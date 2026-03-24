@@ -19,7 +19,8 @@ class SecurityMonitor extends EventTarget {
   constructor(wsUrl) {
     super();
     // Default: connect to same host on /security-ws
-    this.wsUrl = wsUrl || `ws://${window.location.host}/security-ws`;
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    this.wsUrl = wsUrl || `${proto}//${window.location.host}/security-ws`;
     this.ws = null;
     this.connected = false;
     this._reconnectTimer = null;

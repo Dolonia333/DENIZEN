@@ -484,6 +484,9 @@ class OfficeScene extends Phaser.Scene {
         const playerStartY = isReferenceTemplate ? 260 : (originY + 228);
         this.player = this.physics.add.sprite(playerStartX, playerStartY, 'player_xp', 1);
         this.player.setCollideWorldBounds(true).setDepth(2.6).setScale(2);
+        // Shrink physics body to foot hitbox
+        this.player.body.setSize(12, 10);
+        this.player.body.setOffset(2, 14);
         // Match the main update() animation contract.
         this._playerAnimKey = (name) => `asm_player_xp_${name}`;
         this.player.setFrame(0);
@@ -514,6 +517,9 @@ class OfficeScene extends Phaser.Scene {
           const npcAnims = ensureAnimSet(`asm_${texKey}`, texKey);
           const npc = this.physics.add.sprite(p.x, p.y, texKey, 1);
           npc.setDepth(2.6).setScale(2);
+          // Shrink physics body to small foot hitbox so NPCs navigate between desks
+          npc.body.setSize(12, 10);    // small collision box (scaled: 24x20)
+          npc.body.setOffset(2, 14);   // anchor to feet (bottom of 16x24 base sprite)
           npc._animKey = (name) => `asm_${texKey}_${name}`;
           npc.ai = {
             mode: 'wander',
@@ -1011,6 +1017,9 @@ class OfficeScene extends Phaser.Scene {
     this.player.setScale(1); // native 32x64, natural proportions
     this.player.setCollideWorldBounds(true);
     this.player.setFrame(20); // front-facing idle (down) - 3rd frame is standing pose
+    // Shrink physics body to foot hitbox
+    this.player.body.setSize(14, 10);
+    this.player.body.setOffset(9, 54);
     const scale = 1; // used by NPCs below
 
     // Camera: 2x zoom, follow player, clamp to world bounds
@@ -1049,6 +1058,9 @@ class OfficeScene extends Phaser.Scene {
       npc.setCollideWorldBounds(true);
       npc.setDrag(900, 900);
       npc.body.setMaxVelocity(160, 160);
+      // Shrink physics body to small foot hitbox so NPCs navigate between desks
+      npc.body.setSize(10, 8);
+      npc.body.setOffset(3, 16);
       npc.ai = {
         mode: 'wander',
         facing: 'right',
@@ -1355,6 +1367,39 @@ class OfficeScene extends Phaser.Scene {
           this._openclawChat.toggle();
         });
       }
+    }
+
+    // --- Agent Office Manager (AI agent coordination system) ---
+    if (window.AgentActions && window.AgentOfficeManager) {
+      this._agentActions = new window.AgentActions(this);
+      this._agentManager = new window.AgentOfficeManager(this, this._agentActions);
+      this._agentManager.init();
+      console.log('[OfficeScene] Agent Office Manager initialized');
+
+      // T key: talk to CTO (cofounder agent)
+      this.input.keyboard.on('keydown-T', () => {
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+        const text = prompt('Say to CTO:');
+        if (text && this._agentManager) {
+          this._agentManager.ceoSpeak(text);
+        }
+      });
+    }
+
+    // --- Pathfinding System ---
+    if (window.OfficePathfinder && window.NpcPathFollower) {
+      this._pathfinder = new window.OfficePathfinder(1280, 720, 16);
+      // Build the grid after a short delay so all furniture/walls are placed
+      this.time.delayedCall(500, () => {
+        this._pathfinder.buildFromScene(this);
+        // Attach path followers to all NPCs
+        if (Array.isArray(this.npcs)) {
+          this.npcs.forEach(npc => {
+            npc._pathFollower = new window.NpcPathFollower(npc, this._pathfinder);
+          });
+        }
+        console.log('[OfficeScene] Pathfinding system initialized');
+      });
     }
 
     // --- Security Monitor + Robber Controller ---
@@ -1678,13 +1723,43 @@ class OfficeScene extends Phaser.Scene {
 
     // Automated Z-sorting (Y-sorting): sort ALL sprites by bottom_y and assign depth.
     // This is the “brain”: if character.bottom_y < desk.bottom_y they draw behind; if > they draw in front.
-    const bottomY = (s) => s.y + (s.displayHeight * (1 - s.originY));
+    // Characters get a small Y bias (+1) so they render IN FRONT of furniture at the same Y level
+    // (e.g., standing behind a chair — the character should be visible over the chair back).
+    const isCharacter = (s) => s === this.player || (Array.isArray(this.npcs) && this.npcs.includes(s));
+    // Track which NPCs are sitting (managed by AgentActions._sittingNpcs)
+    const sittingNpcSet = this._agentActions?._sittingNpcs || new Map();
+    const isSittingNpc = (s) => {
+      if (!isCharacter(s) || s === this.player) return false;
+      const key = s.texture?.key;
+      return key && sittingNpcSet.has(key);
+    };
+    const sortY = (s) => {
+      const baseY = s.y + (s.displayHeight * (1 - s.originY));
+      return isCharacter(s) ? baseY + 1 : baseY;
+    };
     const sortable = [];
     if (this.player) sortable.push(this.player);
     if (Array.isArray(this.npcs)) sortable.push(...this.npcs);
     if (Array.isArray(this.furnitureDecorSprites)) sortable.push(...this.furnitureDecorSprites.map((e) => e.sprite).filter(Boolean));
-    sortable.sort((a, b) => bottomY(a) - bottomY(b));
-    sortable.forEach((s, i) => s.setDepth(10 + i));
+    sortable.sort((a, b) => sortY(a) - sortY(b));
+    sortable.forEach((s, i) => {
+      // Don't override depth for sitting NPCs — their depth is locked by _applySitDepth
+      if (isSittingNpc(s)) return;
+      s.setDepth(10 + i);
+    });
+    // For sitting NPCs: lock depth relative to their chair
+    sittingNpcSet.forEach((sitData, npcKey) => {
+      const npc = this.npcs?.find(n => n.texture?.key === npcKey);
+      if (!npc || !sitData.chairSprite) return;
+      const chairDepth = sitData.chairSprite.depth;
+      if (sitData.chairInfo?.backFacing) {
+        // Back-facing: chair ON TOP of NPC
+        npc.setDepth(chairDepth - 0.5);
+      } else {
+        // Front-facing: NPC ON TOP of chair
+        npc.setDepth(chairDepth + 0.5);
+      }
+    });
 
     // Interaction: press E/Space near object in front of player.
     const interactPressed = (this.interactKeys?.E?.isDown || this.interactKeys?.SPACE?.isDown);
@@ -1877,59 +1952,141 @@ class OfficeScene extends Phaser.Scene {
         const ai = npc.ai;
         if (!ai) return;
 
-        let target = null;
+        // Helper: use pathfinding if available, otherwise straight-line
+        const pf = npc._pathFollower;
+        const usePathfinding = !!pf;
+
+        // --- Physics-aware unstick: if body is blocked, nudge perpendicular ---
+        const b = npc.body.blocked;
+        if (!b.none && (b.left || b.right || b.up || b.down)) {
+          ai._physicsStuckTime = (ai._physicsStuckTime || 0) + delta;
+          if (ai._physicsStuckTime > 400) {
+            // Nudge perpendicular to the blocked direction
+            const nudge = 30;
+            if (b.left || b.right) {
+              npc.y += (Math.random() > 0.5 ? nudge : -nudge);
+            }
+            if (b.up || b.down) {
+              npc.x += (Math.random() > 0.5 ? nudge : -nudge);
+            }
+            // Force repath
+            if (pf && pf.waypoints) {
+              const dest = pf.waypoints[pf.waypoints.length - 1];
+              if (dest) pf.navigateTo(dest.x, dest.y);
+            } else if (ai.mode === 'wander' && ai.wanderTarget) {
+              if (pf) pf.navigateTo(ai.wanderTarget.x, ai.wanderTarget.y);
+            }
+            ai._physicsStuckTime = 0;
+          }
+        } else {
+          ai._physicsStuckTime = 0;
+        }
+
         if (ai.mode === 'agent_task') {
+          // If NPC is sitting/working/reading — freeze in place, no movement
+          const isStationary = ai.taskState === 'sitting' || ai.taskState === 'working' || ai.taskState === 'reading' || ai.taskState === 'reporting';
+          if (isStationary) {
+            npc.body.setVelocity(0, 0);
+            // Don't continue to movement logic — skip to animation section
+          } else {
           // AI agent task: walk to assigned position and stay
           const t = ai.taskTarget || { x: 400, y: 300 };
-          const dx = t.x - npc.x;
-          const dy = t.y - npc.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist > 8) {
-            npc.body.setVelocity((dx / dist) * wanderSpeed, (dy / dist) * wanderSpeed);
-            ai.taskState = 'walking';
+          const dist = Math.hypot(t.x - npc.x, t.y - npc.y);
+
+          if (dist > 10) {
+            if (usePathfinding) {
+              // Start pathfinding if not already navigating to this target
+              if (!pf.isNavigating() || ai._lastTarget?.x !== t.x || ai._lastTarget?.y !== t.y) {
+                pf.navigateTo(t.x, t.y);
+                ai._lastTarget = { x: t.x, y: t.y };
+              }
+              const vel = pf.update(wanderSpeed, delta);
+              if (vel) {
+                npc.body.setVelocity(vel.vx, vel.vy);
+                if (ai.taskState !== 'walking') ai.taskState = 'walking';
+              } else {
+                // Path follower returned null — arrived or no path
+                npc.body.setVelocity(0, 0);
+                if (ai.taskState === 'walking') ai.taskState = 'working';
+              }
+            } else {
+              npc.body.setVelocity(((t.x - npc.x) / dist) * wanderSpeed, ((t.y - npc.y) / dist) * wanderSpeed);
+              if (ai.taskState !== 'walking') ai.taskState = 'walking';
+            }
           } else {
             npc.body.setVelocity(0, 0);
-            ai.taskState = 'working';
-            ai.facing = 'down'; // face desk
+            if (pf) pf.stop();
+            if (ai.taskState === 'walking') ai.taskState = 'working';
           }
+          } // close isStationary else
         } else if (ai.mode === 'follow') {
           const offset = ai.followOffset || { x: 0, y: 0 };
           const targetX = this.player.x + offset.x;
           const targetY = this.player.y + offset.y;
-          const dx = targetX - npc.x;
-          const dy = targetY - npc.y;
-          const dist = Math.hypot(dx, dy);
+          const dist = Math.hypot(targetX - npc.x, targetY - npc.y);
+
           if (dist > followDistance) {
-            const vx = (dx / dist) * followSpeed;
-            const vy = (dy / dist) * followSpeed;
-            npc.body.setVelocity(vx, vy);
+            if (usePathfinding) {
+              // Re-path every 500ms while following (player moves)
+              if (!ai._followRepath || now - ai._followRepath > 500) {
+                pf.navigateTo(targetX, targetY);
+                ai._followRepath = now;
+              }
+              const vel = pf.update(followSpeed, delta);
+              if (vel) {
+                npc.body.setVelocity(vel.vx, vel.vy);
+              } else {
+                npc.body.setVelocity(0, 0);
+              }
+            } else {
+              npc.body.setVelocity(((targetX - npc.x) / dist) * followSpeed, ((targetY - npc.y) / dist) * followSpeed);
+            }
           } else {
             npc.body.setVelocity(0, 0);
+            if (pf) pf.stop();
           }
         } else {
-          // wander
+          // Wander mode — pick a new random destination and pathfind to it
           if (now >= ai.nextWanderAt) {
-            ai.nextWanderAt = now + Phaser.Math.Between(900, 2200);
-            ai.wanderTarget = {
-              x: Phaser.Math.Between(120, 1160),
-              y: Phaser.Math.Between(160, 600)
-            };
+            ai.nextWanderAt = now + Phaser.Math.Between(2500, 6000);
+            const wx = Phaser.Math.Between(120, 1160);
+            const wy = Phaser.Math.Between(160, 600);
+            ai.wanderTarget = { x: wx, y: wy };
+            if (usePathfinding) {
+              pf.navigateTo(wx, wy);
+            }
           }
-          const dx = ai.wanderTarget.x - npc.x;
-          const dy = ai.wanderTarget.y - npc.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist > 12) {
-            npc.body.setVelocity((dx / dist) * wanderSpeed, (dy / dist) * wanderSpeed);
+
+          if (usePathfinding && pf.isNavigating()) {
+            const vel = pf.update(wanderSpeed, delta);
+            if (vel) {
+              npc.body.setVelocity(vel.vx, vel.vy);
+            } else {
+              // Arrived or path lost — pick a new target soon
+              npc.body.setVelocity(0, 0);
+              ai.nextWanderAt = Math.min(ai.nextWanderAt, now + 500);
+            }
+          } else if (!usePathfinding) {
+            const dx = ai.wanderTarget.x - npc.x;
+            const dy = ai.wanderTarget.y - npc.y;
+            const dist = Math.hypot(dx, dy);
+            if (dist > 12) {
+              npc.body.setVelocity((dx / dist) * wanderSpeed, (dy / dist) * wanderSpeed);
+            } else {
+              npc.body.setVelocity(0, 0);
+            }
           } else {
+            // Not navigating (path failed) — pick a new target soon
             npc.body.setVelocity(0, 0);
+            ai.nextWanderAt = Math.min(ai.nextWanderAt, now + 500);
           }
         }
 
         // Animations based on velocity
         const vx = npc.body.velocity.x;
         const vy = npc.body.velocity.y;
-        const moving = Math.abs(vx) > 2 || Math.abs(vy) > 2;
-        if (moving) {
+        const npcMoving = Math.abs(vx) > 2 || Math.abs(vy) > 2;
+        if (npcMoving) {
           if (Math.abs(vx) > Math.abs(vy)) {
             ai.facing = vx < 0 ? 'left' : 'right';
           } else {
@@ -1953,6 +2110,11 @@ class OfficeScene extends Phaser.Scene {
     // Update agent controller bubbles
     if (this._npcAgentCtrl) {
       this._npcAgentCtrl.updateBubbles();
+    }
+
+    // Update agent office manager (AI agent coordination)
+    if (this._agentManager) {
+      this._agentManager.update();
     }
 
     // Update robber controller (security threat visualization)
@@ -2277,6 +2439,7 @@ window.game = new Phaser.Game(config);
         <button id="ed-export-btn">Export JSON (X)</button>
         <button id="ed-snap-btn">Snap: ON</button>
         <button id="ed-clear-btn">Clear Selection</button>
+        <button id="ed-collision-btn" style="background:#e74c3c;">Show Collisions</button>
         <span class="spacer">E=toggle | Drag catalog -> map | Double-click sprite = delete</span>
       </div>
       <aside id="editor-catalog">
@@ -2300,6 +2463,59 @@ window.game = new Phaser.Game(config);
       event.currentTarget.textContent = `Snap: ${window._editorSnap ? 'ON' : 'OFF'}`;
     });
     document.getElementById('ed-clear-btn').addEventListener('click', () => setPendingCatalog(null));
+
+    // Collision box visualization toggle
+    let collisionVisible = false;
+    let collisionGraphics = null;
+    document.getElementById('ed-collision-btn').addEventListener('click', (event) => {
+      const scene = getScene();
+      if (!scene) return;
+      collisionVisible = !collisionVisible;
+      event.currentTarget.textContent = collisionVisible ? 'Hide Collisions' : 'Show Collisions';
+      event.currentTarget.style.background = collisionVisible ? '#27ae60' : '#e74c3c';
+
+      if (collisionVisible) {
+        // Draw collision boxes as red rectangles
+        if (!collisionGraphics) {
+          collisionGraphics = scene.add.graphics();
+        }
+        collisionGraphics.clear();
+        collisionGraphics.setDepth(9999);
+
+        (scene._obstacles || []).forEach(obs => {
+          if (!obs || !obs.body) return;
+          const bx = obs.body.x;
+          const by = obs.body.y;
+          const bw = obs.body.width;
+          const bh = obs.body.height;
+          // Red fill with transparency
+          collisionGraphics.fillStyle(0xff0000, 0.3);
+          collisionGraphics.fillRect(bx, by, bw, bh);
+          // Red border
+          collisionGraphics.lineStyle(1, 0xff0000, 0.8);
+          collisionGraphics.strokeRect(bx, by, bw, bh);
+        });
+
+        // Also show pathfinding grid blocked cells in blue
+        if (scene._pathfinder) {
+          const pf = scene._pathfinder;
+          const cs = pf.cellSize;
+          collisionGraphics.fillStyle(0x0066ff, 0.15);
+          for (let gy = 0; gy < pf.rows; gy++) {
+            for (let gx = 0; gx < pf.cols; gx++) {
+              if (!pf.isWalkable(gx, gy)) {
+                collisionGraphics.fillRect(gx * cs, gy * cs, cs, cs);
+              }
+            }
+          }
+        }
+      } else {
+        if (collisionGraphics) {
+          collisionGraphics.clear();
+        }
+      }
+    });
+
     renderCatalogList();
   }
 

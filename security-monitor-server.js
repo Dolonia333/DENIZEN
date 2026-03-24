@@ -302,9 +302,12 @@ class SecurityMonitorServer {
               const procs = JSON.parse(stdout);
               const arr = Array.isArray(procs) ? procs : [procs];
               const suspicious = ['nc', 'ncat', 'netcat', 'nmap', 'mimikatz', 'psexec',
-                'meterpreter', 'reverse', 'shell', 'keylogger', 'rat', 'backdoor'];
+                'meterpreter', 'reverse', 'keylogger', 'rat', 'backdoor'];
+              // Exclude common system processes that contain suspicious substrings
+              const safeProcesses = ['powershell', 'pwsh', 'cmd', 'conhost', 'explorer'];
               arr.forEach(proc => {
                 const name = (proc.Name || '').toLowerCase();
+                if (safeProcesses.some(s => name.includes(s))) return; // skip known safe
                 if (suspicious.some(s => name.includes(s))) {
                   this._emitThreat({
                     category: 'process_spawn',
