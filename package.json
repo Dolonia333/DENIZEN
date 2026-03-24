@@ -1,0 +1,24 @@
+{
+  "name": "pixel-office-game",
+  "version": "1.0.0",
+  "description": "A pixel art office game that visualizes AI agent workflows as an RPG. Watch your AI agents work like office employees — walking to desks, typing, researching, and collaborating — all driven by real AI activity from [OpenClaw](https://github.com/nichochar/openclaw).",
+  "main": "asset-browser.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dolonia333/ai-office-game-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dolonia333/ai-office-game-/issues"
+  },
+  "homepage": "https://github.com/Dolonia333/ai-office-game-#readme",
+  "dependencies": {
+    "ws": "^8.20.0"
+  }
+}

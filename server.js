@@ -2,8 +2,10 @@ const http = require('http');
 const net = require('net');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
+const { WebSocketServer } = require('ws');
 const SecurityMonitorServer = require('./security-monitor-server');
+const CofounderAgent = require('./src/cofounder-agent');
+const NpcBrainManager = require('./src/npc-brains');
 
 const PORT = process.env.PORT || 8080;
 // Serve from the parent directory so ../pixel game stuff/ paths resolve correctly
@@ -41,6 +43,11 @@ const securityMonitor = new SecurityMonitorServer({
   apiRateLimit: 100,
 });
 securityMonitor.start();
+
+// --- Cofounder Agent (CTO AI brain) ---
+const npcBrains = new NpcBrainManager();
+const cofounderAgent = new CofounderAgent();
+cofounderAgent.npcBrains = npcBrains; // Give the director access to individual NPC brains
 
 const server = http.createServer((req, res) => {
   let urlPath = decodeURIComponent(req.url.split('?')[0]);
@@ -125,28 +132,74 @@ const server = http.createServer((req, res) => {
   });
 });
 
-// WebSocket upgrade handler — route security-ws to monitor, everything else to OpenClaw
+// --- WebSocket Servers (using 'ws' package) ---
+
+// Security Monitor WebSocket
+const securityWss = new WebSocketServer({ noServer: true });
+securityWss.on('connection', (ws) => {
+  console.log('[SecurityMonitor] WS client connected');
+  securityMonitor.addClient(ws);
+  ws.on('close', () => {
+    console.log('[SecurityMonitor] WS client disconnected');
+    securityMonitor.removeClient(ws);
+  });
+  ws.on('error', () => {
+    securityMonitor.removeClient(ws);
+  });
+});
+
+// Agent Office WebSocket
+const agentWss = new WebSocketServer({ noServer: true });
+agentWss.on('connection', (ws) => {
+  console.log(`[CofounderAgent] WS client connected (${cofounderAgent.wsClients.size + 1} total)`);
+  cofounderAgent.addClient(ws);
+
+  ws.on('message', (data) => {
+    try {
+      const msg = JSON.parse(data.toString());
+      if (msg.type === 'npc_conversation') {
+        // Route to individual NPC brain for a personalized response
+        npcBrains.getResponse(msg.npcName, msg.fromName, msg.text, msg.context || {})
+          .then(response => {
+            const reply = JSON.stringify({
+              type: 'npc_response',
+              npcName: msg.npcName,
+              fromName: msg.fromName,
+              text: response,
+            });
+            if (ws.readyState === 1) ws.send(reply);
+          })
+          .catch(err => console.warn('[NpcBrains] Response error:', err.message));
+      } else {
+        cofounderAgent.handleClientMessage(msg);
+      }
+    } catch (err) {
+      console.warn('[AgentWS] Failed to parse client message:', err.message);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log(`[CofounderAgent] WS client disconnected (${cofounderAgent.wsClients.size - 1} remaining)`);
+    cofounderAgent.removeClient(ws);
+  });
+  ws.on('error', () => {
+    cofounderAgent.removeClient(ws);
+  });
+});
+
+// Route WebSocket upgrades
 server.on('upgrade', (req, socket, head) => {
-  // Security monitor WebSocket
   if (req.url === '/security-ws') {
-    // Minimal WebSocket handshake
-    const key = req.headers['sec-websocket-key'];
-    const acceptKey = crypto
-      .createHash('sha1')
-      .update(key + '258EAFA5-E914-47DA-95CA-5AB5DC085B11')
-      .digest('base64');
+    securityWss.handleUpgrade(req, socket, head, (ws) => {
+      securityWss.emit('connection', ws, req);
+    });
+    return;
+  }
 
-    socket.write(
-      'HTTP/1.1 101 Switching Protocols\r\n' +
-      'Upgrade: websocket\r\n' +
-      'Connection: Upgrade\r\n' +
-      `Sec-WebSocket-Accept: ${acceptKey}\r\n` +
-      '\r\n'
-    );
-
-    // Create a minimal WebSocket wrapper
-    const ws = createMinimalWS(socket);
-    securityMonitor.addClient(ws);
+  if (req.url === '/agent-ws') {
+    agentWss.handleUpgrade(req, socket, head, (ws) => {
+      agentWss.emit('connection', ws, req);
+    });
     return;
   }
 
@@ -168,129 +221,12 @@ server.on('upgrade', (req, socket, head) => {
   socket.on('error', () => target.destroy());
 });
 
-/**
- * Minimal WebSocket frame encoder/decoder for the security monitor
- * (avoids requiring the 'ws' npm package)
- */
-function createMinimalWS(socket) {
-  const ws = {
-    readyState: 1, // OPEN
-    send(data) {
-      if (ws.readyState !== 1) return;
-      const payload = Buffer.from(data, 'utf8');
-      const frame = encodeWSFrame(payload);
-      try {
-        socket.write(frame);
-      } catch (e) {
-        ws.readyState = 3;
-      }
-    },
-    close() {
-      ws.readyState = 2;
-      try { socket.end(); } catch (e) {}
-      ws.readyState = 3;
-    },
-    _onCloseCallbacks: [],
-    on(event, cb) {
-      if (event === 'close') ws._onCloseCallbacks.push(cb);
-    },
-  };
-
-  // Handle incoming frames (for future bidirectional communication)
-  let buffer = Buffer.alloc(0);
-  socket.on('data', (chunk) => {
-    buffer = Buffer.concat([buffer, chunk]);
-    while (buffer.length >= 2) {
-      const result = decodeWSFrame(buffer);
-      if (!result) break;
-      buffer = buffer.slice(result.totalLength);
-
-      if (result.opcode === 0x08) {
-        // Close frame
-        ws.readyState = 3;
-        ws._onCloseCallbacks.forEach(cb => cb());
-        socket.end();
-        return;
-      }
-      if (result.opcode === 0x09) {
-        // Ping → Pong
-        const pong = encodeWSFrame(result.payload, 0x0a);
-        socket.write(pong);
-      }
-      // Text frames (0x01) could be handled here for bidirectional comms
-    }
-  });
-
-  socket.on('close', () => {
-    ws.readyState = 3;
-    ws._onCloseCallbacks.forEach(cb => cb());
-  });
-
-  socket.on('error', () => {
-    ws.readyState = 3;
-  });
-
-  return ws;
-}
-
-function encodeWSFrame(payload, opcode = 0x01) {
-  const len = payload.length;
-  let header;
-  if (len < 126) {
-    header = Buffer.alloc(2);
-    header[0] = 0x80 | opcode; // FIN + opcode
-    header[1] = len;
-  } else if (len < 65536) {
-    header = Buffer.alloc(4);
-    header[0] = 0x80 | opcode;
-    header[1] = 126;
-    header.writeUInt16BE(len, 2);
-  } else {
-    header = Buffer.alloc(10);
-    header[0] = 0x80 | opcode;
-    header[1] = 127;
-    header.writeBigUInt64BE(BigInt(len), 2);
-  }
-  return Buffer.concat([header, payload]);
-}
-
-function decodeWSFrame(buffer) {
-  if (buffer.length < 2) return null;
-  const opcode = buffer[0] & 0x0f;
-  const masked = (buffer[1] & 0x80) !== 0;
-  let payloadLen = buffer[1] & 0x7f;
-  let offset = 2;
-
-  if (payloadLen === 126) {
-    if (buffer.length < 4) return null;
-    payloadLen = buffer.readUInt16BE(2);
-    offset = 4;
-  } else if (payloadLen === 127) {
-    if (buffer.length < 10) return null;
-    payloadLen = Number(buffer.readBigUInt64BE(2));
-    offset = 10;
-  }
-
-  const maskSize = masked ? 4 : 0;
-  const totalLength = offset + maskSize + payloadLen;
-  if (buffer.length < totalLength) return null;
-
-  let payload;
-  if (masked) {
-    const mask = buffer.slice(offset, offset + 4);
-    payload = Buffer.alloc(payloadLen);
-    for (let i = 0; i < payloadLen; i++) {
-      payload[i] = buffer[offset + 4 + i] ^ mask[i % 4];
-    }
-  } else {
-    payload = buffer.slice(offset, offset + payloadLen);
-  }
-
-  return { opcode, payload, totalLength };
-}
-
 server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log(`Security Monitor active — WebSocket at ws://localhost:${PORT}/security-ws`);
+  console.log(`Agent Office WebSocket at ws://localhost:${PORT}/agent-ws`);
   console.log(`Test threats: http://localhost:${PORT}/security-test?type=file_access&severity=high&detail=Someone+reading+passwords`);
+
+  // Start the cofounder agent's autonomous thinking loop
+  cofounderAgent.start();
 });
