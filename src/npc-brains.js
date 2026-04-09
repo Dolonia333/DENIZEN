@@ -162,7 +162,16 @@ class NpcBrainManager {
       const memPath = path.join(__dirname, '..', 'npcs', folder, 'MEMORY.md');
       const timestamp = new Date().toISOString().slice(0, 16);
       fs.appendFileSync(memPath, `\n- [${timestamp}] ${entry}`);
-      brain.longTermMemory = fs.readFileSync(memPath, 'utf-8');
+
+      // Cap memory file at 200 lines to prevent unbounded growth
+      const MAX_MEMORY_LINES = 200;
+      let content = fs.readFileSync(memPath, 'utf-8');
+      const lines = content.split('\n');
+      if (lines.length > MAX_MEMORY_LINES) {
+        content = lines.slice(lines.length - MAX_MEMORY_LINES).join('\n');
+        fs.writeFileSync(memPath, content);
+      }
+      brain.longTermMemory = content;
     } catch (err) {
       console.warn(`[NpcBrains] Failed to save memory for ${npcName}:`, err.message);
     }

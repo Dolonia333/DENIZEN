@@ -17,6 +17,7 @@ class AgentActions {
     this._roleLabels = new Map(); // npcKey -> text object
     this._typingIndicators = new Map(); // npcKey -> text object
     this._sittingNpcs = new Map(); // npcKey -> { chairSprite, origDepth, origY }
+    this._standingMeetingNpcs = new Set(); // npcKeys standing in meeting formation
 
     // Room definitions — agents understand the office layout
     this.ROOMS = {
@@ -281,24 +282,25 @@ class AgentActions {
    * Front-facing chair: NPC renders ON TOP of chair (higher depth)
    */
   _applySitDepth(npc, npcKey, chair, chairInfo) {
+    // Save original depth BEFORE modifying it
     const origDepth = npc.depth;
     const chairDepth = chair.sprite.depth;
 
-    if (chairInfo.backFacing) {
-      // Back-facing: chair should be on top of NPC (NPC is behind the chair back)
-      // Set NPC depth below chair
-      npc.setDepth(chairDepth - 0.5);
-    } else {
-      // Front-facing: NPC should be on top of chair
-      npc.setDepth(chairDepth + 0.5);
-    }
-
+    // Store sit data first, with the correct original depth
     this._sittingNpcs.set(npcKey, {
       chairSprite: chair.sprite,
       origDepth,
       origY: npc.y,
       chairInfo,
     });
+
+    if (chairInfo.backFacing) {
+      // Back-facing: chair should be on top of NPC (NPC is behind the chair back)
+      npc.setDepth(chairDepth - 0.5);
+    } else {
+      // Front-facing: NPC should be on top of chair
+      npc.setDepth(chairDepth + 0.5);
+    }
   }
 
   /**
@@ -312,8 +314,12 @@ class AgentActions {
     if (npc) {
       // Restore original depth (Y-sort will take over)
       npc.setDepth(sitData.origDepth);
-      // Move NPC slightly away from chair
-      npc.y += 16;
+      // Move NPC away from chair based on facing direction
+      if (sitData.chairInfo?.backFacing) {
+        npc.y -= 16; // Back-facing chair: step forward (down in screen = was sitting facing away)
+      } else {
+        npc.y += 16; // Front-facing chair: step backward (down)
+      }
     }
 
     this._hideTypingIndicator(npcKey);
@@ -647,7 +653,6 @@ class AgentActions {
         const room = this.ROOMS.conference;
         // Standing positions: rows behind the chairs, spread across the room
         // Track how many are already standing so we can stagger them
-        if (!this._standingMeetingNpcs) this._standingMeetingNpcs = new Set();
         this._standingMeetingNpcs.add(npcKey);
         const standIndex = [...this._standingMeetingNpcs].indexOf(npcKey);
 
