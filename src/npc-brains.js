@@ -81,7 +81,11 @@ class NpcBrainManager {
     if (!this.providers.demo) {
       this.providers.demo = { type: 'demo', baseUrl: null, apiKey: null, model: null };
     }
-    this._demoMode = Object.keys(this.providers).length <= 2; // only demo + maybe lmstudio
+    // Count only remote providers (exclude demo and lmstudio which is local-only)
+    const remoteProviderCount = Object.keys(this.providers).filter(
+      k => k !== 'demo' && k !== 'lmstudio'
+    ).length;
+    this._demoMode = remoteProviderCount === 0;
     if (this._demoMode) {
       console.log('[NpcBrains] Demo mode active — NPCs use smart scripted responses (no API keys required)');
     }
@@ -609,12 +613,15 @@ ${roleActions}
 
     // Parse delegation tag [DELEGATE:...]
     let delegation = null;
+    const knownNpcNames = Object.keys(this.brains);
     const delegateMatch = responseText.match(/\[DELEGATE:([^:]+):([^\]]+)\]/);
     if (delegateMatch) {
       const delegateTo = delegateMatch[1].trim();
       const reason = delegateMatch[2].trim();
-      if (this._hierarchy[delegateTo]) {
+      if (knownNpcNames.includes(delegateTo) && this._hierarchy[delegateTo]) {
         delegation = { delegateTo, reason, originalMessage: message };
+      } else {
+        console.warn(`[NpcBrains] Ignoring DELEGATE to unknown NPC "${delegateTo}"`);
       }
       responseText = responseText.replace(/\s*\[DELEGATE:[^\]]+\]/, '').trim();
     }
@@ -634,8 +641,11 @@ ${roleActions}
         }
         // Extract delegation from fallback
         const fbDelegateMatch = fallbackText.match(/\[DELEGATE:([^:]+):([^\]]+)\]/);
-        if (fbDelegateMatch && this._hierarchy[fbDelegateMatch[1].trim()]) {
-          delegation = { delegateTo: fbDelegateMatch[1].trim(), reason: fbDelegateMatch[2].trim(), originalMessage: message };
+        if (fbDelegateMatch) {
+          const fbDelegateTo = fbDelegateMatch[1].trim();
+          if (knownNpcNames.includes(fbDelegateTo) && this._hierarchy[fbDelegateTo]) {
+            delegation = { delegateTo: fbDelegateTo, reason: fbDelegateMatch[2].trim(), originalMessage: message };
+          }
         }
         console.log(`[NpcBrains] Smart fallback for ${npcName}: ${actions.length} actions, delegation=${delegation?.delegateTo || 'none'}`);
       }
