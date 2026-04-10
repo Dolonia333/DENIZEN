@@ -378,7 +378,7 @@ node server.js
 Make sure you're running the server from the project directory:
 
 ```bash
-cd pixel-office-game
+cd ai-office-game-
 node server.js
 ```
 
