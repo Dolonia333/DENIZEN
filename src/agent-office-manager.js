@@ -169,15 +169,9 @@ class AgentOfficeManager {
       if (agent.role === 'cofounder') {
         // CTO gets a manager office desk, fallback to open office
         deskPool = managerDesks.length > 0 ? managerDesks : openDesks;
-      } else if (
-        (agent.roleDef && agent.roleDef.idleArea === 'desk') ||
-        agent.role === 'researcher' || agent.role === 'stock_trader'
-      ) {
-        // All desk-based roles (idleArea=desk): desk_worker, qa_engineer,
-        // devops, designer, data_engineer — plus researcher & stock_trader
-        deskPool = openDesks;
       } else {
-        return; // receptionist, security, project_mgr, etc. don't need desks
+        // Everyone gets a desk — it's an office, everyone needs a workstation
+        deskPool = openDesks;
       }
 
       // Find first unassigned desk
@@ -223,10 +217,11 @@ class AgentOfficeManager {
           }
           break;
         case 'receptionist':
-          this.actions.walkTo(npcKey, 580, 610);
-          agent.status = 'stationed';
-          break;
         case 'it_support':
+        case 'security':
+        case 'project_mgr':
+        case 'product_mgr':
+        case 'intern':
           if (agent.assignedDesk) {
             this.actions.useComputer(npcKey, agent.assignedDesk);
             agent.status = 'working';
@@ -396,11 +391,17 @@ class AgentOfficeManager {
         if (agent.assignedDesk) {
           this.actions.useComputer(npcKey, agent.assignedDesk);
           agent.status = 'working';
-          if (message) {
-            this.scene.time.delayedCall(1500, () => {
-              this.actions.speak(npcKey, message);
-            });
-          }
+        } else {
+          // No desk — walk to a random work area so they don't freeze
+          const wx = 300 + Math.random() * 500;
+          const wy = 300 + Math.random() * 200;
+          this.actions.walkTo(npcKey, wx, wy);
+          agent.status = 'working';
+        }
+        if (message) {
+          this.scene.time.delayedCall(1500, () => {
+            this.actions.speak(npcKey, message);
+          });
         }
         break;
 
