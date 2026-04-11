@@ -197,7 +197,8 @@ class AgentOfficeManager {
       switch (agent.role) {
         case 'cofounder':
           if (agent.assignedDesk) {
-            this.actions.useComputer(npcKey, agent.assignedDesk);
+            // Teleport CTO directly to her private office desk — no walking across office
+            this.actions.teleportToDesk(npcKey, agent.assignedDesk);
             agent.status = 'working';
             this.scene.time.delayedCall(5000, () => {
               this.actions.speak(npcKey, 'Good morning team!');

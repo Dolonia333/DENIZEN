@@ -238,6 +238,10 @@ class AgentActions {
         npc.ai.taskTarget = { x: targetX, y: targetY };
         npc.ai.taskState = 'walking';
 
+        // Shrink collision body while walking to desk so NPC can squeeze through tight furniture gaps
+        npc.body.setSize(6, 4);
+        npc.body.setOffset(5, 20);
+
         const checkInterval = this.scene.time.addEvent({
           delay: 100,
           loop: true,
@@ -245,6 +249,10 @@ class AgentActions {
             const dist = Math.hypot(targetX - npc.x, targetY - npc.y);
             if (dist <= 14 || npc.ai.taskState === 'working') {
               checkInterval.remove();
+
+              // Restore normal collision body
+              npc.body.setSize(10, 8);
+              npc.body.setOffset(3, 16);
 
               // Snap NPC to chair position and sit
               npc.body.setVelocity(0, 0);
@@ -277,10 +285,51 @@ class AgentActions {
         this.scene.time.delayedCall(12000, () => {
           checkInterval.remove();
           npc.body.setVelocity(0, 0);
+          // Restore collision body if walk timed out
+          npc.body.setSize(10, 8);
+          npc.body.setOffset(3, 16);
           resolve();
         });
       });
     });
+  }
+
+  /**
+   * teleportToDesk(npcKey, deskId) - Instantly place NPC at desk chair (no walking)
+   */
+  teleportToDesk(npcKey, deskId) {
+    const npc = this._getNpc(npcKey);
+    const desk = this._getFurniture(deskId);
+    if (!npc || !desk?.sprite) return;
+
+    const chair = this._findChairNearDesk(desk);
+    const chairInfo = this._getChairFacing(chair, desk);
+
+    const tx = chair?.sprite ? chair.sprite.x : desk.sprite.x;
+    const ty = chair?.sprite ? chair.sprite.y : desk.sprite.y + 24;
+
+    npc.x = tx;
+    npc.y = ty;
+    npc.body.setVelocity(0, 0);
+    npc.ai.mode = 'agent_task';
+    npc.ai.taskState = 'sitting';
+    npc.ai.facing = chairInfo.facing;
+    npc.anims.stop();
+    if (chairInfo.facing === 'up') npc.setFrame(12);
+    else if (chairInfo.facing === 'down') npc.setFrame(0);
+    else if (chairInfo.facing === 'left') npc.setFrame(4);
+    else npc.setFrame(8);
+
+    if (chair?.sprite) {
+      this._applySitDepth(npc, npcKey, chair, chairInfo);
+    }
+    this._sittingNpcs.set(npcKey, {
+      chairSprite: chair?.sprite || null,
+      origDepth: npc.depth,
+      origY: npc.y,
+      chairInfo,
+    });
+    this._showTypingIndicator(npc, npcKey);
   }
 
   /**

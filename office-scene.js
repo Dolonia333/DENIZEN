@@ -2146,8 +2146,10 @@ class OfficeScene extends Phaser.Scene {
                 npc.body.setVelocity(vel.vx, vel.vy);
                 if (ai.taskState !== 'walking') ai.taskState = 'walking';
               } else {
-                // Path follower returned null — arrived or no path
+                // Path follower returned null — arrived or gave up
                 npc.body.setVelocity(0, 0);
+                // Clear last target so pathfinding retries on next frame
+                ai._lastTarget = null;
                 if (ai.taskState === 'walking') ai.taskState = 'working';
               }
             } else {

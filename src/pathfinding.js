@@ -341,7 +341,7 @@ class NpcPathFollower {
     this._stuckCount = 0;        // consecutive stuck checks
     this._rerouting = false;
     this._rerouteCount = 0;      // how many times we've rerouted for this destination
-    this._maxReroutes = 3;       // give up after this many reroutes
+    this._maxReroutes = 5;       // give up after this many reroutes
     this._totalStuckTime = 0;    // cumulative time stuck on this path
   }
 
@@ -416,8 +416,8 @@ class NpcPathFollower {
         this._stuckCount = (this._stuckCount || 0) + 1;
         this._totalStuckTime += 500;
 
-        // If stuck for too long overall (4s+), give up entirely
-        if (this._totalStuckTime >= 4000) {
+        // If stuck for too long overall (8s+), give up entirely
+        if (this._totalStuckTime >= 8000) {
           this.waypoints = null;
           this._stuckCount = 0;
           this._totalStuckTime = 0;
