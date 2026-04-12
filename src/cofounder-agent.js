@@ -279,6 +279,42 @@ YOUR JOB — create a LIVING office:
   }
 
   /**
+   * Build a state-reactive prompt based on current office observations
+   */
+  _buildStateReactivePrompt() {
+    const state = this.officeState;
+    const observations = [];
+
+    if (state.agents && state.agents.length > 0) {
+      const idle = state.agents.filter(a => a.status === 'idle' || !a.status);
+      const working = state.agents.filter(a => a.status === 'working');
+      const talking = state.agents.filter(a => a.status === 'talking' || a.status === 'collaborating');
+
+      if (idle.length > 3) observations.push(`${idle.length} agents are idle — ${idle.slice(0, 3).map(a => a.name).join(', ')} aren't doing much.`);
+      if (working.length > 10) observations.push('Most of the team is heads-down working. Maybe time for a quick standup or check-in.');
+      if (talking.length > 0) observations.push(`${talking.map(a => a.name).join(' and ')} are having conversations.`);
+
+      // Random agent spotlight
+      const spotlight = state.agents[Math.floor(Math.random() * state.agents.length)];
+      if (spotlight) observations.push(`${spotlight.name} (${spotlight.role || 'team member'}) is currently ${spotlight.status || 'at their desk'}.`);
+    }
+
+    // Time-based suggestions
+    const hour = new Date().getHours();
+    if (hour >= 9 && hour < 10) observations.push('Morning — good time for a standup or team check-in.');
+    else if (hour >= 12 && hour < 13) observations.push('Lunch time — people might want breaks.');
+    else if (hour >= 15 && hour < 16) observations.push('Afternoon — good time for code reviews or 1:1s.');
+
+    // Recent history
+    const lastActions = this.conversationHistory.slice(-2).map(m => m.content?.slice(0, 60)).filter(Boolean);
+    if (lastActions.length > 0) observations.push(`Recently: ${lastActions.join('; ')}`);
+
+    if (observations.length === 0) observations.push('The office is running. Look for opportunities to improve workflow.');
+
+    return `Office observations:\n${observations.join('\n')}\n\nAs CTO, decide what should happen next. Generate 2-4 commands that create natural office workflow — conversations, check-ins, task assignments, meetings, or just letting people work. Be specific about what each person should do and say.`;
+  }
+
+  /**
    * Main thinking function - calls LM Studio and dispatches commands
    */
   async _think() {
@@ -293,44 +329,7 @@ YOUR JOB — create a LIVING office:
       const ceoMsg = this._ceoMessages.shift();
       userMessage = `The CEO just said to you: "${ceoMsg}". Respond to them and take appropriate action.`;
     } else {
-      // Periodic autonomous thinking
-      const prompts = [
-        // HIERARCHY: CTO manages team
-        'Abby checks on Alex (her senior dev). She walks to him, asks about sprint progress. Alex reports back confidently. They reference something from a previous conversation.',
-        'Abby calls a 1-ON-1 MEETING with Marcus using callMeeting. They discuss project timelines in the conference room, then return to desks.',
-        // HIERARCHY: Senior dev manages juniors
-        'Alex checks on Josh and Edward. He walks to Josh first, asks about the frontend. Then speakTo Edward about the API. They collaborate on a solution.',
-        'Alex does a code review with Roki (intern). He walks to Roki, reviews his code, gives feedback. Roki asks a follow-up question showing he remembers past advice.',
-        // MEETINGS: Standup
-        'Marcus calls a STANDUP meeting using callMeeting with Alex, Josh, Edward, Jenny, Oscar. Leaders sit, juniors stand. Marcus asks each for a status update. After 3-4 exchanges, everyone stands up and returns to work.',
-        // MEETINGS: Sprint planning
-        'Abby calls SPRINT PLANNING using callMeeting with Marcus, Sarah, Alex, Jenny, Josh, Edward. Leaders sit in chairs, devs stand. Sarah presents what users need. Alex estimates effort. After the meeting, everyone returns to desks.',
-        // MEETINGS: Design review
-        'Rob calls a DESIGN REVIEW using callMeeting with Sarah, Josh. They discuss UI decisions in the conference room. Josh mentions something Rob showed him before. After review, everyone returns to work.',
-        // NPC-TO-NPC: Organic peer conversations
-        'Edward walks to Josh to ask about a frontend bug that affects his API. Josh explains the issue. They figure it out together — real collaboration between peers.',
-        'Molly walks to Jenny after finding a bug. She explains the steps to reproduce. Jenny suggests it might be related to Alex\'s recent changes. Molly goes to Alex next.',
-        'Oscar walks to Dan to coordinate a deployment. Dan confirms the servers are ready. Oscar thanks him and goes back to his desk to run the pipeline.',
-        // NPC-TO-NPC: Cross-team conversations
-        'Pier walks to Bob to discuss research data. Bob shares findings. Pier figures out how to build a pipeline for it. They reference their previous conversation about data formats.',
-        'Sarah walks to Rob to review new mockups. Rob shows his work. Sarah gives feedback about user needs. They iterate on the design together.',
-        // MEETINGS: All-hands (leaders sit, everyone else stands)
-        'Abby calls ALL-HANDS using callMeeting with Marcus, Sarah, Alex, Jenny, Bob, Dan, Josh, Edward, Roki, Molly, Rob, Oscar, Pier, Bouncer, Lucy. She presents a company update. Leaders sit in chairs, junior staff stands in rows. Marcus shares sprint progress. Sarah announces a feature. 2-3 standing staff ask questions. Everyone returns to work.',
-        // HIERARCHY: Intern learning from different people
-        'Roki walks to Jenny and asks about code review best practices. Jenny mentors him. Then Roki walks to Josh and asks about frontend patterns. He is learning from everyone.',
-        // SUPPORT: Security + reception
-        'Bouncer patrols and notices something. He walks to Dan to report. Dan walks to Abby to escalate. The hierarchy chain works.',
-        'Lucy coordinates meetings. She walks to Marcus to confirm a meeting time, then walks to Sarah, then informs Abby. She keeps the office running smoothly.',
-        // MEETINGS: Incident response
-        'Dan calls an URGENT meeting using callMeeting with Oscar, Alex, Abby, Edward. A server issue needs immediate attention. They discuss the fix. Dan and Oscar sit (ops leads), others contribute.',
-        // Natural office life — breaks and casual chat
-        'Josh takes a coffee break. He goes to the breakroom. Rob joins him. They chat casually about the project. Roki comes by and asks them a question.',
-        'End of a work cycle. 2-3 people take breaks, others start new tasks. Someone follows up on a conversation from earlier. Keep it natural and hierarchy-aware.',
-        // NPC autonomy — NPCs initiate based on their own needs
-        'Edward realizes he needs design specs from Rob. He walks to Rob and asks. Rob pulls up his designs and explains. Edward goes back to implement.',
-        'Molly finishes testing a feature and walks to Marcus to report the results. Marcus updates the sprint board. Molly then walks to the dev who wrote it to give specific feedback.',
-      ];
-      userMessage = prompts[this._thinkCount % prompts.length];
+      userMessage = this._buildStateReactivePrompt();
     }
 
     // Add to conversation history
@@ -359,7 +358,7 @@ YOUR JOB — create a LIVING office:
         consecutiveErrors: this._consecutiveErrors,
       });
 
-      if (this._consecutiveErrors >= 2 && !this._usingDemoLoop) {
+      if (this._consecutiveErrors >= 5 && !this._usingDemoLoop) {
         console.warn('[CofounderAgent] API failing — switching to demo think loop');
         this._usingDemoLoop = true;
         this.stop();

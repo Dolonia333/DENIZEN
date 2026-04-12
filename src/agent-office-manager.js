@@ -48,6 +48,10 @@ class AgentOfficeManager {
       intern: { label: 'Intern', color: '#84cc16', idleArea: 'roaming' },
     };
 
+    // Status indicator dots and task labels
+    this._statusDots = new Map(); // npcKey -> Phaser.GameObjects.Arc
+    this._taskLabels = new Map(); // npcKey -> Phaser.GameObjects.Text
+
     // NPC key to display name mapping
     this.NPC_NAMES = {
       xp_abby: 'Abby',
@@ -239,6 +243,70 @@ class AgentOfficeManager {
       });
       delay += 4000; // space NPCs 4 seconds apart
     });
+
+    // Update status indicators every 500ms
+    this.scene.time.addEvent({
+      delay: 500,
+      loop: true,
+      callback: () => this._updateStatusIndicators(),
+    });
+  }
+
+  /**
+   * Update visual status indicators (colored dots + task labels) above each NPC
+   */
+  _updateStatusIndicators() {
+    this.agents.forEach((agent, npcKey) => {
+      const npc = this.actions._getNpc(npcKey);
+      if (!npc) return;
+
+      // Status dot color based on agent status
+      const colors = {
+        working: 0x4ade80,    // green
+        talking: 0x60a5fa,    // blue
+        collaborating: 0x60a5fa,
+        break: 0xfbbf24,      // yellow
+        meeting: 0xa855f7,    // purple
+        error: 0xef4444,      // red
+        idle: 0x94a3b8,       // gray
+        checking: 0x06b6d4,   // cyan
+        reporting: 0xf97316,  // orange
+      };
+      const color = colors[agent.status] || colors.idle;
+
+      // Create or update dot
+      let dot = this._statusDots.get(npcKey);
+      if (!dot) {
+        dot = this.scene.add.circle(0, 0, 3, color);
+        dot.setDepth(9999);
+        this._statusDots.set(npcKey, dot);
+      }
+      dot.setFillStyle(color);
+      dot.setPosition(npc.x, npc.y - 56);
+      dot.setVisible(true);
+
+      // Task label — only show if NPC has an active task
+      let label = this._taskLabels.get(npcKey);
+      if (agent._taskLabel) {
+        if (!label) {
+          label = this.scene.add.text(0, 0, '', {
+            fontSize: '6px',
+            fontFamily: 'monospace',
+            color: '#94a3b8',
+            backgroundColor: '#0f172a80',
+            padding: { x: 2, y: 1 },
+          });
+          label.setDepth(9998);
+          label.setOrigin(0.5, 1);
+          this._taskLabels.set(npcKey, label);
+        }
+        label.setText(agent._taskLabel.slice(0, 25));
+        label.setPosition(npc.x, npc.y - 58);
+        label.setVisible(true);
+      } else if (label) {
+        label.setVisible(false);
+      }
+    });
   }
 
   /**
@@ -299,6 +367,15 @@ class AgentOfficeManager {
     const location = decision.location || null;
     const message = decision.message || '';
 
+    // Track task label for visual display
+    if (decision.taskPhase === 'starting' && message) {
+      agent._taskLabel = message.slice(0, 30);
+    } else if (decision.taskPhase === 'finished') {
+      agent._taskLabel = null;
+    } else if (action === 'work' && message && message !== 'Working...') {
+      agent._taskLabel = message.slice(0, 30);
+    }
+
     console.log(`[NPC Think] ${npcName}: "${thought}" → ${action}${target ? ` → ${target}` : ''}${location ? ` @ ${location}` : ''}`);
 
     // Show thought bubble briefly
@@ -323,6 +400,7 @@ class AgentOfficeManager {
 
     switch (action) {
       case 'talk': {
+        agent.status = 'talking';
         const targetKey = findTargetKey(target);
         if (targetKey && message) {
           this.actions.standUp(npcKey);
@@ -552,6 +630,7 @@ class AgentOfficeManager {
       }
 
       case 'meeting':
+        agent.status = 'meeting';
         if (message) {
           this.actions.speak(npcKey, message);
         }

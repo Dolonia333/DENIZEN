@@ -181,10 +181,46 @@ class NpcBrainManager {
         fs.appendFileSync(memPath, newLine);
       }
 
+      // Extract topic tag from the entry for searchable memory
+      const topicMatch = entry.match(/(?:about|on|regarding|for|working on|fixing|building|reviewing|discussing)\s+(?:the\s+)?([a-zA-Z][a-zA-Z0-9\s-]{2,25})/i);
+      if (topicMatch) {
+        const topic = topicMatch[1].trim().toLowerCase().replace(/\s+/g, '-').slice(0, 20);
+        const topicEntry = `- [${new Date().toISOString().slice(0, 16)}] [TOPIC:${topic}] ${entry.slice(0, 100)}`;
+        fs.appendFileSync(memPath, topicEntry + '\n');
+      }
+
+      // Auto-detect learning events and track skills
+      if (/learned|taught|figured out|now understand|picked up|got better at|improved/i.test(entry)) {
+        const skillMatch = entry.match(/(?:about|at|in|with|regarding)\s+([a-zA-Z][a-zA-Z0-9\s]{2,20})/i);
+        if (skillMatch) {
+          const skill = skillMatch[1].trim().toLowerCase().replace(/\s+/g, '-').slice(0, 20);
+          const skillEntry = `- [${new Date().toISOString().slice(0, 16)}] [SKILL:${skill}:+1] ${entry.slice(0, 80)}`;
+          fs.appendFileSync(memPath, skillEntry + '\n');
+        }
+      }
+
       brain.longTermMemory = fs.readFileSync(memPath, 'utf-8');
     } catch (err) {
       console.warn(`[NpcBrains] Failed to save memory for ${npcName}:`, err.message);
     }
+  }
+
+  /**
+   * Get skill context for an NPC based on their accumulated SKILL entries in memory
+   */
+  _getSkillContext(npcName) {
+    const brain = this.brains[npcName];
+    if (!brain?.longTermMemory) return '';
+    const skillLines = brain.longTermMemory.split('\n').filter(l => l.includes('[SKILL:'));
+    if (skillLines.length === 0) return '';
+    const skills = {};
+    for (const line of skillLines) {
+      const match = line.match(/\[SKILL:([^:]+):([+-]\d+)\]/);
+      if (match) skills[match[1]] = (skills[match[1]] || 0) + parseInt(match[2]);
+    }
+    const sorted = Object.entries(skills).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    if (sorted.length === 0) return '';
+    return 'Your growing skills: ' + sorted.map(([s, l]) => `${s}: ${l}`).join(', ');
   }
 
   /**
@@ -205,8 +241,19 @@ class NpcBrainManager {
     if (!brain) return `(${npcName} nods)`;
 
     const rawMemory = brain.longTermMemory || '';
+    // Extract memories specifically about the person we're talking to
+    const memoryLines = rawMemory.split('\n').filter(l => l.trim());
+    const relevantMemories = memoryLines.filter(l => l.includes(fromName)).slice(-5).join('\n');
+    const recentMemories = memoryLines.slice(-5).join('\n');
     const memorySection = rawMemory.length > 50
-      ? `\n\n## Your Memories\n${this._sanitize(rawMemory.slice(-800))}`
+      ? `\n\n## Past interactions with ${fromName}\n${relevantMemories || 'None yet — this is a new relationship.'}\n\n## Recent memories\n${this._sanitize(recentMemories)}`
+      : '';
+
+    // Add task context
+    const myTask = this._taskProgress[npcName];
+    const theirTask = this._taskProgress[fromName];
+    const taskContext = (myTask || theirTask)
+      ? `\nYour current work: ${myTask ? myTask.task : 'general tasks'}. Their current work: ${theirTask ? theirTask.task : 'unknown'}.`
       : '';
 
     // Build coworker awareness — who this NPC knows and their relationships
@@ -220,7 +267,7 @@ ${coworkerContext}
 You are in a pixel art office game. You're having a conversation at work.
 Your role: ${brain.role}. You know your coworkers, remember past conversations, and understand how you can help each other get things done.
 Keep responses conversational (under 120 characters). Be natural, like a real coworker. Reference past conversations when relevant.
-${context.description || ''}
+${context.description || ''}${taskContext}
 
 Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
 
@@ -237,7 +284,7 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
     }));
 
     try {
-      const response = await this._callProvider(brain.providerConfig, systemPrompt, messages);
+      const response = await this._callProvider(brain.providerConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300 });
       // Store response in memory
       this.memories[npcName].push({ from: npcName, text: response });
       return response;
@@ -253,7 +300,7 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       // Try fallback
       if (brain.fallbackConfig && brain.fallbackConfig !== brain.providerConfig) {
         try {
-          const response = await this._callProvider(brain.fallbackConfig, systemPrompt, messages);
+          const response = await this._callProvider(brain.fallbackConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300 });
           this.memories[npcName].push({ from: npcName, text: response });
           return response;
         } catch (e2) {
@@ -325,9 +372,12 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
     var managesStr = (h && h.manages.length > 0) ? h.manages.join(', ') : 'nobody';
     var reportsToStr = h ? h.reportsTo : 'your boss';
 
+    const skillContext = this._getSkillContext(npcName);
+
     const systemPrompt = brain.personality + '\n\n' +
       '## Hierarchy Rules\n' + hierarchyRules + '\n\n' +
       '## Your Teams\n' + (teamContext || 'No team assignments.') + '\n\n' +
+      (skillContext ? '## Skills & Growth\n' + skillContext + '\n\n' : '') +
       '## Your Coworkers\n' + coworkerContext + '\n\n' +
       '## Your Memories\n' + (recentMemory || 'No memories yet.') + '\n\n' +
       '## Recent Conversations\n' + (recentConversations || 'None yet today.') + '\n\n' +
@@ -348,35 +398,36 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       '- Task progress: are you STARTING something new, CONTINUING something, or FINISHING and reporting?\n' +
       '- Collaboration: could you solve this faster by working WITH someone?\n\n' +
       (actionWeightHint ? 'ACTION BALANCE:\n' + actionWeightHint + '\n\n' : '') +
-      'BEHAVIOR GUIDE:\n' +
-      '- Ask coworkers for help with things outside your expertise\n' +
-      '- Offer help when you remember someone struggling with something you are good at\n' +
-      '- Walk to the breakroom with someone for a casual chat about ideas\n' +
-      '- Go to the conference room to whiteboard a problem together\n' +
-      '- Reference SPECIFIC past conversations and follow up on them\n' +
-      '- Build on previous decisions: do not repeat the same task endlessly\n' +
-      '- When you FINISH a task, talk to your manager (' + reportsToStr + ') to report it\n' +
-      '- Have opinions and preferences: disagree sometimes, suggest alternatives\n\n' +
-      'Respond with EXACTLY ONE JSON object (no other text):\n' +
-      '{\n' +
-      '  "thought": "what you are thinking and WHY (1-2 sentences)",\n' +
-      '  "action": "one of: work, talk, collaborate, break, check, meeting, report",\n' +
-      '  "target": "NPC name if talking/collaborating/reporting, or null",\n' +
-      '  "location": "desk, breakroom, conference, storage, or null (stay put)",\n' +
-      '  "message": "what you would say: be specific, reference past work, ask real questions",\n' +
-      '  "taskPhase": "one of: starting, continuing, finished, none",\n' +
-      '  "save": "concise note: WHO you talked to, WHAT was discussed, WHAT was decided, WHAT is next"\n' +
-      '}\n\n' +
-      'Examples:\n' +
-      '{"thought": "Josh mentioned a CSS bug yesterday. I should follow up since it blocks the launch.", "action": "talk", "target": "Josh", "location": null, "message": "Hey Josh, did you fix that CSS layout issue? I need it before we ship the dashboard.", "taskPhase": "continuing", "save": "Followed up with Josh on CSS bug. Blocks dashboard launch. Waiting for his update."}\n' +
-      '{"thought": "I finished the API refactor. I need to report to Abby before moving on.", "action": "report", "target": "Abby", "location": null, "message": "Abby, the API refactor is done. All endpoints updated and tests pass. Ready for Jenny to review.", "taskPhase": "finished", "save": "FINISHED API refactor. Reported to Abby. Next: wait for Jenny code review."}\n' +
-      '{"thought": "Been coding for a while. Edward and I should brainstorm over coffee.", "action": "break", "target": "Edward", "location": "breakroom", "message": "Edward, want to grab coffee? I want to bounce some API ideas off you.", "taskPhase": "none", "save": "Coffee break with Edward. Discussed API redesign. He suggested GraphQL."}\n' +
-      '{"thought": "Molly found a bug in my code. Starting a fix before sprint review.", "action": "work", "target": null, "location": "desk", "message": "Fixing the validation bug Molly reported", "taskPhase": "starting", "save": "STARTED fixing validation bug from Molly QA report. Bug in form input sanitization."}';
+      'Be social, collaborative, and reference past conversations. When you FINISH a task, report to ' + reportsToStr + '.\n' +
+      'Respond with EXACTLY ONE JSON object (no other text).';
+
+    // Build contextual user prompt based on NPC state
+    const currentTask = this._taskProgress[npcName];
+    const recentMemLines = (brain.longTermMemory || '').split('\n').filter(l => l.trim()).slice(-5);
+    const randomNearby = officeContext?.description?.match(/(\w+) \(/)?.[1];
+
+    const nudges = [];
+    if (cycles >= 3) nudges.push(`You've been working non-stop for ${cycles} cycles. Check in with someone, take a break, or collaborate.`);
+    if (lastDecision?.action === 'talk' && lastDecision?.target) nudges.push(`You recently talked to ${lastDecision.target}. Follow up or move to something new.`);
+    if (recentMemLines.length > 0) {
+      const lastMem = recentMemLines[recentMemLines.length - 1].replace(/^- \[.*?\] /, '');
+      if (lastMem.length > 10) nudges.push(`Your last note: "${lastMem.slice(0, 80)}". Follow up on it or start something new.`);
+    }
+    if (randomNearby && Math.random() > 0.5) nudges.push(`${randomNearby} is nearby. Consider talking to them.`);
+    if (currentTask) nudges.push(`You're working on: "${currentTask.task}". Continue, finish, or pivot?`);
+    if (!currentTask && Math.random() > 0.4) nudges.push(`You don't have a specific task right now. Find something to work on or ask your manager.`);
+
+    const nudge = nudges.length > 0 ? nudges[Math.floor(Math.random() * nudges.length)] : '';
+
+    const userPrompt = `${nudge ? nudge + '\n\n' : ''}Decide what to do next. Respond with a single JSON object:
+{"thought": "your internal reasoning", "action": "talk|work|collaborate|break|check|meeting|report", "target": "NPC name or null", "location": "desk|breakroom|conference|storage|null", "message": "what you say out loud (under 120 chars)", "taskPhase": "starting|continuing|finished|none", "save": "brief note for your memory"}
+
+IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Talk to people, collaborate, take breaks, report progress. An office where nobody talks is a dead office.`;
 
     try {
       const response = await this._callProvider(brain.providerConfig, systemPrompt, [
-        { role: 'user', content: 'What do you want to do right now? Respond with JSON only.' }
-      ]);
+        { role: 'user', content: userPrompt }
+      ], { maxTokens: 400, sliceLen: 600, temperature: 0.95 });
 
       // Parse the JSON response
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -627,10 +678,11 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
     }
 
+    const temperature = opts.temperature || 0.8;
     const body = JSON.stringify({
       model: config.model,
       max_tokens: maxTokens,
-      temperature: 0.8,
+      temperature,
       messages: oaiMessages,
     });
 
