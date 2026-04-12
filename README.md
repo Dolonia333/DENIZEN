@@ -29,8 +29,13 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
 - [NPC System](#npc-system)
   - [Soul Files (Identity)](#soul-files-identity)
   - [NPC Brains (Runtime)](#npc-brains-runtime)
+  - [Autonomous Decision Loop](#autonomous-decision-loop)
+  - [Status Indicators](#status-indicators)
+  - [Skill Tracking](#skill-tracking)
+  - [Request Queue (GPU Management)](#request-queue-gpu-management)
 - [CTO Agent](#cto-agent)
 - [Meeting System](#meeting-system)
+  - [Break Room Behavior](#break-room-behavior)
 - [Security Monitor](#security-monitor)
 - [Controls](#controls)
   - [OpenClaw Panel](#openclaw-panel)
@@ -292,21 +297,97 @@ Each NPC has an individual AI brain managed by `src/npc-brains.js`:
 - **Multi-provider support** — different NPCs can use different AI backends
 - **Fallback chain** — Primary provider -> Claude -> Smart scripted fallback (infers actions from message context)
 
+### Autonomous Decision Loop
+
+Every 45-75 seconds, each NPC runs a **think cycle** — calling LM Studio to decide their next action. The AI receives contextual information about the NPC's current state and returns a JSON decision:
+
+```json
+{
+  "thought": "I've been coding for a while, Alex mentioned he needs help with the API",
+  "action": "talk",
+  "target": "Alex",
+  "message": "Hey Alex, need a hand with that API issue?"
+}
+```
+
+**Available actions:**
+| Action | Behavior |
+|--------|----------|
+| `work` | Walk to assigned desk, sit down, show typing indicator |
+| `talk` | Stand up, walk to target NPC, initiate conversation |
+| `break` | Walk to breakroom, chill for 30s, return to desk |
+| `meeting` | Walk to conference room, sit in chair, return after 25s |
+| `collaborate` | Walk to target NPC's desk, work together |
+| `report` | Walk to manager, deliver status update |
+| `check` | Check on a team member's progress |
+
+**Contextual nudges** prevent repetitive behavior — if an NPC has been working for 3+ cycles, the prompt suggests taking a break or talking to someone. Nearby NPCs and recent memories are included so decisions reference real context.
+
+### Status Indicators
+
+Colored dots above each NPC show their current state at a glance — this is the core observability feature:
+
+| Color | Status |
+|-------|--------|
+| Green | Working at desk |
+| Blue | Talking / collaborating |
+| Yellow | On break |
+| Purple | In a meeting |
+| Red | Error state |
+| Cyan | Checking on someone |
+| Orange | Reporting to manager |
+| Gray | Idle |
+
+Task labels appear below the dot showing what the NPC is currently working on (truncated to 25 characters). Updated every 500ms.
+
+### Skill Tracking
+
+NPCs accumulate skills over time through conversations and work:
+
+- When an NPC learns something in a conversation, `[SKILL:javascript:+1]` entries are written to their `MEMORY.md`
+- Skills are parsed and included in think prompts so NPCs reference their expertise
+- Over time, NPCs develop specializations based on their interactions
+
+### Request Queue (GPU Management)
+
+All 16 NPCs share a single sequential inference queue for LM Studio:
+
+```
+NPC think() ──┐
+NPC think() ──┼──> _requestQueue[] ──> _processQueue() ──> LM Studio (one at a time)
+CTO think() ──┘                         60s timeout
+```
+
+- One inference runs at a time (4070 Ti Super can't handle parallel requests to a 14B model)
+- 60-second timeout per request prevents queue starvation
+- CofounderAgent (CTO) shares the same queue — no priority bypass
+- If queue is full, requests wait — no dropped decisions
+
 ## CTO Agent
 
-The `CofounderAgent` is an autonomous AI director that:
+The `CofounderAgent` (Abby) is an autonomous AI director that manages the entire team. She sits in a private office and thinks every 15-30 seconds.
 
-1. **Thinks every 15-30 seconds** — evaluates office state and decides next actions
-2. **Generates commands** — sends JSON command arrays to control NPCs:
-   ```json
-   [
-     { "action": "speakTo", "agentId": "Abby", "params": { "target": "Alex", "text": "How is the API?" } },
-     { "action": "walkTo", "agentId": "Bob", "params": { "x": 400, "y": 200 } },
-     { "action": "callMeeting", "agentId": "Abby", "params": { "attendees": ["Alex", "Bob"] } }
-   ]
-   ```
-3. **Responds to the player** — type messages as the CEO and the CTO will react
-4. **Maintains conversation history** — up to 20 messages for context
+**How she decides what to do:**
+
+Instead of rotating through scripted scenarios, the CTO uses a **state-reactive prompt** that observes the actual office:
+- Counts idle/working/talking agents and spots opportunities ("5 agents are idle — time for a standup")
+- Time-of-day awareness (morning = standup, lunch = breaks, afternoon = code reviews)
+- References recent actions to avoid repetition
+- Reacts to what's actually happening, not a random script
+
+**What she can do:**
+
+```json
+[
+  { "action": "speakTo", "agentId": "Abby", "params": { "target": "Alex", "text": "How is the API?" } },
+  { "action": "walkTo", "agentId": "Bob", "params": { "x": 400, "y": 200 } },
+  { "action": "callMeeting", "agentId": "Abby", "params": { "attendees": ["Alex", "Bob"] } }
+]
+```
+
+- **Responds to the player** — type messages as the CEO and the CTO will react
+- **Maintains conversation history** — up to 20 messages for context
+- **Falls back gracefully** — if LM Studio is down, runs demo behaviors after 5+ errors
 
 ## Meeting System
 
@@ -314,8 +395,17 @@ NPCs use the **conference room** for group discussions and smaller desk areas fo
 
 - **`callMeeting`** — CTO (or anyone) calls a meeting with specified attendees. All walk to the conference room and sit at spread-out chairs.
 - **`joinMeeting`** — Single NPC joins an existing meeting. Chair assignment maximizes distance from occupied seats.
+- **Autonomous meetings** — When an NPC's think cycle returns `action: "meeting"`, they stand up, walk to the conference room, sit in a chair, and automatically return to their desk after 25 seconds.
 - **Staggered speech** — When multiple NPCs speak in the same area, conversations are queued with 3.5s delays so speech bubbles don't overlap.
 - **Meeting flow:** Announce -> Attendees walk -> Sit -> Discussion (speakTo exchanges) -> Stand up -> Return to work
+
+### Break Room Behavior
+
+When NPCs decide to take a break:
+- They stand up from their desk and walk to the breakroom area (bottom-left of the office)
+- Chill for 30 seconds with a yellow status dot
+- Automatically return to their assigned desk when break ends
+- If pathfinding to the breakroom fails, they go to idle/wander mode instead of getting stuck
 
 ## Security Monitor
 
@@ -548,6 +638,7 @@ Uses the [LimeZu Modern Office Revamped](https://limezu.itch.io/) asset pack. Al
 | [HOW_OBJECTS_ARE_BUILT.md](HOW_OBJECTS_ARE_BUILT.md) | Tile/sprite structure by engine (MV, VX Ace, XP) |
 | [CATALOG_OVERVIEW.md](CATALOG_OVERVIEW.md) | Asset pack contents (LimeZu Modern Office) |
 | [CATALOG_CONVENTIONS.md](CATALOG_CONVENTIONS.md) | Catalog field reference — type vocabulary, anchors, interact_distance |
+| [CHANGELOG.md](CHANGELOG.md) | Full development history — Phase 1-6 implementation details, bug fixes, architecture decisions |
 
 ## License
 
