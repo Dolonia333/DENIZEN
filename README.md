@@ -1,22 +1,73 @@
-# AI Office Game
+# DENIZEN
 
-A pixel art office simulation where AI-powered NPCs work autonomously in a virtual office. Each NPC has its own AI brain (Claude, Grok, Gemini, Kimi, or LM Studio), personality, and role. A CTO agent (Claude) directs the team in real-time, assigning tasks, calling meetings, and coordinating work — all visualized as a top-down RPG.
+**Real-time visual observability layer for AI agents.** Watch autonomous AI agents collaborate, communicate, and execute tasks in a pixel-art office — every agent action rendered as NPC behavior you can see.
 
 Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/) asset pack.
 
-![Game Preview](assets/ref_Hu4Gzs.png)
+![Denizen Preview](assets/ref_Hu4Gzs.png)
 
-## Features
+---
+
+## Table of Contents
+
+- [What is Denizen?](#what-is-denizen)
+- [Quick Start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [Install and Run](#install-and-run)
+- [Configuration](#configuration)
+  - [API Keys](#api-keys)
+  - [LM Studio (Local AI)](#lm-studio-local-ai)
+  - [NPC AI Provider Mapping](#npc-ai-provider-mapping)
+  - [Zero-Config Demo Mode](#zero-config-demo-mode-no-api-keys-needed)
+- [How It Works](#how-it-works)
+  - [Architecture](#architecture)
+  - [WebSocket Endpoints](#websocket-endpoints)
+  - [Key Source Files](#key-source-files)
+  - [Data Files](#data-files)
+  - [Agent-NPC Mapping](#agent-npc-mapping)
+  - [State-to-Area Mapping](#state-to-area-mapping)
+- [NPC System](#npc-system)
+  - [Soul Files (Identity)](#soul-files-identity)
+  - [NPC Brains (Runtime)](#npc-brains-runtime)
+- [CTO Agent](#cto-agent)
+- [Meeting System](#meeting-system)
+- [Security Monitor](#security-monitor)
+- [Controls](#controls)
+  - [OpenClaw Panel](#openclaw-panel)
+- [Procedural Room Generator](#procedural-room-generator)
+  - [Room Archetypes](#room-archetypes)
+  - [How Generation Works](#how-generation-works)
+  - [Usage](#usage)
+- [Office Furniture System](#office-furniture-system)
+- [Character Sprites](#character-sprites)
+- [Development Tools](#development-tools)
+  - [Sprite-to-Catalog Pipeline](#sprite-to-catalog-pipeline)
+- [OpenClaw Integration](#openclaw-integration)
+- [Troubleshooting](#troubleshooting)
+  - [Server won't start (EADDRINUSE)](#server-wont-start-eaddrinuse)
+  - [WebSocket errors](#websocket-errors-404-on-agent-ws-or-security-ws)
+  - [NPCs don't respond](#npcs-dont-respond--blank-speech-bubbles)
+  - [Black screen](#visualization-shows-black-screen)
+  - [OpenClaw panel doesn't load](#openclaw-chat-panel-doesnt-load)
+- [Asset Pack](#asset-pack)
+- [Related Documentation](#related-documentation)
+- [License](#license)
+
+---
+
+## What is Denizen?
+
+Denizen is a visual observability layer that renders AI agent workflows as a living pixel-art office. Instead of reading logs or staring at dashboards, you watch AI agents work — each agent is represented as an NPC character that walks, talks, sits at desks, joins meetings, and collaborates with other agents in real time.
 
 - **16 AI-powered NPCs** — each with a unique personality, role, and AI provider
 - **Zero-config demo mode** — works out of the box without any API keys; NPCs use smart scripted responses
-- **Autonomous CTO** — Claude-powered director that thinks every 15-30s and commands the team (falls back to demo loop if API unavailable)
+- **Autonomous CTO agent** — directs the team every 15-30s, assigning tasks, calling meetings, and coordinating work (falls back to demo loop if API unavailable)
 - **Multi-provider AI** — NPCs use Claude, Grok, Gemini, Kimi, or LM Studio (local)
-- **Player chat system** — press `Enter` to talk to NPCs; they walk over, respond, and execute tasks
-- **A* pathfinding** — NPCs navigate around furniture using grid-based pathfinding with stuck detection
+- **Player interaction** — press `Enter` to talk to NPCs as the CEO; they walk over, respond, and execute tasks
+- **A\* pathfinding** — NPCs navigate around furniture using grid-based pathfinding with stuck detection
 - **Security monitor** — live threat detection dashboard (file access, network scans, injection attempts)
-- **Meeting system** — call meetings, NPCs walk to conference room, sit in chairs, discuss, return to work
-- **Procedural room generator** — algorithmically builds rooms from the furniture catalog with 6 archetypes (workspace, conference, breakroom, manager office, reception, storage)
+- **Meeting system** — call meetings, NPCs walk to the conference room, sit in chairs, discuss, and return to work
+- **Procedural room generator** — algorithmically builds rooms from the furniture catalog with 6 archetypes
 - **OpenClaw integration** — connect to the OpenClaw gateway for full AI agent workflows
 
 ## Quick Start
@@ -29,8 +80,8 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
 ### Install and Run
 
 ```bash
-git clone https://github.com/Dolonia333/ai-office-game-.git
-cd ai-office-game-
+git clone https://github.com/Dolonia333/DENIZEN.git
+cd DENIZEN
 npm install
 node server.js
 ```
@@ -48,7 +99,7 @@ Open **http://localhost:8080** in your browser.
 
 ### API Keys
 
-The game reads API keys from `~/.openclaw/openclaw.json` (or `%USERPROFILE%\.openclaw\openclaw.json` on Windows).
+Denizen reads API keys from `~/.openclaw/openclaw.json` (or `%USERPROFILE%\.openclaw\openclaw.json` on Windows).
 
 ```json
 {
@@ -70,7 +121,7 @@ Bob (Researcher) and Dan (IT Support) use **LM Studio** by default — no API ke
 1. Download and install [LM Studio](https://lmstudio.ai/)
 2. Load a model (default expects `dolphin3.0-llama3.1-8b`)
 3. Start the local server on port 1234 (LM Studio default)
-4. The game connects automatically to `http://localhost:1234`
+4. Denizen connects automatically to `http://localhost:1234`
 
 ### NPC AI Provider Mapping
 
@@ -97,36 +148,15 @@ Bob (Researcher) and Dan (IT Support) use **LM Studio** by default — no API ke
 
 ### Zero-Config Demo Mode (No API Keys Needed)
 
-The game works immediately after cloning — no API keys required. In demo mode:
+Denizen works immediately after cloning — no API keys required. In demo mode:
 - All 16 NPCs load and respond with context-aware scripted responses
 - The CTO agent runs pre-scripted office behaviors (standups, code reviews, meetings)
 - Smart fallback infers actions from player messages (e.g. "fix the bug" triggers coding behavior)
 - If API keys are configured but fail (e.g. exhausted credits), the system auto-falls back to demo mode
 
-## Controls
+## How It Works
 
-| Key | Action |
-|-----|--------|
-| `W` / `Arrow Up` | Move up |
-| `A` / `Arrow Left` | Move left |
-| `S` / `Arrow Down` | Move down |
-| `D` / `Arrow Right` | Move right |
-| `Enter` | Open chat — talk to NPCs (say their name or face them) |
-| `Esc` | Close chat panel |
-| `F` | Sit in nearby chair |
-| `E` | Toggle furniture editor mode |
-| `C` | Toggle OpenClaw chat panel |
-
-### OpenClaw Panel
-
-| Button | Action |
-|--------|--------|
-| **Sessions** | Browse, switch, or delete chat sessions |
-| **+ New** | Start a new chat session |
-| **Pop Out** | Open OpenClaw UI in a new browser tab |
-| **x** | Close the panel |
-
-## Architecture
+### Architecture
 
 ```
 Browser (Phaser 3)                    Server (Node.js :8080)              External
@@ -178,9 +208,9 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | `src/RoomAssembly.js` | Phaser integration for room layouts — catalog lookup, texture cropping, Y-sort |
 | `src/RoomGenerator.js` | Procedural room generator — 6 archetypes, collision grid, decor pass |
 | `src/RoomBuilder.js` | Low-level sprite rendering with modular group validation |
-| `data/sheet_registry.json` | Canonical map of sheet IDs → file paths + grid sizes |
+| `data/sheet_registry.json` | Canonical map of sheet IDs to file paths + grid sizes |
 | `data/master_furniture_catalog.json` | Auto-generated merge of all furniture_catalog_*.json files |
-| `index.html` | Entry point — loads Phaser 3.80 + all game scripts |
+| `index.html` | Entry point — loads Phaser 3.80 + all visualization scripts |
 
 ### Data Files
 
@@ -191,25 +221,33 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | `data/sheet_registry.json` | Sprite sheet registry for tilesets |
 | `assets-catalog.json` | Asset catalog for the sprite system |
 
-## AI Systems
+### Agent-NPC Mapping
 
-### Cofounder Agent (CTO Brain)
+The `NpcAgentController` listens for gateway events and drives NPC behavior:
 
-The `CofounderAgent` is an autonomous AI director powered by Claude that:
+| Agent Event | NPC Behavior |
+|------------|--------------|
+| Agent starts a task | NPC walks to a desk, shows "Working..." |
+| Agent writes text | NPC sits at desk, speech bubble shows text |
+| Agent uses a tool | NPC at desk, bubble shows tool name |
+| Agent finishes | NPC walks back to breakroom, shows "Done!" |
+| Agent errors | NPC shows "Error!", returns to idle after 3s |
+| Chat streaming | NPC shows "Typing..." |
 
-1. **Thinks every 15-30 seconds** — evaluates office state and decides next actions
-2. **Generates commands** — sends JSON command arrays to control NPCs:
-   ```json
-   [
-     { "action": "speakTo", "agentId": "Abby", "params": { "target": "Alex", "text": "How is the API?" } },
-     { "action": "walkTo", "agentId": "Bob", "params": { "x": 400, "y": 200 } },
-     { "action": "callMeeting", "agentId": "Abby", "params": { "attendees": ["Alex", "Bob"] } }
-   ]
-   ```
-3. **Responds to the player** — type messages as the CEO and the CTO will react
-4. **Maintains conversation history** — up to 20 messages for context
+### State-to-Area Mapping
 
-### NPC Soul Files (OpenClaw Architecture)
+| Agent State | Office Area |
+|------------|-------------|
+| `idle` | Breakroom (bottom-left) |
+| `writing` | Desk (main office) |
+| `researching` | Desk |
+| `executing` | Desk |
+| `syncing` | Desk |
+| `error` | Desk |
+
+## NPC System
+
+### Soul Files (Identity)
 
 Each NPC's identity is defined in plain markdown files — following the [OpenClaw](https://github.com/nichochar/openclaw) "soul file" pattern pioneered by Erik Steinberger. Instead of hardcoding personalities into the code, each NPC **reads itself into existence** from `.md` files at startup.
 
@@ -254,7 +292,23 @@ Each NPC has an individual AI brain managed by `src/npc-brains.js`:
 - **Multi-provider support** — different NPCs can use different AI backends
 - **Fallback chain** — Primary provider -> Claude -> Smart scripted fallback (infers actions from message context)
 
-### Meeting System
+## CTO Agent
+
+The `CofounderAgent` is an autonomous AI director that:
+
+1. **Thinks every 15-30 seconds** — evaluates office state and decides next actions
+2. **Generates commands** — sends JSON command arrays to control NPCs:
+   ```json
+   [
+     { "action": "speakTo", "agentId": "Abby", "params": { "target": "Alex", "text": "How is the API?" } },
+     { "action": "walkTo", "agentId": "Bob", "params": { "x": 400, "y": 200 } },
+     { "action": "callMeeting", "agentId": "Abby", "params": { "attendees": ["Alex", "Bob"] } }
+   ]
+   ```
+3. **Responds to the player** — type messages as the CEO and the CTO will react
+4. **Maintains conversation history** — up to 20 messages for context
+
+## Meeting System
 
 NPCs use the **conference room** for group discussions and smaller desk areas for 1-on-1s:
 
@@ -263,7 +317,7 @@ NPCs use the **conference room** for group discussions and smaller desk areas fo
 - **Staggered speech** — When multiple NPCs speak in the same area, conversations are queued with 3.5s delays so speech bubbles don't overlap.
 - **Meeting flow:** Announce -> Attendees walk -> Sit -> Discussion (speakTo exchanges) -> Stand up -> Return to work
 
-### Security Monitor
+## Security Monitor
 
 The `SecurityMonitorServer` provides real-time threat detection:
 
@@ -279,53 +333,28 @@ The `SecurityMonitorServer` provides real-time threat detection:
 
 Test it: `http://localhost:8080/security-test?type=file_access&severity=high&detail=Test+threat`
 
-## How Agent-NPC Mapping Works
+## Controls
 
-The `NpcAgentController` listens for gateway events and drives NPC behavior:
+| Key | Action |
+|-----|--------|
+| `W` / `Arrow Up` | Move up |
+| `A` / `Arrow Left` | Move left |
+| `S` / `Arrow Down` | Move down |
+| `D` / `Arrow Right` | Move right |
+| `Enter` | Open chat — talk to NPCs (say their name or face them) |
+| `Esc` | Close chat panel |
+| `F` | Sit in nearby chair |
+| `E` | Toggle furniture editor mode |
+| `C` | Toggle OpenClaw chat panel |
 
-| Agent Event | NPC Behavior |
-|------------|--------------|
-| Agent starts a task | NPC walks to a desk, shows "Working..." |
-| Agent writes text | NPC sits at desk, speech bubble shows text |
-| Agent uses a tool | NPC at desk, bubble shows tool name |
-| Agent finishes | NPC walks back to breakroom, shows "Done!" |
-| Agent errors | NPC shows "Error!", returns to idle after 3s |
-| Chat streaming | NPC shows "Typing..." |
+### OpenClaw Panel
 
-### State-to-Area Mapping
-
-| Agent State | Office Area |
-|------------|-------------|
-| `idle` | Breakroom (bottom-left) |
-| `writing` | Desk (main office) |
-| `researching` | Desk |
-| `executing` | Desk |
-| `syncing` | Desk |
-| `error` | Desk |
-
-## OpenClaw Integration
-
-For full AI agent workflows (not just NPC conversations), connect to an [OpenClaw](https://github.com/nichochar/openclaw) gateway:
-
-1. Install and start OpenClaw on port 18789
-2. Start the game server: `node server.js`
-3. Open `http://localhost:8080`
-4. The game automatically connects via `src/gateway-bridge.js`
-5. Press `C` to open the embedded chat panel
-6. Send messages — watch NPCs react to agent activity
-
-The server proxies `/openclaw/*` requests to the gateway, stripping iframe-blocking headers.
-
-## Character Sprites
-
-The player character uses `Dolo.png` — a 768x64 sprite sheet generated with [Character Generator 2.0](https://www.graymatterstudios.net/) (LimeZu-compatible).
-
-- **Frame size:** 32x64 pixels
-- **24 frames:** 6 per direction (RIGHT, UP, LEFT, DOWN)
-- **Idle frame:** 3rd pose (index 2) of each direction group
-- **Walk animation:** All 6 frames per direction at 10fps
-
-All 16 NPCs use individual XP-style character sheets at 32x48 per frame (4x4 grid: 4 directions, 4 frames each).
+| Button | Action |
+|--------|--------|
+| **Sessions** | Browse, switch, or delete chat sessions |
+| **+ New** | Start a new chat session |
+| **Pop Out** | Open OpenClaw UI in a new browser tab |
+| **x** | Close the panel |
 
 ## Procedural Room Generator
 
@@ -342,7 +371,7 @@ The `RoomGenerator` (`src/RoomGenerator.js`) algorithmically builds room layouts
 | `reception` | Reception desk, waiting row seats, plants |
 | `storage` | Bookshelves, filing cabinets, minimal decor |
 
-### How It Works
+### How Generation Works
 
 1. **Catalog Intelligence** — groups all 48 catalog sprites by type (surface, seat, furniture, decor, partition) and builds convenience pools (desks, chairs, plants, etc.)
 2. **OccupancyGrid** — 32px-cell collision grid prevents overlapping furniture. Every placed item marks its footprint.
@@ -402,16 +431,16 @@ Furniture is placed using a catalog-driven system:
 - **Sprite sources:** Individual PNG files from the LimeZu Modern Office pack (`assets/modern_office_singles_16/`)
 - **Tilesets:** Wall and floor tiles from the MV tileset PNGs
 
-## Asset Pack
+## Character Sprites
 
-Uses the [LimeZu Modern Office Revamped](https://limezu.itch.io/) asset pack. All required assets are bundled in the `assets/` directory:
+The player character uses `Dolo.png` — a 768x64 sprite sheet generated with [Character Generator 2.0](https://www.graymatterstudios.net/) (LimeZu-compatible).
 
-- `assets/Walls_TILESET_A4.png` — Wall tiles
-- `assets/Floors_TILESET_A2.png` — Floor tiles
-- `assets/Modern_Office_Black_Shadow_32x32.png` — Main furniture spritesheet
-- `assets/Room_Builder_Office_32x32.png` — Floor and wall builder tiles
-- `assets/modern_office_singles_16/*.png` — Individual furniture sprites (350+ items)
-- `assets/*.png` — Player character (Dolo) + 16 NPC character sheets
+- **Frame size:** 32x64 pixels
+- **24 frames:** 6 per direction (RIGHT, UP, LEFT, DOWN)
+- **Idle frame:** 3rd pose (index 2) of each direction group
+- **Walk animation:** All 6 frames per direction at 10fps
+
+All 16 NPCs use individual XP-style character sheets at 32x48 per frame (4x4 grid: 4 directions, 4 frames each).
 
 ## Development Tools
 
@@ -424,20 +453,33 @@ All tools are browser-based — open them at `http://localhost:8080/<tool>.html`
 | `asset-browser.html` | Thumbnail grid of every LimeZu asset pack — find sprites visually |
 | `tile-labeler.html` | Label individual floor/wall tiles in MV A2/A4/BCDE tilesets |
 | `sprite-labeler.html` | Review and fix object ID assignments on character/NPC sprites |
-| `singles-viewer.html` | Browse pre-sliced single-sprite PNGs (IDs 1–339) by ID or filename |
+| `singles-viewer.html` | Browse pre-sliced single-sprite PNGs (IDs 1-339) by ID or filename |
 | `verify-sprites.html` | Render every catalog entry live — confirms crops and coordinates |
 
-### Sprite → Catalog Pipeline
+### Sprite-to-Catalog Pipeline
 
 ```
 Find sprite (Asset Browser)
-  → Cut it (Sprite Cutter: load PNG, drag selection, name, save)
-  → Export JSON (Sprite Cutter: Export All JSON → sprite_cuts.json)
-  → Paste into data/furniture_catalog_openplan.json
-  → Verify (verify-sprites.html)
-  → Rebuild master: python scripts/build_master_catalog.py
-  → Place in game via room-templates.json
+  -> Cut it (Sprite Cutter: load PNG, drag selection, name, save)
+  -> Export JSON (Sprite Cutter: Export All JSON -> sprite_cuts.json)
+  -> Paste into data/furniture_catalog_openplan.json
+  -> Verify (verify-sprites.html)
+  -> Rebuild master: python scripts/build_master_catalog.py
+  -> Place in visualization via room-templates.json
 ```
+
+## OpenClaw Integration
+
+For full AI agent workflows (not just NPC conversations), connect to an [OpenClaw](https://github.com/nichochar/openclaw) gateway:
+
+1. Install and start OpenClaw on port 18789
+2. Start the server: `node server.js`
+3. Open `http://localhost:8080`
+4. Denizen automatically connects via `src/gateway-bridge.js`
+5. Press `C` to open the embedded chat panel
+6. Send messages — watch NPCs react to agent activity
+
+The server proxies `/openclaw/*` requests to the gateway, stripping iframe-blocking headers.
 
 ## Troubleshooting
 
@@ -462,7 +504,7 @@ node server.js
 Make sure you're running the server from the project directory:
 
 ```bash
-cd ai-office-game-
+cd DENIZEN
 node server.js
 ```
 
@@ -472,7 +514,7 @@ node server.js
 - For LM Studio NPCs (Bob, Dan): ensure LM Studio is running with a model on port 1234
 - Check the terminal for `[NpcBrains]` error messages
 
-### Game shows black screen
+### Visualization shows black screen
 
 - Hard refresh the browser (`Ctrl+Shift+R`)
 - Check browser console for JavaScript errors
@@ -483,12 +525,23 @@ node server.js
 - OpenClaw gateway must be running on `localhost:18789`
 - The server proxies `/openclaw/*` — check terminal for proxy errors
 
+## Asset Pack
+
+Uses the [LimeZu Modern Office Revamped](https://limezu.itch.io/) asset pack. All required assets are bundled in the `assets/` directory:
+
+- `assets/Walls_TILESET_A4.png` — Wall tiles
+- `assets/Floors_TILESET_A2.png` — Floor tiles
+- `assets/Modern_Office_Black_Shadow_32x32.png` — Main furniture spritesheet
+- `assets/Room_Builder_Office_32x32.png` — Floor and wall builder tiles
+- `assets/modern_office_singles_16/*.png` — Individual furniture sprites (350+ items)
+- `assets/*.png` — Player character (Dolo) + 16 NPC character sheets
+
 ## Related Documentation
 
 | Document | Contents |
 |----------|----------|
 | [TOOLS_GUIDE.md](TOOLS_GUIDE.md) | **All browser tools** — step-by-step usage for Sprite Cutter, Catalog Explorer, Asset Browser, and every other dev tool |
-| [ENGINE_AND_SPRITES.md](ENGINE_AND_SPRITES.md) | **How it all works** — Phaser scene lifecycle, sprite sheet formats, catalog schema, how a JSON entry becomes a game sprite |
+| [ENGINE_AND_SPRITES.md](ENGINE_AND_SPRITES.md) | **How it all works** — Phaser scene lifecycle, sprite sheet formats, catalog schema, how a JSON entry becomes a rendered sprite |
 | [SYSTEM_SUMMARY.md](SYSTEM_SUMMARY.md) | Room Assembly system — sprite inventory, validation, templates |
 | [ROOM_ASSEMBLY_GUIDE.md](ROOM_ASSEMBLY_GUIDE.md) | Implementation guide for room layouts |
 | [ASSEMBLY.md](ASSEMBLY.md) | Sprite assembly blueprint (16px grid rules, pivot points) |
@@ -498,7 +551,7 @@ node server.js
 
 ## License
 
-Game code: MIT
+Code: MIT
 
 Art assets: [LimeZu Modern Office](https://limezu.itch.io/) — see their license terms.
 Character sprites: Generated with [Character Generator 2.0](https://www.graymatterstudios.net/).
