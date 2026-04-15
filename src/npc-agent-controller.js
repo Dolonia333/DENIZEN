@@ -32,6 +32,52 @@ const BREAKROOM = { xMin: 50, xMax: 280, yMin: 500, yMax: 660 };
 const DESK_AREA = { xMin: 100, xMax: 750, yMin: 100, yMax: 400 };
 // Reception area
 const RECEPTION = { xMin: 380, xMax: 840, yMin: 460, yMax: 660 };
+// Bookshelf / research nook (back-right storage corner)
+const BOOKSHELF_POS = { x: 1080, y: 600 };
+// Conference room center (for planning / meetings)
+const CONFERENCE_POS = { x: 1060, y: 360 };
+
+// Classify OpenClaw tool calls into visual categories
+const TOOL_CLASSIFIER = {
+  // Reading / lookup
+  Read: 'research', Glob: 'research', Grep: 'research',
+  ToolSearch: 'research',
+  // Web
+  WebFetch: 'web', WebSearch: 'web',
+  // Editing / writing
+  Edit: 'code', Write: 'code', MultiEdit: 'code', NotebookEdit: 'code',
+  // Shell
+  Bash: 'terminal',
+  // Delegation
+  Task: 'delegate', Agent: 'delegate',
+  // Plans / todos
+  ExitPlanMode: 'plan', EnterPlanMode: 'plan',
+  TodoWrite: 'todo',
+};
+
+// Visual label per tool category
+const TOOL_LABELS = {
+  research: { text: 'Reading',       color: '#60a5fa' },
+  web:      { text: 'Web search',    color: '#60a5fa' },
+  code:     { text: 'Writing code',  color: '#4ade80' },
+  terminal: { text: '$ terminal',    color: '#22d3ee' },
+  delegate: { text: 'Delegating',    color: '#fbbf24' },
+  plan:     { text: 'Planning',      color: '#a78bfa' },
+  todo:     { text: 'Todos',         color: '#a78bfa' },
+  generic:  { text: 'Working',       color: '#4ade80' },
+};
+
+function classifyTool(name) {
+  if (!name) return 'generic';
+  if (TOOL_CLASSIFIER[name]) return TOOL_CLASSIFIER[name];
+  // MCP tools (external integrations) → delegate-like
+  if (/^mcp__/i.test(name)) return 'delegate';
+  // Heuristic fallbacks on the tool name
+  if (/read|list|get|search|find|fetch/i.test(name)) return 'research';
+  if (/write|edit|create|update|patch/i.test(name)) return 'code';
+  if (/run|exec|bash|shell/i.test(name)) return 'terminal';
+  return 'generic';
+}
 
 class NpcAgentController {
   /**
@@ -318,6 +364,131 @@ class NpcAgentController {
     npc.ai.nextWanderAt = 0;
   }
 
+  /**
+   * Route an OpenClaw tool call to a visible NPC action.
+   * Each category picks a location + indicator so viewers can SEE
+   * what kind of work the agent is doing:
+   *   research/web  → bookshelf (reading)
+   *   code          → desk (typing)
+   *   terminal      → desk + '$' emote
+   *   delegate      → walk to a coworker + speech bubble
+   *   plan          → walk to conference room
+   *   todo          → stand up + speak the tool name
+   */
+  _routeToolAction(binding, toolName) {
+    const npc = binding.npc;
+    if (!npc || !npc.ai) return;
+
+    // If the autonomous agent-manager is actively driving this NPC,
+    // don't fight it — just surface the tool name as a bubble.
+    if (this.scene._agentManager && npc.ai.mode === 'agent_task' && npc.ai.taskState === 'walking') {
+      this._showBubble(npc, toolName);
+      return;
+    }
+
+    const kind = classifyTool(toolName);
+    const label = TOOL_LABELS[kind] || TOOL_LABELS.generic;
+    binding.state = (kind === 'research' || kind === 'web') ? 'researching' : 'executing';
+
+    switch (kind) {
+      case 'research':
+      case 'web':
+        this._sendToBookshelf(npc);
+        this._setCustomIndicator(npc, label);
+        this._showBubble(npc, toolName);
+        break;
+      case 'terminal':
+        this._sendToDesk(npc, binding);
+        this._setCustomIndicator(npc, label);
+        this._showEmote(npc, '$');
+        break;
+      case 'delegate':
+        this._delegateToPeer(npc, binding, toolName);
+        this._setCustomIndicator(npc, label);
+        break;
+      case 'plan':
+        this._sendToConference(npc);
+        this._setCustomIndicator(npc, label);
+        this._showBubble(npc, toolName);
+        break;
+      case 'todo':
+        // Stand up and speak the todo — makes the planning visible
+        if (npc.body) npc.body.setVelocity(0, 0);
+        npc.ai.taskState = 'idle';
+        this._showBubble(npc, toolName, 'speech');
+        this._setCustomIndicator(npc, label);
+        break;
+      case 'code':
+      default:
+        this._sendToDesk(npc, binding);
+        this._setCustomIndicator(npc, label);
+        this._showBubble(npc, toolName);
+        break;
+    }
+  }
+
+  /** Send NPC to the bookshelf / research area */
+  _sendToBookshelf(npc) {
+    // Try to find a real shelf in the scene; fall back to the fixed nook
+    let target = BOOKSHELF_POS;
+    const shelves = (this.scene._interactables || []).filter(
+      it => it.id && /shelf|bookcase/i.test(it.id)
+    );
+    if (shelves.length) {
+      const shelf = shelves[Math.floor(Math.random() * shelves.length)];
+      if (shelf.sprite) target = { x: shelf.sprite.x, y: shelf.sprite.y + 24 };
+    }
+    npc.ai.mode = 'agent_task';
+    npc.ai.taskTarget = { x: target.x, y: target.y };
+    npc.ai.taskState = 'walking';
+  }
+
+  /** Send NPC to the conference room */
+  _sendToConference(npc) {
+    npc.ai.mode = 'agent_task';
+    npc.ai.taskTarget = {
+      x: CONFERENCE_POS.x + (Math.random() - 0.5) * 60,
+      y: CONFERENCE_POS.y + (Math.random() - 0.5) * 40,
+    };
+    npc.ai.taskState = 'walking';
+  }
+
+  /** Walk this NPC to a random peer to symbolize delegation */
+  _delegateToPeer(npc, binding, toolName) {
+    // Pick any other bound NPC as the "delegate target"
+    const peers = [...this.agentNpcs.values()]
+      .filter(b => b !== binding && b.npc && b.npc !== npc);
+    if (!peers.length) {
+      // No peers — just stay at desk with the label
+      this._sendToDesk(npc, binding);
+      this._showBubble(npc, toolName);
+      return;
+    }
+    const peer = peers[Math.floor(Math.random() * peers.length)].npc;
+    const tx = peer.x + (npc.x > peer.x ? 26 : -26);
+    const ty = peer.y;
+    npc.ai.mode = 'agent_task';
+    npc.ai.taskTarget = { x: tx, y: ty };
+    npc.ai.taskState = 'walking';
+    this._showBubble(npc, 'Handing off: ' + (toolName || 'task'), 'speech');
+  }
+
+  /** Custom indicator (overrides the default state-based one) */
+  _setCustomIndicator(npc, label) {
+    this._clearStatusIndicator(npc);
+    if (!label) return;
+    const indicator = this.scene.add.text(npc.x, npc.y - 32, label.text, {
+      fontSize: '6px',
+      fontFamily: 'monospace',
+      color: label.color,
+      backgroundColor: '#0f172a',
+      padding: { x: 2, y: 1 },
+    });
+    indicator.setOrigin(0.5, 1);
+    indicator.setDepth(9997);
+    this._statusIndicators.set(npc, indicator);
+  }
+
   /** Bind to gateway bridge events */
   _bindEvents() {
     // Agent lifecycle events
@@ -334,8 +505,10 @@ class NpcAgentController {
           this.setAgentState(agentId, 'executing', 'Working...');
         } else if (payload.data.phase === 'end') {
           this.setAgentState(agentId, 'idle', 'Done!');
+          if (binding.npc) this._showEmote(binding.npc, 'done');
         } else if (payload.data.phase === 'error') {
           this.setAgentState(agentId, 'error', 'Error!');
+          if (binding.npc) this._showEmote(binding.npc, 'error');
           this.scene.time.delayedCall(3000, () => {
             this.setAgentState(agentId, 'idle');
           });
@@ -348,7 +521,7 @@ class NpcAgentController {
 
       if (payload.stream === 'tool' && payload.data) {
         const toolName = payload.data.name || payload.data.tool || 'tool';
-        this.setAgentState(agentId, 'executing', toolName);
+        this._routeToolAction(binding, toolName);
       }
     });
 
