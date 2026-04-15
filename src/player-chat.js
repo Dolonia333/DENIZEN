@@ -405,12 +405,12 @@ class PlayerChat {
     if (!player) return;
 
     this._playerBubble = this.scene.add.text(player.x, player.y - 60, truncated, {
-      fontSize: '7px',
+      fontSize: '10px',
       fontFamily: 'monospace',
       color: '#4ade80',
       backgroundColor: '#0f172a',
-      padding: { x: 4, y: 3 },
-      wordWrap: { width: 140 },
+      padding: { x: 5, y: 4 },
+      wordWrap: { width: 180 },
       align: 'center',
     });
     this._playerBubble.setOrigin(0.5, 1);

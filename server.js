@@ -195,6 +195,7 @@ agentWss.on('connection', (ws) => {
               npcName: typeof msg.npcName === 'string' && msg.npcName ? msg.npcName : 'Unknown',
               fromName: typeof msg.fromName === 'string' ? msg.fromName : '',
               text: '(No reply right now.)',
+              turn: typeof msg.turn === 'number' ? msg.turn : 1,
             }));
           }
           return;
@@ -207,6 +208,7 @@ agentWss.on('connection', (ws) => {
               npcName: msg.npcName,
               fromName: msg.fromName,
               text: '(No reply right now.)',
+              turn: typeof msg.turn === 'number' ? msg.turn : 1,
             }));
           }
           return;
@@ -219,6 +221,7 @@ agentWss.on('connection', (ws) => {
               npcName: msg.npcName,
               fromName: msg.fromName,
               text: response,
+              turn: typeof msg.turn === 'number' ? msg.turn : 1,
             });
             if (ws.readyState === 1) ws.send(reply);
             // Save significant conversations to MEMORY.md
@@ -232,6 +235,7 @@ agentWss.on('connection', (ws) => {
                 npcName: msg.npcName,
                 fromName: msg.fromName,
                 text: '(No reply right now.)',
+                turn: typeof msg.turn === 'number' ? msg.turn : 1,
               }));
             }
           });

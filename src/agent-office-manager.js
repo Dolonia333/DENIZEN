@@ -396,14 +396,15 @@ class AgentOfficeManager {
         const targetKey = findTargetKey(target);
         if (targetKey && message) {
           this.actions.standUp(npcKey);
-          this.actions.speakTo(npcKey, targetKey, message);
-          // Send to server for real AI response from target NPC
-          this.scene.time.delayedCall(2000, () => {
+          // Fire the server request the moment the speaker arrives and the
+          // opening bubble is shown (speakTo resolves after that happens).
+          this.actions.speakTo(npcKey, targetKey, message).then(() => {
             this._send({
               type: 'npc_conversation',
               npcName: target,
               fromName: npcName,
               text: message,
+              turn: 1,
             });
           });
         } else if (message) {
@@ -429,16 +430,15 @@ class AgentOfficeManager {
             this.scene.time.delayedCall(1000, () => goToLocation(targetKey, location));
           }
 
-          // Initiator speaks first
+          // Initiator speaks first, then server is notified on arrival
           this.scene.time.delayedCall(3000, () => {
-            this.actions.speakTo(npcKey, targetKey, message);
-            // Target responds via AI
-            this.scene.time.delayedCall(2000, () => {
+            this.actions.speakTo(npcKey, targetKey, message).then(() => {
               this._send({
                 type: 'npc_conversation',
                 npcName: target,
                 fromName: npcName,
                 text: message,
+                turn: 1,
               });
             });
           });
@@ -752,9 +752,43 @@ class AgentOfficeManager {
         const responderKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
+        const originalSpeakerKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.fromName?.toLowerCase()
+        )?.[0];
+
         if (responderKey) {
           this.actions.speak(responderKey, msg.text);
           console.log(`[AgentManager] ${msg.npcName} responds to ${msg.fromName}: "${msg.text}"`);
+        }
+
+        // Reply-back loop: if we're under the turn cap, have the original
+        // speaker say something back. Creates a natural two-way conversation
+        // instead of the one-shot "A speaks, B replies" we had before.
+        const MAX_CHAT_TURNS = 2;
+        const currentTurn = typeof msg.turn === 'number' ? msg.turn : 1;
+        const canReplyBack =
+          responderKey &&
+          originalSpeakerKey &&
+          msg.text &&
+          !/\(No reply right now\.\)/i.test(msg.text) &&
+          currentTurn < MAX_CHAT_TURNS;
+
+        if (canReplyBack) {
+          // Small beat so the responder's bubble is visible before the next
+          // request fires (server adds its own delay before the response bubble).
+          this.scene.time.delayedCall(1800, () => {
+            // Responder now becomes the speaker — walks to and addresses the
+            // original speaker with their just-generated line.
+            this.actions.speakTo(responderKey, originalSpeakerKey, msg.text).then(() => {
+              this._send({
+                type: 'npc_conversation',
+                npcName: msg.fromName,   // original speaker is now the target
+                fromName: msg.npcName,   // responder is now the speaker
+                text: msg.text,
+                turn: currentTurn + 1,
+              });
+            });
+          });
         }
         break;
       }
@@ -772,16 +806,15 @@ class AgentOfficeManager {
           ([k, v]) => v.toLowerCase() === msg.fromName?.toLowerCase()
         )?.[0];
         if (cascadeTargetKey && cascadeFromKey && msg.message) {
-          // The leader speaks to the report
-          this.actions.speakTo(cascadeFromKey, cascadeTargetKey, msg.message);
+          // The leader speaks to the report, then request a reply on arrival
           console.log('[Cascade] ' + msg.fromName + ' -> ' + msg.npcName + ': "' + msg.message + '"');
-          // Trigger the report's AI to respond to the directive
-          this.scene.time.delayedCall(2500, () => {
+          this.actions.speakTo(cascadeFromKey, cascadeTargetKey, msg.message).then(() => {
             this._send({
               type: 'npc_conversation',
               npcName: msg.npcName,
               fromName: msg.fromName,
               text: msg.message,
+              turn: 1,
             });
           });
         }

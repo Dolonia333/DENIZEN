@@ -858,12 +858,12 @@ class AgentActions {
     const suffix = isThought ? ' )' : '';
 
     const bubbleText = this.scene.add.text(0, 0, prefix + truncated + suffix, {
-      fontSize: '7px',
+      fontSize: '10px',
       fontFamily: 'monospace',
       color: textColor,
       backgroundColor: bgColor,
-      padding: { x: 4, y: 3 },
-      wordWrap: { width: 120 },
+      padding: { x: 5, y: 4 },
+      wordWrap: { width: 180 },
       align: 'center',
     });
     bubbleText.setOrigin(0.5, 1);
