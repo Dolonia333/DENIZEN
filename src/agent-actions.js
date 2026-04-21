@@ -18,6 +18,10 @@ class AgentActions {
     this._typingIndicators = new Map(); // npcKey -> text object
     this._sittingNpcs = new Map(); // npcKey -> { chairSprite, origDepth, origY }
     this._standingMeetingNpcs = new Set(); // npcKey -> Set of NPCs currently standing in meeting
+    // Tracks how many NPCs are currently walking up to speak to a given target.
+    // Caps concurrent speakers so Abby doesn't attract a 4-NPC tornado.
+    this._activeSpeakers = new Map(); // targetNpcKey -> count
+    this.MAX_SPEAKERS_PER_TARGET = 2;
 
     // Room definitions — agents understand the office layout
     this.ROOMS = {
@@ -537,13 +541,86 @@ class AgentActions {
         const target = this._getNpc(targetNpcKey);
         if (!npc || !target) { resolve(); return; }
 
-        // Walk near the target NPC — add slight Y offset so they don't stack
-        const tx = target.x + (npc.x > target.x ? 26 : -26);
-        const ty = target.y + Phaser.Math.Between(-6, 6);
+        // #4 — Conversation slot reservation. If the target already has
+        // MAX_SPEAKERS_PER_TARGET speakers walking up, skip this speakTo so we
+        // don't form a pile. The speaker just doesn't walk over — a short speech
+        // bubble at their own spot still works via the separate speak() verb.
+        const activeCount = this._activeSpeakers.get(targetNpcKey) || 0;
+        if (activeCount >= this.MAX_SPEAKERS_PER_TARGET) {
+          resolve();
+          return;
+        }
+        this._activeSpeakers.set(targetNpcKey, activeCount + 1);
+        let slotReleased = false;
+        const releaseSlot = () => {
+          if (slotReleased) return;
+          slotReleased = true;
+          const n = (this._activeSpeakers.get(targetNpcKey) || 1) - 1;
+          if (n <= 0) this._activeSpeakers.delete(targetNpcKey);
+          else this._activeSpeakers.set(targetNpcKey, n);
+        };
+
+        // Walk near the target NPC — add slight Y offset so they don't stack.
+        let tx = target.x + (npc.x > target.x ? 26 : -26);
+        let ty = target.y + Phaser.Math.Between(-6, 6);
+
+        // #2 — Snap target to nearest walkable cell so we don't aim into a wall
+        // (happens when the target NPC is flush against furniture).
+        const pf = this.scene._pathfinder;
+        if (pf && typeof pf.findWalkableNear === 'function') {
+          const snapped = pf.findWalkableNear(tx, ty, 48);
+          if (snapped) { tx = snapped.x; ty = snapped.y; }
+        }
 
         npc.ai.mode = 'agent_task';
         npc.ai.taskTarget = { x: tx, y: ty };
         npc.ai.taskState = 'walking';
+
+        // Stuck detection: if distance doesn't decrease for ~1.5s, abort early
+        // so the NPC doesn't grind into a wall or pile onto another NPC.
+        let lastDist = Math.hypot(tx - npc.x, ty - npc.y);
+        let stuckTicks = 0;
+        const STUCK_LIMIT = 15; // 15 × 100ms = 1.5s with no progress
+        let resolved = false;
+        const finish = (mode) => {
+          if (resolved) return;
+          resolved = true;
+          releaseSlot();
+          checkInterval.remove();
+          npc.body.setVelocity(0, 0);
+          if (mode === 'arrived') {
+            // Face speaker toward the target
+            npc.ai.facing = target.x > npc.x ? 'right' : 'left';
+            npc.anims.stop();
+            if (npc.ai.facing === 'left') npc.setFrame(4);
+            else npc.setFrame(8);
+
+            // Face the target NPC back toward the speaker
+            if (target.ai) {
+              target.ai.facing = npc.x > target.x ? 'right' : 'left';
+              target.body.setVelocity(0, 0);
+              target.anims.stop();
+              if (target.ai.facing === 'left') target.setFrame(4);
+              else target.setFrame(8);
+            }
+
+            // Small idle pause before speaking — looks like settling in
+            this.scene.time.delayedCall(350, () => {
+              // Show speech bubble after the pause
+              this._showSpeechBubble(npc, npcKey, text, 'speech');
+              // After a beat, resolve
+              this.scene.time.delayedCall(1500, () => resolve());
+            });
+          } else {
+            // Stuck or timed out — release the NPC back to wander so it
+            // doesn't stay jammed against geometry.
+            npc.ai.mode = 'wander';
+            npc.ai.taskTarget = null;
+            npc.ai.taskState = null;
+            npc.ai.nextWanderAt = this.scene.time.now + 1500;
+            resolve();
+          }
+        };
 
         const checkInterval = this.scene.time.addEvent({
           delay: 100,
@@ -551,42 +628,25 @@ class AgentActions {
           callback: () => {
             const dist = Math.hypot(tx - npc.x, ty - npc.y);
             if (dist <= 20) {
-              checkInterval.remove();
-              npc.body.setVelocity(0, 0);
-
-              // Face speaker toward the target
-              npc.ai.facing = target.x > npc.x ? 'right' : 'left';
-              npc.anims.stop();
-              if (npc.ai.facing === 'left') npc.setFrame(4);
-              else npc.setFrame(8);
-
-              // Face the target NPC back toward the speaker
-              if (target.ai) {
-                target.ai.facing = npc.x > target.x ? 'right' : 'left';
-                target.body.setVelocity(0, 0);
-                target.anims.stop();
-                if (target.ai.facing === 'left') target.setFrame(4);
-                else target.setFrame(8);
-              }
-
-              // Small idle pause before speaking — looks like settling in
-              this.scene.time.delayedCall(350, () => {
-                // Show speech bubble after the pause
-                this._showSpeechBubble(npc, npcKey, text, 'speech');
-
-                // After a beat, resolve
-                this.scene.time.delayedCall(1500, () => {
-                  resolve();
-                });
-              });
+              finish('arrived');
+              return;
             }
+            // Made less than 1px of progress this tick — count as stuck.
+            if (lastDist - dist < 1) {
+              stuckTicks++;
+              if (stuckTicks >= STUCK_LIMIT) {
+                finish('stuck');
+                return;
+              }
+            } else {
+              stuckTicks = 0;
+            }
+            lastDist = dist;
           }
         });
 
-        this.scene.time.delayedCall(8000, () => {
-          checkInterval.remove();
-          resolve();
-        });
+        // Hard ceiling — dropped from 8s to 3s so jammed NPCs recover fast.
+        this.scene.time.delayedCall(3000, () => finish('timeout'));
       });
     });
   }

@@ -1505,7 +1505,8 @@ class OfficeScene extends Phaser.Scene {
 
     // --- Pathfinding System ---
     if (window.OfficePathfinder && window.NpcPathFollower) {
-      this._pathfinder = new window.OfficePathfinder(1280, 720, 16);
+      // cellSize omitted — defaults to 8 in pathfinding.js (finer paths).
+      this._pathfinder = new window.OfficePathfinder(1280, 720);
       // Build the grid after a short delay so all furniture/walls are placed
       this.time.delayedCall(500, () => {
         this._pathfinder.buildFromScene(this);
@@ -2057,6 +2058,34 @@ class OfficeScene extends Phaser.Scene {
       const followSpeed = 140;
       const wanderSpeed = 90;
 
+      // #1 — Separation steering. For each walking NPC we add a small repulsion
+      // from any neighbor within SEP_RADIUS px. Stationary NPCs (sitting,
+      // working, reading) are ignored as neighbors so you can still walk up to
+      // talk to someone at their desk.
+      const SEP_RADIUS = 24;
+      const SEP_RADIUS_SQ = SEP_RADIUS * SEP_RADIUS;
+      const SEP_STRENGTH = 55; // px/s max repulsion magnitude
+      const _applySeparation = (npc, vx, vy) => {
+        let sx = 0, sy = 0;
+        for (let j = 0; j < this.npcs.length; j++) {
+          const other = this.npcs[j];
+          if (!other || other === npc) continue;
+          const oai = other.ai;
+          // Don't push AWAY from seated targets — we want to be ABLE to approach them.
+          if (oai && (oai.taskState === 'sitting' || oai.taskState === 'working' || oai.taskState === 'reading')) continue;
+          const dx = npc.x - other.x;
+          const dy = npc.y - other.y;
+          const dsq = dx * dx + dy * dy;
+          if (dsq === 0 || dsq > SEP_RADIUS_SQ) continue;
+          const d = Math.sqrt(dsq);
+          // Falloff: closer = stronger, scaled to SEP_STRENGTH at d=0, 0 at d=SEP_RADIUS
+          const strength = (1 - d / SEP_RADIUS) * SEP_STRENGTH;
+          sx += (dx / d) * strength;
+          sy += (dy / d) * strength;
+        }
+        return { vx: vx + sx, vy: vy + sy };
+      };
+
       this.npcs.forEach((npc, idx) => {
         const ai = npc.ai;
         if (!ai) return;
@@ -2071,8 +2100,9 @@ class OfficeScene extends Phaser.Scene {
           ai._physicsStuckTime = (ai._physicsStuckTime || 0) + delta;
           ai._totalPhysicsStuck = (ai._totalPhysicsStuck || 0) + delta;
 
-          // If stuck on physics for 5+ seconds total, abandon current task
-          if (ai._totalPhysicsStuck > 5000) {
+          // If stuck on physics for 1.5+ seconds total, abandon current task.
+          // Faster recovery → NPCs visibly unstick instead of grinding on walls.
+          if (ai._totalPhysicsStuck > 1500) {
             npc.body.setVelocity(0, 0);
             if (pf) pf.stop();
             ai._totalPhysicsStuck = 0;
@@ -2085,7 +2115,7 @@ class OfficeScene extends Phaser.Scene {
               ai.wanderTarget = null;
               ai.nextWanderAt = now + 1000;
             }
-          } else if (ai._physicsStuckTime > 400) {
+          } else if (ai._physicsStuckTime > 200) {
             // Nudge perpendicular to the blocked direction
             const nudge = 20;
             if (b.left || b.right) {
@@ -2129,7 +2159,8 @@ class OfficeScene extends Phaser.Scene {
               }
               const vel = pf.update(wanderSpeed, delta);
               if (vel) {
-                npc.body.setVelocity(vel.vx, vel.vy);
+                const sep = _applySeparation(npc, vel.vx, vel.vy);
+                npc.body.setVelocity(sep.vx, sep.vy);
                 if (ai.taskState !== 'walking') ai.taskState = 'walking';
               } else {
                 // Path follower returned null — arrived or gave up
@@ -2146,7 +2177,10 @@ class OfficeScene extends Phaser.Scene {
                 }
               }
             } else {
-              npc.body.setVelocity(((t.x - npc.x) / dist) * wanderSpeed, ((t.y - npc.y) / dist) * wanderSpeed);
+              const rawVx = ((t.x - npc.x) / dist) * wanderSpeed;
+              const rawVy = ((t.y - npc.y) / dist) * wanderSpeed;
+              const sep = _applySeparation(npc, rawVx, rawVy);
+              npc.body.setVelocity(sep.vx, sep.vy);
               if (ai.taskState !== 'walking') ai.taskState = 'walking';
             }
           } else {
@@ -2170,12 +2204,16 @@ class OfficeScene extends Phaser.Scene {
               }
               const vel = pf.update(followSpeed, delta);
               if (vel) {
-                npc.body.setVelocity(vel.vx, vel.vy);
+                const sep = _applySeparation(npc, vel.vx, vel.vy);
+                npc.body.setVelocity(sep.vx, sep.vy);
               } else {
                 npc.body.setVelocity(0, 0);
               }
             } else {
-              npc.body.setVelocity(((targetX - npc.x) / dist) * followSpeed, ((targetY - npc.y) / dist) * followSpeed);
+              const rawVx = ((targetX - npc.x) / dist) * followSpeed;
+              const rawVy = ((targetY - npc.y) / dist) * followSpeed;
+              const sep = _applySeparation(npc, rawVx, rawVy);
+              npc.body.setVelocity(sep.vx, sep.vy);
             }
           } else {
             npc.body.setVelocity(0, 0);
@@ -2212,7 +2250,8 @@ class OfficeScene extends Phaser.Scene {
           if (usePathfinding && pf.isNavigating()) {
             const vel = pf.update(wanderSpeed, delta);
             if (vel) {
-              npc.body.setVelocity(vel.vx, vel.vy);
+              const sep = _applySeparation(npc, vel.vx, vel.vy);
+              npc.body.setVelocity(sep.vx, sep.vy);
             } else {
               // Arrived or path lost — pick a new target soon
               npc.body.setVelocity(0, 0);
@@ -2223,7 +2262,10 @@ class OfficeScene extends Phaser.Scene {
             const dy = ai.wanderTarget.y - npc.y;
             const dist = Math.hypot(dx, dy);
             if (dist > 12) {
-              npc.body.setVelocity((dx / dist) * wanderSpeed, (dy / dist) * wanderSpeed);
+              const rawVx = (dx / dist) * wanderSpeed;
+              const rawVy = (dy / dist) * wanderSpeed;
+              const sep = _applySeparation(npc, rawVx, rawVy);
+              npc.body.setVelocity(sep.vx, sep.vy);
             } else {
               npc.body.setVelocity(0, 0);
             }

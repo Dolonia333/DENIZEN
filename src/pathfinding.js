@@ -7,9 +7,9 @@ class OfficePathfinder {
   /**
    * @param {number} worldW - World width in pixels
    * @param {number} worldH - World height in pixels
-   * @param {number} cellSize - Grid cell size in pixels (default 16 for finer navigation)
+   * @param {number} cellSize - Grid cell size in pixels (default 8 for finer navigation)
    */
-  constructor(worldW, worldH, cellSize = 16) {
+  constructor(worldW, worldH, cellSize = 8) {
     this.worldW = worldW;
     this.worldH = worldH;
     this.cellSize = cellSize;
@@ -18,6 +18,9 @@ class OfficePathfinder {
 
     // Grid: 0 = walkable, 1 = blocked
     this.grid = new Uint8Array(this.cols * this.rows);
+    // Soft-cost layer — added to A* g-score for cells adjacent to obstacles.
+    // Encourages paths through open space instead of hugging walls/corners.
+    this.softCost = new Float32Array(this.cols * this.rows);
   }
 
   /**
@@ -28,6 +31,7 @@ class OfficePathfinder {
   buildFromScene(scene) {
     // Reset grid — everything walkable
     this.grid.fill(0);
+    if (this.softCost) this.softCost.fill(0);
 
     const cs = this.cellSize;
 
@@ -70,7 +74,73 @@ class OfficePathfinder {
       });
     }
 
+    // Compute soft-cost halo — cells adjacent to blocked get a small penalty
+    // so A* prefers open-space routes instead of corner-hugging.
+    this._computeSoftCost();
+
     console.log(`[Pathfinder] Grid built: ${this.cols}x${this.rows} (${cs}px cells), ${this._countBlocked()} blocked cells`);
+  }
+
+  /**
+   * Compute per-cell soft-cost penalty based on distance to nearest blocked cell.
+   * Cells one step from a wall get +0.6, two steps +0.25, three steps +0.1.
+   * A* adds these to the movement cost, producing smoother routes through open space.
+   */
+  _computeSoftCost() {
+    if (!this.softCost) return;
+    this.softCost.fill(0);
+    const cols = this.cols, rows = this.rows;
+    const weights = [0.6, 0.25, 0.1]; // for ring-distance 1, 2, 3
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (this.grid[y * cols + x] !== 1) continue;
+        // Paint halo around this blocked cell
+        for (let r = 1; r <= weights.length; r++) {
+          const w = weights[r - 1];
+          const x0 = Math.max(0, x - r), x1 = Math.min(cols - 1, x + r);
+          const y0 = Math.max(0, y - r), y1 = Math.min(rows - 1, y + r);
+          for (let yy = y0; yy <= y1; yy++) {
+            for (let xx = x0; xx <= x1; xx++) {
+              // Only perimeter of ring r
+              if (Math.max(Math.abs(xx - x), Math.abs(yy - y)) !== r) continue;
+              const idx = yy * cols + xx;
+              if (this.grid[idx] === 1) continue; // blocked cells don't get soft cost
+              if (this.softCost[idx] < w) this.softCost[idx] = w;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Rebuild the grid — convenience alias for when layout changes.
+   */
+  rebuild(scene) {
+    this.buildFromScene(scene);
+  }
+
+  /**
+   * Find the nearest walkable pixel location to (px, py) within maxRadiusPx.
+   * Spirals outward through grid cells. Returns { x, y } pixel center, or null.
+   * Use this to snap speakTo / goToRoom targets onto a reachable tile.
+   */
+  findWalkableNear(px, py, maxRadiusPx = 48) {
+    const cs = this.cellSize;
+    const gx = Math.floor(px / cs);
+    const gy = Math.floor(py / cs);
+    const maxRing = Math.max(1, Math.ceil(maxRadiusPx / cs));
+    if (this.isWalkable(gx, gy)) return this.toPixel(gx, gy);
+    for (let r = 1; r <= maxRing; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const nx = gx + dx, ny = gy + dy;
+          if (this.isWalkable(nx, ny)) return this.toPixel(nx, ny);
+        }
+      }
+    }
+    return null;
   }
 
   /**
@@ -78,9 +148,10 @@ class OfficePathfinder {
    */
   _blockRect(px, py, pw, ph) {
     const cs = this.cellSize;
-    // NPC foot hitboxes are ~10x8, so minimal padding needed
-    // Just enough to prevent pathing right along obstacle edges
-    const pad = 4;
+    // NPC foot hitboxes are ~10x8, so minimal padding needed.
+    // Soft-cost layer handles corner-hugging; keep pad tight (3px) so NPCs
+    // can still fit through doorways on the 8px grid.
+    const pad = 3;
     const x0 = Math.max(0, Math.floor((px - pad) / cs));
     const y0 = Math.max(0, Math.floor((py - pad) / cs));
     const x1 = Math.min(this.cols - 1, Math.floor((px + pw + pad) / cs));
@@ -189,8 +260,9 @@ class OfficePathfinder {
     fScore.set(startKey, heuristic(start, end));
     openSet.push({ x: start.x, y: start.y, f: fScore.get(startKey) });
 
-    // Limit iterations to prevent freezing on impossible paths
-    const maxIterations = 2000;
+    // Limit iterations to prevent freezing on impossible paths.
+    // Bumped for 8px grid (160×90 = 14400 cells — longer paths need more room).
+    const maxIterations = 6000;
     let iterations = 0;
 
     // 8-directional neighbors
@@ -240,7 +312,9 @@ class OfficePathfinder {
         }
 
         const nk = key(nx, ny);
-        const tentG = (gScore.get(ck) || 0) + dir.cost;
+        // Movement cost + soft penalty for cells near obstacles (favors open space).
+        const softPenalty = this.softCost ? this.softCost[nk] : 0;
+        const tentG = (gScore.get(ck) || 0) + dir.cost + softPenalty;
 
         if (!gScore.has(nk) || tentG < gScore.get(nk)) {
           cameFrom.set(nk, ck);
@@ -470,9 +544,17 @@ class NpcPathFollower {
       this._stuckTimer = 0;
     }
 
+    // Arrival slowdown — when approaching the FINAL waypoint, scale speed
+    // by dist/40 (floor 0.35). Prevents overshoot / jitter at the goal.
+    let effSpeed = speed;
+    if (this.waypointIndex === this.waypoints.length - 1 && dist < 40) {
+      const slowFactor = Math.max(0.35, dist / 40);
+      effSpeed = speed * slowFactor;
+    }
+
     // Move toward current waypoint
-    const vx = (dx / dist) * speed;
-    const vy = (dy / dist) * speed;
+    const vx = (dx / dist) * effSpeed;
+    const vy = (dy / dist) * effSpeed;
     return { vx, vy };
   }
 
