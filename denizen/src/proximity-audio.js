@@ -72,6 +72,67 @@
     return null;
   }
 
+  // --- audio mode (ambient / focus / mute-all) ----------------------------
+  // 'ambient'   — current "listen-in" behavior: distance falloff + whisper
+  //               floor + active-convo override.
+  // 'focus'     — only the conversation partner is audible. If no partner,
+  //               only the SINGLE closest NPC within fullVolumeRadius plays.
+  //               Everything else hard-muted. The cocktail-party noise gone.
+  // 'mute-all'  — every NPC line silenced. Bubbles still render.
+  const MODES = ['ambient', 'focus', 'mute-all'];
+  const STORAGE_KEY = 'denizenAudioMode';
+  let _audioMode = 'ambient';
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
+      if (saved && MODES.indexOf(saved) !== -1) _audioMode = saved;
+    }
+  } catch (_) { /* SSR / disabled storage — keep default */ }
+
+  function getAudioMode() { return _audioMode; }
+  function setAudioMode(mode) {
+    if (MODES.indexOf(mode) === -1) return _audioMode;
+    _audioMode = mode;
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(STORAGE_KEY, mode);
+      }
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('denizen:audiomode', { detail: { mode } }));
+      }
+    } catch (_) { /* best-effort */ }
+    return _audioMode;
+  }
+  function cycleAudioMode() {
+    const i = MODES.indexOf(_audioMode);
+    return setAudioMode(MODES[(i + 1) % MODES.length]);
+  }
+
+  /** Return the display name of the NPC closest to the player, OR null
+   *  if no NPC is within fullVolumeRadius. Used by focus mode to pick
+   *  the implicit "the person addressing me" when no explicit chat
+   *  partner is set. */
+  function _closestNpcToPlayer() {
+    const scene = (typeof window !== 'undefined' && window.__DenizenScene) || null;
+    const player = scene?.player;
+    if (!scene || !player || !Array.isArray(scene.npcs)) return null;
+    const c = cfg();
+    const roster = window.DenizenNpcRoster?.keyToDisplay || {};
+    let best = null;
+    let bestD2 = c.fullVolumeRadius * c.fullVolumeRadius;
+    for (const n of scene.npcs) {
+      if (!n?.texture?.key) continue;
+      const dx = n.x - player.x;
+      const dy = n.y - player.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        best = roster[n.texture.key] || n.texture.key;
+      }
+    }
+    return best;
+  }
+
   // --- single-speaker slot ------------------------------------------------
   // Real-world fix for "I hear two voices at once." Only one NPC can have
   // audio playing at any moment. New speakers during an active slot are
@@ -179,7 +240,25 @@
   function computeVolumeForNpc(npcName) {
     if (!npcName) return { volume: 0, muted: true, reason: 'no-name' };
 
-    // 1. Active-convo gate
+    // 0. Mode gate — hard-mute and focus modes short-circuit everything.
+    const mode = _audioMode;
+    if (mode === 'mute-all') {
+      return { volume: 0, muted: true, reason: 'mode=mute-all' };
+    }
+    if (mode === 'focus') {
+      // In focus mode, only ONE NPC is audible at a time:
+      // 1. the explicit conversation partner (set by player-chat), OR
+      // 2. when no partner exists, the closest NPC within fullVolumeRadius
+      //    (so walking up to someone naturally tunes them in).
+      const partner = getActiveConvoNpc();
+      const allowed = partner || _closestNpcToPlayer();
+      if (!allowed || allowed !== npcName) {
+        return { volume: 0, muted: true, reason: `focus mode (allowed: ${allowed || 'none'})` };
+      }
+      return { volume: 1, muted: false, reason: `focus on ${allowed}` };
+    }
+
+    // 1. Active-convo gate (ambient mode)
     const active = getActiveConvoNpc();
     if (active && active !== npcName) {
       return { volume: 0, muted: true, reason: `mid-chat with ${active}` };
@@ -233,25 +312,82 @@
     return { volume: Math.max(0, Math.min(1, volume)), muted: false, reason: `dist=${Math.round(dist)}` };
   }
 
+  // --- UI chip + keyboard shortcut ---------------------------------------
+  // A tiny corner chip showing the current audio mode. Click to cycle.
+  // Alt+L is the keyboard shortcut. Persisted in localStorage via the
+  // set/get functions above.
+  function _renderChip() {
+    if (typeof document === 'undefined') return;
+    const id = 'denizen-audio-mode-chip';
+    let el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement('button');
+      el.id = id;
+      el.type = 'button';
+      el.title = 'Audio mode (Alt+L to cycle)';
+      Object.assign(el.style, {
+        position: 'fixed', bottom: '14px', left: '14px', zIndex: 9999,
+        background: 'rgba(17,24,39,0.92)', color: '#fde68a',
+        border: '1px solid #3f3f46', borderRadius: '999px',
+        padding: '6px 12px', font: '12px/1.2 monospace',
+        cursor: 'pointer', userSelect: 'none',
+      });
+      el.addEventListener('click', () => cycleAudioMode());
+      // Also listen for programmatic mode changes so the chip stays in sync.
+      window.addEventListener('denizen:audiomode', _paintChip);
+      document.body.appendChild(el);
+    }
+    _paintChip();
+  }
+  function _paintChip() {
+    const el = document.getElementById('denizen-audio-mode-chip');
+    if (!el) return;
+    const label = _audioMode === 'focus'    ? '🎯 Focus'
+                : _audioMode === 'mute-all' ? '🔇 Muted'
+                :                             '🔊 Listen-in';
+    el.textContent = label;
+    el.dataset.mode = _audioMode;
+  }
+
+  function _bindHotkey() {
+    if (typeof document === 'undefined') return;
+    document.addEventListener('keydown', (e) => {
+      // Skip when typing in inputs.
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        cycleAudioMode();
+      }
+    });
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', () => { _renderChip(); _bindHotkey(); });
+    } else {
+      _renderChip();
+      _bindHotkey();
+    }
+  }
+
   // --- export -------------------------------------------------------------
+  const surface = {
+    computeVolumeForNpc,
+    setActiveConvoNpc,
+    getActiveConvoNpc,
+    acquireSpeakerSlot,
+    releaseSpeakerSlot,
+    getSlotHolder,
+    getAudioMode,
+    setAudioMode,
+    cycleAudioMode,
+    MODES,
+  };
   if (typeof window !== 'undefined') {
-    window.DenizenProximityAudio = {
-      computeVolumeForNpc,
-      setActiveConvoNpc,
-      getActiveConvoNpc,
-      acquireSpeakerSlot,
-      releaseSpeakerSlot,
-      getSlotHolder,
-    };
+    window.DenizenProximityAudio = surface;
   }
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-      computeVolumeForNpc,
-      setActiveConvoNpc,
-      getActiveConvoNpc,
-      acquireSpeakerSlot,
-      releaseSpeakerSlot,
-      getSlotHolder,
-    };
+    module.exports = surface;
   }
 })();

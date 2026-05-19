@@ -172,6 +172,32 @@ Use cases (LLM picks naturally with the prompt hint):
 - "If this build fails one more time, I'm rewriting it in Go."
 - "Wait, did I close the PR?"
 
+## Audio modes (listen-in / focus / mute-all)
+
+Three player-controlled audio modes layered on top of the proximity
+volume system. Toggle via the **🔊 chip in the bottom-left corner** or
+the **Alt+L** keyboard shortcut. Persisted in `localStorage` under
+key `denizenAudioMode`.
+
+| Mode | What you hear |
+|---|---|
+| **🔊 Listen-in** (default) | Ambient office — proximity volume falloff + facing penalty + active-convo override (the original proximity-audio behavior). Distant NPCs whisper, close ones are full volume. |
+| **🎯 Focus** | Only ONE NPC at a time. The active conversation partner if set (player just chatted them within 30s); otherwise the single closest NPC within `fullVolumeRadius` (90 px). Everyone else is hard-muted regardless of distance. |
+| **🔇 Mute-all** | Every NPC line silenced. Speech bubbles still render — purely an audio gate. |
+
+Programmatic surface on `window.DenizenProximityAudio`:
+
+```js
+DenizenProximityAudio.getAudioMode()      // → 'ambient' | 'focus' | 'mute-all'
+DenizenProximityAudio.setAudioMode('focus')
+DenizenProximityAudio.cycleAudioMode()    // → next mode
+DenizenProximityAudio.MODES               // ['ambient','focus','mute-all']
+```
+
+Each `setAudioMode` call fires a `denizen:audiomode` CustomEvent on
+`window` so the chip stays in sync if you flip the mode from elsewhere
+(e.g. a future settings panel).
+
 ## Files touched
 
 - `src/world-state.js` — `renderContextBlock` surfaces `lastAddressed`,

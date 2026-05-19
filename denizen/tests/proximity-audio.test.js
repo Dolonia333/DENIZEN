@@ -232,6 +232,112 @@ describe('proximity-audio.acquireSpeakerSlot', () => {
   });
 });
 
+describe('audio modes (listen-in / focus / mute-all)', () => {
+  beforeEach(() => {
+    if (typeof globalThis.window === 'undefined') globalThis.window = globalThis;
+    delete globalThis.window.__DenizenScene;
+    delete globalThis.window.DenizenNpcRoster;
+    delete globalThis.window.DenizenProximityAudio;
+    delete globalThis.window.DenizenProximityConfig;
+    // Strip localStorage so each test starts at the default mode.
+    try {
+      if (globalThis.window.localStorage) {
+        globalThis.window.localStorage.removeItem('denizenAudioMode');
+      }
+    } catch (_) {}
+  });
+
+  it('defaults to ambient mode', () => {
+    const m = loadModule();
+    assert.equal(m.getAudioMode(), 'ambient');
+  });
+
+  it('cycles ambient → focus → mute-all → ambient', () => {
+    const m = loadModule();
+    assert.equal(m.cycleAudioMode(), 'focus');
+    assert.equal(m.cycleAudioMode(), 'mute-all');
+    assert.equal(m.cycleAudioMode(), 'ambient');
+  });
+
+  it('setAudioMode rejects unknown modes', () => {
+    const m = loadModule();
+    assert.equal(m.setAudioMode('rave'), 'ambient');   // unchanged
+  });
+
+  it('mute-all mutes every NPC regardless of position or convo', () => {
+    const m = loadModule();
+    setupScene({
+      playerXY: { x: 100, y: 100 },
+      npcs: [{ key: 'xp_lucy', name: 'Lucy', x: 110, y: 100 }],
+      facingVx: 30, facingVy: 0,
+    });
+    m.setActiveConvoNpc('Lucy');         // would normally make Lucy audible
+    m.setAudioMode('mute-all');
+    const r = m.computeVolumeForNpc('Lucy');
+    assert.equal(r.muted, true);
+    assert.match(r.reason, /mute-all/);
+  });
+
+  it('focus mode lets ONLY the active convo partner through', () => {
+    const m = loadModule();
+    setupScene({
+      playerXY: { x: 100, y: 100 },
+      npcs: [
+        { key: 'xp_lucy',   name: 'Lucy',   x: 110, y: 100 },
+        { key: 'xp_edward', name: 'Edward', x: 130, y: 100 },
+      ],
+      facingVx: 30, facingVy: 0,
+    });
+    m.setAudioMode('focus');
+    m.setActiveConvoNpc('Lucy');
+    assert.equal(m.computeVolumeForNpc('Lucy').muted, false);
+    assert.equal(m.computeVolumeForNpc('Edward').muted, true);
+    assert.match(m.computeVolumeForNpc('Edward').reason, /focus mode/);
+  });
+
+  it('focus mode without a convo picks the closest NPC inside fullVolumeRadius', () => {
+    const m = loadModule();
+    setupScene({
+      playerXY: { x: 100, y: 100 },
+      npcs: [
+        { key: 'xp_lucy',   name: 'Lucy',   x: 130, y: 100 }, // 30 px away
+        { key: 'xp_edward', name: 'Edward', x: 180, y: 100 }, // 80 px away — also within radius (90)
+        { key: 'xp_alex',   name: 'Alex',   x: 500, y: 100 }, // far away
+      ],
+      facingVx: 30, facingVy: 0,
+    });
+    m.setAudioMode('focus');
+    m.setActiveConvoNpc(null);    // no partner
+    assert.equal(m.computeVolumeForNpc('Lucy').muted, false);
+    assert.equal(m.computeVolumeForNpc('Edward').muted, true);
+    assert.equal(m.computeVolumeForNpc('Alex').muted, true);
+  });
+
+  it('focus mode mutes everyone when nobody is within fullVolumeRadius', () => {
+    const m = loadModule();
+    setupScene({
+      playerXY: { x: 100, y: 100 },
+      npcs: [{ key: 'xp_lucy', name: 'Lucy', x: 500, y: 500 }],  // miles away
+      facingVx: 30, facingVy: 0,
+    });
+    m.setAudioMode('focus');
+    assert.equal(m.computeVolumeForNpc('Lucy').muted, true);
+  });
+
+  it('ambient mode keeps the prior proximity behavior', () => {
+    const m = loadModule();
+    setupScene({
+      playerXY: { x: 100, y: 100 },
+      npcs: [{ key: 'xp_lucy', name: 'Lucy', x: 130, y: 100 }],
+      facingVx: 30, facingVy: 0,
+    });
+    m.setAudioMode('ambient');
+    const r = m.computeVolumeForNpc('Lucy');
+    assert.equal(r.muted, false);
+    assert.equal(r.volume, 1);
+  });
+});
+
 describe('proximity-audio file shape', () => {
   it('has the right module surface and graceful fallbacks', () => {
     const file = fs.readFileSync(path.join(__dirname, '..', 'src', 'proximity-audio.js'), 'utf8');
