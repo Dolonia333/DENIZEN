@@ -1,0 +1,91 @@
+{
+  "_README": "Importable n8n workflow that watches Gmail and forwards new messages to Denizen's /api/email-inbound. After import: (1) attach your Gmail OAuth2 credential to the 'Gmail Trigger' node, (2) edit the HTTP Request node's URL to your Denizen host, (3) set the X-Denizen-Secret header to the same value you set in EMAIL_INBOUND_SECRET on the Denizen server. Activate the workflow.",
+  "name": "Denizen — Gmail inbox to Sarah",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            { "mode": "everyMinute" }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "is:unread newer_than:1d"
+        },
+        "options": {}
+      },
+      "id": "ce0a5040-7e22-4f24-9b14-2dffaaaa0001",
+      "name": "Gmail Trigger (unread, last 24h)",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 280],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_WITH_YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 (Zion)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize the Gmail payload into the simple { from, subject, body, threadId }\n// shape that Denizen's /api/email-inbound expects.\nconst payload = $input.item.json || {};\nconst headers = payload.payload?.headers || [];\nfunction h(name) {\n  const f = headers.find(x => (x.name || '').toLowerCase() === name.toLowerCase());\n  return f ? String(f.value || '') : '';\n}\n// Body may be inline or in parts; pick the first text/plain we can find.\nfunction extractBody(part) {\n  if (!part) return '';\n  if (part.mimeType === 'text/plain' && part.body?.data) {\n    return Buffer.from(part.body.data, 'base64').toString('utf8');\n  }\n  if (Array.isArray(part.parts)) {\n    for (const p of part.parts) {\n      const t = extractBody(p);\n      if (t) return t;\n    }\n  }\n  return '';\n}\nconst body = extractBody(payload.payload) || payload.snippet || '';\nreturn [{\n  json: {\n    from: h('from'),\n    subject: h('subject'),\n    body,\n    threadId: payload.threadId || null\n  }\n}];"
+      },
+      "id": "ce0a5040-7e22-4f24-9b14-2dffaaaa0002",
+      "name": "Normalize email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 280]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://REPLACE_WITH_YOUR_DENIZEN_HOST/api/email-inbound",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Denizen-Secret", "value": "REPLACE_WITH_SAME_VALUE_AS_EMAIL_INBOUND_SECRET" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: $json.from, subject: $json.subject, body: $json.body, threadId: $json.threadId }) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "id": "ce0a5040-7e22-4f24-9b14-2dffaaaa0003",
+      "name": "POST → Denizen /api/email-inbound",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 280]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger (unread, last 24h)": {
+      "main": [
+        [
+          { "node": "Normalize email", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Normalize email": {
+      "main": [
+        [
+          { "node": "POST → Denizen /api/email-inbound", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "tags": ["denizen", "secretary"]
+}

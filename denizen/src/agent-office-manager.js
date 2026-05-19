@@ -1420,6 +1420,39 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'npc_email_arrived': {
+        // n8n said new mail landed → secretary NPC walks to her desk
+        // and emotes so the player sees the office responding to a
+        // real outside event. Pure visual flourish; the actual draft
+        // composition already happened server-side.
+        const secKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === String(msg.npcName || '').toLowerCase()
+        )?.[0];
+        if (!secKey) break;
+        const agent = this.agents.get(secKey);
+        if (!agent || agent.status === 'task_override') break;
+        try {
+          this.actions.standUp(secKey);
+          this.actions.emote(secKey, msg.escalated ? '!' : '✉');
+          if (agent.assignedDesk) {
+            this.scene.time.delayedCall(800, () => {
+              this.actions.useComputer(secKey, agent.assignedDesk);
+              agent.status = 'working';
+            });
+          }
+          // Brief line so the player can see what triggered it.
+          this.scene.time.delayedCall(1500, () => {
+            const preview = String(msg.subject || '').slice(0, 40);
+            const line = msg.escalated
+              ? `Flagged email from ${msg.from || 'someone'} — needs your eyes.`
+              : `Drafting reply to ${msg.from || 'an email'}.`;
+            this.actions.speak(secKey, msg.escalated ? line : preview ? `${line} Re: ${preview}` : line);
+          });
+        } catch (err) {
+          console.warn('[AgentManager] npc_email_arrived handler failed:', err?.message || err);
+        }
+        break;
+      }
       case 'furniture_placed': {
         // Live spawn — the server just persisted a new item via
         // /api/place-furniture. Try to instantiate the sprite immediately

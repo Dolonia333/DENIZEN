@@ -15,6 +15,8 @@ const animationForge = require('./src/animation-forge');
 const soulReflection = require('./src/soul-reflection');
 const npcRoster = require('./src/npc-roster');
 const capabilityProposal = require('./src/capability-proposal');
+const emailHandler = require('./src/email-handler');
+const gmailClient = require('./src/gmail-client');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
 // edit data/voice-map.json + restart to change. Missing file → empty map
@@ -1318,6 +1320,123 @@ const server = http.createServer((req, res) => {
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ proposals, total, cap: HARD_CAP, truncated: total > HARD_CAP }));
+    return;
+  }
+
+  // --- Email inbound (from n8n Gmail trigger) ---
+  // n8n POSTs { from, subject, body, threadId?, secret? } whenever
+  // a new email lands in the watched inbox. We route to the first NPC
+  // with an email_style block in their SOUL (Sarah today), draft a
+  // reply with the existing brain pipeline, save to Gmail drafts
+  // (or local fallback if Gmail OAuth isn't wired yet), and broadcast
+  // a `npc_email_arrived` WS event so the office UI can animate
+  // Sarah walking to her desk.
+  if (urlPath === '/api/email-inbound' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
+        return;
+      }
+      // Shared-secret check. EMAIL_INBOUND_SECRET in env; if unset, the
+      // endpoint is open (useful in dev). Pass the same value in n8n's
+      // Webhook node header or body so prod is auth'd.
+      const expectedSecret = process.env.EMAIL_INBOUND_SECRET || '';
+      if (expectedSecret) {
+        const got = String(payload.secret || req.headers['x-denizen-secret'] || '');
+        if (got !== expectedSecret) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'bad or missing secret' }));
+          return;
+        }
+      }
+
+      try {
+        const result = await emailHandler.processInboundEmail(
+          { npcBrains, gmailClient },
+          {
+            from: String(payload.from || '').slice(0, 200),
+            subject: String(payload.subject || '').slice(0, 400),
+            body: String(payload.body || '').slice(0, 20000),
+            threadId: payload.threadId || null,
+          },
+          { preferredName: payload.preferredName || null },
+        );
+        if (!result.ok) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(result));
+          return;
+        }
+
+        // Surface as a worldState event AND a direct WS broadcast so
+        // the in-office Sarah sprite can react (walk to desk).
+        try {
+          worldState.pushEvent('email', `${result.route?.name || 'Secretary'} drafted reply to ${payload.from}`);
+        } catch (_) {}
+        try {
+          cofounderAgent.wsClients.forEach(ws => {
+            if (ws.readyState !== 1) return;
+            try {
+              ws.send(JSON.stringify({
+                type: 'npc_email_arrived',
+                npcName: result.route?.name || 'Sarah',
+                from: payload.from,
+                subject: payload.subject,
+                escalated: !!result.escalated,
+                draftId: result.drafted?.id || null,
+              }));
+            } catch (_) {}
+          });
+        } catch (_) {}
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: String(err?.message || err) }));
+      }
+    });
+    return;
+  }
+
+  // --- Email drafts (read for operator review) ---
+  if (urlPath === '/api/email-drafts' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const sentParam = url.searchParams.get('sent');
+    const sentFilter = sentParam === 'true' ? true : sentParam === 'false' ? false : null;
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') || 25)));
+    const drafts = gmailClient.listDrafts({ limit, sentFilter });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ drafts, mode: gmailClient.mode() }));
+    return;
+  }
+
+  // --- Email draft send (operator action) ---
+  if (urlPath === '/api/email-draft/send' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
+        return;
+      }
+      // The route trusts the request only when EMAIL_AUTOSEND env is on.
+      // We also check the per-NPC SOUL's email_canAutoSend at gmail-client
+      // level via the autoSendAllowed flag.
+      const result = await gmailClient.sendDraft({
+        id: String(payload.id || ''),
+        autoSendAllowed: !!payload.autoSendAllowed,
+      });
+      res.writeHead(result.status === 'sent' ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    });
     return;
   }
 

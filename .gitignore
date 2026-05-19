@@ -11,6 +11,9 @@ denizen/data/animation-proposals.json
 denizen/data/soul-proposals.json
 denizen/data/capability-proposals.json
 denizen/data/assistant-profile.json
+denizen/data/email-drafts.json
+denizen/data/email-log.json
+denizen/data/gmail-oauth.json
 
 # Embedded git repos (tracked separately)
 openclaw/
