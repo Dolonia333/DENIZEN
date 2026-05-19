@@ -1,6 +1,6 @@
 {
   "_README": "Importable n8n workflow that watches Gmail and forwards new messages to Denizen's /api/email-inbound. After import: (1) attach your Gmail OAuth2 credential to the 'Gmail Trigger' node, (2) edit the HTTP Request node's URL to your Denizen host, (3) set the X-Denizen-Secret header to the same value you set in EMAIL_INBOUND_SECRET on the Denizen server. Activate the workflow.",
-  "name": "Denizen — Gmail inbox to Sarah",
+  "name": "Denizen — Gmail inbox to Lucy",
   "nodes": [
     {
       "parameters": {
@@ -87,5 +87,5 @@
     "executionOrder": "v1"
   },
   "active": false,
-  "tags": ["denizen", "secretary"]
+  "tags": ["denizen", "secretary", "lucy"]
 }

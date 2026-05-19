@@ -1,21 +1,21 @@
-# Denizen — Email Integration (n8n → Sarah → Gmail)
+# Denizen — Email Integration (n8n → Lucy → Gmail)
 
-> Sarah (Secretary NPC) drafts replies to the CEO's inbox automatically.
+> Lucy (Secretary NPC) drafts replies to the CEO's inbox automatically.
 > n8n watches Gmail, posts new messages to Denizen, the NPC brain
-> composes a reply in Sarah's voice, and the result lands in Gmail
-> drafts for one-click review. Inside the office, Sarah visibly walks
+> composes a reply in Lucy's voice, and the result lands in Gmail
+> drafts for one-click review. Inside the office, Lucy visibly walks
 > to her desk when mail arrives.
 
 ## TL;DR
 
 | Piece | Where |
 |---|---|
-| n8n workflow | [`data/email-workflows/sarah-inbox.n8n.json`](../data/email-workflows/sarah-inbox.n8n.json) (import into n8n) |
+| n8n workflow | [`data/email-workflows/lucy-inbox.n8n.json`](../data/email-workflows/lucy-inbox.n8n.json) (import into n8n) |
 | Inbound endpoint | `POST /api/email-inbound` |
 | Operator review | `GET /api/email-drafts?sent=false` + `POST /api/email-draft/send` |
 | Audit log | `data/email-log.json` (lazy-created, gitignored if you add it) |
 | Drafts mirror | `data/email-drafts.json` (lazy-created) |
-| Sarah's email config | `npcs/conference_woman/SOUL.md` → `### email_style` block |
+| Lucy's email config | `npcs/lucy/SOUL.md` → `### email_style` block |
 | Server module | [`src/email-handler.js`](../src/email-handler.js) |
 | Gmail wrapper | [`src/gmail-client.js`](../src/gmail-client.js) |
 | In-game animation | `agent-office-manager._handleServerMessage` → `case 'npc_email_arrived'` |
@@ -62,7 +62,7 @@ to flip modes.
 
 In n8n:
 
-1. **Import** `data/email-workflows/sarah-inbox.n8n.json`.
+1. **Import** `data/email-workflows/lucy-inbox.n8n.json`.
 2. Attach your **Gmail OAuth2 credential** to the *Gmail Trigger* node.
 3. Edit the *POST → Denizen* HTTP node:
    - URL → `https://your-denizen-host/api/email-inbound`
@@ -73,14 +73,14 @@ In n8n:
 
 ### 3. (Optional) flip on autosend
 
-By default every draft lands in drafts. To allow Sarah to actually send
+By default every draft lands in drafts. To allow Lucy to actually send
 without operator review:
 
 ```bash
 EMAIL_AUTOSEND=true npm start
 ```
 
-Plus, edit Sarah's SOUL — change `never_send: true` to `never_send: false`
+Plus, edit Lucy's SOUL — change `never_send: true` to `never_send: false`
 and add `email_canAutoSend: true` under the `### email_style` block.
 Both gates must pass.
 
@@ -89,7 +89,7 @@ Both gates must pass.
 `src/email-handler.buildReplyPrompt(npcName, email, style)` produces:
 
 ```
-You are acting as Sarah, drafting an email reply on the CEO's behalf.
+You are acting as Lucy, drafting an email reply on the CEO's behalf.
 Tone: warm-professional, brief. Keep it under 3 short paragraphs.
 Always disclose that this draft was composed by an AI secretary, not the CEO personally.
 Do NOT make commitments on the CEO's behalf (calendar invites, contract terms, money).
@@ -112,7 +112,7 @@ blank line so the disclosure footer is consistent every time.
 *disqualify* auto-drafting. Defaults include `contract`, `nda`,
 `invoice`, `wire`, `payment`, `agreement`, `legal`, `urgent`,
 `ASAP`, `fire`, `lawsuit`. When any of these appear in the subject
-or body, Sarah:
+or body, Lucy:
 
 - Does NOT compose a reply.
 - Logs the email to `data/email-log.json` with `kind: "escalated"`.
@@ -126,7 +126,7 @@ NOT match `payment`.
 ## Daily cap
 
 Each email-handling NPC is capped at **10 inbound emails per UTC day**.
-Returns `400` with `daily email cap hit for Sarah (10/10)` once
+Returns `400` with `daily email cap hit for Lucy (10/10)` once
 exceeded. The cap reads `data/email-log.json` so it survives restarts.
 
 ## Endpoints
@@ -144,7 +144,7 @@ When `processInboundEmail` succeeds, the server broadcasts:
 ```json
 {
   "type": "npc_email_arrived",
-  "npcName": "Sarah",
+  "npcName": "Lucy",
   "from": "garnett@example.com",
   "subject": "Development Meeting",
   "escalated": false,
@@ -153,19 +153,19 @@ When `processInboundEmail` succeeds, the server broadcasts:
 ```
 
 The client handler (`agent-office-manager._handleServerMessage` →
-`case 'npc_email_arrived'`) makes Sarah stand up, emote, walk to her
+`case 'npc_email_arrived'`) makes Lucy stand up, emote, walk to her
 assigned desk, and speak a one-line summary. Pure visual flourish;
 the actual draft has already been composed server-side.
 
 ## What this is NOT
 
 - **No auto-replies to unknown senders by default.** That's a Phase 2
-  feature — would need a per-sender allow-list. Today, Sarah will draft
+  feature — would need a per-sender allow-list. Today, Lucy will draft
   a reply for whoever lands in the inbox.
-- **No calendar acceptance.** Sarah explicitly refuses to RSVP to
+- **No calendar acceptance.** Lucy explicitly refuses to RSVP to
   events on the CEO's behalf — that always requires the operator.
 - **No multi-recipient mass-send.** The `to:` field is whoever wrote
-  to you; Sarah doesn't add CCs or BCCs.
+  to you; Lucy doesn't add CCs or BCCs.
 - **No contract signing.** The escalation keyword list catches the
   obvious flags. If she misses one, the `never_send: true` SOUL gate
   + the `EMAIL_AUTOSEND` env gate both have to be flipped before
@@ -178,7 +178,7 @@ the actual draft has already been composed server-side.
 - Threading awareness — read the last N messages in a thread and
   reference them.
 - Multi-NPC handling: different NPCs handle different kinds of email
-  (Marcus for vendor stuff, Sarah for scheduling, Lucy for visitor
+  (Marcus for vendor stuff, Lucy for scheduling, Lucy for visitor
   RSVPs).
 - Sender allow-list before any draft fires.
 - Inline-reply UI in the operator review panel.
@@ -187,6 +187,6 @@ the actual draft has already been composed server-side.
 
 - [WORLD-STATE.md](WORLD-STATE.md) — the singleton each event lands in
 - [AI-SYSTEM.md](AI-SYSTEM.md) — the brain pipeline `getResponse` runs through
-- [ACTIONS.md](ACTIONS.md) — the in-game actions Sarah uses
+- [ACTIONS.md](ACTIONS.md) — the in-game actions Lucy uses
 - [PROPOSAL_REVIEW.md](PROPOSAL_REVIEW.md) — the operator review pattern
   email drafts inherit from
