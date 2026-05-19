@@ -14,6 +14,7 @@ denizen/data/assistant-profile.json
 denizen/data/email-drafts.json
 denizen/data/email-log.json
 denizen/data/gmail-oauth.json
+denizen/data/llm-telemetry.jsonl
 
 # Embedded git repos (tracked separately)
 openclaw/

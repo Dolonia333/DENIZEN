@@ -17,6 +17,7 @@ const npcRoster = require('./src/npc-roster');
 const capabilityProposal = require('./src/capability-proposal');
 const emailHandler = require('./src/email-handler');
 const gmailClient = require('./src/gmail-client');
+const llmTelemetry = require('./src/llm-telemetry');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
 // edit data/voice-map.json + restart to change. Missing file → empty map
@@ -1437,6 +1438,41 @@ const server = http.createServer((req, res) => {
       res.writeHead(result.status === 'sent' ? 200 : 400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
     });
+    return;
+  }
+
+  // --- LLM telemetry endpoints ---
+  // Real observability into LM Studio + every other LLM provider call.
+  // Each call records: npc, kind, provider, model, latencyMs, tokens
+  // in/out, prompt/response preview, error+hint.
+  if (urlPath === '/api/telemetry/llm' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const opts = {
+      limit: Math.min(500, Math.max(1, Number(url.searchParams.get('limit') || 50))),
+      kind: url.searchParams.get('kind') || null,
+      npc: url.searchParams.get('npc') || null,
+      sinceMs: url.searchParams.get('sinceMs') ? Number(url.searchParams.get('sinceMs')) : null,
+      errorsOnly: url.searchParams.get('errorsOnly') === 'true',
+    };
+    const calls = llmTelemetry.getRecent(opts);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ calls, queryOpts: opts }));
+    return;
+  }
+  if (urlPath === '/api/telemetry/llm/stats' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const windowMs = Number(url.searchParams.get('windowMs') || 5 * 60 * 1000);
+    const stats = llmTelemetry.getStats({ windowMs });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(stats));
+    return;
+  }
+  if (urlPath === '/api/telemetry/llm/errors' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') || 20)));
+    const errors = llmTelemetry.getRecentErrors({ limit });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ errors }));
     return;
   }
 

@@ -15,8 +15,10 @@ const npcRoster = require('./npc-roster');
 // older test fixtures that import npc-brains in isolation don't break.
 let worldState = null;
 let agentBus = null;
+let llmTelemetry = null;
 try { worldState = require('./world-state'); } catch (_) {}
 try { agentBus = require('./agent-bus'); } catch (_) {}
+try { llmTelemetry = require('./llm-telemetry'); } catch (_) {}
 
 class NpcBrainManager {
   constructor() {
@@ -650,7 +652,7 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
     }));
 
     try {
-      const response = await this._callProvider(brain.providerConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300 });
+      const response = await this._callProvider(brain.providerConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300, npc: npcName, kind: 'response' });
       let out = response;
       if (typeof out !== 'string') {
         out = this._cannedResponse(npcName, fromName, safeMessage);
@@ -671,7 +673,7 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       // Try fallback
       if (brain.fallbackConfig && brain.fallbackConfig !== brain.providerConfig) {
         try {
-          const response = await this._callProvider(brain.fallbackConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300 });
+          const response = await this._callProvider(brain.fallbackConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300, npc: npcName, kind: 'response-fallback' });
           let out = response;
           if (typeof out !== 'string') {
             out = this._cannedResponse(npcName, fromName, safeMessage);
@@ -912,7 +914,7 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     try {
       const response = await this._callProvider(brain.providerConfig, systemPrompt, [
         { role: 'user', content: userPrompt }
-      ], { maxTokens: 400, sliceLen: 600, temperature: 0.95 });
+      ], { maxTokens: 400, sliceLen: 600, temperature: 0.95, npc: npcName, kind: 'think' });
 
       // Parse the JSON response
       const jsonMatch = response.match(/\{[\s\S]*\}/);
@@ -1271,6 +1273,32 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     const maxTokens = opts.maxTokens || 150;
     const sliceLen = opts.sliceLen || 150;
 
+    // Telemetry — capture the start of every LLM call. Filled in below
+    // on resolve (with response + tokens) or reject (with error). The
+    // npc/kind/correlationId all come from opts so callers can label
+    // their calls without changing _callLocal's signature.
+    const _telStart = Date.now();
+    const _telLast = messages.length ? messages[messages.length - 1] : null;
+    const _telPromptPreview = (_telLast?.content || messages[0]?.content || '').toString();
+    const _telBase = {
+      npc: opts.npc || opts.npcName || null,
+      kind: opts.kind || 'other',
+      provider: config?.type || config?.provider || null,
+      model: config?.model || null,
+      promptPreview: _telPromptPreview,
+      correlationId: opts.correlationId || null,
+    };
+    const _telRecord = (extra) => {
+      if (!llmTelemetry?.record) return;
+      try {
+        llmTelemetry.record({
+          ..._telBase,
+          latencyMs: Date.now() - _telStart,
+          ...extra,
+        });
+      } catch (_) { /* never let telemetry break inference */ }
+    };
+
     const oaiMessages = [
       { role: 'system', content: systemPrompt },
       ...messages.map(m => ({ role: m.role, content: m.content })),
@@ -1350,29 +1378,44 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         if (looksHtml) {
           markFailure();
           done();
-          return reject(new Error(`LM Studio returned HTML (HTTP ${res.statusCode}) — model probably not loaded`));
+          const err = new Error(`LM Studio returned HTML (HTTP ${res.statusCode}) — model probably not loaded`);
+          _telRecord({ error: err });
+          return reject(err);
         }
         try {
           const p = JSON.parse(data);
           if (p.error) {
             markFailure();
             done();
-            return reject(new Error(p.error.message || JSON.stringify(p.error)));
+            const err = new Error(p.error.message || JSON.stringify(p.error));
+            _telRecord({ error: err });
+            return reject(err);
           }
           markSuccess();
           done();
-          resolve((p.choices?.[0]?.message?.content || '').trim().slice(0, sliceLen));
+          const responseText = (p.choices?.[0]?.message?.content || '').trim().slice(0, sliceLen);
+          // OpenAI-compat APIs (LM Studio, Anthropic, etc.) return usage
+          // counts. Capture if present so we can chart tokens/min.
+          _telRecord({
+            responsePreview: responseText,
+            tokensIn: p.usage?.prompt_tokens,
+            tokensOut: p.usage?.completion_tokens,
+          });
+          resolve(responseText);
         } catch (e) {
           markFailure();
           done();
+          _telRecord({ error: e });
           reject(e);
         }
       });
     });
-    req.on('error', (err) => { markFailure(); done(); reject(err); });
+    req.on('error', (err) => { markFailure(); done(); _telRecord({ error: err }); reject(err); });
     req.setTimeout(60000, () => {
       markFailure();
-      req.destroy(new Error('LM Studio timeout'));
+      const err = new Error('LM Studio timeout');
+      req.destroy(err);
+      _telRecord({ error: err });
       done();
     });
     req.write(body);
@@ -1805,7 +1848,7 @@ ${roleActions}
     // With 16 NPCs autonomously thinking, the FIFO queue is almost always
     // backed up; without this, player messages queue behind 5-10 jobs
     // and reliably time out at the 15s client timeout.
-    const playerOpts = { maxTokens: 300, sliceLen: 500, priority: 'high' };
+    const playerOpts = { maxTokens: 300, sliceLen: 500, priority: 'high', npc: npcName, kind: 'chat' };
 
     let responseText;
     try {
