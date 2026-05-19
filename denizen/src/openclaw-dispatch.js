@@ -251,10 +251,38 @@ if (typeof window !== 'undefined') {
 
   const DEFAULT_GATEWAY_METHOD = 'chat.send';
 
+  /**
+   * Tiny helper: post an OpenClaw telemetry event to the server.
+   * Fire-and-forget — never blocks the actual dispatch.
+   */
+  function _telemetry(event) {
+    try {
+      fetch('/api/telemetry/openclaw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (_) { /* never let telemetry IO break dispatch */ }
+  }
+
   async function sendToGateway(text, opts = {}) {
+    const correlationId = opts.correlationId || `oc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const startedAt = Date.now();
+    _telemetry({
+      tool: opts.tool || 'chat.send', source: 'gateway',
+      args: { text: String(text || '').slice(0, 240), urgent: !!opts.urgent },
+      status: 'started', correlationId,
+    });
+
     const bridge = window.__DenizenGatewayBridge;
     if (!bridge || !bridge.connected) {
-      return { ok: false, error: 'gateway not connected', via: 'gateway' };
+      _telemetry({
+        tool: opts.tool || 'chat.send', source: 'gateway',
+        status: 'failed', latencyMs: Date.now() - startedAt,
+        error: 'gateway not connected', correlationId,
+      });
+      return { ok: false, error: 'gateway not connected', via: 'gateway', correlationId };
     }
     try {
       let res;
@@ -268,9 +296,20 @@ if (typeof window !== 'undefined') {
           source: 'denizen-player',
         });
       }
-      return { ok: true, response: res, via: 'gateway' };
+      _telemetry({
+        tool: opts.tool || 'chat.send', source: 'gateway',
+        status: 'succeeded', latencyMs: Date.now() - startedAt,
+        response: res, correlationId,
+      });
+      return { ok: true, response: res, via: 'gateway', correlationId };
     } catch (err) {
-      return { ok: false, error: err?.message || String(err), via: 'gateway' };
+      const msg = err?.message || String(err);
+      _telemetry({
+        tool: opts.tool || 'chat.send', source: 'gateway',
+        status: 'failed', latencyMs: Date.now() - startedAt,
+        error: msg, correlationId,
+      });
+      return { ok: false, error: msg, via: 'gateway', correlationId };
     }
   }
 
@@ -278,18 +317,44 @@ if (typeof window !== 'undefined') {
     // Fallback path — POST to the OpenClaw HTTP proxy.
     // Endpoint is overridable via window.DenizenOpenClawChatPath (defaults to /openclaw/api/chat).
     const path = window.DenizenOpenClawChatPath || '/openclaw/api/chat';
+    const correlationId = opts.correlationId || `oc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const startedAt = Date.now();
+    _telemetry({
+      tool: opts.tool || 'http.chat', source: 'http',
+      args: { text: String(text || '').slice(0, 240), urgent: !!opts.urgent },
+      status: 'started', correlationId,
+    });
     try {
       const res = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, urgent: !!opts.urgent, source: 'denizen-player' }),
       });
-      if (!res.ok) return { ok: false, error: `HTTP ${res.status}`, via: 'http' };
+      if (!res.ok) {
+        const msg = `HTTP ${res.status}`;
+        _telemetry({
+          tool: opts.tool || 'http.chat', source: 'http',
+          status: 'failed', latencyMs: Date.now() - startedAt,
+          error: msg, correlationId,
+        });
+        return { ok: false, error: msg, via: 'http', correlationId };
+      }
       let body = null;
       try { body = await res.json(); } catch (_) { body = await res.text(); }
-      return { ok: true, response: body, via: 'http' };
+      _telemetry({
+        tool: opts.tool || 'http.chat', source: 'http',
+        status: 'succeeded', latencyMs: Date.now() - startedAt,
+        response: body, correlationId,
+      });
+      return { ok: true, response: body, via: 'http', correlationId };
     } catch (err) {
-      return { ok: false, error: err?.message || String(err), via: 'http' };
+      const msg = err?.message || String(err);
+      _telemetry({
+        tool: opts.tool || 'http.chat', source: 'http',
+        status: 'failed', latencyMs: Date.now() - startedAt,
+        error: msg, correlationId,
+      });
+      return { ok: false, error: msg, via: 'http', correlationId };
     }
   }
 

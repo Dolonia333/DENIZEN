@@ -124,6 +124,9 @@ class LlmTelemetry {
       const { category, hint } = classifyError(msg);
       rec.error = { message: msg, category, hint };
     }
+    // Carry OpenClaw-specific status field through normalization so the
+    // panel and stats can branch on it without inventing a 2nd ring.
+    if (entry._ocStatus) rec._ocStatus = entry._ocStatus;
     this.ring.push(rec);
     if (this.ring.length > this.ringSize) this.ring.shift();
     if (this.persist) this._appendJsonl(rec);
@@ -164,7 +167,9 @@ class LlmTelemetry {
    */
   getStats({ windowMs = 5 * 60 * 1000 } = {}) {
     const minTs = Date.now() - windowMs;
-    const inWindow = this.ring.filter(r => Date.parse(r.at) >= minTs);
+    // Exclude OpenClaw runs from LLM stats — they're a separate concern
+    // with their own getOpenClawStats and panel tab.
+    const inWindow = this.ring.filter(r => Date.parse(r.at) >= minTs && r.kind !== 'openclaw');
     if (inWindow.length === 0) {
       return {
         windowMs, calls: 0, errors: 0, errorRate: 0,
@@ -237,6 +242,68 @@ class LlmTelemetry {
   /** Recent errors with classification hints. */
   getRecentErrors({ limit = 20 } = {}) {
     return this.ring.filter(r => r.error).slice(-limit).reverse();
+  }
+
+  /** OpenClaw-specific aggregates: tool runs in the window, by status,
+   *  by tool, p50/p95 of completed runs. */
+  getOpenClawStats({ windowMs = 5 * 60 * 1000 } = {}) {
+    const minTs = Date.now() - windowMs;
+    const inWindow = this.ring.filter(r => Date.parse(r.at) >= minTs && r.kind === 'openclaw');
+    const completed = inWindow.filter(r => r._ocStatus === 'succeeded' || r._ocStatus === 'failed');
+    const failed = inWindow.filter(r => r._ocStatus === 'failed' || !!r.error);
+    const latencies = completed.map(r => r.latencyMs).filter(Number.isFinite).sort((a, b) => a - b);
+    const pct = (p) => latencies.length
+      ? latencies[Math.min(latencies.length - 1, Math.floor(latencies.length * p))]
+      : null;
+    const byTool = {};
+    for (const r of inWindow) {
+      const tool = r.model || 'unknown';
+      if (!byTool[tool]) byTool[tool] = { started: 0, succeeded: 0, failed: 0 };
+      byTool[tool][r._ocStatus] = (byTool[tool][r._ocStatus] || 0) + 1;
+    }
+    return {
+      windowMs,
+      runs: inWindow.length,
+      started: inWindow.filter(r => r._ocStatus === 'started').length,
+      succeeded: inWindow.filter(r => r._ocStatus === 'succeeded').length,
+      failed: failed.length,
+      p50LatencyMs: pct(0.50),
+      p95LatencyMs: pct(0.95),
+      byTool,
+    };
+  }
+
+  /** Recent OpenClaw events in time order. */
+  getRecentOpenClaw({ limit = 50 } = {}) {
+    return this.ring.filter(r => r.kind === 'openclaw').slice(-limit).reverse();
+  }
+
+  /**
+   * Record an OpenClaw tool run. Different shape from LLM calls but
+   * lives in the same stream (tagged with kind: 'openclaw') so the
+   * operator can correlate by timestamp + correlationId.
+   *
+   * @param {object} entry
+   *   { tool, args, status: 'started'|'succeeded'|'failed',
+   *     latencyMs?, response?, error?, source?, correlationId? }
+   */
+  recordOpenClaw(entry) {
+    return this.record({
+      kind: 'openclaw',
+      provider: entry.source || 'openclaw',
+      model: entry.tool || null,
+      latencyMs: entry.latencyMs,
+      // Pack args + response into the preview fields so they show in the panel
+      // without inventing a new render path. JSON-stringify args defensively.
+      promptPreview: entry.args ? (typeof entry.args === 'string' ? entry.args : JSON.stringify(entry.args)) : null,
+      responsePreview: entry.response
+        ? (typeof entry.response === 'string' ? entry.response : JSON.stringify(entry.response))
+        : null,
+      error: entry.error,
+      correlationId: entry.correlationId || null,
+      // Stash the status as part of the entry so getRecent can surface it.
+      _ocStatus: entry.status || 'unknown',
+    });
   }
 
   /** Reset (test convenience). */

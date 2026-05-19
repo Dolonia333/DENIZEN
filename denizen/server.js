@@ -1476,6 +1476,53 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- OpenClaw telemetry: browser dispatcher posts events here ---
+  if (urlPath === '/api/telemetry/openclaw' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
+        return;
+      }
+      try {
+        const rec = llmTelemetry.recordOpenClaw({
+          tool:          String(payload.tool || 'unknown').slice(0, 80),
+          args:          payload.args || null,
+          status:        ['started', 'succeeded', 'failed'].indexOf(payload.status) !== -1 ? payload.status : 'unknown',
+          latencyMs:     Number.isFinite(payload.latencyMs) ? payload.latencyMs : undefined,
+          response:      payload.response || null,
+          error:         payload.error ? { message: String(payload.error).slice(0, 600) } : null,
+          source:        String(payload.source || 'openclaw').slice(0, 40),
+          correlationId: payload.correlationId || null,
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, id: rec.id }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: String(err?.message || err) }));
+      }
+    });
+    return;
+  }
+  if (urlPath === '/api/telemetry/openclaw/stats' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const windowMs = Number(url.searchParams.get('windowMs') || 5 * 60 * 1000);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(llmTelemetry.getOpenClawStats({ windowMs })));
+    return;
+  }
+  if (urlPath === '/api/telemetry/openclaw' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || 50)));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ events: llmTelemetry.getRecentOpenClaw({ limit }) }));
+    return;
+  }
+
   // --- World-state snapshot (read-only) ---
   // Useful for debugging and for the n8n/Supabase integration to know what
   // the office "looks like" before posting an update.

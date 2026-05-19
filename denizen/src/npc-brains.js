@@ -1099,9 +1099,39 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     return Promise.reject(new Error('Unknown provider type'));
   }
 
+  /**
+   * Build a telemetry hook for a provider call. Returns
+   * { onResponse(text, tokensIn, tokensOut), onError(err) } the
+   * provider can invoke without repeating boilerplate.
+   */
+  _makeTelHook(providerType, config, messages, opts) {
+    const startedAt = Date.now();
+    const last = messages.length ? messages[messages.length - 1] : null;
+    const promptPreview = (last?.content || messages[0]?.content || '').toString();
+    const base = {
+      npc: opts.npc || opts.npcName || null,
+      kind: opts.kind || 'other',
+      provider: providerType,
+      model: config?.model || null,
+      promptPreview,
+      correlationId: opts.correlationId || null,
+    };
+    const rec = (extra) => {
+      if (!llmTelemetry?.record) return;
+      try {
+        llmTelemetry.record({ ...base, latencyMs: Date.now() - startedAt, ...extra });
+      } catch (_) {}
+    };
+    return {
+      onResponse: (text, tokensIn, tokensOut) => rec({ responsePreview: text, tokensIn, tokensOut }),
+      onError:    (err)                       => rec({ error: err }),
+    };
+  }
+
   _callAnthropic(config, systemPrompt, messages, opts = {}) {
     const maxTokens = opts.maxTokens || 100;
     const sliceLen = opts.sliceLen || 150;
+    const tel = this._makeTelHook('anthropic', config, messages, opts);
     return new Promise((resolve, reject) => {
       const body = JSON.stringify({
         model: config.model,
@@ -1125,13 +1155,20 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         res.on('end', () => {
           try {
             const p = JSON.parse(data);
-            if (p.error) return reject(new Error(p.error.message));
-            resolve((p.content?.[0]?.text || '').trim().slice(0, sliceLen));
-          } catch (e) { reject(e); }
+            if (p.error) { const e = new Error(p.error.message); tel.onError(e); return reject(e); }
+            const text = (p.content?.[0]?.text || '').trim().slice(0, sliceLen);
+            // Anthropic uses input_tokens / output_tokens (note: not prompt/completion).
+            tel.onResponse(text, p.usage?.input_tokens, p.usage?.output_tokens);
+            resolve(text);
+          } catch (e) { tel.onError(e); reject(e); }
         });
       });
-      req.on('error', reject);
-      req.setTimeout(10000, () => req.destroy(new Error('Timeout')));
+      req.on('error', (err) => { tel.onError(err); reject(err); });
+      req.setTimeout(10000, () => {
+        const e = new Error('Anthropic timeout');
+        tel.onError(e);
+        req.destroy(e);
+      });
       req.write(body);
       req.end();
     });
@@ -1140,6 +1177,7 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
   _callGoogle(config, systemPrompt, messages, opts = {}) {
     const maxTokens = opts.maxTokens || 60;
     const sliceLen = opts.sliceLen || 150;
+    const tel = this._makeTelHook('google', config, messages, opts);
     return new Promise((resolve, reject) => {
       const contents = messages.map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
@@ -1168,14 +1206,20 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         res.on('end', () => {
           try {
             const p = JSON.parse(data);
-            if (p.error) return reject(new Error(p.error.message));
-            const text = p.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            resolve(text.trim().slice(0, sliceLen));
-          } catch (e) { reject(e); }
+            if (p.error) { const e = new Error(p.error.message); tel.onError(e); return reject(e); }
+            const text = (p.candidates?.[0]?.content?.parts?.[0]?.text || '').trim().slice(0, sliceLen);
+            // Google uses usageMetadata.promptTokenCount / candidatesTokenCount.
+            tel.onResponse(text, p.usageMetadata?.promptTokenCount, p.usageMetadata?.candidatesTokenCount);
+            resolve(text);
+          } catch (e) { tel.onError(e); reject(e); }
         });
       });
-      req.on('error', reject);
-      req.setTimeout(10000, () => req.destroy(new Error('Timeout')));
+      req.on('error', (err) => { tel.onError(err); reject(err); });
+      req.setTimeout(10000, () => {
+        const e = new Error('Google timeout');
+        tel.onError(e);
+        req.destroy(e);
+      });
       req.write(body);
       req.end();
     });
@@ -1184,6 +1228,9 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
   _callOpenAI(config, systemPrompt, messages, opts = {}) {
     const maxTokens = opts.maxTokens || 150;
     const sliceLen = opts.sliceLen || 150;
+    // xAI / Moonshot / OpenAI all use this. Use config.type so the
+    // telemetry says e.g. 'xai' not 'openai' for Grok calls.
+    const tel = this._makeTelHook(config.type || 'openai', config, messages, opts);
     return new Promise((resolve, reject) => {
       const oaiMessages = [
         { role: 'system', content: systemPrompt },
@@ -1213,13 +1260,23 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         res.on('end', () => {
           try {
             const p = JSON.parse(data);
-            if (p.error) return reject(new Error(p.error.message || JSON.stringify(p.error)));
-            resolve((p.choices?.[0]?.message?.content || '').trim().slice(0, sliceLen));
-          } catch (e) { reject(e); }
+            if (p.error) {
+              const e = new Error(p.error.message || JSON.stringify(p.error));
+              tel.onError(e);
+              return reject(e);
+            }
+            const text = (p.choices?.[0]?.message?.content || '').trim().slice(0, sliceLen);
+            tel.onResponse(text, p.usage?.prompt_tokens, p.usage?.completion_tokens);
+            resolve(text);
+          } catch (e) { tel.onError(e); reject(e); }
         });
       });
-      req.on('error', reject);
-      req.setTimeout(10000, () => req.destroy(new Error('Timeout')));
+      req.on('error', (err) => { tel.onError(err); reject(err); });
+      req.setTimeout(10000, () => {
+        const e = new Error((config.type || 'openai') + ' timeout');
+        tel.onError(e);
+        req.destroy(e);
+      });
       req.write(body);
       req.end();
     });
@@ -1273,30 +1330,11 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     const maxTokens = opts.maxTokens || 150;
     const sliceLen = opts.sliceLen || 150;
 
-    // Telemetry — capture the start of every LLM call. Filled in below
-    // on resolve (with response + tokens) or reject (with error). The
-    // npc/kind/correlationId all come from opts so callers can label
-    // their calls without changing _callLocal's signature.
-    const _telStart = Date.now();
-    const _telLast = messages.length ? messages[messages.length - 1] : null;
-    const _telPromptPreview = (_telLast?.content || messages[0]?.content || '').toString();
-    const _telBase = {
-      npc: opts.npc || opts.npcName || null,
-      kind: opts.kind || 'other',
-      provider: config?.type || config?.provider || null,
-      model: config?.model || null,
-      promptPreview: _telPromptPreview,
-      correlationId: opts.correlationId || null,
-    };
+    // Telemetry hook — same shape as the remote providers use.
+    const _tel = this._makeTelHook(config?.type || 'lmstudio', config, messages, opts);
     const _telRecord = (extra) => {
-      if (!llmTelemetry?.record) return;
-      try {
-        llmTelemetry.record({
-          ..._telBase,
-          latencyMs: Date.now() - _telStart,
-          ...extra,
-        });
-      } catch (_) { /* never let telemetry break inference */ }
+      if (extra && extra.error) _tel.onError(extra.error);
+      else _tel.onResponse(extra?.responsePreview, extra?.tokensIn, extra?.tokensOut);
     };
 
     const oaiMessages = [

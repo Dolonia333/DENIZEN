@@ -22,6 +22,8 @@
   const STATS_URL  = '/api/telemetry/llm/stats?windowMs=300000';
   const CALLS_URL  = '/api/telemetry/llm';
   const ERRORS_URL = '/api/telemetry/llm/errors';
+  const OPENCLAW_URL       = '/api/telemetry/openclaw';
+  const OPENCLAW_STATS_URL = '/api/telemetry/openclaw/stats?windowMs=300000';
   const POLL_MS    = 5000;
 
   const state = {
@@ -151,6 +153,7 @@
         <button class="tab" data-tab="calls">Calls</button>
         <button class="tab" data-tab="stats">Stats</button>
         <button class="tab" data-tab="errors">Errors</button>
+        <button class="tab" data-tab="openclaw">OpenClaw</button>
         <span style="flex:1"></span>
         <button class="tab" data-action="close">✕</button>
       </header>
@@ -241,6 +244,13 @@
         body.innerHTML = state.errors.length === 0
           ? '<div style="padding:12px; color:#94a3b8">No errors. 🎉</div>'
           : state.errors.map(renderErrorRow).join('');
+      } else if (state.tab === 'openclaw') {
+        const [eventsRes, statsRes] = await Promise.all([
+          fetch(OPENCLAW_URL).then(r => r.json()),
+          fetch(OPENCLAW_STATS_URL).then(r => r.json()),
+        ]);
+        const events = eventsRes.events || [];
+        body.innerHTML = renderOpenClaw(events, statsRes);
       }
     } catch (err) {
       body.textContent = 'failed to load: ' + (err?.message || err);
@@ -295,6 +305,37 @@
       <pre style="color:#fda4af">⚠ [${esc(c.error.category)}] ${esc(c.error.message)}</pre>
       <div class="hint">${esc(c.error.hint)}</div>
     </div>`;
+  }
+
+  function renderOpenClaw(events, stats) {
+    const head = stats && stats.runs > 0 ? `
+      <div class="summary" style="grid-template-columns:1fr">
+        <div class="card"><h4>Window: 5 min</h4>
+          <div>runs: <b>${stats.runs}</b> · started ${stats.started} · ✓ ${stats.succeeded} · ✗ ${stats.failed}</div>
+          <div>latency (completed): p50 ${stats.p50LatencyMs ? (stats.p50LatencyMs/1000).toFixed(2)+'s' : '—'} · p95 ${stats.p95LatencyMs ? (stats.p95LatencyMs/1000).toFixed(2)+'s' : '—'}</div>
+          <div>by tool: ${Object.entries(stats.byTool || {}).map(([t, b]) => `${esc(t)} (✓${b.succeeded||0}/✗${b.failed||0})`).join(' · ') || '(none)'}</div>
+        </div>
+      </div>` : `<div style="padding:12px; color:#94a3b8">No OpenClaw runs in the last 5 min.</div>`;
+    const list = events.length === 0
+      ? ''
+      : events.map(e => {
+          const status = e._ocStatus || '?';
+          const dot = status === 'succeeded' ? '#86efac' : status === 'failed' ? '#fda4af' : '#fde68a';
+          return `<div class="row ${status === 'failed' || e.error ? 'err' : ''}">
+            <div class="meta">
+              <span style="color:${dot}">●</span>
+              <span><b>${esc(e.model || 'tool')}</b></span>
+              <span>${esc(e.provider || 'openclaw')}</span>
+              <span>${status}</span>
+              ${e.latencyMs != null ? `<span>${Math.round(e.latencyMs)}ms</span>` : ''}
+              <span style="margin-left:auto">${fmtRel(e.at)}</span>
+            </div>
+            ${e.promptPreview ? `<pre>→ ${esc(e.promptPreview)}</pre>` : ''}
+            ${e.responsePreview ? `<pre style="color:#86efac">← ${esc(e.responsePreview)}</pre>` : ''}
+            ${e.error ? `<pre style="color:#fda4af">⚠ ${esc(e.error.message)}</pre>` : ''}
+          </div>`;
+        }).join('');
+    return head + list;
   }
 
   function renderStats(s) {

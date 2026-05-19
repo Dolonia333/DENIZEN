@@ -180,4 +180,72 @@ describe('getStats', () => {
     assert.equal(s.topErrors[1].category, 'provider_down');
     assert.match(s.topErrors[0].hint, /slow or stuck/);
   });
+
+  it('excludes openclaw events from LLM stats', () => {
+    const { t } = mk({ persist: false });
+    t.record({ npc: 'X', kind: 'think', latencyMs: 100 });
+    t.recordOpenClaw({ tool: 'deploy', status: 'succeeded', latencyMs: 5000 });
+    t.recordOpenClaw({ tool: 'rollback', status: 'failed', latencyMs: 200 });
+    const s = t.getStats();
+    assert.equal(s.calls, 1);   // only the LLM call
+    assert.equal(s.p50LatencyMs, 100);
+  });
+});
+
+describe('LlmTelemetry.recordOpenClaw + stats', () => {
+  it('records tool + status + latency, packs args/response into previews', () => {
+    const { t } = mk({ persist: false });
+    const r = t.recordOpenClaw({
+      tool: 'github.create_pr',
+      source: 'gateway',
+      args: { repo: 'denizen', title: 'fix bug' },
+      response: { url: 'https://github.com/x/y/pull/123' },
+      status: 'succeeded',
+      latencyMs: 1200,
+      correlationId: 'oc_test',
+    });
+    assert.equal(r.kind, 'openclaw');
+    assert.equal(r.provider, 'gateway');
+    assert.equal(r.model, 'github.create_pr');
+    assert.equal(r.latencyMs, 1200);
+    assert.equal(r._ocStatus, 'succeeded');
+    assert.equal(r.correlationId, 'oc_test');
+    assert.match(r.promptPreview, /repo/);
+    assert.match(r.responsePreview, /pull\/123/);
+  });
+
+  it('errors attach via the same classifier', () => {
+    const { t } = mk({ persist: false });
+    const r = t.recordOpenClaw({ tool: 'x', status: 'failed', error: new Error('connect ECONNREFUSED') });
+    assert.ok(r.error);
+    assert.equal(r.error.category, 'provider_down');
+  });
+
+  it('getOpenClawStats counts by status + groups by tool', () => {
+    const { t } = mk({ persist: false });
+    t.recordOpenClaw({ tool: 'deploy', status: 'started' });
+    t.recordOpenClaw({ tool: 'deploy', status: 'succeeded', latencyMs: 1500 });
+    t.recordOpenClaw({ tool: 'deploy', status: 'failed', latencyMs: 200 });
+    t.recordOpenClaw({ tool: 'rollback', status: 'succeeded', latencyMs: 800 });
+    const s = t.getOpenClawStats();
+    assert.equal(s.runs, 4);
+    assert.equal(s.started, 1);
+    assert.equal(s.succeeded, 2);
+    assert.equal(s.failed, 1);
+    assert.equal(s.byTool.deploy.succeeded, 1);
+    assert.equal(s.byTool.deploy.failed, 1);
+    assert.equal(s.byTool.rollback.succeeded, 1);
+  });
+
+  it('getRecentOpenClaw returns only openclaw entries, newest first', () => {
+    const { t } = mk({ persist: false });
+    t.record({ npc: 'X', kind: 'think' });
+    t.recordOpenClaw({ tool: 'a', status: 'started' });
+    t.record({ npc: 'X', kind: 'chat' });
+    t.recordOpenClaw({ tool: 'b', status: 'succeeded' });
+    const r = t.getRecentOpenClaw();
+    assert.equal(r.length, 2);
+    assert.equal(r[0].model, 'b');
+    assert.equal(r[1].model, 'a');
+  });
 });
