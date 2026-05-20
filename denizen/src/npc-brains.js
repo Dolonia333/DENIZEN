@@ -29,8 +29,13 @@ class NpcBrainManager {
     this._lastDecisions = {};  // npcName -> last decision object
     this._taskProgress = {};   // npcName -> { task, phase, startedAt }
     this._pendingCascades = []; // queued cascade decisions to send downstream
-    this._requestQueue = [];    // sequential queue for LM Studio requests
-    this._processingRequest = false; // whether a request is in-flight
+    this._requestQueue = [];    // queue for LM Studio requests
+    // Up to N concurrent inferences. LM Studio supports parallel
+    // generation (server config "Parallel: 4"), and the Denizen mutex
+    // used to be a single boolean wasting those slots. Default 2 keeps
+    // GPU happy without saturating; override via LM_STUDIO_PARALLEL.
+    this._maxInflight = Math.max(1, Math.min(8, Number(process.env.LM_STUDIO_PARALLEL) || 2));
+    this._inflightCount = 0;
 
     // Persistent intelligence state
     this._npcGoals = {};          // npcName -> { goal, createdAt, progress }
@@ -645,8 +650,15 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       this.memories[npcName] = this.memories[npcName].slice(-50);
     }
 
-    // Build conversation from memory
-    const messages = this.memories[npcName].map(m => ({
+    // Build conversation from memory. Cap at the last RESPONSE_HISTORY
+    // messages so we don't ship 50-message contexts on every chat —
+    // those were the #1 token cost driver per the LM Studio logs
+    // (avg 2,500 prompt tokens vs 85 completion tokens = 29:1 ratio).
+    // The full memory is still retained in this.memories AND written
+    // to MEMORY.md for later reference; we just don't replay the whole
+    // history into every LLM call. Override via NPC_HISTORY_DEPTH env.
+    const HISTORY_DEPTH = Number(process.env.NPC_HISTORY_DEPTH) || 10;
+    const messages = this.memories[npcName].slice(-HISTORY_DEPTH).map(m => ({
       role: m.from === npcName ? 'assistant' : 'user',
       content: m.from === npcName ? m.text : `${m.from} says: "${m.text}"`,
     }));
@@ -1114,6 +1126,10 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
       provider: providerType,
       model: config?.model || null,
       promptPreview,
+      // Capture the prompt's conversation depth so the panel can flag
+      // history-bloat — the call that runs against "51 messages" is the
+      // single biggest cost driver per the LM Studio logs.
+      conversationMsgs: messages.length,
       correlationId: opts.correlationId || null,
     };
     const rec = (extra) => {
@@ -1308,23 +1324,31 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
   }
 
   _processQueue() {
-    if (this._processingRequest || this._requestQueue.length === 0) return;
-
-    // Circuit breaker: if the provider is in cooldown after too many failures,
-    // reject queued requests fast instead of letting each one time out at 60s.
-    const now = Date.now();
-    if (!this._providerHealth) this._providerHealth = { consecutiveFailures: 0, cooldownUntil: 0 };
-    if (now < this._providerHealth.cooldownUntil) {
-      // Drain the queue quickly — NPCs will fall back to canned behavior.
-      while (this._requestQueue.length) {
-        const job = this._requestQueue.shift();
-        const remaining = Math.ceil((this._providerHealth.cooldownUntil - now) / 1000);
-        job.reject(new Error(`Provider cooling down (${remaining}s left)`));
+    // Allow up to _maxInflight concurrent calls. LM Studio's server
+    // Parallel setting controls how many actually run on the GPU at
+    // once — we don't try to outpace it.
+    while (this._inflightCount < this._maxInflight && this._requestQueue.length > 0) {
+      // Circuit breaker check (per-iteration so cooldown can trip mid-drain).
+      const now = Date.now();
+      if (!this._providerHealth) this._providerHealth = { consecutiveFailures: 0, cooldownUntil: 0 };
+      if (now < this._providerHealth.cooldownUntil) {
+        while (this._requestQueue.length) {
+          const job = this._requestQueue.shift();
+          const remaining = Math.ceil((this._providerHealth.cooldownUntil - now) / 1000);
+          job.reject(new Error(`Provider cooling down (${remaining}s left)`));
+        }
+        return;
       }
-      return;
+      this._inflightCount += 1;
+      this._dispatchOneFromQueue();
     }
+  }
 
-    this._processingRequest = true;
+  /** Pop the next job and fire its HTTP request. Wraps the old single-
+   *  mutex body so multiple calls can be in flight simultaneously. */
+  _dispatchOneFromQueue() {
+    // Old behavior used a single boolean; now we just bump a counter
+    // and let each call's `done()` decrement it.
 
     const { config, systemPrompt, messages, opts, resolve, reject } = this._requestQueue.shift();
     const maxTokens = opts.maxTokens || 150;
@@ -1384,7 +1408,7 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     };
 
     const done = () => {
-      this._processingRequest = false;
+      this._inflightCount = Math.max(0, this._inflightCount - 1);
       this._processQueue();
     };
 

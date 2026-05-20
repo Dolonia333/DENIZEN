@@ -114,6 +114,10 @@ class LlmTelemetry {
       latencyMs: Number.isFinite(entry.latencyMs) ? entry.latencyMs : null,
       tokensIn: Number.isFinite(entry.tokensIn) ? entry.tokensIn : null,
       tokensOut: Number.isFinite(entry.tokensOut) ? entry.tokensOut : null,
+      // Prompt conversation depth — surfaces history-bloat ("on
+      // conversation with 51 messages" in LM Studio logs) so the
+      // operator can see which NPCs are paying for big histories.
+      conversationMsgs: Number.isFinite(entry.conversationMsgs) ? entry.conversationMsgs : null,
       promptPreview: entry.promptPreview ? String(entry.promptPreview).slice(0, 240) : null,
       responsePreview: entry.responsePreview ? String(entry.responsePreview).slice(0, 240) : null,
       error: null,
@@ -176,6 +180,8 @@ class LlmTelemetry {
         p50LatencyMs: null, p95LatencyMs: null, p99LatencyMs: null,
         avgLatencyMs: null,
         tokensInTotal: 0, tokensOutTotal: 0, tokensPerMin: 0,
+        callsPerMin: 0, promptToCompletionRatio: null,
+        avgConversationMsgs: null, maxConversationMsgs: null,
         byNpc: {}, byProvider: {}, byKind: {}, topErrors: [],
       };
     }
@@ -220,6 +226,15 @@ class LlmTelemetry {
       .slice(0, 5)
       .map(([category, v]) => ({ category, ...v }));
 
+    // Conversation depth stats — surfaces history bloat. The LM Studio
+    // logs showed many calls running against 50+ messages; this lets the
+    // operator see whether a trim helped.
+    const convoLens = inWindow.map(r => r.conversationMsgs).filter(Number.isFinite);
+    const avgConvo = convoLens.length
+      ? Math.round(convoLens.reduce((a, b) => a + b, 0) / convoLens.length)
+      : null;
+    const maxConvo = convoLens.length ? Math.max(...convoLens) : null;
+
     return {
       windowMs,
       calls: inWindow.length,
@@ -232,6 +247,13 @@ class LlmTelemetry {
       tokensInTotal: tokensIn,
       tokensOutTotal: tokensOut,
       tokensPerMin: Math.round((tokensIn + tokensOut) / (windowMs / 60000)),
+      // New: calls per minute (throughput) and prompt:completion ratio
+      // (efficiency). High ratio (e.g. 30:1) means we're paying mostly
+      // for context, not new output — a signal to trim history.
+      callsPerMin: +(inWindow.length / (windowMs / 60000)).toFixed(1),
+      promptToCompletionRatio: tokensOut > 0 ? +(tokensIn / tokensOut).toFixed(1) : null,
+      avgConversationMsgs: avgConvo,
+      maxConversationMsgs: maxConvo,
       byNpc: groupBy('npc'),
       byProvider: groupBy('provider'),
       byKind: groupBy('kind'),

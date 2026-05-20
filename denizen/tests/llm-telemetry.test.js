@@ -158,6 +158,41 @@ describe('getStats', () => {
     assert.equal(s.tokensPerMin, 180);
   });
 
+  it('callsPerMin + promptToCompletionRatio', () => {
+    const { t } = mk({ persist: false });
+    t.record({ npc: 'A', kind: 'think', latencyMs: 100, tokensIn: 2500, tokensOut: 85 });
+    t.record({ npc: 'B', kind: 'think', latencyMs: 100, tokensIn: 2500, tokensOut: 85 });
+    const s = t.getStats({ windowMs: 60_000 });
+    assert.equal(s.callsPerMin, 2);
+    // 5000 / 170 = ~29.4
+    assert.ok(s.promptToCompletionRatio > 28 && s.promptToCompletionRatio < 31);
+  });
+
+  it('avgConversationMsgs + maxConversationMsgs surface history bloat', () => {
+    const { t } = mk({ persist: false });
+    t.record({ npc: 'A', kind: 'chat', latencyMs: 100, conversationMsgs: 2 });
+    t.record({ npc: 'A', kind: 'chat', latencyMs: 100, conversationMsgs: 51 });
+    t.record({ npc: 'A', kind: 'chat', latencyMs: 100, conversationMsgs: 25 });
+    const s = t.getStats();
+    assert.equal(s.maxConversationMsgs, 51);
+    assert.equal(s.avgConversationMsgs, 26);
+  });
+
+  it('conversationMsgs is carried on the normalized record', () => {
+    const { t } = mk({ persist: false });
+    const r = t.record({ npc: 'X', kind: 'chat', conversationMsgs: 7 });
+    assert.equal(r.conversationMsgs, 7);
+  });
+
+  it('empty window returns the new fields as zero/null', () => {
+    const { t } = mk({ persist: false });
+    const s = t.getStats();
+    assert.equal(s.callsPerMin, 0);
+    assert.equal(s.promptToCompletionRatio, null);
+    assert.equal(s.avgConversationMsgs, null);
+    assert.equal(s.maxConversationMsgs, null);
+  });
+
   it('byNpc groups + counts errors per group', () => {
     const { t } = mk({ persist: false });
     t.record({ npc: 'Lucy', kind: 'think', latencyMs: 100 });

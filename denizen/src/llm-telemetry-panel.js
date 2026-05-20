@@ -279,13 +279,16 @@
   function renderCallRow(c) {
     const lat = c.latencyMs != null ? Math.round(c.latencyMs) + 'ms' : '—';
     const isErr = !!c.error;
+    const ratio = (c.tokensIn != null && c.tokensOut > 0) ? (c.tokensIn / c.tokensOut).toFixed(0) + ':1' : '';
+    const convo = c.conversationMsgs != null ? `${c.conversationMsgs} msgs` : '';
     return `<div class="row ${isErr ? 'err' : ''}">
       <div class="meta">
         <span><b>${esc(c.npc || '?')}</b></span>
         <span>${esc(c.kind)}</span>
         <span>${esc(c.provider || '?')} ${esc(c.model || '')}</span>
         <span>${lat}</span>
-        <span>${fmtTokens(c.tokensIn, c.tokensOut)} tok</span>
+        <span>${fmtTokens(c.tokensIn, c.tokensOut)} tok${ratio ? ' · ' + ratio : ''}</span>
+        ${convo ? `<span>${convo}</span>` : ''}
         <span style="margin-left:auto">${fmtRel(c.at)}</span>
       </div>
       ${c.promptPreview ? `<pre>→ ${esc(c.promptPreview)}</pre>` : ''}
@@ -358,11 +361,23 @@
         ).join('<hr style="border:0; border-top:1px solid #334155; margin:4px 0"/>')
       : '(none — clean)';
 
+    const ratioColor = s.promptToCompletionRatio != null && s.promptToCompletionRatio > 20 ? '#fda4af'
+                     : s.promptToCompletionRatio != null && s.promptToCompletionRatio > 10 ? '#fbbf24'
+                     : '#86efac';
+    const convoColor = s.maxConversationMsgs != null && s.maxConversationMsgs > 40 ? '#fda4af'
+                     : s.maxConversationMsgs != null && s.maxConversationMsgs > 20 ? '#fbbf24'
+                     : '#cbd5e1';
     return `<div class="summary">
       <div class="card"><h4>Window: 5 min</h4>
-        <div>calls: <b>${s.calls}</b> · errors: ${s.errors} (${(s.errorRate * 100).toFixed(1)}%)</div>
+        <div>calls: <b>${s.calls}</b> (${s.callsPerMin}/min) · errors: ${s.errors} (${(s.errorRate * 100).toFixed(1)}%)</div>
         <div>latency: p50 ${ms(s.p50LatencyMs)} · p95 ${ms(s.p95LatencyMs)} · p99 ${ms(s.p99LatencyMs)}</div>
         <div>tokens: ${s.tokensInTotal}↑ ${s.tokensOutTotal}↓ · ${s.tokensPerMin}/min</div>
+        ${s.promptToCompletionRatio != null
+          ? `<div>prompt:completion ratio: <b style="color:${ratioColor}">${s.promptToCompletionRatio}:1</b>${s.promptToCompletionRatio > 20 ? ' — most cost is rebuilding context' : ''}</div>`
+          : ''}
+        ${s.avgConversationMsgs != null
+          ? `<div>convo depth: avg ${s.avgConversationMsgs} · <b style="color:${convoColor}">max ${s.maxConversationMsgs}</b>${s.maxConversationMsgs > 40 ? ' — trim history?' : ''}</div>`
+          : ''}
       </div>
       <div class="card"><h4>Top errors</h4>${topErr}</div>
       ${byTable(s.byNpc, 'By NPC')}
