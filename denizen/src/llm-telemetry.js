@@ -57,7 +57,7 @@ const ERROR_CLASSIFIERS = [
   { re: /HTML.*not loaded|HTML.*404|<!doctype html>/i, category: 'model_not_loaded',
     hint: 'LM Studio responded with HTML, which means no model is loaded. Load one in LM Studio → Models.' },
   { re: /context.*length|context.*size|prompt is too long|exceeds.*context/i, category: 'context_overflow',
-    hint: 'Prompt exceeds the model context window. Trim MEMORY.md or lower the conversation history depth.' },
+    hint: 'Prompt exceeds the model context window. Easiest fix: bump n_ctx in LM Studio (Model load options → Context Length → 16384 or 32768). Or trim MEMORY.md / NPC_HISTORY_DEPTH.' },
   { re: /HTTP 401|invalid.*api.*key|unauthor/i, category: 'auth',
     hint: 'API key missing or wrong. Check ~/.openclaw/openclaw.json for the relevant provider.' },
   { re: /HTTP 403/i, category: 'forbidden',
