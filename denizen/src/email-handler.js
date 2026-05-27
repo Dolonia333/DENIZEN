@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Email Handler — inbound n8n webhook → NPC brain → Gmail draft.
+ * Email Handler — inbound n8n webhook → NPC brain → Gmail draft or send.
  *
  * Architecture (matches the user's spec from this session):
  *
@@ -10,25 +10,38 @@
  *   /api/email-inbound (server.js)
  *        ▼
  *   email-handler.processInboundEmail()
- *        ├── route to NPC by email_style (Sarah today, anyone with it)
+ *        ├── route to NPC by email_style (Lucy, or anyone with it)
  *        ├── escalation rules — bail to "operator only" if hot-button keyword
  *        ├── npcBrains.getResponse() with email-shaped prompt
- *        ├── gmail-client.createDraft()  (local fallback if Gmail not wired)
+ *        ├── gmail-client.createDraft() OR sendEmail() depending on flags
  *        ├── append signature
  *        ├── audit log to data/email-log.json
- *        └── return { ok, drafted: { id, ... } } AND emit worldState event
+ *        └── return { ok, drafted: { id, ... }, sent: bool } AND emit worldState event
  *
- * Drafts-only by default. EMAIL_AUTOSEND=true plus a per-NPC SOUL
- * email_style.email_canAutoSend: true is required to actually send.
+ * Auto-send rules:
+ *   EMAIL_AUTOSEND=true AND email_canAutoSend: true in SOUL AND shouldEscalate()=false
+ *   → actually send via gmailClient.sendEmail() (not just draft).
+ *   Otherwise → create draft (safe default).
+ *
+ * ESCALATION_KEYWORDS is a module-level list that is always checked in addition
+ * to per-NPC SOUL escalate_keywords. Any match forces draft-only + Zion notification.
  *
  * The handler is intentionally pure-ish: it does NOT speak directly
  * to gmail-client when the caller (the HTTP route in server.js) is
- * better placed to also broadcast the Phaser "Sarah walks to her
+ * better placed to also broadcast the Phaser "Lucy walks to her
  * desk" WS event. Caller wires that piece.
  */
 
 const fs = require('node:fs');
 const path = require('node:path');
+
+// ---------- escalation keyword list ----------------------------------------
+// These are always checked regardless of per-NPC SOUL escalate_keywords.
+// Any match forces draft-only and a notification to Zion — never auto-send.
+const ESCALATION_KEYWORDS = [
+  'contract', 'nda', 'payment', 'legal', 'invoice', 'lawsuit', 'settlement',
+  'confidential', 'attorney', 'urgent: ceo only',
+];
 
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_LOG_FILE = path.join(ROOT, 'data', 'email-log.json');
@@ -111,17 +124,42 @@ function routeEmailToNpc(npcBrains, emailPayload, { preferredName = null } = {})
   return null;
 }
 
-/** Decide whether the email is hot enough to escalate (operator-only,
- *  no auto-draft). Keyword match is case-insensitive and bounded by
- *  word edges so e.g. "ndaily" doesn't match "nda". */
-function shouldEscalate(emailPayload, style) {
-  if (!style?.escalate_keywords?.length) return false;
-  const haystack = `${emailPayload.subject || ''}\n${emailPayload.body || ''}`.toLowerCase();
-  return style.escalate_keywords.some(kw => {
+/** Decide whether the email is hot enough to escalate (draft-only,
+ *  notify Zion — never auto-send). Checks BOTH the module-level
+ *  ESCALATION_KEYWORDS list and the per-NPC SOUL escalate_keywords.
+ *  Keyword match is case-insensitive and bounded by word edges so
+ *  e.g. "ndaily" doesn't match "nda".
+ *
+ *  Exported so tests and Lucy's processEmailQueue can call it directly
+ *  with just a subject+body string pair: shouldEscalate(subject, body). */
+function shouldEscalate(subjectOrPayload, bodyOrStyle) {
+  // Support two calling conventions:
+  //   shouldEscalate(emailPayload, style)  — original server/handler shape
+  //   shouldEscalate(subject, body)        — direct string pair (queue path)
+  let subject, body, styleKeywords;
+  if (typeof subjectOrPayload === 'string') {
+    subject = subjectOrPayload;
+    body    = typeof bodyOrStyle === 'string' ? bodyOrStyle : '';
+    styleKeywords = [];
+  } else {
+    subject = subjectOrPayload?.subject || '';
+    body    = subjectOrPayload?.body    || '';
+    styleKeywords = bodyOrStyle?.escalate_keywords || [];
+  }
+
+  const haystack = `${subject}\n${body}`.toLowerCase();
+
+  const matchKw = (kw) => {
     const k = String(kw).toLowerCase();
     if (!k) return false;
     return new RegExp(`(^|\\W)${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\W|$)`).test(haystack);
-  });
+  };
+
+  // Check module-level list first (always authoritative)
+  if (ESCALATION_KEYWORDS.some(matchKw)) return true;
+  // Then per-NPC SOUL keywords
+  if (styleKeywords.length && styleKeywords.some(matchKw)) return true;
+  return false;
 }
 
 /** Build the LLM prompt for the secretary's reply. Returns
@@ -282,29 +320,65 @@ async function processInboundEmail({ npcBrains, gmailClient }, emailPayload, opt
     ? emailPayload.subject
     : `Re: ${emailPayload.subject}`;
 
-  // Save the draft.
-  let drafted;
-  try {
-    drafted = await gmailClient.createDraft({
-      to: emailPayload.from,
-      subject: subjectReply,
-      body: finalBody,
-      threadId: emailPayload.threadId || null,
-      by: npcName,
-    });
-  } catch (err) {
-    _appendLog({ npc: npcName, kind: 'draft-failed', from: emailPayload.from, subject: emailPayload.subject, error: String(err?.message || err) });
-    return { ok: false, error: 'draft failed: ' + (err?.message || err), route: routed };
-  }
+  // Decide: auto-send or draft?
+  // Conditions for auto-send (ALL must be true):
+  //   1. EMAIL_AUTOSEND env var is 'true'
+  //   2. NPC SOUL has email_canAutoSend: true
+  //   3. SOUL does NOT have never_send: true
+  //   4. shouldEscalate() returns false (already checked above, but double-check here)
+  const autoSendEnv = String(process.env.EMAIL_AUTOSEND || '').toLowerCase() === 'true';
+  const canAutoSend = autoSendEnv && !style.never_send && style.email_canAutoSend;
 
-  // Auto-send if the NPC's SOUL permits and EMAIL_AUTOSEND=true env is set.
+  let drafted;
   let sent = false;
-  if (!style.never_send && style.email_canAutoSend) {
+
+  if (canAutoSend) {
+    // Attempt to send directly. If the gmail client supports sendEmail(), use it;
+    // fall back to draft+sendDraft for clients that only expose drafts.
     try {
-      const sendResult = await gmailClient.sendDraft({ id: drafted.id, autoSendAllowed: true });
-      sent = sendResult.status === 'sent';
+      if (typeof gmailClient.sendEmail === 'function') {
+        const sendResult = await gmailClient.sendEmail({
+          to: emailPayload.from,
+          subject: subjectReply,
+          body: finalBody,
+          threadId: emailPayload.threadId || null,
+          by: npcName,
+        });
+        // sendEmail returns the same shape as createDraft for compatibility
+        drafted = sendResult;
+        sent = true;
+      } else {
+        // Fallback: create draft then immediately send it
+        drafted = await gmailClient.createDraft({
+          to: emailPayload.from,
+          subject: subjectReply,
+          body: finalBody,
+          threadId: emailPayload.threadId || null,
+          by: npcName,
+        });
+        const sendResult = await gmailClient.sendDraft({ id: drafted.id, autoSendAllowed: true });
+        sent = sendResult.status === 'sent';
+      }
     } catch (err) {
       console.warn(`[email-handler] auto-send failed for ${npcName}:`, err?.message || err);
+      // Fall through to draft-only path below
+      drafted = null;
+    }
+  }
+
+  // Draft-only path (also used as fallback if auto-send threw)
+  if (!drafted) {
+    try {
+      drafted = await gmailClient.createDraft({
+        to: emailPayload.from,
+        subject: subjectReply,
+        body: finalBody,
+        threadId: emailPayload.threadId || null,
+        by: npcName,
+      });
+    } catch (err) {
+      _appendLog({ npc: npcName, kind: 'draft-failed', from: emailPayload.from, subject: emailPayload.subject, error: String(err?.message || err) });
+      return { ok: false, error: 'draft failed: ' + (err?.message || err), route: routed };
     }
   }
 
@@ -315,11 +389,95 @@ async function processInboundEmail({ npcBrains, gmailClient }, emailPayload, opt
     mode: drafted.mode,
     from: emailPayload.from,
     subject: emailPayload.subject,
+    autoSendEnabled: autoSendEnv,
     bodyPreview: finalBody.slice(0, 240),
   });
 
   return { ok: true, drafted, sent, route: routed };
 }
+
+// ---------- email queue processor -------------------------------------------
+
+/**
+ * processEmailQueue() — called from Lucy's think loop.
+ *
+ * Checks Lucy's pending email tasks (stored as { from, subject, body, threadId }
+ * objects in memory / a lightweight in-process queue), composes + sends or drafts
+ * each one, and returns a summary string Lucy can surface to Zion.
+ *
+ * The queue itself is an in-process array (_pendingQueue). External code can
+ * push tasks onto it via addToEmailQueue(). This keeps things simple — no
+ * additional DB or file writes needed for the queue itself.
+ */
+const _pendingQueue = [];
+
+/**
+ * Add an email task to Lucy's pending queue.
+ * @param {{ from:string, subject:string, body:string, threadId?:string }} task
+ */
+function addToEmailQueue(task) {
+  if (task?.from && task?.subject) {
+    _pendingQueue.push(task);
+  }
+}
+
+/**
+ * Process all pending emails in Lucy's queue.
+ * @param {{ npcBrains:object, gmailClient:object }} deps
+ * @returns {Promise<string>}  — human-readable summary for Lucy to say
+ */
+async function processEmailQueue({ npcBrains, gmailClient } = {}) {
+  if (!_pendingQueue.length) return '';
+  if (!npcBrains || !gmailClient) {
+    console.warn('[email-handler] processEmailQueue: deps not provided — skipping');
+    return '';
+  }
+
+  const tasks = _pendingQueue.splice(0); // drain the queue
+  const results = { sent: 0, drafted: 0, escalated: 0, failed: 0 };
+  const notes = [];
+
+  for (const task of tasks) {
+    try {
+      const result = await processInboundEmail(
+        { npcBrains, gmailClient },
+        { from: task.from, subject: task.subject, body: task.body || '', threadId: task.threadId || null },
+        { preferredName: 'Lucy' },
+      );
+      if (!result.ok) {
+        results.failed++;
+        notes.push(`Failed reply to ${task.from}: ${result.error}`);
+      } else if (result.escalated) {
+        results.escalated++;
+        notes.push(`Escalated to Zion: "${task.subject}" from ${task.from}`);
+      } else if (result.sent) {
+        results.sent++;
+        notes.push(`Sent reply to "${task.subject}" from ${task.from}`);
+      } else {
+        results.drafted++;
+        notes.push(`Draft ready: reply to "${task.subject}" from ${task.from}`);
+      }
+    } catch (err) {
+      results.failed++;
+      notes.push(`Error handling "${task.subject}": ${err?.message || err}`);
+    }
+  }
+
+  const parts = [];
+  if (results.sent)      parts.push(`${results.sent} sent`);
+  if (results.drafted)   parts.push(`${results.drafted} drafted`);
+  if (results.escalated) parts.push(`${results.escalated} escalated to Zion`);
+  if (results.failed)    parts.push(`${results.failed} failed`);
+
+  const summary = parts.length
+    ? `Email queue processed: ${parts.join(', ')}. ${notes.join(' | ')}`
+    : 'Email queue was empty.';
+
+  console.log('[email-handler] processEmailQueue:', summary);
+  return summary;
+}
+
+// ----------------------------------------------------------------------------
 
 module.exports = {
   parseEmailStyle,
@@ -328,6 +486,10 @@ module.exports = {
   buildReplyPrompt,
   assembleFinalBody,
   processInboundEmail,
+  processEmailQueue,
+  addToEmailQueue,
+  handleInboundEmail: processInboundEmail, // alias for clarity in docs/spec
+  ESCALATION_KEYWORDS,
   _LOG_FILE: DEFAULT_LOG_FILE,
   PER_NPC_DAILY_CAP,
 };

@@ -414,4 +414,317 @@ async function applyToJob(deps, job, opts = {}) {
   return { ok: false, error: 'provide either applyEmail or applyUrl' };
 }
 
-module.exports = { applyToJob, applyByEmail, applyByWebForm, loadProfile };
+// ---------- pipeline helpers ------------------------------------------------
+
+const { exec } = require('node:child_process');
+const crypto = require('node:crypto');
+
+const OPENCLAW_ROOT = 'C:/Users/zionv/OneDrive/Desktop/multbot/openclaw/skills';
+const SCRAPER_SCRIPT  = path.join(OPENCLAW_ROOT, 'job-scraper',     'job-scraper.mjs');
+const APPLIER_SCRIPT  = path.join(OPENCLAW_ROOT, 'job-applier',     'job-applier.mjs');
+const RESUME_SCRIPT   = path.join(OPENCLAW_ROOT, 'resume-generator','resume-generator.mjs');
+
+/** Run a node script and return its stdout as a string. Rejects on timeout. */
+function _spawnSkill(scriptPath, args = [], timeoutMs = 60000) {
+  return new Promise((resolve, reject) => {
+    if (!fs.existsSync(scriptPath)) {
+      return reject(new Error(`Skill script not found: ${scriptPath}`));
+    }
+    const cmd = `node "${scriptPath}" ${args.map(a => `"${a}"`).join(' ')}`;
+    exec(cmd, { timeout: timeoutMs, windowsHide: true, maxBuffer: 4 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) return reject(new Error((stderr || err.message || '').slice(0, 500)));
+      resolve((stdout || '').trim());
+    });
+  });
+}
+
+/**
+ * Filter scraped listings against the user profile's preferred roles,
+ * optional salary floor, and remote preference.
+ */
+function _filterListings(listings, profile, { minSalary = 0, remoteOnly = false } = {}) {
+  const targetRoles = (profile.targetRoles || [
+    'senior ai engineer', 'product manager', 'full-stack engineer',
+    'full stack engineer', 'backend developer', 'backend engineer',
+    'software engineer', 'developer', 'full-stack developer',
+  ]).map(r => r.toLowerCase());
+
+  return listings.filter(job => {
+    const title = (job.title || '').toLowerCase();
+    const desc  = (job.description || job.snippet || '').toLowerCase();
+
+    // Role match: at least one target keyword in the title
+    const roleMatch = targetRoles.some(r => title.includes(r));
+    if (!roleMatch) return false;
+
+    // Salary floor
+    if (minSalary && job.salary) {
+      const salaryNum = Number(String(job.salary).replace(/[^0-9]/g, '')) || 0;
+      if (salaryNum > 0 && salaryNum < minSalary) return false;
+    }
+
+    // Remote filter
+    if (remoteOnly) {
+      const remote = `${title} ${desc} ${(job.location || '').toLowerCase()}`;
+      if (!remote.includes('remote')) return false;
+    }
+
+    return true;
+  });
+}
+
+/**
+ * Build a fast template cover letter, personalised per listing.
+ * All letters in a pipeline run share the same opener template;
+ * only company name and role are swapped out. Target: < 1s per letter.
+ */
+function _buildTemplateCoverLetter(profile, job, openerTemplate) {
+  const opener = openerTemplate
+    ? openerTemplate
+        .replace(/\{company\}/g, job.company || '')
+        .replace(/\{role\}/g, job.title || '')
+    : (profile.summary || `I build production systems and ship working software.`);
+
+  const topExp = (profile.experience || [])[0];
+  const expLine = topExp
+    ? `Most recently as ${topExp.title} at ${topExp.company}, ${(topExp.bullets || [])[0] || ''}`.slice(0, 200)
+    : '';
+
+  return [
+    opener,
+    '',
+    expLine ? expLine + '.' : '',
+    '',
+    `The ${job.title || 'role'} at ${job.company || 'your company'} is a direct match for what I do. ` +
+    `My skills include ${(profile.skills || []).slice(0, 5).join(', ')}.`,
+    '',
+    'Happy to discuss further.',
+  ].filter(l => l !== null && l !== undefined).join('\n').trim();
+}
+
+// ---------- pipeline status tracker ----------------------------------------
+
+let _pipelineStatus = { running: false, lastRun: null, lastSummary: '' };
+
+function getPipelineStatus() {
+  return { ..._pipelineStatus };
+}
+
+// ---------- application log helpers ----------------------------------------
+
+function getApplicationLog({ limit = 50 } = {}) {
+  const store = _readLog();
+  return store.entries.slice(0, limit);
+}
+
+// ---------- main pipeline ---------------------------------------------------
+
+/**
+ * runJobPipeline — Lucy's full scrape→filter→resume→cover→apply pipeline.
+ *
+ * @param {object} opts
+ * @param {string}  opts.query       — search query (default: 'software engineer')
+ * @param {string}  opts.site        — job board: linkedin | indeed | glassdoor | ziprecruiter
+ * @param {number}  opts.pages       — pages to scrape (default: 2)
+ * @param {number}  opts.minSalary   — optional salary floor (0 = no filter)
+ * @param {boolean} opts.remoteOnly  — only keep remote listings
+ * @returns {Promise<string>}  — summary string Lucy can use as her message
+ */
+async function runJobPipeline(opts = {}) {
+  if (_pipelineStatus.running) {
+    return 'Job pipeline is already running — wait for it to finish before starting another.';
+  }
+
+  const query      = opts.query      || 'software engineer';
+  const site       = opts.site       || 'linkedin';
+  const pages      = Math.min(opts.pages || 2, 3);
+  const minSalary  = Number(opts.minSalary)  || 0;
+  const remoteOnly = Boolean(opts.remoteOnly);
+
+  _pipelineStatus = { running: true, lastRun: new Date().toISOString(), lastSummary: '' };
+  console.log(`[job-pipeline] Starting: query="${query}" site=${site} pages=${pages}`);
+
+  const profile = loadProfile();
+  if (!profile) {
+    _pipelineStatus.running = false;
+    return 'Cannot run job pipeline — user-profile.json is missing. Fill it in at denizen/data/user-profile.json.';
+  }
+
+  // ── Step 1: Scrape ───────────────────────────────────────────────────────
+  let listings = [];
+  try {
+    const scraperArgs = [
+      '--site', site,
+      '--query', query,
+      '--pages', String(pages),
+      '--headless', 'true',
+      '--save', 'false',
+    ];
+    if (remoteOnly) scraperArgs.push('--remote-only', 'true');
+
+    const raw = await _spawnSkill(SCRAPER_SCRIPT, scraperArgs, 90000);
+    // The scraper may print progress lines before the final JSON — grab
+    // the last valid JSON array in the output.
+    const jsonMatch = raw.match(/(\[[\s\S]*\])\s*$/);
+    if (jsonMatch) {
+      listings = JSON.parse(jsonMatch[1]);
+    } else {
+      // Try parsing the whole thing
+      const parsed = JSON.parse(raw);
+      listings = parsed.jobs || (Array.isArray(parsed) ? parsed : []);
+    }
+    console.log(`[job-pipeline] Scraped ${listings.length} listings from ${site}`);
+  } catch (err) {
+    console.warn('[job-pipeline] Scraper failed:', err.message);
+    _appendLog({ kind: 'pipeline-scrape-failed', query, site, error: err.message, at: new Date().toISOString() });
+    _pipelineStatus.running = false;
+    return `Job scrape failed for "${query}" on ${site}: ${err.message}. Check if the skill script is installed.`;
+  }
+
+  if (!listings.length) {
+    _pipelineStatus.running = false;
+    return `No listings found for "${query}" on ${site}. Try a different query or site.`;
+  }
+
+  // ── Step 2: Filter ───────────────────────────────────────────────────────
+  const qualified = _filterListings(listings, profile, { minSalary, remoteOnly });
+  console.log(`[job-pipeline] ${qualified.length}/${listings.length} listings passed filter`);
+
+  if (!qualified.length) {
+    _pipelineStatus.running = false;
+    return `Found ${listings.length} listings on ${site} but none matched profile filters. Try a broader query.`;
+  }
+
+  // ── Step 3 & 4: Resume + Cover Letter (per listing) ─────────────────────
+  // Build one shared opener template for the cover letters (fast, no LLM call per job)
+  const openerTemplate = `${profile.summary || 'I build production software and ship what I start.'}`;
+
+  const results = { applied: [], manualQueue: [], failed: [] };
+  let bestMatch = null;
+
+  for (const job of qualified) {
+    const jobId = crypto.randomUUID();
+    const company = job.company || 'Unknown Company';
+    const role    = job.title   || 'Unknown Role';
+
+    // Step 3 — Generate tailored resume
+    let resumePath = null;
+    try {
+      const profileTmpPath = path.join(require('os').tmpdir(), `lucy-profile-${jobId}.json`);
+      const jobTmpPath     = path.join(require('os').tmpdir(), `lucy-job-${jobId}.json`);
+      fs.writeFileSync(profileTmpPath, JSON.stringify(profile), 'utf8');
+      fs.writeFileSync(jobTmpPath, JSON.stringify({
+        title: role, company, description: job.description || job.snippet || '',
+      }), 'utf8');
+
+      const resumeOut = path.join(require('os').tmpdir(), `lucy-resume-${jobId}.html`);
+      const resumeArgs = [
+        '--profile', profileTmpPath,
+        '--job',     jobTmpPath,
+        '--template', 'modern',
+        '--output',  resumeOut,
+      ];
+      await _spawnSkill(RESUME_SCRIPT, resumeArgs, 30000);
+      resumePath = fs.existsSync(resumeOut) ? resumeOut : null;
+
+      // Clean up tmp files
+      try { fs.unlinkSync(profileTmpPath); } catch (_) {}
+      try { fs.unlinkSync(jobTmpPath); } catch (_) {}
+    } catch (err) {
+      console.warn(`[job-pipeline] Resume gen failed for ${role} at ${company}:`, err.message);
+      // Continue without a tailored resume — not fatal
+    }
+
+    // Step 4 — Cover letter (template, < 5s target)
+    const coverLetter = _buildTemplateCoverLetter(profile, { title: role, company }, openerTemplate);
+
+    // Step 5 — Apply or queue
+    let status = 'needs_manual_apply';
+    let applierError = null;
+
+    if (job.url && fs.existsSync(APPLIER_SCRIPT)) {
+      try {
+        const applierArgs = [
+          '--url',       job.url,
+          '--dry-run',   'true', // always dry-run from pipeline — safety first
+          '--headless',  'true',
+        ];
+        if (resumePath) applierArgs.push('--resume-pdf', resumePath);
+        if (coverLetter) applierArgs.push('--cover-letter', coverLetter.slice(0, 800));
+
+        await _spawnSkill(APPLIER_SCRIPT, applierArgs, 60000);
+        status = 'applied';
+        if (!bestMatch) bestMatch = { company, role };
+      } catch (err) {
+        applierError = err.message;
+        status = 'needs_manual_apply';
+        console.warn(`[job-pipeline] Applier failed for ${role} at ${company}:`, err.message);
+      }
+    } else {
+      if (!job.url) console.log(`[job-pipeline] No URL for ${role} at ${company} — queuing for manual review`);
+      if (!fs.existsSync(APPLIER_SCRIPT)) console.warn('[job-pipeline] job-applier.mjs not found — skipping auto-apply');
+    }
+
+    // Step 6 — Log entry
+    const logEntry = {
+      id:         jobId,
+      ts:         new Date().toISOString(),
+      npc:        'Lucy',
+      company,
+      role,
+      site,
+      status,
+      resumePath: resumePath || null,
+      notes:      applierError ? `Applier error: ${applierError}` : (status === 'needs_manual_apply' ? 'No URL or applier unavailable' : 'Dry-run via job-applier'),
+    };
+    _appendLog(logEntry);
+
+    if (status === 'applied') {
+      results.applied.push({ company, role });
+      if (!bestMatch) bestMatch = { company, role };
+    } else {
+      results.manualQueue.push({ company, role });
+    }
+  }
+
+  // ── Step 7: Summary ──────────────────────────────────────────────────────
+  const appliedCount = results.applied.length;
+  const manualCount  = results.manualQueue.length;
+  const bestStr = bestMatch ? ` Best match: ${bestMatch.role} at ${bestMatch.company}.` : '';
+  const summary = [
+    appliedCount ? `Applied to ${appliedCount} role${appliedCount === 1 ? '' : 's'} on ${site}.` : '',
+    manualCount  ? `${manualCount} more queued for manual review.` : '',
+    bestStr,
+  ].filter(Boolean).join(' ').trim() || `Processed ${qualified.length} listings from ${site} — all queued for manual review.`;
+
+  _pipelineStatus = { running: false, lastRun: _pipelineStatus.lastRun, lastSummary: summary };
+  console.log('[job-pipeline] Done:', summary);
+  return summary;
+}
+
+// ---------- unified entry point ---------------------------------------------
+
+async function applyToJob(deps, job, opts = {}) {
+  if (!job.company || !job.jobTitle) {
+    return { ok: false, error: 'company and jobTitle are required' };
+  }
+
+  // Prefer web form if URL is given; fall back to email
+  if (job.applyUrl) {
+    return applyByWebForm(job, { broadcast: deps.broadcast, provider: job.provider });
+  }
+  if (job.applyEmail) {
+    return applyByEmail(deps, job, opts);
+  }
+  return { ok: false, error: 'provide either applyEmail or applyUrl' };
+}
+
+module.exports = {
+  applyToJob,
+  applyByEmail,
+  applyByWebForm,
+  loadProfile,
+  runJobPipeline,
+  getApplicationLog,
+  getPipelineStatus,
+};
