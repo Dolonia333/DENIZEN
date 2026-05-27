@@ -127,8 +127,9 @@ Thoughtful, analytical, methodical. Thinks before he speaks and backs every opin
 
 **How he works:**
 - Reads `src/npc-brains.js` and `data/company-brief.json` for context
-- Benchmarks models, researches AI patterns, documents findings
+- Benchmarks models, researches AI agent observability patterns, documents findings
 - Hangs out near the bookshelf — uses it as a research station
+- Uses **browserclaw** skill to research competitor tools (LangSmith, Phoenix, Langfuse), read papers, and investigate external documentation
 - Writes research reports to `reports/research/`
 
 ---
@@ -184,7 +185,8 @@ Quiet, reliable, dry humor. Speaks in short sentences because he'd rather be fix
 **How he works:**
 - Reads `server.js` and `src/linux-agent.js`
 - Gets live infra data injected: LM Studio ping, server health, Node version
-- Knows LM Studio management skill, can diagnose context overflow errors
+- Receives **Bouncer escalations** — when Bouncer confirms a serious threat, it assigns Dan a directive via `npc_assign_directive`. Dan is the decision-maker for network-level responses.
+- Skills: `browserclaw` (docs, vendor advisories, suspicious domain checks), `lm-studio` (model management, context overflow), `supabase-bridge` (database health)
 - Writes IT support reports to `reports/it-reports/`
 - Lives in the storage/server room — his natural territory
 
@@ -208,11 +210,14 @@ Warm, organized, socially sharp. The first person you see and the last you forge
 
 **Quirks:** Greets visitors before they reach the desk. Knows when someone is having a bad day before they say anything.
 
+**Filler phrase:** *"Of course — let me take care of that."* — said before she's already doing it.
+
 **How she works:**
-- Handles email triage for the CEO — `src/email-handler.js`
-- Runs job applications — `src/job-application.js`
-- Has access to OpenClaw job pipeline skills: `job-scraper`, `job-applier`, `resume-generator`, `session-health`, `pdf-generator`
+- **Email auto-send**: inbound emails arrive via n8n → `POST /api/email-inbound`. Lucy composes a reply. If `EMAIL_AUTOSEND=true` and no escalation keywords match, the email sends automatically. Escalation keywords (`contract`, `nda`, `payment`, `legal`, `invoice`, `lawsuit`, `settlement`, `confidential`, `attorney`, `urgent: ceo only`) always force draft-only.
+- **Job pipeline**: 7-step automated cycle — scrape → filter → resume → cover letter → apply → log → report. Triggered by `POST /api/lucy-job-pipeline` or by Lucy's own `run_skill` decision.
+- Skills: `job-scraper`, `job-applier`, `resume-generator`, `session-health`, `pdf-generator`
 - Stationed at the reception desk — first point of contact for visitors
+- Walks to her desk when email arrives (in-game behavior)
 - Writes admin notes to `reports/admin/`
 
 ---
@@ -233,12 +238,15 @@ Before this, corporate security for a logistics firm with facilities in three co
 **Personality:**
 Stoic, observant, no-nonsense. Notices everything — who comes in, who leaves, what time, what they're carrying. Intimidating at first, surprisingly warm once you earn his trust. Dry sense of humor that catches people off guard. When reporting to the CEO: one sentence on the threat, one on how he handled it, one on what he put in place to stop it happening again.
 
+**Filler phrase:** *"On it."* — one word, already moving.
+
 **How he works:**
 - When the security monitor fires a threat, Bouncer runs real Kali Linux commands via `src/linux-agent.js`
 - Opens a Windows Terminal window showing live investigation commands
-- Threat-specific investigation: nmap, ss, netstat, journalctl, whois, tcpdump
-- Runs scheduled perimeter patrols via `perimeterPatrol()` — checks all open ports, probes critical services
-- Reports findings to `reports/security/`
+- Threat-specific investigation: nmap, ss, netstat, journalctl, whois, tcpdump, tshark (for packet anomalies)
+- Runs scheduled perimeter patrols via `perimeterPatrol()` — baseline `nmap` scan of all known ports, diffs against `data/bouncer-baseline.json` to detect new or closed ports
+- After every investigation, `buildReport()` writes a structured markdown report to `reports/security/` with: metadata header, per-step findings, threat intel (whois), pattern-based assessment, and a final verdict (`THREAT CONFIRMED` / `LIKELY FALSE POSITIVE` / `INCONCLUSIVE`)
+- When `investigationIsSerious()` is true, assigns a directive to **Dan** via `npc_assign_directive` — `urgent: true`
 - Patrols between reception and the front entrance
 
 **Investigation commands by threat type:**
@@ -266,16 +274,23 @@ Stoic, observant, no-nonsense. Notices everything — who comes in, who leaves, 
 | **Manages** | Nobody (coordinates everyone) |
 | **Home room** | Conference room |
 | **Artifact type** | `reports/pm-reports/` |
-| **SOUL file** | ⚠️ Missing — needs to be created |
 
 **Who he is:**
-Marcus keeps the sprint on track. He doesn't build features — he makes sure the people who do have everything they need and nothing blocking them. He runs standups, tracks deadlines, escalates blockers, and coordinates handoffs between teams.
+Marcus ran his own software consultancy for three years before concluding he was better at keeping teams on track than building things himself. He was a decent developer — not exceptional — but he had a talent for seeing the whole board, noticing when work was stacking up in the wrong places, and unblocking people before they realized they were blocked. He closed the consultancy, took a PM role at a mid-size company, then moved here because the problem was more interesting. He runs three miles every morning before work. He has not missed a day in four years and does not talk about it.
 
-**Role in practice:**
-- Checks in with every team lead for status updates
-- Identifies tasks older than 2 days with no progress — escalates to Abby
-- Coordinates handoffs (e.g., Edward's backend work → Molly's QA pass)
-- Runs the afternoon standup
+**Personality:**
+Organized, calm, direct. Has the kind of steadiness that makes panicking people slow down. Doesn't sugarcoat status — if a task is three days behind, he says it's three days behind. Not a micromanager but notices everything, and when something has been sitting still too long, he says something. Dry appreciation for good processes and visible frustration at bad ones. Believes most project failures are communication failures in disguise.
+
+**Filler phrase:** *"Where does that stand."* — used the way other people use hello. As an opener, not a pleasantry.
+
+**Quirks:** Keeps a single running list of every open blocker across the team, updated in real time. Never on a whiteboard — in his head and in a text file he's had since 2021. Runs standups standing up. Moves toward the door if they go long. People have learned to wrap up.
+
+**How he works:**
+- Checks in with every team lead for actual status (not optimistic status)
+- Identifies tasks older than 2 days with no movement — escalates directly to Abby
+- Coordinates handoffs (e.g., Edward's backend changes → Molly's QA pass)
+- Makes sure Josh has clear requirements for the frontend feed panel
+- Runs the afternoon standup in under 8 minutes
 - Writes PM reports to `reports/pm-reports/`
 
 ---
@@ -288,18 +303,25 @@ Marcus keeps the sprint on track. He doesn't build features — he makes sure th
 | **Reports to** | Abby |
 | **Manages** | Nobody (defines what engineering builds) |
 | **Home room** | Conference room |
-| **Artifact type** | `reports/pm-reports/` |
-| **SOUL file** | ⚠️ Missing — needs to be created |
+| **Artifact type** | `reports/product/` |
 
 **Who she is:**
-Sarah is the voice of the user inside the engineering process. She defines *what* gets built. Alex decides *how*. She prioritizes the backlog, writes specs, reviews features before they ship, and makes sure what the team builds actually solves a real problem.
+Sarah came from a growth and product role at a B2B SaaS company where she shipped fourteen features in two years and killed eight of them before launch because they tested badly. She learned the hard way that the features you don't build are sometimes the best product decisions you make. She moved into AI infrastructure because she saw that most of the interesting unsolved product problems had moved there — not the AI models themselves, but the tools people use to understand and deploy them. That's exactly what Denizen is. She has a habit of printing user feedback emails and reading them on paper. She says something about the medium makes patterns easier to spot.
 
-**Role in practice:**
-- Prioritizes Sprint 5 backlog after Sprint 4 lands
-- Writes feature specs (e.g., the NPC delegation chain spec)
-- Aligns with Abby on product direction vs. technical constraints
-- Reviews visitor feedback and user reports
-- Works with Rob on UX direction
+**Personality:**
+Commercially sharp, user-obsessed, decisive. Asks "who is this for" before she asks "how does it work." Pushes back on features that look cool but have no clear user value. Direct about priorities — something is either important enough to be in the sprint or it isn't. No polite vagueness. Collaborative without being indecisive. Makes the call at the end.
+
+**Filler phrase:** *"What problem does that solve."* — asked flat, without judgment, every single time a feature idea comes up. Even her own ideas.
+
+**Quirks:** Prints emails and user feedback on paper and reads them with a pen. Cannot explain why this works better than a screen. It just does. Keeps a "killed features" log — everything scoped out of the roadmap and why. Revisits it quarterly to check her own judgment.
+
+**How she works:**
+- Defines what gets built this sprint and what gets deferred
+- Writes feature specs (e.g., the NPC delegation chain spec, work output feed scope)
+- Aligns with Abby on whether the work output feed is user-facing or debug-only
+- Decides whether the public demo needs a simplified NPC roster or can use all 16
+- Reviews visitor feedback; works with Rob on UX direction
+- Writes product decisions and specs to `reports/product/`
 
 ---
 
@@ -501,7 +523,7 @@ Enthusiastic, curious, humble. A sponge — absorbing everything from every team
 
 Every 45–75 seconds, each NPC runs a **think cycle**:
 
-1. Server builds a rich context prompt: company brief, sprint tasks, code snippet (random chance), live system data (DevOps/IT/Security only), hierarchy, team state, office events, their memory, recent conversations
+1. Server builds a rich context prompt: soul file, company brief, sprint tasks, mood state, active directive (if any), pending skill result (if any), code snippet (random chance), live system data (DevOps/IT/Security only), hierarchy, team state, office events, memory, recent conversations
 2. The prompt is sent to the NPC's AI provider (LM Studio, Claude, Grok, etc.)
 3. The AI returns one JSON object with their decision
 4. The server executes the action and broadcasts it to the game client
@@ -513,17 +535,49 @@ Every 45–75 seconds, each NPC runs a **think cycle**:
   "reasoning": "1-2 sentences: what's my state, what matters most, why this action",
   "plan": "one-line projected next 2 steps",
   "thought": "internal monologue (one sentence)",
-  "action": "talk|work|collaborate|break|check|meeting|report|read|visit|coffee|wander",
+  "action": "talk|work|collaborate|break|check|meeting|report|delegate|run_skill",
   "target": "NPC name or null",
   "location": "desk|breakroom|conference|storage|manager_office|reception|open_office|null",
   "message": "what they say out loud (under 120 chars)",
   "taskPhase": "starting|continuing|finished|none",
   "save": "brief note written to their memory",
-  "outcome": "ok|stuck|blocked|success|null"
+  "outcome": "ok|stuck|blocked|success|null",
+  "skill": "github|browserclaw|supabase-bridge|job-scraper|lm-studio|...",
+  "skillParams": { "cmd": "issue create", "title": "bug: ...", "body": "..." }
 }
 ```
 
-When `taskPhase` is `finished`, the NPC's decision is written to a real markdown file in `reports/<category>/` on disk.
+`skill` and `skillParams` are only used when `action === 'run_skill'`. When `taskPhase === 'finished'`, the NPC writes a real markdown artifact to `reports/<category>/`. When a directive is active and `taskPhase === 'finished'`, the directive is cleared and the NPC automatically walks to the assigner to report.
+
+---
+
+## Mood System
+
+Every NPC carries a live mood state injected into their think prompt on every cycle:
+
+| Axis | Range | Shifts up when | Shifts down when |
+|------|-------|----------------|-----------------|
+| `stress` | 0–100 | Consecutive work cycles, urgent directives, blocked tasks | Breaks, finished tasks |
+| `satisfaction` | 0–100 | Finishing tasks, positive player interaction, completed directives | Long idle periods |
+| `focus` | 0–100 | Uninterrupted desk time | Context switches, meetings, interruptions |
+
+High stress → more `break` decisions. High focus → more `work` decisions. The player talking to an NPC boosts their satisfaction immediately.
+
+---
+
+## Directive Inbox
+
+Any NPC can assign a **direct-order task** to another NPC — or the player can do it via REST:
+
+```bash
+curl -X POST http://localhost:8080/api/assign-directive \
+  -H 'Content-Type: application/json' \
+  -d '{"to":"Alex","from":"Abby","task":"Fix the WebSocket dedup bug","urgent":true}'
+```
+
+The directive appears as a prominent `DIRECT ORDER` block at the very top of the target NPC's system prompt — above their soul, above company context — on their next think cycle. They prioritize it immediately. When they finish and return `taskPhase: 'finished'`, they walk to the assigner to report back.
+
+Bouncer uses this automatically when it confirms a serious threat — it assigns Dan a directive with `urgent: true`.
 
 ---
 
@@ -531,22 +585,24 @@ When `taskPhase` is `finished`, the NPC's decision is written to a real markdown
 
 | NPC | Reads real code | Writes artifacts | Live system data | Real tool execution |
 |-----|----------------|-----------------|-----------------|-------------------|
-| Abby | ✓ | `reports/leadership/` | — | Dispatches all actions, triggers Bouncer |
-| Alex | ✓ | `reports/code-reviews/` | — | GitHub skill (CI, PRs, issues) |
-| Bob | ✓ | `reports/research/` | — | — (browserclaw planned) |
-| Jenny | ✓ | `reports/code-reviews/` | — | GitHub skill (PR review) |
-| Dan | ✓ | `reports/it-reports/` | LM Studio ping, server health | lm-studio, supabase-bridge |
-| Lucy | ✓ | `reports/admin/` | — | job-scraper, job-applier, resume-generator, pdf-generator |
-| Bouncer | ✓ | `reports/security/` | Server health, process list | **Full Kali Linux**: nmap, ss, netstat, journalctl, whois, tcpdump |
+| Abby | ✓ | `reports/leadership/` | — | All skills via delegation; triggers Bouncer investigations |
+| Alex | ✓ | `reports/code-reviews/` | — | `github` (CI, PRs, issues) |
+| Bob | ✓ | `reports/research/` | — | `browserclaw` (research, docs, competitor analysis) |
+| Jenny | ✓ | `reports/code-reviews/` | — | `github` (PR review, bug filing) |
+| Dan | ✓ | `reports/it-reports/` | LM Studio ping, server health | `browserclaw`, `lm-studio`, `supabase-bridge`; receives Bouncer threat escalations |
+| Lucy | ✓ | `reports/admin/` | — | `job-scraper`, `job-applier`, `resume-generator`, `pdf-generator`; email auto-send |
+| Bouncer | ✓ | `reports/security/` | Server health, process list | **Full Kali Linux**: nmap, ss, netstat, journalctl, whois, tcpdump, tshark |
 | Marcus | — | `reports/pm-reports/` | — | — |
-| Sarah | — | `reports/pm-reports/` | — | — |
+| Sarah | — | `reports/product/` | — | — |
 | Edward | ✓ | `reports/code-reviews/` | — | — |
 | Josh | ✓ | `reports/code-reviews/` | — | — |
 | Molly | ✓ | `reports/bugs/` | — | — |
-| Oscar | ✓ | `reports/devops/` | Disk usage, process list, server health | supabase-bridge, github CI |
-| Pier | ✓ | `reports/data-reports/` | — | supabase-bridge |
+| Oscar | ✓ | `reports/devops/` | Disk usage, process list, server health | `supabase-bridge`, `github` (CI status) |
+| Pier | ✓ | `reports/data-reports/` | — | `supabase-bridge` (query, insert, schema design) |
 | Rob | ✓ | `reports/design/` | — | — |
 | Roki | ✓ | `reports/intern-notes/` | — | — |
+
+**All NPCs** have a live mood state (stress / satisfaction / focus) injected into every think prompt, and can send/receive directives via the directive inbox.
 
 ---
 
