@@ -38,6 +38,9 @@ class NpcBrainManager {
     this._taskProgress = {};   // npcName -> { task, phase, startedAt }
     this._pendingCascades = []; // queued cascade decisions to send downstream
     this._requestQueue = [];    // queue for LM Studio requests
+    this._pendingSkillResults = new Map(); // npcName → {skill, result, ts}
+    this._npcMoods = new Map();            // npcName → {mood, since, cycles}
+    this._directives = new Map();          // npcName → {from, task, ts, urgent}
     // Up to N concurrent inferences. LM Studio supports parallel
     // generation (server config "Parallel: 4"), and the Denizen mutex
     // For large models (27B+) keep to 1 concurrent request so the GPU
@@ -1013,7 +1016,38 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       }
     }
 
+    // Pending skill result — inject once, then clear
+    const skillResult = this._pendingSkillResults.get(npcName);
+    if (skillResult) {
+      this._pendingSkillResults.delete(npcName);
+    }
+    const skillResultBlock = skillResult
+      ? `## Skill Result: ${skillResult.skill}\nYou just ran the "${skillResult.skill}" skill and got this data back:\n${skillResult.result}\nUse this to inform your next action.\n\n`
+      : '';
+
+    // Mood block
+    const mood = this._getMood(npcName);
+    this._tickMoodCycle(npcName);
+    const moodHints = {
+      energized: 'You are energized right now — you just finished something or got good news. It shows in how you talk.',
+      frustrated: 'You are frustrated — something is blocked or not working. You are professional about it but it colors your tone.',
+      tired: 'You have been heads-down for a while and you need a break. Consider taking one.',
+      focused: 'You are in a focused, efficient mode right now.',
+      excited: 'You are genuinely excited about what you are working on.',
+      neutral: '',
+    };
+    const moodBlock = mood !== 'neutral' ? `## Current Mood\nMood: ${mood}. ${moodHints[mood] || ''}\n\n` : '';
+
+    // Directive inbox — prepended prominently so it can't be missed
+    const directive = this._directives.get(npcName);
+    const directiveBlock = directive
+      ? `## DIRECT ORDER FROM ${String(directive.from).toUpperCase()}\n${directive.task}\nThis is your mandatory current task. Work on it now. When finished, set taskPhase to "finished" and report back.\n\n`
+      : '';
+
     const systemPrompt = brain.personality + '\n\n' +
+      (directiveBlock ? directiveBlock : '') +
+      (skillResultBlock ? skillResultBlock : '') +
+      (moodBlock ? moodBlock : '') +
       (companyContext ? '## Company & Sprint Context\n' + companyContext + '\n\n' : '') +
       (openClawContext ? '## OpenClaw Skills Available\n' + openClawContext + '\n\n' : '') +
       (codeContext ? '## Codebase Snippet (from your work area)\n' + codeContext + '\n\n' : '') +
@@ -1086,7 +1120,7 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       : '';
 
     const userPrompt = `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Decide what to do next. Think step by step, then respond with a single JSON object:
-{"reasoning": "1-2 sentences tracing: what's my current state, what matters most, why this action", "plan": "one-line projected next 2 steps", "thought": "your internal monologue (one sentence)", "action": "talk|work|collaborate|break|check|meeting|report|read|visit|coffee|wander", "target": "NPC name or null", "location": "desk|breakroom|conference|storage|manager_office|reception|open_office|null", "message": "what you say out loud (under 120 chars)", "taskPhase": "starting|continuing|finished|none", "save": "brief note for your memory", "outcome": "ok|stuck|blocked|success|null"}
+{"reasoning": "1-2 sentences tracing: what's my current state, what matters most, why this action", "plan": "one-line projected next 2 steps", "thought": "your internal monologue (one sentence)", "action": "talk|work|collaborate|break|check|meeting|report|read|visit|coffee|wander|run_skill", "target": "NPC name or null", "location": "desk|breakroom|conference|storage|manager_office|reception|open_office|null", "message": "what you say out loud (under 120 chars)", "taskPhase": "starting|continuing|finished|none", "save": "brief note for your memory", "outcome": "ok|stuck|blocked|success|null", "skill": "skill name when action is run_skill (e.g. job-scraper, github, browserclaw) or null", "skillParams": {}}
 
 ACTION MEANINGS:
 - talk/collaborate/report: interact with a specific coworker (set target)
@@ -1097,6 +1131,7 @@ ACTION MEANINGS:
 - visit: drop by a coworker's desk to check on them (set target, no conversation required)
 - wander: walk through the office, stretch, observe — use sparingly
 - meeting: go to the conference room for a meeting. Set target to whoever you want there — they will physically walk to the conference room and join you. Set location: conference. Use when you need to review work, plan something, or sync with someone face-to-face. Example: {"action":"meeting","target":"Josh","location":"conference","message":"Josh, quick sync in the conference room?"}
+- run_skill: execute an OpenClaw skill tool. Set skill to the skill name and skillParams to the arguments. Use for: Lucy→job-scraper/job-applier/resume-generator, Alex/Jenny→github, Bob→browserclaw, Dan→lm-studio, Oscar→supabase-bridge
 
 IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use the WHOLE OFFICE — go to the conference room for meetings, the breakroom for coffee, the bookshelf to read. An office where nobody moves is a dead office.`;
 
@@ -1164,6 +1199,33 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
           }
         } else if (decision.taskPhase === 'continuing' && this._taskProgress[npcName]) {
           this._taskProgress[npcName].phase = 'continuing';
+        }
+
+        // ── Mood updates ──────────────────────────────────────────────────────
+        if (decision.outcome === 'blocked' || decision.outcome === 'stuck') {
+          this._updateMood(npcName, 'task_blocked');
+        } else if (decision.taskPhase === 'finished') {
+          this._updateMood(npcName, 'task_finished');
+        } else if (decision.action === 'meeting') {
+          this._updateMood(npcName, 'meeting_called');
+        }
+        // Track consecutive work cycles for tiredness
+        {
+          const workCycles = this._thinkCycles[npcName] || 0;
+          if (workCycles >= 3) {
+            this._updateMood(npcName, 'long_work_streak');
+          }
+        }
+
+        // ── Directive inbox: clear on finish + redirect ───────────────────────
+        if (decision.taskPhase === 'finished' && this._directives.has(npcName)) {
+          const dir = this._directives.get(npcName);
+          this._directives.delete(npcName);
+          if (decision.action !== 'report') {
+            decision.action = 'report';
+            decision.target = dir.from;
+            decision.message = decision.message || `Done — ${decision.save || 'task complete'}.`;
+          }
         }
 
         // Enhanced memory saving: include WHO, WHAT, DECIDED, NEXT
@@ -2784,6 +2846,102 @@ ${roleActions}
     } catch (err) {
       return { ok: false, error: `POST failed: ${err?.message || err}`, proposal: parsed };
     }
+  }
+
+  // ── Feature: Skill Bridge ──────────────────────────────────────────────────
+
+  /**
+   * Store an OpenClaw skill result for an NPC. It will be injected into
+   * their next think() system prompt, then cleared.
+   */
+  injectSkillResult(npcName, skill, result) {
+    this._pendingSkillResults.set(npcName, { skill, result, ts: Date.now() });
+  }
+
+  // ── Feature: Mood System ───────────────────────────────────────────────────
+
+  /**
+   * Return the current mood string for an NPC, defaulting to 'neutral'.
+   */
+  _getMood(npcName) {
+    const entry = this._npcMoods.get(npcName);
+    if (!entry) return 'neutral';
+    // Check if cycle budget has expired
+    if (entry.cycles <= 0) {
+      this._npcMoods.delete(npcName);
+      return 'neutral';
+    }
+    return entry.mood;
+  }
+
+  /**
+   * Shift an NPC's mood based on a named event. Cycle counts are decremented
+   * on each call to _getMood (effectively each think cycle).
+   */
+  _updateMood(npcName, event) {
+    const MEETING_EXCITED = new Set(['Josh', 'Roki']);
+    const MEETING_FOCUSED = new Set(['Abby', 'Marcus', 'Sarah']);
+
+    let mood = 'neutral';
+    let cycles = 2;
+
+    switch (event) {
+      case 'task_finished':
+        mood = 'energized'; cycles = 2; break;
+      case 'task_blocked':
+        mood = 'frustrated'; cycles = 3; break;
+      case 'long_work_streak':
+        mood = 'tired'; cycles = 2; break;
+      case 'ceo_talked':
+        mood = 'energized'; cycles = 2; break;
+      case 'meeting_called':
+        if (MEETING_EXCITED.has(npcName)) {
+          mood = 'excited';
+        } else if (MEETING_FOCUSED.has(npcName)) {
+          mood = 'focused';
+        } else {
+          mood = 'neutral';
+        }
+        cycles = 2;
+        break;
+      default:
+        mood = 'neutral'; cycles = 0;
+    }
+
+    if (mood === 'neutral') {
+      this._npcMoods.delete(npcName);
+    } else {
+      this._npcMoods.set(npcName, { mood, since: Date.now(), cycles });
+    }
+  }
+
+  /**
+   * Tick down the mood cycle counter by 1. Called inside think() after
+   * we read the mood so the NPC gets the full cycle before expiry.
+   */
+  _tickMoodCycle(npcName) {
+    const entry = this._npcMoods.get(npcName);
+    if (!entry) return;
+    entry.cycles -= 1;
+    if (entry.cycles <= 0) this._npcMoods.delete(npcName);
+  }
+
+  /**
+   * Allow server.js to push mood events (e.g. 'ceo_talked') from outside
+   * the think loop.
+   */
+  setMoodFromExternal(npcName, event) {
+    this._updateMood(npcName, event);
+  }
+
+  // ── Feature: Directive Inbox ───────────────────────────────────────────────
+
+  /**
+   * Push a mandatory task directive from one NPC to another.
+   */
+  assignDirective(targetNpc, fromNpc, task, urgent = false) {
+    this._directives.set(targetNpc, { from: fromNpc, task, ts: Date.now(), urgent });
+    log.info('Directive', `${fromNpc} → ${targetNpc}: "${String(task).slice(0, 60)}"`);
   }
 }
 

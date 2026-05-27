@@ -2194,6 +2194,47 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'directive_assigned': {
+        // A directive was pushed to an NPC (manager → report). Log it and
+        // optionally animate the target NPC so the player sees they have a task.
+        const targetKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.to?.toLowerCase()
+        )?.[0];
+        console.log(`[Directive] ${msg.from} → ${msg.to}: "${String(msg.task || '').slice(0, 60)}"`);
+        if (targetKey) {
+          try { this.actions.emote(targetKey, '!'); } catch (_) {}
+        }
+        break;
+      }
+      case 'npc_skill_start': {
+        // An NPC started running an OpenClaw skill — animate them at their desk
+        const skillNpcKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
+        )?.[0];
+        if (skillNpcKey) {
+          const skillAgent = this.agents.get(skillNpcKey);
+          if (skillAgent?.assignedDesk) {
+            try { this.actions.useComputer(skillNpcKey, skillAgent.assignedDesk); } catch (_) {}
+          }
+        }
+        break;
+      }
+      case 'npc_skill_result': {
+        // Skill finished — brief emote on the NPC so the player notices
+        const skillResultKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
+        )?.[0];
+        if (skillResultKey) {
+          try {
+            this.actions.emote(skillResultKey, msg.ok ? '✓' : '!');
+          } catch (_) {}
+        }
+        if (this.scene._playerChat) {
+          const note = `${msg.npcName} finished running ${msg.skill}${msg.ok ? '' : ' (error)'}.`;
+          this.scene._playerChat._addToLog(msg.npcName, note);
+        }
+        break;
+      }
       default:
         console.log('[AgentManager] Unknown message type:', msg.type);
     }

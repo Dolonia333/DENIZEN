@@ -21,6 +21,7 @@ const llmTelemetry = require('./src/llm-telemetry');
 const jobApplication = require('./src/job-application');
 const desktopAgent = require('./src/desktop-agent');
 const linuxAgent = require('./src/linux-agent');
+const npcTools   = require('./src/npc-tools');
 const log = require('./src/logger');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -153,6 +154,105 @@ securityMonitor.start();
 const npcBrains = new NpcBrainManager();
 const cofounderAgent = new CofounderAgent();
 cofounderAgent.npcBrains = npcBrains; // Give the director access to individual NPC brains
+
+// --- OpenClaw Skill Bridge ---
+const OPENCLAW_ROOT = 'C:/Users/zionv/OneDrive/Desktop/multbot/openclaw';
+const SKILL_SCRIPTS = {
+  'job-scraper':      `${OPENCLAW_ROOT}/skills/job-scraper/job-scraper.mjs`,
+  'job-applier':      `${OPENCLAW_ROOT}/skills/job-applier/job-applier.mjs`,
+  'resume-generator': `${OPENCLAW_ROOT}/skills/resume-generator/resume-generator.mjs`,
+  'pdf-generator':    `${OPENCLAW_ROOT}/skills/pdf-generator/pdf-generator.mjs`,
+  'browserclaw':      `${OPENCLAW_ROOT}/skills/browserclaw/browserclaw.mjs`,
+  'canvas-render':    `${OPENCLAW_ROOT}/skills/canvas-render/canvas-render.mjs`,
+  'lm-studio':        `${OPENCLAW_ROOT}/skills/lm-studio/lm-studio.mjs`,
+  'supabase-bridge':  `${OPENCLAW_ROOT}/skills/supabase-bridge/supabase-bridge.mjs`,
+};
+const GITHUB_REPO = 'Dolonia333/DENIZEN';
+
+/**
+ * Run an OpenClaw skill on behalf of an NPC. Fires async; result is injected
+ * back into the NPC's next think() cycle via npcBrains.injectSkillResult().
+ */
+async function runNpcSkill(npcName, skill, skillParams = {}) {
+  const { exec } = require('child_process');
+  const TIMEOUT_MS = 30000;
+
+  const broadcast = (m) => {
+    const raw = JSON.stringify(m);
+    (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+  };
+
+  log.info('SkillBridge', `${npcName} → ${skill} ${JSON.stringify(skillParams)}`);
+  broadcast({ type: 'npc_skill_start', npcName, skill, skillParams, ts: Date.now() });
+
+  // Special case: Lucy running job-scraper or job-applier triggers the full pipeline.
+  // This integrates the multi-step pipeline instead of raw CLI passthrough.
+  if (npcName === 'Lucy' && (skill === 'job-scraper' || skill === 'job-applier')) {
+    log.info('SkillBridge', `Lucy → job pipeline via ${skill}`);
+    broadcast({ type: 'npc_skill_start', npcName, skill: 'job-pipeline', skillParams, ts: Date.now() });
+    jobApplication.runJobPipeline({
+      query:     skillParams.query     || skillParams.q    || 'software engineer',
+      site:      skillParams.site      || 'linkedin',
+      pages:     Number(skillParams.pages || 2),
+      remoteOnly: Boolean(skillParams.remoteOnly || skillParams['remote-only']),
+      minSalary: Number(skillParams.minSalary || 0),
+    }).then(summary => {
+      npcBrains.injectSkillResult(npcName, 'job-pipeline', summary);
+      broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: true, output: summary.slice(0, 200), ts: Date.now() });
+      broadcast({ type: 'lucy_job_pipeline_done', summary });
+      log.info('SkillBridge', `Lucy ← job-pipeline: ${summary.slice(0, 80)}`);
+    }).catch(err => {
+      const output = `Job pipeline failed: ${err?.message || err}`;
+      npcBrains.injectSkillResult(npcName, 'job-pipeline', output);
+      broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: false, output, ts: Date.now() });
+    });
+    return Promise.resolve({ ok: true, output: 'Lucy job pipeline started', skill: 'job-pipeline', npcName });
+  }
+
+  return new Promise((resolve) => {
+    let cmd;
+
+    if (skill === 'github') {
+      // Build gh CLI command from skillParams
+      const action = skillParams.action || 'pr-list';
+      const repo = skillParams.repo || GITHUB_REPO;
+      if (action === 'pr-list') {
+        cmd = `gh pr list --repo ${repo}`;
+      } else if (action === 'run-list') {
+        const limit = skillParams.limit || 5;
+        cmd = `gh run list --repo ${repo} --limit ${limit}`;
+      } else if (action === 'issue-list') {
+        cmd = `gh issue list --repo ${repo}`;
+      } else {
+        // Generic: treat action as the gh sub-command
+        cmd = `gh ${action} --repo ${repo}`;
+      }
+    } else if (SKILL_SCRIPTS[skill]) {
+      // Convert skillParams object to CLI args: {site: 'linkedin'} → '--site linkedin'
+      const args = Object.entries(skillParams)
+        .map(([k, v]) => `--${k} ${String(v).replace(/"/g, '\\"')}`)
+        .join(' ');
+      cmd = `node "${SKILL_SCRIPTS[skill]}"${args ? ' ' + args : ''}`;
+    } else {
+      const result = { ok: false, output: `Unknown skill: ${skill}`, skill, npcName };
+      broadcast({ type: 'npc_skill_result', ...result, ts: Date.now() });
+      resolve(result);
+      return;
+    }
+
+    const child = exec(cmd, { windowsHide: true, timeout: TIMEOUT_MS }, (err, stdout, stderr) => {
+      const output = (stdout || stderr || (err ? err.message : 'no output')).slice(0, 800);
+      const ok = !err;
+      const result = { ok, output, skill, npcName };
+      npcBrains.injectSkillResult(npcName, skill, output);
+      broadcast({ type: 'npc_skill_result', npcName, skill, ok, output: output.slice(0, 200), ts: Date.now() });
+      log.info('SkillBridge', `${npcName} ← ${skill} (${ok ? 'ok' : 'err'}): ${output.slice(0, 80)}`);
+      resolve(result);
+    });
+    // Safety: kill child if it somehow outlives the timeout
+    setTimeout(() => { try { child.kill(); } catch (_) {} }, TIMEOUT_MS + 2000);
+  });
+}
 
 // --- Furniture-placement whitelist + per-NPC daily budget ---
 // The whitelist is shared between /api/place-furniture and the prompt
@@ -337,6 +437,20 @@ function _openBouncerTerminal(showCmd) {
       detached: true, stdio: 'ignore', shell: true,
     }).unref();
   }
+}
+
+/**
+ * Decide whether a Bouncer investigation result is serious enough to escalate
+ * to Dan (IT Support). Returns true if there are strong indicators of a real threat.
+ */
+function investigationIsSerious(investigation) {
+  const summary = (investigation.summary || '').toLowerCase();
+  return (
+    (summary.includes('established') && summary.includes('failed')) ||
+    summary.includes('brute') ||
+    (summary.match(/open\s+port/g) || []).length > 3 ||
+    (summary.includes('accepted') && summary.includes('invalid user'))
+  );
 }
 
 function _recordNpcError(message) {
@@ -1534,6 +1648,25 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- POST /api/assign-directive — push a mandatory task to an NPC ---
+  // Body: { from: "Abby", to: "Josh", task: "Fix the auth bug today", urgent?: true }
+  if (urlPath === '/api/assign-directive' && req.method === 'POST') {
+    _readJsonBody(req).then(payload => {
+      if (!payload.from || !payload.to || !payload.task) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'from, to, and task are required' }));
+        return;
+      }
+      npcBrains.assignDirective(payload.to, payload.from, payload.task, !!payload.urgent);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, from: payload.from, to: payload.to }));
+    }).catch(err => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    });
+    return;
+  }
+
   // --- Abort any in-flight desktop agent task ---
   if (urlPath === '/api/desktop-abort' && req.method === 'POST') {
     desktopAgent._abortAll = true;
@@ -1620,6 +1753,42 @@ const server = http.createServer((req, res) => {
         bcast({ type: 'bouncer_tool_status', tool, status: 'error',
           threat: { category: 'manual', source: target, detail: reason },
           message: `${tool} threw: ${err?.message}` });
+      }
+    });
+    return;
+  }
+
+  // --- Lucy job pipeline (scrape → filter → resume → cover → apply) ---
+  // POST /api/lucy-job-pipeline { query, site, pages, remoteOnly, minSalary }
+  // Runs Lucy's full pipeline and returns the summary string.
+  if (urlPath === '/api/lucy-job-pipeline' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+
+      try {
+        const summary = await jobApplication.runJobPipeline({
+          query:      payload.query      || 'software engineer',
+          site:       payload.site       || 'linkedin',
+          pages:      Number(payload.pages || 2),
+          remoteOnly: Boolean(payload.remoteOnly),
+          minSalary:  Number(payload.minSalary || 0),
+        });
+        try { worldState.pushEvent('job-pipeline', `Lucy: ${summary}`); } catch (_) {}
+        try {
+          cofounderAgent.wsClients.forEach(ws => {
+            if (ws.readyState !== 1) return;
+            try { ws.send(JSON.stringify({ type: 'lucy_job_pipeline_done', summary })); } catch (_) {}
+          });
+        } catch (_) {}
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, summary }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
       }
     });
     return;
@@ -2552,8 +2721,25 @@ agentWss.on('connection', (ws) => {
                 if (ws.readyState === 1) ws.send(cascadeReply);
               }, (idx + 1) * 3000);
             });
+
+            // Skill bridge — fire async, NPC picks up result next think cycle
+            if (decision.action === 'run_skill' && decision.skill) {
+              runNpcSkill(msg.npcName, decision.skill, decision.skillParams || {})
+                .catch(err => console.warn('[SkillBridge]', err.message));
+            }
           })
           .catch(err => console.warn('[NpcBrains] Think error:', err.message));
+      } else if (msg.type === 'npc_assign_directive') {
+        // Any manager can push a mandatory task to a direct report
+        if (msg.from && msg.to && msg.task) {
+          npcBrains.assignDirective(msg.to, msg.from, msg.task, !!msg.urgent);
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'directive_assigned',
+            from: msg.from,
+            to: msg.to,
+            task: msg.task,
+          }));
+        }
       } else if (msg.type === 'player_chat') {
         // CEO (player) is talking directly to an NPC
         const npcName = msg.npcName;
@@ -2641,6 +2827,8 @@ agentWss.on('connection', (ws) => {
             });
             if (ws.readyState === 1) ws.send(reply);
             npcBrains.saveMemory(npcName, `CEO said: "${msg.text}" — I replied: "${text}"${result.delegation ? ` [delegated to ${result.delegation.delegateTo}]` : ''}`);
+            // Mood shift: NPC was just spoken to by the CEO
+            npcBrains.setMoodFromExternal(npcName, 'ceo_talked');
           })
           .catch(err => {
             const errMsg = String(err?.message ?? err);
@@ -2771,6 +2959,25 @@ agentWss.on('connection', (ws) => {
 
         // Run the real investigation (fast, direct WSL exec — no vision needed)
         linuxAgent.investigate(threat).then(result => {
+          // ── Feature 1: Write structured markdown report ──────────────────
+          let reportPath = null;
+          if (result.ok) {
+            try {
+              const reportMd = linuxAgent.buildReport(threat, result, null);
+              const slug = (threat.category || 'investigation')
+                .toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30);
+              const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+              reportPath = npcTools.writeArtifact(
+                'Bouncer', 'security',
+                `bouncer_${slug}_${dateStr}_${Date.now()}`,
+                reportMd,
+              );
+              if (reportPath) console.log(`[BouncerLinux] Report written: ${reportPath}`);
+            } catch (reportErr) {
+              console.warn('[BouncerLinux] Report write failed:', reportErr?.message);
+            }
+          }
+
           _broadcast({
             type: 'bouncer_linux_result',
             status: result.ok ? 'done' : 'error',
@@ -2780,21 +2987,36 @@ agentWss.on('connection', (ws) => {
             elapsed: result.elapsed,
             steps: result.steps,
             summary: result.summary,
+            reportPath: reportPath || null,
             message: result.ok
               ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s).`
               : `WSL error: ${result.error}`,
           });
 
-          // Also have Bouncer report key findings to the player via AI brain
+          // ── Feature 2: Escalate to Dan if investigation is serious ───────
+          if (result.ok && investigationIsSerious(result)) {
+            const danMsg = {
+              type: 'npc_assign_directive',
+              from: 'Bouncer',
+              to: 'Dan',
+              task: `Security escalation: ${threat.category || 'unknown'} threat detected. Review Bouncer's report in reports/security/ and check server configuration.`,
+              urgent: true,
+            };
+            cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(danMsg)); });
+            console.log(`[BouncerLinux] Serious threat — escalating to Dan`);
+          }
+
+          // ── AI report to CEO ──────────────────────────────────────────────
           if (result.ok && result.summary && ws.readyState === 1) {
+            const fileRef = reportPath ? ` Full report filed at ${reportPath}.` : '';
             const reportPrompt = [
               `You just ran security commands in Kali Linux to investigate a ${threat.category || 'unknown'} threat.`,
               `Here is what you found:\n${result.summary.slice(0, 800)}`,
-              `Report the key findings to the CEO in 2-3 sentences. Focus on what looks suspicious. Be concise and direct.`,
+              `Report the key findings to Abby (CEO) in one tight paragraph: what was found, how serious, what you did.${fileRef} No alarm, no dramatization. State facts and actions.`,
             ].join(' ');
             npcBrains.getResponse('Bouncer', 'CEO', reportPrompt, {
               kind: 'linux-investigation-report',
-              description: 'Report security investigation findings. Stoic, professional, 2-3 sentences max.',
+              description: 'Report security investigation findings to CEO. Stoic, professional, one paragraph. Reference report file if available.',
             }).then(text => {
               cofounderAgent.wsClients.forEach(c => {
                 if (c.readyState === 1) c.send(JSON.stringify({
