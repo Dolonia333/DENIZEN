@@ -944,6 +944,8 @@ The `docs/` directory has the canonical deep-dives for the runtime systems:
 | [docs/CITY_GENERATOR.md](docs/CITY_GENERATOR.md) | **Procedural city pipeline** (`src/city/`) — planner → chunk → interior → Phaser adapter. Scaffolded, not yet wired to the main scene |
 | [docs/WORLD_ENGINE.md](docs/WORLD_ENGINE.md) | **World engine** (`src/world/`) — seeded RNG, room layout, L-corridors, recipe-driven furnisher, character anim registry |
 | [docs/SCRIPTS.md](docs/SCRIPTS.md) | **Asset toolchain** — which `scripts/` you actually run for a sprite import vs. which are archaeological |
+| [docs/NPCS.md](docs/NPCS.md) | **NPC Roster** — all 16 NPCs: who they are, personality, hierarchy, backstory, what they can actually do |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | **Capability Roadmap** — everything built, everything planned, phases 1-4 with effort estimates |
 | [docs/SECURITY.md](docs/SECURITY.md) | Threat catalog (10 categories), robber archetype mappings, tuning knobs |
 | [docs/SETUP.md](docs/SETUP.md) | End-to-end install — Node + LM Studio baseline, plus Linux Wireshark/Nmap live feeders |
 
