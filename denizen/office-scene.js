@@ -1503,6 +1503,12 @@ class OfficeScene extends Phaser.Scene {
       this._agentManager.init();
       console.log('[OfficeScene] Agent Office Manager initialized');
 
+      // --- Work Output Feed (live NPC activity HUD, Tab to toggle) ---
+      if (window.WorkFeedPanel) {
+        this._workFeed = new window.WorkFeedPanel(this);
+        console.log('[OfficeScene] Work Feed initialized (press Tab to toggle)');
+      }
+
       // --- Player Chat System (talk to NPCs) ---
       if (window.PlayerChat) {
         this._playerChat = new window.PlayerChat(this, this._agentManager);

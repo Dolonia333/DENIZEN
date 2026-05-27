@@ -1667,11 +1667,39 @@ class AgentOfficeManager {
         break;
       }
 
+      case 'run_skill': {
+        // NPC is running an OpenClaw skill — treat visually like "work" (sit at desk)
+        // The skill runs server-side; the NPC picks up the result in their next think cycle.
+        agent.status = 'working';
+        if (agent.assignedDesk) {
+          this.actions.useComputer(npcKey, agent.assignedDesk);
+        }
+        if (message) {
+          this.scene.time.delayedCall(1200, () => {
+            this.actions.speak(npcKey, message);
+          });
+        }
+        break;
+      }
+
       default:
         if (agent.assignedDesk) {
           this.actions.useComputer(npcKey, agent.assignedDesk);
           agent.status = 'working';
         }
+    }
+
+    // ── Directive cascade: when a manager explicitly delegates, push a real directive ──
+    // Covers a 'delegate' action (future) and talk actions explicitly flagged as assignments.
+    if (decision && decision.target && decision.message &&
+        (decision.action === 'delegate' ||
+         (decision.action === 'talk' && decision._isAssignment))) {
+      this._send({
+        type: 'npc_assign_directive',
+        from: npcName,
+        to: decision.target,
+        task: decision.message,
+      });
     }
   }
 
@@ -1967,6 +1995,18 @@ class AgentOfficeManager {
       case 'npc_work_output': {
         // An NPC started, continued, or finished a task — show in the work feed
         this._addWorkFeedEntry(msg.npcName, msg.phaseEmoji || '•', msg.note || '', msg.artifactPath || null);
+        // Also forward to the DOM-based Work Feed HUD panel (Tab to toggle)
+        if (this.scene?._workFeed) {
+          this.scene._workFeed.addEntry({
+            npcName:      msg.npcName      || '?',
+            phase:        msg.phase        || '',
+            phaseEmoji:   msg.phaseEmoji   || '•',
+            note:         msg.note         || '',
+            action:       msg.action       || '',
+            artifactPath: msg.artifactPath || null,
+            ts:           msg.ts           || Date.now(),
+          });
+        }
         break;
       }
       case 'agent_error': {
