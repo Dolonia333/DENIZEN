@@ -19,6 +19,11 @@
  */
 
 const { exec } = require('node:child_process');
+const fs   = require('node:fs');
+const path = require('node:path');
+
+const PROJECT_ROOT   = path.resolve(__dirname, '..');
+const BASELINE_PATH  = path.join(PROJECT_ROOT, 'data', 'bouncer-baseline.json');
 
 const WSL_DISTRO = process.env.WSL_DISTRO || 'kali-linux';
 const CMD_TIMEOUT_MS = 20000;
@@ -32,11 +37,12 @@ const THREAT_COMMANDS = {
     ip ? { label: `Quick nmap of attacker`, cmd: `nmap -T4 -F --open ${ip} 2>/dev/null` } : null,
   ],
 
-  packet_anomaly: (ip) => [
+  packet_anomaly: (ip, tsharkReady) => [
     { label: 'Active connections', cmd: "ss -tnp 2>/dev/null | head -30" },
     { label: 'Listening sockets',  cmd: "ss -tlnp 2>/dev/null | head -20" },
     ip ? { label: `Connections to/from attacker`, cmd: `netstat -an 2>/dev/null | grep ${ip}` } : null,
     { label: 'Recent packets (5s capture)', cmd: "timeout 5 tcpdump -i any -c 40 -nn 2>/dev/null || echo 'tcpdump needs root — skipping'" },
+    // Tshark capture — only added at runtime if tshark is installed and ip is present
   ],
 
   brute_force: (ip) => [
@@ -165,6 +171,19 @@ async function investigate(threat) {
   const cmdFn = THREAT_COMMANDS[category] || THREAT_COMMANDS.unknown;
   const steps = (cmdFn(ip) || []).filter(Boolean);
 
+  // Feature 5: tshark integration for packet_anomaly — add step if tshark present
+  if (category === 'packet_anomaly' && ip) {
+    try {
+      const tsharkCheck = await checkTshark();
+      if (tsharkCheck.installed) {
+        steps.push({
+          label: 'Tshark packet capture (5s)',
+          cmd: `timeout 5 tshark -i any -c 50 -Y "ip.src == ${ip} or ip.dst == ${ip}" -T fields -e ip.src -e ip.dst -e tcp.dstport -e tcp.flags.syn 2>/dev/null || echo "tshark not available"`,
+        });
+      }
+    } catch (_) {}
+  }
+
   let results;
   try {
     results = await runCommands(steps);
@@ -277,13 +296,202 @@ async function checkTshark() {
   return { installed: !r.stdout.includes('NOT INSTALLED'), detail: r.stdout.trim() };
 }
 
+// ── Baseline helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Load the stored baseline from disk. Returns null if not found or unreadable.
+ * @returns {{ ts: string, openPorts: Array, wsServer: object, lmStudio: object }|null}
+ */
+function loadBaseline() {
+  try {
+    const raw = fs.readFileSync(BASELINE_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Save the current scan result as the new baseline.
+ * @param {{ openPorts: Array, wsServer: object, lmStudio: object }} scanResult
+ */
+function saveBaseline(scanResult) {
+  try {
+    const baseline = {
+      ts: new Date().toISOString(),
+      openPorts: (scanResult.openPorts || []).map(p => ({
+        port: p.port,
+        service: p.service || '',
+        state: p.state || 'open',
+      })),
+      wsServer:  { open: !!(scanResult.wsServer && scanResult.wsServer.open) },
+      lmStudio:  { open: !!(scanResult.lmStudio && scanResult.lmStudio.open) },
+    };
+    fs.writeFileSync(BASELINE_PATH, JSON.stringify(baseline, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('[LinuxAgent] Could not save baseline:', err.message);
+  }
+}
+
+// ── Structured report builder ─────────────────────────────────────────────────
+
+/**
+ * Build a structured markdown investigation report.
+ *
+ * @param {object} threat       - { category, severity, source, detail }
+ * @param {object} investigation - { ok, category, ip, steps, summary, elapsed }
+ * @param {object|null} whoisData - optional whois info already embedded in steps
+ * @returns {string}  markdown report
+ */
+function buildReport(threat, investigation, whoisData) {
+  const ts       = new Date().toISOString();
+  const category = threat.category || investigation.category || 'unknown';
+  const severity = threat.severity || 'unknown';
+  const ip       = investigation.ip || extractIp(threat.source || threat.detail || '') || 'unknown';
+  const steps    = Array.isArray(investigation.steps) ? investigation.steps : [];
+
+  // ── Findings sections ──────────────────────────────────────────────────────
+  let findingsSection = '';
+  if (steps.length === 0) {
+    findingsSection = '_No command output collected._\n';
+  } else {
+    findingsSection = steps.map(s => {
+      const ms  = typeof s.ms === 'number' ? `${s.ms}ms` : '';
+      const hdr = ms ? `### ${s.label} (${ms})` : `### ${s.label}`;
+      return `${hdr}\n\`\`\`\n${(s.output || '').trim()}\n\`\`\``;
+    }).join('\n\n');
+  }
+
+  // ── Threat intel section ───────────────────────────────────────────────────
+  let threatIntel = 'No IP identified.';
+  if (ip !== 'unknown') {
+    // Look for whois step already in the steps array
+    const whoisStep = steps.find(s => s.label && s.label.toLowerCase().includes('whois'));
+    if (whoisStep && whoisStep.output) {
+      threatIntel = whoisStep.output.trim();
+    } else if (whoisData && whoisData.raw) {
+      threatIntel = whoisData.raw.trim().slice(0, 400);
+    } else {
+      threatIntel = `Source IP: ${ip} (no whois data retrieved)`;
+    }
+  }
+
+  // ── Assessment & Recommended Actions (pattern-based) ──────────────────────
+  const allOutput = steps.map(s => (s.output || '')).join('\n').toLowerCase();
+  const summary   = (investigation.summary || '').toLowerCase();
+
+  const hasEstablished   = allOutput.includes('established');
+  const hasFailed        = allOutput.includes('failed') || allOutput.includes('invalid user');
+  const hasRefused       = allOutput.includes('refused') || allOutput.includes('rejected');
+  const hasBrute         = summary.includes('brute') || (hasFailed && allOutput.includes('ssh'));
+  const openPortCount    = (allOutput.match(/\bopen\b/g) || []).length;
+  const hasHighConnCount = /\b([2-9]\d|\d{3,})\s+ESTABLISHED/.test(allOutput) ||
+                           /^\s*([2-9]\d|\d{3,})\s+\d/.test(allOutput);
+
+  let assessment = '';
+  let recommendations = [];
+  let status = 'INCONCLUSIVE';
+
+  if (hasBrute || (hasFailed && hasEstablished)) {
+    assessment = `Evidence of brute force or repeated failed authentication from ${ip !== 'unknown' ? ip : 'an unknown source'}. `
+      + `Active established connections were detected alongside auth failures, suggesting the attacker may have obtained or is actively attempting credentials. `
+      + `Immediate action is warranted.`;
+    recommendations = [
+      `Block source IP ${ip !== 'unknown' ? ip : '(identify from logs)'} at the firewall`,
+      'Review /var/log/auth.log for full scope of login attempts',
+      'Rotate credentials for any accounts targeted',
+      'Enable fail2ban or equivalent rate-limiting on SSH/RDP',
+    ];
+    status = 'THREAT CONFIRMED';
+  } else if (hasFailed && !hasEstablished) {
+    assessment = `Multiple failed authentication attempts detected from ${ip !== 'unknown' ? ip : 'an unknown source'}. `
+      + `No active established connections were found, suggesting the attempts have not yet succeeded. `
+      + `Monitor closely — escalation to confirmed breach is possible.`;
+    recommendations = [
+      `Rate-limit or temporarily block ${ip !== 'unknown' ? ip : 'source IP'}`,
+      'Check for other IPs showing similar patterns (distributed brute force)',
+      'Verify account lockout policies are in effect',
+    ];
+    status = 'THREAT CONFIRMED';
+  } else if (openPortCount > 3) {
+    assessment = `Scan identified ${openPortCount} open port references across the host. `
+      + `Some of these may represent unexpected or unpatched services. `
+      + `Cross-reference against the approved service baseline to identify anomalies.`;
+    recommendations = [
+      'Audit each open port against the approved service list',
+      'Disable or firewall any services not required for operations',
+      'Verify service versions are patched',
+    ];
+    status = 'THREAT CONFIRMED';
+  } else if (hasHighConnCount) {
+    assessment = `Unusually high connection count detected, which may indicate a DoS attempt, connection flood, or compromised process making excessive outbound connections. `
+      + `Further investigation into process ownership of these connections is recommended.`;
+    recommendations = [
+      'Identify processes behind high connection counts using lsof or ss -tp',
+      `If ${ip !== 'unknown' ? ip : 'source'} is responsible, consider rate-limiting at the network level`,
+      'Check for zombie or unresponsive processes consuming sockets',
+    ];
+    status = 'THREAT CONFIRMED';
+  } else if (hasEstablished || hasRefused) {
+    assessment = `Established or refused connections were observed. No definitive indicators of compromise were found in this scan, `
+      + `though activity from ${ip !== 'unknown' ? ip : 'unknown sources'} warrants continued monitoring. `
+      + `The threat cannot be ruled out.`;
+    recommendations = [
+      'Continue monitoring connection logs for escalating activity',
+      'Run a follow-up scan in 15 minutes to check for persistence',
+      'Review application logs for corresponding request anomalies',
+    ];
+    status = 'INCONCLUSIVE';
+  } else {
+    assessment = `No significant indicators of compromise were found in this scan. `
+      + `The threat trigger may have been a transient anomaly or false positive. `
+      + `Standard monitoring should continue.`;
+    recommendations = [
+      'Retain this report for baseline comparison',
+      'Continue scheduled perimeter patrols',
+    ];
+    status = 'LIKELY FALSE POSITIVE';
+  }
+
+  const recList = recommendations.map(r => `- ${r}`).join('\n');
+
+  return [
+    `# Security Investigation Report`,
+    `**Date:** ${ts}`,
+    `**Threat Category:** ${category}`,
+    `**Severity:** ${severity}`,
+    `**Source IP:** ${ip}`,
+    `**Investigated by:** Bouncer`,
+    ``,
+    `## Findings`,
+    ``,
+    findingsSection,
+    ``,
+    `## Threat Intel`,
+    ``,
+    threatIntel,
+    ``,
+    `## Assessment`,
+    ``,
+    assessment,
+    ``,
+    `## Recommended Actions`,
+    ``,
+    recList,
+    ``,
+    `**Status:** ${status}`,
+  ].join('\n');
+}
+
 /**
  * Full perimeter check — everything Bouncer does on a patrol cycle.
- * Returns a summary object with all findings.
+ * Compares current open ports against the stored baseline and saves a new one.
+ * Returns a summary object with all findings and comparison deltas.
  */
 async function perimeterPatrol() {
-  const start = Date.now();
-  const scan  = await baselineScan();
+  const start    = Date.now();
+  const baseline = loadBaseline();
+  const scan     = await baselineScan();
 
   // Quick port probes on Denizen's critical services
   const [wsServer, lmStudio] = await Promise.all([
@@ -299,8 +507,47 @@ async function perimeterPatrol() {
       .then(r => r.stdout.slice(0, 600)),
   ]);
 
-  const elapsed = Date.now() - start;
+  const elapsed   = Date.now() - start;
   const openPorts = scan.ports.filter(p => p.state === 'open');
+
+  // ── Baseline comparison ────────────────────────────────────────────────────
+  const newPorts    = [];
+  const closedPorts = [];
+
+  if (baseline && Array.isArray(baseline.openPorts)) {
+    const basePortNums = new Set(baseline.openPorts.map(p => String(p.port)));
+    const currPortNums = new Set(openPorts.map(p => String(p.port)));
+
+    for (const p of openPorts) {
+      if (!basePortNums.has(String(p.port))) {
+        newPorts.push(p);
+      }
+    }
+    for (const p of baseline.openPorts) {
+      if (!currPortNums.has(String(p.port))) {
+        closedPorts.push(p);
+      }
+    }
+  }
+
+  // Save current state as new baseline
+  saveBaseline({ openPorts, wsServer, lmStudio });
+
+  // Build comparison summary lines
+  const comparisonLines = [];
+  if (!baseline) {
+    comparisonLines.push('Baseline established — first patrol recorded.');
+  } else {
+    if (newPorts.length > 0) {
+      comparisonLines.push(`NEW PORT DETECTED: ${newPorts.map(p => `${p.port}/${p.service || '?'}`).join(', ')}`);
+    }
+    if (closedPorts.length > 0) {
+      comparisonLines.push(`PORT CLOSED (expected): ${closedPorts.map(p => `${p.port}/${p.service || '?'}`).join(', ')}`);
+    }
+    if (newPorts.length === 0 && closedPorts.length === 0) {
+      comparisonLines.push('Port baseline unchanged.');
+    }
+  }
 
   return {
     ok: scan.ok,
@@ -310,10 +557,14 @@ async function perimeterPatrol() {
     lmStudio,
     authLog,
     connections,
+    newPorts,
+    closedPorts,
+    baselineComparison: comparisonLines.join('\n'),
     summary: [
       `Baseline scan: ${openPorts.length} open port(s) — ${openPorts.map(p => `${p.port}/${p.service}`).join(', ') || 'none'}`,
       `WebSocket server (8080): ${wsServer.open ? 'UP' : 'DOWN'}`,
       `LM Studio (1234): ${lmStudio.open ? 'UP' : 'DOWN'}`,
+      ...comparisonLines,
       `Elapsed: ${elapsed}ms`,
     ].join('\n'),
   };
@@ -323,6 +574,11 @@ module.exports = {
   runCommand,
   investigate,
   extractIp,
+  // Structured reporting
+  buildReport,
+  // Baseline
+  loadBaseline,
+  saveBaseline,
   // Proactive tools
   baselineScan,
   probePort,
