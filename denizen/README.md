@@ -24,6 +24,7 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [WebSocket Endpoints](#websocket-endpoints)
   - [Key Source Files](#key-source-files)
   - [Data Files](#data-files)
+  - [NPC Artifact Reports](#npc-artifact-reports)
   - [Agent-NPC Mapping](#agent-npc-mapping)
   - [State-to-Area Mapping](#state-to-area-mapping)
 - [NPC System](#npc-system)
@@ -37,6 +38,12 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
 - [Meeting System](#meeting-system)
   - [Break Room Behavior](#break-room-behavior)
 - [Security Monitor](#security-monitor)
+- [Bouncer — Kali Linux Security Agent](#bouncer--kali-linux-security-agent)
+  - [How Bouncer Investigates Threats](#how-bouncer-investigates-threats)
+  - [Threat-to-Command Mapping](#threat-to-command-mapping)
+  - [Proactive Patrol](#proactive-patrol)
+  - [API Endpoints](#api-endpoints)
+  - [Setup](#setup)
 - [Controls](#controls)
   - [OpenClaw Panel](#openclaw-panel)
 - [Procedural Room Generator](#procedural-room-generator)
@@ -54,6 +61,10 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [NPCs don't respond](#npcs-dont-respond--blank-speech-bubbles)
   - [Black screen](#visualization-shows-black-screen)
   - [OpenClaw panel doesn't load](#openclaw-chat-panel-doesnt-load)
+  - [Bouncer types commands into wrong window](#bouncer-types-commands-into-the-wrong-window)
+  - [Bouncer terminal doesn't open](#bouncer-terminal-doesnt-open--windows-terminal-not-found)
+  - [Bouncer shows no output](#bouncer-investigation-shows-no-output-or-wsl-errors)
+  - [LM_STUDIO_PARALLEL not working](#lm_studio_parallel-not-taking-effect)
 - [Testing](#testing)
 - [Asset Pipeline](#asset-pipeline)
 - [City Generator (experimental)](#city-generator-experimental)
@@ -83,8 +94,11 @@ Denizen is a visual observability layer that renders AI agent workflows as a liv
 
 ### Prerequisites
 
-- **Node.js** 18+
+- **Node.js** 22+
 - **npm** (comes with Node.js)
+- **LM Studio** — for local NPCs (Bob, Dan, Bouncer, Edward, Oscar, Pier). Load any GGUF model and start the local server on port 1234.
+- **WSL with Kali Linux** *(optional, for Bouncer's live security investigations)* — `wsl --install -d kali-linux`. Bouncer runs `nmap`, `ss`, `netstat`, `journalctl`, and `whois` inside Kali when threats are detected.
+- **Windows Terminal** *(optional, Windows only)* — Bouncer opens a real terminal window when investigating threats. Installed automatically from the Microsoft Store or via `winget install Microsoft.WindowsTerminal`.
 
 ### Install and Run
 
@@ -141,12 +155,20 @@ Denizen reads API keys from `~/.openclaw/openclaw.json` (or `%USERPROFILE%\.open
 
 ### LM Studio (Local AI)
 
-Bob (Researcher) and Dan (IT Support) use **LM Studio** by default — no API key needed.
+Bob (Researcher), Dan (IT Support), Bouncer (Security), Edward, Oscar, and Pier use **LM Studio** by default — no API key needed.
 
 1. Download and install [LM Studio](https://lmstudio.ai/)
-2. Load a model (default expects `dolphin3.0-llama3.1-8b`)
+2. Load a model (default expects `dolphin3.0-llama3.1-8b` or any GGUF model)
 3. Start the local server on port 1234 (LM Studio default)
 4. Denizen connects automatically to `http://localhost:1234`
+
+**Parallel inference** — if your GPU can handle it, you can load multiple model slots and let LM Studio serve parallel requests. Set this in your `.env` file:
+
+```env
+LM_STUDIO_PARALLEL=2
+```
+
+Start the server with `node --env-file=.env server.js` (or use the provided `launch.json` in `.claude/`). The default is 1 (sequential — safe for 8B models on a 12GB GPU).
 
 ### NPC AI Provider Mapping
 
@@ -199,13 +221,16 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | office-scene.js     |  /agent-ws   | CofounderAgent         |  HTTPS   | Anthropic API   |
 | agent-office-mgr.js |<------------>| (Claude CTO brain)     |--------->| (Claude)        |
 | npc-agent-ctrl.js   |              |                        |          +-----------------+
-|                     | /security-ws | NpcBrainManager        |  HTTPS   | XAI API         |
-| security-monitor.js |<------------>| (per-NPC AI brains)    |--------->| (Grok)          |
+|                     | /security-ws | NpcBrainManager        |  HTTPS   | XAI API (Grok)  |
+| security-monitor.js |<------------>| (per-NPC AI brains)    |--------->|                 |
 |                     |              |                        |          +-----------------+
 | gateway-bridge.js   |  (proxy)     | SecurityMonitorServer  |  HTTP    | LM Studio       |
 | openclaw-chat.js    |<------------>| (threat detection)     |--------->| (localhost:1234) |
 +---------------------+              |                        |          +-----------------+
-                                      | Static file server     |
+                                      | linux-agent.js         |  WSL     | Kali Linux      |
+                                      | (Bouncer investigates) |--------->| nmap/ss/netstat |
+                                      |                        |          | journalctl/whois|
+                                      | Static file server     |          +-----------------+
                                       | /openclaw/* proxy      |--------->| OpenClaw GW     |
                                       +------------------------+          | (localhost:18789)|
                                                                           +-----------------+
@@ -223,7 +248,7 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 
 | File | Purpose |
 |------|---------|
-| `server.js` | HTTP server, WebSocket routing, OpenClaw proxy, security monitoring |
+| `server.js` | HTTP server, WebSocket routing, OpenClaw proxy, security monitoring, Bouncer API endpoints |
 | `office-scene.js` | Main Phaser 3 scene — rendering, NPCs, player, furniture, walls |
 | `src/cofounder-agent.js` | CTO AI brain — autonomous thinking loop, command generation |
 | `src/npc-brains.js` | Multi-provider NPC brains — loads soul files, manages memory |
@@ -237,6 +262,12 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | `src/security-monitor.js` | Client-side security dashboard (receives threats from server) |
 | `security-monitor-server.js` | Server-side threat detection (file, network, API, system) |
 | `src/player-chat.js` | CEO-to-NPC chat system (targeting, walk-over, delegation) |
+| `src/logger.js` | Centralized structured logger — timestamps, log levels, per-module prefixes |
+| `src/linux-agent.js` | Bouncer's Kali WSL command runner — `ss`, `nmap`, `netstat`, `ps`, `journalctl`, `whois`, `tcpdump`; threat-specific command sets; `perimeterPatrol()` for scheduled scans |
+| `src/npc-tools.js` | Safe read-only system tools for NPCs — disk usage, memory, CPU load, uptime, process list |
+| `src/desktop-agent.js` | Vision-based desktop automation via nut-js — screenshot → LM decision → mouse/keyboard; includes abort flag to kill in-flight tasks |
+| `src/computer-use-agent.js` | Computer-use integration for NPC desktop interactions |
+| `src/job-application.js` | Job application workflow — NPC-driven resume/cover letter automation |
 | `src/demo-scene.js` | Investor demo cutscene (20-second scripted sequence) |
 | `src/pathfinding.js` | A* pathfinding for NPC movement |
 | `src/robber-controller.js` | Optional robber NPC visualization |
@@ -245,6 +276,8 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | `src/RoomBuilder.js` | Low-level sprite rendering with modular group validation |
 | `data/sheet_registry.json` | Canonical map of sheet IDs to file paths + grid sizes |
 | `data/master_furniture_catalog.json` | Auto-generated merge of all furniture_catalog_*.json files |
+| `data/company-brief.json` | Company context — mission, stack, team structure (injected into NPC prompts) |
+| `data/user-profile.json` | CEO profile — used by Lucy and Bouncer for personalized responses |
 | `index.html` | Entry point — loads Phaser 3.80 + all visualization scripts |
 
 ### Data Files
@@ -254,7 +287,24 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | `data/furniture_catalog_openplan.json` | Furniture definitions and placement coordinates |
 | `data/definitions.json` | Object definitions (desks, chairs, monitors, plants, etc.) |
 | `data/sheet_registry.json` | Sprite sheet registry for tilesets |
+| `data/company-brief.json` | Company context injected into NPC prompts (mission, tech stack, team) |
+| `data/user-profile.json` | CEO profile for personalized NPC responses |
+| `data/job-application-log.json` | Log of job applications filed by the job-application agent |
 | `assets-catalog.json` | Asset catalog for the sprite system |
+
+### NPC Artifact Reports
+
+NPCs generate real work artifacts as markdown files in the `reports/` directory:
+
+```
+reports/
+  bugs/           # Bug reports filed by Molly (QA)
+  code-reviews/   # Code review notes from Alex, Jenny, Edward
+  it-reports/     # IT support tickets and resolutions from Dan
+  pm-reports/     # Project management updates from Marcus
+```
+
+Each file is named `<npc>_<summary>_<date>.md` and contains the NPC's actual output. These are committed to git so you have a real history of what the AI agents produced.
 
 ### Agent-NPC Mapping
 
@@ -505,6 +555,57 @@ The `SecurityMonitorServer` provides real-time threat detection:
 
 Test it: `http://localhost:8080/security-test?type=file_access&severity=high&detail=Test+threat`
 
+## Bouncer — Kali Linux Security Agent
+
+Bouncer is more than an NPC — he's a real security investigator. When the security monitor detects a threat, Bouncer uses **`src/linux-agent.js`** to run live investigation commands inside Kali Linux (via WSL).
+
+### How Bouncer Investigates Threats
+
+1. Security monitor detects a threat (e.g. `brute_force` from IP `1.2.3.4`)
+2. Server sends `bouncer_run_linux` WebSocket message to Bouncer
+3. `linux-agent.js` selects the right command set for the threat category
+4. Commands run inside `wsl -d kali-linux bash -c ...` with a 20-second timeout
+5. Results are returned to Bouncer's AI brain as context for his response
+6. A **Windows Terminal** window opens showing the live commands running in Kali (so you can watch him work)
+
+### Threat-to-Command Mapping
+
+| Threat | Commands Bouncer Runs |
+|--------|----------------------|
+| `brute_force` | `journalctl` auth failures, `last` recent logins, `nmap` the attacker IP |
+| `network_scan` | `ss -tnp` active connections, `netstat ESTABLISHED`, `nmap` attacker |
+| `packet_anomaly` | `ss` connections, `tcpdump` 5s capture, connections to/from IP |
+| `data_breach` | `lsof -i` open sockets, `who` active sessions, connections to IP |
+| `shell_exec` | `ps aux` running processes, bash history, `ss -tlnp` new listeners |
+| `api_abuse` | `netstat ESTABLISHED`, connection counts by IP |
+| `exfiltration` | Outbound `ss ESTAB`, transfer stats, connections to target |
+| `scan_probe` | `ss -tlnp` listening services, SYN packets, `nmap` attacker |
+| `process_spawn` | `ps aux` all processes, processes sorted by start time |
+
+### Proactive Patrol
+
+Bouncer also runs scheduled perimeter checks via `perimeterPatrol()`:
+- Baseline `nmap -sV` scan of Denizen's known service ports
+- Port probe of the WebSocket server (8080) and LM Studio (1234)
+- Auth log check for recent failures
+- Active connection overview
+
+### API Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `POST /api/bouncer-linux` | JSON `{ category, source }` | Trigger Bouncer investigation from HTTP |
+| `POST /api/bouncer-scan` | — | Run `perimeterPatrol()` and return findings |
+| `POST /api/desktop-abort` | — | Kill any in-flight `desktopAgent` task |
+
+### Setup
+
+1. Install Kali: `wsl --install -d kali-linux`
+2. Open Kali and install tools: `sudo apt update && sudo apt install -y nmap net-tools lsof whois tshark`
+3. Set the distro name in `.env` if you're using a different WSL distro: `WSL_DISTRO=kali-linux`
+
+> **No Kali? No problem.** If WSL is not installed or Kali isn't available, Bouncer's commands fail silently and he reports back with whatever partial data he collected. The office keeps running.
+
 ## Controls
 
 | Key | Action |
@@ -696,6 +797,29 @@ node server.js
 
 - OpenClaw gateway must be running on `localhost:18789`
 - The server proxies `/openclaw/*` — check terminal for proxy errors
+
+### Bouncer types commands into the wrong window
+
+This is fixed in the current version. If you see commands being typed into your chat or text editor when Bouncer investigates a threat, make sure you're on the latest commit. The fix replaced the `nut-js` keyboard automation with direct `spawn(wt.exe)` — Bouncer now opens a real Windows Terminal window with the command pre-loaded as an argument, so no keyboard simulation happens.
+
+### Bouncer terminal doesn't open / "Windows Terminal not found"
+
+- Windows Terminal must be installed (`winget install Microsoft.WindowsTerminal` or Microsoft Store)
+- The server looks for `wt.exe` at `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe` — this is where the Store version installs
+- If not found, it falls back to `cmd.exe` which opens a plain console window instead
+
+### Bouncer investigation shows "(no output)" or WSL errors
+
+- Kali Linux must be installed: `wsl --install -d kali-linux`
+- Required tools inside Kali: `sudo apt install -y nmap net-tools lsof whois`
+- If using a different distro name, set `WSL_DISTRO=your-distro` in `.env`
+- Bouncer still functions without WSL — he just won't have live data to report
+
+### LM_STUDIO_PARALLEL not taking effect
+
+- Start the server with: `node --env-file=.env server.js` (not just `node server.js`)
+- Or export the variable first: `$env:LM_STUDIO_PARALLEL=2; node server.js` (PowerShell)
+- The `.claude/launch.json` already includes `--env-file=.env` for FleetView users
 
 ## Testing
 
