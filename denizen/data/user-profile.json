@@ -1,0 +1,102 @@
+{
+  "name": "Zion Alexander Van Zandt",
+  "email": "zionvanzandt@gmail.com",
+  "phone": "",
+  "location": "Oklahoma City, OK",
+  "linkedin": "https://www.linkedin.com/in/zion-van-zandt-8231a028a/",
+  "github": "https://github.com/Dolonia333",
+  "portfolio": "",
+  "title": "Full-Stack & Backend Developer",
+  "summary": "Self-taught full-stack and backend developer with hands-on experience building production platforms, containerized infrastructure, and automated testing workflows. Proficient in Python, Java, JavaScript, and SQL with practical knowledge of Docker, CI/CD pipelines, and agile development practices. Passionate about solving real problems through iterative development, continuous delivery, and thoughtful software design.",
+  "skills": [
+    "Python", "Java", "JavaScript", "SQL", "C++",
+    "REST APIs", "Authentication", "RBAC", "Webhook Processing", "Microservices Architecture",
+    "PostgreSQL", "Supabase", "Relational Schema Design", "Query Optimization",
+    "Docker", "Docker Compose", "Linux", "Reverse Proxies", "Cloudflare Tunnel", "Tailscale", "CI/CD",
+    "Automated Testing", "Endpoint Validation", "Error Handling", "Logging & Monitoring",
+    "Agile Development", "Iterative Delivery", "Continuous Integration/Continuous Delivery",
+    "Git", "VS Code", "n8n", "OpenAI APIs", "LM Studio", "Node.js", "WebSockets", "Phaser"
+  ],
+  "experience": [
+    {
+      "title": "Developer",
+      "company": "The Verge OKC / Dolonia Data Tech",
+      "location": "Oklahoma City, OK",
+      "start": "2024",
+      "end": "Present",
+      "bullets": [
+        "Built and operated client-facing web systems for real users and paying customers; gathered requirements from stakeholders, prioritized features iteratively, and incorporated feedback through agile-style development cycles.",
+        "Extended backend services across existing codebases, implementing authentication, data storage, and CI/CD deployment pipelines using Docker containers across local and cloud infrastructure.",
+        "Designed and executed automated tests to validate API endpoints, webhook integrations, and payment processing logic before deploying to production environments.",
+        "Implemented logging, monitoring, and health checks to maintain system uptime; debugged and resolved production issues across multiple interconnected services.",
+        "Collaborated with team members and clients to scope projects, communicate trade-offs, and deliver working software incrementally while maintaining code quality."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Self-Hosted AI Platform with User, Team & Admin Portals",
+      "stack": "Python, JavaScript, Docker",
+      "bullets": [
+        "Designed and deployed a multi-tenant platform with role-based access control supporting user, team, and admin dashboards across concurrent sessions.",
+        "Integrated payment and subscription logic using Supabase, implementing webhook handlers, idempotent transactions, and automated billing state management.",
+        "Built and tested backend APIs for user data, permissions, and session handling; validated endpoint behavior and edge cases before each deployment."
+      ]
+    },
+    {
+      "name": "AI Workflow Orchestration System",
+      "stack": "Python, REST APIs, Docker",
+      "bullets": [
+        "Deployed autonomous AI pipelines connecting LLM processing, external APIs, and persistent storage; architected for reliability across concurrent workflows.",
+        "Built monitoring dashboards and alerting to track execution state and failure modes, enabling faster debugging and reducing mean time to resolution."
+      ]
+    },
+    {
+      "name": "RPG-Style AI Workflow Visualization Engine",
+      "stack": "JavaScript, Python, Full-Stack",
+      "bullets": [
+        "Built a browser-based visualization layer on top of existing backend orchestration, representing AI workflow states as navigable game entities with real-time synchronization.",
+        "Iterated on UI design based on user feedback to improve debugging transparency and system observability for non-technical team members."
+      ]
+    },
+    {
+      "name": "Self-Hosted Automation Platform",
+      "stack": "Docker, Linux, DevOps",
+      "bullets": [
+        "Deployed and maintained a containerized n8n automation platform using Docker Compose, reverse proxy networking, and persistent volumes for long-running production jobs.",
+        "Built and validated automated workflows integrating APIs, webhooks, and SQL storage; implemented retry logic and error handling to ensure continuous reliability."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Self-Taught Software Engineering & AI Systems Development",
+      "institution": "Independent Study",
+      "notes": "Backend development, databases, software design, testing, cloud computing, and machine learning fundamentals."
+    },
+    {
+      "degree": "Game Development Certificate",
+      "institution": "Heritage Hall",
+      "location": "Oklahoma City, OK"
+    },
+    {
+      "degree": "App Development Certificate",
+      "institution": "Francis Tuttle Technology Center",
+      "location": "Oklahoma City, OK"
+    }
+  ],
+  "additional": [
+    "Operates personal home-lab infrastructure including NAS storage, containerized services, and secure remote networking; continuously learning through hands-on experimentation.",
+    "Growth-minded and eager to learn: thrives in collaborative team environments, actively seeks feedback from mentors and peers, and adapts quickly to new tools, languages, and frameworks.",
+    "Strong problem solver who takes initiative independently while contributing positively to team culture and shared goals."
+  ],
+  "coverLetterStyle": "confident and direct — lead with what I built, not what I want. Keep it under 200 words. No filler phrases like 'I am excited to apply'.",
+  "doNotDisclose": ["salary expectations", "current income"],
+  "autofillDefaults": {
+    "yearsExperience": "3+",
+    "workAuthorization": "US Citizen",
+    "requiresSponsorship": false,
+    "willingToRelocate": false,
+    "remotePreference": "remote"
+  }
+}

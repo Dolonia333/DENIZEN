@@ -310,7 +310,7 @@ class OpenClawChat {
     panel.querySelector('#openclaw-ui-sessions').addEventListener('click', () => this.toggleSessions());
     panel.querySelector('#openclaw-ui-new').addEventListener('click', () => this.newSession());
     panel.querySelector('#openclaw-ui-newtab').addEventListener('click', () => {
-      window.open('http://localhost:18789/?token=test-token-12345', '_blank');
+      window.open('http://localhost:18792/?token=test-token-12345', '_blank');
     });
 
     // Block game input while interacting with the panel

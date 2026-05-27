@@ -4,10 +4,13 @@
  * so AI agent events can drive NPC behavior in the game.
  */
 
-const GATEWAY_URL = 'ws://localhost:18789';
+const GATEWAY_URL = 'ws://localhost:18792';
 const PROTOCOL_VERSION = 3;
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
+// After this many failed reconnect attempts, stop retrying and go silent.
+// The game runs fine without openclaw — no need to spam the console forever.
+const RECONNECT_MAX_ATTEMPTS = 5;
 
 class GatewayBridge extends EventTarget {
   constructor(url = GATEWAY_URL) {
@@ -29,7 +32,9 @@ class GatewayBridge extends EventTarget {
       return;
     }
 
-    console.log('[GatewayBridge] Connecting to', this.url);
+    if (this._reconnectAttempt === 0) {
+      console.log('[GatewayBridge] Connecting to', this.url);
+    }
     this.ws = new WebSocket(this.url);
 
     this.ws.onopen = () => {
@@ -54,8 +59,11 @@ class GatewayBridge extends EventTarget {
       this._scheduleReconnect();
     };
 
-    this.ws.onerror = (err) => {
-      console.warn('[GatewayBridge] WebSocket error:', err);
+    this.ws.onerror = () => {
+      // Suppress noisy error objects — the close event already handles reconnect.
+      if (this._reconnectAttempt === 0) {
+        console.warn('[GatewayBridge] Cannot reach openclaw gateway at', this.url, '— game runs fine without it.');
+      }
     };
   }
 
@@ -194,12 +202,18 @@ class GatewayBridge extends EventTarget {
 
   _scheduleReconnect() {
     if (this._reconnectTimer) return;
+    if (this._reconnectAttempt >= RECONNECT_MAX_ATTEMPTS) {
+      console.info('[GatewayBridge] openclaw gateway not available — stopping reconnect. Start openclaw and refresh to enable.');
+      return;
+    }
     const delay = Math.min(
       RECONNECT_BASE_MS * Math.pow(2, this._reconnectAttempt),
       RECONNECT_MAX_MS
     );
     this._reconnectAttempt++;
-    console.log(`[GatewayBridge] Reconnecting in ${delay}ms (attempt ${this._reconnectAttempt})`);
+    if (this._reconnectAttempt <= 2) {
+      console.log(`[GatewayBridge] Reconnecting in ${delay}ms (attempt ${this._reconnectAttempt})`);
+    }
     this._reconnectTimer = setTimeout(() => {
       this._reconnectTimer = null;
       this.connect();

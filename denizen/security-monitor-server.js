@@ -51,7 +51,7 @@ class SecurityMonitorServer {
       watchDirs: options.watchDirs || [],
 
       // OpenClaw gateway URL
-      openclawUrl: options.openclawUrl || 'ws://localhost:18789',
+      openclawUrl: options.openclawUrl || 'ws://localhost:18792',
     };
 
     this._intervals = [];

@@ -297,9 +297,20 @@ async function processInboundEmail({ npcBrains, gmailClient }, emailPayload, opt
     return { ok: false, error: 'draft failed: ' + (err?.message || err), route: routed };
   }
 
+  // Auto-send if the NPC's SOUL permits and EMAIL_AUTOSEND=true env is set.
+  let sent = false;
+  if (!style.never_send && style.email_canAutoSend) {
+    try {
+      const sendResult = await gmailClient.sendDraft({ id: drafted.id, autoSendAllowed: true });
+      sent = sendResult.status === 'sent';
+    } catch (err) {
+      console.warn(`[email-handler] auto-send failed for ${npcName}:`, err?.message || err);
+    }
+  }
+
   _appendLog({
     npc: npcName,
-    kind: 'drafted',
+    kind: sent ? 'sent' : 'drafted',
     draftId: drafted.id,
     mode: drafted.mode,
     from: emailPayload.from,
@@ -307,7 +318,7 @@ async function processInboundEmail({ npcBrains, gmailClient }, emailPayload, opt
     bodyPreview: finalBody.slice(0, 240),
   });
 
-  return { ok: true, drafted, route: routed };
+  return { ok: true, drafted, sent, route: routed };
 }
 
 module.exports = {

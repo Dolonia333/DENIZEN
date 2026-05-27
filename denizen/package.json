@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "node --test --test-concurrency=1",
-    "start": "node server.js",
+    "start": "node --env-file=.env server.js",
     "build:assets": "node scripts/run-pipeline.js",
     "build:assets:dry": "node scripts/run-pipeline.js --dry-run"
   },
@@ -28,6 +28,8 @@
   },
   "homepage": "https://github.com/Dolonia333/DENIZEN#readme",
   "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
+    "playwright": "^1.60.0",
     "ws": "^8.20.0"
   }
 }

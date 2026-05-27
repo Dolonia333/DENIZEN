@@ -341,48 +341,123 @@
     return head + list;
   }
 
+  // Kind labels — map internal kind names to readable descriptions
+  const KIND_LABELS = {
+    think:              '🧠 think — NPC decides next action',
+    response:           '💬 response — NPC replies to a player',
+    chat:               '💬 chat — NPC conversation',
+    email:              '📧 email — NPC sends/reads email',
+    goal:               '🎯 goal — NPC sets a new goal',
+    plan:               '📋 plan — NPC builds a plan',
+    reflection:         '🪞 reflection — NPC reflects on memory',
+    'city-plan':        '🏙 city-plan — world event planning',
+    'response-fallback':'⚡ response-fallback — fast fallback reply',
+    openclaw:           '🔧 openclaw — tool/code execution',
+    other:              '❓ other — untagged call (check npc-brains.js)',
+  };
+
   function renderStats(s) {
     if (!s || s.calls === 0) {
       return '<div style="padding:12px; color:#94a3b8">No telemetry in the last 5 minutes.</div>';
     }
-    const ms = (n) => n == null ? '—' : (n / 1000).toFixed(2) + 's';
-    const byTable = (obj, title) => {
+    const ms  = (n) => n == null ? '—' : (n / 1000).toFixed(2) + 's';
+    const tok  = (n) => n == null ? '—' : n.toLocaleString();
+
+    // ── By-NPC / By-provider / By-kind table ──────────────────────────────
+    const byTable = (obj, title, labelMap) => {
       const rows = Object.entries(obj).sort((a, b) => b[1].calls - a[1].calls);
-      if (!rows.length) return `<div class="card"><h4>${title}</h4>(none)</div>`;
-      return `<div class="card"><h4>${title}</h4>
-        ${rows.map(([k, v]) =>
-          `<div>${esc(k)}: ${v.calls}c · ${v.avgLatencyMs != null ? Math.round(v.avgLatencyMs) + 'ms' : '—'} · ${v.tokensIn + v.tokensOut} tok${v.errors ? ` · <span style="color:#fda4af">${v.errors}e</span>` : ''}</div>`
-        ).join('')}
+      if (!rows.length) return `<div class="card"><h4>${title}</h4><div style="color:#94a3b8">(none)</div></div>`;
+      return `<div class="card">
+        <h4>${title}</h4>
+        <div style="color:#64748b; font-size:10px; margin-bottom:4px">calls · avg latency · total tokens sent+received</div>
+        ${rows.map(([k, v]) => {
+          const label = labelMap ? (labelMap[k] || k) : k;
+          const totalTok = (v.tokensIn || 0) + (v.tokensOut || 0);
+          const latStr = v.avgLatencyMs != null ? (v.avgLatencyMs / 1000).toFixed(2) + 's avg' : '—';
+          const errBadge = v.errors ? `<span style="color:#fda4af; margin-left:4px">${v.errors} error${v.errors > 1 ? 's' : ''}</span>` : '';
+          const unknownNote = k === 'unknown' ? `<span style="color:#fbbf24; font-size:10px"> (untagged — missing npc name)</span>` : '';
+          return `<div style="padding:3px 0; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:baseline">
+            <span><b style="color:#c7d2fe">${esc(label)}</b>${unknownNote}${errBadge}</span>
+            <span style="color:#94a3b8">${v.calls} call${v.calls !== 1 ? 's' : ''} · ${latStr} · ${tok(totalTok)} tok</span>
+          </div>`;
+        }).join('')}
       </div>`;
     };
+
+    // ── Top errors ─────────────────────────────────────────────────────────
     const topErr = s.topErrors?.length
       ? s.topErrors.map(e =>
-          `<div><b>${esc(e.category)}</b> ×${e.count}<br/><span style="color:#fbbf24">${esc(e.hint)}</span></div>`
-        ).join('<hr style="border:0; border-top:1px solid #334155; margin:4px 0"/>')
-      : '(none — clean)';
+          `<div style="margin-bottom:6px">
+            <b style="color:#fda4af">${esc(e.category)}</b> <span style="color:#94a3b8">×${e.count}</span><br/>
+            <span style="color:#fbbf24; font-size:10px">${esc(e.hint)}</span>
+          </div>`
+        ).join('')
+      : '<span style="color:#86efac">✓ No errors</span>';
 
-    const ratioColor = s.promptToCompletionRatio != null && s.promptToCompletionRatio > 20 ? '#fda4af'
-                     : s.promptToCompletionRatio != null && s.promptToCompletionRatio > 10 ? '#fbbf24'
-                     : '#86efac';
-    const convoColor = s.maxConversationMsgs != null && s.maxConversationMsgs > 40 ? '#fda4af'
-                     : s.maxConversationMsgs != null && s.maxConversationMsgs > 20 ? '#fbbf24'
-                     : '#cbd5e1';
+    // ── Color thresholds ───────────────────────────────────────────────────
+    const ratioColor = s.promptToCompletionRatio > 20 ? '#fda4af'
+                     : s.promptToCompletionRatio > 10 ? '#fbbf24' : '#86efac';
+    const ratioTip   = s.promptToCompletionRatio > 20
+      ? ' — high: you\'re paying mostly to re-send context'
+      : s.promptToCompletionRatio > 10 ? ' — moderate' : ' — efficient';
+
+    const convoColor = s.maxConversationMsgs > 40 ? '#fda4af'
+                     : s.maxConversationMsgs > 20 ? '#fbbf24' : '#cbd5e1';
+    const errColor   = s.errorRate > 0.1 ? '#fda4af' : s.errorRate > 0 ? '#fbbf24' : '#86efac';
+
+    // ── Throughput bar (visual calls/min indicator) ────────────────────────
+    const cpm = s.callsPerMin || 0;
+    const barPct = Math.min(100, (cpm / 10) * 100); // 10 calls/min = full bar
+    const barColor = cpm > 8 ? '#fda4af' : cpm > 4 ? '#fbbf24' : '#4ade80';
+    const throughputBar = `
+      <div style="margin-top:4px">
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-bottom:2px">
+          <span>throughput (calls/min)</span><span>${cpm}/min</span>
+        </div>
+        <div style="background:#1e293b; border-radius:4px; height:6px; overflow:hidden">
+          <div style="width:${barPct}%; height:100%; background:${barColor}; border-radius:4px; transition:width 0.5s"></div>
+        </div>
+      </div>`;
+
     return `<div class="summary">
-      <div class="card"><h4>Window: 5 min</h4>
-        <div>calls: <b>${s.calls}</b> (${s.callsPerMin}/min) · errors: ${s.errors} (${(s.errorRate * 100).toFixed(1)}%)</div>
-        <div>latency: p50 ${ms(s.p50LatencyMs)} · p95 ${ms(s.p95LatencyMs)} · p99 ${ms(s.p99LatencyMs)}</div>
-        <div>tokens: ${s.tokensInTotal}↑ ${s.tokensOutTotal}↓ · ${s.tokensPerMin}/min</div>
-        ${s.promptToCompletionRatio != null
-          ? `<div>prompt:completion ratio: <b style="color:${ratioColor}">${s.promptToCompletionRatio}:1</b>${s.promptToCompletionRatio > 20 ? ' — most cost is rebuilding context' : ''}</div>`
-          : ''}
-        ${s.avgConversationMsgs != null
-          ? `<div>convo depth: avg ${s.avgConversationMsgs} · <b style="color:${convoColor}">max ${s.maxConversationMsgs}</b>${s.maxConversationMsgs > 40 ? ' — trim history?' : ''}</div>`
-          : ''}
+      <!-- Overview card -->
+      <div class="card" style="grid-column:1/-1">
+        <h4>📊 Last 5 minutes — what happened</h4>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:4px">
+          <div>
+            <div><span style="color:#64748b">Calls:</span> <b>${s.calls}</b> total <span style="color:#64748b">(${s.callsPerMin}/min)</span></div>
+            <div><span style="color:#64748b">Errors:</span> <b style="color:${errColor}">${s.errors}</b> <span style="color:#64748b">(${(s.errorRate * 100).toFixed(1)}%)</span></div>
+            ${throughputBar}
+          </div>
+          <div>
+            <div><span style="color:#64748b">Latency p50:</span> ${ms(s.p50LatencyMs)} <span style="color:#64748b">typical</span></div>
+            <div><span style="color:#64748b">Latency p95:</span> ${ms(s.p95LatencyMs)} <span style="color:#64748b">slow tail</span></div>
+            <div><span style="color:#64748b">Latency p99:</span> ${ms(s.p99LatencyMs)} <span style="color:#64748b">worst</span></div>
+          </div>
+        </div>
+        <div style="margin-top:6px; border-top:1px solid #1e293b; padding-top:6px">
+          <div><span style="color:#64748b">Tokens sent (↑ prompt):</span> <b>${tok(s.tokensInTotal)}</b></div>
+          <div><span style="color:#64748b">Tokens received (↓ output):</span> <b>${tok(s.tokensOutTotal)}</b> <span style="color:#64748b">${s.tokensPerMin}/min total</span></div>
+          ${s.promptToCompletionRatio != null
+            ? `<div><span style="color:#64748b">Prompt:output ratio:</span> <b style="color:${ratioColor}">${s.promptToCompletionRatio}:1</b><span style="color:${ratioColor}; font-size:10px">${ratioTip}</span></div>`
+            : ''}
+          ${s.avgConversationMsgs != null
+            ? `<div><span style="color:#64748b">History depth:</span> avg ${s.avgConversationMsgs} msgs · max <b style="color:${convoColor}">${s.maxConversationMsgs}</b> msgs per call${s.maxConversationMsgs > 40 ? ' <span style="color:#fda4af; font-size:10px">— trim history</span>' : ''}</div>`
+            : ''}
+        </div>
       </div>
-      <div class="card"><h4>Top errors</h4>${topErr}</div>
-      ${byTable(s.byNpc, 'By NPC')}
-      ${byTable(s.byProvider, 'By provider')}
-      ${byTable(s.byKind, 'By kind')}
+
+      <!-- Top errors -->
+      <div class="card"><h4>⚠ Top errors</h4>${topErr}</div>
+
+      <!-- By NPC -->
+      ${byTable(s.byNpc, '🤖 By NPC — who\'s calling the model', null)}
+
+      <!-- By provider -->
+      ${byTable(s.byProvider, '🌐 By provider', null)}
+
+      <!-- By kind — with readable labels -->
+      ${byTable(s.byKind, '🏷 By call type', KIND_LABELS)}
     </div>`;
   }
 

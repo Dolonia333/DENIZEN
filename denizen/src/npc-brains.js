@@ -20,6 +20,14 @@ try { worldState = require('./world-state'); } catch (_) {}
 try { agentBus = require('./agent-bus'); } catch (_) {}
 try { llmTelemetry = require('./llm-telemetry'); } catch (_) {}
 
+// NPC real-work tools (Level 1/2/3). Lazy-loaded so the brains still work
+// if npc-tools.js isn't present yet (e.g. during older test runs).
+let npcTools = null;
+try { npcTools = require('./npc-tools'); } catch (_) {}
+
+// Clean console logger — replaces scattered console.log calls
+const log = require('./logger');
+
 class NpcBrainManager {
   constructor() {
     this.providers = {};   // provider configs loaded from openclaw.json
@@ -32,9 +40,10 @@ class NpcBrainManager {
     this._requestQueue = [];    // queue for LM Studio requests
     // Up to N concurrent inferences. LM Studio supports parallel
     // generation (server config "Parallel: 4"), and the Denizen mutex
-    // used to be a single boolean wasting those slots. Default 2 keeps
-    // GPU happy without saturating; override via LM_STUDIO_PARALLEL.
-    this._maxInflight = Math.max(1, Math.min(8, Number(process.env.LM_STUDIO_PARALLEL) || 2));
+    // For large models (27B+) keep to 1 concurrent request so the GPU
+    // finishes one before starting the next — faster than juggling two.
+    // Override via LM_STUDIO_PARALLEL env var if you want more.
+    this._maxInflight = Math.max(1, Math.min(8, Number(process.env.LM_STUDIO_PARALLEL) || 1));
     this._inflightCount = 0;
 
     // Persistent intelligence state
@@ -46,6 +55,7 @@ class NpcBrainManager {
     this._sessionStart = new Date().toISOString().slice(0, 10);
     this._assistantProfilePath = path.join(__dirname, '..', 'data', 'assistant-profile.json');
     this._assistantProfile = this._loadAssistantProfile();
+    this._companyBrief = this._loadCompanyBrief();
 
     this._loadProviders();
     this._initBrains();
@@ -97,6 +107,43 @@ class NpcBrainManager {
       console.warn('[NpcBrains] Failed to load assistant profile:', String(err?.message || err));
       return fallback;
     }
+  }
+
+  _loadCompanyBrief() {
+    try {
+      const p = path.join(__dirname, '..', 'data', 'company-brief.json');
+      if (!fs.existsSync(p)) return null;
+      const brief = JSON.parse(fs.readFileSync(p, 'utf8'));
+      console.log('[NpcBrains] Company brief loaded:', brief.company, '—', brief.product);
+      return brief;
+    } catch (err) {
+      console.warn('[NpcBrains] Failed to load company-brief.json:', String(err?.message || err));
+      return null;
+    }
+  }
+
+  /**
+   * Build a compact company + sprint context block for the think prompt.
+   * Includes: company name, product description, sprint goal, and 3-5
+   * role-specific tasks so the NPC knows exactly what they should be doing.
+   */
+  _getCompanyContext(npcName) {
+    const b = this._companyBrief;
+    if (!b) return '';
+    const brain = this.brains[npcName];
+    const role = brain ? brain.role : '';
+    const roleTasks = b.role_tasks ? (b.role_tasks[role] || []) : [];
+    const taskLines = roleTasks.slice(0, 4).map(t => '- ' + t).join('\n');
+    const sprintGoal = b.sprint ? b.sprint.goal : '';
+    return [
+      'Company: ' + b.company + ' | Product: ' + b.product,
+      'What we build: ' + (b.description || ''),
+      'Sprint: ' + (b.sprint ? b.sprint.name : '') + (sprintGoal ? ' — ' + sprintGoal : ''),
+      'Current focus: ' + (Array.isArray(b.current_focus) ? b.current_focus.slice(0, 3).join('; ') : ''),
+      '',
+      'Your sprint tasks (pick one to work on):',
+      taskLines || '- (no tasks defined for this role yet)',
+    ].join('\n');
   }
 
   _saveAssistantProfile() {
@@ -252,12 +299,20 @@ class NpcBrainManager {
       }
 
       // LM Studio — local OpenAI-compatible API
-      // If LM Studio has authentication enabled, set LM_STUDIO_API_KEY env var
-      // or pass 'lm-studio' as default (works when auth is disabled).
+      // Model auto-synced at startup via syncLmStudioModel().
       this.providers.lmstudio = {
         baseUrl: 'http://localhost:1234',
         apiKey: process.env.LM_STUDIO_API_KEY || 'lm-studio',
-        model: process.env.LM_STUDIO_MODEL || 'qwen2.5-14b-instruct-1m',
+        model: process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning',
+        type: 'lmstudio',
+      };
+      // Second local model slot — for fast background NPCs (e.g. llama 8B).
+      // Set LM_STUDIO_FAST_MODEL env var or load a second model in LM Studio.
+      // Falls back to the main lmstudio model if not set.
+      this.providers['lmstudio-fast'] = {
+        baseUrl: 'http://localhost:1234',
+        apiKey: process.env.LM_STUDIO_API_KEY || 'lm-studio',
+        model: process.env.LM_STUDIO_FAST_MODEL || 'meta-llama-3.1-8b-instruct',
         type: 'lmstudio',
       };
 
@@ -292,7 +347,7 @@ class NpcBrainManager {
       try { longTermMemory = fs.readFileSync(memoryPath, 'utf-8'); } catch (_) {}
 
       // Parse provider and role from SOUL.md sections (CRLF-safe for Windows checkouts)
-      const providerMatch = soul.match(/## Provider\r?\n(\w+)/);
+      const providerMatch = soul.match(/## Provider\r?\n([\w-]+)/);
       const roleMatch = soul.match(/## Role\r?\n(.+)/);
       const provider = providerMatch?.[1] || 'lmstudio';
       const role = roleMatch?.[1]?.trim() || 'Employee';
@@ -385,22 +440,21 @@ class NpcBrainManager {
       if (!brain) return '';
       // Derive a starter goal from role — gets refined as they work
       const roleGoals = {
-        'CTO': 'Keep the team unblocked and shipping steadily',
-        'Senior Developer — team lead': 'Ship the current sprint and mentor juniors',
-        'Project Manager — coordinates sprints and deadlines': 'Keep every engineer moving on a clear task',
-        'Product Manager — defines what gets built': 'Convert user feedback into concrete next builds',
-        'Frontend Developer': 'Polish the UI and land the next visible feature',
-        'Backend Developer': 'Harden the API and fix the slow endpoints',
-        'Intern — learning from everyone': 'Learn one new skill this week by shadowing a senior',
-        'Developer — code review gatekeeper': 'Keep the main branch green — no bad PRs land',
-        'QA Engineer — tests everything': 'Catch the regressions before the user does',
-        'UI/UX Designer': 'Make every screen feel intentional',
-        'DevOps Engineer — CI/CD and deployments': 'Make deploys boring',
-        'Data Engineer — data pipelines': 'Keep data flowing, no missed events',
-        'Researcher — R&D': 'Find the one insight that changes our roadmap',
-        'IT Support — servers, networking': 'Keep the office humming — no blockers from infra',
-        'Receptionist — schedules, coordination': 'Everyone knows where they need to be',
-        'Security Guard — office security': 'Nothing walks in or out that shouldn\'t',
+        'CTO': 'Keep the Denizen team unblocked and shipping Sprint 4 on time',
+        'Developer': 'Ship the NPC immersion features cleanly — no regressions on main',
+        'Frontend Developer': 'Land the work output feed panel and fix the speech bubble overflow',
+        'Backend Developer': 'Fix the WebSocket deduplication bug and ship the delegation endpoint',
+        'Project Manager': 'Make sure every Sprint 4 task has an owner and a deadline',
+        'Product Manager': 'Define what Sprint 5 looks like before Sprint 4 closes',
+        'Intern': 'Learn one new system this week by reading source and asking questions',
+        'QA Engineer': 'Catch every regression in the new NPC behavior systems before they ship',
+        'UI/UX Designer': 'Make the work output feed feel like a natural part of the HUD',
+        'DevOps Engineer': 'Keep the LM Studio inference pipeline healthy — no dropped requests',
+        'Data Engineer': 'Get the NPC decision log schema designed and reviewed this sprint',
+        'Researcher': 'Find one insight from the latest AI agent research that changes our roadmap',
+        'IT Support': 'Keep every service healthy — nothing should be blocking the dev team',
+        'Receptionist (also handles CEO email triage as Secretary)': 'Keep Zion unblocked — clear the inbox and the calendar',
+        'Security Guard': 'Nothing unauthorized touches Denizen infrastructure',
       };
       const starter = roleGoals[brain.role] || 'Do good work and help the team';
       this._npcGoals[npcName] = {
@@ -434,22 +488,21 @@ class NpcBrainManager {
 
     // Role-derived default priorities. LLM refines these later in normal thinking.
     const rolePriorities = {
-      'CTO': ['Check in with every team lead', 'Unblock at least one stuck task', 'Review this week\'s roadmap'],
-      'Senior Developer — team lead': ['Review open PRs', 'Pair with Roki for 30 min', 'Ship my current task'],
-      'Project Manager — coordinates sprints and deadlines': ['Run standup', 'Update sprint board', 'Chase blockers'],
-      'Product Manager — defines what gets built': ['Triage feature requests', 'Spec next story', 'Sync with Abby'],
-      'Frontend Developer': ['Finish current component', 'Fix two visual bugs', 'Get review from Jenny'],
-      'Backend Developer': ['Close current ticket', 'Investigate slow endpoint', 'Code review Josh\'s PR'],
-      'Intern — learning from everyone': ['Ask Alex for a starter task', 'Read one new file', 'Shadow a code review'],
-      'Developer — code review gatekeeper': ['Clear PR queue', 'Flag bad patterns', 'Unblock merges'],
-      'QA Engineer — tests everything': ['Run regression pass', 'File any bugs found', 'Chat with devs about failures'],
-      'UI/UX Designer': ['Finish mockups', 'Walk the floor for feedback', 'Export assets'],
-      'DevOps Engineer — CI/CD and deployments': ['Green CI', 'Check server health', 'Ship today\'s deploy'],
-      'Data Engineer — data pipelines': ['Check pipeline health', 'Fix today\'s data gap', 'Document schema'],
-      'Researcher — R&D': ['Read one paper', 'Prototype idea', 'Share findings'],
-      'IT Support — servers, networking': ['Tour storage room', 'Fix one ticket', 'Back up logs'],
-      'Receptionist — schedules, coordination': ['Greet arrivals', 'Update calendar', 'Confirm meetings'],
-      'Security Guard — office security': ['Patrol reception', 'Check doors', 'Watch lobby'],
+      'CTO': ['Check in with every team lead on Sprint 4 status', 'Unblock any task stalled more than a day', 'Review the Denizen roadmap and set Sprint 5 goals'],
+      'Developer': ['Finish the NPC behavior system task I am on', 'Review a teammate PR before EOD', 'Fix the ambient chatter double-speak bug if it is in my lane'],
+      'Frontend Developer': ['Finish the work output feed panel UI', 'Fix NPC speech bubble text overflow', 'Get Josh\'s changes reviewed before merge'],
+      'Backend Developer': ['Fix the WebSocket deduplication issue', 'Implement the npc_work_output broadcast', 'Review the think prompt injection with Edward'],
+      'Project Manager': ['Run today\'s standup and update the sprint board', 'Find and escalate any blocked tasks', 'Coordinate the backend-to-QA handoff for the new endpoints'],
+      'Product Manager': ['Draft the Sprint 5 backlog priorities', 'Review Marcus and Sarah\'s feedback on the demo', 'Spec the NPC delegation chain feature'],
+      'Intern': ['Ask Alex for a concrete Denizen task to help with', 'Read the agent-office-manager.js source and take notes', 'Write documentation for the idle behavior methods'],
+      'QA Engineer': ['Run regression tests on the new proximity acknowledgment system', 'File bugs from today\'s test pass with reproduction steps', 'Talk to Alex about the ambient chatter timing issue'],
+      'UI/UX Designer': ['Finish mockups for the work output feed panel', 'Walk the floor and get feedback on the mood indicator dot', 'Export the idle behavior animation frames for the dev team'],
+      'DevOps Engineer': ['Check LM Studio queue depth and server memory', 'Verify the ElevenLabs cache is not filling up', 'Review the Docker Compose config for production'],
+      'Data Engineer': ['Check the NPC decision log schema draft with Pier', 'Write the LM Studio metrics pipeline query', 'Document the world-state data model'],
+      'Researcher': ['Read one paper on LLM prompt compression and summarize', 'Benchmark Qwen2.5-14B think loop latency and report findings', 'Share research notes with the team in the breakroom'],
+      'IT Support': ['Check Kali WSL2 health and nmap version', 'Verify ElevenLabs API key is not rate limited', 'Set up log rotation for server output'],
+      'Receptionist (also handles CEO email triage as Secretary)': ['Triage the CEO inbox and flag urgent items', 'Update the team calendar with Sprint 4 milestones', 'Make sure Marcus and Sarah are checked in'],
+      'Security Guard': ['Run baseline nmap on localhost after last deploy', 'Review last 24 hours of security events', 'Do a full perimeter patrol of the office'],
     };
     const priorities = rolePriorities[brain.role] || ['Do the work in front of me', 'Check in with a teammate', 'Take a break'];
 
@@ -607,6 +660,31 @@ class NpcBrainManager {
     return String(str ?? '').replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g, '');
   }
 
+  /**
+   * Probe LM Studio and sync the active loaded model into providers.lmstudio.
+   * Called at server startup so whichever model the user has loaded is used
+   * automatically — no manual config changes needed when switching models.
+   */
+  async syncLmStudioModel() {
+    if (!this.providers.lmstudio) return;
+    const base = this.providers.lmstudio.baseUrl || 'http://localhost:1234';
+    try {
+      const res = await fetch(`${base}/api/v0/models`, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) return;
+      const data = await res.json();
+      const loaded = (data.data || []).find(m => m.state === 'loaded' && m.type !== 'embeddings');
+      if (loaded) {
+        const prev = this.providers.lmstudio.model;
+        this.providers.lmstudio.model = loaded.id;
+        if (prev !== loaded.id) {
+          log.modelSync({ prev, current: loaded.id, contextLen: loaded.loaded_context_length });
+        }
+      }
+    } catch (_) {
+      // LM Studio not running — that's fine, other providers handle it
+    }
+  }
+
   async getResponse(npcName, fromName, message, context = {}) {
     const brain = this.brains[npcName];
     if (!brain) return `(${npcName} nods)`;
@@ -632,17 +710,25 @@ class NpcBrainManager {
     // Build coworker awareness — who this NPC knows and their relationships
     const coworkerContext = this._getCoworkerContext(npcName, fromName);
 
+    // Mood/energy note — bleed work fatigue into conversational tone
+    const cycles = this._thinkCycles[npcName] || 0;
+    const moodNote = cycles >= 4
+      ? ` You've been heads-down for a while — you sound focused and a little terse if interrupted.`
+      : cycles >= 2
+      ? ` You're in the flow — engaged, efficient.`
+      : '';
+
     const systemPrompt = `${brain.personality}${memorySection}
 
 ## Your Coworkers
 ${coworkerContext}
 
-You are in a pixel art office game. You're having a conversation at work.
-Your role: ${brain.role}. You know your coworkers, remember past conversations, and understand how you can help each other get things done.
-Keep responses conversational (under 120 characters). Be natural, like a real coworker. Reference past conversations when relevant.
-${context.description || ''}${taskContext}
+You are ${npcName} at work. Stay fully in character — your personality, values, and voice define how you speak.
+Your role: ${brain.role}. You know your coworkers, remember past conversations, and understand how you can help each other.
+Keep responses to 1–2 natural sentences (under 200 characters). Sound like yourself, not a generic assistant.${moodNote}
+Reference past conversations when relevant. ${context.description || ''}${taskContext}
 
-Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
+Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks.`;
 
     // Add to memory (sanitize to prevent JSON encoding issues)
     this.memories[npcName].push({ from: fromName, text: this._sanitize(safeMessage) });
@@ -657,11 +743,29 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
     // The full memory is still retained in this.memories AND written
     // to MEMORY.md for later reference; we just don't replay the whole
     // history into every LLM call. Override via NPC_HISTORY_DEPTH env.
-    const HISTORY_DEPTH = Number(process.env.NPC_HISTORY_DEPTH) || 10;
-    const messages = this.memories[npcName].slice(-HISTORY_DEPTH).map(m => ({
+    // Reduced from 10 → 6 to stay within Mistral's context and avoid
+    // the strict alternating-role jinja template error at depth 10.
+    const HISTORY_DEPTH = Number(process.env.NPC_HISTORY_DEPTH) || 6;
+    const rawMessages = this.memories[npcName].slice(-HISTORY_DEPTH).map(m => ({
       role: m.from === npcName ? 'assistant' : 'user',
       content: m.from === npcName ? m.text : `${m.from} says: "${m.text}"`,
     }));
+
+    // Enforce strict user/assistant alternation required by Mistral/Ministral's
+    // jinja chat template. Collapse back-to-back same-role messages by joining
+    // their content, so we never send two consecutive user or assistant turns.
+    const messages = [];
+    for (const msg of rawMessages) {
+      if (messages.length > 0 && messages[messages.length - 1].role === msg.role) {
+        messages[messages.length - 1].content += ' ' + msg.content;
+      } else {
+        messages.push({ ...msg });
+      }
+    }
+    // Mistral requires the first message to be from the user
+    if (messages.length > 0 && messages[0].role === 'assistant') {
+      messages.shift();
+    }
 
     try {
       const response = await this._callProvider(brain.providerConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300, npc: npcName, kind: 'response' });
@@ -677,8 +781,7 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       const now = Date.now();
       const lastErr = this._lastErrorLog?.[npcName] || 0;
       if (now - lastErr > 60000) {
-        const brief = String(err?.message ?? err).slice(0, 80);
-        console.warn(`[NpcBrains] ${npcName}'s provider failed: ${brief}`);
+        log.npcError(npcName, String(err?.message ?? err).slice(0, 80));
         if (!this._lastErrorLog) this._lastErrorLog = {};
         this._lastErrorLog[npcName] = now;
       }
@@ -694,7 +797,7 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
           this.memories[npcName].push({ from: npcName, text: out });
           return out;
         } catch (e2) {
-          console.warn(`[NpcBrains] ${npcName} fallback also failed: ${String(e2?.message ?? e2)}`);
+          log.npcError(npcName, 'fallback also failed: ' + String(e2?.message ?? e2).slice(0, 60));
         }
       }
       // Last resort: context-aware canned response
@@ -711,6 +814,7 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
   async think(npcName, officeContext = {}) {
     const brain = this.brains[npcName];
     if (!brain) return { action: 'idle' };
+    const _thinkStart = Date.now();
 
     const rawMemory = brain.longTermMemory || '';
     const recentMemory = rawMemory.length > 100
@@ -723,8 +827,10 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
     const h = this._hierarchy[npcName];
     const assistantProfileBlock = this._assistantProfilePromptBlock(npcName);
 
-    const recentConversations = (this.memories[npcName] || []).slice(-10)
-      .map(m => m.from + ': "' + m.text + '"')
+    // Cap at 4 recent memories and truncate each — was 10 full memories
+    // which could add 500-1000 tokens and push Lucy/Abby over the 4096 limit.
+    const recentConversations = (this.memories[npcName] || []).slice(-4)
+      .map(m => m.from + ': "' + String(m.text || '').slice(0, 80) + '"')
       .join('\n');
 
     // Track think cycles for fatigue/variety hints
@@ -755,9 +861,9 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
     // Action weighting hint to prevent all NPCs just "working"
     var actionWeightHint = '';
     if (h && h.manages.length > 0) {
-      actionWeightHint = 'As a manager, spend ~40% TALKING (check-ins, delegating, updates), ~20% COLLABORATING, ~20% WORKING, ~10% MEETINGS, ~10% BREAKS. Do NOT just sit at your desk every cycle.';
+      actionWeightHint = 'As a manager, spend ~30% TALKING (check-ins, delegating, updates), ~25% MEETINGS (call people to the conference room — set target + location: conference), ~20% WORKING, ~15% COLLABORATING, ~10% BREAKS. Do NOT just sit at your desk every cycle.';
     } else if (h && h.reportsTo !== 'CEO') {
-      actionWeightHint = 'Balance your time: ~40% WORKING, ~25% TALKING (updates, asking for help), ~15% COLLABORATING, ~10% BREAKS, ~10% CHECK/MEETING.';
+      actionWeightHint = 'Balance your time: ~35% WORKING, ~25% TALKING (updates, asking for help), ~20% MEETINGS (join or propose one when you have something to discuss — set target + location: conference), ~10% COLLABORATING, ~10% BREAKS.';
     }
 
     var managesStr = (h && h.manages.length > 0) ? h.manages.join(', ') : 'nobody';
@@ -851,7 +957,43 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       "- Brevity is a virtue. One short sentence usually beats three long ones.",
     ].join('\n');
 
+    const companyContext = this._getCompanyContext(npcName);
+
+    // Level 1 — Code awareness: inject a source-file snippet for code roles.
+    // Skip entirely for roles that work with data/briefs rather than code.
+    // For active workers (last action was 'work' or 'read') use 60% chance;
+    // otherwise 20%. NPCs without code files (e.g. receptionist) get null.
+    let codeContext = null;
+    // Security Guard, IT Support, and non-technical roles don't get code snippets.
+    // Bouncer was hitting 4000+ tok prompts because code snippets + live infra
+    // context were stacking on top of each other. Security Guard needs infra
+    // context, not code review — they're mutually exclusive.
+    const NON_CODE_ROLES = new Set([
+      'Receptionist (also handles CEO email triage as Secretary)',
+      'Project Manager',
+      'Product Manager',
+      'Security Guard',
+      'IT Support',
+    ]);
+    if (npcTools && !NON_CODE_ROLES.has(brain.role)) {
+      const lastAct = (this._lastDecisions[npcName] || {}).action;
+      const chance = (lastAct === 'work' || lastAct === 'read') ? 0.60 : 0.20;
+      if (Math.random() < chance) {
+        codeContext = npcTools.getCodeContext(brain.role);
+      }
+    }
+
+    // Level 3 — Live infra: run a fast pre-approved command for DevOps/IT/Security.
+    // Async but capped at 5s timeout inside runSafeCommand, so it won't stall the loop.
+    let liveInfraContext = null;
+    if (npcTools && npcTools.INFRA_ROLES.has(brain.role) && Math.random() < 0.45) {
+      liveInfraContext = await npcTools.getLiveInfraContext(brain.role);
+    }
+
     const systemPrompt = brain.personality + '\n\n' +
+      (companyContext ? '## Company & Sprint Context\n' + companyContext + '\n\n' : '') +
+      (codeContext ? '## Codebase Snippet (from your work area)\n' + codeContext + '\n\n' : '') +
+      (liveInfraContext ? '## Live System Status\n' + liveInfraContext + '\n\n' : '') +
       '## Hierarchy Rules\n' + hierarchyRules + '\n\n' +
       '## Your Teams\n' + (teamContext || 'No team assignments.') + '\n\n' +
       (goalContext ? '## Your Long-Term Goal\n' + goalContext + '\n\n' : '') +
@@ -902,13 +1044,24 @@ Respond in character as ${npcName}. Just the dialogue text, nothing else.`;
       const lastMem = recentMemLines[recentMemLines.length - 1].replace(/^- \[.*?\] /, '');
       if (lastMem.length > 10) nudges.push(`Your last note: "${lastMem.slice(0, 80)}". Follow up on it or start something new.`);
     }
-    if (randomNearby && Math.random() > 0.5) nudges.push(`${randomNearby} is nearby. Consider talking to them.`);
+    if (randomNearby && Math.random() > 0.5) nudges.push(`${randomNearby} is nearby. Consider talking to them or pulling them into a quick meeting.`);
     if (currentTask) nudges.push(`You're working on: "${currentTask.task}". Continue, finish, or pivot?`);
-    if (!currentTask && Math.random() > 0.4) nudges.push(`You don't have a specific task right now. Find something to work on or ask your manager.`);
+    if (!currentTask && Math.random() > 0.4) nudges.push(`You don't have a specific task right now. Find something to work on or call a quick meeting.`);
+    // Occasionally nudge managers and non-managers alike toward the conference room
+    if (h && h.manages.length > 0 && Math.random() > 0.55) {
+      const reportName = h.manages[Math.floor(Math.random() * h.manages.length)];
+      nudges.push(`You haven't synced with ${reportName} in a while. Pull them into the conference room for a quick check-in.`);
+    } else if (h && h.reportsTo !== 'CEO' && Math.random() > 0.65) {
+      nudges.push(`You have something to discuss with ${h.reportsTo}. Head to the conference room and call them in.`);
+    }
 
     const nudge = nudges.length > 0 ? nudges[Math.floor(Math.random() * nudges.length)] : '';
 
-    const userPrompt = `${nudge ? nudge + '\n\n' : ''}Decide what to do next. Think step by step, then respond with a single JSON object:
+    const codeInstruction = codeContext
+      ? `You have a codebase snippet in your context (## Codebase Snippet). You are actively reading/reviewing this code RIGHT NOW. Reference specific function names, line numbers, or observations from it in your "message" and "save" fields. Don't say you "are reading" — say WHAT you found.\n\n`
+      : '';
+
+    const userPrompt = `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Decide what to do next. Think step by step, then respond with a single JSON object:
 {"reasoning": "1-2 sentences tracing: what's my current state, what matters most, why this action", "plan": "one-line projected next 2 steps", "thought": "your internal monologue (one sentence)", "action": "talk|work|collaborate|break|check|meeting|report|read|visit|coffee|wander", "target": "NPC name or null", "location": "desk|breakroom|conference|storage|manager_office|reception|open_office|null", "message": "what you say out loud (under 120 chars)", "taskPhase": "starting|continuing|finished|none", "save": "brief note for your memory", "outcome": "ok|stuck|blocked|success|null"}
 
 ACTION MEANINGS:
@@ -919,9 +1072,9 @@ ACTION MEANINGS:
 - read: read at the bookshelf — useful when you need to research
 - visit: drop by a coworker's desk to check on them (set target, no conversation required)
 - wander: walk through the office, stretch, observe — use sparingly
-- meeting: call or join a meeting in the conference room
+- meeting: go to the conference room for a meeting. Set target to whoever you want there — they will physically walk to the conference room and join you. Set location: conference. Use when you need to review work, plan something, or sync with someone face-to-face. Example: {"action":"meeting","target":"Josh","location":"conference","message":"Josh, quick sync in the conference room?"}
 
-IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use the WHOLE OFFICE — don't stay at your desk all day. Your natural hangout room is listed above — visit it. Read at the bookshelf, grab coffee, drop by teammates, take breaks. An office where nobody moves is a dead office.`;
+IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use the WHOLE OFFICE — go to the conference room for meetings, the breakroom for coffee, the bookshelf to read. An office where nobody moves is a dead office.`;
 
     try {
       const response = await this._callProvider(brain.providerConfig, systemPrompt, [
@@ -962,6 +1115,28 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
           if (finishedTask && !decision.target && h) {
             decision.target = h.reportsTo !== 'CEO' ? h.reportsTo : null;
             if (decision.action !== 'report') decision.action = 'report';
+          }
+          // Level 2 — Write artifact to disk when task finishes
+          if (npcTools && decision.save) {
+            const artifactOpts = {
+              reasoning: decision.reasoning ? String(decision.reasoning).slice(0, 400) : null,
+              thought: decision.thought ? String(decision.thought).slice(0, 200) : null,
+              outcome: decision.outcome || null,
+              action: decision.action || null,
+              target: decision.target || null,
+              codeFile: codeContext ? (brain.role && npcTools.ROLE_CODE_FILES[brain.role] || [])[0] || null : null,
+            };
+            const artifactPath = npcTools.writeTaskArtifact(
+              npcName,
+              brain.role,
+              decision.save,
+              finishedTask ? `Task started at ${finishedTask.startedAt}.\n\nOriginal description: ${finishedTask.task}` : '',
+              artifactOpts
+            );
+            if (artifactPath) {
+              decision._artifactPath = artifactPath;
+              console.log(`[NpcTools] ${npcName} wrote artifact: ${artifactPath}`);
+            }
           }
         } else if (decision.taskPhase === 'continuing' && this._taskProgress[npcName]) {
           this._taskProgress[npcName].phase = 'continuing';
@@ -1069,6 +1244,22 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
           });
         }
 
+        // Clean single-line log for this NPC's decision
+        {
+          const tok = this._lastTokens?.[npcName];
+          const summary = decision.save || decision.message || decision.thought || '';
+          log.npcAction({
+            npcName,
+            action:   decision.action || 'idle',
+            target:   decision.target || null,
+            summary,
+            tokIn:    tok?.in,
+            tokOut:   tok?.out,
+            ms:       Date.now() - _thinkStart,
+            artifact: decision._artifactPath || null,
+          });
+        }
+
         return decision;
       }
       // Fallback when the LLM returned nothing parseable. Pick a varied
@@ -1083,8 +1274,7 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
       const now = Date.now();
       if (!this._lastThinkErrorLog) this._lastThinkErrorLog = {};
       if (now - (this._lastThinkErrorLog[npcName] || 0) > 60000) {
-        const brief = String(err?.message ?? err).slice(0, 120);
-        console.warn(`[NpcBrains] ${npcName} think error: ${brief}`);
+        log.npcError(npcName, String(err?.message ?? err).slice(0, 100));
         this._lastThinkErrorLog[npcName] = now;
       }
       return { action: 'error', thought: 'Something went wrong', message: err.message || 'API error — taking a break', target: null };
@@ -1375,6 +1565,10 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
       max_tokens: maxTokens,
       temperature,
       messages: oaiMessages,
+      // Disable chain-of-thought thinking for NPC chats — faster responses
+      // and avoids the Qwen3/reasoning model issue where content is empty
+      // because everything ends up in reasoning_content instead.
+      enable_thinking: false,
     });
 
     const markSuccess = () => {
@@ -1396,12 +1590,13 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         globalThis._npcStats.lastProviderFailAt = Date.now();
         globalThis._npcStats.providerFail = (globalThis._npcStats.providerFail || 0) + 1;
       }
-      if (this._providerHealth.consecutiveFailures >= 5) {
+      if (this._providerHealth.consecutiveFailures >= 10) {
         // 30s cooldown — long enough for LM Studio to reload the model after
         // a crash/unload, short enough that we resume quickly when it recovers.
+        // Threshold raised to 10 so a slow 27B model doesn't trip this on startup.
         this._providerHealth.cooldownUntil = Date.now() + 30000;
         if (!this._lastCooldownLog || Date.now() - this._lastCooldownLog > 30000) {
-          console.warn('[NpcBrains] Provider unhealthy — pausing inference for 30s (likely LM Studio model reload or overload)');
+          log.providerHealth({ event: 'cooldown', provider: 'lmstudio', failures: this._providerHealth.consecutiveFailures, cooldownSec: 30, queueLen: this._requestQueue.length });
           this._lastCooldownLog = Date.now();
         }
       }
@@ -1447,15 +1642,30 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         try {
           const p = JSON.parse(data);
           if (p.error) {
-            markFailure();
+            const errMsg = p.error.message || JSON.stringify(p.error);
+            // "Model unloaded" means LM Studio swapped models — re-sync so
+            // the next request uses whatever is now loaded, don't count as failure
+            if (/model unloaded/i.test(errMsg)) {
+              log.warn('LMStudio', 'model was unloaded — re-syncing...');
+              this.syncLmStudioModel().catch(() => {});
+              // Reset failure count so we don't trip the cooldown
+              this._providerHealth.consecutiveFailures = 0;
+            } else {
+              markFailure();
+            }
             done();
-            const err = new Error(p.error.message || JSON.stringify(p.error));
+            const err = new Error(errMsg);
             _telRecord({ error: err });
             return reject(err);
           }
           markSuccess();
           done();
-          const responseText = (p.choices?.[0]?.message?.content || '').trim().slice(0, sliceLen);
+          // Reasoning models (Qwen3, DeepSeek-R1, etc.) put chain-of-thought in
+          // reasoning_content and leave content empty — fall back to it so NPCs
+          // always have something to say even if enable_thinking is on.
+          const msg = p.choices?.[0]?.message || {};
+          const rawText = msg.content || msg.reasoning_content || '';
+          const responseText = rawText.trim().slice(0, sliceLen);
           // OpenAI-compat APIs (LM Studio, Anthropic, etc.) return usage
           // counts. Capture if present so we can chart tokens/min.
           _telRecord({
@@ -1463,6 +1673,11 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
             tokensIn: p.usage?.prompt_tokens,
             tokensOut: p.usage?.completion_tokens,
           });
+          // Cache last token counts per NPC so the think() log can show them
+          if (opts?.npc && p.usage) {
+            if (!this._lastTokens) this._lastTokens = {};
+            this._lastTokens[opts.npc] = { in: p.usage.prompt_tokens, out: p.usage.completion_tokens };
+          }
           resolve(responseText);
         } catch (e) {
           markFailure();
@@ -1473,7 +1688,8 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
       });
     });
     req.on('error', (err) => { markFailure(); done(); _telRecord({ error: err }); reject(err); });
-    req.setTimeout(60000, () => {
+    // 27B models can take 90–120s on first cold response — give plenty of room
+    req.setTimeout(180000, () => {
       markFailure();
       const err = new Error('LM Studio timeout');
       req.destroy(err);
@@ -1501,7 +1717,7 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     'Bob':     { reportsTo: 'Abby', manages: [], title: 'Researcher — R&D' },
     'Dan':     { reportsTo: 'Abby', manages: [], title: 'IT Support — servers, networking' },
     'Lucy':    { reportsTo: 'Abby', manages: [], title: 'Receptionist — schedules, coordination' },
-    'Bouncer': { reportsTo: 'Dan', manages: [], title: 'Security Guard — office security' },
+    'Bouncer': { reportsTo: 'Abby', manages: [], title: 'Security Guard — office security' },
   };
 
   // #3 — Room affinity by role. Each NPC has a natural hangout room
@@ -2005,82 +2221,220 @@ ${roleActions}
   /**
    * Generate a context-aware canned response for NPC-to-NPC conversation.
    * Used when no AI provider is available (demo mode or all providers down).
+   * Responses are personality-specific, not just role-generic.
    */
   _cannedResponse(npcName, fromName, message) {
     const h = this._hierarchy[npcName];
     const title = (h?.title || '').toLowerCase();
     const msg = message.toLowerCase();
 
-    // Role-specific responses based on what was said
-    if (/bug|fix|error|broken|crash/i.test(msg)) {
-      if (/developer|frontend|backend/i.test(title)) return 'On it, checking the code now.';
-      if (/qa|test/i.test(title)) return 'I\'ll write a test for that.';
-      if (/devops/i.test(title)) return 'Let me check the logs.';
-      return 'I\'ll flag that for the team.';
-    }
-    if (/deploy|ship|release|push/i.test(msg)) {
-      if (/devops/i.test(title)) return 'Running the pipeline now.';
-      if (/developer/i.test(title)) return 'My PR is ready to merge.';
-      return 'I\'ll prep my part for release.';
-    }
-    if (/meeting|standup|sync/i.test(msg)) {
-      return 'I\'ll be there. Let me wrap this up.';
-    }
-    if (/review|pr|code review/i.test(msg)) {
-      if (/developer/i.test(title)) return 'I\'ll review it this afternoon.';
-      return 'Sure, send it over.';
-    }
-    if (/design|mockup|ui|ux/i.test(msg)) {
-      if (/designer/i.test(title)) return 'I have some ideas. Let me sketch it.';
-      return 'Let\'s loop in Rob on the design.';
-    }
-    if (/research|data|analysis/i.test(msg)) {
-      if (/researcher|data/i.test(title)) return 'I\'ll dig into the data.';
-      return 'Good call. Let me look into it.';
-    }
-    if (/help|stuck|blocked/i.test(msg)) {
-      if (h?.manages?.includes(fromName)) return 'Show me what you\'ve got so far.';
-      return 'Sure, what do you need?';
-    }
-    if (/status|update|progress|how/i.test(msg)) {
-      const statuses = [
-        'Making good progress. Almost done.',
-        'About 80% done. Wrapping up.',
-        'Just finishing up the last part.',
-        'On track. Should be done soon.',
-      ];
-      return statuses[Math.floor(Math.random() * statuses.length)];
-    }
-    if (/good|great|nice|thanks|awesome/i.test(msg)) {
-      const thanks = ['Thanks!', 'Appreciate it.', 'Sure thing.', 'Happy to help.'];
-      return thanks[Math.floor(Math.random() * thanks.length)];
-    }
-    if (/morning|hello|hi |hey/i.test(msg)) {
-      const greets = ['Morning!', 'Hey, what\'s up?', 'Hi! Ready to go.', 'Hey there.'];
-      return greets[Math.floor(Math.random() * greets.length)];
-    }
-
-    // Generic role-based responses
-    const roleResponses = {
-      'cto': ['Got it. I\'ll coordinate the team.', 'Let me think about the approach.', 'Good idea. Let\'s prioritize that.'],
-      'project manager': ['I\'ll update the board.', 'Let me check the timeline.', 'I\'ll sync with the team.'],
-      'product manager': ['That aligns with our roadmap.', 'Let me check with users.', 'Good insight.'],
-      'senior developer': ['I\'ll architect a solution.', 'Let me review the codebase.', 'Solid approach.'],
-      'frontend developer': ['I\'ll update the UI.', 'Working on the components.', 'Let me check the styles.'],
-      'backend developer': ['I\'ll handle the API side.', 'Checking the database now.', 'Let me write the endpoint.'],
-      'qa engineer': ['I\'ll test that scenario.', 'Writing test cases now.', 'Let me verify that.'],
-      'devops engineer': ['I\'ll check the infra.', 'Monitoring looks good.', 'Pipeline is green.'],
-      'data engineer': ['Let me run the query.', 'Checking the data pipeline.', 'I\'ll analyze that.'],
-      'ui/ux designer': ['I\'ll mock that up.', 'Let me sketch some options.', 'Good UX call.'],
-      'researcher': ['I\'ll look into it.', 'Interesting finding.', 'Let me check the research.'],
-      'it support': ['I\'ll take a look at that.', 'Restarting the service.', 'Should be fixed now.'],
-      'receptionist': ['I\'ll note that down.', 'Let me check the schedule.', 'I\'ll pass that along.'],
-      'security guard': ['All clear here.', 'I\'ll keep an eye out.', 'Security check done.'],
-      'intern': ['On it! Learning a lot.', 'I\'ll give it a try.', 'Can you show me how?'],
+    // Per-NPC personality-flavored response pools. Each entry reflects the
+    // character's voice so fallbacks still feel like that specific person.
+    const npcVoice = {
+      'Abby': {
+        bug:     ['Rerouting that to the right person. Not letting it sit.', 'Already thinking about who owns this. Give me a sec.'],
+        deploy:  ['Let\'s make sure we\'re green before we push. Who\'s on it?', 'I want a sign-off from Oscar before anything ships.'],
+        meeting: ['Block it. I\'ll be there — this matters.', 'Set it up. We\'re not letting this slip through the cracks.'],
+        review:  ['I trust your judgment. Flag it if something looks off.', 'Good instinct to check. Let me know what you find.'],
+        help:    ['Tell me what\'s blocking you. Let\'s fix it.', 'Show me where you\'re stuck — I\'ll unblock you.'],
+        status:  ['Give me the honest number, not the optimistic one.', 'What\'s the actual state? No spin.'],
+        greet:   ['Morning. What\'s on fire today?', 'Hey — anything I need to know before standup?'],
+        idle:    ['I\'m mapping out the sprint. Pull me if something\'s urgent.', 'Connecting dots. What\'s up?', 'On it — what do you need?'],
+      },
+      'Alex': {
+        bug:     ['Found it. This is a classic off-by-one — give me 10 minutes.', 'Ugh, I see it. Bad pattern, should\'ve been caught in review.'],
+        deploy:  ['My branch is clean. Merge it whenever.', 'PR\'s ready — tests pass, no lint errors.'],
+        meeting: ['I\'ll be there. Let me hit a stopping point first.', 'Fine, but let\'s keep it tight — I\'m in the zone.'],
+        review:  ['I\'ll tear through it. Don\'t expect me to go easy on it.', 'Send it over. If it\'s sloppy I\'m going to say so.'],
+        help:    ['Show me the stack trace. Let\'s figure it out.', 'Walk me through what you tried. I\'ll spot the gap.'],
+        status:  ['Almost done — this part\'s actually interesting.', 'Deeper than I thought, but I\'ve got it.'],
+        greet:   ['Hey. Good PR yesterday, by the way.', 'Morning. Coffee\'d up and ready.'],
+        idle:    ['Deep in this refactor. What do you need?', 'Give me the hard problem — I\'m warmed up.', 'Working. Talk fast.'],
+      },
+      'Marcus': {
+        bug:     ['Adding it to the board. Who\'s got capacity to take it?', 'Logging it now. Let\'s triage — is this sprint or backlog?'],
+        deploy:  ['Is the release checklist done? I\'m not signing off without it.', 'Which sprint does this land in? Let me update the timeline.'],
+        meeting: ['I\'ll send a calendar invite with the agenda. 15 minutes max.', 'Already have it on the board — good timing.'],
+        review:  ['Noted. I\'ll make sure it\'s in the next sprint cycle.', 'Adding it to the sprint board as a review ticket.'],
+        help:    ['Let\'s scope it first. Tell me what done looks like.', 'Is this a blocker? I\'ll escalate if it is.'],
+        status:  ['Sprint\'s at 60%. We\'re on pace but not ahead.', 'Three tickets left — should close them by EOD.'],
+        greet:   ['Morning. Standup in 20 — got your update ready?', 'Hey! Board looks good today. Let\'s keep it moving.'],
+        idle:    ['Updating the sprint board. What\'s blocked?', 'Tracking three deadlines right now. You good?', 'On the timeline. What\'s up?'],
+      },
+      'Sarah': {
+        bug:     ['How does this affect the user flow? That\'s what I care about.', 'Does a user actually hit this, or is it edge-case only?'],
+        deploy:  ['Is this the thing users asked for? Let me check the feedback.', 'Before we ship, does this solve the actual problem?'],
+        meeting: ['I\'ll prep some user data to bring. Good timing.', 'Yes — I want to walk through the latest user signals.'],
+        review:  ['From the user\'s perspective, does this actually make sense?', 'I\'ll look at it through a user lens and flag any concerns.'],
+        help:    ['Tell me what the user is trying to do. We\'ll work backward.', 'What\'s the job-to-be-done here? Let\'s start there.'],
+        status:  ['Still gathering user feedback. It\'s pointing somewhere interesting.', 'Getting clearer on the problem. Almost ready to spec it.'],
+        greet:   ['Morning! Got a user interview at 11 — exciting insights coming.', 'Hey! Have you seen the latest NPS scores?'],
+        idle:    ['Synthesizing feedback. What do you need?', 'Working on the next spec. Have a minute?', 'User-focused over here. What\'s up?'],
+      },
+      'Jenny': {
+        bug:     ['This shouldn\'t have gotten past review. Who approved this PR?', 'Found it. Adding a comment now — this pattern is a problem.'],
+        deploy:  ['Not merging until the tests pass. Non-negotiable.', 'I see three issues in this diff. We\'re not shipping this yet.'],
+        meeting: ['I\'ll be there. Bringing the PR backlog.', 'Fine — but let\'s use this to talk about review standards.'],
+        review:  ['Working through it. There\'s one pattern I want to flag.', 'Almost done — it\'s mostly clean but I have notes.'],
+        help:    ['Show me the code. I\'ll tell you exactly what\'s wrong.', 'Walk me through your approach. I\'ll spot the issue.'],
+        status:  ['Three PRs in queue. All need fixes before they merge.', 'Almost through the backlog. Two flagged, one approved.'],
+        greet:   ['Morning. PR queue has three waiting — plan accordingly.', 'Hey. Did you see the diff that landed last night?'],
+        idle:    ['Reviewing code. Don\'t merge without me.', 'In the diff. What do you need?', 'Gatekeeping. Talk to me.'],
+      },
+      'Molly': {
+        bug:     ['Already filed it. Here\'s the repro steps — it\'s 100% consistent.', 'Confirmed it on my end. This is a real bug, not flakiness.'],
+        deploy:  ['Did anyone run the regression suite? I need to verify before this goes out.', 'Holding off until I finish the smoke test.'],
+        meeting: ['I\'ll bring the latest test results. We should talk about the failure rate.', 'Yes — I have a list of edge cases we haven\'t covered yet.'],
+        review:  ['I\'ll test every path in that ticket, not just the happy path.', 'I\'m on it — I always test the things nobody thinks to test.'],
+        help:    ['Describe the expected behavior. Let\'s see if it actually does that.', 'Tell me the exact steps. I\'ll reproduce it.'],
+        status:  ['Found two regressions in the new build. Logging them now.', 'Tests are green except for one flaky integration test.'],
+        greet:   ['Morning. Build from last night had a failure — heads up.', 'Hey! Did you check the test dashboard this morning?'],
+        idle:    ['Running tests. Catching things before they catch us.', 'In QA mode. What broke?', 'Testing the edge cases nobody else bothers with.'],
+      },
+      'Josh': {
+        bug:     ['Oh that\'s a CSS specificity thing — I can fix it in two minutes.', 'Yep, I see it. The component\'s re-rendering when it shouldn\'t.'],
+        deploy:  ['My part of the UI is done. Looks great in Chromium and Firefox.', 'Pushed the styles — should be good on all screen sizes now.'],
+        meeting: ['Sure, I\'ll be there. Can I bring the mockup to show?', 'I\'m in — I want to talk about the new component library.'],
+        review:  ['On it — does it look right visually too? I\'ll check that.', 'Going through it now. I care a lot about the interaction design.'],
+        help:    ['Yeah I can help — what component is it?', 'Come look at my screen, I\'ll show you the pattern I\'m using.'],
+        status:  ['Almost done with the component — just wiring up the animation.', 'UI is looking clean. Just one responsive breakpoint left.'],
+        greet:   ['Morning! I redesigned that button last night — you\'ll love it.', 'Hey! Have you seen what the new transition looks like?'],
+        idle:    ['Polishing the UI. It has to be perfect.', 'In the components. What do you need?', 'Building something cool over here.'],
+      },
+      'Edward': {
+        bug:     ['There\'s a race condition in the endpoint. Reproducing now.', 'The database query is doing a full scan — that\'s the culprit.'],
+        deploy:  ['API is stable. Migration scripts are tested — we\'re good to go.', 'The endpoint handles the new payload. All edge cases covered.'],
+        meeting: ['I\'ll be there. I have numbers on the slow endpoints to share.', 'Sure — I want to talk about the auth refactor.'],
+        review:  ['Reviewing the backend changes. The indexing strategy needs work.', 'I\'ll check the query plan and the error handling.'],
+        help:    ['What\'s the payload look like? Send me the request logs.', 'Paste the stack trace — I\'ll find it.'],
+        status:  ['API is solid. Working on optimizing the slow queries now.', 'Backend\'s good. Josh\'s UI is the bottleneck now.'],
+        greet:   ['Morning. API uptime was 100% overnight.', 'Hey. Servers are quiet — good sign.'],
+        idle:    ['Optimizing queries. Numbers matter.', 'In the API. What\'s the issue?', 'Backend work. What do you need?'],
+      },
+      'Roki': {
+        bug:     ['Oh no — is this my fault? Let me check my last commit.', 'I see it! I think I know what happened — can I try to fix it?'],
+        deploy:  ['Is there anything I can do to help with the deploy?', 'I read the deployment docs — I want to understand this process.'],
+        meeting: ['I\'ll be there! Should I take notes?', 'Yes! I always learn something at these.'],
+        review:  ['I\'d love feedback on my code — be honest, I\'m still learning.', 'I\'ll look at it! I\'m trying to understand the pattern.'],
+        help:    ['Yes please — I\'ve been stuck on this for a while.', 'Thank you! I was about to ask someone for help.'],
+        status:  ['Making progress! Alex helped me understand the tricky part.', 'Slower than I hoped but I\'m figuring it out.'],
+        greet:   ['Good morning! Ready to learn something new today.', 'Hey! I stayed late last night working on my ticket — almost done!'],
+        idle:    ['Learning something new every day here.', 'Trying to figure this out. Can you help?', 'Taking notes and building things.'],
+      },
+      'Oscar': {
+        bug:     ['Infra-side or app-side? Let me check the logs and metrics.', 'I see a spike in the error rate — pulling the deployment logs.'],
+        deploy:  ['Pipeline\'s green. Ready to ship when you say go.', 'Ran the full check — infra is healthy, rollback is ready.'],
+        meeting: ['I\'ll be there. Bringing the uptime report.', 'Sure — I want to talk about the on-call rotation too.'],
+        review:  ['Reviewing the infra changes. Config drift is my main concern.', 'Checking the deployment config. One thing I want to flag.'],
+        help:    ['What\'s the error? Give me the service name and timestamp.', 'Check the metrics first — usually tells us everything.'],
+        status:  ['CI is green, deploys are clean. Boring is good.', 'One flaky test in the pipeline — investigating now.'],
+        greet:   ['Morning. All systems green overnight.', 'Hey. Check the dashboard if you get a chance — looking healthy.'],
+        idle:    ['Keeping the lights on. What broke?', 'Monitoring everything. Talk to me.', 'Making deploys boring. What\'s up?'],
+      },
+      'Pier': {
+        bug:     ['Data issue or pipeline issue? Those are different problems.', 'The pipeline dropped some events — I\'m tracing where.'],
+        deploy:  ['Schema migration is ready. Zero downtime rollout planned.', 'Data should flow cleanly after this deploy — I checked the transforms.'],
+        meeting: ['I\'ll pull the latest query metrics to bring.', 'I\'m in — I want to walk through the data model changes.'],
+        review:  ['Looking at the schema changes. I care about the query patterns.', 'Reviewing the pipeline config. Data quality is the priority.'],
+        help:    ['What does the data look like? Show me a sample row.', 'Tell me the expected vs actual — I\'ll trace it upstream.'],
+        status:  ['Pipeline\'s healthy. Processing 98% of events on time.', 'Found a gap in yesterday\'s data — patching the transform now.'],
+        greet:   ['Morning. Data looks clean from last night.', 'Hey! New analytics are live — wait till you see the dashboard.'],
+        idle:    ['Watching the pipeline. Data never lies.', 'Running queries. What do you need to know?', 'In the data. What\'s your question?'],
+      },
+      'Bob': {
+        bug:     ['Interesting — is this a known failure mode or something new?', 'I\'ve seen a pattern like this before. Let me pull my notes.'],
+        deploy:  ['From a systems perspective, is this the right rollout order?', 'Has anyone looked at the second-order effects of this change?'],
+        meeting: ['I\'ll bring some research that\'s relevant to what we\'re building.', 'I\'m in — I\'ve been thinking about this problem from a different angle.'],
+        review:  ['I\'ll look at it. I\'m thinking about the broader implications.', 'There might be prior art we\'re missing. Let me check.'],
+        help:    ['Tell me everything about it. I\'ll go wide before going deep.', 'What do we actually know versus what we\'re assuming?'],
+        status:  ['Down a rabbit hole, but it\'s a productive one.', 'Found something surprising. Might change our approach.'],
+        greet:   ['Morning. Read something interesting last night — relevant to us.', 'Hey! I have a hypothesis I want to test this week.'],
+        idle:    ['Reading and connecting dots. What are you curious about?', 'Researching. Ask me anything.', 'In the weeds on something interesting.'],
+      },
+      'Dan': {
+        bug:     ['Is it hardware or software? I need to check the server room.', 'Restart didn\'t fix it — going deeper. Give me a few minutes.'],
+        deploy:  ['Servers are ready. Enough headroom on disk and RAM.', 'I\'ll monitor the infra side during the deploy.'],
+        meeting: ['I\'ll be there. Might step out if something goes down.', 'Sure — I\'ll keep my phone on in case something beeps.'],
+        review:  ['Checking the network config. Something looks off.', 'I\'ll look at the server settings. That\'s my domain.'],
+        help:    ['Is it making a weird noise? What\'s the error message?', 'I\'ll come take a look. Usually faster than explaining over chat.'],
+        status:  ['Everything\'s up. Ran diagnostics this morning — clean.', 'One server is running hot. Keeping an eye on it.'],
+        greet:   ['Morning. Rebooted the test server last night — should be faster.', 'Hey. Anything hardware-related need my attention?'],
+        idle:    ['In the server room. Keeping things humming.', 'IT stuff. What broke?', 'Fixing things before they break. What\'s up?'],
+      },
+      'Lucy': {
+        bug:     ['I\'ll make sure the right person knows about this right away.', 'That sounds stressful — let me get you connected with whoever can fix it.'],
+        deploy:  ['I\'ll let the team know the timeline so they can plan around it.', 'Got it — I\'ll update the calendar so no one\'s surprised.'],
+        meeting: ['Already on it! I\'ll send the invite with everything they need.', 'I\'ll find a time that works and get it on everyone\'s calendar.'],
+        review:  ['Happy to help coordinate — who should be in the loop on this?', 'I\'ll make sure it doesn\'t fall through the cracks.'],
+        help:    ['Of course! What do you need? I\'ll make it happen.', 'You\'ve got it. Let me take care of that for you.'],
+        status:  ['All good on my end! Calendar\'s clean and people are where they need to be.', 'Smooth morning so far — everyone\'s checked in.'],
+        greet:   ['Good morning! Coffee\'s fresh — help yourself.', 'Hey! Love seeing you. How\'s your day starting?'],
+        idle:    ['Keeping things running smoothly over here.', 'Here if you need anything — just say the word!', 'Always happy to help — what do you need?'],
+      },
+      'Bouncer': {
+        bug:     ['Not my department — but I\'ll keep an eye out for anything unusual.', 'Noted. I\'ll loop in the right person.'],
+        deploy:  ['All clear on the physical side. You\'re good to go.', 'No issues at the door. Proceed when ready.'],
+        meeting: ['I\'ll keep the entrance covered while you\'re in there.', 'Noted. I\'ll make sure nobody interrupts.'],
+        review:  ['That\'s above my pay grade. You\'ll want someone technical for that.', 'Not my area — but I\'m listening.'],
+        help:    ['What kind of help? Security-wise I\'m your person.', 'I\'m watching the perimeter. What do you need?'],
+        status:  ['Perimeter is secure. Nobody in or out without clearance.', 'Quiet on my end. Which is exactly how I like it.'],
+        greet:   ['Morning. All clear.', 'Hey. Building\'s secure — have a good one.'],
+        idle:    ['All clear.', 'Watching the door.', 'Quiet. Good.'],
+      },
     };
 
-    const responses = roleResponses[title] || ['Got it.', 'Sure thing.', 'Working on it.', 'Sounds good.'];
-    return responses[Math.floor(Math.random() * responses.length)];
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const voice = npcVoice[npcName];
+
+    if (voice) {
+      if (/bug|fix|error|broken|crash/i.test(msg))          return pick(voice.bug);
+      if (/deploy|ship|release|push/i.test(msg))            return pick(voice.deploy);
+      if (/meeting|standup|sync/i.test(msg))                return pick(voice.meeting);
+      if (/review|pr|code review/i.test(msg))               return pick(voice.review);
+      if (/help|stuck|blocked/i.test(msg))                  return pick(voice.help);
+      if (/status|update|progress|how/i.test(msg))          return pick(voice.status);
+      if (/morning|hello|hi |hey|good/i.test(msg))          return pick(voice.greet);
+      return pick(voice.idle);
+    }
+
+    // Fallback for any NPC not in the voice table — role-flavored but less generic
+    if (/bug|fix|error|broken|crash/i.test(msg)) {
+      if (/developer|frontend|backend/i.test(title)) return 'On it, I see the problem.';
+      if (/qa|test/i.test(title)) return 'Confirmed — I\'ll write the repro steps.';
+      if (/devops/i.test(title)) return 'Checking the logs now.';
+      return 'I\'ll get the right person on it.';
+    }
+    if (/deploy|ship|release|push/i.test(msg)) {
+      if (/devops/i.test(title)) return 'Pipeline\'s running.';
+      if (/developer/i.test(title)) return 'PR is ready to merge.';
+      return 'I\'ll prep my part.';
+    }
+    if (/meeting|standup|sync/i.test(msg))         return 'I\'ll be there. Let me wrap up first.';
+    if (/review|pr/i.test(msg))                    return 'Sending my notes shortly.';
+    if (/help|stuck|blocked/i.test(msg))           return h?.manages?.includes(fromName) ? 'Show me what you\'ve got.' : 'What do you need?';
+    if (/status|update|progress/i.test(msg))       return 'Making progress — almost there.';
+    if (/morning|hello|hi |hey/i.test(msg))        return 'Hey! What\'s going on?';
+
+    const roleIdle = {
+      'cto': ['Coordinating. What\'s blocking you?', 'Thinking ahead. What do you need?'],
+      'project manager': ['Updating the board. All good?', 'Tracking the sprint. Talk to me.'],
+      'product manager': ['Mapping user needs. What\'s up?', 'Working on the next spec.'],
+      'senior developer': ['Deep in the code. What is it?', 'Solving the hard part. Talk fast.'],
+      'frontend developer': ['Polishing the UI. What\'s the issue?', 'In the components. What do you need?'],
+      'backend developer': ['API work. What\'s the problem?', 'In the database. What do you need?'],
+      'qa engineer': ['Running tests. What broke?', 'Checking everything. What\'s up?'],
+      'devops engineer': ['Watching the pipeline. All green?', 'Keeping deploys boring. What\'s up?'],
+      'data engineer': ['Pipeline\'s running. What do you need?', 'Crunching data. What\'s the question?'],
+      'ui/ux designer': ['Sketching ideas. What do you think?', 'Working on designs. What\'s up?'],
+      'researcher': ['In the research. What are you curious about?', 'Finding patterns. Talk to me.'],
+      'it support': ['Keeping things running. What broke?', 'In the server room. What\'s the issue?'],
+      'receptionist': ['Here if you need me!', 'Making sure everyone\'s set. What do you need?'],
+      'security guard': ['All clear.', 'Watching the door.'],
+      'intern': ['Learning every day!', 'Working on my ticket. Making progress.'],
+    };
+
+    const pool = roleIdle[title] || ['On it.', 'Working on it.', 'Sure thing.'];
+    return pick(pool);
   }
 
   _getRoleActions(npcName, h) {

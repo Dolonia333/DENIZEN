@@ -18,6 +18,10 @@ const capabilityProposal = require('./src/capability-proposal');
 const emailHandler = require('./src/email-handler');
 const gmailClient = require('./src/gmail-client');
 const llmTelemetry = require('./src/llm-telemetry');
+const jobApplication = require('./src/job-application');
+const desktopAgent = require('./src/desktop-agent');
+const linuxAgent = require('./src/linux-agent');
+const log = require('./src/logger');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
 // edit data/voice-map.json + restart to change. Missing file → empty map
@@ -127,7 +131,7 @@ const MIME = {
 };
 
 const OPENCLAW_HOST = '127.0.0.1';
-const OPENCLAW_PORT = 18789;
+const OPENCLAW_PORT = 18792;
 
 // --- Security Monitor ---
 const securityMonitor = new SecurityMonitorServer({
@@ -284,6 +288,57 @@ function _resolveNpcFolder(npcName) {
 // Recent NPC-brain errors, surfaced through GET /api/health so the client
 // diagnostic widget can show them without the user opening the terminal.
 global._npcRecentErrors = global._npcRecentErrors || [];
+/**
+ * Build a short demo command to show in the visual WSL terminal window.
+ * This is the command the player *sees* Bouncer type — real investigation
+ * runs separately via linuxAgent.investigate().
+ */
+function _buildTerminalShowCmd(threat) {
+  const ip = linuxAgent.extractIp(threat.source || threat.detail || '');
+  const cmds = {
+    network_scan:   ip ? `nmap -T4 -F --open ${ip}` : 'ss -tnp',
+    packet_anomaly: 'netstat -an | grep ESTABLISHED | head -20',
+    brute_force:    'grep -iE "failed|invalid" /var/log/auth.log 2>/dev/null | tail -20',
+    data_breach:    'lsof -i -n 2>/dev/null | grep ESTABLISHED | head -20',
+    shell_exec:     'ps aux | sort -rk3 | head -20',
+    api_abuse:      'netstat -an | awk \'{print $5}\' | cut -d: -f1 | sort | uniq -c | sort -rn | head -15',
+    exfiltration:   'ss -tnp | grep ESTAB',
+    scan_probe:     ip ? `nmap -T4 -F --open ${ip}` : 'ss -tlnp',
+    process_spawn:  'ps aux | head -30',
+    unknown:        'ss -tnp | head -20',
+  };
+  return cmds[threat.category] || cmds.unknown;
+}
+
+/**
+ * Open a real visible terminal window showing Bouncer's WSL command.
+ * Uses Windows Terminal (wt.exe) if available, falls back to cmd.exe.
+ * Never types into the focused window — spawns its own process.
+ */
+function _openBouncerTerminal(showCmd) {
+  const { spawn } = require('node:child_process');
+  const wslArgs = ['-d', 'kali-linux', '--', 'bash', '-c', `${showCmd}; echo; echo '--- Bouncer scan complete. Press any key to close ---'; read -n1`];
+
+  // Try Windows Terminal first (wt.exe)
+  const wtPaths = [
+    process.env.LOCALAPPDATA + '\\Microsoft\\WindowsApps\\wt.exe',
+    'C:\\Program Files\\WindowsApps\\Microsoft.WindowsTerminal_1.0.0.0_x64__8wekyb3d8bbwe\\wt.exe',
+  ];
+  const fs = require('node:fs');
+  const wtExe = wtPaths.find(p => { try { return fs.existsSync(p); } catch(_) { return false; } });
+
+  if (wtExe) {
+    // wt.exe -d . wsl -d kali-linux -- bash -c "cmd"
+    spawn(wtExe, ['-d', '.', 'wsl', ...wslArgs], { detached: true, stdio: 'ignore' }).unref();
+  } else {
+    // Fallback: cmd.exe window running wsl directly
+    // /k keeps the window open so Bouncer can read the output
+    spawn('cmd.exe', ['/c', 'start', '"Bouncer - Kali Linux"', 'wsl', ...wslArgs], {
+      detached: true, stdio: 'ignore', shell: true,
+    }).unref();
+  }
+}
+
 function _recordNpcError(message) {
   const entry = { ts: Date.now(), message: String(message).slice(0, 400) };
   global._npcRecentErrors.push(entry);
@@ -1441,6 +1496,225 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Cost dashboard + balance check ---
+  if (urlPath === '/api/costs' && req.method === 'GET') {
+    (async () => {
+      const { buildCostSummary, fetchMoonshotBalance, PRICING } = llmTelemetry;
+      const summary = buildCostSummary(llmTelemetry.ring);
+
+      // Check Moonshot/Kimi balance (only provider with a public balance API)
+      const moonshotKey = npcBrains.providers?.kimi?.apiKey || npcBrains.providers?.moonshot?.apiKey;
+      const moonshot = moonshotKey ? await fetchMoonshotBalance(moonshotKey) : { ok: false, error: 'no key configured' };
+
+      // Per-provider pricing reference
+      const pricingRef = Object.entries(PRICING)
+        .filter(([k]) => !['claude','gemini','grok','kimi'].includes(k)) // dedupe aliases
+        .reduce((acc, [k, v]) => {
+          acc[k] = { inputPer1MTokens: `$${v.in}`, outputPer1MTokens: `$${v.out}` };
+          return acc;
+        }, {});
+
+      // Cheapest provider recommendation
+      const cheapest = Object.entries(PRICING)
+        .filter(([k]) => !['claude','gemini','grok','kimi','lmstudio'].includes(k) && PRICING[k].in > 0)
+        .sort(([,a],[,b]) => (a.in + a.out) - (b.in + b.out))[0];
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        period: '24h',
+        ...summary,
+        balances: { moonshot },
+        tip: summary.totalCost > 0.01
+          ? `You\'ve spent $${summary.totalCost.toFixed(4)} today. Switch NPCs to "gemini" provider for ~10x savings vs claude.`
+          : 'Spend is low. Keep going.',
+        pricingRef,
+      }, null, 2));
+    })();
+    return;
+  }
+
+  // --- Abort any in-flight desktop agent task ---
+  if (urlPath === '/api/desktop-abort' && req.method === 'POST') {
+    desktopAgent._abortAll = true;
+    setTimeout(() => { desktopAgent._abortAll = false; }, 5000); // auto-reset after 5s
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, note: 'Desktop agent task aborted.' }));
+    return;
+  }
+
+  // --- Desktop agent (Lucy controls the full PC) ---
+  if (urlPath === '/api/desktop-task' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      if (!payload.instruction) {
+        res.writeHead(400); res.end(JSON.stringify({ error: 'instruction required' })); return;
+      }
+      const broadcast = (msg) => cofounderAgent.wsClients.forEach(ws => {
+        if (ws.readyState === 1) ws.send(JSON.stringify(msg));
+      });
+      // Return immediately — task runs async, progress via WS
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, async: true, note: 'Lucy is on it — watch your screen.' }));
+      desktopAgent.runDesktopTask({ instruction: payload.instruction, broadcast, provider: payload.provider || null })
+        .catch(err => console.error('[desktop-task] error:', err?.message));
+    });
+    return;
+  }
+
+  // --- Bouncer security scan (manual trigger) ---
+  // POST /api/bouncer-scan { tool: 'nmap'|'wireshark'|'zenmap', target?: '192.168.1.1', reason?: 'manual' }
+  // 'zenmap' and 'nmap' both run nmap via Kali WSL (Zenmap is just a GUI wrapper — nmap is the real tool).
+  // 'wireshark' runs tcpdump on loopback via Kali WSL (tshark if installed).
+  if (urlPath === '/api/bouncer-scan' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+
+      const tool      = payload.tool || 'nmap';
+      const target    = payload.target || 'localhost';
+      const reason    = payload.reason || 'manual security check';
+      const bcast     = (msg) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(msg)); });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, tool, async: true, note: `Bouncer is running ${tool} via Kali Linux — results incoming.` }));
+
+      bcast({ type: 'bouncer_tool_status', tool, status: 'starting',
+        threat: { category: 'manual', source: target, detail: reason },
+        message: `Bouncer running ${tool === 'zenmap' ? 'nmap' : tool} in Kali WSL — ${reason}` });
+
+      try {
+        let result;
+        if (tool === 'nmap' || tool === 'zenmap') {
+          // nmap scan — zenmap is just a GUI wrapper, use nmap CLI directly
+          result = await linuxAgent.investigate({ category: 'network_scan', source: target, detail: reason });
+        } else if (tool === 'wireshark') {
+          // tcpdump loopback snapshot as Wireshark replacement
+          result = await linuxAgent.trafficSnapshot();
+          result = { ok: result.ok, summary: result.raw, elapsed: 5000, steps: [{ label: 'tcpdump loopback', output: result.raw }] };
+        } else {
+          result = await linuxAgent.perimeterPatrol();
+          result = { ok: result.ok, summary: result.summary, elapsed: result.elapsed, steps: [] };
+        }
+
+        bcast({
+          type: 'bouncer_tool_status', tool,
+          status: result.ok ? 'done' : 'error',
+          threat: { category: 'manual', source: target, detail: reason },
+          steps: result.steps?.length,
+          message: result.ok
+            ? `${tool} complete (${((result.elapsed || 0) / 1000).toFixed(1)}s) — ${(result.summary || '').slice(0, 120)}`
+            : `${tool} failed`,
+        });
+
+        console.log(`[BouncerScan] ${tool} on ${target}: ${result.ok ? 'ok' : 'failed'}`);
+      } catch (err) {
+        console.error(`[bouncer-scan] ${tool} error:`, err?.message);
+        bcast({ type: 'bouncer_tool_status', tool, status: 'error',
+          threat: { category: 'manual', source: target, detail: reason },
+          message: `${tool} threw: ${err?.message}` });
+      }
+    });
+    return;
+  }
+
+  // --- Bouncer Linux terminal (Kali WSL investigation) ---
+  // POST /api/bouncer-linux { category?, source?, detail?, openTerminal?: bool }
+  // Runs real security commands in Kali WSL and streams results via WS.
+  if (urlPath === '/api/bouncer-linux' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+
+      const broadcast = (msg) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(msg)); });
+      const threat = {
+        category: payload.category || 'unknown',
+        source:   payload.source   || null,
+        detail:   payload.detail   || payload.category || 'manual investigation',
+      };
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, async: true, note: 'Bouncer is running Kali Linux commands — watch your chat.' }));
+
+      broadcast({ type: 'bouncer_linux_status', status: 'starting', threat, message: `Bouncer opened a Kali Linux terminal to investigate ${threat.category}...` });
+
+      // Open a real visible terminal window so the player can watch Bouncer work.
+      // Uses _openBouncerTerminal (direct spawn) — never types into the focused window.
+      if (payload.openTerminal !== false) {
+        _openBouncerTerminal(_buildTerminalShowCmd(threat));
+      }
+
+      // Run the actual investigation in parallel
+      linuxAgent.investigate(threat).then(result => {
+        broadcast({
+          type: 'bouncer_linux_result',
+          status: result.ok ? 'done' : 'error',
+          threat,
+          category: result.category,
+          ip: result.ip,
+          elapsed: result.elapsed,
+          steps: result.steps,
+          summary: result.summary,
+          message: result.ok
+            ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s, ${result.steps.length} commands).`
+            : `Linux investigation failed: ${result.error}`,
+        });
+      }).catch(err => {
+        broadcast({ type: 'bouncer_linux_result', status: 'error', threat, message: `WSL error: ${err.message}` });
+      });
+    });
+    return;
+  }
+
+  // --- Job applications (Lucy applies on behalf of CEO) ---
+  if (urlPath === '/api/job-apply' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+
+      const result = await jobApplication.applyToJob(
+        {
+          npcBrains,
+          gmailClient,
+          broadcast: (msg) => cofounderAgent.wsClients.forEach(ws => {
+            if (ws.readyState === 1) ws.send(JSON.stringify(msg));
+          }),
+        },
+        {
+          applyEmail:   payload.applyEmail,
+          applyUrl:     payload.applyUrl,
+          jobTitle:     payload.jobTitle,
+          company:      payload.company,
+          description:  payload.description,
+          requirements: payload.requirements,
+          provider:     payload.provider || null,  // 'anthropic' | 'kimi' | null (auto)
+        },
+        {
+          // fullAI=true: ask Ministral 14B to write the whole letter (~60-120s)
+          // fullAI=false (default): template + LLaMA 8B opener (~3-8s)
+          fullAI: payload.fullAI === true,
+        }
+      );
+      try { worldState.pushEvent('job-apply', `Lucy applied to ${payload.jobTitle} at ${payload.company}`); } catch (_) {}
+      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    });
+    return;
+  }
+
   // --- LLM telemetry endpoints ---
   // Real observability into LM Studio + every other LLM provider call.
   // Each call records: npc, kind, provider, model, latencyMs, tokens
@@ -2243,6 +2517,26 @@ agentWss.on('connection', (ws) => {
             });
             if (ws.readyState === 1) ws.send(reply);
 
+            // Broadcast work output to all clients when an NPC starts or finishes a task
+            if (decision.save && decision.taskPhase && decision.taskPhase !== 'none') {
+              const phaseEmoji = { starting: '▶', continuing: '⟳', finished: '✓' }[decision.taskPhase] || '•';
+              const workMsg = JSON.stringify({
+                type: 'npc_work_output',
+                npcName: msg.npcName,
+                phase: decision.taskPhase,
+                phaseEmoji,
+                note: String(decision.save || '').slice(0, 120),
+                action: decision.action || 'work',
+                artifactPath: decision._artifactPath || null,
+                ts: Date.now(),
+              });
+              wss.clients.forEach(c => { if (c.readyState === 1) c.send(workMsg); });
+              // Log artifact to server console when a file lands on disk
+              if (decision._artifactPath) {
+                console.log(`[WorkOutput] ${msg.npcName} saved artifact → ${decision._artifactPath}`);
+              }
+            }
+
             // Send cascade decisions (leader decisions rippling down to reports)
             const cascades = decision._cascades || [];
             delete decision._cascades; // Clean up before sending
@@ -2292,7 +2586,34 @@ agentWss.on('connection', (ws) => {
         console.log(`[PlayerChat] CEO → ${npcName}: "${msg.text}"`);
         global._npcStats.playerChatReceived++;
         global._npcStats.lastPlayerChatAt = Date.now();
-        npcBrains.getPlayerResponse(npcName, msg.text)
+
+        // If talking to Lucy and the message looks like a PC control request,
+        // trigger the desktop agent directly instead of just chatting.
+        const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
+        const desktopTriggers = /open|launch|click|type|search|go to|navigate|take a screenshot|screen|find|copy|paste|close|minimize|maximize|play|volume|spotify|chrome|browser|notepad|calculator|file|folder/i;
+        if (npcName === 'Lucy' && desktopTriggers.test(msg.text)) {
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName: 'Lucy',
+            text: `On it — taking control of your PC now.`,
+            delegation: null, actions: [],
+          }));
+          desktopAgent.runDesktopTask({ instruction: msg.text, broadcast: _broadcast })
+            .catch(err => console.error('[desktop-task] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Incident reports from the Bouncer use a stripped-down system prompt
+        // so the NPC speaks in their own voice about what just happened,
+        // rather than routing through the player-response delegation framework.
+        const isIncidentReport = msg.isIncidentReport === true;
+        const responsePromise = isIncidentReport
+          ? npcBrains.getResponse(npcName, 'CEO', msg.text, { kind: 'incident-report', description: 'You are reporting a security incident to the CEO. Speak in your own voice — stoic, professional, dry. 2-3 sentences max.' })
+              .then(text => ({ text: typeof text === 'string' ? text : String(text || ''), delegation: null, actions: [] }))
+          : npcBrains.getPlayerResponse(npcName, msg.text);
+
+        responsePromise
           .then(result => {
             // If the brain returned nothing usable, treat it as an
             // error so the client sees WHY instead of an empty bubble.
@@ -2382,6 +2703,114 @@ agentWss.on('connection', (ws) => {
           worldState.environment.playerPosition = msg.position || null;
           worldState._emit('environment', worldState.environment);
         }
+      } else if (msg.type === 'bouncer_run_tool') {
+        // Bouncer requests a security scan via Kali WSL.
+        // tool: 'nmap' | 'zenmap' (both run nmap CLI) | 'wireshark' (runs tcpdump)
+        // threat: { category, severity, source, target, detail }
+        const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
+        const threat   = msg.threat || {};
+        const tool     = msg.tool   || 'nmap';
+        const sourceIp = threat.source && /\d{1,3}\.\d{1,3}/.test(String(threat.source)) ? String(threat.source) : null;
+
+        console.log(`[BouncerTool] Running ${tool} (Kali WSL) for ${threat.category} threat from ${sourceIp || 'unknown'}`);
+
+        _broadcast({
+          type: 'bouncer_tool_status', tool, status: 'starting', threat,
+          message: `Bouncer running ${tool === 'zenmap' ? 'nmap' : tool} in Kali Linux — investigating ${threat.category || 'the threat'}...`,
+        });
+
+        // All tools now run via Kali WSL — no desktop agent / GUI dependency
+        const scanPromise = (tool === 'nmap' || tool === 'zenmap')
+          ? linuxAgent.investigate({ ...threat, source: sourceIp || threat.source })
+          : (tool === 'wireshark')
+            ? linuxAgent.trafficSnapshot().then(r => ({ ok: r.ok, summary: r.raw, elapsed: 5000, steps: [{ label: 'tcpdump', output: r.raw }] }))
+            : linuxAgent.perimeterPatrol().then(r => ({ ok: r.ok, summary: r.summary, elapsed: r.elapsed, steps: [] }));
+
+        scanPromise.then(result => {
+            _broadcast({
+              type: 'bouncer_tool_status',
+              tool,
+              status: result.ok ? 'done' : 'error',
+              threat,
+              steps: result.steps?.length,
+              message: result.ok
+                ? `${tool === 'zenmap' ? 'nmap' : tool} complete (${((result.elapsed || 0) / 1000).toFixed(1)}s).`
+                : `${tool} failed: ${result.error}`,
+            });
+          })
+          .catch(err => {
+            console.error(`[BouncerTool] ${tool} error:`, err?.message);
+            _broadcast({
+              type: 'bouncer_tool_status',
+              tool,
+              status: 'error',
+              threat,
+              message: `${tool} threw: ${err?.message || err}`,
+            });
+          });
+      } else if (msg.type === 'bouncer_run_linux') {
+        // Bouncer requests a Kali WSL investigation for a threat.
+        // threat: { category, severity, source, target, detail }
+        // openTerminal: bool (default false) — set true to open a visible WSL window
+        const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
+        const threat = msg.threat || {};
+
+        console.log(`[BouncerLinux] WSL investigation for ${threat.category} from ${threat.source || 'unknown'}`);
+
+        _broadcast({
+          type: 'bouncer_linux_status',
+          status: 'starting',
+          threat,
+          message: `Bouncer opened a Kali Linux terminal to investigate ${threat.category || 'the threat'}...`,
+        });
+
+        // Open a real visible terminal window so the player can watch Bouncer work.
+        if (msg.openTerminal !== false) {
+          _openBouncerTerminal(_buildTerminalShowCmd(threat));
+        }
+
+        // Run the real investigation (fast, direct WSL exec — no vision needed)
+        linuxAgent.investigate(threat).then(result => {
+          _broadcast({
+            type: 'bouncer_linux_result',
+            status: result.ok ? 'done' : 'error',
+            threat,
+            category: result.category,
+            ip: result.ip,
+            elapsed: result.elapsed,
+            steps: result.steps,
+            summary: result.summary,
+            message: result.ok
+              ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s).`
+              : `WSL error: ${result.error}`,
+          });
+
+          // Also have Bouncer report key findings to the player via AI brain
+          if (result.ok && result.summary && ws.readyState === 1) {
+            const reportPrompt = [
+              `You just ran security commands in Kali Linux to investigate a ${threat.category || 'unknown'} threat.`,
+              `Here is what you found:\n${result.summary.slice(0, 800)}`,
+              `Report the key findings to the CEO in 2-3 sentences. Focus on what looks suspicious. Be concise and direct.`,
+            ].join(' ');
+            npcBrains.getResponse('Bouncer', 'CEO', reportPrompt, {
+              kind: 'linux-investigation-report',
+              description: 'Report security investigation findings. Stoic, professional, 2-3 sentences max.',
+            }).then(text => {
+              cofounderAgent.wsClients.forEach(c => {
+                if (c.readyState === 1) c.send(JSON.stringify({
+                  type: 'player_chat_response',
+                  npcName: 'Bouncer',
+                  text: typeof text === 'string' ? text : String(text || ''),
+                  delegation: null,
+                  actions: [],
+                }));
+              });
+            }).catch(() => {});
+          }
+        }).catch(err => {
+          console.error('[BouncerLinux] WSL error:', err?.message);
+          _broadcast({ type: 'bouncer_linux_result', status: 'error', threat, message: `WSL threw: ${err?.message || err}` });
+        });
       } else {
         cofounderAgent.handleClientMessage(msg);
       }
@@ -2433,23 +2862,105 @@ server.on('upgrade', (req, socket, head) => {
   socket.on('error', () => target.destroy());
 });
 
+// If port is already in use, kill whatever's holding it and retry once.
+// This makes `node server.js` safe to run without manually killing the old process.
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.warn(`[Server] Port ${PORT} busy — killing existing process and retrying...`);
+    const { execSync } = require('child_process');
+    try {
+      if (process.platform === 'win32') {
+        // Find PID on the port and kill it
+        const out = execSync(`netstat -ano | findstr :${PORT}`, { encoding: 'utf8', timeout: 3000 });
+        const pids = [...new Set(out.split('\n').map(l => l.trim().split(/\s+/).pop()).filter(p => /^\d+$/.test(p) && p !== '0'))];
+        pids.forEach(pid => { try { execSync(`taskkill /PID ${pid} /F`, { timeout: 2000 }); } catch (_) {} });
+      } else {
+        execSync(`fuser -k ${PORT}/tcp 2>/dev/null || lsof -ti:${PORT} | xargs kill -9 2>/dev/null || true`, { timeout: 3000 });
+      }
+    } catch (_) {}
+    setTimeout(() => server.listen(PORT), 1000);
+  }
+});
+
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-  console.log(`Security Monitor active — WebSocket at ws://localhost:${PORT}/security-ws`);
-  console.log(`Agent Office WebSocket at ws://localhost:${PORT}/agent-ws`);
-  console.log(`Test threats: http://localhost:${PORT}/security-test?type=file_access&severity=high&detail=Someone+reading+passwords`);
-  console.log(`World-state snapshot: GET http://localhost:${PORT}/api/world-state`);
-  console.log(`Task webhook (n8n etc): POST http://localhost:${PORT}/api/task-update  body: {id,title,status?,assignee?}`);
-  console.log(`Presence toggle (voice gate): POST http://localhost:${PORT}/api/presence  body: {present:true|false}`);
+  const parallel = process.env.LM_STUDIO_PARALLEL || 1;
+  const npcCount = Object.keys(npcRoster || {}).length || 16;
+  log.banner({ port: PORT, parallel, npcs: npcCount });
+  log.info('Server', `http://localhost:${PORT}`);
+  log.info('WS', `ws://localhost:${PORT}/agent-ws`);
+  log.info('Security', `ws://localhost:${PORT}/security-ws`);
   const ttsStatus = elevenLabs.status();
   if (ttsStatus.configured) {
-    console.log(`ElevenLabs TTS: ✅ configured (key from ${ttsStatus.source}); POST http://localhost:${PORT}/api/tts  body: {npcName,text}`);
+    log.info('TTS', `ElevenLabs ✓ (key from ${ttsStatus.source})`);
   } else {
-    console.log(`ElevenLabs TTS: not configured. Set ELEVENLABS_API_KEY (or add to ~/.openclaw/.env) and restart to enable.`);
+    log.warn('TTS', 'ElevenLabs not configured — set ELEVENLABS_API_KEY to enable');
   }
 
-  // Start the cofounder agent's autonomous thinking loop
-  cofounderAgent.start();
+  // Sync LM Studio's active loaded model BEFORE starting the agent loop
+  // so every component picks up the right model from the first request.
+  npcBrains.syncLmStudioModel().catch(() => {}).finally(() => {
+    // Keep cofounderAgent.model in sync too
+    if (npcBrains.providers?.lmstudio?.model) {
+      cofounderAgent.model = npcBrains.providers.lmstudio.model;
+    }
+    // Start the cofounder agent's autonomous thinking loop
+    cofounderAgent.start();
+  });
+
+  // ── Bouncer proactive patrol loop ─────────────────────────────────────────
+  // Every 5 minutes Bouncer runs a real nmap baseline scan via Kali WSL and
+  // broadcasts the results. NPCs (especially Bouncer's think loop) can read
+  // the latest patrol result from worldState.bouncerPatrol.
+  // First patrol fires after 60s so startup settles first.
+  const PATROL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  let _patrolTimer = null;
+
+  async function runBouncerPatrol() {
+    try {
+      log.info('Patrol', 'running perimeter check...');
+      const patrol = await linuxAgent.perimeterPatrol();
+
+      // Store in world-state so it injects into Bouncer's think prompts
+      if (worldState) {
+        worldState.bouncerPatrol = {
+          ts:        Date.now(),
+          summary:   patrol.summary,
+          openPorts: patrol.openPorts || [],
+          wsServer:  patrol.wsServer,
+          lmStudio:  patrol.lmStudio,
+          elapsed:   patrol.elapsed,
+        };
+      }
+
+      // Broadcast to all clients so the HUD can show patrol status
+      const patrolMsg = JSON.stringify({
+        type:      'bouncer_patrol_result',
+        summary:   patrol.summary,
+        openPorts: patrol.openPorts || [],
+        wsUp:      patrol.wsServer?.open || false,
+        lmUp:      patrol.lmStudio?.open || false,
+        elapsed:   patrol.elapsed,
+        ts:        Date.now(),
+      });
+      wss.clients.forEach(c => { if (c.readyState === 1) c.send(patrolMsg); });
+
+      log.patrol({ openPorts: patrol.openPorts, wsUp: patrol.wsServer?.open, lmUp: patrol.lmStudio?.open, elapsed: patrol.elapsed });
+
+      // If open ports changed, broadcast a security event
+      if (patrol.openPorts && patrol.openPorts.length > 0) {
+        const portList = patrol.openPorts.map(p => `${p.port}/${p.service}`).join(', ');
+        broadcast({ type: 'threat', category: 'scan_probe', severity: 'low',
+          source: 'localhost', detail: `Baseline scan found open ports: ${portList}` });
+      }
+    } catch (err) {
+      log.warn('Patrol', err?.message || String(err));
+    }
+    _patrolTimer = setTimeout(runBouncerPatrol, PATROL_INTERVAL_MS);
+  }
+
+  // Kick off first patrol after 60s
+  _patrolTimer = setTimeout(runBouncerPatrol, 60 * 1000);
+  log.info('Patrol', 'scheduled — first check in 60s, then every 5 min');
 });
 
 // Graceful shutdown — stop the security monitor's intervals and child
@@ -2463,6 +2974,7 @@ function gracefulShutdown(signal) {
   try { securityMonitor.stop?.(); } catch (e) { console.warn('[Server] securityMonitor.stop:', e?.message); }
   try { cofounderAgent.stop?.(); } catch (_) {}
   try { externalSink.detach(); } catch (_) {}
+  try { if (_patrolTimer) { clearTimeout(_patrolTimer); _patrolTimer = null; } } catch (_) {}
   try {
     if (_broadcastTimer) clearTimeout(_broadcastTimer);
   } catch (_) {}

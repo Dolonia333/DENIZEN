@@ -15,7 +15,7 @@ try { worldState = require('./world-state'); } catch (_) {}
 
 class CofounderAgent {
   constructor() {
-    this.model = process.env.LM_STUDIO_MODEL || 'qwen2.5-14b-instruct-1m';
+    this.model = process.env.LM_STUDIO_MODEL || 'qwen/qwen3.6-27b';
     this.baseUrl = process.env.LM_STUDIO_URL || 'http://localhost:1234';
     this.wsClients = new Set();
 
@@ -294,10 +294,12 @@ YOUR JOB — create a LIVING office:
       const idle = state.agents.filter(a => a.status === 'idle' || !a.status);
       const working = state.agents.filter(a => a.status === 'working');
       const talking = state.agents.filter(a => a.status === 'talking' || a.status === 'collaborating');
+      const inMeeting = state.agents.filter(a => a.status === 'meeting');
 
       if (idle.length > 3) observations.push(`${idle.length} agents are idle — ${idle.slice(0, 3).map(a => a.name).join(', ')} aren't doing much.`);
       if (working.length > 10) observations.push('Most of the team is heads-down working. Maybe time for a quick standup or check-in.');
       if (talking.length > 0) observations.push(`${talking.map(a => a.name).join(' and ')} are having conversations.`);
+      if (inMeeting.length > 0) observations.push(`MEETING IN PROGRESS: ${inMeeting.map(a => a.name).join(', ')} are in the conference room. Do NOT call another meeting until they return to their desks.`);
 
       // Random agent spotlight
       const spotlight = state.agents[Math.floor(Math.random() * state.agents.length)];
@@ -396,9 +398,12 @@ YOUR JOB — create a LIVING office:
   _callLmStudio(userMessage) {
     // Route through NpcBrainManager's queue so all LM Studio requests are sequential
     if (this.npcBrains) {
+      // Always use the live synced model from npcBrains — picks up whatever
+      // LM Studio has loaded without needing a restart
+      const liveModel = this.npcBrains.providers?.lmstudio?.model || this.model;
       const config = {
         baseUrl: this.baseUrl,
-        model: this.model,
+        model: liveModel,
         type: 'lmstudio',
       };
       return this.npcBrains._callLocal(config, this._getSystemPrompt(), this.conversationHistory, {
@@ -537,20 +542,36 @@ YOUR JOB — create a LIVING office:
         return;
       }
 
+      // Meeting cooldown — prevent calling the same meeting repeatedly.
+      // The game takes ~30s to run a meeting and return people to desks;
+      // calling again in the same window just re-teleports everyone.
+      const MEETING_COOLDOWN_MS = 90000;
+      const now = Date.now();
+      const filteredCommands = commands.filter(cmd => {
+        if (!cmd.action) return false;
+        if (cmd.action === 'callMeeting') {
+          const lastAt = this._lastMeetingAt || 0;
+          if (now - lastAt < MEETING_COOLDOWN_MS) {
+            console.log(`[CofounderAgent] callMeeting suppressed — cooldown active (${Math.round((MEETING_COOLDOWN_MS - (now - lastAt)) / 1000)}s left)`);
+            return false;
+          }
+          this._lastMeetingAt = now;
+        }
+        return true;
+      });
+
       // Send each command to all connected game clients
-      commands.forEach(cmd => {
-        if (!cmd.action) return; // skip invalid commands
+      filteredCommands.forEach(cmd => {
         const message = {
           type: 'agent_command',
           agentId: cmd.agentId || 'cofounder',
           action: cmd.action,
           params: cmd.params || {},
         };
-
         this._broadcast(message);
       });
 
-      console.log(`[CofounderAgent] Dispatched ${commands.length} commands`);
+      console.log(`[CofounderAgent] Dispatched ${filteredCommands.length} commands`);
     } catch (err) {
       console.warn('[CofounderAgent] Failed to parse response:', err.message);
       // If parsing fails, try a simpler speak command

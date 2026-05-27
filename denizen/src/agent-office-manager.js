@@ -52,6 +52,12 @@ class AgentOfficeManager {
     this._statusDots = new Map(); // npcKey -> Phaser.GameObjects.Arc
     this._taskLabels = new Map(); // npcKey -> Phaser.GameObjects.Text
 
+    // Proximity acknowledgment cooldowns
+    this._npcLastAcknowledged = new Map();
+
+    // Mood state per NPC
+    this._moods = new Map();
+
     // NPC key to display name mapping (from shared roster)
     const roster = globalThis.DenizenNpcRoster;
     if (!roster) {
@@ -272,6 +278,23 @@ class AgentOfficeManager {
       loop: true,
       callback: () => this._maybeOfferTour(),
     });
+
+    // Assign initial moods per role
+    this._assignInitialMoods();
+
+    // Idle behavior timers — staggered so NPCs don't all fire at once
+    this._startIdleBehaviors();
+
+    // Ambient spontaneous chatter
+    this._startAmbientChatter();
+
+    // Proximity acknowledgment tracker
+    this._startProximityTracker();
+
+    // Morning broadcast — fires 10s after startup so it doesn't overlap greetings
+    this.scene.time.delayedCall(10000, () => {
+      this._broadcastOfficeEvent('morning', {});
+    });
   }
 
   /**
@@ -294,36 +317,113 @@ class AgentOfficeManager {
     if (idleMs < 45000) return;
 
     this._lastTourAt = now;
-    this._runLucyTour();
+    this._runLucyTour().catch(err => {
+      console.warn('[Tour] Tour error:', err?.message || err);
+      // Reset Lucy's status so she's not stuck as 'tour_guide'
+      const lucy = this.agents?.get('xp_lucy');
+      if (lucy && lucy.status === 'tour_guide') lucy.status = 'working';
+    });
   }
 
   /**
-   * Walk Lucy to the player, greet them, then escort them past 2 nearby
-   * NPCs and have each introduce themselves. Best-effort: relies on
-   * actions.walkTo + speak/speakTo. Aborts on any error.
+   * Wait until the player is within `dist` pixels of `targetX/Y`.
+   * Polls every 600ms. Resolves true when close enough, false on timeout.
+   * Shows a `waitBubble` text on `npcKey` while waiting (e.g. "This way…").
    */
-  _runLucyTour() {
+  _waitForPlayerNear(targetX, targetY, { dist = 160, timeoutMs = 20000, npcKey, waitBubble } = {}) {
+    return new Promise((resolve) => {
+      const player = this.scene.player;
+      if (!player) return resolve(false);
+
+      let elapsed = 0;
+      let bubbleShown = false;
+
+      const check = () => {
+        if (!this.scene?.player) return resolve(false);
+        const d = Math.hypot(this.scene.player.x - targetX, this.scene.player.y - targetY);
+        if (d <= dist) return resolve(true);
+
+        elapsed += 600;
+        if (elapsed >= timeoutMs) return resolve(false);
+
+        // Show "follow me" bubble once after 2s of waiting
+        if (!bubbleShown && elapsed >= 2000 && npcKey && waitBubble) {
+          bubbleShown = true;
+          try { this.actions.speak(npcKey, waitBubble); } catch (_) {}
+        }
+
+        this.scene.time.delayedCall(600, check);
+      };
+      check();
+    });
+  }
+
+  /**
+   * Wait until the player sends a new chat message (any NPC), or timeout.
+   * Returns the message text if one arrives, or null on timeout.
+   * Hooks into the WS message flow by registering a one-shot listener.
+   */
+  _waitForPlayerReply(timeoutMs = 25000) {
+    return new Promise((resolve) => {
+      let resolved = false;
+      const timer = this.scene.time.delayedCall(timeoutMs, () => {
+        if (!resolved) { resolved = true; resolve(null); }
+      });
+      // One-shot hook: _pendingReplyResolvers is checked in the WS message handler
+      if (!this._pendingReplyResolvers) this._pendingReplyResolvers = [];
+      this._pendingReplyResolvers.push((text) => {
+        if (!resolved) {
+          resolved = true;
+          try { timer.remove(); } catch (_) {}
+          resolve(text);
+        }
+      });
+    });
+  }
+
+  /**
+   * Walk Lucy to the player, ask if they want a tour, wait for a reply,
+   * then escort them to 2 nearby NPCs — checking proximity at each stop
+   * so Lucy actually waits for the player to follow before moving on.
+   */
+  async _runLucyTour() {
     const lucyKey = 'xp_lucy';
     const lucy = this.agents.get(lucyKey);
     const lucySprite = this.actions._getNpc(lucyKey);
     const player = this.scene.player;
     if (!lucy || !lucySprite || !player) return;
 
-    console.log('[Tour] Lucy starting receptionist tour for the player');
+    console.log('[Tour] Lucy starting tour for the player');
     lucy.status = 'tour_guide';
     this.actions.standUp(lucyKey);
 
-    // Walk to a spot near the player (offset so she doesn't overlap).
+    // Step 1 — walk to player
     const offsetX = player.x > 640 ? -48 : 48;
     this.actions.walkTo(lucyKey, player.x + offsetX, player.y);
+    await new Promise(r => this.scene.time.delayedCall(3500, r));
 
-    // After arrival: greet.
-    this.scene.time.delayedCall(3500, () => {
-      this.actions.speak(lucyKey, "Hi! You look a bit lost — want a quick tour of the office?");
-    });
+    // Step 2 — greet and ask if they want a tour (a real question)
+    this.actions.speak(lucyKey, "Hey! I'm Lucy. Want me to introduce you to the team?");
 
-    // Pick 2 nearby NPCs (other than Lucy) to introduce. Prefer ones at
-    // desks (interesting to meet) over ones in motion.
+    // Wait up to 20s for the player to reply.
+    // If they say yes / okay / sure / please / tour → proceed.
+    // Silence or "no" → bow out gracefully.
+    const reply = await this._waitForPlayerReply(20000);
+    const declined = reply && /\bno\b|nope|not now|later|busy/i.test(reply);
+    const silent   = reply === null;
+
+    if (declined || silent) {
+      const msg = declined
+        ? "No problem — I'm at reception if you need me!"
+        : "I'll be here if you change your mind!";
+      this.actions.speak(lucyKey, msg);
+      await new Promise(r => this.scene.time.delayedCall(2500, r));
+      this.actions.goToRoom(lucyKey, 'reception');
+      lucy.status = 'working';
+      return;
+    }
+
+    // Step 3 — pick 2 nearby NPCs to visit (sorted by distance to player)
     const candidates = [];
     this.agents.forEach((agent, key) => {
       if (key === lucyKey) return;
@@ -335,34 +435,51 @@ class AgentOfficeManager {
     candidates.sort((a, b) => a.d - b.d);
     const tourStops = candidates.slice(0, 2);
 
-    let delay = 8000;
-    tourStops.forEach((stop, i) => {
-      this.scene.time.delayedCall(delay, () => {
-        // Lucy walks toward the stop NPC.
-        this.actions.walkTo(lucyKey, stop.sprite.x + 32, stop.sprite.y);
-        this.scene.time.delayedCall(3000, () => {
-          this.actions.speak(lucyKey, `This is ${stop.agent.name}, our ${stop.agent.roleDef?.label || stop.agent.role}.`);
-        });
-        // Prompt the stop NPC to introduce themselves on the server side.
-        this.scene.time.delayedCall(5000, () => {
-          this._send({
-            type: 'npc_introduce',
-            npcName: stop.agent.name,
-            context: `Lucy is giving the CEO a tour. Introduce yourself in one short sentence — your name, role, and one thing you care about. Be warm but brief.`,
-          });
-        });
-      });
-      delay += 9000;
-    });
+    this.actions.speak(lucyKey, "Great — follow me!");
+    await new Promise(r => this.scene.time.delayedCall(1800, r));
 
-    // Tour wraps up — Lucy returns to reception.
-    this.scene.time.delayedCall(delay + 4000, () => {
-      this.actions.speak(lucyKey, "I'll be at reception if you need anything else!");
-      this.scene.time.delayedCall(2500, () => {
-        this.actions.goToRoom(lucyKey, 'reception');
-        lucy.status = 'working';
+    for (const stop of tourStops) {
+      const stopSprite = this.actions._getNpc(stop.key);
+      if (!stopSprite) continue;
+
+      // Lucy walks to the stop NPC
+      this.actions.walkTo(lucyKey, stopSprite.x + 36, stopSprite.y);
+      await new Promise(r => this.scene.time.delayedCall(3200, r));
+
+      // Pause — wait for the player to actually walk over (up to 20s)
+      const playerArrived = await this._waitForPlayerNear(
+        stopSprite.x, stopSprite.y,
+        { dist: 180, timeoutMs: 20000, npcKey: lucyKey, waitBubble: 'Come on over!' }
+      );
+
+      if (!playerArrived) {
+        // Player didn't follow — abort gracefully
+        this.actions.speak(lucyKey, "Looks like you wandered off — catch me at reception!");
+        await new Promise(r => this.scene.time.delayedCall(2000, r));
+        break;
+      }
+
+      // Introduce the NPC
+      const roleLabel = stop.agent.roleDef?.label || stop.agent.role || 'team member';
+      this.actions.speak(lucyKey, `This is ${stop.agent.name}, our ${roleLabel}.`);
+      await new Promise(r => this.scene.time.delayedCall(2800, r));
+
+      // Ask the NPC to introduce themselves — and wait for them to speak
+      this._send({
+        type: 'npc_introduce',
+        npcName: stop.agent.name,
+        context: 'Lucy is giving the CEO a tour. Introduce yourself in one warm sentence — name, role, one thing you care about.',
       });
-    });
+
+      // Give player a moment to chat with this NPC if they want
+      await new Promise(r => this.scene.time.delayedCall(6000, r));
+    }
+
+    // Tour done
+    this.actions.speak(lucyKey, "That's the team! I'll be at reception if you need anything.");
+    await new Promise(r => this.scene.time.delayedCall(2500, r));
+    this.actions.goToRoom(lucyKey, 'reception');
+    lucy.status = 'working';
   }
 
   /**
@@ -455,16 +572,20 @@ class AgentOfficeManager {
    * and stand, giving receptionist NPCs something real to react to.
    */
   /**
-   * Walk a security NPC at the nearest active robber, deliver a
-   * character-line challenge, then ask the robber-controller to resolve
-   * the confrontation (flee, sass, or stand defiant). Combined with the
-   * Bouncer's SOUL.md voice ("stoic, dry humor, intimidating") this
-   * makes the security role actually exist for the player instead of
-   * looping a hard-coded patrol regardless of what's happening.
+   * Full threat-response sequence:
+   *   1. Walk to robber
+   *   2. Challenge + interrogate (Bouncer asks; robber gives suspicious answer)
+   *   3. Resolve (flee / sass / stand defiant)
+   *   4. Report the incident to the player via AI brain
+   *   5. Set up a countermeasure at the affected area
+   *   6. If 2+ threats recently — offer/set up a honeypot
    */
   _confrontNearestRobber(secKey, agent, robbers) {
     const secSprite = this.actions._getNpc(secKey);
     if (!secSprite) return;
+
+    // Don't double-engage
+    if (agent.status === 'engaging') return;
 
     // Pick the nearest visible robber.
     let nearest = null;
@@ -479,37 +600,379 @@ class AgentOfficeManager {
     if (!nearest) return;
 
     agent.status = 'engaging';
+    this._shiftMoodOnEvent('threat_detected');
     this.actions.standUp(secKey);
     this.actions.emote(secKey, '!');
 
-    // Move to within ~50px of the robber, then deliver the challenge.
-    this.actions.walkTo(secKey, nearest.position.x - 32, nearest.position.y);
+    // Track recent threats for honeypot trigger
+    if (!this._recentThreats) this._recentThreats = [];
+    this._recentThreats.push({ category: nearest.category, at: Date.now() });
+    // Keep only the last 5 minutes worth
+    this._recentThreats = this._recentThreats.filter(t => Date.now() - t.at < 5 * 60 * 1000);
 
-    // Stoic-Bouncer voice. Severity-driven phrasing — high severity
-    // gets a sharper line; routine threats get the dry-humor variant.
-    const sev = String(nearest.severity || 'medium').toLowerCase();
-    const CHALLENGE = {
-      high:     ['Hands where I can see them.', 'Don’t make this hard.', 'Step away from that.'],
-      critical: ['You picked the wrong building.', 'On the ground. Now.', 'You’re done.'],
-      low:      ['Help you find something?', 'This area’s staff-only.', 'You lost?'],
-      medium:   ['Need to see some ID.', 'You don’t look like staff.', 'Far enough.'],
+    const sev      = String(nearest.severity || 'medium').toLowerCase();
+    const category = nearest.category || 'unknown';
+
+    // ── Real tool triggers ───────────────────────────────────────────────────
+    // 1. Kali Linux terminal (WSL) — runs first, fastest, always fires.
+    //    Direct exec: ss, netstat, nmap, ps aux, auth logs — real output.
+    this._send({ type: 'bouncer_run_linux', threat: nearest, openTerminal: true });
+
+    // 2. Wireshark / Zenmap — GUI tools for specific threat types.
+    //    Staggered after WSL so they don't fight for focus.
+    const WIRESHARK_CATEGORIES = new Set(['packet_anomaly', 'network_scan', 'api_abuse', 'data_breach']);
+    const ZENMAP_CATEGORIES    = new Set(['network_scan', 'brute_force', 'scan_probe', 'process_spawn']);
+    const wantWireshark = WIRESHARK_CATEGORIES.has(category);
+    const wantZenmap    = ZENMAP_CATEGORIES.has(category);
+
+    if (wantWireshark) {
+      this.scene.time.delayedCall(5000, () => {
+        this._send({ type: 'bouncer_run_tool', tool: 'wireshark', threat: nearest });
+      });
+    }
+    if (wantZenmap) {
+      const delay = wantWireshark ? 12000 : 5000;
+      this.scene.time.delayedCall(delay, () => {
+        this._send({ type: 'bouncer_run_tool', tool: 'zenmap', threat: nearest });
+      });
+    }
+
+    // ── Step 1: walk to robber ───────────────────────────────────────────────
+    this.actions.walkTo(secKey, nearest.position.x - 36, nearest.position.y);
+
+    // ── Step 2: interrogation questions ─────────────────────────────────────
+    // Bouncer asks a sharp question tailored to what the robber is doing.
+    const INTERROGATE = {
+      file_access:   ["What are you looking for in those files?", "Those are not yours — who sent you?", "Care to explain what is so interesting in there?"],
+      data_breach:   ["Whose credentials are you using?", "What are you pulling off that machine?", "You are logged into an account that is not yours."],
+      network_scan:  ["Why are you scanning our network?", "Which ports were you hoping to find open?", "You are mapping our systems. Start talking."],
+      brute_force:   ["How long have you been on that lock?", "Who told you to get in here?", "That door is not going to open for you."],
+      shell_exec:    ["What commands are you running?", "You do not have shell access. Explain yourself.", "I can see what you are typing. Stop."],
+      api_abuse:     ["How many requests have you made?", "Which endpoint are you probing?", "That is not a public endpoint. Who gave you the docs?"],
+      process_spawn: ["What process did you just launch?", "That executable does not belong here.", "What are you trying to run on our systems?"],
+      exfiltration:  ["What is in the bag?", "You are not walking out with that.", "Put it down. Now. What did you copy?"],
+      scan_probe:    ["You have walked past reception three times.", "What are you casing?", "You are not here for a meeting. I have been watching."],
+      packet_anomaly:["You are listening to traffic that is not yours.", "What are you capturing?", "That device should not be on our network."],
+      unknown:       ["Who are you and what are you doing here?", "You do not have access to this area.", "Start talking."],
     };
-    const pool = CHALLENGE[sev] || CHALLENGE.medium;
-    const line = pool[Math.floor(Math.random() * pool.length)];
 
-    // Speak after arrival. Robber controller then runs the response
-    // animation + maybe-flee logic — it's the source of truth for
-    // robber state machines.
-    this.scene.time.delayedCall(2500, () => {
-      this.actions.speak(secKey, line);
+    // Robber deflections — what they claim vs what is obvious
+    const ROBBER_DEFLECT = {
+      file_access:   ["Just looking for the bathroom.", "Someone asked me to grab something.", "I work on the third floor."],
+      data_breach:   ["I was just checking my email.", "IT asked me to run some diagnostics.", "The screen was already unlocked."],
+      network_scan:  ["New network setup, checking connectivity.", "IT support, routine scan.", "Just checking the wifi."],
+      brute_force:   ["My keycard stopped working.", "Facilities sent me.", "I just need five minutes in there."],
+      shell_exec:    ["Running updates.", "Maintenance script.", "DevOps asked me to run something."],
+      api_abuse:     ["Load testing. Totally authorized.", "Just checking uptime.", "Public API, no big deal."],
+      process_spawn: ["Deploying a patch.", "IT asked me to install something.", "It is a scheduled task."],
+      exfiltration:  ["Just my laptop. Personal stuff.", "Archiving old files, totally normal.", "Boss asked me to move some data."],
+      scan_probe:    ["Waiting for a friend.", "Dropped something earlier.", "Just admiring the lobby."],
+      packet_anomaly:["Network troubleshooting.", "My analyzer is misconfigured.", "Wrong building, wrong cable."],
+      unknown:       ["I am allowed to be here.", "Nobody told me this was off-limits.", "I have a meeting."],
+    };
+
+    // Bouncer follow-up after hearing the excuse
+    const FOLLOWUP = {
+      high:     ["Not convincing. Step away.", "That story does not check out.", "Wrong answer."],
+      critical: ["You are done here.", "We are past talking.", "Last chance to walk out on your own."],
+      low:      ["Nice try.", "Right. Let me get you to the exit.", "Not today."],
+      medium:   ["I have heard better lies.", "Try again in another building.", "You are going to want to leave now."],
+    };
+
+    const qPool   = INTERROGATE[category]   || INTERROGATE.unknown;
+    const dPool   = ROBBER_DEFLECT[category]|| ROBBER_DEFLECT.unknown;
+    const fuPool  = FOLLOWUP[sev]           || FOLLOWUP.medium;
+    const question = qPool [Math.floor(Math.random() * qPool.length)];
+    const deflect  = dPool [Math.floor(Math.random() * dPool.length)];
+    const followup = fuPool[Math.floor(Math.random() * fuPool.length)];
+
+    this.scene.time.delayedCall(2800, () => {
+      // Bouncer asks the question
+      this.actions.speak(secKey, question);
+
+      // Robber deflects ~1.8s later (enough to be readable)
+      this.scene.time.delayedCall(2200, () => {
+        const robberObj = this.scene._robberCtrl?.robbers?.get(nearest.threatId);
+        if (robberObj) {
+          this.scene._robberCtrl?._showBubble(robberObj, `🦹 ${deflect}`);
+        }
+
+        // Bouncer's follow-up — sceptical, final
+        this.scene.time.delayedCall(2000, () => {
+          this.actions.speak(secKey, followup);
+
+          // ── Step 3: resolve (flee/sass/stand) ─────────────────────────────
+          this.scene.time.delayedCall(800, () => {
+            const result = this.scene._robberCtrl?.confront?.(nearest.threatId, agent.name || 'Bouncer');
+            const outcome = result?.outcome || 'fled';
+
+            // ── Step 4: report to player ───────────────────────────────────
+            // Wait a moment so the resolution animation plays first
+            this.scene.time.delayedCall(3500, () => {
+              this._reportIncidentToPlayer(secKey, agent, nearest, outcome);
+            });
+          });
+        });
+      });
+    });
+  }
+
+  /**
+   * Walk Bouncer to the player and have his AI brain deliver a natural
+   * language incident report — what the threat was, how it was handled,
+   * and what countermeasure is being set up. Fires a real npcBrains call
+   * so the report sounds like Bouncer, not boilerplate.
+   */
+  _reportIncidentToPlayer(secKey, agent, threat, outcome) {
+    const player = this.scene.player;
+    if (!player) { agent.status = 'patrolling'; return; }
+
+    const offsetX = player.x > 640 ? -48 : 48;
+    this.actions.walkTo(secKey, player.x + offsetX, player.y);
+    this.actions.emote(secKey, '!');
+
+    // Countermeasure description by category
+    const COUNTERMEASURES = {
+      file_access:    'locked down the filing area and flagged those files for audit',
+      data_breach:    'forced a session logout on that terminal and changed the access policy',
+      network_scan:   'blocked that IP range at the perimeter and added a watchpoint on the subnet',
+      brute_force:    'added a 3-strike lockout on that door and flagged the access logs',
+      shell_exec:     'killed the process, revoked the shell access, and set an alert on that user',
+      api_abuse:      'rate-limited that client ID and flagged the endpoint for review',
+      process_spawn:  'terminated the process tree and quarantined the entry point',
+      exfiltration:   'intercepted the data transfer and flagged the user for review',
+      scan_probe:     'set a tripwire on the front perimeter — next scan pings me directly',
+      packet_anomaly: 'isolated that network segment and set a traffic alert on the tap point',
+      unknown:        'escorted them out and marked their access as revoked',
+    };
+
+    const outcomeDesc = {
+      fled:   'they ran',
+      sassed: 'they got mouthy then ran',
+      stood:  'they held their ground — threat is still active, keep your eyes open',
+    }[outcome] || 'handled';
+
+    const cm = COUNTERMEASURES[threat.category] || COUNTERMEASURES.unknown;
+
+    const reportContext = [
+      `You just caught a ${threat.severity} ${threat.category.replace(/_/g, ' ')} threat.`,
+      `Detail: ${threat.detail || '(no detail)'}`,
+      `When you confronted them: ${outcomeDesc}.`,
+      `Countermeasure you set up: ${cm}.`,
+      `Report this concisely to the CEO in 2-3 sentences in your voice — stoic, dry, professional.`,
+      `Mention what the threat was doing, what you did, and what you set up to prevent recurrence.`,
+    ].join(' ');
+
+    this.scene.time.delayedCall(3000, () => {
+      // Use the Bouncer's AI brain to generate the report in his voice
+      if (this.ws?.readyState === WebSocket.OPEN) {
+        this._send({
+          type: 'player_chat',
+          npcName: agent.name || 'Bouncer',
+          npcKey: secKey,
+          text: reportContext,
+          isIncidentReport: true,  // tag so server can route it correctly
+          playerPos: {
+            x: Math.round(player.x),
+            y: Math.round(player.y),
+          },
+        });
+      } else {
+        // Fallback if WS is down
+        this.actions.speak(secKey, `${threat.category.replace(/_/g, ' ')} — handled. ${cm}. Watch your back.`);
+      }
+
+      // Mood shift: threat resolved
+      this._shiftMoodOnEvent('threat_resolved');
+
+      // Broadcast office reaction to the catch
+      this._broadcastOfficeEvent('threat_caught', {});
+
+      // ── Step 5: set up a physical countermeasure ──────────────────────────
+      this.scene.time.delayedCall(5000, () => {
+        this._setupCountermeasure(secKey, agent, threat);
+      });
+    });
+  }
+
+  /**
+   * Bouncer walks to the affected area and visually "secures" it —
+   * shows a glowing "SECURED" marker and speaks about what he's doing.
+   * The marker fades after 60s (visual only, not permanent).
+   */
+  _setupCountermeasure(secKey, agent, threat) {
+    const COUNTERMEASURE_POS = {
+      file_access:    { x: 960, y: 160,  label: '🔒 Files locked' },
+      data_breach:    { x: 388, y: 156,  label: '🖥 Terminal locked' },
+      network_scan:   { x: 844, y: 300,  label: '📡 Perimeter watchpoint' },
+      brute_force:    { x: 340, y: 444,  label: '🚪 Lockout active' },
+      shell_exec:     { x: 648, y: 156,  label: '💻 Shell revoked' },
+      api_abuse:      { x: 456, y: 156,  label: '🌐 Rate limit set' },
+      process_spawn:  { x: 50,  y: 400,  label: '⚙️ Entry quarantined' },
+      exfiltration:   { x: 400, y: 444,  label: '📦 Transfer blocked' },
+      scan_probe:     { x: 200, y: 560,  label: '👁 Tripwire set' },
+      packet_anomaly: { x: 1100, y: 400, label: '📶 Segment isolated' },
+    };
+
+    const cm = COUNTERMEASURE_POS[threat.category];
+    if (!cm) { agent.status = 'patrolling'; return; }
+
+    const cmLine = {
+      file_access:   'Locking down the files.',
+      data_breach:   'Killing that terminal session.',
+      network_scan:  'Setting a watchpoint on the perimeter.',
+      brute_force:   'Adding a strike-lockout on that door.',
+      shell_exec:    'Revoking the shell access.',
+      api_abuse:     'Throttling that endpoint.',
+      process_spawn: 'Quarantining the entry point.',
+      exfiltration:  'Blocking the egress path.',
+      scan_probe:    'Setting a tripwire out front.',
+      packet_anomaly:'Isolating that network segment.',
+    }[threat.category] || 'Securing the area.';
+
+    agent.status = 'securing';
+    this.actions.walkTo(secKey, cm.x, cm.y);
+
+    this.scene.time.delayedCall(3500, () => {
+      this.actions.speak(secKey, cmLine);
+
+      // Drop a visual "secured" marker at this position
       this.scene.time.delayedCall(800, () => {
-        const r = this.scene._robberCtrl?.confront?.(nearest.threatId, agent.name || 'Bouncer');
-        if (r && r.ok) {
-          // Brief recovery hold before resuming patrol so the player
-          // sees the resolution.
+        this._placeSecuredMarker(cm.x, cm.y, cm.label);
+
+        // Check if we should set up a honeypot
+        const recentCount = (this._recentThreats || []).filter(t => Date.now() - t.at < 5 * 60 * 1000).length;
+        if (recentCount >= 2 && !this._honeypotActive) {
+          this.scene.time.delayedCall(4000, () => {
+            this._setupHoneypot(secKey, agent);
+          });
+        } else {
           this.scene.time.delayedCall(4000, () => {
             agent.status = 'patrolling';
           });
+        }
+      });
+    });
+  }
+
+  /**
+   * Place a glowing "SECURED" text marker at a world position.
+   * Fades out after 60 seconds.
+   */
+  _placeSecuredMarker(x, y, label) {
+    if (!this.scene?.add) return;
+    const marker = this.scene.add.text(x, y - 20, label, {
+      fontSize: '8px',
+      fontFamily: 'monospace',
+      color: '#4ade80',
+      backgroundColor: '#052e16cc',
+      padding: { x: 4, y: 2 },
+    });
+    marker.setOrigin(0.5, 1);
+    marker.setDepth(9000);
+
+    // Pulse animation
+    this.scene.tweens.add({
+      targets: marker,
+      alpha: { from: 1, to: 0.6 },
+      duration: 800,
+      yoyo: true,
+      repeat: 5,
+    });
+
+    // Fade out and destroy after 60s
+    this.scene.time.delayedCall(60000, () => {
+      this.scene.tweens.add({
+        targets: marker,
+        alpha: 0,
+        duration: 2000,
+        onComplete: () => { try { marker.destroy(); } catch (_) {} },
+      });
+    });
+  }
+
+  /**
+   * Honeypot mode: Bouncer picks a tempting spot for intruders (a computer
+   * near the edge, a filing cabinet in a low-traffic area), walks there,
+   * and waits. Any robber that comes within 120px triggers an immediate
+   * confrontation — no walk-to needed, Bouncer is already there.
+   *
+   * Shows a "🍯 Bait set" whisper bubble. Deactivates after 3 minutes
+   * or when a robber is caught.
+   */
+  _setupHoneypot(secKey, agent) {
+    if (this._honeypotActive) return;
+    this._honeypotActive = true;
+
+    // Honeypot spots — tempting locations where an intruder might go
+    const HONEYPOT_SPOTS = [
+      { x: 960, y: 160,  label: '🍯 Watching the files...' },
+      { x: 388, y: 156,  label: '🍯 Staking out the terminal...' },
+      { x: 1100, y: 400, label: '🍯 Watching the server room...' },
+      { x: 648, y: 156,  label: '🍯 Bait deployed at the desk...' },
+    ];
+    const spot = HONEYPOT_SPOTS[Math.floor(Math.random() * HONEYPOT_SPOTS.length)];
+
+    agent.status = 'honeypot';
+    this.actions.walkTo(secKey, spot.x, spot.y);
+
+    this.scene.time.delayedCall(3500, () => {
+      this.actions.speak(secKey, spot.label);
+
+      // Visual whisper indicator
+      this._placeSecuredMarker(spot.x, spot.y + 20, '🍯 Bait');
+
+      // Notify the player
+      const player = this.scene.player;
+      if (player && this.ws?.readyState === WebSocket.OPEN) {
+        this._send({
+          type: 'bouncer_honeypot',
+          message: `Bouncer set up a honeypot at (${Math.round(spot.x)}, ${Math.round(spot.y)}) — waiting for the next intruder.`,
+          position: { x: Math.round(spot.x), y: Math.round(spot.y) },
+        });
+      }
+
+      // Proximity check: poll every second while in honeypot mode
+      const poll = () => {
+        if (!this._honeypotActive || agent.status !== 'honeypot') return;
+
+        const robbers = this.scene._robberCtrl?.getActiveRobbers?.() || [];
+        const spriteNow = this.actions._getNpc(secKey);
+        if (!spriteNow) { this._honeypotActive = false; return; }
+
+        const tripped = robbers.find(r => {
+          if (!r?.position) return false;
+          const d = Math.hypot(r.position.x - spriteNow.x, r.position.y - spriteNow.y);
+          return d < 120;
+        });
+
+        if (tripped) {
+          this._honeypotActive = false;
+          agent.status = 'engaging';
+
+          // Bouncer springs the trap
+          this.actions.emote(secKey, '!');
+          this.actions.speak(secKey, 'Got one. Knew you would come back.');
+
+          this.scene.time.delayedCall(1200, () => {
+            const result = this.scene._robberCtrl?.confront?.(tripped.threatId, agent.name || 'Bouncer');
+            this.scene.time.delayedCall(2500, () => {
+              this._reportIncidentToPlayer(secKey, agent, tripped, result?.outcome || 'fled');
+            });
+          });
+          return;
+        }
+
+        this.scene.time.delayedCall(1000, poll);
+      };
+      this.scene.time.delayedCall(1000, poll);
+
+      // Honeypot expires after 3 minutes
+      this.scene.time.delayedCall(3 * 60 * 1000, () => {
+        if (this._honeypotActive) {
+          this._honeypotActive = false;
+          this.actions.speak(secKey, 'Nobody took the bait. Resetting patrol.');
+          agent.status = 'patrolling';
         }
       });
     });
@@ -540,13 +1003,13 @@ class AgentOfficeManager {
     const ROOM_LINES = {
       manager_office: [
         'Can I help you find something?',
-        'Looking for Abby? She’s usually in around now.',
-        'This is the CTO’s office — anything you need?',
+        'Looking for Abby? She is usually in around now.',
+        'This is the CTO office — anything you need?',
       ],
       storage: [
         'Storage is staff-only, my friend.',
         'Anything I can grab for you from here?',
-        'You’re a bit deep in the supply room.',
+        'You are a bit deep in the supply room.',
       ],
     };
     const pool = ROOM_LINES[room] || ROOM_LINES.manager_office;
@@ -583,6 +1046,7 @@ class AgentOfficeManager {
       this.scene.time.delayedCall(3500, () => {
         this.actions.emote(key, 'wave');
         this.actions.speak(key, 'Hi, I\'m here for a meeting.');
+        this._broadcastOfficeEvent('visitor_arrived', {});
       });
       // Nudge the receptionists to greet by name
       const lucyKey = 'xp_lucy';
@@ -687,7 +1151,7 @@ class AgentOfficeManager {
     const nearbyFurniture = this._computeNearbyFurniture(npcKey, 5);
 
     const context = {
-      description: `Office time: ${new Date().toLocaleTimeString()}. Your status: ${agent.status || 'idle'}. ` +
+      description: `Office time: ${new Date().toLocaleTimeString()}. Time of day: ${this._getTimeOfDay()}. Your status: ${agent.status || 'idle'}. Your current mood: ${this._getMood(npcKey)}. ` +
         `Nearby coworkers: ${nearbyNpcs.join(', ')}.`,
       nearbyFurniture,
     };
@@ -1153,25 +1617,55 @@ class AgentOfficeManager {
         break;
       }
 
-      case 'meeting':
+      case 'meeting': {
         agent.status = 'meeting';
         this.actions.standUp(npcKey);
-        if (message) {
-          this.actions.speak(npcKey, message);
-        }
-        // Actually walk to the conference room and join meeting
+        if (message) this.actions.speak(npcKey, message);
         this.actions.joinMeeting(npcKey);
-        // Return to desk after meeting (~25s)
-        this.scene.time.delayedCall(25000, () => {
-          agent.status = 'working';
-          agent._taskLabel = null;
-          this.actions.standUp(npcKey);
-          const deskId = this._deskAssignments?.get(npcKey);
-          if (deskId) {
-            this.actions.useComputer(npcKey, deskId);
-          }
+
+        // Pull attendees into the conference room alongside the caller.
+        // If the think decision named a specific target, bring them.
+        // If not, managers (cofounder / project_mgr / product_mgr) pull
+        // up to 2 idle coworkers so the room doesn't look empty.
+        const meetingAttendeeKeys = [];
+        const explicitTargetKey = findTargetKey(target);
+        if (explicitTargetKey) {
+          meetingAttendeeKeys.push(explicitTargetKey);
+        } else if (['cofounder', 'project_mgr', 'product_mgr'].includes(agent.role)) {
+          const candidates = [...this.agents.entries()]
+            .filter(([k, a]) => k !== npcKey && a.status !== 'meeting' && a.status !== 'walking')
+            .slice(0, 2)
+            .map(([k]) => k);
+          meetingAttendeeKeys.push(...candidates);
+        }
+
+        meetingAttendeeKeys.forEach((attendeeKey, i) => {
+          const attendeeAgent = this.agents.get(attendeeKey);
+          if (!attendeeAgent) return;
+          attendeeAgent.status = 'meeting';
+          this.scene.time.delayedCall(800 + i * 600, () => {
+            this.actions.standUp(attendeeKey);
+            this.actions.joinMeeting(attendeeKey);
+          });
+        });
+
+        const allMeetingKeys = [npcKey, ...meetingAttendeeKeys];
+
+        // Everyone returns to their desks after ~30s
+        this.scene.time.delayedCall(30000, () => {
+          allMeetingKeys.forEach(k => {
+            const a = this.agents.get(k);
+            if (!a || a.status !== 'meeting') return;
+            a.status = 'working';
+            a._taskLabel = null;
+            this.actions.standUp(k);
+            if (a.assignedDesk) {
+              setTimeout(() => this.actions.useComputer(k, a.assignedDesk), 1500);
+            }
+          });
         });
         break;
+      }
 
       default:
         if (agent.assignedDesk) {
@@ -1312,25 +1806,31 @@ class AgentOfficeManager {
           currentTurn < MAX_CHAT_TURNS;
 
         if (canReplyBack) {
-          // Small beat so the responder's bubble is visible before the
-          // next request fires.
-          this.scene.time.delayedCall(1800, () => {
+          // Estimate how long the TTS for this reply will take (~100ms/char, min 2s)
+          // so the next turn fires AFTER the speaker finishes talking, not before.
+          const estSpeakMs = Math.max(2000, Math.min((msg.text?.length || 0) * 95, 8000));
+
+          this.scene.time.delayedCall(estSpeakMs + 600, () => {
             // Walk the responder toward the original speaker so the
-            // conversation has spatial weight, BUT do NOT speak the same
-            // line again — line 1295 already played the audio + bubble.
-            // Pre-fix: actions.speakTo re-spoke msg.text on arrival,
-            // which was the second voice the player heard for short
-            // replies (the single-speaker slot only dedupes when the
-            // estimated TTL > the 1800ms walk delay).
+            // conversation has spatial weight.
             const targetSprite = this.actions._getNpc(originalSpeakerKey);
             if (targetSprite) {
               try { this.actions.walkTo(responderKey, targetSprite.x - 24, targetSprite.y); }
               catch (_) { /* sprite gone — okay */ }
             }
+
+            // Register a one-shot callback so the NEXT npc_response from the
+            // original speaker resolves here, keeping turns in lock-step.
+            // Key: "<speakerName>→<responderName>" so multiple simultaneous
+            // conversations don't cross-wire.
+            const key = `${msg.fromName}→${msg.npcName}`;
+            if (!this._npcConvoCallbacks) this._npcConvoCallbacks = {};
+            this._npcConvoCallbacks[key] = null; // mark as pending
+
             this._send({
               type: 'npc_conversation',
-              npcName: msg.fromName,   // original speaker is now the target
-              fromName: msg.npcName,   // responder is now the speaker
+              npcName: msg.fromName,   // original speaker responds now
+              fromName: msg.npcName,   // responder is now the listener
               text: msg.text,
               turn: currentTurn + 1,
             });
@@ -1387,6 +1887,86 @@ class AgentOfficeManager {
         }
 
         console.log(`[AgentManager] ${msg.npcName} responds to CEO: "${msg.text}"${msg.delegation ? ` [delegating to ${msg.delegation.delegateTo}]` : ''}${msg.actions?.length ? ` [${msg.actions.length} actions]` : ''}`);
+        break;
+      }
+      case 'bouncer_honeypot': {
+        // Bouncer set up a honeypot — surface it in the player chat panel
+        if (this.scene._playerChat) {
+          this.scene._playerChat._addToLog('Bouncer', `🍯 ${msg.message || 'Honeypot set.'}`);
+        }
+        break;
+      }
+      case 'bouncer_linux_status': {
+        // Kali WSL investigation started
+        const bouncerKey = 'xp_bouncer';
+        if (this.scene._playerChat) {
+          this.scene._playerChat._addToLog('Bouncer', `🐉 ${msg.message || 'Running Kali Linux commands...'}`);
+        }
+        try { this.actions.speak(bouncerKey, 'Opening Kali Linux terminal...'); } catch (_) {}
+        // Show Bouncer at desk (he is working the terminal)
+        const ba = this.agents?.get(bouncerKey);
+        if (ba?.assignedDesk) { try { this.actions.useComputer(bouncerKey, ba.assignedDesk); } catch (_) {} }
+        break;
+      }
+      case 'bouncer_linux_result': {
+        // Kali WSL investigation complete — show results in chat
+        const bouncerKey = 'xp_bouncer';
+        if (this.scene._playerChat) {
+          if (msg.status === 'done') {
+            const stepCount = Array.isArray(msg.steps) ? msg.steps.length : '?';
+            const ipNote    = msg.ip ? ` [attacker: ${msg.ip}]` : '';
+            this.scene._playerChat._addToLog('Bouncer', `🐉 Kali done (${(msg.elapsed / 1000 || 0).toFixed(1)}s, ${stepCount} commands${ipNote}) — see report above.`);
+          } else {
+            this.scene._playerChat._addToLog('Bouncer', `⚠ Kali Linux error: ${msg.message}`);
+          }
+        }
+        if (msg.status === 'done') {
+          try { this.actions.emote(bouncerKey, '!'); } catch (_) {}
+        }
+        break;
+      }
+      case 'bouncer_tool_status': {
+        // Desktop agent running Wireshark / Zenmap on behalf of Bouncer.
+        // Show progress in the player chat panel and animate the Bouncer.
+        const bouncerKey = 'xp_bouncer';
+        const bouncerAgent = this.agents?.get(bouncerKey);
+        const toolIcon = msg.tool === 'zenmap' ? '🗺' : '🦈';
+        const toolName = msg.tool === 'zenmap' ? 'Zenmap' : 'Wireshark';
+
+        if (msg.status === 'starting') {
+          if (this.scene._playerChat) {
+            this.scene._playerChat._addToLog('Bouncer', `${toolIcon} Running ${toolName} on ${msg.threat?.source || 'the network'}...`);
+          }
+          // Show the Bouncer at his desk typing (he's working the tool)
+          if (bouncerAgent?.assignedDesk) {
+            this.actions.useComputer(bouncerKey, bouncerAgent.assignedDesk);
+          }
+        } else if (msg.status === 'done') {
+          if (this.scene._playerChat) {
+            this.scene._playerChat._addToLog('Bouncer', `${toolIcon} ${toolName} scan complete — ${msg.steps || '?'} steps. Check your screen for the results.`);
+          }
+          // Bouncer emotes satisfaction
+          this.actions.emote(bouncerKey, '✓');
+        } else if (msg.status === 'error') {
+          if (this.scene._playerChat) {
+            this.scene._playerChat._addToLog('Bouncer', `⚠ ${toolName} couldn't run: ${msg.message || 'unknown error'}. Is it installed?`);
+          }
+        }
+
+        // Also show a speech bubble on the Bouncer sprite
+        const bubbleText = {
+          starting: `${toolIcon} Running ${toolName}...`,
+          done:     `${toolIcon} ${toolName} done.`,
+          error:    `⚠ ${toolName} failed.`,
+        }[msg.status];
+        if (bubbleText) {
+          try { this.actions.speak(bouncerKey, bubbleText); } catch (_) {}
+        }
+        break;
+      }
+      case 'npc_work_output': {
+        // An NPC started, continued, or finished a task — show in the work feed
+        this._addWorkFeedEntry(msg.npcName, msg.phaseEmoji || '•', msg.note || '', msg.artifactPath || null);
         break;
       }
       case 'agent_error': {
@@ -1528,6 +2108,49 @@ class AgentOfficeManager {
               detail: { ts: mirror.at, changeCount: msg.changes?.length || 0 },
             }));
           } catch (_) { /* CustomEvent unavailable in some test contexts */ }
+        }
+        break;
+      }
+      case 'openclaw_task': {
+        // Server is asking OpenClaw to do real browser automation on behalf of an NPC.
+        // 1. Animate Lucy so the player can see she's handling it.
+        // 2. Forward the instruction to OpenClaw via the gateway bridge.
+        const lucyKey = 'xp_lucy';
+        const lucyAgent = this.agents.get(lucyKey);
+        if (lucyAgent) {
+          lucyAgent.status = 'working';
+          try {
+            this.actions.standUp(lucyKey);
+            this.actions.emote(lucyKey, '🌐');
+            if (lucyAgent.assignedDesk) {
+              this.scene.time.delayedCall(600, () => {
+                this.actions.useComputer(lucyKey, lucyAgent.assignedDesk);
+              });
+            }
+            const taskLabel = msg.meta?.jobTitle
+              ? `Filling out application — ${msg.meta.jobTitle} at ${msg.meta.company}`
+              : 'Handling web task via OpenClaw...';
+            this.scene.time.delayedCall(1000, () => {
+              this.actions.speak(lucyKey, taskLabel.slice(0, 80));
+            });
+          } catch (err) {
+            console.warn('[AgentManager] openclaw_task Lucy animation failed:', err?.message);
+          }
+        }
+
+        // Forward to OpenClaw gateway
+        const bridge = window.__DenizenGatewayBridge;
+        if (bridge && bridge.connected) {
+          bridge.sendChat(msg.instruction || JSON.stringify(msg), { urgent: false })
+            .then(r => console.log('[AgentManager] openclaw_task sent to gateway:', r))
+            .catch(err => console.warn('[AgentManager] openclaw_task gateway send failed:', err?.message));
+        } else {
+          console.warn('[AgentManager] openclaw_task: gateway not connected — task not forwarded to OpenClaw');
+          if (lucyAgent) {
+            this.scene.time.delayedCall(2000, () => {
+              this.actions.speak(lucyKey, 'OpenClaw not connected — check the gateway.');
+            });
+          }
         }
         break;
       }
@@ -2139,6 +2762,448 @@ class AgentOfficeManager {
    */
   update() {
     this.actions.update();
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYSTEM 1 — Idle Behaviors
+  // ─────────────────────────────────────────────────────────────────────────
+
+  _startIdleBehaviors() {
+    let stagger = 0;
+    this.agents.forEach((agent, npcKey) => {
+      const delay = stagger + 45000 + Math.random() * 45000;
+      this.scene.time.delayedCall(delay, () => this._tickIdleBehavior(npcKey));
+      stagger += 3000;
+    });
+  }
+
+  _tickIdleBehavior(npcKey) {
+    const IDLE_PHRASES = {
+      cofounder:    ['Thinking...', 'Hmm.', 'Need to revisit that.', 'Almost.', 'Good.'],
+      desk_worker:  ['Almost got it.', 'Hm.', 'That is weird.', 'Nice.', 'Come on...', 'Wait.'],
+      researcher:   ['Interesting.', 'Let me check that.', 'Hmm.', 'Not quite.', 'One more source.'],
+      receptionist: ['Mmhm.', 'Good.', 'On it.', 'Let me look that up.', 'Almost done.'],
+      security:     ['Clear.', 'Quiet today.', 'Checking.', 'Fine.', 'Eyes open.'],
+      it_support:   ['That should not do that.', 'Hm.', 'Easy fix.', 'Oh come on.', 'There it is.'],
+      qa_engineer:  ['Found one.', 'That is a bug.', 'Edge case.', 'Really?', 'As expected.'],
+      devops:       ['Should be fine.', 'Monitoring.', 'Clean.', 'Hmm.', 'Good pipeline.'],
+      designer:     ['That kerning.', 'Better.', 'Not quite right.', 'Almost.', 'Clean.'],
+      data_engineer:['Pipeline looks good.', 'Hmm.', 'Interesting pattern.', 'Clean data.', 'Almost.'],
+      intern:       ['Okay.', 'Got it.', 'Right.', 'Makes sense.', 'Cool.', 'Wait...'],
+      default:      ['Hmm.', 'Okay.', 'Nice.', 'Working on it.', 'Almost.'],
+    };
+
+    const RESTRICTED_STATUSES = new Set([
+      'task_override', 'engaging', 'meeting', 'honeypot',
+      'tour_guide', 'securing', 'reporting', 'talking', 'collaborating',
+    ]);
+
+    const agent = this.agents.get(npcKey);
+    if (!agent) return;
+    if (RESTRICTED_STATUSES.has(agent.status)) {
+      this.scene.time.delayedCall(45000 + Math.random() * 45000, () => this._tickIdleBehavior(npcKey));
+      return;
+    }
+
+    const role = agent.role || 'default';
+    const phrasePool = IDLE_PHRASES[role] || IDLE_PHRASES.default;
+    const phrase = phrasePool[Math.floor(Math.random() * phrasePool.length)];
+
+    const roll = Math.random();
+    if (roll < 0.20) {
+      // Coffee run
+      this.actions.goToCoffee(npcKey);
+      agent.status = 'break';
+      this.scene.time.delayedCall(12000, () => {
+        if (agent.assignedDesk) {
+          this.actions.useComputer(npcKey, agent.assignedDesk);
+          agent.status = 'working';
+        }
+      });
+    } else if (roll < 0.45) {
+      this.actions.think(npcKey, '*stretches*');
+    } else if (roll < 0.70) {
+      this.actions.emote(npcKey, '...');
+    } else {
+      this.actions.think(npcKey, phrase);
+    }
+
+    this.scene.time.delayedCall(45000 + Math.random() * 45000, () => this._tickIdleBehavior(npcKey));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYSTEM 2 — Ambient Spontaneous Chatter
+  // ─────────────────────────────────────────────────────────────────────────
+
+  _startAmbientChatter() {
+    this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+  }
+
+  _tickAmbientChatter() {
+    const AMBIENT_TOPICS = [
+      'Hey, have you had coffee yet?',
+      'Did you see the deploy went smooth this morning?',
+      'Quick question when you have a second.',
+      'Long week already and it is only Tuesday.',
+      'How is that task going for you?',
+      'Anyone else feel like we need a whiteboard session?',
+      'I was just thinking about the architecture on that last feature.',
+      'You hungry? I am about to grab something.',
+      'Did you check the latest logs?',
+      'I found something interesting while researching earlier.',
+      'Hey, good work on that last one.',
+      'Do you know if Abby is in today?',
+      'I keep meaning to refactor that module.',
+      'The build is green, finally.',
+      'We should sync up on this before end of day.',
+    ];
+
+    const RESTRICTED_STATUSES = new Set([
+      'task_override', 'engaging', 'meeting', 'honeypot',
+      'tour_guide', 'talking', 'collaborating', 'reporting',
+    ]);
+
+    const freeAgents = [];
+    this.agents.forEach((agent, npcKey) => {
+      if (!RESTRICTED_STATUSES.has(agent.status)) {
+        freeAgents.push({ npcKey, agent });
+      }
+    });
+
+    if (freeAgents.length < 2) {
+      this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+      return;
+    }
+
+    // Pick 2 distinct random agents
+    const idx1 = Math.floor(Math.random() * freeAgents.length);
+    let idx2 = Math.floor(Math.random() * (freeAgents.length - 1));
+    if (idx2 >= idx1) idx2++;
+
+    const { npcKey: initiatorKey, agent: initiatorAgent } = freeAgents[idx1];
+    const { npcKey: responderKey, agent: responderAgent } = freeAgents[idx2];
+
+    const responderSprite = this.actions._getNpc(responderKey);
+    if (!responderSprite) {
+      this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+      return;
+    }
+
+    const line = AMBIENT_TOPICS[Math.floor(Math.random() * AMBIENT_TOPICS.length)];
+
+    // Walk initiator toward responder
+    this.actions.walkTo(initiatorKey, responderSprite.x - 32, responderSprite.y);
+    initiatorAgent.status = 'talking';
+    responderAgent.status = 'talking';
+
+    // After arriving, initiator speaks
+    this.scene.time.delayedCall(2500, () => {
+      this.actions.speak(initiatorKey, line);
+
+      // Fire brain request so the responder generates a real reply
+      this._send({
+        type: 'npc_conversation',
+        npcName: responderAgent.name,
+        fromName: initiatorAgent.name,
+        text: line,
+        turn: 1,
+      });
+    });
+
+    // Both return to desks after 18s
+    this.scene.time.delayedCall(18000, () => {
+      if (initiatorAgent.assignedDesk) {
+        this.actions.useComputer(initiatorKey, initiatorAgent.assignedDesk);
+        initiatorAgent.status = 'working';
+      } else {
+        initiatorAgent.status = 'idle';
+      }
+      if (responderAgent.assignedDesk) {
+        this.actions.useComputer(responderKey, responderAgent.assignedDesk);
+        responderAgent.status = 'working';
+      } else {
+        responderAgent.status = 'idle';
+      }
+    });
+
+    this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYSTEM 3 — Proximity Acknowledgment
+  // ─────────────────────────────────────────────────────────────────────────
+
+  _startProximityTracker() {
+    this.scene.time.addEvent({
+      delay: 600,
+      loop: true,
+      callback: () => this._tickProximity(),
+    });
+  }
+
+  _tickProximity() {
+    const ACK_LINES = {
+      cofounder:    ['Hey.', 'Good timing.', 'Come in.'],
+      desk_worker:  ['Hey.', 'What is up?', 'Oh hey.'],
+      receptionist: ['Hi! Need anything?', 'Hey there!', 'Good to see you.'],
+      security:     ['Hey.', 'All good?', 'What is up?'],
+      it_support:   ['Need something?', 'Hey.', 'What broke?'],
+      qa_engineer:  ['Hey.', 'What is going on?', 'Find a bug?'],
+      devops:       ['Hey.', 'Pipeline still green.', 'What is up?'],
+      designer:     ['Oh hey.', 'What do you think?', 'Hey.'],
+      researcher:   ['Hey.', 'Good timing actually.', 'Come look at this.'],
+      data_engineer:['Hey.', 'Numbers look good.', 'What is up?'],
+      intern:       ['Oh! Hey.', 'Hi.', 'Hey, good to see you.'],
+      default:      ['Hey.', 'What is up?', 'Oh hey.'],
+    };
+
+    const NON_BUSY_STATUSES = new Set(['working', 'idle', 'wandering', 'break']);
+    const player = this.scene.player;
+    if (!player) return;
+
+    const now = Date.now();
+    this.agents.forEach((agent, npcKey) => {
+      if (!NON_BUSY_STATUSES.has(agent.status)) return;
+      const npcSprite = this.actions._getNpc(npcKey);
+      if (!npcSprite) return;
+      const d = Math.hypot(player.x - npcSprite.x, player.y - npcSprite.y);
+      if (d > 75) return;
+      const lastAck = this._npcLastAcknowledged.get(npcKey) || 0;
+      if (now - lastAck < 40000) return;
+
+      this._npcLastAcknowledged.set(npcKey, now);
+      const role = agent.role || 'default';
+      const pool = ACK_LINES[role] || ACK_LINES.default;
+      const ackLine = pool[Math.floor(Math.random() * pool.length)];
+
+      this.actions.emote(npcKey, '...');
+      this.scene.time.delayedCall(300, () => {
+        this.actions.speak(npcKey, ackLine);
+      });
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYSTEM 4 — Emotional State / Mood
+  // ─────────────────────────────────────────────────────────────────────────
+
+  _getMood(npcKey) {
+    return this._moods.get(npcKey) || 'focused';
+  }
+
+  _setMood(npcKey, mood) {
+    this._moods.set(npcKey, mood);
+  }
+
+  _assignInitialMoods() {
+    const ROLE_DEFAULT_MOODS = {
+      cofounder:    'focused',
+      security:     'focused',
+      devops:       'focused',
+      receptionist: 'relaxed',
+      designer:     'relaxed',
+      researcher:   'curious',
+      data_engineer:'curious',
+      intern:       'excited',
+      qa_engineer:  'focused',
+      it_support:   'focused',
+    };
+    this.agents.forEach((agent, npcKey) => {
+      const mood = ROLE_DEFAULT_MOODS[agent.role] || 'focused';
+      this._moods.set(npcKey, mood);
+    });
+  }
+
+  _shiftMoodOnEvent(eventType) {
+    this.agents.forEach((agent, npcKey) => {
+      const role = agent.role || '';
+      const current = this._getMood(npcKey);
+      switch (eventType) {
+        case 'threat_detected':
+          if (role === 'security') {
+            this._setMood(npcKey, 'focused');
+          } else {
+            this._setMood(npcKey, 'stressed');
+          }
+          break;
+        case 'threat_resolved':
+          if (role === 'security') {
+            this._setMood(npcKey, 'relaxed');
+          } else if (current === 'stressed') {
+            this._setMood(npcKey, 'focused');
+          }
+          break;
+        case 'morning': {
+          const ROLE_DEFAULT_MOODS = {
+            cofounder:    'focused',
+            security:     'focused',
+            devops:       'focused',
+            receptionist: 'relaxed',
+            designer:     'relaxed',
+            researcher:   'curious',
+            data_engineer:'curious',
+            intern:       'excited',
+            qa_engineer:  'focused',
+            it_support:   'focused',
+          };
+          const defaultMood = ROLE_DEFAULT_MOODS[role] || 'focused';
+          this._setMood(npcKey, defaultMood);
+          break;
+        }
+        case 'good_deploy':
+          if (role === 'devops') {
+            this._setMood(npcKey, 'excited');
+          } else {
+            this._setMood(npcKey, 'relaxed');
+          }
+          break;
+      }
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYSTEM 5 — Office Event Reactions
+  // ─────────────────────────────────────────────────────────────────────────
+
+  _broadcastOfficeEvent(eventType, data) {
+    const EVENT_REACTIONS = {
+      threat_caught: [
+        'Did you see that?',
+        'Bouncer handled that fast.',
+        'Glad we have security.',
+        'That was intense.',
+      ],
+      visitor_arrived: [
+        'Oh, we have a visitor.',
+        'Looks like someone is here.',
+        'I should clean up my desk.',
+      ],
+      job_applied: [
+        'Heard we are hiring.',
+        'Good, we need more hands.',
+        'Wonder who applied.',
+      ],
+      morning: [
+        'Morning.',
+        'Good morning.',
+        'Coffee first.',
+        'Here we go.',
+      ],
+    };
+
+    const RESTRICTED_STATUSES = new Set([
+      'task_override', 'engaging', 'meeting', 'tour_guide',
+    ]);
+
+    const reactions = EVENT_REACTIONS[eventType];
+    if (!reactions) return;
+
+    const freeAgents = [];
+    this.agents.forEach((agent, npcKey) => {
+      if (!RESTRICTED_STATUSES.has(agent.status)) {
+        freeAgents.push({ npcKey, agent });
+      }
+    });
+
+    if (freeAgents.length === 0) return;
+
+    // Pick 1-2 reactors
+    const count = Math.min(freeAgents.length, 1 + Math.floor(Math.random() * 2));
+    const shuffled = freeAgents.slice().sort(() => Math.random() - 0.5);
+    const reactors = shuffled.slice(0, count);
+
+    reactors.forEach(({ npcKey }, i) => {
+      const reaction = reactions[Math.floor(Math.random() * reactions.length)];
+      const delay = 1000 + Math.random() * 1000 + i * 800;
+      this.scene.time.delayedCall(delay, () => {
+        try { this.actions.speak(npcKey, reaction); } catch (_) {}
+      });
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SYSTEM 6 — Time-of-Day Context
+  // ─────────────────────────────────────────────────────────────────────────
+
+  _getTimeOfDay() {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 10)  return 'morning';
+    if (h >= 10 && h < 14) return 'midday';
+    if (h >= 14 && h < 18) return 'afternoon';
+    return 'evening';
+  }
+
+  /**
+   * Work output feed — shows a small rolling HUD in the bottom-left corner
+   * of the screen listing the last 6 things NPCs reported they were working on.
+   * Each entry fades out after 30 seconds so the screen does not fill up.
+   *
+   * Called by the npc_work_output WS message handler.
+   */
+  _addWorkFeedEntry(npcName, phaseEmoji, note, artifactPath) {
+    if (!this.scene?.add) return;
+
+    // Lazy-init feed container
+    if (!this._workFeed) {
+      this._workFeed = [];
+      this._workFeedY = 0;
+    }
+
+    // Build one line: "✓ Alex — Fixed chatter bug  [→ reports/bugs/...]"
+    const artifactTag = artifactPath ? `  [→ ${artifactPath.slice(0, 38)}]` : '';
+    const line = `${phaseEmoji} ${npcName} — ${note.slice(0, 70)}${artifactTag}`;
+
+    // Calculate Y position — stack from bottom of visible area
+    const cam = this.scene.cameras?.main;
+    const baseX = cam ? cam.scrollX + 8 : 8;
+    const baseY = cam ? cam.scrollY + (cam.height || 600) - 20 : 580;
+
+    // Shift all existing entries up
+    this._workFeed.forEach(entry => {
+      if (entry?.text) {
+        try { entry.text.setY(entry.text.y - 14); } catch (_) {}
+      }
+    });
+
+    // Create new entry text
+    try {
+      // Finished tasks get a brighter accent; artifact entries get green tint
+      const textColor = artifactPath ? '#4ade80' : (phaseEmoji === '✓' ? '#e2e8f0' : '#94a3b8');
+      const txt = this.scene.add.text(baseX, baseY, line, {
+        fontSize: '7px',
+        fontFamily: 'monospace',
+        color: textColor,
+        backgroundColor: '#0f172a99',
+        padding: { x: 4, y: 2 },
+        wordWrap: { width: 340 },
+      });
+      txt.setDepth(8500);
+      txt.setScrollFactor(1);  // follow camera
+
+      const entry = { text: txt };
+      this._workFeed.push(entry);
+
+      // Keep only last 6
+      if (this._workFeed.length > 6) {
+        const old = this._workFeed.shift();
+        try { old.text.destroy(); } catch (_) {}
+      }
+
+      // Fade out after 30 seconds
+      this.scene.time.delayedCall(30000, () => {
+        try {
+          this.scene.tweens.add({
+            targets: txt,
+            alpha: 0,
+            duration: 1500,
+            onComplete: () => {
+              try { txt.destroy(); } catch (_) {}
+              this._workFeed = (this._workFeed || []).filter(e => e.text !== txt);
+            },
+          });
+        } catch (_) {}
+      });
+    } catch (_) {}
   }
 
   /**

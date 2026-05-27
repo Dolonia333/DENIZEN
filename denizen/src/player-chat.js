@@ -373,6 +373,13 @@ class PlayerChat {
       },
     });
 
+    // Notify any pending reply-waiters (e.g. Lucy's tour waiting for player response)
+    const resolvers = this.manager?._pendingReplyResolvers;
+    if (Array.isArray(resolvers) && resolvers.length > 0) {
+      const toFire = resolvers.splice(0);
+      toFire.forEach(fn => { try { fn(trimmed); } catch (_) {} });
+    }
+
     // Visible "thinking…" indicator so the user knows the request is
     // in flight, not silently dropped. Replaced by the real response
     // (or by '(no response)' if the 15s timeout fires).
@@ -503,9 +510,20 @@ class PlayerChat {
     // (actions are handled by agent-office-manager._executeNpcActions with a 2s delay)
     const hadActions = this._hasActions;
     this._hasActions = false; // reset for next message
-    if (!hadActions) {
-      this.scene.time.delayedCall(3500, () => {
-        // Re-check: _hasActions may have been set by a late-arriving action dispatch
+
+    // If the NPC's reply ends with a question, they should linger longer —
+    // they're waiting for the player's answer, not rushing back to their desk.
+    const askedQuestion = /\?/.test(safeText);
+    // Linger time: 8s if they asked something, 4s otherwise (gives player time
+    // to see the reply before the NPC walks away)
+    const lingerMs = hadActions ? 0 : (askedQuestion ? 8000 : 4000);
+
+    if (lingerMs > 0) {
+      // Keep the NPC frozen and facing the player during the linger window.
+      // If the player sends another message before the linger expires,
+      // _stopNpcForConversation re-extends the addressedUntil timer —
+      // so there's no need to clear this timer on new input.
+      this.scene.time.delayedCall(lingerMs, () => {
         if (!this._hasActions) {
           this._resumeNpc(npcKey);
         }

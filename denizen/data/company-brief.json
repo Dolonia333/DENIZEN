@@ -1,0 +1,137 @@
+{
+  "company": "Dolonia Data Tech Solutions",
+  "product": "Denizen",
+  "tagline": "Real-time visual AI agent environment",
+  "description": "Denizen is a browser-based pixel-art office simulation where each NPC is a live AI agent running real business tasks — email triage, job applications, security monitoring, and PC control. It makes AI agent workflows visible and debuggable. The target audience is engineering teams who need to observe, test, and demo autonomous AI behavior in a way that is intuitive for non-technical stakeholders.",
+  "ceo": "Zion Van Zandt",
+  "tech_stack": [
+    "Node.js + WebSocket server",
+    "Phaser 3 (browser game engine)",
+    "LM Studio (local LLM inference — Qwen2.5-14B)",
+    "ElevenLabs TTS",
+    "n8n automation",
+    "PostgreSQL + Supabase",
+    "Kali Linux WSL2 (security tools)",
+    "Gmail API"
+  ],
+  "sprint": {
+    "name": "Sprint 4 — Real NPC Task Execution",
+    "goal": "Every NPC knows what Denizen is, understands their role in building it, and is actively working on sprint tasks. No more generic busy-work.",
+    "active_since": "2026-05-27",
+    "ends": "2026-06-10"
+  },
+  "current_focus": [
+    "NPC immersion: idle behaviors, ambient chatter, proximity acknowledgment, mood system, event reactions",
+    "Real task execution: each NPC references specific Denizen features in their work",
+    "Lucy job application pipeline: cover letter generation under 5 seconds",
+    "Bouncer security integration: Kali WSL + Wireshark + Zenmap active on threats",
+    "Work output feed: visible log of what each NPC is producing"
+  ],
+  "role_tasks": {
+    "CTO": [
+      "Review the Sprint 4 architecture for NPC behavior systems — are we overcomplicating it",
+      "Decide whether to open-source Denizen or keep it as a private product demo",
+      "Evaluate adding a Gemini provider alongside LM Studio for NPC brains",
+      "Unblock the dev team on the WebSocket message routing refactor",
+      "Write the technical vision doc for the public demo version of Denizen"
+    ],
+    "Developer": [
+      "Finish the emotional state mood shift system for all 16 NPCs",
+      "Fix the ambient chatter double-speak bug when two NPCs pick each other simultaneously",
+      "Add unit tests for the new proximity acknowledgment cooldown logic",
+      "Review Edward's WebSocket deduplication PR before EOD",
+      "Profile the think loop under 16 concurrent NPCs and document the bottleneck"
+    ],
+    "Frontend Developer": [
+      "Polish the NPC speech bubble rendering — text overflow on long lines",
+      "Implement the work output feed panel in the bottom-left HUD",
+      "Fix the status dot not updating when NPC transitions from meeting to working",
+      "Add smooth camera follow when player walks near the edge of the map",
+      "Clean up the player chat UI so it does not overlap NPC speech bubbles"
+    ],
+    "Backend Developer": [
+      "Fix the WebSocket message deduplication issue causing occasional double-speaks",
+      "Implement the npc_work_output broadcast so clients see real task updates",
+      "Refactor the npc_think handler to use a proper message router pattern",
+      "Build the delegation endpoint so Abby can push tasks to specific developers",
+      "Profile server memory after 2 hours of active NPC think loops"
+    ],
+    "QA Engineer": [
+      "Write regression tests for the new proximity acknowledgment system",
+      "Test ambient chatter cooldowns — verify no two NPCs get stuck in a talk loop",
+      "Run full 16-NPC stress test and document any think loop failures",
+      "Verify mood shifts do not corrupt NPC status indicators",
+      "File bugs from todays test pass with reproduction steps"
+    ],
+    "DevOps Engineer": [
+      "Monitor LM Studio inference queue depth — alert if it exceeds 8 pending requests",
+      "Check server memory after 2 hours of NPC activity — last week it hit 1.8GB",
+      "Add health check endpoint to the agent WebSocket for uptime monitoring",
+      "Make sure ElevenLabs TTS cache directory has a size cap and rotation policy",
+      "Review the Docker Compose config — production deploy is coming up"
+    ],
+    "Researcher": [
+      "Research LLM prompt compression techniques for NPC long-term memory",
+      "Benchmark Qwen2.5-14B vs smaller local models for think loop latency on this hardware",
+      "Write up findings on the theory of mind system — what behavior is it actually producing",
+      "Investigate multi-agent coordination patterns — how do other games do NPC delegation",
+      "Read the emergent behavior section of the latest game AI proceedings and summarize"
+    ],
+    "UI/UX Designer": [
+      "Design the work output feed panel — subtle HUD feel, not a dashboard",
+      "Improve the mood indicator visual — the status dot is too small to read at a glance",
+      "Mockup the delegation flow UX so Zion can see how Abby assigns work to Alex",
+      "Review NPC idle animation frames — stretch and yawn need more personality",
+      "Propose the visual language for the honeypot bait marker on screen"
+    ],
+    "Data Engineer": [
+      "Design the schema for persisting NPC decision logs across server restarts",
+      "Build the LM Studio inference metrics pipeline into Supabase for latency tracking",
+      "Write the query that ranks NPCs by think cycle activity over the last hour",
+      "Document the world-state data model so the team can read it",
+      "Decide whether the event feed should be persisted or stay in-memory only"
+    ],
+    "IT Support": [
+      "Verify the Kali WSL2 distro is healthy and nmap is at a current version",
+      "Check that the ElevenLabs API key has not hit its monthly limit",
+      "Set up log rotation for server.js output so the logs directory does not fill up",
+      "Investigate why LM Studio drops the WebSocket connection after long idle periods",
+      "Make sure all required environment variables are documented in .env.example"
+    ],
+    "Receptionist (also handles CEO email triage as Secretary)": [
+      "Triage the CEO inbox and flag anything that needs same-day attention",
+      "Keep the team calendar updated with Sprint 4 milestone dates",
+      "Prepare a draft job application for any Senior AI Engineer roles that come up",
+      "Make sure Marcus and Sarah have everything they need for their visit",
+      "Follow up on any pending job application drafts from last week"
+    ],
+    "Security Guard": [
+      "Run a baseline nmap scan of localhost — confirm no unexpected open ports after last deploy",
+      "Review the last 24 hours of security events and write a one-paragraph incident summary",
+      "Confirm the honeypot configuration is armed and monitoring correctly",
+      "Brief the CEO on the most recent threat that was caught and handled",
+      "Do a full perimeter patrol — reception, storage room, manager office, back corridor"
+    ],
+    "Intern": [
+      "Help Alex track down the ambient chatter timing bug — two NPCs interrupting each other",
+      "Read through agent-office-manager.js to understand the full NPC lifecycle",
+      "Write JSDoc comments for the new idle behavior methods added in Sprint 4",
+      "Ask Bob to walk through the theory of mind system — it is confusing but important",
+      "Manually test the proximity acknowledgment feature in the browser and take notes"
+    ],
+    "Project Manager": [
+      "Check Sprint 4 milestone progress with each team lead and update the board",
+      "Identify any tasks older than 2 days with no progress and escalate to Abby",
+      "Coordinate the handoff between Edward's backend work and Molly's QA pass",
+      "Make sure Josh has clear requirements for the frontend feed panel task",
+      "Run the afternoon standup and make sure everyone knows what they are finishing today"
+    ],
+    "Product Manager": [
+      "Prioritize the Sprint 5 backlog — what matters most after the immersion work lands",
+      "Review visitor feedback from Marcus and Sarah on the Denizen demo",
+      "Write the spec for the NPC delegation chain feature — Abby assigning to Alex",
+      "Align with Abby on whether the work output feed is a user feature or a debug tool",
+      "Decide if the public demo version needs a simplified NPC roster or can use all 16"
+    ]
+  }
+}

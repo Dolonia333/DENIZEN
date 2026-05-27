@@ -72,6 +72,12 @@ const ERROR_CLASSIFIERS = [
     hint: 'Provider returned an empty completion. May indicate a stuck model — restart LM Studio.' },
   { re: /aborted|cancel/i, category: 'aborted',
     hint: 'Request was cancelled (timeout or shutdown). Usually not actionable.' },
+  { re: /jinja.*template|roles must alternate|conversation roles/i, category: 'role_alternation',
+    hint: 'Chat history has back-to-back user or assistant messages. Mistral/Ministral requires strict alternation. Fixed in npc-brains.js — restart the server.' },
+  { re: /model.*crashed|exit code|has crashed/i, category: 'model_crash',
+    hint: 'LM Studio model crashed (likely OOM). LM Studio will auto-reload. Reduce context length or Parallel setting if this recurs.' },
+  { re: /model reloaded/i, category: 'model_reloaded',
+    hint: 'LM Studio reloaded the model (after a crash or manual reload). Requests during reload return this error and are retried automatically.' },
 ];
 
 function classifyError(message) {
@@ -335,6 +341,96 @@ class LlmTelemetry {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Pricing table — cost per 1M tokens (USD). Update when providers change.
+// ---------------------------------------------------------------------------
+const PRICING = {
+  // provider key → { in: $/M input tokens, out: $/M output tokens }
+  'anthropic':  { in: 0.80,  out: 4.00  },  // claude-haiku-4-5
+  'claude':     { in: 0.80,  out: 4.00  },
+  'google':     { in: 0.075, out: 0.30  },  // gemini-2.5-flash
+  'gemini':     { in: 0.075, out: 0.30  },
+  'xai':        { in: 2.00,  out: 10.00 },  // grok-4 (estimated)
+  'grok':       { in: 2.00,  out: 10.00 },
+  'moonshot':   { in: 0.14,  out: 0.28  },  // kimi-k2
+  'kimi':       { in: 0.14,  out: 0.28  },
+  'openai':     { in: 0.15,  out: 0.60  },  // gpt-4o-mini equivalent
+  'lmstudio':   { in: 0,     out: 0     },  // free — local
+};
+
+/**
+ * Estimate cost in USD from token counts + provider key.
+ * Returns { inputCost, outputCost, totalCost } — all in USD.
+ */
+function estimateCost(provider, tokensIn, tokensOut) {
+  const p = PRICING[String(provider).toLowerCase()] || { in: 0, out: 0 };
+  const inputCost  = ((tokensIn  || 0) / 1_000_000) * p.in;
+  const outputCost = ((tokensOut || 0) / 1_000_000) * p.out;
+  return {
+    inputCost:  +inputCost.toFixed(6),
+    outputCost: +outputCost.toFixed(6),
+    totalCost:  +(inputCost + outputCost).toFixed(6),
+  };
+}
+
+/**
+ * Fetch Moonshot (Kimi) account balance.
+ * Returns { ok, available, voucher, cash, currency } or { ok: false, error }.
+ */
+async function fetchMoonshotBalance(apiKey) {
+  if (!apiKey) return { ok: false, error: 'no API key' };
+  try {
+    const res = await fetch('https://api.moonshot.cn/v1/users/me/balance', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const d = await res.json();
+    const bal = d?.data || d;
+    return {
+      ok: true,
+      available: bal.available_balance ?? bal.total ?? null,
+      voucher:   bal.voucher_balance   ?? null,
+      cash:      bal.cash_balance      ?? null,
+      currency:  bal.currency          ?? 'CNY',
+      raw:       bal,
+    };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err) };
+  }
+}
+
+/**
+ * Build a cost summary from telemetry ring data.
+ * Groups by provider, sums tokens, applies pricing.
+ */
+function buildCostSummary(ring, { windowMs = 24 * 60 * 60 * 1000 } = {}) {
+  const minTs = Date.now() - windowMs;
+  const inWindow = ring.filter(r => Date.parse(r.at) >= minTs && !r.error);
+  const byProvider = {};
+  for (const r of inWindow) {
+    const key = String(r.provider || 'unknown').toLowerCase();
+    if (!byProvider[key]) byProvider[key] = { calls: 0, tokensIn: 0, tokensOut: 0 };
+    byProvider[key].calls++;
+    byProvider[key].tokensIn  += r.tokensIn  || 0;
+    byProvider[key].tokensOut += r.tokensOut || 0;
+  }
+  let totalCost = 0;
+  const providers = {};
+  for (const [key, d] of Object.entries(byProvider)) {
+    const cost = estimateCost(key, d.tokensIn, d.tokensOut);
+    providers[key] = { ...d, ...cost };
+    totalCost += cost.totalCost;
+  }
+  return {
+    windowMs,
+    totalCost: +totalCost.toFixed(6),
+    totalCostFormatted: `$${totalCost.toFixed(4)}`,
+    providers,
+    pricing: PRICING,
+  };
+}
+
 // Singleton — every subsystem records into the same instance.
 const telemetry = new LlmTelemetry();
 
@@ -342,3 +438,7 @@ module.exports = telemetry;
 module.exports.LlmTelemetry = LlmTelemetry;
 module.exports.classifyError = classifyError;
 module.exports._DEFAULT_LOG_FILE = DEFAULT_LOG_FILE;
+module.exports.estimateCost = estimateCost;
+module.exports.fetchMoonshotBalance = fetchMoonshotBalance;
+module.exports.buildCostSummary = buildCostSummary;
+module.exports.PRICING = PRICING;

@@ -1,0 +1,423 @@
+'use strict';
+/**
+ * Desktop Agent — gives Lucy (or any NPC) full PC control.
+ *
+ * Same loop as computer-use-agent but targets the whole desktop instead of
+ * a browser window:
+ *   1. Take a screenshot of the full screen
+ *   2. Send it to the vision model (Ministral 14B by default) with the task
+ *   3. Model decides: click, type, scroll, open app, read clipboard, or done
+ *   4. Execute the action via nut-js (native mouse/keyboard/screen)
+ *   5. Repeat until task_done or max steps
+ *
+ * Trigger via POST /api/desktop-task:
+ *   { instruction, provider? }
+ *
+ * Or tell Lucy: "Open Spotify and play something chill"
+ */
+
+const fs   = require('node:fs');
+const path = require('node:path');
+const http = require('node:http');
+const https = require('node:https');
+
+const DESKTOP_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'desktop_action',
+      description: 'Perform an action on the desktop',
+      parameters: {
+        type: 'object',
+        properties: {
+          action: {
+            type: 'string',
+            enum: ['click', 'right_click', 'double_click', 'type', 'key', 'scroll', 'move', 'screenshot', 'open_app', 'read_clipboard', 'write_clipboard'],
+            description: 'The action to perform',
+          },
+          x: { type: 'number', description: 'X coordinate for mouse actions' },
+          y: { type: 'number', description: 'Y coordinate for mouse actions' },
+          text: { type: 'string', description: 'Text to type or clipboard content' },
+          key: { type: 'string', description: 'Key or key combo to press (e.g. "ctrl+c", "enter", "escape")' },
+          app: { type: 'string', description: 'App name or exe path to open' },
+          direction: { type: 'string', enum: ['up', 'down', 'left', 'right'], description: 'Scroll direction' },
+          amount: { type: 'number', description: 'Scroll amount in lines' },
+        },
+        required: ['action'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'task_done',
+      description: 'Call when the task is fully complete',
+      parameters: { type: 'object', properties: { summary: { type: 'string' } }, required: [] },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'task_blocked',
+      description: 'Call if the task cannot be completed',
+      parameters: { type: 'object', properties: { reason: { type: 'string' } }, required: ['reason'] },
+    },
+  },
+];
+
+// ---------------------------------------------------------------------------
+// nut-js wrapper (lazy-loaded so server starts even if nut-js has issues)
+// ---------------------------------------------------------------------------
+
+let _nut = null;
+function _getNut() {
+  if (!_nut) _nut = require('@nut-tree-fork/nut-js');
+  return _nut;
+}
+
+async function takeScreenshot() {
+  const { screen, FileType } = _getNut();
+  const os = require('node:os');
+  const tmpDir = os.tmpdir();
+  const name = `denizen-screenshot-${Date.now()}`;
+  // capture(name, fileType, directory) — saves PNG, returns file path
+  await screen.capture(name, FileType.PNG, tmpDir);
+  const filePath = path.join(tmpDir, `${name}.png`);
+  const buf = fs.readFileSync(filePath);
+  try { fs.unlinkSync(filePath); } catch (_) {}
+  return buf;
+}
+
+async function executeAction(action) {
+  const { mouse, keyboard, screen, clipboard, Key, Button } = _getNut();
+
+  switch (action.action) {
+    case 'click':
+      await mouse.move([{ x: action.x, y: action.y }]);
+      await mouse.click(Button.LEFT);
+      break;
+
+    case 'right_click':
+      await mouse.move([{ x: action.x, y: action.y }]);
+      await mouse.click(Button.RIGHT);
+      break;
+
+    case 'double_click':
+      await mouse.move([{ x: action.x, y: action.y }]);
+      await mouse.doubleClick(Button.LEFT);
+      break;
+
+    case 'move':
+      await mouse.move([{ x: action.x, y: action.y }]);
+      break;
+
+    case 'type':
+      await keyboard.type(action.text || '');
+      break;
+
+    case 'key': {
+      const combo = String(action.key || '').toLowerCase();
+      // Map common combos to nut-js Key constants
+      const keyMap = {
+        'enter': Key.Return, 'return': Key.Return,
+        'escape': Key.Escape, 'esc': Key.Escape,
+        'tab': Key.Tab,
+        'space': Key.Space,
+        'backspace': Key.Backspace,
+        'delete': Key.Delete,
+        'up': Key.Up, 'down': Key.Down, 'left': Key.Left, 'right': Key.Right,
+        'home': Key.Home, 'end': Key.End,
+        'pageup': Key.PageUp, 'pagedown': Key.PageDown,
+        'f1': Key.F1, 'f2': Key.F2, 'f3': Key.F3, 'f4': Key.F4,
+        'f5': Key.F5, 'f6': Key.F6, 'f7': Key.F7, 'f8': Key.F8,
+      };
+      if (combo.includes('+')) {
+        // Combo like ctrl+c, win+d, alt+tab
+        const parts = combo.split('+');
+        const modKeys = [];
+        let mainKey = null;
+        for (const p of parts) {
+          if (p === 'ctrl' || p === 'control') modKeys.push(Key.LeftControl);
+          else if (p === 'alt') modKeys.push(Key.LeftAlt);
+          else if (p === 'shift') modKeys.push(Key.LeftShift);
+          else if (p === 'win' || p === 'super' || p === 'meta') modKeys.push(Key.LeftSuper);
+          else mainKey = keyMap[p] || Key[p.charAt(0).toUpperCase() + p.slice(1)];
+        }
+        if (mainKey) await keyboard.pressKey(...modKeys, mainKey);
+        else await keyboard.pressKey(...modKeys);
+      } else {
+        const k = keyMap[combo] || Key[combo.charAt(0).toUpperCase() + combo.slice(1)];
+        if (k) await keyboard.pressKey(k);
+      }
+      break;
+    }
+
+    case 'scroll': {
+      if (action.x !== undefined && action.y !== undefined) {
+        await mouse.move([{ x: action.x, y: action.y }]);
+      }
+      const amount = action.amount || 3;
+      const dir = action.direction || 'down';
+      if (dir === 'down') await mouse.scroll(0, -amount);
+      else if (dir === 'up') await mouse.scroll(0, amount);
+      else if (dir === 'right') await mouse.scroll(amount, 0);
+      else if (dir === 'left') await mouse.scroll(-amount, 0);
+      break;
+    }
+
+    case 'open_app': {
+      // Use Windows start command to open apps by name or path
+      const { exec } = require('node:child_process');
+      const app = action.app || '';
+      await new Promise((res) => exec(`start "" "${app}"`, res));
+      await new Promise(r => setTimeout(r, 1500)); // wait for app to open
+      break;
+    }
+
+    case 'read_clipboard': {
+      const text = await clipboard.getContent();
+      return { clipboardText: text };
+    }
+
+    case 'write_clipboard':
+      await clipboard.setContent(action.text || '');
+      break;
+
+    case 'screenshot':
+      // Just take a new screenshot — handled in the loop
+      break;
+  }
+  // Small delay after each action so the screen updates
+  await new Promise(r => setTimeout(r, 300));
+  return {};
+}
+
+// ---------------------------------------------------------------------------
+// LM Studio vision API call (same as computer-use-agent)
+// ---------------------------------------------------------------------------
+
+function _callVisionModel(messages, systemPrompt, { baseUrl, model, apiKey }) {
+  return new Promise((resolve, reject) => {
+    const oaiMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages,
+    ];
+    // No tool_calls — Ministral's chat template can't handle alternating
+    // tool results + user messages. Use plain text JSON output instead.
+    const body = JSON.stringify({
+      model,
+      messages: oaiMessages,
+      max_tokens: 300,
+      temperature: 0.2,
+    });
+
+    const url = new URL('/v1/chat/completions', baseUrl);
+    const isHttp = url.protocol === 'http:';
+    const lib = isHttp ? http : https;
+
+    const req = lib.request({
+      hostname: url.hostname,
+      port: url.port || (isHttp ? 80 : 443),
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'Authorization': `Bearer ${apiKey || 'lm-studio'}`,
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); }
+        catch (e) { reject(new Error('Bad JSON from vision model: ' + data.slice(0, 200))); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(120000, () => { req.destroy(new Error('Vision model timeout')); });
+    req.write(body);
+    req.end();
+  });
+}
+
+function _parseResponse(raw) {
+  if (raw.error) return { error: raw.error?.message || JSON.stringify(raw.error) };
+  const choice = raw.choices?.[0];
+  if (!choice) return { error: 'No choices in response' };
+  const msg = choice.message || {};
+  // Reasoning models put output in reasoning_content — fall back
+  const text = (msg.content || msg.reasoning_content || '').trim();
+
+  // Extract JSON action from text output
+  let action = null;
+  const jsonMatch = text.match(/\{[^{}]*\}/);
+  if (jsonMatch) {
+    try { action = JSON.parse(jsonMatch[0]); } catch (_) {}
+  }
+
+  if (!action) {
+    // No JSON found — model is confused, mark done to avoid infinite loop
+    console.warn('[DesktopAgent] No JSON action found in response:', text.slice(0, 120));
+    return { text, actions: [], done: true };
+  }
+
+  if (action.action === 'done') return { text: action.summary || 'Done', actions: [], done: true };
+  if (action.action === 'blocked') return { text: 'BLOCKED: ' + (action.reason || 'unknown'), actions: [], done: true };
+
+  return { text, actions: [action], done: false, rawMsg: msg };
+}
+
+// ---------------------------------------------------------------------------
+// Main desktop task runner
+// ---------------------------------------------------------------------------
+
+async function runDesktopTask({ instruction, broadcast, provider, apiKey } = {}) {
+  const cfgPath = path.join(process.env.USERPROFILE || process.env.HOME || '', '.openclaw', 'openclaw.json');
+  let cfg = {};
+  try { cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8')); } catch (_) {}
+
+  const lmCfg = {
+    baseUrl: process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234',
+    model: process.env.LM_STUDIO_VISION_MODEL || process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning',
+    apiKey: process.env.LM_STUDIO_API_KEY || cfg?.models?.providers?.lmstudio?.apiKey || 'lm-studio',
+  };
+
+  const systemPrompt = [
+    'You are a desktop automation agent with full control of this Windows PC.',
+    'You can see the screen via screenshots and control the mouse, keyboard, and apps.',
+    'Each turn you must output EXACTLY ONE JSON action on a single line, like:',
+    '{"action":"click","x":100,"y":200}',
+    '{"action":"type","text":"hello"}',
+    '{"action":"key","key":"ctrl+c"}',
+    '{"action":"scroll","x":500,"y":400,"direction":"down","amount":3}',
+    '{"action":"open_app","app":"Wireshark"}',
+    '{"action":"open_app","app":"Zenmap"}',
+    '{"action":"read_clipboard"}',
+    '{"action":"done","summary":"what you accomplished including key findings"}',
+    '{"action":"blocked","reason":"why you cannot proceed"}',
+    'Valid actions: click, right_click, double_click, type, key, scroll, move, open_app, read_clipboard, write_clipboard, done, blocked',
+    'Be precise with pixel coordinates from the screenshot. Output ONLY the JSON, nothing else.',
+    '',
+    'WIRESHARK tips:',
+    '- After opening, double-click the active interface (Ethernet or Wi-Fi — the one with activity bars)',
+    '- To stop capture: click the red square stop button in the toolbar',
+    '- To apply a display filter: click the filter bar at the top, type the filter, press Enter',
+    '- To read packet summary: look at the Packet List pane (top section) for IPs, protocols, info',
+    '- After reading, call done with a summary of suspicious IPs, ports, protocols you saw',
+    '',
+    'ZENMAP tips:',
+    '- Target field is the text box next to "Target:" label at the top',
+    '- Profile dropdown is next to "Profile:" label — select "Quick scan"',
+    '- Scan button is the large button to the right of the profile dropdown',
+    '- Results appear in the "Nmap Output" tab at the bottom — look for open ports and host status',
+    '- After reading results, call done with a summary of hosts found and open ports',
+    '',
+    'Do NOT open banking, private files, or sensitive apps unless explicitly asked.',
+    'If an app is not installed, call blocked immediately rather than searching for it.',
+  ].join('\n');
+
+  const MAX_STEPS = 50; // bumped for Wireshark/Zenmap which need more steps than simple tasks
+  let steps = 0;
+
+  // Check global abort flag — set require('./desktop-agent')._abortAll = true to kill tasks
+  if (_abortFlag) {
+    console.log('[DesktopAgent] Aborted before start (abort flag set)');
+    return { ok: false, steps: 0, error: 'aborted' };
+  }
+  const messages = [];
+
+  const _broadcast = (type, data) => {
+    if (!broadcast) return;
+    try { broadcast({ type, ...data }); } catch (_) {}
+  };
+
+  _broadcast('desktop_task_status', { status: 'starting', message: `Lucy is starting: ${instruction}` });
+
+  try {
+    // Initial screenshot
+    let screenshotBuf = await takeScreenshot();
+    let screenshotB64 = screenshotBuf.toString('base64');
+
+    _broadcast('desktop_task_screenshot', { screenshot: screenshotB64 });
+
+    // First message — task + screenshot
+    messages.push({
+      role: 'user',
+      content: [
+        { type: 'text', text: `Task: ${instruction}\n\nHere is the current state of the screen. What do you do first?` },
+        { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshotB64}` } },
+      ],
+    });
+
+    while (steps < MAX_STEPS && !_abortFlag) {
+      steps++;
+      console.log(`[DesktopAgent] Step ${steps}/${MAX_STEPS}`);
+
+      const raw = await _callVisionModel(messages, systemPrompt, lmCfg);
+      const parsed = _parseResponse(raw);
+
+      if (parsed.error) {
+        console.error('[DesktopAgent] Model error:', parsed.error);
+        _broadcast('desktop_task_status', { status: 'error', message: parsed.error });
+        return { ok: false, steps, error: parsed.error };
+      }
+
+      // Add assistant response to history
+      messages.push({ role: 'assistant', content: parsed.text || '' });
+
+      if (parsed.done) {
+        console.log('[DesktopAgent] Task complete:', parsed.text);
+        _broadcast('desktop_task_status', { status: 'done', message: `Lucy finished: ${instruction}`, steps });
+        return { ok: true, steps };
+      }
+
+      // Execute the action
+      for (const action of parsed.actions) {
+        console.log(`[DesktopAgent] Action: ${action.action}`, action.x !== undefined ? `(${action.x}, ${action.y})` : action.text ? `"${String(action.text).slice(0,30)}"` : '');
+        _broadcast('desktop_task_action', { action: action.action, x: action.x, y: action.y, text: action.text });
+        try {
+          const result = await executeAction(action);
+          if (result?.clipboardText) {
+            _broadcast('desktop_task_action', { action: 'clipboard_read', text: result.clipboardText });
+          }
+        } catch (err) {
+          console.error('[DesktopAgent] Action error:', err?.message);
+        }
+      }
+
+      // Take new screenshot and send as next user message
+      await new Promise(r => setTimeout(r, 600));
+      screenshotBuf = await takeScreenshot();
+      screenshotB64 = screenshotBuf.toString('base64');
+      _broadcast('desktop_task_screenshot', { screenshot: screenshotB64 });
+
+      messages.push({
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Screen updated. What is your next action? Output only JSON.' },
+          { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshotB64}` } },
+        ],
+      });
+
+      // Keep context lean — only last 6 messages + system
+      if (messages.length > 12) messages.splice(0, messages.length - 12);
+    }
+
+    _broadcast('desktop_task_status', { status: 'error', message: 'Max steps reached' });
+    return { ok: false, steps, error: 'Max steps reached' };
+
+  } catch (err) {
+    console.error('[DesktopAgent] Fatal error:', err?.message || err);
+    _broadcast('desktop_task_status', { status: 'error', message: err?.message || String(err) });
+    return { ok: false, steps, error: err?.message || String(err) };
+  }
+}
+
+// Set module.exports._abortAll = true to stop any in-flight task immediately.
+let _abortFlag = false;
+
+module.exports = {
+  runDesktopTask,
+  get _abortAll() { return _abortFlag; },
+  set _abortAll(v) { _abortFlag = !!v; },
+};
