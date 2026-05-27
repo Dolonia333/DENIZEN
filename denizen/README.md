@@ -31,10 +31,14 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [Soul Files (Identity)](#soul-files-identity)
   - [NPC Brains (Runtime)](#npc-brains-runtime)
   - [Autonomous Decision Loop](#autonomous-decision-loop)
+  - [Mood System](#mood-system)
+  - [Directive Inbox](#directive-inbox)
   - [Status Indicators](#status-indicators)
   - [Skill Tracking](#skill-tracking)
   - [Request Queue (GPU Management)](#request-queue-gpu-management)
 - [CTO Agent](#cto-agent)
+- [OpenClaw Skill Bridge](#openclaw-skill-bridge)
+- [Work Output Feed](#work-output-feed)
 - [Meeting System](#meeting-system)
   - [Break Room Behavior](#break-room-behavior)
 - [Security Monitor](#security-monitor)
@@ -42,8 +46,9 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [How Bouncer Investigates Threats](#how-bouncer-investigates-threats)
   - [Threat-to-Command Mapping](#threat-to-command-mapping)
   - [Proactive Patrol](#proactive-patrol)
-  - [API Endpoints](#api-endpoints)
   - [Setup](#setup)
+- [Lucy — Email and Job Pipeline](#lucy--email-and-job-pipeline)
+- [REST API Reference](#rest-api-reference)
 - [Controls](#controls)
   - [OpenClaw Panel](#openclaw-panel)
 - [Procedural Room Generator](#procedural-room-generator)
@@ -85,7 +90,13 @@ Denizen is a visual observability layer that renders AI agent workflows as a liv
 - **Multi-provider AI** — NPCs use Claude, Grok, Gemini, Kimi, or LM Studio (local)
 - **Player interaction** — press `Enter` to talk to NPCs as the CEO; they walk over, respond, and execute tasks
 - **A\* pathfinding** — NPCs navigate around furniture using grid-based pathfinding with stuck detection
+- **Mood system** — NPCs accumulate stress, satisfaction, and focus; mood shifts are injected into every think prompt
+- **Directive inbox** — any NPC (or the player) can assign a direct-order task to another NPC; the NPC prioritizes it over their normal cycle
+- **OpenClaw skill bridge** — NPCs can execute real tools (GitHub, browserclaw, Supabase, job pipeline) via `action: run_skill`; results are injected into the next think cycle
+- **Work output feed** — press `Tab` for a terminal-style HUD panel showing every NPC work output in real time with color-coded roles
 - **Security monitor** — live threat detection dashboard (file access, network scans, injection attempts)
+- **Bouncer investigations** — Bouncer runs real Kali Linux commands (nmap, ss, journalctl, tshark) against detected threats; produces structured markdown reports; escalates to Dan if serious
+- **Lucy job pipeline** — Lucy can run a full 7-step job search → apply pipeline via OpenClaw skills; handles email auto-send with escalation keyword gating
 - **Meeting system** — call meetings, NPCs walk to the conference room, sit in chairs, discuss, and return to work
 - **Procedural room generator** — algorithmically builds rooms from the furniture catalog with 6 archetypes
 - **OpenClaw integration** — connect to the OpenClaw gateway for full AI agent workflows
@@ -267,7 +278,9 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | `src/npc-tools.js` | Safe read-only system tools for NPCs — disk usage, memory, CPU load, uptime, process list |
 | `src/desktop-agent.js` | Vision-based desktop automation via nut-js — screenshot → LM decision → mouse/keyboard; includes abort flag to kill in-flight tasks |
 | `src/computer-use-agent.js` | Computer-use integration for NPC desktop interactions |
-| `src/job-application.js` | Job application workflow — NPC-driven resume/cover letter automation |
+| `src/job-application.js` | Lucy's job pipeline — 7-step scrape→filter→resume→cover→apply→log chain |
+| `src/work-feed.js` | Work output feed HUD — `WorkFeedPanel` class, Tab toggle, per-NPC color coding, 100-entry history |
+| `src/email-handler.js` | Inbound email processor — escalation detection, auto-send gating, email queue |
 | `src/demo-scene.js` | Investor demo cutscene (20-second scripted sequence) |
 | `src/pathfinding.js` | A* pathfinding for NPC movement |
 | `src/robber-controller.js` | Optional robber NPC visualization |
@@ -298,13 +311,17 @@ NPCs generate real work artifacts as markdown files in the `reports/` directory:
 
 ```
 reports/
-  bugs/           # Bug reports filed by Molly (QA)
+  bugs/           # Bug reports filed by Molly or Jenny (QA)
   code-reviews/   # Code review notes from Alex, Jenny, Edward
   it-reports/     # IT support tickets and resolutions from Dan
   pm-reports/     # Project management updates from Marcus
+  product/        # Product specs and decisions from Sarah
+  security/       # Bouncer investigation reports — threat, findings, verdict, recommended actions
 ```
 
 Each file is named `<npc>_<summary>_<date>.md` and contains the NPC's actual output. These are committed to git so you have a real history of what the AI agents produced.
+
+Security reports include: metadata header (severity, source IP, category), per-step findings with labeled code blocks, threat intel (whois), pattern-based assessment, and a final verdict (`THREAT CONFIRMED` / `LIKELY FALSE POSITIVE` / `INCONCLUSIVE`).
 
 ### Agent-NPC Mapping
 
@@ -431,14 +448,18 @@ Each NPC has an individual AI brain managed by `src/npc-brains.js`:
 
 ### Autonomous Decision Loop
 
-Every 45-75 seconds, each NPC runs a **think cycle** — calling LM Studio to decide their next action. The AI receives contextual information about the NPC's current state and returns a JSON decision:
+Every 45-75 seconds, each NPC runs a **think cycle** — calling the LLM to decide their next action. The AI receives the NPC's soul, live company context, mood state, any active directive, pending skill results, and spatial context (who is nearby, what time of day it is). It returns a JSON decision:
 
 ```json
 {
-  "thought": "I've been coding for a while, Alex mentioned he needs help with the API",
+  "reasoning": "Alex asked me about the API endpoint issue earlier. I should check in.",
+  "plan": "Walk over, ask for status, see if I can unblock him.",
+  "thought": "I've been coding for a while — time to check on Alex",
   "action": "talk",
   "target": "Alex",
-  "message": "Hey Alex, need a hand with that API issue?"
+  "message": "Hey Alex, need a hand with that API issue?",
+  "taskPhase": "in_progress",
+  "save": "Checked in with Alex about API endpoint blocker"
 }
 ```
 
@@ -452,8 +473,47 @@ Every 45-75 seconds, each NPC runs a **think cycle** — calling LM Studio to de
 | `collaborate` | Walk to target NPC's desk, work together |
 | `report` | Walk to manager, deliver status update |
 | `check` | Check on a team member's progress |
+| `delegate` | Assign a task to another NPC via the directive inbox |
+| `run_skill` | Execute a real OpenClaw skill (GitHub, browserclaw, Supabase, etc.) |
 
-**Contextual nudges** prevent repetitive behavior — if an NPC has been working for 3+ cycles, the prompt suggests taking a break or talking to someone. Nearby NPCs and recent memories are included so decisions reference real context.
+When `taskPhase === 'finished'` the NPC writes a markdown artifact to `reports/<category>/`. When `action === 'run_skill'` the server routes the request to the skill bridge and injects the result into the NPC's next think cycle.
+
+**Contextual nudges** prevent repetitive behavior — if an NPC has been working for 3+ cycles, the prompt suggests taking a break or talking to someone. Nearby NPCs, recent memories, mood state, and any active directives are all included so decisions reference real context.
+
+### Mood System
+
+Every NPC carries a live mood state that is injected into their think prompt on every cycle. Mood affects tone, decision-making, and what actions the NPC chooses.
+
+**Mood axes:**
+
+| Axis | Range | What shifts it |
+|------|-------|----------------|
+| `stress` | 0–100 | Consecutive work cycles, blocked tasks, urgent directives |
+| `satisfaction` | 0–100 | Finished tasks, positive player interactions, `taskPhase: 'finished'` |
+| `focus` | 0–100 | Time at desk, uninterrupted work cycles |
+
+Mood is updated after every decision via `_updateMood()` in `npc-brains.js`. The player talking to an NPC (`player_chat`) boosts satisfaction. An NPC that finishes a directive auto-reports back and gains satisfaction. High stress causes more `break` decisions; high focus causes more `work` decisions.
+
+External systems can also set mood with `npcBrains.setMoodFromExternal(npcName, event)`.
+
+### Directive Inbox
+
+Any NPC (or the REST API) can assign a **direct-order task** to another NPC. The directive is injected as a prominent `DIRECT ORDER` block at the top of the target NPC's system prompt — above their soul, above company context — so it dominates their next decision.
+
+**How it works:**
+
+1. A CTO/manager NPC returns `action: "delegate"` with a target and message
+2. `agent-office-manager.js` broadcasts `npc_assign_directive` to the server
+3. `npcBrains.assignDirective(targetNpc, fromNpc, task, urgent)` stores the directive
+4. Next time the target NPC thinks, the directive block is the first thing the LLM sees
+5. When the NPC returns `taskPhase: 'finished'`, the directive is cleared and the NPC automatically walks to the assigner to report back
+
+**Via REST:**
+```bash
+curl -X POST http://localhost:8080/api/assign-directive \
+  -H 'Content-Type: application/json' \
+  -d '{"to":"Alex","from":"Abby","task":"Fix the WebSocket dedup bug","urgent":true}'
+```
 
 ### Status Indicators
 
@@ -521,6 +581,69 @@ Instead of rotating through scripted scenarios, the CTO uses a **state-reactive 
 - **Maintains conversation history** — up to 20 messages for context
 - **Falls back gracefully** — if LM Studio is down, runs demo behaviors after 5+ errors
 
+## OpenClaw Skill Bridge
+
+NPCs can execute real tools during their think cycle using `action: run_skill`. The skill bridge in `server.js` routes the request to the correct OpenClaw CLI script and injects the result into the NPC's next think cycle via `npcBrains.injectSkillResult()`.
+
+**How it works:**
+
+```
+NPC think() → action: run_skill, skill: "github", skillParams: {...}
+  → server.js: runNpcSkill(npcName, skill, skillParams)
+  → routes: github → `gh` CLI | others → `node skills/<name>/<name>.mjs`
+  → result injected into NPC's next system prompt as "## Skill Result"
+  → NPC reads result and decides next action based on real output
+```
+
+**Skill registry:**
+
+| Skill | What it does | Who uses it |
+|-------|-------------|-------------|
+| `github` | Create issues, PRs, check CI via `gh` CLI | Alex, Jenny, Abby |
+| `browserclaw` | Automated browser for research and investigation | Bob, Dan, Abby |
+| `coding-agent` | Run Claude Code / Codex on real files | Abby |
+| `supabase-bridge` | Query, insert, and migrate Supabase | Pier, Abby, Dan |
+| `job-scraper` | Scrape job listings from LinkedIn/Indeed | Lucy |
+| `job-applier` | Auto-fill and submit job applications | Lucy |
+| `resume-generator` | Tailor resumes to job descriptions | Lucy |
+| `lm-studio` | Manage local models, fix context overflow | Dan, Abby |
+| `canvas-render` | Render HTML to screenshot | Abby |
+| `pdf-generator` | Generate PDF documents | Lucy, Abby |
+
+**WS events broadcast when a skill runs:**
+
+| Event | When |
+|-------|------|
+| `npc_skill_start` | Skill execution begins — NPC sits at desk |
+| `npc_skill_result` | Skill completed — result shown in player chat log |
+
+**Via REST (trigger manually):**
+```bash
+# Trigger from outside the game
+curl -X POST http://localhost:8080/api/assign-directive \
+  -H 'Content-Type: application/json' \
+  -d '{"to":"Bob","from":"Abby","task":"Research LangSmith observability features","urgent":false}'
+# Bob will decide to run_skill: browserclaw on his next think cycle
+```
+
+---
+
+## Work Output Feed
+
+Press **`Tab`** to toggle a terminal-style HUD panel in the bottom-left of the screen. Every time an NPC produces work output (`npc_work_output` WS event), an entry appears in real time.
+
+**Features:**
+
+- Per-NPC color coding (each role has a distinct color)
+- Emoji + bold NPC name + activity note + 📄 artifact icon when a report was filed
+- Relative timestamps ("2s ago", "1m ago")
+- 100-entry in-memory history — last 20 shown when panel opens
+- Slide-in animation, Tab to toggle, empty state message when no activity yet
+
+**Implementation:** `src/work-feed.js` exports `WorkFeedPanel` as a global. `office-scene.js` instantiates it after `AgentOfficeManager.init()`. The `npc_work_output` WS handler in `agent-office-manager.js` calls `scene._workFeed.addEntry(data)` alongside the existing Phaser canvas feed.
+
+---
+
 ## Meeting System
 
 NPCs use the **conference room** for group discussions and smaller desk areas for 1-on-1s:
@@ -584,19 +707,27 @@ Bouncer is more than an NPC — he's a real security investigator. When the secu
 
 ### Proactive Patrol
 
-Bouncer also runs scheduled perimeter checks via `perimeterPatrol()`:
-- Baseline `nmap -sV` scan of Denizen's known service ports
+Bouncer runs scheduled perimeter checks via `perimeterPatrol()`:
+- Baseline `nmap -sV` scan of Denizen's known service ports — diffs against `data/bouncer-baseline.json` to detect new or closed ports
 - Port probe of the WebSocket server (8080) and LM Studio (1234)
 - Auth log check for recent failures
 - Active connection overview
+- Results saved as new baseline for the next patrol
 
-### API Endpoints
+### Structured Reports + Escalation
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `POST /api/bouncer-linux` | JSON `{ category, source }` | Trigger Bouncer investigation from HTTP |
-| `POST /api/bouncer-scan` | — | Run `perimeterPatrol()` and return findings |
-| `POST /api/desktop-abort` | — | Kill any in-flight `desktopAgent` task |
+After every investigation, `buildReport()` generates a full markdown file in `reports/security/`:
+
+```
+reports/security/<bouncer>_<threat-category>_<date>.md
+```
+
+Each report contains: metadata (severity, source IP, date), per-step findings with labeled code blocks and timing, threat intel (whois), pattern-based assessment, and a final verdict:
+- `THREAT CONFIRMED` — brute force, open unexpected ports, high connection counts detected
+- `LIKELY FALSE POSITIVE` — nothing anomalous found
+- `INCONCLUSIVE` — partial data collected
+
+When `investigationIsSerious()` returns true, Bouncer broadcasts `npc_assign_directive` to **Dan** (IT Support) with `urgent: true` — Dan receives the directive and takes network-level action.
 
 ### Setup
 
@@ -605,6 +736,61 @@ Bouncer also runs scheduled perimeter checks via `perimeterPatrol()`:
 3. Set the distro name in `.env` if you're using a different WSL distro: `WSL_DISTRO=kali-linux`
 
 > **No Kali? No problem.** If WSL is not installed or Kali isn't available, Bouncer's commands fail silently and he reports back with whatever partial data he collected. The office keeps running.
+
+---
+
+## Lucy — Email and Job Pipeline
+
+Lucy handles two real-world workflows on behalf of the CEO.
+
+### Email Auto-Send
+
+Inbound emails arrive via `POST /api/email-inbound` (from an n8n Gmail watcher). Lucy's brain composes a reply in her warm receptionist voice.
+
+**Auto-send gating:**
+- `EMAIL_AUTOSEND=true` in `.env` + `email_canAutoSend: true` in Lucy's SOUL + no escalation keyword → email is **sent automatically**
+- Any escalation keyword match → draft only, Lucy notifies the CEO in-game
+
+**Escalation keywords** (always force draft-only, regardless of env vars):
+`contract`, `nda`, `payment`, `legal`, `invoice`, `lawsuit`, `settlement`, `confidential`, `attorney`, `urgent: ceo only`
+
+### Job Pipeline
+
+Lucy can run a full automated job search and application cycle:
+
+```
+POST /api/lucy-job-pipeline
+Body: { query, site, pages, remoteOnly, minSalary }
+```
+
+**7-step pipeline:**
+1. `job-scraper.mjs` — scrape listings from LinkedIn/Indeed
+2. Filter — role keyword match, salary floor, remote-only flag
+3. `resume-generator.mjs` — tailor resume per listing
+4. Cover letter — fast template (no LLM call, <1s per letter)
+5. `job-applier.mjs` — dry-run apply (or live if configured)
+6. Log — append to `data/job-application-log.json`
+7. Return summary — "Applied to N roles on linkedin. M more queued for manual review."
+
+When Lucy's NPC brain returns `action: run_skill, skill: job-scraper`, the server short-circuits to `runJobPipeline()` and injects the summary into her next think cycle.
+
+---
+
+## REST API Reference
+
+| Endpoint | Method | Body | Purpose |
+|----------|--------|------|---------|
+| `POST /api/assign-directive` | JSON | `{ to, from, task, urgent }` | Assign a direct-order task to any NPC |
+| `POST /api/lucy-job-pipeline` | JSON | `{ query, site, pages, remoteOnly, minSalary }` | Trigger Lucy's full job search + apply pipeline |
+| `POST /api/bouncer-linux` | JSON | `{ category, source }` | Trigger Bouncer investigation |
+| `POST /api/bouncer-scan` | — | — | Run `perimeterPatrol()` and return findings |
+| `POST /api/desktop-abort` | — | — | Kill any in-flight `desktopAgent` task |
+| `POST /api/email-inbound` | JSON | email payload | Deliver inbound email to Lucy |
+| `GET /api/generate-city` | — | `?seed&width&height&roadStride` | Generate a city layout (headless) |
+| `POST /api/llm-city-plan` | JSON | `{ prompt, gridW, gridH, provider }` | LLM-driven city zoning |
+| `GET /security-test` | — | `?type&severity&detail` | Inject a synthetic security threat |
+
+---
 
 ## Controls
 
@@ -616,6 +802,7 @@ Bouncer also runs scheduled perimeter checks via `perimeterPatrol()`:
 | `D` / `Arrow Right` | Move right |
 | `Enter` | Open chat — talk to NPCs (say their name or face them) |
 | `Esc` | Close chat panel |
+| `Tab` | Toggle Work Output Feed panel (real-time NPC activity log) |
 | `F` | Sit in nearby chair |
 | `E` | Toggle furniture editor mode |
 | `C` | Toggle OpenClaw chat panel |
