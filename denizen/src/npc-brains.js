@@ -990,8 +990,32 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       liveInfraContext = await npcTools.getLiveInfraContext(brain.role);
     }
 
+    // OpenClaw skills context — injected for roles that can actually use them.
+    // Lucy uses job pipeline skills, Bouncer uses security tools, CTO/IT use
+    // the broader skill set for delegation. Kept brief — just enough to inform
+    // decisions, not a full API reference.
+    const OPENCLAW_SKILL_ROLES = new Set([
+      'CTO', 'Receptionist (also handles CEO email triage as Secretary)',
+      'Security Guard', 'IT Support', 'DevOps Engineer',
+    ]);
+    let openClawContext = null;
+    if (OPENCLAW_SKILL_ROLES.has(brain.role)) {
+      const skillsByRole = {
+        'CTO': 'browserclaw (web automation), coding-agent (Claude Code/Codex), github (PRs/issues/CI), supabase-bridge (database), canvas-render (HTML→screenshot), pdf-generator, lm-studio (model management)',
+        'Receptionist (also handles CEO email triage as Secretary)': 'job-scraper (find job listings on LinkedIn/Indeed), job-applier (auto-fill and submit applications), resume-generator (tailor resumes to job descriptions), pdf-generator (generate PDFs), session-health (check job board login status)',
+        'Security Guard': 'browserclaw (investigate suspicious URLs), visionclaw (screen/image analysis). Primary tools are in Kali Linux via linux-agent: nmap, ss, netstat, journalctl, whois, tcpdump',
+        'IT Support': 'lm-studio (manage models, fix context overflow), supabase-bridge (check database health), browserclaw (look up docs/fixes)',
+        'DevOps Engineer': 'supabase-bridge (query metrics), github (check CI status), lm-studio (monitor inference queue)',
+      };
+      const skillLine = skillsByRole[brain.role] || '';
+      if (skillLine) {
+        openClawContext = `OpenClaw gateway (localhost:18789) is live. Skills you can reference or request:\n${skillLine}\nWhen you delegate real work to OpenClaw, mention the skill name in your message.`;
+      }
+    }
+
     const systemPrompt = brain.personality + '\n\n' +
       (companyContext ? '## Company & Sprint Context\n' + companyContext + '\n\n' : '') +
+      (openClawContext ? '## OpenClaw Skills Available\n' + openClawContext + '\n\n' : '') +
       (codeContext ? '## Codebase Snippet (from your work area)\n' + codeContext + '\n\n' : '') +
       (liveInfraContext ? '## Live System Status\n' + liveInfraContext + '\n\n' : '') +
       '## Hierarchy Rules\n' + hierarchyRules + '\n\n' +
