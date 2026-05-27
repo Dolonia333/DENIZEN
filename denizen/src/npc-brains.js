@@ -1000,6 +1000,7 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
     const OPENCLAW_SKILL_ROLES = new Set([
       'CTO', 'Receptionist (also handles CEO email triage as Secretary)',
       'Security Guard', 'IT Support', 'DevOps Engineer',
+      'Developer', 'Researcher', 'Data Engineer',
     ]);
     let openClawContext = null;
     if (OPENCLAW_SKILL_ROLES.has(brain.role)) {
@@ -1009,6 +1010,9 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
         'Security Guard': 'browserclaw (investigate suspicious URLs), visionclaw (screen/image analysis). Primary tools are in Kali Linux via linux-agent: nmap, ss, netstat, journalctl, whois, tcpdump',
         'IT Support': 'lm-studio (manage models, fix context overflow), supabase-bridge (check database health), browserclaw (look up docs/fixes)',
         'DevOps Engineer': 'supabase-bridge (query metrics), github (check CI status), lm-studio (monitor inference queue)',
+        'Developer': 'github (create issues, open PRs, check CI status, list/close issues via gh CLI)',
+        'Researcher': 'browserclaw (automated browser for reading docs, papers, and web research)',
+        'Data Engineer': 'supabase-bridge (query/insert data, run migrations, inspect schemas)',
       };
       const skillLine = skillsByRole[brain.role] || '';
       if (skillLine) {
