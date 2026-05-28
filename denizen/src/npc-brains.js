@@ -1031,6 +1031,26 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       }
     }
 
+    // PC Access — every NPC should understand when the CEO asks them to use the PC.
+    // This block is appended to the system prompt for every NPC, regardless of role.
+    // It interprets phrases like "use my pc", "on my computer", "do it on my desktop"
+    // and explains the two execution modes available.
+    const pcAccessContext = `## PC Access (How to Use the CEO's Computer)
+When the CEO says any of these phrases — "use my pc", "use my computer", "on my desktop", "on my screen", "open X on my computer", "run this on my pc", "do it on my machine", "in the background" — they are giving you permission to drive the CEO's actual computer to perform a task. You can do this via:
+
+- **desktop-agent** — vision + mouse/keyboard automation (open apps, click buttons, type, scroll). Best for GUI tasks.
+- **computer-use-agent** — same idea, smarter for multi-step workflows.
+- **coding-agent** — for code changes in this repository (isolated worktree + diff proposal).
+- **browserclaw** — for anything that lives in a web browser.
+
+You have two execution modes:
+- **background** (default): the work runs off-screen. The CEO can keep doing other things; you report when done.
+- **visible** ("on my screen", "let me watch"): the cursor moves on the CEO's screen so they can see what you're doing.
+
+When the CEO's intent is a PC task, respond with: \`action: "run_skill"\`, \`skill: "desktop-agent"\` (or whichever fits), and include \`skillParams: { task: "<plain-english description>", mode: "background" | "visible" }\`. If the CEO didn't specify a mode, infer from context — "do this" or "in the background" → background; "show me", "on my screen", "let me watch" → visible.
+
+If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly ask: "Want me to do this on your PC, or just walk you through it?" Don't assume.`;
+
     // Pending skill result — inject once, then clear
     const skillResult = this._pendingSkillResults.get(npcName);
     if (skillResult) {
@@ -1089,6 +1109,7 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       (moodBlock ? moodBlock : '') +
       (companyContext ? '## Company & Sprint Context\n' + companyContext + '\n\n' : '') +
       (openClawContext ? '## OpenClaw Skills Available\n' + openClawContext + '\n\n' : '') +
+      (pcAccessContext ? pcAccessContext + '\n\n' : '') +
       (codeContext ? '## Codebase Snippet (from your work area)\n' + codeContext + '\n\n' : '') +
       (liveInfraContext ? '## Live System Status\n' + liveInfraContext + '\n\n' : '') +
       '## Hierarchy Rules\n' + hierarchyRules + '\n\n' +
@@ -2261,8 +2282,28 @@ ${roleActions}
 - Reference your current work, past conversations, and team status when relevant.
 - Respond in character as ${npcName}. Dialogue text first, then tags at the end.`;
 
-    // Add to memory
-    this.memories[npcName].push({ from: 'CEO', text: this._sanitize(safeMessage) });
+    // PC-use intent detection — annotate the message so the NPC knows
+    // explicitly that the CEO is asking for a real PC task (not just chat).
+    // The NPC's system prompt has a ## PC Access block explaining how to respond.
+    const PC_USE_PATTERNS = [
+      /\buse\s+my\s+(pc|computer|machine|desktop|laptop)\b/i,
+      /\bon\s+my\s+(pc|computer|screen|desktop|machine)\b/i,
+      /\b(open|launch|click|type|run|do\s+(it|this))\s+on\s+my\b/i,
+      /\bin\s+the\s+background\b/i,
+      /\blet\s+me\s+watch\b/i,
+      /\bshow\s+me\s+(while\s+you|as\s+you)\b/i,
+    ];
+    const matchedPattern = PC_USE_PATTERNS.find(re => re.test(safeMessage));
+    let intentAnnotation = '';
+    if (matchedPattern) {
+      // Infer mode: explicit "in the background" → background; "show me", "let me watch", "on my screen" → visible; otherwise background.
+      const wantsVisible = /\b(show\s+me|let\s+me\s+watch|on\s+my\s+screen|as\s+you)\b/i.test(safeMessage);
+      const mode = wantsVisible ? 'visible' : 'background';
+      intentAnnotation = ` [INTENT:pc_use:mode=${mode}]`;
+    }
+
+    // Add to memory (with intent tag if PC-use detected)
+    this.memories[npcName].push({ from: 'CEO', text: this._sanitize(safeMessage) + intentAnnotation });
     if (this.memories[npcName].length > 50) {
       this.memories[npcName] = this.memories[npcName].slice(-50);
     }
