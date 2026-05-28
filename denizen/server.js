@@ -24,6 +24,8 @@ const linuxAgent = require('./src/linux-agent');
 const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
+const taskChain        = require('./src/task-chain');
+const conflictDetector = require('./src/conflict-detector');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
 // edit data/voice-map.json + restart to change. Missing file → empty map
@@ -155,6 +157,13 @@ securityMonitor.start();
 const npcBrains = new NpcBrainManager();
 const cofounderAgent = new CofounderAgent();
 cofounderAgent.npcBrains = npcBrains; // Give the director access to individual NPC brains
+
+// Wire broadcast into npc-brains so task-chain advancement can send WS events
+npcBrains.setBroadcast((msg) =>
+  (agentWss ? agentWss.clients : new Set()).forEach(c => {
+    if (c.readyState === 1) c.send(typeof msg === 'string' ? msg : JSON.stringify(msg));
+  })
+);
 
 // --- OpenClaw Skill Bridge ---
 const OPENCLAW_ROOT = 'C:/Users/zionv/OneDrive/Desktop/multbot/openclaw';
@@ -1686,6 +1695,54 @@ const server = http.createServer((req, res) => {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: err.message }));
     });
+    return;
+  }
+
+  // --- POST /api/task-chains — start a multi-step NPC task chain ---
+  // Body: { name, triggeredBy, steps: [{ npc, task, artifactCategory }] }
+  if (urlPath === '/api/task-chains' && req.method === 'POST') {
+    _readJsonBody(req).then(payload => {
+      if (!payload.steps || !Array.isArray(payload.steps) || payload.steps.length === 0) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'steps array is required' }));
+        return;
+      }
+      const broadcastFn = (msg) =>
+        (agentWss ? agentWss.clients : new Set()).forEach(c => {
+          if (c.readyState === 1) c.send(JSON.stringify(msg));
+        });
+      const chain = taskChain.startChain(
+        payload,
+        (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
+        broadcastFn
+      );
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, chainId: chain.id, name: chain.name, steps: chain.steps.length }));
+    }).catch(err => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    });
+    return;
+  }
+
+  // --- GET /api/task-chains — list active chains and their status ---
+  if (urlPath === '/api/task-chains' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ chains: taskChain.getActiveChains() }));
+    return;
+  }
+
+  // --- GET /api/task-chains/:id — get a specific chain's status ---
+  const chainStatusMatch = urlPath.match(/^\/api\/task-chains\/([^/]+)$/);
+  if (chainStatusMatch && req.method === 'GET') {
+    const chain = taskChain.getChainStatus(chainStatusMatch[1]);
+    if (!chain) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'chain not found' }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ chain }));
     return;
   }
 
