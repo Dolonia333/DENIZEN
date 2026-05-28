@@ -38,6 +38,9 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [Request Queue (GPU Management)](#request-queue-gpu-management)
 - [CTO Agent](#cto-agent)
 - [OpenClaw Skill Bridge](#openclaw-skill-bridge)
+- [NPC Coding-Task-Runner](#npc-coding-task-runner)
+- [Task Chains](#task-chains)
+- [Conflict Detection & Arbitration](#conflict-detection--arbitration)
 - [Work Output Feed](#work-output-feed)
 - [Meeting System](#meeting-system)
   - [Break Room Behavior](#break-room-behavior)
@@ -93,6 +96,9 @@ Denizen is a visual observability layer that renders AI agent workflows as a liv
 - **Mood system** — NPCs accumulate stress, satisfaction, and focus; mood shifts are injected into every think prompt
 - **Directive inbox** — any NPC (or the player) can assign a direct-order task to another NPC; the NPC prioritizes it over their normal cycle
 - **OpenClaw skill bridge** — NPCs can execute real tools (GitHub, browserclaw, Supabase, job pipeline) via `action: run_skill`; results are injected into the next think cycle
+- **NPCs run Claude Code** — `skill: coding-agent` spawns Claude Code in an isolated git worktree to modify real files; diffs are written to `reports/code-reviews/` for human approval before merge
+- **Task chains** — `POST /api/task-chains` orchestrates multi-step NPC workflows (spec→design→code→review→QA); each step auto-assigns the next directive when its NPC finishes, with all prior artifacts as context
+- **NPC disagreement & arbitration** — when two NPCs produce conflicting outcomes about the same topic, both positions get injected into Abby's next think prompt — she makes the call
 - **Work output feed** — press `Tab` for a terminal-style HUD panel showing every NPC work output in real time with color-coded roles
 - **Security monitor** — live threat detection dashboard (file access, network scans, injection attempts)
 - **Bouncer investigations** — Bouncer runs real Kali Linux commands (nmap, ss, journalctl, tshark) against detected threats; produces structured markdown reports; escalates to Dan if serious
@@ -281,6 +287,9 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 | `src/job-application.js` | Lucy's job pipeline — 7-step scrape→filter→resume→cover→apply→log chain |
 | `src/work-feed.js` | Work output feed HUD — `WorkFeedPanel` class, Tab toggle, per-NPC color coding, 100-entry history |
 | `src/email-handler.js` | Inbound email processor — escalation detection, auto-send gating, email queue |
+| `src/coding-task-runner.js` | NPC coding-agent runner — git worktree isolation, `npx @anthropic-ai/claude-code --print` execution, diff capture, proposal storage, approve/reject lifecycle |
+| `src/task-chain.js` | `TaskChainRunner` — multi-step NPC directive chains, auto-advances on `taskPhase: finished`, artifact handoff between steps |
+| `src/conflict-detector.js` | `ConflictDetector` — rolling artifact log, similarity heuristic, queues conflicts for Abby arbitration |
 | `src/demo-scene.js` | Investor demo cutscene (20-second scripted sequence) |
 | `src/pathfinding.js` | A* pathfinding for NPC movement |
 | `src/robber-controller.js` | Optional robber NPC visualization |
@@ -474,9 +483,9 @@ Every 45-75 seconds, each NPC runs a **think cycle** — calling the LLM to deci
 | `report` | Walk to manager, deliver status update |
 | `check` | Check on a team member's progress |
 | `delegate` | Assign a task to another NPC via the directive inbox |
-| `run_skill` | Execute a real OpenClaw skill (GitHub, browserclaw, Supabase, etc.) |
+| `run_skill` | Execute a real OpenClaw skill (GitHub, browserclaw, Supabase, `coding-agent`, etc.) |
 
-When `taskPhase === 'finished'` the NPC writes a markdown artifact to `reports/<category>/`. When `action === 'run_skill'` the server routes the request to the skill bridge and injects the result into the NPC's next think cycle.
+When `taskPhase === 'finished'` the NPC writes a markdown artifact to `reports/<category>/` — if the NPC is currently a step in a task chain, the chain advances automatically and the next NPC is assigned. When `action === 'run_skill'` the server routes the request to the skill bridge and injects the result into the NPC's next think cycle. When `skill === 'coding-agent'`, the request is handled by the coding-task-runner: Claude Code runs in an isolated git worktree and a diff proposal is written to `reports/code-reviews/` for human approval.
 
 **Contextual nudges** prevent repetitive behavior — if an NPC has been working for 3+ cycles, the prompt suggests taking a break or talking to someone. Nearby NPCs, recent memories, mood state, and any active directives are all included so decisions reference real context.
 
@@ -601,7 +610,7 @@ NPC think() → action: run_skill, skill: "github", skillParams: {...}
 |-------|-------------|-------------|
 | `github` | Create issues, PRs, check CI via `gh` CLI | Alex, Jenny, Abby |
 | `browserclaw` | Automated browser for research and investigation | Bob, Dan, Abby |
-| `coding-agent` | Run Claude Code / Codex on real files | Abby |
+| `coding-agent` | Run Claude Code on real files in an isolated worktree → proposal in `reports/code-reviews/` (see [NPC Coding-Task-Runner](#npc-coding-task-runner)) | Alex, Edward, Josh, Jenny, Abby |
 | `supabase-bridge` | Query, insert, and migrate Supabase | Pier, Abby, Dan |
 | `job-scraper` | Scrape job listings from LinkedIn/Indeed | Lucy |
 | `job-applier` | Auto-fill and submit job applications | Lucy |
@@ -625,6 +634,133 @@ curl -X POST http://localhost:8080/api/assign-directive \
   -d '{"to":"Bob","from":"Abby","task":"Research LangSmith observability features","urgent":false}'
 # Bob will decide to run_skill: browserclaw on his next think cycle
 ```
+
+---
+
+## NPC Coding-Task-Runner
+
+NPCs can request real code changes to the codebase. When an NPC returns `action: run_skill, skill: coding-agent`, the server runs Claude Code in an isolated git worktree, captures the diff, and writes a code-review proposal that requires human approval before merge.
+
+**Flow:**
+
+```
+NPC think() → action: run_skill, skill: coding-agent, skillParams: { task, targetFiles }
+  → server.js routes to codingTaskRunner.runCodingTask()
+  → guard check: reject if targetFiles touch npcs/ .claude/ user-profile.json company-brief.json
+  → git worktree add .npc-worktrees/<npc>-<ts> -b npc-coding-<npc>-<ts>
+  → npx @anthropic-ai/claude-code --print "<task>" (cwd = worktree)
+  → git diff HEAD captured
+  → reports/code-reviews/<npc>_<task-slug>_<date>.md written with diff
+  → npc_code_proposal WS event broadcast
+  → proposal sits pending_review until you approve or reject
+```
+
+**Guardrails:**
+
+- Forbidden files: `npcs/`, `.claude/`, `data/user-profile.json`, `data/company-brief.json` (NPCs cannot modify their own soul/memory or system settings)
+- Max 5 files per task
+- Max 1 pending proposal per NPC at a time
+- Worktrees auto-cleaned on approve/reject; branches deleted
+
+**Approval API:**
+
+```bash
+# List pending proposals
+curl http://localhost:8080/api/code-proposals
+
+# Approve — merges branch into master, removes worktree
+curl -X POST http://localhost:8080/api/code-proposals/<id>/approve
+
+# Reject — removes worktree without merging
+curl -X POST http://localhost:8080/api/code-proposals/<id>/reject
+```
+
+**Implementation:** `src/coding-task-runner.js` (`runCodingTask`, `getProposals`, `approveProposal`, `rejectProposal`).
+
+---
+
+## Task Chains
+
+Multi-step NPC workflows that chain directives across the team. A chain is a sequence of `{ npc, task, artifactCategory }` steps — each step's artifact is passed as context to the next step's NPC, and the chain auto-advances when each NPC sets `taskPhase: finished`.
+
+**Example: full spec→design→code→review→QA pipeline:**
+
+```bash
+curl -X POST http://localhost:8080/api/task-chains \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Fix speech bubble overflow",
+    "triggeredBy": "Abby",
+    "steps": [
+      { "npc": "Sarah",  "task": "Spec: what is acceptable behavior for long-line bubbles?", "artifactCategory": "product" },
+      { "npc": "Rob",    "task": "Mockup the corrected behavior per spec",                    "artifactCategory": "design" },
+      { "npc": "Josh",   "task": "Implement per Rob mockup",                                  "artifactCategory": "code-reviews" },
+      { "npc": "Jenny",  "task": "Review Josh implementation",                                "artifactCategory": "code-reviews" },
+      { "npc": "Molly",  "task": "Regression test the fix",                                   "artifactCategory": "bugs" }
+    ]
+  }'
+```
+
+**What happens:**
+
+1. Sarah gets the first directive with "You are step 1 of 5 in chain 'Fix speech bubble overflow'"
+2. When Sarah finishes (`taskPhase: finished`), the chain auto-advances → Rob gets directive 2 with Sarah's spec path as context
+3. Each subsequent NPC sees all prior artifacts in their think prompt
+4. When the last NPC finishes, the chain status flips to `complete` and `npc_chain_complete` is broadcast
+
+**WS events broadcast:**
+
+| Event | When |
+|-------|------|
+| `npc_chain_started` | Chain initialized, first directive assigned |
+| `npc_chain_step_done` | Step N completed, NPC handed off to step N+1 |
+| `npc_chain_complete` | All steps done |
+
+**REST API:**
+
+```bash
+# Start a chain (returns chainId)
+POST /api/task-chains          → { ok, chainId, name, steps }
+
+# List all running chains
+GET  /api/task-chains          → { chains: [...] }
+
+# Get one chain's status
+GET  /api/task-chains/:id      → { chain: {...} }
+```
+
+**Implementation:** `src/task-chain.js` (`TaskChainRunner` singleton: `startChain`, `onStepComplete`, `getChainStatus`, `getActiveChains`).
+
+---
+
+## Conflict Detection & Arbitration
+
+When two NPCs produce conflicting outputs about the same topic, the conflict detector queues the disagreement for Abby. Her next think prompt receives both positions with an explicit "ARBITRATION NEEDED" block — she's expected to make the call and assign follow-up directives.
+
+**How conflicts are detected:**
+
+- Every NPC artifact is logged in a rolling 50-entry buffer
+- For each new artifact, the detector scans for:
+  - Same chain ID (different step, different NPC) — OR
+  - Task strings sharing 3+ overlapping words (3+ chars each)
+- AND different `outcome` fields (e.g., one says `success`, other says `blocked`)
+- AND both artifacts are < 5 minutes old
+- AND `npc1 !== npc2`
+
+If all conditions match → conflict record queued for Abby. The next time Abby thinks, her prompt includes:
+
+```
+## ⚠️ CONFLICT DETECTED — ARBITRATION NEEDED
+Edward and Jenny disagree about: "refactor the websocket dedup logic"
+- Edward outcome: success
+- Jenny outcome: blocked
+- Artifacts: reports/code-reviews/edward_refactor_<date>.md, reports/code-reviews/jenny_refactor_<date>.md
+Make a call. Assign directives to both with your decision.
+```
+
+The conflict is consumed once (cleared after Abby reads it). Abby's response — usually `action: delegate` to both NPCs — is the resolution.
+
+**Implementation:** `src/conflict-detector.js` (`ConflictDetector` singleton: `recordArtifact`, `getConflictForNpc`).
 
 ---
 
@@ -781,6 +917,12 @@ When Lucy's NPC brain returns `action: run_skill, skill: job-scraper`, the serve
 | Endpoint | Method | Body | Purpose |
 |----------|--------|------|---------|
 | `POST /api/assign-directive` | JSON | `{ to, from, task, urgent }` | Assign a direct-order task to any NPC |
+| `POST /api/task-chains` | JSON | `{ name, triggeredBy, steps }` | Start a multi-step NPC chain (spec→code→QA) |
+| `GET /api/task-chains` | — | — | List all active task chains |
+| `GET /api/task-chains/:id` | — | — | Get a single chain's status + artifacts |
+| `GET /api/code-proposals` | — | — | List pending NPC code proposals |
+| `POST /api/code-proposals/:id/approve` | — | — | Merge proposal branch into master, clean up worktree |
+| `POST /api/code-proposals/:id/reject` | — | — | Discard proposal, clean up worktree |
 | `POST /api/lucy-job-pipeline` | JSON | `{ query, site, pages, remoteOnly, minSalary }` | Trigger Lucy's full job search + apply pipeline |
 | `POST /api/bouncer-linux` | JSON | `{ category, source }` | Trigger Bouncer investigation |
 | `POST /api/bouncer-scan` | — | — | Run `perimeterPatrol()` and return findings |
@@ -1132,7 +1274,7 @@ The `docs/` directory has the canonical deep-dives for the runtime systems:
 | [docs/WORLD_ENGINE.md](docs/WORLD_ENGINE.md) | **World engine** (`src/world/`) — seeded RNG, room layout, L-corridors, recipe-driven furnisher, character anim registry |
 | [docs/SCRIPTS.md](docs/SCRIPTS.md) | **Asset toolchain** — which `scripts/` you actually run for a sprite import vs. which are archaeological |
 | [docs/NPCS.md](docs/NPCS.md) | **NPC Roster** — all 16 NPCs: who they are, personality, hierarchy, backstory, what they can actually do |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | **Capability Roadmap** — Phase 1+2 complete; Phase 3 (Claude Code on real files, cross-NPC task chains, NPC disagreement) is next |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | **Capability Roadmap** — Phases 1, 2, and 3 complete; Phase 4 (public demo mode, perf tuning, Docker deploy) is next |
 | [docs/SECURITY.md](docs/SECURITY.md) | Threat catalog (10 categories), robber archetype mappings, tuning knobs |
 | [docs/SETUP.md](docs/SETUP.md) | End-to-end install — Node + LM Studio baseline, plus Linux Wireshark/Nmap live feeders |
 
