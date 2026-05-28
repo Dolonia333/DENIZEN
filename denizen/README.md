@@ -1140,7 +1140,9 @@ This is fixed in the current version. If you see commands being typed into your 
 ### Bouncer investigation shows "(no output)" or WSL errors
 
 - Kali Linux must be installed: `wsl --install -d kali-linux`
-- Required tools inside Kali: `sudo apt install -y nmap net-tools lsof whois`
+- Required tools inside Kali: `sudo apt install -y nmap net-tools lsof whois tshark`
+- tshark and lsof are easy to miss — if `packet_anomaly` investigations are missing the tshark capture step or `data_breach` investigations show "(no output)" for the open-sockets step, those packages aren't installed. The runner silently skips missing tools rather than erroring. Verify with: `wsl -d kali-linux which tshark lsof`
+- When installing tshark, the install will prompt `"Should non-superusers be able to capture packets?"` — answer `No` (Kali's default WSL user is root anyway). For non-interactive install: `echo 'wireshark-common wireshark-common/install-setuid boolean false' | sudo debconf-set-selections && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y tshark`
 - If using a different distro name, set `WSL_DISTRO=your-distro` in `.env`
 - Bouncer still functions without WSL — he just won't have live data to report
 
