@@ -98,6 +98,195 @@ Everything the NPCs can do, everything they will be able to do, in order of what
 
 ---
 
+## Phase 5 — Continuous Improvement Loop
+
+NPCs stop being a static cast and start being a team that measurably grows. Abby observes team capability, identifies gaps, and generates novel work to close them. Outcomes feed back into the system as skill points and mood — successes reinforce, failures get diagnosed. The office gets better at its job week over week without operator intervention.
+
+This is the loop that turns Denizen from "AI agents doing tasks" into "AI team learning to do tasks better."
+
+```
+NPCs do work → outcome scored → score propagates to NPC (skill +N, mood +N)
+                                       ↓
+                               team competency map updates
+                                       ↓
+                  Abby's reflection: where are the gaps?
+                                       ↓
+                  Abby generates training tasks + proposes new capabilities
+                                       ↓
+                  NPCs get directives targeted at weak areas
+                                       ↓
+                  cycle repeats — team grows measurably
+```
+
+---
+
+### 5.1 — Outcome Scoring + Team Competency Map
+
+**Status:** 🔴 Not built  
+**Files:** `src/outcome-scorer.js` (new), `src/competency-map.js` (new), `src/npc-brains.js`, `server.js`  
+**Depends on:** Directive inbox ✅, Task chains ✅, Code proposals ✅
+
+Today every artifact is marked `taskPhase: finished` but nothing distinguishes "done well" from "done badly." Without scoring, NPCs can't actually learn. This sub-phase builds the scoring layer plus the team-wide view of who's strong at what.
+
+**What it builds:**
+
+1. **`src/outcome-scorer.js`** — module that scores every completed unit of work on a 0–5 scale:
+   - `5` — chain step completed AND artifact was actually used by next step / code proposal approved / bug confirmed real
+   - `4` — completed cleanly, no rework
+   - `3` — completed but required clarification / partial result
+   - `2` — abandoned (NPC marked `outcome: blocked` or `stuck`)
+   - `1` — conflict triggered (another NPC produced contradictory artifact)
+   - `0` — failed entirely (skill exec errored, code proposal rejected, exception thrown)
+
+   Score is computed from existing signals: `decision.outcome`, code proposal status, chain advancement, conflict detector hits.
+
+2. **`src/competency-map.js`** — aggregates per-NPC skill scores into a normalized profile:
+   ```js
+   {
+     "Edward": {
+       skills: { backend: 8.4, websocket: 5.1, database: 7.2, testing: 2.3 },
+       avgOutcome: 4.1,
+       artifactCount: 23,
+       recentTrend: '+0.4'   // 7-day moving avg delta
+     },
+     ...
+   }
+   ```
+   Skills come from existing `[SKILL:name:+N]` tags in MEMORY.md, but now they're scaled by outcome scores (a `+1` skill tag on a 5-outcome task = +1.0; on a 2-outcome task = +0.4).
+
+3. **`src/npc-brains.js`** — after `taskPhase: finished`, call `outcomeScorer.score(decision)` → apply mood adjustment (satisfaction +N on high scores, stress +N on low) → update competency map.
+
+4. **`server.js`** endpoints:
+   ```
+   GET /api/competency-map           — full team profile
+   GET /api/competency-map/:npc      — single NPC's profile
+   GET /api/competency-map/gaps      — sorted list of team-wide weak areas
+   ```
+
+**Why it matters:** Once this lands, you can immediately see "Edward is strongest at backend (8.4), weakest at testing (2.3). Team has no one above 5.0 in design." That visibility is the precondition for everything in 5.2 and 5.3.
+
+**Effort:** ~2 days
+
+---
+
+### 5.2 — Abby Gap-Aware + Training Task Generator
+
+**Status:** 🔴 Not built  
+**Files:** `src/cofounder-agent.js`, `src/training-task-generator.js` (new), `src/npc-brains.js`  
+**Depends on:** 5.1 (competency map)
+
+Abby today acts on current office state — who's idle, what just happened. She doesn't see capability gaps. This sub-phase makes her gap-aware and gives her the ability to craft novel training tasks targeted at specific NPCs.
+
+**What it builds:**
+
+1. **Inject competency context into Abby's think prompt:**
+   ```
+   ## Team Competency Snapshot (7-day window)
+   - Edward: strong backend (8.4), weak testing (2.3) — trending +0.4
+   - Josh: strong frontend (7.1), weak accessibility (1.5)
+   - Team-wide gaps: design (top score 4.2 = Rob; no one else above 2.5)
+   - Recent low-score artifacts: 3 by Roki this week (avg 2.3)
+   
+   Consider whether anyone needs a development push.
+   ```
+
+2. **`src/training-task-generator.js`** — pure module that, given a target NPC + weak skill area, generates a concrete training directive:
+   ```js
+   generateTrainingTask({ npc: 'Edward', weakSkill: 'testing' })
+   // → {
+   //     task: "Read tests/world-state.test.js and write a one-page summary 
+   //            of how the suite is structured. File to reports/learning/.",
+   //     artifactCategory: 'learning',
+   //     successCriteria: 'summary references at least 3 test patterns from the file'
+   //   }
+   ```
+   The generator uses templates per skill area + the NPC's specific role context, so a "testing" training task for Edward (backend dev) differs from one for Josh (frontend).
+
+3. **Abby's `CofounderAgent` gains a new action:** `trainNpc` — assigns a training directive to a target NPC. Logged as a non-urgent directive but tagged `kind: training` so the work feed shows it differently.
+
+4. **Training reports** land in `reports/learning/<npc>_<topic>_<date>.md` — separate from regular work so you can see the team's growth trajectory.
+
+**Why it matters:** Abby goes from a dispatcher of existing work to a manager actively pushing team growth. Within a week of running with 5.2 enabled, you should see measurable competency map shifts for any NPC that had clear weak areas.
+
+**Effort:** ~1.5 days
+
+---
+
+### 5.3 — Autonomous Capability Proposals + Trial-Mode SOUL Edits
+
+**Status:** 🔴 Not built  
+**Files:** `src/cofounder-agent.js`, `src/npc-brains.js`, `src/soul-reflection.js`, `server.js`  
+**Depends on:** 5.1 (competency map), existing proposal queues ✅
+
+The system already has proposal queues for SOUL edits, capabilities, and animations — but they require explicit operator approval for every change, and only the NPC themselves can propose. This sub-phase lets Abby propose capabilities the team is missing, and lets trustworthy NPCs auto-apply small SOUL edits.
+
+**What it builds:**
+
+1. **Abby auto-proposes capabilities** based on competency map gaps:
+   - If `gaps.includes({ skill: 'docVisualization', members: 0 })` (no one strong)
+   - AND no existing capability proposal addresses it
+   - → Abby posts `POST /api/request-capability { by: 'Abby', verbName: 'whiteboardDraw', description: '...' }`
+   - Same budget cap as NPCs (1/day) — Abby isn't exempt; this prevents runaway proposal spam
+
+2. **Trial-mode auto-apply for SOUL edits:**
+   - New field on each NPC: `_soulTrustScore` (starts at 0)
+   - Every `applied` SOUL edit that doesn't get reverted within 7 days adds +1
+   - Every `rejected` SOUL edit subtracts 1
+   - When `_soulTrustScore >= 5`:
+     - Future SOUL edits from that NPC enter `auto-apply trial mode`
+     - The edit applies immediately but is tagged `auto-applied`
+     - Operator can revert any auto-applied edit within 24h (decrements trust by 2)
+     - After 24h with no revert, the edit is permanent
+   - This is opt-in per NPC via a `.env` flag `SOUL_AUTO_APPLY=true` — off by default
+
+3. **Diff-bounded** — auto-apply only triggers for edits that:
+   - Add or drop ≤ 2 lines
+   - Don't touch `## Provider`, `## Role`, `## Core Identity`
+   - Don't reduce the soul file by >10%
+
+4. **REST endpoints:**
+   ```
+   GET /api/competency-map/proposals      — Abby's auto-generated capability proposals
+   GET /api/soul-auto-apply-log           — every auto-applied edit + revert window status
+   POST /api/soul-auto-apply/:id/revert   — operator panic button
+   ```
+
+**Why it matters:** This is what makes the team measurably evolve without you in the loop daily. Abby identifies missing skills and asks for them. NPCs whose growth proposals have proven good get to evolve faster. The system has memory of trust earned.
+
+**The approval gate stays — but it gets smarter.** Big SOUL changes still require manual approve+apply. Small, frequent, proven-trustworthy edits flow through automatically.
+
+**Effort:** ~2 days
+
+---
+
+### Phase 5 Build Order
+
+```
+5.1  Outcome scoring + competency map   (~2 days)
+       → src/outcome-scorer.js (new)
+       → src/competency-map.js (new)
+       → npc-brains.js: score on finish, update map
+       → 3 new REST endpoints
+       → BLOCKS 5.2 + 5.3
+
+5.2  Abby gap-aware + training tasks    (~1.5 days)
+       → cofounder-agent.js: inject competency snapshot
+       → src/training-task-generator.js (new)
+       → New action: trainNpc
+       → reports/learning/ category
+       → DEPENDS ON 5.1
+
+5.3  Autonomous capability + trial SOUL  (~2 days)
+       → cofounder-agent.js: Abby auto-proposes
+       → soul-reflection.js: trust score + auto-apply
+       → SOUL_AUTO_APPLY env gate (off by default)
+       → DEPENDS ON 5.1
+```
+
+**Total to Phase 5 complete: ~5-6 days of focused work.**
+
+---
+
 ## Capability Matrix
 
 | Capability | Status |
@@ -130,10 +319,20 @@ Everything the NPCs can do, everything they will be able to do, in order of what
 | Public demo mode (4-NPC, Claude-only) | 🔴 Phase 4.1 |
 | Performance optimization | 🟡 Phase 4.2 — ongoing |
 | Docker production deploy | 🟡 Phase 4.3 — scaffolded |
+| Outcome scoring (per-artifact 0–5) | 🔴 Phase 5.1 |
+| Team competency map | 🔴 Phase 5.1 |
+| Abby gap-aware reflection | 🔴 Phase 5.2 |
+| Training task generator (Abby pushes growth) | 🔴 Phase 5.2 |
+| Autonomous capability proposals from Abby | 🔴 Phase 5.3 |
+| Trial-mode auto-apply for trusted SOUL edits | 🔴 Phase 5.3 |
 
 ---
 
-## What's Next (Phase 4)
+## What's Next
+
+**Two parallel tracks** are open. Phase 4 is operational (demo + production); Phase 5 is the autonomous improvement loop (Abby teaching the team).
+
+### Phase 4 — Production and Demo
 
 ```
 4.1  Public demo mode                (~1 day)
@@ -154,3 +353,25 @@ Everything the NPCs can do, everything they will be able to do, in order of what
 ```
 
 Total to Phase 4 complete: **~2 days**
+
+### Phase 5 — Continuous Improvement Loop
+
+```
+5.1  Outcome scoring + competency map   (~2 days) — BLOCKS 5.2 + 5.3
+       → src/outcome-scorer.js, src/competency-map.js (new)
+       → GET /api/competency-map[/:npc|/gaps]
+
+5.2  Abby gap-aware + training tasks    (~1.5 days)
+       → Competency snapshot in Abby's think prompt
+       → src/training-task-generator.js (new)
+       → New action: trainNpc → reports/learning/
+
+5.3  Autonomous capability + trial SOUL  (~2 days)
+       → Abby auto-proposes missing capabilities (1/day budget)
+       → SOUL trust score + auto-apply for ≤2-line edits (opt-in via env)
+       → Operator revert window (24h) preserves the approval gate
+```
+
+Total to Phase 5 complete: **~5–6 days**
+
+**Recommended order:** Phase 5 first (the loop closes the value story), then Phase 4 (productionizes what's already a great demo).
