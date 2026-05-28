@@ -18,6 +18,7 @@ const capabilityProposal = require('./src/capability-proposal');
 const emailHandler = require('./src/email-handler');
 const gmailClient = require('./src/gmail-client');
 const llmTelemetry = require('./src/llm-telemetry');
+const pcActivity = require('./src/pc-activity-tracker');
 const jobApplication = require('./src/job-application');
 const desktopAgent = require('./src/desktop-agent');
 const linuxAgent = require('./src/linux-agent');
@@ -165,6 +166,16 @@ npcBrains.setBroadcast((msg) =>
   })
 );
 
+// Same broadcaster, wired into the PC activity tracker. Every started /
+// done / failed PC task fans out to the browser as `pc_activity` events
+// so the telemetry panel's "PC activity" section refreshes instantly
+// without polling.
+pcActivity.setBroadcast((msg) =>
+  (agentWss ? agentWss.clients : new Set()).forEach(c => {
+    if (c.readyState === 1) c.send(typeof msg === 'string' ? msg : JSON.stringify(msg));
+  })
+);
+
 // --- OpenClaw Skill Bridge ---
 const OPENCLAW_ROOT = 'C:/Users/zionv/OneDrive/Desktop/multbot/openclaw';
 const SKILL_SCRIPTS = {
@@ -200,6 +211,15 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
   if (npcName === 'Lucy' && (skill === 'job-scraper' || skill === 'job-applier')) {
     log.info('SkillBridge', `Lucy → job pipeline via ${skill}`);
     broadcast({ type: 'npc_skill_start', npcName, skill: 'job-pipeline', skillParams, ts: Date.now() });
+    // PC activity tracker: this is a real PC task (browser + LLMs). Mode
+    // is 'visible' because runJobPipeline → applyByWebForm opens a real
+    // Chromium window the user can watch.
+    const activity = pcActivity.record({
+      npc: npcName, kind: 'job-pipeline',
+      task: `${skillParams.query || skillParams.q || 'job search'} on ${skillParams.site || 'linkedin'}`,
+      mode: 'visible', status: 'started',
+    });
+    const pipelineStart = Date.now();
     jobApplication.runJobPipeline({
       query:     skillParams.query     || skillParams.q    || 'software engineer',
       site:      skillParams.site      || 'linkedin',
@@ -207,11 +227,21 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       remoteOnly: Boolean(skillParams.remoteOnly || skillParams['remote-only']),
       minSalary: Number(skillParams.minSalary || 0),
     }).then(summary => {
+      pcActivity.record({
+        id: activity.id, npc: npcName, kind: 'job-pipeline',
+        task: activity.task, mode: 'visible', status: 'done',
+        durationMs: Date.now() - pipelineStart, detail: String(summary).slice(0, 240),
+      });
       npcBrains.injectSkillResult(npcName, 'job-pipeline', summary);
       broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: true, output: summary.slice(0, 200), ts: Date.now() });
       broadcast({ type: 'lucy_job_pipeline_done', summary });
       log.info('SkillBridge', `Lucy ← job-pipeline: ${summary.slice(0, 80)}`);
     }).catch(err => {
+      pcActivity.record({
+        id: activity.id, npc: npcName, kind: 'job-pipeline',
+        task: activity.task, mode: 'visible', status: 'failed',
+        durationMs: Date.now() - pipelineStart, detail: String(err?.message || err).slice(0, 240),
+      });
       const output = `Job pipeline failed: ${err?.message || err}`;
       npcBrains.injectSkillResult(npcName, 'job-pipeline', output);
       broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: false, output, ts: Date.now() });
@@ -223,6 +253,15 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
   if (skill === 'coding-agent') {
     const { targetFiles, task: skillTask } = skillParams || {};
     const taskDesc = skillTask || `NPC ${npcName} coding task`;
+    // PC activity tracker: Claude Code runs in a worktree on disk;
+    // it touches files and runs `git` / `npm` — definitely a PC task.
+    // Background by default since the user doesn't see it directly.
+    const activity = pcActivity.record({
+      npc: npcName, kind: 'coding-agent',
+      task: taskDesc, mode: 'background', status: 'started',
+      detail: Array.isArray(targetFiles) && targetFiles.length ? `files: ${targetFiles.join(', ').slice(0, 200)}` : null,
+    });
+    const codingStart = Date.now();
     return codingTaskRunner.runCodingTask({
       npc: npcName,
       task: taskDesc,
@@ -234,11 +273,29 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       },
     }).then(result => {
       const output = result.ok ? JSON.stringify(result) : `Error: ${result.error}`;
+      pcActivity.record({
+        id: activity.id, npc: npcName, kind: 'coding-agent',
+        task: taskDesc, mode: 'background',
+        status: result.ok ? 'done' : 'failed',
+        durationMs: Date.now() - codingStart,
+        detail: String(output).slice(0, 240),
+      });
       npcBrains.injectSkillResult(npcName, skill, output);
       broadcast({ type: 'npc_skill_result', npcName, skill, ok: result.ok, output: output.slice(0, 200), ts: Date.now() });
       return result.ok ? JSON.stringify(result) : `Error: ${result.error}`;
     });
   }
+
+  // PC activity tracker: this is a generic skill exec — a real child
+  // process. Mode is background; skills don't render their own UI.
+  const skillTaskDesc = skillParams?.task || skillParams?.query || skill;
+  const activity = pcActivity.record({
+    npc: npcName, kind: 'skill', skill,
+    task: String(skillTaskDesc).slice(0, 240),
+    mode: skillParams?.mode === 'visible' ? 'visible' : 'background',
+    status: 'started',
+  });
+  const skillStart = Date.now();
 
   return new Promise((resolve) => {
     let cmd;
@@ -266,6 +323,11 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       cmd = `node "${SKILL_SCRIPTS[skill]}"${args ? ' ' + args : ''}`;
     } else {
       const result = { ok: false, output: `Unknown skill: ${skill}`, skill, npcName };
+      pcActivity.record({
+        id: activity.id, npc: npcName, kind: 'skill', skill,
+        task: activity.task, mode: activity.mode, status: 'failed',
+        durationMs: Date.now() - skillStart, detail: `Unknown skill: ${skill}`,
+      });
       broadcast({ type: 'npc_skill_result', ...result, ts: Date.now() });
       resolve(result);
       return;
@@ -275,6 +337,13 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       const output = (stdout || stderr || (err ? err.message : 'no output')).slice(0, 800);
       const ok = !err;
       const result = { ok, output, skill, npcName };
+      pcActivity.record({
+        id: activity.id, npc: npcName, kind: 'skill', skill,
+        task: activity.task, mode: activity.mode,
+        status: ok ? 'done' : 'failed',
+        durationMs: Date.now() - skillStart,
+        detail: output.slice(0, 240),
+      });
       npcBrains.injectSkillResult(npcName, skill, output);
       broadcast({ type: 'npc_skill_result', npcName, skill, ok, output: output.slice(0, 200), ts: Date.now() });
       log.info('SkillBridge', `${npcName} ← ${skill} (${ok ? 'ok' : 'err'}): ${output.slice(0, 80)}`);
@@ -1772,8 +1841,36 @@ const server = http.createServer((req, res) => {
       // Return immediately — task runs async, progress via WS
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, async: true, note: 'Lucy is on it — watch your screen.' }));
+      // PC activity: desktop-agent drives mouse/keyboard on the whole
+      // PC — by definition 'visible' (the user literally watches the
+      // cursor move). Npc tagged 'Lucy' because that's the only NPC
+      // wired to /api/desktop-task today.
+      const dtActivity = pcActivity.record({
+        npc: 'Lucy', kind: 'desktop-agent',
+        task: String(payload.instruction).slice(0, 240),
+        mode: 'visible', status: 'started',
+      });
+      const dtStart = Date.now();
       desktopAgent.runDesktopTask({ instruction: payload.instruction, broadcast, provider: payload.provider || null })
-        .catch(err => console.error('[desktop-task] error:', err?.message));
+        .then((result) => {
+          pcActivity.record({
+            id: dtActivity.id, npc: 'Lucy', kind: 'desktop-agent',
+            task: dtActivity.task, mode: 'visible', status: 'done',
+            durationMs: Date.now() - dtStart,
+            detail: result && typeof result === 'object'
+              ? String(result.summary || result.note || '').slice(0, 240) || null
+              : null,
+          });
+        })
+        .catch(err => {
+          pcActivity.record({
+            id: dtActivity.id, npc: 'Lucy', kind: 'desktop-agent',
+            task: dtActivity.task, mode: 'visible', status: 'failed',
+            durationMs: Date.now() - dtStart,
+            detail: String(err?.message || err).slice(0, 240),
+          });
+          console.error('[desktop-task] error:', err?.message);
+        });
     });
     return;
   }
@@ -1802,6 +1899,16 @@ const server = http.createServer((req, res) => {
         threat: { category: 'manual', source: target, detail: reason },
         message: `Bouncer running ${tool === 'zenmap' ? 'nmap' : tool} in Kali WSL — ${reason}` });
 
+      // PC activity: linux-agent runs real commands in WSL/Kali. The
+      // bouncer terminal window pops up in this path, so mode='visible'
+      // when the operator asked for a terminal, otherwise 'background'.
+      const scanActivity = pcActivity.record({
+        npc: 'Bouncer', kind: 'linux-agent',
+        task: `${tool} ${target}${reason && reason !== 'manual security check' ? ' — ' + reason : ''}`.slice(0, 240),
+        mode: 'visible', status: 'started',
+      });
+      const scanStart = Date.now();
+
       try {
         let result;
         if (tool === 'nmap' || tool === 'zenmap') {
@@ -1816,6 +1923,14 @@ const server = http.createServer((req, res) => {
           result = { ok: result.ok, summary: result.summary, elapsed: result.elapsed, steps: [] };
         }
 
+        pcActivity.record({
+          id: scanActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+          task: scanActivity.task, mode: scanActivity.mode,
+          status: result.ok ? 'done' : 'failed',
+          durationMs: Date.now() - scanStart,
+          detail: (result.summary || '').slice(0, 240) || null,
+        });
+
         bcast({
           type: 'bouncer_tool_status', tool,
           status: result.ok ? 'done' : 'error',
@@ -1828,6 +1943,12 @@ const server = http.createServer((req, res) => {
 
         console.log(`[BouncerScan] ${tool} on ${target}: ${result.ok ? 'ok' : 'failed'}`);
       } catch (err) {
+        pcActivity.record({
+          id: scanActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+          task: scanActivity.task, mode: scanActivity.mode,
+          status: 'failed', durationMs: Date.now() - scanStart,
+          detail: String(err?.message || err).slice(0, 240),
+        });
         console.error(`[bouncer-scan] ${tool} error:`, err?.message);
         bcast({ type: 'bouncer_tool_status', tool, status: 'error',
           threat: { category: 'manual', source: target, detail: reason },
@@ -1848,6 +1969,13 @@ const server = http.createServer((req, res) => {
       try { payload = JSON.parse(body || '{}'); }
       catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
 
+      // PC activity: manual operator-triggered pipeline run.
+      const jpActivity = pcActivity.record({
+        npc: 'Lucy', kind: 'job-pipeline',
+        task: `${payload.query || 'software engineer'} on ${payload.site || 'linkedin'}`,
+        mode: 'visible', status: 'started',
+      });
+      const jpStart = Date.now();
       try {
         const summary = await jobApplication.runJobPipeline({
           query:      payload.query      || 'software engineer',
@@ -1855,6 +1983,12 @@ const server = http.createServer((req, res) => {
           pages:      Number(payload.pages || 2),
           remoteOnly: Boolean(payload.remoteOnly),
           minSalary:  Number(payload.minSalary || 0),
+        });
+        pcActivity.record({
+          id: jpActivity.id, npc: 'Lucy', kind: 'job-pipeline',
+          task: jpActivity.task, mode: 'visible', status: 'done',
+          durationMs: Date.now() - jpStart,
+          detail: String(summary).slice(0, 240),
         });
         try { worldState.pushEvent('job-pipeline', `Lucy: ${summary}`); } catch (_) {}
         try {
@@ -1866,6 +2000,12 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, summary }));
       } catch (err) {
+        pcActivity.record({
+          id: jpActivity.id, npc: 'Lucy', kind: 'job-pipeline',
+          task: jpActivity.task, mode: 'visible', status: 'failed',
+          durationMs: Date.now() - jpStart,
+          detail: String(err?.message || err).slice(0, 240),
+        });
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
       }
@@ -1898,12 +2038,30 @@ const server = http.createServer((req, res) => {
 
       // Open a real visible terminal window so the player can watch Bouncer work.
       // Uses _openBouncerTerminal (direct spawn) — never types into the focused window.
-      if (payload.openTerminal !== false) {
+      const openTerminal = payload.openTerminal !== false;
+      if (openTerminal) {
         _openBouncerTerminal(_buildTerminalShowCmd(threat));
       }
 
+      // PC activity: bouncer-linux endpoint = linux-agent run.
+      // mode = 'visible' when a terminal window is spawned, else 'background'.
+      const blActivity = pcActivity.record({
+        npc: 'Bouncer', kind: 'linux-agent',
+        task: `investigate ${threat.category}${threat.source ? ' (' + threat.source + ')' : ''}`,
+        mode: openTerminal ? 'visible' : 'background',
+        status: 'started',
+      });
+      const blStart = Date.now();
+
       // Run the actual investigation in parallel
       linuxAgent.investigate(threat).then(result => {
+        pcActivity.record({
+          id: blActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+          task: blActivity.task, mode: blActivity.mode,
+          status: result.ok ? 'done' : 'failed',
+          durationMs: Date.now() - blStart,
+          detail: (result.summary || result.error || '').slice(0, 240) || null,
+        });
         broadcast({
           type: 'bouncer_linux_result',
           status: result.ok ? 'done' : 'error',
@@ -1918,6 +2076,12 @@ const server = http.createServer((req, res) => {
             : `Linux investigation failed: ${result.error}`,
         });
       }).catch(err => {
+        pcActivity.record({
+          id: blActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+          task: blActivity.task, mode: blActivity.mode,
+          status: 'failed', durationMs: Date.now() - blStart,
+          detail: String(err?.message || err).slice(0, 240),
+        });
         broadcast({ type: 'bouncer_linux_result', status: 'error', threat, message: `WSL error: ${err.message}` });
       });
     });
@@ -2042,6 +2206,46 @@ const server = http.createServer((req, res) => {
     const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || 50)));
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ events: llmTelemetry.getRecentOpenClaw({ limit }) }));
+    return;
+  }
+
+  // --- LLM decision histogram (what NPCs are actually choosing) ---
+  // Extracts the `action` (and optional `skill`) field from every
+  // `think` call's responsePreview in the rolling window. Lets the panel
+  // show "12 chat · 4 run_skill · 2 meeting" instead of just call counts.
+  if (urlPath === '/api/telemetry/llm/decisions' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const windowMs = Number(url.searchParams.get('windowMs') || 5 * 60 * 1000);
+    const stats = llmTelemetry.getDecisionStats({ windowMs });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(stats));
+    return;
+  }
+
+  // --- PC activity tracker endpoints ---
+  // The PC activity ring buffer records every real PC-side task an NPC
+  // runs — skills, desktop-agent, coding-agent, linux-agent (Bouncer),
+  // job-pipeline (Lucy). Read-only.
+  if (urlPath === '/api/pc-activity' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const limit = Math.min(200, Math.max(1, Number(url.searchParams.get('limit') || 50)));
+    const npc    = url.searchParams.get('npc')    || undefined;
+    const kind   = url.searchParams.get('kind')   || undefined;
+    const status = url.searchParams.get('status') || undefined;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ events: pcActivity.getRecent({ limit, npc, kind, status }) }));
+    return;
+  }
+  if (urlPath === '/api/pc-activity/stats' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const windowMs = Number(url.searchParams.get('windowMs') || 5 * 60 * 1000);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(pcActivity.getStats({ windowMs })));
+    return;
+  }
+  if (urlPath === '/api/pc-activity/active' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ active: pcActivity.getActive() }));
     return;
   }
 
@@ -2906,8 +3110,35 @@ agentWss.on('connection', (ws) => {
             text: `On it — taking control of your PC now.`,
             delegation: null, actions: [],
           }));
+          // PC activity: chat-triggered desktop-agent invocation. Mode
+          // is 'visible' — the user is literally about to watch Lucy
+          // pilot the desktop.
+          const dtChatActivity = pcActivity.record({
+            npc: 'Lucy', kind: 'desktop-agent',
+            task: String(msg.text).slice(0, 240),
+            mode: 'visible', status: 'started',
+          });
+          const dtChatStart = Date.now();
           desktopAgent.runDesktopTask({ instruction: msg.text, broadcast: _broadcast })
-            .catch(err => console.error('[desktop-task] error:', err?.message));
+            .then((result) => {
+              pcActivity.record({
+                id: dtChatActivity.id, npc: 'Lucy', kind: 'desktop-agent',
+                task: dtChatActivity.task, mode: 'visible', status: 'done',
+                durationMs: Date.now() - dtChatStart,
+                detail: result && typeof result === 'object'
+                  ? String(result.summary || result.note || '').slice(0, 240) || null
+                  : null,
+              });
+            })
+            .catch(err => {
+              pcActivity.record({
+                id: dtChatActivity.id, npc: 'Lucy', kind: 'desktop-agent',
+                task: dtChatActivity.task, mode: 'visible', status: 'failed',
+                durationMs: Date.now() - dtChatStart,
+                detail: String(err?.message || err).slice(0, 240),
+              });
+              console.error('[desktop-task] error:', err?.message);
+            });
           global._npcStats.playerChatSucceeded++;
           return;
         }
@@ -3029,6 +3260,15 @@ agentWss.on('connection', (ws) => {
           message: `Bouncer running ${tool === 'zenmap' ? 'nmap' : tool} in Kali Linux — investigating ${threat.category || 'the threat'}...`,
         });
 
+        // PC activity: bouncer-driven linux-agent run. mode = 'background'
+        // since this code path doesn't spawn its own terminal window.
+        const btActivity = pcActivity.record({
+          npc: 'Bouncer', kind: 'linux-agent',
+          task: `${tool} ${threat.category || 'investigation'}${sourceIp ? ' (' + sourceIp + ')' : ''}`.slice(0, 240),
+          mode: 'background', status: 'started',
+        });
+        const btStart = Date.now();
+
         // All tools now run via Kali WSL — no desktop agent / GUI dependency
         const scanPromise = (tool === 'nmap' || tool === 'zenmap')
           ? linuxAgent.investigate({ ...threat, source: sourceIp || threat.source })
@@ -3037,6 +3277,13 @@ agentWss.on('connection', (ws) => {
             : linuxAgent.perimeterPatrol().then(r => ({ ok: r.ok, summary: r.summary, elapsed: r.elapsed, steps: [] }));
 
         scanPromise.then(result => {
+            pcActivity.record({
+              id: btActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+              task: btActivity.task, mode: 'background',
+              status: result.ok ? 'done' : 'failed',
+              durationMs: Date.now() - btStart,
+              detail: (result.summary || result.error || '').slice(0, 240) || null,
+            });
             _broadcast({
               type: 'bouncer_tool_status',
               tool,
@@ -3049,6 +3296,12 @@ agentWss.on('connection', (ws) => {
             });
           })
           .catch(err => {
+            pcActivity.record({
+              id: btActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+              task: btActivity.task, mode: 'background',
+              status: 'failed', durationMs: Date.now() - btStart,
+              detail: String(err?.message || err).slice(0, 240),
+            });
             console.error(`[BouncerTool] ${tool} error:`, err?.message);
             _broadcast({
               type: 'bouncer_tool_status',
@@ -3075,12 +3328,30 @@ agentWss.on('connection', (ws) => {
         });
 
         // Open a real visible terminal window so the player can watch Bouncer work.
-        if (msg.openTerminal !== false) {
+        const blrOpenTerm = msg.openTerminal !== false;
+        if (blrOpenTerm) {
           _openBouncerTerminal(_buildTerminalShowCmd(threat));
         }
 
+        // PC activity: WS-triggered linux-agent investigation. Mode follows
+        // whether we actually pop a terminal window.
+        const blrActivity = pcActivity.record({
+          npc: 'Bouncer', kind: 'linux-agent',
+          task: `investigate ${threat.category || 'threat'}${threat.source ? ' (' + threat.source + ')' : ''}`,
+          mode: blrOpenTerm ? 'visible' : 'background',
+          status: 'started',
+        });
+        const blrStart = Date.now();
+
         // Run the real investigation (fast, direct WSL exec — no vision needed)
         linuxAgent.investigate(threat).then(result => {
+          pcActivity.record({
+            id: blrActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+            task: blrActivity.task, mode: blrActivity.mode,
+            status: result.ok ? 'done' : 'failed',
+            durationMs: Date.now() - blrStart,
+            detail: (result.summary || result.error || '').slice(0, 240) || null,
+          });
           // ── Feature 1: Write structured markdown report ──────────────────
           let reportPath = null;
           if (result.ok) {
@@ -3152,6 +3423,12 @@ agentWss.on('connection', (ws) => {
             }).catch(() => {});
           }
         }).catch(err => {
+          pcActivity.record({
+            id: blrActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+            task: blrActivity.task, mode: blrActivity.mode,
+            status: 'failed', durationMs: Date.now() - blrStart,
+            detail: String(err?.message || err).slice(0, 240),
+          });
           console.error('[BouncerLinux] WSL error:', err?.message);
           _broadcast({ type: 'bouncer_linux_result', status: 'error', threat, message: `WSL threw: ${err?.message || err}` });
         });
@@ -3260,9 +3537,25 @@ server.listen(PORT, () => {
   let _patrolTimer = null;
 
   async function runBouncerPatrol() {
+    // PC activity: every 5-min patrol runs real WSL commands. Background
+    // by default — no terminal window is opened for the timer-driven
+    // patrol.
+    const patActivity = pcActivity.record({
+      npc: 'Bouncer', kind: 'linux-agent',
+      task: 'scheduled perimeter patrol',
+      mode: 'background', status: 'started',
+    });
+    const patStart = Date.now();
     try {
       log.info('Patrol', 'running perimeter check...');
       const patrol = await linuxAgent.perimeterPatrol();
+      pcActivity.record({
+        id: patActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+        task: patActivity.task, mode: 'background',
+        status: patrol.ok ? 'done' : 'failed',
+        durationMs: Date.now() - patStart,
+        detail: (patrol.summary || '').slice(0, 240) || null,
+      });
 
       // Store in world-state so it injects into Bouncer's think prompts
       if (worldState) {
@@ -3297,6 +3590,12 @@ server.listen(PORT, () => {
           source: 'localhost', detail: `Baseline scan found open ports: ${portList}` });
       }
     } catch (err) {
+      pcActivity.record({
+        id: patActivity.id, npc: 'Bouncer', kind: 'linux-agent',
+        task: patActivity.task, mode: 'background',
+        status: 'failed', durationMs: Date.now() - patStart,
+        detail: String(err?.message || err).slice(0, 240),
+      });
       log.warn('Patrol', err?.message || String(err));
     }
     _patrolTimer = setTimeout(runBouncerPatrol, PATROL_INTERVAL_MS);

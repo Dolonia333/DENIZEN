@@ -24,6 +24,13 @@
   const ERRORS_URL = '/api/telemetry/llm/errors';
   const OPENCLAW_URL       = '/api/telemetry/openclaw';
   const OPENCLAW_STATS_URL = '/api/telemetry/openclaw/stats?windowMs=300000';
+  // New endpoints powering the three additional sections on the Stats tab.
+  const DECISIONS_URL      = '/api/telemetry/llm/decisions?windowMs=300000';
+  const PC_STATS_URL       = '/api/pc-activity/stats?windowMs=300000';
+  const PC_ACTIVE_URL      = '/api/pc-activity/active';
+  const PC_RECENT_URL      = '/api/pc-activity?limit=8';
+  const TASK_CHAINS_URL    = '/api/task-chains';
+  const PROPOSALS_URL      = '/api/proposals?status=pending';
   const POLL_MS    = 5000;
 
   const state = {
@@ -32,6 +39,12 @@
     stats: null,
     calls: [],
     errors: [],
+    // Extra slices, fetched alongside the LLM stats on the Stats tab.
+    decisions: null,    // { actions, skills, total, windowMs }
+    pcStats:   null,    // { total, byKind, byNpc, byStatus, windowMs }
+    pcActive:  [],      // currently-running PC tasks
+    pcRecent:  [],      // last few completed/failed
+    active:    null,    // { chains, proposals }
     filterKind: '',
     filterNpc: '',
     filterErrorsOnly: false,
@@ -213,6 +226,43 @@
     if (state.open) loadTab();
   }
 
+  // ---- helpers shared across tabs ----
+
+  /**
+   * Fetch every data slice the Stats tab needs in parallel:
+   *   1. LLM stats (existing)
+   *   2. Decision histogram (new)
+   *   3. PC activity stats + active + recent (new)
+   *   4. Active state — task chains, pending proposals (new)
+   *
+   * Failures degrade silently (any one slice may be `null` and the
+   * matching section will just say "no data").
+   */
+  async function loadStatsBundle() {
+    const safe = (url, fallback) =>
+      fetch(url, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : fallback)
+        .catch(() => fallback);
+    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals] = await Promise.all([
+      safe(STATS_URL, null),
+      safe(DECISIONS_URL, { actions: {}, skills: {}, total: 0 }),
+      safe(PC_STATS_URL, { total: 0, byKind: {}, byNpc: {}, byStatus: {} }),
+      safe(PC_ACTIVE_URL, { active: [] }),
+      safe(PC_RECENT_URL, { events: [] }),
+      safe(TASK_CHAINS_URL, { chains: [] }),
+      safe(PROPOSALS_URL, { proposals: [] }),
+    ]);
+    state.stats     = stats;
+    state.decisions = decisions;
+    state.pcStats   = pcStats;
+    state.pcActive  = pcActive.active || [];
+    state.pcRecent  = pcRecent.events || [];
+    state.active    = {
+      chains:    Array.isArray(chains.chains) ? chains.chains : [],
+      proposals: Array.isArray(proposals.proposals) ? proposals.proposals : [],
+    };
+  }
+
   // ---- tab content ----
   async function loadTab() {
     renderPanel();
@@ -234,8 +284,7 @@
           ? '<div style="padding:12px; color:#94a3b8">No calls yet.</div>'
           : state.calls.map(renderCallRow).join('');
       } else if (state.tab === 'stats') {
-        const r = await fetch(STATS_URL);
-        state.stats = await r.json();
+        await loadStatsBundle();
         body.innerHTML = renderStats(state.stats);
       } else if (state.tab === 'errors') {
         const r = await fetch(ERRORS_URL);

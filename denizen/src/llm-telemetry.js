@@ -307,6 +307,37 @@ class LlmTelemetry {
   }
 
   /**
+   * What did NPCs actually decide to do in the current window?
+   *
+   * Walks every 'think' record's responsePreview, pulls out the
+   * `"action": "..."` and `"skill": "..."` fields, and tallies them.
+   * Gives the panel two histograms: action distribution (chat, work,
+   * meeting, run_skill, …) and — when run_skill is involved — which
+   * skills were chosen.
+   *
+   * Uses regex over the preview because the preview is already
+   * truncated to 240 chars and may have been pretty-printed; JSON.parse
+   * would refuse anything malformed and we'd rather count partials than
+   * count zero.
+   */
+  getDecisionStats({ windowMs = 5 * 60 * 1000 } = {}) {
+    const cutoff = Date.now() - windowMs;
+    const recent = this.ring.filter(e =>
+      Date.parse(e.at) >= cutoff && e.kind === 'think'
+    );
+    const actions = {}, skills = {};
+    for (const e of recent) {
+      try {
+        const m = (e.responsePreview || '').match(/"action"\s*:\s*"([^"]+)"/);
+        if (m) actions[m[1]] = (actions[m[1]] || 0) + 1;
+        const s = (e.responsePreview || '').match(/"skill"\s*:\s*"([^"]+)"/);
+        if (s) skills[s[1]] = (skills[s[1]] || 0) + 1;
+      } catch (_) { /* ignore — bad preview shouldn't poison the histogram */ }
+    }
+    return { actions, skills, total: recent.length, windowMs };
+  }
+
+  /**
    * Record an OpenClaw tool run. Different shape from LLM calls but
    * lives in the same stream (tagged with kind: 'openclaw') so the
    * operator can correlate by timestamp + correlationId.
