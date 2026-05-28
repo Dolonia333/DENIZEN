@@ -11,6 +11,7 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
 ## Table of Contents
 
 - [What is Denizen?](#what-is-denizen)
+- [Why NPCs? (The Design Philosophy)](#why-npcs-the-design-philosophy)
 - [Quick Start](#quick-start)
   - [Prerequisites](#prerequisites)
   - [Install and Run](#install-and-run)
@@ -19,6 +20,7 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [LM Studio (Local AI)](#lm-studio-local-ai)
   - [NPC AI Provider Mapping](#npc-ai-provider-mapping)
   - [Zero-Config Demo Mode](#zero-config-demo-mode-no-api-keys-needed)
+  - [Environment Variables](#environment-variables)
 - [How It Works](#how-it-works)
   - [Architecture](#architecture)
   - [WebSocket Endpoints](#websocket-endpoints)
@@ -35,12 +37,17 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [Directive Inbox](#directive-inbox)
   - [Status Indicators](#status-indicators)
   - [Skill Tracking](#skill-tracking)
+  - [MEMORY.md Format](#memorymd-format)
+  - [Add a New NPC](#add-a-new-npc)
   - [Request Queue (GPU Management)](#request-queue-gpu-management)
 - [CTO Agent](#cto-agent)
 - [OpenClaw Skill Bridge](#openclaw-skill-bridge)
 - [NPC Coding-Task-Runner](#npc-coding-task-runner)
 - [Task Chains](#task-chains)
 - [Conflict Detection & Arbitration](#conflict-detection--arbitration)
+- [Voice — TTS, STT, and Presence Gating](#voice--tts-stt-and-presence-gating)
+- [LLM Telemetry](#llm-telemetry)
+- [Proposal Queues (NPC-Initiated Changes)](#proposal-queues-npc-initiated-changes)
 - [Work Output Feed](#work-output-feed)
 - [Meeting System](#meeting-system)
   - [Break Room Behavior](#break-room-behavior)
@@ -51,6 +58,7 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [Proactive Patrol](#proactive-patrol)
   - [Setup](#setup)
 - [Lucy — Email and Job Pipeline](#lucy--email-and-job-pipeline)
+  - [n8n Integration (Email Pipeline Setup)](#n8n-integration-email-pipeline-setup)
 - [REST API Reference](#rest-api-reference)
 - [Controls](#controls)
   - [OpenClaw Panel](#openclaw-panel)
@@ -73,6 +81,7 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
   - [Bouncer terminal doesn't open](#bouncer-terminal-doesnt-open--windows-terminal-not-found)
   - [Bouncer shows no output](#bouncer-investigation-shows-no-output-or-wsl-errors)
   - [LM_STUDIO_PARALLEL not working](#lm_studio_parallel-not-taking-effect)
+- [Performance & Tuning](#performance--tuning)
 - [Testing](#testing)
 - [Asset Pipeline](#asset-pipeline)
 - [City Generator (experimental)](#city-generator-experimental)
@@ -99,6 +108,47 @@ Denizen is a visual observability layer that renders AI agent workflows as a liv
 - **NPCs run Claude Code** — `skill: coding-agent` spawns Claude Code in an isolated git worktree to modify real files; diffs are written to `reports/code-reviews/` for human approval before merge
 - **Task chains** — `POST /api/task-chains` orchestrates multi-step NPC workflows (spec→design→code→review→QA); each step auto-assigns the next directive when its NPC finishes, with all prior artifacts as context
 - **NPC disagreement & arbitration** — when two NPCs produce conflicting outcomes about the same topic, both positions get injected into Abby's next think prompt — she makes the call
+
+## Why NPCs? (The Design Philosophy)
+
+Denizen isn't a game. It's an observability layer that uses game mechanics to make AI agent workflows legible to humans. The NPCs aren't decoration — each one is a real AI agent doing a specific job for a specific reason.
+
+**The problem Denizen solves.** When you run AI agents in production, you typically end up staring at terminal logs, JSON blobs, or LangSmith traces. You can tell *what* happened — but you can't see the *shape* of the work: who's idle, who's blocked, where the bottleneck is, what's waiting on what. Denizen takes the same telemetry you'd see in a dashboard and renders it as a living office. You walk in and immediately see: Bouncer is investigating something serious, Lucy is at her desk processing email, three engineers are in the conference room — and Abby is alone in her office, which means nothing is escalated. That visual scan takes about two seconds. A log dashboard couldn't tell you the same thing in two minutes.
+
+**Each NPC is a real agent with a real job.** The 16 NPCs aren't archetypes — they're the actual functions a small AI-powered company needs:
+
+| NPC | Real-world function | Why this NPC exists |
+|-----|---------------------|---------------------|
+| **Abby** (CTO) | Orchestrator / dispatcher | Every workflow needs someone deciding what gets worked on. Abby observes state, assigns directives, calls meetings, escalates. She's the autonomous director — the one agent who looks at all the others and makes calls. |
+| **Marcus** (PM) | Status tracker | Without explicit tracking, agentic systems silently stall. Marcus's only job is checking in: "where does that stand," "two days ago, what changed." He surfaces blockers. |
+| **Sarah** (Product) | Scope guard | Agents over-build by default. Sarah's filler line — *"what problem does that solve"* — is a deliberate counterweight. She kills bad features before they hit engineering. |
+| **Alex, Edward, Josh, Roki** (Engineering) | Build, ship, learn | Senior, backend, frontend, intern — different roles need different prompt context, different model strength, different file-read scope. |
+| **Jenny, Molly** (QA / Review) | Quality gate | Code shouldn't merge without a second pair of eyes. Two separate roles because review (Jenny: pre-merge) and QA (Molly: post-merge) are different cognitive tasks. |
+| **Rob** (Design) | Visual problem-solving | Engineers solve in code. Some problems are solved in layout, hierarchy, contrast. |
+| **Bob** (Research) | Knowledge layer | Decisions made without prior art waste compute. Bob's job is to surface what's already known via `browserclaw` before anyone builds. |
+| **Pier** (Data) | Persistence + analytics | Without structured logging of agent decisions, you can't replay, debug, or measure. Pier owns the Supabase pipeline. |
+| **Oscar** (DevOps) | Reliability | Inference queues, model swaps, server health. Different from Dan: Oscar prevents incidents; Dan responds to them. |
+| **Dan** (IT) | Incident responder | When Bouncer flags a real threat, *somebody* has to decide what to do about it. Dan receives Bouncer's escalations as directives. |
+| **Bouncer** (Security) | Active investigation | Most security tools alert and stop. Bouncer alerts *and investigates* — actually running nmap/ss/tcpdump/tshark to confirm or refute the alert. |
+| **Lucy** (EA / Reception) | External-world interface | Email, scheduling, job pipelines. The agent that touches systems outside the company codebase. |
+
+**How to remap this to your business.** Every NPC is just a `SOUL.md` file. The role table above is illustrative, not prescriptive. Concrete examples of how Denizen has been remapped (or could be):
+
+- **Customer support team** — replace engineers with tier-1/tier-2/escalation agents, replace Sarah with a feedback-prioritization agent, keep Bouncer for fraud detection
+- **Sales pipeline** — Lucy becomes outbound prospecting (job-scraper → contact-finder → email-sender), Alex becomes deal-desk, Sarah becomes pricing approval, Bouncer becomes compliance gate
+- **Research lab** — Bob becomes literature review, Pier becomes results-logging, Rob becomes paper-figure-generation, Abby becomes lab-PI coordinator
+- **Trading desk** — Pier becomes data pipeline (already is), Edward becomes strategy backtester, Bouncer becomes risk monitor, Dan becomes infrastructure responder
+- **Hospital ops** — Lucy becomes patient intake, Marcus becomes case coordinator, Bouncer becomes HIPAA compliance auditor
+
+**The pattern: one NPC per durable role.** A "role" is something that has its own decision-making context, its own success criteria, its own files it cares about, and its own escalation paths. If you can describe a job in two sentences, it's an NPC. If you find yourself writing "and also does X" for one agent, that X should be its own NPC.
+
+**Why each one's model choice matters.** NPCs use different LLMs because the work is different:
+- **Cloud Claude (Haiku)** — Abby, Marcus, Sarah, Molly, Rob, Jenny, Lucy. Reasoning-heavy work or work that touches the real world (email, code review). Cloud latency is acceptable because these decisions matter more than they happen often.
+- **LM Studio (Qwen2.5-14B)** — Alex, Edward, Bob, Pier, Oscar. Engineering and analysis work. Runs locally on a 4070 Ti Super. Lower latency, no token cost, full data privacy for code reads.
+- **LM Studio (fast)** — Dan, Roki, Bouncer. High-frequency or simple-context work. A smaller local model keeps the inference queue clear.
+- **Grok** — Josh. Cheap, fast, and the team's frontend dev doesn't need deep reasoning for every think cycle.
+
+**The takeaway.** Denizen's 16-NPC roster isn't a fixed product — it's a template for how to structure an AI-powered team so the work is observable. Fork it, swap the soul files, change the org chart in `data/company-brief.json`, and you have a visual operating layer for whatever your business does.
 - **Work output feed** — press `Tab` for a terminal-style HUD panel showing every NPC work output in real time with color-coded roles
 - **Security monitor** — live threat detection dashboard (file access, network scans, injection attempts)
 - **Bouncer investigations** — Bouncer runs real Kali Linux commands (nmap, ss, journalctl, tshark) against detected threats; produces structured markdown reports; escalates to Dan if serious
@@ -227,6 +277,53 @@ Denizen works immediately after cloning — no API keys required. In demo mode:
 - The CTO agent runs pre-scripted office behaviors (standups, code reviews, meetings)
 - Smart fallback infers actions from player messages (e.g. "fix the bug" triggers coding behavior)
 - If API keys are configured but fail (e.g. exhausted credits), the system auto-falls back to demo mode
+
+### Environment Variables
+
+Denizen reads its env from `.env` in the project root (start with `node --env-file=.env server.js` or use the bundled `.claude/launch.json` which does it automatically). Every variable below is optional — defaults are listed and the system runs without any of them.
+
+**Core**
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `PORT` | `8080` | HTTP / WebSocket port |
+| `LM_STUDIO_URL` / `LM_STUDIO_BASE_URL` | `http://localhost:1234` | LM Studio endpoint (override if running LM Studio on a different host or port) |
+| `LM_STUDIO_API_KEY` | (none) | API key for LM Studio if you've set one |
+| `LM_STUDIO_PARALLEL` | `1` | How many simultaneous inference requests to allow. With Qwen2.5-14B on a 4070 Ti Super, `2` is comfortable. Raise to 3 only if LM Studio's "Parallel" server setting matches. |
+| `LM_STUDIO_MODEL` | `dolphin3.0-llama3.1-8b` | Default model name for local NPCs |
+| `LM_STUDIO_FAST_MODEL` | `dolphin3.0-llama3.1-8b` | Lighter model for high-frequency NPCs (Dan, Roki, Bouncer) |
+| `LM_STUDIO_VISION_MODEL` | (LM_STUDIO_MODEL) | Model used by `desktopAgent` for screenshot analysis |
+| `NPC_HISTORY_DEPTH` | `20` | How many prior messages each NPC keeps in their think context |
+
+**Provider API keys** *(can also be set in `~/.openclaw/openclaw.json`)*
+| Variable | Provider |
+|----------|----------|
+| `ANTHROPIC_API_KEY` | Claude (Anthropic) |
+| `OPENAI_API_KEY` | OpenAI (fallback for some classifier paths) |
+| `MOONSHOT_API_KEY` / `KIMI_API_KEY` | Moonshot / Kimi |
+| `ELEVENLABS_API_KEY` / `XI_API_KEY` | ElevenLabs TTS |
+| `ELEVENLABS_VOICE_ID` | Default ElevenLabs voice ID (per-NPC overrides live in `data/voice-map.json`) |
+| `ELEVENLABS_MODEL_ID` | Default `eleven_turbo_v2_5` |
+| `OPENAI_WHISPER_API_KEY` | OpenAI Whisper (server-side STT fallback if browser STT is unavailable) |
+| `OPENAI_WHISPER_BASE_URL` | Whisper endpoint override |
+| `OPENAI_WHISPER_MODEL` | Whisper model name |
+
+**Lucy email pipeline**
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `EMAIL_AUTOSEND` | `false` | When `true`, Lucy actually sends low-risk replies. Escalation keywords (`contract`, `nda`, `payment`, …) always force draft-only regardless. |
+| `EMAIL_INBOUND_SECRET` | (none) | Required if set: `POST /api/email-inbound` must include `?secret=<value>` |
+| `GMAIL_OAUTH_FILE` | `~/.openclaw/gmail-oauth.json` | Where to find Gmail OAuth credentials |
+
+**Bouncer / WSL**
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `WSL_DISTRO` | `kali-linux` | WSL distribution name. Override if you use a different Linux for security investigations. |
+
+**City Generator + miscellany**
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `CITY_PLAN_PROVIDER` | `claude` | Which provider runs `POST /api/llm-city-plan` zoning |
+| `SOUL_PROPOSALS_PATH` | `data/soul-proposals.json` | Where NPC SOUL.md proposals are queued |
 
 ## How It Works
 
@@ -549,6 +646,104 @@ NPCs accumulate skills over time through conversations and work:
 - Skills are parsed and included in think prompts so NPCs reference their expertise
 - Over time, NPCs develop specializations based on their interactions
 
+### MEMORY.md Format
+
+`MEMORY.md` is plain markdown plus a few structured tag conventions. The runtime reads memories in two passes: human-readable text becomes part of the prompt as-is, and any `[SKILL:...]` or `[FACT:...]` tags are parsed out and surfaced separately.
+
+**Anatomy of a memory file:**
+
+```markdown
+# Jenny — Memory
+
+## Recent Conversations
+- 2026-05-27: Zion asked about the websocket dedup bug — I told him Edward owns it, tracking the spec.
+- 2026-05-26: Caught a race condition in the proximity cooldown; filed bug-report-2026-05-26.md.
+
+## Skills
+[SKILL:javascript:+3]
+[SKILL:testing:+5]
+[SKILL:race-conditions:+2]
+[SKILL:websocket:+1]
+
+## Facts about teammates
+[FACT:Edward:owns the websocket layer]
+[FACT:Alex:reviews PRs same-day]
+
+## Decisions and reasoning
+- I block PRs without tests because the company shipped a payment bug in 2025 from an untested branch. Worth the friction.
+```
+
+**Tag syntax:**
+
+| Tag | Format | What it does |
+|-----|--------|--------------|
+| `[SKILL:name:+N]` | `name` is lowercase, `N` is an integer (usually 1–3) | Increments a skill counter. Skills with counts ≥ 3 are listed as "expertise" in the NPC's think prompt. |
+| `[FACT:Subject:claim]` | `Subject` is an NPC name or noun, `claim` is short | Added as a "Known facts" block in the think prompt. Helps cross-NPC awareness. |
+| `[MOOD:event:+/-N]` | Internal | Used by the mood system to bias future cycles. Usually written by code, not by hand. |
+
+**Where memories come from:**
+
+1. **End-of-conversation summarization** — after a player_chat session or a significant NPC exchange, the runtime asks the NPC's model to summarize what to remember (max 200 chars) and appends it
+2. **`taskPhase: finished` artifacts** — when an NPC writes a report, a one-line summary of the task gets appended to memory
+3. **Manual editing** — you can edit `MEMORY.md` directly to seed an NPC with context. Restart isn't required for read-only edits; the runtime re-reads memory on every think cycle.
+
+**Soft cap:** files over ~2KB get truncated in the prompt (oldest entries first). Phase 4.2 will add automatic summarization to keep older context compressed.
+
+### Add a New NPC
+
+Adding an NPC is three steps. No code changes if you're using an existing sprite sheet.
+
+**1. Create the NPC folder and SOUL.md**
+
+```bash
+mkdir -p denizen/npcs/dave
+```
+
+`denizen/npcs/dave/SOUL.md`:
+
+```markdown
+# Dave — Sales Lead
+
+## Core Identity
+You are Dave, the sales lead. You own outbound, demos, and pipeline reporting.
+
+## Personality
+Direct, persistent, optimistic. Reads the room fast.
+
+## Filler phrase
+"What's the next step here."
+
+## Provider
+claude
+
+## Role
+Sales Lead
+```
+
+The runtime parses `## Provider` (one of `claude`, `lmstudio`, `lmstudio-fast`, `grok`, `gemini`, `kimi`) and `## Role` (free-form string used in logs and prompts). Everything else in the file becomes part of the NPC's system prompt.
+
+**2. Register Dave in `src/npc-roster.js`**
+
+Add an entry mapping the display name to the folder and sprite:
+
+```js
+{ name: 'Dave', folder: 'dave', sprite: 'assets/Premade_Character_03.png' }
+```
+
+**3. Assign a desk in `data/company-brief.json`** (optional)
+
+If you want Dave to show up in the org chart and have a home desk, add him to the appropriate team in the company brief. If you skip this, he'll show up but won't have an assigned desk (defaults to wander).
+
+**4. Restart the server**
+
+```bash
+node --env-file=.env server.js
+```
+
+Dave joins the 17-NPC office. His think cycle starts immediately, he gets a status dot, and he can be talked to via the chat panel. To give him real capabilities, edit his soul to mention the OpenClaw skills you want him to know about (`browserclaw`, `gmail`, etc.).
+
+**Optional — give Dave his own sprite:** drop a 32×48 4×4 character sheet PNG into `assets/` and reference it in the roster entry. See `assets/Premade_Character_01.png` for the format.
+
 ### Request Queue (GPU Management)
 
 All 16 NPCs share a single sequential inference queue for LM Studio:
@@ -764,6 +959,164 @@ The conflict is consumed once (cleared after Abby reads it). Abby's response —
 
 ---
 
+## Voice — TTS, STT, and Presence Gating
+
+Denizen has a full voice loop: NPCs can speak (ElevenLabs TTS), you can speak back (push-to-talk STT), and the office stays silent when you're not at the keyboard (voice gate). The browser never sees your API key — all TTS calls go through the server.
+
+### Text-to-Speech (NPCs talking)
+
+**Architecture:**
+
+```
+NPC speaks  →  src/voice-gate.js (presence check)  →  DenizenVoice
+                                                          ↓
+                                            elevenlabs-provider (browser)
+                                                          ↓
+                                            fetch /api/tts {npc, text}
+                                                          ↓
+                                          src/elevenlabs-tts.js (server)
+                                          adds xi-api-key header
+                                                          ↓
+                                          api.elevenlabs.io → audio/mpeg
+                                                          ↓
+                                          new Audio(blob).play() in browser
+```
+
+**Per-NPC voice mapping** lives in `data/voice-map.json`:
+
+```json
+{ "Abby": "voice-id-from-elevenlabs", "Lucy": "another-voice-id", ... }
+```
+
+If no voice is mapped for an NPC, the default `ELEVENLABS_VOICE_ID` is used. If no ElevenLabs key is configured at all, the browser falls back to Web Speech API's `SpeechSynthesis` (works offline, less natural).
+
+**Setup:**
+
+1. Get an ElevenLabs API key from elevenlabs.io
+2. Set `ELEVENLABS_API_KEY=...` in `.env`
+3. (Optional) Copy voice IDs from your ElevenLabs library into `data/voice-map.json`
+4. Health check: `curl http://localhost:8080/api/tts/health` → `{ ok: true, ... }`
+
+### Presence Gate
+
+The presence gate (`src/voice-gate.js`) keeps TTS silent unless `worldState.zionPresent === true`. The presence flag flips on when you:
+- Move (WASD/arrow keys)
+- Open the chat panel (Enter)
+- Click anywhere on the canvas
+
+…and flips off after 60 seconds of no input. Status chip in the top-right shows current state (`🔊 listen-in`, `🔇 muted`). Press `Alt+L` to manually cycle modes.
+
+### Speech-to-Text (You talking back)
+
+Push-to-talk is built in. Hold **`\`** (backslash) or click the 🎤 button → speak → release. The transcript drops into the player-chat pipeline as if you'd typed it. By default this uses the browser's `webkitSpeechRecognition` (Chrome/Edge only, no API key needed).
+
+**Action classification:** an optional classifier (`src/openclaw-dispatch.js`) runs on every voice transcript. If it scores the message as an *action request* ("run a security scan", "check the build"), it's routed to OpenClaw via `gateway-bridge.sendChat()` — your voice command actually executes.
+
+**Whisper fallback (server-side):** if you need cross-browser STT or higher accuracy, set `OPENAI_WHISPER_API_KEY=...` and the server will accept audio uploads at `/api/whisper` and proxy to OpenAI.
+
+### Proximity Audio
+
+`src/proximity-audio.js` adjusts TTS volume based on the distance between the player and the speaking NPC. NPCs across the office sound farther away; NPCs at your shoulder sound close. Disabled when the panel is in mute mode.
+
+### SFX
+
+`src/sfx.js` plays event-driven sound effects (door open, meeting bell, status change). All SFX go through the same presence gate — silent when you're away. Missing audio files are tolerated; no crash, just no sound.
+
+---
+
+## LLM Telemetry
+
+Every call to every LLM in Denizen is logged. The `src/llm-telemetry.js` module records a structured event per call, persists to a JSONL file, and exposes a panel in the diag UI.
+
+**What gets recorded:**
+
+```json
+{
+  "id": "tel_1716832901_a8c3",
+  "at": "2026-05-27T19:48:21.300Z",
+  "npc": "Abby",
+  "kind": "think",
+  "provider": "anthropic",
+  "model": "claude-haiku-4-5",
+  "latencyMs": 842,
+  "tokensIn": 1240,
+  "tokensOut": 187,
+  "promptPreview": "You are Abby, the CTO...",
+  "responsePreview": "{\"action\":\"callMeeting\",...",
+  "error": null,
+  "correlationId": "task-chain-7"
+}
+```
+
+**Storage:**
+- In-memory ring buffer of the last 500 events (cheap to read for the UI)
+- Appended to `data/llm-telemetry.jsonl` if `persist=true` (default). JSONL so partial writes can't corrupt the file and `tail`/`grep` work.
+
+**Event kinds:** `think` (NPC decision), `chat` (player→NPC response), `email` (Lucy reply), `response` (any LLM response), `goal`, `plan`, `reflection`, `city-plan`, `openclaw` (downstream OpenClaw run), `other`.
+
+**Error classifier:** the runtime turns raw errors into `{ category, hint }` so the diag panel shows actionable fixes instead of stack traces. Categories include `context_overflow`, `rate_limit`, `auth_failed`, `model_not_found`, `network`. Each one has a one-line hint with the actual fix.
+
+**External sink** (`src/external-sink.js`): telemetry events can be forwarded to Supabase or n8n in real time. Configure via:
+
+```env
+EXTERNAL_SINK_URL=https://your-supabase-url/rest/v1/llm_telemetry
+EXTERNAL_SINK_KEY=...
+EXTERNAL_SINK_KINDS=think,error    # comma-separated filter, or "*" for all
+```
+
+The sink auto-disables after 5 consecutive failures to prevent log flooding.
+
+**Diag panel:** the telemetry panel UI lives in `src/llm-telemetry-panel.js` and shows per-NPC call rates, recent errors, and a calls-per-minute graph. Toggled from the diag chip in the bottom-right of the canvas.
+
+---
+
+## Proposal Queues (NPC-Initiated Changes)
+
+NPCs can propose three kinds of changes to themselves and the system. **None of these proposals apply automatically** — every one requires explicit operator approval via the proposals panel.
+
+### What can be proposed
+
+| Kind | NPC trigger | What it proposes | Daily budget |
+|------|-------------|------------------|--------------|
+| **SOUL edit** | `npcBrains.reflectOnDay(npc)` daily reflection | Add or drop a single line in the NPC's own `SOUL.md` (personality, opinions, quirks) | 1 / NPC / day |
+| **New animation** | `[ACTION:requestAnimation:name:description]` in think output | A new sprite animation (e.g., `meditate`, `whiteboardDraw`) | 2 / NPC / day |
+| **New capability** | `[ACTION:requestCapability:verb:description]` in think output | A new action verb the NPC could use (e.g., `whiteboardDraw`, `paginate`) | 1 / NPC / day |
+
+`system` and `operator` proposers are exempt from the budget caps.
+
+### Where proposals live
+
+| Kind | Storage | REST endpoint |
+|------|---------|---------------|
+| SOUL | `data/soul-proposals.json` | `GET /api/soul-proposals`, `POST /api/soul-proposal`, `/approve`, `/apply` |
+| Animation | `data/animation-proposals.json` | `GET /api/animation-proposals`, `POST /api/request-animation` |
+| Capability | `data/capability-proposals.json` | `GET /api/capability-proposals`, `POST /api/request-capability`, `/approve` |
+| **Aggregate** | — | `GET /api/proposals` — returns all three queues with a `kind` field on each entry |
+
+### Operator review panel
+
+A 📋 chip lives in the bottom-right of the canvas next to the diag chip. When it's yellow (`📋 N pending`), there are proposals to review. Click to open the panel.
+
+Each card shows:
+- **Badge color** indicating kind: purple = animation, blue = SOUL edit, orange = capability
+- The proposing NPC, timestamp, and the actual proposal text
+- Approve / Reject buttons
+- An **Apply** button (SOUL only) that writes the edit to `npcs/<name>/SOUL.md` and appends to `SOUL.history.md` after approval
+
+**Two-step apply for SOUL edits:** `approve` only marks the queue entry. A separate explicit `apply` call actually writes to the SOUL.md file. This is intentional — it gives you a chance to reconsider before mutating an NPC's identity.
+
+### Why the approval gate is non-negotiable
+
+From `docs/ROADMAP_SELF_ADVANCEMENT.md`:
+
+> Without the approval gate, NPCs might gradually delete their personality quirks ("I'm anxious") in favor of bland competence ("I'm efficient at my tasks"). The approval gate is non-negotiable for this stage. We're not trying to make 16 indistinguishable productivity bots.
+
+The reflection prompt also explicitly tells the NPC that proposing nothing is a valid and often correct answer. Most reflections result in no proposal, which is the design intent.
+
+**Deeper docs:** [`docs/SOUL_REFLECTION.md`](docs/SOUL_REFLECTION.md), [`docs/CAPABILITY_PROPOSALS.md`](docs/CAPABILITY_PROPOSALS.md), [`docs/ANIMATION_FORGE.md`](docs/ANIMATION_FORGE.md), [`docs/PROPOSAL_REVIEW.md`](docs/PROPOSAL_REVIEW.md).
+
+---
+
 ## Work Output Feed
 
 Press **`Tab`** to toggle a terminal-style HUD panel in the bottom-left of the screen. Every time an NPC produces work output (`npc_work_output` WS event), an entry appears in real time.
@@ -909,6 +1262,64 @@ Body: { query, site, pages, remoteOnly, minSalary }
 7. Return summary — "Applied to N roles on linkedin. M more queued for manual review."
 
 When Lucy's NPC brain returns `action: run_skill, skill: job-scraper`, the server short-circuits to `runJobPipeline()` and injects the summary into her next think cycle.
+
+### n8n Integration (Email Pipeline Setup)
+
+Lucy's email auto-send requires an n8n workflow to deliver inbound Gmail messages to Denizen. The Denizen side is ready out of the box; you build the n8n half once.
+
+**n8n workflow (4 nodes):**
+
+```
+[Gmail Trigger]  →  [Function]  →  [HTTP Request]  →  [(optional) Slack/Discord]
+```
+
+**Node 1 — Gmail Trigger**
+- Auth: your Gmail account
+- Event: `Message Received` (or `New Email Matching Search`)
+- Filter (optional): `is:unread to:me`
+- Polling interval: 1–5 minutes
+
+**Node 2 — Function (shape the payload)**
+```js
+return [{
+  json: {
+    from:     $input.first().json.From,
+    to:       $input.first().json.To,
+    subject:  $input.first().json.Subject || '',
+    body:     $input.first().json.body?.plain || $input.first().json.snippet || '',
+    threadId: $input.first().json.threadId,
+    messageId: $input.first().json.id
+  }
+}];
+```
+
+**Node 3 — HTTP Request → Denizen**
+- Method: `POST`
+- URL: `http://<your-denizen-host>:8080/api/email-inbound?secret=<EMAIL_INBOUND_SECRET>`
+- Headers: `Content-Type: application/json`
+- Body: JSON, send the full output of Node 2
+- Timeout: 30 seconds (Lucy may take that long to compose a reply)
+
+**Node 4 — (optional) Notify yourself**
+- Slack/Discord/Telegram with `${$json.subject}` so you know an email came in
+
+**Denizen-side verification:**
+```bash
+# Health check
+curl http://localhost:8080/api/email-inbound -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"from":"test@example.com","subject":"test","body":"hello Lucy"}'
+# → Lucy walks to her desk and composes a reply
+```
+
+**Security: set `EMAIL_INBOUND_SECRET=<a-random-string>` in `.env`.** Without it, anyone who finds the endpoint can deliver fake emails to Lucy. With it, n8n must include `?secret=<value>` in the URL or the request is rejected with 401.
+
+**What Lucy does with each email:**
+1. Composes a reply via her configured AI provider (Claude Haiku by default)
+2. If `EMAIL_AUTOSEND=true` and no escalation keyword matches → sends via `gmailClient.sendEmail()`
+3. Otherwise → creates a Gmail draft you can review and send manually
+4. Walks to her reception desk in-game (visible status change)
+5. Logs the inbound + her response to her `MEMORY.md`
 
 ---
 
@@ -1151,6 +1562,58 @@ This is fixed in the current version. If you see commands being typed into your 
 - Start the server with: `node --env-file=.env server.js` (not just `node server.js`)
 - Or export the variable first: `$env:LM_STUDIO_PARALLEL=2; node server.js` (PowerShell)
 - The `.claude/launch.json` already includes `--env-file=.env` for FleetView users
+
+## Performance & Tuning
+
+Denizen runs 16 NPCs simultaneously, each making LLM calls every 45–75 seconds. On a single workstation that's a meaningful inference load. This section covers what to tune and in what order.
+
+### Sizing
+
+| GPU | Recommended setup | LM_STUDIO_PARALLEL |
+|-----|-------------------|---------------------|
+| RTX 4070 / 4070 Ti / 4080 (12-16GB) | One 14B model (Qwen2.5-14B q4) | 1–2 |
+| RTX 4070 Ti Super / 4090 (16-24GB) | One 14B + one fast 7B | 2–3 |
+| Multiple GPUs / 48GB+ | One 32B + one fast 14B | 3–4 |
+| CPU only | Use cloud Claude for all NPCs | n/a |
+
+**Memory math:** Qwen2.5-14B q4 uses ~9GB of VRAM. With LM_STUDIO_PARALLEL=2, LM Studio allocates 2× the KV cache (~3-5GB extra). Leave 1-2GB headroom for the OS. That's why 12GB cards run at parallel=1 comfortably and 16GB cards can push to parallel=2.
+
+### Where the bottlenecks actually are
+
+When the office feels sluggish, it's almost always one of these (in order of frequency):
+
+1. **LM Studio queue saturation** — 16 NPCs all wanting to think, single-slot inference. Check the diag panel's "queue depth" — if it's consistently >5, raise `LM_STUDIO_PARALLEL` or move more NPCs to cloud Claude.
+2. **Cloud API rate limits** — if you hit Anthropic's RPM cap, NPCs using Claude will start failing. The telemetry panel shows this clearly with `rate_limit` error category.
+3. **Context overflow** — LM Studio rejects requests when prompt + completion exceed the model's context window. Lower `NPC_HISTORY_DEPTH` from 20 to 10. The telemetry classifier surfaces this with a specific hint.
+4. **Long-running coding-agent tasks** — Claude Code can take 30–120 seconds for a real change. While one is running, that NPC is unavailable. This is by design.
+5. **Browser rendering** — at >25 NPCs the Phaser scene starts dropping frames. Reduce active NPCs via the demo-roster mechanism (Phase 4.1) or close the work output feed panel.
+
+### Tuning knobs in priority order
+
+```bash
+# 1. The single most impactful change for local-inference setups
+LM_STUDIO_PARALLEL=2          # default 1; raise to 2 if you have ≥16GB VRAM
+
+# 2. Shrink the prompt — the cheapest win
+NPC_HISTORY_DEPTH=10          # default 20; cuts ~30-40% off prompt size for active NPCs
+
+# 3. Cap how often NPCs think (in src/npc-brains.js _scheduleNextThink)
+# default range: 45–75 seconds. Push to 90–120 if you don't need fast reactions.
+
+# 4. Move chatty NPCs to cloud providers
+# Edit npcs/<name>/SOUL.md, change ## Provider from `lmstudio` to `claude`
+```
+
+### Diagnostic tools built in
+
+- **Diag chip** (bottom-right of canvas) — opens a panel showing queue depth, recent errors, calls-per-minute, per-NPC stats
+- **`GET /api/telemetry`** — same data over HTTP for scripting
+- **`data/llm-telemetry.jsonl`** — every call ever made. `tail -f data/llm-telemetry.jsonl | jq` for live monitoring
+- **External sink** — forward telemetry to Supabase/n8n for long-term analytics (see [LLM Telemetry](#llm-telemetry))
+
+### Memory file growth
+
+`MEMORY.md` grows over time. Currently the runtime soft-caps prompt injection at ~2KB (oldest entries truncated). Phase 4.2 will add automatic summarization. Manual workaround: edit any NPC's `MEMORY.md` and trim it — the runtime re-reads memory on every think cycle, so no restart needed.
 
 ## Testing
 
