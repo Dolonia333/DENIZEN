@@ -21,8 +21,9 @@ const llmTelemetry = require('./src/llm-telemetry');
 const jobApplication = require('./src/job-application');
 const desktopAgent = require('./src/desktop-agent');
 const linuxAgent = require('./src/linux-agent');
-const npcTools   = require('./src/npc-tools');
-const log = require('./src/logger');
+const npcTools         = require('./src/npc-tools');
+const log              = require('./src/logger');
+const codingTaskRunner = require('./src/coding-task-runner');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
 // edit data/voice-map.json + restart to change. Missing file → empty map
@@ -207,6 +208,27 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: false, output, ts: Date.now() });
     });
     return Promise.resolve({ ok: true, output: 'Lucy job pipeline started', skill: 'job-pipeline', npcName });
+  }
+
+  // --- coding-agent: run Claude Code in an isolated worktree ---
+  if (skill === 'coding-agent') {
+    const { targetFiles, task: skillTask } = skillParams || {};
+    const taskDesc = skillTask || `NPC ${npcName} coding task`;
+    return codingTaskRunner.runCodingTask({
+      npc: npcName,
+      task: taskDesc,
+      targetFiles: Array.isArray(targetFiles) ? targetFiles : [],
+      skillParams,
+      broadcast: (msg) => {
+        const raw = JSON.stringify(msg);
+        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+      },
+    }).then(result => {
+      const output = result.ok ? JSON.stringify(result) : `Error: ${result.error}`;
+      npcBrains.injectSkillResult(npcName, skill, output);
+      broadcast({ type: 'npc_skill_result', npcName, skill, ok: result.ok, output: output.slice(0, 200), ts: Date.now() });
+      return result.ok ? JSON.stringify(result) : `Error: ${result.error}`;
+    });
   }
 
   return new Promise((resolve) => {
@@ -2081,6 +2103,49 @@ const server = http.createServer((req, res) => {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
       }
+    });
+    return;
+  }
+
+  // --- GET /api/code-proposals — list all NPC code proposals ---
+  if (urlPath === '/api/code-proposals' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ proposals: codingTaskRunner.getProposals() }));
+    return;
+  }
+
+  // --- POST /api/code-proposals/:id/approve ---
+  const approveMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/approve$/);
+  if (approveMatch && req.method === 'POST') {
+    const proposalId = approveMatch[1];
+    codingTaskRunner.approveProposal(proposalId).then(result => {
+      if (result.ok) {
+        const raw = JSON.stringify({ type: 'npc_code_proposal_approved', proposalId });
+        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+      }
+      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch(err => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message }));
+    });
+    return;
+  }
+
+  // --- POST /api/code-proposals/:id/reject ---
+  const rejectMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/reject$/);
+  if (rejectMatch && req.method === 'POST') {
+    const proposalId = rejectMatch[1];
+    codingTaskRunner.rejectProposal(proposalId).then(result => {
+      if (result.ok) {
+        const raw = JSON.stringify({ type: 'npc_code_proposal_rejected', proposalId });
+        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+      }
+      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch(err => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message }));
     });
     return;
   }
