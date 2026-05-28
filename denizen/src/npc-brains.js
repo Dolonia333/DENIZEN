@@ -25,6 +25,17 @@ try { llmTelemetry = require('./llm-telemetry'); } catch (_) {}
 let npcTools = null;
 try { npcTools = require('./npc-tools'); } catch (_) {}
 
+// Phase 3.2 — Task chain orchestration
+let taskChain = null;
+try { taskChain = require('./task-chain'); } catch (_) {}
+
+// Phase 3.3 — NPC conflict detector (injects into Abby's prompt when NPCs disagree)
+let conflictDetector = null;
+try { conflictDetector = require('./conflict-detector'); } catch (_) {}
+
+// Broadcast function reference — set at server startup via setBroadcast()
+let _broadcastFn = null;
+
 // Clean console logger — replaces scattered console.log calls
 const log = require('./logger');
 
@@ -1048,8 +1059,32 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       ? `## DIRECT ORDER FROM ${String(directive.from).toUpperCase()}\n${directive.task}\nThis is your mandatory current task. Work on it now. When finished, set taskPhase to "finished" and report back.\n\n`
       : '';
 
+    // Addition A — Chain context: inject when NPC is part of an active task chain
+    let chainContext = null;
+    if (taskChain) {
+      const chainInfo = taskChain.getChainForNpc(npcName);
+      if (chainInfo) {
+        const { chain, stepIndex } = chainInfo;
+        const prevArtifacts = chain.artifacts.length
+          ? chain.artifacts.map(a => `- Step ${a.step + 1} (${a.npc}): ${path.basename(a.artifactPath)}`).join('\n')
+          : 'None yet.';
+        chainContext = `## Active Task Chain\nYou are step ${stepIndex + 1} of ${chain.steps.length} in task chain "${chain.name}".\nPrevious artifacts:\n${prevArtifacts}\nComplete your step, then the chain will advance automatically.`;
+      }
+    }
+
+    // Addition C — Conflict context: inject into Abby/CTO prompt when NPCs disagree
+    let conflictContext = null;
+    if (conflictDetector && (npcName === 'Abby' || (brain && brain.role === 'CTO'))) {
+      const conflict = conflictDetector.getConflictForNpc('Abby');
+      if (conflict) {
+        conflictContext = `## CONFLICT DETECTED — ARBITRATION NEEDED\n${conflict.npc1} and ${conflict.npc2} disagree about: "${conflict.task}"\n- ${conflict.npc1} outcome: ${conflict.outcome1}\n- ${conflict.npc2} outcome: ${conflict.outcome2}\n- Artifacts: ${conflict.artifacts.join(', ')}\nMake a call. Assign directives to both with your decision.`;
+      }
+    }
+
     const systemPrompt = brain.personality + '\n\n' +
       (directiveBlock ? directiveBlock : '') +
+      (chainContext ? chainContext + '\n\n' : '') +
+      (conflictContext ? conflictContext + '\n\n' : '') +
       (skillResultBlock ? skillResultBlock : '') +
       (moodBlock ? moodBlock : '') +
       (companyContext ? '## Company & Sprint Context\n' + companyContext + '\n\n' : '') +
@@ -1199,6 +1234,32 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
             if (artifactPath) {
               decision._artifactPath = artifactPath;
               console.log(`[NpcTools] ${npcName} wrote artifact: ${artifactPath}`);
+            }
+          }
+
+          // Addition B — Record artifact for conflict detection
+          if (conflictDetector && decision.save) {
+            conflictDetector.recordArtifact({
+              npc: npcName,
+              task: finishedTask ? finishedTask.task : (decision.save || ''),
+              outcome: decision.outcome || null,
+              artifactPath: decision._artifactPath || '',
+              chainId: (taskChain && taskChain.getChainForNpc(npcName))?.chain?.id || null,
+            });
+          }
+
+          // Addition B — Advance the task chain when this NPC was a chain step
+          if (taskChain) {
+            const chainInfo = taskChain.getChainForNpc(npcName);
+            if (chainInfo) {
+              const artifactPath = decision._artifactPath || `reports/unknown/${npcName}_${Date.now()}.md`;
+              const _broadcast = _broadcastFn || null;
+              taskChain.onStepComplete(
+                npcName,
+                artifactPath,
+                (to, from, task, urgent) => this.assignDirective(to, from, task, urgent),
+                _broadcast
+              );
             }
           }
         } else if (decision.taskPhase === 'continuing' && this._taskProgress[npcName]) {
@@ -2950,3 +3011,12 @@ ${roleActions}
 }
 
 module.exports = NpcBrainManager;
+
+/**
+ * Set the broadcast function used by the task chain runner when NPC brains
+ * need to send chain events to connected WebSocket clients.
+ * Call this from server.js at startup: npcBrains.setBroadcast(fn)
+ */
+module.exports.setBroadcast = function(fn) {
+  _broadcastFn = fn;
+};

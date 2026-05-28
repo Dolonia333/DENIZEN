@@ -2235,6 +2235,51 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'npc_chain_started': {
+        // A multi-step task chain was kicked off
+        console.log(`[Chain] Started: "${msg.name}" — ${(msg.steps || []).join(' → ')} (${msg.totalSteps} steps)`);
+        if (this.scene?._workFeed) {
+          this.scene._workFeed.addEntry({
+            npcName: msg.name || 'Chain',
+            phase: 'starting',
+            phaseEmoji: '🔗',
+            note: `Chain started: ${msg.name} | ${(msg.steps || []).join(' → ')}`,
+            artifactPath: null,
+          });
+        }
+        break;
+      }
+
+      case 'npc_chain_step_done': {
+        // One NPC finished their step in the chain
+        console.log(`[Chain] Step done: ${msg.npc} → artifact: ${msg.artifactPath} (${msg.remaining} steps remain)`);
+        if (this.scene?._workFeed) {
+          this.scene._workFeed.addEntry({
+            npcName: msg.npc || '?',
+            phase: 'finished',
+            phaseEmoji: '🔗',
+            note: `Chain step ${msg.step + 1} done — ${msg.remaining} step${msg.remaining !== 1 ? 's' : ''} remaining`,
+            artifactPath: msg.artifactPath || null,
+          });
+        }
+        break;
+      }
+
+      case 'npc_chain_complete': {
+        // All steps in the chain are done
+        console.log(`[Chain] Complete: "${msg.name}" — ${(msg.artifacts || []).length} artifacts produced`);
+        if (this.scene?._workFeed) {
+          this.scene._workFeed.addEntry({
+            npcName: msg.name || 'Chain',
+            phase: 'finished',
+            phaseEmoji: '🔗',
+            note: `Chain complete: "${msg.name}" (${(msg.artifacts || []).length} artifacts)`,
+            artifactPath: null,
+          });
+        }
+        break;
+      }
+
       default:
         console.log('[AgentManager] Unknown message type:', msg.type);
     }
