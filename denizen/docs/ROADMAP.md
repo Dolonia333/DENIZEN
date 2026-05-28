@@ -42,79 +42,11 @@ Everything the NPCs can do, everything they will be able to do, in order of what
 - ✅ **Bouncer investigation upgrade** — `buildReport()` structured markdown reports with verdicts (THREAT CONFIRMED / LIKELY FALSE POSITIVE / INCONCLUSIVE); `perimeterPatrol()` baseline diff (`data/bouncer-baseline.json`); tshark integration for packet anomalies; `investigationIsSerious()` → Dan directive escalation
 - ✅ **Work output feed UI** — `src/work-feed.js` (`WorkFeedPanel`); Tab key toggle; per-NPC color coding; 100-entry history; slide-in animation; wired to `npc_work_output` WS event in `agent-office-manager.js`
 
----
+### Phase 3 — Deep Integration (`66bc3a2`, `b569fad`, `04e747a`)
 
-## Phase 3 — Deep Integration
-
-NPCs do complex multi-step real work. The office stops being a simulation and starts being a real dev team.
-
----
-
-### 3.1 — NPCs Run Claude Code on Real Files
-
-**Status:** 🔴 Needs architecture  
-**Files:** `server.js`, `src/npc-brains.js`, new `src/coding-task-runner.js`  
-**Depends on:** Skill bridge ✅ (done)
-
-**How it works:**
-1. Alex or Edward outputs `{"action":"run_skill","skill":"coding-agent","skillParams":{"task":"fix the WebSocket deduplication in server.js","file":"denizen/server.js"}}`
-2. Server creates an isolated git worktree for the NPC (`git worktree add`)
-3. `coding-agent` skill runs Claude Code on that worktree with the task description
-4. Diff + test output come back as skill result → injected into NPC's next think cycle
-5. NPC reviews it, files a code review artifact, proposes merge
-6. Proposed changes sit in `reports/code-reviews/<npc>_<task>_<date>.md` for Zion to approve
-
-**Guardrails:**
-- NPCs never push to main directly — all changes go through a review artifact
-- Worktrees are isolated per NPC per task, auto-deleted after review
-- No NPC can modify its own soul file or memory file via coding-agent
-- Code changes require human approval before merge
-
-**Effort:** ~1 day
-
----
-
-### 3.2 — Cross-NPC Real Task Chains
-
-**Status:** 🔴 Needs architecture  
-**Depends on:** Directive inbox ✅ (done), 3.1 (coding agent)
-
-**Full chain example (speech bubble overflow fix):**
-
-```
-Abby decides: "Fix the speech bubble overflow on long lines"
-  → directive → Sarah: "Spec this — what's overflow, what's acceptable?"
-  → Sarah writes spec → reports/product/sarah_bubble_overflow_spec_<date>.md
-  → directive → Rob: "Design the fix — mockup correct behavior"
-  → Rob writes mockup → reports/design/rob_bubble_overflow_<date>.md
-  → directive → Josh: "Implement per Rob's spec"
-  → Josh runs coding-agent → diff produced
-  → directive → Jenny: "Review Josh's PR"
-  → Jenny reviews → approves or requests changes → reports/code-reviews/jenny_<pr>_<date>.md
-  → directive → Molly: "Test the fix"
-  → Molly runs regression → reports/bugs/molly_<test>_<date>.md or sign-off
-  → Abby receives final report
-```
-
-This is an entire sprint task flowing through real NPCs with real artifacts at every stage. The directive inbox (done) handles the handoff chain; 3.1 (coding agent) handles the actual code change.
-
-**Effort:** ~2 days
-
----
-
-### 3.3 — NPC Disagreement and Escalation
-
-**Status:** 🔴 Speculative  
-**Depends on:** 3.2
-
-**How it works:**
-- When two NPCs have conflicting positions (e.g., Edward wants to refactor before the release; Jenny says "too risky, scope it for next sprint"), they both flag their position in their artifact
-- The conflict is detected server-side and injected into Abby's next think context: both positions summarized
-- Abby makes a call; her decision is logged and broadcast to both NPCs as directives
-- Both NPCs acknowledge and follow the decision
-- Makes the office feel like a real team with opinions, not just a set of yes-NPCs
-
-**Effort:** ~1 day
+- ✅ **NPCs run Claude Code on real files** — `src/coding-task-runner.js`: isolated git worktree per NPC per task, `npx @anthropic-ai/claude-code --print` execution, diff capture, proposal written to `reports/code-reviews/`; forbidden files guard (soul/memory/settings); `GET/POST /api/code-proposals` with approve/reject
+- ✅ **Cross-NPC task chains** — `src/task-chain.js` (`TaskChainRunner` singleton): multi-step directive sequences, each step gets previous artifacts as context, auto-advances on `taskPhase: finished`; `POST /api/task-chains`, `GET /api/task-chains/:id`; broadcasts `npc_chain_started` / `npc_chain_step_done` / `npc_chain_complete`
+- ✅ **NPC disagreement + Abby arbitration** — `src/conflict-detector.js` (`ConflictDetector` singleton): rolling 50-entry artifact log, similarity heuristic (3+ overlapping words), outcome diff check, both positions injected into Abby's next think prompt for arbitration
 
 ---
 
@@ -192,32 +124,33 @@ This is an entire sprint task flowing through real NPCs with real artifacts at e
 | Browserclaw + tools (Dan) | ✅ Done — Phase 2 |
 | Supabase pipeline design (Pier) | ✅ Done — Phase 2 |
 | Work output feed UI panel (Tab key) | ✅ Done — Phase 2 |
-| NPCs run Claude Code on real files | 🔴 Phase 3.1 |
-| Full task chain (spec→code→QA) | 🔴 Phase 3.2 |
-| NPC disagreement/escalation | 🔴 Phase 3.3 |
+| NPCs run Claude Code on real files | ✅ Done — Phase 3 |
+| Full task chain (spec→code→QA) | ✅ Done — Phase 3 |
+| NPC disagreement/escalation | ✅ Done — Phase 3 |
 | Public demo mode (4-NPC, Claude-only) | 🔴 Phase 4.1 |
 | Performance optimization | 🟡 Phase 4.2 — ongoing |
 | Docker production deploy | 🟡 Phase 4.3 — scaffolded |
 
 ---
 
-## What's Next (Phase 3 Build Order)
+## What's Next (Phase 4)
 
 ```
-3.1  NPCs run Claude Code on real files     (~1 day)
-       → server.js: worktree creation + coding-agent routing
-       → src/coding-task-runner.js: new module
-       → Guardrails: no self-modification, human-approval gate
+4.1  Public demo mode                (~1 day)
+       → Simplified 4-NPC roster (Abby, Alex, Lucy, Bouncer)
+       → Claude Haiku only — no LM Studio required
+       → Read-only — no player chat
+       → ?mode=demo URL param
 
-3.2  Cross-NPC real task chains             (~2 days)
-       → Depends on: directive inbox ✅, 3.1
-       → Full spec→code→QA pipeline through real NPCs
-       → Each handoff produces a real artifact
+4.2  Performance optimization        (ongoing)
+       → Profile 16-NPC think loop under load
+       → MEMORY.md auto-summarization (>2KB)
+       → Player-chat requests jump the LM Studio queue
 
-3.3  NPC disagreement and escalation        (~1 day)
-       → Depends on: 3.2
-       → Conflict detection + Abby arbitration
+4.3  Docker production deploy        (~4 hours)
+       → Wire env vars (EMAIL_AUTOSEND, WSL_DISTRO, LM_STUDIO_PARALLEL)
+       → Docker HEALTHCHECK endpoint
+       → Deploy checklist in docs/DEPLOYMENT.md
 ```
 
-Total to Phase 3 complete: **~4 days**  
-Total to Phase 4 (demo-ready): **~5-6 days**
+Total to Phase 4 complete: **~2 days**
