@@ -303,11 +303,14 @@ class NpcBrainManager {
       }
       if (p.xai?.apiKey) {
         const xaiModels = p.xai.models || [];
-        const grok3Model = xaiModels.find(m => m.id?.includes('grok-3') && !m.id?.includes('mini'));
+        // Prefer the current flagship (grok-4.x), falling back to first listed.
+        const grokModel = xaiModels.find(m => m.id?.includes('grok-4') && !m.id?.includes('fast'))
+          || xaiModels.find(m => m.id?.includes('grok-4'))
+          || xaiModels[0];
         this.providers.grok = {
           baseUrl: 'https://api.x.ai',
           apiKey: p.xai.apiKey,
-          model: p.xai.model || grok3Model?.id || xaiModels[0]?.id || 'grok-3',
+          model: p.xai.model || grokModel?.id || 'grok-4.3',
           type: 'openai',
         };
       }
