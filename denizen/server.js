@@ -2374,7 +2374,9 @@ const server = http.createServer((req, res) => {
           <p>Close this tab and head back to the office.</p>
           <p style="margin-top:16px"><a href="http://localhost:8080">← Return to Denizen</a></p>
         </div></body></html>`);
-        broadcast({ type: 'market_auth_connected', ts: Date.now() });
+        if (agentWss) agentWss.clients.forEach(c => {
+          if (c.readyState === 1) c.send(JSON.stringify({ type: 'market_auth_connected', ts: Date.now() }));
+        });
         log.info('Market', 'Robinhood OAuth connected — Roki activated');
       })
       .catch(err => {

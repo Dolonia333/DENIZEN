@@ -3068,7 +3068,12 @@ module.exports = NpcBrainManager;
  * Set the broadcast function used by the task chain runner when NPC brains
  * need to send chain events to connected WebSocket clients.
  * Call this from server.js at startup: npcBrains.setBroadcast(fn)
+ *
+ * Defined on the prototype (not the constructor) so it's callable on the
+ * `new NpcBrainManager()` *instance* that server.js holds. _broadcastFn is
+ * module-scoped, so a single setter backs every instance — fine, since the
+ * server only ever creates one.
  */
-module.exports.setBroadcast = function(fn) {
+NpcBrainManager.prototype.setBroadcast = function(fn) {
   _broadcastFn = fn;
 };
