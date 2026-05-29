@@ -181,6 +181,17 @@ class LlmTelemetry {
   }
 
   /**
+   * All in-window LLM events (excludes OpenClaw runs). Unlike getRecent this
+   * isn't capped by `limit` — it returns the full window so per-NPC cost can
+   * be computed by pricing each call by the model it actually used.
+   * @param {object} opts { windowMs }
+   */
+  getWindowEvents({ windowMs = 5 * 60 * 1000 } = {}) {
+    const minTs = Date.now() - windowMs;
+    return this.ring.filter(r => Date.parse(r.at) >= minTs && r.kind !== 'openclaw');
+  }
+
+  /**
    * Aggregate stats over a rolling window. Default window: 5 minutes.
    */
   getStats({ windowMs = 5 * 60 * 1000 } = {}) {

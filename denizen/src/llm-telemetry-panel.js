@@ -39,6 +39,7 @@
   function taskChainsUrl()         { return '/api/task-chains'; }
   function proposalsUrl()          { return '/api/proposals?status=pending'; }
   function costUrl(w)              { return `/api/telemetry/cost?windowMs=${w}`; }
+  function npcProfilesUrl(w)       { return `/api/npc-profiles?windowMs=${w}`; }
 
   const POLL_MS = 5000;
 
@@ -67,6 +68,7 @@
     pcRecent: [],
     active: null,
     cost: null,
+    npcProfiles: null,
     filterKind: '',
     filterNpc: '',
     filterProvider: '',
@@ -361,7 +363,7 @@
       fetch(url, { cache: 'no-store' })
         .then(r => r.ok ? r.json() : fallback)
         .catch(() => fallback);
-    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost] = await Promise.all([
+    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost, npcProfiles] = await Promise.all([
       safe(statsUrl(w), null),
       safe(decisionsUrl(w), { actions: {}, skills: {}, total: 0 }),
       safe(pcStatsUrl(w), { total: 0, byKind: {}, byNpc: {}, byStatus: {} }),
@@ -370,6 +372,7 @@
       safe(taskChainsUrl(), { chains: [] }),
       safe(proposalsUrl(), { proposals: [] }),
       safe(costUrl(w), null),
+      safe(npcProfilesUrl(w), null),
     ]);
     state.stats     = stats;
     state.decisions = decisions;
@@ -380,7 +383,8 @@
       chains:    Array.isArray(chains.chains) ? chains.chains : [],
       proposals: Array.isArray(proposals.proposals) ? proposals.proposals : [],
     };
-    state.cost      = cost;
+    state.cost        = cost;
+    state.npcProfiles = npcProfiles;
   }
 
   // ---- tab content ----
@@ -558,7 +562,7 @@
     const win = winLabel();
     if (!s || s.calls === 0) {
       return `<div style="padding:12px; color:#94a3b8">No telemetry in the last ${win}.</div>` +
-             renderDecisions() + renderCost() + renderPcActivity() + renderActiveState();
+             renderDecisions() + renderCost() + renderNpcProfiles() + renderPcActivity() + renderActiveState();
     }
     const ms  = (n) => n == null ? '—' : (n / 1000).toFixed(2) + 's';
     const tok = (n) => n == null ? '—' : n.toLocaleString();
@@ -661,7 +665,50 @@
       <!-- By kind -->
       ${byTable(s.byKind, '🏷 By call type', KIND_LABELS)}
 
-    </div>` + renderDecisions() + renderCost() + renderPcActivity() + renderActiveState();
+    </div>` + renderDecisions() + renderCost() + renderNpcProfiles() + renderPcActivity() + renderActiveState();
+  }
+
+  // ── Per-NPC profile tracker ───────────────────────────────────────────────
+  function renderNpcProfiles() {
+    const p = state.npcProfiles;
+    if (!p || !p.profiles || !p.profiles.length) {
+      return `<div class="summary"><div class="card" style="grid-column:1/-1">
+        <h4>👤 NPC profiles (${winLabel()})</h4>
+        <div style="color:#94a3b8">No NPC activity measured yet — let the office think a few cycles.</div>
+      </div></div>`;
+    }
+    const usd = (n) => n == null ? '—' : '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const k   = (n) => n == null ? '—' : n.toLocaleString();
+
+    const rows = p.profiles.map(prof => {
+      const localBadge = prof.isLocal
+        ? `<span class="prov-chip" style="background:#0e749088; border:1px solid #0e7490">LOCAL</span>`
+        : provChip(prof.provider);
+      const lat = prof.avgLatencyMs != null ? Math.round(prof.avgLatencyMs) + 'ms' : '—';
+      const errBadge = prof.errors ? `<span style="color:#fda4af"> ${prof.errors}e</span>` : '';
+      // Local NPCs → show ESTIMATE (what cloud would cost). Cloud NPCs → show ACTUAL.
+      const costCell = prof.isLocal
+        ? `<span style="color:#94a3b8">est <b style="color:#fbbf24">${usd(prof.estPerMonth)}/mo</b> <span style="font-size:9px">on ${esc(p.referenceModel)}</span></span>`
+        : `<span style="color:#94a3b8">actual <b style="color:#86efac">${usd(prof.actualPerMonth)}/mo</b></span>`;
+      return `<div style="padding:4px 0; border-bottom:1px solid #1e293b">
+        <div style="display:flex; justify-content:space-between; align-items:baseline">
+          <span><b style="color:#c7d2fe">${esc(prof.npc)}</b> ${localBadge}${errBadge}</span>
+          ${costCell}
+        </div>
+        <div style="font-size:10px; color:#64748b; margin-top:1px">
+          ${esc(prof.model || '?')} · ${prof.calls} calls · ${k(prof.tokensIn)}↑/${k(prof.tokensOut)}↓ tok · ${lat}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="summary"><div class="card" style="grid-column:1/-1">
+      <h4>👤 NPC profiles — cost per agent (${winLabel()})</h4>
+      <div style="color:#64748b; font-size:10px; margin-bottom:6px">
+        Local agents show an <span style="color:#fbbf24">estimate</span> (what they'd cost on ${esc(p.referenceModel)}).
+        Cloud agents show <span style="color:#86efac">actual</span> measured spend.
+      </div>
+      ${rows}
+    </div></div>`;
   }
 
   // ── Cost projection ───────────────────────────────────────────────────────

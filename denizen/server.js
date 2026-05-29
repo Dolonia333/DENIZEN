@@ -2254,6 +2254,19 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Per-NPC profile tracker: actual cost (priced by the model each NPC
+  //     really ran on) + estimated cost if it were on a reference cloud model ---
+  if (urlPath === '/api/npc-profiles' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const windowMs = Number(url.searchParams.get('windowMs') || 60 * 60 * 1000);
+    const referenceModel = url.searchParams.get('referenceModel') || undefined;
+    const events = llmTelemetry.getWindowEvents({ windowMs });
+    const result = costProjector.buildNpcProfiles(events, { windowMs, referenceModel });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(result));
+    return;
+  }
+
   // --- OpenClaw telemetry: browser dispatcher posts events here ---
   if (urlPath === '/api/telemetry/openclaw' && req.method === 'POST') {
     let body = '';

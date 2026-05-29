@@ -42,13 +42,13 @@ const CLOUD_PRICING = [
   { provider: 'anthropic', providerLabel: 'Claude', modelId: 'claude-haiku-4-5',  label: 'Claude Haiku 4.5',  input: 1.00, output: 5.00,  cacheRead: 0.10 },
   { provider: 'anthropic', providerLabel: 'Claude', modelId: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', input: 3.00, output: 15.00, cacheRead: 0.30 },
   { provider: 'anthropic', providerLabel: 'Claude', modelId: 'claude-opus-4-7',   label: 'Claude Opus 4.7',   input: 5.00, output: 25.00, cacheRead: 0.50 },
-  // Google — Gemini 3 Flash / 3.5 Flash / 3.1 Pro (≤200k context tier)
-  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3-flash',   label: 'Gemini 3 Flash',   input: 0.50, output: 3.00,  cacheRead: 0.05 },
-  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', input: 1.50, output: 9.00,  cacheRead: 0.15 },
-  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3.1-pro',   label: 'Gemini 3.1 Pro',   input: 2.00, output: 12.00, cacheRead: 0.20 },
-  // xAI — Grok 4.1 Fast / Grok 4.3 (current flagship)
-  { provider: 'xai', providerLabel: 'Grok', modelId: 'grok-4.1-fast', label: 'Grok 4.1 Fast', input: 0.20, output: 0.50, cacheRead: 0.05 },
-  { provider: 'xai', providerLabel: 'Grok', modelId: 'grok-4.3',      label: 'Grok 4.3',      input: 1.25, output: 2.50, cacheRead: 0.13 },
+  // Google — Gemini 3 Flash / 3.5 Flash / 3.1 Pro (model IDs verified via
+  // ListModels: 3-flash & 3.1-pro carry a -preview suffix; 3.5-flash does not)
+  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3-flash-preview', label: 'Gemini 3 Flash',   input: 0.50, output: 3.00,  cacheRead: 0.05 },
+  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3.5-flash',       label: 'Gemini 3.5 Flash', input: 1.50, output: 9.00,  cacheRead: 0.15 },
+  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro',   input: 2.00, output: 12.00, cacheRead: 0.20 },
+  // xAI — Grok 4.3 (current flagship; grok-4.1-fast was deprecated/redirected)
+  { provider: 'xai', providerLabel: 'Grok', modelId: 'grok-4.3', label: 'Grok 4.3', input: 1.25, output: 2.50, cacheRead: 0.13 },
   // Moonshot — Kimi K2.5 / K2.6 (current; K2 legacy EOL May 2026)
   { provider: 'moonshot', providerLabel: 'Kimi', modelId: 'kimi-k2.5', label: 'Kimi K2.5', input: 0.60, output: 3.00, cacheRead: 0.15 },
   { provider: 'moonshot', providerLabel: 'Kimi', modelId: 'kimi-k2.6', label: 'Kimi K2.6', input: 0.95, output: 4.00, cacheRead: 0.15 },
@@ -197,7 +197,108 @@ function projectPerNpc(byNpc = {}, model, windowMs = 5 * 60 * 1000) {
   }).sort((a, b) => b.perMonth - a.perMonth);
 }
 
+// Map a telemetry provider name → pricing-table provider key.
+function provKey(p) {
+  return p === 'claude' ? 'anthropic'
+    : p === 'kimi'   ? 'moonshot'
+    : p === 'grok'   ? 'xai'
+    : p === 'gemini' ? 'google'
+    : p;
+}
+
+const LOCAL_PROVIDERS = new Set(['lmstudio', 'lmstudio-fast', 'openai', 'demo']);
+
+/**
+ * Price one call by the model it actually used.
+ * Local providers are free. Cloud calls match by exact modelId, then by
+ * provider as a fallback.
+ */
+function priceForCall(provider, modelId, pricingRows) {
+  if (LOCAL_PROVIDERS.has(provider)) return { input: 0, output: 0, local: true };
+  let row = pricingRows.find(r => !r.local && r.modelId === modelId);
+  if (!row) {
+    const key = provKey(provider);
+    row = pricingRows.find(r => !r.local && r.provider === key);
+  }
+  return row ? { input: row.input, output: row.output, local: false } : { input: 0, output: 0, local: false, unknown: true };
+}
+
+/**
+ * Per-NPC profiles: ACTUAL cost (priced by the model each call really used)
+ * plus an ESTIMATED cost if that NPC ran on a reference cloud model.
+ *
+ * This is the "profile tracker" — for a local NPC it shows what it WOULD cost
+ * on the cloud (estimate); for a cloud NPC it shows what it HAS cost (actual).
+ *
+ * @param {object[]} events — telemetry.getWindowEvents()
+ * @param {object} opts — { windowMs, referenceModel } referenceModel is the
+ *   modelId used for the "if it were on cloud" estimate (default Haiku 4.5).
+ * @returns {object} { windowMs, referenceModel, profiles: [...] }
+ */
+function buildNpcProfiles(events = [], opts = {}) {
+  const windowMs = opts.windowMs || 60 * 60 * 1000;
+  const referenceModelId = opts.referenceModel || 'claude-haiku-4-5';
+  const pricing = loadPricing();
+  const ref = pricing.find(r => r.modelId === referenceModelId)
+    || pricing.find(r => !r.local); // first cloud model if ref missing
+  const dayFactor = 86_400_000 / windowMs;
+
+  const acc = {};
+  for (const e of events) {
+    const npc = e.npc || 'unknown';
+    if (!acc[npc]) {
+      acc[npc] = {
+        npc, calls: 0, errors: 0, tokensIn: 0, tokensOut: 0,
+        actualCost: 0, anyCloud: false, latSum: 0, latN: 0,
+        providers: new Set(), models: new Set(),
+        lastAt: 0, lastProvider: null, lastModel: null,
+      };
+    }
+    const b = acc[npc];
+    const tIn = e.tokensIn || 0, tOut = e.tokensOut || 0;
+    b.calls += 1;
+    if (e.error) b.errors += 1;
+    b.tokensIn += tIn; b.tokensOut += tOut;
+    if (Number.isFinite(e.latencyMs)) { b.latSum += e.latencyMs; b.latN += 1; }
+    const price = priceForCall(e.provider, e.model, pricing);
+    b.actualCost += (tIn / 1e6) * price.input + (tOut / 1e6) * price.output;
+    if (!price.local) b.anyCloud = true;
+    if (e.provider) b.providers.add(e.provider);
+    if (e.model) b.models.add(e.model);
+    const ts = Date.parse(e.at) || 0;
+    if (ts >= b.lastAt) { b.lastAt = ts; b.lastProvider = e.provider; b.lastModel = e.model; }
+  }
+
+  const profiles = Object.values(acc).map(b => {
+    const estWindow = (b.tokensIn / 1e6) * (ref?.input || 0) + (b.tokensOut / 1e6) * (ref?.output || 0);
+    return {
+      npc: b.npc,
+      provider: b.lastProvider,
+      model: b.lastModel,
+      isLocal: !b.anyCloud,
+      calls: b.calls,
+      errors: b.errors,
+      tokensIn: b.tokensIn,
+      tokensOut: b.tokensOut,
+      avgLatencyMs: b.latN ? Math.round(b.latSum / b.latN) : null,
+      providersUsed: [...b.providers],
+      // ACTUAL — what this NPC's calls really cost (local = $0)
+      actualCostWindow: round4(b.actualCost),
+      actualPerDay:   round2(b.actualCost * dayFactor),
+      actualPerMonth: round2(b.actualCost * dayFactor * 30),
+      // ESTIMATED — what it would cost on the reference cloud model
+      estModel:      ref?.label || null,
+      estPerDay:     round2(estWindow * dayFactor),
+      estPerMonth:   round2(estWindow * dayFactor * 30),
+    };
+  }).sort((a, b) =>
+    (b.actualPerMonth - a.actualPerMonth) || (b.estPerMonth - a.estPerMonth)
+  );
+
+  return { windowMs, referenceModel: ref?.label || referenceModelId, profiles };
+}
+
 function round2(n) { return Math.round(n * 100) / 100; }
 function round4(n) { return Math.round(n * 10000) / 10000; }
 
-module.exports = { loadPricing, project, projectPerNpc };
+module.exports = { loadPricing, project, projectPerNpc, buildNpcProfiles };
