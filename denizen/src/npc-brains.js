@@ -1021,7 +1021,7 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
     const OPENCLAW_SKILL_ROLES = new Set([
       'CTO', 'Receptionist (also handles CEO email triage as Secretary)',
       'Security Guard', 'IT Support', 'DevOps Engineer',
-      'Developer', 'Researcher', 'Data Engineer',
+      'Developer', 'Researcher', 'Data Engineer', 'Intern',
     ]);
     let openClawContext = null;
     if (OPENCLAW_SKILL_ROLES.has(brain.role)) {
@@ -1034,6 +1034,7 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
         'Developer': 'github (create issues, open PRs, check CI status, list/close issues via gh CLI)',
         'Researcher': 'browserclaw (automated browser for reading docs, papers, and web research)',
         'Data Engineer': 'supabase-bridge (query/insert data, run migrations, inspect schemas)',
+        'Intern': 'market-watch (run a full Robinhood market observation cycle — quotes for your watchlist + portfolio snapshot), get-quote (quick price check, skillParams: { symbols: ["NVDA","TSLA"] }), trade-suggest (record a trade idea as a SUGGESTION ONLY — never executed automatically, skillParams: { symbol, tradeAction: "buy"|"sell"|"watch", rationale, targetPrice? })',
       };
       const skillLine = skillsByRole[brain.role] || '';
       if (skillLine) {

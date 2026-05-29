@@ -26,6 +26,7 @@ const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
 const taskChain        = require('./src/task-chain');
+const robinhoodMcp     = require('./src/robinhood-mcp');
 const conflictDetector = require('./src/conflict-detector');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -247,6 +248,74 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: false, output, ts: Date.now() });
     });
     return Promise.resolve({ ok: true, output: 'Lucy job pipeline started', skill: 'job-pipeline', npcName });
+  }
+
+  // --- market-watch: Roki runs a market observation cycle via Robinhood MCP ---
+  if (skill === 'market-watch' || skill === 'get-quote') {
+    const marketStart = Date.now();
+    const activity = pcActivity.record({
+      npc: npcName, kind: 'market-watch',
+      task: skill === 'get-quote'
+        ? `quote: ${(skillParams?.symbols || []).join(',')||'watchlist'}`
+        : 'market observation cycle',
+      mode: 'background', status: 'started',
+    });
+
+    const doMarket = skill === 'get-quote'
+      ? () => robinhoodMcp.getQuote(skillParams?.symbols || robinhoodMcp.loadWatchlist())
+      : () => robinhoodMcp.runMarketObservation();
+
+    doMarket().then(result => {
+      const output = JSON.stringify(result).slice(0, 1200);
+      pcActivity.record({
+        id: activity.id, npc: npcName, kind: 'market-watch',
+        task: activity.task, mode: 'background', status: 'done',
+        durationMs: Date.now() - marketStart, detail: output.slice(0, 240),
+      });
+      npcBrains.injectSkillResult(npcName, skill, output);
+      broadcast({ type: 'npc_skill_result', npcName, skill, ok: true, output: output.slice(0, 400), ts: Date.now() });
+      broadcast({ type: 'market_data_update', npcName, data: result, ts: Date.now() });
+      log.info('Market', `${npcName} ← ${skill}: ${output.slice(0, 80)}`);
+    }).catch(err => {
+      const output = `Market data unavailable: ${err.message}`;
+      pcActivity.record({
+        id: activity.id, npc: npcName, kind: 'market-watch',
+        task: activity.task, mode: 'background', status: 'failed',
+        durationMs: Date.now() - marketStart, detail: output,
+      });
+      npcBrains.injectSkillResult(npcName, skill, output);
+      broadcast({ type: 'npc_skill_result', npcName, skill, ok: false, output, ts: Date.now() });
+      log.warn('Market', `${npcName} market-watch failed: ${err.message}`);
+    });
+    return Promise.resolve({ ok: true, output: 'Market observation started', skill, npcName });
+  }
+
+  // --- trade-suggest: Roki records a trade suggestion (NEVER executes) ---
+  if (skill === 'trade-suggest') {
+    // Safety: reject if skillParams somehow contain an 'execute' flag
+    if (skillParams?.execute === true || skillParams?.placeOrder === true) {
+      const msg = 'BLOCKED: Denizen does not execute trades automatically. This is a safety constraint.';
+      log.warn('Market', msg);
+      npcBrains.injectSkillResult(npcName, skill, msg);
+      broadcast({ type: 'npc_skill_result', npcName, skill, ok: false, output: msg, ts: Date.now() });
+      return Promise.resolve({ ok: false, output: msg, skill, npcName });
+    }
+
+    const suggestion = robinhoodMcp.createSuggestion({
+      npc: npcName,
+      symbol: skillParams?.symbol,
+      action: skillParams?.tradeAction || skillParams?.action || 'watch',
+      quantity: skillParams?.quantity || null,
+      rationale: skillParams?.rationale || '',
+      currentPrice: skillParams?.currentPrice || null,
+      targetPrice: skillParams?.targetPrice || null,
+    });
+    const output = `Trade suggestion recorded: ${suggestion.action?.toUpperCase()} ${suggestion.symbol} — ${suggestion.rationale.slice(0, 80)}`;
+    npcBrains.injectSkillResult(npcName, skill, output);
+    broadcast({ type: 'npc_skill_result', npcName, skill, ok: true, output, ts: Date.now() });
+    broadcast({ type: 'trade_suggestion', suggestion, ts: Date.now() });
+    log.info('Market', `${npcName} trade suggestion: ${output}`);
+    return Promise.resolve({ ok: true, output, skill, npcName, suggestion });
   }
 
   // --- coding-agent: run Claude Code in an isolated worktree ---
@@ -2248,6 +2317,104 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/pc-activity/active' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ active: pcActivity.getActive() }));
+    return;
+  }
+
+  // ─── Market / Robinhood endpoints ────────────────────────────────────────────
+  // Auth status + token setup
+  if (urlPath === '/api/market/auth-status' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      authenticated: robinhoodMcp.isAuthenticated(),
+      note: robinhoodMcp.isAuthenticated()
+        ? 'Robinhood token is configured. Roki can watch the market.'
+        : 'Set ROBINHOOD_API_TOKEN in denizen/.env to connect Roki to the market.',
+    }));
+    return;
+  }
+  if (urlPath === '/api/market/auth/token' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      try {
+        const { token } = JSON.parse(body);
+        if (!token || typeof token !== 'string' || token.length < 10) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid token' }));
+          return;
+        }
+        robinhoodMcp.saveToken(token.trim());
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, note: 'Token saved. Restart the server or wait for Roki\'s next think cycle.' }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+
+  // Live market data (proxied through server so auth token stays server-side)
+  if (urlPath === '/api/market/quote' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const symbols = (url.searchParams.get('symbols') || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+    if (!symbols.length) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'symbols param required, e.g. ?symbols=NVDA,TSLA' }));
+      return;
+    }
+    robinhoodMcp.getQuote(symbols)
+      .then(data => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)); })
+      .catch(err => { res.writeHead(502, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })); });
+    return;
+  }
+  if (urlPath === '/api/market/portfolio' && req.method === 'GET') {
+    robinhoodMcp.getPortfolio()
+      .then(data => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)); })
+      .catch(err => { res.writeHead(502, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })); });
+    return;
+  }
+  if (urlPath === '/api/market/positions' && req.method === 'GET') {
+    robinhoodMcp.getPositions()
+      .then(data => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)); })
+      .catch(err => { res.writeHead(502, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })); });
+    return;
+  }
+
+  // Watchlist management
+  if (urlPath === '/api/market/watchlist' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ symbols: robinhoodMcp.loadWatchlist() }));
+    return;
+  }
+  if (urlPath === '/api/market/watchlist' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      try {
+        const { action, symbol } = JSON.parse(body);
+        let symbols;
+        if (action === 'add') symbols = robinhoodMcp.addToWatchlist(symbol);
+        else if (action === 'remove') symbols = robinhoodMcp.removeFromWatchlist(symbol);
+        else { res.writeHead(400); res.end(JSON.stringify({ error: 'action must be add|remove' })); return; }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, symbols }));
+      } catch (e) { res.writeHead(400); res.end(JSON.stringify({ error: e.message })); }
+    });
+    return;
+  }
+
+  // Trade suggestions — display only, no execution
+  if (urlPath === '/api/trade-suggestions' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ suggestions: robinhoodMcp.loadSuggestions() }));
+    return;
+  }
+  if (/^\/api\/trade-suggestions\/([^/]+)\/dismiss$/.test(urlPath) && req.method === 'POST') {
+    const id = urlPath.split('/')[3];
+    const entry = robinhoodMcp.dismissSuggestion(id);
+    res.writeHead(entry ? 200 : 404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(entry ? { ok: true, entry } : { error: 'not found' }));
     return;
   }
 
