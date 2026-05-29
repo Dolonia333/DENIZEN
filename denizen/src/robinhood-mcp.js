@@ -2,73 +2,404 @@
 /**
  * Robinhood MCP Client — read-only market data for Roki's stock watcher.
  *
- * Connects to: https://agent.robinhood.com/mcp/trading
- * Protocol:    MCP over HTTP (JSON-RPC 2.0, POST)
- * Auth:        Bearer token — set ROBINHOOD_API_TOKEN in .env, or POST
- *              a token to /api/market/auth/token from the browser.
+ * Endpoint:   https://agent.robinhood.com/mcp/trading
+ * Protocol:   MCP Streamable HTTP (POST JSON-RPC + GET SSE, Mcp-Session-Id)
+ * Auth:       OAuth 2.0 Authorization Code + PKCE (public client, no secret)
+ *             Dynamic client registration — no developer portal needed.
  *
- * DESIGN RULE: This module NEVER places orders. The `placeTrade()` method
- * records a human-readable suggestion to data/trade-suggestions.json and
- * returns it — the user must act on it in the Robinhood app themselves.
+ * ── First-time setup (one-time, 30 seconds) ────────────────────────────────
+ *   1. Visit http://localhost:8080/api/market/auth/connect  in your browser
+ *   2. Log in to Robinhood and tap "Allow"
+ *   3. You're redirected back — Roki activates automatically
  *
- * Setup (once):
- *   1. Log in at https://robinhood.com → Account → API → create a key
- *   2. Add ROBINHOOD_API_TOKEN=<key> to denizen/.env
- *   3. Restart the server — Roki will start watching immediately.
+ * ── Auth internals ─────────────────────────────────────────────────────────
+ *   Registration: POST https://agent.robinhood.com/oauth/trading/register
+ *     → returns client_id (no client_secret — public client)
+ *   Authorization: https://robinhood.com/oauth  (PKCE S256)
+ *   Token exchange: POST https://api.robinhood.com/oauth2/token/
  *
- * OR paste the token in-game: tell any NPC "set Roki's market token" and
- * the player chat handler will route to POST /api/market/auth/token.
+ * ── DESIGN RULE ────────────────────────────────────────────────────────────
+ *   This module NEVER places orders. placeTrade() does not exist.
+ *   createSuggestion() records a human-readable idea to trade-suggestions.json.
+ *   The user acts on suggestions in the Robinhood app themselves.
  */
 
-const https = require('node:https');
-const fs    = require('node:fs');
-const path  = require('node:path');
+const https  = require('node:https');
+const http   = require('node:http');
+const crypto = require('node:crypto');
+const fs     = require('node:fs');
+const path   = require('node:path');
 
-const ROOT          = path.resolve(__dirname, '..');
-const TOKEN_FILE    = path.join(ROOT, 'data', 'robinhood-oauth.json');
-const WATCHLIST_FILE = path.join(ROOT, 'data', 'roki-watchlist.json');
-const SUGGESTIONS_FILE = path.join(ROOT, 'data', 'trade-suggestions.json');
+const ROOT              = path.resolve(__dirname, '..');
+const OAUTH_FILE        = path.join(ROOT, 'data', 'robinhood-oauth.json');
+const WATCHLIST_FILE    = path.join(ROOT, 'data', 'roki-watchlist.json');
+const SUGGESTIONS_FILE  = path.join(ROOT, 'data', 'trade-suggestions.json');
 
-const MCP_HOST   = 'agent.robinhood.com';
-const MCP_PATH   = '/mcp/trading';
-const MCP_TIMEOUT_MS = 15000;
+// OAuth constants (from endpoint discovery)
+const MCP_HOST          = 'agent.robinhood.com';
+const MCP_PATH          = '/mcp/trading';
+const AUTH_ENDPOINT     = 'https://robinhood.com/oauth';
+const TOKEN_ENDPOINT    = 'https://api.robinhood.com/oauth2/token/';
+const REGISTER_ENDPOINT = 'https://agent.robinhood.com/oauth/trading/register';
+const SCOPE             = 'internal';
+const REDIRECT_URI      = 'http://localhost:8080/api/market/auth/callback';
+const MCP_TIMEOUT_MS    = 15000;
 
-// Default watchlist if none saved
+// Default watchlist for Roki
 const DEFAULT_WATCHLIST = ['NVDA', 'TSLA', 'AAPL', 'MSFT', 'META', 'AMZN'];
 
-let _idCounter = 1;
+let _idCounter      = 1;
+let _sessionId      = null;          // Mcp-Session-Id from server
+let _initialized    = false;
+let _pendingVerifier = null;         // PKCE verifier held during auth flow
 
-// ─── Token management ────────────────────────────────────────────────────────
+// ─── Persistence ─────────────────────────────────────────────────────────────
 
-function loadToken() {
-  // Env var takes priority
-  if (process.env.ROBINHOOD_API_TOKEN) return process.env.ROBINHOOD_API_TOKEN;
-  try {
-    const data = JSON.parse(fs.readFileSync(TOKEN_FILE, 'utf-8'));
-    return data.access_token || data.token || null;
-  } catch (_) {
-    return null;
+function loadOAuth() {
+  try { return JSON.parse(fs.readFileSync(OAUTH_FILE, 'utf-8')); } catch (_) { return {}; }
+}
+function saveOAuth(data) {
+  fs.mkdirSync(path.dirname(OAUTH_FILE), { recursive: true });
+  fs.writeFileSync(OAUTH_FILE, JSON.stringify({ ...loadOAuth(), ...data, updatedAt: new Date().toISOString() }, null, 2));
+}
+
+function getToken()    { return process.env.ROBINHOOD_API_TOKEN || loadOAuth().access_token  || null; }
+function getRefresh()  { return loadOAuth().refresh_token  || null; }
+function getClientId() { return loadOAuth().client_id      || null; }
+
+function isAuthenticated() { return !!getToken(); }
+
+// ─── Dynamic client registration ─────────────────────────────────────────────
+
+/**
+ * Register Denizen as a Robinhood OAuth client (once).
+ * Robinhood uses open dynamic registration — no developer account needed.
+ * Returns the client_id.
+ */
+function registerClient() {
+  const existing = getClientId();
+  if (existing) return Promise.resolve(existing);
+
+  return httpsPost('agent.robinhood.com', '/oauth/trading/register', {
+    client_name: 'Denizen',
+    redirect_uris: [REDIRECT_URI],
+    grant_types: ['authorization_code', 'refresh_token'],
+    response_types: ['code'],
+    scope: SCOPE,
+    token_endpoint_auth_method: 'none',
+  }).then(data => {
+    const clientId = data.client_id;
+    saveOAuth({ client_id: clientId });
+    return clientId;
+  });
+}
+
+// ─── PKCE helpers ─────────────────────────────────────────────────────────────
+
+function generatePKCE() {
+  const verifier  = crypto.randomBytes(32).toString('base64url');
+  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+  return { verifier, challenge };
+}
+
+// ─── OAuth flow ───────────────────────────────────────────────────────────────
+
+/**
+ * Build the authorization URL. Call this to start the login flow.
+ * Stores the PKCE verifier in memory for the callback.
+ * @returns {Promise<string>} URL to redirect the user to
+ */
+async function buildAuthUrl() {
+  const clientId = await registerClient();
+  const { verifier, challenge } = generatePKCE();
+  _pendingVerifier = verifier;
+
+  const state = crypto.randomBytes(8).toString('hex');
+  saveOAuth({ pending_state: state });
+
+  const params = new URLSearchParams({
+    client_id:             clientId,
+    redirect_uri:          REDIRECT_URI,
+    response_type:         'code',
+    scope:                 SCOPE,
+    code_challenge:        challenge,
+    code_challenge_method: 'S256',
+    state,
+  });
+  return `${AUTH_ENDPOINT}?${params.toString()}`;
+}
+
+/**
+ * Exchange an authorization code for tokens. Called from the OAuth callback.
+ * @param {string} code   — the authorization code from the redirect
+ * @param {string} state  — state param (checked against pending_state)
+ */
+async function handleCallback(code, state) {
+  const saved = loadOAuth();
+  if (state && saved.pending_state && state !== saved.pending_state) {
+    throw new Error('OAuth state mismatch — possible CSRF');
   }
+
+  const verifier = _pendingVerifier;
+  if (!verifier) throw new Error('No PKCE verifier found — restart the auth flow');
+
+  const clientId = getClientId();
+  if (!clientId) throw new Error('No client_id — registration may have failed');
+
+  const body = new URLSearchParams({
+    grant_type:    'authorization_code',
+    code,
+    client_id:     clientId,
+    redirect_uri:  REDIRECT_URI,
+    code_verifier: verifier,
+  }).toString();
+
+  const data = await httpsPostForm('api.robinhood.com', '/oauth2/token/', body);
+
+  saveOAuth({
+    access_token:  data.access_token,
+    refresh_token: data.refresh_token || null,
+    expires_in:    data.expires_in    || null,
+    token_type:    data.token_type    || 'Bearer',
+    authorized_at: new Date().toISOString(),
+    pending_state: null,
+  });
+
+  _pendingVerifier = null;
+  _initialized     = false; // force re-initialize with new token
+  return data;
 }
 
-function saveToken(token) {
-  fs.mkdirSync(path.dirname(TOKEN_FILE), { recursive: true });
-  fs.writeFileSync(TOKEN_FILE, JSON.stringify({ access_token: token, savedAt: new Date().toISOString() }, null, 2));
+/**
+ * Refresh the access token using the stored refresh_token.
+ */
+async function refreshToken() {
+  const refreshTok = getRefresh();
+  if (!refreshTok) throw new Error('No refresh token stored — user must re-authenticate');
+
+  const clientId = getClientId();
+  const body = new URLSearchParams({
+    grant_type:    'refresh_token',
+    refresh_token: refreshTok,
+    client_id:     clientId,
+  }).toString();
+
+  const data = await httpsPostForm('api.robinhood.com', '/oauth2/token/', body);
+  saveOAuth({
+    access_token:  data.access_token,
+    refresh_token: data.refresh_token || refreshTok,
+    expires_in:    data.expires_in,
+    refreshed_at:  new Date().toISOString(),
+  });
+  return data.access_token;
 }
 
-function isAuthenticated() {
-  return !!loadToken();
+// ─── Low-level HTTP helpers ───────────────────────────────────────────────────
+
+function httpsPost(hostname, pathname, payload) {
+  const body = JSON.stringify(payload);
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname, port: 443, path: pathname, method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body),
+        'Accept': 'application/json',
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(json)}`));
+          resolve(json);
+        } catch (e) { reject(new Error(`Parse error: ${data.slice(0, 200)}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(MCP_TIMEOUT_MS, () => req.destroy(new Error('timeout')));
+    req.write(body);
+    req.end();
+  });
 }
 
-// ─── Watchlist persistence ───────────────────────────────────────────────────
+function httpsPostForm(hostname, pathname, formBody) {
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname, port: 443, path: pathname, method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(formBody),
+        'Accept': 'application/json',
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (res.statusCode >= 400) return reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(json)}`));
+          resolve(json);
+        } catch (e) { reject(new Error(`Token parse error: ${data.slice(0, 200)}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(MCP_TIMEOUT_MS, () => req.destroy(new Error('timeout')));
+    req.write(formBody);
+    req.end();
+  });
+}
+
+// ─── MCP JSON-RPC transport ───────────────────────────────────────────────────
+
+/**
+ * Send a JSON-RPC request to the MCP endpoint.
+ * Handles 401 → token refresh → retry (once).
+ */
+async function mcpRequest(method, params = {}, retrying = false) {
+  const token = getToken();
+  if (!token) {
+    throw new Error('Robinhood: not authenticated. Visit http://localhost:8080/api/market/auth/connect to log in.');
+  }
+
+  const body = JSON.stringify({ jsonrpc: '2.0', id: _idCounter++, method, params });
+
+  return new Promise((resolve, reject) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      'Content-Length': Buffer.byteLength(body),
+      'Accept': 'application/json, text/event-stream',
+      'User-Agent': 'Denizen/1.0 (Robinhood MCP)',
+    };
+    if (_sessionId) headers['Mcp-Session-Id'] = _sessionId;
+
+    const req = https.request({
+      hostname: MCP_HOST, port: 443, path: MCP_PATH, method: 'POST', headers,
+    }, (res) => {
+      // Capture session ID if server sends one
+      if (res.headers['mcp-session-id']) _sessionId = res.headers['mcp-session-id'];
+
+      if (res.statusCode === 401 && !retrying) {
+        // Try refresh then retry once
+        res.resume();
+        refreshToken()
+          .then(() => mcpRequest(method, params, true))
+          .then(resolve)
+          .catch(reject);
+        return;
+      }
+
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          // Handle SSE response (text/event-stream) — extract first JSON data line
+          if (res.headers['content-type']?.includes('text/event-stream')) {
+            const dataLine = data.split('\n').find(l => l.startsWith('data:'));
+            if (dataLine) {
+              const json = JSON.parse(dataLine.slice(5).trim());
+              if (json.error) return reject(new Error(`MCP error [${json.error.code}]: ${json.error.message}`));
+              return resolve(json.result);
+            }
+          }
+          const json = JSON.parse(data);
+          if (json.error) return reject(new Error(`MCP error [${json.error.code}]: ${json.error.message}`));
+          resolve(json.result);
+        } catch (e) {
+          reject(new Error(`MCP parse error: ${e.message} (${data.slice(0, 200)})`));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(MCP_TIMEOUT_MS, () => req.destroy(new Error('Robinhood MCP timeout')));
+    req.write(body);
+    req.end();
+  });
+}
+
+function callTool(toolName, toolArgs = {}) {
+  return mcpRequest('tools/call', { name: toolName, arguments: toolArgs });
+}
+
+// ─── MCP session init ─────────────────────────────────────────────────────────
+
+async function initialize() {
+  if (_initialized) return true;
+  try {
+    await mcpRequest('initialize', {
+      protocolVersion: '2024-11-05',
+      capabilities:   { roots: {}, sampling: {} },
+      clientInfo:     { name: 'Denizen', version: '1.0.0' },
+    });
+    _initialized = true;
+  } catch (_) {
+    // Some endpoints don't require initialize — proceed anyway
+    _initialized = true;
+  }
+  return true;
+}
+
+async function listTools() {
+  await initialize();
+  return mcpRequest('tools/list', {});
+}
+
+// ─── Market data API ──────────────────────────────────────────────────────────
+
+async function getQuote(symbols) {
+  await initialize();
+  const syms = Array.isArray(symbols) ? symbols : [symbols];
+  return callTool('get_quote', { symbols: syms });
+}
+
+async function getPortfolio() {
+  await initialize();
+  return callTool('get_portfolio', {});
+}
+
+async function getPositions() {
+  await initialize();
+  return callTool('get_positions', {});
+}
+
+async function getOrderHistory(limit = 20) {
+  await initialize();
+  return callTool('get_orders', { limit });
+}
+
+/**
+ * Full market observation cycle for Roki's think loop.
+ * Returns { watchlist, quotes, portfolio, movers, at, error? }
+ */
+async function runMarketObservation() {
+  const watchlist = loadWatchlist();
+  let quotes = null, portfolio = null, error = null;
+
+  try {
+    await initialize();
+    quotes = await getQuote(watchlist);
+  } catch (err) { error = err.message; }
+
+  try { portfolio = await getPortfolio(); } catch (_) {}
+
+  const items = Array.isArray(quotes) ? quotes : (quotes?.quotes || []);
+  const movers = [...items]
+    .filter(q => q.changePercent != null)
+    .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
+    .slice(0, 3);
+
+  return { watchlist, quotes: items, portfolio, movers, at: new Date().toISOString(), error };
+}
+
+// ─── Watchlist ────────────────────────────────────────────────────────────────
 
 function loadWatchlist() {
   try {
     const d = JSON.parse(fs.readFileSync(WATCHLIST_FILE, 'utf-8'));
     return Array.isArray(d.symbols) ? d.symbols : DEFAULT_WATCHLIST;
-  } catch (_) {
-    return DEFAULT_WATCHLIST;
-  }
+  } catch (_) { return DEFAULT_WATCHLIST; }
 }
 
 function saveWatchlist(symbols) {
@@ -79,10 +410,7 @@ function saveWatchlist(symbols) {
 function addToWatchlist(symbol) {
   const list = loadWatchlist();
   const sym = symbol.toUpperCase().trim();
-  if (!list.includes(sym)) {
-    list.push(sym);
-    saveWatchlist(list);
-  }
+  if (!list.includes(sym)) { list.push(sym); saveWatchlist(list); }
   return list;
 }
 
@@ -92,43 +420,34 @@ function removeFromWatchlist(symbol) {
   return list;
 }
 
-// ─── Trade suggestions (read-only output — NO order execution) ───────────────
+// ─── Trade suggestions (DISPLAY ONLY — no execution) ─────────────────────────
 
 function loadSuggestions() {
-  try {
-    return JSON.parse(fs.readFileSync(SUGGESTIONS_FILE, 'utf-8'));
-  } catch (_) {
-    return [];
-  }
+  try { return JSON.parse(fs.readFileSync(SUGGESTIONS_FILE, 'utf-8')); } catch (_) { return []; }
 }
 
 /**
  * Record a trade suggestion from Roki.
  *
- * THIS DOES NOT PLACE AN ORDER. It writes a human-readable suggestion that
- * the user can choose to act on in the Robinhood app themselves.
- *
- * @param {object} params
- *   { npc, symbol, action, quantity, rationale, currentPrice, targetPrice }
+ * THIS DOES NOT PLACE AN ORDER. It writes a suggestion the user can choose
+ * to act on in the Robinhood app themselves.
  */
 function createSuggestion(params) {
   const suggestions = loadSuggestions();
   const entry = {
-    id: `sug_${Date.now()}_${(Math.random() * 0xffff | 0).toString(16)}`,
-    at: new Date().toISOString(),
-    npc: params.npc || 'Roki',
-    symbol: (params.symbol || '').toUpperCase(),
-    action: params.action || 'watch', // 'buy' | 'sell' | 'watch'
-    quantity: params.quantity || null,
-    rationale: (params.rationale || '').slice(0, 600),
+    id:           `sug_${Date.now()}_${(Math.random() * 0xffff | 0).toString(16)}`,
+    at:           new Date().toISOString(),
+    npc:          params.npc      || 'Roki',
+    symbol:       (params.symbol  || '').toUpperCase(),
+    action:       params.action   || 'watch',
+    quantity:     params.quantity || null,
+    rationale:    (params.rationale || '').slice(0, 600),
     currentPrice: params.currentPrice || null,
-    targetPrice: params.targetPrice || null,
-    status: 'suggested', // 'suggested' | 'dismissed' — user acts in Robinhood app
-    // Explicit reminder for operators reading raw JSON
-    _note: 'This is a SUGGESTION only. Denizen never executes trades. Act in the Robinhood app.',
+    targetPrice:  params.targetPrice  || null,
+    status:       'suggested',
+    _note:        'SUGGESTION ONLY. Denizen never executes trades.',
   };
   suggestions.unshift(entry);
-  // Keep last 200 suggestions
   if (suggestions.length > 200) suggestions.splice(200);
   fs.mkdirSync(path.dirname(SUGGESTIONS_FILE), { recursive: true });
   fs.writeFileSync(SUGGESTIONS_FILE, JSON.stringify(suggestions, null, 2));
@@ -146,207 +465,23 @@ function dismissSuggestion(id) {
   return entry;
 }
 
-// ─── MCP HTTP transport ───────────────────────────────────────────────────────
-
-/**
- * Send a single JSON-RPC request to the Robinhood MCP endpoint.
- * Returns the `result` field, or throws on error.
- */
-function mcpRequest(method, params = {}) {
-  const token = loadToken();
-  if (!token) {
-    return Promise.reject(new Error('Robinhood: not authenticated — set ROBINHOOD_API_TOKEN in .env'));
-  }
-
-  const body = JSON.stringify({
-    jsonrpc: '2.0',
-    id: _idCounter++,
-    method,
-    params,
-  });
-
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: MCP_HOST,
-      port: 443,
-      path: MCP_PATH,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'Content-Length': Buffer.byteLength(body),
-        'User-Agent': 'Denizen/1.0 (Robinhood MCP client)',
-      },
-    }, (res) => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(data);
-          if (json.error) {
-            return reject(new Error(`MCP error [${json.error.code}]: ${json.error.message}`));
-          }
-          resolve(json.result);
-        } catch (e) {
-          reject(new Error(`Robinhood MCP parse error: ${e.message} (raw: ${data.slice(0, 200)})`));
-        }
-      });
-    });
-    req.on('error', reject);
-    req.setTimeout(MCP_TIMEOUT_MS, () => {
-      req.destroy(new Error('Robinhood MCP timeout'));
-    });
-    req.write(body);
-    req.end();
-  });
-}
-
-/**
- * Call a specific MCP tool by name.
- * Robinhood MCP uses the standard MCP tools/call interface.
- */
-function callTool(toolName, toolArgs = {}) {
-  return mcpRequest('tools/call', { name: toolName, arguments: toolArgs });
-}
-
-// ─── High-level market data API ───────────────────────────────────────────────
-
-/**
- * Initialize an MCP session (required before other calls in some MCP servers).
- * Safe to call multiple times — no-ops after first success.
- */
-let _initialized = false;
-async function initialize() {
-  if (_initialized) return true;
-  try {
-    await mcpRequest('initialize', {
-      protocolVersion: '2024-11-05',
-      capabilities: { roots: {}, sampling: {} },
-      clientInfo: { name: 'Denizen', version: '1.0.0' },
-    });
-    _initialized = true;
-    return true;
-  } catch (err) {
-    // Some MCP servers don't require initialize — continue anyway
-    _initialized = true;
-    return false;
-  }
-}
-
-/**
- * List available tools from the Robinhood MCP.
- */
-async function listTools() {
-  await initialize();
-  return mcpRequest('tools/list', {});
-}
-
-/**
- * Get a live quote for one or more symbols.
- * @param {string|string[]} symbols — e.g. 'NVDA' or ['NVDA','TSLA']
- * @returns {object} { symbol, price, change, changePercent, ... }
- */
-async function getQuote(symbols) {
-  await initialize();
-  const syms = Array.isArray(symbols) ? symbols : [symbols];
-  return callTool('get_quote', { symbols: syms });
-}
-
-/**
- * Get a summary of the authenticated account's portfolio.
- * @returns {object} { totalValue, dayChange, ... }
- */
-async function getPortfolio() {
-  await initialize();
-  return callTool('get_portfolio', {});
-}
-
-/**
- * Get all current positions.
- * @returns {object[]} [ { symbol, quantity, averageCost, currentPrice, ... } ]
- */
-async function getPositions() {
-  await initialize();
-  return callTool('get_positions', {});
-}
-
-/**
- * Get order history.
- * @param {number} limit — max orders to return
- */
-async function getOrderHistory(limit = 20) {
-  await initialize();
-  return callTool('get_orders', { limit });
-}
-
-/**
- * Run a full market observation cycle for Roki.
- *
- * 1. Gets quotes for the watchlist
- * 2. Gets portfolio summary (if auth available)
- * 3. Returns a structured observation Roki's brain can use for commentary
- *
- * @returns {object} { watchlist: [...], portfolio: {...}|null, at: ISO, movers: [...] }
- */
-async function runMarketObservation() {
-  const watchlist = loadWatchlist();
-  let quotes = null;
-  let portfolio = null;
-  let error = null;
-
-  try {
-    await initialize();
-    quotes = await getQuote(watchlist);
-  } catch (err) {
-    error = err.message;
-  }
-
-  try {
-    portfolio = await getPortfolio();
-  } catch (_) {
-    // Portfolio optional — might not be connected
-  }
-
-  // Sort by biggest % change to surface notable movers
-  const items = Array.isArray(quotes) ? quotes : (quotes?.quotes || []);
-  const movers = [...items]
-    .filter(q => q.changePercent != null)
-    .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
-    .slice(0, 3);
-
-  return {
-    watchlist,
-    quotes: items,
-    portfolio,
-    movers,
-    at: new Date().toISOString(),
-    error,
-  };
-}
-
 // ─── Exports ─────────────────────────────────────────────────────────────────
 
 module.exports = {
-  // Auth
+  // Auth flow
   isAuthenticated,
-  loadToken,
-  saveToken,
+  buildAuthUrl,
+  handleCallback,
+  refreshToken,
+  getClientId,
+  registerClient,
   // Watchlist
-  loadWatchlist,
-  saveWatchlist,
-  addToWatchlist,
-  removeFromWatchlist,
-  // Suggestions (display-only, NO order execution)
-  loadSuggestions,
-  createSuggestion,
-  dismissSuggestion,
+  loadWatchlist, saveWatchlist, addToWatchlist, removeFromWatchlist,
+  // Suggestions (no execution)
+  loadSuggestions, createSuggestion, dismissSuggestion,
   // Market data
-  initialize,
-  listTools,
-  getQuote,
-  getPortfolio,
-  getPositions,
-  getOrderHistory,
+  initialize, listTools,
+  getQuote, getPortfolio, getPositions, getOrderHistory,
   runMarketObservation,
   // Low-level
   callTool,

@@ -2321,36 +2321,66 @@ const server = http.createServer((req, res) => {
   }
 
   // ─── Market / Robinhood endpoints ────────────────────────────────────────────
-  // Auth status + token setup
+  // Auth status
   if (urlPath === '/api/market/auth-status' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       authenticated: robinhoodMcp.isAuthenticated(),
+      clientId: robinhoodMcp.getClientId() || null,
       note: robinhoodMcp.isAuthenticated()
-        ? 'Robinhood token is configured. Roki can watch the market.'
-        : 'Set ROBINHOOD_API_TOKEN in denizen/.env to connect Roki to the market.',
+        ? 'Robinhood connected. Roki is watching the market.'
+        : 'Not connected. Visit /api/market/auth/connect to log in with Robinhood.',
     }));
     return;
   }
-  if (urlPath === '/api/market/auth/token' && req.method === 'POST') {
-    let body = '';
-    req.on('data', c => { body += c; });
-    req.on('end', () => {
-      try {
-        const { token } = JSON.parse(body);
-        if (!token || typeof token !== 'string' || token.length < 10) {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Invalid token' }));
-          return;
-        }
-        robinhoodMcp.saveToken(token.trim());
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, note: 'Token saved. Restart the server or wait for Roki\'s next think cycle.' }));
-      } catch (e) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: e.message }));
-      }
-    });
+
+  // OAuth2 PKCE initiation — redirect user to Robinhood login
+  if (urlPath === '/api/market/auth/connect' && req.method === 'GET') {
+    robinhoodMcp.buildAuthUrl()
+      .then(authUrl => {
+        res.writeHead(302, { Location: authUrl });
+        res.end();
+      })
+      .catch(err => {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end(`Auth setup failed: ${err.message}`);
+      });
+    return;
+  }
+
+  // OAuth2 callback — exchange code for tokens
+  if (urlPath.startsWith('/api/market/auth/callback') && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const code  = url.searchParams.get('code');
+    const state = url.searchParams.get('state');
+    const error = url.searchParams.get('error');
+
+    if (error || !code) {
+      res.writeHead(400, { 'Content-Type': 'text/html' });
+      res.end(`<h2>Robinhood auth failed</h2><p>${error || 'No code received'}</p><p><a href="/api/market/auth/connect">Try again</a></p>`);
+      return;
+    }
+
+    robinhoodMcp.handleCallback(code, state)
+      .then(() => {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(`<!DOCTYPE html><html><head><style>
+          body{font-family:monospace;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+          .box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:32px;max-width:400px;text-align:center}
+          h2{color:#86efac;margin:0 0 12px} p{color:#94a3b8;margin:0 0 8px} a{color:#93c5fd}
+        </style></head><body><div class="box">
+          <h2>✓ Robinhood Connected</h2>
+          <p>Roki is now watching the market.</p>
+          <p>Close this tab and head back to the office.</p>
+          <p style="margin-top:16px"><a href="http://localhost:8080">← Return to Denizen</a></p>
+        </div></body></html>`);
+        broadcast({ type: 'market_auth_connected', ts: Date.now() });
+        log.info('Market', 'Robinhood OAuth connected — Roki activated');
+      })
+      .catch(err => {
+        res.writeHead(500, { 'Content-Type': 'text/html' });
+        res.end(`<h2>Token exchange failed</h2><p>${err.message}</p><p><a href="/api/market/auth/connect">Try again</a></p>`);
+      });
     return;
   }
 
