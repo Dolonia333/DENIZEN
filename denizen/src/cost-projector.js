@@ -27,68 +27,67 @@
 const fs   = require('node:fs');
 const path = require('node:path');
 
-// Public list prices (USD per 1M tokens) for cloud models the openclaw.json
-// config leaves at 0. Edit freely — these are just fallbacks. ~May 2026.
-const PRICE_OVERRIDES = {
-  'kimi-k2.5':              { input: 0.60, output: 2.50, estimate: true },
-  'kimi-k2-0905-preview':   { input: 0.60, output: 2.50, estimate: true },
-  'kimi-k2-turbo-preview':  { input: 1.15, output: 8.00, estimate: true },
-  'kimi-k2-thinking':       { input: 0.60, output: 2.50, estimate: true },
-  'kimi-k2-thinking-turbo': { input: 1.15, output: 8.00, estimate: true },
-};
-
-// Friendly labels by provider key
-const PROVIDER_LABELS = {
-  anthropic: 'Claude',
-  google:    'Gemini',
-  xai:       'Grok',
-  moonshot:  'Kimi',
-  openai:    'LM Studio (local)',
-};
+// ── Curated CURRENT cloud pricing ───────────────────────────────────────────
+// USD per 1,000,000 tokens. Verified against provider pricing pages, May 2026.
+// The openclaw.json config carries older models (Sonnet 4.5, Haiku 3.5, Grok 2/3,
+// Gemini 2.x) — we deliberately do NOT use those for the projection. This table
+// is the source of truth for "what would current cloud models cost." Edit here
+// when prices/models change, and bump PRICING_AS_OF.
+//
+// cacheRead = price for input tokens served from prompt cache (huge lever for
+// Denizen since every NPC re-sends its big SOUL system prompt each think cycle).
+const PRICING_AS_OF = '2026-05';
+const CLOUD_PRICING = [
+  // Anthropic — Haiku 4.5 / Sonnet 4.6 / Opus 4.7 (output = 5x input)
+  { provider: 'anthropic', providerLabel: 'Claude', modelId: 'claude-haiku-4-5',  label: 'Claude Haiku 4.5',  input: 1.00, output: 5.00,  cacheRead: 0.10 },
+  { provider: 'anthropic', providerLabel: 'Claude', modelId: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', input: 3.00, output: 15.00, cacheRead: 0.30 },
+  { provider: 'anthropic', providerLabel: 'Claude', modelId: 'claude-opus-4-7',   label: 'Claude Opus 4.7',   input: 5.00, output: 25.00, cacheRead: 0.50 },
+  // Google — Gemini 3 Flash / 3.5 Flash / 3.1 Pro (≤200k context tier)
+  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3-flash',   label: 'Gemini 3 Flash',   input: 0.50, output: 3.00,  cacheRead: 0.05 },
+  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', input: 1.50, output: 9.00,  cacheRead: 0.15 },
+  { provider: 'google', providerLabel: 'Gemini', modelId: 'gemini-3.1-pro',   label: 'Gemini 3.1 Pro',   input: 2.00, output: 12.00, cacheRead: 0.20 },
+  // xAI — Grok 4.1 Fast / Grok 4.3 (current flagship)
+  { provider: 'xai', providerLabel: 'Grok', modelId: 'grok-4.1-fast', label: 'Grok 4.1 Fast', input: 0.20, output: 0.50, cacheRead: 0.05 },
+  { provider: 'xai', providerLabel: 'Grok', modelId: 'grok-4.3',      label: 'Grok 4.3',      input: 1.25, output: 2.50, cacheRead: 0.13 },
+  // Moonshot — Kimi K2.5 / K2.6 (current; K2 legacy EOL May 2026)
+  { provider: 'moonshot', providerLabel: 'Kimi', modelId: 'kimi-k2.5', label: 'Kimi K2.5', input: 0.60, output: 3.00, cacheRead: 0.15 },
+  { provider: 'moonshot', providerLabel: 'Kimi', modelId: 'kimi-k2.6', label: 'Kimi K2.6', input: 0.95, output: 4.00, cacheRead: 0.15 },
+];
 
 /**
- * Build a pricing table from openclaw.json.
+ * Build the pricing table: LOCAL models from openclaw.json (shown as FREE) +
+ * the curated CURRENT cloud table above. We pull local models from config so
+ * the projection reflects whatever you actually run locally, but cloud prices
+ * always come from the curated (current) table — not the stale config costs.
+ *
  * @returns {object[]} [{ provider, modelId, label, input, output, cacheRead, local, estimate }]
  */
 function loadPricing() {
+  const rows = [];
+
+  // 1) Local models from config (the 'openai'-keyed provider == LM Studio here)
   const configPath = path.join(
     process.env.USERPROFILE || process.env.HOME || '',
     '.openclaw', 'openclaw.json'
   );
-  let providers = {};
   try {
-    providers = JSON.parse(fs.readFileSync(configPath, 'utf-8'))?.models?.providers || {};
-  } catch (_) {
-    return [];
-  }
-
-  const rows = [];
-  for (const [provKey, prov] of Object.entries(providers)) {
-    const isLocal = provKey === 'openai'; // openai key == local LM Studio in this setup
-    for (const m of (prov.models || [])) {
-      const override = PRICE_OVERRIDES[m.id];
-      const cost = m.cost || {};
-      let input  = cost.input  ?? 0;
-      let output = cost.output ?? 0;
-      let estimate = false;
-      // If a cloud model is priced at 0 in config but we have an override, use it.
-      if (!isLocal && input === 0 && output === 0 && override) {
-        input = override.input;
-        output = override.output;
-        estimate = true;
-      }
+    const providers = JSON.parse(fs.readFileSync(configPath, 'utf-8'))?.models?.providers || {};
+    const local = providers.openai;
+    for (const m of (local?.models || [])) {
       rows.push({
-        provider:  provKey,
-        providerLabel: PROVIDER_LABELS[provKey] || provKey,
-        modelId:   m.id,
-        label:     m.name || m.id,
-        input,
-        output,
-        cacheRead: cost.cacheRead ?? null,
-        local:     isLocal,
-        estimate:  estimate || !!override?.estimate,
+        provider: 'openai',
+        providerLabel: 'LM Studio (local)',
+        modelId: m.id,
+        label: m.name || m.id,
+        input: 0, output: 0, cacheRead: 0,
+        local: true, estimate: false,
       });
     }
+  } catch (_) { /* no config — cloud-only projection still works */ }
+
+  // 2) Curated current cloud models
+  for (const p of CLOUD_PRICING) {
+    rows.push({ ...p, local: false, estimate: false });
   }
   return rows;
 }
@@ -168,7 +167,8 @@ function project(usage = {}, opts = {}) {
     tokensOutPerDay: Math.round(tokensOut * dayFactor),
     models,
     cacheHitRate,
-    note: 'Projection from locally-measured token volume. ±15% (tokenizer differences). "Cached" columns assume ' +
+    pricingAsOf: PRICING_AS_OF,
+    note: `Prices verified ${PRICING_AS_OF}. Projection from locally-measured token volume, ±15% (tokenizer differences). "Cached" assumes ` +
           Math.round(cacheHitRate * 100) + '% of input tokens hit prompt cache (the repeated SOUL prompt).',
   };
 }

@@ -703,7 +703,7 @@
 
     return `<div class="summary">
       <div class="card" style="grid-column:1/-1">
-        <h4>💰 Cloud cost projection — if you switched providers</h4>
+        <h4>💰 Cloud cost projection — if you switched providers ${c.pricingAsOf ? `<span style="color:#475569; font-size:9px">prices ${esc(c.pricingAsOf)}</span>` : ''}</h4>
         <div style="color:#64748b; font-size:10px; margin-bottom:6px">
           Measured locally: ${k(c.tokensIn)}↑ / ${k(c.tokensOut)}↓ tokens over ${winLabel()}
           (${k(c.callsPerDay)} calls/day, ${k(c.tokensInPerDay)}↑/${k(c.tokensOutPerDay)}↓ tok/day projected)
