@@ -1297,7 +1297,8 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     try {
       const response = await this._callProvider(brain.providerConfig, systemPrompt, [
         { role: 'user', content: userPrompt }
-      ], { maxTokens: 400, sliceLen: 600, temperature: 0.95, npc: npcName, kind: 'think' });
+      ], { maxTokens: 400, sliceLen: 600, temperature: 0.95, npc: npcName, kind: 'think',
+           jsonSchema: NpcBrainManager.DECISION_SCHEMA, jsonSchemaName: 'npc_decision' });
 
       // Parse the JSON response with the tolerant parser (handles fences,
       // trailing commas, smart quotes, and truncated output from weaker models).
@@ -1610,12 +1611,21 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     const sliceLen = opts.sliceLen || 150;
     const tel = this._makeTelHook('anthropic', config, messages, opts);
     return new Promise((resolve, reject) => {
-      const body = JSON.stringify({
+      const bodyObj = {
         model: config.model,
         max_tokens: maxTokens,
         system: systemPrompt,
         messages: messages.length > 0 ? messages : [{ role: 'user', content: 'Introduce yourself briefly.' }],
-      });
+      };
+      // Structured output for think calls. Anthropic has no JSON mode, so we
+      // force a single tool call whose input_schema IS the decision schema.
+      // The model must return a validated `input` object — guaranteed JSON.
+      if (opts.jsonSchema) {
+        const toolName = opts.jsonSchemaName || 'emit_decision';
+        bodyObj.tools = [{ name: toolName, description: 'Emit your next decision as structured data.', input_schema: opts.jsonSchema }];
+        bodyObj.tool_choice = { type: 'tool', name: toolName };
+      }
+      const body = JSON.stringify(bodyObj);
 
       const url = new URL('/v1/messages', config.baseUrl);
       const req = https.request({
@@ -1633,7 +1643,11 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
           try {
             const p = JSON.parse(data);
             if (p.error) { const e = new Error(p.error.message); tel.onError(e); return reject(e); }
-            const text = (p.content?.[0]?.text || '').trim().slice(0, sliceLen);
+            // Prefer a tool_use block (structured output); fall back to text.
+            const toolBlock = Array.isArray(p.content) ? p.content.find(c => c.type === 'tool_use') : null;
+            const text = toolBlock
+              ? JSON.stringify(toolBlock.input)
+              : (p.content?.find(c => c.type === 'text')?.text || p.content?.[0]?.text || '').trim().slice(0, sliceLen);
             // Anthropic uses input_tokens / output_tokens (note: not prompt/completion).
             tel.onResponse(text, p.usage?.input_tokens, p.usage?.output_tokens);
             resolve(text);
@@ -1664,10 +1678,18 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         contents.push({ role: 'user', parts: [{ text: 'Introduce yourself briefly.' }] });
       }
 
+      const genConfig = { maxOutputTokens: maxTokens };
+      // Structured output for think calls. We use responseMimeType (JSON mode)
+      // rather than responseSchema because Gemini's responseSchema is an
+      // OpenAPI 3.0 subset that rejects our union types (['string','null']).
+      // JSON mode still guarantees valid, parseable JSON — the core goal.
+      if (opts.jsonSchema) {
+        genConfig.responseMimeType = 'application/json';
+      }
       const body = JSON.stringify({
         contents,
         systemInstruction: { parts: [{ text: systemPrompt }] },
-        generationConfig: { maxOutputTokens: maxTokens },
+        generationConfig: genConfig,
       });
 
       const url = new URL(
@@ -1717,11 +1739,19 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
       }
 
-      const body = JSON.stringify({
+      const oaiBody = {
         model: config.model,
         max_tokens: maxTokens,
         messages: oaiMessages,
-      });
+      };
+      // Structured output for think calls. json_object mode is the widely-
+      // supported OpenAI-compatible option (xAI, Moonshot) — guarantees valid
+      // JSON without risking a 400 from the newer json_schema form. The think
+      // prompt already references JSON, satisfying providers that require it.
+      if (opts.jsonSchema) {
+        oaiBody.response_format = { type: 'json_object' };
+      }
+      const body = JSON.stringify(oaiBody);
 
       const url = new URL('/v1/chat/completions', config.baseUrl);
       const req = https.request({
@@ -1831,7 +1861,7 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
     }
 
     const temperature = opts.temperature || 0.8;
-    const body = JSON.stringify({
+    const bodyObj = {
       model: config.model,
       max_tokens: maxTokens,
       temperature,
@@ -1840,7 +1870,18 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
       // and avoids the Qwen3/reasoning model issue where content is empty
       // because everything ends up in reasoning_content instead.
       enable_thinking: false,
-    });
+    };
+    // Structured output — when a schema is supplied (think calls), constrain
+    // LM Studio's decoding to valid JSON matching the decision schema. This is
+    // the single biggest model-friendliness lever: even a 3B model literally
+    // cannot emit malformed JSON, so weak models stop falling back to scripted.
+    if (opts.jsonSchema) {
+      bodyObj.response_format = {
+        type: 'json_schema',
+        json_schema: { name: opts.jsonSchemaName || 'decision', schema: opts.jsonSchema, strict: false },
+      };
+    }
+    const body = JSON.stringify(bodyObj);
 
     const markSuccess = () => {
       this._providerHealth.consecutiveFailures = 0;
@@ -3149,6 +3190,32 @@ ${roleActions}
     log.info('Directive', `${fromNpc} → ${targetNpc}: "${String(task).slice(0, 60)}"`);
   }
 }
+
+/**
+ * Decision schema for structured output. Passed to providers that support
+ * grammar-constrained / schema-validated decoding (LM Studio json_schema,
+ * Gemini responseSchema, Anthropic tool-use) so even small models can't emit
+ * malformed JSON. Only `action` is required; everything else is optional so
+ * NPCs aren't forced to fill fields that don't apply. Non-strict on purpose —
+ * models may add reasoning/plan keys, which we keep.
+ */
+NpcBrainManager.DECISION_SCHEMA = {
+  type: 'object',
+  properties: {
+    reasoning:  { type: 'string', description: 'Brief why behind the choice' },
+    thought:    { type: 'string', description: 'Short thought-bubble text' },
+    action:     { type: 'string', enum: ['talk','collaborate','report','work','break','coffee','check','read','visit','wander','meeting','delegate','run_skill','idle'] },
+    target:     { type: ['string','null'], description: 'Coworker name, if any' },
+    location:   { type: ['string','null'], description: 'breakroom|conference|storage|manager_office|reception|open_office|desk' },
+    message:    { type: 'string', description: 'What you say or do' },
+    taskPhase:  { type: ['string','null'], enum: ['starting','continuing','finished','none',null] },
+    save:       { type: ['string','null'], description: 'A memory to persist' },
+    outcome:    { type: ['string','null'] },
+    skill:      { type: ['string','null'], description: 'OpenClaw skill name when action=run_skill' },
+    skillParams:{ type: ['object','null'] },
+  },
+  required: ['action'],
+};
 
 module.exports = NpcBrainManager;
 

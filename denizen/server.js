@@ -2254,6 +2254,15 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Decision parse-health: how often the model's JSON needed repair or
+  //     failed. High repair/fail rate = the current model is not very
+  //     model-friendly (consider structured output or a stronger model). ---
+  if (urlPath === '/api/telemetry/parse-health' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(npcBrains.getDecisionParseStats()));
+    return;
+  }
+
   // --- Per-NPC profile tracker: actual cost (priced by the model each NPC
   //     really ran on) + estimated cost if it were on a reference cloud model ---
   if (urlPath === '/api/npc-profiles' && req.method === 'GET') {
