@@ -4,9 +4,10 @@
     {
       "name": "denizen",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["--no-warnings", "server.js"],
+      "runtimeArgs": ["--no-warnings", "--env-file=.env", "server.js"],
       "cwd": "denizen",
       "port": 8080,
+      "autoPort": false,
       "waitForPort": 5000
     }
   ]

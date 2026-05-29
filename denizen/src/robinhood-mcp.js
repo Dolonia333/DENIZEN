@@ -29,6 +29,7 @@ const http   = require('node:http');
 const crypto = require('node:crypto');
 const fs     = require('node:fs');
 const path   = require('node:path');
+const marketData = require('./market-data'); // free no-key quote feed (Yahoo/Stooq)
 
 const ROOT              = path.resolve(__dirname, '..');
 const OAUTH_FILE        = path.join(ROOT, 'data', 'robinhood-oauth.json');
@@ -348,10 +349,27 @@ async function listTools() {
 
 // ─── Market data API ──────────────────────────────────────────────────────────
 
+/**
+ * Get quotes. Quotes are public data, so we always have a working source:
+ *   - If Robinhood is authenticated, try its MCP first (richest, account-aware).
+ *   - Otherwise (or on failure) fall back to the free Yahoo/Stooq feed.
+ * This means Roki works TODAY even while Robinhood agentic access is waitlisted.
+ *
+ * @returns {object[]} normalized quotes, each with a `source` field.
+ */
 async function getQuote(symbols) {
-  await initialize();
   const syms = Array.isArray(symbols) ? symbols : [symbols];
-  return callTool('get_quote', { symbols: syms });
+  if (isAuthenticated()) {
+    try {
+      await initialize();
+      const rh = await callTool('get_quote', { symbols: syms });
+      const items = Array.isArray(rh) ? rh : (rh?.quotes || null);
+      if (items && items.length) return items.map(q => ({ ...q, source: q.source || 'robinhood' }));
+    } catch (_) {
+      // fall through to free feed
+    }
+  }
+  return marketData.getQuotes(syms);
 }
 
 async function getPortfolio() {
@@ -375,14 +393,17 @@ async function getOrderHistory(limit = 20) {
  */
 async function runMarketObservation() {
   const watchlist = loadWatchlist();
-  let quotes = null, portfolio = null, error = null;
+  let quotes = [], portfolio = null, error = null;
 
+  // Quotes always work (free feed fallback inside getQuote).
   try {
-    await initialize();
     quotes = await getQuote(watchlist);
   } catch (err) { error = err.message; }
 
-  try { portfolio = await getPortfolio(); } catch (_) {}
+  // Portfolio is Robinhood-only — null until agentic access is granted.
+  if (isAuthenticated()) {
+    try { portfolio = await getPortfolio(); } catch (_) {}
+  }
 
   const items = Array.isArray(quotes) ? quotes : (quotes?.quotes || []);
   const movers = [...items]
@@ -390,7 +411,18 @@ async function runMarketObservation() {
     .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
     .slice(0, 3);
 
-  return { watchlist, quotes: items, portfolio, movers, at: new Date().toISOString(), error };
+  const quoteSource = items[0]?.source || 'none';
+
+  return {
+    watchlist,
+    quotes: items,
+    portfolio,
+    movers,
+    quoteSource,                       // 'yahoo' | 'stooq' | 'robinhood' | 'none'
+    robinhoodConnected: isAuthenticated(),
+    at: new Date().toISOString(),
+    error,
+  };
 }
 
 // ─── Watchlist ────────────────────────────────────────────────────────────────
