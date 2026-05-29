@@ -2137,8 +2137,10 @@ const server = http.createServer((req, res) => {
       limit: Math.min(500, Math.max(1, Number(url.searchParams.get('limit') || 50))),
       kind: url.searchParams.get('kind') || null,
       npc: url.searchParams.get('npc') || null,
+      provider: url.searchParams.get('provider') || null,
       sinceMs: url.searchParams.get('sinceMs') ? Number(url.searchParams.get('sinceMs')) : null,
       errorsOnly: url.searchParams.get('errorsOnly') === 'true',
+      sort: url.searchParams.get('sort') || 'newest',
     };
     const calls = llmTelemetry.getRecent(opts);
     res.writeHead(200, { 'Content-Type': 'application/json' });

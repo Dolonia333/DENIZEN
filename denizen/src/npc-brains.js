@@ -280,34 +280,44 @@ class NpcBrainManager {
       // without editing this file. The defaults track the current
       // generation of each vendor's small/fast tier.
       if (p.anthropic?.apiKey) {
+        // openclaw.json stores models in an array — pick the fastest (haiku-tier)
+        // model by looking for 'haiku' in the id, falling back to [0] if not found.
+        const anthropicModels = p.anthropic.models || [];
+        const haikuModel = anthropicModels.find(m => m.id?.includes('haiku'));
         this.providers.claude = {
           baseUrl: 'https://api.anthropic.com',
           apiKey: p.anthropic.apiKey,
-          model: p.anthropic.model || 'claude-haiku-4-5',
+          model: p.anthropic.model || haikuModel?.id || anthropicModels[0]?.id || 'claude-haiku-3-5-20241022',
           type: 'anthropic',
         };
       }
       if (p.google?.apiKey) {
+        const googleModels = p.google.models || [];
+        const flashModel = googleModels.find(m => m.id?.includes('flash'));
         this.providers.gemini = {
           baseUrl: 'https://generativelanguage.googleapis.com',
           apiKey: p.google.apiKey,
-          model: p.google.model || 'gemini-2.5-flash',
+          model: p.google.model || flashModel?.id || googleModels[0]?.id || 'gemini-2.5-flash',
           type: 'google',
         };
       }
       if (p.xai?.apiKey) {
+        const xaiModels = p.xai.models || [];
+        const grok3Model = xaiModels.find(m => m.id?.includes('grok-3') && !m.id?.includes('mini'));
         this.providers.grok = {
           baseUrl: 'https://api.x.ai',
           apiKey: p.xai.apiKey,
-          model: p.xai.model || 'grok-4',
+          model: p.xai.model || grok3Model?.id || xaiModels[0]?.id || 'grok-3',
           type: 'openai',
         };
       }
       if (p.moonshot?.apiKey) {
+        const kimiModels = p.moonshot.models || [];
+        const kimi2Model = kimiModels.find(m => m.id?.includes('k2') && !m.id?.includes('thinking'));
         this.providers.kimi = {
           baseUrl: p.moonshot.baseUrl || 'https://api.moonshot.cn',
           apiKey: p.moonshot.apiKey,
-          model: p.moonshot.model || 'kimi-k2',
+          model: p.moonshot.model || kimi2Model?.id || kimiModels[0]?.id || 'kimi-k2',
           type: 'openai',
         };
       }

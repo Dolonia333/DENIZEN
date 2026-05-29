@@ -158,18 +158,26 @@ class LlmTelemetry {
 
   /**
    * Recent calls, optionally filtered.
-   * @param {object} opts { limit, kind, npc, sinceMs, errorsOnly }
+   * @param {object} opts { limit, kind, npc, provider, sinceMs, errorsOnly, sort }
+   *   sort: 'newest' (default) | 'slowest' — controls result ordering
    */
   getRecent(opts = {}) {
-    const { limit = 50, kind = null, npc = null, sinceMs = null, errorsOnly = false } = opts;
+    const { limit = 50, kind = null, npc = null, provider = null, sinceMs = null, errorsOnly = false, sort = 'newest' } = opts;
     const minTs = sinceMs ? Date.now() - sinceMs : 0;
-    return this.ring.filter(r => {
+    let results = this.ring.filter(r => {
       if (kind && r.kind !== kind) return false;
-      if (npc && r.npc !== npc) return false;
+      if (npc && r.npc?.toLowerCase() !== npc.toLowerCase()) return false;
+      if (provider && r.provider !== provider) return false;
       if (errorsOnly && !r.error) return false;
       if (minTs && Date.parse(r.at) < minTs) return false;
       return true;
-    }).slice(-limit).reverse();
+    });
+    if (sort === 'slowest') {
+      results = results.filter(r => r.latencyMs != null).sort((a, b) => b.latencyMs - a.latencyMs);
+    } else {
+      results = results.slice(-limit).reverse();
+    }
+    return results.slice(0, limit);
   }
 
   /**
