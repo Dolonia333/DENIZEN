@@ -835,6 +835,91 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
   }
 
   /**
+   * Tolerant decision-JSON parser — model-friendliness layer.
+   *
+   * Smaller / cheaper models routinely emit JSON that strict JSON.parse
+   * rejects: markdown ```json fences, trailing commas, smart quotes, or
+   * output truncated mid-object when they hit the token cap. Every failure
+   * used to fall back to a scripted decision, which made weaker models look
+   * "dead." This recovers the decision instead.
+   *
+   * Strategy:
+   *   1. strip code fences
+   *   2. extract the first BALANCED {...} via brace counting (string-aware,
+   *      so braces inside string values don't miscount) — not a greedy regex
+   *   3. if truncated (never closed), close the open string + balance braces
+   *   4. try strict parse, then conservative repairs (trailing commas, smart
+   *      quotes). Never does risky rewrites that could corrupt values.
+   *
+   * @returns {object|null} the parsed decision, or null if unrecoverable.
+   */
+  _parseDecisionJson(raw) {
+    if (!raw || typeof raw !== 'string') return null;
+    let s = raw.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+    const start = s.indexOf('{');
+    if (start === -1) return null;
+
+    let depth = 0, inStr = false, esc = false, end = -1;
+    for (let i = start; i < s.length; i++) {
+      const c = s[i];
+      if (esc) { esc = false; continue; }
+      if (c === '\\') { esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (inStr) continue;
+      if (c === '{') depth++;
+      else if (c === '}') { depth--; if (depth === 0) { end = i; break; } }
+    }
+
+    let candidate;
+    if (end !== -1) {
+      candidate = s.slice(start, end + 1);
+    } else {
+      // Truncated mid-object (hit maxTokens). Close the dangling string and
+      // balance the open braces so we can still recover the fields that made it.
+      candidate = s.slice(start);
+      if (inStr) candidate += '"';
+      candidate += '}'.repeat(Math.max(1, depth));
+    }
+
+    const repairs = [
+      (x) => x,
+      (x) => x.replace(/,\s*([}\]])/g, '$1'),                                  // trailing commas
+      (x) => x.replace(/,\s*([}\]])/g, '$1')
+              .replace(/[“”]/g, '"').replace(/[‘’]/g, "'"), // smart quotes
+    ];
+    for (const fix of repairs) {
+      try {
+        const obj = JSON.parse(fix(candidate));
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+          // Telemetry: count how often we had to repair, so model-friendliness
+          // is measurable (exposed via getDecisionParseStats()).
+          if (fix !== repairs[0] || end === -1) {
+            this._decisionParseRepairs = (this._decisionParseRepairs || 0) + 1;
+          }
+          this._decisionParseOk = (this._decisionParseOk || 0) + 1;
+          return obj;
+        }
+      } catch (_) { /* try next repair */ }
+    }
+    this._decisionParseFail = (this._decisionParseFail || 0) + 1;
+    return null;
+  }
+
+  /** Parse-health counters for the decision JSON — surfaces how model-friendly
+   *  the current model is (high repair/fail rate ⇒ switch model or add schema). */
+  getDecisionParseStats() {
+    const ok = this._decisionParseOk || 0;
+    const repairs = this._decisionParseRepairs || 0;
+    const fail = this._decisionParseFail || 0;
+    const total = ok + fail;
+    return {
+      ok, repairs, fail, total,
+      repairRate: total ? +(repairs / total).toFixed(3) : 0,
+      failRate:   total ? +(fail / total).toFixed(3) : 0,
+    };
+  }
+
+  /**
    * Autonomous NPC thinking — decides what to do next based on role, memory, and office state.
    * Returns a JSON action the NPC wants to take, plus _cascades for leaders.
    */
@@ -1214,10 +1299,10 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
         { role: 'user', content: userPrompt }
       ], { maxTokens: 400, sliceLen: 600, temperature: 0.95, npc: npcName, kind: 'think' });
 
-      // Parse the JSON response
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const decision = JSON.parse(jsonMatch[0]);
+      // Parse the JSON response with the tolerant parser (handles fences,
+      // trailing commas, smart quotes, and truncated output from weaker models).
+      const decision = this._parseDecisionJson(response);
+      if (decision) {
 
         // Track think cycles (reset on non-work action)
         if (decision.action === 'work') {
