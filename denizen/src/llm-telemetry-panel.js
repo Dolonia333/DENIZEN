@@ -38,6 +38,7 @@
   function pcRecentUrl()           { return '/api/pc-activity?limit=8'; }
   function taskChainsUrl()         { return '/api/task-chains'; }
   function proposalsUrl()          { return '/api/proposals?status=pending'; }
+  function costUrl(w)              { return `/api/telemetry/cost?windowMs=${w}`; }
 
   const POLL_MS = 5000;
 
@@ -65,6 +66,7 @@
     pcActive: [],
     pcRecent: [],
     active: null,
+    cost: null,
     filterKind: '',
     filterNpc: '',
     filterProvider: '',
@@ -359,7 +361,7 @@
       fetch(url, { cache: 'no-store' })
         .then(r => r.ok ? r.json() : fallback)
         .catch(() => fallback);
-    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals] = await Promise.all([
+    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost] = await Promise.all([
       safe(statsUrl(w), null),
       safe(decisionsUrl(w), { actions: {}, skills: {}, total: 0 }),
       safe(pcStatsUrl(w), { total: 0, byKind: {}, byNpc: {}, byStatus: {} }),
@@ -367,6 +369,7 @@
       safe(pcRecentUrl(), { events: [] }),
       safe(taskChainsUrl(), { chains: [] }),
       safe(proposalsUrl(), { proposals: [] }),
+      safe(costUrl(w), null),
     ]);
     state.stats     = stats;
     state.decisions = decisions;
@@ -377,6 +380,7 @@
       chains:    Array.isArray(chains.chains) ? chains.chains : [],
       proposals: Array.isArray(proposals.proposals) ? proposals.proposals : [],
     };
+    state.cost      = cost;
   }
 
   // ---- tab content ----
@@ -554,7 +558,7 @@
     const win = winLabel();
     if (!s || s.calls === 0) {
       return `<div style="padding:12px; color:#94a3b8">No telemetry in the last ${win}.</div>` +
-             renderDecisions() + renderPcActivity() + renderActiveState();
+             renderDecisions() + renderCost() + renderPcActivity() + renderActiveState();
     }
     const ms  = (n) => n == null ? '—' : (n / 1000).toFixed(2) + 's';
     const tok = (n) => n == null ? '—' : n.toLocaleString();
@@ -657,7 +661,58 @@
       <!-- By kind -->
       ${byTable(s.byKind, '🏷 By call type', KIND_LABELS)}
 
-    </div>` + renderDecisions() + renderPcActivity() + renderActiveState();
+    </div>` + renderDecisions() + renderCost() + renderPcActivity() + renderActiveState();
+  }
+
+  // ── Cost projection ───────────────────────────────────────────────────────
+  function renderCost() {
+    const c = state.cost;
+    if (!c || !c.models || !c.models.length) {
+      return `<div class="summary"><div class="card" style="grid-column:1/-1">
+        <h4>💰 Cloud cost projection (${winLabel()})</h4>
+        <div style="color:#94a3b8">No token usage measured yet — let the office run a few minutes.</div>
+      </div></div>`;
+    }
+    const usd = (n) => n == null ? '—' : '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const k = (n) => n == null ? '—' : n.toLocaleString();
+
+    // Cloud models sorted cheapest-first (local first since $0).
+    const rows = c.models.map(m => {
+      const isLocal = m.local;
+      const cachedNote = m.perMonthCached != null
+        ? `<span style="color:#86efac"> · ${usd(m.perMonthCached)}/mo cached</span>`
+        : '';
+      const est = m.estimate ? '<span style="color:#fbbf24; font-size:9px"> est</span>' : '';
+      return `<div style="padding:3px 0; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:baseline">
+        <span><b style="color:${isLocal ? '#86efac' : '#c7d2fe'}">${esc(m.label)}</b>${est}</span>
+        <span style="color:#94a3b8">${isLocal ? '<b style="color:#86efac">FREE</b>' : usd(m.perDay) + '/day · <b>' + usd(m.perMonth) + '/mo</b>' + cachedNote}</span>
+      </div>`;
+    }).join('');
+
+    const perNpc = c.perNpc && c.perNpc.rows && c.perNpc.rows.length
+      ? `<div class="card">
+          <h4>🤖 Cost per NPC (on ${esc(c.perNpc.model)})</h4>
+          <div style="color:#64748b; font-size:10px; margin-bottom:4px">who'd cost the most to run on cloud · $/month</div>
+          ${c.perNpc.rows.slice(0, 12).map(r => `
+            <div style="padding:2px 0; border-bottom:1px solid #1e293b; display:flex; justify-content:space-between">
+              <span style="color:#c7d2fe">${esc(r.npc)}</span>
+              <span style="color:#94a3b8">${k(r.tokensIn)}↑/${k(r.tokensOut)}↓ tok · <b>${usd(r.perMonth)}/mo</b></span>
+            </div>`).join('')}
+        </div>`
+      : '';
+
+    return `<div class="summary">
+      <div class="card" style="grid-column:1/-1">
+        <h4>💰 Cloud cost projection — if you switched providers</h4>
+        <div style="color:#64748b; font-size:10px; margin-bottom:6px">
+          Measured locally: ${k(c.tokensIn)}↑ / ${k(c.tokensOut)}↓ tokens over ${winLabel()}
+          (${k(c.callsPerDay)} calls/day, ${k(c.tokensInPerDay)}↑/${k(c.tokensOutPerDay)}↓ tok/day projected)
+        </div>
+        ${rows}
+        <div style="margin-top:6px; font-size:9px; color:#475569">${esc(c.note)}</div>
+      </div>
+      ${perNpc}
+    </div>`;
   }
 
   // ── Decisions histogram ──────────────────────────────────────────────────

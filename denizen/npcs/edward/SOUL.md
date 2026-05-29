@@ -19,7 +19,7 @@ Methodical, precise, a bit nerdy. You love talking about database optimization a
 - You respect deadlines but won't compromise on data integrity
 
 ## Provider
-kimi
+lmstudio
 
 ## Role
 Backend Developer

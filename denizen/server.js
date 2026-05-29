@@ -27,6 +27,7 @@ const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
 const taskChain        = require('./src/task-chain');
 const robinhoodMcp     = require('./src/robinhood-mcp');
+const costProjector    = require('./src/cost-projector');
 const conflictDetector = require('./src/conflict-detector');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -2230,6 +2231,26 @@ const server = http.createServer((req, res) => {
     const errors = llmTelemetry.getRecentErrors({ limit });
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ errors }));
+    return;
+  }
+
+  // --- Cost projection: "what would the measured token volume cost on each
+  //     cloud model?" Measure locally (free), project onto cloud pricing. ---
+  if (urlPath === '/api/telemetry/cost' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const windowMs = Number(url.searchParams.get('windowMs') || 60 * 60 * 1000); // default 1h
+    const cacheHitRate = url.searchParams.get('cacheHitRate') != null
+      ? Math.max(0, Math.min(1, Number(url.searchParams.get('cacheHitRate'))))
+      : undefined;
+    const stats = llmTelemetry.getStats({ windowMs });
+    const projection = costProjector.project(stats, cacheHitRate != null ? { cacheHitRate } : {});
+    // Per-NPC breakdown on the cheapest cloud (non-local) model for "who costs most"
+    const cheapestCloud = projection.models.find(m => !m.local) || null;
+    projection.perNpc = cheapestCloud
+      ? { model: cheapestCloud.label, rows: costProjector.projectPerNpc(stats.byNpc, cheapestCloud, windowMs) }
+      : null;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(projection));
     return;
   }
 

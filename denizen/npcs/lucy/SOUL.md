@@ -105,7 +105,7 @@ what to open or where to go. I also run the office tours and keep the team conne
 What do you need?"
 
 ## Provider
-claude
+lmstudio
 
 ## Role
 Receptionist (also handles CEO email triage as Secretary)
