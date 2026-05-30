@@ -1964,7 +1964,7 @@ class OfficeScene extends Phaser.Scene {
           this.facing = 'down';
         }
       }
-    } else if (justPressed && this.playerLocked && !this.chatTyping) {
+    } else if (justPressed && this.playerLocked) {
       standUp();
     }
 
@@ -1973,18 +1973,18 @@ class OfficeScene extends Phaser.Scene {
     const rightKey = this.cursors.right.isDown;
     const upKey = this.cursors.up.isDown;
     const downKey = this.cursors.down.isDown;
-    // Pressing a movement key stands you up from sitting/interacting — but not
-    // while you're typing (those keys are going into the chat box, not here).
-    if (this.playerLocked && !this.chatTyping && (leftKey || rightKey || upKey || downKey)) {
+    // Pressing a movement (arrow) key stands you up from sitting/interacting.
+    if (this.playerLocked && (leftKey || rightKey || upKey || downKey)) {
       standUp();
     }
 
-    // Movement is blocked while sitting/interacting (playerLocked) OR while the
-    // chat box is focused (chatTyping). The chat panel merely being VISIBLE no
-    // longer freezes you — only active typing does. Don't return early: NPC AI,
+    // Movement is blocked ONLY while sitting/interacting (playerLocked). The
+    // chat box no longer freezes the player at all — arrow keys still drive
+    // movement even while the input is focused (the input lets them through),
+    // so you can type AND walk at the same time. Don't return early: NPC AI,
     // physics, and bubbles must keep running below.
     let moving = false;
-    if (this.playerLocked || this.chatTyping) {
+    if (this.playerLocked) {
       body.setVelocity(0, 0);
       this.player.anims.stop();
     } else {

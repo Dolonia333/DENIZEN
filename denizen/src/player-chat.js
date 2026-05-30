@@ -739,41 +739,44 @@ class PlayerChat {
     this._logEl = panel.querySelector('#player-chat-log');
     this._targetLabel = panel.querySelector('#player-chat-target');
 
-    // Focus/blur drive the movement lock: locked ONLY while typing, so the
-    // moment you send (blur) you can walk again — no Esc required.
-    this._input.addEventListener('focus', () => {
-      this.scene.chatTyping = true;
-    });
-    this._input.addEventListener('blur', () => {
-      this.scene.chatTyping = false;
-      this.scene.playerState = 'walk';
-    });
+    // Arrow keys are movement. Even while the chat box is focused we let them
+    // reach the game so the player can walk AND type at the same time. Every
+    // other key is captured so letters go into the box, not the game.
+    const MOVE_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 
-    // Send on Enter, then blur so control returns to the game instantly.
     this._input.addEventListener('keydown', (e) => {
-      e.stopPropagation(); // Prevent game keys from firing while typing
+      if (MOVE_KEYS.includes(e.key)) {
+        // Don't move the text caret; DON'T stopPropagation — Phaser needs the
+        // event to move the player. This is what lets you walk while typing.
+        e.preventDefault();
+        return;
+      }
+      e.stopPropagation(); // letters/space/etc. type into the box, not the game
       if (e.key === 'Enter') {
         if (this._input.value.trim()) {
           this.sendMessage(this._input.value);
           this._input.value = '';
         }
-        this._input.blur(); // hand control back to movement (fluent: type → Enter → walk)
+        // Keep focus so you can keep chatting and moving — no Esc needed.
       } else if (e.key === 'Escape') {
-        this.close();       // Esc dismisses the panel entirely
+        this.close(); // Esc dismisses the chat panel
       }
     });
 
-    // Block all key events from reaching the game while typing
-    this._input.addEventListener('keyup', (e) => e.stopPropagation());
+    // Let arrow keyups reach the game too (so movement keys release cleanly);
+    // swallow everything else so stray keyups don't trigger game actions.
+    this._input.addEventListener('keyup', (e) => {
+      if (!MOVE_KEYS.includes(e.key)) e.stopPropagation();
+    });
     this._input.addEventListener('keypress', (e) => e.stopPropagation());
 
-    // Send button — send then return focus to the game.
+    // Send button — send and keep the box focused for the next message.
     panel.querySelector('#player-chat-send').addEventListener('click', () => {
       if (this._input.value.trim()) {
         this.sendMessage(this._input.value);
         this._input.value = '';
       }
-      this._input.blur();
+      this._input.focus();
     });
 
     // Block game input while interacting with panel
