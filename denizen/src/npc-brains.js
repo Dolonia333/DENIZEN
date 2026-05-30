@@ -1132,12 +1132,15 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       };
       const skillLine = skillsByRole[brain.role] || '';
       if (skillLine) {
+        // Everyone with skill access can do real web research — use it instead
+        // of guessing when you need facts, docs, or a working reference to copy.
+        const researchLine = `\nresearch (look it up on the web): action:"run_skill", skill:"research", skillParams:{ query:"your question", read:1 }. Use this BEFORE guessing — to find how to do something, verify a fact, or compare your broken approach to a working example. Results come back on your next think.`;
         // Technical roles can also AUTHOR a new tool when none of the above fits.
         const builders = new Set(['CTO', 'Developer', 'Data Engineer', 'DevOps Engineer', 'Researcher', 'IT Support']);
         const buildLine = builders.has(brain.role)
           ? `\nIf you need a tool that doesn't exist yet, draft one: action:"run_skill", skill:"build-skill", skillParams:{ name:"kebab-name", purpose:"what it does", params:["inputs"] }. The CEO must approve the generated code before it can run — so propose it, then move on; don't wait.`
           : '';
-        openClawContext = `OpenClaw gateway (localhost:18789) is live. Skills you can reference or request:\n${skillLine}${buildLine}\nWhen you delegate real work to OpenClaw, mention the skill name in your message.`;
+        openClawContext = `OpenClaw gateway (localhost:18789) is live. Skills you can reference or request:\n${skillLine}${researchLine}${buildLine}\nWhen you delegate real work to OpenClaw, mention the skill name in your message.`;
       }
     }
 

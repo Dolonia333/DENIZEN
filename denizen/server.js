@@ -29,6 +29,7 @@ const taskChain        = require('./src/task-chain');
 const robinhoodMcp     = require('./src/robinhood-mcp');
 const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
+const webResearch      = require('./src/web-research');
 const conflictDetector = require('./src/conflict-detector');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -262,6 +263,32 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: false, output, ts: Date.now() });
     });
     return Promise.resolve({ ok: true, output: 'Lucy job pipeline started', skill: 'job-pipeline', npcName });
+  }
+
+  // --- research: real web search (+ optional page read) fed back into the
+  //     NPC's next think cycle so they reason over what they actually found. ---
+  if (skill === 'research') {
+    const researchStart = Date.now();
+    const query = skillParams?.query || skillParams?.q || skillParams?.topic || skillParams?.task || '';
+    const activity = pcActivity.record({
+      npc: npcName, kind: 'research', task: `research: ${String(query).slice(0, 120)}`,
+      mode: 'background', status: 'started',
+    });
+    webResearch.research(query, { count: Number(skillParams?.count) || 5, read: skillParams?.read != null ? Number(skillParams.read) : 1 })
+      .then(result => {
+        const formatted = webResearch.formatForNpc(result);
+        const ok = !result.error || result.results.length > 0;
+        pcActivity.record({ id: activity.id, npc: npcName, kind: 'research', task: activity.task, mode: 'background', status: ok ? 'done' : 'failed', durationMs: Date.now() - researchStart, detail: `${result.results.length} results` });
+        npcBrains.injectSkillResult(npcName, 'research', formatted);
+        broadcast({ type: 'npc_skill_result', npcName, skill: 'research', ok, output: `Found ${result.results.length} sources for "${result.query}"`, ts: Date.now() });
+        broadcast({ type: 'npc_research', npcName, query: result.query, sources: result.results.map(r => ({ title: r.title, url: r.url })), ts: Date.now() });
+        log.info('Research', `${npcName} researched "${String(query).slice(0, 60)}" → ${result.results.length} sources`);
+      })
+      .catch(err => {
+        npcBrains.injectSkillResult(npcName, 'research', `Research failed: ${err.message}`);
+        broadcast({ type: 'npc_skill_result', npcName, skill: 'research', ok: false, output: String(err.message).slice(0, 200), ts: Date.now() });
+      });
+    return Promise.resolve({ ok: true, output: 'Research started', skill: 'research', npcName });
   }
 
   // --- build-skill: an NPC drafts a NEW tool. Generated code is QUARANTINED
@@ -2309,6 +2336,17 @@ const server = http.createServer((req, res) => {
       : null;
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(projection));
+    return;
+  }
+
+  // --- Research: manual web research endpoint (same engine NPCs use). ---
+  if (urlPath === '/api/research' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const q = url.searchParams.get('q') || url.searchParams.get('query') || '';
+    const read = url.searchParams.get('read') != null ? Number(url.searchParams.get('read')) : 1;
+    webResearch.research(q, { count: Number(url.searchParams.get('count')) || 5, read })
+      .then(result => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(result)); })
+      .catch(err => { res.writeHead(502, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })); });
     return;
   }
 
