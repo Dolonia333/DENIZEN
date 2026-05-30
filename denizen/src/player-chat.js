@@ -328,6 +328,22 @@ class PlayerChat {
     this._waitingForResponse = true;
     this._lastTargetKey = targetKey; // remember for response handler
 
+    // "Follow me" intent — handled client-side for instant response. The NPC
+    // starts trailing the player immediately; the message still goes to the
+    // server so the brain has context for its spoken reply.
+    const acts = this.manager?.actions;
+    if (acts && typeof acts.startFollow === 'function') {
+      const followRe = /\b(follow me|come with me|come along|follow along|walk with me|tag along|lead the way|after me)\b/i;
+      const stopFollowRe = /\b(stop following|stop follow|wait here|stay here|stay there|stay put|that'?s enough|you can stop|hold here|wait there|go back to (your )?desk)\b/i;
+      if (stopFollowRe.test(trimmed) && acts.isFollowing(targetKey)) {
+        acts.stopFollow(targetKey);
+        try { acts.speak(targetKey, "Okay — I'll wait here."); } catch (_) {}
+      } else if (followRe.test(trimmed)) {
+        acts.startFollow(targetKey);
+        try { acts.speak(targetKey, 'Right behind you!'); } catch (_) {}
+      }
+    }
+
     // Proximity-audio: tell the audio gate the player is now in active
     // conversation with this NPC, so every other NPC's voice line is
     // muted for the duration of the chat. Decays after ~30s of no

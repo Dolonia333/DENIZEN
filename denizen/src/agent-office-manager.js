@@ -1235,15 +1235,34 @@ class AgentOfficeManager {
     const addressedUntil = npcSprite?.ai?._addressedUntil || 0;
     const addressedBy = npcSprite?.ai?._addressedBy;
     if (addressedUntil > this.scene.time.now && addressedBy && action !== 'talk') {
-      const addressedByName = this.NPC_NAMES[addressedBy];
+      // '__player__' is the CEO talking to them — it is NOT in NPC_NAMES, which
+      // is why this guard used to silently skip player conversations and let
+      // the NPC wander off mid-reply. Handle it explicitly.
+      const isPlayer = addressedBy === '__player__';
+      const addressedByName = isPlayer ? 'the CEO' : this.NPC_NAMES[addressedBy];
       if (addressedByName) {
-        const movey = ['work', 'break', 'wander', 'visit', 'collaborate'].indexOf(action) !== -1;
+        // Any action that would move them away counts as "walking off".
+        const movey = ['work', 'break', 'coffee', 'wander', 'visit', 'collaborate', 'meeting', 'check', 'read'].indexOf(action) !== -1;
         if (movey) {
           console.log(`[NPC Focus] ${npcName} was just addressed by ${addressedByName} — staying put to respond`);
           action = 'talk';
-          target = addressedByName;
+          // For the player we keep them in place (no NPC target to route to);
+          // for a peer we point the reply back at that peer.
+          target = isPlayer ? null : addressedByName;
           location = null;
         }
+      }
+    }
+
+    // Follow-me lock — if this NPC is trailing the player, an autonomous
+    // decision must NOT walk them off (the follow tick would fight it and
+    // they'd jitter). Strip any movement; let them still speak in place.
+    if (this.actions.isFollowing && this.actions.isFollowing(npcKey)) {
+      const movey = ['work', 'break', 'coffee', 'wander', 'visit', 'collaborate', 'meeting', 'check', 'read'].indexOf(action) !== -1;
+      if (movey || location || (action === 'talk' && target)) {
+        action = 'talk';
+        target = null;
+        location = null;
       }
     }
 

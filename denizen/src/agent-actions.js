@@ -23,6 +23,12 @@ class AgentActions {
     this._activeSpeakers = new Map(); // targetNpcKey -> count
     this.MAX_SPEAKERS_PER_TARGET = 2;
 
+    // "Follow me" — NPCs the player has told to follow. Ticked every frame in
+    // update() so they re-path to the player's CURRENT position as they move.
+    this._followers = new Map();      // npcKey -> { lastRetargetAt, lastPx, lastPy }
+    this.FOLLOW_STOP_DIST = 84;       // close enough — stop walking + face player
+    this.FOLLOW_RETARGET_MS = 250;    // min gap between re-paths (avoid thrash)
+
     // Room definitions — agents understand the office layout
     this.ROOMS = {
       open_office: { name: 'Open Office', xMin: 100, xMax: 800, yMin: 80, yMax: 420, purpose: 'Main workspace with cubicle desks and computers' },
@@ -32,6 +38,64 @@ class AgentActions {
       reception: { name: 'Reception', xMin: 380, xMax: 840, yMin: 460, yMax: 660, purpose: 'Front desk, waiting area for visitors' },
       storage: { name: 'Storage/IT', xMin: 880, xMax: 1248, yMin: 460, yMax: 660, purpose: 'Server room, IT equipment, storage' },
     };
+  }
+
+  // ---- Follow-me ----
+
+  /** Start an NPC following the player. Idempotent. */
+  startFollow(npcKey) {
+    const npc = this._getNpc(npcKey);
+    if (!npc || !npc.ai) return false;
+    if (this._sittingNpcs.has(npcKey)) this._standUpNpc(npcKey);
+    if (npc._pathFollower) npc._pathFollower.stop();
+    npc.ai.mode = 'agent_task';      // keep manager mode so autonomous wander won't fight us
+    npc.ai.taskState = 'walking';
+    this._followers.set(npcKey, { lastRetargetAt: 0, lastPx: null, lastPy: null });
+    return true;
+  }
+
+  /** Stop an NPC following the player. */
+  stopFollow(npcKey) {
+    if (!this._followers.has(npcKey)) return false;
+    this._followers.delete(npcKey);
+    const npc = this._getNpc(npcKey);
+    if (npc?.body) npc.body.setVelocity(0, 0);
+    if (npc?.ai) npc.ai.taskState = 'arrived';
+    return true;
+  }
+
+  isFollowing(npcKey) { return this._followers.has(npcKey); }
+  stopAllFollow() { for (const k of [...this._followers.keys()]) this.stopFollow(k); }
+
+  /** Per-frame: keep each follower walking toward the player's current spot. */
+  _tickFollow() {
+    if (!this._followers.size) return;
+    const player = this.scene.player;
+    if (!player) return;
+    const now = this.scene.time?.now || Date.now();
+    this._followers.forEach((st, npcKey) => {
+      const npc = this._getNpc(npcKey);
+      if (!npc || !npc.ai || !npc.body) return;
+      const dx = player.x - npc.x, dy = player.y - npc.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > this.FOLLOW_STOP_DIST) {
+        npc.ai.mode = 'agent_task';
+        // Re-path when the player has moved enough, or the throttle elapsed.
+        const moved = st.lastPx == null || Math.hypot(player.x - st.lastPx, player.y - st.lastPy) > 20;
+        if (moved || now - st.lastRetargetAt > this.FOLLOW_RETARGET_MS) {
+          const side = npc.x <= player.x ? -1 : 1; // trail beside, not on top of, the player
+          npc.ai.taskTarget = { x: player.x + side * 28, y: player.y + 8 };
+          npc.ai.taskState = 'walking';
+          st.lastRetargetAt = now; st.lastPx = player.x; st.lastPy = player.y;
+        }
+      } else {
+        // Arrived — stop and face the player.
+        npc.body.setVelocity(0, 0);
+        npc.ai.taskState = 'arrived';
+        if (Math.abs(dx) > Math.abs(dy)) npc.ai.facing = dx < 0 ? 'left' : 'right';
+        else npc.ai.facing = dy < 0 ? 'up' : 'down';
+      }
+    });
   }
 
   // ---- NPC / Furniture Helpers ----
@@ -1196,6 +1260,9 @@ class AgentActions {
    * Update all visual elements positions (call from scene update)
    */
   update() {
+    // Keep "follow me" NPCs glued to the player.
+    this._tickFollow();
+
     const updateMap = (map, yOffset) => {
       map.forEach((entry) => {
         if (entry.npc && entry.text && !entry.text.scene) return;
