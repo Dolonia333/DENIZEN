@@ -42,14 +42,17 @@ class PlayerChat {
     this._visible = !this._visible;
     this._container.style.display = this._visible ? 'flex' : 'none';
     if (this._visible) {
-      this._input.focus();
-      // Lock player movement while chat is open
-      this.scene.playerLocked = true;
+      this._input.focus();   // focus handler sets scene.chatTyping (= movement lock)
     } else {
-      this._input.blur();
-      this.scene.playerLocked = false;
-      this.scene.playerState = 'walk';
+      this._input.blur();    // blur handler clears it
     }
+  }
+
+  /** True only while the text box is focused — i.e. the player is actually
+   *  typing. Movement is blocked just for this window, not the whole time the
+   *  panel is on screen, so walking is fluent: type, Enter, you're moving. */
+  isTyping() {
+    return document.activeElement === this._input;
   }
 
   /**
@@ -736,15 +739,27 @@ class PlayerChat {
     this._logEl = panel.querySelector('#player-chat-log');
     this._targetLabel = panel.querySelector('#player-chat-target');
 
-    // Send on Enter
+    // Focus/blur drive the movement lock: locked ONLY while typing, so the
+    // moment you send (blur) you can walk again — no Esc required.
+    this._input.addEventListener('focus', () => {
+      this.scene.chatTyping = true;
+    });
+    this._input.addEventListener('blur', () => {
+      this.scene.chatTyping = false;
+      this.scene.playerState = 'walk';
+    });
+
+    // Send on Enter, then blur so control returns to the game instantly.
     this._input.addEventListener('keydown', (e) => {
-      e.stopPropagation(); // Prevent game keys from firing
-      if (e.key === 'Enter' && this._input.value.trim()) {
-        this.sendMessage(this._input.value);
-        this._input.value = '';
-      }
-      if (e.key === 'Escape') {
-        this.close();
+      e.stopPropagation(); // Prevent game keys from firing while typing
+      if (e.key === 'Enter') {
+        if (this._input.value.trim()) {
+          this.sendMessage(this._input.value);
+          this._input.value = '';
+        }
+        this._input.blur(); // hand control back to movement (fluent: type → Enter → walk)
+      } else if (e.key === 'Escape') {
+        this.close();       // Esc dismisses the panel entirely
       }
     });
 
@@ -752,12 +767,13 @@ class PlayerChat {
     this._input.addEventListener('keyup', (e) => e.stopPropagation());
     this._input.addEventListener('keypress', (e) => e.stopPropagation());
 
-    // Send button
+    // Send button — send then return focus to the game.
     panel.querySelector('#player-chat-send').addEventListener('click', () => {
       if (this._input.value.trim()) {
         this.sendMessage(this._input.value);
         this._input.value = '';
       }
+      this._input.blur();
     });
 
     // Block game input while interacting with panel
