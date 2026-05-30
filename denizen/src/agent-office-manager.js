@@ -2254,6 +2254,21 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'npc_report_to_ceo': {
+        // An NPC is following through on a promise it made the CEO. Surface it
+        // so "I'll report back" actually reaches you: chat log + bubble + emote.
+        const reporterKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
+        )?.[0];
+        if (reporterKey) {
+          try { this.actions.emote(reporterKey, '📋'); } catch (_) {}
+          try { this.actions.speak(reporterKey, String(msg.text).slice(0, 120)); } catch (_) {}
+        }
+        if (this.scene._playerChat) {
+          this.scene._playerChat._addToLog(msg.npcName, `[report] ${msg.text}`);
+        }
+        break;
+      }
       case 'npc_chain_started': {
         // A multi-step task chain was kicked off
         console.log(`[Chain] Started: "${msg.name}" — ${(msg.steps || []).join(' → ')} (${msg.totalSteps} steps)`);

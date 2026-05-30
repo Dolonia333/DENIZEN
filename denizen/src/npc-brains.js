@@ -52,6 +52,7 @@ class NpcBrainManager {
     this._pendingSkillResults = new Map(); // npcName → {skill, result, ts}
     this._npcMoods = new Map();            // npcName → {mood, since, cycles}
     this._directives = new Map();          // npcName → {from, task, ts, urgent}
+    this._commitments = new Map();         // npcName → [{ text, to, at, status }]  — promises the NPC made and must follow through on
     // Up to N concurrent inferences. LM Studio supports parallel
     // generation (server config "Parallel: 4"), and the Denizen mutex
     // For large models (27B+) keep to 1 concurrent request so the GPU
@@ -802,6 +803,11 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       }
       out = this._sanitize(out);
       this.memories[npcName].push({ from: npcName, text: out });
+      // If the NPC just promised the CEO something ("I'll look into it and
+      // report back"), record it so their think loop actually follows through
+      // instead of forgetting it the moment the chat ends.
+      const promise = this._detectCommitment(out);
+      if (promise) this.recordCommitment(npcName, promise, fromName === npcName ? 'the team' : (fromName || 'the CEO'));
       return out;
     } catch (err) {
       // Throttle error logging — only log once per NPC per 60 seconds
@@ -1178,6 +1184,17 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       ? `## DIRECT ORDER FROM ${String(directive.from).toUpperCase()}\n${directive.task}\nThis is your mandatory current task. Work on it now. When finished, set taskPhase to "finished" and report back.\n\n`
       : '';
 
+    // Commitments — promises this NPC made that they haven't acted on yet. This
+    // is what stops "I'll report back" from evaporating: the promise is replayed
+    // as an obligation every cycle until they actually do it.
+    const openCommitments = this.getOpenCommitments(npcName);
+    const commitmentBlock = openCommitments.length
+      ? `## PROMISES YOU MUST KEEP\n${openCommitments.map(c => {
+          const mins = Math.max(0, Math.round((Date.now() - c.at) / 60000));
+          return `- You told ${c.to} you would: "${c.text}" (${mins}m ago).`;
+        }).join('\n')}\nDo NOT just say it again. Actually DO it this cycle — research it, run the skill, write the artifact, or talk to whoever can unblock you — then set taskPhase:"finished" and action:"report" (target the person you promised) with the result. If you genuinely cannot, report specifically why and what you need.\n\n`
+      : '';
+
     // Addition A — Chain context: inject when NPC is part of an active task chain
     let chainContext = null;
     if (taskChain) {
@@ -1202,6 +1219,7 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
 
     const systemPrompt = brain.personality + '\n\n' +
       (directiveBlock ? directiveBlock : '') +
+      (commitmentBlock ? commitmentBlock : '') +
       (chainContext ? chainContext + '\n\n' : '') +
       (conflictContext ? conflictContext + '\n\n' : '') +
       (skillResultBlock ? skillResultBlock : '') +
@@ -1319,6 +1337,36 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
           thought: decision.thought,
           timestamp: new Date().toISOString().slice(0, 16),
         };
+
+        // ── Commitment capture + resolution ───────────────────────────────────
+        // They followed through if they finished a task or actually reported /
+        // ran a skill — clear their open promises and surface the report.
+        const didFollowThrough =
+          decision.taskPhase === 'finished' ||
+          decision.action === 'report' ||
+          (decision.action === 'run_skill') ||
+          (decision.outcome === 'success');
+        if (didFollowThrough) {
+          const resolved = this.resolveCommitments(npcName, decision.action || 'acted');
+          // If they'd promised the CEO, surface the report so the CEO actually
+          // sees the follow-through (the whole point of "report back").
+          if (resolved.some(c => /ceo|zion|boss|you/i.test(c.to)) && _broadcastFn) {
+            try {
+              _broadcastFn({
+                type: 'npc_report_to_ceo',
+                npcName,
+                text: decision.message || decision.save || 'Done — following up on what I told you.',
+                ts: Date.now(),
+              });
+            } catch (_) {}
+          }
+        } else {
+          // Otherwise, if this decision itself contains a new promise, record it.
+          if (decision.message && ['talk', 'collaborate', 'meeting', 'report'].includes(decision.action)) {
+            const promise = this._detectCommitment(decision.message);
+            if (promise) this.recordCommitment(npcName, promise, decision.target || 'the team');
+          }
+        }
 
         // Track task progress phases
         if (decision.taskPhase === 'starting' && decision.message) {
@@ -3188,6 +3236,54 @@ ${roleActions}
   assignDirective(targetNpc, fromNpc, task, urgent = false) {
     this._directives.set(targetNpc, { from: fromNpc, task, ts: Date.now(), urgent });
     log.info('Directive', `${fromNpc} → ${targetNpc}: "${String(task).slice(0, 60)}"`);
+  }
+
+  // ── Commitment tracking — make NPCs follow through on what they SAY ─────────
+  //
+  // The lead complaint: an NPC tells you "I'll look into that and report back"
+  // and then never does. Their stated intent was just text in a message; no
+  // state captured it, so the next think cycle they'd moved on. This records
+  // promises and injects them back into the prompt as obligations until acted on.
+
+  /** Does this message contain a forward-looking promise? Returns the trimmed
+   *  promise text, or null. Skips messages that are already reporting done work. */
+  _detectCommitment(message) {
+    if (!message || typeof message !== 'string') return null;
+    // Already-done / reporting language — not a new promise.
+    if (/\b(i (looked|checked|finished|completed|did|found|fixed|wrote|built)|i'?ve |i have (looked|checked|done|finished|completed|built))/i.test(message)) return null;
+    const promise = /(i'?ll\b|i will\b|let me\b|i'?m going to\b|i am going to\b|i'?m on it\b|on it\b|get back to you|report back|circle back|look into|i'?ll check|i'?ll handle|take care of (it|this|that)|i'?ll figure|dig into|investigate this|put together|i'?ll draft|i'?ll write up|i'?ll find out|i'?ll set up|i'?ll build|i'?ll fix)/i;
+    if (!promise.test(message)) return null;
+    return message.replace(/\s+/g, ' ').trim().slice(0, 200);
+  }
+
+  /** Record a promise an NPC made (deduped; max 3 open per NPC). */
+  recordCommitment(npcName, text, to) {
+    if (!text) return;
+    const list = this._commitments.get(npcName) || [];
+    // Dedupe near-identical open promises.
+    const norm = text.toLowerCase().slice(0, 60);
+    if (list.some(c => c.status === 'open' && c.text.toLowerCase().slice(0, 60) === norm)) return;
+    list.push({ text, to: to || 'the team', at: Date.now(), status: 'open' });
+    // Keep only the 3 most recent open commitments + drop resolved.
+    const open = list.filter(c => c.status === 'open').slice(-3);
+    this._commitments.set(npcName, open);
+    log.info('Commitment', `${npcName} → ${to || 'team'}: "${text.slice(0, 60)}"`);
+  }
+
+  getOpenCommitments(npcName) {
+    return (this._commitments.get(npcName) || []).filter(c => c.status === 'open');
+  }
+
+  /** Resolve (clear) an NPC's open commitments — they followed through. Returns
+   *  the resolved commitments so the caller can surface a report to the CEO. */
+  resolveCommitments(npcName, reason = 'acted') {
+    const list = this._commitments.get(npcName) || [];
+    const resolved = list.filter(c => c.status === 'open');
+    if (resolved.length) {
+      this._commitments.set(npcName, []);
+      log.info('Commitment', `${npcName} resolved ${resolved.length} (${reason})`);
+    }
+    return resolved;
   }
 }
 
