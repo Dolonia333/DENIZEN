@@ -2381,6 +2381,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Grounding/hallucination stats: how often NPC claims were flagged as
+  //     unbacked (no evidence behind "I fixed it" / "research shows X"). ---
+  if (urlPath === '/api/telemetry/grounding' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(require('./src/hallucination-guard').getStats()));
+    return;
+  }
+
   // --- Per-NPC profile tracker: actual cost (priced by the model each NPC
   //     really ran on) + estimated cost if it were on a reference cloud model ---
   if (urlPath === '/api/npc-profiles' && req.method === 'GET') {

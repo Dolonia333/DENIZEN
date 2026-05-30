@@ -10,6 +10,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const npcRoster = require('./npc-roster');
+const hallucinationGuard = require('./hallucination-guard');
 
 // Shared world-state singleton + agent bus. Loaded lazily in a try/catch so
 // older test fixtures that import npc-brains in isolation don't break.
@@ -53,6 +54,8 @@ class NpcBrainManager {
     this._npcMoods = new Map();            // npcName → {mood, since, cycles}
     this._directives = new Map();          // npcName → {from, task, ts, urgent}
     this._commitments = new Map();         // npcName → [{ text, to, at, status }]  — promises the NPC made and must follow through on
+    this._evidenceLog = new Map();         // npcName → { skillAt, researchAt, researchText, artifactAt } — what backs their claims
+    this._pendingGrounding = new Map();    // npcName → grounding-check note to inject next think
     // Up to N concurrent inferences. LM Studio supports parallel
     // generation (server config "Parallel: 4"), and the Denizen mutex
     // For large models (27B+) keep to 1 concurrent request so the GPU
@@ -1203,6 +1206,11 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         }).join('\n')}\nDo NOT just say it again. Actually DO it this cycle — research it, run the skill, write the artifact, or talk to whoever can unblock you — then set taskPhase:"finished" and action:"report" (target the person you promised) with the result. If you genuinely cannot, report specifically why and what you need.\n\n`
       : '';
 
+    // Grounding correction — if last cycle the NPC made an unbacked claim, the
+    // hallucination guard flagged it; replay that here so they fix it.
+    const groundingNote = this._pendingGrounding.get(npcName) || '';
+    if (groundingNote) this._pendingGrounding.delete(npcName);
+
     // Addition A — Chain context: inject when NPC is part of an active task chain
     let chainContext = null;
     if (taskChain) {
@@ -1228,6 +1236,7 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
     const systemPrompt = brain.personality + '\n\n' +
       (directiveBlock ? directiveBlock : '') +
       (commitmentBlock ? commitmentBlock : '') +
+      (groundingNote ? groundingNote : '') +
       (chainContext ? chainContext + '\n\n' : '') +
       (conflictContext ? conflictContext + '\n\n' : '') +
       (skillResultBlock ? skillResultBlock : '') +
@@ -1375,6 +1384,38 @@ IMPORTANT: You must pick actions OTHER than "work" at least 40% of the time. Use
             if (promise) this.recordCommitment(npcName, promise, decision.target || 'the team');
           }
         }
+
+        // ── Grounding / hallucination check ───────────────────────────────────
+        // Deterministic layer: does the NPC's claim have any evidence behind it?
+        // Runs every cycle (cheap regex); flags "I fixed it / research shows X"
+        // when no skill ran, no artifact was written, and no research was done.
+        try {
+          const claimText = [decision.message, decision.save].filter(Boolean).join('. ');
+          if (claimText) {
+            const ev = this._evidenceLog.get(npcName) || {};
+            if (decision._artifactPath) { ev.artifactAt = Date.now(); this._evidenceLog.set(npcName, ev); }
+            const FRESH = 3 * 60 * 1000, tnow = Date.now();
+            const evidence = {
+              hasSkillResult: ev.skillAt && (tnow - ev.skillAt) < FRESH,
+              hasResearch:    ev.researchAt && (tnow - ev.researchAt) < FRESH,
+              hasArtifact:    !!decision._artifactPath || (ev.artifactAt && (tnow - ev.artifactAt) < FRESH),
+              researchText:   ev.researchText,
+            };
+            // Deterministic-only here (no extra LLM call in the think loop).
+            hallucinationGuard.check({ text: claimText, evidence, npc: npcName }).then(res => {
+              if (res.flagged.length) {
+                this._pendingGrounding.set(npcName, res.note);
+                if (_broadcastFn) {
+                  try {
+                    _broadcastFn({ type: 'npc_hallucination_flag', npcName,
+                      claims: res.flagged.map(f => ({ text: f.text, reason: f.reason })), ts: Date.now() });
+                  } catch (_) {}
+                }
+                log.npcError(npcName, `grounding: ${res.flagged.length} unbacked claim(s)`);
+              }
+            }).catch(() => {});
+          }
+        } catch (_) { /* never let the guard break the think loop */ }
 
         // Track task progress phases
         if (decision.taskPhase === 'starting' && decision.message) {
@@ -3158,6 +3199,12 @@ ${roleActions}
    */
   injectSkillResult(npcName, skill, result) {
     this._pendingSkillResults.set(npcName, { skill, result, ts: Date.now() });
+    // Evidence ledger — what the NPC has actually done, used by the grounding
+    // check to tell real work apart from confident claims with nothing behind them.
+    const ev = this._evidenceLog.get(npcName) || {};
+    ev.skillAt = Date.now();
+    if (skill === 'research') { ev.researchAt = Date.now(); ev.researchText = String(result || '').slice(0, 2000); }
+    this._evidenceLog.set(npcName, ev);
   }
 
   // ── Feature: Mood System ───────────────────────────────────────────────────

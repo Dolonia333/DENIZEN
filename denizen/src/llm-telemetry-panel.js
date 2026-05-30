@@ -41,6 +41,7 @@
   function costUrl(w)              { return `/api/telemetry/cost?windowMs=${w}`; }
   function npcProfilesUrl(w)       { return `/api/npc-profiles?windowMs=${w}`; }
   function parseHealthUrl()        { return '/api/telemetry/parse-health'; }
+  function groundingUrl()          { return '/api/telemetry/grounding'; }
 
   const POLL_MS = 5000;
 
@@ -71,6 +72,7 @@
     cost: null,
     npcProfiles: null,
     parseHealth: null,
+    grounding: null,
     filterKind: '',
     filterNpc: '',
     filterProvider: '',
@@ -365,7 +367,7 @@
       fetch(url, { cache: 'no-store' })
         .then(r => r.ok ? r.json() : fallback)
         .catch(() => fallback);
-    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost, npcProfiles, parseHealth] = await Promise.all([
+    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost, npcProfiles, parseHealth, grounding] = await Promise.all([
       safe(statsUrl(w), null),
       safe(decisionsUrl(w), { actions: {}, skills: {}, total: 0 }),
       safe(pcStatsUrl(w), { total: 0, byKind: {}, byNpc: {}, byStatus: {} }),
@@ -376,6 +378,7 @@
       safe(costUrl(w), null),
       safe(npcProfilesUrl(w), null),
       safe(parseHealthUrl(), null),
+      safe(groundingUrl(), null),
     ]);
     state.stats     = stats;
     state.decisions = decisions;
@@ -389,6 +392,7 @@
     state.cost        = cost;
     state.npcProfiles = npcProfiles;
     state.parseHealth = parseHealth;
+    state.grounding   = grounding;
   }
 
   // ---- tab content ----
@@ -785,6 +789,22 @@
     </div>`;
   }
 
+  // Compact grounding/hallucination indicator — how many NPC claims were
+  // flagged as unbacked. Green = grounded; amber/red = making things up.
+  function groundingLine() {
+    const g = state.grounding;
+    if (!g || !g.checked) return '';
+    const flagPct = Math.round((g.flagRate || 0) * 100);
+    const color = flagPct > 25 ? '#fda4af' : flagPct > 10 ? '#fbbf24' : '#86efac';
+    const verdict = flagPct > 25 ? 'often claiming things with no evidence'
+                  : flagPct > 10 ? 'some unbacked claims' : 'claims are grounded';
+    return `<div style="margin-top:2px; font-size:10px; color:#64748b">
+      Grounding: <b style="color:${color}">${100 - flagPct}% backed</b>
+      · ${g.checked} claims / ${g.flagged} flagged
+      · <span style="color:${color}">${esc(verdict)}</span>
+    </div>`;
+  }
+
   function renderDecisions() {
     const d = state.decisions;
     if (!d || d.total === 0) {
@@ -792,6 +812,7 @@
         <h4>🎯 What NPCs decided (${winLabel()})</h4>
         <div style="color:#94a3b8">No decision data yet — NPCs haven't finished a think cycle.</div>
         ${parseHealthLine()}
+        ${groundingLine()}
       </div></div>`;
     }
     const bar = (label, count, total, color) => {
@@ -826,6 +847,7 @@
       </div>
       <div class="card" style="grid-column:1/-1; padding-top:4px; padding-bottom:4px">
         ${parseHealthLine() || '<div style="color:#64748b; font-size:10px">JSON health: no data yet</div>'}
+        ${groundingLine()}
       </div>
     </div>`;
   }
