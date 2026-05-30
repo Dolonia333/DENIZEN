@@ -40,6 +40,7 @@
   function proposalsUrl()          { return '/api/proposals?status=pending'; }
   function costUrl(w)              { return `/api/telemetry/cost?windowMs=${w}`; }
   function npcProfilesUrl(w)       { return `/api/npc-profiles?windowMs=${w}`; }
+  function parseHealthUrl()        { return '/api/telemetry/parse-health'; }
 
   const POLL_MS = 5000;
 
@@ -69,6 +70,7 @@
     active: null,
     cost: null,
     npcProfiles: null,
+    parseHealth: null,
     filterKind: '',
     filterNpc: '',
     filterProvider: '',
@@ -363,7 +365,7 @@
       fetch(url, { cache: 'no-store' })
         .then(r => r.ok ? r.json() : fallback)
         .catch(() => fallback);
-    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost, npcProfiles] = await Promise.all([
+    const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost, npcProfiles, parseHealth] = await Promise.all([
       safe(statsUrl(w), null),
       safe(decisionsUrl(w), { actions: {}, skills: {}, total: 0 }),
       safe(pcStatsUrl(w), { total: 0, byKind: {}, byNpc: {}, byStatus: {} }),
@@ -373,6 +375,7 @@
       safe(proposalsUrl(), { proposals: [] }),
       safe(costUrl(w), null),
       safe(npcProfilesUrl(w), null),
+      safe(parseHealthUrl(), null),
     ]);
     state.stats     = stats;
     state.decisions = decisions;
@@ -385,6 +388,7 @@
     };
     state.cost        = cost;
     state.npcProfiles = npcProfiles;
+    state.parseHealth = parseHealth;
   }
 
   // ---- tab content ----
@@ -763,12 +767,31 @@
   }
 
   // ── Decisions histogram ──────────────────────────────────────────────────
+  // Compact one-line decision-parse health indicator (model-friendliness).
+  // Green = model emits clean JSON; amber = parser is repairing; red = failing.
+  function parseHealthLine() {
+    const h = state.parseHealth;
+    if (!h || !h.total) return '';
+    const repairPct = Math.round((h.repairRate || 0) * 100);
+    const failPct   = Math.round((h.failRate || 0) * 100);
+    const color = failPct > 5 ? '#fda4af' : repairPct > 15 ? '#fbbf24' : '#86efac';
+    const verdict = failPct > 5 ? 'model struggles with JSON — size up or add schema'
+                  : repairPct > 15 ? 'parser is repairing often — marginal'
+                  : 'clean — model is JSON-reliable';
+    return `<div style="margin-top:4px; font-size:10px; color:#64748b">
+      JSON health: <b style="color:${color}">${100 - failPct}% ok</b>
+      · ${h.ok} ok / ${h.repairs} repaired / ${h.fail} failed
+      · <span style="color:${color}">${esc(verdict)}</span>
+    </div>`;
+  }
+
   function renderDecisions() {
     const d = state.decisions;
     if (!d || d.total === 0) {
       return `<div class="summary"><div class="card" style="grid-column:1/-1">
         <h4>🎯 What NPCs decided (${winLabel()})</h4>
         <div style="color:#94a3b8">No decision data yet — NPCs haven't finished a think cycle.</div>
+        ${parseHealthLine()}
       </div></div>`;
     }
     const bar = (label, count, total, color) => {
@@ -800,6 +823,9 @@
       <div class="card">
         <h4>🔧 Skills invoked</h4>
         ${skillBars}
+      </div>
+      <div class="card" style="grid-column:1/-1; padding-top:4px; padding-bottom:4px">
+        ${parseHealthLine() || '<div style="color:#64748b; font-size:10px">JSON health: no data yet</div>'}
       </div>
     </div>`;
   }
