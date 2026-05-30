@@ -20,6 +20,10 @@ denizen/data/robinhood-oauth.json
 denizen/data/trade-suggestions.json
 denizen/data/roki-watchlist.json
 
+# NPC-authored skills — quarantined drafts + proposal store (runtime/generated)
+denizen/skills-pending/
+denizen/data/skill-proposals.json
+
 # Embedded git repos (tracked separately)
 openclaw/
 .github/

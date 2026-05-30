@@ -28,6 +28,7 @@ const codingTaskRunner = require('./src/coding-task-runner');
 const taskChain        = require('./src/task-chain');
 const robinhoodMcp     = require('./src/robinhood-mcp');
 const costProjector    = require('./src/cost-projector');
+const skillBuilder     = require('./src/skill-builder');
 const conflictDetector = require('./src/conflict-detector');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -192,6 +193,18 @@ const SKILL_SCRIPTS = {
 };
 const GITHUB_REPO = 'Dolonia333/DENIZEN';
 
+// Approved NPC-authored skills (slug → script path), cached for 5s so we don't
+// re-read the proposals file on every skill dispatch. Refreshed on approval.
+let _approvedSkillCache = { at: 0, map: {} };
+function _approvedSkillScripts() {
+  const now = Date.now();
+  if (now - _approvedSkillCache.at > 5000) {
+    try { _approvedSkillCache = { at: now, map: skillBuilder.getApprovedSkillScripts() }; }
+    catch (_) { _approvedSkillCache = { at: now, map: {} }; }
+  }
+  return _approvedSkillCache.map;
+}
+
 /**
  * Run an OpenClaw skill on behalf of an NPC. Fires async; result is injected
  * back into the NPC's next think() cycle via npcBrains.injectSkillResult().
@@ -249,6 +262,48 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
       broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: false, output, ts: Date.now() });
     });
     return Promise.resolve({ ok: true, output: 'Lucy job pipeline started', skill: 'job-pipeline', npcName });
+  }
+
+  // --- build-skill: an NPC drafts a NEW tool. Generated code is QUARANTINED
+  //     and only becomes runnable after the CEO approves it. Never auto-runs. ---
+  if (skill === 'build-skill') {
+    const buildStart = Date.now();
+    const activity = pcActivity.record({
+      npc: npcName, kind: 'build-skill',
+      task: `draft skill: ${skillParams?.name || skillParams?.purpose || '?'}`,
+      mode: 'background', status: 'started',
+    });
+    // Generator: use a capable coding model (Kimi K2.6 if available, else local).
+    const generateFn = async (spec) => {
+      const prompt = skillBuilder.buildGenerationPrompt(spec);
+      const cfg = npcBrains.providers?.kimi || npcBrains.providers?.lmstudio || npcBrains.providers?.demo;
+      if (!cfg || cfg.type === 'demo') return null;
+      return npcBrains._callProvider(cfg,
+        'You are a careful Node.js tool author. Output ONLY runnable code, no prose, no fences.',
+        [{ role: 'user', content: prompt }],
+        { maxTokens: 1200, sliceLen: 6000, kind: 'skill-codegen', npc: npcName });
+    };
+    skillBuilder.requestSkill({
+      npc: npcName,
+      name: skillParams?.name,
+      purpose: skillParams?.purpose || skillParams?.task,
+      params: skillParams?.params || [],
+      generateFn,
+    }).then(result => {
+      const ok = !!result.ok;
+      const output = ok
+        ? `Drafted skill "${result.proposal.slug}" (${result.proposal.status}) — awaiting CEO approval before it can run.${result.proposal.scanFlags.length ? ' Safety flags: ' + result.proposal.scanFlags.join('; ') : ''}`
+        : `Could not draft skill: ${result.error}`;
+      pcActivity.record({ id: activity.id, npc: npcName, kind: 'build-skill', task: activity.task, mode: 'background', status: ok ? 'done' : 'failed', durationMs: Date.now() - buildStart, detail: output.slice(0, 240) });
+      npcBrains.injectSkillResult(npcName, 'build-skill', output);
+      broadcast({ type: 'npc_skill_result', npcName, skill: 'build-skill', ok, output: output.slice(0, 300), ts: Date.now() });
+      if (ok) broadcast({ type: 'npc_skill_proposal', npcName, proposal: { id: result.proposal.id, name: result.proposal.slug, status: result.proposal.status, scanFlags: result.proposal.scanFlags }, ts: Date.now() });
+      log.info('SkillBuilder', `${npcName} drafted "${result.proposal?.slug || '?'}" → ${result.proposal?.status || 'error'}`);
+    }).catch(err => {
+      npcBrains.injectSkillResult(npcName, 'build-skill', `build-skill failed: ${err.message}`);
+      broadcast({ type: 'npc_skill_result', npcName, skill: 'build-skill', ok: false, output: String(err.message).slice(0, 200), ts: Date.now() });
+    });
+    return Promise.resolve({ ok: true, output: 'Skill draft started', skill: 'build-skill', npcName });
   }
 
   // --- market-watch: Roki runs a market observation cycle via Robinhood MCP ---
@@ -385,12 +440,15 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
         // Generic: treat action as the gh sub-command
         cmd = `gh ${action} --repo ${repo}`;
       }
-    } else if (SKILL_SCRIPTS[skill]) {
+    } else if (SKILL_SCRIPTS[skill] || _approvedSkillScripts()[skill]) {
+      // Built-in skills OR NPC-authored skills the CEO has APPROVED (approved
+      // ones live in skills/<slug>/ and only appear here after approval).
+      const scriptPath = SKILL_SCRIPTS[skill] || _approvedSkillScripts()[skill];
       // Convert skillParams object to CLI args: {site: 'linkedin'} → '--site linkedin'
       const args = Object.entries(skillParams)
         .map(([k, v]) => `--${k} ${String(v).replace(/"/g, '\\"')}`)
         .join(' ');
-      cmd = `node "${SKILL_SCRIPTS[skill]}"${args ? ' ' + args : ''}`;
+      cmd = `node "${scriptPath}"${args ? ' ' + args : ''}`;
     } else {
       const result = { ok: false, output: `Unknown skill: ${skill}`, skill, npcName };
       pcActivity.record({
@@ -2251,6 +2309,28 @@ const server = http.createServer((req, res) => {
       : null;
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(projection));
+    return;
+  }
+
+  // --- Skill proposals: NPC-authored tools awaiting CEO review. The code is
+  //     quarantined in skills-pending/ and only runs after approval. ---
+  if (urlPath === '/api/skill-proposals' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const status = url.searchParams.get('status') || null;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ proposals: skillBuilder.getSkillProposals({ status }) }));
+    return;
+  }
+  if (/^\/api\/skill-proposals\/([^/]+)\/(approve|reject)$/.test(urlPath) && req.method === 'POST') {
+    const [, , , id, decision] = urlPath.split('/');
+    const result = decision === 'approve' ? skillBuilder.approveSkill(id) : skillBuilder.rejectSkill(id);
+    if (result.ok) {
+      _approvedSkillCache = { at: 0, map: {} }; // bust cache so an approved skill is runnable immediately
+      if (agentWss) agentWss.clients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify({ type: 'skill_proposal_decided', id, decision, ts: Date.now() })); });
+      log.info('SkillBuilder', `Skill "${result.proposal?.slug}" ${decision}d by CEO`);
+    }
+    res.writeHead(result.ok ? 200 : 404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(result));
     return;
   }
 

@@ -1132,7 +1132,12 @@ Respond as ${npcName}. Dialogue only — no stage directions, no quotation marks
       };
       const skillLine = skillsByRole[brain.role] || '';
       if (skillLine) {
-        openClawContext = `OpenClaw gateway (localhost:18789) is live. Skills you can reference or request:\n${skillLine}\nWhen you delegate real work to OpenClaw, mention the skill name in your message.`;
+        // Technical roles can also AUTHOR a new tool when none of the above fits.
+        const builders = new Set(['CTO', 'Developer', 'Data Engineer', 'DevOps Engineer', 'Researcher', 'IT Support']);
+        const buildLine = builders.has(brain.role)
+          ? `\nIf you need a tool that doesn't exist yet, draft one: action:"run_skill", skill:"build-skill", skillParams:{ name:"kebab-name", purpose:"what it does", params:["inputs"] }. The CEO must approve the generated code before it can run — so propose it, then move on; don't wait.`
+          : '';
+        openClawContext = `OpenClaw gateway (localhost:18789) is live. Skills you can reference or request:\n${skillLine}${buildLine}\nWhen you delegate real work to OpenClaw, mention the skill name in your message.`;
       }
     }
 
