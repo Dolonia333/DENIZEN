@@ -2254,6 +2254,49 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'meeting_convene': {
+        // Walk participants into the conference room so the discussion is visible.
+        const names = msg.participants || [];
+        names.forEach((name, i) => {
+          const k = Object.entries(this.NPC_NAMES).find(([kk, v]) => v.toLowerCase() === name.toLowerCase())?.[0];
+          if (k) {
+            this.scene.time.delayedCall(i * 400, () => {
+              try { this.actions.standUp(k); this.actions.goToRoom(k, 'conference'); } catch (_) {}
+            });
+            const ag = this.agents.get(k); if (ag) ag.status = 'meeting';
+          }
+        });
+        if (this.scene._playerChat) this.scene._playerChat._addToLog('System', `Meeting started: "${msg.topic}" — ${names.join(', ')}`);
+        break;
+      }
+      case 'npc_meeting_turn': {
+        // One participant speaks — show it as a bubble over them.
+        const k = Object.entries(this.NPC_NAMES).find(([kk, v]) => v.toLowerCase() === msg.npcName?.toLowerCase())?.[0];
+        if (k) { try { this.actions.speak(k, String(msg.text).slice(0, 160)); } catch (_) {} }
+        if (this.scene._playerChat) this.scene._playerChat._addToLog(msg.npcName, msg.text);
+        break;
+      }
+      case 'meeting_adjourn': {
+        // Send everyone back to their desks; surface the decision + action items.
+        (msg.participants || []).forEach((name, i) => {
+          const k = Object.entries(this.NPC_NAMES).find(([kk, v]) => v.toLowerCase() === name.toLowerCase())?.[0];
+          if (k) {
+            const ag = this.agents.get(k);
+            this.scene.time.delayedCall(i * 400, () => {
+              try { if (ag?.assignedDesk) this.actions.useComputer(k, ag.assignedDesk); else this.actions.goToRoom(k, 'open_office'); } catch (_) {}
+            });
+            if (ag) ag.status = 'working';
+          }
+        });
+        if (this.scene._playerChat) {
+          const items = (msg.actionItems || []).map(a => `${a.to}: ${a.task}`).join(' | ');
+          this.scene._playerChat._addToLog('System', `Meeting wrapped: "${msg.topic}".${items ? ' Action items → ' + items : ''}`);
+        }
+        if (this.scene?._workFeed && msg.artifactPath) {
+          try { this.scene._workFeed.add?.({ npc: 'Team', kind: 'meeting', text: `Meeting notes: ${msg.artifactPath}` }); } catch (_) {}
+        }
+        break;
+      }
       case 'npc_report_to_ceo': {
         // An NPC is following through on a promise it made the CEO. Surface it
         // so "I'll report back" actually reaches you: chat log + bubble + emote.

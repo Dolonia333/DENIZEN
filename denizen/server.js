@@ -30,6 +30,7 @@ const robinhoodMcp     = require('./src/robinhood-mcp');
 const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
 const webResearch      = require('./src/web-research');
+const meetingRunner    = require('./src/meeting-runner');
 const conflictDetector = require('./src/conflict-detector');
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -204,6 +205,29 @@ function _approvedSkillScripts() {
     catch (_) { _approvedSkillCache = { at: now, map: {} }; }
   }
   return _approvedSkillCache.map;
+}
+
+/**
+ * Convene a dynamic, multi-turn meeting. Wires the meeting-runner to the NPC
+ * brains (each participant speaks in their own voice/model), the WS broadcast
+ * (so they visibly talk in the conference room), and the directive system (so
+ * action items become real follow-up work).
+ */
+function startMeeting({ topic, facilitator, participants } = {}) {
+  const broadcast = (m) => (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
+  // Sensible cross-functional default roster if the CEO didn't name people.
+  const roster = (Array.isArray(participants) && participants.length)
+    ? participants
+    : ['Abby', 'Marcus', 'Sarah', 'Alex'];
+  const lead = facilitator || (roster.includes('Abby') ? 'Abby' : roster[0]);
+  return meetingRunner.run({
+    topic,
+    facilitator: lead,
+    participants: roster,
+    meetingTurnFn: (npc, opts) => npcBrains.meetingTurn(npc, opts),
+    broadcastFn: broadcast,
+    assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, urgent),
+  });
 }
 
 /**
@@ -2336,6 +2360,28 @@ const server = http.createServer((req, res) => {
       : null;
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(projection));
+    return;
+  }
+
+  // --- Meetings: convene a dynamic multi-turn discussion. ---
+  if (urlPath === '/api/meeting' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ active: meetingRunner.getActive(), history: meetingRunner.getHistory() }));
+    return;
+  }
+  if (urlPath === '/api/meeting' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let payload = {};
+      try { payload = JSON.parse(body || '{}'); } catch (_) {}
+      if (!payload.topic) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'topic required' })); return; }
+      if (meetingRunner.isActive()) { res.writeHead(409, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'a meeting is already in progress' })); return; }
+      // Fire async; respond immediately (the discussion plays out over ~30-60s).
+      startMeeting(payload).then(r => log.info('Meeting', `"${payload.topic}" → ${r.ok ? r.turns + ' turns, ' + (r.actionItems?.length || 0) + ' action items' : r.error}`)).catch(() => {});
+      res.writeHead(202, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, started: true, topic: payload.topic, note: 'Meeting convened — watch the conference room.' }));
+    });
     return;
   }
 

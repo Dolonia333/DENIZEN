@@ -347,6 +347,20 @@ class PlayerChat {
       }
     }
 
+    // "Hold a meeting about X" intent — convene a dynamic team discussion.
+    const meetingMatch = trimmed.match(/\b(?:hold|call|start|set up|run|have)\s+(?:a\s+)?(?:team\s+)?meeting\s+(?:about|on|to discuss|regarding)\s+(.+)/i)
+      || trimmed.match(/\b(?:have|get)\s+(?:the\s+)?(?:team|everyone)\s+(?:to\s+)?(?:discuss|meet about|talk about|figure out)\s+(.+)/i);
+    if (meetingMatch && meetingMatch[1]) {
+      const topic = meetingMatch[1].replace(/[.?!]+$/, '').trim().slice(0, 200);
+      this._addToLog('System', `Convening a meeting about: ${topic}…`);
+      fetch('/api/meeting', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic }),
+      }).then(r => r.json()).then(j => {
+        if (j.error) this._addToLog('System', `Couldn't start meeting: ${j.error}`);
+      }).catch(() => {});
+    }
+
     // Proximity-audio: tell the audio gate the player is now in active
     // conversation with this NPC, so every other NPC's voice line is
     // muted for the duration of the chat. Decays after ~30s of no

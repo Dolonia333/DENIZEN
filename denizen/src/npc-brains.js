@@ -716,6 +716,40 @@ class NpcBrainManager {
     }
   }
 
+  /**
+   * One turn in a dynamic meeting. The NPC speaks in their own voice/model,
+   * sees the transcript so far, and is told to actually move the discussion
+   * forward — propose, ask a pointed question, ANSWER an open question, or
+   * raise a concrete concern. The facilitator frames and (at the end) decides.
+   *
+   * @returns {Promise<string>} a short contribution (or '' on failure)
+   */
+  async meetingTurn(npcName, { topic, transcript = [], asFacilitator = false, closing = false } = {}) {
+    const brain = this.brains[npcName];
+    if (!brain) return '';
+
+    const lines = transcript.slice(-12).map(t => `${t.speaker}: ${t.text}`).join('\n') || '(no one has spoken yet)';
+    let instruction;
+    if (asFacilitator && !closing) {
+      instruction = `You are FACILITATING this meeting. Open it: state the problem in one sentence, then ask the single most important question to get the team solving it. Be brief.`;
+    } else if (closing) {
+      instruction = `You are CLOSING this meeting. Read the discussion and state the DECISION in 1-2 sentences, then list concrete action items as "ACTION: <Name> — <task>" (one per line, assign to specific people who were here). No fluff.`;
+    } else {
+      instruction = `It's your turn. Do ONE useful thing: answer an open question someone asked, propose a concrete next step, or raise a specific concern/risk. If you don't actually know something, say so and say who or what could find out (e.g. "we should research X"). 1-3 sentences. Don't repeat what's already been said.`;
+    }
+
+    const systemPrompt = `${brain.personality}\n\nYou are ${npcName}, ${brain.role}, in a live team meeting. Speak in your own voice. Be concrete and concise — this is a working session, not small talk.`;
+    const userPrompt = `MEETING TOPIC: ${topic}\n\nDISCUSSION SO FAR:\n${lines}\n\n${instruction}`;
+
+    try {
+      const out = await this._callProvider(brain.providerConfig, systemPrompt, [{ role: 'user', content: userPrompt }],
+        { maxTokens: closing ? 220 : 120, sliceLen: closing ? 700 : 400, temperature: 0.85, npc: npcName, kind: 'meeting' });
+      return this._sanitize(typeof out === 'string' ? out : '');
+    } catch (_) {
+      return '';
+    }
+  }
+
   async getResponse(npcName, fromName, message, context = {}) {
     const brain = this.brains[npcName];
     if (!brain) return `(${npcName} nods)`;
