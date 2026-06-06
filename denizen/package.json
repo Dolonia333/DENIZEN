@@ -6,7 +6,7 @@
   "scripts": {
     "test": "node --test --test-concurrency=1",
     "test:e2e": "node --test tests/e2e/visitor-assistant.e2e.js",
-    "test:visitor": "node --test tests/denizen-visitor.test.js tests/visitor-chat.test.js tests/visitor-flow.integration.test.js tests/handoff-notify.test.js tests/prediction-loop.test.js tests/mirofish-prediction.test.js tests/visitor-intelligence.test.js tests/visitor-access.test.js tests/denizen-org-policy.test.js tests/platform-identity-bridge.test.js tests/roki-trading-spine.test.js tests/npc-mcp-gateway.test.js tests/visitor-complete.test.js",
+    "test:visitor": "node --test tests/denizen-visitor.test.js tests/visitor-chat.test.js tests/visitor-flow.integration.test.js tests/handoff-notify.test.js tests/prediction-loop.test.js tests/mirofish-prediction.test.js tests/visitor-intelligence.test.js tests/visitor-access.test.js tests/denizen-org-policy.test.js tests/platform-identity-bridge.test.js tests/roki-trading-spine.test.js tests/npc-mcp-gateway.test.js tests/companion-api.test.js tests/visitor-complete.test.js",
     "test:visitor:all": "npm run test:visitor && npm run test:e2e",
     "start": "node --env-file=.env server.js",
     "build:assets": "node scripts/run-pipeline.js",

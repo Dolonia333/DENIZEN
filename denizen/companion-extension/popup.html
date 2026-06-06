@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Denizen Companion</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>Denizen Companion</h1>
+    <p id="conn-status" class="muted">Checking connection…</p>
+  </header>
+
+  <section id="connected-panel" class="hidden">
+    <div class="npc-chip" id="npc-label">—</div>
+    <div class="actions">
+      <button type="button" id="btn-refresh">Refresh status</button>
+      <button type="button" id="btn-clipboard">Send clipboard</button>
+      <button type="button" id="btn-activity">Log activity</button>
+    </div>
+    <label class="field-label" for="memory-input">Quick memory</label>
+    <textarea id="memory-input" rows="3" placeholder="Remember this for my NPC…"></textarea>
+    <button type="button" id="btn-send-memory" class="primary">Send memory</button>
+    <pre id="status-preview" class="preview">—</pre>
+    <button type="button" id="btn-disconnect" class="ghost">Disconnect</button>
+  </section>
+
+  <section id="setup-panel" class="hidden">
+    <ol class="steps">
+      <li>Open Denizen and claim an NPC (team session)</li>
+      <li>Click <strong>Connect AI</strong> — credentials sync automatically</li>
+      <li>Or paste token manually below</li>
+    </ol>
+    <label class="field-label" for="base-url">Denizen URL</label>
+    <input id="base-url" type="url" placeholder="http://localhost:8080" />
+    <label class="field-label" for="npc-key">NPC key</label>
+    <input id="npc-key" type="text" placeholder="roki" />
+    <label class="field-label" for="display-name">Display name</label>
+    <input id="display-name" type="text" placeholder="Roki" />
+    <label class="field-label" for="token">Bearer token</label>
+    <input id="token" type="password" placeholder="From Connect AI modal" />
+    <button type="button" id="btn-save-manual" class="primary">Save connection</button>
+  </section>
+
+  <p id="toast" class="toast hidden"></p>
+  <script src="popup.js"></script>
+</body>
+</html>

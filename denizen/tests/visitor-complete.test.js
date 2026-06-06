@@ -34,6 +34,8 @@ const REQUIRED_FILES = [
   'denizen-mcp-connector.js',
   'denizen-npc-mcp-gateway.js',
   'visitor-mcp-connect-ui.js',
+  'visitor-companion-bridge.js',
+  'denizen-companion-api.js',
   'denizen-prediction-loop.js',
 ];
 
@@ -89,6 +91,7 @@ const NODE_MODULES = [
   'visitor-cited-research.js',
   'denizen-slack-channel.js',
   'denizen-mcp-connector.js',
+  'denizen-companion-api.js',
   'denizen-prediction-loop.js',
 ];
 
@@ -103,6 +106,7 @@ const BROWSER_MODULES = [
   'visitor-briefing-ui.js',
   'visitor-voice-walkup.js',
   'visitor-mcp-connect-ui.js',
+  'visitor-companion-bridge.js',
 ];
 
 function readUtf8(relPath) {
@@ -115,6 +119,15 @@ describe('visitor assistant — 100% completion gate', () => {
       const full = path.join(SRC, file);
       assert.ok(fs.existsSync(full), `missing src/${file}`);
     }
+  });
+
+  it('companion extension bundle exists', () => {
+    assert.ok(fs.existsSync(path.join(ROOT, 'companion-extension', 'manifest.json')));
+    assert.ok(fs.existsSync(path.join(ROOT, 'companion-extension', 'background.js')));
+    const bridge = readUtf8('src/visitor-companion-bridge.js');
+    assert.ok(bridge.includes('DenizenCompanionBridge'));
+    const lazy = readUtf8('src/denizen-lazy-scripts.js');
+    assert.ok(lazy.includes('visitor-companion-bridge.js'));
   });
 
   it('index.html includes all visitor script tags', () => {

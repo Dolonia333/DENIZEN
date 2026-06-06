@@ -26,7 +26,8 @@
 
   function afterOffice() {
     const urls = [
-      './src/visitor-mcp-connect-ui.js?v=mcp2',
+      './src/visitor-companion-bridge.js?v=comp1',
+      './src/visitor-mcp-connect-ui.js?v=mcp3',
       './src/visitor-briefing-ui.js?v=vis3',
       './src/visitor-voice-walkup.js?v=vis3',
       './src/proposals-panel.js?v=mobbtn1',

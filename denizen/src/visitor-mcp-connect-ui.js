@@ -127,6 +127,10 @@
         color: #4ade80;
         margin-left: 6px;
       }
+      #${MODAL_ID} .mcp-badge.blue {
+        background: rgba(96, 165, 250, 0.12);
+        color: #93c5fd;
+      }
     `;
     document.head.appendChild(s);
   }
@@ -135,7 +139,7 @@
     const sess = globalThis.DenizenVisitorSession;
     const token = sess?.getSessionToken?.();
     if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
+    return { 'X-Session-Token': token };
   }
 
   async function createToken(npcKey) {
@@ -210,12 +214,28 @@
         <h3>Connect your AI to ${displayName}</h3>
         <p class="mcp-warn">${payload.warning || 'Save this token now — it cannot be retrieved again.'}</p>
         <div class="mcp-tabs">
-          <button type="button" class="mcp-tab active" data-tab="cursor">Cursor / API</button>
+          <button type="button" class="mcp-tab active" data-tab="companion">Companion<span class="mcp-badge blue">Easiest</span></button>
+          <button type="button" class="mcp-tab" data-tab="cursor">Cursor / API</button>
           <button type="button" class="mcp-tab" data-tab="chatgpt">ChatGPT GPT<span class="mcp-badge">Plus OK</span></button>
           <button type="button" class="mcp-tab" data-tab="claude">Claude.ai</button>
         </div>
 
-        <div class="mcp-panel active" data-panel="cursor">
+        <div class="mcp-panel active" data-panel="companion">
+          <p>Browser extension — provider-agnostic. Works with any AI; no MCP or API config.</p>
+          <ol>
+            <li>Install <code>denizen/companion-extension</code> in Chrome (Load unpacked)</li>
+            <li>Credentials sync automatically from this page</li>
+            <li>Right-click text → <strong>Send to Denizen NPC</strong></li>
+            <li>Or use <strong>Ctrl+Shift+D</strong> to push clipboard</li>
+          </ol>
+          <p>Extension popup: refresh status, send memory, log activity.</p>
+          <p class="mcp-warn">Token saved to extension storage on this device only.</p>
+          <div class="mcp-actions">
+            <button type="button" class="mcp-copy" data-copy="token" data-label="token">Copy token (manual fallback)</button>
+          </div>
+        </div>
+
+        <div class="mcp-panel" data-panel="cursor">
           <p>For Cursor, Cline, Claude Desktop, or any MCP client with an API key.</p>
           <p>MCP URL:</p>
           <pre>${payload.mcp_url || ''}</pre>
@@ -294,9 +314,16 @@
     });
   }
 
+  function syncCompanion(payload, displayName) {
+    try {
+      globalThis.DenizenCompanionBridge?.saveCredentials?.(payload, displayName);
+    } catch (_) { /* extension optional */ }
+  }
+
   async function openConnectFlow(npcKey, displayName) {
     try {
       const payload = await createToken(npcKey);
+      syncCompanion(payload, displayName);
       showTokenModal(npcKey, displayName, payload);
     } catch (err) {
       console.warn('[DenizenVisitorMcpConnectUI]', err);

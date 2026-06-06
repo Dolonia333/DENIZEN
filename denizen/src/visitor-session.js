@@ -593,6 +593,10 @@
       return sessionId;
     },
 
+    getSessionToken() {
+      return sessionToken || null;
+    },
+
     getDisplayName() {
       return displayName || 'Guest';
     },
