@@ -146,4 +146,79 @@ describe('npc-mcp-gateway', () => {
 
     await new Promise((resolve) => server.close(resolve));
   });
+
+  it('buildOpenApiSpec documents REST sync paths', () => {
+    const spec = gateway.buildOpenApiSpec('http://localhost:8080');
+    assert.equal(spec.openapi, '3.1.0');
+    assert.ok(spec.paths['/api/npc-sync/status']);
+    assert.ok(spec.paths['/api/npc-sync/memory']);
+    assert.ok(spec.paths['/api/npc-sync/activity']);
+    assert.equal(spec.servers[0].url, 'http://localhost:8080');
+  });
+
+  it('REST GET /status returns NPC status with bearer token', async () => {
+    const server = http.createServer((req, res) => {
+      gateway.handleRestSync(req, res, 'status');
+    });
+    await new Promise((resolve) => server.listen(0, resolve));
+    const { port } = server.address();
+
+    const res = await fetch(`http://127.0.0.1:${port}/api/npc-sync/status`, {
+      headers: { Authorization: 'Bearer good-token' },
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(body.npc.npc_key, 'roki');
+
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('REST POST /memory accepts note alias for ChatGPT', async () => {
+    const server = http.createServer((req, res) => {
+      gateway.handleRestSync(req, res, 'memory');
+    });
+    await new Promise((resolve) => server.listen(0, resolve));
+    const { port } = server.address();
+
+    const res = await fetch(`http://127.0.0.1:${port}/api/npc-sync/memory`, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer good-token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ note: 'ChatGPT-friendly memory line' }),
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.ok, true);
+
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('REST POST /activity logs work', async () => {
+    let logged = false;
+    denizenDb.recordWorkOutput = (row) => { logged = row.note === 'Synced from REST'; };
+
+    const server = http.createServer((req, res) => {
+      gateway.handleRestSync(req, res, 'activity');
+    });
+    await new Promise((resolve) => server.listen(0, resolve));
+    const { port } = server.address();
+
+    const res = await fetch(`http://127.0.0.1:${port}/api/npc-sync/activity`, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer good-token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ note: 'Synced from REST' }),
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.ok, true);
+    assert.equal(logged, true);
+
+    await new Promise((resolve) => server.close(resolve));
+  });
 });

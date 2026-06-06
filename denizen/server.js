@@ -1629,6 +1629,24 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/npc-sync/openapi.json' && req.method === 'GET') {
+    const publicBase = process.env.DENIZEN_PUBLIC_URL
+      || process.env.DENIZEN_URL
+      || `http://localhost:${PORT}`;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(npcMcpGateway.buildOpenApiSpec(publicBase)));
+    return;
+  }
+
+  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity)\/?$/);
+  if (npcSyncMatch) {
+    npcMcpGateway.handleRestSync(req, res, npcSyncMatch[1]).catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   // Optional OpenClaw gateway proxy (off by default — Jelly is standalone)
   if (JELLY_ENABLE_OPENCLAW_GATEWAY && fullUrl.startsWith('/openclaw')) {
     const targetPath = fullUrl.replace(/^\/openclaw/, '') || '/';

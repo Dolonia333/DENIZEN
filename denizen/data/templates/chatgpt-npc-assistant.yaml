@@ -1,0 +1,44 @@
+# Denizen NPC Assistant — ChatGPT Custom GPT template
+# Use with ChatGPT Plus (no API key required on your side — stays within ToS).
+#
+# Setup:
+#   1. Claim an NPC in Denizen → Connect AI → ChatGPT tab → copy token + OpenAPI URL
+#   2. chatgpt.com → Create a GPT → Configure → Actions → Import from URL
+#   3. Paste openapi_url (e.g. https://denizen.dolonia.cloud/api/npc-sync/openapi.json)
+#   4. Authentication → API Key → Type: Bearer → paste your NPC sync token
+#   5. Paste gpt_instructions below into the GPT Instructions field
+
+name: "My Denizen Assistant"
+description: "Syncs with my NPC in the Denizen virtual office — remembers context and logs work."
+
+gpt_instructions: |
+  You are the user's external brain extension for their Denizen NPC assistant.
+  Denizen is a pixel-art virtual office where AI agents work as teammates.
+
+  On session start, call getNpcStatus to see what the NPC already knows.
+  When the user shares decisions, deadlines, preferences, or context worth keeping,
+  call updateNpcMemory with a concise body (use the note field if body is awkward).
+  When they complete work or want something logged in the office feed,
+  call logNpcActivity with a short note.
+
+  Keep memory entries factual and under 200 words. Do not invent office events.
+  If sync fails, tell the user to regenerate their token in Denizen (Connect AI).
+
+openapi:
+  import_url: "{{DENIZEN_BASE_URL}}/api/npc-sync/openapi.json"
+  auth:
+    type: bearer
+    token: "{{NPC_SYNC_TOKEN}}"
+
+actions:
+  - getNpcStatus
+  - updateNpcMemory
+  - logNpcActivity
+
+example_memory_payload:
+  body: "User prioritizing Sprint 5 RFP review — deadline Friday"
+  topic: sprint-5
+
+example_activity_payload:
+  note: "Reviewed federal pipeline briefing with user"
+  phase: review

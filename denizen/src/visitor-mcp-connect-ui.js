@@ -1,5 +1,5 @@
 /**
- * MCP connect UI — let teammates link Claude/Cursor to their claimed NPC.
+ * MCP connect UI — three onboarding paths: Cursor/API, ChatGPT GPT, Claude.ai.
  * Attaches to globalThis.DenizenVisitorMcpConnectUI (no imports).
  */
 (function () {
@@ -45,13 +45,14 @@
         border: 1px solid #1f2937;
         border-radius: 10px;
         padding: 20px 22px;
-        width: min(520px, calc(100vw - 32px));
+        width: min(560px, calc(100vw - 32px));
         max-height: calc(100vh - 48px);
         overflow: auto;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
       }
       #${MODAL_ID} h3 { margin: 0 0 8px; color: #e2e8f0; font-size: 14px; }
-      #${MODAL_ID} p { margin: 0 0 10px; color: #94a3b8; font-size: 11px; line-height: 1.45; }
+      #${MODAL_ID} p, #${MODAL_ID} li { margin: 0 0 8px; color: #94a3b8; font-size: 11px; line-height: 1.45; }
+      #${MODAL_ID} ol { margin: 0 0 10px 18px; padding: 0; }
       #${MODAL_ID} pre {
         background: #0f172a;
         border: 1px solid #1f2937;
@@ -63,11 +64,36 @@
         word-break: break-all;
         margin: 8px 0 12px;
       }
+      #${MODAL_ID} .mcp-tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      #${MODAL_ID} .mcp-tab {
+        font: inherit;
+        font-size: 10px;
+        font-weight: bold;
+        border-radius: 999px;
+        padding: 6px 12px;
+        cursor: pointer;
+        border: 1px solid #1f2937;
+        background: #1e293b;
+        color: #94a3b8;
+      }
+      #${MODAL_ID} .mcp-tab.active {
+        background: rgba(96, 165, 250, 0.2);
+        border-color: rgba(96, 165, 250, 0.5);
+        color: #93c5fd;
+      }
+      #${MODAL_ID} .mcp-panel { display: none; }
+      #${MODAL_ID} .mcp-panel.active { display: block; }
       #${MODAL_ID} .mcp-actions {
         display: flex;
         gap: 8px;
         justify-content: flex-end;
         flex-wrap: wrap;
+        margin-top: 8px;
       }
       #${MODAL_ID} button {
         font: inherit;
@@ -91,6 +117,15 @@
         color: #fbbf24;
         font-size: 10px;
         margin-bottom: 8px;
+      }
+      #${MODAL_ID} .mcp-badge {
+        display: inline-block;
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(74, 222, 128, 0.12);
+        color: #4ade80;
+        margin-left: 6px;
       }
     `;
     document.head.appendChild(s);
@@ -145,48 +180,117 @@
     if (el) el.remove();
   }
 
+  function bindCopyButtons(root, getText) {
+    root.querySelectorAll('.mcp-copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const key = btn.getAttribute('data-copy');
+        const text = getText(key);
+        await copyText(text);
+        const label = btn.getAttribute('data-label') || key;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = `Copy ${label}`; }, 1500);
+      });
+    });
+  }
+
   function showTokenModal(npcKey, displayName, payload) {
     injectStyles();
     closeModal();
 
+    const configJson = JSON.stringify(payload.cursor_config || payload.claude_desktop_config, null, 2);
+    const openapiUrl = payload.rest_sync?.openapi_url || payload.chatgpt?.openapi_url || '';
+    const gptInstructions = payload.chatgpt?.gpt_instructions || '';
+    const chatgptSteps = (payload.chatgpt?.steps || []).map((s) => `<li>${s}</li>`).join('');
+    const claudeSteps = (payload.claude_ai?.steps || []).map((s) => `<li>${s}</li>`).join('');
+
     const modal = document.createElement('div');
     modal.id = MODAL_ID;
-    const configJson = JSON.stringify(payload.cursor_config || payload.claude_desktop_config, null, 2);
     modal.innerHTML = `
       <div class="mcp-card">
         <h3>Connect your AI to ${displayName}</h3>
         <p class="mcp-warn">${payload.warning || 'Save this token now — it cannot be retrieved again.'}</p>
-        <p>MCP URL:</p>
-        <pre id="denizen-mcp-url">${payload.mcp_url || ''}</pre>
-        <p>Bearer token:</p>
-        <pre id="denizen-mcp-token">${payload.token || ''}</pre>
-        <p>Cursor / Claude Desktop config snippet:</p>
-        <pre id="denizen-mcp-config">${configJson}</pre>
+        <div class="mcp-tabs">
+          <button type="button" class="mcp-tab active" data-tab="cursor">Cursor / API</button>
+          <button type="button" class="mcp-tab" data-tab="chatgpt">ChatGPT GPT<span class="mcp-badge">Plus OK</span></button>
+          <button type="button" class="mcp-tab" data-tab="claude">Claude.ai</button>
+        </div>
+
+        <div class="mcp-panel active" data-panel="cursor">
+          <p>For Cursor, Cline, Claude Desktop, or any MCP client with an API key.</p>
+          <p>MCP URL:</p>
+          <pre>${payload.mcp_url || ''}</pre>
+          <p>Bearer token:</p>
+          <pre>${payload.token || ''}</pre>
+          <p>Config snippet:</p>
+          <pre>${configJson}</pre>
+          <div class="mcp-actions">
+            <button type="button" class="mcp-copy" data-copy="url" data-label="URL">Copy URL</button>
+            <button type="button" class="mcp-copy" data-copy="token" data-label="token">Copy token</button>
+            <button type="button" class="mcp-copy" data-copy="config" data-label="config">Copy config</button>
+          </div>
+        </div>
+
+        <div class="mcp-panel" data-panel="chatgpt">
+          <p>ChatGPT Plus Custom GPT — no API key on your side. Stays within OpenAI ToS.</p>
+          <ol>${chatgptSteps}</ol>
+          <p>OpenAPI URL (import in GPT Actions):</p>
+          <pre>${openapiUrl}</pre>
+          <p>Bearer token (GPT Action auth):</p>
+          <pre>${payload.token || ''}</pre>
+          <p>Suggested GPT instructions:</p>
+          <pre>${gptInstructions}</pre>
+          <div class="mcp-actions">
+            <button type="button" class="mcp-copy" data-copy="openapi" data-label="OpenAPI URL">Copy OpenAPI URL</button>
+            <button type="button" class="mcp-copy" data-copy="token" data-label="token">Copy token</button>
+            <button type="button" class="mcp-copy" data-copy="gpt" data-label="instructions">Copy instructions</button>
+          </div>
+        </div>
+
+        <div class="mcp-panel" data-panel="claude">
+          <p>Claude.ai MCP connector — Pro subscription, no API billing.</p>
+          <ol>${claudeSteps}</ol>
+          <p>Connector URL:</p>
+          <pre>${payload.claude_ai?.connector_url || payload.mcp_url || ''}</pre>
+          <p>Authorization header:</p>
+          <pre>Bearer ${payload.token || ''}</pre>
+          <p class="mcp-warn">If MCP connector is unavailable, use the ChatGPT tab REST path or Cursor/API instead.</p>
+          <div class="mcp-actions">
+            <button type="button" class="mcp-copy" data-copy="claude-url" data-label="connector URL">Copy connector URL</button>
+            <button type="button" class="mcp-copy" data-copy="claude-auth" data-label="auth header">Copy auth header</button>
+          </div>
+        </div>
+
         <div class="mcp-actions">
-          <button type="button" class="mcp-copy" data-copy="url">Copy URL</button>
-          <button type="button" class="mcp-copy" data-copy="token">Copy token</button>
-          <button type="button" class="mcp-copy" data-copy="config">Copy config</button>
           <button type="button" class="mcp-close">Done</button>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
 
+    const texts = {
+      url: payload.mcp_url || '',
+      token: payload.token || '',
+      config: configJson,
+      openapi: openapiUrl,
+      gpt: gptInstructions,
+      'claude-url': payload.claude_ai?.connector_url || payload.mcp_url || '',
+      'claude-auth': `Bearer ${payload.token || ''}`,
+    };
+
+    modal.querySelectorAll('.mcp-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.getAttribute('data-tab');
+        modal.querySelectorAll('.mcp-tab').forEach((t) => t.classList.toggle('active', t === tab));
+        modal.querySelectorAll('.mcp-panel').forEach((p) => {
+          p.classList.toggle('active', p.getAttribute('data-panel') === id);
+        });
+      });
+    });
+
+    bindCopyButtons(modal, (key) => texts[key] || '');
     modal.querySelector('.mcp-close').addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
-    });
-    modal.querySelectorAll('.mcp-copy').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const kind = btn.getAttribute('data-copy');
-        let text = '';
-        if (kind === 'url') text = payload.mcp_url || '';
-        if (kind === 'token') text = payload.token || '';
-        if (kind === 'config') text = configJson;
-        await copyText(text);
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = `Copy ${kind}`; }, 1500);
-      });
     });
   }
 
@@ -236,7 +340,7 @@
     offerAfterClaim(npcKey, displayName) {
       refreshButton();
       setTimeout(() => {
-        if (confirm(`Connect Claude or Cursor to ${displayName}?`)) {
+        if (confirm(`Connect an external AI to ${displayName}? (ChatGPT, Claude, or Cursor)`)) {
           openConnectFlow(npcKey, displayName);
         }
       }, 400);

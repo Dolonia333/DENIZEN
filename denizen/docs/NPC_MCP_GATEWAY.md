@@ -42,6 +42,10 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 | `POST` | `/mcp/npc/:npcKey` | Bearer | JSON-RPC MCP (initialize, tools/list, tools/call) |
 | `POST` | `/api/mcp/tokens` | Visitor session (team tier) | Create token — returns plaintext once |
 | `GET` | `/api/mcp/connect-info?npc_key=roki` | Optional session | Setup instructions |
+| `GET` | `/api/npc-sync/openapi.json` | None | OpenAPI 3.1 spec for ChatGPT Custom GPT Actions |
+| `GET` | `/api/npc-sync/status` | Bearer (NPC token) | REST alias for `get_status` |
+| `POST` | `/api/npc-sync/memory` | Bearer | REST alias for `update_memory` (`body` or `note`) |
+| `POST` | `/api/npc-sync/activity` | Bearer | REST alias for `log_activity` |
 
 ### MCP tools
 
@@ -55,7 +59,23 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 
 1. Claim an NPC as your assistant (team session).
 2. Click **Connect AI** next to the assistant chip.
-3. Copy the MCP URL, bearer token, or Cursor/Claude config snippet.
+3. Choose a tab: **Cursor/API**, **ChatGPT GPT**, or **Claude.ai**.
+
+### ChatGPT Plus (Custom GPT Actions — no API key)
+
+Works within OpenAI ToS — subscription chat only, no programmatic API routing.
+
+1. Connect AI → **ChatGPT GPT** tab → copy OpenAPI URL + bearer token.
+2. [Create a Custom GPT](https://chatgpt.com/gpts/editor) → **Actions** → **Import from URL**.
+3. Paste `https://<your-host>/api/npc-sync/openapi.json`.
+4. **Authentication** → API Key → Type: **Bearer** → paste your NPC token.
+5. Paste suggested instructions from the modal (or use `data/templates/chatgpt-npc-assistant.yaml`).
+
+### Claude.ai (MCP connector — Pro subscription)
+
+1. Connect AI → **Claude.ai** tab → copy connector URL + auth header.
+2. Claude.ai → Settings → Integrations → Add MCP connector.
+3. If connector UI is unavailable, use the ChatGPT REST path or Cursor/API instead.
 
 ### Via API
 
@@ -107,4 +127,7 @@ cd denizen
 
 ## Tag
 
-Release milestone: `v1.3-npc-mcp-sync`
+| Release | Tag | Notes |
+|---------|-----|-------|
+| v1.3 | `v1.3-npc-mcp-sync` | MCP JSON-RPC gateway |
+| v1.4 | `v1.4-npc-sync-rest` | REST shim + OpenAPI + ChatGPT/Claude onboarding |

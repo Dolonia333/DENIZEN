@@ -331,6 +331,213 @@ async function handleHttpRequest(req, res, npcKeyFromPath) {
   return handleRpc(scope, req, res, body, sessionId);
 }
 
+function getPublicBaseUrl() {
+  return String(
+    process.env.DENIZEN_PUBLIC_URL
+    || process.env.DENIZEN_URL
+    || `http://localhost:${process.env.PORT || 8080}`,
+  ).replace(/\/$/, '');
+}
+
+async function authenticateBearerRequest(req, res) {
+  let reqUrl;
+  try {
+    reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  } catch (_) {
+    sendJson(res, 400, { ok: false, error: 'bad url' });
+    return null;
+  }
+
+  const token = extractBearer(req, reqUrl);
+  if (!token) {
+    sendJson(res, 401, { ok: false, error: 'Bearer token required' });
+    return null;
+  }
+
+  const scope = await module.exports.resolveToken(token);
+  if (!scope) {
+    sendJson(res, 401, { ok: false, error: 'invalid or revoked token' });
+    return null;
+  }
+
+  if (!checkRateLimit(scope.token_id)) {
+    sendJson(res, 429, { ok: false, error: 'rate limit exceeded' });
+    return null;
+  }
+
+  return scope;
+}
+
+async function handleRestSync(req, res, action) {
+  const scope = await authenticateBearerRequest(req, res);
+  if (!scope) return;
+
+  if (action === 'status') {
+    if (req.method !== 'GET') {
+      return sendJson(res, 405, { ok: false, error: 'GET only' });
+    }
+    let limit = 10;
+    try {
+      const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+      limit = Number(u.searchParams.get('limit')) || 10;
+    } catch (_) { /* keep default */ }
+    const result = await callTool(scope, 'get_status', { limit });
+    return sendJson(res, result?.ok ? 200 : 400, result);
+  }
+
+  if (action === 'memory' || action === 'activity') {
+    if (req.method !== 'POST') {
+      return sendJson(res, 405, { ok: false, error: 'POST only' });
+    }
+    let body;
+    try {
+      body = await readBody(req);
+    } catch (err) {
+      return sendJson(res, 400, { ok: false, error: err?.message || 'invalid json' });
+    }
+    const payload = body || {};
+    const result = action === 'memory'
+      ? await callTool(scope, 'update_memory', {
+        body: payload.body || payload.note || payload.text,
+        topic: payload.topic,
+        outcome: payload.outcome,
+      })
+      : await callTool(scope, 'log_activity', payload);
+    return sendJson(res, result?.ok ? 200 : 400, result);
+  }
+
+  return sendJson(res, 404, { ok: false, error: 'unknown action' });
+}
+
+function buildOpenApiSpec(baseUrl) {
+  const base = String(baseUrl || getPublicBaseUrl()).replace(/\/$/, '');
+  return {
+    openapi: '3.1.0',
+    info: {
+      title: 'Denizen NPC Sync API',
+      description:
+        'REST bridge for ChatGPT Custom GPT Actions and other HTTP clients. '
+        + 'Create a bearer token in the Denizen office (Connect AI), then configure your client.',
+      version: '1.4.0',
+    },
+    servers: [{ url: base }],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          description: 'NPC sync token from Denizen Connect AI',
+        },
+      },
+    },
+    security: [{ bearerAuth: [] }],
+    paths: {
+      '/api/npc-sync/status': {
+        get: {
+          operationId: 'getNpcStatus',
+          summary: 'Get NPC status, recent memories, and work feed',
+          parameters: [{
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', default: 10 },
+          }],
+          responses: {
+            200: { description: 'NPC status payload' },
+          },
+        },
+      },
+      '/api/npc-sync/memory': {
+        post: {
+          operationId: 'updateNpcMemory',
+          summary: 'Remember something for this NPC',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    body: { type: 'string', description: 'Memory text' },
+                    note: { type: 'string', description: 'Alias for body' },
+                    topic: { type: 'string' },
+                    outcome: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Memory recorded' } },
+        },
+      },
+      '/api/npc-sync/activity': {
+        post: {
+          operationId: 'logNpcActivity',
+          summary: 'Log work activity for this NPC',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['note'],
+                  properties: {
+                    note: { type: 'string' },
+                    phase: { type: 'string' },
+                    action: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Activity logged' } },
+        },
+      },
+    },
+  };
+}
+
+function buildOnboardingPayload({ baseUrl, npcKey, token }) {
+  const base = String(baseUrl || getPublicBaseUrl()).replace(/\/$/, '');
+  const mcpUrl = `${base}/mcp/npc/${encodeURIComponent(npcKey)}`;
+  const openapiUrl = `${base}/api/npc-sync/openapi.json`;
+
+  return {
+    rest_sync: {
+      base_url: `${base}/api/npc-sync`,
+      status_url: `${base}/api/npc-sync/status`,
+      memory_url: `${base}/api/npc-sync/memory`,
+      activity_url: `${base}/api/npc-sync/activity`,
+      openapi_url: openapiUrl,
+    },
+    chatgpt: {
+      openapi_url: openapiUrl,
+      auth_type: 'Bearer',
+      steps: [
+        'Create a Custom GPT at chatgpt.com/gpts/editor',
+        'Actions → Import from URL → paste the OpenAPI URL',
+        'Authentication → API Key → Auth Type: Bearer → paste your token',
+        'Instructions: use getNpcStatus, updateNpcMemory, logNpcActivity for the teammate NPC',
+      ],
+      gpt_instructions: [
+        `You are synced to ${npcDisplayName(npcKey)} in the Denizen virtual office.`,
+        'When the user shares decisions, tasks, or context worth remembering, call updateNpcMemory.',
+        'When they finish work, call logNpcActivity with a short note.',
+        'At the start of a session, call getNpcStatus to see what the NPC already knows.',
+      ].join(' '),
+    },
+    claude_ai: {
+      connector_url: mcpUrl,
+      auth_header: `Bearer ${token}`,
+      steps: [
+        'Claude.ai → Settings → Integrations → Add MCP connector',
+        'URL: MCP connector URL below',
+        'Header: Authorization Bearer <your token>',
+        'Note: Claude.ai connectors are more limited than the API — use REST/OpenAPI if MCP is unavailable',
+      ],
+    },
+  };
+}
+
 async function createMcpToken({
   orgId,
   npcKey,
@@ -354,14 +561,16 @@ async function createMcpToken({
     p_label: label || null,
   });
 
-  const baseUrl = String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || `http://localhost:${process.env.PORT || 8080}`).replace(/\/$/, '');
+  const baseUrl = getPublicBaseUrl();
   const mcpUrl = `${baseUrl}/mcp/npc/${encodeURIComponent(npcKey)}`;
+  const onboarding = buildOnboardingPayload({ baseUrl, npcKey, token });
 
   return {
     token_id: tokenId,
     token,
     mcp_url: mcpUrl,
     npc_key: npcKey,
+    ...onboarding,
     cursor_config: {
       mcpServers: {
         [`denizen-${npcKey}`]: {
@@ -382,20 +591,31 @@ async function createMcpToken({
 }
 
 function buildConnectInfo(npcKey, baseUrl) {
-  const url = `${String(baseUrl || '').replace(/\/$/, '')}/mcp/npc/${encodeURIComponent(npcKey)}`;
+  const base = String(baseUrl || getPublicBaseUrl()).replace(/\/$/, '');
+  const url = `${base}/mcp/npc/${encodeURIComponent(npcKey)}`;
   return {
     npc_key: npcKey,
     mcp_url: url,
     tools: TOOL_DEFINITIONS.map((t) => t.name),
-    instructions: 'Create a token via POST /api/mcp/tokens (team session required), then add the mcp_url + Bearer token to your AI client.',
+    openapi_url: `${base}/api/npc-sync/openapi.json`,
+    paths: {
+      cursor_api: 'MCP JSON-RPC at mcp_url (Cursor, Claude Desktop, API clients)',
+      chatgpt: 'Custom GPT Actions via openapi_url + Bearer token',
+      claude_ai: 'Claude.ai MCP connector at mcp_url + Bearer token',
+    },
+    instructions: 'Create a token via POST /api/mcp/tokens (team session required), then choose Cursor/API, ChatGPT, or Claude.ai in Connect AI.',
   };
 }
 
 module.exports = {
   TOOL_DEFINITIONS,
   handleHttpRequest,
+  handleRestSync,
+  buildOpenApiSpec,
+  getPublicBaseUrl,
   createMcpToken,
   buildConnectInfo,
+  buildOnboardingPayload,
   resolveToken,
   callTool,
 };
