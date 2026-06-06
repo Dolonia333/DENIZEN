@@ -60,8 +60,20 @@ function Invoke-MigrationViaDocker {
   )
 
   $env:PGPASSWORD = 'postgres'
-  Get-Content -Path $FilePath -Raw |
-    docker exec -i -e PGPASSWORD=postgres $ContainerName psql -v ON_ERROR_STOP=1 -U $Role -d postgres | Out-Null
+  $prevEap = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  $output = Get-Content -Path $FilePath -Raw |
+    docker exec -i -e PGPASSWORD=postgres $ContainerName psql -v ON_ERROR_STOP=1 -U $Role -d postgres 2>&1
+  $exitCode = $LASTEXITCODE
+  $ErrorActionPreference = $prevEap
+  if ($exitCode -ne 0) {
+    throw ($output | Out-String).Trim()
+  }
+}
+
+function Test-LocalDockerDbUrl {
+  param([string]$Url)
+  return $Url -match '127\.0\.0\.1:54322|localhost:54322'
 }
 
 function Invoke-MigrationViaDbUrl {
@@ -71,7 +83,11 @@ function Invoke-MigrationViaDbUrl {
   )
 
   if (-not (Get-Command psql -ErrorAction SilentlyContinue)) {
-    throw "psql not found in PATH. Install PostgreSQL client tools or run against Docker."
+    if (Test-LocalDockerDbUrl -Url $DbUrl) {
+      Invoke-MigrationViaDocker -FilePath $FilePath -Role $Role
+      return
+    }
+    throw "psql not found in PATH. Install PostgreSQL client tools, use local Docker (127.0.0.1:54322), or run without -DbUrl."
   }
 
   $sql = Get-Content -Path $FilePath -Raw

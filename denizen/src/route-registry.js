@@ -66,17 +66,38 @@ function getFederalSummaryProvider(deps) {
   return async () => fn(db);
 }
 
+function getIntelligenceRouteHandler(deps) {
+  const intelligenceRoutes = safeRequire('./routes/intelligence-routes');
+  if (!intelligenceRoutes) return null;
+  if (typeof intelligenceRoutes.createIntelligenceRouteHandler === 'function') {
+    return intelligenceRoutes.createIntelligenceRouteHandler(deps);
+  }
+  if (typeof intelligenceRoutes.handleIntelligenceRoutes === 'function') {
+    return intelligenceRoutes.handleIntelligenceRoutes;
+  }
+  if (typeof intelligenceRoutes === 'function') {
+    return intelligenceRoutes;
+  }
+  return null;
+}
+
 function createDenizenRouteHandler(deps = {}) {
   const robinhoodMcp = deps.robinhoodMcp || safeRequire('./robinhood-mcp');
   const jobCrm = deps.jobCrm || safeRequire('./job-crm');
   const getPredictionSummary = getPredictionHandler(deps);
   const getFederalPipelineSummary = getFederalSummaryProvider(deps);
+  const intelligenceRouteHandler = getIntelligenceRouteHandler(deps);
 
   return async function handleDenizenRoutes(req, res) {
     const reqUrl = req.url || '/';
     const url = new URL(reqUrl, 'http://localhost');
     const path = url.pathname;
     const method = req.method || 'GET';
+
+    if (intelligenceRouteHandler) {
+      const handled = await intelligenceRouteHandler(req, res, { req, res, url, deps });
+      if (handled) return true;
+    }
 
     if (method === 'GET' && path === '/api/intelligence/prediction-summary') {
       if (!getPredictionSummary) {

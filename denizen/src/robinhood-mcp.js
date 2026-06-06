@@ -45,6 +45,7 @@ const TOKEN_ENDPOINT    = 'https://api.robinhood.com/oauth2/token/';
 const REGISTER_ENDPOINT = 'https://agent.robinhood.com/oauth/trading/register';
 const SCOPE             = 'internal';
 const REDIRECT_URI      = 'http://localhost:8080/api/market/auth/callback';
+const DEFAULT_DENIZEN_BASE_URL = 'http://localhost:8080';
 const MCP_TIMEOUT_MS    = 15000;
 
 // Default watchlist for Roki
@@ -70,6 +71,11 @@ function getRefresh()  { return loadOAuth().refresh_token  || null; }
 function getClientId() { return loadOAuth().client_id      || null; }
 
 function isAuthenticated() { return !!getToken(); }
+
+function getAuthConnectUrl(baseUrl = DEFAULT_DENIZEN_BASE_URL) {
+  const normalizedBase = String(baseUrl || DEFAULT_DENIZEN_BASE_URL).replace(/\/$/, '');
+  return `${normalizedBase}/api/market/auth/connect`;
+}
 
 // ─── Dynamic client registration ─────────────────────────────────────────────
 
@@ -393,6 +399,12 @@ async function getOrderHistory(limit = 20) {
  * Returns { watchlist, quotes, portfolio, movers, at, error? }
  */
 async function runMarketObservation() {
+  try {
+    await seedDefaultWatchlistInDbIfEmpty({ npcKey: 'roki' });
+  } catch (_) {
+    /* non-fatal */
+  }
+
   const watchlist = loadWatchlist();
   let quotes = [], portfolio = null, error = null;
 
@@ -465,6 +477,28 @@ function removeFromWatchlist(symbol) {
     /* non-fatal */
   }
   return list;
+}
+
+async function seedDefaultWatchlistInDbIfEmpty(opts = {}) {
+  if (!denizenDb?.enabled || !denizenDb?.orgId || typeof denizenDb.getWatchlist !== 'function') {
+    return { ok: false, seeded: false, reason: 'db_not_ready' };
+  }
+
+  const npcKey = opts.npcKey || 'roki';
+  const existing = await denizenDb.getWatchlist({ npcKey, limit: 200 }).catch(() => []);
+  if (Array.isArray(existing) && existing.length > 0) {
+    return { ok: true, seeded: false, existingCount: existing.length };
+  }
+
+  const addedAt = new Date().toISOString();
+  for (const symbol of DEFAULT_WATCHLIST) {
+    denizenDb.syncWatchlistSymbol(symbol, { npcKey, addedAt });
+  }
+  if (typeof denizenDb._drain === 'function') {
+    await denizenDb._drain().catch(() => {});
+  }
+
+  return { ok: true, seeded: true, symbols: [...DEFAULT_WATCHLIST] };
 }
 
 // ─── Trade suggestions (DISPLAY ONLY — no execution) ─────────────────────────
@@ -541,6 +575,7 @@ function dismissSuggestion(id) {
 module.exports = {
   // Auth flow
   isAuthenticated,
+  getAuthConnectUrl,
   buildAuthUrl,
   handleCallback,
   refreshToken,
@@ -548,6 +583,8 @@ module.exports = {
   registerClient,
   // Watchlist
   loadWatchlist, saveWatchlist, addToWatchlist, removeFromWatchlist,
+  seedDefaultWatchlistInDbIfEmpty,
+  DEFAULT_WATCHLIST,
   // Suggestions (no execution)
   loadSuggestions, createSuggestion, dismissSuggestion,
   // Market data

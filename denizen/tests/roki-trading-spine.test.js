@@ -182,6 +182,45 @@ describe('roki trading spine — robinhood dual write', () => {
     assert.equal(watchCalls[0].symbol, 'SHOP');
     assert.equal(Boolean(watchCalls[1].opts?.remove), true);
   });
+
+  it('exports auth connect URL helper and seeds default watchlist when DB is empty', async () => {
+    const robinhoodMcp = require('../src/robinhood-mcp.js');
+    const db = require('../src/denizen-db.js');
+
+    const synced = [];
+    db.enabled = true;
+    db.orgId = 'org-test';
+    db.getWatchlist = async () => [];
+    db.syncWatchlistSymbol = (symbol, opts) => synced.push({ symbol, opts });
+    db._drain = async () => {};
+
+    const authUrl = robinhoodMcp.getAuthConnectUrl('http://127.0.0.1:8080/');
+    assert.equal(authUrl, 'http://127.0.0.1:8080/api/market/auth/connect');
+
+    const seeded = await robinhoodMcp.seedDefaultWatchlistInDbIfEmpty({ npcKey: 'roki' });
+    assert.equal(seeded.ok, true);
+    assert.equal(seeded.seeded, true);
+    assert.deepEqual(
+      synced.map((entry) => entry.symbol),
+      robinhoodMcp.DEFAULT_WATCHLIST,
+    );
+  });
+
+  it('does not seed default watchlist when DB already has symbols', async () => {
+    const robinhoodMcp = require('../src/robinhood-mcp.js');
+    const db = require('../src/denizen-db.js');
+
+    let syncCalls = 0;
+    db.enabled = true;
+    db.orgId = 'org-test';
+    db.getWatchlist = async () => ['AAPL'];
+    db.syncWatchlistSymbol = () => { syncCalls += 1; };
+
+    const seeded = await robinhoodMcp.seedDefaultWatchlistInDbIfEmpty({ npcKey: 'roki' });
+    assert.equal(seeded.ok, true);
+    assert.equal(seeded.seeded, false);
+    assert.equal(syncCalls, 0);
+  });
 });
 
 describe('roki trading spine — migration markers', () => {

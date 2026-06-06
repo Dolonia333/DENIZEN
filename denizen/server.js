@@ -34,8 +34,9 @@ const { startVisitorIntelligenceLoop } = require('./src/visitor-briefing-loop');
 const slackChannel = require('./src/denizen-slack-channel');
 const mcpConnector = require('./src/denizen-mcp-connector');
 const citedResearch = require('./src/visitor-cited-research');
-const { runPredictionMaintenance, getPredictionSummary } = require('./src/denizen-prediction-loop');
+const { runPredictionMaintenance, getPredictionSummary, runMiroFishMaintenance } = require('./src/denizen-prediction-loop');
 const { getRfpPipelineSummary } = require('./src/federal-pipeline');
+const mirofishPrediction = require('./src/mirofish-prediction');
 const pcActivity = require('./src/pc-activity-tracker');
 const jobApplication = require('./src/job-application');
 const jobCrm         = require('./src/job-crm');
@@ -4434,6 +4435,36 @@ const server = http.createServer((req, res) => {
       const summary = await getRfpPipelineSummary(denizenDb);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, summary }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/intelligence/mirofish-status' && req.method === 'GET') {
+    (async () => {
+      const cfg = mirofishPrediction.getConfig();
+      const available = await mirofishPrediction.isAvailable();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, enabled: cfg.enabled, baseUrl: cfg.baseUrl, available }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/intelligence/mirofish-sync' && req.method === 'POST') {
+    (async () => {
+      if (!denizenDb.enabled || !denizenDb.orgId) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Intelligence layer unavailable' }));
+        return;
+      }
+      const result = await runMiroFishMaintenance(denizenDb);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, result }));
     })().catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));

@@ -196,8 +196,23 @@ async function recordPrediction(db, input = {}) {
   return rows?.[0] || null;
 }
 
+async function runMiroFishMaintenance(db) {
+  if (!db?.enabled || !db?.orgId) return { ok: false, reason: 'db_unavailable', synced: 0 };
+  try {
+    // Lazy require avoids a circular dependency at module init time.
+    const mirofish = require('./mirofish-prediction');
+    if (typeof mirofish?.syncForecastsForOrg !== 'function') {
+      return { ok: false, reason: 'mirofish_module_unavailable', synced: 0 };
+    }
+    return mirofish.syncForecastsForOrg(db);
+  } catch (err) {
+    return { ok: false, reason: err?.message || String(err), synced: 0 };
+  }
+}
+
 module.exports = {
   runPredictionMaintenance,
+  runMiroFishMaintenance,
   getPredictionSummary,
   recordPrediction,
   _accuracyScore,

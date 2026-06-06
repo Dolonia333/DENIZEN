@@ -11,6 +11,7 @@ tiles-catalog.json
 # Credentials & config
 .env
 .env.*
+!.env.production.template
 openclaw.json
 *.pem
 *.key
