@@ -86,6 +86,7 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
 - [Asset Pipeline](#asset-pipeline)
 - [City Generator (experimental)](#city-generator-experimental)
 - [Asset Pack](#asset-pack)
+- [Documentation Index](#documentation-index)
 - [Related Documentation](#related-documentation)
 - [Deployment](#deployment)
 - [License](#license)
@@ -1709,18 +1710,27 @@ Uses the [LimeZu Modern Office Revamped](https://limezu.itch.io/) asset pack. Al
 - `assets/modern_office_singles_16/*.png` — Individual furniture sprites (350+ items)
 - `assets/*.png` — Player character (Dolo) + 16 NPC character sheets
 
+## Documentation Index
+
+Use **[docs/DOCS_INDEX.md](docs/DOCS_INDEX.md)** as the master map of all documentation (categorized + status-tagged as `on GitHub` or `new/local`).
+
 ## Related Documentation
 
 The `docs/` directory has the canonical deep-dives for the runtime systems:
 
 | Document | Contents |
 |----------|----------|
+| [docs/DOCS_INDEX.md](docs/DOCS_INDEX.md) | Master docs index — categorized map with GitHub-tracked vs local/new status |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Whole-system topology — browser ↔ Node server ↔ LM Studio, decision loops, WebSocket message types |
 | [docs/AI-SYSTEM.md](docs/AI-SYSTEM.md) | NPC intelligence layer — goals, daily plans, theory of mind, chain-of-thought, memory tags, social graph |
 | [docs/WORLD-STATE.md](docs/WORLD-STATE.md) | **WorldState + Voice Gate + outbound webhooks** — single source of truth, presence-gated TTS, Supabase/n8n forwarding, throttled broadcasts |
+| [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) | Database tables, entities, and schema-level data contracts |
+| [docs/INTELLIGENCE_SPINE.md](docs/INTELLIGENCE_SPINE.md) | Central intelligence orchestration spine *(in progress)* |
+| [docs/MIROFISH_PREDICTION.md](docs/MIROFISH_PREDICTION.md) | Prediction model pipeline and outcomes *(in progress)* |
 | [docs/VOICE.md](docs/VOICE.md) | **ElevenLabs TTS** — per-NPC voice map, `/api/tts` proxy (key never reaches the browser), smoke CLI, troubleshooting |
 | [docs/SFX.md](docs/SFX.md) | **Sound effects** — ambient loop + event-driven cues, presence-gated, missing-file-tolerant |
 | [docs/OPENCLAW_INTEGRATION.md](docs/OPENCLAW_INTEGRATION.md) | **OpenClaw → WorldState bridge** — gateway events drive tasks + voice + agent-bus + per-NPC role-hinted assignment, in addition to the existing sprite/bubble layer |
+| [docs/JELLY_INTEGRATION.md](docs/JELLY_INTEGRATION.md) | Jelly-native skill runtime integration guide *(in progress)* |
 | [docs/VOICE_INPUT.md](docs/VOICE_INPUT.md) | **Voice loop** — push-to-talk STT (`\` or 🎤) + action classifier + outbound dispatch to OpenClaw. Closes the "voice in → real action out" loop. |
 | [docs/AWARENESS.md](docs/AWARENESS.md) | **NPC awareness signals** — every spatial / social / temporal signal injected into the think prompt, with a pattern for adding more. |
 | [docs/SOCIAL_BEHAVIOR.md](docs/SOCIAL_BEHAVIOR.md) | **Social layer** — conversation focus (NPCs stop walking when spoken to), Lucy's receptionist tour for idle players, office manners, think-aloud bubbles. |
@@ -1729,6 +1739,9 @@ The `docs/` directory has the canonical deep-dives for the runtime systems:
 | [docs/CAPABILITY_PROPOSALS.md](docs/CAPABILITY_PROPOSALS.md) | **Capability (verb) proposal queue** — NPCs request brand new actions via `[ACTION:requestCapability:...]`; proposals land in `data/capability-proposals.json` for operator review (no auto-implementation; 1/NPC/day). |
 | [docs/PROPOSAL_REVIEW.md](docs/PROPOSAL_REVIEW.md) | **Operator proposal review UI** — bottom-right chip that aggregates animation + SOUL + capability proposals via `GET /api/proposals`, with approve / reject buttons. |
 | [docs/EMAIL_INTEGRATION.md](docs/EMAIL_INTEGRATION.md) | **Lucy handles the CEO's email** — n8n Gmail watcher → `POST /api/email-inbound` → Lucy's brain composes a reply in her warm receptionist voice → Gmail draft (or local fallback). Drafts-only by default; `EMAIL_AUTOSEND` gate behind SOUL `email_canAutoSend`. Escalation keywords (contract, NDA, payment, …) skip auto-draft. In-game, Lucy walks to her reception desk when mail arrives. |
+| [docs/JOB_CRM.md](docs/JOB_CRM.md) | Job CRM workflow and automation integration *(in progress)* |
+| [docs/FEDERAL_PIPELINE.md](docs/FEDERAL_PIPELINE.md) | Federal pipeline integration guide *(in progress)* |
+| [docs/ROBINHOOD_LIVE.md](docs/ROBINHOOD_LIVE.md) | Robinhood live trading integration and risk controls |
 | [docs/ROADMAP_SELF_ADVANCEMENT.md](docs/ROADMAP_SELF_ADVANCEMENT.md) | **Where it's going** — staged plan from live office mutation → custom sprite generation → SOUL.md self-revision → cross-NPC negotiation. |
 | [docs/SCENE.md](docs/SCENE.md) | **`office-scene.js` navigation map** — what lives where in the 3079-line scene |
 | [docs/ACTIONS.md](docs/ACTIONS.md) | **NPC action vocabulary** — every `actions.X()` (walk, sit, speak, callMeeting, …), the per-NPC turn queue, how cofounder dispatch reaches an action |
@@ -1738,10 +1751,17 @@ The `docs/` directory has the canonical deep-dives for the runtime systems:
 | [docs/CITY_GENERATOR.md](docs/CITY_GENERATOR.md) | **Procedural city pipeline** (`src/city/`) — planner → chunk → interior → Phaser adapter. Scaffolded, not yet wired to the main scene |
 | [docs/WORLD_ENGINE.md](docs/WORLD_ENGINE.md) | **World engine** (`src/world/`) — seeded RNG, room layout, L-corridors, recipe-driven furnisher, character anim registry |
 | [docs/SCRIPTS.md](docs/SCRIPTS.md) | **Asset toolchain** — which `scripts/` you actually run for a sprite import vs. which are archaeological |
+| [docs/FULL_WORLD.md](docs/FULL_WORLD.md) | Multi-zone world assembly guide from LimeZu packs *(local)* |
+| [docs/LIMEZU_PLACEMENT.md](docs/LIMEZU_PLACEMENT.md) | LimeZu placement and layering guide *(local)* |
+| [docs/SPRITE_FIX_GUIDE.md](docs/SPRITE_FIX_GUIDE.md) | Sprite diagnosis and repair playbook *(local)* |
 | [docs/NPCS.md](docs/NPCS.md) | **NPC Roster** — all 16 NPCs: who they are, personality, hierarchy, backstory, what they can actually do |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | **Capability Roadmap** — Phases 1, 2, and 3 complete; Phase 4 (public demo mode, perf tuning, Docker deploy) is next |
 | [docs/SECURITY.md](docs/SECURITY.md) | Threat catalog (10 categories), robber archetype mappings, tuning knobs |
 | [docs/SETUP.md](docs/SETUP.md) | End-to-end install — Node + LM Studio baseline, plus Linux Wireshark/Nmap live feeders |
+| [docs/PRODUCTION_DEPLOY.md](docs/PRODUCTION_DEPLOY.md) | Production deployment and operations runbook |
+| [docs/TESTING.md](docs/TESTING.md) | Consolidated testing guide and test execution policy *(in progress)* |
+| [docs/VISITOR_ONBOARDING.md](docs/VISITOR_ONBOARDING.md) | New contributor onboarding flow *(in progress)* |
+| [docs/SESSION_2026-06-05.md](docs/SESSION_2026-06-05.md) | Session log: Jelly migration and provider rebalance *(local)* |
 
 Top-level legacy references (sprite tooling & asset pipeline):
 

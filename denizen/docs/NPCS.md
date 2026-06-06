@@ -519,6 +519,25 @@ Enthusiastic, curious, humble. A sponge — absorbing everything from every team
 
 ---
 
+## Real work mode (Sprint 4)
+
+On server boot each NPC **auto-claims** one line from `data/company-brief.json` → `role_tasks` (stable per day). Env knobs in `src/prompt-tuning.js`:
+
+| Env | Default | Effect |
+|-----|---------|--------|
+| `DENIZEN_ECONOMY_MODE` | `true` | Bundle: slower thinks, no sprint auto-claim, no real-work nudges, 15min skill CD |
+| `DENIZEN_AUTO_CLAIM_SPRINT` | `true` (off in economy) | Seed `_taskProgress` from company brief |
+| `DENIZEN_REAL_WORK_MODE` | `false` | When `true`, nudges `run_skill` (causes ~25% run_skill actions) |
+| `DENIZEN_RUN_SKILL_COOLDOWN_MS` | `900000` | Min ms between autonomous `run_skill` per NPC (15 min) |
+| `DENIZEN_RUN_SKILL_MAX_PER_WINDOW` | `1` | Hard cap per cooldown window (directives bypass) |
+| `DENIZEN_THINK_MIN_MS` / `MAX` | `120000` / `200000` | Think cadence |
+| `DENIZEN_GLOBAL_THINK_GAP_MS` | `8000` | Serialize thinks so LM Studio queue stays short |
+| `DENIZEN_THINK_STAGGER_MS` | `10000` | Delay between each NPC's first think on boot |
+
+All dev/PM/QA/design roles now receive **OpenClaw skill lists** in their think prompt (not only Alex/Bob).
+
+---
+
 ## How NPCs Make Decisions
 
 Every 45–75 seconds, each NPC runs a **think cycle**:

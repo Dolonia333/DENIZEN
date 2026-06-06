@@ -2,6 +2,8 @@
 
 Step-by-step setup for running Denizen, including the optional Linux security sidecar that makes real Wireshark + Nmap events spawn robbers in the game.
 
+> **2026-06-05 update:** NPC skills now run through **Jelly** 🪼 (`denizen/jelly/`). See [SESSION_2026-06-05.md](SESSION_2026-06-05.md) for the full changelog, dual-model setup, and sidecar startup.
+
 ## 1. Minimum baseline (any platform)
 
 ### Node.js
@@ -17,6 +19,14 @@ node --version
 ```bash
 git clone https://github.com/Dolonia333/DENIZEN.git
 cd DENIZEN
+npm install
+```
+
+PowerShell equivalent:
+
+```powershell
+git clone https://github.com/Dolonia333/DENIZEN.git
+Set-Location .\DENIZEN
 npm install
 ```
 
@@ -66,6 +76,30 @@ npm start
 ```
 
 Open http://localhost:8080 in a browser. You should see 16 NPCs moving around, talking to each other, and occasionally taking breaks.
+
+## 1b. Local Supabase Docker setup (for Denizen DB features)
+
+Denizen DB-backed features (visitor org context, prediction summary, trading/federal data surfaces) require a running Supabase stack.
+
+Expected local ports:
+
+- `http://127.0.0.1:54321` (Supabase REST/PostgREST)
+- `127.0.0.1:54322` (Postgres SQL)
+
+PowerShell quick checks:
+
+```powershell
+docker ps
+Invoke-WebRequest "http://127.0.0.1:54321/rest/v1/" -Method Head -UseBasicParsing
+```
+
+Apply Denizen migrations locally (Docker mode):
+
+```powershell
+.\scripts\apply-all-migrations.ps1
+```
+
+If you are deploying to production/self-hosted Supabase, follow [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md).
 
 ## 2. Enable the security visualization (local fake events)
 
@@ -208,6 +242,8 @@ A **packet_anomaly** robber should appear in the IT/storage room.
 | `TSHARK_IFACE` | `any` | Interface for tshark to listen on |
 | `TSHARK_BPF` | unset | Extra BPF filter AND-ed with default self-exclude |
 | `ENABLE_SCAN_DETECT` | enabled on Linux | Set to `0` to disable firewall-log scan detector |
+| `SUPABASE_URL` | `http://127.0.0.1:54321` (when local stack is used) | Supabase PostgREST base URL used by Denizen DB and verification scripts |
+| `DENIZEN_DB_ENABLED` | auto (`true` when `SUPABASE_URL` exists) | Explicit DB toggle; set `false` to run Denizen without DB writes |
 | `SUPABASE_WEBHOOK_URL` | unset | If set, world-state changes POST to this URL — see [WORLD-STATE.md](WORLD-STATE.md#external-sinks-supabase--n8n-outbound) |
 | `SUPABASE_WEBHOOK_KEY` | unset | Sent as `Authorization: Bearer …` for the Supabase webhook |
 | `N8N_WEBHOOK_URL` | unset | Same as Supabase, but for n8n |
@@ -217,6 +253,40 @@ A **packet_anomaly** robber should appear in the IT/storage room.
 | `ELEVENLABS_API_KEY` (or `XI_API_KEY`) | unset | Enables ElevenLabs TTS — see [VOICE.md](VOICE.md). Also read from `~/.openclaw/.env` if not in env |
 | `ELEVENLABS_VOICE_ID` | `EXAVITQu4vr4xnSDxMaL` | Default voice ID; per-NPC overrides live in `data/voice-map.json` |
 | `ELEVENLABS_MODEL_ID` | `eleven_turbo_v2_5` | Default model ID |
+
+## 4b. Visitor regression suite (`npm run test:visitor`)
+
+Run the visitor/intelligence regression suite before pushing DB or API changes:
+
+```powershell
+npm run test:visitor
+```
+
+Current baseline output ends with:
+
+- `tests 80`
+- `pass 80`
+- `fail 0`
+
+For full pre-release pass (visitor + e2e):
+
+```powershell
+npm run test:visitor:all
+```
+
+See [TESTING.md](TESTING.md) for test pyramid and deployment run order.
+
+## 4c. Jelly standalone path
+
+Jelly runtime source is vendored in:
+
+- `denizen/jelly/`
+
+Common Jelly-related paths:
+
+- Runtime entry: `denizen/jelly/index.js`
+- Metadata/branding: `denizen/jelly/meta.js`
+- Supabase sidecar: `denizen/jelly/services/supabase-bridge/`
 
 ## 5. Troubleshooting
 
@@ -283,3 +353,5 @@ Once the basics work:
 - [ARCHITECTURE.md](ARCHITECTURE.md) — whole-system topology
 - [SECURITY.md](SECURITY.md) — threat catalog, robber mappings, detection rules
 - [AI-SYSTEM.md](AI-SYSTEM.md) — how the NPC brains work
+- [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md) — production deploy/rollback runbook
+- [TESTING.md](TESTING.md) — test suites, smokes, and pre-deploy cadence

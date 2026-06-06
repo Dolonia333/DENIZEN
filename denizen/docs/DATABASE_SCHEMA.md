@@ -286,3 +286,46 @@ Each new org gets its own office session stream, facts, and predictions — **ag
 ## TypeScript types
 
 After schema stabilizes a domain, run MCP `generate_typescript_types` → `denizen/src/types/database.ts` for server/bridge type safety.
+
+---
+
+## v1.2 platform bridge updates (000012 / 000013 / 000014)
+
+This section captures schema additions that complete the v1.2 intelligence and identity bridge.
+
+### Trading spine tables (000014)
+
+| Table | Purpose | Key columns |
+|---|---|---|
+| `denizen_watchlist_symbols` | Org-scoped, NPC-attributed watchlist symbols | `org_id`, `npc_key` (default `roki`), `symbol`, `added_at`, unique `(org_id, symbol)` |
+| `denizen_trade_suggestions` | Org-scoped trade ideas emitted by Roki/trading workflows | `org_id`, `npc_key`, `symbol`, `action`, `rationale`, `status`, `created_at` |
+
+Both tables:
+- enable RLS
+- use `denizen_user_can_access_org(org_id)` select policies
+- feed facts via trigger (`trade_suggestion.created`)
+
+### Platform org bridge tables (000012 / 000013)
+
+| Table | Migration | Change |
+|---|---|---|
+| `client_appointments` | `000013` | Added `client_id` FK and `org_id` FK; backfilled by matching client email; indexed for org/client queries |
+| `subscriptions` | `000013` | Added `org_id` FK; backfilled from linked client; org index added |
+| `denizen_job_applications` | `000012` | Added org bridge and attribution columns: `org_id`, `npc_key`, `session_id`; defaults/backfills align to default org + `roki` |
+
+Trigger-driven intelligence writes:
+- `client_appointments` -> `appointment.booked`, `appointment.status_changed`
+- `denizen_job_applications` -> `job_application.*` facts + job outcomes (`job.positive_signal`, `job.rejected`)
+
+### Apply order for 000012 and 000013
+
+Use this order in local/prod rollout:
+
+| Step | Migration | Run as | Why |
+|---|---|---|---|
+| 1 | `20260606000012_platform_identity_bridge.sql` | `postgres` (Denizen-owned objects) | Creates helper funcs, denizen table bridges, and trigger functions |
+| 2 | `20260606000013_platform_tables_admin.sql` | `supabase_admin` (platform-owned tables) | Alters Supabase-owned tables, installs policies, attaches appointment trigger |
+
+`000013` depends on objects introduced in `000012`, so reversing these can break trigger/policy creation.
+
+See also: [Intelligence spine](INTELLIGENCE_SPINE.md) and [Visitor onboarding](VISITOR_ONBOARDING.md).

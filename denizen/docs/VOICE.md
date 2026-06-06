@@ -108,32 +108,33 @@ node scripts/tts-smoke.js --help
 
 Writes `out/test-tts.mp3` and prints the file size + elapsed ms. If it fails, the error message tells you exactly what's wrong — bad key, bad voice ID, no quota, network — so you don't have to guess.
 
-## Per-NPC voices
+## Per-NPC voices (gender-aware)
 
-`data/voice-map.json` maps NPC display names to ElevenLabs voice IDs:
+Each NPC has a `gender` field in `src/npc-roster.js` (`male` / `female`). On server boot, `src/voice-resolve.js` merges that into `data/voice-map.json` and assigns a **distinct ElevenLabs voice from the matching gender pool** when `voiceId` is missing (`autoAssignByGender: true`).
 
 ```jsonc
 {
-  "default": { "voiceId": "EXAVITQu4vr4xnSDxMaL", "modelId": "eleven_turbo_v2_5" },
+  "autoAssignByGender": true,
+  "byGender": { "female": "21m00Tcm4TlvDq8ikWAM", "male": "ErXwobaYiN019PkySvjV" },
   "npcs": {
-    "Abby":   { "voiceId": "EXAVITQu4vr4xnSDxMaL" },
-    "Alex":   { "voiceId": "29vD33N1CtxCmqQRPOHJ" },
-    "Bob":    { "voiceId": "5Q0t7uMcjvnagumLfvZi" },
-    "...":    "..."
+    "Abby": { "gender": "female", "voiceId": "EXAVITQu4vr4xnSDxMaL" },
+    "Alex": { "gender": "male",   "voiceId": "29vD33N1CtxCmqQRPOHJ" }
   }
 }
 ```
 
-The defaults use ElevenLabs' public voice library so they work out of the box. To change them:
+**Re-sync all voices from roster gender** (rotates through male/female pools):
 
-- Pick a voice from https://elevenlabs.io/app/voice-library and copy its ID.
-- Edit `data/voice-map.json` — restart not needed for the map itself, the
-  server reads it on every request? No — actually it's loaded once at
-  startup. Restart after editing.
-- Per-NPC `modelId` overrides the default model. Useful when you want
-  Roki on `eleven_multilingual_v2` but Abby on the cheaper turbo model.
+```bash
+node scripts/sync-voice-map.js --write
+npm start
+```
 
-You can clone your own voice in ElevenLabs (paid plan) and drop its ID in here too — no code changes.
+To change a single NPC: pick a voice from https://elevenlabs.io/app/voice-library, set `voiceId` in `data/voice-map.json`, restart the server.
+
+Without ElevenLabs, the browser fallback uses **higher pitch for female NPCs and lower for male** (`displayToGender` on `DenizenNpcRoster`).
+
+Per-NPC `modelId` overrides the default model. Clone voices in ElevenLabs and drop IDs in `voice-map.json` — no code changes.
 
 ## Endpoints
 

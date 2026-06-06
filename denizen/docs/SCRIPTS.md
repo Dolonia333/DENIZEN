@@ -32,6 +32,167 @@ node scripts/build_singles_manifest.js
 
 Everything else in `scripts/` is either secondary, one-shot, or archaeological.
 
+## Operations & verification scripts
+
+This section documents the production/local-ops scripts that are easy to miss if you only run the asset pipeline.
+
+For deployment flow, see [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md).
+
+### `deploy-production.ps1` (full deploy orchestrator)
+
+Purpose:
+
+- Loads `.env.production`
+- Runs migrations
+- Verifies schema (SQL + optional REST)
+- Runs basic Denizen API smoke checks
+- Emits JSON report and exits non-zero on failure
+
+PowerShell:
+
+```powershell
+.\scripts\deploy-production.ps1
+```
+
+Optional:
+
+```powershell
+.\scripts\deploy-production.ps1 -SkipHttpVerification
+```
+
+Expected success signal:
+
+- JSON output with `"status": "PASS"`
+- `summary.failed` equals `0`
+
+### `apply-all-migrations.ps1` (deterministic migration runner)
+
+Purpose:
+
+- Applies migration `20260606000012` as `postgres`
+- Applies migration `20260606000013` as `supabase_admin`
+- Applies `20260606000014+` by inferred role
+
+PowerShell (local Docker mode):
+
+```powershell
+.\scripts\apply-all-migrations.ps1
+```
+
+PowerShell (remote/prod URL mode):
+
+```powershell
+$env:SUPABASE_DB_URL = "postgresql://postgres:<password>@<host>:5432/postgres?sslmode=require"
+.\scripts\apply-all-migrations.ps1 -DbUrl $env:SUPABASE_DB_URL
+```
+
+Expected success signal:
+
+- Console line: `All targeted migrations applied successfully.`
+
+### `apply-migration-admin.ps1` (single admin migration)
+
+Purpose:
+
+- Applies one migration file as `supabase_admin` against local Docker Postgres.
+
+PowerShell:
+
+```powershell
+.\scripts\apply-migration-admin.ps1 "supabase\migrations\20260606000013_platform_tables_admin.sql"
+```
+
+Expected success signal:
+
+- Console line: `Applied <migration-file> as supabase_admin`
+
+### `verify-production-schema.js` (schema verification report)
+
+Purpose:
+
+- REST HEAD checks for required Supabase tables
+- Optional DB object checks when `SUPABASE_DB_URL` is set
+
+PowerShell:
+
+```powershell
+node .\scripts\verify-production-schema.js
+```
+
+Expected success signal:
+
+- JSON output with `"status": "PASS"` and `"failed": 0`
+
+### `smoke-onboarding.js` (visitor onboarding smoke)
+
+Purpose:
+
+- Verifies visitor access codes, session creation, anti-spoof behavior, assistant claim token checks, and demo restrictions.
+
+PowerShell:
+
+```powershell
+$env:DENIZEN_URL = "http://127.0.0.1:8080"
+node .\scripts\smoke-onboarding.js
+```
+
+Expected success signal:
+
+- Per-check lines prefixed with `PASS`
+- Final line: `All <n> smoke checks passed.`
+
+### `smoke-spine-e2e.js` (intelligence spine smoke)
+
+Purpose:
+
+- Verifies health fallback behavior
+- Checks `/api/job-crm/maintenance` response shape
+- Checks `/api/intelligence/prediction-summary`
+
+PowerShell:
+
+```powershell
+$env:DENIZEN_URL = "http://127.0.0.1:8080"
+node .\scripts\smoke-spine-e2e.js
+```
+
+Expected success signal:
+
+- `PASS` lines for each check
+- Final line: `Smoke spine summary: pass=<n> fail=0`
+
+### `robinhood-live-smoke.js` (live auth + watchlist + suggestion smoke)
+
+Purpose:
+
+- Verifies market auth status
+- Seeds default watchlist when needed
+- Adds `NVDA` to watchlist
+- Creates and verifies a DB-backed trade suggestion marker
+
+PowerShell:
+
+```powershell
+$env:DENIZEN_URL = "http://127.0.0.1:8080"
+node .\scripts\robinhood-live-smoke.js
+```
+
+Expected output modes:
+
+- If not authenticated: JSON output with OAuth connect URL and rerun guidance
+- If authenticated and healthy: JSON output with `"ok": true`
+- On failure: JSON output with `"ok": false` and non-zero exit
+
+### Common ops sequence (pre-deploy)
+
+```powershell
+.\scripts\apply-all-migrations.ps1 -DbUrl $env:SUPABASE_DB_URL
+node .\scripts\verify-production-schema.js
+npm run test:visitor
+node .\scripts\smoke-onboarding.js
+node .\scripts\smoke-spine-e2e.js
+```
+
 ## Pipeline overview
 
 ```

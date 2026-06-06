@@ -69,9 +69,9 @@ A tooltip-style status bar above the button shows interim transcript ("… looki
 
 - **Push-to-talk only.** No always-on mic. The hotkey suppresses on `repeat=true` so holding doesn't re-trigger; first-down starts, key-up stops.
 - **Won't fire while you're typing.** If `document.activeElement` is an `<input>`, `<textarea>`, or contentEditable element, the hotkey is ignored.
-- **Single utterance per push.** `recognition.continuous = false`. Push, talk, release.
+- **Continuous while open.** Short pauses do not end the session — keep talking, click 🎤 / **Speak** / release `\` when you're done.
 - **Interim results render live.** You see what the recognizer thinks you're saying as you speak.
-- **Auto-submit on final.** `setAutosubmit(false)` to disable and inspect the transcript before sending.
+- **Auto-submit on stop.** `setAutosubmit(false)` to disable and inspect the transcript before sending.
 
 ### Tuning at runtime
 

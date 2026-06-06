@@ -2,6 +2,8 @@
 
 Denizen is a real-time visual observability layer for AI agents. This document describes how the whole system fits together, end-to-end.
 
+> **2026-06-05 update:** Skill dispatch now goes through **Jelly** (`denizen/jelly/`) instead of the OpenClaw gateway. See [SESSION_2026-06-05.md](SESSION_2026-06-05.md).
+
 ## One-sentence summary
 
 A Phaser pixel-art office where 16 NPCs represent AI agents. Each NPC has its own "brain" (an LLM running locally on LM Studio) that decides what to do every few seconds. A parallel security monitor watches real system/network events and spawns robber NPCs when something suspicious happens — so someone who can't read a log can still *see* the threat.
@@ -148,6 +150,34 @@ The NPC brain layer added in the most recent feature batch — see [AI-SYSTEM.md
 - **Shared task board** — `addSharedTask`/`_getTaskBoard` — anyone can post, anyone can claim. Visible in the think prompt.
 - **Social graph** — `_recordRelationship(from, to)` tracks interaction counts per pair.
 - **Chat reply-back cap raised** from 2 → 4 turns so conversations actually develop.
+
+## Intelligence layer (visitor -> facts -> predictions)
+
+The runtime intelligence stack now connects visitor activity, NPC output, and business-table triggers into a single event spine used for briefings, pipeline summaries, and forecast validation.
+
+```mermaid
+flowchart LR
+  V[Visitor UI + onboarding] --> S[/api/visitor/* and /api/intelligence/*]
+  S --> DB[src/denizen-db.js]
+  DB --> F[denizen_facts]
+  DB --> O[denizen_outcomes]
+  DB --> P[denizen_predictions]
+  T[DB triggers on intake/leads/rfps/appointments/jobs/trades] --> F
+  T --> O
+  O --> VAL[denizen_validate_predictions]
+  P --> VAL
+  VAL --> API[prediction-summary + pipeline-summary + morning briefing cards]
+```
+
+### Intelligence path by responsibility
+
+| Stage | Module/table | Responsibility |
+|---|---|---|
+| Visitor/session intake | `src/visitor-session.js`, `src/denizen-visitor.js`, `src/visitor-access.js` | Establish session tier/org, enforce token + feature gating |
+| Runtime writes | `src/denizen-db.js` | Append facts from NPC work, LLM telemetry, office state, and visitor handoffs |
+| Business trigger writes | `supabase/migrations/20260606000006*`, `000012*`, `000014*` | Emit facts/outcomes from intake, leads, RFPs, appointments, jobs, and trade suggestions |
+| Forecast layer | `src/denizen-prediction-loop.js`, `src/mirofish-prediction.js` | Maintain/validate forecasts and expose summarized metrics |
+| Visitor intelligence surfaces | `src/denizen-visitor-intelligence.js` | Build morning briefings and proactive updates using predictions + pipeline context |
 
 ## Message type reference
 

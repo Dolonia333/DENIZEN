@@ -42,15 +42,33 @@ See [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) for the full capability m
 
 | Doc | Contents |
 |-----|----------|
-| **[denizen/README.md](denizen/README.md)** | The full README — installation, configuration, every feature, troubleshooting, performance tuning. **Start here.** |
-| [denizen/docs/NPCS.md](denizen/docs/NPCS.md) | Full 16-NPC roster — personality, hierarchy, capabilities, model choices |
-| [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) | Capability roadmap — Phases 1–5, what's done, what's next |
-| [denizen/docs/ARCHITECTURE.md](denizen/docs/ARCHITECTURE.md) | Whole-system topology — browser ↔ server ↔ LM Studio, decision loops, WS message types |
-| [denizen/docs/AI-SYSTEM.md](denizen/docs/AI-SYSTEM.md) | NPC intelligence layer — goals, plans, theory of mind, memory tags |
-| [denizen/docs/WORLD-STATE.md](denizen/docs/WORLD-STATE.md) | Single source of truth + outbound webhooks (Supabase, n8n) |
-| [denizen/docs/VOICE.md](denizen/docs/VOICE.md) | ElevenLabs per-NPC voice + presence gating |
-| [denizen/docs/VOICE_INPUT.md](denizen/docs/VOICE_INPUT.md) | Push-to-talk STT + action classifier |
-| [denizen/docs/SETUP.md](denizen/docs/SETUP.md) | End-to-end install with optional security feeders |
+| **[denizen/README.md](denizen/README.md)** | Full project README with architecture, runtime systems, APIs, and operations |
+| **[denizen/docs/DOCS_INDEX.md](denizen/docs/DOCS_INDEX.md)** | Master documentation map with categories and GitHub vs local/new status |
+| [denizen/docs/SETUP.md](denizen/docs/SETUP.md) | End-to-end install and environment configuration |
+| [denizen/docs/VISITOR_ONBOARDING.md](denizen/docs/VISITOR_ONBOARDING.md) | Team vs demo visitor auth, session tokens, CEO path |
+| [denizen/docs/ARCHITECTURE.md](denizen/docs/ARCHITECTURE.md) | Runtime topology and component relationships |
+| [denizen/docs/AI-SYSTEM.md](denizen/docs/AI-SYSTEM.md) | NPC intelligence, planning, and memory behaviors |
+| [denizen/docs/WORLD-STATE.md](denizen/docs/WORLD-STATE.md) | Shared world-state model and outbound events |
+| [denizen/docs/INTELLIGENCE_SPINE.md](denizen/docs/INTELLIGENCE_SPINE.md) | Facts → outcomes → predictions loop (v1.1/v1.2) |
+| [denizen/docs/DATABASE_SCHEMA.md](denizen/docs/DATABASE_SCHEMA.md) | Database schema, entities, and relationships |
+| [denizen/docs/MIROFISH_PREDICTION.md](denizen/docs/MIROFISH_PREDICTION.md) | MiroFish HTTP integration and heuristic fallback |
+| [denizen/docs/OPENCLAW_INTEGRATION.md](denizen/docs/OPENCLAW_INTEGRATION.md) | OpenClaw bridge and runtime behavior |
+| [denizen/docs/JELLY_INTEGRATION.md](denizen/docs/JELLY_INTEGRATION.md) | Jelly skill executor and supabase-bridge |
+| [denizen/docs/EMAIL_INTEGRATION.md](denizen/docs/EMAIL_INTEGRATION.md) | Lucy email ingestion, gating, and automation |
+| [denizen/docs/JOB_CRM.md](denizen/docs/JOB_CRM.md) | Roki job applications and Supabase sync |
+| [denizen/docs/FEDERAL_PIPELINE.md](denizen/docs/FEDERAL_PIPELINE.md) | Federal RFP pipeline and org-gated briefing |
+| [denizen/docs/ROBINHOOD_LIVE.md](denizen/docs/ROBINHOOD_LIVE.md) | Robinhood live integration and operational caveats |
+| [denizen/docs/NPCS.md](denizen/docs/NPCS.md) | NPC roster, personalities, roles, and capabilities |
+| [denizen/docs/VOICE.md](denizen/docs/VOICE.md) | TTS architecture and presence gating |
+| [denizen/docs/VOICE_INPUT.md](denizen/docs/VOICE_INPUT.md) | Push-to-talk speech input and action routing |
+| [denizen/docs/FULL_WORLD.md](denizen/docs/FULL_WORLD.md) | Multi-zone LimeZu world assembly guide *(local)* |
+| [denizen/docs/LIMEZU_PLACEMENT.md](denizen/docs/LIMEZU_PLACEMENT.md) | LimeZu placement and layering guide *(local)* |
+| [denizen/docs/SPRITE_FIX_GUIDE.md](denizen/docs/SPRITE_FIX_GUIDE.md) | Sprite troubleshooting and correction workflow *(local)* |
+| [denizen/docs/SECURITY.md](denizen/docs/SECURITY.md) | Threat categories, detection, and response flow |
+| [denizen/docs/PRODUCTION_DEPLOY.md](denizen/docs/PRODUCTION_DEPLOY.md) | Production deployment checklist and runbook |
+| [denizen/docs/TESTING.md](denizen/docs/TESTING.md) | Test pyramid, smoke scripts, pre-deploy checklist |
+| [denizen/docs/SESSION_2026-06-05.md](denizen/docs/SESSION_2026-06-05.md) | Session log for Jelly migration and provider rebalance *(local)* |
+| [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) | Capability roadmap and delivery phases |
 
 ## Why NPCs?
 
