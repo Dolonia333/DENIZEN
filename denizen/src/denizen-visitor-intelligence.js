@@ -6,6 +6,8 @@
 
 const denizenDb = require('./denizen-db.js');
 const denizenVisitor = require('./denizen-visitor.js');
+const { getPredictionSummary } = require('./denizen-prediction-loop.js');
+const federalPipeline = require('./federal-pipeline.js');
 
 class IntelligenceError extends Error {
   constructor(message, code) {
@@ -221,6 +223,14 @@ function _todayDateStr(d = new Date()) {
   return d.toISOString().slice(0, 10);
 }
 
+function _sessionCanViewFederalPipeline(session) {
+  const tier = String(session?.metadata?.tier || '').toLowerCase();
+  const orgSlug = String(session?.metadata?.org_slug || denizenDb.orgSlug || '').toLowerCase();
+  if (tier === 'demo' || orgSlug === 'acme') return false;
+  if (tier === 'team') return true;
+  return !!orgSlug && orgSlug !== 'acme';
+}
+
 async function buildMorningBriefing(sessionId) {
   _ensureDb();
   if (!sessionId) throw new IntelligenceError('sessionId required', 'BAD_INPUT');
@@ -262,19 +272,42 @@ async function buildMorningBriefing(sessionId) {
     });
   }
 
+  let federalPipelineSummary = null;
+  if (_sessionCanViewFederalPipeline(session)) {
+    try {
+      federalPipelineSummary = await federalPipeline.getRfpPipelineSummary(denizenDb);
+      sections.push('', 'Federal pipeline:');
+      sections.push(`- ${federalPipelineSummary.total_rfps} active RFPs, total value $${Math.round(federalPipelineSummary.total_pipeline_value || 0).toLocaleString()}`);
+      if (federalPipelineSummary.next_due_dates?.length) {
+        sections.push(`- Next due: ${federalPipelineSummary.next_due_dates.map((d) => `${d.title || d.id} (${d.days_to_due}d)`).join('; ')}`);
+      }
+    } catch (_) { /* non-fatal */ }
+  }
+
   let predictionNote = '';
+  let predictionSummary = { total: 0, validated: 0, avgAccuracy: null, byType: {}, topForecasts: [] };
   if (denizenDb.orgId) {
     try {
-      const preds = await denizenDb._get(
-        `denizen_predictions?select=entity_type,prediction,confidence&org_id=eq.${encodeURIComponent(denizenDb.orgId)}&validated_at=is.null&order=confidence.desc&limit=3`,
-      );
+      predictionSummary = await getPredictionSummary(denizenDb.orgId, denizenDb, {
+        includeTopForecasts: true,
+        topLimit: 3,
+      });
+      const preds = predictionSummary.topForecasts || [];
       if (preds?.length) {
         sections.push('', 'High-confidence forecasts:');
         preds.forEach((p, i) => {
-          const label = p.entity_type || 'entity';
-          const conf = p.confidence != null ? `${Math.round(Number(p.confidence) * 100)}%` : 'n/a';
+          const label = p.entityType || 'entity';
+          const prob = p.probability != null ? p.probability : p.confidence;
+          const conf = prob != null ? `${Math.round(Number(prob) * 100)}%` : 'n/a';
           sections.push(`${i + 1}. ${label} (${conf})`);
         });
+      }
+      if (predictionSummary.total > 0) {
+        const avg = predictionSummary.avgAccuracy != null
+          ? `${Math.round(Number(predictionSummary.avgAccuracy) * 100)}%`
+          : 'n/a';
+        predictionNote = `Prediction accuracy ${predictionSummary.validated}/${predictionSummary.total} validated, avg ${avg}.`;
+        sections.push('', predictionNote);
       }
     } catch (_) { /* non-fatal */ }
   }
@@ -291,6 +324,8 @@ async function buildMorningBriefing(sessionId) {
     projects: projects.filter((p) => p.status === 'active').length,
     commitments: commitments.length,
     predictionNote,
+    predictionSummary,
+    federal_pipeline: federalPipelineSummary,
     generated_at: new Date().toISOString(),
   };
 

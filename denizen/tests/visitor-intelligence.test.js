@@ -160,10 +160,73 @@ describe('denizen-visitor-intelligence', () => {
   });
 
   it('builds morning briefing content', async () => {
+    const origGet = denizenDb._get;
+    denizenDb._get = async (path) => {
+      if (path.startsWith('rfps?')) {
+        return [{
+          id: 'rfp-1',
+          title: 'USAF Data Platform',
+          status: 'in_review',
+          proposal_due_date: '2099-06-20T00:00:00.000Z',
+          estimated_value_max: 900000,
+        }];
+      }
+      return origGet(path);
+    };
     const briefing = await buildMorningBriefing(SESSION_ID);
+    denizenDb._get = origGet;
     assert.equal(briefing.sessionId, SESSION_ID);
     assert.ok(briefing.content.text.includes('Alex'));
     assert.ok(briefing.content.text.includes('RFP Alpha'));
+    assert.ok(briefing.content.federal_pipeline);
+  });
+
+  it('includes prediction summary and forecast cards in briefing payload', async () => {
+    denizenDb._get = async (path) => {
+      if (path.includes('denizen_visitor_profiles')) return [];
+      if (path.includes('denizen_visitor_sessions') && path.includes('id=eq.')) {
+        return [{ id: SESSION_ID, display_name: 'Alex' }];
+      }
+      if (path.includes('denizen_user_assistants')) {
+        return [{ npc_key: 'bob', assistant_name: 'Bob', denizen_npcs: { display_name: 'Bob' } }];
+      }
+      if (path.includes('denizen_user_projects')) return [{ name: 'RFP Alpha', status: 'active' }];
+      if (path.includes('denizen_assistant_messages')) return [];
+      if (path.includes('denizen_visitor_commitments')) return [];
+      if (path.includes('denizen_predictions') && path.includes('prediction_type,accuracy_score,validated_at')) {
+        return [
+          {
+            prediction_type: 'lead.close_probability',
+            accuracy_score: 0.8,
+            validated_at: '2026-06-01T00:00:00.000Z',
+          },
+          {
+            prediction_type: 'lead.close_probability',
+            accuracy_score: null,
+            validated_at: null,
+          },
+        ];
+      }
+      if (path.includes('denizen_predictions') && path.includes('entity_type,entity_id,entity_key')) {
+        return [{
+          entity_type: 'lead',
+          entity_id: 'lead-1',
+          entity_key: null,
+          prediction_type: 'lead.close_probability',
+          prediction: { close_probability: 0.76 },
+          confidence: 0.76,
+          validated_at: null,
+          created_at: '2026-06-06T00:00:00.000Z',
+        }];
+      }
+      return [];
+    };
+
+    const briefing = await buildMorningBriefing(SESSION_ID);
+    assert.equal(briefing.content.predictionSummary.total, 2);
+    assert.equal(briefing.content.predictionSummary.validated, 1);
+    assert.equal(briefing.content.predictionSummary.topForecasts.length, 1);
+    assert.match(briefing.content.predictionNote, /Prediction accuracy/i);
   });
 
   it('upserts visitor profile', async () => {

@@ -7,6 +7,7 @@
 const POSITIVE_OUTCOMES = new Set([
   'intake.converted',
   'lead.converted',
+  'lead.won',
   'client.created',
   'rfp.bid',
   'job.offer',
@@ -30,6 +31,20 @@ function _accuracyScore(prediction, outcomeType) {
     return actualPositive ? predProb : 1 - predProb;
   }
   return predictedPositive === actualPositive ? 1.0 : 0.0;
+}
+
+function _predictionProbability(prediction) {
+  const pred = prediction?.prediction || {};
+  const type = String(prediction?.prediction_type || '').toLowerCase();
+  let raw = null;
+  if (pred.close_probability != null) raw = pred.close_probability;
+  else if (pred.bid_probability != null) raw = pred.bid_probability;
+  else if (pred.win_probability != null) raw = pred.win_probability;
+  else if (type === 'lead.close_probability' && prediction?.confidence != null) raw = prediction.confidence;
+  else if (type === 'intake.close_probability' && prediction?.confidence != null) raw = prediction.confidence;
+  else if (type === 'rfp.bid_probability' && prediction?.confidence != null) raw = prediction.confidence;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : null;
 }
 
 async function _latestOutcome(db, orgId, pred) {
@@ -84,9 +99,9 @@ async function runPredictionMaintenance(db) {
 /**
  * Aggregate prediction stats for an org.
  */
-async function getPredictionSummary(orgId, db) {
+async function getPredictionSummary(orgId, db, opts = {}) {
   if (!db?.enabled || !orgId) {
-    return { total: 0, validated: 0, avgAccuracy: null, byType: {} };
+    return { total: 0, validated: 0, avgAccuracy: null, byType: {}, topForecasts: [] };
   }
 
   const orgFilter = `org_id=eq.${encodeURIComponent(orgId)}`;
@@ -119,18 +134,71 @@ async function getPredictionSummary(orgId, db) {
     }
   }
 
-  return {
+  const summary = {
     total: preds.length,
     validated: validatedRows.length,
     avgAccuracy: validatedRows.length
       ? +(accuracySum / validatedRows.length).toFixed(3)
       : null,
     byType,
+    topForecasts: [],
   };
+
+  if (opts.includeTopForecasts) {
+    const topLimit = Math.max(1, Math.min(20, Number(opts.topLimit) || 3));
+    const topRows = await db._get(
+      `denizen_predictions?select=entity_type,entity_id,entity_key,prediction_type,prediction,confidence,validated_at,created_at&${orgFilter}&order=confidence.desc.nullslast,created_at.desc&limit=${topLimit}`,
+    );
+    summary.topForecasts = (topRows || []).map((p) => ({
+      entityType: p.entity_type || 'entity',
+      entityId: p.entity_id || null,
+      entityKey: p.entity_key || null,
+      predictionType: p.prediction_type || 'unknown',
+      probability: _predictionProbability(p),
+      confidence: p.confidence != null ? Number(p.confidence) : null,
+      status: p.validated_at ? 'validated' : 'pending',
+      validatedAt: p.validated_at || null,
+      createdAt: p.created_at || null,
+    }));
+  }
+
+  return summary;
+}
+
+async function recordPrediction(db, input = {}) {
+  if (!db?.enabled || !db?.orgId) return null;
+  if (typeof db.insertPrediction === 'function') {
+    return db.insertPrediction(input);
+  }
+  const probability = _predictionProbability({
+    prediction_type: input.predictionType,
+    prediction: input.prediction,
+    confidence: input.confidence,
+  });
+  const rows = await db._post(
+    'denizen_predictions',
+    {
+      org_id: db.orgId,
+      model_key: input.modelKey || 'app_layer_v1',
+      model_version: input.modelVersion || '1.0.0',
+      prediction_type: input.predictionType,
+      entity_type: input.entityType,
+      entity_id: input.entityId || null,
+      entity_key: input.entityKey || null,
+      prediction: input.prediction || {},
+      confidence: input.confidence != null ? Number(input.confidence) : probability,
+      horizon: input.horizon || null,
+      input_fact_ids: Array.isArray(input.inputFactIds) ? input.inputFactIds : null,
+      metadata: input.metadata || {},
+    },
+    { prefer: 'return=representation' },
+  );
+  return rows?.[0] || null;
 }
 
 module.exports = {
   runPredictionMaintenance,
   getPredictionSummary,
+  recordPrediction,
   _accuracyScore,
 };

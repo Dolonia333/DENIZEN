@@ -30,6 +30,7 @@ const crypto = require('node:crypto');
 const fs     = require('node:fs');
 const path   = require('node:path');
 const marketData = require('./market-data'); // free no-key quote feed (Yahoo/Stooq)
+const denizenDb = require('./denizen-db');
 
 const ROOT              = path.resolve(__dirname, '..');
 const OAUTH_FILE        = path.join(ROOT, 'data', 'robinhood-oauth.json');
@@ -442,13 +443,27 @@ function saveWatchlist(symbols) {
 function addToWatchlist(symbol) {
   const list = loadWatchlist();
   const sym = symbol.toUpperCase().trim();
-  if (!list.includes(sym)) { list.push(sym); saveWatchlist(list); }
+  if (!list.includes(sym)) {
+    list.push(sym);
+    saveWatchlist(list);
+    try {
+      denizenDb.syncWatchlistSymbol(sym, { npcKey: 'roki' });
+    } catch (_) {
+      /* non-fatal */
+    }
+  }
   return list;
 }
 
 function removeFromWatchlist(symbol) {
-  const list = loadWatchlist().filter(s => s !== symbol.toUpperCase().trim());
+  const sym = symbol.toUpperCase().trim();
+  const list = loadWatchlist().filter(s => s !== sym);
   saveWatchlist(list);
+  try {
+    denizenDb.syncWatchlistSymbol(sym, { npcKey: 'roki', remove: true });
+  } catch (_) {
+    /* non-fatal */
+  }
   return list;
 }
 
@@ -483,6 +498,18 @@ function createSuggestion(params) {
   if (suggestions.length > 200) suggestions.splice(200);
   fs.mkdirSync(path.dirname(SUGGESTIONS_FILE), { recursive: true });
   fs.writeFileSync(SUGGESTIONS_FILE, JSON.stringify(suggestions, null, 2));
+  try {
+    denizenDb.upsertTradeSuggestion({
+      symbol: entry.symbol,
+      action: entry.action,
+      rationale: entry.rationale,
+      status: 'pending',
+      createdAt: entry.at,
+      npc_key: 'roki',
+    });
+  } catch (_) {
+    /* non-fatal */
+  }
   return entry;
 }
 
@@ -493,6 +520,18 @@ function dismissSuggestion(id) {
     entry.status = 'dismissed';
     entry.dismissedAt = new Date().toISOString();
     fs.writeFileSync(SUGGESTIONS_FILE, JSON.stringify(suggestions, null, 2));
+    try {
+      denizenDb.upsertTradeSuggestion({
+        symbol: entry.symbol,
+        action: entry.action,
+        rationale: entry.rationale,
+        status: 'dismissed',
+        createdAt: entry.at,
+        npc_key: 'roki',
+      });
+    } catch (_) {
+      /* non-fatal */
+    }
   }
   return entry;
 }

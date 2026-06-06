@@ -49,6 +49,25 @@
       #${PANEL_ID}.open { display: block; }
       #${PANEL_ID} h3 { margin: 0 0 8px; font-size: 12px; color: #fcd34d; }
       #${PANEL_ID} .brief-text { white-space: pre-wrap; color: #cbd5e1; margin-bottom: 10px; }
+      #${PANEL_ID} .pipeline-strip {
+        margin: 0 0 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(74, 222, 128, 0.35);
+        background: rgba(20, 83, 45, 0.18);
+        color: #d1fae5;
+      }
+      #${PANEL_ID} .pipeline-strip .pipeline-title {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #86efac;
+        margin-bottom: 4px;
+      }
+      #${PANEL_ID} .pipeline-strip .pipeline-meta {
+        color: #bbf7d0;
+        margin-bottom: 2px;
+      }
       #${PANEL_ID} .commit-item {
         padding: 6px 8px;
         margin: 4px 0;
@@ -66,6 +85,34 @@
         color: #94a3b8;
         cursor: pointer;
       }
+      #${PANEL_ID} .prediction-card {
+        padding: 6px 8px;
+        margin: 4px 0;
+        border-radius: 6px;
+        background: rgba(30, 41, 59, 0.55);
+        border: 1px solid #475569;
+      }
+      #${PANEL_ID} .prediction-meta {
+        color: #94a3b8;
+        font-size: 10px;
+      }
+      #${PANEL_ID} .prediction-status {
+        margin-left: 6px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        border: 1px solid #64748b;
+        font-size: 9px;
+      }
+      #${PANEL_ID} .prediction-status.validated {
+        color: #86efac;
+        border-color: #14532d;
+        background: rgba(34, 197, 94, 0.15);
+      }
+      #${PANEL_ID} .prediction-status.pending {
+        color: #fcd34d;
+        border-color: #92400e;
+        background: rgba(251, 191, 36, 0.15);
+      }
     `;
     document.head.appendChild(s);
   }
@@ -76,6 +123,12 @@
 
   function isCeo() {
     return globalThis.__DenizenCeoMode === true;
+  }
+
+  function isTeamSession() {
+    const caps = globalThis.DenizenVisitorCapabilities;
+    if (caps?.isTeam) return caps.isTeam();
+    return !!globalThis.DenizenVisitorSession?.isTeam?.();
   }
 
   function authHeaders(extra = {}) {
@@ -113,16 +166,51 @@
       document.body.appendChild(panelEl);
     }
     const text = briefing?.content?.text || 'No briefing yet — check back after 8am.';
+    const federal = briefing?.content?.federal_pipeline;
+    const pipelineHtml = (isTeamSession() && federal)
+      ? `
+        <div class="pipeline-strip">
+          <div class="pipeline-title">Federal pipeline</div>
+          <div class="pipeline-meta">${Number(federal.total_rfps || 0)} RFPs · $${Math.round(Number(federal.total_pipeline_value || 0)).toLocaleString()}</div>
+          ${Array.isArray(federal.next_due_dates) && federal.next_due_dates.length
+    ? `<div class="pipeline-meta">Due soon: ${federal.next_due_dates.slice(0, 3).map((d) => `${(d.title || 'RFP').replace(/</g, '&lt;')} (${d.days_to_due}d)`).join('; ')}</div>`
+    : ''}
+        </div>
+      `
+      : '';
     const commitHtml = (commitments || []).slice(0, 8).map((c) => `
       <div class="commit-item" data-id="${c.id}">
         ${c.text}${c.npc_key ? ` <span style="color:#64748b">(${c.npc_key})</span>` : ''}
         <button type="button" data-done="${c.id}">Done</button>
       </div>
     `).join('') || '<div style="color:#64748b">No open commitments.</div>';
+    const forecasts = briefing?.content?.predictionSummary?.topForecasts || [];
+    const predictionHtml = forecasts.slice(0, 5).map((p) => {
+      const entity = p.entityType || 'entity';
+      const id = p.entityId || p.entityKey || 'n/a';
+      const prob = p.probability != null ? `${Math.round(Number(p.probability) * 100)}%` : 'n/a';
+      const status = p.status === 'validated' ? 'validated' : 'pending';
+      return `
+        <div class="prediction-card">
+          <div>${entity} <span style="color:#64748b">${id}</span><span class="prediction-status ${status}">${status}</span></div>
+          <div class="prediction-meta">probability: ${prob}</div>
+        </div>
+      `;
+    }).join('') || '<div style="color:#64748b">No forecast cards.</div>';
+    const accuracy = briefing?.content?.predictionSummary?.avgAccuracy;
+    const validated = briefing?.content?.predictionSummary?.validated || 0;
+    const totalPreds = briefing?.content?.predictionSummary?.total || 0;
+    const accuracyLine = totalPreds
+      ? `Accuracy: ${validated}/${totalPreds} validated${accuracy != null ? `, avg ${Math.round(Number(accuracy) * 100)}%` : ''}`
+      : 'No prediction accuracy data yet.';
 
     panelEl.innerHTML = `
       <h3>Morning briefing</h3>
+      ${pipelineHtml}
       <div class="brief-text">${text.replace(/</g, '&lt;')}</div>
+      <h3>Forecasts</h3>
+      <div class="prediction-meta">${accuracyLine}</div>
+      ${predictionHtml}
       <h3>Open commitments</h3>
       ${commitHtml}
     `;
