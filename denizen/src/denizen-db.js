@@ -117,12 +117,13 @@ class DenizenDb {
     }
   }
 
-  recordWorkOutput({ npcName, phase, action, note, artifactPath, role }) {
+  recordWorkOutput({ npcName, phase, action, note, artifactPath, role, orgId }) {
     if (!this.enabled) return;
     const npc_key = this.npcKey(npcName);
+    const targetOrgId = orgId || this.orgId;
     this.enqueue(async () => {
       const row = {
-        org_id: this.orgId,
+        org_id: targetOrgId,
         office_session_id: this.officeSessionId,
         npc_key,
         role: role || null,
@@ -618,6 +619,52 @@ class DenizenDb {
         /* non-fatal */
       }
     }
+  }
+
+  async insertNpcMemory({
+    orgId,
+    npcKey,
+    body,
+    topic = null,
+    outcome = null,
+    source = 'npc_brain',
+    memberId = null,
+    skillTag = null,
+    taskPhase = null,
+    metadata = {},
+  }) {
+    const targetOrgId = orgId || this.orgId;
+    if (!this.enabled || !targetOrgId || !npcKey || !body) return null;
+    const row = {
+      org_id: targetOrgId,
+      npc_key: npcKey,
+      body: String(body).slice(0, 2000),
+      topic: topic || null,
+      outcome: outcome || null,
+      source: source || 'npc_brain',
+      member_id: memberId || null,
+      skill_tag: skillTag || null,
+      task_phase: taskPhase || null,
+      metadata: metadata || {},
+    };
+    const inserted = await this._post('denizen_npc_memories', row, {
+      prefer: 'return=representation',
+    });
+    return inserted?.[0] || null;
+  }
+
+  async listNpcMemories({ orgId, npcKey, limit = 20, source = null } = {}) {
+    const targetOrgId = orgId || this.orgId;
+    if (!this.enabled || !targetOrgId || !npcKey) return [];
+    const parts = [
+      'denizen_npc_memories?select=id,npc_key,recorded_at,body,topic,outcome,source,member_id',
+      `org_id=eq.${encodeURIComponent(targetOrgId)}`,
+      `npc_key=eq.${encodeURIComponent(npcKey)}`,
+      'order=recorded_at.desc',
+      `limit=${Math.max(1, Math.min(100, Number(limit) || 20))}`,
+    ];
+    if (source) parts.push(`source=eq.${encodeURIComponent(source)}`);
+    return this._get(parts.join('&'));
   }
 
   async _get(path) {

@@ -26,6 +26,7 @@
 
   function afterOffice() {
     const urls = [
+      './src/visitor-mcp-connect-ui.js?v=mcp1',
       './src/visitor-briefing-ui.js?v=vis3',
       './src/visitor-voice-walkup.js?v=vis3',
       './src/proposals-panel.js?v=mobbtn1',
@@ -36,7 +37,9 @@
         urls.push('./src/demo-scene.js');
       }
     } catch (_) {}
-    return loadAll(urls);
+    return loadAll(urls).then(() => {
+      globalThis.DenizenVisitorMcpConnectUI?.attach?.();
+    });
   }
 
   window.DenizenLazyScripts = {

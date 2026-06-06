@@ -32,6 +32,8 @@ const REQUIRED_FILES = [
   'visitor-cited-research.js',
   'denizen-slack-channel.js',
   'denizen-mcp-connector.js',
+  'denizen-npc-mcp-gateway.js',
+  'visitor-mcp-connect-ui.js',
   'denizen-prediction-loop.js',
 ];
 
@@ -69,6 +71,10 @@ const SERVER_ROUTE_MARKERS = [
   '/api/visitor/handoff',
   '/api/visitor/projects',
   '/api/visitor/teammates',
+  '/api/mcp/tokens',
+  '/api/mcp/connect-info',
+  'mcpNpcMatch',
+  'refreshDbMemories',
   'visitor_register',
   'buildLucyHandoffAlertBroadcast',
 ];
@@ -93,6 +99,7 @@ const BROWSER_MODULES = [
   'visitor-onboarding.js',
   'visitor-briefing-ui.js',
   'visitor-voice-walkup.js',
+  'visitor-mcp-connect-ui.js',
 ];
 
 function readUtf8(relPath) {

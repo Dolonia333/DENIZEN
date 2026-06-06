@@ -1,0 +1,401 @@
+'use strict';
+
+/**
+ * Per-NPC MCP gateway — Streamable HTTP JSON-RPC.
+ * Teammate AIs (Claude, Cursor, etc.) connect to /mcp/npc/:npcKey with a bearer token.
+ *
+ * Tools: update_memory, get_status, log_activity
+ */
+
+const crypto = require('node:crypto');
+const denizenDb = require('./denizen-db.js');
+const { hashSessionToken } = require('./visitor-session-auth.js');
+
+const PROTOCOL_VERSION = '2024-11-05';
+const RATE_LIMIT_PER_HOUR = Number(process.env.DENIZEN_MCP_RATE_LIMIT || 120);
+const _rateBuckets = new Map();
+
+let _idCounter = 1;
+const _sessions = new Map();
+
+const TOOL_DEFINITIONS = [
+  {
+    name: 'update_memory',
+    description: 'Append a memory line to this NPC in Denizen (syncs to the in-world agent).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        body: { type: 'string', description: 'Memory text to remember' },
+        topic: { type: 'string', description: 'Optional topic tag' },
+        outcome: { type: 'string', description: 'Optional outcome label' },
+      },
+      required: ['body'],
+    },
+  },
+  {
+    name: 'get_status',
+    description: 'Read current NPC status: recent work, memories, roster info.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        limit: { type: 'number', description: 'Max recent items (default 10)' },
+      },
+    },
+  },
+  {
+    name: 'log_activity',
+    description: 'Log a work activity for this NPC (appears in work feed and facts spine).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        note: { type: 'string', description: 'What the NPC did' },
+        phase: { type: 'string', description: 'Optional phase tag (e.g. review, coding)' },
+        action: { type: 'string', description: 'Optional action verb' },
+      },
+      required: ['note'],
+    },
+  },
+];
+
+function sendJson(res, status, payload) {
+  if (res.writableEnded) return;
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(payload));
+}
+
+function readBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (c) => { data += c; });
+    req.on('end', () => {
+      if (!data.trim()) return resolve(null);
+      try { resolve(JSON.parse(data)); } catch (e) { reject(e); }
+    });
+    req.on('error', reject);
+  });
+}
+
+function extractBearer(req, url) {
+  const auth = req.headers.authorization || req.headers.Authorization || '';
+  const m = String(auth).match(/^Bearer\s+(.+)$/i);
+  if (m) return m[1].trim();
+  return url.searchParams.get('token') || null;
+}
+
+function rateLimitKey(tokenId) {
+  return String(tokenId || 'unknown');
+}
+
+function checkRateLimit(tokenId) {
+  const key = rateLimitKey(tokenId);
+  const hour = Math.floor(Date.now() / 3600000);
+  const bucketKey = `${key}:${hour}`;
+  const count = (_rateBuckets.get(bucketKey) || 0) + 1;
+  _rateBuckets.set(bucketKey, count);
+  if (_rateBuckets.size > 5000) {
+    const cutoff = hour - 2;
+    for (const k of _rateBuckets.keys()) {
+      if (Number(k.split(':').pop()) < cutoff) _rateBuckets.delete(k);
+    }
+  }
+  return count <= RATE_LIMIT_PER_HOUR;
+}
+
+async function resolveToken(token) {
+  if (!token || !denizenDb.enabled) return null;
+  const result = await denizenDb._rpc('denizen_resolve_mcp_token', { p_token: token });
+  if (!result?.ok) return null;
+  return result;
+}
+
+function npcDisplayName(npcKey) {
+  const entries = require('./npc-roster').entries || [];
+  const hit = entries.find((e) => e.folder === npcKey);
+  return hit?.display || npcKey;
+}
+
+async function toolUpdateMemory(scope, args) {
+  const body = String(args?.body || '').trim().slice(0, 2000);
+  if (!body) return { ok: false, error: 'body required' };
+
+  const row = await denizenDb.insertNpcMemory({
+    orgId: scope.org_id,
+    npcKey: scope.npc_key,
+    body,
+    topic: args?.topic || null,
+    outcome: args?.outcome || null,
+    source: 'mcp',
+    memberId: scope.member_id || null,
+  });
+
+  await denizenDb.recordFact({
+    orgId: scope.org_id,
+    factType: 'npc.memory.updated',
+    actorType: 'mcp',
+    actorId: scope.npc_key,
+    payload: {
+      body: body.slice(0, 200),
+      topic: args?.topic || null,
+      source: 'mcp',
+      memory_id: row?.id || null,
+      member_id: scope.member_id || null,
+    },
+    tags: ['npc', 'memory', 'mcp'],
+  });
+
+  return {
+    ok: true,
+    memory_id: row?.id || null,
+    npc_key: scope.npc_key,
+    recorded_at: row?.recorded_at || new Date().toISOString(),
+  };
+}
+
+async function toolGetStatus(scope, args) {
+  const limit = Math.max(1, Math.min(50, Number(args?.limit) || 10));
+  const npcKey = scope.npc_key;
+  const orgId = scope.org_id;
+
+  const [npcRows, memories, work] = await Promise.all([
+    denizenDb._get(`denizen_npcs?select=npc_key,display_name,role,protected,claimable&npc_key=eq.${encodeURIComponent(npcKey)}&limit=1`).catch(() => []),
+    denizenDb.listNpcMemories({ orgId, npcKey, limit, source: 'mcp' }).catch(() => []),
+    denizenDb._get([
+      'denizen_work_output?select=phase,action,note,ts',
+      `org_id=eq.${encodeURIComponent(orgId)}`,
+      `npc_key=eq.${encodeURIComponent(npcKey)}`,
+      'order=ts.desc',
+      `limit=${limit}`,
+    ].join('&')).catch(() => []),
+  ]);
+
+  return {
+    ok: true,
+    npc: npcRows?.[0] || { npc_key: npcKey, display_name: npcDisplayName(npcKey) },
+    recent_mcp_memories: memories,
+    recent_work: work || [],
+    org_slug: scope.org_slug,
+  };
+}
+
+async function toolLogActivity(scope, args) {
+  const note = String(args?.note || '').trim().slice(0, 500);
+  if (!note) return { ok: false, error: 'note required' };
+  const display = npcDisplayName(scope.npc_key);
+
+  denizenDb.recordWorkOutput({
+    orgId: scope.org_id,
+    npcName: display,
+    phase: args?.phase || 'mcp',
+    action: args?.action || 'activity',
+    note,
+    role: 'mcp-sync',
+  });
+
+  return { ok: true, logged: true, npc_key: scope.npc_key };
+}
+
+async function callTool(scope, name, args) {
+  switch (name) {
+    case 'update_memory': return toolUpdateMemory(scope, args);
+    case 'get_status': return toolGetStatus(scope, args);
+    case 'log_activity': return toolLogActivity(scope, args);
+    default: return { ok: false, error: `unknown tool: ${name}` };
+  }
+}
+
+async function handleRpc(scope, req, res, message, sessionId) {
+  const { id, method, params } = message || {};
+
+  if (method === 'initialize') {
+    const sid = sessionId || crypto.randomBytes(16).toString('hex');
+    _sessions.set(sid, { scope, at: Date.now() });
+    if (sessionId) res.setHeader('Mcp-Session-Id', sid);
+    return sendJson(res, 200, {
+      jsonrpc: '2.0',
+      id,
+      result: {
+        protocolVersion: PROTOCOL_VERSION,
+        capabilities: { tools: {} },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.3.0' },
+      },
+    });
+  }
+
+  if (method === 'tools/list') {
+    return sendJson(res, 200, {
+      jsonrpc: '2.0',
+      id,
+      result: { tools: TOOL_DEFINITIONS },
+    });
+  }
+
+  if (method === 'tools/call') {
+    const toolName = params?.name;
+    const toolArgs = params?.arguments || {};
+    try {
+      const result = await callTool(scope, toolName, toolArgs);
+      return sendJson(res, 200, {
+        jsonrpc: '2.0',
+        id,
+        result: {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          isError: !result?.ok,
+        },
+      });
+    } catch (err) {
+      return sendJson(res, 200, {
+        jsonrpc: '2.0',
+        id,
+        error: { code: -32000, message: err?.message || String(err) },
+      });
+    }
+  }
+
+  if (method === 'notifications/initialized') {
+    return sendJson(res, 200, { jsonrpc: '2.0', id, result: {} });
+  }
+
+  return sendJson(res, 200, {
+    jsonrpc: '2.0',
+    id,
+    error: { code: -32601, message: `Method not found: ${method}` },
+  });
+}
+
+async function handleHttpRequest(req, res, npcKeyFromPath) {
+  const npcKey = String(npcKeyFromPath || '').toLowerCase().trim();
+  if (!npcKey) {
+    return sendJson(res, 400, { ok: false, error: 'npc_key required' });
+  }
+
+  let reqUrl;
+  try {
+    reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+  } catch (_) {
+    return sendJson(res, 400, { ok: false, error: 'bad url' });
+  }
+
+  const pathKey = reqUrl.pathname.split('/').filter(Boolean).pop();
+  if (pathKey && pathKey !== npcKey) {
+    return sendJson(res, 400, { ok: false, error: 'npc_key mismatch' });
+  }
+
+  const token = extractBearer(req, reqUrl);
+  if (!token) {
+    return sendJson(res, 401, { ok: false, error: 'Bearer token required' });
+  }
+
+  const scope = await module.exports.resolveToken(token);
+  if (!scope) {
+    return sendJson(res, 401, { ok: false, error: 'invalid or revoked token' });
+  }
+
+  if (scope.npc_key !== npcKey) {
+    return sendJson(res, 403, { ok: false, error: 'token not valid for this NPC' });
+  }
+
+  if (!checkRateLimit(scope.token_id)) {
+    return sendJson(res, 429, { ok: false, error: 'rate limit exceeded' });
+  }
+
+  if (req.method === 'GET') {
+    return sendJson(res, 200, {
+      ok: true,
+      mcp: true,
+      npc_key: npcKey,
+      tools: TOOL_DEFINITIONS.map((t) => t.name),
+      protocol: PROTOCOL_VERSION,
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return sendJson(res, 405, { ok: false, error: 'POST or GET only' });
+  }
+
+  let body;
+  try {
+    body = await readBody(req);
+  } catch (err) {
+    return sendJson(res, 400, { ok: false, error: err?.message || 'invalid json' });
+  }
+
+  const sessionId = req.headers['mcp-session-id'] || req.headers['Mcp-Session-Id'] || null;
+
+  if (Array.isArray(body)) {
+    for (const msg of body) {
+      await handleRpc(scope, req, res, msg, sessionId);
+    }
+    return;
+  }
+
+  return handleRpc(scope, req, res, body, sessionId);
+}
+
+async function createMcpToken({
+  orgId,
+  npcKey,
+  memberId = null,
+  sessionId = null,
+  label = null,
+} = {}) {
+  if (!denizenDb.enabled || !orgId || !npcKey) {
+    throw new Error('database unavailable or missing org/npc');
+  }
+
+  const token = crypto.randomBytes(32).toString('base64url');
+  const tokenHash = hashSessionToken(token);
+
+  const tokenId = await denizenDb._rpc('denizen_register_mcp_token', {
+    p_org_id: orgId,
+    p_npc_key: npcKey,
+    p_token_hash: tokenHash,
+    p_member_id: memberId || null,
+    p_session_id: sessionId || null,
+    p_label: label || null,
+  });
+
+  const baseUrl = String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || `http://localhost:${process.env.PORT || 8080}`).replace(/\/$/, '');
+  const mcpUrl = `${baseUrl}/mcp/npc/${encodeURIComponent(npcKey)}`;
+
+  return {
+    token_id: tokenId,
+    token,
+    mcp_url: mcpUrl,
+    npc_key: npcKey,
+    cursor_config: {
+      mcpServers: {
+        [`denizen-${npcKey}`]: {
+          url: mcpUrl,
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      },
+    },
+    claude_desktop_config: {
+      mcpServers: {
+        [`denizen-${npcKey}`]: {
+          url: mcpUrl,
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      },
+    },
+  };
+}
+
+function buildConnectInfo(npcKey, baseUrl) {
+  const url = `${String(baseUrl || '').replace(/\/$/, '')}/mcp/npc/${encodeURIComponent(npcKey)}`;
+  return {
+    npc_key: npcKey,
+    mcp_url: url,
+    tools: TOOL_DEFINITIONS.map((t) => t.name),
+    instructions: 'Create a token via POST /api/mcp/tokens (team session required), then add the mcp_url + Bearer token to your AI client.',
+  };
+}
+
+module.exports = {
+  TOOL_DEFINITIONS,
+  handleHttpRequest,
+  createMcpToken,
+  buildConnectInfo,
+  resolveToken,
+  callTool,
+};

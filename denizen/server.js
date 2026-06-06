@@ -47,6 +47,7 @@ const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
 const taskChain        = require('./src/task-chain');
 const robinhoodMcp     = require('./src/robinhood-mcp');
+const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
 const routeRegistry    = require('./src/route-registry');
 const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
@@ -1618,6 +1619,15 @@ const server = http.createServer((req, res) => {
 
   // --- Security: check every request for suspicious patterns ---
   securityMonitor.checkHttpRequest(req);
+
+  const mcpNpcMatch = urlPath.match(/^\/mcp\/npc\/([^/]+)\/?$/);
+  if (mcpNpcMatch) {
+    npcMcpGateway.handleHttpRequest(req, res, mcpNpcMatch[1]).catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
 
   // Optional OpenClaw gateway proxy (off by default — Jelly is standalone)
   if (JELLY_ENABLE_OPENCLAW_GATEWAY && fullUrl.startsWith('/openclaw')) {
@@ -5148,6 +5158,74 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/mcp/tokens' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const npcKey = String(body.npc_key || body.npcKey || '').toLowerCase().trim();
+      if (!sessionId || !npcKey) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and npc_key required' }));
+        return;
+      }
+      const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
+      const accounts = await denizenDb._get(
+        `denizen_team_accounts?select=id&visitor_session_id=eq.${encodeURIComponent(sessionId)}&limit=1`,
+      ).catch(() => []);
+      const result = await npcMcpGateway.createMcpToken({
+        orgId: access.orgId,
+        npcKey,
+        memberId: accounts?.[0]?.id || null,
+        sessionId,
+        label: body.label || null,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        ...result,
+        warning: 'Save this token now — it cannot be retrieved again.',
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/mcp/connect-info' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const npcKey = String(u.searchParams.get('npc_key') || u.searchParams.get('npcKey') || '').toLowerCase().trim();
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!npcKey) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'npc_key required' }));
+        return;
+      }
+      if (sessionId) {
+        await _verifyVisitorSession(req, sessionId, {});
+      }
+      const publicBase = process.env.DENIZEN_PUBLIC_URL
+        || process.env.DENIZEN_URL
+        || `http://localhost:${PORT}`;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        ...npcMcpGateway.buildConnectInfo(npcKey, publicBase),
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/mcp/servers' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true, servers: mcpConnector.listServers() }));
@@ -7119,6 +7197,9 @@ let _visitorIntelligenceLoop = null;
 server.listen(PORT, () => {
   denizenDb.init().then((result) => {
     if (!result?.ok) return;
+    npcBrains.refreshDbMemories().catch((err) => {
+      console.warn('[NpcBrains] initial DB memory refresh failed:', err?.message || err);
+    });
     runPredictionMaintenance(denizenDb).catch((err) => {
       console.warn('[DenizenPredictionLoop] initial maintenance failed:', err?.message || err);
     });

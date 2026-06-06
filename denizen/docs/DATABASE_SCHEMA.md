@@ -70,7 +70,8 @@ denizen_assistant_messages
 
 ── NPC cognition (shared office) ──
 denizen_npcs                  ← roster mirror (key, display_name, role, protected)
-denizen_npc_memories          ← structured MEMORY.md lines
+denizen_npc_memories          ← structured MEMORY.md lines (+ org_id, source, member_id via 000015)
+denizen_mcp_tokens            ← per-teammate MCP bearer token hashes (v1.3)
 denizen_npc_conversation_turns
 denizen_npc_goals
 denizen_npc_directives

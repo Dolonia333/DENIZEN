@@ -32,6 +32,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Integrations | [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md) | new/local | Jelly skill executor, supabase-bridge, denizen-data-actions |
 | Integrations | [FEDERAL_PIPELINE.md](FEDERAL_PIPELINE.md) | new/local | RFP pipeline, requirement review, org-gated briefing strip |
 | Integrations | [JOB_CRM.md](JOB_CRM.md) | new/local | Roki job applications, Supabase sync, facts trigger |
+| Integrations | [NPC_MCP_GATEWAY.md](NPC_MCP_GATEWAY.md) | new/local | Per-NPC MCP gateway, bearer tokens, memory sync (v1.3) |
 | NPCs/AI | [NPCS.md](NPCS.md) | on GitHub | Full NPC roster and role definitions |
 | NPCs/AI | [SOCIAL_BEHAVIOR.md](SOCIAL_BEHAVIOR.md) | on GitHub | Social interaction heuristics and behaviors |
 | NPCs/AI | [VOICE.md](VOICE.md) | on GitHub | TTS architecture, gating, and voice configuration |

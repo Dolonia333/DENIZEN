@@ -17,6 +17,7 @@ const DEMO_RESTRICTED_FEATURES = new Set([
   'recurring_tasks_post',
   'bridge_skill',
   'briefing',
+  'mcp_connect',
 ]);
 
 class VisitorAccessError extends Error {

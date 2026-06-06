@@ -46,6 +46,9 @@ const permissionRegistry = require('./permission-registry');
 let visitorAccess = null;
 try { visitorAccess = require('./visitor-access'); } catch (_) {}
 
+let denizenDb = null;
+try { denizenDb = require('./denizen-db'); } catch (_) {}
+
 // Broadcast function reference — set at server startup via setBroadcast()
 let _broadcastFn = null;
 
@@ -772,9 +775,56 @@ class NpcBrainManager {
       }
 
       brain.longTermMemory = fs.readFileSync(memPath, 'utf-8');
+
+      if (denizenDb?.enabled && denizenDb.orgId) {
+        denizenDb.insertNpcMemory({
+          orgId: denizenDb.orgId,
+          npcKey: folder,
+          body: entry,
+          source: 'npc_brain',
+        }).catch((err) => {
+          console.warn(`[NpcBrains] DB memory sync failed for ${npcName}:`, err?.message || err);
+        });
+      }
     } catch (err) {
       console.warn(`[NpcBrains] Failed to save memory for ${npcName}:`, String(err?.message ?? err));
     }
+  }
+
+  /**
+   * Merge recent DB memories into brain prompts (MCP + npc_brain sources).
+   * File MEMORY.md remains the fallback when DB is empty or unavailable.
+   */
+  async refreshDbMemories() {
+    if (!denizenDb?.enabled || !denizenDb.orgId) return { ok: false, reason: 'db_unavailable' };
+
+    let merged = 0;
+    for (const [name, brain] of Object.entries(this.brains)) {
+      const folder = this._nameToFolder[name];
+      if (!folder) continue;
+      try {
+        const rows = await denizenDb.listNpcMemories({
+          orgId: denizenDb.orgId,
+          npcKey: folder,
+          limit: 40,
+        });
+        if (!rows?.length) continue;
+
+        const dbBlock = rows
+          .map((r) => `- [${String(r.recorded_at || '').slice(0, 16)}] ${r.body}`)
+          .join('\n');
+        const filePart = brain.longTermMemory || '';
+        brain.longTermMemory = `## Synced memories (database)\n${dbBlock}\n\n## File memories\n${filePart}`;
+        merged += 1;
+      } catch (err) {
+        console.warn(`[NpcBrains] refreshDbMemories failed for ${name}:`, err?.message || err);
+      }
+    }
+
+    if (merged > 0) {
+      console.log(`[NpcBrains] refreshed DB memories for ${merged} NPC(s)`);
+    }
+    return { ok: true, merged };
   }
 
   /**
