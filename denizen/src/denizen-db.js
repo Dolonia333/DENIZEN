@@ -279,6 +279,77 @@ class DenizenDb {
     });
   }
 
+  async insertPrediction({
+    predictionType,
+    entityType,
+    entityId = null,
+    entityKey = null,
+    prediction = {},
+    confidence = null,
+    horizon = null,
+    modelKey = 'app_layer_v1',
+    modelVersion = '1.0.0',
+    inputFactIds = null,
+    metadata = {},
+  } = {}) {
+    if (!this.enabled || !this.orgId) return null;
+    if (!predictionType || !entityType || (!entityId && !entityKey)) return null;
+
+    let normalizedConfidence = confidence;
+    if (normalizedConfidence == null) {
+      if (prediction?.close_probability != null) {
+        normalizedConfidence = Number(prediction.close_probability);
+      } else if (prediction?.bid_probability != null) {
+        normalizedConfidence = Number(prediction.bid_probability);
+      }
+    }
+    if (normalizedConfidence != null && Number.isFinite(Number(normalizedConfidence))) {
+      normalizedConfidence = Math.max(0, Math.min(1, Number(normalizedConfidence)));
+    } else {
+      normalizedConfidence = null;
+    }
+
+    const rows = await this._post(
+      'denizen_predictions',
+      {
+        org_id: this.orgId,
+        model_key: modelKey,
+        model_version: modelVersion,
+        prediction_type: predictionType,
+        entity_type: entityType,
+        entity_id: entityId,
+        entity_key: entityKey,
+        prediction: prediction || {},
+        confidence: normalizedConfidence,
+        horizon: horizon || null,
+        input_fact_ids: Array.isArray(inputFactIds) ? inputFactIds : null,
+        metadata: metadata || {},
+      },
+      { prefer: 'return=representation' },
+    );
+    return rows?.[0] || null;
+  }
+
+  async listPredictionsForEntity({
+    entityType,
+    entityId = null,
+    entityKey = null,
+    includeValidated = true,
+    limit = 10,
+  } = {}) {
+    if (!this.enabled || !this.orgId || !entityType || (!entityId && !entityKey)) return [];
+    const orgFilter = `org_id=eq.${encodeURIComponent(this.orgId)}`;
+    const entityTypeFilter = `entity_type=eq.${encodeURIComponent(entityType)}`;
+    const idFilter = entityId
+      ? `entity_id=eq.${encodeURIComponent(entityId)}`
+      : `entity_key=eq.${encodeURIComponent(entityKey)}`;
+    const validatedFilter = includeValidated ? '' : '&validated_at=is.null';
+    const safeLimit = Math.max(1, Math.min(100, Number(limit) || 10));
+    return this._get(
+      `denizen_predictions?select=id,prediction_type,entity_type,entity_id,entity_key,prediction,confidence,validated_at,accuracy_score,created_at&${orgFilter}&${entityTypeFilter}&${idFilter}${validatedFilter}&order=created_at.desc&limit=${safeLimit}`,
+    );
+  }
+
   /** Upsert a job application row for Roki / intelligence spine. */
   syncJobApplication(app, opts = {}) {
     if (!this.enabled || !this.orgId || !app?.id) return;
@@ -323,6 +394,129 @@ class DenizenDb {
   syncAllJobApplications(apps, opts = {}) {
     if (!Array.isArray(apps)) return;
     for (const app of apps) this.syncJobApplication(app, opts);
+  }
+
+  /** Sync one watchlist symbol for Roki (add/remove). */
+  syncWatchlistSymbol(symbol, opts = {}) {
+    if (!this.enabled || !this.orgId || !symbol) return;
+    const normalized = String(symbol).toUpperCase().trim();
+    if (!normalized) return;
+    const orgId = opts.orgId || this.orgId;
+    const npcKey = opts.npcKey || 'roki';
+
+    this.enqueue(async () => {
+      if (opts.remove) {
+        await this._delete(
+          `denizen_watchlist_symbols?org_id=eq.${encodeURIComponent(orgId)}&symbol=eq.${encodeURIComponent(normalized)}`,
+        );
+        return;
+      }
+      await this._post(
+        'denizen_watchlist_symbols?on_conflict=org_id,symbol',
+        {
+          org_id: orgId,
+          npc_key: npcKey,
+          symbol: normalized,
+          added_at: opts.addedAt || new Date().toISOString(),
+        },
+        { prefer: 'resolution=merge-duplicates,return=minimal' },
+      );
+    });
+  }
+
+  /** Insert or update an org-scoped trade suggestion row. */
+  upsertTradeSuggestion(suggestion, opts = {}) {
+    if (!this.enabled || !this.orgId || !suggestion) return;
+    const symbol = String(suggestion.symbol || '').toUpperCase().trim();
+    if (!symbol) return;
+    const createdAt = suggestion.createdAt || suggestion.created_at || suggestion.at || new Date().toISOString();
+    const orgId = opts.orgId || this.orgId;
+    const npcKey = opts.npcKey || suggestion.npcKey || suggestion.npc_key || 'roki';
+    const status = mapTradeSuggestionStatus(suggestion.status);
+    const action = String(suggestion.action || 'watch').toLowerCase();
+    const row = {
+      org_id: orgId,
+      npc_key: npcKey,
+      symbol,
+      action,
+      rationale: String(suggestion.rationale || '').slice(0, 2000) || null,
+      status,
+      created_at: createdAt,
+    };
+
+    this.enqueue(async () => {
+      // If a uuid id is provided, update that exact row.
+      if (isUuid(suggestion.id)) {
+        const existing = await this._get(
+          `denizen_trade_suggestions?select=id&limit=1&id=eq.${encodeURIComponent(suggestion.id)}`,
+        ).catch(() => []);
+        if (existing?.length) {
+          await this._patch(
+            `denizen_trade_suggestions?id=eq.${encodeURIComponent(suggestion.id)}`,
+            row,
+            { prefer: 'return=minimal' },
+          );
+          return;
+        }
+        await this._post('denizen_trade_suggestions', { id: suggestion.id, ...row }, { prefer: 'return=minimal' });
+        return;
+      }
+
+      // For status changes from JSON suggestions, match by natural key when possible.
+      if (status !== 'pending' && createdAt) {
+        const existing = await this._get(
+          `denizen_trade_suggestions?select=id&limit=1&org_id=eq.${encodeURIComponent(orgId)}&npc_key=eq.${encodeURIComponent(npcKey)}&symbol=eq.${encodeURIComponent(symbol)}&action=eq.${encodeURIComponent(action)}&created_at=eq.${encodeURIComponent(createdAt)}`,
+        ).catch(() => []);
+        if (existing?.[0]?.id) {
+          await this._patch(
+            `denizen_trade_suggestions?id=eq.${encodeURIComponent(existing[0].id)}`,
+            { status, rationale: row.rationale },
+            { prefer: 'return=minimal' },
+          );
+          return;
+        }
+      }
+
+      await this._post('denizen_trade_suggestions', row, { prefer: 'return=minimal' });
+    });
+  }
+
+  /** List latest trade suggestions for an org/npc scope. */
+  async listTradeSuggestions(opts = {}) {
+    if (!this.enabled || !this.orgId) return [];
+    const orgId = opts.orgId || this.orgId;
+    const npcKey = opts.npcKey || 'roki';
+    const status = opts.status ? mapTradeSuggestionStatus(opts.status) : null;
+    const limit = Number(opts.limit || 50);
+    const path = [
+      'denizen_trade_suggestions?select=id,org_id,npc_key,symbol,action,rationale,status,created_at',
+      `org_id=eq.${encodeURIComponent(orgId)}`,
+      `npc_key=eq.${encodeURIComponent(npcKey)}`,
+      status ? `status=eq.${encodeURIComponent(status)}` : null,
+      'order=created_at.desc',
+      `limit=${Number.isFinite(limit) ? Math.max(1, Math.min(200, limit)) : 50}`,
+    ]
+      .filter(Boolean)
+      .join('&');
+    return this._get(path);
+  }
+
+  /** Read watchlist symbols for an org/npc scope. */
+  async getWatchlist(opts = {}) {
+    if (!this.enabled || !this.orgId) return [];
+    const orgId = opts.orgId || this.orgId;
+    const npcKey = opts.npcKey || 'roki';
+    const limit = Number(opts.limit || 200);
+    const rows = await this._get(
+      [
+        'denizen_watchlist_symbols?select=symbol,added_at',
+        `org_id=eq.${encodeURIComponent(orgId)}`,
+        `npc_key=eq.${encodeURIComponent(npcKey)}`,
+        'order=added_at.asc',
+        `limit=${Number.isFinite(limit) ? Math.max(1, Math.min(500, limit)) : 200}`,
+      ].join('&'),
+    );
+    return (rows || []).map((r) => String(r.symbol || '').toUpperCase().trim()).filter(Boolean);
   }
 
   /** Job CRM outcomes (text app ids, not UUIDs). */
@@ -469,6 +663,19 @@ class DenizenDb {
     return null;
   }
 
+  async _delete(path) {
+    const res = await fetch(`${this.url}/rest/v1/${path}`, {
+      method: 'DELETE',
+      headers: this._headers({ prefer: 'return=minimal' }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`DELETE ${path} → HTTP ${res.status} ${text.slice(0, 120)}`);
+    }
+    return null;
+  }
+
   async _rpc(fn, body) {
     const res = await fetch(`${this.url}/rest/v1/rpc/${fn}`, {
       method: 'POST',
@@ -503,6 +710,19 @@ class DenizenDb {
 }
 
 const denizenDb = new DenizenDb();
+
+function mapTradeSuggestionStatus(status) {
+  const normalized = String(status || '').toLowerCase().trim();
+  if (normalized === 'dismissed') return 'dismissed';
+  if (normalized === 'acted') return 'acted';
+  return 'pending';
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value || ''),
+  );
+}
 
 module.exports = denizenDb;
 module.exports.DenizenDb = DenizenDb;

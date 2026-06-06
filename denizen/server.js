@@ -1,3 +1,4 @@
+require('./src/load-env');
 const http = require('http');
 const net = require('net');
 const fs = require('fs');
@@ -7,6 +8,8 @@ const { WebSocketServer } = require('ws');
 const SecurityMonitorServer = require('./security-monitor-server');
 const CofounderAgent = require('./src/cofounder-agent');
 const NpcBrainManager = require('./src/npc-brains');
+const ambientDialogue = require('./src/ambient-dialogue');
+const promptTuning = require('./src/prompt-tuning');
 const worldState = require('./src/world-state');
 const agentBus = require('./src/agent-bus');
 const ExternalSink = require('./src/external-sink');
@@ -14,12 +17,28 @@ const elevenLabs = require('./src/elevenlabs-tts');
 const animationForge = require('./src/animation-forge');
 const soulReflection = require('./src/soul-reflection');
 const npcRoster = require('./src/npc-roster');
+const npcCapabilities = require('./src/npc-capabilities');
+const voiceResolve = require('./src/voice-resolve');
 const capabilityProposal = require('./src/capability-proposal');
 const emailHandler = require('./src/email-handler');
 const gmailClient = require('./src/gmail-client');
 const llmTelemetry = require('./src/llm-telemetry');
+const denizenDb = require('./src/denizen-db');
+const orgPolicy = require('./src/denizen-org-policy');
+const denizenVisitor = require('./src/denizen-visitor');
+const visitorAccess = require('./src/visitor-access');
+const sessionAuth = require('./src/visitor-session-auth');
+const teamAuth = require('./src/denizen-team-auth');
+const visitorIntel = require('./src/denizen-visitor-intelligence');
+const { startVisitorIntelligenceLoop } = require('./src/visitor-briefing-loop');
+const slackChannel = require('./src/denizen-slack-channel');
+const mcpConnector = require('./src/denizen-mcp-connector');
+const citedResearch = require('./src/visitor-cited-research');
+const { runPredictionMaintenance, getPredictionSummary } = require('./src/denizen-prediction-loop');
+const { getRfpPipelineSummary } = require('./src/federal-pipeline');
 const pcActivity = require('./src/pc-activity-tracker');
 const jobApplication = require('./src/job-application');
+const jobCrm         = require('./src/job-crm');
 const desktopAgent = require('./src/desktop-agent');
 const linuxAgent = require('./src/linux-agent');
 const npcTools         = require('./src/npc-tools');
@@ -27,19 +46,477 @@ const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
 const taskChain        = require('./src/task-chain');
 const robinhoodMcp     = require('./src/robinhood-mcp');
+const routeRegistry    = require('./src/route-registry');
 const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
 const webResearch      = require('./src/web-research');
+const screenObserve    = require('./src/screen-observe');
 const meetingRunner    = require('./src/meeting-runner');
 const conflictDetector = require('./src/conflict-detector');
+const {
+  extractSearchQuery,
+  extractBareSearchTopic,
+  extractScreenObserveIntent,
+  extractScreenControlIntent,
+  extractJobBoardSearchIntent,
+  extractBrowserStatusIntent,
+  extractOpenBrowserIntent,
+  extractBrowserRetryIntent,
+  extractBrowserReadIntent,
+  isCancelUtterance,
+  wantsLucyBrowserOpen,
+  extractOpenBraveIntent,
+  extractCloseBrowserIntent,
+  extractJobBoardHelpIntent,
+  isDenizenNativeIntent,
+  fixVoiceMishearings,
+  normalizePlayerUtterance,
+  isTunnelHost,
+  resolveStaffIntentNpc,
+} = require('./src/openclaw-dispatch');
+const { buildLucySearchBrief, isJunkSearchQuery } = require('./src/lucy-search-brief');
+const jellyPaths = require('./jelly/paths');
+const { normalizeNpcKey, getNpcBrowserPaths } = require('./src/npc-browser-paths');
+
+global._activeBrowserNpc = global._activeBrowserNpc || 'lucy';
+
+const LUCY_CLOSE_FLAG = jellyPaths.lucyCloseFlag();
+const SEARCH_CMD_FILE = path.join(jellyPaths.browserDir(), 'search-command.json');
+const SEARCH_RESULT_FILE = path.join(jellyPaths.browserDir(), 'search-result.json');
+const SEARCH_CMD_FLAG = path.join(jellyPaths.browserDir(), 'search-command.flag');
+const INPUT_CMD_FILE = path.join(jellyPaths.browserDir(), 'input-command.json');
+const INPUT_CMD_FLAG = path.join(jellyPaths.browserDir(), 'input-command.flag');
+const LUCY_LIVE_HEARTBEAT_FILE = path.join(jellyPaths.browserDir(), 'live-heartbeat.json');
+const lucyBrowserStream = require('./src/lucy-browser-stream');
+const LUCY_MIRROR_STATE_FILE = path.join(jellyPaths.browserDir(), 'mirror-state.json');
+const LUCY_MIRROR_FRAME_FILE = path.join(jellyPaths.canvasDir(), 'lucy-mirror-live.png');
+const LUCY_MIRROR_STREAM_FILE = path.join(jellyPaths.canvasDir(), 'lucy-mirror-live.jpg');
+
+function _writeSearchCommand(cmd) {
+  try {
+    fs.mkdirSync(jellyPaths.browserDir(), { recursive: true });
+    fs.writeFileSync(SEARCH_CMD_FILE, JSON.stringify(cmd));
+    fs.writeFileSync(SEARCH_CMD_FLAG, String(Date.now()));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function _writeBrowserInputCommand(cmd) {
+  try {
+    jellyPaths.ensureJellyDirs();
+    fs.writeFileSync(INPUT_CMD_FILE, JSON.stringify(cmd));
+    fs.writeFileSync(INPUT_CMD_FLAG, String(Date.now()));
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function _readSearchResult(id, timeoutMs = 120000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const poll = () => {
+      try {
+        if (fs.existsSync(SEARCH_RESULT_FILE)) {
+          const r = JSON.parse(fs.readFileSync(SEARCH_RESULT_FILE, 'utf8'));
+          if (r && r.id === id) {
+            try { fs.unlinkSync(SEARCH_RESULT_FILE); } catch (_) {}
+            resolve(r);
+            return;
+          }
+        }
+      } catch (_) {}
+      if (Date.now() - start >= timeoutMs) {
+        resolve({ ok: false, error: 'Timed out waiting for open browser to run search' });
+        return;
+      }
+      setTimeout(poll, 400);
+    };
+    poll();
+  });
+}
+
+function lucyBrowserUntilClose() {
+  return String(process.env.LUCY_BROWSER_UNTIL_CLOSE || 'true').toLowerCase() !== 'false';
+}
+
+function signalCloseLucyBrowser() {
+  try {
+    fs.mkdirSync(path.dirname(LUCY_CLOSE_FLAG), { recursive: true });
+    fs.writeFileSync(LUCY_CLOSE_FLAG, String(Date.now()));
+    global._lucyBrowserOpen = false;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function clearLucyCloseFlag() {
+  try { if (fs.existsSync(LUCY_CLOSE_FLAG)) fs.unlinkSync(LUCY_CLOSE_FLAG); } catch (_) {}
+}
+
+function _readMirrorState(npcKey) {
+  const paths = getNpcBrowserPaths(npcKey);
+  try {
+    if (fs.existsSync(paths.stateFile)) {
+      return JSON.parse(fs.readFileSync(paths.stateFile, 'utf8'));
+    }
+  } catch (_) {}
+  if (normalizeNpcKey(npcKey) === 'lucy') {
+    try {
+      if (fs.existsSync(LUCY_MIRROR_STATE_FILE)) {
+        return JSON.parse(fs.readFileSync(LUCY_MIRROR_STATE_FILE, 'utf8'));
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+
+function _readLucyMirrorState() {
+  return _readMirrorState('lucy');
+}
+
+function _markMirrorClosed(npcKey) {
+  try {
+    jellyPaths.ensureJellyDirs();
+    const paths = getNpcBrowserPaths(npcKey);
+    const prev = _readMirrorState(npcKey) || {};
+    fs.writeFileSync(
+      paths.stateFile,
+      JSON.stringify({ ...prev, status: 'closed', streaming: false, updatedAt: Date.now() }),
+      'utf8',
+    );
+  } catch (_) {}
+}
+
+function _markLucyMirrorClosed() {
+  _markMirrorClosed('lucy');
+}
+
+const LUCY_MIRROR_FRAME_LIVE_MS = 6000;
+
+function _syncMirrorStateWithChild(childAlive) {
+  if (childAlive) return;
+  const state = _readLucyMirrorState() || {};
+  if (state.status === 'open' || state.status === 'searching' || state.streaming) {
+    _markLucyMirrorClosed();
+  }
+  if (global._lucyBrowserOpen) global._lucyBrowserOpen = false;
+}
+
+function _latestMirrorFrameFileForNpc(npcKey) {
+  const paths = getNpcBrowserPaths(npcKey);
+  let best = null;
+  let bestMtime = 0;
+  for (const p of [paths.streamFile, paths.frameFile]) {
+    try {
+      if (!fs.existsSync(p)) continue;
+      const st = fs.statSync(p);
+      if (st.mtimeMs > bestMtime) {
+        bestMtime = st.mtimeMs;
+        best = { path: p, mtimeMs: st.mtimeMs, format: p.endsWith('.png') ? 'png' : 'jpeg' };
+      }
+    } catch (_) {}
+  }
+  if (!best && normalizeNpcKey(npcKey) === 'lucy') {
+    return _latestMirrorFrameFile();
+  }
+  return best;
+}
+
+function _buildNpcMirrorResponse(npcKey) {
+  const key = normalizeNpcKey(npcKey);
+  const paths = getNpcBrowserPaths(key);
+  _syncLucyBrowserOpenState();
+  const state = _readMirrorState(key) || {};
+  const last = global._lucyLastBrowser || {};
+  const childAlive = _lucyBrowserChildAlive();
+  const activeKey = normalizeNpcKey(global._activeBrowserNpc || 'lucy');
+  const ownsBrowser = childAlive && activeKey === key;
+  _syncMirrorStateWithChild(childAlive);
+  const stateAfter = ownsBrowser ? state : (_readMirrorState(key) || {});
+
+  let frameStat = null;
+  try {
+    if (fs.existsSync(paths.frameFile)) frameStat = fs.statSync(paths.frameFile);
+    else if (normalizeNpcKey(key) === 'lucy' && fs.existsSync(LUCY_MIRROR_FRAME_FILE)) {
+      frameStat = fs.statSync(LUCY_MIRROR_FRAME_FILE);
+    }
+  } catch (_) {}
+  const frameMtime = frameStat ? frameStat.mtimeMs : null;
+  const frameAgeMs = frameStat ? Date.now() - frameStat.mtimeMs : Infinity;
+  const frameFresh = frameAgeMs < LUCY_MIRROR_FRAME_LIVE_MS;
+
+  const open = ownsBrowser;
+  const streaming = !!(ownsBrowser && (frameFresh || stateAfter.status === 'searching' || !frameStat));
+  const staleFrame = !ownsBrowser && !!frameStat;
+  const status = ownsBrowser
+    ? (stateAfter.status || 'open')
+    : (staleFrame ? 'snapshot' : (childAlive && activeKey !== key ? 'busy' : 'idle'));
+
+  const apiBase = `/api/npc-browser/${encodeURIComponent(key)}`;
+  return {
+    ok: true,
+    npcKey: key,
+    activeNpcKey: activeKey,
+    open,
+    streaming,
+    staleFrame,
+    frameAgeMs: frameStat ? Math.round(frameAgeMs) : null,
+    searching: ownsBrowser && (stateAfter.status === 'searching' || !frameStat),
+    status,
+    query: stateAfter.query || (ownsBrowser ? last.query : null) || null,
+    url: stateAfter.url || (ownsBrowser ? last.url : null) || null,
+    title: stateAfter.title || null,
+    browserLabel: ownsBrowser ? (last.label || stateAfter.browserEngine || null) : null,
+    readExcerpt: stateAfter.readExcerpt || null,
+    results: Array.isArray(stateAfter.results) ? stateAfter.results.slice(0, 8) : null,
+    lastActivity: stateAfter.lastActivity || null,
+    activityLog: Array.isArray(stateAfter.activityLog) ? stateAfter.activityLog.slice(-12) : [],
+    viewportWidth: stateAfter.viewportWidth || null,
+    viewportHeight: stateAfter.viewportHeight || null,
+    frameUrl: frameStat ? `${apiBase}/frame?v=${Math.floor(frameMtime)}` : null,
+    streamUrl: streaming ? `${apiBase}/live-frame` : null,
+    updatedAt: stateAfter.updatedAt || frameMtime || null,
+    busyWithOtherNpc: childAlive && activeKey !== key,
+  };
+}
+
+function _buildLucyMirrorResponse() {
+  return _buildNpcMirrorResponse('lucy');
+}
+
+function _broadcastNpcMirrorUpdate(broadcast, npcKey) {
+  if (typeof broadcast !== 'function') return;
+  const key = normalizeNpcKey(npcKey || global._activeBrowserNpc || 'lucy');
+  const payload = { type: 'npc_browser_mirror', ..._buildNpcMirrorResponse(key), ts: Date.now() };
+  broadcast(payload);
+  if (key === 'lucy') {
+    broadcast({ type: 'lucy_browser_mirror', ...payload, ts: Date.now() });
+  }
+}
+
+function _broadcastLucyMirrorUpdate(broadcast) {
+  _broadcastNpcMirrorUpdate(broadcast, 'lucy');
+}
+
+function _broadcastAgentWs(msg) {
+  const raw = JSON.stringify(msg);
+  if (!agentWss) return;
+  agentWss.clients.forEach((c) => { if (c.readyState === 1) c.send(raw); });
+}
+
+let _mirrorFrameMtime = 0;
+function _latestMirrorFrameFile() {
+  let best = null;
+  let bestMtime = 0;
+  for (const p of [LUCY_MIRROR_STREAM_FILE, LUCY_MIRROR_FRAME_FILE]) {
+    try {
+      if (!fs.existsSync(p)) continue;
+      const st = fs.statSync(p);
+      if (st.mtimeMs > bestMtime) {
+        bestMtime = st.mtimeMs;
+        best = { path: p, mtimeMs: st.mtimeMs, format: p.endsWith('.png') ? 'png' : 'jpeg' };
+      }
+    } catch (_) {}
+  }
+  return best;
+}
+
+function _pushLucyBrowserFrame() {
+  try {
+    const activeKey = normalizeNpcKey(global._activeBrowserNpc || 'lucy');
+    const latest = _latestMirrorFrameFileForNpc(activeKey);
+    if (!latest) return;
+    if (latest.mtimeMs <= _mirrorFrameMtime) return;
+    _mirrorFrameMtime = latest.mtimeMs;
+    const buf = fs.readFileSync(latest.path);
+    if (!buf || buf.length < 80) return;
+    const frameMsg = {
+      type: 'npc_browser_frame',
+      npcKey: activeKey,
+      format: latest.format,
+      data: buf.toString('base64'),
+      ts: Date.now(),
+    };
+    _broadcastAgentWs(frameMsg);
+    if (activeKey === 'lucy') {
+      _broadcastAgentWs({ type: 'lucy_browser_frame', ...frameMsg, ts: Date.now() });
+    }
+  } catch (_) {}
+}
+
+function _startLucyMirrorFrameWatcher() {
+  jellyPaths.ensureJellyDirs();
+  const watchDir = jellyPaths.canvasDir();
+  try {
+    fs.watch(watchDir, { persistent: false }, () => _pushLucyBrowserFrame());
+  } catch (_) {}
+  setInterval(_pushLucyBrowserFrame, 120);
+}
+
+function closeLucyBrowser() {
+  signalCloseLucyBrowser();
+  _clearLucyBrowserIpc();
+  _killLucyWebSearchChildren();
+  _killOrphanLucyChromium();
+  global._lucyBrowserOpen = false;
+  _markLucyMirrorClosed();
+  return { ok: true, message: 'Closing browser…' };
+}
+
+function _clearLucyBrowserIpc() {
+  for (const f of [SEARCH_CMD_FILE, SEARCH_CMD_FLAG, SEARCH_RESULT_FILE, INPUT_CMD_FILE, INPUT_CMD_FLAG, LUCY_LIVE_HEARTBEAT_FILE]) {
+    try { if (fs.existsSync(f)) fs.unlinkSync(f); } catch (_) {}
+  }
+}
+
+/** Kill orphan web-search.mjs children (profile lock blocks new launches). */
+function _killLucyWebSearchChildren() {
+  const { execSync } = require('node:child_process');
+  try {
+    if (process.platform === 'win32') {
+      execSync(
+        'powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \\"Name=\'node.exe\'\\" | Where-Object { $_.CommandLine -like \'*web-search.mjs*\' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"',
+        { timeout: 8000, stdio: 'pipe' },
+      );
+    } else {
+      execSync('pkill -f "web-search.mjs" 2>/dev/null || true', { timeout: 5000, stdio: 'pipe' });
+    }
+  } catch (_) {}
+}
+
+/** Orphan Playwright Chromium processes keep the Lucy profile locked after node exits. */
+function _killOrphanLucyChromium() {
+  const { execSync } = require('node:child_process');
+  const profileNeedle = process.platform === 'win32'
+    ? '.denizen\\\\browser\\\\job-apply'
+    : '.denizen/browser/job-apply';
+  try {
+    if (process.platform === 'win32') {
+      execSync(
+        `powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*${profileNeedle}*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"`,
+        { timeout: 12000, stdio: 'pipe' },
+      );
+    } else {
+      execSync(`pkill -f "${profileNeedle}" 2>/dev/null || true`, { timeout: 5000, stdio: 'pipe' });
+    }
+  } catch (_) {}
+}
+
+/** Full reset before launching a fresh headed browser (not IPC reuse). */
+async function _prepareLucyBrowserForLaunch() {
+  global._lucyBrowserOpen = false;
+  signalCloseLucyBrowser();
+  _killLucyWebSearchChildren();
+  _killOrphanLucyChromium();
+  _clearLucyBrowserIpc();
+  await new Promise((r) => setTimeout(r, 2500));
+  clearLucyCloseFlag();
+}
+
+/** Fresh mirror frames / heartbeat mean Lucy's browser child is alive. */
+function _lucyMirrorSignalsLive() {
+  try {
+    if (fs.existsSync(LUCY_LIVE_HEARTBEAT_FILE)) {
+      const hb = JSON.parse(fs.readFileSync(LUCY_LIVE_HEARTBEAT_FILE, 'utf8'));
+      if (Date.now() - (hb.at || 0) < 3000) return true;
+    }
+  } catch (_) {}
+  try {
+    const latest = _latestMirrorFrameFile();
+    if (!latest) return false;
+    return Date.now() - latest.mtimeMs < LUCY_MIRROR_FRAME_LIVE_MS;
+  } catch (_) {}
+  return false;
+}
+
+/** True when a keep-open web-search.mjs child is still running. */
+function _lucyBrowserChildAlive() {
+  if (_lucyMirrorSignalsLive()) return true;
+  try {
+    const { execSync } = require('node:child_process');
+    if (process.platform === 'win32') {
+      const ps = "$ProgressPreference='SilentlyContinue';(Get-CimInstance Win32_Process -Filter \"Name='node.exe'\") | Where-Object { $_.CommandLine -like '*web-search.mjs*' } | Measure-Object | Select-Object -ExpandProperty Count";
+      const b64 = Buffer.from(ps, 'utf16le').toString('base64');
+      const out = execSync(`powershell -NoProfile -EncodedCommand ${b64}`, { encoding: 'utf8', timeout: 8000 }).trim();
+      return Number(out) > 0;
+    }
+  } catch (_) {}
+  return false;
+}
+
+/** After server restart, a keep-open browser child may still be running. */
+function _syncLucyBrowserOpenState() {
+  if (global._lucyBrowserOpen && _lucyBrowserChildAlive()) return true;
+  if (global._lucyBrowserOpen && !_lucyBrowserChildAlive()) {
+    global._lucyBrowserOpen = false;
+  }
+  if (_lucyBrowserChildAlive()) {
+    global._lucyBrowserOpen = true;
+    return true;
+  }
+  return false;
+}
+
+function _resetLucyBrowserOnStartup() {
+  global._lucyBrowserOpen = false;
+  signalCloseLucyBrowser();
+  _clearLucyBrowserIpc();
+  _killLucyWebSearchChildren();
+  _killOrphanLucyChromium();
+  _markLucyMirrorClosed();
+  console.log('[Lucy] Browser state reset on startup');
+}
+const researchQueue    = require('./src/research-queue');
+const researchSessions = require('./src/research-sessions');
+const researchBrief    = require('./src/research-brief');
+const awayNotify       = require('./src/away-notify');
+const { startAll: startResearchScheduler } = require('./src/research-scheduler');
+
+/** Per threat category+source — avoid duplicate Kali/Zenmap runs (client + server). */
+const _bouncerInvCooldown = new Map();
+const BOUNCER_INV_COOLDOWN_MS = parseInt(process.env.BOUNCER_INVESTIGATION_COOLDOWN_MS, 10) || 900000;
+function _bouncerInvKey(threat = {}) {
+  return `${threat.category || 'unknown'}:${threat.source || 'unknown'}`;
+}
+function _bouncerInvTake(threat = {}) {
+  try {
+    const { isLocalOrLoopback, isInternalThreatSource } = require('./src/security-ip');
+    if (isLocalOrLoopback(threat.source) || isInternalThreatSource(threat.source)) {
+      return { allowed: false, key: 'internal', remainingSec: 0, loopback: true };
+    }
+  } catch (_) {}
+  const key = _bouncerInvKey(threat);
+  const last = _bouncerInvCooldown.get(key) || 0;
+  if (Date.now() - last < BOUNCER_INV_COOLDOWN_MS) {
+    return { allowed: false, key, remainingSec: Math.ceil((BOUNCER_INV_COOLDOWN_MS - (Date.now() - last)) / 1000) };
+  }
+  _bouncerInvCooldown.set(key, Date.now());
+  return { allowed: true, key };
+}
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
 // edit data/voice-map.json + restart to change. Missing file → empty map
 // → every NPC uses the default voice.
 let _voiceMap = { default: {}, npcs: {} };
 try {
-  _voiceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'voice-map.json'), 'utf8'));
+  const rawMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'voice-map.json'), 'utf8'));
+  _voiceMap = voiceResolve.applyRosterToVoiceMap(rawMap, npcRoster, { assignMissingVoices: true });
 } catch (_) { /* optional */ }
+
+function _resolveVoiceForNpc(npcName, payload = {}) {
+  const rosterEntry = (npcRoster.entries || []).find(e => e.display === npcName) || null;
+  const resolved = voiceResolve.resolveNpcVoice(npcName, _voiceMap, rosterEntry);
+  return {
+    voiceId: payload.voiceId || resolved.voiceId,
+    modelId: payload.modelId || resolved.modelId,
+    gender: resolved.gender,
+    source: payload.voiceId ? 'override' : resolved.source,
+  };
+}
 
 const PORT = process.env.PORT || 8080;
 const STT_MAX_AUDIO_BYTES = 12 * 1024 * 1024; // 12MB hard cap
@@ -138,6 +615,7 @@ const MIME = {
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.ico': 'image/x-icon',
+  '.md': 'text/markdown; charset=utf-8',
 };
 
 const OPENCLAW_HOST = '127.0.0.1';
@@ -161,8 +639,195 @@ securityMonitor.start();
 
 // --- Cofounder Agent (CTO AI brain) ---
 const npcBrains = new NpcBrainManager();
+if (promptTuning.economyMode) {
+  console.log(
+    `[Denizen] Economy mode ON — think ${promptTuning.thinkMinMs / 1000}-${promptTuning.thinkMaxMs / 1000}s, ` +
+    `run_skill max ${promptTuning.runSkillMaxPerWindow}/${promptTuning.runSkillCooldownMs / 60000}min per NPC`
+  );
+}
 const cofounderAgent = new CofounderAgent();
 cofounderAgent.npcBrains = npcBrains; // Give the director access to individual NPC brains
+
+/** Broadcast to game WS + notify Discord/Slack when configured. */
+function _ceoBroadcast(msg) {
+  const raw = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  try {
+    // agentWss.clients === cofounderAgent.wsClients (same sockets) — do not double-send.
+    (agentWss ? agentWss.clients : cofounderAgent.wsClients).forEach((c) => {
+      if (c.readyState === 1) c.send(raw);
+    });
+  } catch (_) {}
+  if (typeof msg === 'object' && msg && (msg.type === 'npc_report_to_ceo' || msg.type === 'research_brief_done' || msg.type === 'daily_digest_sent')) {
+    const text = msg.text || msg.summary || msg.report || '';
+    if (text) {
+      awayNotify.notifyCeo({
+        title: msg.npcName ? `${msg.npcName} — Denizen` : 'Denizen',
+        source: msg.type,
+        text: String(text).slice(0, 1800),
+      }).catch(() => {});
+    }
+  }
+}
+
+/** Connected visitor sessions (WS presence) — sessionId → { displayName, lastSeenAt } */
+global._denizenOnlineSessions = global._denizenOnlineSessions || new Map();
+const _notifiedCeoHandoffIds = new Set();
+
+function listOnlineSessionIds() {
+  return new Set(global._denizenOnlineSessions?.keys() || []);
+}
+
+function _setVisitorOnline(sessionId, displayName) {
+  if (!sessionId) return;
+  global._denizenOnlineSessions.set(sessionId, {
+    displayName: displayName || 'Guest',
+    lastSeenAt: Date.now(),
+  });
+}
+
+function _touchVisitorOnline(sessionId) {
+  if (!sessionId) return;
+  const entry = global._denizenOnlineSessions.get(sessionId);
+  if (entry) entry.lastSeenAt = Date.now();
+}
+
+function _clearVisitorOnline(sessionId) {
+  if (!sessionId || !global._denizenOnlineSessions?.size) return;
+  const clients = agentWss ? agentWss.clients : cofounderAgent.wsClients;
+  for (const c of clients) {
+    if (c.readyState === 1 && c._denizenSessionId === sessionId) return;
+  }
+  global._denizenOnlineSessions.delete(sessionId);
+}
+
+function _broadcastToVisitorSession(sessionId, payload) {
+  if (!sessionId || !payload) return;
+  const clients = agentWss ? agentWss.clients : cofounderAgent.wsClients;
+  const msg = JSON.stringify(payload);
+  for (const ws of clients) {
+    if (ws.readyState === 1 && ws._denizenSessionId === sessionId) {
+      ws.send(msg);
+    }
+  }
+}
+
+function _notifyCeoHandoff(handoff) {
+  if (!handoff?.id || _notifiedCeoHandoffIds.has(handoff.id)) return;
+  _notifiedCeoHandoffIds.add(handoff.id);
+  const from = handoff.from_display_name || 'Someone';
+  const slice = String(handoff.message || '').slice(0, 120);
+  try {
+    worldState.pushEvent('handoff', `Assistant handoff from ${from}: ${slice}`);
+  } catch (_) {}
+  _ceoBroadcast(denizenVisitor.buildLucyHandoffAlertBroadcast(handoff));
+}
+
+function _deliverHandoffWs(ws, handoff, { ceoBridge = false } = {}) {
+  if (!ws || ws.readyState !== 1 || !handoff?.id) return;
+  ws._deliveredHandoffIds = ws._deliveredHandoffIds || new Set();
+  if (ws._deliveredHandoffIds.has(handoff.id)) return;
+  ws._deliveredHandoffIds.add(handoff.id);
+  if (ceoBridge) _notifyCeoHandoff(handoff);
+  ws.send(JSON.stringify({ type: 'assistant_handoff', handoff }));
+}
+
+function _writeVisitorAccessError(res, err) {
+  const status = visitorAccess.visitorAccessErrorStatus(err);
+  const body = {
+    ok: false,
+    error: err?.message || String(err),
+    code: err?.code || 'ERROR',
+  };
+  if (err?.feature) body.feature = err.feature;
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(body));
+}
+
+async function _guardVisitorFeature(req, sessionId, feature, body = {}) {
+  const access = await _verifyVisitorSession(req, sessionId, body);
+  visitorAccess.assertTeamFeature(access, feature);
+  return access;
+}
+
+async function _verifyVisitorSession(req, sessionId, body = {}) {
+  if (!sessionId) {
+    throw new visitorAccess.VisitorAccessError('session_id required', 'BAD_INPUT');
+  }
+  const token = sessionAuth.extractSessionAuth(req, body);
+  await visitorAccess.assertSessionToken(sessionId, token);
+  return visitorAccess.resolveSessionAccess(sessionId);
+}
+
+async function _resolveVisitorToolGate(sessionId) {
+  if (!sessionId) return { canUseRealWork: true, sessionTier: null };
+  try {
+    const access = await visitorAccess.resolveSessionAccess(sessionId);
+    return {
+      sessionTier: access.tier,
+      canUseRealWork: visitorAccess.canUseRealWork(access.session?.metadata, access.org?.settings),
+      sessionMetadata: access.session?.metadata || null,
+      orgSettings: access.org?.settings || null,
+    };
+  } catch (_) {
+    return { canUseRealWork: false, sessionTier: 'demo', sessionMetadata: null, orgSettings: null };
+  }
+}
+
+function _denyVisitorRealTools(ws, npcName) {
+  if (ws.readyState === 1) {
+    ws.send(JSON.stringify({
+      type: 'player_chat_response',
+      npcName,
+      text: 'That needs team access — explore the demo with chat and the office tour.',
+      delegation: null,
+      actions: [],
+    }));
+  }
+  global._npcStats.playerChatSucceeded++;
+}
+
+async function _handleVisitorHandoffPost(req, res) {
+  const body = await _readJsonBody(req, 64 * 1024);
+  let fromSessionId = body.from_session_id || body.fromSessionId;
+  const message = body.message;
+  if ((body.is_ceo || body.isCeo) && !fromSessionId) {
+    fromSessionId = await denizenVisitor.getOrCreateCeoBridgeSession();
+  }
+  if (!fromSessionId || !message) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'from_session_id (or is_ceo) and message required' }));
+    return;
+  }
+  const handoffAccess = await visitorAccess.resolveSessionAccess(fromSessionId);
+  if (!handoffAccess.isDemo && !(body.is_ceo || body.isCeo)) {
+    await _verifyVisitorSession(req, fromSessionId, body);
+  }
+  if (body.to_ceo ?? body.toCeo) {
+    visitorAccess.assertTeamFeature(handoffAccess, 'to_ceo');
+  }
+  const target = await denizenVisitor.resolveHandoffTarget({
+    toSessionId: body.to_session_id || body.toSessionId,
+    toCeo: body.to_ceo ?? body.toCeo,
+    toDisplayName: body.to_display_name ?? body.toDisplayName,
+  });
+  const handoff = await denizenVisitor.sendHandoff({
+    fromSessionId,
+    toSessionId: target.session_id,
+    fromNpc: body.from_npc ?? body.fromNpc ?? ((body.is_ceo || body.isCeo) ? 'ceo' : undefined),
+    toNpc: body.to_npc ?? body.toNpc,
+    message,
+    metadata: body.metadata,
+  });
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ ok: true, handoff, target }));
+}
+
+function _mapResearchPriority(p) {
+  const s = String(p || '').toLowerCase();
+  if (s === 'urgent' || s === 'high') return 8;
+  if (s === 'low') return 3;
+  return 5;
+}
 
 // Wire broadcast into npc-brains so task-chain advancement can send WS events
 npcBrains.setBroadcast((msg) =>
@@ -181,18 +846,11 @@ pcActivity.setBroadcast((msg) =>
   })
 );
 
-// --- OpenClaw Skill Bridge ---
-const OPENCLAW_ROOT = 'C:/Users/zionv/OneDrive/Desktop/multbot/openclaw';
-const SKILL_SCRIPTS = {
-  'job-scraper':      `${OPENCLAW_ROOT}/skills/job-scraper/job-scraper.mjs`,
-  'job-applier':      `${OPENCLAW_ROOT}/skills/job-applier/job-applier.mjs`,
-  'resume-generator': `${OPENCLAW_ROOT}/skills/resume-generator/resume-generator.mjs`,
-  'pdf-generator':    `${OPENCLAW_ROOT}/skills/pdf-generator/pdf-generator.mjs`,
-  'browserclaw':      `${OPENCLAW_ROOT}/skills/browserclaw/browserclaw.mjs`,
-  'canvas-render':    `${OPENCLAW_ROOT}/skills/canvas-render/canvas-render.mjs`,
-  'lm-studio':        `${OPENCLAW_ROOT}/skills/lm-studio/lm-studio.mjs`,
-  'supabase-bridge':  `${OPENCLAW_ROOT}/skills/supabase-bridge/supabase-bridge.mjs`,
-};
+// --- Jelly 🪼 — Denizen skill runtime (your tech; OpenClaw optional fallback) ---
+const { createJelly, JELLY } = require('./jelly');
+const OPENCLAW_ROOT = process.env.OPENCLAW_ROOT || path.join(__dirname, '..', 'openclaw');
+const SKILL_SCRIPTS = jellyPaths.resolveSkillScripts();
+const JELLY_ENABLE_OPENCLAW_GATEWAY = String(process.env.JELLY_ENABLE_OPENCLAW_GATEWAY || 'false').toLowerCase() === 'true';
 const GITHUB_REPO = 'Dolonia333/DENIZEN';
 
 // Approved NPC-authored skills (slug → script path), cached for 5s so we don't
@@ -230,307 +888,400 @@ function startMeeting({ topic, facilitator, participants } = {}) {
   });
 }
 
+/** Serialize browser searches — one persistent profile cannot launch twice. */
+let _browserSearchChain = Promise.resolve();
+
 /**
- * Run an OpenClaw skill on behalf of an NPC. Fires async; result is injected
+ * Any NPC opens a VISIBLE browser, searches DuckDuckGo, and surfaces results in chat.
+ * Shared by /api/lucy-search, player_chat, and runNpcSkill('web-search').
+ */
+function runNpcWebSearch(npcName, query, opts = {}) {
+  const npc = String(npcName || 'Lucy');
+  const { spawn } = require('node:child_process');
+  const q = String(query || '').trim();
+  const openOnly = opts.openOnly === true;
+  if (!q && !openOnly && !opts.directUrl) {
+    return Promise.resolve({ ok: false, error: 'query required', query: '', results: [], summary: '' });
+  }
+
+  const headless = opts.headless === true;
+  const quiet = opts.quiet === true;
+  const broadcast = opts.broadcast || ((m) => {
+    const raw = JSON.stringify(m);
+    (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+  });
+
+  const runOnce = async () => {
+  const mirrorKey = normalizeNpcKey(npc);
+  global._activeBrowserNpc = mirrorKey;
+  if (q) global._lucyLastSearchQuery = q;
+  if (openOnly && global._lucyBrowserOpen && _lucyBrowserChildAlive()) {
+    const browserLabel = global._lucyLastBrowser?.label || 'Playwright Chromium';
+    const summary = `${npc} browser is already open (${browserLabel}). Say what to search, or "close the browser".`;
+    if (!quiet) {
+      _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: npc, text: summary, ts: Date.now() });
+    }
+    return Promise.resolve({ ok: true, query: q, results: [], summary, alreadyOpen: true });
+  }
+
+  // Reuse keep-open browser for follow-up searches (no kill/relaunch delay).
+  if (!headless && !openOnly && q && _lucyBrowserChildAlive() && global._lucyBrowserOpen) {
+    const cmdId = `search-${Date.now()}`;
+    _writeSearchCommand({ id: cmdId, query: q });
+    const result = await _readSearchResult(cmdId, 120000);
+    if (result?.ok) {
+      const brief = await buildLucySearchBrief(npcBrains, q, result.results || [], {
+        staysOpenMsg: '\n\nBrowser stays open until you say "close the browser".',
+        readPages: [],
+      });
+      _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: npc, text: brief, ts: Date.now() });
+      return { ok: true, query: q, results: result.results || [], summary: brief, keepOpen: true };
+    }
+  }
+
+  // Always launch a fresh headed browser — IPC reuse caused zombie context errors.
+  if (!headless) {
+    await _prepareLucyBrowserForLaunch();
+  }
+  const untilClose = !headless && lucyBrowserUntilClose() && opts.keepOpen !== false;
+  const act = pcActivity.record({
+    npc, kind: 'web-search',
+    task: openOnly ? 'open browser' : `search: ${q.slice(0, 120)}`,
+    mode: 'visible', status: 'started',
+  });
+  if (!quiet) {
+    broadcast({
+      type: 'npc_skill_start', npcName: npc, skill: 'web-search',
+      skillParams: openOnly ? { openOnly: true } : { query: q }, ts: Date.now(),
+    });
+    try {
+      jellyPaths.ensureJellyDirs();
+      const paths = getNpcBrowserPaths(mirrorKey);
+      const prev = _readMirrorState(mirrorKey) || {};
+      fs.writeFileSync(
+        paths.stateFile,
+        JSON.stringify({
+          ...prev,
+          status: 'searching',
+          streaming: true,
+          npcKey: mirrorKey,
+          query: openOnly ? '' : q,
+          lastActivity: openOnly ? 'Launching browser…' : `Searching: ${q}`,
+          activityLog: [
+            ...(Array.isArray(prev.activityLog) ? prev.activityLog.slice(-19) : []),
+            { line: openOnly ? 'Launching browser…' : `Searching: ${q}`, at: Date.now() },
+          ],
+          updatedAt: Date.now(),
+        }),
+        'utf8',
+      );
+    } catch (_) {}
+    _broadcastNpcMirrorUpdate(broadcast, mirrorKey);
+  }
+
+  const script = SKILL_SCRIPTS['web-search'];
+  const startMs = Date.now();
+  const lingerMs = untilClose ? 0 : Number(opts.lingerMs || process.env.LUCY_SEARCH_LINGER_MS || 4 * 60 * 1000);
+
+  const browserMode = String(opts.browserMode || process.env.LUCY_BROWSER_MODE || 'auto').toLowerCase();
+  const spawnArgs = ['--query', q || 'browser', '--headless', headless ? 'true' : 'false', '--browser-mode', browserMode];
+  if (openOnly) spawnArgs.push('--open-only', 'true');
+  if (opts.directUrl) spawnArgs.push('--direct-url', String(opts.directUrl));
+  if (opts.jobBoard) spawnArgs.push('--job-board', String(opts.jobBoard));
+  if (untilClose) {
+    clearLucyCloseFlag();
+    spawnArgs.push('--keep-open', 'true');
+  } else if (!headless && lingerMs > 0) {
+    spawnArgs.push('--linger-ms', String(lingerMs));
+  }
+
+  const finishSearch = async (parsed, errOut, resolve) => {
+    const ok = !!(parsed && parsed.ok);
+    const results = ok ? (parsed.results || []) : [];
+    const lingerSec = parsed?.lingerMs ? Math.round(parsed.lingerMs / 1000) : 0;
+    pcActivity.record({
+      id: act.id, npc, kind: 'web-search', task: act.task, mode: 'visible',
+      status: ok ? 'done' : 'failed',
+      durationMs: Date.now() - startMs,
+      detail: ok
+        ? `${results.length} results${lingerSec ? ` · browser open ${lingerSec}s` : ''}`
+        : (parsed?.error || errOut).slice(0, 240),
+    });
+    const browserLabel = parsed?.browserEngine === 'chrome'
+      ? 'Playwright + Chrome'
+      : parsed?.browserEngine === 'msedge'
+        ? 'Playwright + Edge'
+        : 'Playwright Chromium';
+    const staysOpenMsg = parsed?.keepOpen
+      ? '\n\nBrowser stays open until you say "close the browser".'
+      : lingerSec ? `\n\n(Browser stays open ~${Math.round(lingerSec / 60)} min so you can browse.)` : '';
+    let summary = parsed?.openOnly && ok
+      ? `Browser's open (${browserLabel}). What should I look up for you?${staysOpenMsg}`
+      : ok && (results.length || (parsed?.readPages || []).length)
+        ? await buildLucySearchBrief(npcBrains, q, results, {
+          staysOpenMsg,
+          readPages: parsed?.readPages || [],
+        })
+        : `I tried searching "${q}" but hit an error: ${parsed?.error || errOut.trim() || 'no results'}`;
+    if (parsed?.keepOpen && ok) global._lucyBrowserOpen = true;
+    if (!ok) {
+      const errText = String(parsed?.error || errOut || '');
+      if (/closed|browser has been closed|profile|existing browser/i.test(errText)) {
+        global._lucyBrowserOpen = false;
+        _killLucyWebSearchChildren();
+        _killOrphanLucyChromium();
+      }
+    }
+    if (parsed?.browserSwitched) {
+      summary += `\n\nI switched to ${browserLabel} — job sites like Indeed/LinkedIn often block automation browsers.`;
+    }
+    if (parsed?.visitedUrls?.length) {
+      const vUrl = parsed.visitedUrls[0].url;
+      const host = (() => { try { return new URL(vUrl).hostname; } catch { return vUrl; } })();
+      if (isTunnelHost(vUrl)) {
+        summary += `\n\nOpened ${host} via ${browserLabel} — sign in to Cloudflare Access there if prompted.`;
+      } else if (parsed?.jobBoard) {
+        summary += `\n\nOpened ${parsed.jobBoard} job search via ${browserLabel}. Complete any verification checkbox in the browser window if you see one.`;
+      } else if (parsed?.browserEngine === 'chrome' || parsed?.browserEngine === 'msedge') {
+        summary += `\n\nOpened ${host} via ${browserLabel}.`;
+      }
+    }
+    if (parsed?.skippedTunnel?.length) {
+      const hosts = [...new Set(parsed.skippedTunnel.map((r) => {
+        try { return new URL(r.url).hostname; } catch { return r.url; }
+      }))].slice(0, 3);
+      summary += `\n\nTunnel links (${hosts.join(', ')}) are on the results page — say the hostname and I'll open them in Chrome.`;
+    }
+    if (parsed?.cloudflareChallenge?.blocked) {
+      const ray = parsed.cloudflareChallenge.rayId ? ` Ray ID ${parsed.cloudflareChallenge.rayId}.` : '';
+      const retried = parsed.cloudflareChallenge.retriedWith
+        ? ` I already retried via Playwright + ${parsed.cloudflareChallenge.retriedWith === 'msedge' ? 'Edge' : 'Chrome'}.`
+        : '';
+      summary += `\n\nCloudflare blocked this page ("Additional Verification Required").${ray}${retried} Click through the checkbox in my browser window, or open the link in your everyday browser.`;
+    }
+    try {
+      global._lucyLastBrowser = {
+        engine: parsed?.browserEngine || 'chromium',
+        label: browserLabel,
+        url: parsed?.visitedUrls?.[0]?.url || parsed?.directUrl || null,
+        at: Date.now(),
+        query: q,
+      };
+      if (q) global._lucyLastSearchQuery = q;
+    } catch (_) {}
+    try { npcBrains.injectSkillResult && npcBrains.injectSkillResult(npc, 'web-search', summary); } catch (_) {}
+    if (ok && summary) {
+      _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: npc, text: summary, ts: Date.now() });
+    }
+    if (!quiet) {
+      broadcast({ type: 'npc_skill_result', npcName: npc, skill: 'web-search', ok, output: summary.slice(0, 200), ts: Date.now() });
+      _broadcastNpcMirrorUpdate(broadcast, mirrorKey);
+    }
+    try {
+      const session = researchSessions.startSession({ topic: q, npcName: npc });
+      if (ok && results.length) {
+        results.slice(0, 3).forEach((r) => {
+          researchSessions.appendFinding(session.id, { source: 'web-search', text: r.title, url: r.url });
+        });
+      }
+      if (ok && parsed?.readPages?.length) {
+        parsed.readPages.slice(0, 2).forEach((p) => {
+          researchSessions.appendFinding(session.id, {
+            source: 'page-read',
+            text: String(p.text || '').slice(0, 500),
+            url: p.url,
+          });
+        });
+      }
+    } catch (_) {}
+    if (opts.writeBrief && ok && results.length) {
+      researchBrief.writeBrief({
+        topic: q,
+        searchResults: results,
+        pages: [],
+        npcBrains,
+      }).then((brief) => {
+        _ceoBroadcast({
+          type: 'research_brief_done',
+          npcName: npc,
+          topic: q,
+          path: brief.filePath,
+          summary: brief.summary || summary.slice(0, 300),
+          ts: Date.now(),
+        });
+      }).catch(() => {});
+    }
+    resolve({ ok, query: q, results, summary, screenshot: parsed?.screenshot || null, lingerMs: parsed?.lingerMs || lingerMs });
+  };
+
+  return new Promise((resolve) => {
+    const child = spawn('node', [script, ...spawnArgs], {
+      cwd: path.dirname(script),
+      env: {
+        ...process.env,
+        JELLY_HOME: jellyPaths.jellyHome(),
+        NPC_MIRROR_KEY: mirrorKey,
+      },
+    });
+    let out = '', errOut = '';
+    let settled = false;
+
+    const tryParse = () => {
+      if (settled) return;
+      for (const line of out.split('\n').filter(Boolean)) {
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed && (parsed.ok === true || parsed.ok === false || parsed.error)) {
+            settled = true;
+            finishSearch(parsed, errOut, resolve);
+            return;
+          }
+        } catch (_) {}
+      }
+    };
+
+    child.stdout.on('data', d => { out += d; tryParse(); });
+    child.stderr.on('data', d => { errOut += d; });
+    child.on('close', () => {
+      if (settled) return;
+      let parsed = null;
+      try { parsed = JSON.parse(out.trim().split('\n').filter(Boolean).pop()); } catch (_) {}
+      finishSearch(parsed, errOut, resolve);
+    });
+  });
+  };
+
+  const job = _browserSearchChain.then(runOnce);
+  _browserSearchChain = job.catch(() => {});
+  return job;
+}
+
+/** Back-compat alias — Lucy search API still uses this name internally. */
+function runLucyWebSearch(query, opts = {}) {
+  return runNpcWebSearch(opts.npcName || 'Lucy', query, opts);
+}
+
+/** Build desktop-agent instruction with profile hints for form fill. */
+function buildScreenControlInstruction(playerText) {
+  let instruction = String(playerText || '').trim();
+  const isForm = /\b(?:fill|form|application|apply|type for me|enter for me)\b/i.test(instruction);
+  instruction += '\n\nYou are on the CEO\'s REAL screen (Brave/browser/apps) — use mouse and keyboard.';
+  if (isForm) {
+    instruction += '\nFill every visible field. Do NOT click final Submit/Send unless the CEO explicitly said to submit.';
+    try {
+      const profilePath = path.join(__dirname, 'data', 'user-profile.json');
+      const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+      const bits = [
+        profile.name && `name: ${profile.name}`,
+        profile.email && `email: ${profile.email}`,
+        profile.phone && `phone: ${profile.phone}`,
+        profile.location && `location: ${profile.location}`,
+        profile.linkedin && `linkedin: ${profile.linkedin}`,
+        profile.title && `title: ${profile.title}`,
+      ].filter(Boolean);
+      if (bits.length) instruction += `\nCEO autofill data: ${bits.join('; ')}`;
+    } catch (_) {}
+  }
+  return instruction;
+}
+
+function triggerNpcScreenControl(npcName, playerText, broadcast) {
+  const instruction = buildScreenControlInstruction(playerText);
+  const act = pcActivity.record({
+    npc: npcName, kind: 'desktop-agent',
+    task: instruction.slice(0, 240),
+    mode: 'visible', status: 'started',
+  });
+  const t0 = Date.now();
+  return desktopAgent.runDesktopTask({ instruction, broadcast, npcName })
+    .then((result) => {
+      const summary = result?.summary || (result?.ok ? 'Done — check your screen.' : result?.error || 'Task failed.');
+      pcActivity.record({
+        id: act.id, npc: npcName, kind: 'desktop-agent',
+        task: act.task, mode: 'visible',
+        status: result?.ok ? 'done' : 'failed',
+        durationMs: Date.now() - t0,
+        detail: String(summary).slice(0, 240),
+      });
+      try { npcBrains.injectSkillResult(npcName, 'desktop-agent', summary); } catch (_) {}
+      broadcast({
+        type: 'npc_skill_result',
+        npcName, skill: 'desktop-agent', ok: !!result?.ok,
+        output: String(summary).slice(0, 200), ts: Date.now(),
+      });
+      if (result?.ok) {
+        broadcast({
+          type: 'npc_report_to_ceo',
+          npcName,
+          text: String(summary).slice(0, 2000),
+          ts: Date.now(),
+        });
+      }
+      return { ok: !!result?.ok, summary, result };
+    })
+    .catch((err) => {
+      pcActivity.record({
+        id: act.id, npc: npcName, kind: 'desktop-agent',
+        task: act.task, mode: 'visible', status: 'failed',
+        durationMs: Date.now() - t0,
+        detail: String(err?.message || err).slice(0, 240),
+      });
+      throw err;
+    });
+}
+
+/** Screenshot + vision describe + optional web research (any NPC). */
+function triggerNpcScreenObserve(npcName, instruction, broadcast) {
+  return screenObserve.runScreenObserve({
+    npcName,
+    instruction,
+    broadcast,
+    injectSkillResult: (n, skill, text) => {
+      try { npcBrains.injectSkillResult(n, skill, text); } catch (_) {}
+    },
+    runWebSearch: (n, q) => runNpcWebSearch(n, q, { broadcast, quiet: false, headless: false })
+      .then((r) => ({ ok: r.ok, summary: r.summary })),
+    queueResearch: (topic, priority) => {
+      try {
+        researchQueue.addTopic({ topic, priority: priority || 'normal', requestedBy: npcName });
+      } catch (_) {}
+    },
+  });
+}
+
+const jelly = createJelly({
+  denizenRoot: __dirname,
+  openclawRoot: OPENCLAW_ROOT,
+  approvedSkillScripts: _approvedSkillScripts,
+  deps: {
+    npcBrains,
+    pcActivity,
+    log,
+    jobApplication,
+    webResearch,
+    skillBuilder,
+    robinhoodMcp,
+    codingTaskRunner,
+    linuxAgent,
+    worldState,
+    bouncerInvTake: _bouncerInvTake,
+    githubRepo: GITHUB_REPO,
+    runWebSearch: runNpcWebSearch,
+  },
+});
+console.log(`[${JELLY.logTag}] ${jelly.listSkills().length} skills loaded — ${JELLY.tagline}`);
+
+/**
+ * Run a Jelly skill on behalf of an NPC. Fires async; result is injected
  * back into the NPC's next think() cycle via npcBrains.injectSkillResult().
  */
 async function runNpcSkill(npcName, skill, skillParams = {}) {
-  const { exec } = require('child_process');
-  const TIMEOUT_MS = 30000;
-
   const broadcast = (m) => {
     const raw = JSON.stringify(m);
     (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
   };
-
-  log.info('SkillBridge', `${npcName} → ${skill} ${JSON.stringify(skillParams)}`);
-  broadcast({ type: 'npc_skill_start', npcName, skill, skillParams, ts: Date.now() });
-
-  // Special case: Lucy running job-scraper or job-applier triggers the full pipeline.
-  // This integrates the multi-step pipeline instead of raw CLI passthrough.
-  if (npcName === 'Lucy' && (skill === 'job-scraper' || skill === 'job-applier')) {
-    log.info('SkillBridge', `Lucy → job pipeline via ${skill}`);
-    broadcast({ type: 'npc_skill_start', npcName, skill: 'job-pipeline', skillParams, ts: Date.now() });
-    // PC activity tracker: this is a real PC task (browser + LLMs). Mode
-    // is 'visible' because runJobPipeline → applyByWebForm opens a real
-    // Chromium window the user can watch.
-    const activity = pcActivity.record({
-      npc: npcName, kind: 'job-pipeline',
-      task: `${skillParams.query || skillParams.q || 'job search'} on ${skillParams.site || 'linkedin'}`,
-      mode: 'visible', status: 'started',
-    });
-    const pipelineStart = Date.now();
-    jobApplication.runJobPipeline({
-      query:     skillParams.query     || skillParams.q    || 'software engineer',
-      site:      skillParams.site      || 'linkedin',
-      pages:     Number(skillParams.pages || 2),
-      remoteOnly: Boolean(skillParams.remoteOnly || skillParams['remote-only']),
-      minSalary: Number(skillParams.minSalary || 0),
-    }).then(summary => {
-      pcActivity.record({
-        id: activity.id, npc: npcName, kind: 'job-pipeline',
-        task: activity.task, mode: 'visible', status: 'done',
-        durationMs: Date.now() - pipelineStart, detail: String(summary).slice(0, 240),
-      });
-      npcBrains.injectSkillResult(npcName, 'job-pipeline', summary);
-      broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: true, output: summary.slice(0, 200), ts: Date.now() });
-      broadcast({ type: 'lucy_job_pipeline_done', summary });
-      log.info('SkillBridge', `Lucy ← job-pipeline: ${summary.slice(0, 80)}`);
-    }).catch(err => {
-      pcActivity.record({
-        id: activity.id, npc: npcName, kind: 'job-pipeline',
-        task: activity.task, mode: 'visible', status: 'failed',
-        durationMs: Date.now() - pipelineStart, detail: String(err?.message || err).slice(0, 240),
-      });
-      const output = `Job pipeline failed: ${err?.message || err}`;
-      npcBrains.injectSkillResult(npcName, 'job-pipeline', output);
-      broadcast({ type: 'npc_skill_result', npcName, skill: 'job-pipeline', ok: false, output, ts: Date.now() });
-    });
-    return Promise.resolve({ ok: true, output: 'Lucy job pipeline started', skill: 'job-pipeline', npcName });
-  }
-
-  // --- research: real web search (+ optional page read) fed back into the
-  //     NPC's next think cycle so they reason over what they actually found. ---
-  if (skill === 'research') {
-    const researchStart = Date.now();
-    const query = skillParams?.query || skillParams?.q || skillParams?.topic || skillParams?.task || '';
-    const activity = pcActivity.record({
-      npc: npcName, kind: 'research', task: `research: ${String(query).slice(0, 120)}`,
-      mode: 'background', status: 'started',
-    });
-    webResearch.research(query, { count: Number(skillParams?.count) || 5, read: skillParams?.read != null ? Number(skillParams.read) : 1 })
-      .then(result => {
-        const formatted = webResearch.formatForNpc(result);
-        const ok = !result.error || result.results.length > 0;
-        pcActivity.record({ id: activity.id, npc: npcName, kind: 'research', task: activity.task, mode: 'background', status: ok ? 'done' : 'failed', durationMs: Date.now() - researchStart, detail: `${result.results.length} results` });
-        npcBrains.injectSkillResult(npcName, 'research', formatted);
-        broadcast({ type: 'npc_skill_result', npcName, skill: 'research', ok, output: `Found ${result.results.length} sources for "${result.query}"`, ts: Date.now() });
-        broadcast({ type: 'npc_research', npcName, query: result.query, sources: result.results.map(r => ({ title: r.title, url: r.url })), ts: Date.now() });
-        log.info('Research', `${npcName} researched "${String(query).slice(0, 60)}" → ${result.results.length} sources`);
-      })
-      .catch(err => {
-        npcBrains.injectSkillResult(npcName, 'research', `Research failed: ${err.message}`);
-        broadcast({ type: 'npc_skill_result', npcName, skill: 'research', ok: false, output: String(err.message).slice(0, 200), ts: Date.now() });
-      });
-    return Promise.resolve({ ok: true, output: 'Research started', skill: 'research', npcName });
-  }
-
-  // --- build-skill: an NPC drafts a NEW tool. Generated code is QUARANTINED
-  //     and only becomes runnable after the CEO approves it. Never auto-runs. ---
-  if (skill === 'build-skill') {
-    const buildStart = Date.now();
-    const activity = pcActivity.record({
-      npc: npcName, kind: 'build-skill',
-      task: `draft skill: ${skillParams?.name || skillParams?.purpose || '?'}`,
-      mode: 'background', status: 'started',
-    });
-    // Generator: use a capable coding model (Kimi K2.6 if available, else local).
-    const generateFn = async (spec) => {
-      const prompt = skillBuilder.buildGenerationPrompt(spec);
-      const cfg = npcBrains.providers?.kimi || npcBrains.providers?.lmstudio || npcBrains.providers?.demo;
-      if (!cfg || cfg.type === 'demo') return null;
-      return npcBrains._callProvider(cfg,
-        'You are a careful Node.js tool author. Output ONLY runnable code, no prose, no fences.',
-        [{ role: 'user', content: prompt }],
-        { maxTokens: 1200, sliceLen: 6000, kind: 'skill-codegen', npc: npcName });
-    };
-    skillBuilder.requestSkill({
-      npc: npcName,
-      name: skillParams?.name,
-      purpose: skillParams?.purpose || skillParams?.task,
-      params: skillParams?.params || [],
-      generateFn,
-    }).then(result => {
-      const ok = !!result.ok;
-      const output = ok
-        ? `Drafted skill "${result.proposal.slug}" (${result.proposal.status}) — awaiting CEO approval before it can run.${result.proposal.scanFlags.length ? ' Safety flags: ' + result.proposal.scanFlags.join('; ') : ''}`
-        : `Could not draft skill: ${result.error}`;
-      pcActivity.record({ id: activity.id, npc: npcName, kind: 'build-skill', task: activity.task, mode: 'background', status: ok ? 'done' : 'failed', durationMs: Date.now() - buildStart, detail: output.slice(0, 240) });
-      npcBrains.injectSkillResult(npcName, 'build-skill', output);
-      broadcast({ type: 'npc_skill_result', npcName, skill: 'build-skill', ok, output: output.slice(0, 300), ts: Date.now() });
-      if (ok) broadcast({ type: 'npc_skill_proposal', npcName, proposal: { id: result.proposal.id, name: result.proposal.slug, status: result.proposal.status, scanFlags: result.proposal.scanFlags }, ts: Date.now() });
-      log.info('SkillBuilder', `${npcName} drafted "${result.proposal?.slug || '?'}" → ${result.proposal?.status || 'error'}`);
-    }).catch(err => {
-      npcBrains.injectSkillResult(npcName, 'build-skill', `build-skill failed: ${err.message}`);
-      broadcast({ type: 'npc_skill_result', npcName, skill: 'build-skill', ok: false, output: String(err.message).slice(0, 200), ts: Date.now() });
-    });
-    return Promise.resolve({ ok: true, output: 'Skill draft started', skill: 'build-skill', npcName });
-  }
-
-  // --- market-watch: Roki runs a market observation cycle via Robinhood MCP ---
-  if (skill === 'market-watch' || skill === 'get-quote') {
-    const marketStart = Date.now();
-    const activity = pcActivity.record({
-      npc: npcName, kind: 'market-watch',
-      task: skill === 'get-quote'
-        ? `quote: ${(skillParams?.symbols || []).join(',')||'watchlist'}`
-        : 'market observation cycle',
-      mode: 'background', status: 'started',
-    });
-
-    const doMarket = skill === 'get-quote'
-      ? () => robinhoodMcp.getQuote(skillParams?.symbols || robinhoodMcp.loadWatchlist())
-      : () => robinhoodMcp.runMarketObservation();
-
-    doMarket().then(result => {
-      const output = JSON.stringify(result).slice(0, 1200);
-      pcActivity.record({
-        id: activity.id, npc: npcName, kind: 'market-watch',
-        task: activity.task, mode: 'background', status: 'done',
-        durationMs: Date.now() - marketStart, detail: output.slice(0, 240),
-      });
-      npcBrains.injectSkillResult(npcName, skill, output);
-      broadcast({ type: 'npc_skill_result', npcName, skill, ok: true, output: output.slice(0, 400), ts: Date.now() });
-      broadcast({ type: 'market_data_update', npcName, data: result, ts: Date.now() });
-      log.info('Market', `${npcName} ← ${skill}: ${output.slice(0, 80)}`);
-    }).catch(err => {
-      const output = `Market data unavailable: ${err.message}`;
-      pcActivity.record({
-        id: activity.id, npc: npcName, kind: 'market-watch',
-        task: activity.task, mode: 'background', status: 'failed',
-        durationMs: Date.now() - marketStart, detail: output,
-      });
-      npcBrains.injectSkillResult(npcName, skill, output);
-      broadcast({ type: 'npc_skill_result', npcName, skill, ok: false, output, ts: Date.now() });
-      log.warn('Market', `${npcName} market-watch failed: ${err.message}`);
-    });
-    return Promise.resolve({ ok: true, output: 'Market observation started', skill, npcName });
-  }
-
-  // --- trade-suggest: Roki records a trade suggestion (NEVER executes) ---
-  if (skill === 'trade-suggest') {
-    // Safety: reject if skillParams somehow contain an 'execute' flag
-    if (skillParams?.execute === true || skillParams?.placeOrder === true) {
-      const msg = 'BLOCKED: Denizen does not execute trades automatically. This is a safety constraint.';
-      log.warn('Market', msg);
-      npcBrains.injectSkillResult(npcName, skill, msg);
-      broadcast({ type: 'npc_skill_result', npcName, skill, ok: false, output: msg, ts: Date.now() });
-      return Promise.resolve({ ok: false, output: msg, skill, npcName });
-    }
-
-    const suggestion = robinhoodMcp.createSuggestion({
-      npc: npcName,
-      symbol: skillParams?.symbol,
-      action: skillParams?.tradeAction || skillParams?.action || 'watch',
-      quantity: skillParams?.quantity || null,
-      rationale: skillParams?.rationale || '',
-      currentPrice: skillParams?.currentPrice || null,
-      targetPrice: skillParams?.targetPrice || null,
-    });
-    const output = `Trade suggestion recorded: ${suggestion.action?.toUpperCase()} ${suggestion.symbol} — ${suggestion.rationale.slice(0, 80)}`;
-    npcBrains.injectSkillResult(npcName, skill, output);
-    broadcast({ type: 'npc_skill_result', npcName, skill, ok: true, output, ts: Date.now() });
-    broadcast({ type: 'trade_suggestion', suggestion, ts: Date.now() });
-    log.info('Market', `${npcName} trade suggestion: ${output}`);
-    return Promise.resolve({ ok: true, output, skill, npcName, suggestion });
-  }
-
-  // --- coding-agent: run Claude Code in an isolated worktree ---
-  if (skill === 'coding-agent') {
-    const { targetFiles, task: skillTask } = skillParams || {};
-    const taskDesc = skillTask || `NPC ${npcName} coding task`;
-    // PC activity tracker: Claude Code runs in a worktree on disk;
-    // it touches files and runs `git` / `npm` — definitely a PC task.
-    // Background by default since the user doesn't see it directly.
-    const activity = pcActivity.record({
-      npc: npcName, kind: 'coding-agent',
-      task: taskDesc, mode: 'background', status: 'started',
-      detail: Array.isArray(targetFiles) && targetFiles.length ? `files: ${targetFiles.join(', ').slice(0, 200)}` : null,
-    });
-    const codingStart = Date.now();
-    return codingTaskRunner.runCodingTask({
-      npc: npcName,
-      task: taskDesc,
-      targetFiles: Array.isArray(targetFiles) ? targetFiles : [],
-      skillParams,
-      broadcast: (msg) => {
-        const raw = JSON.stringify(msg);
-        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
-      },
-    }).then(result => {
-      const output = result.ok ? JSON.stringify(result) : `Error: ${result.error}`;
-      pcActivity.record({
-        id: activity.id, npc: npcName, kind: 'coding-agent',
-        task: taskDesc, mode: 'background',
-        status: result.ok ? 'done' : 'failed',
-        durationMs: Date.now() - codingStart,
-        detail: String(output).slice(0, 240),
-      });
-      npcBrains.injectSkillResult(npcName, skill, output);
-      broadcast({ type: 'npc_skill_result', npcName, skill, ok: result.ok, output: output.slice(0, 200), ts: Date.now() });
-      return result.ok ? JSON.stringify(result) : `Error: ${result.error}`;
-    });
-  }
-
-  // PC activity tracker: this is a generic skill exec — a real child
-  // process. Mode is background; skills don't render their own UI.
-  const skillTaskDesc = skillParams?.task || skillParams?.query || skill;
-  const activity = pcActivity.record({
-    npc: npcName, kind: 'skill', skill,
-    task: String(skillTaskDesc).slice(0, 240),
-    mode: skillParams?.mode === 'visible' ? 'visible' : 'background',
-    status: 'started',
-  });
-  const skillStart = Date.now();
-
-  return new Promise((resolve) => {
-    let cmd;
-
-    if (skill === 'github') {
-      // Build gh CLI command from skillParams
-      const action = skillParams.action || 'pr-list';
-      const repo = skillParams.repo || GITHUB_REPO;
-      if (action === 'pr-list') {
-        cmd = `gh pr list --repo ${repo}`;
-      } else if (action === 'run-list') {
-        const limit = skillParams.limit || 5;
-        cmd = `gh run list --repo ${repo} --limit ${limit}`;
-      } else if (action === 'issue-list') {
-        cmd = `gh issue list --repo ${repo}`;
-      } else {
-        // Generic: treat action as the gh sub-command
-        cmd = `gh ${action} --repo ${repo}`;
-      }
-    } else if (SKILL_SCRIPTS[skill] || _approvedSkillScripts()[skill]) {
-      // Built-in skills OR NPC-authored skills the CEO has APPROVED (approved
-      // ones live in skills/<slug>/ and only appear here after approval).
-      const scriptPath = SKILL_SCRIPTS[skill] || _approvedSkillScripts()[skill];
-      // Convert skillParams object to CLI args: {site: 'linkedin'} → '--site linkedin'
-      const args = Object.entries(skillParams)
-        .map(([k, v]) => `--${k} ${String(v).replace(/"/g, '\\"')}`)
-        .join(' ');
-      cmd = `node "${scriptPath}"${args ? ' ' + args : ''}`;
-    } else {
-      const result = { ok: false, output: `Unknown skill: ${skill}`, skill, npcName };
-      pcActivity.record({
-        id: activity.id, npc: npcName, kind: 'skill', skill,
-        task: activity.task, mode: activity.mode, status: 'failed',
-        durationMs: Date.now() - skillStart, detail: `Unknown skill: ${skill}`,
-      });
-      broadcast({ type: 'npc_skill_result', ...result, ts: Date.now() });
-      resolve(result);
-      return;
-    }
-
-    const child = exec(cmd, { windowsHide: true, timeout: TIMEOUT_MS }, (err, stdout, stderr) => {
-      const output = (stdout || stderr || (err ? err.message : 'no output')).slice(0, 800);
-      const ok = !err;
-      const result = { ok, output, skill, npcName };
-      pcActivity.record({
-        id: activity.id, npc: npcName, kind: 'skill', skill,
-        task: activity.task, mode: activity.mode,
-        status: ok ? 'done' : 'failed',
-        durationMs: Date.now() - skillStart,
-        detail: output.slice(0, 240),
-      });
-      npcBrains.injectSkillResult(npcName, skill, output);
-      broadcast({ type: 'npc_skill_result', npcName, skill, ok, output: output.slice(0, 200), ts: Date.now() });
-      log.info('SkillBridge', `${npcName} ← ${skill} (${ok ? 'ok' : 'err'}): ${output.slice(0, 80)}`);
-      resolve(result);
-    });
-    // Safety: kill child if it somehow outlives the timeout
-    setTimeout(() => { try { child.kill(); } catch (_) {} }, TIMEOUT_MS + 2000);
-  });
+  log.info(JELLY.logTag, `${npcName} → ${skill} ${JSON.stringify(skillParams)}`);
+  return jelly.runSkill(npcName, skill, skillParams, { broadcast });
 }
 
 // --- Furniture-placement whitelist + per-NPC daily budget ---
@@ -756,6 +1507,10 @@ global._npcStats = global._npcStats || {
 const externalSink = new ExternalSink({ worldState });
 externalSink.attach();
 
+// Supabase instrumentation — facts, work output, LLM telemetry (fire-and-forget).
+llmTelemetry.setDbSink((rec) => denizenDb.recordLlmEvent(rec));
+denizenDb.attachWorldState(worldState);
+
 // --- WorldState change broadcast (throttled) ---
 // Whenever any subsystem mutates the world, queue a delta for every
 // connected /agent-ws client. Without throttling, a busy moment (e.g. a
@@ -841,6 +1596,16 @@ function safeDecodePath(url) {
 }
 
 const server = http.createServer((req, res) => {
+  // Route registry wiring sketch (kept as comment to avoid broad server.js churn):
+  // const denizenRoutes = routeRegistry.registerDenizenRoutes(server, {
+  //   npcBrains,
+  //   broadcast: broadcastToAll,
+  //   getPredictionSummary,
+  //   robinhoodMcp,
+  //   jobCrm,
+  // });
+  // if (await denizenRoutes.handle(req, res)) return;
+
   let urlPath = safeDecodePath(req.url);
   const fullUrl = req.url;
 
@@ -853,8 +1618,8 @@ const server = http.createServer((req, res) => {
   // --- Security: check every request for suspicious patterns ---
   securityMonitor.checkHttpRequest(req);
 
-  // Proxy /openclaw/* to the OpenClaw gateway, stripping iframe-blocking headers
-  if (fullUrl.startsWith('/openclaw')) {
+  // Optional OpenClaw gateway proxy (off by default — Jelly is standalone)
+  if (JELLY_ENABLE_OPENCLAW_GATEWAY && fullUrl.startsWith('/openclaw')) {
     const targetPath = fullUrl.replace(/^\/openclaw/, '') || '/';
     const proxyOpts = {
       hostname: OPENCLAW_HOST,
@@ -1257,6 +2022,32 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, proposal }));
     });
+    return;
+  }
+
+  // GET /api/npc-capabilities — all NPC capability cards
+  if (urlPath === '/api/npc-capabilities' && req.method === 'GET') {
+    const cards = npcCapabilities.DISPLAY_NAMES.map((name) => {
+      const cap = npcCapabilities.getCapabilities(name);
+      return cap ? { name, ...cap } : { name };
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ npcs: cards }));
+    return;
+  }
+
+  // GET /api/npc-capabilities/:name — one NPC
+  const capNameMatch = urlPath.match(/^\/api\/npc-capabilities\/([^/]+)$/);
+  if (capNameMatch && req.method === 'GET') {
+    const rawName = decodeURIComponent(capNameMatch[1]);
+    const cap = npcCapabilities.getCapabilities(rawName);
+    if (!cap) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'unknown NPC' }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(cap));
     return;
   }
 
@@ -1805,15 +2596,56 @@ const server = http.createServer((req, res) => {
       }
 
       try {
+        const emailPayload = {
+          from: String(payload.from || '').slice(0, 200),
+          subject: String(payload.subject || '').slice(0, 400),
+          body: String(payload.body || '').slice(0, 20000),
+          threadId: payload.threadId || null,
+        };
+        const broadcastWs = (msg) => {
+          try {
+            cofounderAgent.wsClients.forEach(ws => {
+              if (ws.readyState === 1) ws.send(JSON.stringify(msg));
+            });
+          } catch (_) {}
+        };
+
+        // Job-search lifecycle: recruiter replies, interviews, offers, outreach.
+        const jobResult = await jobCrm.processInboundJobEmail(
+          { npcBrains, gmailClient },
+          emailPayload,
+        );
+        if (jobResult.handled) {
+          const reportLines = [];
+          if (jobResult.kind === 'interview_request') {
+            reportLines.push(`Interview request for ${jobResult.app?.role} at ${jobResult.app?.company}!`);
+            if (jobResult.prep?.filePath) reportLines.push(`Prep doc: ${jobResult.prep.filePath}`);
+          } else if (jobResult.kind === 'offer') {
+            reportLines.push(`Offer from ${jobResult.app?.company} — needs your review.`);
+            if (jobResult.brief?.brief) reportLines.push(jobResult.brief.brief.slice(0, 400));
+          } else if (jobResult.kind === 'rejection') {
+            reportLines.push(`Update: ${jobResult.app?.company} passed on ${jobResult.app?.role}. Logged for learning.`);
+          } else if (jobResult.draft) {
+            reportLines.push(`Drafted recruiter reply for ${jobResult.app?.company} — check Gmail drafts.`);
+          } else if (jobResult.kind === 'recruiter_outreach') {
+            reportLines.push(`New recruiter outreach logged: ${jobResult.app?.role} at ${jobResult.app?.company}.`);
+          }
+          const report = reportLines.join('\n');
+          if (report) {
+            broadcastWs({ type: 'npc_report_to_ceo', npcName: 'Lucy', text: report, ts: Date.now() });
+            broadcastWs({ type: 'job_crm_event', ...jobResult, ts: Date.now() });
+          }
+          if (jobResult.escalated) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true, jobCrm: jobResult, escalated: true }));
+            return;
+          }
+        }
+
         const result = await emailHandler.processInboundEmail(
           { npcBrains, gmailClient },
-          {
-            from: String(payload.from || '').slice(0, 200),
-            subject: String(payload.subject || '').slice(0, 400),
-            body: String(payload.body || '').slice(0, 20000),
-            threadId: payload.threadId || null,
-          },
-          { preferredName: payload.preferredName || null },
+          emailPayload,
+          { preferredName: payload.preferredName || jobResult.handled ? 'Lucy' : null },
         );
         if (!result.ok) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -1827,23 +2659,18 @@ const server = http.createServer((req, res) => {
           worldState.pushEvent('email', `${result.route?.name || 'Secretary'} drafted reply to ${payload.from}`);
         } catch (_) {}
         try {
-          cofounderAgent.wsClients.forEach(ws => {
-            if (ws.readyState !== 1) return;
-            try {
-              ws.send(JSON.stringify({
-                type: 'npc_email_arrived',
-                npcName: result.route?.name || 'Sarah',
-                from: payload.from,
-                subject: payload.subject,
-                escalated: !!result.escalated,
-                draftId: result.drafted?.id || null,
-              }));
-            } catch (_) {}
+          broadcastWs({
+            type: 'npc_email_arrived',
+            npcName: result.route?.name || 'Lucy',
+            from: payload.from,
+            subject: payload.subject,
+            escalated: !!result.escalated,
+            draftId: result.drafted?.id || null,
           });
         } catch (_) {}
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result));
+        res.end(JSON.stringify({ ...result, jobCrm: jobResult.handled ? jobResult : undefined }));
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: String(err?.message || err) }));
@@ -1885,6 +2712,62 @@ const server = http.createServer((req, res) => {
       });
       res.writeHead(result.status === 'sent' ? 200 : 400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
+    });
+    return;
+  }
+
+  // POST /api/grant-permission — CEO grants an NPC access to proceed with a blocked task.
+  // Body: { npcName, permission, scope? }
+  // Saves to permission-registry (persists across restarts) + NPC's MEMORY.md + fires a
+  // directive so the NPC picks up the unblock on their very next think cycle.
+  if (urlPath === '/api/grant-permission' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let p;
+      try { p = JSON.parse(body || '{}'); }
+      catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
+        return;
+      }
+
+      const npcName  = String(p.npcName  || '').trim().slice(0, 60);
+      const permission = String(p.permission || p.task || '').trim().slice(0, 200);
+      const scope    = String(p.scope || permission).trim().slice(0, 200);
+      if (!npcName || !permission) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'npcName and permission are required' }));
+        return;
+      }
+
+      const permissionRegistry = require('./src/permission-registry');
+      const isNew = permissionRegistry.grantPermission(npcName, permission, 'CEO', scope);
+
+      // Also write the grant into the NPC's MEMORY.md so it persists across server restarts.
+      const memoryPath = require('path').join(__dirname, 'npcs', npcName, 'MEMORY.md');
+      permissionRegistry.saveToMemory(npcName, permission, 'CEO', memoryPath);
+
+      // Fire a directive so the NPC unblocks immediately on the next think cycle.
+      try {
+        npcBrains.assignDirective(
+          npcName, 'CEO',
+          `Permission granted: proceed with "${permission}". You no longer need approval — just do it.`
+        );
+      } catch (_) {}
+
+      // Broadcast the grant so the office UI can show a confirmation.
+      // Uses the npcBrains broadcaster which is already wired to all WS clients.
+      try {
+        (agentWss ? agentWss.clients : new Set()).forEach(c => {
+          if (c.readyState === 1) c.send(JSON.stringify(
+            { type: 'npc_permission_granted', npcName, permission, ts: Date.now() }
+          ));
+        });
+      } catch (_) {}
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, npcName, permission, isNew }));
     });
     return;
   }
@@ -2019,37 +2902,13 @@ const server = http.createServer((req, res) => {
       });
       // Return immediately — task runs async, progress via WS
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, async: true, note: 'Lucy is on it — watch your screen.' }));
-      // PC activity: desktop-agent drives mouse/keyboard on the whole
-      // PC — by definition 'visible' (the user literally watches the
-      // cursor move). Npc tagged 'Lucy' because that's the only NPC
-      // wired to /api/desktop-task today.
-      const dtActivity = pcActivity.record({
-        npc: 'Lucy', kind: 'desktop-agent',
-        task: String(payload.instruction).slice(0, 240),
-        mode: 'visible', status: 'started',
-      });
-      const dtStart = Date.now();
-      desktopAgent.runDesktopTask({ instruction: payload.instruction, broadcast, provider: payload.provider || null })
-        .then((result) => {
-          pcActivity.record({
-            id: dtActivity.id, npc: 'Lucy', kind: 'desktop-agent',
-            task: dtActivity.task, mode: 'visible', status: 'done',
-            durationMs: Date.now() - dtStart,
-            detail: result && typeof result === 'object'
-              ? String(result.summary || result.note || '').slice(0, 240) || null
-              : null,
-          });
-        })
+      const deskNpc = String(payload.npcName || 'Lucy');
+      res.end(JSON.stringify({ ok: true, async: true, note: `${deskNpc} is on it — watch your screen.` }));
+      triggerNpcScreenControl(deskNpc, payload.instruction, broadcast)
         .catch(err => {
-          pcActivity.record({
-            id: dtActivity.id, npc: 'Lucy', kind: 'desktop-agent',
-            task: dtActivity.task, mode: 'visible', status: 'failed',
-            durationMs: Date.now() - dtStart,
-            detail: String(err?.message || err).slice(0, 240),
-          });
           console.error('[desktop-task] error:', err?.message);
         });
+      return;
     });
     return;
   }
@@ -2162,7 +3021,7 @@ const server = http.createServer((req, res) => {
           pages:      Number(payload.pages || 2),
           remoteOnly: Boolean(payload.remoteOnly),
           minSalary:  Number(payload.minSalary || 0),
-        });
+        }, { npcBrains });
         pcActivity.record({
           id: jpActivity.id, npc: 'Lucy', kind: 'job-pipeline',
           task: jpActivity.task, mode: 'visible', status: 'done',
@@ -2192,6 +3051,352 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Lucy web search (visible browser) ---
+  // POST /api/lucy-search { query, headless?: false }
+  // Opens Lucy's VISIBLE browser, searches DuckDuckGo, returns top results, and
+  // surfaces them in the office chat. This is what "Lucy, search X" routes to so
+  // she actually browses instead of replying with text (and without needing the
+  // OpenClaw gateway running).
+  // GET /api/lucy-browser/mirror — live browser mirror state for mobile/remote CEO UI
+  if (urlPath === '/api/lucy-browser/mirror' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(_buildLucyMirrorResponse()));
+    return;
+  }
+
+  const npcBrowserMatch = urlPath.match(/^\/api\/npc-browser\/([^/]+)(?:\/(mirror|live-frame|frame|stream|close|input))?$/);
+  if (npcBrowserMatch) {
+    const npcKey = decodeURIComponent(npcBrowserMatch[1]);
+    const action = npcBrowserMatch[2] || 'mirror';
+    if (action === 'mirror' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(_buildNpcMirrorResponse(npcKey)));
+      return;
+    }
+    if (action === 'live-frame' && req.method === 'GET') {
+      const childAlive = _lucyBrowserChildAlive();
+      const activeKey = normalizeNpcKey(global._activeBrowserNpc || 'lucy');
+      const latest = _latestMirrorFrameFileForNpc(npcKey);
+      const frameAgeMs = latest ? Date.now() - latest.mtimeMs : Infinity;
+      const frameFresh = frameAgeMs < LUCY_MIRROR_FRAME_LIVE_MS;
+      const owns = childAlive && activeKey === normalizeNpcKey(npcKey);
+      if (!latest || (!owns && !frameFresh)) {
+        res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({
+          ok: false,
+          error: owns ? 'no live frame yet' : 'browser not live for this NPC',
+          stale: !owns,
+          activeNpcKey: activeKey,
+        }));
+        return;
+      }
+      fs.readFile(latest.path, (err, data) => {
+        if (err) {
+          res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+          res.end(JSON.stringify({ ok: false, error: 'no live frame yet' }));
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': latest.format === 'png' ? 'image/png' : 'image/jpeg',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        });
+        res.end(data);
+      });
+      return;
+    }
+    if (action === 'frame' && req.method === 'GET') {
+      const paths = getNpcBrowserPaths(npcKey);
+      const framePath = fs.existsSync(paths.frameFile) ? paths.frameFile : (
+        normalizeNpcKey(npcKey) === 'lucy' ? LUCY_MIRROR_FRAME_FILE : paths.frameFile
+      );
+      fs.readFile(framePath, (err, data) => {
+        if (err) {
+          res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+          res.end(JSON.stringify({ ok: false, error: 'no frame yet' }));
+          return;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        });
+        res.end(data);
+      });
+      return;
+    }
+    if (action === 'stream' && req.method === 'GET') {
+      const paths = getNpcBrowserPaths(npcKey);
+      lucyBrowserStream.serveLucyMjpegStream(req, res, {
+        streamFile: paths.streamFile,
+        isLive: () => {
+          const activeKey = normalizeNpcKey(global._activeBrowserNpc || 'lucy');
+          return (_lucyBrowserChildAlive() && activeKey === normalizeNpcKey(npcKey)) || !!global._lucyBrowserOpen;
+        },
+      });
+      return;
+    }
+    if (action === 'close' && req.method === 'POST') {
+      const r = closeLucyBrowser();
+      const broadcast = (m) => {
+        const raw = JSON.stringify(m);
+        (agentWss ? agentWss.clients : new Set()).forEach((c) => { if (c.readyState === 1) c.send(raw); });
+      };
+      _broadcastNpcMirrorUpdate(broadcast, npcKey);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(r));
+      return;
+    }
+    if (action === 'input' && req.method === 'POST') {
+      let body = '';
+      req.on('data', (c) => { body += c; });
+      req.on('end', () => {
+        let payload = {};
+        try { payload = JSON.parse(body || '{}'); } catch (_) {}
+        const type = String(payload.type || '').toLowerCase();
+        const activeKey = normalizeNpcKey(global._activeBrowserNpc || 'lucy');
+        if (!['scroll', 'click'].includes(type)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'type must be scroll or click' }));
+          return;
+        }
+        if (!_lucyBrowserChildAlive() || activeKey !== normalizeNpcKey(npcKey)) {
+          res.writeHead(409, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            ok: false,
+            error: `browser not live for ${npcKey} — ask them to search again`,
+            activeNpcKey: activeKey,
+          }));
+          return;
+        }
+        const cmd = {
+          id: `input-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          type,
+          x: Number(payload.x),
+          y: Number(payload.y),
+          deltaX: Number(payload.deltaX) || 0,
+          deltaY: Number(payload.deltaY) || 0,
+        };
+        if (type === 'click' && (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y))) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'click requires x and y' }));
+          return;
+        }
+        const queued = _writeBrowserInputCommand(cmd);
+        res.writeHead(queued ? 202 : 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: queued, queued: !!queued, id: cmd.id }));
+      });
+      return;
+    }
+  }
+
+  // GET /api/lucy-browser/live-frame — latest mirror frame (PNG or JPEG)
+  if (urlPath === '/api/lucy-browser/live-frame' && req.method === 'GET') {
+    const childAlive = _lucyBrowserChildAlive();
+    const latest = _latestMirrorFrameFile();
+    const frameAgeMs = latest ? Date.now() - latest.mtimeMs : Infinity;
+    const frameFresh = frameAgeMs < LUCY_MIRROR_FRAME_LIVE_MS;
+    if (!latest || (!childAlive && !frameFresh)) {
+      res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({
+        ok: false,
+        error: childAlive ? 'no live frame yet' : 'browser not live',
+        stale: !childAlive,
+      }));
+      return;
+    }
+    fs.readFile(latest.path, (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ ok: false, error: 'no live frame yet' }));
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': latest.format === 'png' ? 'image/png' : 'image/jpeg',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      });
+      res.end(data);
+    });
+    return;
+  }
+
+  // GET /api/lucy-browser/stream — MJPEG fallback (some browsers block this on <img>)
+  if (urlPath === '/api/lucy-browser/stream' && req.method === 'GET') {
+    lucyBrowserStream.serveLucyMjpegStream(req, res, {
+      streamFile: LUCY_MIRROR_STREAM_FILE,
+      isLive: () => _lucyBrowserChildAlive() || !!global._lucyBrowserOpen,
+    });
+    return;
+  }
+
+  // GET /api/lucy-browser/frame — latest PNG frame from Lucy's Playwright browser
+  if (urlPath === '/api/lucy-browser/frame' && req.method === 'GET') {
+    fs.readFile(LUCY_MIRROR_FRAME_FILE, (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({ ok: false, error: 'no frame yet' }));
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      });
+      res.end(data);
+    });
+    return;
+  }
+
+  if (urlPath === '/api/lucy-browser/close' && req.method === 'POST') {
+    const r = closeLucyBrowser();
+    const broadcast = (m) => {
+      const raw = JSON.stringify(m);
+      (agentWss ? agentWss.clients : new Set()).forEach((c) => { if (c.readyState === 1) c.send(raw); });
+    };
+    _broadcastLucyMirrorUpdate(broadcast);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(r));
+    return;
+  }
+
+  // POST /api/lucy-browser/input — remote scroll / tap on Lucy's open Playwright page
+  if (urlPath === '/api/lucy-browser/input' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', () => {
+      let payload = {};
+      try { payload = JSON.parse(body || '{}'); } catch (_) {}
+      const type = String(payload.type || '').toLowerCase();
+      if (!['scroll', 'click'].includes(type)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'type must be scroll or click' }));
+        return;
+      }
+      if (!_lucyBrowserChildAlive()) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'browser not live — ask Lucy to search again' }));
+        return;
+      }
+      const cmd = {
+        id: `input-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        type,
+        x: Number(payload.x),
+        y: Number(payload.y),
+        deltaX: Number(payload.deltaX) || 0,
+        deltaY: Number(payload.deltaY) || 0,
+      };
+      if (type === 'click' && (!Number.isFinite(cmd.x) || !Number.isFinite(cmd.y))) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'click requires x and y' }));
+        return;
+      }
+      const queued = _writeBrowserInputCommand(cmd);
+      res.writeHead(queued ? 202 : 500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: queued, queued: !!queued, id: cmd.id }));
+    });
+    return;
+  }
+
+  // POST /api/open-brave { url? } — launch CEO's real Brave browser
+  if (urlPath === '/api/open-brave' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', async () => {
+      let payload = {};
+      try { payload = JSON.parse(body || '{}'); } catch (_) {}
+      try {
+        const r = await desktopAgent.openBraveBrowser(payload.url || null);
+        res.writeHead(r.ok ? 200 : 500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(r));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
+      }
+    });
+    return;
+  }
+
+  // POST /api/screen-observe { npcName?, instruction } — screenshot + vision + web research
+  if (urlPath === '/api/screen-observe' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const npcName = String(payload.npcName || 'Lucy');
+      const instruction = String(payload.instruction || 'Describe what is on my screen.');
+      const broadcast = (m) => {
+        const raw = JSON.stringify(m);
+        (agentWss ? agentWss.clients : new Set()).forEach((c) => { if (c.readyState === 1) c.send(raw); });
+      };
+      triggerNpcScreenObserve(npcName, instruction, broadcast)
+        .then((r) => {
+          res.writeHead(r.ok ? 200 : 500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(r));
+        })
+        .catch((err) => {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
+        });
+    });
+    return;
+  }
+
+  if (urlPath === '/api/lucy-search' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'invalid JSON' }));
+        return;
+      }
+      const query = String(payload.query || '').trim();
+      const openOnly = payload.openOnly === true;
+      if (!openOnly && query && isJunkSearchQuery(query)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'search topic required (not just "search" or "web")' }));
+        return;
+      }
+      if (!query && !openOnly && !payload.directUrl) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'query required' }));
+        return;
+      }
+
+      // Respond immediately — browser search can take 30–120s and Cloudflare/tunnel
+      // HTTP limits return HTML error pages if we block the request.
+      res.writeHead(202, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        pending: true,
+        query: query || (openOnly ? 'browser' : ''),
+        message: 'Search started — results will appear in chat when Lucy finishes.',
+      }));
+
+      const broadcast = (m) => cofounderAgent.wsClients.forEach(c => {
+        if (c.readyState === 1) c.send(JSON.stringify(m));
+      });
+      runLucyWebSearch(query, {
+        headless: payload.headless === true,
+        quiet: false,
+        browserMode: payload.browserMode,
+        directUrl: payload.directUrl || null,
+        jobBoard: payload.jobBoard || null,
+        openOnly: payload.openOnly === true,
+        broadcast,
+      }).catch((err) => {
+        _ceoBroadcast({
+          type: 'npc_report_to_ceo',
+          npcName: 'Lucy',
+          text: `Search failed: ${String(err?.message || err)}`,
+          ts: Date.now(),
+        });
+      });
+    });
+    return;
+  }
+
   // --- Bouncer Linux terminal (Kali WSL investigation) ---
   // POST /api/bouncer-linux { category?, source?, detail?, openTerminal?: bool }
   // Runs real security commands in Kali WSL and streams results via WS.
@@ -2210,14 +3415,29 @@ const server = http.createServer((req, res) => {
         detail:   payload.detail   || payload.category || 'manual investigation',
       };
 
+      const invGate = _bouncerInvTake(threat);
+      if (!invGate.allowed) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: false,
+          skipped: true,
+          note: `Investigation cooldown (${invGate.remainingSec}s) for ${invGate.key}`,
+        }));
+        return;
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, async: true, note: 'Bouncer is running Kali Linux commands — watch your chat.' }));
 
-      broadcast({ type: 'bouncer_linux_status', status: 'starting', threat, message: `Bouncer opened a Kali Linux terminal to investigate ${threat.category}...` });
+      const openTerminal = payload.openTerminal === true;
+      broadcast({
+        type: 'bouncer_linux_status',
+        status: 'starting',
+        threat,
+        openTerminal,
+        message: `Bouncer is investigating ${threat.category} in the background...`,
+      });
 
-      // Open a real visible terminal window so the player can watch Bouncer work.
-      // Uses _openBouncerTerminal (direct spawn) — never types into the focused window.
-      const openTerminal = payload.openTerminal !== false;
       if (openTerminal) {
         _openBouncerTerminal(_buildTerminalShowCmd(threat));
       }
@@ -2263,6 +3483,239 @@ const server = http.createServer((req, res) => {
         });
         broadcast({ type: 'bouncer_linux_result', status: 'error', threat, message: `WSL error: ${err.message}` });
       });
+    });
+    return;
+  }
+
+  // --- Job CRM: application lifecycle, standup, referrals, maintenance ---
+  if (urlPath === '/api/job-crm' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const status = url.searchParams.get('status') || null;
+    const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') || 50)));
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      applications: jobCrm.listApplications({ status, limit }),
+      stats: jobCrm.getOutcomeStats(),
+      referrals: jobCrm.loadCrm().referrals,
+    }));
+    return;
+  }
+
+  if (urlPath === '/api/job-crm/standup' && req.method === 'GET') {
+    const report = jobCrm.buildWeeklyStandup();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, report }));
+    return;
+  }
+
+  if (urlPath === '/api/job-crm/maintenance' && req.method === 'POST') {
+    const broadcast = (m) => {
+      try {
+        (agentWss ? agentWss.clients : new Set()).forEach(c => {
+          if (c.readyState === 1) c.send(JSON.stringify(m));
+        });
+        cofounderAgent.wsClients.forEach(ws => {
+          if (ws.readyState === 1) ws.send(JSON.stringify(m));
+        });
+      } catch (_) {}
+    };
+    jobCrm.runMaintenance({ npcBrains, broadcast })
+      .then(r => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, ...r }));
+      })
+      .catch(err => {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
+      });
+    return;
+  }
+
+  if (urlPath === '/api/job-crm/referral' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let p;
+      try { p = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const ref = jobCrm.addReferral({
+        company: String(p.company || '').trim(),
+        contact: String(p.contact || '').trim(),
+        relationship: String(p.relationship || 'linkedin').trim(),
+        notes: String(p.notes || '').trim(),
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, referral: ref }));
+    });
+    return;
+  }
+
+  // --- Research queue + briefs + general Bob chain ---
+  if (urlPath === '/api/research-queue' && req.method === 'GET') {
+    const pending = researchQueue.listTopics({ status: 'pending', limit: 50 });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, pending: pending.length, items: pending }));
+    return;
+  }
+
+  if (urlPath === '/api/research-queue' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let p;
+      try { p = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const topic = String(p.topic || '').trim();
+      if (!topic) { res.writeHead(400); res.end(JSON.stringify({ ok: false, error: 'topic required' })); return; }
+      try {
+        const item = researchQueue.addTopic({
+          topic,
+          priority: _mapResearchPriority(p.priority),
+          assignedTo: String(p.assignedTo || 'Bob').trim(),
+          notes: String(p.notes || '').trim(),
+        });
+        const pending = researchQueue.listTopics({ status: 'pending', limit: 100 });
+        _ceoBroadcast({
+          type: 'research_queue_update',
+          npcName: 'Lucy',
+          topic,
+          pending: pending.length,
+          ts: Date.now(),
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, item, pending: pending.length }));
+      } catch (err) {
+        res.writeHead(500); res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath === '/api/research-brief' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let p;
+      try { p = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const topic = String(p.topic || '').trim();
+      if (!topic) { res.writeHead(400); res.end(JSON.stringify({ ok: false, error: 'topic required' })); return; }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, note: `Researching "${topic}" — brief incoming.` }));
+      const session = researchSessions.startSession({ topic, npcName: 'Bob' });
+      researchBrief.runFullResearch(topic, { count: 5, read: 2, npcBrains })
+        .then((result) => {
+          try { researchSessions.linkSessionToBrief(session.id, result.filePath); } catch (_) {}
+          const text = `Research brief ready: "${topic}"\n${result.filePath}\n${(result.summary || '').slice(0, 400)}`;
+          _ceoBroadcast({
+            type: 'research_brief_done',
+            npcName: 'Bob',
+            topic,
+            path: result.filePath,
+            summary: result.summary || text,
+            text,
+            ts: Date.now(),
+          });
+        })
+        .catch(err => {
+          _ceoBroadcast({
+            type: 'npc_report_to_ceo',
+            npcName: 'Lucy',
+            text: `Research brief failed for "${topic}": ${err?.message || err}`,
+            ts: Date.now(),
+          });
+        });
+    });
+    return;
+  }
+
+  if (urlPath === '/api/lucy-research-chain' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let p;
+      try { p = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const topic = String(p.topic || p.query || '').trim();
+      if (!topic) { res.writeHead(400); res.end(JSON.stringify({ error: 'topic required' })); return; }
+      try {
+        const chain = taskChain.startChain({
+          name: `Research: ${topic}`,
+          triggeredBy: 'CEO',
+          steps: [
+            { npc: 'Bob', task: `Deep research on: ${topic}. Read sources, write a markdown brief to reports/research/, note risks and next actions.`, artifactCategory: 'research' },
+            { npc: 'Lucy', task: `Summarize Bob's brief on "${topic}" for the CEO in chat. Highlight top 3 takeaways and recommended next steps.`, artifactCategory: 'admin' },
+          ],
+        }, npcBrains.assignDirective.bind(npcBrains), _ceoBroadcast);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, chainId: chain.id, topic }));
+      } catch (err) {
+        res.writeHead(500); res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath === '/api/away/digest' && req.method === 'POST') {
+    awayNotify.runDailyDigest({
+      jobCrm,
+      researchQueue,
+      gmailClient,
+      channels: ['discord', 'slack'],
+    }).then((text) => {
+      _ceoBroadcast({ type: 'daily_digest_sent', npcName: 'Lucy', report: text, text, ts: Date.now() });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, text }));
+    }).catch(err => {
+      res.writeHead(500); res.end(JSON.stringify({ ok: false, error: err.message }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/away/research/run' && req.method === 'POST') {
+    awayNotify.runScheduledResearch({
+      researchQueue,
+      assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
+      from: 'Lucy',
+    }).then((result) => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch(err => {
+      res.writeHead(500); res.end(JSON.stringify({ ok: false, error: err.message }));
+    });
+    return;
+  }
+
+  // Bob researches → Lucy applies (task chain for high-value listings)
+  if (urlPath === '/api/lucy-job-research-chain' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      let p;
+      try { p = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const company = String(p.company || '').trim();
+      const role = String(p.role || p.query || '').trim();
+      if (!company || !role) {
+        res.writeHead(400); res.end(JSON.stringify({ error: 'company and role required' })); return;
+      }
+      try {
+        const chain = taskChain.startChain({
+          name: `Job research: ${role} at ${company}`,
+          triggeredBy: 'CEO',
+          steps: [
+            { npc: 'Bob', task: `Research ${company} for a ${role} application. Cover: funding, culture, remote policy, red flags. Write findings to reports/job-research/.`, artifactCategory: 'research' },
+            { npc: 'Lucy', task: `Using Bob's research on ${company}, score the ${role} fit and apply if score ≥ 7. Tailor cover letter. Do NOT submit without CEO approval.`, artifactCategory: 'job-apply' },
+          ],
+        }, npcBrains.assignDirective.bind(npcBrains), (m) => {
+          (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, chainId: chain.id }));
+      } catch (err) {
+        res.writeHead(500); res.end(JSON.stringify({ ok: false, error: String(err?.message || err) }));
+      }
     });
     return;
   }
@@ -2340,6 +3793,20 @@ const server = http.createServer((req, res) => {
     const errors = llmTelemetry.getRecentErrors({ limit });
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ errors }));
+    return;
+  }
+  if (urlPath === '/api/telemetry/insights' && req.method === 'GET') {
+    try {
+      const telemetryInsights = require('./src/telemetry-insights');
+      const url = new URL(req.url, 'http://x');
+      const force = url.searchParams.get('force') === '1';
+      const insights = telemetryInsights.getInsights({ force });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...insights }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    }
     return;
   }
 
@@ -2720,6 +4187,967 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Visitor sessions + personal assistant claims ---
+  if (urlPath === '/api/orgs' && req.method === 'GET') {
+    (async () => {
+      const orgs = await denizenVisitor.listOrganizations();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, orgs }));
+    })().catch((err) => {
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/access/verify' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 4 * 1024);
+      const kind = body.kind ?? body.type;
+      const accessKind = kind === 'ceo' ? 'ceo' : kind === 'team' ? 'team' : null;
+      if (!accessKind) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'kind must be "team" or "ceo"' }));
+        return;
+      }
+      const result = visitorAccess.verifyAccessCode(body.code, accessKind);
+      if (!result.ok) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    })().catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/auth/register' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const result = await teamAuth.registerTeamAccount({
+        email: body.email,
+        displayName: body.display_name ?? body.displayName,
+        teamCode: body.team_code ?? body.teamCode,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/auth/login' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const result = await teamAuth.loginTeamAccount({
+        email: body.email,
+        teamCode: body.team_code ?? body.teamCode,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/session' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const existingId = body.session_id || body.sessionId || null;
+      const existingToken = sessionAuth.extractSessionAuth(req, body);
+      const accessGrant = body.access_grant || body.accessGrant || null;
+      const grantPayload = accessGrant ? sessionAuth.verifyAccessGrant(accessGrant) : null;
+
+      let orgSlug = body.org_slug ?? body.orgSlug ?? null;
+      let tier = null;
+      let metadata = body.metadata && typeof body.metadata === 'object' ? { ...body.metadata } : {};
+
+      if (grantPayload) {
+        orgSlug = grantPayload.org_slug;
+        tier = grantPayload.tier;
+        metadata = { ...visitorAccess.metadataFromAccessGrant(grantPayload), ...metadata };
+      } else if (existingId && existingToken) {
+        await visitorAccess.assertSessionToken(existingId, existingToken);
+        const access = await visitorAccess.resolveSessionAccess(existingId);
+        orgSlug = access.orgSlug;
+        tier = access.tier;
+      } else if (body.demo === true || metadata.access_method === 'demo' || orgSlug === promptTuning.demoOrgSlug) {
+        orgSlug = promptTuning.demoOrgSlug;
+        tier = 'demo';
+        metadata = {
+          tier: 'demo',
+          org_slug: orgSlug,
+          access_method: 'demo',
+          ...metadata,
+        };
+      } else {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: false,
+          error: 'access_grant or valid session_token required for team sessions',
+          code: 'DENIED',
+        }));
+        return;
+      }
+
+      if (tier === 'team' && !grantPayload && !(existingId && existingToken)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'team tier requires access_grant', code: 'DENIED' }));
+        return;
+      }
+
+      const resolvedOrg = await denizenVisitor.resolveOrgBySlug(orgSlug);
+      if (!resolvedOrg) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `Organization "${orgSlug}" not found` }));
+        return;
+      }
+
+      metadata.tier = tier || metadata.tier || (resolvedOrg.slug === promptTuning.demoOrgSlug ? 'demo' : 'team');
+      metadata.org_slug = resolvedOrg.slug;
+
+      let sessionToken = null;
+      let sessionTokenHash = null;
+      const isRefresh = !!(existingId && existingToken);
+      const issueToken = tier !== 'demo';
+      if (!isRefresh && issueToken) {
+        const created = sessionAuth.createSessionToken();
+        sessionToken = created.token;
+        sessionTokenHash = created.hash;
+      }
+
+      const session = await denizenVisitor.createOrUpdateSession({
+        sessionId: existingId,
+        displayName: body.display_name ?? body.displayName,
+        metadata,
+        orgId: resolvedOrg.id,
+        sessionTokenHash: sessionTokenHash || undefined,
+        forceNewId: !existingId,
+      });
+
+      if (grantPayload?.email && session?.id) {
+        await teamAuth.linkAccountToSession(grantPayload.email, session.id);
+      }
+
+      const payload = {
+        ok: true,
+        session,
+        org: { slug: resolvedOrg.slug, id: resolvedOrg.id },
+      };
+      if (sessionToken) payload.session_token = sessionToken;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(payload));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/org' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const slug = u.searchParams.get('slug') || denizenDb.orgSlug || 'zion';
+      const org = await denizenVisitor.resolveOrgBySlug(slug);
+      if (!org) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `Organization "${slug}" not found` }));
+        return;
+      }
+      const policy = await orgPolicy.getOrgPolicy(org.slug);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        org: {
+          slug: org.slug,
+          id: org.id,
+          display_name: org.display_name,
+          plan: org.plan || null,
+          policy,
+        },
+      }));
+    })().catch((err) => {
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/org/policy' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const slug = u.searchParams.get('slug') || denizenDb.orgSlug || 'zion';
+      const table = u.searchParams.get('table');
+      const policy = await orgPolicy.getOrgPolicy(slug);
+      const allowed = table
+        ? await orgPolicy.isBusinessTableAllowed(slug, table)
+        : null;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, slug, policy, table: table || null, allowed }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/intelligence/prediction-summary' && req.method === 'GET') {
+    (async () => {
+      if (!denizenDb.enabled || !denizenDb.orgId) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Intelligence layer unavailable' }));
+        return;
+      }
+      const summary = await getPredictionSummary(denizenDb.orgId, denizenDb);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, summary }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/federal/pipeline-summary' && req.method === 'GET') {
+    (async () => {
+      if (!denizenDb.enabled || !denizenDb.orgId) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Intelligence layer unavailable' }));
+        return;
+      }
+      const summary = await getRfpPipelineSummary(denizenDb);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, summary }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/session' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, session }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/assistant' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      const assistant = await denizenVisitor.getAssistant(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, assistant: assistant || null }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/claim' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const npcKey = body.npc_key || body.npcKey || body.npc_name || body.npcName;
+      if (!sessionId || !npcKey) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and npc_key (or npc_name) required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const assistant = await denizenVisitor.claimAssistant({
+        sessionId,
+        npcKey,
+        assistantName: body.assistant_name ?? body.assistantName,
+        focus: body.focus,
+        roleOverlay: body.role_overlay ?? body.roleOverlay,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, assistant }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/assistant' && req.method === 'PATCH') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const assistant = await denizenVisitor.updateAssistant({
+        sessionId,
+        assistantName: body.assistant_name ?? body.assistantName,
+        focus: body.focus,
+        roleOverlay: body.role_overlay ?? body.roleOverlay,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, assistant }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/projects' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const projects = await denizenVisitor.listProjects(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, projects }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/projects' && req.method === 'POST') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sid = sessionId || body.session_id || body.sessionId;
+      if (!sid) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sid, body);
+      const project = await denizenVisitor.addProject(sid, {
+        name: body.name,
+        status: body.status,
+        priority: body.priority,
+        notes: body.notes,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, project }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (/^\/api\/visitor\/projects\/([^/]+)$/.test(urlPath) && req.method === 'PATCH') {
+    (async () => {
+      const projectId = urlPath.split('/')[4];
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sid = sessionId || body.session_id || body.sessionId;
+      if (!sid) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sid, body);
+      const project = await denizenVisitor.updateProject(projectId, sid, body);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, project }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (/^\/api\/visitor\/projects\/([^/]+)$/.test(urlPath) && req.method === 'DELETE') {
+    (async () => {
+      const projectId = urlPath.split('/')[4];
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      await denizenVisitor.deleteProject(projectId, sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/teammates' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const teammates = await denizenVisitor.listTeammatesWithPresence(
+        sessionId,
+        listOnlineSessionIds(),
+      );
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, teammates }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/handoff' && req.method === 'POST') {
+    _handleVisitorHandoffPost(req, res).catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        _writeVisitorAccessError(res, err);
+        return;
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/handoffs' && req.method === 'POST') {
+    _handleVisitorHandoffPost(req, res).catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        _writeVisitorAccessError(res, err);
+        return;
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/handoffs' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const handoffs = await denizenVisitor.getPendingHandoffs(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, handoffs }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (/^\/api\/visitor\/handoffs\/([^/]+)\/delivered$/.test(urlPath) && req.method === 'POST') {
+    (async () => {
+      const messageId = urlPath.split('/')[4];
+      const body = await _readJsonBody(req, 64 * 1024);
+      let sid = body.session_id || body.sessionId;
+      if (body.is_ceo || body.isCeo) {
+        sid = await denizenVisitor.getOrCreateCeoBridgeSession();
+      }
+      if (!sid) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id or is_ceo required' }));
+        return;
+      }
+      if (!(body.is_ceo || body.isCeo)) {
+        await _verifyVisitorSession(req, sid, body);
+      }
+      const handoff = await denizenVisitor.markHandoffDelivered(messageId, sid);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, handoff }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (/^\/api\/visitor\/handoffs\/([^/]+)$/.test(urlPath) && req.method === 'PATCH') {
+    (async () => {
+      const messageId = urlPath.split('/')[4];
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sid = sessionId || body.session_id || body.sessionId;
+      if (!sid) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sid, body);
+      const handoff = await denizenVisitor.markHandoffDelivered(messageId, sid);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, handoff }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/briefing' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const access = await visitorAccess.resolveSessionAccess(sessionId);
+      visitorAccess.assertTeamFeature(access, 'briefing');
+      const force = u.searchParams.get('force') === '1';
+      const briefing = await visitorIntel.getOrCreateTodayBriefing(sessionId, { force });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, briefing }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/profile' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const profile = await visitorIntel.getProfile(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, profile }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/profile' && req.method === 'PATCH') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      if (
+        body.slack_webhook_url !== undefined
+        || body.slackWebhookUrl !== undefined
+        || body.slack_user_id !== undefined
+        || body.slackUserId !== undefined
+      ) {
+        await _guardVisitorFeature(req, sessionId, 'profile_slack', body);
+      }
+      const profile = await visitorIntel.upsertProfile(sessionId, body);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, profile }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        _writeVisitorAccessError(res, err);
+        return;
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/commitments' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const status = u.searchParams.get('status') || 'open';
+      const commitments = await visitorIntel.listCommitments(sessionId, { status });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, commitments }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/commitments' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId || !body.text) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and text required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const commitment = await visitorIntel.addCommitment(sessionId, {
+        text: body.text,
+        npcKey: body.npc_key || body.npcKey,
+        dueAt: body.due_at || body.dueAt,
+        source: body.source,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, commitment }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (/^\/api\/visitor\/commitments\/([^/]+)\/resolve$/.test(urlPath) && req.method === 'POST') {
+    (async () => {
+      const commitmentId = urlPath.split('/')[4];
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const commitment = await visitorIntel.resolveCommitment(commitmentId, sessionId, body.status || 'done');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, commitment }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/recurring-tasks' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const tasks = await visitorIntel.listRecurringTasks(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, tasks }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/recurring-tasks' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId || !body.label || !body.prompt) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id, label, and prompt required' }));
+        return;
+      }
+      await _guardVisitorFeature(req, sessionId, 'recurring_tasks_post', body);
+      const task = await visitorIntel.addRecurringTask(sessionId, {
+        label: body.label,
+        prompt: body.prompt,
+        npcKey: body.npc_key || body.npcKey,
+        schedule: body.schedule,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, task }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        _writeVisitorAccessError(res, err);
+        return;
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/research' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const query = u.searchParams.get('q') || u.searchParams.get('query');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const external = u.searchParams.get('external');
+      if (!query) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'q required' }));
+        return;
+      }
+      if (sessionId) {
+        await _verifyVisitorSession(req, sessionId, {});
+        if (external == null || /^(1|true|yes)$/i.test(String(external))) {
+          await _guardVisitorFeature(req, sessionId, 'research_external', {});
+        }
+      }
+      const cited = await citedResearch.runCitedResearch(query);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, research: cited, display: citedResearch.formatForDisplay(cited) }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        _writeVisitorAccessError(res, err);
+        return;
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/slack/link' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _guardVisitorFeature(req, sessionId, 'slack_link', body);
+      const profile = await slackChannel.linkSlackSession(sessionId, {
+        webhookUrl: body.webhook_url || body.webhookUrl,
+        slackUserId: body.slack_user_id || body.slackUserId,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, profile }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        _writeVisitorAccessError(res, err);
+        return;
+      }
+      const status = visitorIntel.intelligenceErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/slack/inbound' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 256 * 1024);
+      const result = await slackChannel.relaySlackInbound(body, {
+        resolveSessionBySlackUser: async (slackUserId) => {
+          if (!denizenDb.enabled || !denizenDb.orgId) return null;
+          const rows = await denizenDb._get(
+            `denizen_visitor_profiles?select=session_id&slack_user_id=eq.${encodeURIComponent(slackUserId)}&limit=1`,
+          );
+          return rows?.[0]?.session_id || null;
+        },
+        onInboundMessage: async ({ sessionId, text }) => {
+          const assistant = await denizenVisitor.getAssistant(sessionId).catch(() => null);
+          const npcKey = assistant?.npc_key;
+          if (!npcKey) return;
+          const session = await denizenVisitor.getSession(sessionId);
+          const result = await npcBrains.getPlayerResponse(npcKey, text, {
+            sessionId,
+            displayName: session?.display_name,
+            assistant,
+          });
+          if (result?.text) {
+            await slackChannel.sendToSlack(sessionId, result.text);
+          }
+        },
+      });
+      if (result.challenge) {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end(result.challenge);
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/mcp/servers' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, servers: mcpConnector.listServers() }));
+    return;
+  }
+
+  if (urlPath === '/api/mcp/discover' && req.method === 'GET') {
+    (async () => {
+      const discovered = await mcpConnector.discoverAll();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, discovered }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (/^\/api\/mcp\/servers\/([^/]+)\/tools$/.test(urlPath) && req.method === 'GET') {
+    (async () => {
+      const serverId = urlPath.split('/')[4];
+      const tools = await mcpConnector.listTools(serverId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...tools }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   // --- Task webhook (n8n / Supabase / external workflows post here) ---
   // Body shape: { id, source?, title, status?, assignee?, detail?, foreground? }
   // We upsert into worldState; the change event then fans out to the browser
@@ -2827,6 +5255,28 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Scripted ambient NPC dialogue (no LLM) ---
+  if (urlPath === '/api/office-config' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(promptTuning.toClientConfig()));
+    return;
+  }
+
+  if (urlPath === '/api/ambient-dialogue/pair' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const initiator = url.searchParams.get('initiator') || '';
+    const responder = url.searchParams.get('responder') || '';
+    if (!initiator.trim() || !responder.trim()) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'initiator and responder required' }));
+      return;
+    }
+    const pair = ambientDialogue.generateAmbientPair(initiator.trim(), responder.trim(), npcBrains);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(pair));
+    return;
+  }
+
   // --- Office health (one-shot diagnostic the client polls every few seconds) ---
   // Reports: WS clients connected, LM Studio reachability, which providers
   // are configured (names only — never keys), recent provider errors, and
@@ -2835,93 +5285,133 @@ const server = http.createServer((req, res) => {
   // needing terminal access.
   if (urlPath === '/api/health' && req.method === 'GET') {
     (async () => {
-      // LIVENESS, NOT JUST REACHABILITY.
-      //
-      // Earlier the health probe lied because LM Studio's single-threaded
-      // HTTP server queues incoming requests behind the chat completions
-      // that are already running. When 16 NPCs are autonomously thinking
-      // back-to-back at full GPU saturation, even a cheap GET /v1/models
-      // can wait 4-8 seconds before LM Studio gets to it. A 5s probe
-      // timeout fires first → probe reports "unreachable" → user thinks
-      // LM Studio is down even though it's actively processing requests.
-      //
-      // The truth source is whether the brain is actually completing
-      // requests, which we already track in _npcStats. If a brain call
-      // succeeded in the last 30 seconds, LM Studio is alive — period.
-      // Run the probe ONLY as a fallback when we have no recent brain
-      // activity to vouch for it.
-      const lmCfg = npcBrains.providers?.lmstudio || {};
-      const lmStudioUrl = lmCfg.baseUrl || process.env.LM_STUDIO_URL || 'http://localhost:1234';
-      const lmHeaders = {};
-      if (lmCfg.apiKey) lmHeaders.Authorization = `Bearer ${lmCfg.apiKey}`;
-
-      // Truth source for "is LM Studio alive": ANY successful provider
-      // call counts. Captured inside _callLocal so it covers autonomous
-      // think() loops too (which never go through the WS handlers and
-      // therefore weren't reflected by the WS-only counters).
-      const stats = global._npcStats || {};
-      const lastBrainOk = Math.max(
-        stats.lastProviderOkAt || 0,
-        stats.lastNpcConvAt || 0,
-        stats.lastPlayerChatAt && stats.playerChatSucceeded > 0 ? stats.lastPlayerChatAt : 0,
-      );
+      const cache = global._healthCache = global._healthCache || { at: 0, body: null, inflight: null };
       const now = Date.now();
-      const recentBrainOk = lastBrainOk && (now - lastBrainOk) < 30000;
 
-      let lmStudioStatus = {
-        reachable: false,
-        url: lmStudioUrl,
-        error: null,
-        model: lmCfg.model || null,
-        livenessSource: null,
+      const cacheTtlMs = (body) => {
+        if (!body?.lmStudio) return 5000;
+        if (body.lmStudio.livenessSource?.startsWith('brain call')) return 5000;
+        return body.lmStudio.reachable ? 10000 : 20000;
       };
 
-      if (recentBrainOk) {
-        // Don't even bother probing — we have proof LM Studio is alive.
-        const ago = Math.round((now - lastBrainOk) / 1000);
-        lmStudioStatus.reachable = true;
-        lmStudioStatus.livenessSource = `brain call succeeded ${ago}s ago`;
-      } else {
-        // No recent activity — fall back to direct probe with a longer
-        // timeout that tolerates a saturated GPU. Try 3 paths; accept a
-        // 401/403 as "server is up, just auth-blocked."
-        const probes = ['/v1/models', '/api/v0/models', '/'];
-        const errors = [];
-        for (const path of probes) {
-          try {
-            const probe = await fetch(`${lmStudioUrl}${path}`, {
-              method: 'GET',
-              headers: lmHeaders,
-              signal: AbortSignal.timeout(15000),
-            });
-            if (probe.ok || probe.status === 401 || probe.status === 403) {
-              lmStudioStatus.reachable = true;
-              lmStudioStatus.probedPath = path;
-              lmStudioStatus.livenessSource = `probe ${path} ok`;
-              if (!probe.ok) lmStudioStatus.warning = `${path} HTTP ${probe.status} (auth issue, but server is up)`;
-              break;
-            }
-            errors.push(`${path}: HTTP ${probe.status}`);
-          } catch (err) {
-            errors.push(`${path}: ${err?.message || String(err)}`);
-          }
-        }
-        if (!lmStudioStatus.reachable) {
-          lmStudioStatus.error = errors.join('; ');
-        }
+      if (cache.body && (now - cache.at) < cacheTtlMs(cache.body)) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ...cache.body,
+          ts: now,
+          wsClients: {
+            agent: cofounderAgent.wsClients.size,
+            security: securityMonitor.clients?.size || 0,
+          },
+          stats: global._npcStats,
+          recentErrors: (global._npcRecentErrors || []).slice(-5),
+        }));
+        return;
       }
 
-      const providers = Object.entries(npcBrains.providers || {})
-        .filter(([k]) => k !== 'demo')
-        .map(([name, cfg]) => ({ name, type: cfg.type, model: cfg.model || null }));
+      if (!cache.inflight) {
+        cache.inflight = (async () => {
+          const lmCfg = npcBrains.providers?.lmstudio || {};
+          const lmStudioUrl = lmCfg.baseUrl || process.env.LM_STUDIO_URL || 'http://localhost:1234';
+          const lmHeaders = {};
+          if (lmCfg.apiKey) lmHeaders.Authorization = `Bearer ${lmCfg.apiKey}`;
 
+          const stats = global._npcStats || {};
+          const lastBrainOk = Math.max(
+            stats.lastProviderOkAt || 0,
+            stats.lastNpcConvAt || 0,
+            stats.lastPlayerChatAt && stats.playerChatSucceeded > 0 ? stats.lastPlayerChatAt : 0,
+          );
+          const builtAt = Date.now();
+          const recentBrainOk = lastBrainOk && (builtAt - lastBrainOk) < 30000;
+
+          let lmStudioStatus = {
+            reachable: false,
+            url: lmStudioUrl,
+            error: null,
+            model: lmCfg.model || null,
+            livenessSource: null,
+          };
+
+          if (recentBrainOk) {
+            const ago = Math.round((builtAt - lastBrainOk) / 1000);
+            lmStudioStatus.reachable = true;
+            lmStudioStatus.livenessSource = `brain call succeeded ${ago}s ago`;
+          } else {
+            const probes = ['/v1/models', '/api/v0/models', '/'];
+            const errors = [];
+            const results = await Promise.all(probes.map(async (path) => {
+              try {
+                const probe = await fetch(`${lmStudioUrl}${path}`, {
+                  method: 'GET',
+                  headers: lmHeaders,
+                  signal: AbortSignal.timeout(5000),
+                });
+                if (probe.ok || probe.status === 401 || probe.status === 403) {
+                  return { ok: true, path, status: probe.status };
+                }
+                return { ok: false, err: `${path}: HTTP ${probe.status}` };
+              } catch (err) {
+                return { ok: false, err: `${path}: ${err?.message || String(err)}` };
+              }
+            }));
+
+            for (const r of results) {
+              if (r.ok) {
+                lmStudioStatus.reachable = true;
+                lmStudioStatus.probedPath = r.path;
+                lmStudioStatus.livenessSource = `probe ${r.path} ok`;
+                if (r.status && r.status !== 200) {
+                  lmStudioStatus.warning = `${r.path} HTTP ${r.status} (auth issue, but server is up)`;
+                }
+                break;
+              }
+              errors.push(r.err);
+            }
+            if (!lmStudioStatus.reachable) {
+              lmStudioStatus.error = errors.join('; ');
+            }
+          }
+
+          const providers = Object.entries(npcBrains.providers || {})
+            .filter(([k]) => k !== 'demo')
+            .map(([name, cfg]) => ({ name, type: cfg.type, model: cfg.model || null }));
+
+          const body = {
+            ok: true,
+            ts: builtAt,
+            lmStudio: lmStudioStatus,
+            providers,
+            demoMode: !!npcBrains._demoMode,
+            wsClients: {
+              agent: cofounderAgent.wsClients.size,
+              security: securityMonitor.clients?.size || 0,
+            },
+            stats: global._npcStats,
+            recentErrors: (global._npcRecentErrors || []).slice(-5),
+            visitor: {
+              enabled: true,
+              db: denizenDb.enabled,
+              features: [
+                'session', 'claim', 'handoff', 'projects', 'onboarding', 'prediction_loop',
+                'briefing', 'commitments', 'deep_memory', 'proactive_triggers', 'recurring_tasks',
+                'slack_channel', 'cited_research', 'voice_walkup', 'mcp_connector',
+              ],
+            },
+          };
+          cache.body = body;
+          cache.at = builtAt;
+          return body;
+        })().finally(() => {
+          cache.inflight = null;
+        });
+      }
+
+      const body = await cache.inflight;
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
-        ok: true,
+        ...body,
         ts: Date.now(),
-        lmStudio: lmStudioStatus,
-        providers,
-        demoMode: !!npcBrains._demoMode,
         wsClients: {
           agent: cofounderAgent.wsClients.size,
           security: securityMonitor.clients?.size || 0,
@@ -2942,9 +5432,16 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/tts/health' && req.method === 'GET') {
     const status = elevenLabs.status();
     res.writeHead(200, { 'Content-Type': 'application/json' });
+    const byGender = { female: 0, male: 0 };
+    for (const e of npcRoster.entries || []) {
+      if (e.gender === 'female') byGender.female++;
+      else if (e.gender === 'male') byGender.male++;
+    }
     res.end(JSON.stringify({
       ...status,
       voiceMapEntries: Object.keys(_voiceMap.npcs || {}).length,
+      rosterGender: byGender,
+      autoAssignByGender: _voiceMap.autoAssignByGender !== false,
     }));
     return;
   }
@@ -3095,9 +5592,10 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: 'text is required' }));
         return;
       }
-      const npcEntry = (payload.npcName && _voiceMap.npcs?.[payload.npcName]) || {};
-      const voiceId = payload.voiceId || npcEntry.voiceId || _voiceMap.default?.voiceId;
-      const modelId = payload.modelId || npcEntry.modelId || _voiceMap.default?.modelId;
+      const { voiceId, modelId, gender, source } = _resolveVoiceForNpc(payload.npcName, payload);
+      if (payload.npcName && process.env.DEBUG_TTS) {
+        console.log(`[TTS] ${payload.npcName} → ${voiceId} (${gender || '?'}, ${source})`);
+      }
 
       try {
         await elevenLabs.synthesize({ text, voiceId, modelId }, res);
@@ -3331,6 +5829,22 @@ securityWss.on('connection', (ws) => {
 });
 
 // Agent Office WebSocket
+function sendToVisitorClients(sessionId, payload) {
+  if (!agentWss || !sessionId) return;
+  const raw = JSON.stringify(payload);
+  agentWss.clients.forEach((c) => {
+    if (c.readyState === 1 && c._denizenSessionId === sessionId) c.send(raw);
+  });
+}
+
+function sendToCeoClients(payload) {
+  if (!agentWss) return;
+  const raw = JSON.stringify(payload);
+  agentWss.clients.forEach((c) => {
+    if (c.readyState === 1 && c._denizenIsCeo) c.send(raw);
+  });
+}
+
 const agentWss = new WebSocketServer({ noServer: true });
 agentWss.on('connection', (ws) => {
   console.log(`[CofounderAgent] WS client connected (${cofounderAgent.wsClients.size + 1} total)`);
@@ -3384,38 +5898,28 @@ agentWss.on('connection', (ws) => {
           }
           return;
         }
-        // Route to individual NPC brain for a personalized response
+        // Replay past LLM dialogue from MEMORY.md + runtime memories — no fresh LLM.
+        // Player chat and think-loop actions still use AI separately.
         global._npcStats.npcConvReceived++;
         global._npcStats.lastNpcConvAt = Date.now();
-        npcBrains.getResponse(msg.npcName, msg.fromName, msg.text, msg.context || {})
-          .then(response => {
-            global._npcStats.npcConvSucceeded++;
-            const reply = JSON.stringify({
-              type: 'npc_response',
-              npcName: msg.npcName,
-              fromName: msg.fromName,
-              text: response,
-              turn: typeof msg.turn === 'number' ? msg.turn : 1,
-            });
-            if (ws.readyState === 1) ws.send(reply);
-            // Save significant conversations to MEMORY.md
-            npcBrains.saveMemory(msg.npcName, `${msg.fromName} said: "${msg.text}" — I replied: "${response}"`);
-          })
-          .catch(err => {
-            global._npcStats.npcConvFailed++;
-            const errMsg = String(err?.message ?? err);
-            console.warn('[NpcBrains] Response error:', errMsg);
-            _recordNpcError(`getResponse(${msg.npcName} ← ${msg.fromName}): ${errMsg}`);
-            if (ws.readyState === 1) {
-              ws.send(JSON.stringify({
-                type: 'npc_response',
-                npcName: msg.npcName,
-                fromName: msg.fromName,
-                text: '(No reply right now.)',
-                turn: typeof msg.turn === 'number' ? msg.turn : 1,
-              }));
-            }
-          });
+        const response = ambientDialogue.getNpcConversationReply(
+          npcBrains,
+          msg.npcName,
+          msg.fromName,
+          msg.text,
+        );
+        global._npcStats.npcConvSucceeded++;
+        global._npcStats.npcConvScripted = (global._npcStats.npcConvScripted || 0) + 1;
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({
+            type: 'npc_response',
+            npcName: msg.npcName,
+            fromName: msg.fromName,
+            text: response,
+            turn: typeof msg.turn === 'number' ? msg.turn : 1,
+            scripted: true,
+          }));
+        }
       } else if (msg.type === 'npc_think') {
         // NPC is asking "what should I do next?"
         npcBrains.think(msg.npcName, msg.context || {})
@@ -3428,20 +5932,31 @@ agentWss.on('connection', (ws) => {
             });
             if (ws.readyState === 1) ws.send(reply);
 
-            // Broadcast work output to all clients when an NPC starts or finishes a task
-            if (decision.save && decision.taskPhase && decision.taskPhase !== 'none') {
+            // Broadcast work output to all clients when an NPC starts or finishes a task.
+            // Use save as the note, falling back to message/thought so the feed never
+            // shows a blank "✓ NPC — " entry when save is empty.
+            const workNote = (decision.save || decision.message || decision.thought || '').trim();
+            if (workNote && decision.taskPhase && decision.taskPhase !== 'none') {
               const phaseEmoji = { starting: '▶', continuing: '⟳', finished: '✓' }[decision.taskPhase] || '•';
               const workMsg = JSON.stringify({
                 type: 'npc_work_output',
                 npcName: msg.npcName,
                 phase: decision.taskPhase,
                 phaseEmoji,
-                note: String(decision.save || '').slice(0, 120),
+                note: workNote.slice(0, 120),
                 action: decision.action || 'work',
                 artifactPath: decision._artifactPath || null,
                 ts: Date.now(),
               });
-              wss.clients.forEach(c => { if (c.readyState === 1) c.send(workMsg); });
+              (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(workMsg); });
+              denizenDb.recordWorkOutput({
+                npcName: msg.npcName,
+                phase: decision.taskPhase,
+                action: decision.action || 'work',
+                note: workNote,
+                artifactPath: decision._artifactPath || null,
+                role: decision.role || null,
+              });
               // Log artifact to server console when a file lands on disk
               if (decision._artifactPath) {
                 console.log(`[WorkOutput] ${msg.npcName} saved artifact → ${decision._artifactPath}`);
@@ -3466,8 +5981,13 @@ agentWss.on('connection', (ws) => {
 
             // Skill bridge — fire async, NPC picks up result next think cycle
             if (decision.action === 'run_skill' && decision.skill) {
-              runNpcSkill(msg.npcName, decision.skill, decision.skillParams || {})
-                .catch(err => console.warn('[SkillBridge]', err.message));
+              const skillGate = npcBrains.allowAutonomousSkillRun(msg.npcName, { skill: decision.skill });
+              if (!skillGate.allowed) {
+                console.log(`[SkillBridge] Blocked ${msg.npcName} → ${decision.skill}: ${skillGate.reason}`);
+              } else {
+                runNpcSkill(msg.npcName, decision.skill, decision.skillParams || {})
+                  .catch(err => console.warn('[SkillBridge]', err.message));
+              }
             }
           })
           .catch(err => console.warn('[NpcBrains] Think error:', err.message));
@@ -3482,9 +6002,24 @@ agentWss.on('connection', (ws) => {
             task: msg.task,
           }));
         }
+      } else if (msg.type === 'visitor_register') {
+        ws._denizenSessionId = msg.session_id || null;
+        ws._denizenIsCeo = !msg.session_id || msg.is_ceo === true;
+        ws._deliveredHandoffIds = ws._deliveredHandoffIds || new Set();
+        if (ws._denizenSessionId && !ws._denizenIsCeo) {
+          const sid = ws._denizenSessionId;
+          const displayName = msg.display_name || msg.displayName || null;
+          if (displayName) {
+            _setVisitorOnline(sid, displayName);
+          } else {
+            denizenVisitor.getSession(sid)
+              .then((s) => _setVisitorOnline(sid, s?.display_name || 'Guest'))
+              .catch(() => _setVisitorOnline(sid, 'Guest'));
+          }
+        }
       } else if (msg.type === 'player_chat') {
         // CEO (player) is talking directly to an NPC
-        const npcName = msg.npcName;
+        let npcName = msg.npcName;
         if (!npcName || !npcBrains.brains[npcName]) {
           console.warn('[AgentWS] player_chat: unknown or missing npcName');
           if (ws.readyState === 1) {
@@ -3511,15 +6046,419 @@ agentWss.on('connection', (ws) => {
           }
           return;
         }
-        console.log(`[PlayerChat] CEO → ${npcName}: "${msg.text}"`);
+        (async () => {
+        const rawPlayerText = msg.text.trim();
+        const originalNpc = npcName;
+        npcName = resolveStaffIntentNpc(rawPlayerText, npcName);
+        if (npcName !== originalNpc) {
+          console.log(`[PlayerChat] Staff intent → routing ${originalNpc} request to Lucy`);
+        }
+        if (!msg.session_id) {
+          console.log(`[PlayerChat] CEO → ${npcName}: "${msg.text}"`);
+        }
         global._npcStats.playerChatReceived++;
         global._npcStats.lastPlayerChatAt = Date.now();
+        const playerText = fixVoiceMishearings(rawPlayerText);
+        const normPlayerText = normalizePlayerUtterance(playerText);
+        const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
+        const visitorToolGate = await _resolveVisitorToolGate(msg.session_id);
+        const blockDemoTools = () => {
+          if (visitorToolGate.canUseRealWork) return false;
+          _denyVisitorRealTools(ws, npcName);
+          return true;
+        };
+
+        // Lucy — reopen browser and retry last search.
+        const browserRetry = extractBrowserRetryIntent(rawPlayerText)
+          || extractBrowserRetryIntent(playerText)
+          || extractBrowserRetryIntent(normPlayerText);
+        if (npcName === 'Lucy' && browserRetry?.retrySearch && global._lucyLastSearchQuery) {
+          if (blockDemoTools()) return;
+          const retryQuery = global._lucyLastSearchQuery;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName: 'Lucy',
+            text: browserRetry.openBrowser
+              ? `Opening my browser and searching "${retryQuery}" again…`
+              : `Trying "${retryQuery}" again…`,
+            delegation: null, actions: [],
+          }));
+          if (browserRetry.openBrowser) closeLucyBrowser();
+          runLucyWebSearch(retryQuery, { broadcast: _broadcast, quiet: true })
+            .catch(err => console.error('[lucy-search-retry] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Lucy — open Playwright browser (instant; no LM Studio, no desktop control).
+        if (npcName === 'Lucy' && (wantsLucyBrowserOpen(rawPlayerText)
+          || wantsLucyBrowserOpen(playerText) || wantsLucyBrowserOpen(normPlayerText))) {
+          if (blockDemoTools()) return;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName: 'Lucy',
+            text: `Opening my browser now — you'll see it on screen.`,
+            delegation: null, actions: [],
+          }));
+          runLucyWebSearch('', { broadcast: _broadcast, openOnly: true, quiet: true })
+            .catch(err => console.error('[lucy-open-browser] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Instant greeting — no LM Studio queue (play Lucy / yo Lucy / hi)
+        if (npcBrains._isGreetingOnly?.(playerText, npcName)) {
+          const greetText = npcBrains._greetingReply(npcName, npcBrains._hierarchy[npcName]);
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName,
+              text: greetText,
+              delegation: null,
+              actions: [],
+            }));
+          }
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Instant capabilities — no LM Studio queue
+        if (npcCapabilities.isCapabilitiesQuestion(playerText)) {
+          const brain = npcBrains.brains[npcName];
+          const capText = npcCapabilities.formatCapabilitiesReply(npcName, {
+            soulSection: brain?.capabilitiesSoul,
+          });
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName,
+              text: capText,
+              delegation: null,
+              actions: [],
+            }));
+          }
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        if (npcName === 'Bouncer') {
+          if (/honeypot|honey\s*pot|honey\s*trap/i.test(playerText)) {
+            _broadcast({ type: 'bouncer_player_order', order: /deploy|set up|activate|working/i.test(playerText) ? 'deploy_honeypot' : 'honeypot_status' });
+          } else if (/catch|stop them|get them|grab them|rate\s*limit|intruder|robber/i.test(playerText)) {
+            _broadcast({ type: 'bouncer_player_order', order: 'confront' });
+          }
+        }
+
+        // Lucy — which browser am I using?
+        if (npcName === 'Lucy' && extractBrowserStatusIntent(playerText)) {
+          const last = global._lucyLastBrowser || {};
+          const reply = last.label
+            ? `I'm on ${last.label}${last.url ? ` — last opened ${last.url}` : ''}.`
+            : `No browser open yet — say "search jobs on indeed" or "I'm on linkedin.com" and I'll pick Playwright Chromium, Chrome, or Edge depending on the site.`;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response', npcName: 'Lucy', text: reply, delegation: null, actions: [],
+          }));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Lucy — how to use LinkedIn/Indeed job search tools
+        const jobBoardHelp = npcName === 'Lucy' ? extractJobBoardHelpIntent(playerText) : null;
+        if (jobBoardHelp) {
+          const siteLabel = jobBoardHelp === 'linkedin' ? 'LinkedIn Jobs' : 'Indeed';
+          const url = jobBoardHelp === 'linkedin'
+            ? 'https://www.linkedin.com/jobs/search/'
+            : 'https://www.indeed.com/jobs';
+          const reply = `Yes — ${siteLabel} has a built-in search. I open it in Playwright + Chrome, run keyword searches, and can queue roles for you. Say "search software engineer jobs on ${jobBoardHelp}" and I'll go there directly.`;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response', npcName: 'Lucy', text: reply, delegation: null, actions: [],
+          }));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Lucy — open Indeed/LinkedIn job search directly (skip DuckDuckGo).
+        const jobBoard = extractJobBoardSearchIntent(playerText);
+        if (npcName === 'Lucy' && jobBoard) {
+          if (blockDemoTools()) return;
+          const label = jobBoard.site === 'linkedin' ? 'LinkedIn Jobs' : 'Indeed';
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName: 'Lucy',
+            text: `Opening ${label}${jobBoard.query ? ` for "${jobBoard.query}"` : ''} in the browser…`,
+            delegation: null, actions: [],
+          }));
+          runLucyWebSearch(jobBoard.query || `jobs on ${jobBoard.site}`, {
+            broadcast: _broadcast,
+            directUrl: jobBoard.url,
+            jobBoard: jobBoard.site,
+            browserMode: 'chrome',
+          }).catch(err => console.error('[lucy-jobboard] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Lucy web search — visible browser via web-search skill (not OpenClaw gateway).
+        let searchQuery = extractSearchQuery(playerText) || extractSearchQuery(normPlayerText)
+          || extractSearchQuery(rawPlayerText);
+        if (!searchQuery && npcName === 'Lucy') {
+          const bare = extractBareSearchTopic(rawPlayerText);
+          if (bare) searchQuery = bare;
+        }
+        if (searchQuery && isJunkSearchQuery(searchQuery)) searchQuery = null;
+        if (npcName === 'Lucy' && isCancelUtterance(playerText)) {
+          closeLucyBrowser();
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName: 'Lucy',
+              text: 'Okay — stopping. Browser closed.',
+              delegation: null,
+              actions: [],
+            }));
+          }
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+        const wsBrowserRetry = extractBrowserRetryIntent(rawPlayerText)
+          || extractBrowserRetryIntent(playerText)
+          || extractBrowserRetryIntent(normPlayerText);
+        const wsWantsSearchAgain = /\b(?:search|do it|try|run it)(?:\s+it)?\s+again\b/i.test(playerText)
+          || /\b(?:search|do it|try|run it)(?:\s+it)?\s+again\b/i.test(normPlayerText);
+        if (npcName === 'Lucy' && global._lucyLastSearchQuery
+          && (wsBrowserRetry?.retrySearch
+            || (wsWantsSearchAgain && (wantsLucyBrowserOpen(playerText) || extractOpenBrowserIntent(playerText))))) {
+          if (blockDemoTools()) return;
+          const retryQ = global._lucyLastSearchQuery;
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName: 'Lucy',
+              text: `Opening my browser and searching "${retryQ}" again…`,
+              delegation: null,
+              actions: [],
+            }));
+          }
+          closeLucyBrowser();
+          runLucyWebSearch(retryQ, { broadcast: _broadcast, quiet: true })
+            .catch(err => console.error('[lucy-search-retry] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+        if (npcName === 'Lucy' && (extractBrowserReadIntent(playerText) || extractBrowserReadIntent(normPlayerText))) {
+          if (blockDemoTools()) return;
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName: 'Lucy',
+              text: 'Reading what\'s in the browser…',
+              delegation: null,
+              actions: [],
+            }));
+          }
+          triggerNpcScreenObserve('Lucy', `The CEO said: "${playerText}". Read Lucy's browser window and summarize the document in plain English.`, _broadcast)
+            .then((r) => {
+              if (r?.summary) {
+                _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: 'Lucy', text: r.summary.slice(0, 2000), ts: Date.now() });
+              }
+            })
+            .catch((err) => console.error('[lucy-browser-read] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+        if (npcName === 'Lucy' && !searchQuery && /\b(?:search|google|look\s+up)\b/i.test(normPlayerText || playerText)) {
+          if (global._lucyLastSearchQuery && wsBrowserRetry?.retrySearch) {
+            const retryQ = global._lucyLastSearchQuery;
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName: 'Lucy',
+                text: `Opening my browser and searching "${retryQ}" again…`,
+                delegation: null,
+                actions: [],
+              }));
+            }
+            closeLucyBrowser();
+            runLucyWebSearch(retryQ, { broadcast: _broadcast, quiet: true })
+              .catch(err => console.error('[lucy-search-retry] error:', err?.message));
+            global._npcStats.playerChatSucceeded++;
+            return;
+          }
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName: 'Lucy',
+              text: 'What should I search for? Try: search Goldendoodles or search remote AI jobs.',
+              delegation: null,
+              actions: [],
+            }));
+          }
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+        if (npcName === 'Lucy' && searchQuery) {
+          if (blockDemoTools()) return;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName: 'Lucy',
+            text: `On it — I'll look up "${searchQuery}" and give you a quick brief.`,
+            delegation: null, actions: [],
+          }));
+          runLucyWebSearch(searchQuery, { broadcast: _broadcast, quiet: true })
+            .catch(err => console.error('[lucy-search] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Lucy — close visible browser on command.
+        if (npcName === 'Lucy' && extractCloseBrowserIntent(playerText)) {
+          const wasOpen = global._lucyBrowserOpen;
+          closeLucyBrowser();
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName: 'Lucy',
+            text: wasOpen ? 'Closing my browser now.' : 'No browser was open — but I sent the close signal just in case.',
+            delegation: null, actions: [],
+          }));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Open CEO's real Brave browser (their profile + cookies).
+        if (extractOpenBraveIntent(playerText)) {
+          if (blockDemoTools()) return;
+          const urlMatch = playerText.match(/https?:\/\/\S+/i);
+          const url = urlMatch ? urlMatch[0] : null;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName,
+            text: url ? `Opening Brave to ${url}…` : `Opening your Brave browser…`,
+            delegation: null, actions: [],
+          }));
+          desktopAgent.openBraveBrowser(url)
+            .then((r) => {
+              if (!r.ok && ws.readyState === 1) {
+                ws.send(JSON.stringify({
+                  type: 'player_chat_response',
+                  npcName,
+                  text: r.error || 'Could not open Brave.',
+                  delegation: null, actions: [],
+                }));
+              }
+            })
+            .catch((err) => console.error('[open-brave] error:', err?.message));
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Screen control — any NPC: click/type/fill on CEO's real screen (when asked).
+        if (extractScreenControlIntent(playerText) && !searchQuery) {
+          if (blockDemoTools()) return;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName,
+            text: `On it — I'll use your screen to help. Watch your mouse move.`,
+            delegation: null, actions: [],
+          }));
+          triggerNpcScreenControl(npcName, playerText, _broadcast)
+            .then((result) => {
+              if (result.summary && ws.readyState === 1) {
+                ws.send(JSON.stringify({
+                  type: 'player_chat_response',
+                  npcName,
+                  text: result.summary.slice(0, 2000),
+                  delegation: null, actions: [],
+                }));
+              }
+            })
+            .catch((err) => {
+              if (ws.readyState === 1) ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName,
+                text: `I couldn't control your screen: ${err?.message || err}`,
+                delegation: null, actions: [],
+              }));
+            });
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
+        // Screen observe — any NPC: screenshot, describe, web research fallback.
+        if (extractScreenObserveIntent(playerText) && !searchQuery) {
+          if (blockDemoTools()) return;
+          const observeInstruction = `The CEO said: "${playerText}". Describe their screen read-only — browser, URLs, typed text, forms. Search the web for anything unclear.`;
+          if (ws.readyState === 1) ws.send(JSON.stringify({
+            type: 'player_chat_response',
+            npcName,
+            text: `Let me look at your screen…`,
+            delegation: null, actions: [],
+          }));
+          const act = pcActivity.record({
+            npc: npcName, kind: 'screen-observe',
+            task: observeInstruction.slice(0, 240),
+            mode: 'visible', status: 'started',
+          });
+          const t0 = Date.now();
+          triggerNpcScreenObserve(npcName, observeInstruction, _broadcast)
+            .then((result) => {
+              if (result.summary && ws.readyState === 1) {
+                ws.send(JSON.stringify({
+                  type: 'player_chat_response',
+                  npcName,
+                  text: result.summary.slice(0, 2000),
+                  delegation: null, actions: [],
+                }));
+              }
+              pcActivity.record({
+                id: act.id, npc: npcName, kind: 'screen-observe',
+                task: act.task, mode: 'visible',
+                status: result.ok ? 'done' : 'failed',
+                durationMs: Date.now() - t0,
+                detail: String(result.summary || '').slice(0, 240),
+              });
+            })
+            .catch((err) => {
+              pcActivity.record({
+                id: act.id, npc: npcName, kind: 'screen-observe',
+                task: act.task, mode: 'visible', status: 'failed',
+                durationMs: Date.now() - t0,
+                detail: String(err?.message || err).slice(0, 240),
+              });
+              if (ws.readyState === 1) ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName,
+                text: `I couldn't read your screen: ${err?.message || err}`,
+                delegation: null, actions: [],
+              }));
+            });
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
 
         // If talking to Lucy and the message looks like a PC control request,
         // trigger the desktop agent directly instead of just chatting.
-        const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
-        const desktopTriggers = /open|launch|click|type|search|go to|navigate|take a screenshot|screen|find|copy|paste|close|minimize|maximize|play|volume|spotify|chrome|browser|notepad|calculator|file|folder/i;
-        if (npcName === 'Lucy' && desktopTriggers.test(msg.text)) {
+        // Word boundaries — avoid "dog types" falsely matching "type".
+        const nativeDenizenIntent = isDenizenNativeIntent(rawPlayerText)
+          || isDenizenNativeIntent(playerText)
+          || isDenizenNativeIntent(normPlayerText);
+        const desktopTriggers = /\b(click|type|navigate|screenshot|copy|paste|close|minimize|maximize|volume|spotify|notepad|calculator|file|folder)\b|go to|take a screenshot/i;
+        const desktopOpenTrigger = /\b(open|launch)\b/i.test(playerText)
+          && !wantsLucyBrowserOpen(rawPlayerText)
+          && !wantsLucyBrowserOpen(playerText)
+          && !wantsLucyBrowserOpen(normPlayerText)
+          && !extractOpenBrowserIntent(playerText)
+          && !extractOpenBrowserIntent(normPlayerText);
+        const desktopBrowserOnly = wantsLucyBrowserOpen(rawPlayerText)
+          || wantsLucyBrowserOpen(playerText)
+          || wantsLucyBrowserOpen(normPlayerText)
+          || extractOpenBrowserIntent(playerText)
+          || extractOpenBrowserIntent(normPlayerText)
+          || extractCloseBrowserIntent(playerText)
+          || extractCloseBrowserIntent(normPlayerText)
+          || nativeDenizenIntent;
+        if (npcName === 'Lucy' && !normPlayerText.match(/^(?:search|google|look\s+up)\b/i)
+          && (desktopTriggers.test(playerText) || desktopOpenTrigger) && !searchQuery && !desktopBrowserOnly) {
+          if (blockDemoTools()) return;
           if (ws.readyState === 1) ws.send(JSON.stringify({
             type: 'player_chat_response',
             npcName: 'Lucy',
@@ -3563,13 +6502,114 @@ agentWss.on('connection', (ws) => {
         // so the NPC speaks in their own voice about what just happened,
         // rather than routing through the player-response delegation framework.
         const isIncidentReport = msg.isIncidentReport === true;
-        const responsePromise = isIncidentReport
-          ? npcBrains.getResponse(npcName, 'CEO', msg.text, { kind: 'incident-report', description: 'You are reporting a security incident to the CEO. Speak in your own voice — stoic, professional, dry. 2-3 sentences max.' })
-              .then(text => ({ text: typeof text === 'string' ? text : String(text || ''), delegation: null, actions: [] }))
-          : npcBrains.getPlayerResponse(npcName, msg.text);
+        const visitorLoadPromise = msg.session_id
+          ? (async () => {
+              const session = await denizenVisitor.getSession(msg.session_id);
+              if (!session) return null;
+              const [assistant, projects, pendingHandoffs, deepProfile, openCommitments] = await Promise.all([
+                denizenVisitor.getAssistant(msg.session_id),
+                denizenVisitor.listProjects(msg.session_id).catch(() => []),
+                denizenVisitor.getPendingHandoffs(msg.session_id).catch(() => []),
+                visitorIntel.getProfile(msg.session_id).catch(() => ({})),
+                visitorIntel.listCommitments(msg.session_id, { status: 'open' }).catch(() => []),
+              ]);
+              return {
+                sessionId: session.id,
+                displayName: session.display_name || 'Guest',
+                assistant,
+                projects,
+                pendingHandoffs,
+                deepProfile,
+                openCommitments,
+              };
+            })().catch((err) => {
+              console.warn('[PlayerChat] visitor session load failed:', err?.message || err);
+              return null;
+            })
+          : Promise.resolve(null);
+
+        const ceoHandoffsPromise = (!msg.session_id && npcName === 'Lucy')
+          ? denizenVisitor.getOrCreateCeoBridgeSession()
+            .then((bridgeId) => (bridgeId ? denizenVisitor.getPendingHandoffs(bridgeId) : []))
+            .catch((err) => {
+              console.warn('[PlayerChat] CEO handoff load failed:', err?.message || err);
+              return [];
+            })
+          : Promise.resolve([]);
+
+        let _visitorCitedResearch = null;
+        const responsePromise = Promise.all([visitorLoadPromise, ceoHandoffsPromise]).then(async ([visitorCtx, ceoHandoffs]) => {
+          if (visitorCtx) {
+            console.log(`[PlayerChat] ${visitorCtx.displayName} → ${npcName}: "${msg.text}"`);
+          }
+          const playerOpts = visitorCtx
+            ? {
+              sessionId: visitorCtx.sessionId,
+              displayName: visitorCtx.displayName,
+              assistant: visitorCtx.assistant,
+              projects: visitorCtx.projects,
+              pendingHandoffs: visitorCtx.pendingHandoffs,
+              deepProfile: visitorCtx.deepProfile,
+              openCommitments: visitorCtx.openCommitments,
+              sessionTier: visitorToolGate.sessionTier,
+              canUseRealWork: visitorToolGate.canUseRealWork,
+              sessionMetadata: visitorToolGate.sessionMetadata,
+              orgSettings: visitorToolGate.orgSettings,
+            }
+            : (ceoHandoffs.length ? { pendingHandoffs: ceoHandoffs } : undefined);
+
+          if (visitorCtx?.sessionId && visitorToolGate.canUseRealWork
+            && citedResearch.looksLikeResearchQuery(msg.text)) {
+            const query = citedResearch.extractResearchQuery(msg.text);
+            const cited = await citedResearch.runCitedResearch(query).catch(() => null);
+            if (cited?.citations?.length) {
+              playerOpts.researchContext = citedResearch.formatForPrompt(cited);
+              _visitorCitedResearch = cited;
+            }
+          }
+
+          if (isIncidentReport) {
+            return npcBrains.getResponse(npcName, 'CEO', msg.text, { kind: 'incident-report', description: 'You are reporting a security incident to the CEO. Speak in your own voice — stoic, professional, dry. 2-3 sentences max.' })
+              .then(text => ({ text: typeof text === 'string' ? text : String(text || ''), delegation: null, actions: [] }));
+          }
+          return npcBrains.getPlayerResponse(npcName, msg.text, playerOpts);
+        });
+
+        if (ws.readyState === 1 && !isIncidentReport) {
+          ws.send(JSON.stringify({
+            type: 'player_chat_ack',
+            npcName,
+            queueLen: npcBrains.getQueueDepth?.() ?? 0,
+          }));
+        }
 
         responsePromise
-          .then(result => {
+          .then(async (result) => {
+            // Server-side: visitor assistant handoffs to Lucy are persisted here.
+            // The client receives the action in player_chat_response for visibility;
+            // denizenVisitor.sendHandoff writes denizen_assistant_messages for Lucy/WS delivery.
+            const handoffActions = (result?.actions || []).filter((a) => a?.action === 'visitor_handoff');
+            if (handoffActions.length && msg.session_id) {
+              for (const handoff of handoffActions) {
+                try {
+                  const target = await denizenVisitor.resolveHandoffTarget({
+                    toCeo: handoff.toCeo !== false,
+                    toSessionId: handoff.toSessionId || handoff.to_session_id,
+                    toDisplayName: handoff.toDisplayName || handoff.to_display_name,
+                  });
+                  await denizenVisitor.sendHandoff({
+                    fromSessionId: msg.session_id,
+                    toSessionId: target.session_id,
+                    message: handoff.message,
+                    fromNpc: npcName,
+                    toNpc: handoff.toNpc || handoff.to_npc,
+                  });
+                } catch (err) {
+                  console.warn('[PlayerChat] visitor_handoff persist failed:', err?.message || err);
+                }
+              }
+            }
+
             // If the brain returned nothing usable, treat it as an
             // error so the client sees WHY instead of an empty bubble.
             const text = (result && typeof result.text === 'string') ? result.text.trim() : '';
@@ -3588,16 +6628,33 @@ agentWss.on('connection', (ws) => {
               return;
             }
             global._npcStats.playerChatSucceeded++;
+
+            if (msg.session_id) {
+              visitorIntel.absorbChatContext(msg.session_id, {
+                userMessage: msg.text,
+                npcResponse: text,
+                npcKey: npcName,
+              }).catch(() => {});
+              visitorIntel.recordCommitmentsFromChat(msg.session_id, {
+                userMessage: msg.text,
+                npcResponse: text,
+                npcKey: npcName,
+              }).catch(() => {});
+              slackChannel.sendToSlack(msg.session_id, `${npcName}: ${text}`).catch(() => {});
+            }
+
             const reply = JSON.stringify({
-              type: 'player_chat_response',
+              type: isIncidentReport ? 'bouncer_security' : 'player_chat_response',
               npcName, text,
               delegation: result.delegation || null,
               actions: result.actions || [],
+              citations: _visitorCitedResearch?.citations || null,
             });
             if (ws.readyState === 1) ws.send(reply);
-            npcBrains.saveMemory(npcName, `CEO said: "${msg.text}" — I replied: "${text}"${result.delegation ? ` [delegated to ${result.delegation.delegateTo}]` : ''}`);
-            // Mood shift: NPC was just spoken to by the CEO
-            npcBrains.setMoodFromExternal(npcName, 'ceo_talked');
+            if (!isIncidentReport && !msg.session_id) {
+              npcBrains.saveMemory(npcName, `CEO said: "${msg.text}" — I replied: "${text}"${result.delegation ? ` [delegated to ${result.delegation.delegateTo}]` : ''}`);
+              npcBrains.setMoodFromExternal(npcName, 'ceo_talked');
+            }
           })
           .catch(err => {
             const errMsg = String(err?.message ?? err);
@@ -3613,6 +6670,9 @@ agentWss.on('connection', (ws) => {
             });
             if (ws.readyState === 1) ws.send(fallback);
           });
+        })().catch((err) => {
+          console.warn('[PlayerChat] handler error:', err?.message || err);
+        });
       } else if (msg.type === 'npc_introduce') {
         // Tour stop: Lucy is presenting NPC X to the player. Ask X's
         // brain to compose a one-line introduction in their own voice.
@@ -3660,21 +6720,35 @@ agentWss.on('connection', (ws) => {
           worldState.environment.playerPosition = msg.position || null;
           worldState._emit('environment', worldState.environment);
         }
+      } else if (msg.type === 'client_profile') {
+        ws._denizenClientProfile = msg;
+        let mobileCount = 0;
+        (agentWss ? agentWss.clients : cofounderAgent.wsClients).forEach((c) => {
+          if (c._denizenClientProfile?.touch) mobileCount++;
+        });
+        global._denizenMobileClients = mobileCount;
       } else if (msg.type === 'bouncer_run_tool') {
         // Bouncer requests a security scan via Kali WSL.
         // tool: 'nmap' | 'zenmap' (both run nmap CLI) | 'wireshark' (runs tcpdump)
         // threat: { category, severity, source, target, detail }
         const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
         const threat   = msg.threat || {};
+        const invGate = _bouncerInvTake(threat);
+        if (!invGate.allowed) {
+          console.log(`[BouncerTool] Suppressed duplicate ${msg.tool || 'nmap'} for ${invGate.key} (${invGate.remainingSec}s left)`);
+        } else {
         const tool     = msg.tool   || 'nmap';
         const sourceIp = threat.source && /\d{1,3}\.\d{1,3}/.test(String(threat.source)) ? String(threat.source) : null;
+        const quietTool = tool === 'zenmap' || tool === 'nmap';
 
         console.log(`[BouncerTool] Running ${tool} (Kali WSL) for ${threat.category} threat from ${sourceIp || 'unknown'}`);
 
-        _broadcast({
-          type: 'bouncer_tool_status', tool, status: 'starting', threat,
-          message: `Bouncer running ${tool === 'zenmap' ? 'nmap' : tool} in Kali Linux — investigating ${threat.category || 'the threat'}...`,
-        });
+        if (!quietTool) {
+          _broadcast({
+            type: 'bouncer_tool_status', tool, status: 'starting', threat,
+            message: `Bouncer running ${tool} in Kali Linux — investigating ${threat.category || 'the threat'}...`,
+          });
+        }
 
         // PC activity: bouncer-driven linux-agent run. mode = 'background'
         // since this code path doesn't spawn its own terminal window.
@@ -3700,16 +6774,18 @@ agentWss.on('connection', (ws) => {
               durationMs: Date.now() - btStart,
               detail: (result.summary || result.error || '').slice(0, 240) || null,
             });
-            _broadcast({
-              type: 'bouncer_tool_status',
-              tool,
-              status: result.ok ? 'done' : 'error',
-              threat,
-              steps: result.steps?.length,
-              message: result.ok
-                ? `${tool === 'zenmap' ? 'nmap' : tool} complete (${((result.elapsed || 0) / 1000).toFixed(1)}s).`
-                : `${tool} failed: ${result.error}`,
-            });
+            if (!quietTool) {
+              _broadcast({
+                type: 'bouncer_tool_status',
+                tool,
+                status: result.ok ? 'done' : 'error',
+                threat,
+                steps: result.steps?.length,
+                message: result.ok
+                  ? `${tool} complete (${((result.elapsed || 0) / 1000).toFixed(1)}s).`
+                  : `${tool} failed: ${result.error}`,
+              });
+            }
           })
           .catch(err => {
             pcActivity.record({
@@ -3719,32 +6795,41 @@ agentWss.on('connection', (ws) => {
               detail: String(err?.message || err).slice(0, 240),
             });
             console.error(`[BouncerTool] ${tool} error:`, err?.message);
-            _broadcast({
-              type: 'bouncer_tool_status',
-              tool,
-              status: 'error',
-              threat,
-              message: `${tool} threw: ${err?.message || err}`,
-            });
+            if (!quietTool) {
+              _broadcast({
+                type: 'bouncer_tool_status',
+                tool,
+                status: 'error',
+                threat,
+                message: `${tool} threw: ${err?.message || err}`,
+              });
+            }
           });
+        }
       } else if (msg.type === 'bouncer_run_linux') {
         // Bouncer requests a Kali WSL investigation for a threat.
         // threat: { category, severity, source, target, detail }
         // openTerminal: bool (default false) — set true to open a visible WSL window
         const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
         const threat = msg.threat || {};
+        const invGate = _bouncerInvTake(threat);
+        if (!invGate.allowed) {
+          if (!invGate.loopback) {
+            console.log(`[BouncerLinux] Suppressed duplicate investigation for ${invGate.key} (${invGate.remainingSec}s left)`);
+          }
+        } else {
 
         console.log(`[BouncerLinux] WSL investigation for ${threat.category} from ${threat.source || 'unknown'}`);
 
+        const blrOpenTerm = msg.openTerminal === true;
         _broadcast({
           type: 'bouncer_linux_status',
           status: 'starting',
           threat,
-          message: `Bouncer opened a Kali Linux terminal to investigate ${threat.category || 'the threat'}...`,
+          message: `Bouncer is investigating ${threat.category || 'the threat'} in the background...`,
         });
 
-        // Open a real visible terminal window so the player can watch Bouncer work.
-        const blrOpenTerm = msg.openTerminal !== false;
+        // Visible WSL window only when CEO explicitly requests via API (never from robber auto-run).
         if (blrOpenTerm) {
           _openBouncerTerminal(_buildTerminalShowCmd(threat));
         }
@@ -3848,6 +6933,7 @@ agentWss.on('connection', (ws) => {
           console.error('[BouncerLinux] WSL error:', err?.message);
           _broadcast({ type: 'bouncer_linux_result', status: 'error', threat, message: `WSL threw: ${err?.message || err}` });
         });
+        }
       } else {
         cofounderAgent.handleClientMessage(msg);
       }
@@ -3859,29 +6945,86 @@ agentWss.on('connection', (ws) => {
   ws.on('close', () => {
     console.log(`[CofounderAgent] WS client disconnected (${cofounderAgent.wsClients.size - 1} remaining)`);
     cofounderAgent.removeClient(ws);
+    let mobileCount = 0;
+    (agentWss ? agentWss.clients : cofounderAgent.wsClients).forEach((c) => {
+      if (c._denizenClientProfile?.touch) mobileCount++;
+    });
+    global._denizenMobileClients = mobileCount;
   });
   ws.on('error', () => {
     cofounderAgent.removeClient(ws);
   });
 });
 
-// Route WebSocket upgrades
+setInterval(async () => {
+  if (!agentWss || !denizenDb.enabled) return;
+  for (const ws of agentWss.clients) {
+    if (ws.readyState !== 1) continue;
+    if (!ws._deliveredHandoffIds) ws._deliveredHandoffIds = new Set();
+
+    if (ws._denizenSessionId) {
+      _touchVisitorOnline(ws._denizenSessionId);
+      try {
+        const handoffs = await denizenVisitor.getPendingHandoffs(ws._denizenSessionId);
+        for (const handoff of handoffs) {
+          _deliverHandoffWs(ws, handoff);
+        }
+        const proactive = await visitorIntel.getPendingProactiveEvents(ws._denizenSessionId);
+        for (const event of proactive || []) {
+          if (!ws._deliveredProactiveIds) ws._deliveredProactiveIds = new Set();
+          if (ws._deliveredProactiveIds.has(event.id)) continue;
+          ws._deliveredProactiveIds.add(event.id);
+          ws.send(JSON.stringify(visitorIntel.buildProactiveBroadcast(event)));
+          visitorIntel.markProactiveDelivered(event.id, ws._denizenSessionId).catch(() => {});
+        }
+      } catch (_) { /* non-fatal poll */ }
+    }
+
+    if (ws._denizenIsCeo) {
+      try {
+        const bridgeId = await denizenVisitor.getOrCreateCeoBridgeSession();
+        if (bridgeId) {
+          const handoffs = await denizenVisitor.getPendingHandoffs(bridgeId);
+          for (const handoff of handoffs) {
+            _deliverHandoffWs(ws, handoff, { ceoBridge: true });
+          }
+        }
+      } catch (_) { /* non-fatal poll */ }
+    }
+  }
+}, 15000);
+
+// Route WebSocket upgrades (pathname only — Cloudflare/nginx may add ?query)
+function _wsUpgradePath(reqUrl) {
+  try {
+    return new URL(reqUrl || '/', 'http://127.0.0.1').pathname.replace(/\/$/, '') || '/';
+  } catch (_) {
+    return String(reqUrl || '').split('?')[0].replace(/\/$/, '') || '/';
+  }
+}
+
 server.on('upgrade', (req, socket, head) => {
-  if (req.url === '/security-ws') {
+  const wsPath = _wsUpgradePath(req.url);
+
+  if (wsPath === '/security-ws') {
     securityWss.handleUpgrade(req, socket, head, (ws) => {
       securityWss.emit('connection', ws, req);
     });
     return;
   }
 
-  if (req.url === '/agent-ws') {
+  if (wsPath === '/agent-ws') {
     agentWss.handleUpgrade(req, socket, head, (ws) => {
       agentWss.emit('connection', ws, req);
     });
     return;
   }
 
-  // OpenClaw WebSocket proxy
+  // Optional OpenClaw WebSocket proxy (off by default)
+  if (!JELLY_ENABLE_OPENCLAW_GATEWAY) {
+    socket.destroy();
+    return;
+  }
   const target = net.createConnection(OPENCLAW_PORT, OPENCLAW_HOST, () => {
     const reqLine = `${req.method} ${req.url} HTTP/${req.httpVersion}\r\n`;
     const headers = Object.entries(req.headers)
@@ -3909,8 +7052,14 @@ server.on('error', (err) => {
       if (process.platform === 'win32') {
         // Find PID on the port and kill it
         const out = execSync(`netstat -ano | findstr :${PORT}`, { encoding: 'utf8', timeout: 3000 });
-        const pids = [...new Set(out.split('\n').map(l => l.trim().split(/\s+/).pop()).filter(p => /^\d+$/.test(p) && p !== '0'))];
-        pids.forEach(pid => { try { execSync(`taskkill /PID ${pid} /F`, { timeout: 2000 }); } catch (_) {} });
+        const pids = [...new Set(out.split('\n').map(l => l.trim().split(/\s+/).pop()).filter(p => /^\d+$/.test(p) && p !== '0' && Number(p) !== process.pid))];
+        pids.forEach((pid) => {
+          try {
+            execSync(`taskkill /PID ${pid} /F`, { timeout: 2000, stdio: 'pipe' });
+          } catch (err) {
+            console.warn(`[Server] Could not kill PID ${pid} on port ${PORT} — close the other server terminal manually, then restart.`);
+          }
+        });
       } else {
         execSync(`fuser -k ${PORT}/tcp 2>/dev/null || lsof -ti:${PORT} | xargs kill -9 2>/dev/null || true`, { timeout: 3000 });
       }
@@ -3919,7 +7068,46 @@ server.on('error', (err) => {
   }
 });
 
+// Research scheduler: job CRM maintenance + queue dispatch (6h) + daily digest (8am).
+startResearchScheduler({
+  jobCrm,
+  gmailClient,
+  npcBrains,
+  researchQueue,
+  broadcast: _ceoBroadcast,
+  assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
+});
+
+_resetLucyBrowserOnStartup();
+_startLucyMirrorFrameWatcher();
+
+const PREDICTION_MAINTENANCE_MS = 6 * 60 * 60 * 1000;
+let _predictionMaintenanceTimer = null;
+let _visitorIntelligenceLoop = null;
+
 server.listen(PORT, () => {
+  denizenDb.init().then((result) => {
+    if (!result?.ok) return;
+    runPredictionMaintenance(denizenDb).catch((err) => {
+      console.warn('[DenizenPredictionLoop] initial maintenance failed:', err?.message || err);
+    });
+    _predictionMaintenanceTimer = setInterval(() => {
+      runPredictionMaintenance(denizenDb).catch((err) => {
+        console.warn('[DenizenPredictionLoop] maintenance failed:', err?.message || err);
+      });
+    }, PREDICTION_MAINTENANCE_MS);
+    _predictionMaintenanceTimer.unref?.();
+
+    _visitorIntelligenceLoop = startVisitorIntelligenceLoop({
+      broadcast: (payload, sessionId) => _broadcastToVisitorSession(sessionId, payload),
+      onRecurringTask: ({ task, event, sessionId }) => {
+        _broadcastToVisitorSession(sessionId, visitorIntel.buildProactiveBroadcast(event));
+        slackChannel.sendToSlack(sessionId, `Recurring: ${task.label}\n${task.prompt}`).catch(() => {});
+      },
+    }, { immediate: false });
+    log.info('VisitorIntelligence', `scheduler started (${_visitorIntelligenceLoop.intervalMs}ms tick)`);
+  }).catch(() => {});
+
   const parallel = process.env.LM_STUDIO_PARALLEL || 1;
   const npcCount = Object.keys(npcRoster || {}).length || 16;
   log.banner({ port: PORT, parallel, npcs: npcCount });
@@ -3936,12 +7124,21 @@ server.listen(PORT, () => {
   // Sync LM Studio's active loaded model BEFORE starting the agent loop
   // so every component picks up the right model from the first request.
   npcBrains.syncLmStudioModel().catch(() => {}).finally(() => {
-    // Keep cofounderAgent.model in sync too
     if (npcBrains.providers?.lmstudio?.model) {
       cofounderAgent.model = npcBrains.providers.lmstudio.model;
     }
-    // Start the cofounder agent's autonomous thinking loop
-    cofounderAgent.start();
+    log.info('ModelSync',
+      `active main=${npcBrains.providers?.lmstudio?.model} ` +
+      `fast=${npcBrains.providers?.['lmstudio-fast']?.model}`
+    );
+    // Economy: Abby uses scripted office commands instead of LM Studio thinks.
+    if (promptTuning.economyMode && !/^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_COFOUNDER_LLM || ''))) {
+      console.log('[CofounderAgent] Economy mode — scripted demo loop (no LLM)');
+      cofounderAgent._usingDemoLoop = true;
+      cofounderAgent._startDemoLoop();
+    } else {
+      cofounderAgent.start();
+    }
   });
 
   // ── Bouncer proactive patrol loop ─────────────────────────────────────────
@@ -3995,7 +7192,7 @@ server.listen(PORT, () => {
         elapsed:   patrol.elapsed,
         ts:        Date.now(),
       });
-      wss.clients.forEach(c => { if (c.readyState === 1) c.send(patrolMsg); });
+      (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(patrolMsg); });
 
       log.patrol({ openPorts: patrol.openPorts, wsUp: patrol.wsServer?.open, lmUp: patrol.lmStudio?.open, elapsed: patrol.elapsed });
 
@@ -4033,7 +7230,19 @@ function gracefulShutdown(signal) {
   try { securityMonitor.stop?.(); } catch (e) { console.warn('[Server] securityMonitor.stop:', e?.message); }
   try { cofounderAgent.stop?.(); } catch (_) {}
   try { externalSink.detach(); } catch (_) {}
+  try { denizenDb.detachWorldState(worldState); } catch (_) {}
+  try {
+    denizenDb.recordFact({
+      factType: 'office.stopped',
+      actorType: 'system',
+      actorId: 'denizen-server',
+      payload: { signal },
+      tags: ['office', 'shutdown'],
+    });
+  } catch (_) {}
   try { if (_patrolTimer) { clearTimeout(_patrolTimer); _patrolTimer = null; } } catch (_) {}
+  try { if (_predictionMaintenanceTimer) { clearInterval(_predictionMaintenanceTimer); _predictionMaintenanceTimer = null; } } catch (_) {}
+  try { if (_visitorIntelligenceLoop) { _visitorIntelligenceLoop.stop(); _visitorIntelligenceLoop = null; } } catch (_) {}
   try {
     if (_broadcastTimer) clearTimeout(_broadcastTimer);
   } catch (_) {}

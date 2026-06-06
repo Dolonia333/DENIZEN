@@ -72,6 +72,10 @@ describe('denizen-org-policy', () => {
       () => orgPolicy.assertBusinessActionAllowed('acme', 'lead-monitor'),
       /Business data access disabled/,
     );
+    await assert.rejects(
+      () => orgPolicy.assertBusinessActionAllowed('acme', 'rfp-pipeline-summary'),
+      /Business data access disabled/,
+    );
     await orgPolicy.assertBusinessActionAllowed('acme', 'work-history');
     denizenDb._get = origGet;
   });

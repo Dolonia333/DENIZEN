@@ -36,6 +36,7 @@ const BUSINESS_ACTIONS = new Set([
   'rfp-status',
   'client-lookup',
   'rfp-requirement-review',
+  'rfp-pipeline-summary',
   'proposal-outline',
   'past-performance-match',
   'intake-to-client',
