@@ -20,6 +20,7 @@
   'use strict';
 
   const POLL_MS = 5000;
+  const FIRST_POLL_DELAY_MS = 4000;
   const HEALTH_URL = '/api/health';
 
   let chip = null;
@@ -80,13 +81,20 @@
     });
     chip.title = 'Click to expand office diagnostics';
     chip.textContent = '⋯ diag';
-    chip.addEventListener('click', togglePanel);
+    const bind = window.DenizenTouchBind?.bindPress;
+    if (bind) bind(chip, togglePanel);
+    else chip.addEventListener('click', togglePanel);
     document.body.appendChild(chip);
 
     panel = document.createElement('div');
     panel.id = 'denizen-diag-panel';
     Object.assign(panel.style, {
-      position: 'fixed', bottom: '46px', left: '14px', zIndex: 9997,
+      position: 'fixed',
+      bottom: 'calc(var(--denizen-dock-height, 56px) + 10px + env(safe-area-inset-bottom, 0px))',
+      left: 'max(10px, env(safe-area-inset-left, 0px))',
+      right: 'max(10px, env(safe-area-inset-right, 0px))',
+      zIndex: 100200,
+      width: 'min(420px, calc(100vw - 20px))',
       background: 'rgba(2,6,23,0.96)', color: '#cfe7ff',
       border: '1px solid #355', borderRadius: '6px',
       padding: '10px 12px', font: '11px monospace', lineHeight: '1.5',
@@ -222,8 +230,10 @@
 
   function init() {
     buildUI();
-    pollOnce();
-    setInterval(pollOnce, POLL_MS);
+    setTimeout(() => {
+      pollOnce();
+      setInterval(pollOnce, POLL_MS);
+    }, FIRST_POLL_DELAY_MS);
     try {
       const auto = new URL(window.location.href).searchParams.get('diag');
       if (auto === '1' || auto === 'open') {

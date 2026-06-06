@@ -168,7 +168,12 @@ async function executeAction(action) {
     case 'open_app': {
       // Use Windows start command to open apps by name or path
       const { exec } = require('node:child_process');
-      const app = action.app || '';
+      let app = action.app || '';
+      if (/^brave$/i.test(app.trim())) {
+        const bravePath = resolveBravePath();
+        if (!bravePath) return { error: 'Brave not installed' };
+        app = bravePath;
+      }
       await new Promise((res) => exec(`start "" "${app}"`, res));
       await new Promise(r => setTimeout(r, 1500)); // wait for app to open
       break;
@@ -271,10 +276,11 @@ function _parseResponse(raw) {
 // Main desktop task runner
 // ---------------------------------------------------------------------------
 
-async function runDesktopTask({ instruction, broadcast, provider, apiKey } = {}) {
-  const cfgPath = path.join(process.env.USERPROFILE || process.env.HOME || '', '.openclaw', 'openclaw.json');
+async function runDesktopTask({ instruction, broadcast, provider, apiKey, npcName } = {}) {
+  const agentName = String(npcName || 'Lucy');
+  const formTask = /\b(?:fill|form|application|apply|type for me|enter for me)\b/i.test(String(instruction || ''));
   let cfg = {};
-  try { cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8')); } catch (_) {}
+  try { cfg = require('../jelly/config-provider').getConfig(); } catch (_) {}
 
   const lmCfg = {
     baseUrl: process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234',
@@ -314,6 +320,12 @@ async function runDesktopTask({ instruction, broadcast, provider, apiKey } = {})
     '',
     'Do NOT open banking, private files, or sensitive apps unless explicitly asked.',
     'If an app is not installed, call blocked immediately rather than searching for it.',
+    '',
+    'BROWSER / FORM FILL (Brave, Chrome, job sites, gov forms):',
+    '- Click into each visible field, type the value, Tab to next field.',
+    '- Scroll down if fields are below the fold.',
+    '- NEVER click final Submit / Send / Pay / Place order unless the CEO explicitly said "submit" or "send it".',
+    '- When all fields are filled, call done with a summary of what you entered and what still needs CEO review.',
   ].join('\n');
 
   const MAX_STEPS = 50; // bumped for Wireshark/Zenmap which need more steps than simple tasks
@@ -331,7 +343,7 @@ async function runDesktopTask({ instruction, broadcast, provider, apiKey } = {})
     try { broadcast({ type, ...data }); } catch (_) {}
   };
 
-  _broadcast('desktop_task_status', { status: 'starting', message: `Lucy is starting: ${instruction}` });
+  _broadcast('desktop_task_status', { status: 'starting', message: `${agentName} is starting: ${instruction}`, npcName: agentName });
 
   try {
     // Initial screenshot
@@ -366,9 +378,10 @@ async function runDesktopTask({ instruction, broadcast, provider, apiKey } = {})
       messages.push({ role: 'assistant', content: parsed.text || '' });
 
       if (parsed.done) {
-        console.log('[DesktopAgent] Task complete:', parsed.text);
-        _broadcast('desktop_task_status', { status: 'done', message: `Lucy finished: ${instruction}`, steps });
-        return { ok: true, steps };
+        const summary = parsed.text || 'Task complete.';
+        console.log('[DesktopAgent] Task complete:', summary);
+        _broadcast('desktop_task_status', { status: 'done', message: `${agentName} finished: ${summary}`, steps, npcName: agentName });
+        return { ok: true, steps, summary };
       }
 
       // Execute the action
@@ -416,8 +429,115 @@ async function runDesktopTask({ instruction, broadcast, provider, apiKey } = {})
 // Set module.exports._abortAll = true to stop any in-flight task immediately.
 let _abortFlag = false;
 
+/** Resolve Brave Browser executable on Windows. */
+function resolveBravePath() {
+  if (process.env.BRAVE_BROWSER_PATH && fs.existsSync(process.env.BRAVE_BROWSER_PATH)) {
+    return process.env.BRAVE_BROWSER_PATH;
+  }
+  const local = process.env.LOCALAPPDATA || '';
+  const candidates = [
+    'C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+    'C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+    local ? path.join(local, 'BraveSoftware', 'Brave-Browser', 'Application', 'brave.exe') : null,
+  ].filter(Boolean);
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+/**
+ * Open the CEO's real Brave browser (their profile, cookies, logins).
+ * @param {string} [url]
+ */
+async function openBraveBrowser(url) {
+  const brave = resolveBravePath();
+  if (!brave) {
+    return { ok: false, error: 'Brave not found. Set BRAVE_BROWSER_PATH in denizen/.env' };
+  }
+  const { exec } = require('node:child_process');
+  const target = url ? `"${brave}" "${url}"` : `"${brave}"`;
+  await new Promise((res, rej) => {
+    exec(`start "" ${target}`, { windowsHide: true }, (err) => (err ? rej(err) : res()));
+  });
+  await new Promise((r) => setTimeout(r, 1500));
+  return { ok: true, path: brave, url: url || null };
+}
+
+/**
+ * Read-only: one screenshot + vision describe (no mouse/keyboard).
+ */
+async function runObserveOnly({ instruction, broadcast, npcName } = {}) {
+  let cfg = {};
+  try { cfg = require('../jelly/config-provider').getConfig(); } catch (_) {}
+
+  const lmCfg = {
+    baseUrl: process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234',
+    model: process.env.LM_STUDIO_VISION_MODEL || process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning',
+    apiKey: process.env.LM_STUDIO_API_KEY || cfg?.models?.providers?.lmstudio?.apiKey || 'lm-studio',
+  };
+
+  const systemPrompt = [
+    'You are a read-only screen observer for an AI assistant.',
+    'Describe what is on the CEO\'s screen: active app, browser (Brave/Chrome/etc), URL bar, page title,',
+    'visible text they typed, forms, buttons, errors, and anything they asked about.',
+    'Do NOT suggest clicks or typing unless the CEO explicitly asked you to act.',
+    'Output EXACTLY ONE JSON object:',
+    '{"action":"done","summary":"2-4 sentences describing the screen","topics":["up to 3 nouns worth researching"],"searchQuery":"one web search phrase to learn more about something unclear on screen"}',
+    'If nothing useful is visible, still describe what you can see.',
+  ].join('\n');
+
+  const _broadcast = (type, data) => {
+    if (!broadcast) return;
+    try { broadcast({ type, ...data, npcName: npcName || 'Lucy' }); } catch (_) {}
+  };
+
+  try {
+    const screenshotBuf = await takeScreenshot();
+    const screenshotB64 = screenshotBuf.toString('base64');
+    _broadcast('desktop_task_screenshot', { screenshot: screenshotB64 });
+
+    const messages = [{
+      role: 'user',
+      content: [
+        { type: 'text', text: `CEO request: ${instruction}\n\nDescribe this screen read-only.` },
+        { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshotB64}` } },
+      ],
+    }];
+
+    const raw = await _callVisionModel(messages, systemPrompt, lmCfg);
+    const parsed = _parseResponse(raw);
+    if (parsed.error) {
+      return { ok: false, error: parsed.error, screenshotB64 };
+    }
+
+    let summary = parsed.text || '';
+    let topics = [];
+    let searchQuery = '';
+    try {
+      const jsonMatch = (parsed.text || '').match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const obj = JSON.parse(jsonMatch[0]);
+        summary = obj.summary || summary;
+        topics = Array.isArray(obj.topics) ? obj.topics : [];
+        searchQuery = obj.searchQuery || '';
+      }
+    } catch (_) {}
+
+    if (!summary && parsed.done) summary = 'Screen captured — vision model returned no summary.';
+
+    return { ok: true, summary, topics, searchQuery, screenshotB64 };
+  } catch (err) {
+    return { ok: false, error: err.message || String(err), screenshotB64: null };
+  }
+}
+
 module.exports = {
   runDesktopTask,
+  runObserveOnly,
+  openBraveBrowser,
+  resolveBravePath,
+  takeScreenshot,
   get _abortAll() { return _abortFlag; },
   set _abortAll(v) { _abortFlag = !!v; },
 };

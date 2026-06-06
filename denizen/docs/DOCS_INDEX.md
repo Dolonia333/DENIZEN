@@ -19,6 +19,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Architecture | [WORLD_ENGINE.md](WORLD_ENGINE.md) | on GitHub | World engine generation/runtime primitives |
 | Architecture | [ROOM_GENERATOR.md](ROOM_GENERATOR.md) | on GitHub | Procedural room generation and archetypes |
 | Architecture | [CITY_GENERATOR.md](CITY_GENERATOR.md) | on GitHub | City generation pipeline and API integration |
+| Architecture | [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) | new/local | Workspace-level module/layout map and ownership boundaries |
 | Intelligence/Data | [AI-SYSTEM.md](AI-SYSTEM.md) | on GitHub | NPC planning, memory, and decision loops |
 | Intelligence/Data | [AWARENESS.md](AWARENESS.md) | on GitHub | Prompt-time awareness features and context signals |
 | Intelligence/Data | [WORLD-STATE.md](WORLD-STATE.md) | on GitHub | Shared world state model and update semantics |
@@ -49,6 +50,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Operations | [HARNESS_EVALUATION.md](HARNESS_EVALUATION.md) | on GitHub | Evaluation harness behavior and criteria |
 | Operations | [PROPOSAL_REVIEW.md](PROPOSAL_REVIEW.md) | on GitHub | Operator review workflow for queued proposals |
 | Operations | [TESTING.md](TESTING.md) | new/local | Test pyramid, smoke scripts, pre-deploy checklist |
+| Operations | [RUNTIME_DATA.md](RUNTIME_DATA.md) | new/local | Runtime-mutated data/reports map, PII handling, cleanup/reset guidance |
 | NPCs/AI | [CAPABILITY_PROPOSALS.md](CAPABILITY_PROPOSALS.md) | on GitHub | NPC capability request and approval workflow |
 | World/Assets | [SFX.md](SFX.md) | on GitHub | Sound effects catalog and playback hooks |
 | Session Notes | [SESSION_2026-06-05.md](SESSION_2026-06-05.md) | new/local | Session log for Jelly migration and model tuning |

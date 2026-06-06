@@ -4,6 +4,11 @@
     <meta charset="utf-8" />
     <title>DENIZEN</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#020617" />
+    <link rel="manifest" href="./manifest.json" />
     <style>
       :root {
         --safe-top: env(safe-area-inset-top, 0px);
@@ -108,16 +113,19 @@
     <!-- Pathfinding -->
     <script src="./src/pathfinding.js" defer></script>
     <script src="./src/npc-roster.js" defer></script>
+    <script src="./src/npc-capabilities.js?v=cap1" defer></script>
+    <!-- Touch tap helper — must load before any dock chip / panel scripts -->
+    <script src="./src/touch-bind.js?v=voice1" defer></script>
     <!-- Agent Office System -->
     <script src="./src/agent-actions.js" defer></script>
-    <script src="./src/agent-office-manager.js" defer></script>
+    <script src="./src/agent-office-manager.js?v=economy2" defer></script>
     <!-- LLM telemetry panel — bottom-left chip + click-to-expand view -->
-    <script src="./src/llm-telemetry-panel.js" defer></script>
+    <script src="./src/llm-telemetry-panel.js?v=lmfix4" defer></script>
     <!-- Proximity audio (distance/facing volume + convo mute, must load
          before voice-gate and elevenlabs-provider so they can call into it) -->
-    <script src="./src/proximity-audio.js" defer></script>
+    <script src="./src/proximity-audio.js?v=audio2" defer></script>
     <!-- Voice gate (Zion-presence flag + speech provider plug) -->
-    <script src="./src/voice-gate.js" defer></script>
+    <script src="./src/voice-gate.js?v=audio2" defer></script>
     <!-- ElevenLabs voice provider (auto-installs if /api/tts/health says yes) -->
     <script src="./src/elevenlabs-provider.js" defer></script>
     <!-- SFX (ambient + event sounds; missing files silently skipped) -->
@@ -126,32 +134,45 @@
     <script src="./src/openclaw-translator.js?v=mobfix2" defer></script>
     <script src="./src/openclaw-worldstate-bridge.js?v=mobfix2" defer></script>
     <!-- OpenClaw outbound dispatch (action classifier + gateway forward) -->
-    <script src="./src/openclaw-dispatch.js?v=mobfix2" defer></script>
-    <!-- Voice input (push-to-talk STT) — requires Chrome's webkitSpeechRecognition -->
-    <script src="./src/voice-input.js" defer></script>
+    <script src="./src/openclaw-dispatch.js?v=lucyroute1" defer></script>
+    <!-- Mobile haptics (tap / impact / notify vibration patterns) -->
+    <script src="./src/mobile-haptics.js?v=mobplay2" defer></script>
+    <!-- Voice input (push-to-talk STT) -->
+    <script src="./src/voice-input.js?v=audio2" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=mobfix3" defer></script>
+    <script src="./src/mobile-controls.js?v=voice1" defer></script>
     <!-- Live office diagnostics chip (bottom-left, polls /api/health every 5s) -->
     <script src="./src/diag.js" defer></script>
-    <!-- Operator review UI for proposal queues (bottom-right; polls /api/proposals every 30s) -->
-    <script src="./src/proposals-panel.js" defer></script>
-    <!-- City Debug overlay (?debug=city, or window.DenizenCityDebug.show()) -->
-    <script src="./src/city-debug.js" defer></script>
+    <!-- Live mirror of Lucy's Playwright browser (mobile-friendly) -->
+    <script src="./src/browser-mirror-panel.js?v=bm5" defer></script>
+    <!-- Bouncer security feed (separate from CEO chat) -->
+    <script src="./src/security-feed.js?v=sec1" defer></script>
+    <!-- Visitor session + assistant claim (before player chat) -->
+    <script src="./src/visitor-session.js?v=vis2" defer></script>
+    <script src="./src/visitor-capabilities.js?v=vis1" defer></script>
+    <script src="./src/visitor-onboarding.js?v=vis1" defer></script>
+    <script src="./src/visitor-claim-ui.js?v=vis1" defer></script>
+    <script src="./src/visitor-handoff-ui.js?v=vis2" defer></script>
+    <script src="./src/visitor-projects-ui.js?v=vis2" defer></script>
+    <script src="./src/visitor-assistant-labels.js?v=vis2" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js" defer></script>
+    <script src="./src/player-chat.js?v=sec1" defer></script>
+    <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
+    <script src="./src/bottom-dock.js?v=sec1" defer></script>
     <!-- Security Monitor + Robber Visualization -->
     <script src="./src/security-monitor.js" defer></script>
     <script src="./src/robber-controller.js" defer></script>
-    <!-- Demo / Cutscene system -->
-    <script src="./src/demo-scene.js" defer></script>
     <!-- Work Output Feed HUD (live NPC activity panel, Tab to toggle) -->
     <script src="./src/work-feed.js" defer></script>
+    <!-- Lazy loader for non-critical UI (briefing, proposals, city debug, demo) -->
+    <script src="./src/denizen-lazy-scripts.js?v=lazy1" defer></script>
     <!-- Game scene -->
-    <!-- Cache-bust during development so changes always show up -->
-    <script src="./office-scene.js?v=dev37" defer></script>
+    <script src="./office-scene.js?v=mobplay4" defer></script>
   </head>
   <body>
     <div id="game-container"></div>
+    <!-- Chat button appears immediately — does not wait for Phaser -->
+    <script src="./src/chat-bootstrap.js?v=sec1"></script>
   </body>
 </html>
 

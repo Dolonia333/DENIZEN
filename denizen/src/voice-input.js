@@ -18,8 +18,11 @@
  * Tunable via the script tag's data-* attrs or via globals:
  *   window.DenizenVoiceInput.setHotkey('\\')          — change the hotkey
  *   window.DenizenVoiceInput.setLang('en-US')         — change recognizer locale
- *   window.DenizenVoiceInput.setAutosubmit(true)      — auto-send on final result
+ *   window.DenizenVoiceInput.setAutosubmit(true)      — auto-send when you stop (default)
  *   window.DenizenVoiceInput.setProvider(fn)          — swap the STT engine
+ *
+ * Continuous mode: while the mic is open, short pauses do NOT end the
+ * session — keep talking, click 🎤 again (or release \) when you're done.
  *
  * NOTE on the hotkey choice: Space is the natural push-to-talk button
  * but the office scene uses Space for Phaser interact. Backslash is
@@ -36,7 +39,11 @@
   let autosubmit = true;
   let recognition = null;
   let listening = false;
-  let lastFinal = '';
+  /** True from start() until explicit stop() — pauses won't end the session. */
+  let sessionActive = false;
+  /** Accumulated finals across Chrome's continuous recognition chunks. */
+  let sessionTranscript = '';
+  let restartTimer = null;
   let micButton = null;
   let statusBadge = null;
   let providerOverride = null;
@@ -157,7 +164,7 @@
 
         recorder.start(250);
         active = true;
-        setStatus('listening', 'recording… (release key or click again to stop)');
+        setStatus('listening', 'recording… pauses are OK — click Stop or 🎤 again when done');
       },
 
       stop() {
@@ -271,74 +278,112 @@
     }
   }
 
+  function isTouchUi() {
+    return !!window.__DenizenIsTouch
+      || document.documentElement.classList.contains('denizen-touch');
+  }
+
+  function isSupported() {
+    return supportsSpeechRecognition || !!providerOverride;
+  }
+
+  function onMicPress(e) {
+    if (e?.preventDefault) e.preventDefault();
+    if (typeof window.DenizenSetPresence === 'function' && !window.DenizenPresence?.zionPresent) {
+      try { window.DenizenSetPresence(true); } catch (_) {}
+    }
+    if (!isSupported()) {
+      setMicState(
+        'error',
+        '<b>🎤 voice not available</b><br><span style="opacity:0.85">Use Chrome on desktop, or set OPENAI_API_KEY on the server for mobile Whisper STT.</span>',
+        { sticky: true },
+      );
+      return;
+    }
+    if (listening || sessionActive) stop();
+    else start();
+  }
+
+  function refreshPresenceChip() {
+    const presenceChip = document.getElementById('denizen-presence-chip');
+    if (!presenceChip) return;
+    const on = !!window.DenizenPresence?.zionPresent;
+    const touch = isTouchUi();
+    presenceChip.textContent = touch
+      ? (on ? '👤🔊' : '👤🔇')
+      : (on ? '👤 voice ON' : '👤 voice OFF');
+    presenceChip.title = on
+      ? 'NPC voice output ON — tap to mute all speech'
+      : 'NPC voice output OFF — tap to hear NPCs (required for Listen-in / Focus)';
+    presenceChip.style.background = on ? '#064e3b' : '#0f172a';
+    presenceChip.style.borderColor = on ? '#34d399' : '#355';
+    presenceChip.style.display = 'block';
+  }
+
+  function onPresencePress() {
+    window.DenizenHaptics?.tap?.();
+    if (typeof window.DenizenTogglePresence === 'function') {
+      window.DenizenTogglePresence();
+    }
+  }
+
+  function wirePress(el, handler) {
+    if (!el || el.dataset.denizenTouchWired === '1') return;
+    el.dataset.denizenTouchWired = '1';
+    const bind = window.DenizenTouchBind?.bindPress;
+    if (bind) bind(el, handler);
+    else el.addEventListener('click', handler);
+  }
+
+  function rewireTouch() {
+    wirePress(document.getElementById('denizen-mic-button'), onMicPress);
+    wirePress(document.getElementById('denizen-presence-chip'), onPresencePress);
+  }
+
   // ---- Build the floating UI ----
   function buildUI() {
-    if (micButton) return;
+    if (micButton) {
+      rewireTouch();
+      return;
+    }
 
     micButton = document.createElement('button');
     micButton.id = 'denizen-mic-button';
-    micButton.title = `Click to start/stop. Or hold ${hotkey} on the keyboard.`;
+    micButton.type = 'button';
+    micButton.title = `Tap to speak — tap again when done. Or hold ${hotkey} on desktop.`;
     micButton.textContent = '🎤';
     Object.assign(micButton.style, {
-      position: 'fixed', bottom: '14px', right: '14px', zIndex: 9998,
+      position: 'fixed', bottom: '14px', right: '14px', zIndex: 100002,
       width: '52px', height: '52px', borderRadius: '50%',
       background: '#0f172a', color: '#cfe7ff', border: '2px solid #355',
       cursor: 'pointer', font: '22px monospace', boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
       transition: 'background 120ms, border-color 120ms, transform 80ms',
+      touchAction: 'manipulation',
     });
-    // CLICK-TO-TOGGLE (not push-to-hold from the button). Press-and-hold
-    // off the button was the worst UX bug — drift the cursor off the
-    // 46-pixel target while speaking and it stopped mid-sentence. Click
-    // once to start; click again to stop. Hold the keyboard hotkey for
-    // push-to-talk if you prefer that.
-    micButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      // If the user clicked the mic, they obviously want the voice loop
-      // active end-to-end. Auto-enable presence (the voice gate) the
-      // first time so they don't sit there wondering why NPCs answer
-      // silently. They can still Alt+V it off if they want.
-      if (typeof window.DenizenSetPresence === 'function' && !window.DenizenPresence?.zionPresent) {
-        try { window.DenizenSetPresence(true); } catch (_) {}
-      }
-      if (listening) stop(); else start();
-    });
+    wirePress(micButton, onMicPress);
     document.body.appendChild(micButton);
 
-    // Presence indicator — small chip above the mic showing 🔊 on / 🔇 off.
-    // Click to toggle. Mirrored from window.DenizenPresence by voice-gate.js.
     const presenceChip = document.createElement('button');
     presenceChip.id = 'denizen-presence-chip';
     presenceChip.type = 'button';
     Object.assign(presenceChip.style, {
-      position: 'fixed', bottom: '76px', right: '74px', zIndex: 9998,
+      position: 'fixed', bottom: '76px', right: '74px', zIndex: 100002,
       background: '#0f172a', color: '#cfe7ff', border: '1px solid #355',
       borderRadius: '14px', padding: '3px 9px', font: '11px monospace',
-      cursor: 'pointer', display: 'none',
+      cursor: 'pointer', display: 'none', touchAction: 'manipulation',
     });
-    presenceChip.title = 'Voice output on/off (also toggle with Alt+V)';
-    presenceChip.addEventListener('click', () => {
-      if (typeof window.DenizenTogglePresence === 'function') window.DenizenTogglePresence();
-    });
+    presenceChip.title = 'NPC voice output on/off';
+    wirePress(presenceChip, onPresencePress);
     document.body.appendChild(presenceChip);
 
-    function refreshPresenceChip() {
-      const on = !!window.DenizenPresence?.zionPresent;
-      presenceChip.textContent = on ? '🔊 voice ON' : '🔇 voice OFF';
-      presenceChip.style.background = on ? '#064e3b' : '#0f172a';
-      presenceChip.style.borderColor = on ? '#34d399' : '#355';
-      presenceChip.style.display = 'block';
-    }
-    // Poll cheaply — presence flips rarely and from many places (Alt+V,
-    // /api/presence POST, voice-gate hotkey). One global isn't reliably
-    // visible via property descriptors, so a 500ms poll is the simplest
-    // correct approach.
-    setInterval(refreshPresenceChip, 500);
+    window.addEventListener('denizen:presence', refreshPresenceChip);
+    setInterval(refreshPresenceChip, 2000);
     refreshPresenceChip();
 
     statusBadge = document.createElement('div');
     statusBadge.id = 'denizen-mic-status';
     Object.assign(statusBadge.style, {
-      position: 'fixed', bottom: '76px', right: '14px', zIndex: 9998,
+      position: 'fixed', bottom: '76px', right: '14px', zIndex: 100200,
       background: 'rgba(0,0,0,0.92)', color: '#cfe7ff',
       font: '11px monospace', padding: '6px 10px', border: '1px solid #355',
       borderRadius: '6px', display: 'none', maxWidth: '340px',
@@ -403,12 +448,62 @@
     }
   }
 
+  function displayTranscript(interim) {
+    const base = sessionTranscript.trim();
+    const tail = String(interim || '').trim();
+    if (base && tail) return `… ${base} ${tail}`;
+    if (base) return `… ${base}`;
+    if (tail) return `… ${tail}`;
+    return 'listening… pauses are OK — click 🎤 again when done';
+  }
+
+  function appendFinalChunk(chunk) {
+    const part = String(chunk || '').trim();
+    if (!part) return;
+    sessionTranscript = sessionTranscript
+      ? `${sessionTranscript} ${part}`
+      : part;
+  }
+
+  function scheduleRecognitionRestart() {
+    if (restartTimer) clearTimeout(restartTimer);
+    restartTimer = setTimeout(() => {
+      restartTimer = null;
+      if (!sessionActive || !recognition) return;
+      try {
+        recognition.start();
+      } catch (err) {
+        if (/InvalidStateError|already started/i.test(err?.message || '')) return;
+        scheduleRecognitionRestart();
+      }
+    }, 180);
+  }
+
+  function finishSession() {
+    sessionActive = false;
+    listening = false;
+    if (restartTimer) {
+      clearTimeout(restartTimer);
+      restartTimer = null;
+    }
+    const toSend = sessionTranscript.trim();
+    sessionTranscript = '';
+    if (toSend && autosubmit) {
+      setMicState('busy', `→ ${toSend}`);
+      deliver(toSend);
+    } else if (!toSend) {
+      setMicState('error', '<b>🔇 no speech</b><br><span style="opacity:0.85">I didn\'t catch anything — click 🎤 and try again.</span>');
+      setTimeout(() => { if (!_errorSticky) setMicState('idle', ''); }, 3500);
+    }
+    setTimeout(() => { if (!_errorSticky) setMicState('idle', ''); }, 1500);
+  }
+
   // ---- Recognition lifecycle ----
   function ensureRecognition() {
     if (!supportsSpeechRecognition) return null;
     if (recognition) return recognition;
     recognition = new SR();
-    recognition.continuous = false;       // single utterance per push
+    recognition.continuous = true;        // keep session open across natural pauses
     recognition.interimResults = true;    // get partial transcripts as you talk
     recognition.lang = lang;
 
@@ -420,16 +515,21 @@
         if (r.isFinal) final += r[0].transcript;
         else interim += r[0].transcript;
       }
-      if (interim) setMicState('listening', `… ${interim}`);
-      if (final) {
-        lastFinal = final.trim();
-        setMicState('busy', `→ ${lastFinal}`);
+      if (final) appendFinalChunk(final);
+      if (sessionActive) {
+        setMicState('listening', displayTranscript(interim));
       }
     };
 
     recognition.onerror = (ev) => {
       const code = ev?.error || 'unknown';
       console.warn('[VoiceInput] recognition error:', code);
+
+      // Mid-session silence/aborts are normal in continuous mode — keep listening.
+      if (sessionActive && (code === 'no-speech' || code === 'aborted')) {
+        scheduleRecognitionRestart();
+        return;
+      }
 
       // Auto-fallback: `network` (Brave blocks Google STT) and
       // `service-not-allowed` (some Chromium forks / locked-down enterprise
@@ -448,6 +548,7 @@
             { sticky: false },
           );
           setTimeout(() => { if (!_errorSticky) setMicState('idle', ''); }, 6000);
+          sessionActive = false;
           listening = false;
           return;
         }
@@ -466,30 +567,37 @@
       if (!sticky) {
         setTimeout(() => { if (!_errorSticky) setMicState('idle', ''); }, 3500);
       }
+      sessionActive = false;
       listening = false;
     };
 
     recognition.onend = () => {
-      listening = false;
-      if (lastFinal && autosubmit) {
-        deliver(lastFinal);
+      // Chrome often ends the recognizer after a silence chunk even in
+      // continuous mode — restart until the user explicitly stops.
+      if (sessionActive) {
+        setMicState('listening', displayTranscript());
+        scheduleRecognitionRestart();
+        return;
       }
-      // Keep the badge visible briefly so user sees what was sent — but
-      // don't stomp a sticky error message if one is up.
-      setTimeout(() => { if (!_errorSticky) setMicState('idle', ''); }, 1500);
-      lastFinal = '';
+      // finishSession() already delivered; onend is just cleanup here.
+      listening = false;
     };
 
     return recognition;
   }
 
   async function start() {
-    if (listening || _starting) return;
+    if (sessionActive || _starting) return;
     _starting = true;
+    sessionTranscript = '';
+    sessionActive = true;
     if (providerOverride) {
       // External provider takes over (e.g. Whisper-via-server).
       try { await providerOverride.start(deliver, setMicState); listening = true; }
-      catch (err) { console.warn('[VoiceInput] provider.start failed:', err?.message || err); }
+      catch (err) {
+        sessionActive = false;
+        console.warn('[VoiceInput] provider.start failed:', err?.message || err);
+      }
       _starting = false;
       return;
     }
@@ -501,8 +609,9 @@
       }
       r.start();
       listening = true;
-      setMicState('listening', 'listening… (click again or release the key to stop)');
+      setMicState('listening', 'listening… pauses are OK — click 🎤 again when done');
     } catch (err) {
+      sessionActive = false;
       // Most common: InvalidStateError when the previous session hasn't
       // fully ended yet (rapid click). Just swallow it — the next click
       // will work fine.
@@ -520,14 +629,23 @@
   }
 
   function stop() {
-    if (!listening) return;
+    if (!sessionActive && !listening) return;
+    const wasActive = sessionActive;
+    sessionActive = false;
     if (providerOverride && typeof providerOverride.stop === 'function') {
       try { providerOverride.stop(); } catch (_) {}
-    } else if (recognition) {
+      listening = false;
+      return;
+    }
+    if (recognition) {
       try { recognition.stop(); } catch (_) {}
     }
-    listening = false;
-    setMicState('busy', 'transcribing…');
+    if (wasActive) {
+      setMicState('busy', 'finishing…');
+      finishSession();
+    } else {
+      listening = false;
+    }
   }
 
   // ---- Deliver transcript ----
@@ -536,7 +654,8 @@
   //         if it's loaded (so voice still works when the chat UI isn't open).
   function deliver(transcript) {
     if (!transcript || !transcript.trim()) return;
-    const text = transcript.trim();
+    const text = window.DenizenOpenClawDispatch?.fixVoiceMishearings?.(transcript.trim())
+      || transcript.trim();
 
     // PlayerChat exposes itself to globals once instantiated. Auto-open
     // the panel so the user can SEE "[NPC] is coming over…" /
@@ -591,10 +710,27 @@
     stop();
   });
 
+  async function probeServerStt() {
+    if (!providerOverride) return;
+    try {
+      const res = await fetch('/api/stt/health', { cache: 'no-store' });
+      const h = res.ok ? await res.json() : {};
+      if (!h?.configured && micButton) {
+        micButton.title = 'Server STT not configured — set OPENAI_API_KEY on the Denizen PC';
+        console.warn('[VoiceInput] /api/stt/health: not configured (OPENAI_API_KEY missing)');
+      } else if (h?.configured) {
+        console.log('[VoiceInput] server Whisper STT ready for mobile');
+      }
+    } catch (_) {}
+  }
+
   // ---- Boot ----
-  function init() {
+  async function init() {
     buildUI();
-    console.log(`[VoiceInput] ready — hold ${hotkey} or click the mic button to talk (${lang})`);
+    rewireTouch();
+    await probeServerStt();
+    const mode = providerOverride ? 'server STT' : (supportsSpeechRecognition ? 'browser SR' : 'unsupported');
+    console.log(`[VoiceInput] ready (${mode}) — tap 🎤 or hold ${hotkey}`);
   }
 
   if (document.readyState === 'loading') {
@@ -605,9 +741,11 @@
 
   // ---- Public API ----
   window.DenizenVoiceInput = {
-    supported: supportsSpeechRecognition || !!providerOverride,
-    isListening: () => listening,
+    get supported() { return isSupported(); },
+    isSupported,
+    isListening: () => sessionActive || listening,
     start, stop,
+    rewireTouch,
     setHotkey(k) { if (typeof k === 'string' && k.length === 1) hotkey = k; },
     setLang(l) { lang = l; if (recognition) recognition.lang = l; },
     setAutosubmit(b) { autosubmit = !!b; },

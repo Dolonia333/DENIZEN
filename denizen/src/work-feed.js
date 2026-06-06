@@ -217,11 +217,20 @@ class WorkFeedPanel {
           white-space: nowrap;
           font-size: 10px;
         }
-        .wf-entry .wf-artifact {
+        .wf-entry .wf-report-link {
           flex-shrink: 0;
-          font-size: 11px;
-          margin-left: 2px;
-          opacity: 0.7;
+          margin-left: 4px;
+          font-size: 10px;
+          color: #38bdf8;
+          text-decoration: none;
+          max-width: 88px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .wf-entry .wf-report-link:hover {
+          color: #7dd3fc;
+          text-decoration: underline;
         }
         .wf-entry .wf-ts {
           flex-shrink: 0;
@@ -270,7 +279,7 @@ class WorkFeedPanel {
     panel.innerHTML = `
       <div id="denizen-work-feed-header">
         <span class="wf-title">work feed</span>
-        <span class="wf-hint">Tab to close</span>
+        <span class="wf-hint">Tab · click report to open</span>
       </div>
       <div id="denizen-work-feed-list"></div>
     `;
@@ -375,13 +384,43 @@ class WorkFeedPanel {
       `<span class="wf-emoji">${this._esc(entry.phaseEmoji)}</span>` +
       `<span class="wf-name" style="color:${nameColor}">${nameEsc}</span>` +
       `<span class="wf-note">${noteEsc}</span>` +
-      (entry.artifactPath ? `<span class="wf-artifact" title="${this._esc(entry.artifactPath)}">&#x1F4C4;</span>` : '') +
       `<span class="wf-ts">${tsStr}</span>`;
 
-    // Store ts on the element so we can update relative timestamps later (optional)
+    const reportHref = this._reportHref(entry.artifactPath);
+    if (reportHref) {
+      const link = document.createElement('a');
+      link.className = 'wf-report-link';
+      link.href = reportHref;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.title = entry.artifactPath;
+      link.textContent = this._reportLinkLabel(entry.artifactPath);
+      link.addEventListener('click', (e) => e.stopPropagation());
+      link.addEventListener('mousedown', (e) => e.stopPropagation());
+      el.insertBefore(link, el.querySelector('.wf-ts'));
+    }
+
     el.dataset.ts = String(entry.ts);
 
     return el;
+  }
+
+  /** Normalize artifact path → browser URL under the Denizen server. */
+  _reportHref(artifactPath) {
+    if (!artifactPath || typeof artifactPath !== 'string') return null;
+    let p = artifactPath.replace(/\\/g, '/').trim();
+    if (!p) return null;
+    const idx = p.indexOf('reports/');
+    if (idx >= 0) p = p.slice(idx);
+    else if (!p.startsWith('reports/')) p = `reports/${p.replace(/^\/+/, '')}`;
+    if (p.includes('..')) return null;
+    return '/' + p.split('/').map(seg => encodeURIComponent(seg)).join('/');
+  }
+
+  _reportLinkLabel(artifactPath) {
+    const name = String(artifactPath || '').replace(/\\/g, '/').split('/').pop() || 'report';
+    const short = name.replace(/\.md$/i, '').slice(0, 22);
+    return short.length < name.replace(/\.md$/i, '').length ? short + '…' : short;
   }
 
   // ------------------------------------------------------------------

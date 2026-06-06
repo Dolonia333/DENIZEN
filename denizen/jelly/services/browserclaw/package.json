@@ -1,0 +1,16 @@
+{
+  "name": "browserclaw",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser automation skill for OpenClaw — controls your real browser with natural language via Stagehand",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "install-browsers": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "@browserbasehq/stagehand": "^2.0.0",
+    "zod": "^3.23.0"
+  }
+}

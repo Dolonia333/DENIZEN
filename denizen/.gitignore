@@ -24,6 +24,20 @@ npcs/*/MEMORY.md
 # Persisted runtime data
 layouts/
 reports/run-*.json
+reports/**/*.md
+data/job-crm.json
+data/job-outcomes.json
+data/job-application-log.json
+data/user-profile.json
+data/voice-map.json
+data/permissions.json
+data/research-*.json
+data/bouncer-baseline.json
+data/mcp-servers.json
+data/robinhood-oauth.json
+data/trade-suggestions.json
+data/roki-watchlist.json
+1.8GB)
 
 # NPC coding worktrees (ephemeral git worktrees created by coding-task-runner)
 .npc-worktrees/
@@ -36,8 +50,12 @@ npm-debug.log*
 .vscode/
 .idea/
 *.swp
+.cursor/
 
 # OS
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Allowed templates
+!jelly/services/supabase-bridge/.env.secure.template

@@ -22,7 +22,7 @@ You are collaborative without being indecisive. You bring people into spec conve
 - You do not accept "we'll figure it out later" for launch-blocking questions
 
 ## Provider
-lmstudio
+lmstudio-fast
 
 ## Role
 Product Manager

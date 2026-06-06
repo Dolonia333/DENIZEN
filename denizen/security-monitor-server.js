@@ -127,23 +127,26 @@ class SecurityMonitorServer {
 
   /** Check an HTTP request for suspicious patterns (call from server.js) */
   checkHttpRequest(req) {
+    const { isLocalOrLoopback } = require('./src/security-ip');
     const ip = req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
     const url = req.url || '';
     const method = req.method || 'GET';
     const ua = req.headers?.['user-agent'] || '';
     const body = req._body || ''; // if body was captured
 
-    // Rate limiting
-    this._trackRequest(ip);
-    const reqCount = this._getRequestCount(ip, 60000);
-    if (reqCount > this.config.apiRateLimit) {
-      this._emitThreat({
-        category: 'brute_force',
-        severity: 'high',
-        source: ip,
-        target: url,
-        detail: `Rate limit exceeded: ${reqCount} req/min from ${ip}`,
-      });
+    // Rate limiting — skip loopback (::1) so local dev/game traffic doesn't spawn robbers
+    if (!isLocalOrLoopback(ip)) {
+      this._trackRequest(ip);
+      const reqCount = this._getRequestCount(ip, 60000);
+      if (reqCount > this.config.apiRateLimit) {
+        this._emitThreat({
+          category: 'brute_force',
+          severity: 'high',
+          source: ip,
+          target: url,
+          detail: `Rate limit exceeded: ${reqCount} req/min from ${ip}`,
+        });
+      }
     }
 
     // Check URL for suspicious patterns
@@ -438,11 +441,22 @@ class SecurityMonitorServer {
             /id_rsa/i,
           ];
 
+          // .env in the watched dev tree changes constantly (saves, sync) — not a real breach.
+          if (/\.env$/i.test(filename)) {
+            return;
+          }
+
+          if (!this._fileThreatAt) this._fileThreatAt = new Map();
+          const dedupeKey = filePath.toLowerCase();
+          const lastFileThreat = this._fileThreatAt.get(dedupeKey) || 0;
+          if (Date.now() - lastFileThreat < 600000) return;
+
           for (const pattern of sensitivePatterns) {
             if (pattern.test(filename)) {
+              this._fileThreatAt.set(dedupeKey, Date.now());
               this._emitThreat({
                 category: 'data_breach',
-                severity: 'critical',
+                severity: 'high',
                 source: 'filesystem',
                 target: filePath,
                 detail: `Sensitive file ${eventType}: ${filename}`,
@@ -709,6 +723,11 @@ class SecurityMonitorServer {
   // --- Threat emission ---
 
   _emitThreat(threat) {
+    const { isLocalOrLoopback, isInternalThreatSource } = require('./src/security-ip');
+    if (isLocalOrLoopback(threat.source) || isInternalThreatSource(threat.source)) {
+      return;
+    }
+
     const threatId = `threat-${++this._threatIdCounter}-${Date.now()}`;
     const fullThreat = {
       type: 'threat',
@@ -717,11 +736,12 @@ class SecurityMonitorServer {
       timestamp: Date.now(),
     };
 
-    // Dedup: don't spam same threat category+source in 5s window
+    // Dedup: same category+source — longer for noisy types (brute_force spam)
     const dedupKey = `${threat.category}:${threat.source}`;
+    const dedupMs = threat.category === 'brute_force' ? 300000 : 90000;
     const existing = Array.from(this.activeThreats.values()).find(t =>
       `${t.category}:${t.source}` === dedupKey &&
-      Date.now() - t.timestamp < 5000
+      Date.now() - t.timestamp < dedupMs
     );
     if (existing) return;
 

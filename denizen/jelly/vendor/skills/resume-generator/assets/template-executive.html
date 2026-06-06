@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{name}} — Resume</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { margin: 0; size: Letter; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Source Sans Pro', -apple-system, sans-serif;
+    font-size: 10pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    background: #fff;
+  }
+  .page {
+    width: 8.5in;
+    min-height: 11in;
+    display: grid;
+    grid-template-columns: 2.2in 1fr;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    padding: 0.5in 0.3in;
+  }
+  .sidebar h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18pt;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .sidebar .tagline {
+    font-size: 9pt;
+    color: #8899aa;
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+  .sidebar .section-title {
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #64b5f6;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+  .sidebar .contact-item {
+    font-size: 8.5pt;
+    margin-bottom: 4px;
+    color: #ccc;
+  }
+  .sidebar .contact-item a { color: #90caf9; text-decoration: none; }
+
+  .sidebar .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .sidebar .skill {
+    display: inline-block;
+    font-size: 7.5pt;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgba(100,181,246,0.15);
+    color: #b0d4f1;
+    border: 1px solid rgba(100,181,246,0.3);
+  }
+  .sidebar .skill.matched {
+    background: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+  }
+
+  .sidebar .cert-item {
+    font-size: 8pt;
+    margin-bottom: 4px;
+    color: #ccc;
+  }
+
+  /* Main content */
+  .main {
+    padding: 0.5in 0.5in 0.5in 0.35in;
+  }
+
+  .main .section { margin-bottom: 14px; }
+  .main .section-title {
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: #1a1a2e;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+  }
+
+  .summary-text {
+    font-size: 9.5pt;
+    color: #444;
+    margin-bottom: 14px;
+    line-height: 1.55;
+  }
+
+  /* Experience */
+  .experience-item { margin-bottom: 10px; }
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .exp-title { font-weight: 700; font-size: 10pt; color: #1a1a2e; }
+  .exp-dates { font-size: 8.5pt; color: #718096; }
+  .exp-company { font-size: 9pt; color: #4a5568; margin-bottom: 2px; }
+  .exp-bullets {
+    padding-left: 16px;
+    font-size: 9pt;
+    color: #2d3748;
+  }
+  .exp-bullets li { margin-bottom: 2px; }
+
+  /* Education */
+  .education-item { margin-bottom: 6px; }
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .edu-degree { font-weight: 700; font-size: 9.5pt; }
+  .edu-date { font-size: 8.5pt; color: #718096; }
+  .edu-school { font-size: 9pt; color: #4a5568; }
+
+  /* Projects */
+  .project-item { margin-bottom: 6px; }
+  .proj-name { font-weight: 700; font-size: 9pt; }
+  .proj-name a { color: #2563eb; text-decoration: none; }
+  .proj-desc { font-size: 8.5pt; color: #555; }
+  .proj-tech { font-size: 8pt; color: #888; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="sidebar">
+    <h1>{{name}}</h1>
+    <div class="tagline">{{job_title}}</div>
+
+    <div class="section-title">Contact</div>
+    <div class="contact-item">{{email}}</div>
+    <div class="contact-item">{{phone}}</div>
+    <div class="contact-item">{{location}}</div>
+    <div class="contact-item"><a href="{{linkedin}}">LinkedIn</a></div>
+    <div class="contact-item"><a href="{{github}}">GitHub</a></div>
+
+    <div class="section-title">Skills</div>
+    <div class="skills-grid">
+      {{skills}}
+    </div>
+
+    <div class="section-title">Certifications</div>
+    {{certifications}}
+  </div>
+
+  <div class="main">
+    <div class="summary-text">{{summary}}</div>
+
+    <div class="section">
+      <div class="section-title">Experience</div>
+      {{experience}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Education</div>
+      {{education}}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Projects</div>
+      {{projects}}
+    </div>
+  </div>
+</div>
+</body>
+</html>

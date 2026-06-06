@@ -52,6 +52,11 @@ const ACTION_VERBS = new Set([
 const TOOL_KEYWORDS = [
   /\bgithub\b/i, /\bgit\b/i, /\bpull request\b/i, /\bpr\b/i, /\bissue\b/i,
   /\bsupabase\b/i, /\bdatabase\b/i, /\bsql\b/i, /\bschema\b/i,
+  /\bintake[\s-]?triage\b/i, /\blead[\s-]?monitor\b/i, /\brfp[\s-]?status\b/i,
+  /\bprediction[\s-]?brief\b/i, /\bclient[\s-]?lookup\b/i, /\boutcome[\s-]?standup\b/i,
+  /\bwork[\s-]?history\b/i, /\bcost[\s-]?dashboard\b/i, /\bentity[\s-]?link\b/i,
+  /\bvisitor[\s-]?claim\b/i, /\bassistant[\s-]?handoff\b/i, /\borg[\s-]?benchmark\b/i,
+  /\bintake[\s-]?form\b/i, /\bnew\s+leads?\b/i, /\bbid\s+decision\b/i,
   /\bbrowser\b/i, /\bnavigate\b/i, /\bscreenshot\b/i,
   /\bdeploy\b/i, /\bstaging\b/i, /\bproduction\b/i, /\bprod\b/i,
   /\bbash\b/i, /\bshell\b/i, /\bterminal\b/i, /\bcommand\b/i,
@@ -63,7 +68,7 @@ const TOOL_KEYWORDS = [
 const CHAT_MARKERS = [
   /\bhow are you\b/i, /\bhow's it going\b/i, /\bgood morning\b/i,
   /\bgood afternoon\b/i, /\bgood evening\b/i, /\bhello\b/i, /\bhi\b/i,
-  /\bthanks\b/i, /\bthank you\b/i, /\bnice\b/i, /\bcool\b/i,
+  /\bhey\b/i, /\bthanks\b/i, /\bthank you\b/i, /\bnice\b/i, /\bcool\b/i,
   /\bwhat do you think\b/i, /\bdo you think\b/i,
 ];
 
@@ -71,6 +76,48 @@ const CHAT_MARKERS = [
 const FORCE_ACTION_PREFIX = /^\s*\/(do|run|exec|action)\b\s*/i;
 const FORCE_CHAT_PREFIX   = /^\s*\/(say|chat|talk)\b\s*/i;
 const POLICY_STORAGE_KEY = 'denizen.openclaw.action-policy';
+
+/** STT often hears "hey Lucy" as "play Lucy" — fix before display or intent parsing. */
+function fixVoiceMishearings(text) {
+  let s = String(text || '').trim();
+  s = s.replace(/^play\s+(?:lucy|lucie|loosey)(?=\s|[,.!?]|$)/i, 'hey Lucy');
+  s = s.replace(/\bbrow?s+w?er\b/gi, 'browser');
+  return s.trim();
+}
+
+/** Strip voice/UI prefixes ("play Lucy …", "hey Lucy …") before intent parsing. */
+function normalizePlayerUtterance(text) {
+  let s = fixVoiceMishearings(text);
+  s = s.replace(/^play\s+(?:lucy|[a-z]+)\s*$/i, '');
+  s = s.replace(/^play\s+(?:lucy|[a-z]+)\s+/i, '');
+  s = s.replace(/^(?:hey|hi|hello|yo|sup|ok)[,!\s]+/i, '');
+  s = s.replace(/^(?:hey|hi|hello|yo)\s+lucy[,:\s]+/i, '');
+  s = s.replace(/^\s*lucy[,:\s]+/i, '');
+  s = s.replace(/^(?:key|um|uh)\s+/i, '');
+  return s.trim();
+}
+
+const JUNK_SEARCH_QUERY = /^(?:search(?:\s+up)?|google|look\s*up|on\s+the\s+web|the\s+web|web|for|please)$/i;
+
+function cleanSearchQuery(query) {
+  let q = String(query || '')
+    .replace(/\s+on\s+the\s+browser\b/gi, '')
+    .replace(/\s+in\s+the\s+browser\b/gi, '')
+    .replace(/\s+on\s+browser\b/gi, '')
+    .replace(/\s+in\s+browser\b/gi, '')
+    .replace(/^(?:on\s+)?(?:the\s+)?web\s+/i, '')
+    .replace(/\s+on\s+(?:the\s+)?web\b/gi, '')
+    .replace(/^the\s+web\s+for\s+/i, '')
+    .replace(/^for\s+/i, '')
+    .replace(/^(?:anything|something|everything)\s+(?:regarding|about|on|related\s+to)\s+/i, '')
+    .replace(/^(?:regarding|about|related\s+to)\s+/i, '')
+    .replace(/^(?:do you|can you|could you|would you)\s+/i, '')
+    .replace(/^(?:key|um|uh|please)\s+/i, '')
+    .replace(/[.?!]+$/, '')
+    .trim();
+  if (/^(?:the\s+)?web$/i.test(q) || JUNK_SEARCH_QUERY.test(q)) return '';
+  return q;
+}
 
 function getDefaultActionPolicy() {
   return {
@@ -115,8 +162,96 @@ function setActionPolicy(patch = {}) {
   return next;
 }
 
+/** Bare hi / hey Lucy — answered instantly without LM Studio or OpenClaw. */
+function isGreetingUtterance(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  if (/^(?:hey|hi|hello|yo|sup|good\s+(?:morning|afternoon|evening))[!.?]*$/i.test(raw)) {
+    return true;
+  }
+  if (/^(?:hey|hi|hello|yo|sup)\s+\w+[!.?]*$/i.test(raw)) {
+    return true;
+  }
+  if (/^play\s+lucy\s*$/i.test(raw)) {
+    return true;
+  }
+  const stripped = normalizePlayerUtterance(fixVoiceMishearings(raw));
+  if (!stripped) return true;
+  return /^(?:how are you|how'?s it going|what'?s up|whats up)$/i.test(stripped);
+}
+
+/** Search phrasing (even without a topic yet) — handled by Lucy locally. */
+function isLucySearchIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  if (extractSearchQuery(raw)) return true;
+  const norm = normalizePlayerUtterance(fixVoiceMishearings(raw));
+  if (extractSearchQuery(norm)) return true;
+  return /\b(?:search|google|look\s+up|browse\s+for)\b/i.test(norm);
+}
+
+/** True when the CEO is explicitly talking to a specific NPC by name. */
+function explicitlyAddressesNpc(text, npcName) {
+  const name = String(npcName || '').trim();
+  if (!name) return false;
+  const raw = String(text || '').trim();
+  const norm = normalizePlayerUtterance(fixVoiceMishearings(raw));
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^(?:hey|hi|hello|yo|ok)?[,!\\s]*${esc}\\b`, 'i').test(norm)
+    || new RegExp(`\\b(?:hey|hi|hello)\\s+${esc}\\b`, 'i').test(raw)
+    || new RegExp(`\\b${esc}[,:\\s]`, 'i').test(raw);
+}
+
+/** Browser/search/research staff work — always Lucy unless it's plain chat to someone else. */
+function isLucyStaffIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  const norm = normalizePlayerUtterance(fixVoiceMishearings(raw));
+  return !!(
+    isLucySearchIntent(raw) || isLucySearchIntent(norm)
+    || extractOpenBrowserIntent(raw) || extractOpenBrowserIntent(norm)
+    || extractBrowserRetryIntent(raw) || extractBrowserRetryIntent(norm)
+    || extractBrowserReadIntent(raw) || extractBrowserReadIntent(norm)
+    || extractCloseBrowserIntent(raw)
+    || extractJobBoardSearchIntent(raw)
+    || extractResearchBriefIntent(raw)
+    || extractResearchQueueIntent(raw)
+  );
+}
+
+/** Route player chat to Lucy for staff intents (search/browser/research). */
+function resolveStaffIntentNpc(text, currentNpcName) {
+  if (!isLucyStaffIntent(text)) return currentNpcName;
+  return 'Lucy';
+}
+
+/** Browser/search/screen intents handled by Denizen Jelly — not OpenClaw gateway. */
+function isDenizenNativeIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  return !!(
+    isGreetingUtterance(raw)
+    || isLucySearchIntent(raw)
+    || extractOpenBraveIntent(raw)
+    || extractOpenBrowserIntent(raw)
+    || extractBrowserRetryIntent(raw)
+    || extractBrowserReadIntent(raw)
+    || isCancelUtterance(raw)
+    || extractCloseBrowserIntent(raw)
+    || extractSearchQuery(raw)
+    || extractJobBoardSearchIntent(raw)
+    || extractScreenObserveIntent(raw)
+    || extractScreenControlIntent(raw)
+    || extractResearchQueueIntent(raw)
+    || extractResearchBriefIntent(raw)
+  );
+}
+
 function evaluateActionPolicy(text, classification) {
   const c = classification || classify(text);
+  if (isDenizenNativeIntent(text)) {
+    return { allowed: true, reason: 'denizen-native intent', policy: getActionPolicy() };
+  }
   if (c.kind !== 'action') {
     return { allowed: true, reason: 'chat message', policy: getActionPolicy() };
   }
@@ -232,8 +367,410 @@ function classify(text) {
   return { kind, confidence, stripped, urgent, reason };
 }
 
+/**
+ * Pull a web-search query out of a player utterance.
+ * Returns null when the message isn't a search request.
+ *
+ * @param {string} text
+ * @returns {string|null}
+ */
+function _looksLikeHostname(query) {
+  const q = String(query || '').trim();
+  return /^(?:https?:\/\/)?[a-z0-9][-a-z0-9]*(?:\.[a-z0-9][-a-z0-9]*)+(?:\/[^\s]*)?$/i.test(q);
+}
+
+function extractSearchQuery(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+
+  // Job-board searches go to Indeed/LinkedIn jobs URLs — not DuckDuckGo.
+  if (extractJobBoardSearchIntent(raw)) return null;
+
+  // Screen/desktop tasks — not web search.
+  if (/\b(?:my screen|your screen|take over|typed it|do you see|look at (?:the |my )?(?:screen|window|page|browser)|check (?:the |my )?(?:screen|window|page)|on my pc|on your pc)\b/i.test(raw)) {
+    return null;
+  }
+
+  const stripped = normalizePlayerUtterance(raw).replace(/\bserch\b/gi, 'search');
+
+  const hasSearchVerb = /\b(?:search|google|look\s+up|browse\s+for)\b/i.test(raw)
+    || /\b(?:search|google|look\s+up|browse\s+for)\b/i.test(stripped);
+
+  const patterns = [
+    /\bsearch\s+on\s+(?:the\s+)?web\s+(?:for\s+)?(.+)/i,
+    /\bsearch(?:\s+(?:the\s+)?web)?\s+for\s+(.+)/i,
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?(?:search\s+up|search(?:\s+(?:the\s+)?web)?(?:\s+for)?|look\s+up|google|browse\s+for)\s+(.+)/i,
+    /\bsearch\s+up\s+(.+)/i,
+    /\bsearch(?:\s+(?:the\s+)?web)?(?:\s+for)\s+(.+)/i,
+    /\b(?:do you|can you|could you|would you)\s+look\s+up\s+(.+)/i,
+    /\blook\s+up\s+(.+)/i,
+  ];
+  for (const candidate of [stripped, normalizePlayerUtterance(raw.replace(/\bserch\b/gi, 'search'))]) {
+    for (const re of patterns) {
+      const m = candidate.match(re);
+      if (m && m[1]) {
+        const query = cleanSearchQuery(m[1]);
+        if (query.length > 1 && !/^(?:the\s+)?web$/i.test(query)) return query;
+      }
+    }
+  }
+
+  const firstWord = (stripped.toLowerCase().match(/^[a-z][a-z'-]*/i) || [''])[0];
+  if (['search', 'lookup', 'google'].includes(firstWord)) {
+    const rest = cleanSearchQuery(
+      stripped.replace(/^[a-z][a-z'-]*\s+(?:(?:on\s+)?(?:the\s+)?web\s+)?(?:for\s+|up\s+)?/i, '')
+    );
+    if (rest && rest.length > 1 && !/^(?:the\s+)?web$/i.test(rest) && !JUNK_SEARCH_QUERY.test(rest)) {
+      return rest;
+    }
+    return null;
+  }
+
+  // Bare hostnames/URLs are not searches unless the user said search/google/look up.
+  if (_looksLikeHostname(stripped) && !hasSearchVerb) return null;
+
+  return null;
+}
+
+/**
+ * Bare topic after a search thread — e.g. "Takis", "Goldendoodles".
+ * @param {string} text
+ * @returns {string|null}
+ */
+function isCancelUtterance(text) {
+  const s = normalizePlayerUtterance(fixVoiceMishearings(String(text || '').trim()));
+  if (!s) return false;
+  return /^(?:no|nah|nope|stop|cancel|wait|never\s*mind|nevermind|forget\s+it|scratch\s+that)\b/i.test(s)
+    || /^(?:no|stop|cancel|wait)\s+/i.test(s)
+    || /^no\s+luc(?:y|ie)?\b/i.test(s);
+}
+
+/** CEO wants Lucy to read/summarize what's in the browser. */
+function extractBrowserReadIntent(text) {
+  const raw = fixVoiceMishearings(String(text || '').trim());
+  if (!raw) return false;
+  const norm = normalizePlayerUtterance(raw);
+  const variants = [raw, norm];
+  for (const v of variants) {
+    if (!v) continue;
+    if (/\b(?:read|review|look\s+over|summarize|check\s+out)\b[\s\S]{0,80}\b(?:doc|document|page|article|site|tab)\b/i.test(v)
+      && /\bbrowser\b/i.test(v)) return true;
+    if (/\b(?:read|review|look\s+over)[\s\S]{0,40}\b(?:in\s+)?(?:the\s+)?browser\b/i.test(v)) return true;
+    if (/\b(?:this\s+doc|the\s+doc|that\s+page)\b[\s\S]{0,40}\bbrowser\b/i.test(v)) return true;
+  }
+  return false;
+}
+
+function extractBareSearchTopic(text) {
+  const s = normalizePlayerUtterance(fixVoiceMishearings(String(text || '').trim()));
+  if (!s || s.length < 2) return null;
+  if (isCancelUtterance(s)) return null;
+  if (/\b(?:search|google|look\s+up|open|close|browser|meeting|follow|deploy|hey|hi|hello|thanks|thank you)\b/i.test(s)) {
+    return null;
+  }
+  if (/^(?:yes|no|ok|okay|sure|stop|cancel|nope|yep)$/i.test(s)) return null;
+  if (/^(?:no|stop|cancel|wait)\s+\w+/i.test(s)) return null;
+  if (/[?!]/.test(s) && s.split(/\s+/).length > 4) return null;
+  const words = s.split(/\s+/).filter(Boolean);
+  if (!words.length || words.length > 5) return null;
+  const topic = cleanSearchQuery(s);
+  if (!topic || topic.length < 2 || JUNK_SEARCH_QUERY.test(topic)) return null;
+  return topic;
+}
+
+/**
+ * CEO wants an NPC to control their real screen (click, type, fill forms).
+ * Only when explicitly asked — not for read-only observe.
+ * @param {string} text
+ * @returns {boolean}
+ */
+function extractScreenControlIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  if (extractOpenBraveIntent(raw) || extractOpenBrowserIntent(raw)) return false;
+  if (/\b(?:fill\s+(?:out|in)|complete (?:this |the )?(?:form|application)|help me (?:fill|apply|complete)|type (?:this |it |that )?for me|enter (?:this |it |that )?for me)\b/i.test(raw)) {
+    return true;
+  }
+  if (/\b(?:fill out|fill in)\b.*\b(?:on my screen|for me|what you see|on screen|in brave)\b/i.test(raw)) {
+    return true;
+  }
+  if (/\bdo it (?:on my screen|for me|on my computer|on my pc)\b/i.test(raw)) {
+    return true;
+  }
+  if (/\b(?:on my (?:screen|computer|pc|machine)|use my (?:pc|computer|screen)|take over (?:my )?(?:screen|computer|pc)|control my (?:screen|computer|mouse|keyboard))\b/i.test(raw)) {
+    return /\b(?:fill|click|type|enter|complete|apply|submit|help me|navigate|go to|open)\b/i.test(raw);
+  }
+  return false;
+}
+
+/**
+ * True when the CEO wants an NPC to look at their real screen (read-only).
+ * @param {string} text
+ * @returns {boolean}
+ */
+function extractScreenObserveIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  if (extractScreenControlIntent(raw)) return false;
+  if (/https?:\/\/\S+/i.test(raw) && /\b(?:i'?m on|im on|on here|look at|see what|on there|jobs on there|find jobs on there|scan|what(?:'s| is) on)\b/i.test(raw)) {
+    return true;
+  }
+  return /\b(?:do you see(?:\s+it)?|can you see(?:\s+it)?|what(?:'s| is) (?:on |this |there)|see what (?:i |you )?typed|see (?:it|this|what|my|the)|look at (?:this|it|my screen|there|what i)|typed it for you|i typed it(?: for you)?|on my screen|what am i looking at|watch(?:ing)? (?:my |what i'?m )|look over (?:my |everything)|over my shoulder|i'?m on |im on |scan(?:ning)? (?:my |the )?(?:screen|feed|page|browser|brave)|take a screenshot|screenshot (?:my |the )?screen|look for jobs on there|jobs on there)\b/i.test(raw);
+}
+
+/**
+ * Open Indeed or LinkedIn job search directly (not DDG).
+ * @param {string} text
+ * @returns {{ site: string, query: string, url: string }|null}
+ */
+function extractJobBoardSearchIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+  const stripped = raw
+    .replace(/^(?:hey|hi|hello|ok)[,!\s]+/i, '')
+    .replace(/^(?:hey|hi|hello)\s+lucy[,:\s]+/i, '')
+    .replace(/^\s*lucy[,:\s]+/i, '')
+    .trim();
+
+  let site = null;
+  if (/\bindeed\b/i.test(stripped)) site = 'indeed';
+  else if (/\blinkedin\b/i.test(stripped)) site = 'linkedin';
+  if (!site) return null;
+
+  const wantsJobs = /\b(?:jobs?|roles?|openings?|positions?|look(?:ing)?\s+(?:for|up)|search(?:ing)?|find|hiring)\b/i.test(stripped)
+    || /\b(?:on|at|in)\s+(?:indeed|linkedin)\b/i.test(stripped);
+  if (!wantsJobs) return null;
+
+  let query = '';
+  const qm = stripped.match(/\b(?:for|searching?\s+for|look(?:ing)?\s+(?:for|up))\s+(.+)/i);
+  if (qm && qm[1]) {
+    query = qm[1]
+      .replace(/[.?!]+$/, '')
+      .replace(/\b(?:on|at|in)\s+(?:indeed|linkedin)\b/gi, '')
+      .replace(/\b(?:indeed|linkedin)\b/gi, '')
+      .trim();
+  }
+
+  const urls = {
+    indeed: (q) => `https://www.indeed.com/jobs${q ? `?q=${encodeURIComponent(q)}` : ''}`,
+    linkedin: (q) => `https://www.linkedin.com/jobs/search/${q ? `?keywords=${encodeURIComponent(q)}` : ''}`,
+  };
+  return { site, query, url: urls[site](query) };
+}
+
+function extractBrowserStatusIntent(text) {
+  return /\b(?:what browser|which browser|browser are you using)\b/i.test(String(text || ''));
+}
+
+/**
+ * Open Lucy's visible Playwright browser — not full desktop control.
+ * @param {string} text
+ * @returns {boolean}
+ */
+function extractOpenBraveIntent(text) {
+  const raw = String(text || '').trim().replace(/\bbroser\b/gi, 'browser');
+  if (!raw) return false;
+  return /\b(?:open|launch|start)\s+(?:the\s+|your\s+|my\s+)?brave(?:\s+browser)?\b/i.test(raw)
+    || /\b(?:open|launch)\s+(?:the\s+|my\s+)?browser\s+in\s+brave\b/i.test(raw);
+}
+
+function extractOpenBrowserIntent(text) {
+  const raw = fixVoiceMishearings(String(text || '').trim()).replace(/\bbroser\b/gi, 'browser');
+  if (!raw) return false;
+  const norm = normalizePlayerUtterance(raw).replace(/\bbroser\b/gi, 'browser');
+  if (extractOpenBraveIntent(raw) || extractOpenBraveIntent(norm)) return false;
+  if (extractSearchQuery(raw) || extractSearchQuery(norm) || extractJobBoardSearchIntent(raw)) return false;
+  const openBrowserRe = /\b(?:open|launch|start|culture)\s+(?:up\s+)?(?:the\s+|your\s+|my\s+|a\s+)?(?:web\s+)?browser\b/i;
+  const openUpBrowserRe = /\b(?:open|launch|start)\s+up\s+(?:a\s+|the\s+|your\s+|my\s+)?(?:web\s+)?browser\b/i;
+  // "open the web", "can you open the web", polite wrappers
+  const openWebRe = /(?:^|\b)(?:(?:can|could|would)\s+you\s+|please\s+)?(?:open|launch|start)\s+(?:the\s+|your\s+|my\s+|a\s+)?web\b/i;
+  const wantsBrowser = openBrowserRe.test(raw) || openBrowserRe.test(norm)
+    || openUpBrowserRe.test(raw) || openUpBrowserRe.test(norm)
+    || openWebRe.test(raw) || openWebRe.test(norm);
+  return wantsBrowser
+    && !/\b(?:notepad|calculator|spotify|chrome\s+app|brave|file|folder)\b/i.test(raw);
+}
+
+/** Retry last Lucy browser search — e.g. "open a browser and do it again". */
+function extractBrowserRetryIntent(text) {
+  const raw = String(text || '').trim();
+  const retryRe = /\b(?:again|retry|do it again|try again|search(?:\s+it)?\s+again|run it again|one more time)\b/i;
+  if (!raw || !retryRe.test(raw)) return null;
+  const norm = normalizePlayerUtterance(raw);
+  const wantsOpen = extractOpenBrowserIntent(raw) || extractOpenBrowserIntent(norm)
+    || wantsLucyBrowserOpen(raw) || wantsLucyBrowserOpen(norm);
+  const retryOnly = /\b(?:try|search|do it|run it)(?:\s+it)?\s+again\b/i.test(raw)
+    || /\b(?:try|search|do it|run it)(?:\s+it)?\s+again\b/i.test(norm);
+  if (wantsOpen) return { openBrowser: true, retrySearch: true };
+  if (retryOnly && !extractSearchQuery(raw) && !extractSearchQuery(norm)) {
+    return { openBrowser: false, retrySearch: true };
+  }
+  return null;
+}
+
+/** True when the CEO wants Lucy's Playwright browser — checks raw + STT-fixed + normalized forms. */
+function wantsLucyBrowserOpen(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  const variants = [raw, fixVoiceMishearings(raw), normalizePlayerUtterance(raw)];
+  const fixed = fixVoiceMishearings(raw);
+  if (fixed !== raw) variants.push(normalizePlayerUtterance(fixed));
+  for (const v of variants) {
+    if (v && extractOpenBrowserIntent(v)) return true;
+  }
+  return false;
+}
+
+/**
+ * CEO wants to close Lucy's visible browser.
+ * @param {string} text
+ * @returns {boolean}
+ */
+function extractCloseBrowserIntent(text) {
+  const raw = String(text || '').trim().replace(/\bbroser\b/gi, 'browser');
+  return /\b(?:close|shut)\s+(?:the\s+|your\s+|my\s+)?(?:web\s+)?browser(?:\s+now)?\b/i.test(raw)
+    || /\bclose\s+the\s+browser\s+now\b/i.test(raw);
+}
+
+function extractJobBoardHelpIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+  if (/\b(?:no|was asking|asked|meant)\s+lucy\b/i.test(raw)) return null;
+  if (/\b(?:do you know how to use|how do you use|can you use|know how to use)\b/i.test(raw)
+    && /\b(?:indeed|linkedin)\b/i.test(raw)
+    && /\b(?:job|search|tool)\b/i.test(raw)) {
+    return /\blinkedin\b/i.test(raw) ? 'linkedin' : 'indeed';
+  }
+  if (/\b(?:linkedin|indeed)\b/i.test(raw) && /\b(?:job search|jobs tool|search tool)\b/i.test(raw)) {
+    return /\blinkedin\b/i.test(raw) ? 'linkedin' : 'indeed';
+  }
+  return null;
+}
+
+function isTunnelHost(url) {
+  try {
+    return /(?:^|\.)dolonia\.cloud$/i.test(new URL(url).hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Pull a research-queue topic out of a player utterance.
+ * Returns null when the message isn't a queue-add request.
+ *
+ * @param {string} text
+ * @returns {{ topic: string, priority?: string }|null}
+ */
+function extractResearchQueueIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+
+  const stripped = raw
+    .replace(/^(?:hey|hi|hello|ok)[,!\s]+/i, '')
+    .replace(/^(?:hey|hi|hello)\s+lucy[,:\s]+/i, '')
+    .replace(/^\s*lucy[,:\s]+/i, '')
+    .trim();
+
+  const priorityRe = /\b(?:priority|prio)\s+(high|low|normal|urgent)\b/i;
+  const priorityMatch = stripped.match(priorityRe);
+  const priority = priorityMatch ? priorityMatch[1].toLowerCase() : undefined;
+  const noPriority = stripped.replace(priorityRe, '').replace(/\s+/g, ' ').trim();
+
+  const patterns = [
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?add\s+(.+?)\s+to\s+(?:my\s+)?research\s+(?:list|queue)\b/i,
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?queue\s+research\s+(?:on|about|for)\s+(.+)/i,
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?put\s+(.+?)\s+on\s+(?:my\s+)?research\s+(?:list|queue)\b/i,
+    /\bqueue\s+research\s+(?:on|about|for)\s+(.+)/i,
+    /\badd\s+(.+?)\s+to\s+(?:my\s+)?research\s+(?:list|queue)\b/i,
+  ];
+
+  for (const candidate of [noPriority, stripped, raw]) {
+    for (const re of patterns) {
+      const m = candidate.match(re);
+      if (m && m[1]) {
+        const topic = m[1].replace(/[.?!]+$/, '').trim();
+        if (topic && topic.length > 1) {
+          return priority ? { topic, priority } : { topic };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Pull a deep-research brief topic out of a player utterance.
+ * Returns null when the message isn't a brief request.
+ *
+ * @param {string} text
+ * @returns {string|null}
+ */
+function extractResearchBriefIntent(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return null;
+
+  const stripped = raw
+    .replace(/^(?:hey|hi|hello|ok)[,!\s]+/i, '')
+    .replace(/^(?:hey|hi|hello)\s+lucy[,:\s]+/i, '')
+    .replace(/^\s*lucy[,:\s]+/i, '')
+    .trim();
+
+  const patterns = [
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?research\s+(.+?)\s+and\s+write\s+a\s+brief\b/i,
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?do\s+(?:a\s+)?deep\s+research\s+(?:on|about|for)\s+(.+)/i,
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?deep\s+research\s+(?:on|about|for)\s+(.+)/i,
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?write\s+a\s+(?:research\s+)?brief\s+(?:on|about|for)\s+(.+)/i,
+    /\bdeep\s+research\s+(?:on|about|for)\s+(.+)/i,
+    /\bresearch\s+(.+?)\s+and\s+write\s+a\s+brief\b/i,
+  ];
+
+  for (const candidate of [stripped, raw]) {
+    for (const re of patterns) {
+      const m = candidate.match(re);
+      if (m && m[1]) {
+        const topic = m[1].replace(/[.?!]+$/, '').trim();
+        if (topic && topic.length > 1) return topic;
+      }
+    }
+  }
+
+  return null;
+}
+
 var __OpenClawDispatchApi = {
   classify,
+  fixVoiceMishearings,
+  normalizePlayerUtterance,
+  cleanSearchQuery,
+  extractSearchQuery,
+  extractBareSearchTopic,
+  cleanSearchQuery,
+  extractScreenObserveIntent,
+  extractScreenControlIntent,
+  extractJobBoardSearchIntent,
+  extractBrowserStatusIntent,
+  extractOpenBrowserIntent,
+  extractBrowserRetryIntent,
+  extractBrowserReadIntent,
+  isCancelUtterance,
+  wantsLucyBrowserOpen,
+  extractOpenBraveIntent,
+  extractCloseBrowserIntent,
+  extractJobBoardHelpIntent,
+  isGreetingUtterance,
+  isLucySearchIntent,
+  isLucyStaffIntent,
+  explicitlyAddressesNpc,
+  resolveStaffIntentNpc,
+  isDenizenNativeIntent,
+  isTunnelHost,
+  getActionPolicy,
+  setActionPolicy,
+  evaluateActionPolicy,
+  extractResearchQueueIntent,
+  extractResearchBriefIntent,
   ACTION_VERBS,
   TOOL_KEYWORDS,
   CHAT_MARKERS,
@@ -411,6 +948,33 @@ if (typeof window !== 'undefined') {
 
   window.DenizenOpenClawDispatch = {
     classify,
+    fixVoiceMishearings,
+    normalizePlayerUtterance,
+    cleanSearchQuery,
+    extractSearchQuery,
+  extractBareSearchTopic,
+  cleanSearchQuery,
+    extractScreenObserveIntent,
+    extractScreenControlIntent,
+    extractJobBoardSearchIntent,
+    extractBrowserStatusIntent,
+    extractOpenBrowserIntent,
+  extractBrowserRetryIntent,
+  extractBrowserReadIntent,
+  isCancelUtterance,
+  wantsLucyBrowserOpen,
+    extractOpenBraveIntent,
+    extractCloseBrowserIntent,
+    extractJobBoardHelpIntent,
+    isGreetingUtterance,
+  isLucySearchIntent,
+  isLucyStaffIntent,
+  explicitlyAddressesNpc,
+  resolveStaffIntentNpc,
+  isDenizenNativeIntent,
+    isTunnelHost,
+    extractResearchQueueIntent,
+    extractResearchBriefIntent,
     dispatch,
     sendToGateway,
     sendToHttpProxy,

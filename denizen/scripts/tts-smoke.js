@@ -72,14 +72,21 @@ async function main() {
   let modelId = args.modelId;
   if (args.npc) {
     try {
-      const map = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'voice-map.json'), 'utf8'));
-      const e = map.npcs?.[args.npc];
-      if (!e) { console.error(`✗ unknown NPC "${args.npc}" in voice-map.json`); process.exit(1); }
-      voiceId = voiceId || e.voiceId || map.default?.voiceId;
-      modelId = modelId || e.modelId || map.default?.modelId;
-      console.log(`  using voice for ${args.npc}: ${voiceId}`);
+      const roster = require('../src/npc-roster');
+      const voiceResolve = require('../src/voice-resolve');
+      const map = voiceResolve.applyRosterToVoiceMap(
+        JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'voice-map.json'), 'utf8')),
+        roster,
+        { assignMissingVoices: true }
+      );
+      const entry = roster.entries.find(e => e.display === args.npc);
+      if (!entry) { console.error(`✗ unknown NPC "${args.npc}" in roster`); process.exit(1); }
+      const resolved = voiceResolve.resolveNpcVoice(args.npc, map, entry);
+      voiceId = voiceId || resolved.voiceId;
+      modelId = modelId || resolved.modelId;
+      console.log(`  using voice for ${args.npc} (${resolved.gender || '?'}, ${resolved.source}): ${voiceId}`);
     } catch (err) {
-      console.error('✗ could not read data/voice-map.json: ' + err.message);
+      console.error('✗ could not resolve voice: ' + err.message);
       process.exit(1);
     }
   }

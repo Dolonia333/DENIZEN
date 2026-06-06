@@ -1,0 +1,192 @@
+{
+  "_comment": "LimeZu asset extraction manifest. Run: node scripts/extract-limezu.js",
+  "sources": {
+    "interiors": "C:/Users/zionv/Downloads/all sprite files/moderninteriors-win.zip",
+    "exteriors": "C:/Users/zionv/Downloads/all sprite files/modernexteriors-win.zip",
+    "farm":      "C:/Users/zionv/Downloads/all sprite files/Modern_Farm_v1.2.zip",
+    "ui":        "C:/Users/zionv/Downloads/all sprite files/modernuserinterface-win.zip"
+  },
+  "outputBase": "assets/limezu",
+  "extract": [
+
+    // ── ROOM BUILDER ─────────────────────────────────────────────────────────
+    // Layer 1 of every interior room. Sub-files are split by purpose.
+    // floors.png    → fill the room interior with chosen tile row
+    // walls_3d.png  → the angled top wall strip (the LimeZu signature look)
+    // walls.png     → flat side/bottom wall panels
+    // shadows.png   → subtle floor shadow along wall base (optional depth)
+    // arches.png    → interior archway doorways between rooms
+
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_16x16.png",                                    "dest": "room-builder/master.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Floors_16x16.png",       "dest": "room-builder/floors.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Walls_16x16.png",        "dest": "room-builder/walls.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_3d_walls_16x16.png",     "dest": "room-builder/walls_3d.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Floor_Shadows_16x16.png","dest": "room-builder/floor_shadows.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Arched_Entryways_16x16.png","dest": "room-builder/arches.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Floor_Paths_16x16.png",  "dest": "room-builder/floor_paths.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_Baseboards_16x16.png",   "dest": "room-builder/baseboards.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Room_Builder_subfiles/Room_Builder_borders_16x16.png",      "dest": "room-builder/borders.png" },
+
+    // ── INTERIOR THEME SHEETS (Layer 2 furniture) ────────────────────────────
+    // Each theme sheet is the merged reference. Individual sprites live in
+    // the Singles sub-folders (extracted below per room type).
+
+    { "zip": "interiors", "src": "1_Interiors/16x16/Interiors_16x16.png",                                "dest": "themes/all_interiors.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/8_Gym_16x16.png",                       "dest": "themes/gym.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/12_Kitchen_16x16.png",                  "dest": "themes/kitchen.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/13_Conference_Hall_16x16.png",          "dest": "themes/conference.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/14_Basement_16x16.png",                 "dest": "themes/lounge.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/5_Classroom_and_library_16x16.png",     "dest": "themes/library.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/3_Bathroom_16x16.png",                  "dest": "themes/bathroom.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/23_Television_and_Film_Studio.png",     "dest": "themes/studio.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/1_Generic_16x16.png",                   "dest": "themes/generic.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/2_LivingRoom_16x16.png",                "dest": "themes/living_room.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/19_Hospital_16x16.png",                 "dest": "themes/medical.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/6_Music_and_sport_16x16.png",           "dest": "themes/music.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/20_Japanese_interiors.png",             "dest": "themes/japanese.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/18_Jail_16x16.png",                     "dest": "themes/jail.png" },
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter/4_Bedroom_16x16.png",                   "dest": "themes/bedroom.png" },
+
+    // ── INTERIOR SINGLES (individual sprites, loaded by key in Phaser) ───────
+    // These are the actual usable sprites. Each file = one furniture piece.
+    // Gym singles (210 sprites)
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/8_Gym_Singles/",       "dest": "singles/gym/",       "glob": true },
+    // Kitchen singles (409 sprites)
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/12_Kitchen_Singles/",  "dest": "singles/kitchen/",   "glob": true },
+    // Conference singles (69 sprites)
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/13_Conference_Hall_Singles/", "dest": "singles/conference/", "glob": true },
+    // Lounge/basement singles
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/",                     "dest": "singles/lounge/",    "glob": true, "filter": "14_Basement" },
+    // Library singles
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/",                     "dest": "singles/library/",   "glob": true, "filter": "5_Classroom" },
+    // Japanese home (tatami, shoji, kotatsu — ref image 1)
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/",                     "dest": "singles/japanese/",  "glob": true, "filter": "20_Japanese" },
+    // Jail / prison cells + security (ref image 2)
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/",                     "dest": "singles/jail/",      "glob": true, "filter": "18_Jail" },
+    // TV / news studio furniture (ref image 3)
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/",                     "dest": "singles/studio/",    "glob": true, "filter": "23_Television" },
+    // Medical (infirmary wing beside jail)
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Singles/",                     "dest": "singles/medical/",   "glob": true, "filter": "19_Hospital" },
+    // Generic singles
+    { "zip": "interiors", "src": "1_Interiors/16x16/Theme_Sorter_Shadowless/1_Generic_Shadowless.png",  "dest": "themes/generic_shadowless.png" },
+
+    // ── ANIMATED OBJECTS ─────────────────────────────────────────────────────
+    // 311 animated spritesheets. Extracting only the Denizen-relevant ones.
+    // Each is a horizontal strip of frames at 16x16. Frame count varies.
+
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_coffee.png",                      "dest": "animated/coffee.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_control_room_server.png",         "dest": "animated/server_rack.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_control_room_screens.png",        "dest": "animated/control_screens.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_control_room_facebook_scrolling.png","dest": "animated/social_feed.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_receptionist.png",                "dest": "animated/receptionist.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_receptionist_2.png",              "dest": "animated/receptionist_2.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_treadmill.png",                   "dest": "animated/treadmill.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_punching_bag_left.png",           "dest": "animated/punching_bag_l.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_punching_bag_right.png",          "dest": "animated/punching_bag_r.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_security_camera_wall_left_.png",  "dest": "animated/security_cam_l.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_security_camera_wall_right_.png", "dest": "animated/security_cam_r.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_fridge.png",                      "dest": "animated/fridge.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_fridge_grey.png",                 "dest": "animated/fridge_grey.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_kitchen_oven.png",                "dest": "animated/oven.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_kitchen_sink_1.png",              "dest": "animated/sink.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_fishtank_orange.png",             "dest": "animated/fishtank.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_elevator_door_entrance_1.png",    "dest": "animated/elevator_open.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_elevator_door_exit.png",          "dest": "animated/elevator_close.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_emergency_exit.png",              "dest": "animated/exit_sign.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_TV_reportage.png",                "dest": "animated/tv.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_old_tv.png",                      "dest": "animated/tv_old.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_canteen_counter.png",             "dest": "animated/canteen_counter.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_canteen_fridge_empty.png",        "dest": "animated/canteen_fridge.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_escalator_up.png",                "dest": "animated/escalator_up.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_escalator_down.png",              "dest": "animated/escalator_down.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_door_glass_double.png",           "dest": "animated/door_glass.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_door_sliding_glass.png",          "dest": "animated/door_sliding.png" },
+    { "zip": "interiors", "src": "3_Animated_objects/16x16/spritesheets/animated_japanese_sliding_door.png",       "dest": "animated/japanese_door.png" },
+
+    // ── PREMADE CHARACTERS ───────────────────────────────────────────────────
+    // 20 fully animated characters at 896x656, 16x16 frames.
+    // Same animation layout as dolonia.png (row0=walk_down, row1=left,
+    // row2=right, row3=up, row4+=sit/type/sleep).
+    // Assign one per NPC — existing animRegistry.js works with no changes.
+
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_01.png","dest": "characters/char_01.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_02.png","dest": "characters/char_02.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_03.png","dest": "characters/char_03.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_04.png","dest": "characters/char_04.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_05.png","dest": "characters/char_05.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_06.png","dest": "characters/char_06.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_07.png","dest": "characters/char_07.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_08.png","dest": "characters/char_08.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_09.png","dest": "characters/char_09.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_10.png","dest": "characters/char_10.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_11.png","dest": "characters/char_11.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_12.png","dest": "characters/char_12.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_13.png","dest": "characters/char_13.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_14.png","dest": "characters/char_14.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_15.png","dest": "characters/char_15.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_16.png","dest": "characters/char_16.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_17.png","dest": "characters/char_17.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_18.png","dest": "characters/char_18.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_19.png","dest": "characters/char_19.png" },
+    { "zip": "interiors", "src": "2_Characters/Character_Generator/0_Premade_Characters/16x16/Premade_Character_20.png","dest": "characters/char_20.png" },
+
+    // ── ROOM DESIGN EXAMPLES (reference for how layers stack) ────────────────
+    // These are the ONLY assembly docs LimeZu provides. Kept for reference.
+
+    { "zip": "interiors", "src": "6_Home_Designs/Gym_Designs/16x16/Gym_preview.png",           "dest": "examples/gym_preview.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Gym_Designs/16x16/Gym_layer_1.png",           "dest": "examples/gym_layer1.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Gym_Designs/16x16/Gym_layer_2.png",           "dest": "examples/gym_layer2.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Generic_Home_Designs/16x16/Generic_Home_1_preview_16x16.png","dest": "examples/generic_preview.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Generic_Home_Designs/16x16/Generic_Home_1_Layer_1.png",     "dest": "examples/generic_layer1.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Generic_Home_Designs/16x16/Generic_Home_1_Layer_2_.png",    "dest": "examples/generic_layer2.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/TV_Studio_Designs/16x16/Tv_Studio_Design_preview.png",     "dest": "examples/studio_preview.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/TV_Studio_Designs/16x16/Tv_Studio_Design_layer_1.png",     "dest": "examples/studio_layer1.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/TV_Studio_Designs/16x16/Tv_Studio_Design_layer_2.png",     "dest": "examples/studio_layer2.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/TV_Studio_Designs/16x16/Tv_Studio_Design_layer_3.png",     "dest": "examples/studio_layer3.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Japanese_Interiors_Home_Designs/16x16/Japanese_Home_1_preview_16x16.png", "dest": "examples/japanese_preview.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Japanese_Interiors_Home_Designs/16x16/Japanese_Home_1_Layer_1_16x16.png", "dest": "examples/japanese_layer1.png" },
+    { "zip": "interiors", "src": "6_Home_Designs/Japanese_Interiors_Home_Designs/16x16/Japanese_Home_1_Layer_2_16x16.png", "dest": "examples/japanese_layer2.png" },
+
+    // ── EXTERIORS ────────────────────────────────────────────────────────────
+    // Building_1 = LIME CORP warm-grey tower (use as DOLONIA HQ)
+    // Building_4 = G-NERIC CORP cool-grey modern glass (use for neighbor buildings)
+    // Naming: Left + Middle_Modular (tile N times) + Right = one floor
+    // Stack floor rows = any building height
+
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/16_Office_16x16.png",       "dest": "exteriors/office_all.png" },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/2_City_Terrains_16x16.png", "dest": "exteriors/city_terrain.png" },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/3_City_Props_16x16.png",    "dest": "exteriors/city_props.png" },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/4_Generic_Buildings_16x16.png","dest": "exteriors/generic_buildings.png" },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/10_Vehicles_16x16.png",     "dest": "exteriors/vehicles.png" },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/17_Garden_16x16.png",       "dest": "exteriors/garden.png" },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/10_Vehicles_Singles_16x16/", "dest": "exteriors/vehicle_singles/", "glob": true },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/Animated_16x16/Vehicles_16x16/Helicopters_16x16/", "dest": "exteriors/helicopters/", "glob": true },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/Animated_16x16/Vehicles_16x16/Cars_16x16/",        "dest": "exteriors/cars/", "glob": true },
+
+    // Office building Singles (individual modular pieces for procedural assembly)
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/16_Office_Singles_16x16/", "dest": "exteriors/office_singles/", "glob": true },
+
+    // Assembly examples — the ONLY guide LimeZu provides for how to stack pieces
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/16_Office_Singles_16x16/ME_Singles_Office_16x16_Example_1.png","dest": "examples/office_building_ex1.png" },
+    { "zip": "exteriors", "src": "Modern_Exteriors_16x16/ME_Theme_Sorter_16x16/16_Office_Singles_16x16/ME_Singles_Office_16x16_Example_2.png","dest": "examples/office_building_ex2.png" },
+
+    // ── FARM ─────────────────────────────────────────────────────────────────
+    // Rooftop garden / outdoor courtyard area.
+    // Crops, terrain, fences, farm building props.
+
+    { "zip": "farm", "src": "16x16/1_Terrains_16x16.png",           "dest": "farm/terrain.png" },
+    { "zip": "farm", "src": "16x16/2_Fences_16x16.png",             "dest": "farm/fences.png" },
+    { "zip": "farm", "src": "16x16/3_Props_and_Buildings_16x16.png", "dest": "farm/props.png" },
+    { "zip": "farm", "src": "16x16/4_Crops_16x16.png",              "dest": "farm/crops.png" },
+    { "zip": "farm", "src": "16x16/7_Pickup_Items_16x16.png",        "dest": "farm/pickup_items.png" },
+    { "zip": "farm", "src": "16x16/Animals_16x16/Cows/Cow_16x16.png",          "dest": "farm/animals/cow.png" },
+    { "zip": "farm", "src": "16x16/Animals_16x16/Chickens_and_Roosters/Chicken_White_16x16.png","dest": "farm/animals/chicken.png" },
+    { "zip": "farm", "src": "16x16/Animals_16x16/Dogs/Dog_Labrador_Brown_16x16.png","dest": "farm/animals/dog.png" },
+    { "zip": "farm", "src": "16x16/Animals_16x16/Sheeps/",           "dest": "farm/animals/",  "glob": true, "filter": "Sheep_White" },
+
+    // ── UI ────────────────────────────────────────────────────────────────────
+
+    { "zip": "ui", "src": "16x16/Modern_UI_Style_1.png", "dest": "ui/style1.png" },
+    { "zip": "ui", "src": "16x16/Modern_UI_Style_2.png", "dest": "ui/style2.png" }
+  ]
+}

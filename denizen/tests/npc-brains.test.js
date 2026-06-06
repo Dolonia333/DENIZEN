@@ -140,6 +140,24 @@ describe('_parseDelegateTag', () => {
 // _smartFallback — action tag generation
 // ---------------------------------------------------------------------------
 
+describe('_isGreetingOnly / _greetingReply', () => {
+  it('detects bare greetings and NPC-addressed hellos', () => {
+    assert.equal(mgr._isGreetingOnly('hi', 'Lucy'), true);
+    assert.equal(mgr._isGreetingOnly('hey lucy', 'Lucy'), true);
+    assert.equal(mgr._isGreetingOnly('yo lucy', 'Lucy'), true);
+    assert.equal(mgr._isGreetingOnly('play Lucy', 'Lucy'), true);
+    assert.equal(mgr._isGreetingOnly('hey Lucy open the web', 'Lucy'), false);
+    assert.equal(mgr._isGreetingOnly('play Lucy open the web', 'Lucy'), false);
+    assert.equal(mgr._isGreetingOnly('hello Lucy!', 'Lucy'), true);
+    assert.equal(mgr._isGreetingOnly('search remote jobs', 'Lucy'), false);
+  });
+
+  it('returns instant Lucy greeting without LLM', () => {
+    const reply = mgr._greetingReply('Lucy', mgr._hierarchy.Lucy);
+    assert.match(reply, /search|browser|dig/i);
+  });
+});
+
 describe('_smartFallback', () => {
   function h(npcName) {
     return mgr._hierarchy[npcName];
@@ -169,6 +187,57 @@ describe('_smartFallback', () => {
     const reply = mgr._smartFallback('Lucy', 'what is going on?', h('Lucy'));
     assert.equal(typeof reply, 'string');
     assert.ok(reply.length > 0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reasoning-model leak stripping (Ministral / DeepSeek-R1 style)
+// ---------------------------------------------------------------------------
+
+describe('reasoning leak stripping', () => {
+  it('_isReasoningLeak detects Thinking Process meta', () => {
+    assert.equal(
+      mgr._isReasoningLeak('Thinking Process: 1. **Analyze the Request**'),
+      true
+    );
+    assert.equal(
+      mgr._isReasoningLeak('Analyze the Request: The user is roleplaying as the CEO asking Bouncer'),
+      true
+    );
+    assert.equal(mgr._isReasoningLeak('Mm. Brute force at the door. Handled it.'), false);
+  });
+
+  it('_bouncerIncidentFallback builds a spoken report from incident context', () => {
+    const msg = [
+      'You just caught a HIGH brute_force threat.',
+      'Detail: 12 failed logins from 192.168.1.232.',
+      'Countermeasure you set up: added a 3-strike lockout on that door.',
+    ].join(' ');
+    const out = mgr._bouncerIncidentFallback(msg);
+    assert.match(out, /brute force/i);
+    assert.match(out, /lockout/i);
+    assert.equal(mgr._isReasoningLeak(out), false);
+  });
+
+  it('_cleanDisplayText strips Thinking Process for Bouncer', () => {
+    const raw = 'Thinking Process: 1. **Analyze** * **Role:** Bouncer. Mm. Brute force at reception — handled it. Eyes open.';
+    const out = mgr._cleanDisplayText(raw, 'Bouncer');
+    assert.ok(!/Thinking\s*Process/i.test(out), `still leaked: ${out}`);
+    assert.match(out, /brute force|handled|eyes open/i);
+  });
+
+  it('getResponse fast-paths Bouncer incident reports without LLM', async () => {
+    const msg = [
+      'You just caught a high brute_force threat.',
+      'Detail: Rate limit exceeded: 101 req/min from ::ffff:192.168.1.232.',
+      'When you confronted them: they held their ground — threat is still active, keep your eyes open.',
+      'Countermeasure you set up: added a 3-strike lockout on that door and flagged the access logs.',
+    ].join(' ');
+    const out = await mgr.getResponse('Bouncer', 'CEO', msg, { kind: 'incident-report' });
+    assert.equal(mgr._isReasoningLeak(out), false);
+    assert.match(out, /brute force/i);
+    assert.match(out, /lockout|flagged/i);
+    assert.match(out, /eyes open|all clear/i);
   });
 });
 

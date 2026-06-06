@@ -44,6 +44,8 @@ See [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) for the full capability m
 |-----|----------|
 | **[denizen/README.md](denizen/README.md)** | Full project README with architecture, runtime systems, APIs, and operations |
 | **[denizen/docs/DOCS_INDEX.md](denizen/docs/DOCS_INDEX.md)** | Master documentation map with categories and GitHub vs local/new status |
+| **[denizen/docs/WORKSPACE_ARCHITECTURE.md](denizen/docs/WORKSPACE_ARCHITECTURE.md)** | Every folder/file — purpose, why it exists, how it works |
+| **[denizen/docs/RUNTIME_DATA.md](denizen/docs/RUNTIME_DATA.md)** | Runtime JSON & reports — writers, readers, PII policy, cleanup |
 | [denizen/docs/SETUP.md](denizen/docs/SETUP.md) | End-to-end install and environment configuration |
 | [denizen/docs/VISITOR_ONBOARDING.md](denizen/docs/VISITOR_ONBOARDING.md) | Team vs demo visitor auth, session tokens, CEO path |
 | [denizen/docs/ARCHITECTURE.md](denizen/docs/ARCHITECTURE.md) | Runtime topology and component relationships |

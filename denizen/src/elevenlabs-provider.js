@@ -42,9 +42,11 @@
       return;
     }
     const utter = new SpeechSynthesisUtterance(text);
+    const gender = window.DenizenNpcRoster?.displayToGender?.[npcName];
     let hash = 0;
     for (let i = 0; i < (npcName || '').length; i++) hash = (hash * 31 + npcName.charCodeAt(i)) >>> 0;
-    utter.pitch = 0.85 + ((hash % 30) / 100);
+    const jitter = (hash % 10) / 100;
+    utter.pitch = gender === 'female' ? 1.1 + jitter : gender === 'male' ? 0.86 + jitter : 0.92 + ((hash % 30) / 100);
     utter.rate = 1.05;
     utter.volume = proximity.volume;
     utter.onend = () => { try { window.DenizenProximityAudio?.releaseSpeakerSlot?.(npcName); } catch (_) {} };

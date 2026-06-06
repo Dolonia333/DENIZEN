@@ -17,6 +17,20 @@ const { exec } = require('child_process');
 
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
+// ── Artifact dedup — prevents NPC report-filing loops ─────────────────────
+// Tracks the last artifact written per NPC: { normSummary, writtenAt }
+const _recentArtifacts = new Map();
+const DEDUP_WINDOW_MS = 4 * 60 * 1000; // 4 minutes
+
+function _isDuplicateArtifact(npcName, taskSummary) {
+  const norm = String(taskSummary).toLowerCase().replace(/\s+/g, ' ').slice(0, 80);
+  const last = _recentArtifacts.get(npcName);
+  if (!last) return false;
+  if ((Date.now() - last.writtenAt) > DEDUP_WINDOW_MS) return false;
+  // Fuzzy match: first 60 chars must match (catches slightly varied phrasings).
+  return last.norm.slice(0, 60) === norm.slice(0, 60);
+}
+
 // ── Read whitelist ─────────────────────────────────────────────────────────
 // Dirs (relative to PROJECT_ROOT) NPCs may read from.
 // Root-level .js files (server.js etc.) are also allowed.
@@ -235,6 +249,10 @@ function writeTaskArtifact(npcName, role, taskSummary, detail, opts) {
   const cfg = ROLE_ARTIFACTS[role];
   if (!cfg) return null;
 
+  // Dedup guard: suppress identical reports filed within the cooldown window.
+  // This breaks the "blocked → re-report same thing → still blocked" loop.
+  if (_isDuplicateArtifact(npcName, taskSummary)) return null;
+
   const slug = (taskSummary || 'task')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
@@ -258,7 +276,12 @@ function writeTaskArtifact(npcName, role, taskSummary, detail, opts) {
     opts && opts.target ? `Reported to: ${opts.target}` : '',
   ].filter(Boolean).join('\n');
 
-  return writeArtifact(npcName, cfg.dir, filename, body);
+  const result = writeArtifact(npcName, cfg.dir, filename, body);
+  if (result) {
+    const norm = String(taskSummary).toLowerCase().replace(/\s+/g, ' ').slice(0, 80);
+    _recentArtifacts.set(npcName, { norm, writtenAt: Date.now() });
+  }
+  return result;
 }
 
 // ──────────────────────────────────────────────────────────────────────────

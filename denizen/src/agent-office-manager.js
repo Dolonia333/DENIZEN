@@ -16,6 +16,11 @@ class AgentOfficeManager {
     this.connected = false;
     this._reconnectTimer = null;
     this._reconnectAttempt = 0;
+    this._officeConfig = null;
+    this._tabId = `tab-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    this._isThinkLeader = false;
+    this._thinkLeaderTimer = null;
+    this._loadOfficeConfig();
 
     // Agent registry: npcKey -> { role, name, status, currentTask, assignedDesk }
     this.agents = new Map();
@@ -54,6 +59,16 @@ class AgentOfficeManager {
 
     // Proximity acknowledgment cooldowns
     this._npcLastAcknowledged = new Map();
+
+    // Bouncer Kali/Zenmap — one full investigation per threat key per window
+    this._bouncerInvestigationAt = new Map();
+    this._bouncerInvestigationCooldownMs = 900000;
+    this._honeypotActive = false;
+    this._honeypotSpot = null;
+    this._bouncerInvestigationShowTerminal = false;
+    this._bouncerLinuxChatAt = new Map();
+    this._incidentReportAt = new Map();
+    this._bouncerStatusDedupAt = new Map();
 
     // Mood state per NPC
     this._moods = new Map();
@@ -101,7 +116,9 @@ class AgentOfficeManager {
     this._assignDesks();
 
     // Connect to server WebSocket
+    window.__DenizenAgentManager = this;
     this.connect();
+    this._bindRemoteReconnect();
 
     // Start periodic state reporting (every 10 seconds)
     this._stateReportInterval = this.scene.time.addEvent({
@@ -188,6 +205,53 @@ class AgentOfficeManager {
     });
   }
 
+  /** Pull think cadence from server — browser cannot read .env. */
+  async _loadOfficeConfig() {
+    try {
+      const r = await fetch('/api/office-config');
+      if (r.ok) {
+        this._officeConfig = await r.json();
+        console.log('[AgentManager] Office config loaded — think',
+          `${(this._officeConfig.thinkMinMs / 1000)}-${(this._officeConfig.thinkMaxMs / 1000)}s`,
+          this._officeConfig.economyMode ? '(economy)' : '');
+      }
+    } catch (_) {}
+  }
+
+  _getThinkCadence() {
+    const c = this._officeConfig || {};
+    return {
+      thinkMinMs: c.thinkMinMs ?? 360000,
+      thinkMaxMs: c.thinkMaxMs ?? 600000,
+      thinkStaggerMs: c.thinkStaggerMs ?? 15000,
+      pauseThinkDuringCeoChat: c.pauseThinkDuringCeoChat !== false,
+      pauseThinksInCeoMode: c.pauseThinksInCeoMode !== false,
+      mobileThinkMultiplier: c.mobileThinkMultiplier ?? 2.5,
+    };
+  }
+
+  /** One browser tab runs think loops — extra tabs were tripling LM Studio load. */
+  _refreshThinkLeader() {
+    const key = 'denizen-think-leader';
+    let leader = null;
+    try {
+      leader = JSON.parse(sessionStorage.getItem(key) || 'null');
+    } catch (_) {}
+    const stale = !leader || Date.now() - (leader.at || 0) > 45000;
+    if (stale) {
+      sessionStorage.setItem(key, JSON.stringify({ id: this._tabId, at: Date.now() }));
+      this._isThinkLeader = true;
+    } else {
+      this._isThinkLeader = leader.id === this._tabId;
+    }
+    if (this._isThinkLeader && !this._thinkLeaderTimer) {
+      this._thinkLeaderTimer = setInterval(() => {
+        sessionStorage.setItem(key, JSON.stringify({ id: this._tabId, at: Date.now() }));
+      }, 15000);
+    }
+    return this._isThinkLeader;
+  }
+
   /**
    * Start initial agent behaviors — role-based startup + autonomous AI thinking
    */
@@ -233,13 +297,15 @@ class AgentOfficeManager {
       }
     });
 
-    // After everyone settles in, start AI think loops (staggered so LM Studio isn't overwhelmed)
-    let delay = 15000;
+    // After everyone settles in, start AI think loops (staggered; one tab only)
+    const cadence = this._getThinkCadence();
+    const thinkStagger = cadence.thinkStaggerMs;
+    let delay = 20000;
     this.agents.forEach((agent, npcKey) => {
       this.scene.time.delayedCall(delay, () => {
-        this._npcThinkLoop(npcKey);
+        if (this._refreshThinkLeader()) this._npcThinkLoop(npcKey);
       });
-      delay += 4000; // space NPCs 4 seconds apart
+      delay += thinkStagger;
     });
 
     // Update status indicators every 500ms
@@ -486,14 +552,54 @@ class AgentOfficeManager {
    * #5 — Role-specific ambient routines. Called on a timer so Lucy/Pier/Bouncer
    * actually use reception / patrol instead of always heading to their desk.
    */
+  _bouncerInvestigationKey(threat) {
+    return `${threat?.category || 'unknown'}:${threat?.source || 'unknown'}`;
+  }
+
+  _canRunBouncerInvestigation(threat) {
+    const key = this._bouncerInvestigationKey(threat);
+    const last = this._bouncerInvestigationAt.get(key) || 0;
+    return Date.now() - last >= this._bouncerInvestigationCooldownMs;
+  }
+
+  _markBouncerInvestigation(threat) {
+    this._bouncerInvestigationAt.set(this._bouncerInvestigationKey(threat), Date.now());
+  }
+
+  _bouncerLinuxChatAllowed(threat) {
+    const key = this._bouncerInvestigationKey(threat || {});
+    const last = this._bouncerLinuxChatAt.get(key) || 0;
+    if (Date.now() - last < this._bouncerInvestigationCooldownMs) return false;
+    this._bouncerLinuxChatAt.set(key, Date.now());
+    return true;
+  }
+
+  /** Skip Kali + chat spam during CEO chats with other NPCs or dev-only threats. */
+  _shouldDeferBouncerInvestigation(threat) {
+    const src = String(threat?.source || '').toLowerCase();
+    if (src === 'filesystem' || src === 'internal') return true;
+    if (src === '::1' || src === '127.0.0.1' || src.startsWith('127.')) return true;
+    const pc = this.scene?._playerChat;
+    if (pc?._ceoConvo && pc._ceoConvo.npcName !== 'Bouncer') return true;
+    return false;
+  }
+
+  _isCeoChatWithOtherNpc() {
+    const pc = this.scene?._playerChat;
+    return !!(pc?._ceoConvo && pc._ceoConvo.npcName !== 'Bouncer');
+  }
+
   _tickRoleRoutines() {
     if (!this.agents) return;
+    const securityBusy = new Set(['engaging', 'securing', 'honeypot']);
     this.agents.forEach((agent, npcKey) => {
       if (!agent || agent.status === 'task_override') return;
       const role = (agent.role || '').toLowerCase();
       const isRecept = role === 'receptionist' || agent.name === 'Lucy' || agent.name === 'Pier';
       const isSec = role === 'security' || agent.name === 'Bouncer';
       if (!isRecept && !isSec) return;
+
+      if (isSec && securityBusy.has(agent.status)) return;
 
       // Only interrupt benign statuses — don't break meetings/reports.
       const interruptible = !agent.status
@@ -539,7 +645,7 @@ class AgentOfficeManager {
         const loiterTooLong = loiterMs > 30000
           && (!this._lastLoiterCheckAt || (Date.now() - this._lastLoiterCheckAt) > 5 * 60 * 1000);
 
-        if (robbers.length > 0) {
+        if (robbers.length > 0 && !this._isCeoChatWithOtherNpc()) {
           this._confrontNearestRobber(npcKey, agent, robbers);
         } else if (loiterTooLong) {
           this._lastLoiterCheckAt = Date.now();
@@ -613,28 +719,14 @@ class AgentOfficeManager {
     const sev      = String(nearest.severity || 'medium').toLowerCase();
     const category = nearest.category || 'unknown';
 
-    // ── Real tool triggers ───────────────────────────────────────────────────
-    // 1. Kali Linux terminal (WSL) — runs first, fastest, always fires.
-    //    Direct exec: ss, netstat, nmap, ps aux, auth logs — real output.
-    this._send({ type: 'bouncer_run_linux', threat: nearest, openTerminal: true });
-
-    // 2. Wireshark / Zenmap — GUI tools for specific threat types.
-    //    Staggered after WSL so they don't fight for focus.
-    const WIRESHARK_CATEGORIES = new Set(['packet_anomaly', 'network_scan', 'api_abuse', 'data_breach']);
-    const ZENMAP_CATEGORIES    = new Set(['network_scan', 'brute_force', 'scan_probe', 'process_spawn']);
-    const wantWireshark = WIRESHARK_CATEGORIES.has(category);
-    const wantZenmap    = ZENMAP_CATEGORIES.has(category);
-
-    if (wantWireshark) {
-      this.scene.time.delayedCall(5000, () => {
-        this._send({ type: 'bouncer_run_tool', tool: 'wireshark', threat: nearest });
-      });
-    }
-    if (wantZenmap) {
-      const delay = wantWireshark ? 12000 : 5000;
-      this.scene.time.delayedCall(delay, () => {
-        this._send({ type: 'bouncer_run_tool', tool: 'zenmap', threat: nearest });
-      });
+    // ── Real tool triggers (cooldown per category+source — no Kali spam) ───
+    if (!this._shouldDeferBouncerInvestigation(nearest)) {
+      if (this._canRunBouncerInvestigation(nearest)) {
+        this._markBouncerInvestigation(nearest);
+        this._send({ type: 'bouncer_run_linux', threat: nearest, openTerminal: false });
+      } else {
+        console.log(`[Security] Skipping duplicate Kali run for ${this._bouncerInvestigationKey(nearest)}`);
+      }
     }
 
     // ── Step 1: walk to robber ───────────────────────────────────────────────
@@ -717,15 +809,36 @@ class AgentOfficeManager {
     });
   }
 
+  /** Security-only lines — never flood CEO/Lucy chat. */
+  _bouncerSecurityStatus(text, kind = 'status') {
+    const body = String(text || '').trim();
+    if (!body) return;
+    const now = Date.now();
+    const last = this._bouncerStatusDedupAt.get(body) || 0;
+    if (now - last < 45000) return;
+    this._bouncerStatusDedupAt.set(body, now);
+    if (window.DenizenSecurityFeed?.ingest) {
+      window.DenizenSecurityFeed.ingest({ text: body, kind });
+    } else if (this.scene?._playerChat) {
+      this.scene._playerChat._addToLog('Bouncer', body);
+    }
+  }
+
   /**
-   * Walk Bouncer to the player and have his AI brain deliver a natural
-   * language incident report — what the threat was, how it was handled,
-   * and what countermeasure is being set up. Fires a real npcBrains call
-   * so the report sounds like Bouncer, not boilerplate.
+   * Walk Bouncer to the player and post a scripted incident report to the
+   * security feed (not CEO chat — keeps Lucy conversations readable).
    */
   _reportIncidentToPlayer(secKey, agent, threat, outcome) {
     const player = this.scene.player;
     if (!player) { agent.status = 'patrolling'; return; }
+
+    const reportKey = `${threat.category}:${threat.source || threat.detail || ''}`.slice(0, 96);
+    const lastReport = this._incidentReportAt.get(reportKey) || 0;
+    if (Date.now() - lastReport < 90000) {
+      agent.status = 'patrolling';
+      return;
+    }
+    this._incidentReportAt.set(reportKey, Date.now());
 
     const offsetX = player.x > 640 ? -48 : 48;
     this.actions.walkTo(secKey, player.x + offsetX, player.y);
@@ -764,22 +877,12 @@ class AgentOfficeManager {
     ].join(' ');
 
     this.scene.time.delayedCall(3000, () => {
-      // Use the Bouncer's AI brain to generate the report in his voice
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        this._send({
-          type: 'player_chat',
-          npcName: agent.name || 'Bouncer',
-          npcKey: secKey,
-          text: reportContext,
-          isIncidentReport: true,  // tag so server can route it correctly
-          playerPos: {
-            x: Math.round(player.x),
-            y: Math.round(player.y),
-          },
-        });
-      } else {
-        // Fallback if WS is down
-        this.actions.speak(secKey, `${threat.category.replace(/_/g, ' ')} — handled. ${cm}. Watch your back.`);
+      const text = window.DenizenSecurityFeed?.formatIncidentReport?.(reportContext)
+        || `${threat.category.replace(/_/g, ' ')} — handled. ${cm}.`;
+      window.DenizenSecurityFeed?.ingest?.({ text, kind: 'incident' });
+      try { this.actions.speak(secKey, String(text).slice(0, 120)); } catch (_) {}
+      if (window.DenizenSecurityFeed?.show) {
+        window.DenizenSecurityFeed.show();
       }
 
       // Mood shift: threat resolved
@@ -912,6 +1015,7 @@ class AgentOfficeManager {
       { x: 648, y: 156,  label: '🍯 Bait deployed at the desk...' },
     ];
     const spot = HONEYPOT_SPOTS[Math.floor(Math.random() * HONEYPOT_SPOTS.length)];
+    this._honeypotSpot = { ...spot, setAt: Date.now() };
 
     agent.status = 'honeypot';
     this.actions.walkTo(secKey, spot.x, spot.y);
@@ -948,6 +1052,7 @@ class AgentOfficeManager {
 
         if (tripped) {
           this._honeypotActive = false;
+          this._honeypotSpot = null;
           agent.status = 'engaging';
 
           // Bouncer springs the trap
@@ -971,11 +1076,34 @@ class AgentOfficeManager {
       this.scene.time.delayedCall(3 * 60 * 1000, () => {
         if (this._honeypotActive) {
           this._honeypotActive = false;
+          this._honeypotSpot = null;
           this.actions.speak(secKey, 'Nobody took the bait. Resetting patrol.');
           agent.status = 'patrolling';
         }
       });
     });
+  }
+
+  /** CEO asked Bouncer to confront active robbers (player chat). */
+  _bouncerConfrontOnPlayerOrder() {
+    const secKey = Object.entries(this.NPC_NAMES).find(([, v]) => v === 'Bouncer')?.[0] || 'xp_bouncer';
+    const agent = this.agents?.get(secKey);
+    const robbers = this.scene._robberCtrl?.getActiveRobbers?.() || [];
+    if (!agent || robbers.length === 0) return false;
+    this._confrontNearestRobber(secKey, agent, robbers);
+    return true;
+  }
+
+  /** CEO asked about honeypot — deploy if not already active. */
+  _bouncerHoneypotOnPlayerOrder() {
+    const secKey = Object.entries(this.NPC_NAMES).find(([, v]) => v === 'Bouncer')?.[0] || 'xp_bouncer';
+    const agent = this.agents?.get(secKey);
+    if (!agent) return { active: false, deployed: false };
+    if (this._honeypotActive) {
+      return { active: true, deployed: false, spot: this._honeypotSpot };
+    }
+    this._setupHoneypot(secKey, agent);
+    return { active: true, deployed: true, spot: this._honeypotSpot };
   }
 
   /**
@@ -1132,9 +1260,30 @@ class AgentOfficeManager {
   _npcThinkLoop(npcKey) {
     const agent = this.agents.get(npcKey);
     if (!agent) return;
+
+    const cadence = this._getThinkCadence();
+
+    if (!this._refreshThinkLeader()) {
+      this.scene.time.delayedCall(60000, () => this._npcThinkLoop(npcKey));
+      return;
+    }
+
+    const mobileTuning = window.__DenizenMobileTuning || {};
+    const pauseCeoMode = cadence.pauseThinksInCeoMode !== false
+      && mobileTuning.pauseThinksInCeoMode !== false;
+    if (pauseCeoMode && window.__DenizenCeoMode) {
+      this.scene.time.delayedCall(60000, () => this._npcThinkLoop(npcKey));
+      return;
+    }
+
     if (agent.status === 'task_override') {
       // Server command took over — check again later
       this.scene.time.delayedCall(15000, () => this._npcThinkLoop(npcKey));
+      return;
+    }
+
+    if (cadence.pauseThinkDuringCeoChat !== false && agent.status === 'ceo_conversation') {
+      this.scene.time.delayedCall(45000, () => this._npcThinkLoop(npcKey));
       return;
     }
 
@@ -1163,9 +1312,12 @@ class AgentOfficeManager {
       context,
     });
 
-    // The response comes back as 'npc_decision' in _handleServerMessage
-    // Schedule next think cycle (30-45 seconds) — more active NPCs, still comfortable for the queue
-    const nextDelay = 30000 + Math.random() * 15000;
+    // Schedule next think from server config (not browser prompt-tuning defaults)
+    let nextDelay = cadence.thinkMinMs + Math.random() * Math.max(0, cadence.thinkMaxMs - cadence.thinkMinMs);
+    if (window.__DenizenIsTouch) {
+      const mult = cadence.mobileThinkMultiplier ?? mobileTuning.mobileThinkMultiplier ?? 1;
+      if (mult > 1) nextDelay = Math.round(nextDelay * mult);
+    }
     this.scene.time.delayedCall(nextDelay, () => this._npcThinkLoop(npcKey));
   }
 
@@ -1220,6 +1372,12 @@ class AgentOfficeManager {
     const agent = this.agents.get(npcKey);
     if (!agent || agent.status === 'task_override') return;
 
+    // Don't let the think loop pull Bouncer off an active threat response.
+    if (['engaging', 'securing', 'honeypot'].includes(agent.status)) {
+      const keep = decision.action === 'talk' || decision.action === 'report';
+      if (!keep) return;
+    }
+
     const thought = decision.thought || '';
     let action = decision.action || 'work';
     let target = decision.target || null;
@@ -1232,6 +1390,14 @@ class AgentOfficeManager {
     // continuing whatever else they had planned. Real people don't pivot
     // to a coffee run mid-sentence.
     const npcSprite = this.actions._getNpc(npcKey);
+    const ceoConvoUntil = npcSprite?.ai?._ceoConvoUntil || 0;
+    const inCeoConvo = agent.status === 'ceo_conversation'
+      || ceoConvoUntil > this.scene.time.now
+      || npcSprite?.ai?.taskState === 'reporting';
+
+    // Autonomous think must not pull an NPC away during CEO conversation.
+    if (inCeoConvo) return;
+
     const addressedUntil = npcSprite?.ai?._addressedUntil || 0;
     const addressedBy = npcSprite?.ai?._addressedBy;
     if (addressedUntil > this.scene.time.now && addressedBy && action !== 'talk') {
@@ -1729,6 +1895,54 @@ class AgentOfficeManager {
       return;
     }
 
+    const existing = window.__DenizenAgentWs;
+    if (existing && (existing.readyState === WebSocket.OPEN || existing.readyState === WebSocket.CONNECTING)) {
+      this.ws = existing;
+      this.connected = existing.readyState === WebSocket.OPEN;
+      existing.onmessage = (evt) => {
+        try {
+          this._handleServerMessage(JSON.parse(evt.data));
+        } catch (err) {
+          console.warn('[AgentManager] Failed to parse message:', err);
+        }
+      };
+      existing.onopen = () => {
+        this.connected = true;
+        this._reconnectAttempt = 0;
+        this.scene?._playerChat?.setWsConnected?.(true);
+        const sess = globalThis.DenizenVisitorSession;
+        if (sess?.getSessionId?.()) {
+          sess.registerWebSocket(existing);
+        } else {
+          this._send({ type: 'visitor_register', is_ceo: true });
+        }
+        this._loadOfficeConfig();
+        this._sendClientProfile();
+        this._sendOfficeState();
+      };
+      existing.onclose = () => {
+        this.connected = false;
+        this.scene?._playerChat?.setWsConnected?.(false);
+        this._scheduleReconnect();
+      };
+      existing.onerror = () => {
+        this.connected = false;
+        this.scene?._playerChat?.setWsConnected?.(false);
+      };
+      if (this.connected) {
+        this.scene?._playerChat?.setWsConnected?.(true);
+        const sess = globalThis.DenizenVisitorSession;
+        if (sess?.getSessionId?.()) {
+          sess.registerWebSocket(existing);
+        } else {
+          this._send({ type: 'visitor_register', is_ceo: true });
+        }
+        this._sendOfficeState();
+      }
+      console.log('[AgentManager] Reusing early chat WebSocket');
+      return;
+    }
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // Connect to same host/port as the page (server.js serves both HTTP and WS)
     const url = `${protocol}//${window.location.host}/agent-ws`;
@@ -1750,8 +1964,17 @@ class AgentOfficeManager {
       console.log('[AgentManager] Connected to agent WebSocket');
       this.connected = true;
       this._reconnectAttempt = 0;
+      this.scene?._playerChat?.setWsConnected?.(true);
 
-      // Send initial office state
+      const sess = globalThis.DenizenVisitorSession;
+      if (sess?.getSessionId?.()) {
+        sess.registerWebSocket(this.ws);
+      } else {
+        this._send({ type: 'visitor_register', is_ceo: true });
+      }
+
+      this._loadOfficeConfig();
+      this._sendClientProfile();
       this._sendOfficeState();
     };
 
@@ -1767,12 +1990,23 @@ class AgentOfficeManager {
     this.ws.onclose = () => {
       console.log('[AgentManager] WebSocket closed');
       this.connected = false;
+      this.scene?._playerChat?.setWsConnected?.(false);
       this._scheduleReconnect();
     };
 
     this.ws.onerror = (err) => {
       console.warn('[AgentManager] WebSocket error:', err);
+      this.scene?._playerChat?.setWsConnected?.(false);
     };
+  }
+
+  _bindRemoteReconnect() {
+    if (this._remoteReconnectBound) return;
+    this._remoteReconnectBound = true;
+    window.addEventListener('online', () => this.connect());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') this.connect();
+    });
   }
 
   _scheduleReconnect() {
@@ -1799,8 +2033,20 @@ class AgentOfficeManager {
    * Handle messages from the server (cofounder agent commands)
    */
   _handleServerMessage(msg) {
-    // In demo mode, only handle player_chat_response — block all other server commands
-    if (this._demoMode && msg.type !== 'player_chat_response') return;
+    // Demo mode: still allow CEO-facing replies (chat, search briefs, browser mirror).
+    const _demoCeoTypes = new Set([
+      'player_chat_response',
+      'npc_report_to_ceo',
+      'research_brief_done',
+      'npc_skill_start',
+      'npc_skill_result',
+      'lucy_browser_mirror',
+      'lucy_browser_frame',
+      'npc_browser_mirror',
+      'npc_browser_frame',
+      'bouncer_security',
+    ]);
+    if (this._demoMode && !_demoCeoTypes.has(msg.type)) return;
     // Per-message console.log was firing ~5/sec across the batched
     // world_state_batch + the per-NPC npc_decision traffic — fine for
     // the first day but unreadable now. Decision logs already happen
@@ -1913,6 +2159,24 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'player_chat_ack': {
+        if (this.scene._playerChat && msg.npcName) {
+          this.scene._playerChat.logPlayerChatAck(msg.npcName, msg.queueLen);
+        }
+        break;
+      }
+      case 'bouncer_security': {
+        const bKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
+        )?.[0] || 'xp_bouncer';
+        const line = String(msg.text || '').trim();
+        if (line) {
+          window.DenizenSecurityFeed?.ingest?.({ text: line, kind: 'incident' });
+          try { this.actions.speak(bKey, line.slice(0, 120)); } catch (_) {}
+          window.DenizenSecurityFeed?.show?.();
+        }
+        break;
+      }
       case 'player_chat_response': {
         // NPC responding to the CEO (player) — route to PlayerChat UI
         const respondingKey = Object.entries(this.NPC_NAMES).find(
@@ -1930,6 +2194,12 @@ class AgentOfficeManager {
 
         // Execute any actions the NPC decided to take
         if (respondingKey && hasActions) {
+          const leaving = msg.actions.some((a) => (
+            ['useComputer', 'goToRoom', 'goToBreakroom', 'checkBookshelf', 'standUp'].includes(a.action)
+          ));
+          if (leaving && this.scene._playerChat?._ceoConvo?.npcKey === respondingKey) {
+            this.scene._playerChat._endCeoConversation('npc leaving to work');
+          }
           this._executeNpcActions(respondingKey, msg.npcName, msg.actions);
         }
 
@@ -1944,20 +2214,23 @@ class AgentOfficeManager {
         break;
       }
       case 'bouncer_linux_status': {
-        // Kali WSL investigation started
+        if (this._isCeoChatWithOtherNpc()) break;
         const bouncerKey = 'xp_bouncer';
-        if (this.scene._playerChat) {
-          this.scene._playerChat._addToLog('Bouncer', `🐉 ${msg.message || 'Running Kali Linux commands...'}`);
+        const showTerminal = /terminal/i.test(String(msg.message || ''));
+        if (showTerminal) {
+          if (this.scene._playerChat) {
+            this.scene._playerChat._addToLog('Bouncer', `🐉 ${msg.message || 'Running Kali Linux commands...'}`);
+          }
+          try { this.actions.speak(bouncerKey, 'Opening Kali Linux terminal...'); } catch (_) {}
+          const ba = this.agents?.get(bouncerKey);
+          if (ba?.assignedDesk) { try { this.actions.useComputer(bouncerKey, ba.assignedDesk); } catch (_) {} }
         }
-        try { this.actions.speak(bouncerKey, 'Opening Kali Linux terminal...'); } catch (_) {}
-        // Show Bouncer at desk (he is working the terminal)
-        const ba = this.agents?.get(bouncerKey);
-        if (ba?.assignedDesk) { try { this.actions.useComputer(bouncerKey, ba.assignedDesk); } catch (_) {} }
         break;
       }
       case 'bouncer_linux_result': {
-        // Kali WSL investigation complete — show results in chat
+        if (this._isCeoChatWithOtherNpc()) break;
         const bouncerKey = 'xp_bouncer';
+        if (!this._bouncerLinuxChatAllowed(msg.threat)) break;
         if (this.scene._playerChat) {
           if (msg.status === 'done') {
             const stepCount = Array.isArray(msg.steps) ? msg.steps.length : '?';
@@ -1972,9 +2245,37 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'bouncer_player_order': {
+        if (msg.order === 'confront') {
+          const ok = this._bouncerConfrontOnPlayerOrder();
+          if (!ok) {
+            this._bouncerSecurityStatus('No active intruder on the map to confront.', 'status');
+          }
+        } else if (msg.order === 'deploy_honeypot') {
+          const hp = this._bouncerHoneypotOnPlayerOrder();
+          if (this.scene._playerChat) {
+            const note = hp.deployed
+              ? `Honeypot deployed${hp.spot ? ` at (${Math.round(hp.spot.x)}, ${Math.round(hp.spot.y)})` : ''} — I will catch the next one within 120px.`
+              : 'Honeypot is already active — still watching.';
+            this.scene._playerChat._addToLog('Bouncer', note);
+          }
+        } else if (msg.order === 'honeypot_status') {
+          if (this.scene._playerChat) {
+            if (this._honeypotActive) {
+              const s = this._honeypotSpot;
+              const where = s ? ` at (${Math.round(s.x)}, ${Math.round(s.y)})` : '';
+              this.scene._playerChat._addToLog('Bouncer', `Honeypot is armed${where} — watching for intruders within 120px.`);
+            } else {
+              this.scene._playerChat._addToLog('Bouncer', 'Honeypot is not armed right now. Say "deploy honeypot" if you want one set.');
+            }
+          }
+        }
+        break;
+      }
       case 'bouncer_tool_status': {
-        // Desktop agent running Wireshark / Zenmap on behalf of Bouncer.
-        // Show progress in the player chat panel and animate the Bouncer.
+        // Legacy desktop-tool path — zenmap/nmap now run via Kali only; keep wireshark msgs quiet.
+        if (msg.tool === 'zenmap' || msg.tool === 'nmap') break;
+
         const bouncerKey = 'xp_bouncer';
         const bouncerAgent = this.agents?.get(bouncerKey);
         const toolIcon = msg.tool === 'zenmap' ? '🗺' : '🦈';
@@ -2225,12 +2526,31 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'lucy_browser_mirror':
+      case 'npc_browser_mirror':
+        window.DenizenBrowserMirror?.ingest?.(msg);
+        break;
+      case 'lucy_browser_frame':
+      case 'npc_browser_frame':
+        window.DenizenBrowserMirror?.onFrame?.(msg);
+        break;
       case 'npc_skill_start': {
-        // An NPC started running an OpenClaw skill — animate them at their desk
+        // Desk skills animate at the desk; web-search keeps Lucy with the CEO.
+        if (msg.skill === 'web-search') {
+          window.DenizenBrowserMirror?.ingest?.({
+            searching: true,
+            open: true,
+            status: 'searching',
+            query: msg.skillParams?.query || '',
+          });
+          break;
+        }
         const skillNpcKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
         if (skillNpcKey) {
+          const inCeoConvo = this.scene._playerChat?._ceoConvo?.npcKey === skillNpcKey;
+          if (inCeoConvo) break;
           const skillAgent = this.agents.get(skillNpcKey);
           if (skillAgent?.assignedDesk) {
             try { this.actions.useComputer(skillNpcKey, skillAgent.assignedDesk); } catch (_) {}
@@ -2239,7 +2559,9 @@ class AgentOfficeManager {
         break;
       }
       case 'npc_skill_result': {
-        // Skill finished — brief emote on the NPC so the player notices
+        if (msg.skill === 'web-search' && this.scene._playerChat?._lucySearchActive) {
+          this.scene._playerChat._lucySearchActive = null;
+        }
         const skillResultKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
@@ -2248,7 +2570,8 @@ class AgentOfficeManager {
             this.actions.emote(skillResultKey, msg.ok ? '✓' : '!');
           } catch (_) {}
         }
-        if (this.scene._playerChat) {
+        // web-search already posts a full brief via npc_report_to_ceo — skip robot status line.
+        if (this.scene._playerChat && msg.skill !== 'web-search') {
           const note = `${msg.npcName} finished running ${msg.skill}${msg.ok ? '' : ' (error)'}.`;
           this.scene._playerChat._addToLog(msg.npcName, note);
         }
@@ -2298,8 +2621,14 @@ class AgentOfficeManager {
         break;
       }
       case 'npc_report_to_ceo': {
+        const lucySearchResult = this.scene._playerChat?._lucySearchActive != null;
+        if (this.scene._playerChat?._lucySearchActive) {
+          this.scene._playerChat._lucySearchActive = null;
+        }
         // An NPC is following through on a promise it made the CEO. Surface it
         // so "I'll report back" actually reaches you: chat log + bubble + emote.
+        // Discord/Slack fan-out is server-side only — job_standup and other
+        // standup events are already broadcast from server.js when configured.
         const reporterKey = Object.entries(this.NPC_NAMES).find(
           ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
         )?.[0];
@@ -2307,11 +2636,102 @@ class AgentOfficeManager {
           try { this.actions.emote(reporterKey, '📋'); } catch (_) {}
           try { this.actions.speak(reporterKey, String(msg.text).slice(0, 120)); } catch (_) {}
         }
-        if (this.scene._playerChat) {
-          this.scene._playerChat._addToLog(msg.npcName, `[report] ${msg.text}`);
+        const pc = this.scene._playerChat || window.__DenizenPlayerChat;
+        if (pc) {
+          if (typeof pc._onNpcReport === 'function') {
+            pc._onNpcReport(msg.npcName, msg.text);
+          } else {
+            const prefix = lucySearchResult ? '' : '[report] ';
+            pc._addToLog(msg.npcName, `${prefix}${msg.text}`);
+          }
         }
         break;
       }
+      case 'research_brief_done': {
+        if (this.scene._playerChat) {
+          const who = msg.npcName || 'Bob';
+          const topic = msg.topic ? `"${msg.topic}"` : 'topic';
+          const detail = msg.path || msg.summary || msg.text || 'brief ready';
+          this.scene._playerChat._addToLog(who, `[research brief] ${topic}: ${detail}`);
+        }
+        break;
+      }
+      case 'research_queue_update': {
+        if (this.scene._playerChat) {
+          const pending = typeof msg.pending === 'number' ? msg.pending : null;
+          const added = msg.topic ? `Added "${msg.topic}"` : 'Queue updated';
+          const count = pending != null ? ` — ${pending} pending` : '';
+          this.scene._playerChat._addToLog(msg.npcName || 'Lucy', `[research queue] ${added}${count}`);
+        }
+        break;
+      }
+      case 'job_standup':
+      case 'job_crm_event': {
+        if (this.scene._playerChat) {
+          const note = msg.report || msg.text || `Job update: ${msg.action || msg.kind || 'event'}`;
+          this.scene._playerChat._addToLog(msg.npcName || 'Lucy', note);
+        }
+        break;
+      }
+      case 'npc_mood_change': {
+        // Keep agent-office-manager._moods in sync with npc-brains._npcMoods.
+        // npc-brains is the source of truth for mood; manager is the display layer.
+        const moodKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
+        )?.[0];
+        if (moodKey) {
+          // Map brain moods → manager mood strings (manager uses simpler set)
+          const MOOD_MAP = {
+            energized: 'excited', frustrated: 'stressed', tired: 'tired',
+            excited: 'excited', focused: 'focused', stressed: 'stressed',
+            neutral: 'focused',
+          };
+          this._setMood(moodKey, MOOD_MAP[msg.mood] || msg.mood);
+        }
+        break;
+      }
+
+      case 'npc_request_user_approval': {
+        // An NPC (or their manager) needs the CEO to grant access before they can proceed.
+        // 1. Walk the NPC to the player. 2. Emote + speak. 3. Surface an approval card in chat.
+        const reqKey = Object.entries(this.NPC_NAMES).find(
+          ([k, v]) => v.toLowerCase() === msg.npcName?.toLowerCase()
+        )?.[0];
+        if (reqKey) {
+          try {
+            // Walk toward the player (use visit action so they actually approach)
+            this.actions.walkToPlayer?.(reqKey) ||
+              this.actions.goToRoom(reqKey, 'open_office');
+          } catch (_) {}
+          try { this.actions.emote(reqKey, '🙋'); } catch (_) {}
+          const speakText = msg.onBehalfOf
+            ? `Hey — ${msg.onBehalfOf} is blocked. Can you approve: "${String(msg.task).slice(0, 80)}"?`
+            : `I need your go-ahead on: "${String(msg.task).slice(0, 80)}"`;
+          try { this.actions.speak(reqKey, speakText); } catch (_) {}
+        }
+        if (this.scene._playerChat) {
+          this.scene._playerChat._addApprovalRequest({
+            npcName:    msg.npcName,
+            onBehalfOf: msg.onBehalfOf || null,
+            task:       msg.task || '(unknown task)',
+            waitingFor: msg.waitingFor || null,
+            permission: msg.permission || msg.task,
+          });
+        }
+        break;
+      }
+
+      case 'npc_permission_granted': {
+        // A permission was granted — confirm it in the chat log.
+        if (this.scene._playerChat) {
+          this.scene._playerChat._addToLog(
+            'System',
+            `✅ ${msg.npcName} granted access: "${msg.permission}"`
+          );
+        }
+        break;
+      }
+
       case 'npc_chain_started': {
         // A multi-step task chain was kicked off
         console.log(`[Chain] Started: "${msg.name}" — ${(msg.steps || []).join(' → ')} (${msg.totalSteps} steps)`);
@@ -2353,6 +2773,37 @@ class AgentOfficeManager {
             note: `Chain complete: "${msg.name}" (${(msg.artifacts || []).length} artifacts)`,
             artifactPath: null,
           });
+        }
+        break;
+      }
+
+      case 'assistant_handoff':
+        globalThis.DenizenVisitorHandoffUI?.showIncoming?.(msg);
+        break;
+
+      case 'lucy_handoff_alert': {
+        const handoff = msg.handoff || msg;
+        const from = handoff?.from_display_name || handoff?.fromDisplayName || 'Someone';
+        const message = String(handoff?.message || '');
+        const speakText = `Heads up — handoff from ${from}: ${message.slice(0, 60)}`;
+        const lucyKey = 'xp_lucy';
+        if (this.agents?.get(lucyKey)) {
+          try {
+            this.actions.speak(lucyKey, speakText);
+          } catch (_) {}
+          const player = this.scene?.player;
+          if (player && this.actions?.walkTo) {
+            try {
+              this.actions.standUp?.(lucyKey);
+              const facing = this.scene.facing || 'down';
+              const off = { up: { x: 0, y: 40 }, down: { x: 0, y: -40 }, left: { x: 40, y: 0 }, right: { x: -40, y: 0 } };
+              const o = off[facing] || off.down;
+              this.actions.walkTo(lucyKey, player.x + o.x, player.y + o.y);
+            } catch (_) {}
+          }
+        }
+        if (globalThis.__DenizenCeoMode) {
+          this.scene?._playerChat?._addToLog?.('Lucy', speakText);
         }
         break;
       }
@@ -2862,8 +3313,18 @@ class AgentOfficeManager {
   /**
    * Send current office state to server
    */
+  _sendClientProfile() {
+    if (!this.connected || !window.__DenizenIsTouch) return;
+    this._send({
+      type: 'client_profile',
+      touch: true,
+      ceoMode: !!window.__DenizenCeoMode,
+    });
+  }
+
   _sendOfficeState() {
     if (!this.connected) return;
+    this._sendClientProfile();
 
     const agentList = [];
     this.agents.forEach((agent, npcKey) => {
@@ -2918,6 +3379,12 @@ class AgentOfficeManager {
       agents: agentList,
       furniture,
       robbers,
+      honeypot: this._honeypotActive ? {
+        active: true,
+        position: this._honeypotSpot ? { x: this._honeypotSpot.x, y: this._honeypotSpot.y } : null,
+        label: this._honeypotSpot?.label || null,
+        setAt: this._honeypotSpot?.setAt || null,
+      } : { active: false },
       tasks: this.tasks.map(t => ({ id: t.id, type: t.type, agent: t.agent })),
       time: this.scene.worldClock?.toString() || '',
     });
@@ -3039,28 +3506,16 @@ class AgentOfficeManager {
   // ─────────────────────────────────────────────────────────────────────────
 
   _startAmbientChatter() {
+    this._ambientChatActive = false; // mutex — prevents overlapping chatter sessions
     this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
   }
 
   _tickAmbientChatter() {
-    const AMBIENT_TOPICS = [
-      'Hey, have you had coffee yet?',
-      'Did you see the deploy went smooth this morning?',
-      'Quick question when you have a second.',
-      'Long week already and it is only Tuesday.',
-      'How is that task going for you?',
-      'Anyone else feel like we need a whiteboard session?',
-      'I was just thinking about the architecture on that last feature.',
-      'You hungry? I am about to grab something.',
-      'Did you check the latest logs?',
-      'I found something interesting while researching earlier.',
-      'Hey, good work on that last one.',
-      'Do you know if Abby is in today?',
-      'I keep meaning to refactor that module.',
-      'The build is green, finally.',
-      'We should sync up on this before end of day.',
-    ];
-
+    // Mutex: if a chatter session is already running, skip and reschedule.
+    if (this._ambientChatActive) {
+      this.scene.time.delayedCall(30000, () => this._tickAmbientChatter());
+      return;
+    }
     const RESTRICTED_STATUSES = new Set([
       'task_override', 'engaging', 'meeting', 'honeypot',
       'tour_guide', 'talking', 'collaborating', 'reporting',
@@ -3092,28 +3547,48 @@ class AgentOfficeManager {
       return;
     }
 
-    const line = AMBIENT_TOPICS[Math.floor(Math.random() * AMBIENT_TOPICS.length)];
+    // Lock — session is now active
+    this._ambientChatActive = true;
 
     // Walk initiator toward responder
     this.actions.walkTo(initiatorKey, responderSprite.x - 32, responderSprite.y);
     initiatorAgent.status = 'talking';
     responderAgent.status = 'talking';
 
-    // After arriving, initiator speaks
-    this.scene.time.delayedCall(2500, () => {
-      this.actions.speak(initiatorKey, line);
-
-      // Fire brain request so the responder generates a real reply
-      this._send({
-        type: 'npc_conversation',
-        npcName: responderAgent.name,
-        fromName: initiatorAgent.name,
-        text: line,
-        turn: 1,
+    // Opener from past LLM dialogue; responder reply via npc_conversation replay.
+    const pairUrl = `/api/ambient-dialogue/pair?initiator=${encodeURIComponent(initiatorAgent.name)}&responder=${encodeURIComponent(responderAgent.name)}`;
+    fetch(pairUrl)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((pair) => {
+        const line = String(pair?.opener || 'Quick question when you have a second.').trim();
+        this.scene.time.delayedCall(2500, () => {
+          this.actions.speak(initiatorKey, line);
+          this._send({
+            type: 'npc_conversation',
+            npcName: responderAgent.name,
+            fromName: initiatorAgent.name,
+            text: line,
+            turn: 1,
+            ambient: true,
+          });
+        });
+      })
+      .catch(() => {
+        const line = 'Quick question when you have a second.';
+        this.scene.time.delayedCall(2500, () => {
+          this.actions.speak(initiatorKey, line);
+          this._send({
+            type: 'npc_conversation',
+            npcName: responderAgent.name,
+            fromName: initiatorAgent.name,
+            text: line,
+            turn: 1,
+            ambient: true,
+          });
+        });
       });
-    });
 
-    // Both return to desks after 18s
+    // Both return to desks after 18s — release the mutex when done
     this.scene.time.delayedCall(18000, () => {
       if (initiatorAgent.assignedDesk) {
         this.actions.useComputer(initiatorKey, initiatorAgent.assignedDesk);
@@ -3127,6 +3602,7 @@ class AgentOfficeManager {
       } else {
         responderAgent.status = 'idle';
       }
+      this._ambientChatActive = false; // release mutex
     });
 
     this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());

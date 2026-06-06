@@ -44,6 +44,16 @@
     } catch (_) { /* offline tolerated */ }
   }
 
+  function _emitPresence() {
+    try {
+      if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+        window.dispatchEvent(new CustomEvent('denizen:presence', {
+          detail: { zionPresent: presence.zionPresent },
+        }));
+      }
+    } catch (_) {}
+  }
+
   async function setPresence(next) {
     try {
       await fetch('/api/presence', {
@@ -52,12 +62,24 @@
         body: JSON.stringify({ present: !!next }),
       });
       presence.zionPresent = !!next; // optimistic; server will confirm via WS
+      _emitPresence();
     } catch (err) {
       console.warn('[VoiceGate] setPresence failed:', err?.message || err);
     }
   }
 
   function togglePresence() { return setPresence(!presence.zionPresent); }
+
+  /** Browser fallback pitch when ElevenLabs is off — wider gap for male vs female. */
+  function speechPitchForNpc(npcName) {
+    const gender = window.DenizenNpcRoster?.displayToGender?.[npcName];
+    let hash = 0;
+    for (let i = 0; i < (npcName || '').length; i++) hash = (hash * 31 + npcName.charCodeAt(i)) >>> 0;
+    const jitter = (hash % 10) / 100;
+    if (gender === 'female') return 1.1 + jitter;
+    if (gender === 'male') return 0.86 + jitter;
+    return 0.92 + ((hash % 30) / 100);
+  }
 
   // ---- Audio: native SpeechSynthesis as a sane default ----
   function defaultVoiceProvider(npcName, text) {
@@ -73,11 +95,7 @@
       return;
     }
     const utter = new SpeechSynthesisUtterance(text);
-    // Tiny per-NPC pitch jitter so different characters don't all sound
-    // identical. Real TTS providers will override this entirely.
-    let hash = 0;
-    for (let i = 0; i < (npcName || '').length; i++) hash = (hash * 31 + npcName.charCodeAt(i)) >>> 0;
-    utter.pitch = 0.85 + ((hash % 30) / 100); // 0.85..1.14
+    utter.pitch = speechPitchForNpc(npcName);
     utter.rate = 1.05;
     utter.volume = proximity.volume;
     utter.onend = () => { try { window.DenizenProximityAudio?.releaseSpeakerSlot?.(npcName); } catch (_) {} };
@@ -114,7 +132,11 @@
           try {
             const msg = JSON.parse(ev.data);
             if (msg.type === 'world_state' && msg.kind === 'presence' && msg.payload) {
-              presence.zionPresent = !!msg.payload.zionPresent;
+              const next = !!msg.payload.zionPresent;
+              if (next !== presence.zionPresent) {
+                presence.zionPresent = next;
+                _emitPresence();
+              }
             }
           } catch (_) {}
         });

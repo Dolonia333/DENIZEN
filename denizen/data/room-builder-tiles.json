@@ -1,0 +1,47 @@
+{
+  "_doc": {
+    "purpose": "Tile-index catalog for the LimeZu Room Builder shell renderer (src/room-tile-renderer.js). LimeZu ships ZERO docs on tile identity, so these were decoded by pixel-analysis of the sheets + verified via tools/tile-inspector.html.",
+    "frameIndex": "frame = row * columns + col, columns = sheetWidthPx / 16.",
+    "floorsSheet": "floors.png 15col x 40row. Materials in 4 column-groups (0-2,4-6,8-10,12-14), stacked in 3-row blocks. Fill tile = center of a block.",
+    "wallsSheet": "walls.png 32col x 40row. 3 wall-colour families: cols 0-9, 11-20, 22-31 (transparent gaps at col 10 & 21). Wall face is several rows tall.",
+    "wallSchema": "Each wallStyle: { sheet, fill, base }. `fill` = wall-face tile (repeated for top band + sides). `base` = baseboard tile for the bottom row. topThick = how many tiles tall the top wall band is."
+  },
+
+  "floors": {
+    "wood_light":   { "sheet": "floors", "frame": 65 },
+    "wood_medium":  { "sheet": "floors", "frame": 155 },
+    "wood_dark":    { "sheet": "floors", "frame": 241 },
+    "carpet_blue":  { "sheet": "floors", "frame": 294 },
+    "carpet_warm":  { "sheet": "floors", "frame": 204 },
+    "tile_teal":    { "sheet": "floors", "frame": 384 },
+    "tile_white":   { "sheet": "floors", "frame": 470 },
+    "tile_grey":    { "sheet": "floors", "frame": 515 },
+    "concrete":     { "sheet": "floors", "frame": 556 },
+    "marble":       { "sheet": "floors", "frame": 61 }
+  },
+
+  "_wallDoc": "3D perspective walls from walls_3d.png (24-col). The sheet has 3 PLAIN-painted wall styles (verified low pattern-variance): brown (edge0/face24), green (edge168/face192), blue-grey (edge1176/face1200). All other schemes are windowed/wallpapered (diamond patterns) and unusable as plain walls. col 0 = plain wall: topEdge = white-above + dark-navy outline + face-top (the 3D depth), face = solid body. topThick = back-wall height in tiles.",
+  "_navyDoc": "Each plain wall tile has a 1px dark-navy outline on ONE side (navySide). The renderer draws face tiles 1px wider, overlapping toward the opposite side, so interior seams are covered and navy survives only at the true room edges — matching LimeZu's seamless example.",
+  "wallStyles": {
+    "office_white":     { "sheet": "walls_3d", "topThick": 3, "topEdge": 1176, "face": 1200, "navySide": "right" },
+    "office_grey":      { "sheet": "walls_3d", "topThick": 3, "topEdge": 1176, "face": 1200, "navySide": "right" },
+    "warm_wood":        { "sheet": "walls_3d", "topThick": 3, "topEdge": 0,    "face": 24,   "navySide": "left" },
+    "warm_red":         { "sheet": "walls_3d", "topThick": 3, "topEdge": 0,    "face": 24,   "navySide": "left" },
+    "industrial_dark":  { "sheet": "walls_3d", "topThick": 3, "topEdge": 168,  "face": 192,  "navySide": "left" }
+  },
+
+  "roomTypes": {
+    "open_office":   { "floor": "wood_light",  "wall": "office_white" },
+    "break_room":    { "floor": "tile_white",  "wall": "warm_wood" },
+    "conference":    { "floor": "wood_dark",   "wall": "office_grey" },
+    "server_room":   { "floor": "concrete",    "wall": "industrial_dark" },
+    "gym":           { "floor": "tile_grey",   "wall": "industrial_dark" },
+    "library":       { "floor": "wood_medium", "wall": "office_white" },
+    "manager_office":{ "floor": "carpet_blue", "wall": "office_white" },
+    "reception":     { "floor": "marble",      "wall": "warm_red" },
+    "japanese_home": { "floor": "wood_medium", "wall": "warm_wood" },
+    "jail":          { "floor": "concrete",    "wall": "industrial_dark" },
+    "tv_studio":     { "floor": "tile_grey",   "wall": "office_grey" },
+    "medical_wing":  { "floor": "tile_white",  "wall": "office_white" }
+  }
+}

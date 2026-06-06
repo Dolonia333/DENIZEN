@@ -87,31 +87,90 @@
     s.id = 'denizen-llm-tel-style';
     s.textContent = `
       #denizen-llm-tel-chip {
-        position: fixed; bottom: 14px; left: 160px; z-index: 9999;
         background: rgba(17,24,39,0.92); color: #93c5fd;
         border: 1px solid #1e40af; border-radius: 999px;
         padding: 6px 12px; font: 12px/1.2 monospace; cursor: pointer;
-        user-select: none; min-width: 170px; text-align: center;
+        user-select: none; min-width: 44px; min-height: 44px; text-align: center;
+        touch-action: manipulation;
+        pointer-events: auto;
+      }
+      html.denizen-touch #denizen-llm-tel-chip {
+        min-width: 44px !important;
+        max-width: 48px !important;
+        padding: 6px 8px !important;
       }
       #denizen-llm-tel-chip[data-state="busy"] { color: #fde68a; border-color: #b45309; }
       #denizen-llm-tel-chip[data-state="err"]  { color: #fda4af; border-color: #be123c; }
       #denizen-llm-tel-panel {
-        position: fixed; bottom: 60px; left: 14px; z-index: 9999;
-        width: 580px; max-height: 75vh; overflow: hidden;
+        position: fixed; z-index: 100200;
+        bottom: calc(var(--denizen-dock-height, 56px) + 10px + env(safe-area-inset-bottom, 0px));
+        left: max(10px, env(safe-area-inset-left, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+        width: min(580px, calc(100vw - 20px));
+        max-height: 75vh; overflow: hidden;
         background: rgba(15,23,42,0.97); color: #e2e8f0;
         border: 1px solid #334155; border-radius: 12px;
-        font: 12px/1.4 monospace; display: flex; flex-direction: column;
+        font: 12px/1.4 monospace; display: none; flex-direction: column;
         box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        pointer-events: auto;
       }
+      #denizen-llm-tel-panel.open { display: flex !important; }
       #denizen-llm-tel-panel header {
         display: flex; gap: 4px; padding: 8px;
         border-bottom: 1px solid #334155;
         background: rgba(30,41,59,0.6);
         flex-wrap: wrap;
+        align-items: center;
+      }
+      #denizen-llm-tel-panel .tab-row {
+        display: flex; gap: 4px; flex: 1 1 auto; flex-wrap: wrap;
+        align-items: center;
+      }
+      #denizen-llm-tel-panel .header-controls {
+        display: flex; gap: 4px; align-items: center; flex-wrap: wrap;
+        margin-left: auto;
+      }
+      html.denizen-touch #denizen-llm-tel-panel header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+      }
+      html.denizen-touch #denizen-llm-tel-panel .tab-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 2px;
+      }
+      html.denizen-touch #denizen-llm-tel-panel .tab-row::-webkit-scrollbar {
+        display: none;
+      }
+      html.denizen-touch #denizen-llm-tel-panel .header-controls {
+        margin-left: 0;
+        justify-content: space-between;
       }
       #denizen-llm-tel-panel .tab {
         padding: 4px 10px; background: rgba(51,65,85,0.5); color: #cbd5e1;
         border: 1px solid #475569; border-radius: 4px; cursor: pointer;
+        touch-action: manipulation;
+        min-height: 36px;
+        flex: 0 0 auto;
+      }
+      #denizen-llm-tel-panel .close-btn {
+        padding: 4px 10px; background: rgba(51,65,85,0.5); color: #cbd5e1;
+        border: 1px solid #475569; border-radius: 4px; cursor: pointer;
+        touch-action: manipulation;
+        min-height: 36px;
+        flex: 0 0 auto;
+      }
+      html.denizen-touch #denizen-llm-tel-panel .tab,
+      html.denizen-touch #denizen-llm-tel-panel .close-btn,
+      html.denizen-touch #denizen-llm-tel-panel .win-btn,
+      html.denizen-touch #denizen-llm-tel-panel .filters button {
+        min-height: 44px;
+        min-width: 44px;
+        padding: 8px 12px;
+        font-size: 12px;
       }
       #denizen-llm-tel-panel .tab[data-active="true"] { background: #1e40af; color: #fff; border-color: #1e40af; }
       #denizen-llm-tel-panel .win-btn {
@@ -174,6 +233,19 @@
       #denizen-llm-tel-panel .win-row {
         display: flex; gap: 3px; align-items: center; flex-wrap: wrap;
       }
+      @media (max-width: 768px), (max-height: 500px) {
+        #denizen-llm-tel-panel {
+          width: calc(100vw - 16px) !important;
+          max-width: calc(100vw - 16px) !important;
+          max-height: min(72dvh, 560px) !important;
+        }
+        #denizen-llm-tel-panel .body {
+          max-height: calc(60dvh - 110px) !important;
+        }
+        #denizen-llm-tel-panel .summary {
+          grid-template-columns: 1fr;
+        }
+      }
     `;
     document.head.appendChild(s);
   }
@@ -186,38 +258,71 @@
     chip.id = 'denizen-llm-tel-chip';
     chip.type = 'button';
     chip.title = 'LM Studio + provider telemetry (click for details)';
-    chip.textContent = '⚙ LM …';
-    chip.addEventListener('click', togglePanel);
+    chip.textContent = '⚙';
+    wireLmChip(chip);
     document.body.appendChild(chip);
     return chip;
+  }
+
+  function isTouchUi() {
+    return !!window.__DenizenIsTouch
+      || document.documentElement.classList.contains('denizen-touch');
+  }
+
+  function wireLmChip(chip) {
+    if (!chip || chip.dataset.denizenTouchWired === '1') return;
+    chip.dataset.denizenTouchWired = '1';
+    const openLm = () => setPanelOpen(!state.open);
+    const bind = window.DenizenTouchBind?.bindPress;
+    if (bind) bind(chip, openLm);
+    else chip.addEventListener('click', openLm);
+    chip.style.touchAction = 'manipulation';
+  }
+
+  function rewireTouch() {
+    wireLmChip(document.getElementById('denizen-llm-tel-chip'));
+    wirePanelButtons(document.getElementById('denizen-llm-tel-panel'));
   }
 
   function paintChip() {
     const chip = ensureChip();
     const s = state.stats;
-    if (!s) { chip.textContent = '⚙ LM …'; return; }
+    const touch = isTouchUi();
+    if (!s) {
+      chip.textContent = touch ? '⚙' : '⚙ LM …';
+      return;
+    }
     const p95 = s.p95LatencyMs != null ? (s.p95LatencyMs / 1000).toFixed(1) + 's' : '—';
     const e = s.errors || 0;
     const winLabel = WINDOWS.find(w => w.ms === state.windowMs)?.label || '?';
-    chip.textContent = `⚙ LM p95 ${p95} • ${s.calls}c/${winLabel} • ${e}e`;
+    chip.textContent = touch
+      ? '⚙'
+      : `⚙ LM p95 ${p95} • ${s.calls}c/${winLabel} • ${e}e`;
+    chip.title = `LM telemetry — p95 ${p95}, ${s.calls} calls/${winLabel}, ${e} errors`;
     chip.dataset.state = e > 0 ? 'err' : (s.calls > 0 ? 'busy' : '');
   }
 
   // ---- panel ----
   function ensurePanel() {
     let panel = document.getElementById('denizen-llm-tel-panel');
-    if (panel) return panel;
+    if (panel) {
+      wirePanelButtons(panel);
+      return panel;
+    }
     panel = document.createElement('div');
     panel.id = 'denizen-llm-tel-panel';
     panel.innerHTML = `
       <header>
-        <button class="tab" data-tab="calls">Calls</button>
-        <button class="tab" data-tab="stats">Stats</button>
-        <button class="tab" data-tab="errors">Errors</button>
-        <button class="tab" data-tab="openclaw">OpenClaw</button>
-        <span style="flex:1"></span>
-        <div class="win-row" id="tel-win-row"></div>
-        <button class="tab" data-action="close">✕</button>
+        <div class="tab-row">
+          <button type="button" class="tab" data-tab="calls">Calls</button>
+          <button type="button" class="tab" data-tab="stats">Stats</button>
+          <button type="button" class="tab" data-tab="errors">Errors</button>
+          <button type="button" class="tab" data-tab="openclaw">OpenClaw</button>
+        </div>
+        <div class="header-controls">
+          <div class="win-row" id="tel-win-row"></div>
+          <button type="button" class="close-btn" data-action="close">✕</button>
+        </div>
       </header>
       <div class="filters" data-section="calls">
         <input data-filter="npc" placeholder="npc filter" style="width:100px"/>
@@ -247,22 +352,12 @@
           <option value="slowest">slowest</option>
         </select>
         <label><input type="checkbox" data-filter="errorsOnly"/> errors</label>
-        <button data-action="refresh">↻</button>
-        <button data-action="export">⬇ CSV</button>
+        <button type="button" data-action="refresh">↻</button>
+        <button type="button" data-action="export">⬇ CSV</button>
       </div>
       <div class="body" data-section="body">loading…</div>
     `;
     document.body.appendChild(panel);
-
-    // Wire tabs / close
-    panel.querySelectorAll('.tab').forEach(b => {
-      b.addEventListener('click', () => {
-        const action = b.dataset.action;
-        if (action === 'close') { state.open = false; renderPanel(); return; }
-        state.tab = b.dataset.tab || state.tab;
-        loadTab();
-      });
-    });
 
     // Wire filters
     panel.querySelector('[data-filter="npc"]').addEventListener('input', (e) => {
@@ -284,13 +379,70 @@
       state.filterErrorsOnly = !!e.target.checked;
       loadTab();
     });
-    panel.querySelector('[data-action="refresh"]').addEventListener('click', loadTab);
-    panel.querySelector('[data-action="export"]').addEventListener('click', exportCsv);
-
     // Build time-window buttons
     buildWindowButtons(panel);
+    wirePanelButtons(panel);
 
     return panel;
+  }
+
+  function onPanelPress(e, btnOverride) {
+    const btn = btnOverride || e.target?.closest?.('button');
+    if (!btn) return;
+
+    if (btn.dataset.action === 'close') {
+      setPanelOpen(false);
+      return;
+    }
+
+    if (btn.classList.contains('tab')) {
+      const tab = btn.dataset.tab;
+      if (tab) {
+        state.tab = tab;
+        loadTab();
+      }
+      return;
+    }
+
+    if (btn.classList.contains('win-btn')) {
+      const ms = Number(btn.dataset.ms);
+      if (!Number.isFinite(ms)) return;
+      state.windowMs = ms;
+      const panel = document.getElementById('denizen-llm-tel-panel');
+      panel?.querySelectorAll('.win-btn').forEach((b) => {
+        b.dataset.active = (Number(b.dataset.ms) === state.windowMs).toString();
+      });
+      pollStats();
+      if (state.open) loadTab();
+      return;
+    }
+
+    const action = btn.getAttribute('data-action');
+    if (action === 'refresh') loadTab();
+    else if (action === 'export') exportCsv();
+  }
+
+  function wirePanelButton(btn) {
+    if (!btn || btn.dataset.lmTouchWired === '1') return;
+    btn.dataset.lmTouchWired = '1';
+    btn.style.touchAction = 'manipulation';
+    const fire = (e) => onPanelPress(e, btn);
+    const bind = window.DenizenTouchBind?.bindPress;
+    if (bind) {
+      bind(btn, fire);
+    } else {
+      btn.addEventListener('click', fire);
+    }
+  }
+
+  function wirePanelButtons(panel) {
+    if (!panel) return;
+    panel.querySelectorAll(
+      'button.tab[data-tab], button.close-btn, button[data-action="close"], button.win-btn, .filters button[data-action]'
+    ).forEach(wirePanelButton);
+    if (panel.dataset.pointerWired === '1') return;
+    panel.dataset.pointerWired = '1';
+    panel.addEventListener('pointerdown', (e) => e.stopPropagation());
   }
 
   function buildWindowButtons(panel) {
@@ -299,38 +451,35 @@
     row.innerHTML = '';
     WINDOWS.forEach(w => {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'win-btn';
       btn.textContent = w.label;
       btn.dataset.ms = w.ms;
       btn.dataset.active = (w.ms === state.windowMs).toString();
-      btn.addEventListener('click', () => {
-        state.windowMs = w.ms;
-        // Update all buttons
-        panel.querySelectorAll('.win-btn').forEach(b => {
-          b.dataset.active = (Number(b.dataset.ms) === state.windowMs).toString();
-        });
-        // Reload everything
-        pollStats();
-        if (state.open) loadTab();
-      });
       row.appendChild(btn);
+      wirePanelButton(btn);
     });
+  }
+
+  function setPanelOpen(open) {
+    state.open = !!open;
+    renderPanel();
+    if (state.open) loadTab();
   }
 
   function renderPanel() {
     const panel = ensurePanel();
+    panel.classList.toggle('open', state.open);
     panel.style.display = state.open ? 'flex' : 'none';
     panel.querySelectorAll('.tab[data-tab]').forEach(t => {
       t.dataset.active = (t.dataset.tab === state.tab).toString();
     });
     const filtersDiv = panel.querySelector('.filters');
-    filtersDiv.style.display = state.tab === 'calls' ? 'flex' : 'none';
+    if (filtersDiv) filtersDiv.style.display = state.tab === 'calls' ? 'flex' : 'none';
   }
 
   function togglePanel() {
-    state.open = !state.open;
-    renderPanel();
-    if (state.open) loadTab();
+    setPanelOpen(!state.open);
   }
 
   // ---- CSV export ----
@@ -612,8 +761,15 @@
     const ratioColor = s.promptToCompletionRatio > 20 ? '#fda4af'
                      : s.promptToCompletionRatio > 10 ? '#fbbf24' : '#86efac';
     const ratioTip   = s.promptToCompletionRatio > 20
-      ? ' — high: you\'re paying mostly to re-send context'
+      ? ' — high: mostly re-sent prompt (trim history / hybrid director / compact chat)'
       : s.promptToCompletionRatio > 10 ? ' — moderate' : ' — efficient';
+    const ratioByKind = s.ratioByKind && Object.keys(s.ratioByKind).length
+      ? Object.entries(s.ratioByKind)
+        .sort((a, b) => (b[1] || 0) - (a[1] || 0))
+        .slice(0, 4)
+        .map(([kind, ratio]) => `${kind} ${ratio}:1`)
+        .join(' · ')
+      : '';
 
     const convoColor = s.maxConversationMsgs > 40 ? '#fda4af'
                      : s.maxConversationMsgs > 20 ? '#fbbf24' : '#cbd5e1';
@@ -654,6 +810,9 @@
           <div><span style="color:#64748b">Tokens received (↓ output):</span> <b>${tok(s.tokensOutTotal)}</b> <span style="color:#64748b">${s.tokensPerMin}/min total</span></div>
           ${s.promptToCompletionRatio != null
             ? `<div><span style="color:#64748b">Prompt:output ratio:</span> <b style="color:${ratioColor}">${s.promptToCompletionRatio}:1</b><span style="color:${ratioColor}; font-size:10px">${ratioTip}</span></div>`
+            : ''}
+          ${ratioByKind
+            ? `<div style="font-size:10px; color:#64748b; margin-top:2px">By kind: ${esc(ratioByKind)}</div>`
             : ''}
           ${s.avgConversationMsgs != null
             ? `<div><span style="color:#64748b">History depth:</span> avg ${s.avgConversationMsgs} msgs · max <b style="color:${convoColor}">${s.maxConversationMsgs}</b> msgs per call${s.maxConversationMsgs > 40 ? ' <span style="color:#fda4af; font-size:10px">— trim history</span>' : ''}</div>`
@@ -779,11 +938,11 @@
     const repairPct = Math.round((h.repairRate || 0) * 100);
     const failPct   = Math.round((h.failRate || 0) * 100);
     const color = failPct > 5 ? '#fda4af' : repairPct > 15 ? '#fbbf24' : '#86efac';
-    const verdict = failPct > 5 ? 'model struggles with JSON — size up or add schema'
-                  : repairPct > 15 ? 'parser is repairing often — marginal'
+    const verdict = failPct > 5 ? 'parse failures — restart after updates; check think max tokens'
+                  : repairPct > 15 ? 'parser repairing often — was truncation; should improve after restart'
                   : 'clean — model is JSON-reliable';
     return `<div style="margin-top:4px; font-size:10px; color:#64748b">
-      JSON health: <b style="color:${color}">${100 - failPct}% ok</b>
+      JSON health (since boot): <b style="color:${color}">${100 - failPct}% ok</b>
       · ${h.ok} ok / ${h.repairs} repaired / ${h.fail} failed
       · <span style="color:${color}">${esc(verdict)}</span>
     </div>`;
@@ -796,10 +955,10 @@
     if (!g || !g.checked) return '';
     const flagPct = Math.round((g.flagRate || 0) * 100);
     const color = flagPct > 25 ? '#fda4af' : flagPct > 10 ? '#fbbf24' : '#86efac';
-    const verdict = flagPct > 25 ? 'often claiming things with no evidence'
-                  : flagPct > 10 ? 'some unbacked claims' : 'claims are grounded';
+    const verdict = flagPct > 25 ? 'unbacked claims — enable real-work mode to enforce'
+                  : flagPct > 10 ? 'some unbacked claims' : 'claims grounded or immersion mode';
     return `<div style="margin-top:2px; font-size:10px; color:#64748b">
-      Grounding: <b style="color:${color}">${100 - flagPct}% backed</b>
+      Grounding (since boot): <b style="color:${color}">${100 - flagPct}% backed</b>
       · ${g.checked} claims / ${g.flagged} flagged
       · <span style="color:${color}">${esc(verdict)}</span>
     </div>`;
@@ -982,20 +1141,43 @@
     }, 500);
   }
 
+  function shouldShowOperatorPanel() {
+    const caps = globalThis.DenizenVisitorCapabilities;
+    if (!caps) return true;
+    return caps.canUseOperatorPanels();
+  }
+
   function boot() {
+    if (!shouldShowOperatorPanel()) return;
     injectStyle();
     ensureChip();
     ensurePanel();
     renderPanel();
     paintChip();
+    rewireTouch();
     pollStats();
     setInterval(pollStats, POLL_MS);
     subscribeWs();
+    window.DenizenLlmTelemetry = {
+      show: () => setPanelOpen(true),
+      hide: () => setPanelOpen(false),
+      toggle: togglePanel,
+      rewireTouch,
+    };
+  }
+
+  function bootWhenReady() {
+    const sess = globalThis.DenizenVisitorSession;
+    if (sess?.init) {
+      sess.init().finally(boot);
+      return;
+    }
+    boot();
   }
 
   if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', boot);
+    window.addEventListener('DOMContentLoaded', bootWhenReady);
   } else {
-    boot();
+    bootWhenReady();
   }
 })();

@@ -21,9 +21,9 @@
  */
 
 // Claims that assert work was completed / something works.
-const COMPLETION_RE = /\b(i (?:fixed|solved|completed|finished|implemented|built|deployed|resolved|wrote|created|set up)\b|it works\b|that works\b|works now\b|tests?\s+(?:pass|are passing|passed)\b|all (?:set|done|good)\b|up and running\b|is live\b|done\b|ready to go\b|good to go\b)/i;
+const COMPLETION_RE = /\b(i (?:fixed|solved|completed|finished|implemented|built|deployed|resolved|wrote|created|set up|filed|submitted)\b|it works\b|that works\b|works now\b|tests?\s+(?:pass|are passing|passed)\b|all (?:set|done|good)\b|up and running\b|is live\b|done\b|ready to go\b|good to go\b|report(?:ed| is ready)|wrote (?:the|a) report)/i;
 // Claims that assert a fact / cite a source.
-const FACTUAL_RE = /\b(the data shows|research shows|according to|studies show|i found that|it turns out|confirmed that|verified that|the docs say|documentation states|statistics show|\d+%\s)/i;
+const FACTUAL_RE = /\b(the data shows|research shows|according to|studies show|i found that|it turns out|confirmed that|verified that|the docs say|documentation states|statistics show|analysis shows|\d+%\s)/i;
 
 function _stats() {
   if (!_stats._s) _stats._s = { checked: 0, flagged: 0, byNpc: {} };

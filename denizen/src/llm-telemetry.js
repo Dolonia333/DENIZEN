@@ -19,7 +19,7 @@
  *     kind:         "think" | "chat" | "email" | "response" |
  *                   "goal" | "plan" | "reflection" | "city-plan" |
  *                   "openclaw" | "other",
- *     provider:     "lmstudio" | "anthropic" | "xai" | "google" | "moonshot" | "claude",
+ *     provider:     "lmstudio" | "lmstudio-fast" | "anthropic" | "xai" | "google" | "moonshot" | "claude",
  *     model:        string,
  *     latencyMs:    number,
  *     tokensIn:     number | null,
@@ -45,6 +45,12 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_LOG_FILE = path.join(ROOT, 'data', 'llm-telemetry.jsonl');
 const DEFAULT_RING_SIZE = 500;
+
+/** Optional hook: (normalizedRecord) => void — e.g. denizen-db dual-write */
+let _dbSink = null;
+function setDbSink(fn) {
+  _dbSink = typeof fn === 'function' ? fn : null;
+}
 
 /** Error classifier. Maps regex → { category, hint }. The first match
  *  wins; the hint is shown to the operator as "here's what to do." */
@@ -140,6 +146,9 @@ class LlmTelemetry {
     this.ring.push(rec);
     if (this.ring.length > this.ringSize) this.ring.shift();
     if (this.persist) this._appendJsonl(rec);
+    if (_dbSink) {
+      try { _dbSink(rec); } catch (_) { /* never break the NPC pipeline */ }
+    }
     return rec;
   }
 
@@ -282,6 +291,11 @@ class LlmTelemetry {
       byNpc: groupBy('npc'),
       byProvider: groupBy('provider'),
       byKind: groupBy('kind'),
+      ratioByKind: Object.fromEntries(
+        Object.entries(groupBy('kind'))
+          .map(([kind, v]) => [kind, v.tokensOut > 0 ? +(v.tokensIn / v.tokensOut).toFixed(1) : null])
+          .filter(([, ratio]) => ratio != null)
+      ),
       topErrors,
     };
   }
@@ -405,7 +419,8 @@ const PRICING = {
   'moonshot':   { in: 0.14,  out: 0.28  },  // kimi-k2
   'kimi':       { in: 0.14,  out: 0.28  },
   'openai':     { in: 0.15,  out: 0.60  },  // gpt-4o-mini equivalent
-  'lmstudio':   { in: 0,     out: 0     },  // free — local
+  'lmstudio':       { in: 0, out: 0 },  // free — local main slot (14B)
+  'lmstudio-fast':  { in: 0, out: 0 },  // free — local fast slot (2B/8B)
 };
 
 /**
@@ -486,6 +501,7 @@ const telemetry = new LlmTelemetry();
 
 module.exports = telemetry;
 module.exports.LlmTelemetry = LlmTelemetry;
+module.exports.setDbSink = setDbSink;
 module.exports.classifyError = classifyError;
 module.exports._DEFAULT_LOG_FILE = DEFAULT_LOG_FILE;
 module.exports.estimateCost = estimateCost;

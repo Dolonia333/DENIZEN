@@ -4,6 +4,7 @@
  * Runs on the server (loaded by server.js), sends commands to the game via WebSocket.
  */
 
+require('./load-env');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -11,11 +12,13 @@ const path = require('path');
 // Shared world-state singleton. Wrapped so unit tests that import this
 // module in isolation don't break if the file moves.
 let worldState = null;
+let promptTuning = null;
 try { worldState = require('./world-state'); } catch (_) {}
+try { promptTuning = require('./prompt-tuning'); } catch (_) {}
 
 class CofounderAgent {
   constructor() {
-    this.model = process.env.LM_STUDIO_MODEL || 'qwen/qwen3.6-27b';
+    this.model = process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning';
     this.baseUrl = process.env.LM_STUDIO_URL || 'http://localhost:1234';
     this.wsClients = new Set();
 
@@ -133,7 +136,7 @@ MEETING SYSTEM:
 - After meeting: Everyone standUp and useComputer to return to work.
 - SPREAD CONVERSATIONS: Stagger speakTo commands — don't have everyone speak at once.
 
-MEETING TYPES (use these regularly):
+MEETING TYPES (use sparingly — max one office meeting every few minutes):
 1. STANDUP (daily): Marcus calls meeting with 4-6 engineers. Each gives a quick status update.
 2. SPRINT PLANNING: Abby + Marcus + Sarah + engineers discuss what to build next.
 3. 1-ON-1: Abby meets with one person in conference room to discuss performance/concerns.
@@ -165,7 +168,7 @@ YOUR JOB — create a LIVING office:
 6. PERSONALITY: Each NPC has a unique personality from their SOUL.md file. Alex is fast and confident. Bob is thoughtful. Jenny is detail-oriented. Dan is quiet. Lucy is warm. Marcus is organized. Sarah is strategic. Edward is methodical. Josh is creative. Molly is meticulous. Oscar is calm. Pier is focused. Rob is visual. Roki is eager. Bouncer is stoic.
 7. USE NAMES: speakTo uses first names: "Alex", "Bob", "Jenny", "Dan", "Lucy", "Abby", "Marcus", "Sarah", "Edward", "Josh", "Molly", "Oscar", "Pier", "Rob", "Roki", "Bouncer".
 8. CONTEXT AWARE: If someone is "sitting", don't walkTo them — they're working. Use standUp first if you need them to move. If someone is in the breakroom, maybe have someone join them for a chat.
-9. VARY ACTIONS: Don't repeat the same pattern. Mix conversations, work sessions, breaks, MEETINGS, and check-ins. Call meetings regularly — they're a key part of office life.
+9. VARY ACTIONS: Mix conversations, work sessions, breaks, and desk check-ins. Meetings are rare — only when a leader has a concrete agenda; prefer speakTo at desks over callMeeting.
 10. When the CEO speaks, Abby should respond and take action based on what was said.
 11. MEETINGS FLOW: Announce meeting → attendees join → discussion (speakTo exchanges while seated) → wrap up → everyone stands and returns to work.`;
 
@@ -178,10 +181,11 @@ YOUR JOB — create a LIVING office:
     console.log('[CofounderAgent] Starting autonomous thinking loop (LM Studio)');
     this._usingDemoLoop = false;
 
-    // Think every 15-30 seconds
+    const thinkMin = promptTuning?.cofounderThinkMinMs ?? 22000;
+    const thinkMax = promptTuning?.cofounderThinkMaxMs ?? 40000;
     const scheduleNextThink = () => {
       if (this._usingDemoLoop) return;
-      const delay = 15000 + Math.random() * 15000;
+      const delay = thinkMin + Math.random() * Math.max(0, thinkMax - thinkMin);
       this._thinkInterval = setTimeout(async () => {
         await this._think();
         scheduleNextThink();
@@ -405,10 +409,14 @@ YOUR JOB — create a LIVING office:
         baseUrl: this.baseUrl,
         model: liveModel,
         type: 'lmstudio',
+        providerKey: 'lmstudio',
       };
       return this.npcBrains._callLocal(config, this._getSystemPrompt(), this.conversationHistory, {
         maxTokens: 1024,
         sliceLen: 4000,
+        npc: 'Abby',
+        kind: 'cofounder',
+        provider: 'lmstudio',
       }).then(text => {
         console.log('[CofounderAgent] LM Studio responded:', text.slice(0, 80));
         return text;
@@ -545,7 +553,7 @@ YOUR JOB — create a LIVING office:
       // Meeting cooldown — prevent calling the same meeting repeatedly.
       // The game takes ~30s to run a meeting and return people to desks;
       // calling again in the same window just re-teleports everyone.
-      const MEETING_COOLDOWN_MS = 90000;
+      const MEETING_COOLDOWN_MS = promptTuning?.cofounderMeetingCooldownMs ?? 180000;
       const now = Date.now();
       const filteredCommands = commands.filter(cmd => {
         if (!cmd.action) return false;
@@ -650,6 +658,10 @@ YOUR JOB — create a LIVING office:
                 threat.robberState = r.state;
               }
             }
+          }
+          if (msg.honeypot && typeof worldState.environment === 'object') {
+            worldState.environment.honeypot = msg.honeypot;
+            worldState._emit('environment', worldState.environment);
           }
         }
         break;

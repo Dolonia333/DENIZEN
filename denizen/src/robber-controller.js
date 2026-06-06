@@ -162,6 +162,10 @@ class RobberController {
 
   /** Spawn a robber for a threat */
   spawnRobber(threat) {
+    const src = String(threat?.source || '').toLowerCase();
+    if (src === 'filesystem' || src === 'internal' || src === '::1' || src === '127.0.0.1' || src.startsWith('127.')) {
+      return;
+    }
     if (this.robbers.size >= this.maxRobbers) {
       console.warn('[RobberCtrl] Max robbers reached, skipping threat:', threat.id);
       return;

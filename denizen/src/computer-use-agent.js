@@ -7,7 +7,7 @@
  * same way Claude Code works.
  *
  * Flow:
- *   1. Launch a VISIBLE Chromium window (user can watch Lucy work).
+ *   1. Launch a VISIBLE stealth browser via shared browser-helpers (Playwright Chromium/Chrome/Edge).
  *   2. Loop: screenshot → Claude API (computer_use tool) → execute action.
  *   3. Broadcast progress events back to Denizen WS so Lucy animates.
  *   4. Leave browser open for 30s after finishing so user can review.
@@ -22,6 +22,19 @@
 const https = require('https');
 const fs    = require('node:fs');
 const path  = require('node:path');
+const { pathToFileURL } = require('node:url');
+
+const jellyPaths = require('../jelly/paths');
+const BROWSER_HELPERS = jellyPaths.browserHelpersPath();
+const APPLY_LINGER_MS = Number(process.env.LUCY_APPLY_LINGER_MS || 4 * 60 * 1000);
+
+let _browserHelpers = null;
+async function _loadBrowserHelpers() {
+  if (!_browserHelpers) {
+    _browserHelpers = import(pathToFileURL(BROWSER_HELPERS).href);
+  }
+  return _browserHelpers;
+}
 
 const VIEWPORT_W  = 1280;
 const VIEWPORT_H  = 800;
@@ -364,10 +377,9 @@ function _loadProviders() {
     http: true,
   };
 
-  // openclaw.json (overrides env if set)
+  // jelly.json (overrides env if set)
   try {
-    const cfgPath = path.join(process.env.USERPROFILE || process.env.HOME || '', '.openclaw', 'openclaw.json');
-    const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+    const cfg = require('../jelly/config-provider').getConfig();
     const p = cfg?.models?.providers || {};
     if (p.anthropic?.apiKey) out.anthropic = { apiKey: p.anthropic.apiKey };
     if (p.moonshot?.apiKey)  out.kimi = {
@@ -387,7 +399,7 @@ function _loadProviders() {
   return out;
 }
 
-async function runBrowserTask({ instruction, url, profile, broadcast, provider, apiKey } = {}) {
+async function runBrowserTask({ instruction, url, profile, broadcast, provider, apiKey, browserMode } = {}) {
   // Pick provider
   const providers = _loadProviders();
   if (apiKey) {
@@ -405,47 +417,49 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
   if (!chosenProvider || !providers[chosenProvider]?.apiKey) {
     return {
       ok: false,
-      error: 'No API key found for computer-use. Add anthropic.apiKey or moonshot.apiKey to ~/.openclaw/openclaw.json',
+      error: 'No API key found for computer-use. Add anthropic.apiKey or moonshot.apiKey to denizen/config/jelly.json',
     };
   }
 
   const providerCfg = providers[chosenProvider];
   console.log(`[ComputerUseAgent] Using provider: ${chosenProvider}`);
 
-  // Playwright check
-  let playwright;
-  try {
-    playwright = require('playwright');
-  } catch (_) {
-    return { ok: false, error: 'playwright not installed. Run: npm install playwright && npx playwright install chromium' };
-  }
-
   const emit = (msg) => { try { if (typeof broadcast === 'function') broadcast(msg); } catch (_) {} };
 
   emit({ type: 'computer_use_status', status: 'starting', provider: chosenProvider, message: 'Lucy is opening a browser...' });
   console.log('[ComputerUseAgent] Starting task:', instruction.slice(0, 80));
 
-  let browser, page;
+  let context, contextKey, page, browserEngine, cloudflareChallenge;
   try {
-    browser = await playwright.chromium.launch({
+    const { launchJobBrowser, formatBrowserLabel, closeBrowser } = await _loadBrowserHelpers();
+    const session = await launchJobBrowser({
+      url: url || null,
       headless: false,
-      args: ['--window-size=1280,900', '--window-position=100,50'],
+      browserMode: browserMode || process.env.LUCY_BROWSER_MODE || 'auto',
     });
-    const ctx = await browser.newContext({ viewport: { width: VIEWPORT_W, height: VIEWPORT_H } });
-    page = await ctx.newPage();
+    context = session.context;
+    contextKey = session.contextKey;
+    page = session.page;
+    browserEngine = session.browserEngine;
+    cloudflareChallenge = session.cloudflareChallenge;
+    emit({
+      type: 'computer_use_status',
+      status: 'navigating',
+      message: url
+        ? `Opening ${url} (${formatBrowserLabel(browserEngine)})`
+        : `Browser ready (${formatBrowserLabel(browserEngine)})`,
+    });
+    if (cloudflareChallenge?.blocked) {
+      const ray = cloudflareChallenge.rayId ? ` Ray ID ${cloudflareChallenge.rayId}` : '';
+      const msg = `Cloudflare is blocking this application page.${ray} Complete verification in Lucy's browser window, then ask her to retry.`;
+      emit({ type: 'computer_use_status', status: 'blocked', message: msg });
+      setTimeout(async () => {
+        try { await closeBrowser(context, { key: contextKey }); } catch (_) {}
+      }, APPLY_LINGER_MS);
+      return { ok: false, error: msg, browserEngine, cloudflareChallenge };
+    }
   } catch (err) {
     return { ok: false, error: 'Browser launch failed: ' + (err?.message || err) };
-  }
-
-  if (url) {
-    try {
-      emit({ type: 'computer_use_status', status: 'navigating', message: `Opening ${url}` });
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-      await page.waitForTimeout(1500);
-    } catch (err) {
-      await browser.close();
-      return { ok: false, error: 'Navigation failed: ' + (err?.message || err) };
-    }
   }
 
   // ── system prompt (same for both providers) ───────────────────────────
@@ -479,7 +493,8 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
     '- Fill every field you can using the profile above.',
     '- For cover letter / "Why do you want to work here?" fields, write 2-3 sentences.',
     '- Do NOT click Submit or Apply — fill everything, then signal task_done.',
-    '- If you hit a captcha or login wall, call task_blocked with the reason.',
+    '- If you hit Cloudflare "Additional Verification Required", Turnstile, or a captcha, call task_blocked — tell the CEO to complete it in the browser window.',
+    '- Type slowly and scroll naturally — bot-like speed gets blocked.',
   ].filter(Boolean).join('\n');
 
   // ── conversation loop ─────────────────────────────────────────────────
@@ -487,7 +502,7 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
   let lastActions = [];  // track last round's actions for tool_result attachment
   let steps = 0;
   let done = false;
-  let result = { ok: true, steps: 0, provider: chosenProvider };
+  let result = { ok: true, steps: 0, provider: chosenProvider, browserEngine };
 
   while (steps < MAX_STEPS && !done) {
     steps++;
@@ -592,10 +607,13 @@ async function runBrowserTask({ instruction, url, profile, broadcast, provider, 
     emit({ type: 'computer_use_final_screenshot', data: finalBuf.toString('base64'), steps });
   } catch (_) {}
 
-  // Leave browser open for 60 seconds so the user can review, then close
+  // Leave browser open so the CEO can review / complete CF challenges, then close
   setTimeout(async () => {
-    try { await browser.close(); } catch (_) {}
-  }, 60000);
+    try {
+      const { closeBrowser } = await _loadBrowserHelpers();
+      await closeBrowser(context, { key: contextKey });
+    } catch (_) {}
+  }, APPLY_LINGER_MS);
 
   return result;
 }

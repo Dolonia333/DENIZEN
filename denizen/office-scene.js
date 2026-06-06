@@ -27,6 +27,7 @@ class OfficeScene extends Phaser.Scene {
     this.load.on('progress', (v) => {
       barFill.width = 256 * v;
       pctText.setText(Math.round(v * 100) + '%');
+      try { window.__DenizenChatBootstrap?.setLoadPct?.(v * 100); } catch (_) {}
     });
     this.load.on('fileprogress', (file) => {
       statusText.setText(file.key || '');
@@ -63,11 +64,11 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const cacheBust = Date.now();
-    this.load.json('tiles_catalog', `./tiles-catalog.json?v=${cacheBust}`);
-    this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${cacheBust}`);
-    this.load.json('room_templates', `./data/room-templates.json?v=${cacheBust}`);
-    this.load.json('sprite_map_modern_office', `./data/sprite-map-modern-office.json?v=${cacheBust}`);
+    const catalogV = 'cat2';
+    this.load.json('tiles_catalog', `./tiles-catalog.json?v=${catalogV}`);
+    this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
+    this.load.json('room_templates', `./data/room-templates.json?v=${catalogV}`);
+    this.load.json('sprite_map_modern_office', `./data/sprite-map-modern-office.json?v=${catalogV}`);
     // Modern Office Revamped — main spritesheet for ALL furniture
     this.load.image(
       'mo_black_shadow_32',
@@ -1167,15 +1168,16 @@ class OfficeScene extends Phaser.Scene {
     this.playerState = 'walk'; // 'walk' | 'interacting'
     this.playerLocked = false;
 
-    // Click any NPC to show a dialog with their texture key
+    // Click / tap any NPC to open player chat with that agent
     this.npcs.forEach((npc) => {
       npc.setInteractive({ useHandCursor: true });
-      npc.on('pointerdown', () => {
+      npc.on('pointerdown', (pointer, _localX, _localY, event) => {
         const rawKey = npc.texture.key;
-        const displayName = rawKey.replace('xp_', '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        const roles = ['Worker', 'Worker', 'Manager', 'Receptionist', 'Security', 'Worker', 'Worker', 'Manager', 'Worker', 'Worker', 'Receptionist', 'Security', 'Worker', 'Manager', 'Worker', 'Worker'];
-        const role = roles[this.npcs.indexOf(npc)] || 'Worker';
-        this.showNpcDialog(displayName, `Role: ${role}\n\nPress E or Space to interact.`);
+        const name = this._agentManager?.NPC_NAMES?.[rawKey] || rawKey;
+        this._playerChat?.openWithNpc?.(rawKey, name);
+        window.DenizenHaptics?.tap?.();
+        if (event) event.stopPropagation();
+        if (pointer?.event) pointer.event.stopPropagation();
       });
     });
 
@@ -1196,22 +1198,17 @@ class OfficeScene extends Phaser.Scene {
       ? null
       : this.cache.json.get('furniture_catalog_openplan');
 
-    // Try to restore saved layout from server (overrides default placements)
+    // Use bundled default immediately — sync XHR here blocked the main thread
+    // and delayed Player Chat / WebSocket init by seconds when the server was busy.
     let placements = furnitureCatalog?.placements;
-    try {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', '/api/layout', false); // synchronous
-      xhr.send();
-      if (xhr.status === 200) {
-        const saved = JSON.parse(xhr.responseText);
-        if (saved && Array.isArray(saved.placements)) {
-          placements = saved.placements;
-          console.log('[OfficeScene] Restored saved layout from server (' + placements.length + ' placements)');
+    fetch('/api/layout')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((saved) => {
+        if (saved?.placements?.length) {
+          console.log('[OfficeScene] Saved layout on server (' + saved.placements.length + ' items) — using bundled default for fast load');
         }
-      }
-    } catch (e) {
-      console.warn('[OfficeScene] Could not load saved layout, using default:', e.message);
-    }
+      })
+      .catch(() => {});
     const catalogObjects = furnitureCatalog?.objects;
     const sliceMargin = (furnitureCatalog?.info?.slice_margin_px !== undefined) ? furnitureCatalog.info.slice_margin_px : 0;
 
@@ -1511,23 +1508,27 @@ class OfficeScene extends Phaser.Scene {
 
       // --- Player Chat System (talk to NPCs) ---
       if (window.PlayerChat) {
-        this._playerChat = new window.PlayerChat(this, this._agentManager);
-        // Expose so voice-input.js can deliver transcripts straight to it.
-        window.__DenizenPlayerChat = this._playerChat;
+        if (window.__DenizenPlayerChat && typeof window.__DenizenPlayerChat.upgrade === 'function') {
+          window.__DenizenPlayerChat.upgrade(this, this._agentManager);
+          this._playerChat = window.__DenizenPlayerChat;
+        } else {
+          this._playerChat = new window.PlayerChat(this, this._agentManager);
+          window.__DenizenPlayerChat = this._playerChat;
+        }
 
-        // Enter key: open/toggle player chat
+        // Enter / T toggle player chat (when not typing in another field)
         this.input.keyboard.on('keydown-ENTER', () => {
           if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
-          this._playerChat.open();
+          this._playerChat.toggle();
         });
 
-        // T key: also opens player chat (legacy shortcut)
         this.input.keyboard.on('keydown-T', () => {
           if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
-          this._playerChat.open();
+          this._playerChat.toggle();
         });
 
         console.log('[OfficeScene] Player Chat initialized (press Enter or T to talk to NPCs)');
+        try { window.__DenizenChatBootstrap?.setLoadPct?.(100); } catch (_) {}
       } else {
         // Fallback: T key uses old prompt dialog
         this.input.keyboard.on('keydown-T', () => {
@@ -1546,8 +1547,9 @@ class OfficeScene extends Phaser.Scene {
     //   ?demo=tour      — 60s feature tour with voice + agent-bus + threats + n8n tasks
     const demoParams = new URLSearchParams(window.location.search);
     const demoKind = demoParams.get('demo');
-    if (demoKind && window.DemoScene) {
-      this.time.delayedCall(3000, () => {
+    if (demoKind) {
+      const startDemo = () => {
+        if (!window.DemoScene) return;
         const demo = new window.DemoScene(this, this._agentManager);
         if (demoKind === 'tour' && typeof demo.startTour === 'function') {
           demo.startTour();
@@ -1556,7 +1558,19 @@ class OfficeScene extends Phaser.Scene {
           demo.start();
           console.log(`[OfficeScene] Investor demo triggered via ?demo=${demoKind}`);
         }
-      });
+      };
+      if (window.DemoScene) {
+        this.time.delayedCall(3000, startDemo);
+      } else if (window.DenizenLazyScripts) {
+        window.DenizenLazyScripts.load(['./src/demo-scene.js']).then(() => {
+          this.time.delayedCall(3000, startDemo);
+        });
+      }
+    }
+
+    // Non-critical panels (briefing, proposals, city debug) after office is interactive.
+    if (window.DenizenLazyScripts) {
+      window.DenizenLazyScripts.afterOffice();
     }
 
     // --- Pathfinding System ---
@@ -1572,6 +1586,8 @@ class OfficeScene extends Phaser.Scene {
             npc._pathFollower = new window.NpcPathFollower(npc, this._pathfinder);
           });
         }
+        this._playerPathFollower = new window.NpcPathFollower(this.player, this._pathfinder);
+        this._installTapToMove();
         console.log('[OfficeScene] Pathfinding system initialized');
       });
     }
@@ -1727,6 +1743,20 @@ class OfficeScene extends Phaser.Scene {
             this._sitReturnPos = null;
           }
         });
+      }
+    });
+  }
+
+  _installTapToMove() {
+    if (this._tapToMoveInstalled) return;
+    this._tapToMoveInstalled = true;
+    this.input.on('pointerdown', (pointer, gameObjects) => {
+      if (!window.__DenizenIsTouch) return;
+      if (this.playerLocked || this._editorHandlers) return;
+      const hitNpc = gameObjects?.some((go) => Array.isArray(this.npcs) && this.npcs.includes(go));
+      if (hitNpc) return;
+      if (this._playerPathFollower?.navigateTo(pointer.worldX, pointer.worldY)) {
+        window.DenizenHaptics?.tap?.();
       }
     });
   }
@@ -1902,8 +1932,9 @@ class OfficeScene extends Phaser.Scene {
       });
     }
 
-    // Interaction: press E/Space near object in front of player.
-    const interactPressed = (this.interactKeys?.E?.isDown || this.interactKeys?.SPACE?.isDown);
+    // Interaction: press E/Space near object in front of player (or mobile Action button).
+    const touchInteract = !!(window.__DenizenTouchState?.interact);
+    const interactPressed = (this.interactKeys?.E?.isDown || this.interactKeys?.SPACE?.isDown || touchInteract);
     if (!this._interactWasDown) this._interactWasDown = false;
     const justPressed = interactPressed && !this._interactWasDown;
     this._interactWasDown = interactPressed;
@@ -1921,7 +1952,9 @@ class OfficeScene extends Phaser.Scene {
     };
 
     if (justPressed && !this.playerLocked && Array.isArray(this._interactables)) {
-      const maxDistDefault = 64;
+      const isTouch = !!window.__DenizenIsTouch;
+      const maxDistDefault = isTouch ? 96 : 64;
+      const dotThreshold = isTouch ? 0.1 : 0.25;
       let best = null;
       for (const it of this._interactables) {
         if (!it?.sprite) continue;
@@ -1933,11 +1966,12 @@ class OfficeScene extends Phaser.Scene {
         if (dist > maxDist) continue;
         // must be roughly in front of player (dot product)
         const dot = (dx / (dist || 1)) * facingVec.x + (dy / (dist || 1)) * facingVec.y;
-        if (dot < 0.25) continue;
+        if (dot < dotThreshold) continue;
         if (!best || dist < best.dist) best = { it, dist };
       }
 
       if (best) {
+        window.DenizenHaptics?.impact?.();
         const { it } = best;
         const def = it.def || {};
         if (def.action === 'use_computer' || def.action === 'use_it') {
@@ -1969,10 +2003,12 @@ class OfficeScene extends Phaser.Scene {
     }
 
     // If interacting, any movement key stands up.
-    const leftKey = this.cursors.left.isDown;
-    const rightKey = this.cursors.right.isDown;
-    const upKey = this.cursors.up.isDown;
-    const downKey = this.cursors.down.isDown;
+    const chatMove = this._chatMoveKeys || {};
+    const touchMove = window.__DenizenTouchState || {};
+    const leftKey = this.cursors.left.isDown || !!chatMove.left || !!touchMove.left;
+    const rightKey = this.cursors.right.isDown || !!chatMove.right || !!touchMove.right;
+    const upKey = this.cursors.up.isDown || !!chatMove.up || !!touchMove.up;
+    const downKey = this.cursors.down.isDown || !!chatMove.down || !!touchMove.down;
     // Pressing a movement (arrow) key stands you up from sitting/interacting.
     if (this.playerLocked && (leftKey || rightKey || upKey || downKey)) {
       standUp();
@@ -1994,25 +2030,41 @@ class OfficeScene extends Phaser.Scene {
       const right = rightKey;
       const up = upKey;
       const down = downKey;
+      const manualMove = left || right || up || down;
+      const pathFollower = this._playerPathFollower;
 
-      if (left) {
-        body.setVelocityX(-speed);
-        moving = true;
-        this.facing = 'left';
-      } else if (right) {
-        body.setVelocityX(speed);
-        moving = true;
-        this.facing = 'right';
-      }
+      if (manualMove) {
+        if (pathFollower?.isNavigating()) pathFollower.stop();
+        if (left) {
+          body.setVelocityX(-speed);
+          moving = true;
+          this.facing = 'left';
+        } else if (right) {
+          body.setVelocityX(speed);
+          moving = true;
+          this.facing = 'right';
+        }
 
-      if (up) {
-        body.setVelocityY(-speed);
-        moving = true;
-        if (!left && !right) this.facing = 'up';
-      } else if (down) {
-        body.setVelocityY(speed);
-        moving = true;
-        if (!left && !right) this.facing = 'down';
+        if (up) {
+          body.setVelocityY(-speed);
+          moving = true;
+          if (!left && !right) this.facing = 'up';
+        } else if (down) {
+          body.setVelocityY(speed);
+          moving = true;
+          if (!left && !right) this.facing = 'down';
+        }
+      } else if (pathFollower?.isNavigating()) {
+        const vel = pathFollower.update(speed, delta);
+        if (vel) {
+          body.setVelocity(vel.vx, vel.vy);
+          moving = true;
+          if (Math.abs(vel.vx) > Math.abs(vel.vy)) {
+            this.facing = vel.vx < 0 ? 'left' : 'right';
+          } else {
+            this.facing = vel.vy < 0 ? 'up' : 'down';
+          }
+        }
       }
     }
 
@@ -2164,7 +2216,11 @@ class OfficeScene extends Phaser.Scene {
             if (pf) pf.stop();
             ai._totalPhysicsStuck = 0;
             ai._physicsStuckTime = 0;
-            if (ai.mode === 'agent_task') {
+            const inCeoTalk = ai.taskState === 'reporting'
+              || (ai._ceoConvoUntil && ai._ceoConvoUntil > now);
+            if (inCeoTalk) {
+              // Don't wander off while talking to the CEO.
+            } else if (ai.mode === 'agent_task') {
               ai.taskState = 'idle';
               ai.mode = 'wander';
               ai.nextWanderAt = now + 2000;
@@ -2395,7 +2451,7 @@ const config = {
   // shifts as the NPC walks. roundPixels:true fixes it for free.
   roundPixels: true,
   loader: {
-    maxParallelDownloads: 6,   // prevent connection stalls with local serve
+    maxParallelDownloads: 12,
     maxRetries: 2
   },
   physics: {

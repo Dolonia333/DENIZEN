@@ -25,6 +25,9 @@
 const EventEmitter = require('node:events');
 const { classify: classifyMood } = require('./sentiment.js');
 
+let promptTuning = null;
+try { promptTuning = require('./prompt-tuning'); } catch (_) {}
+
 /**
  * @typedef {Object} NpcLiveState
  * @property {{x:number,y:number}} [position]
@@ -92,6 +95,7 @@ class WorldState extends EventEmitter {
       meetingInProgress: false,
       meetingAttendees: [],
       time: Date.now(),
+      honeypot: { active: false, position: null, label: null, setAt: null },
     };
 
     /** Furniture snapshot from the client. Used for desk-neighbor lookup
@@ -461,6 +465,10 @@ class WorldState extends EventEmitter {
 
   pushThreat(threat) {
     if (!threat || typeof threat !== 'object') return;
+    try {
+      const { isLocalOrLoopback, isInternalThreatSource } = require('./security-ip');
+      if (isLocalOrLoopback(threat.source) || isInternalThreatSource(threat.source)) return;
+    } catch (_) {}
     const t = { ts: Date.now(), ...threat };
     this.activeThreats.unshift(t);
     if (this.activeThreats.length > this._caps.activeThreats) {
@@ -562,7 +570,8 @@ class WorldState extends EventEmitter {
    * and any backgrounded work happening off-screen.
    * @param {string} npcName
    */
-  renderContextBlock(npcName) {
+  renderContextBlock(npcName, opts = {}) {
+    const compact = opts.compact ?? promptTuning?.compactLiveContext ?? false;
     const me = this.npcs[npcName];
     const lines = [];
     if (me) {
@@ -599,9 +608,11 @@ class WorldState extends EventEmitter {
       // Desk geography — your desk + the two nearest desks' owners. So
       // engineers know who's next to them physically, which matters for
       // "tap on the shoulder" interactions.
-      const desk = this.getDeskContext(npcName);
-      if (desk?.neighbors?.length) {
-        lines.push(`- Your desk neighbors: ${desk.neighbors.join(', ')}`);
+      if (!compact) {
+        const desk = this.getDeskContext(npcName);
+        if (desk?.neighbors?.length) {
+          lines.push(`- Your desk neighbors: ${desk.neighbors.join(', ')}`);
+        }
       }
     }
 
@@ -610,7 +621,7 @@ class WorldState extends EventEmitter {
     if (me && me.position) {
       const near = this.npcsNear(me.position.x, me.position.y, 160)
         .filter(n => n !== npcName)
-        .slice(0, 3);
+        .slice(0, compact ? 2 : 3);
       if (near.length) {
         const nearStrs = near.map(n => {
           const s = this.npcs[n];
@@ -654,23 +665,30 @@ class WorldState extends EventEmitter {
       }
     }
 
-    // Office-wide activity — keep it short, the prompt is already long.
-    const otherActive = Object.entries(this.npcs)
-      .filter(([n, s]) => n !== npcName && s.currentTask)
-      .slice(0, 4)
-      .map(([n, s]) => `${n}: ${s.currentTask}`);
-    if (otherActive.length) lines.push(`- Room activity: ${otherActive.join('; ')}`);
+    if (!compact) {
+      const otherActive = Object.entries(this.npcs)
+        .filter(([n, s]) => n !== npcName && s.currentTask)
+        .slice(0, 3)
+        .map(([n, s]) => `${n}: ${s.currentTask}`);
+      if (otherActive.length) lines.push(`- Room activity: ${otherActive.join('; ')}`);
 
-    // Room occupancy — so NPCs can sense "everyone's in conference, I'm
-    // alone at my desk" or "breakroom is full, maybe later." Surfaced as a
-    // compact one-liner to keep prompt cost down.
-    const occ = this.roomOccupancy();
-    const occEntries = Object.entries(occ).filter(([, c]) => c > 0);
-    if (occEntries.length) {
-      const parts = occEntries
-        .sort((a, b) => b[1] - a[1])
-        .map(([room, c]) => `${room}:${c}`);
-      lines.push(`- Office occupancy: ${parts.join(' ')}`);
+      const occ = this.roomOccupancy();
+      const occEntries = Object.entries(occ).filter(([, c]) => c > 0);
+      if (occEntries.length) {
+        const parts = occEntries
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 4)
+          .map(([room, c]) => `${room}:${c}`);
+        lines.push(`- Office occupancy: ${parts.join(' ')}`);
+      }
+    }
+
+    const hp = this.environment?.honeypot;
+    if (npcName === 'Bouncer' && hp?.active) {
+      const pos = hp.position ? `at (${Math.round(hp.position.x)}, ${Math.round(hp.position.y)})` : 'deployed';
+      lines.push(`- Honeypot: ACTIVE ${pos} — waiting for intruders within 120px.`);
+    } else if (npcName === 'Bouncer' && hp && !hp.active) {
+      lines.push('- Honeypot: not deployed (CEO can ask you to set one up).');
     }
 
     if (this.activeThreats.length) {
@@ -721,35 +739,27 @@ class WorldState extends EventEmitter {
       }
     }
 
-    // Conversation thread continuity — same SUBJECT raised by THIS NPC
-    // toward a peer 3+ times in the last 24h. Different from stuck-loop
-    // (which is back-and-forth on identical phrasing in 10 min). This
-    // catches "Sarah has asked about the mockups 3 times today" — the
-    // peer maybe hasn't answered yet, or the NPC is hammering the same
-    // topic across the day without realising. Cap to 1 line per think.
-    let bestThread = null; // { peer, count, fingerprint, sampleText }
-    for (const [key, ring] of this.recentExchanges) {
-      const [a, b] = key.split('|');
-      if (a !== npcName && b !== npcName) continue;
-      const peer = a === npcName ? b : a;
-      // Walk this NPC's outbound messages, ask topicCount for each
-      // distinct fingerprint we haven't already checked. We need the
-      // text to pass to topicCount — counting per outgoing message is
-      // fine, dedupe by fingerprint.
-      const seen = new Set();
-      for (const ex of ring) {
-        if (ex.from !== npcName) continue;
-        const fp = _topicFingerprint(ex.text);
-        if (!fp || seen.has(fp)) continue;
-        seen.add(fp);
-        const count = this.topicCount(npcName, peer, ex.text);
-        if (count >= 3 && (!bestThread || count > bestThread.count)) {
-          bestThread = { peer, count, fingerprint: fp, sampleText: ex.text };
+    if (!compact) {
+      let bestThread = null;
+      for (const [key, ring] of this.recentExchanges) {
+        const [a, b] = key.split('|');
+        if (a !== npcName && b !== npcName) continue;
+        const peer = a === npcName ? b : a;
+        const seen = new Set();
+        for (const ex of ring) {
+          if (ex.from !== npcName) continue;
+          const fp = _topicFingerprint(ex.text);
+          if (!fp || seen.has(fp)) continue;
+          seen.add(fp);
+          const count = this.topicCount(npcName, peer, ex.text);
+          if (count >= 3 && (!bestThread || count > bestThread.count)) {
+            bestThread = { peer, count, fingerprint: fp, sampleText: ex.text };
+          }
         }
       }
-    }
-    if (bestThread) {
-      lines.push(`- Thread with ${bestThread.peer}: you've raised "${bestThread.fingerprint}" ${bestThread.count}x today. Either escalate, drop it, or shift topic.`);
+      if (bestThread) {
+        lines.push(`- Thread with ${bestThread.peer}: you've raised "${bestThread.fingerprint}" ${bestThread.count}x today. Either escalate, drop it, or shift topic.`);
+      }
     }
 
     // Player presence — when the human (Zion / "the CEO") is in the

@@ -24,6 +24,7 @@ const path = require('node:path');
 const http  = require('node:http');
 const https = require('node:https');
 const computerUseAgent = require('./computer-use-agent');
+const jobCrm = require('./job-crm');
 
 const PROFILE_FILE = path.join(__dirname, '..', 'data', 'user-profile.json');
 const LOG_FILE     = path.join(__dirname, '..', 'data', 'job-application-log.json');
@@ -123,7 +124,7 @@ async function buildFastCoverLetter(npcBrains, profile, job) {
   // Resolve LM Studio fast-model config
   const fastCfg = npcBrains?.providers?.['lmstudio-fast'] || npcBrains?.providers?.lmstudio || null;
   const baseUrl  = fastCfg?.baseUrl  || process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234';
-  const model    = fastCfg?.model    || process.env.LM_STUDIO_FAST_MODEL || 'meta-llama-3.1-8b-instruct';
+  const model    = fastCfg?.model    || process.env.LM_STUDIO_FAST_MODEL || 'google/gemma-4-e2b';
   const apiKey   = fastCfg?.apiKey   || process.env.LM_STUDIO_API_KEY   || 'lm-studio';
 
   const openerSystemPrompt = [
@@ -308,6 +309,15 @@ async function applyByEmail({ npcBrains, gmailClient, broadcast }, job, opts = {
     }
 
     _appendLog({ kind: sent ? 'sent' : 'drafted', method: 'email', company: job.company, jobTitle: job.jobTitle, to: job.applyEmail, draftId: drafted.id, sent });
+    const crmStore = jobCrm.loadCrm();
+    const crmId = `crm_${Date.now()}`;
+    jobCrm.upsertApplication(crmStore, {
+      id: crmId, company: job.company, role: job.jobTitle,
+      status: sent ? 'watching' : 'awaiting_submit', applyEmail: job.applyEmail,
+      letterType: opts.fullAI ? 'fullAI' : 'fast', appliedAt: new Date().toISOString(),
+    });
+    jobCrm.recordOutcome(crmId, 'applied', { letterType: opts.fullAI ? 'fullAI' : 'fast' });
+    jobCrm.saveCrm(crmStore);
     _broadcast('job_apply_status', {
       status: sent ? 'sent' : 'drafted',
       method: 'email',
@@ -365,6 +375,7 @@ async function applyByWebForm(job, { broadcast, provider } = {}) {
     profile,
     broadcast,
     provider: provider || job.provider || null,
+    browserMode: process.env.LUCY_BROWSER_MODE || 'auto',
   }).then(result => {
     _appendLog({
       kind: result.ok ? 'computer-use-done' : 'computer-use-failed',
@@ -419,10 +430,10 @@ async function applyToJob(deps, job, opts = {}) {
 const { exec } = require('node:child_process');
 const crypto = require('node:crypto');
 
-const OPENCLAW_ROOT = 'C:/Users/zionv/OneDrive/Desktop/multbot/openclaw/skills';
-const SCRAPER_SCRIPT  = path.join(OPENCLAW_ROOT, 'job-scraper',     'job-scraper.mjs');
-const APPLIER_SCRIPT  = path.join(OPENCLAW_ROOT, 'job-applier',     'job-applier.mjs');
-const RESUME_SCRIPT   = path.join(OPENCLAW_ROOT, 'resume-generator','resume-generator.mjs');
+const jellyPaths = require('../jelly/paths');
+const SCRAPER_SCRIPT  = jellyPaths.vendorScriptPath('job-scraper');
+const APPLIER_SCRIPT  = jellyPaths.vendorScriptPath('job-applier');
+const RESUME_SCRIPT   = jellyPaths.vendorScriptPath('resume-generator');
 
 /** Run a node script and return its stdout as a string. Rejects on timeout. */
 function _spawnSkill(scriptPath, args = [], timeoutMs = 60000) {
@@ -530,7 +541,7 @@ function getApplicationLog({ limit = 50 } = {}) {
  * @param {boolean} opts.remoteOnly  — only keep remote listings
  * @returns {Promise<string>}  — summary string Lucy can use as her message
  */
-async function runJobPipeline(opts = {}) {
+async function runJobPipeline(opts = {}, deps = {}) {
   if (_pipelineStatus.running) {
     return 'Job pipeline is already running — wait for it to finish before starting another.';
   }
@@ -595,17 +606,60 @@ async function runJobPipeline(opts = {}) {
     return `Found ${listings.length} listings on ${site} but none matched profile filters. Try a broader query.`;
   }
 
-  // ── Step 3 & 4: Resume + Cover Letter (per listing) ─────────────────────
-  // Build one shared opener template for the cover letters (fast, no LLM call per job)
-  const openerTemplate = `${profile.summary || 'I build production software and ship what I start.'}`;
+  // ── Step 2b: Score + rank (Bob-style company research on top N) ───────────
+  const ranked = await jobCrm.scoreAndRankListings(profile, qualified, {
+    researchTopN: jobCrm.RESEARCH_TOP_N,
+  });
+  console.log(`[job-pipeline] Scored ${ranked.length} listings — top: ${ranked[0]?.score || '?'} (${ranked[0]?.job?.company || '?'})`);
 
-  const results = { applied: [], manualQueue: [], failed: [] };
+  const crmStore = jobCrm.loadCrm();
+  const results = { applied: [], manualQueue: [], skipped: [], failed: [] };
   let bestMatch = null;
+  let fullAiUsed = 0;
+  let applyCount = 0;
 
-  for (const job of qualified) {
+  // Build one shared opener template for template cover letters
+  const openerTemplate = `${profile.summary || 'I build production software and ship what I start.'}`;
+  const npcBrains = deps.npcBrains || null;
+
+  for (const entry of ranked) {
+    const job = entry.job;
     const jobId = crypto.randomUUID();
     const company = job.company || 'Unknown Company';
     const role    = job.title   || 'Unknown Role';
+    const score   = entry.score;
+    const recommendation = entry.recommendation;
+
+    if (recommendation === 'skip') {
+      results.skipped.push({ company, role, score });
+      jobCrm.upsertApplication(crmStore, {
+        id: jobId, company, role, site, status: 'skipped', score,
+        scoreReasons: entry.reasons, url: job.url || null,
+        description: (job.description || job.snippet || '').slice(0, 500),
+      });
+      continue;
+    }
+
+    if (recommendation === 'review') {
+      results.manualQueue.push({ company, role, score });
+      jobCrm.upsertApplication(crmStore, {
+        id: jobId, company, role, site, status: 'queued', score,
+        scoreReasons: entry.reasons, url: job.url || null,
+        description: (job.description || job.snippet || '').slice(0, 500),
+        researchSummary: (entry.research?.results || []).slice(0, 2).map(r => r.title).join('; ') || null,
+      });
+      continue;
+    }
+
+    if (applyCount >= jobCrm.MAX_AUTO_APPLY_PER_RUN) {
+      results.manualQueue.push({ company, role, score });
+      jobCrm.upsertApplication(crmStore, {
+        id: jobId, company, role, site, status: 'queued', score,
+        scoreReasons: entry.reasons, url: job.url || null,
+        notes: 'Daily apply cap reached — queued for next run',
+      });
+      continue;
+    }
 
     // Step 3 — Generate tailored resume
     let resumePath = null;
@@ -635,8 +689,32 @@ async function runJobPipeline(opts = {}) {
       // Continue without a tailored resume — not fatal
     }
 
-    // Step 4 — Cover letter (template, < 5s target)
-    const coverLetter = _buildTemplateCoverLetter(profile, { title: role, company }, openerTemplate);
+    // Step 4 — Cover letter: full AI for top-scored roles, template otherwise
+    let coverLetter;
+    let letterType = 'template';
+    const useFullAi = score >= jobCrm.FULL_AI_SCORE_THRESHOLD
+      && fullAiUsed < jobCrm.FULL_AI_MAX_COUNT
+      && npcBrains;
+    if (useFullAi) {
+      try {
+        const { systemHint, userPrompt } = buildCoverLetterPrompt(profile, {
+          jobTitle: role, company, description: job.description || job.snippet || '',
+        });
+        coverLetter = await npcBrains.getResponse('Lucy', 'CEO', userPrompt, {
+          kind: 'job-application',
+          systemOverride: systemHint,
+        });
+        letterType = 'fullAI';
+        fullAiUsed++;
+      } catch (err) {
+        console.warn(`[job-pipeline] fullAI cover letter failed for ${company}:`, err.message);
+        coverLetter = _buildTemplateCoverLetter(profile, { title: role, company }, openerTemplate);
+      }
+    } else {
+      coverLetter = npcBrains
+        ? await buildFastCoverLetter(npcBrains, profile, { jobTitle: role, company, description: job.description || job.snippet || '' })
+        : _buildTemplateCoverLetter(profile, { title: role, company }, openerTemplate);
+    }
 
     // Step 5 — Apply or queue
     let status = 'needs_manual_apply';
@@ -645,14 +723,15 @@ async function runJobPipeline(opts = {}) {
     if (job.url && fs.existsSync(APPLIER_SCRIPT)) {
       try {
         const applierArgs = [
-          '--url',       job.url,
-          '--dry-run',   'true', // always dry-run from pipeline — safety first
-          '--headless',  'true',
+          '--url',          job.url,
+          '--dry-run',      'true', // always dry-run from pipeline — safety first
+          '--headless',     'false', // visible + stealth; CF sites need real browser
+          '--browser-mode', process.env.LUCY_BROWSER_MODE || 'auto',
         ];
         if (resumePath) applierArgs.push('--resume-pdf', resumePath);
         if (coverLetter) applierArgs.push('--cover-letter', coverLetter.slice(0, 800));
 
-        await _spawnSkill(APPLIER_SCRIPT, applierArgs, 60000);
+        await _spawnSkill(APPLIER_SCRIPT, applierArgs, 180000);
         status = 'applied';
         if (!bestMatch) bestMatch = { company, role };
       } catch (err) {
@@ -665,35 +744,55 @@ async function runJobPipeline(opts = {}) {
       if (!fs.existsSync(APPLIER_SCRIPT)) console.warn('[job-pipeline] job-applier.mjs not found — skipping auto-apply');
     }
 
-    // Step 6 — Log entry
+    const crmStatus = status === 'applied' ? 'applied' : 'awaiting_submit';
+    const appliedAt = new Date().toISOString();
+
+    // Step 6 — Log entry (legacy log + CRM)
     const logEntry = {
-      id:         jobId,
-      ts:         new Date().toISOString(),
-      npc:        'Lucy',
-      company,
-      role,
-      site,
-      status,
+      id: jobId, ts: appliedAt, npc: 'Lucy', company, role, site, status,
+      score, letterType,
       resumePath: resumePath || null,
-      notes:      applierError ? `Applier error: ${applierError}` : (status === 'needs_manual_apply' ? 'No URL or applier unavailable' : 'Dry-run via job-applier'),
+      notes: applierError ? `Applier error: ${applierError}` : (status === 'needs_manual_apply' ? 'No URL or applier unavailable' : 'Dry-run via job-applier'),
     };
     _appendLog(logEntry);
 
+    jobCrm.upsertApplication(crmStore, {
+      id: jobId, company, role, site, url: job.url || null,
+      status: crmStatus, score, scoreReasons: entry.reasons,
+      letterType, resumePath: resumePath || null,
+      description: (job.description || job.snippet || '').slice(0, 500),
+      researchSummary: (entry.research?.results || []).slice(0, 2).map(r => r.title).join('; ') || null,
+      appliedAt,
+      companyDomain: (job.url || '').match(/https?:\/\/([^/]+)/)?.[1]?.replace(/^www\./, '') || null,
+    });
+    jobCrm.recordOutcome(jobId, 'applied', {
+      site, scoreBand: score >= 8 ? '8-10' : score >= 6 ? '6-7' : '1-5', letterType,
+    });
+
     if (status === 'applied') {
-      results.applied.push({ company, role });
-      if (!bestMatch) bestMatch = { company, role };
+      results.applied.push({ company, role, score });
+      applyCount++;
+      if (!bestMatch || score > (bestMatch.score || 0)) bestMatch = { company, role, score };
     } else {
-      results.manualQueue.push({ company, role });
+      results.manualQueue.push({ company, role, score });
     }
   }
+
+  jobCrm.saveCrm(crmStore);
 
   // ── Step 7: Summary ──────────────────────────────────────────────────────
   const appliedCount = results.applied.length;
   const manualCount  = results.manualQueue.length;
-  const bestStr = bestMatch ? ` Best match: ${bestMatch.role} at ${bestMatch.company}.` : '';
+  const skippedCount = results.skipped.length;
+  const bestStr = bestMatch
+    ? ` Best match: ${bestMatch.role} at ${bestMatch.company} (score ${bestMatch.score}).`
+    : '';
   const summary = [
-    appliedCount ? `Applied to ${appliedCount} role${appliedCount === 1 ? '' : 's'} on ${site}.` : '',
-    manualCount  ? `${manualCount} more queued for manual review.` : '',
+    `Scored ${ranked.length} listings.`,
+    appliedCount ? `Applied to ${appliedCount} role${appliedCount === 1 ? '' : 's'} (score ≥ ${jobCrm.MIN_SCORE_TO_APPLY}).` : '',
+    manualCount  ? `${manualCount} queued for your review.` : '',
+    skippedCount ? `${skippedCount} low-fit roles skipped.` : '',
+    fullAiUsed ? `${fullAiUsed} got tailored full-AI cover letters.` : '',
     bestStr,
   ].filter(Boolean).join(' ').trim() || `Processed ${qualified.length} listings from ${site} — all queued for manual review.`;
 
@@ -727,4 +826,6 @@ module.exports = {
   runJobPipeline,
   getApplicationLog,
   getPipelineStatus,
+  buildCoverLetterPrompt,
+  buildFastCoverLetter,
 };

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>LimeZu Single Preview — Denizen</title>
+<style>
+  body { margin:0; background:#0f172a; color:#e2e8f0; font:14px system-ui,sans-serif; }
+  header { padding:12px 16px; background:#1e293b; border-bottom:1px solid #334155; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  header h1 { margin:0; font-size:16px; color:#4a9eff; }
+  select, button { background:#0b1220; color:#e2e8f0; border:1px solid #334155; border-radius:6px; padding:6px 10px; }
+  main { display:flex; gap:24px; padding:24px; flex-wrap:wrap; }
+  .stage {
+    background: repeating-conic-gradient(#1e293b 0% 25%, #0f172a 0% 50%) 50%/20px 20px;
+    padding:24px; border:1px solid #334155; border-radius:8px; min-width:200px; min-height:200px;
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  .stage img { image-rendering:pixelated; max-width:100%; }
+  aside { max-width:420px; }
+  pre { background:#0b1220; padding:12px; border-radius:6px; font-size:11px; overflow:auto; }
+  .ok { color:#4ade80; }
+  .bad { color:#f87171; }
+  p.hint { color:#94a3b8; font-size:13px; line-height:1.5; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LimeZu single preview</h1>
+  <label>Theme <select id="theme"></select></label>
+  <label>Sprite <select id="pick" style="min-width:280px"></select></label>
+  <label>Scale <input id="scale" type="range" min="1" max="8" value="4" /> <span id="scaleVal">4×</span></label>
+</header>
+<main>
+  <div class="stage" id="stage"><span class="bad">Select a sprite</span></div>
+  <aside>
+    <p class="hint" id="status">Loads <code>assets/limezu/singles/…</code> the same way the game should — whole file, no grid slice.</p>
+    <h3>Catalog entry</h3>
+    <pre id="json">{}</pre>
+    <button id="copy">Copy JSON</button>
+  </aside>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let catalog = null;
+let byTheme = {};
+
+async function init() {
+  try {
+    catalog = await fetch('/data/furniture_catalog_limezu.json?v=' + Date.now()).then(r => r.json());
+  } catch (e) {
+    $('status').innerHTML = '<span class="bad">Missing furniture_catalog_limezu.json — run: node scripts/build-limezu-singles-catalog.js</span>';
+    return;
+  }
+  for (const [id, def] of Object.entries(catalog.objects || {})) {
+    const t = def.theme || 'misc';
+    (byTheme[t] = byTheme[t] || []).push({ id, def });
+  }
+  const themes = Object.keys(byTheme).sort();
+  $('theme').innerHTML = themes.map(t => `<option value="${t}">${t} (${byTheme[t].length})</option>`).join('');
+  $('theme').onchange = fillPick;
+  $('pick').onchange = render;
+  $('scale').oninput = () => { $('scaleVal').textContent = $('scale').value + '×'; render(); };
+  $('copy').onclick = () => navigator.clipboard.writeText($('json').textContent);
+  fillPick();
+}
+
+function fillPick() {
+  const t = $('theme').value;
+  const list = (byTheme[t] || []).sort((a, b) => a.id.localeCompare(b.id));
+  $('pick').innerHTML = list.map(({ id, def }) =>
+    `<option value="${id}">${def._file || id}</option>`
+  ).join('');
+  render();
+}
+
+function render() {
+  const id = $('pick').value;
+  const def = catalog?.objects?.[id];
+  if (!def) return;
+  const url = '/' + def.url_path.replace(/^\//, '');
+  const sc = Number($('scale').value) || 4;
+  const w = (def.w || 16) * sc;
+  const h = (def.h || 16) * sc;
+  $('stage').innerHTML = `<img src="${url}" width="${w}" height="${h}" alt="${id}" onerror="this.alt='FAILED TO LOAD'" />`;
+  const snippet = {
+    id,
+    source_type: 'single_file',
+    single_id: id,
+    url_path: def.url_path,
+    w: def.w,
+    h: def.h,
+    origin: 'bottom',
+    placement: { x: 200, y: 200, z_index: 1.5 },
+  };
+  $('json').textContent = JSON.stringify(snippet, null, 2);
+  $('status').innerHTML = def.w && def.h
+    ? `<span class="ok">OK</span> — ${def.w}×${def.h}px at <code>${def.url_path}</code>`
+    : '<span class="bad">Could not read size</span>';
+}
+
+init();
+</script>
+</body>
+</html>

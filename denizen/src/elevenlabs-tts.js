@@ -53,7 +53,8 @@ function _resolveKey() {
   // to add a `dotenv` dependency just for this single optional integration.
   const home = process.env.USERPROFILE || process.env.HOME;
   if (!home) return null;
-  const envFile = path.join(home, '.openclaw', '.env');
+  const envFile = [path.join(home, '.denizen', '.env'), path.join(home, '.openclaw', '.env')]
+    .find(f => { try { return fs.existsSync(f); } catch { return false; } }) || path.join(home, '.denizen', '.env');
   let raw;
   try { raw = fs.readFileSync(envFile, 'utf8'); }
   catch (_) { return null; }

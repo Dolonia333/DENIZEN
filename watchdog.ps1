@@ -8,6 +8,7 @@ $env:AGENT_TOKEN = "rvJ4Odm7EYmHOxbEtO6dwUIQLv55aYybAyU3uZw6880"
 $GatewayDir = "C:\Users\zionv\OneDrive\Desktop\multbot\openclaw"
 $BridgeScript = "C:\Users\zionv\OneDrive\Desktop\multbot\openclaw\supabase-bridge\secure-bridge.py"
 $CloudflaredExe = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
+$DenizenDir = "C:\Users\zionv\OneDrive\Desktop\multbot\denizen"
 
 function Test-Port($port) {
     $result = netstat -ano | Select-String "LISTENING" | Select-String ":$port "
@@ -31,11 +32,18 @@ while ($true) {
         Start-Sleep -Seconds 10
     }
 
+    # Check Denizen web server on port 8080 (denizen.dolonia.cloud origin)
+    if (-not (Test-Port 8080)) {
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Denizen server down (8080) - restarting..."
+        Start-Process -FilePath "node" -ArgumentList "server.js" -WorkingDirectory $DenizenDir -WindowStyle Minimized
+        Start-Sleep -Seconds 8
+    }
+
     # Check cloudflared tunnel
     $cf = Get-Process -Name "cloudflared" -ErrorAction SilentlyContinue
     if (-not $cf) {
         Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Cloudflare tunnel down - restarting..."
-        Start-Process -FilePath $CloudflaredExe -ArgumentList "tunnel", "run" -WindowStyle Minimized
+        Start-Process -FilePath $CloudflaredExe -ArgumentList "tunnel", "run", "dolobot" -WindowStyle Minimized
         Start-Sleep -Seconds 5
     }
 

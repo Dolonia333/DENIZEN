@@ -28,8 +28,8 @@ let _braveKey = null;
 function braveKey() {
   if (_braveKey !== null) return _braveKey;
   try {
-    const cfg = JSON.parse(fs.readFileSync(path.join(process.env.USERPROFILE || process.env.HOME || '', '.openclaw', 'openclaw.json'), 'utf-8'));
-    _braveKey = cfg?.tools?.web?.search?.apiKey || '';
+    const { getBraveKey } = require('../jelly/config-provider');
+    _braveKey = getBraveKey() || '';
   } catch (_) { _braveKey = ''; }
   return _braveKey;
 }
@@ -54,7 +54,7 @@ function search(query, count = 5) {
   const key = braveKey();
   const q = String(query || '').slice(0, 400).trim();
   if (!q) return Promise.resolve({ query: q, results: [], error: 'empty query' });
-  if (!key) return Promise.resolve({ query: q, results: [], error: 'no Brave search key in openclaw.json (tools.web.search.apiKey)' });
+  if (!key) return Promise.resolve({ query: q, results: [], error: 'no Brave search key in jelly.json (tools.web.search.apiKey)' });
 
   return new Promise((resolve) => {
     const reqPath = `/res/v1/web/search?q=${encodeURIComponent(q)}&count=${Math.max(1, Math.min(10, count))}`;

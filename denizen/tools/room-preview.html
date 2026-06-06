@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Room Shell Preview — Denizen</title>
+<style>
+  body { margin:0; background:#0f172a; color:#e2e8f0; font:13px 'Segoe UI',sans-serif; }
+  header { padding:10px 16px; background:#1e293b; border-bottom:1px solid #334155; display:flex; gap:14px; align-items:center; }
+  header h1 { font-size:15px; margin:0; color:#4a9eff; }
+  #game { padding:16px; }
+  .hint { color:#64748b; font-size:12px; }
+  a { color:#4a9eff; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏠 Room Shell Preview</h1>
+  <span class="hint">Every roomType from <code>data/room-builder-tiles.json</code>. Magenta tiles = wrong/missing index → fix via <a href="/tools/tile-inspector.html" target="_blank">tile-inspector</a>, reload here.</span>
+</header>
+<div id="game"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script>
+<script type="module">
+import { RoomTileRenderer } from '../src/room-tile-renderer.js';
+
+let catalog = null;
+
+class PreviewScene extends Phaser.Scene {
+  preload() {
+    this.load.json('rb_catalog', '/data/room-builder-tiles.json?v=' + Date.now());
+    RoomTileRenderer.preload(this, '/assets/limezu/room-builder');
+  }
+
+  create() {
+    catalog = this.cache.json.get('rb_catalog');
+    const renderer = new RoomTileRenderer(this, catalog);
+    const types = Object.keys(catalog.roomTypes || {});
+
+    const COLS = 12, ROWS = 8;          // each sample room: 12×8 tiles
+    const cellW = COLS * 16 * 3 + 40;    // *3 zoom + gap
+    const cellH = ROWS * 16 * 3 + 60;
+    const perRow = 4;
+
+    types.forEach((rt, i) => {
+      const gx = (i % perRow) * cellW + 20;
+      const gy = Math.floor(i / perRow) * cellH + 30;
+
+      // Container scaled 3× for visibility.
+      const cont = this.add.container(gx, gy).setScale(3);
+      const r = new RoomTileRenderer(this, catalog);
+      const out = r.renderRoom({
+        x: 0, y: 0, cols: COLS, rows: ROWS, roomType: rt,
+        doors: [{ side: 'south', offset: 5, span: 2 }],
+        depthBase: 0,
+      });
+      [...out.floor, ...out.walls].forEach(o => cont.add(o));
+
+      // Label above each room.
+      this.add.text(gx, gy - 18, `${rt}  ·  ${catalog.roomTypes[rt].floor} / ${catalog.roomTypes[rt].wall}`,
+        { font: '12px monospace', color: '#94a3b8' });
+    });
+
+    // Size the canvas to fit.
+    const rowsUsed = Math.ceil(types.length / perRow);
+    this.scale.resize(perRow * cellW + 40, rowsUsed * cellH + 40);
+  }
+}
+
+new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: 'game',
+  backgroundColor: '#0b1220',
+  pixelArt: true,
+  width: 1400, height: 800,
+  scene: PreviewScene,
+});
+</script>
+</body>
+</html>

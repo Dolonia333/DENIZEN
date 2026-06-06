@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{name}} — Resume</title>
+<style>
+  @page { margin: 0; size: Letter; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: #222;
+    background: #fff;
+  }
+  .page {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.6in 0.7in;
+  }
+
+  /* Header — centered, minimal */
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+  }
+  .header h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #111;
+  }
+  .header .contact {
+    font-size: 9pt;
+    color: #555;
+    margin-top: 4px;
+  }
+  .header .contact a { color: #555; text-decoration: none; }
+  .header .contact span { margin: 0 6px; }
+
+  .summary-text {
+    text-align: center;
+    font-style: italic;
+    color: #444;
+    font-size: 9.5pt;
+    margin-bottom: 14px;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Section headings */
+  .section { margin-bottom: 12px; }
+  .section-title {
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #111;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 2px;
+    margin-bottom: 8px;
+  }
+
+  /* Skills */
+  .skills-grid { font-size: 9.5pt; color: #333; }
+  .skill {
+    display: inline;
+    font-size: 9.5pt;
+  }
+  .skill::after { content: " · "; color: #999; }
+  .skill:last-child::after { content: ""; }
+  .skill.matched { font-weight: 700; }
+
+  /* Experience */
+  .experience-item { margin-bottom: 10px; }
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .exp-title { font-weight: 700; font-size: 10pt; }
+  .exp-dates { font-size: 9pt; color: #666; font-style: italic; }
+  .exp-company { font-size: 9.5pt; color: #444; }
+  .exp-bullets {
+    padding-left: 18px;
+    font-size: 9.5pt;
+    color: #333;
+  }
+  .exp-bullets li { margin-bottom: 2px; }
+
+  /* Education */
+  .education-item { margin-bottom: 6px; }
+  .edu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .edu-degree { font-weight: 700; font-size: 10pt; }
+  .edu-date { font-size: 9pt; color: #666; font-style: italic; }
+  .edu-school { font-size: 9.5pt; color: #444; }
+
+  /* Certifications & Projects */
+  .cert-item { font-size: 9.5pt; margin-bottom: 3px; }
+  .project-item { margin-bottom: 6px; }
+  .proj-name { font-weight: 700; font-size: 9.5pt; }
+  .proj-name a { color: #333; }
+  .proj-desc { font-size: 9pt; color: #555; }
+  .proj-tech { font-size: 8.5pt; color: #777; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>{{name}}</h1>
+    <div class="contact">
+      {{email}}<span>|</span>{{phone}}<span>|</span>{{location}}<span>|</span><a href="{{linkedin}}">LinkedIn</a><span>|</span><a href="{{github}}">GitHub</a>
+    </div>
+  </div>
+
+  <div class="summary-text">{{summary}}</div>
+
+  <div class="section">
+    <div class="section-title">Skills</div>
+    <div class="skills-grid">
+      {{skills}}
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Experience</div>
+    {{experience}}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Education</div>
+    {{education}}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Certifications</div>
+    {{certifications}}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Projects</div>
+    {{projects}}
+  </div>
+</div>
+</body>
+</html>

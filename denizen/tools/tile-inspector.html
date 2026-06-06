@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LimeZu Tile Inspector — Denizen</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --line:#334155; --txt:#e2e8f0; --accent:#4a9eff; --sel:#22c55e; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:13px/1.4 'Segoe UI',system-ui,sans-serif; }
+  header { padding:10px 16px; background:var(--panel); border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:12px; align-items:center; position:sticky; top:0; z-index:10; }
+  header h1 { font-size:15px; margin:0; color:var(--accent); font-weight:600; }
+  select, button, input { background:#0b1220; color:var(--txt); border:1px solid var(--line); border-radius:5px; padding:5px 9px; font:inherit; }
+  button { cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  label { display:flex; align-items:center; gap:5px; }
+  .wrap { display:flex; gap:0; height:calc(100vh - 52px); }
+  .stage { flex:1; overflow:auto; padding:24px; background:
+    repeating-conic-gradient(#1a2030 0% 25%, #141a28 0% 50%) 50%/24px 24px; position:relative; }
+  canvas { image-rendering:pixelated; display:block; cursor:crosshair; box-shadow:0 0 0 1px var(--line); }
+  aside { width:300px; flex-shrink:0; background:var(--panel); border-left:1px solid var(--line); padding:14px; overflow:auto; }
+  aside h2 { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; margin:14px 0 6px; }
+  .readout { font-family:'Courier New',monospace; font-size:13px; }
+  .readout .row { display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #243049; }
+  .readout .k { color:#94a3b8; }
+  .readout .v { color:var(--sel); font-weight:bold; }
+  .selbox { background:#0b1220; border:1px solid var(--line); border-radius:6px; padding:10px; margin-top:8px; }
+  .selbox textarea { width:100%; height:120px; background:#060a13; color:#7ee787; border:1px solid var(--line); border-radius:4px; font-family:'Courier New',monospace; font-size:11px; resize:vertical; }
+  .hint { color:#64748b; font-size:11px; margin-top:6px; }
+  .pill { display:inline-block; background:#0b1220; border:1px solid var(--line); border-radius:99px; padding:2px 8px; font-size:11px; margin:2px; }
+  kbd { background:#0b1220; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:1px 5px; font-size:11px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔍 Tile Inspector</h1>
+  <label>Sheet:
+    <select id="sheet"></select>
+  </label>
+  <label>Tile:
+    <select id="tilesize">
+      <option value="16" selected>16px</option>
+      <option value="32">32px</option>
+      <option value="48">48px</option>
+    </select>
+  </label>
+  <label>Zoom:
+    <input id="zoom" type="range" min="1" max="12" value="4" style="width:120px" />
+    <span id="zoomval">4×</span>
+  </label>
+  <label><input type="checkbox" id="grid" checked /> Grid</label>
+  <label><input type="checkbox" id="indices" /> Indices</label>
+  <button id="reload">↻ Reload list</button>
+</header>
+
+<div class="wrap">
+  <div class="stage"><canvas id="c"></canvas></div>
+  <aside>
+    <h2>Hover</h2>
+    <div class="readout" id="hover">
+      <div class="row"><span class="k">col, row</span><span class="v" id="h-cr">–</span></div>
+      <div class="row"><span class="k">frame index</span><span class="v" id="h-idx">–</span></div>
+      <div class="row"><span class="k">pixel x, y</span><span class="v" id="h-px">–</span></div>
+    </div>
+
+    <h2>Selection</h2>
+    <div class="hint">Click a tile, or drag to box-select a multi-tile piece.</div>
+    <div class="readout">
+      <div class="row"><span class="k">origin col,row</span><span class="v" id="s-cr">–</span></div>
+      <div class="row"><span class="k">size (tiles)</span><span class="v" id="s-wh">–</span></div>
+      <div class="row"><span class="k">pixel rect</span><span class="v" id="s-px">–</span></div>
+    </div>
+
+    <div class="selbox">
+      <h2 style="margin-top:0">Catalog snippet</h2>
+      <textarea id="snippet" readonly></textarea>
+      <button id="copy" style="margin-top:6px; width:100%">📋 Copy JSON</button>
+    </div>
+
+    <h2>Sheet info</h2>
+    <div class="readout">
+      <div class="row"><span class="k">dimensions</span><span class="v" id="i-dim">–</span></div>
+      <div class="row"><span class="k">grid (cols×rows)</span><span class="v" id="i-grid">–</span></div>
+      <div class="row"><span class="k">total tiles</span><span class="v" id="i-total">–</span></div>
+    </div>
+
+    <h2>Keys</h2>
+    <div>
+      <span class="pill"><kbd>G</kbd> grid</span>
+      <span class="pill"><kbd>I</kbd> indices</span>
+      <span class="pill"><kbd>+</kbd>/<kbd>-</kbd> zoom</span>
+      <span class="pill"><kbd>Esc</kbd> clear sel</span>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const cv = $('c'), ctx = cv.getContext('2d');
+let img = null, imgName = '', tile = 16, zoom = 4;
+let sel = null;          // {c0,r0,c1,r1} in tile coords (inclusive)
+let dragging = false, dragStart = null;
+
+ctx.imageSmoothingEnabled = false;
+
+function cols() { return img ? Math.floor(img.width / tile) : 0; }
+function rows() { return img ? Math.floor(img.height / tile) : 0; }
+
+async function loadList() {
+  const sheetSel = $('sheet');
+  sheetSel.innerHTML = '<option>loading…</option>';
+  try {
+    const idx = await fetch('/assets/limezu/index.json?v=' + Date.now()).then(r => r.json());
+    // Flatten all category arrays into a single picklist, prefixed by category.
+    const opts = [];
+    for (const [cat, arr] of Object.entries(idx)) {
+      if (!Array.isArray(arr)) continue;
+      for (const rel of arr) opts.push(rel);
+    }
+    // Also include the raw modern-office sheets already in the project.
+    opts.sort();
+    sheetSel.innerHTML = opts.map(p => `<option value="assets/limezu/${p}">${p}</option>`).join('');
+    if (opts.length) loadSheet(sheetSel.value);
+  } catch (e) {
+    sheetSel.innerHTML = '<option>failed to load index.json</option>';
+    console.error(e);
+  }
+}
+
+function loadSheet(url) {
+  const im = new Image();
+  im.onload = () => {
+    img = im; imgName = url.split('/').pop();
+    $('i-dim').textContent = `${img.width}×${img.height}`;
+    $('i-grid').textContent = `${cols()}×${rows()}`;
+    $('i-total').textContent = cols() * rows();
+    sel = null;
+    draw();
+  };
+  im.onerror = () => console.error('failed to load', url);
+  im.src = '/' + url + '?v=' + Date.now();
+}
+
+function draw() {
+  if (!img) return;
+  cv.width = img.width * zoom;
+  cv.height = img.height * zoom;
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(img, 0, 0, cv.width, cv.height);
+
+  const C = cols(), R = rows(), ts = tile * zoom;
+
+  if ($('grid').checked) {
+    ctx.strokeStyle = 'rgba(74,158,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let c = 0; c <= C; c++) { ctx.moveTo(c*ts, 0); ctx.lineTo(c*ts, cv.height); }
+    for (let r = 0; r <= R; r++) { ctx.moveTo(0, r*ts); ctx.lineTo(cv.width, r*ts); }
+    ctx.stroke();
+  }
+
+  if ($('indices').checked && ts >= 28) {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = `${Math.min(ts/3.2, 11)}px monospace`;
+    ctx.textBaseline = 'top';
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      ctx.fillText(r*C + c, c*ts + 2, r*ts + 1);
+    }
+  }
+
+  if (sel) {
+    const x = Math.min(sel.c0, sel.c1) * ts;
+    const y = Math.min(sel.r0, sel.r1) * ts;
+    const w = (Math.abs(sel.c1 - sel.c0) + 1) * ts;
+    const h = (Math.abs(sel.r1 - sel.r0) + 1) * ts;
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x+1, y+1, w-2, h-2);
+    ctx.fillStyle = 'rgba(34,197,94,0.12)';
+    ctx.fillRect(x, y, w, h);
+  }
+}
+
+function tileAt(ev) {
+  const rect = cv.getBoundingClientRect();
+  const px = (ev.clientX - rect.left) / zoom;
+  const py = (ev.clientY - rect.top) / zoom;
+  return { c: Math.floor(px / tile), r: Math.floor(py / tile), px: Math.floor(px), py: Math.floor(py) };
+}
+
+cv.addEventListener('mousemove', ev => {
+  if (!img) return;
+  const t = tileAt(ev);
+  if (t.c < 0 || t.r < 0 || t.c >= cols() || t.r >= rows()) return;
+  $('h-cr').textContent = `${t.c}, ${t.r}`;
+  $('h-idx').textContent = t.r * cols() + t.c;
+  $('h-px').textContent = `${t.c*tile}, ${t.r*tile}`;
+  if (dragging && dragStart) { sel = { c0:dragStart.c, r0:dragStart.r, c1:t.c, r1:t.r }; draw(); }
+});
+
+cv.addEventListener('mousedown', ev => {
+  if (!img) return;
+  const t = tileAt(ev);
+  dragging = true; dragStart = t;
+  sel = { c0:t.c, r0:t.r, c1:t.c, r1:t.r };
+  draw(); updateSel();
+});
+window.addEventListener('mouseup', () => { if (dragging) { dragging = false; updateSel(); } });
+
+function updateSel() {
+  if (!sel) return;
+  const c0 = Math.min(sel.c0, sel.c1), r0 = Math.min(sel.r0, sel.r1);
+  const w = Math.abs(sel.c1 - sel.c0) + 1, h = Math.abs(sel.r1 - sel.r0) + 1;
+  $('s-cr').textContent = `${c0}, ${r0}`;
+  $('s-wh').textContent = `${w} × ${h}`;
+  $('s-px').textContent = `${c0*tile},${r0*tile} ${w*tile}×${h*tile}`;
+  const idx = r0 * cols() + c0;
+  const snippet = {
+    sheet: imgName.replace('.png',''),
+    col: c0, row: r0, w, h,
+    px: c0*tile, py: r0*tile,
+    frame: idx
+  };
+  $('snippet').value = JSON.stringify(snippet, null, 2);
+}
+
+$('copy').onclick = () => {
+  navigator.clipboard.writeText($('snippet').value);
+  $('copy').textContent = '✓ Copied';
+  setTimeout(() => $('copy').textContent = '📋 Copy JSON', 1200);
+};
+
+$('sheet').onchange = e => loadSheet(e.target.value);
+$('tilesize').onchange = e => { tile = +e.target.value; if (img){ $('i-grid').textContent = `${cols()}×${rows()}`; $('i-total').textContent = cols()*rows(); } sel=null; draw(); };
+$('zoom').oninput = e => { zoom = +e.target.value; $('zoomval').textContent = zoom+'×'; draw(); };
+$('grid').onchange = draw;
+$('indices').onchange = draw;
+$('reload').onclick = loadList;
+
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'g') { $('grid').checked = !$('grid').checked; draw(); }
+  if (e.key === 'i') { $('indices').checked = !$('indices').checked; draw(); }
+  if (e.key === '+' || e.key === '=') { $('zoom').value = Math.min(12, zoom+1); $('zoom').oninput({target:$('zoom')}); }
+  if (e.key === '-') { $('zoom').value = Math.max(1, zoom-1); $('zoom').oninput({target:$('zoom')}); }
+  if (e.key === 'Escape') { sel = null; draw(); }
+});
+
+loadList();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "Denizen",
+  "short_name": "Denizen",
+  "description": "AI office simulator — play and manage your team from phone or desktop.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": []
+}

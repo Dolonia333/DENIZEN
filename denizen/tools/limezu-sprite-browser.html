@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>LimeZu Sprite Browser — label &amp; inspect</title>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --line:#334155; --txt:#e2e8f0; --accent:#4a9eff; --warn:#fbbf24; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:13px system-ui,sans-serif; }
+  header { padding:10px 14px; background:var(--panel); border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:8px; align-items:center; position:sticky; top:0; z-index:20; }
+  header h1 { margin:0; font-size:15px; color:var(--accent); }
+  input, select, button, textarea { background:#0b1220; color:var(--txt); border:1px solid var(--line); border-radius:5px; padding:5px 8px; font:inherit; }
+  button { cursor:pointer; } button:hover { border-color:var(--accent); }
+  .warn { color:var(--warn); font-size:12px; max-width:520px; }
+  main { display:grid; grid-template-columns:1fr 340px; height:calc(100vh - 52px); }
+  #grid-wrap { overflow:auto; padding:12px; }
+  #grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:10px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:6px; cursor:pointer; }
+  .card:hover, .card.sel { border-color:var(--accent); }
+  .card img { width:100%; height:72px; object-fit:contain; image-rendering:pixelated; background:repeating-conic-gradient(#1a2030 0% 25%, #141a28 0% 50%) 50%/8px 8px; display:block; }
+  .card .fn { font-size:10px; color:#94a3b8; word-break:break-all; margin-top:4px; max-height:28px; overflow:hidden; }
+  .card .sz { font-size:10px; color:#64748b; }
+  .card .tag { font-size:10px; color:#4ade80; }
+  aside { border-left:1px solid var(--line); background:var(--panel); padding:12px; overflow:auto; }
+  aside h2 { font-size:11px; text-transform:uppercase; color:#94a3b8; margin:12px 0 6px; }
+  .preview-box { background:repeating-conic-gradient(#1a2030 0% 25%, #141a28 0% 50%) 50%/16px 16px; min-height:160px; display:flex; align-items:flex-end; justify-content:center; padding:16px; border:1px solid var(--line); border-radius:6px; }
+  .preview-box img { image-rendering:pixelated; max-width:100%; }
+  label { display:block; font-size:11px; color:#94a3b8; margin:6px 0 2px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .footprint-hint { font-size:11px; color:var(--warn); line-height:1.4; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LimeZu sprite browser</h1>
+  <label>Theme <select id="theme"></select></label>
+  <input id="q" type="search" placeholder="filter filename…" style="width:160px" />
+  <label>Size <select id="sizeF"><option value="">all</option><option value="16x16">16×16 only</option><option value="multi">bigger than 16×16</option></select></label>
+  <button id="saveLabels">Save labels JSON</button>
+  <span class="warn">Singles_42 is not a name — label what you see. 16×16 often = fragment, not full furniture.</span>
+</header>
+<main>
+  <div id="grid-wrap"><div id="grid"></div></div>
+  <aside>
+    <div class="preview-box" id="preview"><span style="color:#64748b">Click a sprite</span></div>
+    <p class="footprint-hint" id="fragWarn" hidden></p>
+    <h2>Your label (only you know what this is)</h2>
+    <label>Display name</label>
+    <input id="displayName" type="text" placeholder="e.g. kotatsu, prison_bed" style="width:100%" />
+    <div class="row2">
+      <div><label>Footprint W (tiles)</label><input id="fpW" type="number" min="1" value="1" style="width:100%" /></div>
+      <div><label>Footprint H (tiles)</label><input id="fpH" type="number" min="1" value="1" style="width:100%" /></div>
+    </div>
+    <label>Depth</label>
+    <input id="depth" type="number" step="0.1" value="1.5" style="width:100%" />
+    <label>Notes</label>
+    <textarea id="notes" rows="3" style="width:100%"></textarea>
+    <button id="applyLabel" style="width:100%;margin-top:8px">Apply label to this sprite</button>
+    <h2>Atlas lookup</h2>
+    <p style="font-size:11px;color:#94a3b8">Open theme sheet to find multi-tile objects:</p>
+    <a id="atlasLink" href="#" target="_blank" style="color:var(--accent)">themes/… in tile-inspector</a>
+    <h2>Placement snippet</h2>
+    <textarea id="snippet" rows="8" readonly style="width:100%;font:11px monospace"></textarea>
+    <p style="font-size:11px;color:#64748b">Anchor: bottom-center at floor tile. Spacing: copy from <code>assets/limezu/examples/*_preview.png</code></p>
+  </aside>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let catalog = null, labels = { byFile: {}, byId: {} }, items = [], selected = null;
+
+const THEME_ATLAS = {
+  japanese: 'themes/japanese.png',
+  jail: 'themes/jail.png',
+  studio: 'themes/studio.png',
+  conference: 'themes/conference.png',
+  gym: 'themes/gym.png',
+  kitchen: 'themes/kitchen.png',
+  medical: 'themes/medical.png',
+};
+
+async function init() {
+  try {
+    catalog = await fetch('/data/furniture_catalog_limezu.json').then(r => r.json());
+  } catch (e) {
+    $('grid').innerHTML = '<p>Run: node scripts/build-limezu-singles-catalog.js</p>';
+    return;
+  }
+  try {
+    labels = await fetch('/data/limezu-labels.json').then(r => r.json());
+  } catch (_) {
+    labels = { byFile: {}, byId: {} };
+  }
+  items = Object.entries(catalog.objects || {}).map(([id, def]) => ({ id, def }));
+  const themes = [...new Set(items.map(i => i.def.theme))].sort();
+  $('theme').innerHTML = themes.map(t => `<option>${t}</option>`).join('');
+  ['theme','q','sizeF'].forEach(id => $(id).addEventListener('input', renderGrid));
+  $('applyLabel').onclick = applyLabel;
+  $('saveLabels').onclick = saveLabels;
+  renderGrid();
+}
+
+function renderGrid() {
+  const theme = $('theme').value;
+  const q = $('q').value.toLowerCase();
+  const sf = $('sizeF').value;
+  const filtered = items.filter(({ id, def }) => {
+    if (def.theme !== theme) return false;
+    if (q && !(def._file || id).toLowerCase().includes(q)) return false;
+    const sz = `${def.w}x${def.h}`;
+    if (sf === '16x16' && sz !== '16x16') return false;
+    if (sf === 'multi' && def.w <= 16 && def.h <= 16) return false;
+    return true;
+  });
+  $('grid').innerHTML = filtered.map(({ id, def }) => {
+    const lab = labels.byFile?.[def._file] || labels.byId?.[id];
+    const url = '/' + def.url_path;
+    const tag = lab?.displayName ? `<div class="tag">${lab.displayName}</div>` : '';
+    return `<div class="card" data-id="${id}">
+      <img src="${url}" alt="" loading="lazy" />
+      <div class="sz">${def.w}×${def.h}</div>
+      ${tag}
+      <div class="fn">${def._file || id}</div>
+    </div>`;
+  }).join('');
+  $('grid').querySelectorAll('.card').forEach(el => {
+    el.onclick = () => selectItem(el.dataset.id);
+  });
+}
+
+function selectItem(id) {
+  selected = items.find(i => i.id === id);
+  if (!selected) return;
+  document.querySelectorAll('.card').forEach(c => c.classList.toggle('sel', c.dataset.id === id));
+  const { def } = selected;
+  const url = '/' + def.url_path;
+  const sc = Math.min(6, Math.max(2, Math.floor(120 / Math.max(def.w, def.h))));
+  $('preview').innerHTML = `<img src="${url}" style="width:${def.w * sc}px;height:${def.h * sc}px" />`;
+  const lab = labels.byFile?.[def._file] || labels.byId?.[id] || {};
+  $('displayName').value = lab.displayName || '';
+  $('fpW').value = lab.footprint?.w || Math.max(1, Math.ceil(def.w / 16));
+  $('fpH').value = lab.footprint?.h || Math.max(1, Math.ceil(def.h / 16));
+  $('depth').value = lab.depth ?? 1.5;
+  $('notes').value = lab.notes || '';
+  $('fragWarn').hidden = !(def.w <= 16 && def.h <= 16);
+  $('fragWarn').textContent = 'This PNG is only 16×16 — likely one tile of a larger prop. Check themes/' + def.theme + '.png for the full object size.';
+  const atlas = THEME_ATLAS[def.theme];
+  $('atlasLink').href = atlas ? `/tools/tile-inspector.html` : '#';
+  $('atlasLink').textContent = atlas ? `Open ${atlas} in tile-inspector` : 'No atlas extracted';
+  $('snippet').value = JSON.stringify({
+    id: selected.id,
+    displayName: lab.displayName || '(unnamed)',
+    url_path: def.url_path,
+    sizePx: { w: def.w, h: def.h },
+    footprintTiles: { w: +$('fpW').value, h: +$('fpH').value },
+    placement: { x: 0, y: 0, z_index: +$('depth').value, origin: 'bottom' },
+  }, null, 2);
+}
+
+function applyLabel() {
+  if (!selected) return;
+  const entry = {
+    displayName: $('displayName').value.trim(),
+    footprint: { w: +$('fpW').value, h: +$('fpH').value },
+    depth: +$('depth').value,
+    notes: $('notes').value.trim(),
+  };
+  if (selected.def._file) labels.byFile[selected.def._file] = entry;
+  labels.byId[selected.id] = entry;
+  renderGrid();
+  selectItem(selected.id);
+}
+
+function saveLabels() {
+  const out = {
+    _doc: labels._doc,
+    _howto: labels._howto,
+    byFile: labels.byFile || {},
+    byId: labels.byId || {},
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'limezu-labels.json';
+  a.click();
+  alert('Save the file to denizen/data/limezu-labels.json then re-run build-limezu-singles-catalog.js');
+}
+
+init();
+</script>
+</body>
+</html>

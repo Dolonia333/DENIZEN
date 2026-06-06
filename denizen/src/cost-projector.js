@@ -66,12 +66,8 @@ function loadPricing() {
   const rows = [];
 
   // 1) Local models from config (the 'openai'-keyed provider == LM Studio here)
-  const configPath = path.join(
-    process.env.USERPROFILE || process.env.HOME || '',
-    '.openclaw', 'openclaw.json'
-  );
   try {
-    const providers = JSON.parse(fs.readFileSync(configPath, 'utf-8'))?.models?.providers || {};
+    const providers = require('../jelly/config-provider').getConfig()?.models?.providers || {};
     const local = providers.openai;
     for (const m of (local?.models || [])) {
       rows.push({

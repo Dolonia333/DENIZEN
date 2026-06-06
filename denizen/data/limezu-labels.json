@@ -1,0 +1,13 @@
+{
+  "_doc": "Human names for LimeZu Singles. Keys match catalog id (lz_<theme>_...) or _file basename. Denizen does not know sprite names without this file.",
+  "_howto": "1) Open /tools/limezu-sprite-browser.html  2) Label each sprite you use  3) Save downloads here as limezu-labels.json",
+  "byFile": {
+    "Japanese_Interiors_Singles_42.png": {
+      "displayName": "example_rename_me",
+      "footprint": { "w": 2, "h": 2 },
+      "depth": 1.5,
+      "notes": "Delete this example after adding real labels"
+    }
+  },
+  "byId": {}
+}

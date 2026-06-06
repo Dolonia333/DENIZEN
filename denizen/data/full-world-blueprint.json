@@ -1,0 +1,118 @@
+{
+  "_doc": "Multi-zone world layout — matches LimeZu reference style (layer-1 shell + layer-2 theme furniture). Tile size 16px unless noted. Wire with ?world=full (future) or import in tools/world-preview.",
+  "version": 1,
+  "tileSize": 16,
+  "worldSize": { "widthPx": 4096, "heightPx": 3072 },
+  "zones": [
+    {
+      "id": "dolonia_hq",
+      "label": "Dolonia HQ — open office",
+      "role": "primary",
+      "x": 1280,
+      "y": 640,
+      "cols": 40,
+      "rows": 24,
+      "roomType": "open_office",
+      "theme": "modern_office",
+      "furnitureTheme": "office",
+      "npcRoles": ["engineering", "leadership", "product"],
+      "doors": [{ "side": "south", "offset": 18, "span": 3, "to": "city_plaza" }]
+    },
+    {
+      "id": "japanese_retreat",
+      "label": "Japanese interiors — multi-room home",
+      "ref": "examples/japanese_preview.png",
+      "x": 160,
+      "y": 160,
+      "cols": 28,
+      "rows": 20,
+      "roomType": "japanese_home",
+      "theme": "japanese",
+      "furnitureTheme": "japanese",
+      "subrooms": [
+        { "name": "genkan", "cols": 8, "rows": 4, "offset": { "x": 10, "y": 16 } },
+        { "name": "tatami_living", "cols": 14, "rows": 10, "offset": { "x": 2, "y": 4 } },
+        { "name": "bedroom", "cols": 10, "rows": 8, "offset": { "x": 16, "y": 2 } },
+        { "name": "dining", "cols": 10, "rows": 6, "offset": { "x": 16, "y": 12 } }
+      ],
+      "doors": [{ "side": "east", "offset": 12, "span": 2, "to": "city_plaza" }]
+    },
+    {
+      "id": "security_complex",
+      "label": "Jail + control room + infirmary",
+      "ref": "themes/jail.png + themes/medical.png",
+      "x": 160,
+      "y": 1200,
+      "cols": 32,
+      "rows": 18,
+      "roomType": "jail",
+      "theme": "jail",
+      "furnitureTheme": "jail",
+      "subrooms": [
+        { "name": "cell_block", "cols": 18, "rows": 8, "offset": { "x": 2, "y": 2 }, "roomType": "jail" },
+        { "name": "control_room", "cols": 12, "rows": 8, "offset": { "x": 20, "y": 2 }, "furniture": ["animated/control_screens", "animated/server_rack"] },
+        { "name": "infirmary", "cols": 14, "rows": 8, "offset": { "x": 16, "y": 10 }, "roomType": "medical_wing", "theme": "medical" }
+      ],
+      "npcRoles": ["security", "operations"],
+      "doors": [{ "side": "north", "offset": 14, "span": 2, "to": "city_plaza" }]
+    },
+    {
+      "id": "news_studio",
+      "label": "TV / film studio",
+      "ref": "examples/studio_preview.png",
+      "x": 2680,
+      "y": 200,
+      "cols": 22,
+      "rows": 16,
+      "roomType": "tv_studio",
+      "theme": "studio",
+      "furnitureTheme": "studio",
+      "furniture": ["animated/tv", "animated/control_screens"],
+      "doors": [{ "side": "west", "offset": 7, "span": 2, "to": "city_plaza" }]
+    },
+    {
+      "id": "city_plaza",
+      "label": "Urban exterior — streets, buildings, park",
+      "ref": "exteriors/city_terrain.png + city_props.png",
+      "x": 640,
+      "y": 2000,
+      "cols": 80,
+      "rows": 50,
+      "type": "exterior",
+      "layers": ["city_terrain", "city_props", "generic_buildings", "garden"],
+      "props": ["street_lamps", "benches", "cars", "crosswalk"],
+      "doors": [
+        { "to": "dolonia_hq", "x": 40, "y": 12 },
+        { "to": "japanese_retreat", "x": 8, "y": 28 },
+        { "to": "security_complex", "x": 8, "y": 42 },
+        { "to": "news_studio", "x": 72, "y": 20 }
+      ]
+    },
+    {
+      "id": "helipad",
+      "label": "Helicopter pad (vehicles sheet)",
+      "ref": "exteriors/helicopters/",
+      "x": 3400,
+      "y": 2400,
+      "cols": 12,
+      "rows": 12,
+      "type": "exterior",
+      "vehicles": ["helicopter_idle"],
+      "doors": [{ "to": "city_plaza", "offset": 0, "span": 1 }]
+    }
+  ],
+  "corridors": [
+    { "from": "dolonia_hq", "to": "city_plaza", "widthTiles": 4 },
+    { "from": "japanese_retreat", "to": "city_plaza", "widthTiles": 3 },
+    { "from": "security_complex", "to": "city_plaza", "widthTiles": 3 },
+    { "from": "news_studio", "to": "city_plaza", "widthTiles": 3 }
+  ],
+  "spawn": {
+    "player": { "zone": "dolonia_hq", "x": 320, "y": 280 },
+    "npcs": [
+      { "zone": "dolonia_hq", "role": "CTO", "x": 200, "y": 120 },
+      { "zone": "security_complex", "role": "Security Guard", "x": 480, "y": 200 },
+      { "zone": "news_studio", "role": "Product Manager", "x": 120, "y": 80 }
+    ]
+  }
+}

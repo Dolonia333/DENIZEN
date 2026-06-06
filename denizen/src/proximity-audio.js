@@ -316,6 +316,26 @@
   // A tiny corner chip showing the current audio mode. Click to cycle.
   // Alt+L is the keyboard shortcut. Persisted in localStorage via the
   // set/get functions above.
+  function onAudioModePress() {
+    window.DenizenHaptics?.tap?.();
+    const mode = cycleAudioMode();
+    // Listen-in / Focus need voice output on — presence defaults off on load.
+    if (mode !== 'mute-all' && typeof window.DenizenSetPresence === 'function'
+        && !window.DenizenPresence?.zionPresent) {
+      try { window.DenizenSetPresence(true); } catch (_) {}
+    }
+    _paintChip();
+  }
+
+  function wireAudioChip(el) {
+    if (!el || el.dataset.denizenTouchWired === '1') return;
+    el.dataset.denizenTouchWired = '1';
+    el.style.touchAction = 'manipulation';
+    const bind = window.DenizenTouchBind?.bindPress;
+    if (bind) bind(el, onAudioModePress);
+    else el.addEventListener('click', onAudioModePress);
+  }
+
   function _renderChip() {
     if (typeof document === 'undefined') return;
     const id = 'denizen-audio-mode-chip';
@@ -331,22 +351,38 @@
         border: '1px solid #3f3f46', borderRadius: '999px',
         padding: '6px 12px', font: '12px/1.2 monospace',
         cursor: 'pointer', userSelect: 'none',
+        minWidth: '44px', minHeight: '44px',
       });
-      el.addEventListener('click', () => cycleAudioMode());
-      // Also listen for programmatic mode changes so the chip stays in sync.
       window.addEventListener('denizen:audiomode', _paintChip);
+      window.addEventListener('denizen:presence', _paintChip);
       document.body.appendChild(el);
     }
+    wireAudioChip(el);
     _paintChip();
   }
   function _paintChip() {
     const el = document.getElementById('denizen-audio-mode-chip');
     if (!el) return;
-    const label = _audioMode === 'focus'    ? '🎯 Focus'
-                : _audioMode === 'mute-all' ? '🔇 Muted'
-                :                             '🔊 Listen-in';
+    const touch = !!window.__DenizenIsTouch
+      || document.documentElement.classList.contains('denizen-touch');
+    const voiceOn = !!window.DenizenPresence?.zionPresent;
+    const label = _audioMode === 'focus'    ? (touch ? '🎯' : '🎯 Focus')
+                : _audioMode === 'mute-all' ? (touch ? '🔕' : '🔕 NPC mute')
+                :                             (touch ? '🔊' : '🔊 Listen-in');
     el.textContent = label;
+    const voiceNote = voiceOn ? '' : ' — voice is OFF (tap 👤 chip)';
+    el.title = _audioMode === 'focus'
+      ? `Focus: only your conversation partner (or nearest NPC) speaks${voiceNote}. Tap to cycle.`
+      : _audioMode === 'mute-all'
+        ? `NPC audio muted (bubbles still show). Tap to cycle.`
+        : `Listen-in: distance + facing volume${voiceNote}. Tap to cycle.`;
     el.dataset.mode = _audioMode;
+    el.style.opacity = (_audioMode === 'mute-all' || !voiceOn) ? '0.82' : '1';
+  }
+
+  function rewireTouch() {
+    wireAudioChip(document.getElementById('denizen-audio-mode-chip'));
+    _paintChip();
   }
 
   function _bindHotkey() {
@@ -385,7 +421,7 @@
     MODES,
   };
   if (typeof window !== 'undefined') {
-    window.DenizenProximityAudio = surface;
+    window.DenizenProximityAudio = { ...surface, rewireTouch };
   }
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = surface;
