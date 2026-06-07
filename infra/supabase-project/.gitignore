@@ -1,0 +1,6 @@
+volumes/db/data
+volumes/storage
+.env
+DOLONIA_CREDENTIALS.txt
+test.http
+docker-compose.override.yml
