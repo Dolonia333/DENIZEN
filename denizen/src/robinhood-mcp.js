@@ -44,8 +44,8 @@ const AUTH_ENDPOINT     = 'https://robinhood.com/oauth';
 const TOKEN_ENDPOINT    = 'https://api.robinhood.com/oauth2/token/';
 const REGISTER_ENDPOINT = 'https://agent.robinhood.com/oauth/trading/register';
 const SCOPE             = 'internal';
-const REDIRECT_URI      = 'http://localhost:8080/api/market/auth/callback';
-const DEFAULT_DENIZEN_BASE_URL = 'http://localhost:8080';
+const REDIRECT_URI      = `http://localhost:${process.env.PORT || 8081}/api/market/auth/callback`;
+const DEFAULT_DENIZEN_BASE_URL = `http://localhost:${process.env.PORT || 8081}`;
 const MCP_TIMEOUT_MS    = 15000;
 
 // Default watchlist for Roki

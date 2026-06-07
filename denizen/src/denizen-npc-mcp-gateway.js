@@ -335,7 +335,7 @@ function getPublicBaseUrl() {
   return String(
     process.env.DENIZEN_PUBLIC_URL
     || process.env.DENIZEN_URL
-    || `http://localhost:${process.env.PORT || 8080}`,
+    || `http://localhost:${process.env.PORT || 8081}`,
   ).replace(/\/$/, '');
 }
 

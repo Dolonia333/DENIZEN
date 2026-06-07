@@ -113,6 +113,13 @@ function verifyAccessCode(code, kind) {
   }
   if (result.ok && kind === 'ceo') {
     result.ceo_grant = sessionAuth.createCeoGrant();
+    result.tier = 'team';
+    result.org_slug = result.org_slug || promptTuning.teamOrgSlug;
+    result.access_grant = sessionAuth.createAccessGrant({
+      tier: 'team',
+      orgSlug: result.org_slug,
+      accessMethod: 'ceo_code',
+    });
   }
   return result;
 }

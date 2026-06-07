@@ -131,6 +131,26 @@ class PlayerChat {
     if (this.scene) this.scene._chatMoveKeys = this._moveKeys;
   }
 
+  _chatFabClosedLabel() {
+    return this.manager?.connected ? '💬 Chat' : '💬 Chat (offline)';
+  }
+
+  _syncFabLabel() {
+    if (!this._fab) return;
+    const compact = document.documentElement.classList.contains('denizen-touch')
+      && this._fab.closest('#denizen-bottom-dock');
+    if (this._visible) {
+      this._fab.textContent = compact ? '✕' : '✕ Close';
+      this._fab.setAttribute('aria-pressed', 'true');
+      this._fab.title = 'Close chat';
+    } else {
+      const label = this._chatFabClosedLabel();
+      this._fab.textContent = compact ? '💬' : label;
+      this._fab.setAttribute('aria-pressed', 'false');
+      this._fab.title = compact ? (this._fab.dataset.fullLabel || label) : 'Talk to NPCs (Enter or T also works)';
+    }
+  }
+
   /**
    * Toggle chat visibility
    */
@@ -138,7 +158,7 @@ class PlayerChat {
     if (this._fab) {
       this._fab.classList.toggle('ws-on', !!connected);
       this._fab.classList.toggle('ws-off', !connected);
-      this._fab.textContent = connected ? '💬 Chat' : '💬 Chat (offline)';
+      this._syncFabLabel();
     }
     const banner = document.getElementById('denizen-ws-banner');
     const remote = !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
@@ -147,20 +167,29 @@ class PlayerChat {
     }
   }
 
-  toggle() {
-    this._visible = !this._visible;
-    this._container.style.display = this._visible ? 'flex' : 'none';
-    if (this._fab) {
-      const label = this.manager?.connected ? '💬 Chat' : '💬 Chat (offline)';
-      this._fab.textContent = this._visible ? '✕ Close' : label;
+  setVisible(visible) {
+    if (!this._container) return;
+    const next = !!visible;
+    if (this._visible === next && (this._container.style.display === 'none') === !next) {
+      return;
     }
-    if (this._visible) {
-      this._input.focus();
+    this._visible = next;
+    this._container.style.display = next ? 'flex' : 'none';
+    document.documentElement.classList.toggle('denizen-chat-open', next);
+    this._syncFabLabel();
+    if (next) {
+      this._input?.focus();
     } else {
-      this._input.blur();
+      this._input?.blur();
       this._clearChatMoveKeys();
       // Closing the panel does not end the conversation — NPC stays with you.
     }
+  }
+
+  toggle() {
+    const showing = this._container
+      && getComputedStyle(this._container).display !== 'none';
+    this.setVisible(!showing);
   }
 
   /** True only while the text box is focused — i.e. the player is actually
@@ -1658,38 +1687,30 @@ class PlayerChat {
     `;
     document.head.appendChild(style);
 
-    const panel = document.createElement('div');
-    panel.id = 'player-chat-panel';
-    panel.innerHTML = `
-      <div id="player-chat-header">
-        <div>
-          <span class="target" id="player-chat-target">Chat</span>
-          <span class="hint"> - Enter send · Speak (pauses OK) · Esc close</span>
+    let panel = document.getElementById('player-chat-panel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'player-chat-panel';
+      panel.innerHTML = `
+        <div id="player-chat-header">
+          <div>
+            <span class="target" id="player-chat-target">Chat</span>
+            <span class="hint"> - Enter send · Speak (pauses OK) · Esc close</span>
+          </div>
         </div>
-      </div>
-      <div id="player-chat-log"></div>
-      <div id="player-chat-input-row">
-        <input id="player-chat-input" type="text" placeholder="Talk to an NPC... (say their name or face them)" autocomplete="off" />
-        <button id="player-chat-speak" type="button" title="Speak — pauses are OK, click again when done">Speak</button>
-        <button id="player-chat-send">Send</button>
-      </div>
-    `;
-    document.body.appendChild(panel);
+        <div id="player-chat-log"></div>
+        <div id="player-chat-input-row">
+          <input id="player-chat-input" type="text" placeholder="Talk to an NPC... (say their name or face them)" autocomplete="off" />
+          <button id="player-chat-speak" type="button" title="Speak — pauses are OK, click again when done">Speak</button>
+          <button id="player-chat-send">Send</button>
+        </div>
+      `;
+      document.body.appendChild(panel);
+    }
 
     const existingFab = document.getElementById('player-chat-fab');
     if (existingFab) {
       this._fab = existingFab;
-      existingFab.replaceWith(existingFab.cloneNode(true));
-      this._fab = document.getElementById('player-chat-fab');
-      const wireFab = (el) => {
-        const onFab = (e) => {
-          if (e?.stopPropagation) e.stopPropagation();
-          this.toggle();
-        };
-        if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(el, onFab);
-        else el.addEventListener('click', onFab);
-      };
-      wireFab(this._fab);
     } else {
       const fab = document.createElement('button');
       fab.id = 'player-chat-fab';
@@ -1697,12 +1718,6 @@ class PlayerChat {
       fab.className = 'ws-off';
       fab.textContent = '💬 Chat';
       fab.title = 'Talk to NPCs (Enter or T also works)';
-      const onFab = (e) => {
-        if (e?.stopPropagation) e.stopPropagation();
-        this.toggle();
-      };
-      if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(fab, onFab);
-      else fab.addEventListener('click', onFab);
       document.body.appendChild(fab);
       this._fab = fab;
     }

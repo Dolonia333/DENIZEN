@@ -5,6 +5,22 @@
 (function () {
   'use strict';
 
+  try {
+    const resetParams = new URLSearchParams(window.location.search);
+    if (resetParams.get('reset') === '1') {
+      [
+        'denizen-visitor-session',
+        'denizen-role',
+        'denizen-onboarding-seen',
+        'denizen-ceo-grant',
+      ].forEach((key) => localStorage.removeItem(key));
+      sessionStorage.removeItem('denizen-portrait-ok');
+      resetParams.delete('reset');
+      const qs = resetParams.toString();
+      window.location.replace(`${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`);
+    }
+  } catch (_) {}
+
   const STORAGE_KEY = 'denizen-visitor-session';
   const ROLE_STORAGE_KEY = 'denizen-role';
   const PROTECTED_NPC_KEYS = new Set(['lucy', 'abby', 'bouncer']);
@@ -17,20 +33,20 @@
     }
   }
 
-  function setCeoMode(persist) {
-    globalThis.__DenizenCeoMode = true;
-    if (persist) {
-      try {
-        localStorage.setItem(ROLE_STORAGE_KEY, 'ceo');
-      } catch (_) {}
-    }
-    if (typeof globalThis.DenizenMobileControls?.setCeoMode === 'function') {
-      globalThis.DenizenMobileControls.setCeoMode(true);
+  function clearCeoUiMode() {
+    globalThis.__DenizenCeoMode = false;
+    try { localStorage.removeItem(ROLE_STORAGE_KEY); } catch (_) {}
+    document.documentElement.classList.remove('denizen-ceo-mode');
+    document.getElementById('denizen-ceo-shell')?.remove();
+    document.getElementById('denizen-ceo-mode-chip')?.remove();
+    const mobile = globalThis.DenizenMobilePlay;
+    if (typeof mobile?.setCeoMode === 'function') {
+      mobile.setCeoMode();
     }
   }
 
   if (readRole() === 'ceo') {
-    setCeoMode(false);
+    clearCeoUiMode();
   }
 
   const FOLDER_TO_NPC_KEY = {
@@ -44,6 +60,7 @@
   let assistant = null;
   let tier = null;
   let orgSlug = null;
+  let accessMethod = null;
   let initPromise = null;
   let modalEl = null;
   let officeConfig = null;
@@ -62,7 +79,7 @@
         demoOrgSlug: 'acme',
         teamOrgSlug: 'zion',
         teamCodeRequired: true,
-        ceoAccessRequired: false,
+        ceoAccessRequired: true,
       },
     };
     return officeConfig;
@@ -117,12 +134,15 @@
       #denizen-visitor-name-modal {
         position: fixed;
         inset: 0;
-        z-index: 100500;
+        z-index: 100900;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(2, 6, 23, 0.88);
+        background: rgba(2, 6, 23, 0.92);
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        pointer-events: auto;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       }
       #denizen-visitor-name-modal .vis-card {
         background: #020617;
@@ -131,6 +151,9 @@
         padding: 24px 28px;
         width: min(360px, calc(100vw - 32px));
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        pointer-events: auto;
+        position: relative;
+        z-index: 1;
       }
       #denizen-visitor-name-modal h2 {
         margin: 0 0 8px;
@@ -143,6 +166,7 @@
         font-size: 12px;
         color: #94a3b8;
       }
+      #denizen-visitor-name-modal .vis-input,
       #denizen-visitor-name-input {
         width: 100%;
         box-sizing: border-box;
@@ -150,12 +174,15 @@
         border: 1px solid #1f2937;
         border-radius: 6px;
         color: #e2e8f0;
-        padding: 10px 12px;
+        padding: 12px 14px;
         font: inherit;
-        font-size: 13px;
+        font-size: 16px;
         outline: none;
         margin-bottom: 14px;
+        min-height: 44px;
+        touch-action: manipulation;
       }
+      #denizen-visitor-name-modal .vis-input:focus,
       #denizen-visitor-name-input:focus {
         border-color: #4ade80;
       }
@@ -164,12 +191,14 @@
         background: #4ade80;
         color: #0f172a;
         border: none;
-        border-radius: 6px;
-        padding: 10px 16px;
+        border-radius: 8px;
+        padding: 12px 16px;
         font: inherit;
         font-weight: bold;
-        font-size: 12px;
+        font-size: 14px;
         cursor: pointer;
+        min-height: 48px;
+        touch-action: manipulation;
       }
       #denizen-visitor-name-continue:hover { background: #22c55e; }
       #denizen-visitor-name-continue:disabled {
@@ -187,24 +216,24 @@
         background: #1e293b;
         color: #e2e8f0;
         border: 1px solid #334155;
-        border-radius: 6px;
-        padding: 12px 16px;
+        border-radius: 8px;
+        padding: 14px 16px;
         font: inherit;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        text-align: left;
+        text-align: center;
+        min-height: 48px;
+        touch-action: manipulation;
       }
-      #denizen-visitor-name-modal .vis-path-btn:hover {
+      #denizen-visitor-name-modal .vis-path-btn:hover,
+      #denizen-visitor-name-modal .vis-path-btn:active {
         border-color: #4ade80;
         background: #0f172a;
       }
-      #denizen-visitor-name-modal .vis-path-btn small {
-        display: block;
-        margin-top: 4px;
-        font-weight: 400;
-        color: #64748b;
-        font-size: 11px;
+      #denizen-visitor-name-modal .vis-path-btn.ceo {
+        border-color: #475569;
+        color: #fde68a;
       }
       #denizen-visitor-name-modal .vis-back {
         background: transparent;
@@ -223,20 +252,24 @@
         font-size: 11px;
         color: #f87171;
       }
-      #denizen-visitor-name-modal .vis-ceo-link {
-        margin-top: 14px;
-        background: transparent;
-        border: none;
-        color: #64748b;
-        font: inherit;
-        font-size: 11px;
-        cursor: pointer;
-        text-decoration: underline;
-        padding: 0;
-        width: 100%;
-        text-align: center;
+      html[data-denizen-modal="open"] #game-container,
+      html[data-denizen-modal="open"] #game-container canvas,
+      html[data-denizen-modal="open"] #denizen-bottom-dock,
+      html[data-denizen-modal="open"] #player-chat-fab,
+      html[data-denizen-modal="open"] #denizen-mobile-controls,
+      html[data-denizen-modal="open"] #denizen-rotate-hint,
+      html[data-denizen-modal="open"] #denizen-ceo-shell,
+      html[data-denizen-modal="open"] #denizen-ws-banner,
+      html[data-denizen-modal="open"] #denizen-load-banner {
+        pointer-events: none !important;
       }
-      #denizen-visitor-name-modal .vis-ceo-link:hover { color: #94a3b8; }
+      html[data-denizen-modal="open"] #denizen-rotate-hint,
+      html[data-denizen-modal="open"] #denizen-ceo-shell {
+        display: none !important;
+      }
+      html[data-denizen-modal="open"] #denizen-visitor-name-modal {
+        z-index: 2147483000;
+      }
     `;
     document.head.appendChild(s);
   }
@@ -261,272 +294,276 @@
       modalEl = document.createElement('div');
       modalEl.id = 'denizen-visitor-name-modal';
       document.body.appendChild(modalEl);
+      document.documentElement.dataset.denizenModal = 'open';
 
       let step = 'choose';
       let pendingAccess = null;
+      let busy = false;
+      let unbindPress = null;
+      let stepUnbinds = [];
+
+      function setGameInputBlocked(block) {
+        try {
+          if (window.game?.input) window.game.input.enabled = !block;
+        } catch (_) {}
+      }
 
       function closeModal(result) {
+        delete document.documentElement.dataset.denizenModal;
+        setGameInputBlocked(false);
+        if (unbindPress) {
+          unbindPress();
+          unbindPress = null;
+        }
+        stepUnbinds.forEach((fn) => fn());
+        stepUnbinds = [];
         modalEl.remove();
         modalEl = null;
+        if (result) {
+          globalThis.DenizenMobilePlay?.syncLayout?.();
+        }
         resolve(result);
       }
 
-      function render() {
+      setGameInputBlocked(true);
+
+      function accessCtx() {
         const access = officeConfig?.visitorAccess || {};
-        const demoSlug = access.demoOrgSlug || 'acme';
-        const teamSlug = access.teamOrgSlug || 'zion';
-        const ceoRequired = !!access.ceoAccessRequired;
+        return {
+          demoSlug: access.demoOrgSlug || 'acme',
+          teamSlug: access.teamOrgSlug || 'zion',
+        };
+      }
+
+      function focusFirstInput() {
+        const input = modalEl.querySelector('.vis-input, #denizen-visitor-name-input');
+        if (input) {
+          setTimeout(() => {
+            try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); }
+          }, 60);
+        }
+      }
+
+      async function submitAccessCode(type) {
+        if (busy) return;
+        const input = modalEl.querySelector('#denizen-visitor-code-input');
+        const btn = modalEl.querySelector('#denizen-visitor-name-continue');
+        const errEl = modalEl.querySelector('#denizen-vis-error');
+        const code = String(input?.value || '').trim();
+        if (!code) {
+          input?.focus();
+          return;
+        }
+        busy = true;
+        if (btn) btn.disabled = true;
+        if (errEl) errEl.hidden = true;
+        const { teamSlug } = accessCtx();
+        try {
+          const verified = await verifyAccessCode(code, type);
+          if (type === 'ceo') {
+            if (verified.ceo_grant) {
+              try { localStorage.setItem('denizen-ceo-grant', verified.ceo_grant); } catch (_) {}
+            }
+            try { localStorage.setItem('denizen-onboarding-seen', '1'); } catch (_) {}
+            const prior = readStore();
+            closeModal({
+              displayName: prior.display_name || 'Zion',
+              orgSlug: verified.org_slug || teamSlug,
+              tier: verified.tier || 'team',
+              accessMethod: 'ceo',
+              accessGrant: verified.access_grant || null,
+            });
+            return;
+          }
+          pendingAccess = {
+            orgSlug: verified.org_slug || teamSlug,
+            tier: verified.tier || 'team',
+            accessMethod: 'team',
+            accessGrant: verified.access_grant || null,
+          };
+          step = 'name';
+          render();
+        } catch (err) {
+          if (errEl) {
+            errEl.textContent = err?.message || (type === 'ceo' ? 'Invalid CEO code' : 'Invalid team code');
+            errEl.hidden = false;
+          }
+          if (btn) btn.disabled = false;
+          input?.focus();
+        } finally {
+          busy = false;
+        }
+      }
+
+      function submitName() {
+        if (busy) return;
+        const input = modalEl.querySelector('#denizen-visitor-name-input');
+        const btn = modalEl.querySelector('#denizen-visitor-name-continue');
+        const name = String(input?.value || '').trim();
+        if (!name) {
+          input?.focus();
+          return;
+        }
+        busy = true;
+        if (btn) btn.disabled = true;
+        closeModal({
+          displayName: pendingAccess?.displayName || name,
+          orgSlug: pendingAccess?.orgSlug,
+          tier: pendingAccess?.tier,
+          accessMethod: pendingAccess?.accessMethod,
+          accessGrant: pendingAccess?.accessGrant || null,
+        });
+      }
+
+      async function handleAction(action) {
+        const { demoSlug } = accessCtx();
+        if (action === 'path-demo') {
+          pendingAccess = { orgSlug: demoSlug, tier: 'demo', accessMethod: 'demo' };
+          step = 'name';
+          render();
+          return;
+        }
+        if (action === 'path-team') {
+          pendingAccess = { accessMethod: 'team' };
+          step = 'team-code';
+          render();
+          return;
+        }
+        if (action === 'path-ceo') {
+          pendingAccess = { accessMethod: 'ceo' };
+          step = 'ceo-code';
+          render();
+          return;
+        }
+        if (action === 'back') {
+          if (step === 'name') {
+            if (pendingAccess?.accessMethod === 'team') step = 'team-code';
+            else if (pendingAccess?.accessMethod === 'ceo') step = 'ceo-code';
+            else step = 'choose';
+          } else {
+            step = 'choose';
+          }
+          render();
+          return;
+        }
+        if (action === 'submit-team-code') {
+          await submitAccessCode('team');
+          return;
+        }
+        if (action === 'submit-ceo-code') {
+          await submitAccessCode('ceo');
+          return;
+        }
+        if (action === 'submit-name') {
+          submitName();
+        }
+      }
+
+      const onModalActivate = (btn) => {
+        if (!btn || btn.disabled || busy) return;
+        handleAction(btn.getAttribute('data-action'));
+      };
+
+      modalEl.addEventListener('click', (e) => {
+        if (window.DenizenTouchBind?.bindPress) return;
+        const btn = e.target.closest('[data-action]');
+        if (!btn || btn.disabled || busy) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onModalActivate(btn);
+      });
+
+      modalEl.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        const tag = e.target?.tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
+        e.preventDefault();
+        if (step === 'team-code') handleAction('submit-team-code');
+        else if (step === 'ceo-code') handleAction('submit-ceo-code');
+        else if (step === 'name') handleAction('submit-name');
+      });
+
+      function wireStepControls() {
+        stepUnbinds.forEach((fn) => fn());
+        stepUnbinds = [];
+        if (!window.DenizenTouchBind?.bindPress) return;
+        modalEl.querySelectorAll('[data-action]').forEach((btn) => {
+          const off = window.DenizenTouchBind.bindPress(
+            btn,
+            () => onModalActivate(btn),
+            { stop: true },
+          );
+          if (typeof off === 'function') stepUnbinds.push(off);
+        });
+      }
+
+      function render() {
+        document.body.appendChild(modalEl);
+        const { teamSlug } = accessCtx();
 
         if (step === 'choose') {
           modalEl.innerHTML = `
             <div class="vis-card">
               <h2>Welcome to Denizen</h2>
-              <p>How would you like to enter the office?</p>
+              <p>How would you like to enter?</p>
               <div class="vis-paths">
-                <button type="button" class="vis-path-btn" data-path="demo">
-                  Try demo
-                  <small>Explore ${demoSlug} — no code needed</small>
-                </button>
-                <button type="button" class="vis-path-btn" data-path="team">
-                  Team access
-                  <small>Enter your team code for ${teamSlug}</small>
-                </button>
-                <button type="button" class="vis-path-btn" data-path="website">
-                  Team email login
-                  <small>Register or sign in with work email + code</small>
-                </button>
+                <button type="button" class="vis-path-btn" data-action="path-demo">Try demo</button>
+                <button type="button" class="vis-path-btn" data-action="path-team">Team access</button>
+                <button type="button" class="vis-path-btn ceo" data-action="path-ceo">CEO access</button>
               </div>
-              ${ceoRequired ? '<button type="button" class="vis-ceo-link" id="denizen-visitor-ceo-link">CEO access</button>' : ''}
             </div>
           `;
-          modalEl.querySelector('[data-path="demo"]').addEventListener('click', () => {
-            pendingAccess = {
-              orgSlug: demoSlug,
-              tier: 'demo',
-              accessMethod: 'demo',
-            };
-            step = 'name';
-            render();
-          });
-          modalEl.querySelector('[data-path="team"]').addEventListener('click', () => {
-            pendingAccess = { accessMethod: 'team' };
-            step = 'team-code';
-            render();
-          });
-          modalEl.querySelector('[data-path="website"]')?.addEventListener('click', () => {
-            pendingAccess = { accessMethod: 'website' };
-            step = 'website-auth';
-            render();
-          });
-          const ceoLink = modalEl.querySelector('#denizen-visitor-ceo-link');
-          ceoLink?.addEventListener('click', () => {
-            if (ceoRequired) {
-              pendingAccess = { accessMethod: 'ceo' };
-              step = 'ceo-code';
-              render();
-            } else {
-              setCeoMode(true);
-              closeModal(null);
-            }
-          });
+          wireStepControls();
           return;
         }
 
         if (step === 'team-code') {
           modalEl.innerHTML = `
             <div class="vis-card">
-              <button type="button" class="vis-back" id="denizen-vis-back">← Back</button>
+              <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Team access</h2>
-              <p>Enter your team code to join ${teamSlug}.</p>
+              <p>Enter team code for ${teamSlug}.</p>
               <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input id="denizen-visitor-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" />
-              <button type="button" id="denizen-visitor-name-continue">Continue</button>
+              <input class="vis-input" id="denizen-visitor-code-input" type="text" maxlength="32" placeholder="1921" autocomplete="off" inputmode="numeric" />
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-team-code">Continue</button>
             </div>
           `;
-          const input = modalEl.querySelector('#denizen-visitor-code-input');
-          const btn = modalEl.querySelector('#denizen-visitor-name-continue');
-          const errEl = modalEl.querySelector('#denizen-vis-error');
-          modalEl.querySelector('#denizen-vis-back').addEventListener('click', () => {
-            step = 'choose';
-            render();
-          });
-          async function submitCode() {
-            const code = String(input.value || '').trim();
-            if (!code) {
-              input.focus();
-              return;
-            }
-            btn.disabled = true;
-            errEl.hidden = true;
-            try {
-              const verified = await verifyAccessCode(code, 'team');
-              pendingAccess = {
-                orgSlug: verified.org_slug || teamSlug,
-                tier: verified.tier || 'team',
-                accessMethod: 'team',
-                accessGrant: verified.access_grant || null,
-              };
-              step = 'name';
-              render();
-            } catch (err) {
-              errEl.textContent = err?.message || 'Invalid team code';
-              errEl.hidden = false;
-              btn.disabled = false;
-              input.focus();
-            }
-          }
-          btn.addEventListener('click', submitCode);
-          input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') submitCode();
-          });
-          setTimeout(() => input.focus(), 50);
-          return;
-        }
-
-        if (step === 'website-auth') {
-          modalEl.innerHTML = `
-            <div class="vis-card">
-              <button type="button" class="vis-back" id="denizen-vis-back">← Back</button>
-              <h2>Team email</h2>
-              <p>Register or sign in with your work email and team code.</p>
-              <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="you@company.com" autocomplete="email" />
-              <input id="denizen-visitor-code-input" type="text" maxlength="32" placeholder="Team code (1921)" autocomplete="off" style="margin-top:10px" />
-              <button type="button" id="denizen-visitor-register" style="margin-top:10px">Register</button>
-              <button type="button" id="denizen-visitor-login" style="margin-top:8px;background:#1e293b;color:#e2e8f0">Sign in</button>
-            </div>
-          `;
-          const emailInput = modalEl.querySelector('#denizen-visitor-email-input');
-          const codeInput = modalEl.querySelector('#denizen-visitor-code-input');
-          const errEl = modalEl.querySelector('#denizen-vis-error');
-          modalEl.querySelector('#denizen-vis-back').addEventListener('click', () => {
-            step = 'choose';
-            render();
-          });
-          async function submitWebsite(mode) {
-            const email = String(emailInput.value || '').trim();
-            const teamCode = String(codeInput.value || '').trim();
-            if (!email) { emailInput.focus(); return; }
-            errEl.hidden = true;
-            const path = mode === 'register' ? '/api/visitor/auth/register' : '/api/visitor/auth/login';
-            const body = mode === 'register'
-              ? { email, display_name: email.split('@')[0], team_code: teamCode }
-              : { email, team_code: teamCode || undefined };
-            try {
-              const res = await fetch(path, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-              });
-              const data = await res.json().catch(() => ({}));
-              if (!res.ok || !data.ok) throw new Error(data.error || 'Auth failed');
-              pendingAccess = {
-                orgSlug: data.org_slug || teamSlug,
-                tier: 'team',
-                accessMethod: mode === 'register' ? 'website_register' : 'website_login',
-                accessGrant: data.access_grant,
-                displayName: data.display_name || email.split('@')[0],
-              };
-              step = 'name';
-              render();
-            } catch (err) {
-              errEl.textContent = err?.message || 'Auth failed';
-              errEl.hidden = false;
-            }
-          }
-          modalEl.querySelector('#denizen-visitor-register').addEventListener('click', () => submitWebsite('register'));
-          modalEl.querySelector('#denizen-visitor-login').addEventListener('click', () => submitWebsite('login'));
-          setTimeout(() => emailInput.focus(), 50);
+          focusFirstInput();
           return;
         }
 
         if (step === 'ceo-code') {
           modalEl.innerHTML = `
             <div class="vis-card">
-              <button type="button" class="vis-back" id="denizen-vis-back">← Back</button>
+              <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>CEO access</h2>
-              <p>Enter your CEO access code.</p>
+              <p>Enter CEO code.</p>
               <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input id="denizen-visitor-code-input" type="password" maxlength="32" placeholder="CEO code" autocomplete="off" />
-              <button type="button" id="denizen-visitor-name-continue">Continue</button>
+              <input class="vis-input" id="denizen-visitor-code-input" type="text" maxlength="32" placeholder="Dolonia" autocomplete="off" autocapitalize="words" />
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-ceo-code">Continue</button>
             </div>
           `;
-          const input = modalEl.querySelector('#denizen-visitor-code-input');
-          const btn = modalEl.querySelector('#denizen-visitor-name-continue');
-          const errEl = modalEl.querySelector('#denizen-vis-error');
-          modalEl.querySelector('#denizen-vis-back').addEventListener('click', () => {
-            step = 'choose';
-            render();
-          });
-          async function submitCeoCode() {
-            const code = String(input.value || '').trim();
-            if (!code) {
-              input.focus();
-              return;
-            }
-            btn.disabled = true;
-            errEl.hidden = true;
-            try {
-              const verified = await verifyAccessCode(code, 'ceo');
-              if (verified.ceo_grant) {
-                try { localStorage.setItem('denizen-ceo-grant', verified.ceo_grant); } catch (_) {}
-              }
-              setCeoMode(true);
-              closeModal(null);
-            } catch (err) {
-              errEl.textContent = err?.message || 'Invalid CEO code';
-              errEl.hidden = false;
-              btn.disabled = false;
-              input.focus();
-            }
-          }
-          btn.addEventListener('click', submitCeoCode);
-          input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') submitCeoCode();
-          });
-          setTimeout(() => input.focus(), 50);
+          focusFirstInput();
+          wireStepControls();
           return;
         }
 
         if (step === 'name') {
           modalEl.innerHTML = `
             <div class="vis-card">
-              <button type="button" class="vis-back" id="denizen-vis-back">← Back</button>
+              <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Welcome to Denizen</h2>
               <p>What's your name?</p>
-              <input id="denizen-visitor-name-input" type="text" maxlength="64" placeholder="Your name" autocomplete="name" />
-              <button type="button" id="denizen-visitor-name-continue">Continue</button>
+              <input class="vis-input" id="denizen-visitor-name-input" type="text" maxlength="64" placeholder="Your name" autocomplete="name" />
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-name">Continue</button>
             </div>
           `;
-          const input = modalEl.querySelector('#denizen-visitor-name-input');
-          const btn = modalEl.querySelector('#denizen-visitor-name-continue');
-          modalEl.querySelector('#denizen-vis-back').addEventListener('click', () => {
-            step = pendingAccess?.accessMethod === 'team' ? 'team-code' : 'choose';
-            render();
-          });
-          function submitName() {
-            const name = String(input.value || '').trim();
-            if (!name) {
-              input.focus();
-              return;
-            }
-            btn.disabled = true;
-            closeModal({
-              displayName: pendingAccess.displayName || name,
-              orgSlug: pendingAccess.orgSlug,
-              tier: pendingAccess.tier,
-              accessMethod: pendingAccess.accessMethod,
-              accessGrant: pendingAccess.accessGrant || null,
-            });
-          }
-          btn.addEventListener('click', submitName);
-          input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') submitName();
-          });
-          setTimeout(() => input.focus(), 50);
+          focusFirstInput();
+          wireStepControls();
         }
       }
 
+      render();
       fetchOfficeConfig().then(() => render());
     });
   }
@@ -551,6 +588,10 @@
     if (sessionId) body.session_id = sessionId;
     if (sessionToken) body.session_token = sessionToken;
     if (opts.accessGrant) body.access_grant = opts.accessGrant;
+    const meta = {};
+    if (opts.accessMethod) meta.access_method = opts.accessMethod;
+    if (opts.accessMethod === 'ceo') meta.is_ceo_principal = true;
+    if (Object.keys(meta).length) body.metadata = meta;
     if (opts.tier === 'demo' || opts.accessMethod === 'demo') {
       body.demo = true;
     } else if (opts.orgSlug) {
@@ -572,12 +613,14 @@
     if (data.session_token) sessionToken = data.session_token;
     if (opts.tier) tier = opts.tier;
     if (opts.orgSlug) orgSlug = opts.orgSlug;
+    if (opts.accessMethod) accessMethod = opts.accessMethod;
     const store = {
       session_id: sessionId,
       session_token: sessionToken || null,
       display_name: displayName,
       tier: tier || opts.tier || null,
       org_slug: orgSlug || data.org?.slug || opts.orgSlug || null,
+      access_method: accessMethod || opts.accessMethod || readStore().access_method || null,
     };
     writeStore(store);
     return session;
@@ -671,7 +714,7 @@
     },
 
     isCeoMode() {
-      return !!globalThis.__DenizenCeoMode;
+      return false;
     },
 
     getTier() {
@@ -684,6 +727,19 @@
 
     isTeam() {
       return DenizenVisitorSession.getTier() === 'team';
+    },
+
+    getAccessMethod() {
+      return accessMethod || readStore().access_method || null;
+    },
+
+    isCeoPrincipal() {
+      if (DenizenVisitorSession.getAccessMethod() === 'ceo') return true;
+      try {
+        return !!localStorage.getItem('denizen-ceo-grant');
+      } catch (_) {
+        return false;
+      }
     },
 
     authHeaders(extra = {}) {
@@ -850,9 +906,7 @@
       if (initPromise) return initPromise;
 
       initPromise = (async () => {
-        if (DenizenVisitorSession.isCeoMode()) {
-          return { sessionId: null, displayName: null, assistant: null };
-        }
+        clearCeoUiMode();
 
         const stored = readStore();
         sessionId = stored.session_id || null;
@@ -860,6 +914,7 @@
         displayName = stored.display_name || null;
         tier = stored.tier || null;
         orgSlug = stored.org_slug || null;
+        accessMethod = stored.access_method || null;
 
         if (!displayName || !tier) {
           const welcome = await showWelcomeModal();
@@ -888,7 +943,7 @@
           }
         }
 
-        if (!displayName || DenizenVisitorSession.isCeoMode()) {
+        if (!displayName) {
           return { sessionId: null, displayName: null, assistant: null };
         }
 

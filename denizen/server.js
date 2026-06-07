@@ -520,7 +520,7 @@ function _resolveVoiceForNpc(npcName, payload = {}) {
   };
 }
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8081;
 const STT_MAX_AUDIO_BYTES = 12 * 1024 * 1024; // 12MB hard cap
 
 function _resolveSttConfig() {
@@ -4083,7 +4083,7 @@ const server = http.createServer((req, res) => {
           <h2>✓ Robinhood Connected</h2>
           <p>Roki is now watching the market.</p>
           <p>Close this tab and head back to the office.</p>
-          <p style="margin-top:16px"><a href="http://localhost:8080">← Return to Denizen</a></p>
+          <p style="margin-top:16px"><a href="http://localhost:${PORT}">← Return to Denizen</a></p>
         </div></body></html>`);
         if (agentWss) agentWss.clients.forEach(c => {
           if (c.readyState === 1) c.send(JSON.stringify({ type: 'market_auth_connected', ts: Date.now() }));
@@ -5934,7 +5934,12 @@ const server = http.createServer((req, res) => {
       return;
     }
     const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    const headers = { 'Content-Type': MIME[ext] || 'application/octet-stream' };
+    if (['.html', '.js', '.css', '.json', '.map'].includes(ext)) {
+      headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+      headers.Pragma = 'no-cache';
+    }
+    res.writeHead(200, headers);
     res.end(data);
   });
 });

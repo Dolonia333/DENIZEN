@@ -504,25 +504,23 @@
 
 
 
-  function attach(playerChat) {
+  function rewireFab(playerChat) {
 
-    if (!playerChat || attached) return;
+    if (!playerChat) return;
 
-    attached = true;
+    ensureFab();
 
-    if (loadBanner) {
-
-      loadBanner.style.display = 'none';
-
-    }
-
-    playerChat._fab = fab;
-
-    playerChat._useBootstrapFab = true;
+    if (!fab) return;
 
     fab.replaceWith(fab.cloneNode(true));
 
     fab = document.getElementById('player-chat-fab');
+
+    if (!fab) return;
+
+    playerChat._fab = fab;
+
+    playerChat._useBootstrapFab = true;
 
     const onFab = (e) => {
 
@@ -536,10 +534,31 @@
 
     else fab.addEventListener('click', onFab);
 
+    playerChat._syncFabLabel?.();
+
+  }
+
+
+
+  function attach(playerChat) {
+
+    if (!playerChat) return;
+
+    const firstAttach = !attached;
+
+    attached = true;
+
+    if (firstAttach && loadBanner) {
+
+      loadBanner.style.display = 'none';
+
+    }
+
+    rewireFab(playerChat);
 
     playerChat.setWsConnected(!!(playerChat.manager?.connected || playerChat.manager?.ws?.readyState === WebSocket.OPEN));
 
-    console.log('[ChatBootstrap] attached to PlayerChat');
+    if (firstAttach) console.log('[ChatBootstrap] attached to PlayerChat');
 
   }
 
@@ -561,19 +580,11 @@
 
 
 
-  window.__DenizenChatBootstrap = { attach, setLoadPct, boot };
+  window.__DenizenChatBootstrap = { attach, rewireFab, setLoadPct, boot };
 
 
 
-  if (document.readyState === 'loading') {
-
-    document.addEventListener('DOMContentLoaded', boot);
-
-  } else {
-
-    boot();
-
-  }
+  boot();
 
 })();
 

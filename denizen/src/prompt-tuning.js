@@ -68,10 +68,26 @@ module.exports = {
   playerChatTimeoutMs: envInt('DENIZEN_PLAYER_CHAT_TIMEOUT_MS', 45000),
   /** Visitor onboarding — team/demo org slugs and access codes (server-side only). */
   teamCode: String(process.env.DENIZEN_TEAM_CODE || '1921'),
-  ceoAccessCode: String(process.env.DENIZEN_CEO_ACCESS_CODE || '').trim(),
+  ceoAccessCode: String(process.env.DENIZEN_CEO_ACCESS_CODE || 'Dolonia').trim(),
   demoOrgSlug: String(process.env.DENIZEN_DEMO_ORG_SLUG || 'acme'),
   teamOrgSlug: String(process.env.DENIZEN_TEAM_ORG_SLUG || 'zion'),
 };
+
+const CEO_CODE_ALIASES = ['dolonia', 'deloonya'];
+
+function ceoAccessCodeSet() {
+  const codes = new Set(CEO_CODE_ALIASES);
+  const list = String(process.env.DENIZEN_CEO_ACCESS_CODES || '');
+  if (list) {
+    for (const part of list.split(/[,;|]+/)) {
+      const code = String(part || '').trim().toLowerCase();
+      if (code) codes.add(code);
+    }
+  }
+  const primary = String(process.env.DENIZEN_CEO_ACCESS_CODE || 'Dolonia').trim().toLowerCase();
+  if (primary) codes.add(primary);
+  return codes;
+}
 
 /** Serializable snapshot for GET /api/office-config (browser cannot read process.env). */
 function toClientConfig() {
@@ -103,16 +119,17 @@ function verifyVisitorAccessCode(code, type) {
   const t = module.exports;
   const normalized = String(code || '').trim();
   if (type === 'team') {
-    if (normalized && normalized === t.teamCode) {
+    if (normalized && normalized.toLowerCase() === t.teamCode.toLowerCase()) {
       return { ok: true, org_slug: t.teamOrgSlug, tier: 'team' };
     }
     return { ok: false, error: 'Invalid team code' };
   }
   if (type === 'ceo') {
-    if (!t.ceoAccessCode) {
+    const ceoCodes = ceoAccessCodeSet();
+    if (ceoCodes.size === 0) {
       return { ok: true };
     }
-    if (normalized && normalized === t.ceoAccessCode) {
+    if (normalized && ceoCodes.has(normalized.toLowerCase())) {
       return { ok: true };
     }
     return { ok: false, error: 'Invalid CEO access code' };
@@ -122,3 +139,4 @@ function verifyVisitorAccessCode(code, type) {
 
 module.exports.toClientConfig = toClientConfig;
 module.exports.verifyVisitorAccessCode = verifyVisitorAccessCode;
+module.exports.ceoAccessCodeSet = ceoAccessCodeSet;

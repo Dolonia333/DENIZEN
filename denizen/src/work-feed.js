@@ -130,7 +130,7 @@ class WorkFeedPanel {
       style.textContent = `
         #denizen-work-feed {
           position: fixed;
-          bottom: max(52px, calc(env(safe-area-inset-bottom, 0px) + 52px));
+          bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px));
           left: max(8px, env(safe-area-inset-left, 0px));
           width: 320px;
           max-height: 200px;

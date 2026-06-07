@@ -1747,16 +1747,44 @@ class OfficeScene extends Phaser.Scene {
     });
   }
 
+  _showTapMarker(worldX, worldY) {
+    if (this._tapMarker) {
+      this._tapMarker.destroy();
+      this._tapMarker = null;
+    }
+    const ring = this.add.circle(worldX, worldY, 10, 0x4ade80, 0.45);
+    ring.setStrokeStyle(2, 0x22c55e, 0.9);
+    ring.setDepth(9000);
+    this._tapMarker = ring;
+    this.tweens.add({
+      targets: ring,
+      alpha: 0,
+      scaleX: 1.8,
+      scaleY: 1.8,
+      duration: 550,
+      ease: 'Cubic.easeOut',
+      onComplete: () => {
+        ring.destroy();
+        if (this._tapMarker === ring) this._tapMarker = null;
+      },
+    });
+  }
+
   _installTapToMove() {
     if (this._tapToMoveInstalled) return;
     this._tapToMoveInstalled = true;
     this.input.on('pointerdown', (pointer, gameObjects) => {
       if (!window.__DenizenIsTouch) return;
+      if (document.documentElement.classList.contains('denizen-portrait-blocked')) return;
       if (this.playerLocked || this._editorHandlers) return;
+      if (document.documentElement.classList.contains('denizen-chat-open')) return;
       const hitNpc = gameObjects?.some((go) => Array.isArray(this.npcs) && this.npcs.includes(go));
       if (hitNpc) return;
       if (this._playerPathFollower?.navigateTo(pointer.worldX, pointer.worldY)) {
         window.DenizenHaptics?.tap?.();
+        if (window.DenizenMobilePlay?.useTapMove?.()) {
+          this._showTapMarker(pointer.worldX, pointer.worldY);
+        }
       }
     });
   }
@@ -3170,7 +3198,8 @@ window.game = new Phaser.Game(config);
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (document.documentElement.dataset.denizenModal === 'open') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
     if (e.key === 'e' || e.key === 'E') {
       if (editorActive) disableEditor();
       else enableEditor();

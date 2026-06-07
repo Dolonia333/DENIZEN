@@ -12,16 +12,14 @@
   }
 
   function isCeo() {
-    return !!globalThis.__DenizenCeoMode;
+    return !!sess()?.isCeoPrincipal?.();
   }
 
   function isDemo() {
-    if (isCeo()) return false;
     return !!sess()?.isDemo?.();
   }
 
   function isTeam() {
-    if (isCeo()) return true;
     return !!sess()?.isTeam?.();
   }
 

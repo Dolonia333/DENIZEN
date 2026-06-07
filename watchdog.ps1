@@ -32,10 +32,10 @@ while ($true) {
         Start-Sleep -Seconds 10
     }
 
-    # Check Denizen web server on port 8080 (denizen.dolonia.cloud origin)
-    if (-not (Test-Port 8080)) {
-        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Denizen server down (8080) - restarting..."
-        Start-Process -FilePath "node" -ArgumentList "server.js" -WorkingDirectory $DenizenDir -WindowStyle Minimized
+    # Check Denizen web server on port 8081 (denizen.dolonia.cloud origin)
+    if (-not (Test-Port 8081)) {
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Denizen server down (8081) - restarting..."
+        Start-Process -FilePath "node" -ArgumentList "--env-file=.env", "server.js" -WorkingDirectory $DenizenDir -WindowStyle Minimized
         Start-Sleep -Seconds 8
     }
 

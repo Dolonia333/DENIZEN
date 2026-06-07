@@ -309,12 +309,10 @@
     if (!presenceChip) return;
     const on = !!window.DenizenPresence?.zionPresent;
     const touch = isTouchUi();
-    presenceChip.textContent = touch
-      ? (on ? '👤🔊' : '👤🔇')
-      : (on ? '👤 voice ON' : '👤 voice OFF');
+    presenceChip.textContent = touch ? '👤' : (on ? '👤 voice ON' : '👤 voice OFF');
     presenceChip.title = on
-      ? 'NPC voice output ON — tap to mute all speech'
-      : 'NPC voice output OFF — tap to hear NPCs (required for Listen-in / Focus)';
+      ? 'Voice ON — tap to mute NPC speech'
+      : 'Voice OFF — tap to hear NPCs';
     presenceChip.style.background = on ? '#064e3b' : '#0f172a';
     presenceChip.style.borderColor = on ? '#34d399' : '#355';
     presenceChip.style.display = 'block';

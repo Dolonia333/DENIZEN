@@ -4,7 +4,7 @@
   "description": "AI office simulator — play and manage your team from phone or desktop.",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "landscape",
   "background_color": "#020617",
   "theme_color": "#020617",
   "icons": []

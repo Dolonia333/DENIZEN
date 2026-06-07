@@ -152,12 +152,15 @@
   function positionClaimBtn() {
     if (!claimBtn) return;
     const gc = document.getElementById('game-container');
+    const safeTop = 12;
     if (!gc) {
-      claimBtn.style.top = 'calc(50% - 80px)';
+      claimBtn.style.top = `calc(${safeTop}px + env(safe-area-inset-top, 0px))`;
       return;
     }
     const rect = gc.getBoundingClientRect();
-    claimBtn.style.top = `${Math.max(12, rect.top - 48)}px`;
+    const bodyPad = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    const minTop = Math.max(safeTop + bodyPad, 12);
+    claimBtn.style.top = `${Math.max(minTop, rect.top - 48)}px`;
   }
 
   function ensureClaimBtn() {

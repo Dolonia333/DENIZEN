@@ -12,6 +12,7 @@
 
   const SLOT_MAP_DESKTOP = {
     left: [
+      'denizen-onboarding-replay-chip',
       'denizen-audio-mode-chip',
       'denizen-diag-chip',
       'denizen-security-chip',
@@ -20,7 +21,6 @@
     center: ['player-chat-fab'],
     right: [
       'denizen-presence-chip',
-      'denizen-ceo-mode-chip',
       'denizen-browser-mirror-chip',
       'denizen-proposals-chip',
       'denizen-mic-button',
@@ -29,7 +29,12 @@
 
   /** Mobile: mic + voice + LM beside chat so they are not off-screen in the dock scroll. */
   const SLOT_MAP_TOUCH = {
-    left: ['denizen-audio-mode-chip', 'denizen-diag-chip', 'denizen-security-chip'],
+    left: [
+      'denizen-onboarding-replay-chip',
+      'denizen-audio-mode-chip',
+      'denizen-diag-chip',
+      'denizen-security-chip',
+    ],
     center: [
       'denizen-llm-tel-chip',
       'player-chat-fab',
@@ -37,7 +42,6 @@
       'denizen-presence-chip',
     ],
     right: [
-      'denizen-ceo-mode-chip',
       'denizen-browser-mirror-chip',
       'denizen-proposals-chip',
     ],
@@ -241,13 +245,15 @@
 
       /* Touch: icon-compact dock — fits portrait + landscape like desktop */
       html.denizen-touch {
-        --denizen-dock-height: 48px;
+        --denizen-dock-height: 44px;
       }
       html.denizen-touch #${DOCK_ID} {
-        gap: 3px;
-        padding: 4px max(6px, env(safe-area-inset-right, 0px))
-                 max(4px, env(safe-area-inset-bottom, 0px))
-                 max(6px, env(safe-area-inset-left, 0px));
+        gap: 2px;
+        padding: 2px max(4px, env(safe-area-inset-right, 0px))
+                 max(2px, env(safe-area-inset-bottom, 0px))
+                 max(4px, env(safe-area-inset-left, 0px));
+        mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
       }
       html.denizen-touch #${DOCK_ID} .denizen-dock-group {
         flex: 0 0 auto;
@@ -263,10 +269,10 @@
         flex-shrink: 0;
       }
       html.denizen-touch #${DOCK_ID} .denizen-dock-chip {
-        min-height: 40px;
-        min-width: 40px;
-        max-width: 48px;
-        padding: 6px 8px !important;
+        min-height: 44px;
+        min-width: 44px;
+        max-width: 52px;
+        padding: 8px 10px !important;
         font-size: 18px !important;
         line-height: 1 !important;
       }
@@ -275,16 +281,16 @@
         font-size: 16px !important;
       }
       html.denizen-touch #${DOCK_ID} #player-chat-fab {
-        padding: 7px 14px !important;
-        font-size: 18px !important;
-        min-height: 40px;
-        min-width: 44px;
+        padding: 6px 12px !important;
+        font-size: 17px !important;
+        min-height: 38px;
+        min-width: 40px;
       }
       html.denizen-touch #${DOCK_ID} #denizen-mic-button {
-        width: 44px !important;
-        height: 44px !important;
-        min-width: 44px !important;
-        font-size: 18px !important;
+        width: 40px !important;
+        height: 40px !important;
+        min-width: 40px !important;
+        font-size: 17px !important;
       }
       html.denizen-touch.denizen-landscape #denizen-browser-mirror-panel {
         min-height: min(58dvh, 420px) !important;
@@ -318,12 +324,12 @@
   }
 
   const CHIP_ICONS = {
+    'denizen-onboarding-replay-chip': '📖',
     'denizen-diag-chip': '⋯',
     'denizen-security-chip': '🛡️',
     'denizen-llm-tel-chip': '⚙',
     'denizen-audio-mode-chip': '🔊',
     'denizen-presence-chip': '👤',
-    'denizen-ceo-mode-chip': '👔',
     'denizen-browser-mirror-chip': '🌐',
     'denizen-proposals-chip': '📋',
     'player-chat-fab': '💬',
@@ -341,6 +347,11 @@
       const el = document.getElementById(id);
       if (!el) continue;
       if (dynamicLabels.has(id)) continue;
+      if (id === 'player-chat-fab' && window.__DenizenPlayerChat?.isOpen) {
+        if (!el.dataset.fullLabel) el.dataset.fullLabel = window.__DenizenPlayerChat._chatFabClosedLabel?.() || '💬 Chat';
+        window.__DenizenPlayerChat._syncFabLabel?.();
+        continue;
+      }
       if (compact) {
         if (!el.dataset.fullLabel) el.dataset.fullLabel = el.textContent || icon;
         el.textContent = icon;
@@ -368,6 +379,8 @@
     window.DenizenVoiceInput?.rewireTouch?.();
     window.DenizenProximityAudio?.rewireTouch?.();
     window.DenizenLlmTelemetry?.rewireTouch?.();
+    window.__DenizenChatBootstrap?.rewireFab?.(window.__DenizenPlayerChat);
+    globalThis.DenizenVisitorOnboarding?.rewireReplayChip?.();
   }
 
   function adoptAll() {

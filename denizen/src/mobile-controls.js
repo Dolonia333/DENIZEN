@@ -1,6 +1,6 @@
 /**
- * Mobile play — landscape-first touch controls, layout sync, on-screen joystick.
- * Sets html classes: denizen-touch | denizen-landscape | denizen-portrait
+ * Mobile play — landscape-only on touch devices.
+ * Sets html classes: denizen-touch | denizen-landscape | denizen-portrait-blocked
  * Exposes window.__DenizenTouchState for office-scene.js movement + interact.
  */
 (function () {
@@ -35,12 +35,19 @@
 
   const STYLE_ID = 'denizen-mobile-play-styles';
   const CONTROLS_ID = 'denizen-mobile-controls';
+  const TAP_INTERACT_ID = 'denizen-tap-interact';
   const ROTATE_ID = 'denizen-rotate-hint';
   const CEO_CHIP_ID = 'denizen-ceo-mode-chip';
   const CEO_SHELL_ID = 'denizen-ceo-shell';
 
-  let ceoMode = false;
   window.__DenizenCeoMode = false;
+
+  function removeCeoUiArtifacts() {
+    window.__DenizenCeoMode = false;
+    document.documentElement.classList.remove('denizen-ceo-mode');
+    document.getElementById(CEO_CHIP_ID)?.remove();
+    document.getElementById(CEO_SHELL_ID)?.remove();
+  }
 
   function setDir(next) {
     state.left = !!next.left;
@@ -66,8 +73,13 @@
     }
   }
 
+  /** Small phones — not tablets/iPads (min edge ≥ 520px = tablet). */
   function isPhoneLike() {
     return Math.min(window.innerWidth, window.innerHeight) < 520;
+  }
+
+  function useTapMove() {
+    return isPhoneLike();
   }
 
   function syncLayoutClasses() {
@@ -77,13 +89,21 @@
     root.classList.toggle('denizen-landscape', landscape);
     root.classList.toggle('denizen-portrait', !landscape);
     root.classList.toggle('denizen-phone', isPhoneLike());
+    root.classList.toggle('denizen-tap-move', useTapMove() && landscape);
+
+    const portraitBlocked = !landscape;
+    root.classList.toggle('denizen-portrait-blocked', portraitBlocked);
+    document.body.classList.toggle('denizen-rotate-blocking', portraitBlocked);
 
     const hint = document.getElementById(ROTATE_ID);
-    if (hint) {
-      const showHint = isPhoneLike() && !landscape;
-      hint.classList.toggle('show', showHint);
-      document.body.classList.toggle('denizen-rotate-blocking', showHint);
-    }
+    if (hint) hint.classList.toggle('show', portraitBlocked);
+  }
+
+  function tryLockLandscape() {
+    if (!isLandscape()) return;
+    try {
+      screen.orientation?.lock?.('landscape').catch(() => {});
+    } catch (_) {}
   }
 
   function injectStyles() {
@@ -93,7 +113,14 @@
     style.textContent = `
       :root {
         --denizen-play-top: var(--safe-top, env(safe-area-inset-top, 0px));
+        --denizen-play-gap: 2px;
         --denizen-keyboard-offset: 0px;
+      }
+
+      /* Landscape: notch is on the sides — reclaim top/bottom space for the canvas */
+      html.denizen-touch.denizen-landscape {
+        --denizen-play-top: 0px;
+        --denizen-play-gap: 1px;
       }
 
       html.denizen-touch body {
@@ -101,47 +128,39 @@
         justify-content: center;
         padding:
           var(--denizen-play-top)
-          var(--safe-right, env(safe-area-inset-right, 0px))
-          calc(var(--denizen-dock-height, 52px) + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))
-          var(--safe-left, env(safe-area-inset-left, 0px));
+          max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
+          calc(var(--denizen-dock-height, 48px) + max(var(--denizen-play-gap), env(safe-area-inset-bottom, 0px)))
+          max(var(--denizen-play-gap), env(safe-area-inset-left, 0px));
       }
 
       html.denizen-touch #game-container {
-        width: min(
-          calc(100dvw - var(--safe-left, 0px) - var(--safe-right, 0px) - 8px),
-          calc((100dvh - var(--denizen-dock-height, 52px) - var(--denizen-play-top) - var(--safe-bottom, env(safe-area-inset-bottom, 0px)) - 6px) * 16 / 9)
+        --denizen-play-w: calc(
+          100dvw - max(var(--denizen-play-gap), env(safe-area-inset-left, 0px))
+                  - max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
         );
-        height: min(
-          calc(100dvh - var(--denizen-dock-height, 52px) - var(--denizen-play-top) - var(--safe-bottom, env(safe-area-inset-bottom, 0px)) - 6px),
-          calc((100dvw - var(--safe-left, 0px) - var(--safe-right, 0px) - 8px) * 9 / 16)
+        --denizen-play-h: calc(
+          100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
+                   - max(var(--denizen-play-gap), env(safe-area-inset-bottom, 0px))
+                   - var(--denizen-play-gap)
         );
+        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
+        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
         max-width: none;
         max-height: none;
-        border-radius: 8px;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+        border-radius: 4px;
+        border-width: 0;
+        box-shadow: none;
       }
 
-      html.denizen-touch.denizen-landscape.denizen-phone #game-container {
-        width: min(
-          calc(100dvw - var(--safe-left, 0px) - var(--safe-right, 0px) - 12px),
-          calc((100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top) - var(--safe-bottom, env(safe-area-inset-bottom, 0px)) - 4px) * 16 / 9)
-        );
-        height: min(
-          calc(100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top) - var(--safe-bottom, env(safe-area-inset-bottom, 0px)) - 4px),
-          calc((100dvw - var(--safe-left, 0px) - var(--safe-right, 0px) - 12px) * 9 / 16)
-        );
-      }
-
-      html.denizen-touch.denizen-portrait.denizen-phone #game-container {
-        width: min(calc(100dvw - 10px), calc((100dvh - var(--denizen-dock-height, 52px) - 120px) * 16 / 9));
-        height: min(calc(100dvh - var(--denizen-dock-height, 52px) - 120px), calc((100dvw - 10px) * 9 / 16));
+      html.denizen-touch.denizen-landscape #game-container {
+        border-radius: 2px;
       }
 
       #${ROTATE_ID} {
         display: none;
         position: fixed;
         inset: 0;
-        z-index: 100050;
+        z-index: 2147483100;
         background: rgba(2, 6, 23, 0.72);
         color: #e2e8f0;
         flex-direction: column;
@@ -153,22 +172,19 @@
         font: 14px/1.5 system-ui, sans-serif;
         pointer-events: none;
       }
-      #${ROTATE_ID}.show { display: flex; }
-      #${ROTATE_ID} .icon,
-      #${ROTATE_ID} div,
-      #${ROTATE_ID} button {
-        pointer-events: auto;
-      }
+      #${ROTATE_ID}.show { display: flex; pointer-events: auto; }
       #${ROTATE_ID} .icon { font-size: 42px; }
-      #${ROTATE_ID} button {
-        margin-top: 8px;
-        background: #1e293b;
-        color: #cbd5e1;
-        border: 1px solid #475569;
-        border-radius: 8px;
-        padding: 10px 16px;
-        font-size: 13px;
-        cursor: pointer;
+
+      /* Portrait is not supported — hide all play UI until rotated */
+      html.denizen-touch.denizen-portrait-blocked #game-container,
+      html.denizen-touch.denizen-portrait-blocked #denizen-bottom-dock,
+      html.denizen-touch.denizen-portrait-blocked #denizen-tap-interact,
+      html.denizen-touch.denizen-portrait-blocked #${CONTROLS_ID},
+      html.denizen-touch.denizen-portrait-blocked #player-chat-panel,
+      html.denizen-touch.denizen-portrait-blocked #denizen-visitor-name-modal,
+      html.denizen-touch.denizen-portrait-blocked #denizen-visitor-onboarding {
+        visibility: hidden !important;
+        pointer-events: none !important;
       }
 
       #${CONTROLS_ID} {
@@ -181,12 +197,67 @@
         pointer-events: none;
         display: none;
       }
-      html.denizen-touch.denizen-landscape #${CONTROLS_ID},
-      html.denizen-touch.denizen-phone #${CONTROLS_ID} {
+      /* Tablets only — landscape joystick (phones use tap-to-move) */
+      html.denizen-touch.denizen-landscape:not(.denizen-tap-move) #${CONTROLS_ID} {
         display: block;
       }
-      html.denizen-touch.denizen-portrait.denizen-phone #${CONTROLS_ID} {
+      html.denizen-touch.denizen-tap-move #${CONTROLS_ID} {
+        display: none !important;
+      }
+      html.denizen-touch.denizen-chat-open #${CONTROLS_ID} {
+        display: none !important;
+      }
+
+      /* Compact interact — top corner, phones only (replaces large E button) */
+      #${TAP_INTERACT_ID} {
         display: none;
+        position: fixed;
+        top: calc(var(--denizen-play-top) + max(6px, env(safe-area-inset-top, 0px)));
+        right: max(6px, env(safe-area-inset-right, 0px));
+        z-index: 99995;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(30, 58, 138, 0.88);
+        border: 2px solid rgba(96, 165, 250, 0.7);
+        color: #dbeafe;
+        font: 700 13px/1 system-ui, sans-serif;
+        cursor: pointer;
+        touch-action: manipulation;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+        padding: 0;
+      }
+      html.denizen-touch.denizen-tap-move.denizen-landscape #${TAP_INTERACT_ID} {
+        display: block;
+      }
+      html.denizen-touch.denizen-chat-open #${TAP_INTERACT_ID},
+      html.denizen-touch.denizen-rotate-blocking #${TAP_INTERACT_ID} {
+        display: none !important;
+      }
+      #${TAP_INTERACT_ID}:active {
+        transform: scale(0.94);
+        background: rgba(29, 78, 216, 0.95);
+      }
+
+      /* Block stray taps on the game while rotate hint is up */
+      html.denizen-touch.denizen-rotate-blocking #game-container,
+      html.denizen-touch.denizen-rotate-blocking #game-container canvas {
+        pointer-events: none !important;
+      }
+
+      /* Hide floating chips until bottom-dock adopts them (prevents overlap flash) */
+      html.denizen-touch body:not(.denizen-dock-ready) #player-chat-fab,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-mic-button,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-onboarding-replay-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-diag-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-security-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-llm-tel-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-audio-mode-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-presence-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-browser-mirror-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-proposals-chip {
+        visibility: hidden !important;
+        pointer-events: none !important;
       }
 
       #${CONTROLS_ID} .mc-joy-base {
@@ -389,108 +460,9 @@
     );
   }
 
-  function canUseCeoModeChip() {
-    const caps = globalThis.DenizenVisitorCapabilities;
-    if (caps?.isDemo?.()) return false;
-    return true;
-  }
-
-  function setCeoMode(on) {
-    if (on && !canUseCeoModeChip()) return;
-    ceoMode = !!on;
-    window.__DenizenCeoMode = ceoMode;
-    document.documentElement.classList.toggle('denizen-ceo-mode', ceoMode);
-    const chip = document.getElementById(CEO_CHIP_ID);
-    if (chip) {
-      chip.classList.toggle('active', ceoMode);
-      chip.setAttribute('aria-pressed', ceoMode ? 'true' : 'false');
-      chip.title = ceoMode ? 'Exit CEO mode (walk office)' : 'CEO mode (manage without walking)';
-    }
-    if (ceoMode) {
-      document.body.classList.remove('denizen-rotate-blocking');
-      const hint = document.getElementById(ROTATE_ID);
-      if (hint) hint.classList.remove('show');
-    } else {
-      syncLayoutClasses();
-    }
-  }
-
-  function toggleCeoMode() {
-    setCeoMode(!ceoMode);
-    window.DenizenHaptics?.impact?.();
-  }
-
-  function buildCeoModeChip() {
-    if (!canUseCeoModeChip()) return;
-    if (document.getElementById(CEO_CHIP_ID)) return;
-    const chip = document.createElement('button');
-    chip.id = CEO_CHIP_ID;
-    chip.type = 'button';
-    chip.className = 'denizen-dock-chip';
-    chip.setAttribute('aria-pressed', 'false');
-    chip.title = 'CEO mode (manage without walking)';
-    chip.textContent = '👔 CEO';
-    const bind = window.DenizenTouchBind?.bindPress;
-    if (bind) {
-      bind(chip, () => toggleCeoMode());
-    } else {
-      chip.addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleCeoMode();
-      });
-    }
-    document.body.appendChild(chip);
-  }
-
-  function buildCeoShell() {
-    if (document.getElementById(CEO_SHELL_ID)) return;
-
-    const shell = document.createElement('div');
-    shell.id = CEO_SHELL_ID;
-    shell.setAttribute('aria-label', 'CEO quick actions');
-    shell.innerHTML = `
-      <div class="ceo-title">CEO mode</div>
-      <div class="ceo-actions">
-        <button type="button" class="ceo-btn" data-ceo-chat>
-          <span class="icon">💬</span><span>Chat</span>
-        </button>
-        <button type="button" class="ceo-btn" data-ceo-browser>
-          <span class="icon">🌐</span><span>Browser mirror</span>
-        </button>
-        <button type="button" class="ceo-btn" data-ceo-proposals>
-          <span class="icon">📋</span><span>Proposals</span>
-        </button>
-      </div>`;
-    document.body.appendChild(shell);
-
-    const bind = window.DenizenTouchBind?.bindPress;
-    const wireCeoBtn = (sel, fn) => {
-      const el = shell.querySelector(sel);
-      if (!el) return;
-      if (bind) bind(el, fn);
-      else el.addEventListener('click', fn);
-    };
-    wireCeoBtn('[data-ceo-chat]', () => {
-      window.DenizenHaptics?.tap?.();
-      const pc = window.__DenizenPlayerChat;
-      if (pc && typeof pc.toggle === 'function') pc.toggle();
-    });
-    wireCeoBtn('[data-ceo-browser]', () => {
-      window.DenizenHaptics?.tap?.();
-      if (typeof window.DenizenBrowserMirror?.show === 'function') {
-        window.DenizenBrowserMirror.show();
-      } else {
-        window.DenizenBrowserMirror?.toggle?.();
-      }
-    });
-    wireCeoBtn('[data-ceo-proposals]', () => {
-      window.DenizenHaptics?.tap?.();
-      if (typeof window.DenizenProposals?.show === 'function') {
-        window.DenizenProposals.show();
-      } else {
-        window.DenizenProposals?.toggle?.();
-      }
-    });
+  function setCeoMode() {
+    removeCeoUiArtifacts();
+    syncLayoutClasses();
   }
 
   function buildRotateHint() {
@@ -499,16 +471,7 @@
     el.id = ROTATE_ID;
     el.innerHTML = `
       <div class="icon">📱↻</div>
-      <div><strong>Turn your phone sideways</strong> to walk the office.<br>Use the joystick + Action button to move and interact.</div>
-      <button type="button" data-dismiss>Play in portrait anyway</button>`;
-    el.querySelector('[data-dismiss]')?.addEventListener('click', () => {
-      el.classList.remove('show');
-      document.body.classList.remove('denizen-rotate-blocking');
-      sessionStorage.setItem('denizen-portrait-ok', '1');
-    });
-    if (sessionStorage.getItem('denizen-portrait-ok') === '1') {
-      document.body.classList.remove('denizen-rotate-blocking');
-    }
+      <div><strong>Rotate your device sideways</strong><br>Denizen only works in landscape on phones and tablets.<br>Tap the office to walk once you rotate.</div>`;
     document.body.appendChild(el);
   }
 
@@ -601,67 +564,25 @@
     }, { passive: true });
   }
 
-  /** Canvas drag fallback when virtual controls hidden (portrait). Scoped to game only. */
-  function installCanvasSwipeFallback() {
-    const gameEl = document.getElementById('game-container');
-    if (!gameEl) return;
+  function buildTapMoveInteract() {
+    if (!useTapMove()) return;
+    if (document.getElementById(TAP_INTERACT_ID)) return;
 
-    let moveId = null;
-    let startX = 0;
-    let startY = 0;
+    const btn = document.createElement('button');
+    btn.id = TAP_INTERACT_ID;
+    btn.type = 'button';
+    btn.title = 'Interact with nearby desk, chair, or object';
+    btn.setAttribute('aria-label', 'Interact');
+    btn.textContent = 'E';
+    document.body.appendChild(btn);
 
-    const moveZoneThreshold = () => Math.round(gameEl.getBoundingClientRect().width * 0.68);
-
-    const onTouchStart = (e) => {
-      if (isLandscape() && isPhoneLike()) return;
-      if (!e.touches || e.touches.length === 0) return;
-      const t = e.changedTouches && e.changedTouches[0];
-      if (!t) return;
-
-      if (t.clientX > moveZoneThreshold()) {
-        setInteractPulse(160);
-        e.preventDefault();
-        return;
-      }
-
-      moveId = t.identifier;
-      startX = t.clientX;
-      startY = t.clientY;
-      clearDir();
-      e.preventDefault();
+    const pulse = () => {
+      window.DenizenHaptics?.impact?.();
+      setInteractPulse(200);
     };
-
-    const onTouchMove = (e) => {
-      if (moveId == null) return;
-      const t = Array.from(e.touches || []).find((x) => x.identifier === moveId);
-      if (!t) return;
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
-      const mag = Math.hypot(dx, dy) || 1;
-      if (mag < 10) { clearDir(); return; }
-      const nx = dx / mag;
-      const ny = dy / mag;
-      setDir({
-        left: nx < -0.32,
-        right: nx > 0.32,
-        up: ny < -0.32,
-        down: ny > 0.32,
-      });
-      e.preventDefault();
-    };
-
-    const endTouch = (e) => {
-      if (moveId == null) return;
-      if (Array.from(e.changedTouches || []).some((x) => x.identifier === moveId)) {
-        moveId = null;
-        clearDir();
-      }
-    };
-
-    gameEl.addEventListener('touchstart', onTouchStart, { passive: false });
-    gameEl.addEventListener('touchmove', onTouchMove, { passive: false });
-    gameEl.addEventListener('touchend', endTouch, { passive: true });
-    gameEl.addEventListener('touchcancel', endTouch, { passive: true });
+    const bind = window.DenizenTouchBind?.bindPress;
+    if (bind) bind(btn, pulse);
+    else btn.addEventListener('click', (e) => { e.preventDefault(); pulse(); });
   }
 
   function installKeyboardViewportSync() {
@@ -681,21 +602,22 @@
     injectStyles();
     buildRotateHint();
     buildVirtualControls();
-    buildCeoModeChip();
-    buildCeoShell();
-    installCanvasSwipeFallback();
+    buildTapMoveInteract();
+    removeCeoUiArtifacts();
+    try { sessionStorage.removeItem('denizen-portrait-ok'); } catch (_) {}
     installKeyboardViewportSync();
     syncLayoutClasses();
+    tryLockLandscape();
 
-    window.addEventListener('orientationchange', () => setTimeout(syncLayoutClasses, 100));
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        syncLayoutClasses();
+        tryLockLandscape();
+      }, 100);
+    });
     window.addEventListener('resize', syncLayoutClasses);
 
-    if (sessionStorage.getItem('denizen-portrait-ok') === '1') {
-      const hint = document.getElementById(ROTATE_ID);
-      if (hint) hint.classList.remove('show');
-    }
-
-    console.log('[MobilePlay] touch controls ready — rotate landscape to play');
+    console.log('[MobilePlay] landscape-only — rotate sideways to play');
   }
 
   if (document.readyState === 'loading') {
@@ -707,8 +629,11 @@
   window.DenizenMobilePlay = {
     syncLayout: syncLayoutClasses,
     isTouch: () => true,
-    toggleCeoMode,
+    isPhoneLike,
+    useTapMove,
+    requiresLandscape: () => true,
+    isLandscape,
     setCeoMode,
-    isCeoMode: () => ceoMode,
+    isCeoMode: () => false,
   };
 })();

@@ -32,19 +32,21 @@
   let boundNpcKey = 'lucy';
 
   function resolveBoundNpcKey() {
-    if (globalThis.__DenizenCeoMode === true) return 'lucy';
     const asst = globalThis.DenizenVisitorSession?.getAssistant?.();
     return asst?.npc_key || 'lucy';
   }
 
   function visitorCanUseRealTools() {
-    if (globalThis.__DenizenCeoMode === true) return true;
     const sess = globalThis.DenizenVisitorSession;
     if (!sess?.getSessionId?.()) return false;
     if (globalThis.DenizenVisitorCapabilities?.canUseRealTools) {
       return globalThis.DenizenVisitorCapabilities.canUseRealTools();
     }
     return !sess.isDemo?.();
+  }
+
+  function browserChipLocked() {
+    return !visitorCanUseRealTools();
   }
 
   function npcDisplayName(key) {
@@ -194,6 +196,34 @@
         line-height: 1.55; font-family: system-ui, sans-serif; max-width: 340px; margin: auto;
       }
       #${PANEL_ID} .bm-idle.hidden { display: none; }
+      #${CHIP_ID}.bm-chip-locked {
+        background: #1e293b !important;
+        border-color: #475569 !important;
+        color: #64748b !important;
+        opacity: 0.92;
+      }
+      #${PANEL_ID} .bm-locked-msg {
+        padding: 22px 20px;
+        color: #94a3b8;
+        font: 13px/1.5 system-ui, sans-serif;
+      }
+      #${PANEL_ID} .bm-locked-msg h3 {
+        margin: 0 0 10px;
+        color: #e2e8f0;
+        font-size: 15px;
+      }
+      #${PANEL_ID} .bm-locked-msg button {
+        margin-top: 14px;
+        background: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid #475569;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 13px;
+        cursor: pointer;
+        min-height: 44px;
+        touch-action: manipulation;
+      }
       #${PANEL_ID} .bm-meta { margin-top: 10px; font-family: system-ui, sans-serif; font-size: 11px; color: #94a3b8; }
       #${PANEL_ID} .bm-meta strong { color: #e2e8f0; }
       #${PANEL_ID} .bm-feed {
@@ -259,10 +289,54 @@
     }
   }
 
+  function syncChipAccess() {
+    if (!chipEl) return;
+    const locked = browserChipLocked();
+    chipEl.classList.toggle('bm-chip-locked', locked);
+    chipEl.setAttribute('aria-disabled', locked ? 'true' : 'false');
+    if (locked) {
+      const demo = globalThis.DenizenVisitorSession?.isDemo?.();
+      chipEl.title = demo
+        ? 'Demo preview — Team or CEO access unlocks the live browser mirror'
+        : 'Sign in with Team or CEO access to watch the live browser mirror';
+      chipEl.style.background = '#1e293b';
+      chipEl.style.borderColor = '#475569';
+      chipEl.style.color = '#64748b';
+      chipEl.textContent = '🌐 browser';
+      return;
+    }
+    boundNpcKey = resolveBoundNpcKey();
+    chipEl.title = `Watch ${npcDisplayName(boundNpcKey)}'s browser live`;
+    setChipState();
+  }
+
+  function showLockedPanel() {
+    buildUI();
+    panelOpen = true;
+    shellReady = false;
+    panelEl.classList.add('open');
+    const demo = globalThis.DenizenVisitorSession?.isDemo?.();
+    panelEl.innerHTML = `
+      <div class="bm-locked-msg">
+        <h3>Live browser mirror</h3>
+        <p>Watch your assistant's real browser session in real time — useful when Lucy is researching, filling forms, or browsing for you.</p>
+        <p>${demo
+    ? '<strong>Demo mode:</strong> this is a preview only. Use <strong>Team access</strong> or <strong>CEO access</strong> to unlock the live feed.'
+    : 'Use <strong>Team access</strong> or <strong>CEO access</strong> to unlock this feature.'}</p>
+        <button type="button" data-bm-locked-close>Got it</button>
+      </div>`;
+    const closeBtn = panelEl.querySelector('[data-bm-locked-close]');
+    const close = () => {
+      panelOpen = false;
+      panelEl.classList.remove('open');
+    };
+    if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(closeBtn, close);
+    else closeBtn.addEventListener('click', close);
+  }
+
   function buildUI() {
     injectStyles();
     if (chipEl && panelEl) return;
-    if (!visitorCanUseRealTools()) return;
     chipEl = document.createElement('button');
     chipEl.id = CHIP_ID;
     chipEl.type = 'button';
@@ -272,10 +346,13 @@
       cursor: 'pointer',
     });
     boundNpcKey = resolveBoundNpcKey();
-    chipEl.title = `Watch ${npcDisplayName(boundNpcKey)}'s browser live`;
     chipEl.textContent = '🌐 browser';
     const openPanel = () => {
       buildUI();
+      if (browserChipLocked()) {
+        showLockedPanel();
+        return;
+      }
       ensureShell();
       if (!panelOpen) {
         panelOpen = true;
@@ -299,6 +376,7 @@
     panelEl.style.bottom = 'calc(56px + 10px)';
     panelEl.style.right = '10px';
     document.body.appendChild(panelEl);
+    syncChipAccess();
   }
 
   function ensureShell() {
@@ -490,11 +568,23 @@
     viewport.addEventListener('pointercancel', endPointer, { capture: true });
   }
 
+  function dockBottomInset() {
+    const dockH = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue('--denizen-dock-height'),
+      10,
+    ) || 56;
+    const safe = parseInt(
+      getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom'),
+      10,
+    ) || 0;
+    return dockH + safe + 8;
+  }
+
   function clampPanelPos(left, top) {
     const w = panelEl?.offsetWidth || 320;
     const h = panelEl?.offsetHeight || 380;
     const maxLeft = Math.max(0, window.innerWidth - w);
-    const maxTop = Math.max(0, window.innerHeight - h);
+    const maxTop = Math.max(0, window.innerHeight - h - dockBottomInset());
     return {
       left: Math.max(0, Math.min(maxLeft, left)),
       top: Math.max(0, Math.min(maxTop, top)),
@@ -888,23 +978,38 @@
     pollTimer = setInterval(() => refresh(), pollIntervalMs());
   }
 
+  function afterVisitorSessionReady(fn) {
+    const run = () => {
+      const sess = globalThis.DenizenVisitorSession;
+      if (!sess?.init) return false;
+      sess.init().then(fn).catch(() => {});
+      return true;
+    };
+    if (run()) return;
+    const poll = setInterval(() => {
+      if (run()) clearInterval(poll);
+    }, 100);
+    setTimeout(() => clearInterval(poll), 20_000);
+  }
+
+  function onSessionReady() {
+    buildUI();
+    syncChipAccess();
+    window.DenizenBottomDock?.refresh?.();
+    const next = resolveBoundNpcKey();
+    if (next !== boundNpcKey) {
+      boundNpcKey = next;
+      shellReady = false;
+      if (chipEl) chipEl.title = `Watch ${npcDisplayName(boundNpcKey)}'s browser live`;
+    }
+    if (panelOpen) refresh();
+  }
+
   async function init() {
     boundNpcKey = resolveBoundNpcKey();
     buildUI();
-    globalThis.DenizenVisitorSession?.init?.().then(() => {
-      if (!visitorCanUseRealTools()) {
-        if (chipEl) { chipEl.remove(); chipEl = null; }
-        if (panelEl) { panelEl.remove(); panelEl = null; panelOpen = false; }
-        return;
-      }
-      const next = resolveBoundNpcKey();
-      if (next !== boundNpcKey) {
-        boundNpcKey = next;
-        shellReady = false;
-        if (chipEl) chipEl.title = `Watch ${npcDisplayName(boundNpcKey)}'s browser live`;
-      }
-      if (panelOpen) refresh();
-    }).catch(() => {});
+    syncChipAccess();
+    afterVisitorSessionReady(onSessionReady);
     try {
       if (new URL(window.location.href).searchParams.get('browser')) {
         panelOpen = true;

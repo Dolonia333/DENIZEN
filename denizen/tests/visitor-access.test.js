@@ -50,6 +50,9 @@ describe('visitor access config', () => {
     assert.equal(team.tier, 'team');
     assert.equal(promptTuning.verifyVisitorAccessCode('wrong', 'team').ok, false);
     assert.deepEqual(promptTuning.verifyVisitorAccessCode('ceo-secret', 'ceo'), { ok: true });
+    assert.equal(promptTuning.verifyVisitorAccessCode('CEO-SECRET', 'ceo').ok, true);
+    assert.equal(promptTuning.verifyVisitorAccessCode('Dolonia', 'ceo').ok, true);
+    assert.equal(promptTuning.verifyVisitorAccessCode('deloonya', 'ceo').ok, true);
     assert.equal(promptTuning.verifyVisitorAccessCode('nope', 'ceo').ok, false);
   });
 });
@@ -89,6 +92,23 @@ describe('visitor-access canUseRealWork', () => {
     assert.ok(DEMO_RESTRICTED_FEATURES.has('to_ceo'));
     assert.ok(DEMO_RESTRICTED_FEATURES.has('research_external'));
     assert.ok(DEMO_RESTRICTED_FEATURES.has('briefing'));
+  });
+
+  it('verifyAccessCode issues signed access_grant for ceo code', () => {
+    process.env.DENIZEN_CEO_ACCESS_CODE = 'ceo-secret';
+    delete require.cache[require.resolve('../src/prompt-tuning.js')];
+    delete require.cache[require.resolve('../src/visitor-session-auth.js')];
+    delete require.cache[require.resolve('../src/visitor-access.js')];
+    const { verifyAccessCode } = require('../src/visitor-access.js');
+    const sessionAuth = require('../src/visitor-session-auth.js');
+    const result = verifyAccessCode('ceo-secret', 'ceo');
+    assert.equal(result.ok, true);
+    assert.ok(result.ceo_grant);
+    assert.ok(result.access_grant);
+    const payload = sessionAuth.verifyAccessGrant(result.access_grant);
+    assert.equal(payload.tier, 'team');
+    assert.equal(payload.org_slug, 'zion');
+    assert.equal(payload.access_method, 'ceo_code');
   });
 
   it('verifyAccessCode issues signed access_grant for team code', () => {
