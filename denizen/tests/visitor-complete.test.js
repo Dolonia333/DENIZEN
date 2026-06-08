@@ -39,15 +39,20 @@ const REQUIRED_FILES = [
   'denizen-prediction-loop.js',
 ];
 
-const INDEX_SCRIPTS = [
+/** Eager in index.html — must load before player chat / scene. */
+const INDEX_EAGER_SCRIPTS = [
   './src/visitor-session.js',
-  './src/visitor-capabilities.js',
   './src/visitor-onboarding.js',
   './src/visitor-claim-ui.js',
+  './src/denizen-lazy-scripts.js',
+];
+
+/** Deferred via denizen-lazy-scripts.js after Phaser boots. */
+const INDEX_LAZY_SCRIPTS = [
+  './src/visitor-capabilities.js',
   './src/visitor-handoff-ui.js',
   './src/visitor-projects-ui.js',
   './src/visitor-assistant-labels.js',
-  './src/denizen-lazy-scripts.js',
 ];
 
 const REQUIRED_EXPORTS = [
@@ -132,12 +137,19 @@ describe('visitor assistant — 100% completion gate', () => {
 
   it('index.html includes all visitor script tags', () => {
     const html = readUtf8('index.html');
-    for (const src of INDEX_SCRIPTS) {
+    const lazy = readUtf8('src/denizen-lazy-scripts.js');
+    for (const src of INDEX_EAGER_SCRIPTS) {
       const escaped = src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       assert.match(
         html,
         new RegExp(`<script[^>]+src="${escaped}(?:\\?[^"]*)?"`),
         `index.html missing script tag for ${src}`,
+      );
+    }
+    for (const src of INDEX_LAZY_SCRIPTS) {
+      assert.ok(
+        lazy.includes(src),
+        `denizen-lazy-scripts.js missing deferred load for ${src}`,
       );
     }
   });

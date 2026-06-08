@@ -103,6 +103,8 @@ describe('topicCount', () => {
 });
 
 describe('renderContextBlock — thread continuity surface', () => {
+  const fullCtx = { compact: false };
+
   it('surfaces the "Thread with X" line when count >= 3', () => {
     const ws = new WorldState();
     ws.updateNpc('Alex', { position: { x: 100, y: 100 }, room: 'open_office' });
@@ -110,7 +112,7 @@ describe('renderContextBlock — thread continuity surface', () => {
     ws.recordExchange('Alex', 'Josh', 'are the mockups ready?');
     ws.recordExchange('Alex', 'Josh', 'mockups ready yet?');
     ws.recordExchange('Alex', 'Josh', 'the mockups ready?');
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     assert.match(block, /Thread with Josh/);
     assert.match(block, /mockups ready/);
     assert.match(block, /3x today/);
@@ -123,7 +125,7 @@ describe('renderContextBlock — thread continuity surface', () => {
     ws.updateNpc('Josh', { position: { x: 500, y: 100 }, room: 'open_office' });
     ws.recordExchange('Alex', 'Josh', 'mockups ready?');
     ws.recordExchange('Alex', 'Josh', 'mockups ready?');
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     assert.doesNotMatch(block, /Thread with/);
   });
 
@@ -141,7 +143,7 @@ describe('renderContextBlock — thread continuity surface', () => {
     ws.recordExchange('Alex', 'Bob', 'deploy ready?');
     ws.recordExchange('Alex', 'Bob', 'deploy ready?');
     ws.recordExchange('Alex', 'Bob', 'deploy ready?');
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     const threadLines = block.split('\n').filter(l => /Thread with/.test(l));
     assert.equal(threadLines.length, 1);
     assert.match(threadLines[0], /Thread with Bob/);

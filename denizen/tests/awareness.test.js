@@ -119,21 +119,23 @@ describe('self-repetition detection', () => {
 });
 
 describe('renderContextBlock — new awareness signals', () => {
+  const fullCtx = { compact: false };
+
   it('mentions adjacent rooms for the NPCs current room', () => {
     const ws = fixture();
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     assert.match(block, /Adjacent rooms: .*conference/);
   });
 
   it('lists desk neighbors', () => {
     const ws = fixture();
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     assert.match(block, /desk neighbors: Josh/);
   });
 
   it('tags nearby NPCs walking in the same direction as "walking with you"', () => {
     const ws = fixture();
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     // Alex and Josh both have velocity (50, 0) and are within 160px.
     assert.match(block, /Josh \(.*walking with you/);
   });
@@ -142,13 +144,13 @@ describe('renderContextBlock — new awareness signals', () => {
     const ws = new WorldState();
     ws.updateNpc('Alex', { position: { x: 100, y: 100 }, room: 'open_office' });
     ws.updateNpc('Josh', { position: { x: 110, y: 100 }, state: 'meeting', busy: true });
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     assert.match(block, /Josh \(.*busy/);
   });
 
   it('renders occupancy across rooms', () => {
     const ws = fixture();
-    const block = ws.renderContextBlock('Alex');
+    const block = ws.renderContextBlock('Alex', fullCtx);
     assert.match(block, /Office occupancy: .*open_office:3/);
   });
 

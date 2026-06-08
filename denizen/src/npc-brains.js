@@ -650,15 +650,18 @@ class NpcBrainManager {
 
       // LM Studio — local OpenAI-compatible API
       // Model auto-synced at startup via syncLmStudioModel().
+      const lmBase = String(
+        process.env.LM_STUDIO_URL || process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234',
+      ).replace(/\/v1\/?$/, '').replace(/\/+$/, '');
       this.providers.lmstudio = {
-        baseUrl: 'http://localhost:1234',
+        baseUrl: lmBase,
         apiKey: process.env.LM_STUDIO_API_KEY || 'lm-studio',
         model: process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning',
         type: 'lmstudio',
       };
       // Second local model slot — fast-tier NPCs (Gemma 4 by default).
       this.providers['lmstudio-fast'] = {
-        baseUrl: 'http://localhost:1234',
+        baseUrl: lmBase,
         apiKey: process.env.LM_STUDIO_API_KEY || 'lm-studio',
         model: process.env.LM_STUDIO_FAST_MODEL || 'google/gemma-4-e2b',
         type: 'lmstudio',
