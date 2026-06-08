@@ -9,6 +9,7 @@ const ENV_KEY_MAP = {
   XAI_API_KEY: ['providers', 'xai', 'apiKey'],
   GOOGLE_API_KEY: ['providers', 'google', 'apiKey'],
   BRAVE_SEARCH_API_KEY: ['tools', 'web', 'search', 'apiKey'],
+  BRAVE_API_KEY: ['tools', 'web', 'search', 'apiKey'],
   SUPABASE_URL: ['supabase', 'url'],
   SUPABASE_BRIDGE_URL: ['supabase', 'bridgeUrl'],
   AGENT_TOKEN: ['supabase', 'agentToken'],
@@ -95,6 +96,7 @@ function loadConfig(denizenRoot) {
 function braveSearchKey(config) {
   return config?.tools?.web?.search?.apiKey
     || process.env.BRAVE_SEARCH_API_KEY
+    || process.env.BRAVE_API_KEY
     || '';
 }
 
