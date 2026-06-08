@@ -14,6 +14,18 @@ Denizen renders AI agent workflows as a living pixel-art office. 16 NPCs are rea
 
 **Built with:** Node.js 22+, Phaser 3, WebSocket, LM Studio (local), Claude / Grok / Gemini / Kimi (cloud), Kali Linux (security + compute mesh), Tailscale (home fleet).
 
+## Repository layout
+
+This monorepo groups the Denizen app, home-lab infra, and related tooling. See [MONOREPO.md](MONOREPO.md) for a fuller map.
+
+| Path | What it is |
+|------|------------|
+| [`denizen/`](denizen/) | Denizen application — Node/Phaser office, Jelly skills, Supabase migrations, docs, tests |
+| [`infra/`](infra/) | Dolonia home lab — NAS/Kali deploy scripts, Tailscale mesh, `finish-all-mesh.py` |
+| [`VisionClaw/`](VisionClaw/) | Android client — camera/audio relay for agent vision experiments |
+| [`watchdog.ps1`](watchdog.ps1) | Windows service watchdog (OpenClaw gateway, bridge, cloudflared, Denizen) |
+| [`OPENCLAW_STAR_OFFICE_QUICKSTART.md`](OPENCLAW_STAR_OFFICE_QUICKSTART.md) | Launcher guide for OpenClaw + Star-Office-UI on Windows |
+
 ## Quick Start
 
 ```bash
@@ -43,9 +55,12 @@ See [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) for the full capability m
 
 | Doc | Contents |
 |-----|----------|
+| **[MONOREPO.md](MONOREPO.md)** | Repo-wide layout — denizen, infra, VisionClaw, openclaw, root scripts |
 | **[denizen/README.md](denizen/README.md)** | Full project README with architecture, runtime systems, APIs, and operations |
 | **[denizen/docs/DOCS_INDEX.md](denizen/docs/DOCS_INDEX.md)** | Master documentation map with categories and GitHub vs local/new status |
-| **[denizen/docs/WORKSPACE_ARCHITECTURE.md](denizen/docs/WORKSPACE_ARCHITECTURE.md)** | Every folder/file — purpose, why it exists, how it works |
+| **[denizen/docs/WORKSPACE_ARCHITECTURE.md](denizen/docs/WORKSPACE_ARCHITECTURE.md)** | Canonical module map — every folder/file, purpose, dependencies |
+| **[denizen/docs/SERVER.md](denizen/docs/SERVER.md)** | `server.js` route and module map |
+| **[denizen/docs/VISITOR_UI.md](denizen/docs/VISITOR_UI.md)** | Visitor browser UI — session modal, projects panel, feature gating |
 | **[denizen/docs/RUNTIME_DATA.md](denizen/docs/RUNTIME_DATA.md)** | Runtime JSON & reports — writers, readers, PII policy, cleanup |
 | [denizen/docs/SETUP.md](denizen/docs/SETUP.md) | End-to-end install and environment configuration |
 | [denizen/docs/VISITOR_ONBOARDING.md](denizen/docs/VISITOR_ONBOARDING.md) | Team vs demo visitor auth, session tokens, CEO path |

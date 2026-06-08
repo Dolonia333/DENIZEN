@@ -2,6 +2,8 @@
 
 Denizen is a real-time visual observability layer for AI agents. This document describes how the whole system fits together, end-to-end.
 
+> **2026-06-08 update:** [server.js](../server.js) is a ~7,700-line monolith — see [SERVER.md](SERVER.md) for route/module map. Skill dispatch goes through **Jelly** (`jelly/`), not `gateway-bridge.js`. Listen port is `process.env.PORT` (code default `8080`; Dolonia lab uses `8081`). Optional **compute mesh** — shared job queue across dolonia/NAS/Kali/Desktop — see [COMPUTE_MESH.md](COMPUTE_MESH.md).
+>
 > **2026-06-05 update:** Skill dispatch now goes through **Jelly** (`denizen/jelly/`) instead of the OpenClaw gateway. See [SESSION_2026-06-05.md](SESSION_2026-06-05.md).
 
 ## One-sentence summary
@@ -23,7 +25,7 @@ A Phaser pixel-art office where 16 NPCs represent AI agents. Each NPC has its ow
 │            │ npc_decision        │                     │            │
 │            ▼                     ▼                     ▲            │
 └────────────┼─────────────────────┼─────────────────────┼────────────┘
-             │ ws://host:8080/ws   │ /security-ws        │ threat events
+             │ ws://host:$PORT/ws  │ /security-ws        │ threat events
              ▼                     ▼                     │
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        NODE SERVER (server.js)                      │
@@ -71,11 +73,12 @@ A Phaser pixel-art office where 16 NPCs represent AI agents. Each NPC has its ow
 
 | File | Responsibility |
 |---|---|
-| [server.js](../server.js) | HTTP + WebSocket server. Serves the static game, routes `npc_*` messages to `NpcBrainManager`, exposes `/security-ws`, `/security-test`. |
+| [server.js](../server.js) | ~7,700-line HTTP + WebSocket monolith (`PORT` env, default `8080`). Serves the static game, routes `npc_*` messages to `NpcBrainManager`, exposes `/security-ws`, `/security-test`, visitor APIs, compute mesh routes, and more. See [SERVER.md](SERVER.md). |
 | [src/npc-brains.js](../src/npc-brains.js) | The brain manager. Loads each NPC's `SOUL.md`/`MEMORY.md`, queues LM Studio requests sequentially, runs `think()` and `getResponse()`. Implements the intelligence layer: goals, daily plans, theory of mind, outcome tagging, event feed, shared task board. |
 | [src/cofounder-agent.js](../src/cofounder-agent.js) (server side) | "Director" agent. Every 15-30s observes office state, picks the most interesting thing to make happen, and broadcasts commands to the game client. State-reactive: flags stuck agents as priority, pulls from the event feed. Mirrors office-state into `worldState` and feeds fatigue tracking off status transitions. |
 | [security-monitor-server.js](../security-monitor-server.js) | Security monitor. Polls system/network/files for threats, and on Linux, runs tshark + scan-detector feeders. Broadcasts threat events to all connected `/security-ws` clients. |
-| [src/gateway-bridge.js](../src/gateway-bridge.js) | Optional bridge to an external OpenClaw gateway on port 18789. |
+| [jelly/](../jelly/) | Skill runtime — `createJelly()` registers and executes native + vendor skills (`jelly/skills/`, `jelly/vendor/skills/`). Replaces legacy `gateway-bridge.js` dispatch. See [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md). |
+| [src/gateway-bridge.js](../src/gateway-bridge.js) | Legacy optional bridge to OpenClaw gateway (port 18789). Off by default since Jelly migration. |
 | [src/world-state.js](../src/world-state.js) | Single in-memory source of truth — NPC positions/state, velocities, fatigue timers, last-addressed, exchange history, sentiment, stuck-loops, threats, tasks, environment. Pub/sub for broadcasts. |
 | [src/sentiment.js](../src/sentiment.js) | Cheap keyword-regex mood classifier (`happy`/`frustrated`/`tired`/`excited`/`anxious`). Called from `recordSelfMessage`; surfaces as peer tags in `Nearby:`. |
 | [src/animation-forge.js](../src/animation-forge.js) | Validates `requestAnimation` proposals; future home of the composition / AI-gen / local-SD renderers (currently API-surface-only stubs). |
@@ -179,9 +182,17 @@ flowchart LR
 | Forecast layer | `src/denizen-prediction-loop.js`, `src/mirofish-prediction.js` | Maintain/validate forecasts and expose summarized metrics |
 | Visitor intelligence surfaces | `src/denizen-visitor-intelligence.js` | Build morning briefings and proactive updates using predictions + pipeline context |
 
+## Compute mesh (optional)
+
+When enabled, Denizen coordinates distributed inference and fleet jobs across a home lab or production fleet (dolonia GPU host, Synology NAS, Kali worker, Denizen Desktop nodes). The server exposes `/api/compute/*` routes backed by Supabase queue tables; fleet agents pull work and report metrics.
+
+See [COMPUTE_MESH.md](COMPUTE_MESH.md) and [../../infra/README.md](../../infra/README.md).
+
 ## Message type reference
 
-### NPC messages (port 8080, `/ws`)
+Port: `process.env.PORT` (default `8080` in code; Dolonia lab typically sets `PORT=8081` in `.env`).
+
+### NPC messages (`/ws`)
 
 | Type | Direction | Payload |
 |---|---|---|
@@ -193,7 +204,7 @@ flowchart LR
 | `office_state` | client → server | full snapshot for CofounderAgent |
 | `agent_command` | server → client | a single action for the CTO to enact |
 
-### Security messages (port 8080, `/security-ws`)
+### Security messages (`/security-ws`)
 
 | Type | Payload |
 |---|---|
@@ -214,6 +225,8 @@ Measured on the target hardware (4070 Ti Super + i9 + 64GB, qwen2.5-14b-instruct
 
 ## Related documents
 
+- [SERVER.md](SERVER.md) — `server.js` monolith route and module map
+- [COMPUTE_MESH.md](COMPUTE_MESH.md) — distributed compute mesh and fleet agents
 - [AI-SYSTEM.md](AI-SYSTEM.md) — deep-dive on the NPC intelligence layer
 - [SECURITY.md](SECURITY.md) — full threat catalog, robber mappings, and test commands
 - [SETUP.md](SETUP.md) — how to run the Linux sidecar for live Wireshark/Nmap visualization

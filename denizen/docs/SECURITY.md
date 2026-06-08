@@ -95,6 +95,16 @@ for ($i=0; $i -lt 5; $i++) { Get-Credential | Out-Null }
 New-Item -ItemType File -Path .\creds.env
 ```
 
+## Bouncer and Kali Linux (WSL)
+
+Bouncer security scans do **not** run on the physical Kali laptop (`hp81081d`). They run inside **WSL distro `kali-linux`** on the Windows Denizen host (dolonia):
+
+- `server.js` → `_openBouncerTerminal()` spawns `wsl -d kali-linux -- bash -c "…"` (or Windows Terminal / `cmd start` wrapper)
+- `linux-agent.js` executes investigation commands in that WSL environment
+- Player-visible nmap / tcpdump output is from WSL, not from the compute-mesh fleet node
+
+The **physical Kali laptop** is a separate machine used only for **compute mesh** (`nas-compute-agent.js`, machine id `hp81081d`). See [COMPUTE_MESH.md](COMPUTE_MESH.md) § WSL Kali vs physical Kali laptop.
+
 ## The Linux live feeders
 
 ### Wireshark (`tshark`) packet monitor

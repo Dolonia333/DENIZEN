@@ -193,6 +193,91 @@ node .\scripts\smoke-onboarding.js
 node .\scripts\smoke-spine-e2e.js
 ```
 
+### Compute mesh smokes
+
+Run against a live Denizen server. Default URL is `http://127.0.0.1:8081` in the Dolonia lab (`PORT=8081` in `.env`).
+
+```powershell
+$env:DENIZEN_URL = "http://127.0.0.1:8081"
+node .\scripts\smoke-mesh-complete.js
+node .\scripts\smoke-mesh-jobs-flow.js
+node .\scripts\smoke-nas-fleet.js
+node .\test-compute-integration.js
+node .\scripts\smoke-credit-economy.js
+```
+
+| Script | Checks |
+|--------|--------|
+| `smoke-mesh-complete.js` | Session, node register/claim/complete, contribution flow (~13 checks) |
+| `smoke-mesh-jobs-flow.js` | Enqueue → queue progress lifecycle (~5 checks) |
+| `smoke-nas-fleet.js` | Fleet report token, NAS metrics in `/api/health` (~4 checks) |
+| `test-compute-integration.js` | Queue transitions, HTTP routes, mocked DB (~33 checks) |
+| `smoke-credit-economy.js` | Compute credit accrual and contribution tracker |
+
+Full mesh deploy + smokes in one command (from repo root):
+
+```powershell
+py infra/finish-all-mesh.py
+```
+
+See [COMPUTE_MESH.md](COMPUTE_MESH.md), [../../infra/README.md](../../infra/README.md), and [TESTING.md](TESTING.md).
+
+### Desktop smokes
+
+Verify Denizen Desktop onboarding, feedback API, and release readiness against a running server:
+
+```powershell
+$env:DENIZEN_URL = "http://127.0.0.1:8081"
+node .\scripts\smoke-desktop-onboarding.js
+node .\scripts\smoke-desktop-feedback.js
+node .\scripts\smoke-desktop-release.js
+```
+
+| Script | Checks |
+|--------|--------|
+| `smoke-desktop-onboarding.js` | Demo session, desktop client headers, org policy, local-client gating |
+| `smoke-desktop-feedback.js` | Feedback submission endpoint and session auth |
+| `smoke-desktop-release.js` | `desktop/package.json` publish config, workflow files, auto-updater; chains feedback smoke |
+
+`smoke-desktop-release.js` is also the pre-tag gate for [`.github/workflows/desktop-release.yml`](../../.github/workflows/desktop-release.yml).
+
+### Catalog scripts (openplan pipeline)
+
+For the Modern Office openplan furniture catalog. Full workflow: [CATALOG_WORKFLOW.md](CATALOG_WORKFLOW.md).
+
+```powershell
+# Rebuild v2 objects from sheet extract + placement mappings
+npm run catalog:rebuild
+
+# Validate objects + placements (overlap, duplicate rects, parent refs)
+npm run validate:catalog
+npm run validate:catalog:strict
+
+# Merge v2 objects into live catalog
+npm run catalog:merge
+
+# Snap placement coordinates to grid
+npm run catalog:snap
+
+# Build singles manifest for modern office assets
+npm run catalog:singles
+```
+
+| Script | Purpose |
+|--------|---------|
+| **`build_openplan_v2_catalog.py`** | Builds `furniture_catalog_openplan_v2.objects.json` from sheet extract + existing placements; emits `catalog_id_migration.json` |
+| **`validate-catalog.mjs`** | CLI validation — overlapping rects, duplicate rects, placement ID refs, `parentInstanceId` chains |
+| **`merge-catalog.mjs`** | Merges v2 `objects` into `furniture_catalog_openplan.json` while preserving `placements` |
+| **`snap-placements.mjs`** | Snaps placement x/y to grid (--write to persist) |
+| **`build-modern-office-singles-catalog.js`** | Scans modern office singles → catalog entries |
+| **`extract_sheet_objects.py`** | Connected-component extract from sheet PNG → per-sprite rects JSON (step 1 of pipeline) |
+
+Browser tools (serve from **multbot repo root** on port 8080):
+
+- `sprite-labeler.html` — label sprites, export v2 objects
+- `verify-sprites.html` — visual crop QA
+- `catalog-explorer.html` — schema reference and overview
+
 ## Pipeline overview
 
 ```
@@ -313,6 +398,7 @@ the `.js` scripts.
 
 ## See also
 
+- [CATALOG_WORKFLOW.md](CATALOG_WORKFLOW.md) — openplan extract → label → validate → ship
 - [TOOLS_GUIDE.md](../TOOLS_GUIDE.md) — the in-browser tools (Sprite
   Cutter, Catalog Explorer, Asset Browser) that consume the artifacts
   these scripts produce
@@ -323,3 +409,5 @@ the `.js` scripts.
   contains, before this pipeline runs
 - [CATALOG_CONVENTIONS.md](../CATALOG_CONVENTIONS.md) — the field
   vocabulary the catalog uses
+- [TESTING.md](TESTING.md) — mesh/desktop smoke run order
+- [COMPUTE_MESH.md](COMPUTE_MESH.md) — compute mesh architecture

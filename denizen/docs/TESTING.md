@@ -63,10 +63,19 @@ Use these when touching related code:
 
 ## Smoke scripts
 
-Run smokes against a running Denizen server (`DENIZEN_URL` defaults to `http://127.0.0.1:8080`):
+Run smokes against a running Denizen server. Set `DENIZEN_URL` to match your server's `PORT` env (code default `8080`; Dolonia lab uses `8081`):
 
 ```powershell
+# Default if PORT unset in .env
 $env:DENIZEN_URL = "http://127.0.0.1:8080"
+node .\scripts\smoke-onboarding.js
+node .\scripts\smoke-spine-e2e.js
+```
+
+Dolonia lab example (`PORT=8081` in `.env`):
+
+```powershell
+$env:DENIZEN_URL = "http://127.0.0.1:8081"
 node .\scripts\smoke-onboarding.js
 node .\scripts\smoke-spine-e2e.js
 ```
@@ -108,7 +117,8 @@ See [COMPUTE_MESH.md](COMPUTE_MESH.md) and [../../infra/README.md](../../infra/R
 Use only when Robinhood auth/token is expected:
 
 ```powershell
-$env:DENIZEN_URL = "http://127.0.0.1:8080"
+# Match your server PORT (8080 default, 8081 in Dolonia lab)
+$env:DENIZEN_URL = "http://127.0.0.1:8081"
 node .\scripts\robinhood-live-smoke.js
 ```
 

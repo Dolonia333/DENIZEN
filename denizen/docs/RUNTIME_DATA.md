@@ -26,6 +26,12 @@ This document tracks runtime-mutated files under `data/` and `reports/`, with ow
 | `data/email-log.json` | `src/email-handler.js` | `src/email-handler.js`, docs/ops review | Medium to high when email queue/inbound runs | Yes | Never commit |
 | `data/email-drafts.json` | `src/gmail-client.js` | `src/gmail-client.js`, `server.js` (`/api/email-drafts`) | Medium when drafting/sending in local mode | Yes | Never commit |
 | `data/skill-proposals.json` | `src/skill-builder.js` | `src/skill-builder.js`, skill proposal APIs | Low to medium when NPC skill proposals are created/reviewed | Low | Commit only if intentionally preserving proposal history; otherwise ignore |
+| `data/desktop-feedback.jsonl` | `src/denizen-desktop-feedback.js` (via `denizen-compute-routes.js`) | Desktop feedback APIs, ops review | Low to medium during desktop user-testing | Possible (free-text feedback) | Never commit |
+| `data/local-agent-permissions.json` | `src/denizen-local-agent.js` | `src/denizen-local-agent.js`, loopback agent routes | Low; when operator changes local-agent trust level (`off` / `ask` / `trusted`) | No | Never commit |
+| `data/gmail-oauth.json` | `src/gmail-client.js` (OAuth registration/exchange/refresh) | `src/gmail-client.js`, `src/away-notify.js` | Low to medium (auth setup and token refresh) | Yes/secret-adjacent (tokens) | Never commit |
+| `data/capability-proposals.json` | `src/capability-proposal.js` | `src/capability-proposal.js`, `/api/capability-proposals`, `/api/request-capability` | Low; when NPCs propose new actions for operator review | Low | Never commit |
+| `layouts/office-layout.json` | `server.js` (`placeFurniture` read-modify-write) | `server.js`, scene client on boot, `furniture_placed` WS broadcast | Medium when NPCs or operators place furniture | No | Never commit local layout experiments |
+| `npcs/<name>/SOUL.history.md` | `server.js` (`POST /api/soul-proposal/apply` via `src/soul-reflection.js`) | Operator audit, soul proposal review UI | Low; one append per applied SOUL edit | Possible (NPC persona edits) | Never commit per-NPC history |
 
 ## `MEMORY.md` Tick Loop
 
@@ -46,15 +52,26 @@ Use this when you want a clean runtime slate without touching source code, docs,
    - Copy `data/user-profile.json`, `data/voice-map.json`, and `data/mcp-servers.json` if you want to preserve local personalization.
 3. Remove runtime artifacts only:
    - Delete `reports/**/*.md`.
-   - Delete runtime JSON/JSONL listed above (especially CRM, research, telemetry, auth, suggestions, drafts/logs, baseline).
+   - Delete runtime JSON/JSONL listed in the matrix above (CRM, research, telemetry, auth, OAuth tokens, proposals, drafts/logs, baseline, desktop feedback, local-agent permissions, capability proposals).
+   - Optionally reset scene/soul runtime: `layouts/office-layout.json`, `npcs/*/SOUL.history.md` (does **not** touch `npcs/*/SOUL.md` unless you delete those manually).
 4. Keep static inputs intact:
-   - Do not delete catalog/reference files such as `data/*catalog*.json`, `data/*manifest*.json`, map/tiles definitions, or `company-brief.json`.
+   - Do not delete catalog/reference files such as `data/*catalog*.json`, `data/*manifest*.json`, map/tiles definitions, `company-brief.json`, or committed `npcs/*/SOUL.md` baselines you intend to keep.
 5. Restart server; runtime files are recreated lazily by their owning modules.
 
 PowerShell example from `denizen/`:
 
 ```powershell
 Remove-Item -Recurse -Force reports\* -Include *.md
-Remove-Item -Force data\job-crm.json,data\job-outcomes.json,data\job-application-log.json,data\permissions.json,data\research-queue.json,data\research-sessions.json,data\research-scheduler-state.json,data\bouncer-baseline.json,data\mcp-servers.json,data\robinhood-oauth.json,data\trade-suggestions.json,data\roki-watchlist.json,data\assistant-profile.json,data\llm-telemetry.jsonl,data\email-log.json,data\email-drafts.json,data\skill-proposals.json -ErrorAction SilentlyContinue
+Remove-Item -Force `
+  data\job-crm.json,data\job-outcomes.json,data\job-application-log.json,`
+  data\permissions.json,data\research-queue.json,data\research-sessions.json,`
+  data\research-scheduler-state.json,data\bouncer-baseline.json,data\mcp-servers.json,`
+  data\robinhood-oauth.json,data\trade-suggestions.json,data\roki-watchlist.json,`
+  data\assistant-profile.json,data\llm-telemetry.jsonl,data\email-log.json,`
+  data\email-drafts.json,data\skill-proposals.json,data\desktop-feedback.jsonl,`
+  data\local-agent-permissions.json,data\gmail-oauth.json,data\capability-proposals.json `
+  -ErrorAction SilentlyContinue
+Remove-Item -Force layouts\office-layout.json -ErrorAction SilentlyContinue
+Get-ChildItem npcs -Recurse -Filter SOUL.history.md | Remove-Item -Force -ErrorAction SilentlyContinue
 ```
 

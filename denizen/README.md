@@ -178,7 +178,7 @@ npm install
 npm start
 ```
 
-Open **http://localhost:8080** in your browser. You should see 16 NPCs moving around, talking to each other, and taking breaks.
+Open **http://localhost:8080** in your browser (or **http://localhost:8081** if your `.env` sets `PORT=8081`, as in the Dolonia lab). You should see 16 NPCs moving around, talking to each other, and taking breaks.
 
 For a guided 60-second tour with voice (auto-toggles presence, walks through agent-bus → security → n8n task → outro):
 
@@ -1753,6 +1753,10 @@ The `docs/` directory has the canonical deep-dives for the runtime systems:
 | Document | Contents |
 |----------|----------|
 | [docs/DOCS_INDEX.md](docs/DOCS_INDEX.md) | Master docs index — categorized map with GitHub-tracked vs local/new status |
+| [../MONOREPO.md](../MONOREPO.md) | Repo-wide layout — denizen, infra, VisionClaw, root scripts |
+| [docs/SERVER.md](docs/SERVER.md) | **`server.js` route map** — HTTP/WS inventory, startup sequence, env vars |
+| [docs/WORKSPACE_ARCHITECTURE.md](docs/WORKSPACE_ARCHITECTURE.md) | **Canonical module map** — every `src/` file by domain |
+| [docs/VISITOR_UI.md](docs/VISITOR_UI.md) | Visitor/mobile UI — compute panel, credits, dock chips, pairing |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Whole-system topology — browser ↔ Node server ↔ LM Studio, decision loops, WebSocket message types |
 | [docs/AI-SYSTEM.md](docs/AI-SYSTEM.md) | NPC intelligence layer — goals, daily plans, theory of mind, chain-of-thought, memory tags, social graph |
 | [docs/WORLD-STATE.md](docs/WORLD-STATE.md) | **WorldState + Voice Gate + outbound webhooks** — single source of truth, presence-gated TTS, Supabase/n8n forwarding, throttled broadcasts |

@@ -19,7 +19,9 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Architecture | [WORLD_ENGINE.md](WORLD_ENGINE.md) | on GitHub | World engine generation/runtime primitives |
 | Architecture | [ROOM_GENERATOR.md](ROOM_GENERATOR.md) | on GitHub | Procedural room generation and archetypes |
 | Architecture | [CITY_GENERATOR.md](CITY_GENERATOR.md) | on GitHub | City generation pipeline and API integration |
-| Architecture | [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) | new/local | Workspace-level module/layout map and ownership boundaries |
+| Architecture | [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) | on GitHub | **Canonical** workspace module/layout map and ownership boundaries |
+| Architecture | [SERVER.md](SERVER.md) | on GitHub | `server.js` route/module map (~7,700-line monolith index) |
+| Architecture | [../../MONOREPO.md](../../MONOREPO.md) | on GitHub | Repo-wide layout — denizen, infra, VisionClaw, openclaw, root scripts |
 | Intelligence/Data | [AI-SYSTEM.md](AI-SYSTEM.md) | on GitHub | NPC planning, memory, and decision loops |
 | Intelligence/Data | [AWARENESS.md](AWARENESS.md) | on GitHub | Prompt-time awareness features and context signals |
 | Intelligence/Data | [WORLD-STATE.md](WORLD-STATE.md) | on GitHub | Shared world state model and update semantics |
@@ -44,7 +46,9 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | World/Assets | [SPRITE_FIX_GUIDE.md](SPRITE_FIX_GUIDE.md) | new/local | Sprite artifact diagnosis and correction playbook |
 | World/Assets | [ANIMATION_FORGE.md](ANIMATION_FORGE.md) | on GitHub | Animation proposal workflow and review process |
 | World/Assets | [PATHFINDING.md](PATHFINDING.md) | on GitHub | A* pathing internals and stuck recovery |
-| World/Assets | [SCRIPTS.md](SCRIPTS.md) | on GitHub | Asset/build script reference and usage |
+| World/Assets | [SCRIPTS.md](SCRIPTS.md) | on GitHub | Asset/build script reference, ops smokes, catalog pipeline |
+| World/Assets | [CATALOG_WORKFLOW.md](CATALOG_WORKFLOW.md) | new/local | Openplan furniture catalog extract → label → validate → ship |
+| NPCs/AI | [VISITOR_UI.md](VISITOR_UI.md) | on GitHub | Visitor/mobile UI — compute panel, credits, dock chips, desktop pairing |
 | Security | [SECURITY.md](SECURITY.md) | on GitHub | Threat model, monitors, and security controls |
 | Operations | [COMPUTE_MESH.md](COMPUTE_MESH.md) | new/local | Distributed compute mesh — queue, fleet agents, APIs, smokes |
 | Operations | [../../infra/README.md](../../infra/README.md) | new/local | Home lab infra — NAS SSH, Kali pull install, Tailscale, orchestrator |
@@ -67,6 +71,11 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | infra/ scripts undocumented | [../../infra/README.md](../../infra/README.md) — NAS, Kali, Tailscale, `finish-all-mesh.py` |
 | Mesh smoke tests not in TESTING.md | Updated [TESTING.md](TESTING.md) |
 | Desktop compute worker thin | Updated [../desktop/README.md](../desktop/README.md) |
+| No repo-wide layout doc | [../../MONOREPO.md](../../MONOREPO.md) — denizen, infra, VisionClaw, openclaw, root scripts |
+| `server.js` too large to navigate | [SERVER.md](SERVER.md) — route/module map |
+| Visitor UI modules scattered | [VISITOR_UI.md](VISITOR_UI.md) — browser visitor layer |
+| Openplan catalog pipeline undocumented | [CATALOG_WORKFLOW.md](CATALOG_WORKFLOW.md) + catalog sections in [SCRIPTS.md](SCRIPTS.md) |
+| Module map status unclear | [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) marked **canonical** (on GitHub) |
 
 ## Documentation Gaps Closed (2026-06-06)
 
@@ -92,23 +101,24 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 6. [FULL_WORLD.md](FULL_WORLD.md)
 
 ### Operators
-1. [COMPUTE_MESH.md](COMPUTE_MESH.md)
-2. [../../infra/README.md](../../infra/README.md)
-3. [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
-4. [TESTING.md](TESTING.md)
-5. [INTELLIGENCE_SPINE.md](INTELLIGENCE_SPINE.md)
-6. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
+1. [../../MONOREPO.md](../../MONOREPO.md) — repo layout and where things live
+2. [COMPUTE_MESH.md](COMPUTE_MESH.md)
+3. [../../infra/README.md](../../infra/README.md)
+4. [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
+5. [TESTING.md](TESTING.md) — unit tests + mesh/desktop smokes
+6. [SERVER.md](SERVER.md) — route map for live debugging
 7. [SECURITY.md](SECURITY.md)
-8. [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)
-9. [SESSION_2026-06-05.md](SESSION_2026-06-05.md)
+8. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
+9. [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)
 
 ### Developers
-1. [ARCHITECTURE.md](ARCHITECTURE.md)
-2. [SCENE.md](SCENE.md)
-3. [ACTIONS.md](ACTIONS.md)
-4. [AGENT_BUS.md](AGENT_BUS.md)
-5. [AI-SYSTEM.md](AI-SYSTEM.md)
-6. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
-7. [COMPUTE_MESH.md](COMPUTE_MESH.md)
-8. [TESTING.md](TESTING.md)
-9. [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md)
+1. [../../MONOREPO.md](../../MONOREPO.md) — repo layout
+2. [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) — **canonical** module map
+3. [SERVER.md](SERVER.md) — `server.js` routes and middleware
+4. [ARCHITECTURE.md](ARCHITECTURE.md) — runtime topology
+5. [SCENE.md](SCENE.md) → [ACTIONS.md](ACTIONS.md) → [AGENT_BUS.md](AGENT_BUS.md)
+6. [AI-SYSTEM.md](AI-SYSTEM.md) → [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
+7. [VISITOR_UI.md](VISITOR_UI.md) → [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
+8. [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md)
+9. [CATALOG_WORKFLOW.md](CATALOG_WORKFLOW.md) → [SCRIPTS.md](SCRIPTS.md)
+10. [TESTING.md](TESTING.md)

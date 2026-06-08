@@ -37,7 +37,7 @@ npm install
 npm run build:win
 ```
 
-Output: `desktop/dist/Denizen-Setup.exe` (NSIS installer, `appId` `com.dolonia.denizen`).
+Output: `desktop/dist-build/Denizen-Setup.exe` (NSIS installer, `appId` `com.dolonia.denizen`).
 
 Other targets:
 
@@ -45,7 +45,150 @@ Other targets:
 npm run build          # all configured targets for current platform
 ```
 
-Serve the installer from the Denizen web root so the download page can link to `/desktop/dist/Denizen-Setup.exe`.
+Serve the installer from the Denizen web root so the download page can link to `/desktop/dist-build/Denizen-Setup.exe`.
+
+## Architecture
+
+Electron main process, preload bridge, and background workers. The renderer (wizard or game) talks to the OS only through `window.DenizenDesktop` IPC.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  main.js (Electron main)                                        │
+│  · spawn embedded Denizen server if none on :8081               │
+│  · system tray + auto-updater (packaged builds)                 │
+│  · denizen:// deep-link handler (pairing)                       │
+│  · permission-prompt.html + feedback-dialog windows             │
+│  · node-worker-loop (capabilities sync + compute + permissions) │
+└───────────────┬───────────────────────────────┬─────────────────┘
+                │ preload.js (contextBridge)      │ child process
+                ▼                                 ▼
+        window.DenizenDesktop              ../server.js (optional)
+                │
+        setup-wizard.html / index.html?desktop=1
+```
+
+### main.js
+
+Entry point (`package.json` → `"main": "main.js"`). Responsibilities:
+
+| Concern | Behavior |
+|---------|----------|
+| **Single instance** | `app.requestSingleInstanceLock()` — second launch focuses existing window and forwards `denizen://` URLs via `second-instance`. |
+| **Embedded server** | `ensureDenizenServer()` probes `GET /api/health` on ports from `PORT` / `DENIZEN_PORT` / `8081` / `8080`. If none respond, spawns `../server.js` with `stdio: "inherit"`. Falls back to `file://` game HTML if the server never becomes healthy. |
+| **Setup vs game** | First run loads `setup-wizard.html`. After `completed: true` in setup state, loads `{serverUrl}?layout=openplan&desktop=1` and starts the worker loop. |
+| **System tray** | `setupTray()` — Open Denizen, Check for updates, Send feedback, version label, Quit. Double-click opens the main window. |
+| **`denizen://` deep links** | Registered via `app.setAsDefaultProtocolClient("denizen")` and `build.protocols` in `package.json`. `handleDenizenProtocolUrl()` parses `denizen://pair?token=…&server=…`, stores pending token, and opens the wizard with pairing pre-filled. macOS uses `open-url`; Windows/Linux use argv on cold start or `second-instance`. |
+| **Permission UI** | `openPermissionPrompt()` — dedicated `permission-prompt.html` window, or forwards to wizard if setup is incomplete. |
+| **IPC** | `setupIpc()` registers all `ipcMain.handle` channels consumed by `preload.js`. |
+
+### preload.js — `window.DenizenDesktop` IPC API
+
+Context-isolated bridge (`contextBridge.exposeInMainWorld`). All methods return Promises unless noted.
+
+| Method | IPC channel | Purpose |
+|--------|-------------|---------|
+| `version` | — (sync) | npm package version string |
+| `platform` | — (sync) | `process.platform` |
+| `isDesktop` | — (sync) | always `true` |
+| `openAgentSettings()` | `open-agent-settings` | Open OS agent / permission settings |
+| `getNodeProfile()` | `get-node-profile` | Contributor node profile from server |
+| `getMachineProfile()` | `get-machine-profile` | Local CPU/RAM/GPU profile (`node-profiler.js`) |
+| `completeSetupWizard(opts)` | `complete-setup-wizard` | Finish wizard → `POST /api/desktop/wizard/complete`, write setup state |
+| `openGame()` | `open-game` | Navigate main window to game after wizard |
+| `claimPairingToken(tokenOrOpts)` | `claim-pairing-token` | Claim browser pairing token → session id/token |
+| `getPairingStatus()` | `get-pairing-status` | Current pairing claim state |
+| `getPendingPermission()` | `get-pending-permission` | Poll server for outstanding permission request |
+| `openOsPermissionSettings()` | `open-os-permission-settings` | Open OS privacy/security settings |
+| `respondPermission(opts)` | `respond-permission` | Approve/deny `{ requestId, approved }` |
+| `sendFeedback(opts)` | `send-feedback` | `POST /api/desktop/feedback` |
+| `checkForUpdates()` | `check-for-updates` | Trigger `electron-updater` check |
+| `getAppInfo()` | `get-app-info` | Version, channel, platform metadata |
+| `setDiagnosticsOptIn(optIn)` | `set-diagnostics-opt-in` | Toggle crash auto-submit in setup state |
+| `onPermissionPending(callback)` | `permission-pending` (event) | Subscribe to permission pushes; returns unsubscribe fn |
+
+### node-worker-loop.js
+
+Background loop started by `maybeStartWorkerLoop()` after wizard completion:
+
+1. **Capabilities sync** (every 60s) — `POST /api/desktop/capabilities/sync` with live metrics from `node-profiler.js`. Patches `nodeId` / `nodeToken` into setup state when the server returns a compute node.
+2. **Compute bootstrap** — if `optIn` and tokens present, registers via `compute-worker.js` and starts claim/complete polling.
+3. **Permission poll** (every 5s) — `GET /api/desktop/permission/pending`; new requests invoke `onPermissionPending` → `openPermissionPrompt()`.
+
+`stopWorkerLoop()` runs on `before-quit`.
+
+### denizen-src.js — dev vs packaged
+
+`scripts/copy-denizen-src.js` runs on `prestart` / `prebuild` and copies shared modules from `denizen/src/` into `desktop/src/`:
+
+- `denizen-hardware-monitor.js`
+- `denizen-node-client.js`
+- `denizen-mesh-job-runner.js`
+
+| Mode | Module resolution |
+|------|-------------------|
+| **Dev** (`npm start`) | Prestart copies fresh files; `compute-worker.js` requires `./src/denizen-*`. |
+| **Packaged** (`electron-builder`) | Prebuild copies into the asar; same `./src/` paths inside the bundle. |
+
+If you see `Cannot find module '../src/denizen-hardware-monitor'`, rebuild the installer — the copy step did not run or the asar is stale.
+
+### Persistent state — `%APPDATA%/Denizen/denizen-desktop-setup.json`
+
+Path: `app.getPath("userData")` + `denizen-desktop-setup.json` (Windows: `%APPDATA%\Denizen\denizen-desktop-setup.json`).
+
+Written by `writeSetupState()` on wizard complete and patched by the worker loop / diagnostics IPC.
+
+| Field | Purpose |
+|-------|---------|
+| `completed` | Wizard finished |
+| `serverUrl` | Denizen server base URL |
+| `sessionId` / `sessionToken` | Linked visitor session |
+| `permission` | `off` / `ask` / `trusted` |
+| `optIn` | Compute contribution enabled |
+| `capabilities` | `{ read_files, write_files, run_code, screen_access, contribute_compute }` |
+| `desktopInstallId` | Server-assigned install id |
+| `identityId` | Linked identity |
+| `nodeId` / `nodeToken` | Compute mesh node credentials |
+| `diagnosticsOptIn` | Auto-submit crash reports |
+| `updateChannel` | `stable` or `beta` |
+| `completedAt` | Unix ms timestamp |
+
+### permission-prompt.html flow
+
+When the server enqueues a permission request and `agent_permission_level` is `ask`:
+
+1. `node-worker-loop.js` polls `/api/desktop/permission/pending`.
+2. `main.js` → `openPermissionPrompt(pending)` opens a small frameless `BrowserWindow` loading `permission-prompt.html` (or forwards to wizard if setup incomplete).
+3. The page calls `getPendingPermission()` on load and listens via `onPermissionPending`.
+4. User clicks **Yes** / **No** → `respondPermission({ requestId, approved })` → `POST /api/desktop/permission/respond` → window closes.
+
+If permission level is `trusted`, the server auto-approves; the desktop loop never surfaces a prompt.
+
+### Build output — `dist-build/` not `dist/`
+
+`package.json` → `build.directories.output` is **`dist-build`**. Older docs or local folders may still reference `dist/`; CI and `publish-update-manifest.ps1` use `dist-build/`.
+
+```
+desktop/dist-build/
+  Denizen-Setup.exe          # NSIS installer (Windows)
+  latest.yml                 # electron-updater manifest (stable)
+  win-unpacked/              # unpacked app for testing
+```
+
+### Desktop smoke tests
+
+Run from `denizen/` with the server up (`DENIZEN_URL`, default `http://127.0.0.1:8081`):
+
+```powershell
+node scripts/smoke-desktop-onboarding.js   # pairing, wizard, permission ask/trusted, capabilities sync
+node scripts/smoke-desktop-feedback.js     # POST /api/desktop/feedback
+node scripts/smoke-desktop-release.js      # package.json + workflow + files sanity; runs feedback smoke
+```
+
+| Script | Checks |
+|--------|--------|
+| `smoke-desktop-onboarding.js` | Demo session, `denizen://pair` token create/claim/replay-403, permission enqueue/respond/clear, wizard complete, capabilities sync, trusted auto-approve |
+| `smoke-desktop-feedback.js` | Feedback POST with session + install metadata |
+| `smoke-desktop-release.js` | `electron-updater` dep, `build:mac`/`build:linux` scripts, publish URL, workflow + auto-updater + crash-reporter files; delegates to feedback smoke |
 
 ## Release
 
@@ -87,7 +230,7 @@ npm run build:win   # or build:mac / build:linux on each platform
 .\scripts\publish-update-manifest.ps1 -Channel stable
 ```
 
-This copies `dist/*` and `latest*.yml` manifests into `updates-publish/<channel>/`. Upload the **contents** of that folder (flat) to:
+This copies `dist-build/*` and `latest*.yml` manifests into `updates-publish/<channel>/`. Upload the **contents** of that folder (flat) to:
 
 `https://denizen.dolonia.cloud/desktop/updates/`
 

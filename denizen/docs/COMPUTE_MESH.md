@@ -42,6 +42,22 @@ Distributed compute network for Denizen: machines report live hardware metrics, 
 
 Auto-producer (`denizen-compute-producer.js`) enqueues `npc_think_batch` every 5 minutes when `DENIZEN_FLEET_IDENTITY_ID` or fleet tokens are set.
 
+## WSL Kali vs physical Kali laptop
+
+Denizen uses **two different Kali contexts**. Do not conflate them when debugging agents, SSH, or security scans.
+
+| | **WSL `kali-linux` (on dolonia)** | **Physical Kali laptop `hp81081d`** |
+|---|-----------------------------------|-------------------------------------|
+| **Purpose** | Bouncer NPC security investigations | Compute mesh headless worker |
+| **How it runs** | `wsl -d kali-linux -- bash -c "…"` from `server.js` / `linux-agent.js` | Native Linux on dedicated hardware |
+| **Triggered by** | Player asks Bouncer to run nmap, wireshark/tcpdump, etc.; visible terminal via `_openBouncerTerminal()` | `nas-compute-agent.js` polling `POST /api/compute/node/claim` |
+| **Network** | Loopback / Windows host networking through WSL | Tailscale IP `100.71.54.109:8081` → dolonia |
+| **Machine id** | N/A (ephemeral WSL instance) | `DENIZEN_MACHINE_ID=hp81081d` |
+| **Install path** | Commands only — no persistent agent | `~/denizen-agent/` via `infra/pull-install-kali-agent.sh` |
+| **Docs** | [SECURITY.md](SECURITY.md) — threat visualization, Bouncer escalation | This doc — fleet nodes, mesh smokes |
+
+**Rule of thumb:** if Bouncer is "running nmap in Kali", that is **WSL on the Windows host**. If a fleet node named `hp81081d` is claiming mesh jobs, that is the **physical laptop** running `nas-compute-agent.js` (same script as the Synology NAS agent, different `DENIZEN_URL` and machine id).
+
 ## Fleet nodes
 
 | Node | Role | Agent | Typical URL |
@@ -68,6 +84,50 @@ Remote agents must **not** use `127.0.0.1` or LAN-only URLs unless they are on t
 | `scripts/build-fleet-agent-bundle.py` | Builds `agent-bundle.tar.gz` for pull installs |
 | `desktop/compute-worker.js` | Desktop compute loop |
 | `desktop/compute-job-runner.js` | Desktop-local job runner (no DB dep) |
+
+## Credits & contribution
+
+Contribution credits reward mesh participants for completed jobs, uptime windows, host stipends (LM Studio / GPU host), and multi-machine fleet bonuses. Credits accrue through a formula layer, are capped per day, settled on a timer, and persisted via the Supabase ledger.
+
+### Module responsibilities
+
+| Module | Responsibility |
+|--------|----------------|
+| `src/denizen-compute-credits.js` | Pure credit formulas — job payout, uptime, host stipend, fleet bonus; daily caps; spend catalog (`priority_boost`, `queue_skip`); hardware/effort/GPU multipliers |
+| `src/denizen-credits.js` | Supabase ledger API — `awardCredits`, `spendCredits`, optimistic balance updates on `denizen_user_identities`, append-only `denizen_credits_ledger` rows |
+| `src/denizen-compute-settlement.js` | Periodic settlement loop (default 15 min) — converts contribution windows into uptime/host-stipend grants; awards fleet bonus when multiple machines contribute |
+| `src/denizen-contribution-tracker.js` | In-memory sampling — tracks active jobs, hardware windows per machine, daily cap state; `grantWithCap()` before any award lands in the ledger |
+| `src/denizen-compute-platform.js` | Visitor/Desktop contribution UI backend — upserts `denizen_node_profiles`, scores hardware, resolves opt-in/contribution level, builds contribution summary for `/api/compute/*` |
+| `src/denizen-host-compute.js` | Host-operator detection — loopback/CEO principal flags, LM Studio liveness probe, resolves effective contribution state for the primary GPU host |
+| `src/denizen-node-worker.js` | Node registry — register/issue endpoint tokens, heartbeat, list nodes; memory fallback when compute tables are not migrated |
+| `src/denizen-node-client.js` | Headless worker HTTP client — claim/complete poll loop used by NAS/Kali agents and bundled into fleet agent tarballs |
+| `src/denizen-local-agent.js` | Loopback desktop agent — permission gate (`data/local-agent-permissions.json`), background run approvals for trusted local callers |
+
+### Credit flow
+
+```
+fleet report / job complete
+        │
+        ▼
+denizen-contribution-tracker  (samples + daily caps)
+        │
+        ▼
+denizen-compute-credits       (formula: job / uptime / stipend / bonus)
+        │
+        ▼
+denizen-compute-settlement    (15-min timer)
+        │
+        ▼
+denizen-credits               (ledger + balance on identity)
+```
+
+Job completion credits are awarded inline in `denizen-compute-routes.js` on `POST /api/compute/node/complete`. Uptime and host stipends settle via `denizen-compute-settlement.js` when contribution windows close.
+
+Probe live credit economy (no secrets printed):
+
+```powershell
+py infra/probe-live-unison.py
+```
 
 ## REST API (compute)
 
@@ -157,7 +217,7 @@ Or manual steps — see [infra/README.md](../../infra/README.md) § Kali.
 ### Denizen Desktop
 
 1. Build installer: `cd denizen/desktop && npm run build:win`
-2. Install `Denizen-Setup.exe`
+2. Install `dist-build/Denizen-Setup.exe`
 3. Complete setup wizard → compute opt-in
 4. Worker uses `compute-worker.js` + bundled `denizen-src` modules
 

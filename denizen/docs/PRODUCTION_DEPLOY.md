@@ -10,6 +10,24 @@ Production runbook for Denizen v1.2 on self-hosted Supabase (`supabase.dolonia.c
 - **DB migrations**: applied with PowerShell scripts in `scripts/`.
 - **Schema verification**: DB + REST checks via `scripts/verify-production-schema.js`.
 
+## Docker (optional)
+
+Container build and compose files live in `denizen/`:
+
+| File | Purpose |
+|------|---------|
+| `denizen/Dockerfile` | Node 20 Alpine image; `npm ci --production`, exposes `8080` |
+| `denizen/docker-compose.yml` | Single `game` service with API key env passthrough |
+
+From `denizen/`:
+
+```powershell
+# Build and run (maps host 8080 → container 8080)
+docker compose up --build -d
+```
+
+Set `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `XAI_API_KEY`, and `KIMI_API_KEY` in a `.env` file beside `docker-compose.yml` (or export them) before `docker compose up`. For production Supabase + mesh, prefer the PowerShell deploy flow below with a full `.env.production` — the stock compose file is a minimal game-server image, not the full Dolonia stack.
+
 ## 1) Prepare `.env.production` (no secrets in git)
 
 Copy from template and fill values in your deploy machine / secret store:
