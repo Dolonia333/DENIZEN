@@ -599,6 +599,43 @@ function buildLucyHandoffAlertBroadcast(handoff, ts = Date.now()) {
   return { type: 'lucy_handoff_alert', handoff, ts };
 }
 
+function maskProviderKeys(keys) {
+  if (!keys || typeof keys !== 'object') return {};
+  const out = {};
+  for (const [name, value] of Object.entries(keys)) {
+    const s = String(value || '').trim();
+    if (!s) {
+      out[name] = '';
+      continue;
+    }
+    out[name] = s.length > 10 ? `${s.slice(0, 4)}…${s.slice(-4)}` : '••••';
+  }
+  return out;
+}
+
+async function getSessionSettings(sessionId) {
+  const session = await getSession(sessionId);
+  if (!session) return null;
+  const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
+  const keys = meta.provider_keys && typeof meta.provider_keys === 'object' ? meta.provider_keys : {};
+  return {
+    email: meta.email || session.email || null,
+    notify_email: meta.notify_email !== false,
+    provider_keys: maskProviderKeys(keys),
+    provider_keys_set: Object.keys(keys).filter((k) => String(keys[k] || '').trim()),
+  };
+}
+
+async function updateSessionSettings(sessionId, { providerKeys, notifyEmail, email } = {}) {
+  const metadata = {};
+  if (providerKeys && typeof providerKeys === 'object') {
+    metadata.provider_keys = providerKeys;
+  }
+  if (notifyEmail != null) metadata.notify_email = !!notifyEmail;
+  if (email != null) metadata.email = String(email).slice(0, 320);
+  return createOrUpdateSession({ sessionId, metadata });
+}
+
 function visitorErrorStatus(err) {
   if (!(err instanceof VisitorError)) return 500;
   switch (err.code) {
@@ -642,4 +679,7 @@ module.exports = {
   markHandoffDelivered,
   resolveHandoffTarget,
   buildLucyHandoffAlertBroadcast,
+  getSessionSettings,
+  updateSessionSettings,
+  maskProviderKeys,
 };

@@ -125,6 +125,16 @@ cd denizen
 .\scripts\apply-all-migrations.ps1
 ```
 
+## NPC-to-NPC vs MCP (important)
+
+| | MCP gateway | Agent bus |
+|---|-------------|-----------|
+| **Purpose** | External AI client ↔ **one** claimed NPC | **In-world** NPC ↔ NPC messaging |
+| **Entry** | Connect AI modal, `/mcp/npc/:key` | `src/agent-bus.js`, `POST /api/agent-bus` |
+| **Use when** | Sync ChatGPT/Cursor/Claude to your assistant | NPCs coordinate in the office |
+
+MCP does **not** expose a `talk_to_npc` tool. For NPC-to-NPC conversations, see [AGENT_BUS.md](AGENT_BUS.md).
+
 ## Tag
 
 | Release | Tag | Notes |

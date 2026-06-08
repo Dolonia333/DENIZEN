@@ -64,7 +64,10 @@ function parseEmailStyle(soulText) {
   // to fight Windows line endings (where \s would greedily eat \r\n and
   // overrun into the next field).
   const normalized = String(soulText).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-  const match = normalized.match(/###\s*email_style\s*\n([\s\S]+?)(?:\n##\s|\n$)/i);
+  let match = normalized.match(/###\s*email_style\s*\n([\s\S]+?)(?:\n##\s|\n###\s|\n$)/i);
+  if (!match) {
+    match = normalized.match(/##\s*Email\s+Style\s*\n([\s\S]+?)(?:\n##\s|\n###\s|\n$)/i);
+  }
   if (!match) return null;
   const body = match[1];
 

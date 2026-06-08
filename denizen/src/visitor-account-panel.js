@@ -96,6 +96,58 @@
         touch-action: manipulation;
       }
       #${ROOT_ID} .acct-logout:hover { border-color: #f87171; background: rgba(248, 113, 113, 0.1); }
+      #${ROOT_ID} .acct-settings {
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #1f2937;
+      }
+      #${ROOT_ID}[data-expanded="1"] .acct-settings {
+        display: flex;
+      }
+      #${ROOT_ID} .acct-settings-title {
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      #${ROOT_ID} .acct-settings-hint {
+        font-size: 9px;
+        color: #64748b;
+        line-height: 1.35;
+      }
+      #${ROOT_ID} .acct-field label {
+        display: block;
+        font-size: 9px;
+        color: #94a3b8;
+        margin-bottom: 3px;
+      }
+      #${ROOT_ID} .acct-field input {
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid #334155;
+        border-radius: 6px;
+        color: #e2e8f0;
+        font: inherit;
+        font-size: 10px;
+        padding: 6px 8px;
+      }
+      #${ROOT_ID} .acct-save-btn {
+        align-self: flex-start;
+        background: rgba(74, 222, 128, 0.12);
+        border: 1px solid #4ade80;
+        border-radius: 6px;
+        color: #4ade80;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
       #${ROOT_ID} .acct-logout:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -257,6 +309,23 @@
         </div>
       </div>
       <div class="acct-stats" id="denizen-acct-stats"></div>
+      <div class="acct-settings" id="denizen-acct-settings">
+        <div class="acct-settings-title">Connect &amp; notifications</div>
+        <div class="acct-settings-hint" id="denizen-acct-email-hint">Email notifications use your login email when Resend is configured on the server.</div>
+        <div class="acct-field">
+          <label for="denizen-acct-key-anthropic">Anthropic key (optional — for your external AI clients)</label>
+          <input type="password" id="denizen-acct-key-anthropic" autocomplete="off" placeholder="sk-ant-…" />
+        </div>
+        <div class="acct-field">
+          <label for="denizen-acct-key-openai">OpenAI key (optional)</label>
+          <input type="password" id="denizen-acct-key-openai" autocomplete="off" placeholder="sk-…" />
+        </div>
+        <label class="acct-settings-hint" style="display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="denizen-acct-notify-email" checked />
+          Send me Denizen email updates
+        </label>
+        <button type="button" class="acct-save-btn" id="denizen-acct-save-settings">Save settings</button>
+      </div>
     `;
     document.body.appendChild(rootEl);
     globalThis.DenizenMobileSidebar?.relayout?.();
@@ -303,6 +372,71 @@
     return rootEl;
   }
 
+  async function loadAccountSettings() {
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid) return;
+    try {
+      const res = await fetch(
+        `/api/visitor/settings?session_id=${encodeURIComponent(sid)}`,
+        { headers: api.authHeaders?.() || {} },
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      const settings = data.settings || {};
+      const hint = rootEl?.querySelector('#denizen-acct-email-hint');
+      if (hint) {
+        const emailRes = await fetch(
+          `/api/visitor/email/status?session_id=${encodeURIComponent(sid)}`,
+          { headers: api.authHeaders?.() || {} },
+        ).catch(() => null);
+        const emailData = emailRes?.ok ? await emailRes.json() : {};
+        if (emailData.resend_configured) {
+          hint.textContent = emailData.has_email
+            ? `Notifications can reach ${emailData.email}. Operator inbox (Lucy) is separate.`
+            : 'Add your email at login to receive Denizen notifications.';
+        } else {
+          hint.textContent = 'Server email (Resend) not configured — notifications are off until operator sets RESEND_API_KEY.';
+        }
+      }
+      const notify = rootEl?.querySelector('#denizen-acct-notify-email');
+      if (notify) notify.checked = settings.notify_email !== false;
+    } catch (_) {}
+  }
+
+  async function saveAccountSettings() {
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid) return;
+    const anthropic = rootEl?.querySelector('#denizen-acct-key-anthropic')?.value?.trim() || '';
+    const openai = rootEl?.querySelector('#denizen-acct-key-openai')?.value?.trim() || '';
+    const notifyEmail = !!rootEl?.querySelector('#denizen-acct-notify-email')?.checked;
+    const provider_keys = {};
+    if (anthropic) provider_keys.anthropic = anthropic;
+    if (openai) provider_keys.openai = openai;
+    const res = await fetch('/api/visitor/settings', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(api.authHeaders?.() || {}),
+      },
+      body: JSON.stringify({
+        session_id: sid,
+        provider_keys,
+        notify_email: notifyEmail,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    const anthEl = rootEl?.querySelector('#denizen-acct-key-anthropic');
+    const openEl = rootEl?.querySelector('#denizen-acct-key-openai');
+    if (anthEl) anthEl.value = '';
+    if (openEl) openEl.value = '';
+    await loadAccountSettings();
+  }
+
   function renderProfile() {
     ensureRoot();
     const api = getSessionApi();
@@ -320,7 +454,10 @@
         emailEl.hidden = true;
       }
     }
-    if (expanded) renderStats();
+    if (expanded) {
+      renderStats();
+      loadAccountSettings();
+    }
   }
 
   function statRow(label, value, className = '') {
@@ -467,6 +604,7 @@
       if (toggleEl) toggleEl.textContent = '▴';
     }
     renderStats();
+    loadAccountSettings();
   }
 
   const DenizenAccountPanel = {

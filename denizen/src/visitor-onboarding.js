@@ -144,6 +144,8 @@
         'Link Cursor, Claude Desktop, or a ChatGPT Custom GPT to your in-world assistant.',
         'Your external AI can log activity, update memory, and read status — same brain, two interfaces.',
         'Day-to-day: keep coding in Cursor while your Denizen NPC stays in sync with the team.',
+        'Ask research questions in chat — team tier gets cited web research when the server has BRAVE_SEARCH_API_KEY.',
+        'Save optional API keys in Account → Connect & notifications (for your external client setup notes).',
       ],
     },
     {

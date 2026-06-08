@@ -332,11 +332,15 @@ async function handleHttpRequest(req, res, npcKeyFromPath) {
 }
 
 function getPublicBaseUrl() {
-  return String(
-    process.env.DENIZEN_PUBLIC_URL
-    || process.env.DENIZEN_URL
-    || `http://localhost:${process.env.PORT || 8080}`,
-  ).replace(/\/$/, '');
+  const pub = String(process.env.DENIZEN_PUBLIC_URL || '').trim().replace(/\/$/, '');
+  if (pub && !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(pub)) {
+    return pub;
+  }
+  const denizen = String(process.env.DENIZEN_URL || '').trim().replace(/\/$/, '');
+  if (denizen && !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(denizen)) {
+    return denizen;
+  }
+  return String(pub || denizen || `http://localhost:${process.env.PORT || 8080}`).replace(/\/$/, '');
 }
 
 async function authenticateBearerRequest(req, res) {

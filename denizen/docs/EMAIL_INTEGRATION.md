@@ -1,5 +1,15 @@
 # Denizen — Email Integration (n8n → Lucy → Gmail)
 
+## Visitor vs operator
+
+| Audience | What works today |
+|----------|------------------|
+| **Operator (CEO)** | n8n Gmail → `POST /api/email-inbound` → Lucy drafts → Gmail or `data/email-drafts.json` |
+| **Visitor** | Identity email at login; optional outbound via Resend (`RESEND_API_KEY`); `GET /api/visitor/email/status` |
+| **Not yet** | Visitor self-serve Gmail OAuth / connect-my-inbox UI |
+
+Lucy's routing requires `### email_style` in `npcs/lucy/SOUL.md` (or legacy `## Email Style` header).
+
 > Lucy (Secretary NPC) drafts replies to the CEO's inbox automatically.
 > n8n watches Gmail, posts new messages to Denizen, the NPC brain
 > composes a reply in Lucy's voice, and the result lands in Gmail

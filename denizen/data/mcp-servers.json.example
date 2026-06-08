@@ -1,0 +1,13 @@
+{
+  "_comment": "Copy to mcp-servers.json (gitignored). Generic MCP tool servers for NPC skill discovery.",
+  "servers": [
+    {
+      "id": "example-readonly",
+      "name": "Example MCP (read-only)",
+      "description": "Streamable HTTP MCP server — tools discovered via /api/mcp/discover",
+      "url": "https://your-mcp-host.example/mcp",
+      "enabled": false,
+      "readOnly": true
+    }
+  ]
+}

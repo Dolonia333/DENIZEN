@@ -18,6 +18,7 @@
   let busyToggle = false;
   let busyPairing = false;
   let busyLevel = false;
+  let busySpend = false;
   let contribExpanded = false;
   let panelHidden = false;
   let suppressToggleEvent = false;
@@ -311,6 +312,29 @@
       }
       #${ROOT_ID} .node-level-select:disabled {
         opacity: 0.55;
+      }
+      #${ROOT_ID} .node-spend-row {
+        margin-top: 4px;
+      }
+      #${ROOT_ID} .node-spend-btn {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #6366f1;
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #${ROOT_ID} .node-spend-btn:hover:not(:disabled) {
+        background: rgba(99, 102, 241, 0.28);
+      }
+      #${ROOT_ID} .node-spend-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
       #${ROOT_ID} .node-modes {
         display: flex;
@@ -709,6 +733,9 @@
       <div class="node-contrib-body" id="denizen-node-contrib-body">
         <div class="node-contrib-row"><span>Jobs done</span><span class="node-contrib-val" id="denizen-node-jobs">0</span></div>
         <div class="node-contrib-row"><span>Credits today</span><span class="node-contrib-val" id="denizen-node-credits-today">0</span></div>
+        <div class="node-contrib-row node-spend-row">
+          <button type="button" class="node-spend-btn" id="denizen-node-spend-btn" disabled>Boost priority (10 cr)</button>
+        </div>
         <div class="node-contrib-row"><span>Est. job credit</span><span class="node-contrib-val" id="denizen-node-est-job">—</span></div>
         <div class="node-contrib-row"><span>Hardware score</span><span class="node-contrib-val" id="denizen-node-hw-score">0</span></div>
         <div class="node-contrib-row"><span>CPU <span class="node-live-label">live</span></span><span class="node-contrib-val" id="denizen-node-cpu">—</span></div>
@@ -825,7 +852,60 @@
       if (panel?.renderProfile) panel.renderProfile();
       if (panel?.renderStats) panel.renderStats();
     });
+    const spendBtn = rootEl.querySelector('#denizen-node-spend-btn');
+    spendBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      spendPriorityBoost().catch((err) => {
+        console.warn('[DenizenNodeUI] credit spend failed:', err?.message || err);
+        state.lastError = err?.message || 'Spend failed';
+        render();
+      });
+    });
     return rootEl;
+  }
+
+  async function fetchCreditsEconomy() {
+    const sid = getSessionId();
+    if (!sid) return null;
+    const res = await fetchWithTimeout(
+      `/api/compute/credits/economy?session_id=${encodeURIComponent(sid)}`,
+      { method: 'GET', headers: authHeaders() },
+    );
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    if (Number.isFinite(Number(data.credits_balance))) {
+      state.credits = Number(data.credits_balance);
+    }
+    state.creditsEconomy = data.economy || data;
+    const cost = data.spend_catalog?.priority_boost?.cost || 10;
+    const spendBtn = rootEl?.querySelector('#denizen-node-spend-btn');
+    if (spendBtn) spendBtn.textContent = `Boost priority (${cost} cr)`;
+    return data;
+  }
+
+  async function spendPriorityBoost() {
+    const sid = getSessionId();
+    if (!sid || busySpend) return;
+    busySpend = true;
+    state.lastError = null;
+    render();
+    try {
+      const res = await fetchWithTimeout('/api/compute/credits/spend', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ session_id: sid, reason: 'priority_boost' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      if (Number.isFinite(Number(data.credits_balance))) {
+        state.credits = Number(data.credits_balance);
+      }
+      await refresh();
+    } finally {
+      busySpend = false;
+      render();
+    }
   }
 
   function formatRam(mb) {
@@ -1006,6 +1086,13 @@
     if (accountEl) {
       accountEl.hidden = !globalThis.DenizenAccountPanel;
     }
+    const spendBtn = rootEl.querySelector('#denizen-node-spend-btn');
+    if (spendBtn) {
+      const cost = state.creditsEconomy?.spend_catalog?.priority_boost?.cost
+        || 10;
+      spendBtn.textContent = `Boost priority (${cost} cr)`;
+      spendBtn.disabled = busySpend || !state.sessionReady || state.credits < cost;
+    }
     if (restoreEl) {
       const dot = restoreEl.querySelector('.restore-dot');
       if (dot) dot.classList.toggle('idle', !state.contributing);
@@ -1090,6 +1177,7 @@
       const summary = data.contribution_summary || data;
       next = mapContributionSummary(summary);
     }
+    await fetchCreditsEconomy().catch(() => null);
     if (liveRes?.ok) {
       const liveData = await liveRes.json().catch(() => ({}));
       const live = liveData.live_usage || null;

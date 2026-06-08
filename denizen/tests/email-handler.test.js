@@ -47,6 +47,17 @@ describe('parseEmailStyle', () => {
     assert.equal(handler.parseEmailStyle(PLAIN_SOUL), null);
   });
 
+  it('parses legacy ## Email Style header (Lucy SOUL on disk)', () => {
+    const legacy = `## Email Style
+- tone: warm-professional
+- email_canAutoSend: true
+`;
+    const style = handler.parseEmailStyle(legacy);
+    assert.ok(style);
+    assert.match(style.tone, /warm-professional/);
+    assert.equal(style.email_canAutoSend, true);
+  });
+
   it('parses tone, max_paragraphs, never_send, escalate_keywords, signature', () => {
     const style = handler.parseEmailStyle(LUCY_SOUL);
     assert.ok(style);

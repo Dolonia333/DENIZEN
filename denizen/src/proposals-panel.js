@@ -12,6 +12,7 @@
   const POLL_MS = 30000;
   const STYLE_ID = 'denizen-proposals-doc-styles';
   const PROPOSALS_URL = '/api/proposals';
+  const SKILL_PROPOSALS_URL = '/api/skill-proposals';
 
   let chipEl = null;
   let panelEl = null;
@@ -20,7 +21,7 @@
   let panelOpen = false;
   let lastFeed = { proposals: [], total: 0 };
   let filterStatus = 'pending';
-  let filterKinds = new Set(['animation', 'soul', 'capability']);
+  let filterKinds = new Set(['animation', 'soul', 'capability', 'skill']);
   let selectedId = null;
   let showTechnical = false;
   let soulApplyAvailable = null;
@@ -318,6 +319,7 @@
     if (kind === 'animation') return 'Animation Proposal';
     if (kind === 'soul') return 'SOUL Revision';
     if (kind === 'capability') return 'Capability Request';
+    if (kind === 'skill') return 'Skill Proposal';
     return String(kind || 'Proposal');
   }
 
@@ -325,6 +327,7 @@
     if (kind === 'animation') return 'ANIM';
     if (kind === 'soul') return 'SOUL';
     if (kind === 'capability') return 'CAP';
+    if (kind === 'skill') return 'SKILL';
     return String(kind || '?').slice(0, 4).toUpperCase();
   }
 
@@ -333,7 +336,21 @@
     if (p.kind === 'animation') return r.animName || p.summary || 'Untitled animation';
     if (p.kind === 'soul') return (r.proposal && r.proposal.summary) || p.summary || 'SOUL edit';
     if (p.kind === 'capability') return r.verbName || r.name || p.summary || 'New capability';
+    if (p.kind === 'skill') return r.name || r.slug || p.summary || 'New skill';
     return p.summary || 'Proposal';
+  }
+
+  function mapSkillProposal(p) {
+    const status = p.status === 'needs_review' ? 'pending' : p.status;
+    return {
+      kind: 'skill',
+      id: p.id,
+      status,
+      by: p.npc,
+      ts: p.at,
+      raw: p,
+      summary: p.purpose || p.name,
+    };
   }
 
   function formatDate(ts) {
@@ -372,6 +389,21 @@
       const verb = r.verbName || r.name;
       if (verb) sections.push({ title: 'Proposed verb', body: verb });
       if (r.description) sections.push({ title: 'Description', body: r.description });
+    } else if (p.kind === 'skill') {
+      if (r.purpose) sections.push({ title: 'Purpose', body: r.purpose });
+      if (r.slug) sections.push({ title: 'Skill slug', body: r.slug });
+      if (Array.isArray(r.scanFlags) && r.scanFlags.length) {
+        sections.push({ title: 'Safety scan flags', body: r.scanFlags.join('\n'), tone: 'drop' });
+      } else if (r.status === 'pending') {
+        sections.push({ title: 'Safety scan', body: 'No dangerous patterns detected.' });
+      }
+      if (r.code) {
+        sections.push({
+          title: 'Generated code (quarantined until approved)',
+          body: String(r.code).slice(0, 4000),
+          muted: true,
+        });
+      }
     }
 
     if (!sections.length && p.summary) {
@@ -535,14 +567,36 @@
   }
 
   async function fetchFeed(status) {
-    const kinds = [...filterKinds].join(',');
-    const url = `${PROPOSALS_URL}?status=${encodeURIComponent(status)}&kind=${encodeURIComponent(kinds)}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
+    const docKinds = [...filterKinds].filter((k) => k !== 'skill');
+    const proposals = [];
+    if (docKinds.length) {
+      const url = `${PROPOSALS_URL}?status=${encodeURIComponent(status)}&kind=${encodeURIComponent(docKinds.join(','))}`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (Array.isArray(json.proposals)) proposals.push(...json.proposals);
+    }
+    if (filterKinds.has('skill')) {
+      const skillStatuses = status === 'all'
+        ? [null]
+        : (status === 'pending' ? ['pending', 'needs_review'] : [status]);
+      for (const st of skillStatuses) {
+        const skillUrl = st ? `${SKILL_PROPOSALS_URL}?status=${encodeURIComponent(st)}` : SKILL_PROPOSALS_URL;
+        const sres = await fetch(skillUrl, { cache: 'no-store' });
+        if (!sres.ok) continue;
+        const sjson = await sres.json();
+        const skills = Array.isArray(sjson.proposals) ? sjson.proposals : [];
+        for (const p of skills) {
+          const mapped = mapSkillProposal(p);
+          if (status === 'all' || mapped.status === status || (status === 'pending' && p.status === 'needs_review')) {
+            proposals.push(mapped);
+          }
+        }
+      }
+    }
     lastFeed = {
-      proposals: Array.isArray(json.proposals) ? json.proposals : [],
-      total: Number(json.total) || (Array.isArray(json.proposals) ? json.proposals.length : 0),
+      proposals,
+      total: proposals.length,
     };
   }
 
@@ -729,10 +783,14 @@
 
   async function decide(kind, id, decision) {
     try {
-      const res = await fetch(`/api/${encodeURIComponent(kind)}-proposal/approve`, {
+      const url = kind === 'skill'
+        ? `/api/skill-proposals/${encodeURIComponent(id)}/${decision === 'approved' ? 'approve' : 'reject'}`
+        : `/api/${encodeURIComponent(kind)}-proposal/approve`;
+      const body = kind === 'skill' ? undefined : JSON.stringify({ id, decision });
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, decision }),
+        headers: kind === 'skill' ? undefined : { 'Content-Type': 'application/json' },
+        body,
       });
       if (!res.ok) {
         const text = await res.text();

@@ -68,6 +68,7 @@ infra/*-out.txt
 
 # Desktop runtime feedback log
 denizen/data/desktop-feedback.jsonl
+denizen/data/mcp-servers.json
 
 # Supabase local stack secrets (use .env.example)
 infra/supabase-project/.env

@@ -12,6 +12,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const CONFIG_FILE = path.join(ROOT, 'data', 'mcp-servers.json');
+const CONFIG_EXAMPLE = path.join(ROOT, 'data', 'mcp-servers.json.example');
 const TIMEOUT_MS = 15000;
 
 let _idCounter = 1;
@@ -22,6 +23,14 @@ function loadConfig() {
     const parsed = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
     return Array.isArray(parsed.servers) ? parsed : { servers: [] };
   } catch (_) {
+    try {
+      if (fs.existsSync(CONFIG_EXAMPLE)) {
+        const ex = JSON.parse(fs.readFileSync(CONFIG_EXAMPLE, 'utf8'));
+        if (Array.isArray(ex.servers)) {
+          return { servers: [], _examplePath: 'data/mcp-servers.json.example' };
+        }
+      }
+    } catch (_) {}
     return { servers: [] };
   }
 }

@@ -2030,9 +2030,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (urlPath === '/api/npc-sync/openapi.json' && req.method === 'GET') {
-    const publicBase = process.env.DENIZEN_PUBLIC_URL
-      || process.env.DENIZEN_URL
-      || `http://localhost:${PORT}`;
+    const publicBase = npcMcpGateway.getPublicBaseUrl();
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(npcMcpGateway.buildOpenApiSpec(publicBase)));
     return;
@@ -4815,6 +4813,94 @@ const server = http.createServer((req, res) => {
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, session }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/email/status' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const settings = await denizenVisitor.getSessionSettings(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        has_email: !!(settings?.email),
+        email: settings?.email || null,
+        notify_email: settings?.notify_email !== false,
+        resend_configured: !!(process.env.RESEND_API_KEY),
+        operator_inbox: true,
+        visitor_gmail_oauth: false,
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/settings' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const settings = await denizenVisitor.getSessionSettings(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, settings: settings || {} }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/settings' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const providerKeys = body.provider_keys || body.providerKeys || null;
+      const notifyEmail = body.notify_email ?? body.notifyEmail;
+      const email = body.email;
+      const session = await denizenVisitor.updateSessionSettings(sessionId, {
+        providerKeys,
+        notifyEmail,
+        email,
+      });
+      const settings = await denizenVisitor.getSessionSettings(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, session, settings: settings || {} }));
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
