@@ -1,4 +1,4 @@
-# Denizen Companion (v1.5)
+# Denizen Companion (v1.6)
 
 Provider-agnostic browser extension that syncs **any** app or AI workflow with your claimed Denizen NPC — no MCP config, no API keys, no subscription ToS issues.
 
@@ -51,6 +51,13 @@ The extension uses the same REST shim as ChatGPT Custom GPT Actions (v1.4).
 - Same bearer token scope as MCP gateway (one NPC per token)
 - Rate limits apply server-side (`DENIZEN_MCP_RATE_LIMIT`)
 
-## Tag
+## Local ports
 
-Release milestone: `v1.5-companion-extension`
+The extension auto-connects on `localhost:8080`, `127.0.0.1:8080`, **`8081`** (Dolonia lab `PORT=8081`), and `https://denizen.dolonia.cloud`.
+
+## Tags
+
+| Release | Tag |
+|---------|-----|
+| v1.5 | `v1.5-companion-extension` — initial Chrome extension |
+| v1.6 | `v1.6.0` — compute mesh milestone; extension adds port 8081 |

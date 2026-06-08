@@ -26,7 +26,7 @@ Sync clipboard, text selections, and quick notes to your Denizen NPC without con
 
 If auto-sync fails, open the popup setup form and paste:
 
-- Denizen URL (e.g. `http://localhost:8080`)
+- Denizen URL (e.g. `http://localhost:8080` or `http://localhost:8081` on Dolonia lab)
 - NPC key (e.g. `roki`)
 - Bearer token from Connect AI modal
 

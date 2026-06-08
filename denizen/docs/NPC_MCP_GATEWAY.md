@@ -132,3 +132,4 @@ cd denizen
 | v1.3 | `v1.3-npc-mcp-sync` | MCP JSON-RPC gateway |
 | v1.4 | `v1.4-npc-sync-rest` | REST shim + OpenAPI + ChatGPT/Claude onboarding |
 | v1.5 | `v1.5-companion-extension` | Chrome extension companion (see [NPC_COMPANION.md](NPC_COMPANION.md)) |
+| v1.6 | `v1.6.0` | Compute mesh + desktop worker + open-plan office; companion adds port 8081 |
