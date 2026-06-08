@@ -5,7 +5,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 lq = '\u201c'
 rq = '\u201d'
 
-path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html'
+path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html'
 with open(path, 'r', encoding='utf-8') as f:
     c = f.read()
 

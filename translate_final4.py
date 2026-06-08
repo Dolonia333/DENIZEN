@@ -18,7 +18,7 @@ def patch(path, replacements):
     for l in remaining[:20]:
         print(f'  {repr(l[:130])}')
 
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html', [
     # CSS comment: mixed partial translation
     ('/* 边框改为直接贴合画布内部，avoiding frame-larger-than-map issue */', '/* Border fits directly inside canvas (avoiding frame-larger-than-map issue) */'),
     # btnHomeFavorite already English, skip
@@ -40,7 +40,7 @@ patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.ht
     ("|| agent.name === 'Nika' || ag", "|| agent.name === 'Nika' || ag"),  # already English, skip
 ])
 
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\office-agent-push.py', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\office-agent-push.py', [
     ('# 自动状态守护：if local state file', '# Auto state guardian: if local state file'),
 ])
 

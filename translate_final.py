@@ -18,7 +18,7 @@ def patch(path, replacements):
         print(f'  {l.strip()[:120]}')
 
 # ── index.html ──────────────────────────────────────────────────────────────
-index_path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html'
+index_path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html'
 patch(index_path, [
     # CSS comments
     ('/* 底部面板容器 */', '/* Bottom panel container */'),
@@ -68,7 +68,7 @@ patch(index_path, [
 ])
 
 # ── join.html ──────────────────────────────────────────────────────────────
-join_path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\join.html'
+join_path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\join.html'
 patch(join_path, [
     ("Join Star 的像素办公室", "Join Star's Pixel Office"),
     ('Your Name（会显示在办公室）', 'Your Name (will be shown in the office)'),
@@ -90,7 +90,7 @@ patch(join_path, [
 ])
 
 # ── invite.html ──────────────────────────────────────────────────────────────
-invite_path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\invite.html'
+invite_path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\invite.html'
 patch(invite_path, [
     ('海辛办公室 - 加入邀请', "Star's Office - Join Invite"),
     ('✨ 海辛办公室 · 加入邀请', "✨ Star's Office · Join Invite"),
@@ -111,7 +111,7 @@ patch(invite_path, [
 ])
 
 # ── office-agent-push.py ────────────────────────────────────────────────────
-push_path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\office-agent-push.py'
+push_path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\office-agent-push.py'
 patch(push_path, [
     ('海辛办公室 - Agent 状态主动推送脚本', 'Star Office - Agent Status Push Script'),
     ('用法：', 'Usage:'),

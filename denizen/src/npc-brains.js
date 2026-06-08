@@ -49,6 +49,9 @@ try { visitorAccess = require('./visitor-access'); } catch (_) {}
 let denizenDb = null;
 try { denizenDb = require('./denizen-db'); } catch (_) {}
 
+let userIdentity = null;
+try { userIdentity = require('./denizen-user-identity'); } catch (_) {}
+
 // Broadcast function reference — set at server startup via setBroadcast()
 let _broadcastFn = null;
 
@@ -64,7 +67,8 @@ class NpcBrainManager {
     this.providers = {};   // provider configs loaded from openclaw.json
     this.brains = {};      // npcName -> NpcBrain instance
     this.memories = {};    // npcName -> conversation history array
-    this._visitorMemories = new Map(); // `${sessionId}:${npcName}` -> [{ from, text }]
+    this._visitorMemories = new Map(); // `${scopeId}:${npcName}` -> [{ from, text }]
+    this._visitorMemHydrated = new Set();
     this._thinkCycles = {};    // npcName -> consecutive work cycles count
     this._lastDecisions = {};  // npcName -> last decision object
     this._taskProgress = {};   // npcName -> { task, phase, startedAt }
@@ -358,23 +362,60 @@ class NpcBrainManager {
     return p[npcName] || p.default || { personaDirective: 'Be proactive and clear.', autonomy: 'ask-then-act' };
   }
 
-  _visitorMemKey(sessionId, npcName) {
-    return `${sessionId}:${npcName}`;
+  _visitorScopeId(opts) {
+    if (!opts) return null;
+    return opts.identityId || opts.sessionId || null;
   }
 
-  _getVisitorMemories(sessionId, npcName) {
-    const key = this._visitorMemKey(sessionId, npcName);
+  _visitorMemKey(scopeId, npcName) {
+    return `${scopeId}:${npcName}`;
+  }
+
+  async _hydrateVisitorMemories(opts, npcName) {
+    const scopeId = this._visitorScopeId(opts);
+    if (!scopeId || !opts?.identityId || !userIdentity?.isEnabled?.()) return;
+    const key = this._visitorMemKey(scopeId, npcName);
+    if (this._visitorMemHydrated.has(key)) return;
+    this._visitorMemHydrated.add(key);
+    try {
+      const npcKey = this._npcKeyForName(npcName);
+      const rows = await userIdentity.loadNpcChatHistory(opts.identityId, npcKey);
+      const mapped = userIdentity.mapChatRowsToMemories(
+        rows,
+        npcName,
+        opts.displayName || 'Guest',
+      );
+      if (mapped.length) {
+        this._visitorMemories.set(key, mapped.slice(-50));
+      }
+    } catch (_) {}
+  }
+
+  _getVisitorMemories(scopeId, npcName) {
+    const key = this._visitorMemKey(scopeId, npcName);
     if (!this._visitorMemories.has(key)) {
       this._visitorMemories.set(key, []);
     }
     return this._visitorMemories.get(key);
   }
 
-  _pushVisitorMemory(sessionId, npcName, from, text) {
-    const mem = this._getVisitorMemories(sessionId, npcName);
-    mem.push({ from, text: this._sanitize(text) });
+  _pushVisitorMemory(scopeId, npcName, from, text, opts) {
+    const sanitized = this._sanitize(text);
+    const mem = this._getVisitorMemories(scopeId, npcName);
+    mem.push({ from, text: sanitized });
     if (mem.length > 50) {
-      this._visitorMemories.set(this._visitorMemKey(sessionId, npcName), mem.slice(-50));
+      this._visitorMemories.set(this._visitorMemKey(scopeId, npcName), mem.slice(-50));
+    }
+    if (opts?.identityId && userIdentity?.saveNpcChatTurn) {
+      const npcKey = this._npcKeyForName(npcName);
+      const role = from === npcName ? 'npc' : 'user';
+      userIdentity.saveNpcChatTurn({
+        identityId: opts.identityId,
+        npcKey,
+        role,
+        content: sanitized,
+        sessionId: opts.sessionId,
+      });
     }
   }
 
@@ -3522,14 +3563,19 @@ ${brain.voiceAnchor || ''}`;
     const safeMessage = typeof message === 'string' ? message : String(message ?? '');
     const h = this._hierarchy[npcName];
     const isVisitor = Boolean(opts.sessionId);
+    const visitorScope = this._visitorScopeId(opts);
     const playerName = isVisitor && opts.displayName ? opts.displayName : 'CEO';
     const isVisitorAssistant = isVisitor && this._isVisitorAssistantForNpc(npcName, opts.assistant);
     const realWorkOn = this._resolveRealWorkMode(opts);
 
+    if (isVisitor) {
+      await this._hydrateVisitorMemories(opts, npcName);
+    }
+
     const pushPlayerMemory = (from, text) => {
       const sanitized = this._sanitize(text);
-      if (isVisitor) {
-        this._pushVisitorMemory(opts.sessionId, npcName, from, sanitized);
+      if (isVisitor && visitorScope) {
+        this._pushVisitorMemory(visitorScope, npcName, from, sanitized, opts);
         return;
       }
       this.memories[npcName].push({ from, text: sanitized });
@@ -3539,7 +3585,9 @@ ${brain.voiceAnchor || ''}`;
     };
 
     const getChatMemories = () => (
-      isVisitor ? this._getVisitorMemories(opts.sessionId, npcName) : (this.memories[npcName] || [])
+      isVisitor && visitorScope
+        ? this._getVisitorMemories(visitorScope, npcName)
+        : (this.memories[npcName] || [])
     );
 
     if (this._isGreetingOnly(safeMessage, npcName)) {

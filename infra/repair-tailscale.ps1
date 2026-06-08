@@ -1,7 +1,7 @@
 # Repair stuck Tailscale on Windows (NoState / duplicate tailscaled).
 # Run as Administrator:
 #   Set-ExecutionPolicy -Scope Process Bypass -Force
-#   & "C:\Users\zionv\OneDrive\Desktop\multbot\infra\repair-tailscale.ps1"
+#   & "C:\Users\zionv\OneDrive\Desktop\Denizen\infra\repair-tailscale.ps1"
 
 $ErrorActionPreference = 'Stop'
 $ts = Join-Path $env:ProgramFiles 'Tailscale\tailscale.exe'

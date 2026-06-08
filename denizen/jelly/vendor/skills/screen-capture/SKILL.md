@@ -12,7 +12,7 @@ Capture OS-level screenshots on Windows using ffmpeg's gdigrab input.
 
 ```bash
 # Full desktop screenshot
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/screen-capture/screen-capture.mjs
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/screen-capture/screen-capture.mjs
 
 # Capture a specific window by title
 node skills/screen-capture/screen-capture.mjs --title "Notepad"

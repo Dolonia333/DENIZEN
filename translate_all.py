@@ -2,7 +2,7 @@
 """Translate all Chinese strings in Star-Office-UI frontend files to English."""
 import os
 
-BASE = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend'
+BASE = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend'
 
 # All Chinese->English replacements (order matters for longer strings first)
 REPLACEMENTS = [

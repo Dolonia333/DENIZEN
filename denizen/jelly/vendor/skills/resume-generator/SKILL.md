@@ -44,7 +44,7 @@ Save the `data` field as `job.json`.
 ### Step 3: Generate the resume
 
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/resume-generator/resume-generator.mjs --profile profile.json --job job.json --template modern --output "C:\Users\zionv\.openclaw\canvas\resume-preview.html" --pdf "C:\Users\zionv\.openclaw\workspace\resume.pdf"
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/resume-generator/resume-generator.mjs --profile profile.json --job job.json --template modern --output "C:\Users\zionv\.openclaw\canvas\resume-preview.html" --pdf "C:\Users\zionv\.openclaw\workspace\resume.pdf"
 ```
 
 **Arguments:**

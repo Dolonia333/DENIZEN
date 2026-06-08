@@ -42,7 +42,7 @@ async function resolveOrgBySlug(slug) {
   if (!slug || !String(slug).trim()) {
     throw new VisitorError('slug required', 'BAD_INPUT');
   }
-  const rows = await denizenDb._get(
+  const rows = await denizenDb._getSoft(
     `denizen_organizations?select=id,slug,display_name,plan,settings&slug=eq.${encodeURIComponent(String(slug).trim())}&limit=1`,
   );
   return rows?.[0] || null;

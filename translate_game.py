@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import re
 
-file = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\game.js'
+file = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\game.js'
 with open(file, 'r', encoding='utf-8') as f:
     c = f.read()
 

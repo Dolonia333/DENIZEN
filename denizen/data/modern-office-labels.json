@@ -1,0 +1,35 @@
+{
+  "_doc": "Human names for Modern Office 32x32 Singles. Keys match catalog id (mo_single_...) or _file basename. Denizen does not know sprite names without this file.",
+  "_howto": "1) Label sprites you place in scenes  2) Key byFile with PNG basename or byId with mo_single_NNN  3) Re-run node scripts/build-modern-office-singles-catalog.js",
+  "byFile": {
+    "Modern_Office_Singles_32x32_91.png": {
+      "displayName": "Metal shelf (empty)",
+      "footprint": { "w": 1, "h": 2 },
+      "depth": 1.5,
+      "notes": "Empty metal shelving unit — catalog shelf_metal_empty"
+    },
+    "Modern_Office_Singles_32x32_122.png": {
+      "displayName": "Lobby pod chair (grey)",
+      "footprint": { "w": 1, "h": 1 },
+      "depth": 1.6,
+      "notes": "Round grey waiting-area pod chair — catalog chair_pod_grey"
+    },
+    "Modern_Office_Singles_32x32_153.png": {
+      "displayName": "Backpack (blue) — candidate",
+      "footprint": { "w": 1, "h": 1 },
+      "depth": 2,
+      "notes": "Floor bag prop — verify in verify-sprites.html; catalog backpack_blue"
+    }
+  },
+  "byId": {
+    "mo_single_091": {
+      "displayName": "Metal shelf (empty)"
+    },
+    "mo_single_122": {
+      "displayName": "Lobby pod chair (grey)"
+    },
+    "mo_single_153": {
+      "displayName": "Backpack (blue) — candidate"
+    }
+  }
+}

@@ -272,7 +272,7 @@ npm run catalog:singles
 | **`build-modern-office-singles-catalog.js`** | Scans modern office singles → catalog entries |
 | **`extract_sheet_objects.py`** | Connected-component extract from sheet PNG → per-sprite rects JSON (step 1 of pipeline) |
 
-Browser tools (serve from **multbot repo root** on port 8080):
+Browser tools (serve from **Denizen repo root** on port 8080):
 
 - `sprite-labeler.html` — label sprites, export v2 objects
 - `verify-sprites.html` — visual crop QA

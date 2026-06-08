@@ -75,6 +75,7 @@
       color: var(--text);
     }
     .card.warn { border-color: #d29922; }
+    .card.overlap { border-color: #f85149; }
     .card.selected { outline: 2px solid var(--accent); }
     .loadErr { color: #f85149; margin: 16px 0; }
     .stats { color: var(--muted); font-size: 13px; }
@@ -109,6 +110,7 @@
     .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
     .badge.ok { border-color: #238636; color: #7ee787; }
     .badge.miss { border-color: #d29922; color: #e3b341; }
+    .badge.overlap { border-color: #f85149; color: #ffa198; }
     .small { font-size: 12px; color: var(--muted); }
     .row { display:flex; gap:8px; flex-wrap: wrap; align-items:center; margin: 8px 0; }
 
@@ -206,7 +208,8 @@
         sheetId: 'mo_black_shadow_32',
         sheetUrl: sheetBase + '/Modern_Office_Revamped_v1.2/2_Modern_Office_Black_Shadow/Modern_Office_Black_Shadow_32x32.png',
         extractUrl: 'out/sheet_extract/modern_office_black_shadow_32.objects.json',
-        defaultCatalogUrl: 'data/furniture_catalog_openplan.json'
+        defaultCatalogUrl: 'data/furniture_catalog_openplan.json',
+        v2CatalogUrl: 'data/furniture_catalog_openplan_v2.objects.json'
       },
       modern_office_16: {
         label: 'Modern Office 16×16',
@@ -227,6 +230,44 @@
 
     function rectKey(r) {
       return `${r.x},${r.y},${r.w},${r.h}`;
+    }
+
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    }
+
+    function depthForType(type) {
+      if (type === 'seat') return 1.6;
+      if (type === 'decor') return 2.0;
+      return 1.5;
+    }
+
+    function actionForType(type) {
+      if (type === 'seat') return 'seat';
+      if (type === 'surface') return 'use_computer';
+      return null;
+    }
+
+    function computeLabeledOverlaps() {
+      const labeled = extract.objects
+        .map((o, i) => ({ ...o, index: i }))
+        .filter(o => (o.catalogId || '').trim());
+      const overlapIndices = new Set();
+      const partners = new Map();
+      for (let i = 0; i < labeled.length; i++) {
+        for (let j = i + 1; j < labeled.length; j++) {
+          const a = labeled[i];
+          const b = labeled[j];
+          if (!rectsOverlap(a.rect, b.rect)) continue;
+          overlapIndices.add(a.index);
+          overlapIndices.add(b.index);
+          if (!partners.has(a.index)) partners.set(a.index, new Set());
+          if (!partners.has(b.index)) partners.set(b.index, new Set());
+          partners.get(a.index).add(b.catalogId);
+          partners.get(b.index).add(a.catalogId);
+        }
+      }
+      return { overlapIndices, partners };
     }
 
     function drawCrop(img, x, y, w, h) {
@@ -450,6 +491,7 @@
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
       const fragment = document.createDocumentFragment();
+      const { overlapIndices, partners } = computeLabeledOverlaps();
       for (const o of objs) {
         const r = o.rect;
         const canvas = o.singleUrl
@@ -469,6 +511,7 @@
         card.className = 'card';
         card.dataset.index = o.index;
         if (selectedIndex === o.index) card.classList.add('selected');
+        if (overlapIndices.has(o.index)) card.classList.add('overlap');
         card.addEventListener('click', (e) => {
           if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
           selectedIndex = o.index;
@@ -489,7 +532,16 @@
         left.textContent = `obj_${o.index}`;
         const right = document.createElement('div');
         right.className = 'right';
-        right.textContent = suggestedName(o.index);
+        if (overlapIndices.has(o.index)) {
+          const badge = document.createElement('span');
+          badge.className = 'badge overlap';
+          const withIds = [...(partners.get(o.index) || [])].filter(Boolean);
+          badge.title = withIds.length ? `Overlaps: ${withIds.join(', ')}` : 'Rect overlaps another labeled entry';
+          badge.textContent = 'OVERLAP';
+          right.appendChild(badge);
+        } else {
+          right.textContent = suggestedName(o.index);
+        }
         idx.appendChild(left);
         idx.appendChild(right);
         card.appendChild(idx);
@@ -517,6 +569,7 @@
           getObj(Number(input.dataset.index)).catalogId = input.value.trim();
           updateStats();
         });
+        input.addEventListener('change', () => applyFilters());
         card.appendChild(input);
 
         const ltype = document.createElement('label');
@@ -544,7 +597,10 @@
 
     function updateStats() {
       const labeled = extract.objects.filter(o => o.catalogId && o.catalogId.length > 0).length;
-      document.getElementById('stats').textContent = `${labeled} / ${extract.objects.length} labeled`;
+      const { overlapIndices } = computeLabeledOverlaps();
+      let text = `${labeled} / ${extract.objects.length} labeled`;
+      if (overlapIndices.size) text += ` · ${overlapIndices.size} overlap warning(s)`;
+      document.getElementById('stats').textContent = text;
     }
 
     function refreshRequiredList() {
@@ -650,26 +706,31 @@
           id = id + '_' + n;
         }
         used.add(id);
-        objects[id] = {
+        const type = o.type || 'furniture';
+        const action = actionForType(type);
+        const entry = {
           sheet: SHEETS[activeSheetKey].sheetId,
           x: r.x,
           y: r.y,
           w: r.w,
           h: r.h,
           origin: 'bottom',
-          depth: 1.5,
-          type: o.type || 'furniture',
-          action: (o.type === 'seat') ? 'seat' : null
+          depth: depthForType(type),
+          display_w: r.w,
+          display_h: r.h,
+          type
         };
+        if (action) entry.action = action;
+        objects[id] = entry;
       }
       return {
         info: {
-          purpose: `Catalog (corrected via Sprite Labeler) – ${SHEETS[activeSheetKey].label}`,
+          purpose: 'Open office catalog objects (v2) — labeled via Sprite Labeler',
+          origin: 'bottom-center anchor.',
           slice_margin_px: 2,
-          origin: 'Place (x,y) = bottom-center of sprite.'
+          sheet: SHEETS[activeSheetKey].sheetId
         },
-        objects,
-        placements: currentCatalog.placements || []
+        objects
       };
     }
 
@@ -725,6 +786,13 @@
         } catch (_) {
           currentCatalog = { objects: {}, placements: [] };
         }
+      }
+      if (cfg.v2CatalogUrl) {
+        try {
+          const rv2 = await fetch(cfg.v2CatalogUrl);
+          const v2 = await rv2.json();
+          currentCatalog.objects = { ...(currentCatalog.objects || {}), ...(v2.objects || {}) };
+        } catch (_) { /* v2 not created yet */ }
       }
 
       const rectToId = catalogRectToId();
@@ -837,7 +905,7 @@
         const blob = new Blob([JSON.stringify(catalog, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `catalog_${activeSheetKey}_labeled.json`;
+        a.download = 'furniture_catalog_openplan_v2.objects.json';
         a.click();
         URL.revokeObjectURL(a.href);
       });

@@ -4,6 +4,7 @@ const denizenDb = require('./denizen-db.js');
 const promptTuning = require('./prompt-tuning.js');
 const { createAccessGrant } = require('./visitor-session-auth.js');
 const { verifyAccessCode } = require('./visitor-access.js');
+const userIdentity = require('./denizen-user-identity.js');
 
 class TeamAuthError extends Error {
   constructor(message, code) {
@@ -67,7 +68,24 @@ async function registerTeamAccount({ email, displayName, teamCode } = {}) {
     email: normalizedEmail,
   });
 
-  return { account, org_slug: org.slug, tier: 'team', access_grant };
+  const identity = await userIdentity.upsertIdentity({
+    email: normalizedEmail,
+    displayName: name,
+    tier: 'team',
+    orgId: org.id,
+    orgSlug: org.slug,
+    source: 'website_register',
+    teamAccountId: account?.id,
+  });
+
+  return {
+    account,
+    org_slug: org.slug,
+    tier: 'team',
+    access_grant,
+    identity: userIdentity.toClientIdentity(identity),
+    display_name: account?.display_name || name,
+  };
 }
 
 async function loginTeamAccount({ email, teamCode } = {}) {
@@ -112,16 +130,27 @@ async function loginTeamAccount({ email, teamCode } = {}) {
     email: normalizedEmail,
   });
 
+  const identity = await userIdentity.upsertIdentity({
+    email: normalizedEmail,
+    displayName: account.display_name,
+    tier: 'team',
+    orgId: org.id,
+    orgSlug: org.slug,
+    source: 'website_login',
+    teamAccountId: account.id,
+  });
+
   return {
     account,
     org_slug: org.slug,
     tier: 'team',
     access_grant,
     display_name: account.display_name,
+    identity: userIdentity.toClientIdentity(identity),
   };
 }
 
-async function linkAccountToSession(email, sessionId) {
+async function linkAccountToSession(email, sessionId, displayName) {
   if (!email || !sessionId) return;
   const normalizedEmail = String(email).trim().toLowerCase();
   const org = await resolveTeamOrg().catch(() => null);
@@ -131,6 +160,16 @@ async function linkAccountToSession(email, sessionId) {
     { visitor_session_id: sessionId },
     { prefer: 'return=minimal' },
   ).catch(() => {});
+  const identity = await userIdentity.resolveIdentityForSession({
+    email: normalizedEmail,
+    displayName,
+    tier: 'team',
+    orgId: org.id,
+    orgSlug: org.slug,
+    source: 'website_login',
+    sessionId,
+  }).catch(() => null);
+  return identity;
 }
 
 module.exports = {

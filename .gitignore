@@ -55,6 +55,22 @@ openclaw/.env
 # Build artifacts
 *.log
 *.tmp
+denizen/desktop/dist/
+denizen/desktop/dist-build/
+infra/kali-agent-bundle.b64
+infra/kali-agent-bundle.tar.gz
+infra/nas-agent-bundle.tar.gz
+infra/*-out.txt
+
+# Fleet agent credentials (generated on each machine)
+.node-credentials.json
+**/denizen-agent/.env
+
+# Desktop runtime feedback log
+denizen/data/desktop-feedback.jsonl
+
+# Supabase local stack secrets (use .env.example)
+infra/supabase-project/.env
 
 # OS
 .DS_Store

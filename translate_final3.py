@@ -19,7 +19,7 @@ lq = '\u201c'  # "
 rq = '\u201d'  # "
 
 # ── index.html ──────────────────────────────────────────────────────────────
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html', [
     # CSS comment with curly quotes
     (f'避免{lq}框比地图大{rq}', 'avoiding frame-larger-than-map issue'),
     # authDefaultPassHint trailing Chinese
@@ -60,7 +60,7 @@ patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.ht
 ])
 
 # ── office-agent-push.py ────────────────────────────────────────────────────
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\office-agent-push.py', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\office-agent-push.py', [
     (f'当本地状态文件不存在或长期不更新时，自动回 idle，避免{lq}假Working{rq}',
      'if local state file is missing or stale, auto-revert to idle (prevent false "Working")'),
     (f'# 只接受{lq}状态文件{rq}结构；避免误把 office-agent-state.json（仅缓存 agentId）当状态源',
@@ -70,7 +70,7 @@ patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\office-a
 ])
 
 # ── invite.html ──────────────────────────────────────────────────────────────
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\invite.html', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\invite.html', [
     (f'把Invite Link + join key 一起发给你的 OpenClaw，并说{lq}帮我加入海辛办公室{rq}。',
      'Send the Invite Link + join key to your OpenClaw and say "Help me join the office".'),
 ])

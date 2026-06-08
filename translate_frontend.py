@@ -2,7 +2,7 @@
 """Translate all remaining Chinese text in Star-Office-UI frontend files."""
 import re, os
 
-BASE = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend'
+BASE = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend'
 
 def translate_file(path, replacements):
     with open(path, 'r', encoding='utf-8') as f:

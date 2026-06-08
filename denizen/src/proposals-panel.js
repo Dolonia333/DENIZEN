@@ -265,13 +265,11 @@
         text-align: center;
         font-family: system-ui, sans-serif;
       }
+      html.denizen-phone #${PANEL_ID}.open .prop-body {
+        flex: 1;
+        min-height: 0;
+      }
       @media (max-width: 640px) {
-        #${PANEL_ID} {
-          width: calc(100vw - 12px) !important;
-          max-height: min(78vh, 640px) !important;
-          left: 6px !important;
-          right: 6px !important;
-        }
         #${PANEL_ID} .prop-body {
           grid-template-columns: 1fr;
           grid-template-rows: auto 1fr;
@@ -517,7 +515,15 @@
 
   function setPanelOpen(open) {
     panelOpen = !!open;
-    if (panelEl) panelEl.classList.toggle('open', panelOpen);
+    document.documentElement.classList.toggle('denizen-proposals-open', panelOpen);
+    if (panelEl) {
+      panelEl.classList.toggle('open', panelOpen);
+      if (panelOpen) {
+        globalThis.DenizenMobileSidebar?.close?.();
+        globalThis.__DenizenPlayerChat?.close?.();
+        globalThis.DenizenDeviceProfile?.resetPhonePanelLayout?.(panelEl);
+      }
+    }
     if (panelOpen) {
       renderPanel();
       refresh();

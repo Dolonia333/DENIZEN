@@ -1,0 +1,66 @@
+{
+  "name": "denizen-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Denizen desktop shell (Electron)",
+  "main": "main.js",
+  "productName": "Denizen",
+  "scripts": {
+    "start": "electron .",
+    "prestart": "node scripts/copy-denizen-src.js",
+    "prebuild": "node scripts/copy-denizen-src.js",
+    "prebuild:win": "node scripts/copy-denizen-src.js",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --win --mac --linux"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.dolonia.denizen",
+    "productName": "Denizen",
+    "directories": {
+      "output": "dist-build"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://denizen.dolonia.cloud/desktop/updates/"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "signAndEditExecutable": false
+    },
+    "mac": {
+      "target": ["dmg", "zip"]
+    },
+    "linux": {
+      "target": "AppImage"
+    },
+    "nsis": {
+      "artifactName": "Denizen-Setup.${ext}",
+      "allowToChangeInstallationDirectory": true,
+      "oneClick": false
+    },
+    "protocols": [
+      {
+        "name": "Denizen",
+        "schemes": ["denizen"]
+      }
+    ],
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!dist-build/**",
+      "!dist-old-*/**"
+    ]
+  }
+}

@@ -7,7 +7,8 @@
  *
  * Env:
  *   SUPABASE_URL              PostgREST base (default http://127.0.0.1:54321)
- *   SUPABASE_ANON_KEY         Local anon key (falls back to Supabase demo key)
+ *   SUPABASE_SERVICE_ROLE_KEY Server key (preferred; bypasses RLS in production)
+ *   SUPABASE_ANON_KEY         Anon key fallback (local dev / fleet agents)
  *   DENIZEN_DB_ENABLED        true|false (default true when URL set)
  *   DENIZEN_ORG_SLUG          org slug (default zion)
  */
@@ -29,8 +30,8 @@ class DenizenDb {
     this.env = opts.env || process.env;
     this.url = String(this.env.SUPABASE_URL || '').replace(/\/$/, '');
     this.key =
-      this.env.SUPABASE_ANON_KEY ||
       this.env.SUPABASE_SERVICE_ROLE_KEY ||
+      this.env.SUPABASE_ANON_KEY ||
       LOCAL_ANON_KEY;
     const enabledEnv = this.env.DENIZEN_DB_ENABLED;
     this.enabled =
@@ -665,6 +666,58 @@ class DenizenDb {
     ];
     if (source) parts.push(`source=eq.${encodeURIComponent(source)}`);
     return this._get(parts.join('&'));
+  }
+
+  async _getSoft(path, ms = 2500) {
+    if (!this.enabled) return null;
+    try {
+      const res = await fetch(`${this.url}/rest/v1/${path}`, {
+        headers: this._headers(),
+        signal: AbortSignal.timeout(ms),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async _postSoft(table, body, { prefer, timeoutMs = 2500 } = {}) {
+    if (!this.enabled) return null;
+    try {
+      const headers = this._headers({ prefer: prefer || 'return=representation' });
+      const res = await fetch(`${this.url}/rest/v1/${table}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!res.ok) return null;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('json')) return await res.json();
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async _patchSoft(path, body, { prefer, timeoutMs = 2500 } = {}) {
+    if (!this.enabled) return null;
+    try {
+      const headers = this._headers({ prefer: prefer || 'return=representation' });
+      const res = await fetch(`${this.url}/rest/v1/${path}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!res.ok) return null;
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('json')) return await res.json();
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   async _get(path) {

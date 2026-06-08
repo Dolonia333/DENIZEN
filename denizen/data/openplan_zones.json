@@ -1,0 +1,61 @@
+{
+  "_doc": {
+    "purpose": "Pixel-bounded floor/wall zones for Hu4Gzs open-plan office rebuild.",
+    "reference": "assets/ref_Hu4Gzs.png",
+    "coordinateSpace": "world pixels — matches furniture_catalog_openplan.json placement x/y (bottom-center anchor).",
+    "alignment": "Bounds derived from office-scene.js floorZones + internal walls (x=848 divider, y=448 left split, y=256 right split). Placements span ~x:52–1228, y:64–700."
+  },
+  "roomOriginPx": { "x": 16, "y": 32 },
+  "tileSize": 32,
+  "shellTileSize": 16,
+  "zones": [
+    {
+      "id": "top_wall_decor_band",
+      "name": "Top wall decor band",
+      "boundsPx": { "x": 52, "y": 64, "w": 1176, "h": 64 },
+      "floorStyle": "tile_grey",
+      "wallStyle": "office_white",
+      "notes": "North wall strip: whiteboards, bookshelf, framed certs, pop art, AC unit. Wall-mounted decor only — no floor furniture grid."
+    },
+    {
+      "id": "open_plan",
+      "name": "Open-plan cubicles",
+      "boundsPx": { "x": 52, "y": 128, "w": 796, "h": 320 },
+      "floorStyle": "tile_grey",
+      "wallStyle": "office_white",
+      "notes": "Main bullpen — two rows of cubicle desks (front/back), divider panels, chairs, desk setups. Grey grid floor."
+    },
+    {
+      "id": "lounge",
+      "name": "Lounge",
+      "boundsPx": { "x": 52, "y": 448, "w": 320, "h": 252 },
+      "floorStyle": "wood_light",
+      "wallStyle": "warm_wood",
+      "notes": "South-west lounge — L-sofa, 2-seat sofas, side table, wood plank floor, brick accent on west wall, money props, tall plants."
+    },
+    {
+      "id": "break_area",
+      "name": "Break / waiting",
+      "boundsPx": { "x": 372, "y": 448, "w": 476, "h": 252 },
+      "floorStyle": "tile_white",
+      "wallStyle": "office_grey",
+      "notes": "South-center break room — vending machine, 4-seat waiting row, water dispenser, wall cert. Door gap to lounge at x≈288–384."
+    },
+    {
+      "id": "side_office_left",
+      "name": "Side office (north-east)",
+      "boundsPx": { "x": 880, "y": 64, "w": 348, "h": 192 },
+      "floorStyle": "wood_light",
+      "wallStyle": "office_white",
+      "notes": "Compact NE office — desk + monitor, executive chair, money bundles, optional sofa nook. Door gap on south wall at y≈160–256."
+    },
+    {
+      "id": "side_office_right",
+      "name": "Side office (south-east)",
+      "boundsPx": { "x": 880, "y": 320, "w": 348, "h": 380 },
+      "floorStyle": "wood_light",
+      "wallStyle": "office_white",
+      "notes": "Larger SE office — box desk, two cubicle desks, coffee machine, cork board, bookshelf, rolling chairs. Spans y≈320–700."
+    }
+  ]
+}

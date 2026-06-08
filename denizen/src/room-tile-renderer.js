@@ -228,6 +228,25 @@ export class RoomTileRenderer {
     });
   }
 
+  /**
+   * Paint a rectangular floor zone (16px tiles) over an existing shell.
+   * Used for per-room floor styles (wood lounge, tile break area, etc.).
+   */
+  fillFloorZone({ x = 0, y = 0, w = 0, h = 0, floor = 'wood_light', depthBase = 0 }) {
+    const floorDef = (this.cat.floors || {})[floor];
+    if (!floorDef || w <= 0 || h <= 0) return [];
+    const fk = this._key(floorDef.sheet);
+    const placed = [];
+    const cols = Math.ceil(w / TILE);
+    const rows = Math.ceil(h / TILE);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        placed.push(this._tile(fk, floorDef.frame, x + c * TILE, y + r * TILE, depthBase));
+      }
+    }
+    return placed;
+  }
+
   /** Destroy every object this renderer placed. */
   clear() {
     this._placed.forEach(o => { try { o.destroy(); } catch (_) {} });

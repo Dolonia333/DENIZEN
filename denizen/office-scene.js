@@ -26,11 +26,16 @@ class OfficeScene extends Phaser.Scene {
 
     this.load.on('progress', (v) => {
       barFill.width = 256 * v;
-      pctText.setText(Math.round(v * 100) + '%');
+      // Phaser text can throw if the font atlas isn't ready yet during preload.
+      if (pctText?.active) {
+        try { pctText.setText(Math.round(v * 100) + '%'); } catch (_) {}
+      }
       try { window.__DenizenChatBootstrap?.setLoadPct?.(v * 100); } catch (_) {}
     });
     this.load.on('fileprogress', (file) => {
-      statusText.setText(file.key || '');
+      if (statusText?.active) {
+        try { statusText.setText(file.key || ''); } catch (_) {}
+      }
     });
 
     // Helpful in-browser diagnostics so missing assets don't look like a silent blue screen.
@@ -67,6 +72,7 @@ class OfficeScene extends Phaser.Scene {
     const catalogV = 'cat2';
     this.load.json('tiles_catalog', `./tiles-catalog.json?v=${catalogV}`);
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
+    this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
     this.load.json('room_templates', `./data/room-templates.json?v=${catalogV}`);
     this.load.json('sprite_map_modern_office', `./data/sprite-map-modern-office.json?v=${catalogV}`);
     // Modern Office Revamped — main spritesheet for ALL furniture
@@ -76,15 +82,7 @@ class OfficeScene extends Phaser.Scene {
     );
     // Unused sheets removed to prevent loader stall (were loading 90+ files)
 
-    // Modern Office singles — minimal set (most items now use spritesheet cuts)
-    // The layout uses ONLY spritesheet-based entries, so no singles needed for initial load.
-    const singleIds = [];
-    singleIds.forEach(id => {
-      this.load.image(
-        `single_${id}`,
-        `assets/modern_office_singles_16/Modern_Office_Singles_32x32_${id}.png`
-      );
-    });
+    // Singles for open-plan are loaded on demand in create() when a placement needs them.
 
     // Player: full 4-direction sheet from paid RPG Maker XP (32x48 per frame)
     this.load.spritesheet(
@@ -225,7 +223,6 @@ class OfficeScene extends Phaser.Scene {
     const seedParam = urlParams.get('seed');
     const layoutParam = urlParams.get('layout') || 'openplan'; // default to openplan
     const modeParam = urlParams.get('mode'); // 'city', 'officegen', etc.
-
     const width = 1280;
     const height = 720;
     const tileSize = 32;
@@ -321,8 +318,7 @@ class OfficeScene extends Phaser.Scene {
       t.refresh();
     };
 
-    // LAYER 1: Floor — base layer, everything sits on top of this
-    // Fill entire world with office floor, then overlay room-specific floors
+    // LAYER 1: Floor — seamless tileSprites per zone (hand-tuned layout)
     this.add.tileSprite(width / 2, height / 2, width, height, 'floor_rb_office').setDepth(0);
 
     const floorZones = [
@@ -353,15 +349,6 @@ class OfficeScene extends Phaser.Scene {
     };
     makeSingleTileTex('corridor_single', 0, 224);
     makeSingleTileTex('clinic_single', 0, 160);
-
-    // Debug HUD so it's obvious which mode is active (helps when caching / wrong URL params).
-    // Very visible mode banner to prove new code is running.
-    this.add.rectangle(width / 2, 18, width, 36, 0x0b1220, 0.92).setDepth(2000);
-    this.add.text(16, 8, `MODE layout=${layoutParam || '(none)'} mode=${modeParam || '(none)'} seed=${seedParam || '(none)'}`, {
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      fontSize: '14px',
-      color: '#e5e7eb',
-    }).setDepth(2001);
 
     // --- Early exit: pure procedural office interior demo ---
     if (modeParam === 'officegen') {
@@ -745,103 +732,15 @@ class OfficeScene extends Phaser.Scene {
     const bottomH = height - bottomY - 24;
 
     // Layout override: open-plan office uses proper 3-layer wall system.
-    if (layoutParam === 'openplan' || layoutParam === 'promo' || this._skipHandcraftedLayout) {
-      // ========================================================
-      // LAYER 2 & 3: Wall System — Face + Outline + Shadow
-      // Strategy: Wall Top Outline at (x,y), Wall Face at (x, y+32)
-      // Horizontal walls: 2 tiles tall (outline on top, face below)
-      // Vertical walls: 1 tile wide (outline) + shadow strip on right
-      // ========================================================
-      const T = 32; // tile size
-
-      // -- Helper: draw a horizontal wall segment --
-      // Reference style: dark navy trim on top + lavender wall face below
-      // y = top edge of wall. Total height = 64px (trim + face).
-      const drawHWall = (startX, y, endX) => {
-        const w = endX - startX;
-        if (w <= 0) return;
-        // Dark trim strip on top (8px tall)
-        this.add.rectangle(startX + w / 2, y + 4, w, 8, 0x3a3a50, 1).setDepth(5);
-        // Lavender wall face below trim
-        const faceH = T * 2 - 8;
-        this.add.tileSprite(startX + w / 2, y + 8 + faceH / 2, w, faceH, 'wall_face').setDepth(3);
-        // Bottom edge shadow
-        this.add.rectangle(startX + w / 2, y + T * 2 - 1, w, 2, 0x9a9ab0, 0.5).setDepth(3.1);
-        // Collision
-        const obs = this.add.rectangle(startX + w / 2, y + T, w, T * 2, 0x000000, 0);
-        this.physics.add.existing(obs, true);
-        this._obstacles.push(obs);
-      };
-
-      // -- Helper: draw a vertical wall segment --
-      // Dark trim on left edge + lavender wall face
-      const drawVWall = (x, startY, endY) => {
-        const h = endY - startY;
-        if (h <= 0) return;
-        // Dark trim line on left edge (6px wide)
-        this.add.rectangle(x + 3, startY + h / 2, 6, h, 0x3a3a50, 1).setDepth(5);
-        // Wall face body
-        this.add.tileSprite(x + 6 + (T - 6) / 2, startY + h / 2, T - 6, h, 'wall_face_v').setDepth(3);
-        // Subtle shadow on right edge
-        this.add.rectangle(x + T - 1, startY + h / 2, 2, h, 0x9a9ab0, 0.4).setDepth(3.1);
-        // Collision
-        const obs = this.add.rectangle(x + T / 2, startY + h / 2, T, h, 0x000000, 0);
-        this.physics.add.existing(obs, true);
-        this._obstacles.push(obs);
-      };
-
-      // -- Helper: place a corner piece --
-      const drawCorner = (x, y, type) => {
-        // Dark trim on top
-        this.add.rectangle(x + T / 2, y + 4, T, 8, 0x3a3a50, 1).setDepth(5.1);
-        // Face tile below
-        const faceH = T * 2 - 8;
-        this.add.tileSprite(x + T / 2, y + 8 + faceH / 2, T, faceH, 'wall_face').setDepth(3);
-      };
-
-      // ============================
-      // PERIMETER WALLS
-      // ============================
-      // Top wall (full width): outline + face = 64px tall
-      drawHWall(0, 0, width);
-      // Corners
-      drawCorner(0, 0, 'tl');
-      drawCorner(width - T, 0, 'tr');
-
-      // Bottom wall: outline + face = 64px tall, placed at bottom
-      drawHWall(0, height - T * 2, width);
-
-      // Left wall (vertical): outline + shadow
-      drawVWall(0, T * 2, height - T * 2);
-
-      // Right wall (vertical): outline + shadow
-      drawVWall(width - T, T * 2, height - T * 2);
-
-      // ============================
-      // INTERNAL WALLS — room divisions with doorway gaps (96px = 3 tiles)
-      // ============================
-
-      // Vertical divider (x=848): separates open office (left) from right rooms
-      drawVWall(848, T * 2, 160);                // top portion
-      // gap y=160-256 (door to manager office, 96px)
-      drawVWall(848, 256, 416);                   // middle portion
-      // gap y=416-512 (hallway connection, 96px)
-      drawVWall(848, 512, height - T * 2);        // bottom portion
-
-      // T-junction where vertical divider meets top wall
-      drawCorner(848, 0, 'tjr');
-      // T-junction where vertical divider meets bottom wall
-      this.add.image(848, height - T * 2, 'wall_tjunc_r').setOrigin(0, 0).setDepth(5.1);
-
-      // Horizontal divider (y=448): separates top offices from bottom rooms (left side)
-      drawHWall(T, 448, 288);                    // left of break room door
-      // gap x=288-384 (door to break room, 96px)
-      drawHWall(384, 448, 848);                   // right of break room door
-
-      // Horizontal divider (y=256, right side): manager from conference/supply
-      drawHWall(848 + T, 256, 1000);             // left of door
-      // gap x=1000-1096 (door, 96px)
-      drawHWall(1096, 256, width - T);            // right of door
+    if (layoutParam === 'promo' || this._skipHandcraftedLayout || layoutParam === 'openplan') {
+      // LAYER 2 & 3: Wall layout from data/openplan_walls.json (editable in wall editor mode)
+      const wallLayout = this.cache.json.get('openplan_walls');
+      if (window.OpenplanWalls && wallLayout) {
+        this._wallLayoutInfo = wallLayout.info || {};
+        window.OpenplanWalls.renderLayout(this, wallLayout, this._obstacles);
+      } else {
+        console.warn('[OfficeScene] openplan_walls.json or OpenplanWalls missing — no walls drawn');
+      }
 
       // Continue with character setup + furniture placement.
     } else {
@@ -1227,17 +1126,10 @@ class OfficeScene extends Phaser.Scene {
         if (!def) return;
         
         if (def.source_type === 'single_file') {
-           // Singles are preloaded in preload() as single_${single_id}.
-           // Map object id -> texture key for later placement.
-           const singleTexKey = `single_${def.single_id || pl.id}`;
-           if (this.textures.exists(singleTexKey)) {
-             // Nothing to slice; texture already loaded from preload().
-           } else {
-             // Fallback: try dynamic load via url_path if available
-             if (def.url_path) {
-               const fullUrl = def.url_path.replace(/\\/g, '/');
-               requiresDynamicLoad.add({ id: pl.id, url: fullUrl });
-             }
+           // Singles are preloaded in preload() as single_${catalog object id}.
+           if (!this.textures.exists(`single_${pl.id}`) && def.url_path) {
+             const fullUrl = def.url_path.replace(/\\/g, '/');
+             requiresDynamicLoad.add({ id: pl.id, url: fullUrl });
            }
            return;
         }
@@ -1273,7 +1165,7 @@ class OfficeScene extends Phaser.Scene {
           if (!def && masterObjs[pl.id]) def = masterObjs[pl.id];
 
           let texKey = `cat_${pl.id}`;
-          if (def && def.source_type === 'single_file') texKey = `single_${def.single_id || pl.id}`;
+          if (def && def.source_type === 'single_file') texKey = `single_${pl.id}`;
 
           if (!def || !this.textures.exists(texKey)) return;
           const depth = typeof def.depth === 'number' ? def.depth : 1.5;
@@ -1311,7 +1203,7 @@ class OfficeScene extends Phaser.Scene {
           const parentSprite = this._placedCatalogSprites[pl.parentInstanceId];
           
           let texKey = `cat_${pl.id}`;
-          if (def && def.source_type === 'single_file') texKey = `single_${def.single_id || pl.id}`;
+          if (def && def.source_type === 'single_file') texKey = `single_${pl.id}`;
 
           if (!def || !parentSprite || !this.textures.exists(texKey)) return;
           const offsetY = pl.parent_offset_y !== undefined ? pl.parent_offset_y : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
@@ -1349,17 +1241,59 @@ class OfficeScene extends Phaser.Scene {
         });
       };
       
-      if (requiresDynamicLoad.size > 0) {
-          requiresDynamicLoad.forEach(req => {
-              if(!this.textures.exists(`single_${req.id}`)) {
-                  this.load.image(`single_${req.id}`, req.url);
-              }
+      const placeMissingSingles = () => {
+        placements.forEach((pl) => {
+          const def = catalogObjects[pl.id] || masterObjs[pl.id];
+          if (!def || def.source_type !== 'single_file') return;
+          const texKey = `single_${pl.id}`;
+          if (!this.textures.exists(texKey)) return;
+          const instanceId = pl.instanceId || pl.id;
+          if (this._placedCatalogSprites[instanceId]) return;
+
+          const depth = typeof def.depth === 'number' ? def.depth : 1.5;
+          const originY = def.origin === 'center' ? 0.5 : 1;
+          let x = pl.x;
+          let y = pl.y;
+          if (pl.parentInstanceId) {
+            const parentSprite = this._placedCatalogSprites[pl.parentInstanceId];
+            if (!parentSprite) return;
+            const offsetY = pl.parent_offset_y !== undefined ? pl.parent_offset_y : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
+            x = parentSprite.x;
+            y = parentSprite.y + offsetY;
+          }
+          const s = this.add.image(x, y, texKey).setOrigin(0.5, originY).setDepth(depth);
+          s.setDisplaySize(def.display_w || 32, def.display_h || 48);
+          this.furnitureDecorSprites.push({ sprite: s, depth });
+          this._placedCatalogSprites[instanceId] = s;
+          this._interactables.push({
+            id: pl.id,
+            instanceId,
+            sprite: s,
+            def: { ...def, _placement: pl },
+            obstacle: null,
+            parentInstanceId: pl.parentInstanceId || null
           });
-          this.load.once('complete', finalizePlacements);
-          this.load.start();
-      } else {
-          finalizePlacements();
-      }
+        });
+      };
+
+      const runPlacements = () => {
+        // Place spritesheet furniture immediately — never block on loader inside create().
+        finalizePlacements();
+        if (requiresDynamicLoad.size === 0) return;
+
+        const pending = [...requiresDynamicLoad].filter((req) => !this.textures.exists(`single_${req.id}`));
+        if (pending.length === 0) {
+          placeMissingSingles();
+          return;
+        }
+
+        pending.forEach((req) => {
+          this.load.image(`single_${req.id}`, req.url);
+        });
+        this.load.once('complete', placeMissingSingles);
+        if (!this.load.isLoading()) this.load.start();
+      };
+      runPlacements();
     } else {
       // Fallback: object-defs (tile-index) + desk/computer placement
       const BASE_GRID = 16;
@@ -2465,6 +2399,10 @@ class OfficeScene extends Phaser.Scene {
   }
 }
 
+if (window.DenizenLazyScripts?.loadDeferred) {
+  window.DenizenLazyScripts.loadDeferred();
+}
+
 const config = {
   type: Phaser.AUTO,
   width: 1280,
@@ -2496,8 +2434,26 @@ window.game = new Phaser.Game(config);
 // Double-click a placed sprite to delete it. Press X to export the updated placements.
 (function() {
   const DOUBLE_CLICK_MS = 260;
+  const WALL_MULTI_CLICK_MS = 420;
+  const WALL_LAYER_ORDER = ['all', 'bands', 'sides', 'joints'];
+  const WALL_LAYER_LABELS = {
+    all: 'All pieces',
+    bands: 'Bands only',
+    sides: 'Sides only',
+    joints: 'Joints only',
+  };
   let editorActive = false;
+  let editorMode = 'furniture';
   let selectedSprite = null;
+  let selectedWallEntry = null;
+  let wallCutMode = false;
+  let wallPendingType = null;
+  let wallTool = 'draw';
+  let wallDrawStart = null;
+  let wallDrawPreview = [];
+  let wallLayerFilter = 'all';
+  let wallHoveredEntry = null;
+  let wallClickStreak = { id: null, count: 0, at: 0 };
   let editorUI = null;
   let layerFilter = 'all';
   let lastPointerTarget = null;
@@ -2529,6 +2485,437 @@ window.game = new Phaser.Game(config);
   function syncInfo(text) {
     const info = document.getElementById('ed-info');
     if (info) info.textContent = text;
+  }
+
+  function getOpenplanWalls() {
+    return window.OpenplanWalls;
+  }
+
+  function wallEditorHint(extra = '') {
+    const layer = WALL_LAYER_LABELS[wallLayerFilter] || 'All pieces';
+    const base = `Layer: ${layer} · click=select · double-click=delete · triple-click=cycle layer`;
+    return extra ? `${extra} — ${base}` : base;
+  }
+
+  function syncWallLayerUi() {
+    const sel = document.getElementById('ed-wall-layer');
+    if (sel && sel.value !== wallLayerFilter) sel.value = wallLayerFilter;
+  }
+
+  function applyWallLayerFilter(scene) {
+    const OW = getOpenplanWalls();
+    if (!OW || !scene?._wallSegments) return;
+    scene._wallSegments.forEach((entry) => OW.setEntryLayerVisible(entry, wallLayerFilter));
+    if (selectedWallEntry?._layerDimmed) selectWallEntry(null);
+    syncWallLayerUi();
+    renderWallSegmentList();
+    refreshWallEditorInteraction(scene);
+  }
+
+  function cycleWallLayerFilter() {
+    const idx = WALL_LAYER_ORDER.indexOf(wallLayerFilter);
+    wallLayerFilter = WALL_LAYER_ORDER[(idx + 1) % WALL_LAYER_ORDER.length];
+    const scene = getScene();
+    applyWallLayerFilter(scene);
+    syncInfo(wallEditorHint(`Switched to ${WALL_LAYER_LABELS[wallLayerFilter]}`));
+  }
+
+  function setWallLayerFilter(layer) {
+    if (!WALL_LAYER_ORDER.includes(layer)) return;
+    wallLayerFilter = layer;
+    applyWallLayerFilter(getScene());
+    syncInfo(wallEditorHint());
+  }
+
+  function registerWallClick(entryOrBgId) {
+    const now = performance.now();
+    const id = entryOrBgId;
+    if (wallClickStreak.id === id && now - wallClickStreak.at <= WALL_MULTI_CLICK_MS) {
+      wallClickStreak.count += 1;
+    } else {
+      wallClickStreak = { id, count: 1, at: now };
+    }
+    wallClickStreak.at = now;
+    return wallClickStreak.count;
+  }
+
+  function resetWallClickStreak() {
+    wallClickStreak = { id: null, count: 0, at: 0 };
+  }
+
+  function handleWallEntryClick(scene, entry) {
+    const OW = getOpenplanWalls();
+    if (!OW || !entry || entry._layerDimmed) return false;
+    const clicks = registerWallClick(entry.instanceId);
+    if (clicks >= 3) {
+      resetWallClickStreak();
+      cycleWallLayerFilter();
+      return true;
+    }
+    if (clicks === 2) {
+      resetWallClickStreak();
+      const id = entry.instanceId;
+      const label = OW.segmentLabel(entry.data);
+      if (selectedWallEntry === entry) selectedWallEntry = null;
+      OW.removeSegment(scene, id, scene._obstacles);
+      syncWallCorners(scene);
+      syncInfo(wallEditorHint(`Deleted ${label}`));
+      return true;
+    }
+    selectWallEntry(entry);
+    return true;
+  }
+
+  function selectWallEntry(entry) {
+    const OW = getOpenplanWalls();
+    const scene = getScene();
+    if (!OW || !scene) return;
+    if (selectedWallEntry) {
+      selectedWallEntry._selected = false;
+      OW.styleEntrySelection(selectedWallEntry, false);
+    }
+    selectedWallEntry = entry && !entry._layerDimmed ? entry : null;
+    if (selectedWallEntry) {
+      selectedWallEntry._selected = true;
+      OW.styleEntrySelection(selectedWallEntry, true);
+      const d = selectedWallEntry.data;
+      syncInfo(wallEditorHint(`${OW.segmentLabel(d)} (${OW.segmentBadge(d)})`));
+    } else {
+      syncInfo(wallEditorHint('Click a wall to select'));
+    }
+    renderWallSegmentList();
+    refreshWallEditorInteraction(scene);
+  }
+
+  function renderWallSegmentList() {
+    const scene = getScene();
+    const OW = getOpenplanWalls();
+    const list = document.getElementById('ed-wall-segment-list');
+    if (!list || !OW || !scene?._wallSegments) return;
+    const items = [...scene._wallSegments].sort((a, b) => {
+      const order = { h: 0, corner: 1, tjunction: 2, v: 3 };
+      return (order[a.data.type] ?? 9) - (order[b.data.type] ?? 9);
+    });
+    list.innerHTML = '';
+    if (items.length === 0) {
+      list.innerHTML = '<div class="wall-list-empty">No wall pieces — draw one or rebuild the perimeter box.</div>';
+      return;
+    }
+    const countEl = document.getElementById('ed-wall-count');
+    if (countEl) countEl.textContent = `(${items.length})`;
+    items.forEach((entry) => {
+      const d = entry.data;
+      const dimmed = !OW.segmentMatchesWallLayer(d, wallLayerFilter);
+      const row = document.createElement('div');
+      row.className = 'wall-list-item';
+      if (selectedWallEntry === entry) row.classList.add('active');
+      if (dimmed) row.classList.add('dimmed');
+      row.innerHTML = `
+        <div class="wall-list-main">
+          <span class="wall-list-badge">${OW.segmentBadge(d)}</span>
+          <span class="wall-list-name">${OW.segmentLabel(d)}</span>
+        </div>
+        <button type="button" class="wall-list-del" title="Delete">×</button>
+      `;
+      row.addEventListener('click', (e) => {
+        if (e.target.classList.contains('wall-list-del')) return;
+        if (dimmed) return;
+        handleWallEntryClick(scene, entry);
+      });
+      row.querySelector('.wall-list-del').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = entry.instanceId;
+        if (selectedWallEntry === entry) selectedWallEntry = null;
+        OW.removeSegment(scene, id, scene._obstacles);
+        syncWallCorners(scene);
+        syncInfo(`Deleted ${OW.segmentLabel(d)}`);
+      });
+      list.appendChild(row);
+    });
+  }
+
+  function rebuildPerimeterBox() {
+    const scene = getScene();
+    const OW = getOpenplanWalls();
+    if (!scene || !OW) return;
+    const removeIds = (scene._wallSegments || [])
+      .filter((e) => (
+        e.data.instanceId?.startsWith('wall_perim_')
+        || e.data.type === 'corner'
+      ))
+      .map((e) => e.instanceId);
+    removeIds.forEach((id) => OW.removeSegment(scene, id, scene._obstacles));
+    OW.buildOfficeBoxPreset(1280, 720).forEach((seg) => {
+      scene._wallSegments.push(OW.renderSegment(scene, seg, scene._obstacles));
+    });
+    selectedWallEntry = null;
+    refreshWallEditorInteraction(scene);
+    renderWallSegmentList();
+    syncInfo('Rebuilt perimeter box — full-width top/bottom trim + side faces');
+  }
+
+  function refreshWallEditorInteraction(scene) {
+    const OW = getOpenplanWalls();
+    if (!OW || !scene?._wallSegments) return;
+    scene._wallSegments.forEach((entry) => {
+      OW.setEntryLayerVisible(entry, wallLayerFilter);
+      entry._selected = selectedWallEntry === entry;
+      OW.styleEntrySelection(entry, entry._selected);
+      entry.handles.forEach((h) => h.destroy());
+      entry.handles = [];
+      if (!entry.hit) return;
+      entry.hit.removeAllListeners?.();
+      entry.hit.removeInteractive();
+      if (editorMode !== 'walls') return;
+      if (entry._layerDimmed) return;
+
+      entry.hit.setInteractive({ draggable: true, useHandCursor: true });
+      entry._wallDragged = false;
+      entry.hit.on('pointerdown', () => {
+        entry._wallDragged = false;
+      });
+      entry.hit.on('pointerover', () => {
+        if (wallHoveredEntry && wallHoveredEntry !== entry) {
+          OW.styleEntryHover(wallHoveredEntry, false);
+        }
+        wallHoveredEntry = entry;
+        OW.styleEntryHover(entry, true);
+      });
+      entry.hit.on('pointerout', () => {
+        if (wallHoveredEntry === entry) wallHoveredEntry = null;
+        OW.styleEntryHover(entry, false);
+      });
+      entry.hit.on('pointerup', () => {
+        if (entry._wallDragged) return;
+        handleWallEntryClick(scene, entry);
+      });
+      entry.hit.on('dragstart', () => {
+        entry._wallDragged = true;
+        resetWallClickStreak();
+        selectWallEntry(entry);
+        entry._dragStart = { ...entry.data };
+      });
+      entry.hit.on('drag', (_p, dragX, dragY) => {
+        const start = entry._dragStart;
+        if (!start) return;
+        const snapOn = window._editorSnap;
+        const id = entry.instanceId;
+        if (start.type === 'h') {
+          const w = start.endX - start.startX;
+          const nx = OW.snap(dragX - w / 2, snapOn);
+          const ny = OW.snap(dragY - OW.T, snapOn);
+          OW.replaceSegment(scene, id, { startX: nx, endX: nx + w, y: ny }, scene._obstacles);
+        } else if (start.type === 'v') {
+          const h = Math.abs(start.endY - start.startY);
+          const nx = OW.snap(dragX - OW.T / 2, snapOn);
+          const ny = OW.snap(dragY - h / 2, snapOn);
+          OW.replaceSegment(scene, id, { x: nx, startY: ny, endY: ny + h }, scene._obstacles);
+        } else {
+          OW.replaceSegment(scene, id, {
+            x: OW.snap(dragX - OW.T / 2, snapOn),
+            y: OW.snap(dragY - OW.T, snapOn),
+          }, scene._obstacles);
+        }
+        selectedWallEntry = scene._wallSegments.find((e) => e.instanceId === id) || null;
+      });
+      entry.hit.on('dragend', () => {
+        entry._dragStart = null;
+        entry._wallDragged = false;
+        syncWallCorners(scene);
+      });
+
+      if (selectedWallEntry !== entry) return;
+
+      OW.attachEditorHandles(scene, entry, (segmentId, role, dragX, dragY) => {
+        const e = scene._wallSegments.find((x) => x.instanceId === segmentId);
+        if (!e) return;
+        const snapOn = window._editorSnap;
+        const seg = { ...e.data };
+        if (seg.type === 'h') {
+          if (role === 'start') seg.startX = OW.snap(dragX, snapOn);
+          if (role === 'end') seg.endX = OW.snap(dragX, snapOn);
+          if (seg.endX - seg.startX < OW.MIN_LEN) return;
+        } else if (seg.type === 'v') {
+          if (role === 'start') seg.startY = OW.snap(dragY, snapOn);
+          if (role === 'end') seg.endY = OW.snap(dragY, snapOn);
+          if (Math.abs(seg.endY - seg.startY) < OW.MIN_LEN) return;
+        }
+        OW.replaceSegment(scene, segmentId, seg, scene._obstacles);
+        selectedWallEntry = scene._wallSegments.find((x) => x.instanceId === segmentId) || null;
+      }, () => syncWallCorners(scene));
+    });
+  }
+
+  function clearWallDrawPreview() {
+    const OW = getOpenplanWalls();
+    if (OW) OW.destroyPreview(wallDrawPreview);
+    wallDrawPreview = [];
+    wallDrawStart = null;
+  }
+
+  function syncWallCorners(scene) {
+    const OW = getOpenplanWalls();
+    if (!OW || !scene) return;
+    OW.syncAutoCorners(scene, scene._obstacles);
+    refreshWallEditorInteraction(scene);
+    renderWallSegmentList();
+  }
+
+  function placeWallSegmentData(scene, seg) {
+    const OW = getOpenplanWalls();
+    if (!OW || !scene || !seg) return null;
+    const entry = OW.renderSegment(scene, seg, scene._obstacles);
+    scene._wallSegments.push(entry);
+    OW.syncAutoCorners(scene, scene._obstacles);
+    const placed = scene._wallSegments.find((e) => e.instanceId === entry.instanceId) || entry;
+    selectWallEntry(placed);
+    refreshWallEditorInteraction(scene);
+    renderWallSegmentList();
+    return placed;
+  }
+
+  function placeWallSegmentsData(scene, segs) {
+    const OW = getOpenplanWalls();
+    if (!OW || !scene || !segs?.length) return null;
+    let last = null;
+    segs.forEach((seg) => {
+      const entry = OW.renderSegment(scene, seg, scene._obstacles);
+      scene._wallSegments.push(entry);
+      last = entry;
+    });
+    OW.syncAutoCorners(scene, scene._obstacles);
+    if (last) selectWallEntry(last);
+    refreshWallEditorInteraction(scene);
+    renderWallSegmentList();
+    return last;
+  }
+
+  function addWallSegment(scene, type, worldX, worldY) {
+    const OW = getOpenplanWalls();
+    if (!OW || !scene) return null;
+    return placeWallSegmentData(scene, OW.defaultSegment(type, worldX, worldY, window._editorSnap));
+  }
+
+  function setWallTool(tool) {
+    wallTool = tool;
+    wallCutMode = false;
+    wallPendingType = tool === 'draw' ? null : tool;
+    clearWallDrawPreview();
+    const cutBtn = document.getElementById('ed-wall-cut-btn');
+    if (cutBtn) {
+      cutBtn.textContent = 'Cut Tool: OFF';
+      cutBtn.classList.remove('active-tool');
+    }
+    document.querySelectorAll('[data-wall-tool]').forEach((btn) => {
+      btn.classList.toggle('active-tool', btn.dataset.wallTool === tool);
+    });
+    const hints = {
+      draw: 'Drag across → band (trim on top) · up/down → side wall (trim on back edge) · diagonal → L with corner joint.',
+      band: 'Click map — wall band: top trim + light blue face (64px tall)',
+      face: 'Click map — side wall: back-edge trim + light blue face (top-down view)',
+      corner: 'Click map — corner cap (trim + blue face, 32px wide)',
+      tjunction: 'Click map — T-junction cap where walls meet',
+      cut: 'Select a wall, then click where to split (doorway gap)',
+    };
+    syncInfo(wallEditorHint(hints[tool] || hints.draw));
+  }
+
+  function duplicateSelectedWall() {
+    const scene = getScene();
+    const OW = getOpenplanWalls();
+    if (!scene || !OW || !selectedWallEntry) return;
+    const copy = OW.duplicateSegment(selectedWallEntry.data, 32);
+    const entry = OW.renderSegment(scene, copy, scene._obstacles);
+    scene._wallSegments.push(entry);
+    selectWallEntry(entry);
+    refreshWallEditorInteraction(scene);
+    syncInfo(`Duplicated → ${copy.instanceId}`);
+  }
+
+  function deleteSelectedWall() {
+    const scene = getScene();
+    const OW = getOpenplanWalls();
+    if (!scene || !OW || !selectedWallEntry) return;
+    const id = selectedWallEntry.instanceId;
+    const label = OW.segmentLabel(selectedWallEntry.data);
+    OW.removeSegment(scene, id, scene._obstacles);
+    selectedWallEntry = null;
+    syncWallCorners(scene);
+    syncInfo(`Deleted ${label}`);
+  }
+
+  function cutSelectedWallAt(worldX, worldY) {
+    const scene = getScene();
+    const OW = getOpenplanWalls();
+    if (!scene || !OW || !selectedWallEntry) return;
+    const parts = OW.splitSegment(selectedWallEntry.data, worldX, worldY);
+    if (!parts) {
+      syncInfo('Cut failed — click closer to middle of segment (min 32px each side)');
+      return;
+    }
+    OW.removeSegment(scene, selectedWallEntry.instanceId, scene._obstacles);
+    parts.forEach((p) => scene._wallSegments.push(OW.renderSegment(scene, p, scene._obstacles)));
+    selectedWallEntry = scene._wallSegments[scene._wallSegments.length - 1];
+    syncWallCorners(scene);
+    syncInfo(`Cut into ${parts.length} segments`);
+  }
+
+  window._editorExportWalls = function () {
+    const scene = getScene();
+    const OW = getOpenplanWalls();
+    if (!scene || !OW) return;
+    const layout = OW.layoutFromScene(scene, scene._wallLayoutInfo || {});
+    const output = JSON.stringify(layout, null, 2);
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(output).catch(() => {});
+    }
+    const blob = new Blob([output], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'openplan_walls_edited.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    syncInfo('Exported openplan_walls.json — paste into data/openplan_walls.json');
+  };
+
+  function setEditorMode(mode) {
+    editorMode = mode === 'walls' ? 'walls' : 'furniture';
+    const scene = getScene();
+    const catPanel = document.getElementById('editor-catalog');
+    const wallPanel = document.getElementById('editor-wall-tools');
+    const tabF = document.getElementById('ed-tab-furniture');
+    const tabW = document.getElementById('ed-tab-walls');
+    if (catPanel) catPanel.style.display = editorMode === 'furniture' ? 'flex' : 'none';
+    if (wallPanel) wallPanel.style.display = editorMode === 'walls' ? 'flex' : 'none';
+    if (tabF) tabF.classList.toggle('active', editorMode === 'furniture');
+    if (tabW) tabW.classList.toggle('active', editorMode === 'walls');
+    wallCutMode = false;
+    clearWallDrawPreview();
+    if (editorMode === 'walls') {
+      setWallTool('draw');
+      if (scene?._interactables) {
+        scene._interactables.forEach((entry) => {
+          if (entry.sprite) entry.sprite.removeInteractive();
+        });
+      }
+      applyWallLayerFilter(scene);
+      syncInfo(wallEditorHint());
+    } else {
+      selectWallEntry(null);
+      if (scene?._wallSegments) {
+        scene._wallSegments.forEach((entry) => {
+          getOpenplanWalls()?.styleEntrySelection(entry, false);
+          entry.handles.forEach((h) => h.destroy());
+          entry.handles = [];
+          entry.hit?.removeInteractive();
+        });
+      }
+      if (scene?._interactables) {
+        scene._interactables.forEach((entry) => prepareSpriteForEditing(scene, entry));
+      }
+      syncInfo('Drag a catalog sprite into the room or click to place.');
+    }
   }
 
   function setPendingCatalog(id) {
@@ -2563,7 +2950,7 @@ window.game = new Phaser.Game(config);
   function ensureCatalogTexture(scene, catalogId, def) {
     if (!scene || !def) return null;
     if (def.source_type === 'single_file') {
-      const singleKey = `single_${def.single_id || catalogId}`;
+      const singleKey = `single_${catalogId}`;
       return scene.textures.exists(singleKey) ? singleKey : null;
     }
 
@@ -2601,7 +2988,7 @@ window.game = new Phaser.Game(config);
     ctx.clearRect(0, 0, 48, 48);
 
     if (def.source_type === 'single_file') {
-      const singleKey = `single_${def.single_id || catalogId}`;
+      const singleKey = `single_${catalogId}`;
       if (scene.textures.exists(singleKey)) {
         const img = scene.textures.get(singleKey).getSourceImage();
         const scale = Math.min(40 / img.width, 40 / img.height, 1);
@@ -2712,6 +3099,166 @@ window.game = new Phaser.Game(config);
         }
         #editor-toolbar button { cursor: pointer; }
         #editor-toolbar .spacer { margin-left: auto; opacity: 0.72; }
+        #editor-mode-tabs { display: flex; gap: 4px; }
+        #editor-mode-tabs button.active {
+          background: rgba(253, 224, 71, 0.35);
+          border-color: rgba(253, 224, 71, 0.9);
+        }
+        #editor-wall-tools {
+          pointer-events: auto;
+          position: fixed;
+          top: 0;
+          right: 0;
+          width: 320px;
+          height: 100vh;
+          background: rgba(15, 23, 42, 0.96);
+          border-left: 1px solid rgba(255, 255, 255, 0.1);
+          display: none;
+          flex-direction: column;
+          padding: 12px;
+          gap: 10px;
+        }
+        #editor-wall-tools button {
+          background: rgba(0, 0, 0, 0.32);
+          color: #fff;
+          border: 1px solid rgba(255, 255, 255, 0.28);
+          border-radius: 6px;
+          padding: 10px 12px;
+          font-size: 12px;
+          cursor: pointer;
+          text-align: left;
+        }
+        #editor-wall-tools button.active-tool {
+          border-color: rgba(253, 224, 71, 0.9);
+          background: rgba(253, 224, 71, 0.14);
+        }
+        #editor-wall-tools .wall-help {
+          font-size: 11px;
+          opacity: 0.75;
+          line-height: 1.45;
+        }
+        .wall-piece-btn {
+          display: grid;
+          grid-template-columns: 52px 1fr;
+          gap: 10px;
+          align-items: center;
+          text-align: left;
+        }
+        .wall-swatch {
+          width: 48px;
+          height: 40px;
+          border-radius: 4px;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.15);
+          image-rendering: pixelated;
+        }
+        .wall-swatch-band { background: #c3d0e6; position: relative; }
+        .wall-swatch-band::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 8px;
+          background: #3a3a50;
+        }
+        .wall-swatch-face { background: #c3d0e6; position: relative; }
+        .wall-swatch-face::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; bottom: 0;
+          width: 8px;
+          background: #3a3a50;
+        }
+        .wall-swatch-corner { background: #c3d0e6; position: relative; }
+        .wall-swatch-corner::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 6px;
+          background: #3a3a50;
+        }
+        .wall-swatch-draw {
+          background: repeating-linear-gradient(
+            135deg,
+            rgba(253,224,71,0.25),
+            rgba(253,224,71,0.25) 6px,
+            rgba(255,255,255,0.06) 6px,
+            rgba(255,255,255,0.06) 12px
+          );
+        }
+        .wall-piece-label { font-weight: 600; font-size: 12px; }
+        .wall-piece-desc { font-size: 10px; opacity: 0.7; margin-top: 2px; }
+        #ed-wall-segment-list {
+          flex: 1;
+          overflow: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-height: 120px;
+          max-height: 36vh;
+          margin-top: 4px;
+        }
+        .wall-list-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 6px;
+          cursor: pointer;
+        }
+        .wall-list-item.active {
+          border-color: rgba(253,224,71,0.85);
+          background: rgba(253,224,71,0.12);
+        }
+        .wall-list-item.dimmed {
+          opacity: 0.38;
+        }
+        #ed-wall-layer {
+          width: 100%;
+          margin-top: 6px;
+          padding: 6px 8px;
+          border-radius: 6px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(0,0,0,0.25);
+          color: #e2e8f0;
+          font-size: 12px;
+        }
+        .wall-click-help {
+          font-size: 10px;
+          opacity: 0.72;
+          margin: 6px 0 0;
+          line-height: 1.45;
+        }
+        .wall-list-main { flex: 1; min-width: 0; }
+        .wall-list-badge {
+          display: inline-block;
+          font-size: 9px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 2px 6px;
+          border-radius: 4px;
+          background: rgba(74,222,128,0.2);
+          color: #bbf7d0;
+          margin-right: 6px;
+        }
+        .wall-list-name { font-size: 11px; font-weight: 600; }
+        .wall-list-del {
+          background: rgba(239,68,68,0.35);
+          border: none;
+          color: #fff;
+          width: 26px;
+          height: 26px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+          line-height: 1;
+        }
+        .wall-list-empty { font-size: 11px; opacity: 0.65; padding: 8px 4px; }
+        #ed-wall-rebuild-btn {
+          background: rgba(59,130,246,0.45);
+          border: 1px solid rgba(147,197,253,0.5);
+        }
         #editor-catalog {
           pointer-events: auto;
           position: fixed;
@@ -2772,7 +3319,11 @@ window.game = new Phaser.Game(config);
         }
       </style>
       <div id="editor-toolbar">
-        <span class="title">EDITOR MODE</span>
+        <span class="title">EDITOR</span>
+        <div id="editor-mode-tabs">
+          <button type="button" id="ed-tab-furniture" class="active">Furniture</button>
+          <button type="button" id="ed-tab-walls">Walls</button>
+        </div>
         <span class="info" id="ed-info">Drag a catalog sprite into the room or click to place.</span>
         <span class="selected" id="ed-selected">Selected: none</span>
         <select id="ed-layer">
@@ -2783,12 +3334,54 @@ window.game = new Phaser.Game(config);
           <option value="decor">Decor/Monitors</option>
           <option value="furniture">Furniture</option>
         </select>
-        <button id="ed-export-btn">Export JSON (X)</button>
+        <button id="ed-export-btn">Export (X)</button>
         <button id="ed-snap-btn">Snap: ON</button>
         <button id="ed-clear-btn">Clear Selection</button>
         <button id="ed-collision-btn" style="background:#e74c3c;">Show Collisions</button>
-        <span class="spacer">E=toggle | Drag catalog -> map | Double-click sprite = delete</span>
+        <span class="spacer">E=toggle editor | X=export active tab</span>
       </div>
+      <aside id="editor-wall-tools">
+        <div style="font-weight:700;">Wall pieces</div>
+        <p class="wall-help">Top-down walls: <strong>bands</strong> get trim on top; <strong>side walls</strong> get trim on the back edge. Drag diagonally for an <strong>L-joint</strong> (band + side + corner cap).</p>
+        <label style="font-size:11px;font-weight:600;margin-top:6px;">Edit layer</label>
+        <select id="ed-wall-layer" title="Isolate wall types while editing">
+          <option value="all">All pieces</option>
+          <option value="bands">Bands only (horizontal)</option>
+          <option value="sides">Sides only (vertical)</option>
+          <option value="joints">Joints only (corners + T)</option>
+        </select>
+        <p class="wall-click-help"><strong>Click</strong> select/highlight · <strong>Double-click</strong> delete · <strong>Triple-click</strong> cycle layer (map or list)</p>
+        <button type="button" class="wall-piece-btn active-tool" data-wall-tool="draw" id="ed-wall-draw">
+          <div class="wall-swatch wall-swatch-draw"></div>
+          <div><div class="wall-piece-label">Draw wall (drag map)</div><div class="wall-piece-desc">Across → band · up/down → side · diagonal → L</div></div>
+        </button>
+        <button type="button" class="wall-piece-btn" data-wall-tool="band" id="ed-wall-add-h">
+          <div class="wall-swatch wall-swatch-band"></div>
+          <div><div class="wall-piece-label">Wall band</div><div class="wall-piece-desc">Dark trim + light blue face</div></div>
+        </button>
+        <button type="button" class="wall-piece-btn" data-wall-tool="face" id="ed-wall-add-v">
+          <div class="wall-swatch wall-swatch-face"></div>
+          <div><div class="wall-piece-label">Side wall face</div><div class="wall-piece-desc">Back-edge trim + light blue face</div></div>
+        </button>
+        <button type="button" class="wall-piece-btn" data-wall-tool="corner" id="ed-wall-add-corner">
+          <div class="wall-swatch wall-swatch-corner"></div>
+          <div><div class="wall-piece-label">Corner cap</div><div class="wall-piece-desc">Trim + face at a corner</div></div>
+        </button>
+        <button type="button" class="wall-piece-btn" data-wall-tool="tjunction" id="ed-wall-add-tj">
+          <div class="wall-swatch wall-swatch-corner"></div>
+          <div><div class="wall-piece-label">T-junction</div><div class="wall-piece-desc">Where three walls meet</div></div>
+        </button>
+        <hr style="border:0;border-top:1px solid rgba(255,255,255,0.1);margin:4px 0;" />
+        <button type="button" id="ed-wall-rebuild-btn">↻ Rebuild perimeter box</button>
+        <p class="wall-help" style="margin:0;">Fixes cut-off corners — one continuous trim bar on top &amp; bottom, side faces on left/right.</p>
+        <div style="font-weight:700;margin-top:8px;">All pieces <span id="ed-wall-count" style="opacity:0.6;font-weight:400;"></span></div>
+        <div id="ed-wall-segment-list"></div>
+        <hr style="border:0;border-top:1px solid rgba(255,255,255,0.1);margin:4px 0;" />
+        <button type="button" id="ed-wall-dup-btn">Duplicate selected (D)</button>
+        <button type="button" id="ed-wall-cut-btn">Cut Tool: OFF</button>
+        <button type="button" id="ed-wall-del-btn">Delete selected (Del)</button>
+        <button type="button" id="ed-wall-export-btn">Export walls JSON (X)</button>
+      </aside>
       <aside id="editor-catalog">
         <div id="editor-catalog-head">
           <div style="font-weight:700;">Catalog</div>
@@ -2804,7 +3397,37 @@ window.game = new Phaser.Game(config);
       updateLayerVisibility();
     });
     document.getElementById('ed-search').addEventListener('input', renderCatalogList);
-    document.getElementById('ed-export-btn').addEventListener('click', () => window._editorExport());
+    document.getElementById('ed-tab-furniture').addEventListener('click', () => setEditorMode('furniture'));
+    document.getElementById('ed-tab-walls').addEventListener('click', () => setEditorMode('walls'));
+    document.getElementById('ed-export-btn').addEventListener('click', () => {
+      if (editorMode === 'walls') window._editorExportWalls();
+      else window._editorExport();
+    });
+    document.getElementById('ed-wall-layer')?.addEventListener('change', (e) => {
+      setWallLayerFilter(e.target.value);
+    });
+    document.getElementById('ed-wall-rebuild-btn').addEventListener('click', () => rebuildPerimeterBox());
+    document.getElementById('ed-wall-draw').addEventListener('click', () => setWallTool('draw'));
+    document.getElementById('ed-wall-add-h').addEventListener('click', () => setWallTool('band'));
+    document.getElementById('ed-wall-add-v').addEventListener('click', () => setWallTool('face'));
+    document.getElementById('ed-wall-add-corner').addEventListener('click', () => setWallTool('corner'));
+    document.getElementById('ed-wall-add-tj').addEventListener('click', () => setWallTool('tjunction'));
+    document.getElementById('ed-wall-dup-btn').addEventListener('click', () => duplicateSelectedWall());
+    document.getElementById('ed-wall-del-btn').addEventListener('click', () => deleteSelectedWall());
+    document.getElementById('ed-wall-export-btn').addEventListener('click', () => window._editorExportWalls());
+    document.getElementById('ed-wall-cut-btn').addEventListener('click', (event) => {
+      wallCutMode = !wallCutMode;
+      wallPendingType = null;
+      wallTool = wallCutMode ? 'cut' : 'draw';
+      clearWallDrawPreview();
+      document.querySelectorAll('[data-wall-tool]').forEach((btn) => btn.classList.remove('active-tool'));
+      event.currentTarget.textContent = `Cut Tool: ${wallCutMode ? 'ON' : 'OFF'}`;
+      event.currentTarget.classList.toggle('active-tool', wallCutMode);
+      syncInfo(wallCutMode
+        ? 'Cut: select a wall, then click where to split (doorway gap)'
+        : 'Cut tool off — use Draw wall to add pieces');
+      if (!wallCutMode) setWallTool('draw');
+    });
     document.getElementById('ed-snap-btn').addEventListener('click', (event) => {
       window._editorSnap = !window._editorSnap;
       event.currentTarget.textContent = `Snap: ${window._editorSnap ? 'ON' : 'OFF'}`;
@@ -3044,7 +3667,8 @@ window.game = new Phaser.Game(config);
 
   function enableEditor() {
     const scene = getScene();
-    if (!scene || !scene._interactables) return;
+    if (!scene) return;
+    if (!Array.isArray(scene._interactables)) scene._interactables = [];
     editorActive = true;
     initEditorState(scene);
     createEditorUI();
@@ -3055,9 +3679,15 @@ window.game = new Phaser.Game(config);
 
     scene._interactables.forEach((entry) => prepareSpriteForEditing(scene, entry));
 
+    const isFurnitureSprite = (gameObject) => (
+      editorMode === 'furniture'
+      && scene._interactables?.some((item) => item.sprite === gameObject)
+    );
+
     const onDragStart = (pointer, gameObject) => {
+      if (!isFurnitureSprite(gameObject)) return;
       selectedSprite = gameObject;
-      gameObject.setTint(0x00ff00);
+      if (typeof gameObject.setTint === 'function') gameObject.setTint(0x00ff00);
       const entry = scene._interactables.find((item) => item.sprite === gameObject);
       if (entry) {
         syncInfo(`${entry.id} [${entry.instanceId}] x:${Math.round(gameObject.x)} y:${Math.round(gameObject.y)}`);
@@ -3065,6 +3695,7 @@ window.game = new Phaser.Game(config);
     };
 
     const onDrag = (pointer, gameObject, dragX, dragY) => {
+      if (!isFurnitureSprite(gameObject)) return;
       if (window._editorSnap) {
         gameObject.x = snapCoord(dragX);
         gameObject.y = snapCoord(dragY);
@@ -3110,11 +3741,94 @@ window.game = new Phaser.Game(config);
     };
 
     const onDragEnd = (pointer, gameObject) => {
-      gameObject.clearTint();
+      if (!isFurnitureSprite(gameObject)) return;
+      if (typeof gameObject.clearTint === 'function') gameObject.clearTint();
+    };
+
+    const onWallPointerMove = (pointer) => {
+      if (!editorActive || editorMode !== 'walls' || !wallDrawStart) return;
+      const OW = getOpenplanWalls();
+      if (!OW) return;
+      OW.destroyPreview(wallDrawPreview);
+      const segs = OW.segmentsFromDrag(
+        wallDrawStart.x, wallDrawStart.y,
+        pointer.worldX, pointer.worldY,
+        window._editorSnap
+      );
+      wallDrawPreview = OW.drawPreviewBand(scene, segs, 0.5);
+    };
+
+    const onWallPointerUp = (pointer) => {
+      if (!editorActive || editorMode !== 'walls') return;
+      const OW = getOpenplanWalls();
+      if (!OW) return;
+
+      if (wallDrawStart) {
+        const start = { ...wallDrawStart };
+        const segs = OW.segmentsFromDrag(
+          start.x, start.y,
+          pointer.worldX, pointer.worldY,
+          window._editorSnap
+        );
+        clearWallDrawPreview();
+        if (segs.length) {
+          resetWallClickStreak();
+          placeWallSegmentsData(scene, segs);
+          const label = segs.length > 2
+            ? `L-wall (${segs.length} pieces with corner joint)`
+            : segs.length > 1
+            ? `L-wall (${segs.length} pieces)`
+            : `${segs[0].type === 'h' ? 'wall band' : 'side wall'} (${
+              segs[0].type === 'h'
+                ? segs[0].endX - segs[0].startX
+                : Math.abs(segs[0].endY - segs[0].startY)
+            }px)`;
+          syncInfo(wallEditorHint(`Placed ${label}`));
+          return;
+        }
+        if (wallTool === 'draw' && !wallCutMode && !wallPendingType) {
+          const moved = Math.hypot(pointer.worldX - start.x, pointer.worldY - start.y);
+          if (moved < 6) {
+            const clicks = registerWallClick('__bg__');
+            if (clicks >= 3) {
+              resetWallClickStreak();
+              cycleWallLayerFilter();
+            } else if (clicks === 1) {
+              selectWallEntry(null);
+            }
+          }
+        }
+        return;
+      }
+
+      if (wallTool === 'draw' && !wallCutMode && !wallPendingType) {
+        const clicks = registerWallClick('__bg__');
+        if (clicks >= 3) {
+          resetWallClickStreak();
+          cycleWallLayerFilter();
+        } else if (clicks === 1) {
+          selectWallEntry(null);
+        }
+      }
     };
 
     const onPointerDown = (pointer, currentlyOver) => {
       if (!editorActive) return;
+      if (editorMode === 'walls') {
+        if (currentlyOver && currentlyOver.length > 0) return;
+        if (wallCutMode && selectedWallEntry) {
+          cutSelectedWallAt(pointer.worldX, pointer.worldY);
+          return;
+        }
+        if (wallPendingType && wallPendingType !== 'draw') {
+          addWallSegment(scene, wallPendingType, pointer.worldX, pointer.worldY);
+          return;
+        }
+        if (wallTool === 'draw' && !wallCutMode) {
+          wallDrawStart = { x: pointer.worldX, y: pointer.worldY };
+        }
+        return;
+      }
       const state = initEditorState(scene);
       if (!state.pendingCatalogId) return;
       if (currentlyOver && currentlyOver.length > 0) return;
@@ -3123,6 +3837,7 @@ window.game = new Phaser.Game(config);
 
     const onGameObjectDown = (pointer, gameObject) => {
       if (!editorActive) return;
+      if (editorMode === 'walls') return;
       const entry = scene._interactables.find((item) => item.sprite === gameObject);
       if (!entry) return;
       const now = performance.now();
@@ -3154,16 +3869,22 @@ window.game = new Phaser.Game(config);
       addCatalogPlacement(scene, catalogId, point.x, point.y);
     };
 
-    scene._editorHandlers = { onDragStart, onDrag, onDragEnd, onPointerDown, onGameObjectDown, onCanvasDragOver, onCanvasDrop };
+    scene._editorHandlers = {
+      onDragStart, onDrag, onDragEnd, onPointerDown, onGameObjectDown,
+      onCanvasDragOver, onCanvasDrop, onWallPointerMove, onWallPointerUp,
+    };
     scene.input.on('dragstart', onDragStart);
     scene.input.on('drag', onDrag);
     scene.input.on('dragend', onDragEnd);
     scene.input.on('pointerdown', onPointerDown);
+    scene.input.on('pointermove', onWallPointerMove);
+    scene.input.on('pointerup', onWallPointerUp);
     scene.input.on('gameobjectdown', onGameObjectDown);
     if (canvas) {
       canvas.addEventListener('dragover', onCanvasDragOver);
       canvas.addEventListener('drop', onCanvasDrop);
     }
+    setEditorMode('furniture');
   }
 
   function disableEditor() {
@@ -3179,6 +3900,8 @@ window.game = new Phaser.Game(config);
       scene.input.off('drag', handlers.onDrag);
       scene.input.off('dragend', handlers.onDragEnd);
       scene.input.off('pointerdown', handlers.onPointerDown);
+      scene.input.off('pointermove', handlers.onWallPointerMove);
+      scene.input.off('pointerup', handlers.onWallPointerUp);
       scene.input.off('gameobjectdown', handlers.onGameObjectDown);
       if (scene.game?.canvas) {
         scene.game.canvas.removeEventListener('dragover', handlers.onCanvasDragOver);
@@ -3195,6 +3918,20 @@ window.game = new Phaser.Game(config);
         }
       });
     }
+    if (scene._wallSegments) {
+      scene._wallSegments.forEach((entry) => {
+        getOpenplanWalls()?.styleEntrySelection(entry, false);
+        entry.handles.forEach((h) => h.destroy());
+        entry.handles = [];
+        entry.hit?.removeInteractive();
+      });
+    }
+    selectedWallEntry = null;
+    editorMode = 'furniture';
+    wallCutMode = false;
+    wallPendingType = null;
+    wallTool = 'draw';
+    clearWallDrawPreview();
   }
 
   document.addEventListener('keydown', (e) => {
@@ -3205,7 +3942,19 @@ window.game = new Phaser.Game(config);
       else enableEditor();
     }
     if (e.key === 'x' || e.key === 'X') {
-      if (editorActive) window._editorExport();
+      if (!editorActive) return;
+      if (editorMode === 'walls') window._editorExportWalls();
+      else window._editorExport();
+    }
+    if (!editorActive || editorMode !== 'walls') return;
+    if (e.key === 'd' || e.key === 'D') {
+      duplicateSelectedWall();
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      deleteSelectedWall();
+    }
+    if (e.key === 'k' || e.key === 'K') {
+      document.getElementById('ed-wall-cut-btn')?.click();
     }
   });
 

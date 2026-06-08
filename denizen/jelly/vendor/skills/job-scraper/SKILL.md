@@ -13,7 +13,7 @@ Scrape job postings from major job boards and store them in Supabase for trackin
 Most job sites require login for full results. Before first use on a site:
 
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-scraper/job-scraper.mjs --site linkedin --query "test" --pages 1 --headless false
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-scraper/job-scraper.mjs --site linkedin --query "test" --pages 1 --headless false
 ```
 
 This opens a **visible browser**. Tell the user:
@@ -27,27 +27,27 @@ The login session persists in `C:\Users\zionv\.openclaw\browser\job-apply\user-d
 
 ### LinkedIn
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-scraper/job-scraper.mjs --site linkedin --query "React Developer" --location "Austin, TX" --pages 3 --remote-only true
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-scraper/job-scraper.mjs --site linkedin --query "React Developer" --location "Austin, TX" --pages 3 --remote-only true
 ```
 
 ### Indeed
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-scraper/job-scraper.mjs --site indeed --query "Full Stack Engineer" --location "Remote" --pages 3
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-scraper/job-scraper.mjs --site indeed --query "Full Stack Engineer" --location "Remote" --pages 3
 ```
 
 ### Glassdoor
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-scraper/job-scraper.mjs --site glassdoor --query "Software Engineer" --location "San Francisco" --pages 2
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-scraper/job-scraper.mjs --site glassdoor --query "Software Engineer" --location "San Francisco" --pages 2
 ```
 
 ### ZipRecruiter
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-scraper/job-scraper.mjs --site ziprecruiter --query "Python Developer" --location "New York" --pages 2
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-scraper/job-scraper.mjs --site ziprecruiter --query "Python Developer" --location "New York" --pages 2
 ```
 
 ### Direct URL (scrape a specific job posting)
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-scraper/job-scraper.mjs --site direct --url "https://boards.greenhouse.io/company/jobs/12345"
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-scraper/job-scraper.mjs --site direct --url "https://boards.greenhouse.io/company/jobs/12345"
 ```
 
 ## Options

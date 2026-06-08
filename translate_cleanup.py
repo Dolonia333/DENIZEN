@@ -16,7 +16,7 @@ def patch(path, replacements):
         print(f'  {l[:120]}')
 
 # ── index.html final fixes ──────────────────────────────────────────────────
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html', [
     # CSS comment with curly quotes
     ('避免"框比地图大"', 'avoiding frame-larger-than-map issue'),
     # gemini api doc link (truncated line, just the Chinese part)
@@ -38,13 +38,13 @@ patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.ht
 ])
 
 # ── invite.html final fix ───────────────────────────────────────────────────
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\invite.html', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\invite.html', [
     ('把Invite Link + join key 一起发给你的 OpenClaw，并说"帮我加入海辛办公室"。', 
      'Send the Invite Link + join key to your OpenClaw and say "Help me join the office".'),
 ])
 
 # ── office-agent-push.py final fixes ───────────────────────────────────────
-patch(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\office-agent-push.py', [
+patch(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\office-agent-push.py', [
     ('# 自动状态守护：当本地状态文件不存在或长期不更新时，自动回 idle，避免"假Working"',
      '# Auto state guardian: if local state file is missing or stale, auto-revert to idle (prevent false "Working")'),
     ('# 只接受"状态文件"结构；避免误把 office-agent-state.json（仅缓存 agentId）当状态源',

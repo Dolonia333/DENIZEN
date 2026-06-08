@@ -29,6 +29,8 @@ const denizenVisitor = require('./src/denizen-visitor');
 const visitorAccess = require('./src/visitor-access');
 const sessionAuth = require('./src/visitor-session-auth');
 const teamAuth = require('./src/denizen-team-auth');
+const userIdentity = require('./src/denizen-user-identity');
+const visitorNotify = require('./src/visitor-notify');
 const visitorIntel = require('./src/denizen-visitor-intelligence');
 const { startVisitorIntelligenceLoop } = require('./src/visitor-briefing-loop');
 const slackChannel = require('./src/denizen-slack-channel');
@@ -41,6 +43,7 @@ const pcActivity = require('./src/pc-activity-tracker');
 const jobApplication = require('./src/job-application');
 const jobCrm         = require('./src/job-crm');
 const desktopAgent = require('./src/desktop-agent');
+const desktopPermissionBridge = require('./src/desktop-permission-bridge');
 const linuxAgent = require('./src/linux-agent');
 const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
@@ -49,6 +52,15 @@ const taskChain        = require('./src/task-chain');
 const robinhoodMcp     = require('./src/robinhood-mcp');
 const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
 const routeRegistry    = require('./src/route-registry');
+const denizenCredits   = require('./src/denizen-credits');
+const { mountComputeRoutes } = require('./src/denizen-compute-routes');
+const hostCompute      = require('./src/denizen-host-compute');
+const hardwareMonitor  = require('./src/denizen-hardware-monitor');
+const fleetRegistry    = require('./src/denizen-fleet-registry');
+const contributionTracker = require('./src/denizen-contribution-tracker');
+const computeSettlement = require('./src/denizen-compute-settlement');
+const computeProducer = require('./src/denizen-compute-producer');
+const nodeProfiler     = require('./src/denizen-node-profiler');
 const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
 const webResearch      = require('./src/web-research');
@@ -520,7 +532,7 @@ function _resolveVoiceForNpc(npcName, payload = {}) {
   };
 }
 
-const PORT = process.env.PORT || 8081;
+const PORT = process.env.PORT || 8080;
 const STT_MAX_AUDIO_BYTES = 12 * 1024 * 1024; // 12MB hard cap
 
 function _resolveSttConfig() {
@@ -539,14 +551,26 @@ function _resolveSttConfig() {
   };
 }
 
-function _readJsonBody(req, limitBytes = 1024 * 1024) {
+function _readJsonBody(req, limitBytes = 1024 * 1024, timeoutMs = 8000) {
   return new Promise((resolve, reject) => {
+    let settled = false;
     let total = 0;
     const chunks = [];
+    const finish = (err, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (err) reject(err);
+      else resolve(value);
+    };
+    const timer = setTimeout(() => {
+      try { req.destroy(); } catch (_) {}
+      finish(new Error('request body timeout — POST body may not reach the server through the tunnel'));
+    }, timeoutMs);
     req.on('data', (chunk) => {
       total += chunk.length;
       if (total > limitBytes) {
-        reject(new Error(`payload too large (>${limitBytes} bytes)`));
+        finish(new Error(`payload too large (>${limitBytes} bytes)`));
         try { req.destroy(); } catch (_) {}
         return;
       }
@@ -555,12 +579,12 @@ function _readJsonBody(req, limitBytes = 1024 * 1024) {
     req.on('end', () => {
       try {
         const raw = Buffer.concat(chunks).toString('utf8');
-        resolve(raw ? JSON.parse(raw) : {});
+        finish(null, raw ? JSON.parse(raw) : {});
       } catch (err) {
-        reject(new Error(`invalid JSON: ${err.message}`));
+        finish(new Error(`invalid JSON: ${err.message}`));
       }
     });
-    req.on('error', (err) => reject(err));
+    req.on('error', (err) => finish(err));
   });
 }
 
@@ -751,6 +775,201 @@ async function _guardVisitorFeature(req, sessionId, feature, body = {}) {
   return access;
 }
 
+async function _withIdentityTimeout(promise, ms = 3000) {
+  let timer;
+  try {
+    return await Promise.race([
+      promise.catch(() => null),
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve(null), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function _parseVisitorAccessKind(raw) {
+  const kind = String(raw || '').trim().toLowerCase();
+  return kind === 'ceo' ? 'ceo' : kind === 'team' ? 'team' : null;
+}
+
+function _respondVisitorAccessVerify(res, code, accessKind) {
+  const result = visitorAccess.verifyAccessCode(code, accessKind);
+  if (!result.ok) {
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(result));
+    return;
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(result));
+}
+
+function _visitorSessionBodyFromHeaders(req) {
+  const h = req.headers || {};
+  const header = (name) => String(h[name] || h[name.toLowerCase()] || '').trim() || null;
+  const metadata = {};
+  const accessMethod = header('x-access-method');
+  if (accessMethod) metadata.access_method = accessMethod;
+  if (/^(1|true|yes)$/i.test(header('x-ceo-principal') || '')) {
+    metadata.is_ceo_principal = true;
+  }
+  return {
+    session_id: header('x-session-id'),
+    session_token: header('x-session-token'),
+    access_grant: header('x-access-grant'),
+    display_name: header('x-display-name'),
+    org_slug: header('x-org-slug'),
+    email: header('x-email'),
+    demo: /^(1|true|yes)$/i.test(header('x-demo') || ''),
+    metadata: Object.keys(metadata).length ? metadata : undefined,
+  };
+}
+
+async function _createVisitorSession(req, res, body) {
+  const existingId = body.session_id || body.sessionId || null;
+  const existingToken = sessionAuth.extractSessionAuth(req, body);
+  const accessGrant = body.access_grant || body.accessGrant || null;
+  const grantPayload = accessGrant ? sessionAuth.verifyAccessGrant(accessGrant) : null;
+
+  let orgSlug = body.org_slug ?? body.orgSlug ?? null;
+  let tier = null;
+  let metadata = body.metadata && typeof body.metadata === 'object' ? { ...body.metadata } : {};
+
+  if (grantPayload) {
+    orgSlug = grantPayload.org_slug;
+    tier = grantPayload.tier;
+    metadata = { ...visitorAccess.metadataFromAccessGrant(grantPayload), ...metadata };
+  } else if (existingId && existingToken) {
+    await visitorAccess.assertSessionToken(existingId, existingToken);
+    const access = await visitorAccess.resolveSessionAccess(existingId);
+    orgSlug = access.orgSlug;
+    tier = access.tier;
+  } else if (body.demo === true || metadata.access_method === 'demo' || orgSlug === promptTuning.demoOrgSlug) {
+    orgSlug = promptTuning.demoOrgSlug;
+    tier = 'demo';
+    metadata = {
+      tier: 'demo',
+      org_slug: orgSlug,
+      access_method: 'demo',
+      ...metadata,
+    };
+  } else {
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: false,
+      error: 'access_grant or valid session_token required for team sessions',
+      code: 'DENIED',
+    }));
+    return;
+  }
+
+  if (tier === 'team' && !grantPayload && !(existingId && existingToken)) {
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'team tier requires access_grant', code: 'DENIED' }));
+    return;
+  }
+
+  const resolvedOrg = await denizenVisitor.resolveOrgBySlug(orgSlug);
+  if (!resolvedOrg) {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: `Organization "${orgSlug}" not found` }));
+    return;
+  }
+
+  metadata.tier = tier || metadata.tier || (resolvedOrg.slug === promptTuning.demoOrgSlug ? 'demo' : 'team');
+  metadata.org_slug = resolvedOrg.slug;
+
+  let sessionToken = null;
+  let sessionTokenHash = null;
+  const isRefresh = !!(existingId && existingToken);
+  const issueToken = tier !== 'demo';
+  if (!isRefresh && issueToken) {
+    const created = sessionAuth.createSessionToken();
+    sessionToken = created.token;
+    sessionTokenHash = created.hash;
+  }
+
+  const session = await denizenVisitor.createOrUpdateSession({
+    sessionId: existingId,
+    displayName: body.display_name ?? body.displayName,
+    metadata,
+    orgId: resolvedOrg.id,
+    sessionTokenHash: sessionTokenHash || undefined,
+    forceNewId: !existingId,
+  });
+
+  let linkedIdentity = null;
+  if (grantPayload?.email && session?.id) {
+    linkedIdentity = await teamAuth.linkAccountToSession(
+      grantPayload.email,
+      session.id,
+      body.display_name ?? body.displayName,
+    );
+  }
+
+  const sessionEmail = grantPayload?.email
+    || body.email
+    || body.identity_email
+    || null;
+  if (sessionEmail && session?.id) {
+    linkedIdentity = await _withIdentityTimeout(
+      userIdentity.resolveIdentityForSession({
+        email: sessionEmail,
+        displayName: body.display_name ?? body.displayName,
+        tier: metadata.tier || tier,
+        orgId: resolvedOrg.id,
+        orgSlug: resolvedOrg.slug,
+        source: metadata.access_method || (tier === 'demo' ? 'demo' : 'session'),
+        sessionId: session.id,
+      }),
+    ) || linkedIdentity;
+  }
+
+  if (!linkedIdentity?.id && metadata.is_ceo_principal && session?.id) {
+    const ceoEmail = process.env.DENIZEN_CEO_IDENTITY_EMAIL
+      || `ceo@${resolvedOrg.slug}.denizen.local`;
+    linkedIdentity = await _withIdentityTimeout(
+      userIdentity.resolveIdentityForSession({
+        email: ceoEmail,
+        displayName: body.display_name ?? body.displayName ?? 'CEO',
+        tier: metadata.tier || tier || 'team',
+        orgId: resolvedOrg.id,
+        orgSlug: resolvedOrg.slug,
+        source: 'ceo',
+        sessionId: session.id,
+      }),
+    );
+  }
+
+  if (linkedIdentity?.id) {
+    const identityForNotify = linkedIdentity;
+    const notifyTier = metadata.tier || tier;
+    denizenDb.enqueue(async () => {
+      if (hostCompute.isLocalOperatorRequest(req)) {
+        await hostCompute.markHostOperatorIfLocal(identityForNotify.id, req).catch(() => null);
+      }
+      await visitorNotify.notifyWelcomeLogin(identityForNotify, {
+        tier: notifyTier,
+        returning: (identityForNotify.login_count || 0) > 1,
+      });
+      await visitorNotify.notifyDiscordNewUser(identityForNotify, {
+        tier: notifyTier,
+      });
+    });
+  }
+
+  const payload = {
+    ok: true,
+    session,
+    org: { slug: resolvedOrg.slug, id: resolvedOrg.id },
+  };
+  if (sessionToken) payload.session_token = sessionToken;
+  if (linkedIdentity) payload.identity = userIdentity.toClientIdentity(linkedIdentity);
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(payload));
+}
+
 async function _verifyVisitorSession(req, sessionId, body = {}) {
   if (!sessionId) {
     throw new visitorAccess.VisitorAccessError('session_id required', 'BAD_INPUT');
@@ -774,6 +993,57 @@ async function _resolveVisitorToolGate(sessionId) {
     return { canUseRealWork: false, sessionTier: 'demo', sessionMetadata: null, orgSettings: null };
   }
 }
+
+const handleComputeRoutes = mountComputeRoutes({
+  internalToken: process.env.DENIZEN_INTERNAL_API_TOKEN || '',
+  fleetAgentToken: process.env.DENIZEN_FLEET_AGENT_TOKEN || '',
+  denizenCredits,
+  userIdentity,
+  verifyVisitorSession: _verifyVisitorSession,
+  get npcBrains() {
+    return npcBrains;
+  },
+});
+
+hardwareMonitor.startHostSampler({
+  intervalMs: 5000,
+  onSample: (snap) => {
+    fleetRegistry.setGlobalHostSnapshot(snap);
+    const hostIdentityId = process.env.DENIZEN_FLEET_IDENTITY_ID || null;
+    if (hostIdentityId) {
+      const scored = nodeProfiler.scoreHardware({
+        cpuCores: snap.cpu_cores ?? null,
+        ramMb: snap.ram?.total_mb ?? null,
+        vramMb: snap.gpu?.vram_total_mb ?? null,
+        gpu: snap.gpu?.model ?? null,
+      });
+      contributionTracker.recordSample({
+        identityId: hostIdentityId,
+        machineId: snap.machine_id || `host-${snap.hostname || 'denizen'}`,
+        hardwareScore: scored.score,
+        contributionLevel: 'max',
+        contributing: true,
+        lmStudioActive: true,
+        liveMetrics: snap,
+        role: 'host',
+      });
+    }
+  },
+});
+fleetRegistry.startAuxiliaryProbeLoop(60000);
+
+computeSettlement.startSettlementLoop({
+  intervalMs: Number(process.env.DENIZEN_SETTLEMENT_INTERVAL_MS) || undefined,
+  creditsApi: denizenCredits,
+  async countContributingMachines(identityId) {
+    const summary = fleetRegistry.buildFleetSummary(identityId);
+    return summary.totals?.contributing_machines || summary.fleet?.length || 1;
+  },
+});
+
+computeProducer.startMeshJobProducer({
+  getNpcBrains: () => npcBrains,
+});
 
 function _denyVisitorRealTools(ws, npcName) {
   if (ws.readyState === 1) {
@@ -1187,7 +1457,66 @@ function buildScreenControlInstruction(playerText) {
   return instruction;
 }
 
-function triggerNpcScreenControl(npcName, playerText, broadcast) {
+async function triggerNpcScreenControl(npcName, playerText, broadcast, opts = {}) {
+  const sessionId = opts.sessionId || opts.session_id || null;
+  let permissionLevel = opts.permissionLevel || opts.agent_permission_level || null;
+  if (!permissionLevel && sessionId) {
+    permissionLevel = await desktopPermissionBridge.resolvePermissionLevelForSession(sessionId);
+  }
+  if (!permissionLevel) permissionLevel = 'trusted';
+
+  const taskPreview = String(playerText || '').slice(0, 240);
+  const approval = desktopPermissionBridge.requestDesktopApprovalIfNeeded({
+    sessionId,
+    npcName,
+    capability: 'desktop-agent',
+    detail: taskPreview,
+    permissionLevel,
+  });
+
+  if (!approval.pending && !approval.approved) {
+    const deniedMsg = approval.reason === 'permission_off'
+      ? 'Desktop agent is off for this account. Enable it in the Denizen desktop app.'
+      : 'Desktop action was not approved.';
+    broadcast({
+      type: 'npc_skill_result',
+      npcName, skill: 'desktop-agent', ok: false,
+      output: deniedMsg, ts: Date.now(),
+    });
+    return { ok: false, denied: true, reason: approval.reason || 'denied' };
+  }
+
+  if (approval.pending) {
+    broadcast({
+      type: 'desktop_permission_pending',
+      npcName,
+      requestId: approval.requestId,
+      detail: taskPreview,
+      ts: Date.now(),
+    });
+    try {
+      const decision = await desktopPermissionBridge.waitForDesktopApproval(
+        sessionId,
+        approval.requestId,
+      );
+      if (!decision?.approved) {
+        broadcast({
+          type: 'npc_skill_result',
+          npcName, skill: 'desktop-agent', ok: false,
+          output: 'You declined the desktop action.', ts: Date.now(),
+        });
+        return { ok: false, denied: true, reason: 'rejected' };
+      }
+    } catch (err) {
+      broadcast({
+        type: 'npc_skill_result',
+        npcName, skill: 'desktop-agent', ok: false,
+        output: err?.message || 'Permission request timed out.', ts: Date.now(),
+      });
+      return { ok: false, denied: true, reason: 'timeout' };
+    }
+  }
+
   const instruction = buildScreenControlInstruction(playerText);
   const act = pcActivity.record({
     npc: npcName, kind: 'desktop-agent',
@@ -1619,6 +1948,77 @@ const server = http.createServer((req, res) => {
 
   // --- Security: check every request for suspicious patterns ---
   securityMonitor.checkHttpRequest(req);
+
+  if (urlPath === '/api/visitor/ping' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, ts: Date.now() }));
+    return;
+  }
+
+  // Visitor auth first — must stay fast (login modal); avoid waiting behind heavy routes.
+  // GET + header fallback: Cloudflare tunnel may not forward POST bodies to origin.
+  if (urlPath === '/api/visitor/access/verify' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      let code;
+      let accessKind;
+      if (req.method === 'GET') {
+        const u = new URL(req.url, 'http://localhost');
+        accessKind = _parseVisitorAccessKind(u.searchParams.get('kind') ?? u.searchParams.get('type'));
+        code = String(
+          req.headers['x-visitor-access-code']
+          || u.searchParams.get('code')
+          || '',
+        ).trim();
+      } else {
+        const body = await _readJsonBody(req, 4 * 1024);
+        accessKind = _parseVisitorAccessKind(body.kind ?? body.type);
+        code = body.code;
+      }
+      if (!accessKind) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'kind must be "team" or "ceo"' }));
+        return;
+      }
+      _respondVisitorAccessVerify(res, code, accessKind);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/session/open' && req.method === 'GET') {
+    (async () => {
+      await _createVisitorSession(req, res, _visitorSessionBodyFromHeaders(req));
+    })().catch((err) => {
+      if (res.writableEnded) return;
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath.startsWith('/api/compute/') || urlPath.startsWith('/api/desktop/')) {
+    handleComputeRoutes(req, res)
+      .then((handled) => {
+        if (handled || res.writableEnded) return;
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Compute route not found' }));
+      })
+      .catch((err) => {
+        if (!res.writableEnded) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+        }
+      });
+    return;
+  }
 
   const mcpNpcMatch = urlPath.match(/^\/mcp\/npc\/([^/]+)\/?$/);
   if (mcpNpcMatch) {
@@ -2932,8 +3332,12 @@ const server = http.createServer((req, res) => {
       // Return immediately — task runs async, progress via WS
       res.writeHead(200, { 'Content-Type': 'application/json' });
       const deskNpc = String(payload.npcName || 'Lucy');
+      const sessionId = payload.session_id || payload.sessionId || null;
       res.end(JSON.stringify({ ok: true, async: true, note: `${deskNpc} is on it — watch your screen.` }));
-      triggerNpcScreenControl(deskNpc, payload.instruction, broadcast)
+      triggerNpcScreenControl(deskNpc, payload.instruction, broadcast, {
+        sessionId,
+        permissionLevel: payload.agent_permission_level || payload.permission_level || null,
+      })
         .catch(err => {
           console.error('[desktop-task] error:', err?.message);
         });
@@ -4230,31 +4634,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (urlPath === '/api/visitor/access/verify' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 4 * 1024);
-      const kind = body.kind ?? body.type;
-      const accessKind = kind === 'ceo' ? 'ceo' : kind === 'team' ? 'team' : null;
-      if (!accessKind) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'kind must be "team" or "ceo"' }));
-        return;
-      }
-      const result = visitorAccess.verifyAccessCode(body.code, accessKind);
-      if (!result.ok) {
-        res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(result));
-        return;
-      }
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(result));
-    })().catch((err) => {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
-    });
-    return;
-  }
-
   if (urlPath === '/api/visitor/auth/register' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 32 * 1024);
@@ -4293,91 +4672,9 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/visitor/session' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 64 * 1024);
-      const existingId = body.session_id || body.sessionId || null;
-      const existingToken = sessionAuth.extractSessionAuth(req, body);
-      const accessGrant = body.access_grant || body.accessGrant || null;
-      const grantPayload = accessGrant ? sessionAuth.verifyAccessGrant(accessGrant) : null;
-
-      let orgSlug = body.org_slug ?? body.orgSlug ?? null;
-      let tier = null;
-      let metadata = body.metadata && typeof body.metadata === 'object' ? { ...body.metadata } : {};
-
-      if (grantPayload) {
-        orgSlug = grantPayload.org_slug;
-        tier = grantPayload.tier;
-        metadata = { ...visitorAccess.metadataFromAccessGrant(grantPayload), ...metadata };
-      } else if (existingId && existingToken) {
-        await visitorAccess.assertSessionToken(existingId, existingToken);
-        const access = await visitorAccess.resolveSessionAccess(existingId);
-        orgSlug = access.orgSlug;
-        tier = access.tier;
-      } else if (body.demo === true || metadata.access_method === 'demo' || orgSlug === promptTuning.demoOrgSlug) {
-        orgSlug = promptTuning.demoOrgSlug;
-        tier = 'demo';
-        metadata = {
-          tier: 'demo',
-          org_slug: orgSlug,
-          access_method: 'demo',
-          ...metadata,
-        };
-      } else {
-        res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          ok: false,
-          error: 'access_grant or valid session_token required for team sessions',
-          code: 'DENIED',
-        }));
-        return;
-      }
-
-      if (tier === 'team' && !grantPayload && !(existingId && existingToken)) {
-        res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'team tier requires access_grant', code: 'DENIED' }));
-        return;
-      }
-
-      const resolvedOrg = await denizenVisitor.resolveOrgBySlug(orgSlug);
-      if (!resolvedOrg) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: `Organization "${orgSlug}" not found` }));
-        return;
-      }
-
-      metadata.tier = tier || metadata.tier || (resolvedOrg.slug === promptTuning.demoOrgSlug ? 'demo' : 'team');
-      metadata.org_slug = resolvedOrg.slug;
-
-      let sessionToken = null;
-      let sessionTokenHash = null;
-      const isRefresh = !!(existingId && existingToken);
-      const issueToken = tier !== 'demo';
-      if (!isRefresh && issueToken) {
-        const created = sessionAuth.createSessionToken();
-        sessionToken = created.token;
-        sessionTokenHash = created.hash;
-      }
-
-      const session = await denizenVisitor.createOrUpdateSession({
-        sessionId: existingId,
-        displayName: body.display_name ?? body.displayName,
-        metadata,
-        orgId: resolvedOrg.id,
-        sessionTokenHash: sessionTokenHash || undefined,
-        forceNewId: !existingId,
-      });
-
-      if (grantPayload?.email && session?.id) {
-        await teamAuth.linkAccountToSession(grantPayload.email, session.id);
-      }
-
-      const payload = {
-        ok: true,
-        session,
-        org: { slug: resolvedOrg.slug, id: resolvedOrg.id },
-      };
-      if (sessionToken) payload.session_token = sessionToken;
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(payload));
+      await _createVisitorSession(req, res, body);
     })().catch((err) => {
+      if (res.writableEnded) return;
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
       }
@@ -5422,9 +5719,19 @@ const server = http.createServer((req, res) => {
       };
 
       if (cache.body && (now - cache.at) < cacheTtlMs(cache.body)) {
+        const cachedHost = fleetRegistry.getGlobalHostSnapshot()
+          || hardwareMonitor.getLatestSnapshot();
+        const cachedHardware = cachedHost
+          ? {
+            live_usage: cachedHost,
+            fleet: [cachedHost, ...fleetRegistry.listAuxiliary()],
+            sampled_at: cachedHost.sampled_at || null,
+          }
+          : cache.body.hardware;
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           ...cache.body,
+          hardware: cachedHardware,
           ts: now,
           wsClients: {
             agent: cofounderAgent.wsClients.size,
@@ -5504,12 +5811,23 @@ const server = http.createServer((req, res) => {
             .filter(([k]) => k !== 'demo')
             .map(([name, cfg]) => ({ name, type: cfg.type, model: cfg.model || null }));
 
+          const hostHardware = fleetRegistry.getGlobalHostSnapshot()
+            || hardwareMonitor.getLatestSnapshot();
+          const hardwarePayload = hostHardware
+            ? {
+              live_usage: hostHardware,
+              fleet: [hostHardware, ...fleetRegistry.listAuxiliary()],
+              sampled_at: hostHardware.sampled_at || null,
+            }
+            : null;
+
           const body = {
             ok: true,
             ts: builtAt,
             lmStudio: lmStudioStatus,
             providers,
             demoMode: !!npcBrains._demoMode,
+            hardware: hardwarePayload,
             wsClients: {
               agent: cofounderAgent.wsClients.size,
               security: securityMonitor.clients?.size || 0,
@@ -6492,9 +6810,11 @@ agentWss.on('connection', (ws) => {
             text: `On it — I'll use your screen to help. Watch your mouse move.`,
             delegation: null, actions: [],
           }));
-          triggerNpcScreenControl(npcName, playerText, _broadcast)
+          triggerNpcScreenControl(npcName, playerText, _broadcast, {
+            sessionId: msg.session_id || null,
+          })
             .then((result) => {
-              if (result.summary && ws.readyState === 1) {
+              if (result?.summary && ws.readyState === 1) {
                 ws.send(JSON.stringify({
                   type: 'player_chat_response',
                   npcName,
@@ -6645,9 +6965,13 @@ agentWss.on('connection', (ws) => {
                 visitorIntel.getProfile(msg.session_id).catch(() => ({})),
                 visitorIntel.listCommitments(msg.session_id, { status: 'open' }).catch(() => []),
               ]);
+              const identity = session.identity_id
+                ? await userIdentity.getIdentityById(session.identity_id).catch(() => null)
+                : await userIdentity.getIdentityBySession(session.id).catch(() => null);
               return {
                 sessionId: session.id,
-                displayName: session.display_name || 'Guest',
+                identityId: identity?.id || session.identity_id || null,
+                displayName: identity?.display_name || session.display_name || 'Guest',
                 assistant,
                 projects,
                 pendingHandoffs,
@@ -6677,6 +7001,7 @@ agentWss.on('connection', (ws) => {
           const playerOpts = visitorCtx
             ? {
               sessionId: visitorCtx.sessionId,
+              identityId: visitorCtx.identityId,
               displayName: visitorCtx.displayName,
               assistant: visitorCtx.assistant,
               projects: visitorCtx.projects,

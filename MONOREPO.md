@@ -1,11 +1,11 @@
-# Multbot Monorepo Map
+# Denizen Monorepo Map
 
-This repository (`multbot`) is a **monorepo** that hosts Denizen (the main product) plus home-lab infrastructure, companion apps, and embedded gateways. The GitHub project is branded **DENIZEN**, but the local checkout root is `multbot/`.
+This repository (`Denizen`) is a **monorepo** that hosts Denizen (the main product) plus home-lab infrastructure, companion apps, and embedded gateways. The GitHub project is **DENIZEN**; the local checkout root is `Denizen/`.
 
 ## Top-level layout
 
 ```
-multbot/
+Denizen/
 ├── denizen/          # Main app — pixel-art AI agent office (Node + Phaser)
 ├── infra/            # Home lab ops — NAS, Kali, Tailscale, Supabase
 ├── VisionClaw/       # Android companion app (camera/audio relay)

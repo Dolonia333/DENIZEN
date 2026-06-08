@@ -10,7 +10,7 @@ except ImportError:
 
 def main():
     root_dir = Path(__file__).resolve().parents[1]
-    assets_dir = Path(r"c:\Users\zionv\OneDrive\Desktop\multbot\pixel game stuff\pixel game assets and stuff\Modern_Office_Revamped_v1.2\4_Modern_Office_singles")
+    assets_dir = Path(r"c:\Users\zionv\OneDrive\Desktop\Denizen\pixel game stuff\pixel game assets and stuff\Modern_Office_Revamped_v1.2\4_Modern_Office_singles")
     out_file = root_dir / "data" / "bad_crops_report.html"
     
     if not assets_dir.exists():
@@ -68,7 +68,7 @@ def main():
                 if edges_touched:
                     # Single items shouldn't usually touch top/left/right. Bottom is okay for shadows planting on floor.
                     if len(edges_touched) > 1 or (len(edges_touched) == 1 and "Bottom" not in edges_touched):
-                        # Since the HTTP server is running in "multbot", the path from the HTTP server root needs to be "/pixel game stuff/..."
+                        # Since the HTTP server is running in "Denizen", the path from the HTTP server root needs to be "/pixel game stuff/..."
                         rel_path = filepath.relative_to(assets_dir.parent.parent)
                         flagged_sprites.append({
                             "file": filepath.name,

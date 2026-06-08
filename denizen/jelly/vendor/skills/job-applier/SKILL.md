@@ -17,12 +17,12 @@ Automatically fill and submit job applications using browser automation. Support
 ### 1. Generate a tailored resume
 Use the `resume-generator` skill first to create a targeted PDF:
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/resume-generator/resume-generator.mjs --profile profile.json --job job.json --template modern --pdf "C:\Users\zionv\.openclaw\workspace\tailored-resume.pdf"
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/resume-generator/resume-generator.mjs --profile profile.json --job job.json --template modern --pdf "C:\Users\zionv\.openclaw\workspace\tailored-resume.pdf"
 ```
 
 ### 2. Dry-run the application
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-applier/job-applier.mjs --job-id "SUPABASE_JOB_ID" --resume-pdf "C:\Users\zionv\.openclaw\workspace\tailored-resume.pdf" --dry-run true
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-applier/job-applier.mjs --job-id "SUPABASE_JOB_ID" --resume-pdf "C:\Users\zionv\.openclaw\workspace\tailored-resume.pdf" --dry-run true
 ```
 
 ### 3. Show the user the screenshot
@@ -36,7 +36,7 @@ The output includes a `screenshot` canvas URL. Tell the user:
 
 ### 4. Submit if approved
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/job-applier/job-applier.mjs --job-id "SUPABASE_JOB_ID" --resume-pdf "C:\Users\zionv\.openclaw\workspace\tailored-resume.pdf" --dry-run false
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/job-applier/job-applier.mjs --job-id "SUPABASE_JOB_ID" --resume-pdf "C:\Users\zionv\.openclaw\workspace\tailored-resume.pdf" --dry-run false
 ```
 
 ## Options

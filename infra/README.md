@@ -116,7 +116,7 @@ export DENIZEN_PULL_URL='http://100.71.54.109:8081'
 curl -fsSL https://raw.githubusercontent.com/Dolonia333/DENIZEN/main/infra/pull-install-kali-agent.sh | bash
 ```
 
-Or from a local multbot checkout:
+Or from a local Denizen checkout:
 
 ```bash
 bash infra/pull-install-kali-agent.sh

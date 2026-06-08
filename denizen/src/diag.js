@@ -104,10 +104,22 @@
     document.body.appendChild(panel);
   }
 
-  function togglePanel() {
-    panelOpen = !panelOpen;
-    if (panel) panel.style.display = panelOpen ? 'block' : 'none';
+  function setPanelOpen(open) {
+    panelOpen = !!open;
+    document.documentElement.classList.toggle('denizen-diag-open', panelOpen);
+    if (panel) {
+      panel.classList.toggle('open', panelOpen);
+      panel.style.display = panelOpen ? 'block' : 'none';
+      if (panelOpen) {
+        globalThis.DenizenMobileSidebar?.close?.();
+        globalThis.DenizenDeviceProfile?.resetPhonePanelLayout?.(panel);
+      }
+    }
     if (panelOpen) renderPanel();
+  }
+
+  function togglePanel() {
+    setPanelOpen(!panelOpen);
   }
 
   function setChip(state, label) {

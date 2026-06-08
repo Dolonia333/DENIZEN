@@ -5,7 +5,7 @@ from collections import defaultdict
 
 
 # Absolute path to your asset root
-ASSET_ROOT = r"C:\Users\zionv\OneDrive\Desktop\multbot\pixel game stuff\pixel game assets and stuff"
+ASSET_ROOT = r"C:\Users\zionv\OneDrive\Desktop\Denizen\pixel game stuff\pixel game assets and stuff"
 
 # Where to write the generated catalog (relative to this script)
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "assets-catalog.scanned.json")

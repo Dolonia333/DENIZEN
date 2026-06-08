@@ -1,11 +1,12 @@
 /**
- * denizen-lazy-scripts.js — load non-critical UI after the office scene is interactive.
- * Keeps initial HTML parse / download smaller so Phaser can start sooner.
+ * denizen-lazy-scripts.js — defer heavy UI until Phaser can start.
  */
 (function () {
   'use strict';
 
   const loaded = new Set();
+  let deferredStarted = false;
+  let deferredDone = null;
 
   function loadScript(src) {
     if (loaded.has(src)) return Promise.resolve();
@@ -13,15 +14,78 @@
     return new Promise((resolve) => {
       const s = document.createElement('script');
       s.src = src;
-      s.defer = true;
+      s.async = true;
       s.onload = () => resolve();
       s.onerror = () => resolve();
       document.head.appendChild(s);
     });
   }
 
+  async function loadParallel(urls) {
+    await Promise.all(urls.map(loadScript));
+  }
+
   async function loadAll(urls) {
     for (const u of urls) await loadScript(u);
+  }
+
+  function initDeferredSceneFeatures() {
+    const scene = globalThis.__DenizenScene || globalThis.game?.scene?.scenes?.[0];
+    if (!scene) return;
+    if (!scene._securityMonitor && globalThis.SecurityMonitor && globalThis.RobberController) {
+      scene._securityMonitor = new globalThis.SecurityMonitor();
+      scene._robberCtrl = new globalThis.RobberController(scene, scene._securityMonitor);
+    }
+    if (!scene._workFeed && globalThis.WorkFeedPanel) {
+      scene._workFeed = new globalThis.WorkFeedPanel(scene);
+    }
+  }
+
+  function finishDeferred() {
+    initDeferredSceneFeatures();
+    globalThis.DenizenBottomDock?.refresh?.();
+    globalThis.DenizenMobileSidebar?.relayout?.();
+    globalThis.DenizenVisitorMcpConnectUI?.attach?.();
+    try {
+      document.dispatchEvent(new CustomEvent('denizen-deferred-scripts-ready'));
+    } catch (_) {}
+  }
+
+  /** Heavy panels + audio — kicked off when office-scene.js loads (parallel with Phaser preload). */
+  function loadDeferred() {
+    if (deferredStarted) return deferredDone || Promise.resolve();
+    deferredStarted = true;
+
+    deferredDone = (async () => {
+      await loadParallel([
+        './src/visitor-capabilities.js?v=vis2',
+        './src/proximity-audio.js?v=audio2',
+        './src/voice-gate.js?v=audio2',
+      ]);
+      await loadParallel([
+        './src/elevenlabs-provider.js',
+        './src/sfx.js',
+        './src/voice-input.js?v=voiceicon1',
+        './src/llm-telemetry-panel.js?v=lmfix8',
+        './src/mesh-jobs-panel.js?v=mesh1',
+        './src/browser-mirror-panel.js?v=mobdraw3',
+        './src/diag.js',
+        './src/security-feed.js?v=sec1',
+      ]);
+      await loadParallel([
+        './src/visitor-desktop-pairing.js?v=pair2',
+        './src/visitor-credits-chip.js?v=node6',
+        './src/visitor-handoff-ui.js?v=vis2',
+        './src/visitor-projects-ui.js?v=vis2',
+        './src/visitor-assistant-labels.js?v=vis2',
+        './src/security-monitor.js',
+        './src/robber-controller.js',
+        './src/work-feed.js',
+      ]);
+      finishDeferred();
+    })();
+
+    return deferredDone;
   }
 
   function afterOffice() {
@@ -30,7 +94,7 @@
       './src/visitor-mcp-connect-ui.js?v=mcp3',
       './src/visitor-briefing-ui.js?v=vis3',
       './src/visitor-voice-walkup.js?v=vis3',
-      './src/proposals-panel.js?v=mobbtn1',
+      './src/proposals-panel.js?v=propfix1',
       './src/city-debug.js',
     ];
     try {
@@ -38,13 +102,14 @@
         urls.push('./src/demo-scene.js');
       }
     } catch (_) {}
-    return loadAll(urls).then(() => {
-      globalThis.DenizenVisitorMcpConnectUI?.attach?.();
-    });
+    return loadDeferred()
+      .then(() => loadAll(urls))
+      .then(finishDeferred);
   }
 
-  window.DenizenLazyScripts = {
+  globalThis.DenizenLazyScripts = {
     load: loadAll,
+    loadDeferred,
     afterOffice,
   };
 })();

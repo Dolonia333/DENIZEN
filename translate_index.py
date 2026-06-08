@@ -3,7 +3,7 @@
 import re, os, sys
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-BASE = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend'
+BASE = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend'
 
 def process(path, replacements):
     with open(path, 'r', encoding='utf-8') as f:

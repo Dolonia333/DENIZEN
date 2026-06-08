@@ -4,7 +4,7 @@ This repo contains multiple projects. If your goal is **OpenClaw (assistant) + S
 
 ### 1) One-command launcher
 
-From PowerShell in `c:\Users\zionv\OneDrive\Desktop\multbot`:
+From PowerShell in `c:\Users\zionv\OneDrive\Desktop\Denizen`:
 
 ```powershell
 .\RUN_OPENCLAW_AND_STAR_OFFICE.ps1 -Install -Build

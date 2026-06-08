@@ -83,12 +83,9 @@
   }
 
   function syncLayoutClasses() {
+    globalThis.DenizenDeviceProfile?.sync?.();
     const landscape = isLandscape();
     const root = document.documentElement;
-    root.classList.add('denizen-touch');
-    root.classList.toggle('denizen-landscape', landscape);
-    root.classList.toggle('denizen-portrait', !landscape);
-    root.classList.toggle('denizen-phone', isPhoneLike());
     root.classList.toggle('denizen-tap-move', useTapMove() && landscape);
 
     const portraitBlocked = !landscape;
@@ -204,7 +201,8 @@
       html.denizen-touch.denizen-tap-move #${CONTROLS_ID} {
         display: none !important;
       }
-      html.denizen-touch.denizen-chat-open #${CONTROLS_ID} {
+      html.denizen-touch.denizen-chat-open #${CONTROLS_ID},
+      html.denizen-touch.denizen-llm-tel-open #${CONTROLS_ID} {
         display: none !important;
       }
 
@@ -231,6 +229,7 @@
         display: block;
       }
       html.denizen-touch.denizen-chat-open #${TAP_INTERACT_ID},
+      html.denizen-touch.denizen-llm-tel-open #${TAP_INTERACT_ID},
       html.denizen-touch.denizen-rotate-blocking #${TAP_INTERACT_ID} {
         display: none !important;
       }
@@ -250,6 +249,7 @@
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-mic-button,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-onboarding-replay-chip,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-diag-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-mesh-jobs-chip,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-security-chip,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-llm-tel-chip,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-audio-mode-chip,
@@ -314,10 +314,10 @@
         max-height: min(52dvh, 300px) !important;
       }
 
-      html.denizen-touch #denizen-diag-panel,
-      html.denizen-touch #denizen-llm-tel-panel,
-      html.denizen-touch #denizen-proposals-panel,
-      html.denizen-touch #denizen-browser-mirror-panel,
+      html.denizen-touch.denizen-tablet #denizen-diag-panel,
+      html.denizen-touch.denizen-tablet #denizen-llm-tel-panel,
+      html.denizen-touch.denizen-tablet #denizen-proposals-panel,
+      html.denizen-touch.denizen-tablet #denizen-browser-mirror-panel,
       html.denizen-touch #player-chat-panel {
         z-index: 100200 !important;
         width: calc(100dvw - 16px) !important;
@@ -327,13 +327,16 @@
         max-height: min(72dvh, 560px) !important;
         pointer-events: auto !important;
       }
-      html.denizen-touch #denizen-diag-panel {
+      html.denizen-touch.denizen-phone #denizen-diag-panel.open,
+      html.denizen-touch.denizen-phone #denizen-llm-tel-panel.open,
+      html.denizen-touch.denizen-phone #denizen-proposals-panel.open,
+      html.denizen-touch.denizen-phone #denizen-browser-mirror-panel.open {
+        pointer-events: auto !important;
+      }
+      html.denizen-touch.denizen-tablet #denizen-diag-panel {
         max-width: calc(100dvw - 16px) !important;
         white-space: pre-wrap;
         overflow-y: auto;
-      }
-      html.denizen-touch.denizen-landscape #denizen-llm-tel-panel .body {
-        max-height: calc(52dvh - 100px) !important;
       }
 
       /* CEO mode chip — floats above dock until bottom-dock adopts it */
@@ -428,6 +431,10 @@
       html.denizen-touch #denizen-browser-mirror-panel button,
       html.denizen-touch #denizen-llm-tel-panel button,
       html.denizen-touch #denizen-diag-panel button,
+      html.denizen-touch #denizen-node-ui-chip button,
+      html.denizen-touch #denizen-account-panel button,
+      html.denizen-touch #denizen-mobile-menu-btn,
+      html.denizen-touch #denizen-mobile-drawer button,
       html.denizen-touch #denizen-mic-status,
       html.denizen-touch #${CEO_SHELL_ID} button,
       html.denizen-touch #${CEO_CHIP_ID} {
@@ -435,6 +442,11 @@
         -webkit-tap-highlight-color: rgba(96, 165, 250, 0.25);
         min-width: 44px;
         min-height: 44px;
+      }
+      html.denizen-touch.denizen-phone #denizen-bottom-dock button,
+      html.denizen-touch.denizen-phone #denizen-mobile-menu-btn {
+        min-width: 34px;
+        min-height: 34px;
       }
     `;
     document.head.appendChild(style);
@@ -456,6 +468,9 @@
       target.closest(`#${ROTATE_ID}`) ||
       target.closest(`#${CEO_SHELL_ID}`) ||
       target.closest(`#${CEO_CHIP_ID}`) ||
+      target.closest('#denizen-mobile-drawer') ||
+      target.closest('#denizen-mobile-drawer-backdrop') ||
+      target.closest('#denizen-mobile-menu-btn') ||
       target.closest('input, textarea, button, select, [contenteditable="true"]')
     );
   }

@@ -93,12 +93,12 @@ Use descriptive filenames for different documents:
 
 The generator script is at:
 ```
-C:\Users\zionv\OneDrive\Desktop\multbot\openclaw\skills\pdf-generator\pdf-generator.mjs
+C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw\skills\pdf-generator\pdf-generator.mjs
 ```
 
 Run it from the OpenClaw project root directory:
 ```
-C:\Users\zionv\OneDrive\Desktop\multbot\openclaw
+C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw
 ```
 
 ## Usage
@@ -106,7 +106,7 @@ C:\Users\zionv\OneDrive\Desktop\multbot\openclaw
 ### Generate from inline HTML
 
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/pdf-generator/pdf-generator.mjs --html "<html><head><style>body{font-family:Arial,sans-serif;padding:40px}h1{color:#2563eb}</style></head><body><h1>Dolonia Media Kit</h1><p>Professional social media management services.</p></body></html>" --output "C:\Users\zionv\.openclaw\workspace\media-kit.pdf"
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/pdf-generator/pdf-generator.mjs --html "<html><head><style>body{font-family:Arial,sans-serif;padding:40px}h1{color:#2563eb}</style></head><body><h1>Dolonia Media Kit</h1><p>Professional social media management services.</p></body></html>" --output "C:\Users\zionv\.openclaw\workspace\media-kit.pdf"
 ```
 
 ### Generate from an HTML file (recommended)
@@ -114,19 +114,19 @@ cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/pdf-generator
 Write the HTML first, then convert:
 
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/pdf-generator/pdf-generator.mjs --file "C:\Users\zionv\.openclaw\canvas\preview.html" --output "C:\Users\zionv\.openclaw\workspace\proposal.pdf"
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/pdf-generator/pdf-generator.mjs --file "C:\Users\zionv\.openclaw\canvas\preview.html" --output "C:\Users\zionv\.openclaw\workspace\proposal.pdf"
 ```
 
 ### Generate from a URL
 
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/pdf-generator/pdf-generator.mjs --url "http://localhost:18789/__moltbot__/canvas/preview.html" --output "C:\Users\zionv\.openclaw\workspace\report.pdf"
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/pdf-generator/pdf-generator.mjs --url "http://localhost:18789/__moltbot__/canvas/preview.html" --output "C:\Users\zionv\.openclaw\workspace\report.pdf"
 ```
 
 ### Custom page settings
 
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/pdf-generator/pdf-generator.mjs --file "C:\Users\zionv\.openclaw\canvas\preview.html" --output "C:\Users\zionv\.openclaw\workspace\report.pdf" --format A4 --landscape true --margin "1in" --scale 0.8
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/pdf-generator/pdf-generator.mjs --file "C:\Users\zionv\.openclaw\canvas\preview.html" --output "C:\Users\zionv\.openclaw\workspace\report.pdf" --format A4 --landscape true --margin "1in" --scale 0.8
 ```
 
 ## Options
@@ -217,7 +217,7 @@ HTML
 ### 3. Generate PDF
 
 ```bash
-cd C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && node skills/pdf-generator/pdf-generator.mjs --file "C:\Users\zionv\.openclaw\canvas\proposal.html" --output "C:\Users\zionv\.openclaw\workspace\dolonia-proposal.pdf" --format Letter --margin "0"
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && node skills/pdf-generator/pdf-generator.mjs --file "C:\Users\zionv\.openclaw\canvas\proposal.html" --output "C:\Users\zionv\.openclaw\workspace\dolonia-proposal.pdf" --format Letter --margin "0"
 ```
 
 ### 4. Tell user the result with inline preview

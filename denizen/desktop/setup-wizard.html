@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Denizen Setup</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #020617;
+      color: #e2e8f0;
+    }
+    .card {
+      width: min(520px, calc(100vw - 32px));
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 24px;
+      background: rgba(15, 23, 42, 0.96);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+    }
+    h1 { margin: 0 0 8px; font-size: 22px; }
+    p { margin: 0 0 16px; color: #94a3b8; line-height: 1.5; }
+    .step { display: none; }
+    .step.active { display: block; }
+    .machine {
+      font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #0b1220;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 0 16px;
+      color: #93c5fd;
+    }
+    .progress {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .progress span {
+      flex: 1;
+      height: 4px;
+      border-radius: 999px;
+      background: #1e293b;
+    }
+    .progress span.done { background: #3b82f6; }
+    .progress span.current { background: #60a5fa; }
+    .choice-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .choice-btn {
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #f8fafc;
+      border-radius: 10px;
+      padding: 18px 16px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: center;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .choice-btn:hover { border-color: #64748b; background: #273449; }
+    .choice-btn.yes { background: #1d4ed8; border-color: #3b82f6; }
+    .choice-btn.yes:hover { background: #2563eb; }
+    .choice-btn.muted { color: #94a3b8; font-weight: 500; }
+    .waiting {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px dashed #475569;
+      background: #0b1220;
+      color: #cbd5e1;
+      margin: 16px 0;
+    }
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #334155;
+      border-top-color: #60a5fa;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .os-note {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0b1220;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+    button {
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+    button.primary { background: #2563eb; border-color: #3b82f6; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error { color: #fca5a5; font-size: 12px; min-height: 18px; margin-top: 8px; }
+    .linked-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #86efac;
+      font-size: 12px;
+    }
+    .diag-opt {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 16px 0 4px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0b1220;
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.5;
+      cursor: pointer;
+    }
+    .diag-opt input {
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="progress" id="progress-bar" aria-hidden="true"></div>
+
+    <div class="step active" data-step="welcome">
+      <h1>Welcome to Denizen Desktop</h1>
+      <p>Link this computer to your Denizen account so your agent can help with files, code, and optional compute — always with your approval.</p>
+      <div class="machine" id="machine-summary">Detecting hardware…</div>
+      <div class="actions">
+        <button class="primary" data-action="next">Get started</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="pairing">
+      <h1>Connect your account</h1>
+      <p id="pairing-lead">Sign in on the Denizen website, then click <strong>Link this computer</strong>. We'll pick up the connection automatically.</p>
+      <div id="pairing-waiting" class="waiting">
+        <div class="spinner"></div>
+        <span>Waiting for browser…</span>
+      </div>
+      <div id="pairing-linked" class="linked-badge" hidden>Account linked</div>
+      <div class="error" id="pairing-error"></div>
+      <div class="actions">
+        <button data-action="retry-pairing">Retry</button>
+        <button class="primary" data-action="next" id="pairing-continue" disabled>Continue</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="read_files">
+      <h1>Read your files?</h1>
+      <p>Let Denizen open and read documents on this machine when you ask — for summaries, search, and context.</p>
+      <div class="choice-row">
+        <button class="choice-btn yes" data-cap="read_files" data-value="yes">Yes</button>
+        <button class="choice-btn muted" data-cap="read_files" data-value="no">Not now</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="write_files">
+      <h1>Save and edit files?</h1>
+      <p>Allow Denizen to create or update files here when you approve — drafts, exports, and project changes.</p>
+      <div class="choice-row">
+        <button class="choice-btn yes" data-cap="write_files" data-value="yes">Yes</button>
+        <button class="choice-btn muted" data-cap="write_files" data-value="no">Not now</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="run_code">
+      <h1>Run code on this machine?</h1>
+      <p>Let Denizen run scripts and terminal commands locally after you confirm — useful for builds, tests, and automation.</p>
+      <div class="choice-row">
+        <button class="choice-btn yes" data-cap="run_code" data-value="yes">Yes</button>
+        <button class="choice-btn muted" data-cap="run_code" data-value="no">Not now</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="screen_access">
+      <h1>See your screen?</h1>
+      <p>Allow Denizen to view your screen when you ask — so it can help with what's on screen, not just files.</p>
+      <div id="os-permission-note" class="os-note" hidden></div>
+      <div class="choice-row">
+        <button class="choice-btn yes" data-cap="screen_access" data-value="yes">Yes</button>
+        <button class="choice-btn muted" data-cap="screen_access" data-value="no">Not now</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="contribute_compute">
+      <h1>Share spare compute?</h1>
+      <p>Optionally let this machine help run background jobs for the Denizen network when you're not busy. You can change this anytime.</p>
+      <div class="choice-row">
+        <button class="choice-btn yes" data-cap="contribute_compute" data-value="yes">Yes</button>
+        <button class="choice-btn muted" data-cap="contribute_compute" data-value="no">Not now</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="done">
+      <h1>You're all set</h1>
+      <p id="done-message">This machine is linked to Denizen. Open the app to start working with your agent.</p>
+      <label class="diag-opt" for="diagnostics-opt-in">
+        <input type="checkbox" id="diagnostics-opt-in" checked />
+        <span>Send anonymous diagnostics to help improve Denizen</span>
+      </label>
+      <div class="actions">
+        <button class="primary" data-action="open-game">Open Denizen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const steps = [
+      'welcome',
+      'pairing',
+      'read_files',
+      'write_files',
+      'run_code',
+      'screen_access',
+      'contribute_compute',
+      'done',
+    ];
+    const capabilitySteps = ['read_files', 'write_files', 'run_code', 'screen_access', 'contribute_compute'];
+
+    let stepIndex = 0;
+    let machine = null;
+    let pairingPollTimer = null;
+    let finishing = false;
+
+    const capabilities = {
+      read_files: false,
+      write_files: false,
+      run_code: false,
+      screen_access: false,
+      contribute_compute: false,
+    };
+
+    function showStep(index) {
+      stepIndex = Math.max(0, Math.min(steps.length - 1, index));
+      document.querySelectorAll('.step').forEach((el) => {
+        el.classList.toggle('active', el.dataset.step === steps[stepIndex]);
+      });
+      renderProgress();
+      if (steps[stepIndex] === 'pairing') startPairingFlow();
+      if (steps[stepIndex] === 'screen_access') renderOsPermissionNote();
+    }
+
+    function renderProgress() {
+      const bar = document.getElementById('progress-bar');
+      if (!bar) return;
+      const setupSteps = steps.length - 1;
+      bar.innerHTML = steps.slice(0, -1).map((name, i) => {
+        let cls = '';
+        if (i < stepIndex) cls = 'done';
+        else if (i === stepIndex) cls = 'current';
+        return `<span class="${cls}" title="${name}"></span>`;
+      }).join('');
+    }
+
+    function setPairingError(msg) {
+      const el = document.getElementById('pairing-error');
+      if (el) el.textContent = msg || '';
+    }
+
+    function setPairingUi(linked) {
+      const waiting = document.getElementById('pairing-waiting');
+      const badge = document.getElementById('pairing-linked');
+      const cont = document.getElementById('pairing-continue');
+      if (waiting) waiting.hidden = !!linked;
+      if (badge) badge.hidden = !linked;
+      if (cont) cont.disabled = !linked;
+    }
+
+    function derivePermissionLevel(caps) {
+      const core = [caps.read_files, caps.write_files, caps.run_code, caps.screen_access];
+      const allNo = core.every((v) => !v);
+      const allYes = core.every((v) => v);
+      if (allNo) return 'off';
+      if (allYes) return 'trusted';
+      return 'ask';
+    }
+
+    function parsePairingFromLocation() {
+      try {
+        const href = window.location.href || '';
+        const url = new URL(href);
+        const token = (url.searchParams.get('pair') || url.searchParams.get('token') || '').trim();
+        const serverUrl = (url.searchParams.get('server') || url.searchParams.get('server_url') || '').trim();
+        if (token) return { token, serverUrl: serverUrl || null };
+        if (href.includes('denizen://')) {
+          const deep = new URL(href.replace('denizen://', 'https://pair.denizen/'));
+          const deepToken = (deep.searchParams.get('token') || deep.searchParams.get('pair') || '').trim();
+          const deepServer = (deep.searchParams.get('server') || deep.searchParams.get('server_url') || '').trim();
+          if (deepToken) return { token: deepToken, serverUrl: deepServer || null };
+          const pathToken = String(deep.pathname || '').replace(/^\/+/, '').trim();
+          if (pathToken && pathToken !== 'pair') {
+            return { token: decodeURIComponent(pathToken), serverUrl: deepServer || null };
+          }
+        }
+      } catch (_) { /* ignore */ }
+      return { token: '', serverUrl: null };
+    }
+
+    async function tryClaimPairing(pairing) {
+      const token = typeof pairing === 'string' ? pairing : pairing?.token;
+      const serverUrl = typeof pairing === 'object' ? pairing?.serverUrl : null;
+      if (!token) return null;
+      setPairingError('');
+      const claimOpts = serverUrl ? { token, serverUrl } : token;
+      const result = await window.DenizenDesktop?.claimPairingToken?.(claimOpts)
+        .catch((err) => ({ ok: false, error: err?.message || String(err) }));
+      if (result?.ok) {
+        setPairingUi(true);
+        return result;
+      }
+      if (result?.error) setPairingError(result.error);
+      return null;
+    }
+
+    async function refreshPairingStatus() {
+      const status = await window.DenizenDesktop?.getPairingStatus?.().catch(() => null);
+      if (status?.claimed) {
+        setPairingUi(true);
+        setPairingError('');
+        return true;
+      }
+      setPairingUi(false);
+      return false;
+    }
+
+    async function startPairingFlow() {
+      setPairingError('');
+      const autoPairing = parsePairingFromLocation();
+      if (autoPairing.token) {
+        const claimed = await tryClaimPairing(autoPairing);
+        if (claimed?.ok) return;
+      }
+      const already = await refreshPairingStatus();
+      if (already) return;
+      if (pairingPollTimer) clearInterval(pairingPollTimer);
+      pairingPollTimer = setInterval(() => {
+        void refreshPairingStatus().then((linked) => {
+          if (linked && pairingPollTimer) {
+            clearInterval(pairingPollTimer);
+            pairingPollTimer = null;
+          }
+        });
+      }, 2000);
+    }
+
+    function renderOsPermissionNote() {
+      const note = document.getElementById('os-permission-note');
+      if (!note) return;
+      const platform = window.DenizenDesktop?.platform || '';
+      if (platform === 'darwin') {
+        note.hidden = false;
+        note.innerHTML = `
+          macOS may ask for <strong>Accessibility</strong> and <strong>Screen Recording</strong> before Denizen can see your screen.
+          <div class="actions" style="justify-content:flex-start;margin-top:12px;">
+            <button class="primary" data-action="open-os-settings">Open Settings</button>
+          </div>
+        `;
+        return;
+      }
+      if (platform === 'win32') {
+        note.hidden = false;
+        note.textContent = 'On Windows, screen capture may require allowing Denizen in your privacy settings when prompted.';
+        return;
+      }
+      note.hidden = true;
+    }
+
+    async function loadMachine() {
+      machine = await window.DenizenDesktop?.getMachineProfile?.().catch(() => null);
+      const summary = document.getElementById('machine-summary');
+      if (!machine || !summary) return;
+      summary.textContent = [
+        `${machine.platform || 'unknown'} · ${machine.cpu_cores || '?'} cores`,
+        `${machine.ram_mb ? Math.round(machine.ram_mb / 1024) + ' GB RAM' : 'RAM unknown'}`,
+        machine.hostname ? `host ${machine.hostname}` : '',
+      ].filter(Boolean).join(' · ');
+    }
+
+    async function finishSetup() {
+      if (finishing) return;
+      finishing = true;
+      const permission = derivePermissionLevel(capabilities);
+      const pairing = await window.DenizenDesktop?.getPairingStatus?.().catch(() => null);
+      const result = await window.DenizenDesktop?.completeSetupWizard?.({
+        capabilities,
+        permission,
+        optIn: capabilities.contribute_compute,
+        diagnosticsOptIn: true,
+        sessionId: pairing?.sessionId || null,
+        sessionToken: pairing?.sessionToken || null,
+        serverUrl: pairing?.serverUrl || null,
+      }).catch((err) => ({ ok: false, error: err?.message || String(err) }));
+      finishing = false;
+      if (!result?.ok) {
+        setPairingError(result?.error || 'Setup failed');
+        showStep(steps.indexOf('pairing'));
+        return;
+      }
+      document.getElementById('done-message').textContent = result.message
+        || 'This machine is linked. Denizen can now sync capabilities with your account.';
+      showStep(steps.indexOf('done'));
+    }
+
+    function onCapabilityChoice(cap, value) {
+      capabilities[cap] = value === 'yes';
+      const idx = steps.indexOf(cap);
+      const next = idx + 1;
+      if (next >= steps.length) return;
+      if (steps[next] === 'done') {
+        void finishSetup();
+        return;
+      }
+      showStep(next);
+    }
+
+    document.getElementById('diagnostics-opt-in')?.addEventListener('change', (ev) => {
+      window.DenizenDesktop?.setDiagnosticsOptIn?.(!!ev.target?.checked);
+    });
+
+    document.addEventListener('click', (ev) => {
+      const cap = ev.target?.dataset?.cap;
+      const capValue = ev.target?.dataset?.value;
+      if (cap && capValue) {
+        onCapabilityChoice(cap, capValue);
+        return;
+      }
+
+      const action = ev.target?.dataset?.action;
+      if (!action) return;
+
+      if (action === 'next') showStep(stepIndex + 1);
+      if (action === 'retry-pairing') void startPairingFlow();
+      if (action === 'open-os-settings') {
+        window.DenizenDesktop?.openOsPermissionSettings?.()
+          || alert('Open System Settings → Privacy & Security → Accessibility and Screen Recording, then enable Denizen.');
+      }
+      if (action === 'open-game') window.DenizenDesktop?.openGame?.();
+    });
+
+    window.DenizenDesktop?.onPermissionPending?.((pending) => {
+      const title = pending?.title || 'Permission request';
+      const detail = pending?.detail || pending?.description || '';
+      const approved = window.confirm(`${title}\n\n${detail}\n\nAllow this action?`);
+      window.DenizenDesktop?.respondPermission?.({
+        requestId: pending?.id,
+        approved,
+      }).catch(() => {});
+    });
+
+    void loadMachine();
+    renderProgress();
+    const launchPairing = parsePairingFromLocation();
+    if (launchPairing.token) {
+      showStep(steps.indexOf('pairing'));
+      void tryClaimPairing(launchPairing);
+    }
+  </script>
+</body>
+</html>

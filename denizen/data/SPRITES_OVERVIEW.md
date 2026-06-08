@@ -144,7 +144,7 @@ Then open `out/verify_sprites/openplan/`, `out/verify_sprites/modern_office_32/`
 
 ### 2. Open the verification page in the browser
 
-Serve the project from the **repo root** (e.g. `python -m http.server 8000` from `multbot`), then open:
+Serve the project from the **repo root** (e.g. `python -m http.server 8000` from `Denizen`), then open:
 
 **http://127.0.0.1:8000/verify-sprites.html** (served from the repo root)
 

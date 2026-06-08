@@ -5,8 +5,8 @@ from pathlib import Path
 
 def main():
     root_dir = Path(__file__).resolve().parents[1]
-    ui_dir = Path(r"c:\Users\zionv\OneDrive\Desktop\multbot\pixel game stuff\pixel game assets and stuff\modernuserinterface-win")
-    assets_dir = Path(r"c:\Users\zionv\OneDrive\Desktop\multbot\pixel game stuff\pixel game assets and stuff")
+    ui_dir = Path(r"c:\Users\zionv\OneDrive\Desktop\Denizen\pixel game stuff\pixel game assets and stuff\modernuserinterface-win")
+    assets_dir = Path(r"c:\Users\zionv\OneDrive\Desktop\Denizen\pixel game stuff\pixel game assets and stuff")
     
     out_file = root_dir / "data" / "modern_ui_catalog.json"
     

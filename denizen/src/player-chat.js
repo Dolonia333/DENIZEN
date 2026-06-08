@@ -177,6 +177,9 @@ class PlayerChat {
     this._container.style.display = next ? 'flex' : 'none';
     document.documentElement.classList.toggle('denizen-chat-open', next);
     this._syncFabLabel();
+    if (next && window.__DenizenIsTouch) {
+      globalThis.DenizenMobileSidebar?.close?.();
+    }
     if (next) {
       this._input?.focus();
     } else {
@@ -1532,12 +1535,33 @@ class PlayerChat {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 8px;
         padding: 6px 12px;
         border-bottom: 1px solid #1e293b;
         color: #94a3b8;
         font-size: 11px;
         flex-shrink: 0;
       }
+      #player-chat-header .chat-header-main {
+        flex: 1;
+        min-width: 0;
+      }
+      #player-chat-close-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        min-height: 40px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: rgba(15, 23, 42, 0.9);
+        color: #e2e8f0;
+        font: 600 20px/1 system-ui, sans-serif;
+        cursor: pointer;
+        touch-action: manipulation;
+        flex-shrink: 0;
+      }
+      #player-chat-panel .chat-mobile-hint { display: none; }
       #player-chat-header .target {
         color: #4ade80;
         font-weight: bold;
@@ -1684,6 +1708,63 @@ class PlayerChat {
           }
         }
       }
+      html.denizen-touch #player-chat-panel {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        border-radius: 12px;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.55);
+      }
+      html.denizen-touch #player-chat-panel .chat-desktop-hint { display: none; }
+      html.denizen-touch #player-chat-panel .chat-mobile-hint { display: inline; }
+      html.denizen-touch #player-chat-close-btn { display: flex; }
+      html.denizen-touch.denizen-chat-open #player-chat-panel {
+        top: max(8px, env(safe-area-inset-top, 0px)) !important;
+        bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        width: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        z-index: 2147483630 !important;
+      }
+      html.denizen-touch #player-chat-log {
+        flex: 1;
+        min-height: 120px;
+        max-height: none;
+        font-size: 14px;
+        line-height: 1.45;
+        padding: 10px 12px;
+      }
+      html.denizen-touch #player-chat-input-row {
+        gap: 8px;
+        padding: 10px 12px max(10px, env(safe-area-inset-bottom, 0px));
+        flex-wrap: wrap;
+      }
+      html.denizen-touch #player-chat-input {
+        flex: 1 1 100%;
+        min-height: 44px;
+        font-size: 16px;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      html.denizen-touch #player-chat-send,
+      html.denizen-touch #player-chat-speak {
+        flex: 1 1 calc(50% - 4px);
+        min-height: 44px;
+        font-size: 15px;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      html.denizen-touch #player-chat-header {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+      html.denizen-touch #player-chat-header .target {
+        font-size: 15px;
+      }
+      html.denizen-touch.denizen-chat-open #game-container,
+      html.denizen-touch.denizen-chat-open #game-container canvas {
+        pointer-events: none !important;
+      }
     `;
     document.head.appendChild(style);
 
@@ -1693,16 +1774,18 @@ class PlayerChat {
       panel.id = 'player-chat-panel';
       panel.innerHTML = `
         <div id="player-chat-header">
-          <div>
+          <div class="chat-header-main">
             <span class="target" id="player-chat-target">Chat</span>
-            <span class="hint"> - Enter send · Speak (pauses OK) · Esc close</span>
+            <span class="hint chat-desktop-hint"> - Enter send · Speak (pauses OK) · Esc close</span>
+            <span class="hint chat-mobile-hint"> — face them or say their name</span>
           </div>
+          <button type="button" id="player-chat-close-btn" aria-label="Close chat">×</button>
         </div>
         <div id="player-chat-log"></div>
         <div id="player-chat-input-row">
-          <input id="player-chat-input" type="text" placeholder="Talk to an NPC... (say their name or face them)" autocomplete="off" />
-          <button id="player-chat-speak" type="button" title="Speak — pauses are OK, click again when done">Speak</button>
-          <button id="player-chat-send">Send</button>
+          <input id="player-chat-input" type="text" placeholder="Message an NPC…" autocomplete="off" enterkeyhint="send" />
+          <button id="player-chat-speak" type="button" title="Tap to speak — tap again when done">🎤 Speak</button>
+          <button id="player-chat-send" type="button">Send</button>
         </div>
       `;
       document.body.appendChild(panel);
@@ -1776,11 +1859,24 @@ class PlayerChat {
 
     // Speak button — toggle voice input (continuous; click again when done).
     const speakBtn = panel.querySelector('#player-chat-speak');
+    const closeBtn = panel.querySelector('#player-chat-close-btn');
+    const onCloseChat = (e) => {
+      if (e?.preventDefault) e.preventDefault();
+      this.close();
+    };
+    if (closeBtn) {
+      if (bindPress) bindPress(closeBtn, onCloseChat);
+      else closeBtn.addEventListener('click', onCloseChat);
+    }
+
     const refreshSpeakBtn = () => {
       const vi = window.DenizenVoiceInput;
       const on = !!(vi && vi.isListening && vi.isListening());
+      const touch = !!window.__DenizenIsTouch;
       speakBtn.classList.toggle('listening', on);
-      speakBtn.textContent = on ? 'Stop' : 'Speak';
+      speakBtn.textContent = on
+        ? (touch ? '⏹ Stop' : 'Stop')
+        : (touch ? '🎤 Speak' : 'Speak');
       const supported = !!(vi && (vi.isSupported?.() ?? vi.supported));
       speakBtn.disabled = !supported;
       speakBtn.style.display = supported ? '' : 'none';

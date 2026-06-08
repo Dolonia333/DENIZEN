@@ -46,6 +46,7 @@ create index if not exists denizen_mcp_tokens_hash_idx
 alter table public.denizen_mcp_tokens enable row level security;
 
 -- No anon/authenticated policies — resolved via security definer RPC only
+drop policy if exists denizen_mcp_tokens_deny_all on public.denizen_mcp_tokens;
 create policy denizen_mcp_tokens_deny_all on public.denizen_mcp_tokens
   for all using (false);
 

@@ -1,5 +1,7 @@
 # Building Your Own Harness — Evaluation of OpenClaw
 
+> **Note (2026-06-08):** Pre-monolith thinking — `server.js` is intentionally ~7,700 lines today; see [SERVER.md](SERVER.md). This doc is research history, not the current architecture plan.
+
 > Research-only document. No code changes here. Reading this should give you
 > enough information to decide whether to fork OpenClaw, build a thin harness
 > from scratch, or stay on the upstream and just extend.

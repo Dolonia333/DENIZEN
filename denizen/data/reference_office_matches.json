@@ -33,10 +33,10 @@
       "pending": true
     },
     "wall_screen_large": {
-      "catalogId": null,
+      "catalogId": "wall_screen_ui",
       "role": "decor_wall",
       "layer": "wall",
-      "pending": true
+      "pending": false
     }
   }
 }

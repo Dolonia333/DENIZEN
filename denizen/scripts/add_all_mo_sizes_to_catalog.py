@@ -10,7 +10,7 @@ from pathlib import Path
 ROOT        = Path(__file__).resolve().parents[1]
 CATALOG     = ROOT / "data" / "master_furniture_catalog.json"
 LABELS      = ROOT / "out" / "mosaics" / "sprite_labels.json"
-SINGLES_BASE = Path(r"c:\Users\zionv\OneDrive\Desktop\multbot\pixel game stuff\pixel game assets and stuff\Modern_Office_Revamped_v1.2\4_Modern_Office_singles")
+SINGLES_BASE = Path(r"c:\Users\zionv\OneDrive\Desktop\Denizen\pixel game stuff\pixel game assets and stuff\Modern_Office_Revamped_v1.2\4_Modern_Office_singles")
 
 SIZES = {
     "16x16": (16, 16),

@@ -1,0 +1,22 @@
+{
+  "info": {
+    "purpose": "Hand-editable openplan wall layout. Perimeter = full-width top/bottom bands (continuous trim). Side segments = plain face only.",
+    "tileSize": 32,
+    "worldSize": { "w": 1280, "h": 720 }
+  },
+  "segments": [
+    { "instanceId": "wall_perim_top", "type": "h", "label": "Perimeter top", "startX": 0, "y": 0, "endX": 1280 },
+    { "instanceId": "wall_perim_bottom", "type": "h", "label": "Perimeter bottom", "startX": 0, "y": 656, "endX": 1280 },
+    { "instanceId": "wall_perim_left", "type": "v", "label": "Perimeter left", "x": 0, "startY": 64, "endY": 656, "shadowSide": "right" },
+    { "instanceId": "wall_perim_right", "type": "v", "label": "Perimeter right", "x": 1248, "startY": 64, "endY": 656, "shadowSide": "left" },
+    { "instanceId": "wall_tj_div_top", "type": "tjunction", "label": "Divider ∩ top", "x": 848, "y": 0, "side": "right" },
+    { "instanceId": "wall_tj_div_bot", "type": "tjunction", "label": "Divider ∩ bottom", "x": 848, "y": 656, "side": "right" },
+    { "instanceId": "wall_div_v_top", "type": "v", "label": "Center divider (top)", "x": 848, "startY": 64, "endY": 160, "shadowSide": "right" },
+    { "instanceId": "wall_div_v_mid", "type": "v", "label": "Center divider (mid)", "x": 848, "startY": 256, "endY": 416, "shadowSide": "right" },
+    { "instanceId": "wall_div_v_bot", "type": "v", "label": "Center divider (bot)", "x": 848, "startY": 512, "endY": 656, "shadowSide": "right" },
+    { "instanceId": "wall_div_h_left_a", "type": "h", "label": "Break room wall (left)", "startX": 0, "y": 448, "endX": 288 },
+    { "instanceId": "wall_div_h_left_b", "type": "h", "label": "Break room wall (right)", "startX": 384, "y": 448, "endX": 848 },
+    { "instanceId": "wall_div_h_right_a", "type": "h", "label": "Manager wall (left)", "startX": 848, "y": 256, "endX": 1000 },
+    { "instanceId": "wall_div_h_right_b", "type": "h", "label": "Manager wall (right)", "startX": 1096, "y": 256, "endX": 1280 }
+  ]
+}

@@ -10,7 +10,13 @@
     "test:visitor:all": "npm run test:visitor && npm run test:e2e",
     "start": "node --env-file=.env server.js",
     "build:assets": "node scripts/run-pipeline.js",
-    "build:assets:dry": "node scripts/run-pipeline.js --dry-run"
+    "build:assets:dry": "node scripts/run-pipeline.js --dry-run",
+    "validate:catalog": "node scripts/validate-catalog.mjs",
+    "validate:catalog:strict": "node scripts/validate-catalog.mjs --strict",
+    "catalog:rebuild": "py -3 scripts/build_openplan_v2_catalog.py",
+    "catalog:merge": "node scripts/merge-catalog.mjs --objects data/furniture_catalog_openplan_v2.objects.json --out data/furniture_catalog_openplan.json",
+    "catalog:singles": "node scripts/build-modern-office-singles-catalog.js",
+    "catalog:snap": "node scripts/snap-placements.mjs --write"
   },
   "repository": {
     "type": "git",

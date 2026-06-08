@@ -6,10 +6,10 @@
 set AGENT_TOKEN=rvJ4Odm7EYmHOxbEtO6dwUIQLv55aYybAyU3uZw6880
 
 echo Starting Supabase Bridge on port 18790...
-start "Supabase Bridge" /min cmd /c "cd /d C:\Users\zionv\OneDrive\Desktop\multbot\openclaw\supabase-bridge && python secure-bridge.py"
+start "Supabase Bridge" /min cmd /c "cd /d C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw\supabase-bridge && python secure-bridge.py"
 
 echo Starting OpenClaw Gateway on port 18789...
-start "OpenClaw Gateway" /min cmd /c "cd /d C:\Users\zionv\OneDrive\Desktop\multbot\openclaw && set AGENT_TOKEN=%AGENT_TOKEN% && npm start -- gateway"
+start "OpenClaw Gateway" /min cmd /c "cd /d C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw && set AGENT_TOKEN=%AGENT_TOKEN% && npm start -- gateway"
 
 timeout /t 5 /nobreak >nul
 

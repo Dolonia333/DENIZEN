@@ -246,6 +246,208 @@
           grid-template-columns: 1fr;
         }
       }
+
+      #denizen-llm-tel-panel .tel-grab {
+        display: none;
+      }
+      #denizen-llm-tel-panel .tel-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+      #denizen-llm-tel-panel .tel-toolbar .tab-row {
+        flex: 1;
+        min-width: 0;
+      }
+
+      html.denizen-touch #denizen-llm-tel-panel {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        border-radius: 12px;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+      }
+      html.denizen-touch.denizen-llm-tel-open #denizen-llm-tel-panel.open {
+        z-index: 2147483644 !important;
+      }
+      html.denizen-touch.denizen-phone.denizen-llm-tel-open #denizen-bottom-dock {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(110%);
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+      html.denizen-touch.denizen-llm-tel-open #game-container,
+      html.denizen-touch.denizen-llm-tel-open #game-container canvas {
+        pointer-events: none !important;
+      }
+
+      html.denizen-phone.denizen-llm-tel-open #denizen-llm-tel-panel.open {
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 0;
+        margin: 0;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .tel-grab {
+        display: block;
+        width: 36px;
+        height: 4px;
+        margin: 6px auto 4px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.45);
+        flex-shrink: 0;
+      }
+      html.denizen-phone #denizen-llm-tel-panel header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        padding: 0 8px 6px;
+        border-bottom: 1px solid #334155;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .tel-toolbar .tab-row {
+        gap: 4px;
+        padding: 3px;
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid #1e293b;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .tab {
+        min-height: 40px;
+        padding: 6px 10px;
+        font-size: 13px;
+        border-radius: 8px;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .close-btn {
+        min-width: 40px;
+        min-height: 40px;
+        font-size: 18px;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .header-controls {
+        padding-bottom: 2px;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .win-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 4px;
+        padding-bottom: 2px;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .win-row::-webkit-scrollbar {
+        display: none;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .win-btn {
+        min-height: 36px;
+        min-width: 40px;
+        padding: 6px 10px;
+        font-size: 12px;
+        flex: 0 0 auto;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .filters {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 6px;
+        padding: 6px 8px;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .filters::-webkit-scrollbar {
+        display: none;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .filters input,
+      html.denizen-phone #denizen-llm-tel-panel .filters select {
+        min-height: 40px;
+        font-size: 14px;
+        padding: 6px 8px;
+        flex: 0 0 auto;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .filters button {
+        min-height: 40px;
+        min-width: 40px;
+        font-size: 14px;
+        flex: 0 0 auto;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .filters label {
+        font-size: 13px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none !important;
+        padding: 8px 10px 10px;
+        font-size: 13px;
+        line-height: 1.4;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .row {
+        max-width: 100%;
+        overflow: hidden;
+        padding: 5px 8px;
+        margin-bottom: 5px;
+        box-sizing: border-box;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .meta {
+        font-size: 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+      html.denizen-phone.denizen-landscape #denizen-llm-tel-panel .meta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 10px;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .meta > span {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      html.denizen-phone.denizen-landscape #denizen-llm-tel-panel .meta > span {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+      }
+      html.denizen-phone #denizen-llm-tel-panel pre {
+        font-size: 12px;
+        max-height: 64px;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        max-width: 100%;
+      }
+      html.denizen-phone.denizen-landscape #denizen-llm-tel-panel pre {
+        font-size: 12px;
+        max-height: 80px;
+        line-height: 1.45;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .hint {
+        font-size: 10px;
+        overflow-wrap: anywhere;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .summary {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        font-size: 12px;
+        padding: 6px 4px;
+      }
+      html.denizen-phone #denizen-llm-tel-panel .prov-chip {
+        font-size: 9px;
+        padding: 2px 5px;
+      }
+      @media (max-height: 400px) {
+        html.denizen-phone #denizen-llm-tel-panel .tab {
+          min-height: 36px;
+          font-size: 12px;
+        }
+        html.denizen-phone #denizen-llm-tel-panel .body {
+          padding: 6px 8px 8px;
+        }
+      }
     `;
     document.head.appendChild(s);
   }
@@ -269,12 +471,25 @@
       || document.documentElement.classList.contains('denizen-touch');
   }
 
+  function isPhoneUi() {
+    return globalThis.DenizenDeviceProfile?.isPhone?.()
+      || (isTouchUi() && document.documentElement.classList.contains('denizen-phone'));
+  }
+
+  function getDeviceTier() {
+    return globalThis.DenizenDeviceProfile?.tier?.()
+      || (isPhoneUi() ? 'phone' : isTouchUi() ? 'tablet' : 'desktop');
+  }
+
   function wireLmChip(chip) {
     if (!chip || chip.dataset.denizenTouchWired === '1') return;
     chip.dataset.denizenTouchWired = '1';
-    const openLm = () => setPanelOpen(!state.open);
+    const openLm = (e) => {
+      e?.preventDefault?.();
+      setPanelOpen(!state.open);
+    };
     const bind = window.DenizenTouchBind?.bindPress;
-    if (bind) bind(chip, openLm);
+    if (bind) bind(chip, openLm, { stop: true });
     else chip.addEventListener('click', openLm);
     chip.style.touchAction = 'manipulation';
   }
@@ -313,15 +528,18 @@
     panel.id = 'denizen-llm-tel-panel';
     panel.innerHTML = `
       <header>
-        <div class="tab-row">
-          <button type="button" class="tab" data-tab="calls">Calls</button>
-          <button type="button" class="tab" data-tab="stats">Stats</button>
-          <button type="button" class="tab" data-tab="errors">Errors</button>
-          <button type="button" class="tab" data-tab="openclaw">OpenClaw</button>
+        <div class="tel-grab" aria-hidden="true"></div>
+        <div class="tel-toolbar">
+          <div class="tab-row">
+            <button type="button" class="tab" data-tab="calls">Calls</button>
+            <button type="button" class="tab" data-tab="stats">Stats</button>
+            <button type="button" class="tab" data-tab="errors">Errors</button>
+            <button type="button" class="tab" data-tab="openclaw">OpenClaw</button>
+          </div>
+          <button type="button" class="close-btn" data-action="close" aria-label="Close settings">✕</button>
         </div>
         <div class="header-controls">
           <div class="win-row" id="tel-win-row"></div>
-          <button type="button" class="close-btn" data-action="close">✕</button>
         </div>
       </header>
       <div class="filters" data-section="calls">
@@ -429,7 +647,7 @@
     const fire = (e) => onPanelPress(e, btn);
     const bind = window.DenizenTouchBind?.bindPress;
     if (bind) {
-      bind(btn, fire);
+      bind(btn, fire, { stop: true });
     } else {
       btn.addEventListener('click', fire);
     }
@@ -463,13 +681,25 @@
 
   function setPanelOpen(open) {
     state.open = !!open;
+    document.documentElement.classList.toggle('denizen-llm-tel-open', state.open);
+    if (state.open) {
+      globalThis.DenizenMobileSidebar?.close?.();
+      globalThis.__DenizenPlayerChat?.close?.();
+      globalThis.DenizenHaptics?.tap?.();
+    }
     renderPanel();
-    if (state.open) loadTab();
+    if (state.open) {
+      const panel = document.getElementById('denizen-llm-tel-panel');
+      globalThis.DenizenDeviceProfile?.resetPhonePanelLayout?.(panel);
+      loadTab();
+    }
   }
 
   function renderPanel() {
     const panel = ensurePanel();
     panel.classList.toggle('open', state.open);
+    panel.dataset.phone = isPhoneUi() ? '1' : '0';
+    panel.dataset.tier = getDeviceTier();
     panel.style.display = state.open ? 'flex' : 'none';
     panel.querySelectorAll('.tab[data-tab]').forEach(t => {
       t.dataset.active = (t.dataset.tab === state.tab).toString();
@@ -1162,6 +1392,7 @@
       show: () => setPanelOpen(true),
       hide: () => setPanelOpen(false),
       toggle: togglePanel,
+      isOpen: () => state.open,
       rewireTouch,
     };
   }

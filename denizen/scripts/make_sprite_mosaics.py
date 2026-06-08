@@ -12,7 +12,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 # ── Config ──────────────────────────────────────────────────────────────────
-SINGLES_DIR = Path(r"c:\Users\zionv\OneDrive\Desktop\multbot\pixel game stuff\pixel game assets and stuff\Modern_Office_Revamped_v1.2\4_Modern_Office_singles")
+SINGLES_DIR = Path(r"c:\Users\zionv\OneDrive\Desktop\Denizen\pixel game stuff\pixel game assets and stuff\Modern_Office_Revamped_v1.2\4_Modern_Office_singles")
 OUT_DIR = Path(__file__).resolve().parents[1] / "out" / "mosaics"
 
 # Only label the 32x32 size — best balance of detail vs speed

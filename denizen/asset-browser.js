@@ -220,7 +220,7 @@ function renderGrid() {
       // Lazy load the image
       const thumbImg = new Image();
       thumbImg.decoding = 'async';
-      // Assume the web server is running from the 'multbot' root folder,
+      // Assume the web server is running from the 'Denizen' root folder,
       // so we use absolute-style paths from the root to the assets
       let srcPath = obj.url_path.replace(/\\/g, '/');
       if (srcPath.startsWith('/pixel game stuff')) {

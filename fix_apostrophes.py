@@ -3,9 +3,9 @@
 import re, os
 
 files = [
-    r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html',
-    r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\electron-standalone.html',
-    r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\game.js',
+    r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html',
+    r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\electron-standalone.html',
+    r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\game.js',
 ]
 
 # Pattern: find single-quoted JS strings that contain an apostrophe mid-word

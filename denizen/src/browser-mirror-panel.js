@@ -21,6 +21,7 @@
   let chipEl = null;
   let panelEl = null;
   let panelOpen = false;
+  let chipBindCleanup = null;
   let pollTimer = null;
   let framePollTimer = null;
   let shellReady = false;
@@ -47,6 +48,44 @@
 
   function browserChipLocked() {
     return !visitorCanUseRealTools();
+  }
+
+  function isMobilePhone() {
+    const root = document.documentElement;
+    return root.classList.contains('denizen-touch')
+      && root.classList.contains('denizen-phone');
+  }
+
+  function resetPanelLayoutForMobile() {
+    if (!panelEl || !isMobilePhone()) return;
+    panelEl.removeAttribute('data-positioned');
+    panelEl.style.removeProperty('top');
+    panelEl.style.removeProperty('left');
+    panelEl.style.removeProperty('right');
+    panelEl.style.removeProperty('bottom');
+    panelEl.style.removeProperty('width');
+    panelEl.style.removeProperty('min-height');
+    panelEl.style.removeProperty('max-height');
+  }
+
+  function setPanelOpen(next) {
+    panelOpen = !!next;
+    if (panelOpen) {
+      globalThis.DenizenMobileSidebar?.close?.();
+    }
+    if (panelEl) {
+      panelEl.classList.toggle('open', panelOpen);
+      if (panelOpen) resetPanelLayoutForMobile();
+    }
+    document.documentElement.classList.toggle('denizen-browser-open', panelOpen);
+    if (panelOpen) {
+      updatePanel();
+      refresh();
+      schedulePoll();
+    } else {
+      stopFramePoll();
+      stopPoll();
+    }
   }
 
   function npcDisplayName(key) {
@@ -202,6 +241,38 @@
         color: #64748b !important;
         opacity: 0.92;
       }
+      html.denizen-touch.denizen-phone #${PANEL_ID}.open {
+        top: max(6px, env(safe-area-inset-top, 0px)) !important;
+        left: max(6px, env(safe-area-inset-left, 0px)) !important;
+        right: max(6px, env(safe-area-inset-right, 0px)) !important;
+        bottom: max(6px, env(safe-area-inset-bottom, 0px)) !important;
+        width: auto !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+        z-index: 100600 !important;
+        border-radius: 10px !important;
+      }
+      html.denizen-touch.denizen-phone.denizen-browser-open #denizen-bottom-dock,
+      html.denizen-touch.denizen-phone.denizen-drawer-open #denizen-bottom-dock {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(110%);
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+      #${PANEL_ID} .bm-close {
+        min-width: 44px;
+        min-height: 44px;
+        background: #1e293b;
+        color: #e2e8f0;
+        border: 1px solid #475569;
+        border-radius: 8px;
+        font: 600 18px/1 system-ui, sans-serif;
+        cursor: pointer;
+        touch-action: manipulation;
+        flex-shrink: 0;
+      }
       #${PANEL_ID} .bm-locked-msg {
         padding: 22px 20px;
         color: #94a3b8;
@@ -310,11 +381,39 @@
     setChipState();
   }
 
+  function handleChipPress() {
+    buildUI();
+    if (browserChipLocked()) {
+      showLockedPanel();
+      return;
+    }
+    ensureShell();
+    setPanelOpen(!panelOpen);
+  }
+
+  function rewireTouch() {
+    if (!chipEl) return;
+    if (chipBindCleanup) {
+      chipBindCleanup();
+      chipBindCleanup = null;
+    }
+    const bind = window.DenizenTouchBind?.bindPress;
+    if (bind) chipBindCleanup = bind(chipEl, handleChipPress);
+    else {
+      chipEl.onclick = (e) => {
+        e.preventDefault();
+        handleChipPress();
+      };
+    }
+  }
+
   function showLockedPanel() {
     buildUI();
-    panelOpen = true;
     shellReady = false;
+    resetPanelLayoutForMobile();
     panelEl.classList.add('open');
+    document.documentElement.classList.add('denizen-browser-open');
+    panelOpen = true;
     const demo = globalThis.DenizenVisitorSession?.isDemo?.();
     panelEl.innerHTML = `
       <div class="bm-locked-msg">
@@ -326,10 +425,7 @@
         <button type="button" data-bm-locked-close>Got it</button>
       </div>`;
     const closeBtn = panelEl.querySelector('[data-bm-locked-close]');
-    const close = () => {
-      panelOpen = false;
-      panelEl.classList.remove('open');
-    };
+    const close = () => setPanelOpen(false);
     if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(closeBtn, close);
     else closeBtn.addEventListener('click', close);
   }
@@ -347,28 +443,8 @@
     });
     boundNpcKey = resolveBoundNpcKey();
     chipEl.textContent = '🌐 browser';
-    const openPanel = () => {
-      buildUI();
-      if (browserChipLocked()) {
-        showLockedPanel();
-        return;
-      }
-      ensureShell();
-      if (!panelOpen) {
-        panelOpen = true;
-        panelEl.classList.add('open');
-        updatePanel();
-        refresh();
-      } else {
-        panelOpen = false;
-        panelEl.classList.remove('open');
-        stopFramePoll();
-      }
-    };
-    const bind = window.DenizenTouchBind?.bindPress;
-    if (bind) bind(chipEl, openPanel);
-    else chipEl.addEventListener('click', openPanel);
     document.body.appendChild(chipEl);
+    rewireTouch();
 
     panelEl = document.createElement('div');
     panelEl.id = PANEL_ID;
@@ -395,6 +471,7 @@
         <span class="bm-status-pill" data-bm="status">Idle</span>
         <button type="button" data-bm="refresh" title="Refresh"
           style="background:#1e293b;color:#cbd5e1;border:1px solid #475569;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">↻</button>
+        <button type="button" class="bm-close" data-bm="close" aria-label="Close browser panel">×</button>
       </div>
       <div class="bm-body">
         <div class="bm-screen">
@@ -417,18 +494,25 @@
         <div class="bm-feed" data-bm="feed"><div class="bm-feed-empty">Activity will show here…</div></div>
       </div>`;
     const refreshBtn = panelEl.querySelector('[data-bm="refresh"]');
+    const closeBtn = panelEl.querySelector('[data-bm="close"]');
     const bind = window.DenizenTouchBind?.bindPress;
     if (refreshBtn) {
       if (bind) bind(refreshBtn, () => refresh());
       else refreshBtn.addEventListener('click', () => refresh());
     }
+    if (closeBtn) {
+      if (bind) bind(closeBtn, () => setPanelOpen(false));
+      else closeBtn.addEventListener('click', () => setPanelOpen(false));
+    }
     panelEl.addEventListener('pointerdown', (e) => e.stopPropagation());
-    wirePanelDrag();
-    wirePanelResize();
+    if (!isMobilePhone()) {
+      wirePanelDrag();
+      wirePanelResize();
+      restorePanelPosition();
+      restorePanelSize();
+    }
     wirePanelScroll();
     wireRemoteControl();
-    restorePanelPosition();
-    restorePanelSize();
     shellReady = true;
   }
 
@@ -929,11 +1013,12 @@
 
   function togglePanel() {
     buildUI();
+    if (browserChipLocked()) {
+      showLockedPanel();
+      return;
+    }
     ensureShell();
-    panelOpen = !panelOpen;
-    if (panelEl) panelEl.classList.toggle('open', panelOpen);
-    if (panelOpen) { updatePanel(); refresh(); schedulePoll(); }
-    else { stopFramePoll(); stopPoll(); }
+    setPanelOpen(!panelOpen);
   }
 
   async function refresh() {
@@ -995,6 +1080,7 @@
   function onSessionReady() {
     buildUI();
     syncChipAccess();
+    rewireTouch();
     window.DenizenBottomDock?.refresh?.();
     const next = resolveBoundNpcKey();
     if (next !== boundNpcKey) {
@@ -1012,18 +1098,15 @@
     afterVisitorSessionReady(onSessionReady);
     try {
       if (new URL(window.location.href).searchParams.get('browser')) {
-        panelOpen = true;
         ensureShell();
-        panelEl.classList.add('open');
-        updatePanel();
-        refresh();
-        schedulePoll();
+        setPanelOpen(true);
       }
     } catch (_) {}
     window.DenizenBrowserMirror = {
-      show() { panelOpen = true; ensureShell(); panelEl.classList.add('open'); updatePanel(); refresh(); schedulePoll(); },
-      hide() { panelOpen = false; panelEl.classList.remove('open'); stopFramePoll(); stopPoll(); },
+      show() { buildUI(); ensureShell(); setPanelOpen(true); },
+      hide() { setPanelOpen(false); },
       toggle: togglePanel,
+      rewireTouch,
       refresh,
       ingest,
       onFrame,

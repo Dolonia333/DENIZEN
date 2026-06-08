@@ -3,7 +3,7 @@ import sys, io, re
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 # ── index.html direct patches ──────────────────────────────────────────────
-path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html'
+path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html'
 with open(path, 'r', encoding='utf-8') as f:
     c = f.read()
 
@@ -18,7 +18,7 @@ for l in remaining[:30]:
 
 # ── office-agent-push.py ────────────────────────────────────────────────────
 print('\n--- office-agent-push.py ---')
-push_path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\office-agent-push.py'
+push_path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\office-agent-push.py'
 with open(push_path, 'r', encoding='utf-8') as f:
     pc = f.read()
 for l in pc.split('\n'):
@@ -27,7 +27,7 @@ for l in pc.split('\n'):
 
 # ── invite.html ─────────────────────────────────────────────────────────────
 print('\n--- invite.html ---')
-inv_path = r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\invite.html'
+inv_path = r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\invite.html'
 with open(inv_path, 'r', encoding='utf-8') as f:
     iv = f.read()
 for l in iv.split('\n'):

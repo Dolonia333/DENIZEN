@@ -20,6 +20,17 @@ describe('denizen-db', () => {
     assert.equal(db.enabled, false);
   });
 
+  it('prefers SUPABASE_SERVICE_ROLE_KEY over SUPABASE_ANON_KEY', () => {
+    const db = new DenizenDb({
+      env: {
+        SUPABASE_URL: 'http://127.0.0.1:54321',
+        SUPABASE_SERVICE_ROLE_KEY: 'service-key',
+        SUPABASE_ANON_KEY: 'anon-key',
+      },
+    });
+    assert.equal(db.key, 'service-key');
+  });
+
   it('init creates office session and boot fact', async () => {
     const calls = [];
     const orgId = '11111111-1111-1111-1111-111111111111';

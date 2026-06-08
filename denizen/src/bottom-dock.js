@@ -16,6 +16,7 @@
       'denizen-audio-mode-chip',
       'denizen-diag-chip',
       'denizen-security-chip',
+      'denizen-mesh-jobs-chip',
       'denizen-llm-tel-chip',
     ],
     center: ['player-chat-fab'],
@@ -34,6 +35,7 @@
       'denizen-audio-mode-chip',
       'denizen-diag-chip',
       'denizen-security-chip',
+      'denizen-mesh-jobs-chip',
     ],
     center: [
       'denizen-llm-tel-chip',
@@ -90,12 +92,23 @@
       }
 
       html.denizen-touch #${DOCK_ID} {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        overflow: hidden;
+      }
+      html.denizen-touch #${DOCK_ID} .denizen-dock-scroll {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 2px;
         overflow-x: auto;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
       }
-      html.denizen-touch #${DOCK_ID}::-webkit-scrollbar {
+      html.denizen-touch #${DOCK_ID} .denizen-dock-scroll::-webkit-scrollbar {
         display: none;
       }
 
@@ -175,6 +188,7 @@
 
       /* Floating panels sit above the dock */
       #denizen-diag-panel,
+      #denizen-mesh-jobs-panel,
       #denizen-proposals-panel,
       #denizen-browser-mirror-panel,
       #denizen-llm-tel-panel,
@@ -185,6 +199,7 @@
         pointer-events: auto !important;
       }
       #denizen-diag-panel,
+      #denizen-mesh-jobs-panel,
       #denizen-llm-tel-panel {
         left: max(10px, env(safe-area-inset-left, 0px)) !important;
       }
@@ -226,6 +241,7 @@
           font-size: 12px !important;
         }
         #denizen-diag-panel,
+        #denizen-mesh-jobs-panel,
         #denizen-llm-tel-panel,
         #denizen-proposals-panel,
         #denizen-browser-mirror-panel {
@@ -243,17 +259,18 @@
         }
       }
 
-      /* Touch: icon-compact dock — fits portrait + landscape like desktop */
+      /* Touch: icon-compact dock — phones shrink further via mobile-sidebar.js */
       html.denizen-touch {
-        --denizen-dock-height: 44px;
+        --denizen-dock-height: 40px;
+      }
+      html.denizen-touch.denizen-phone:not(.denizen-mobile-drawer-mode) {
+        --denizen-dock-height: 38px;
       }
       html.denizen-touch #${DOCK_ID} {
         gap: 2px;
         padding: 2px max(4px, env(safe-area-inset-right, 0px))
                  max(2px, env(safe-area-inset-bottom, 0px))
                  max(4px, env(safe-area-inset-left, 0px));
-        mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
-        -webkit-mask-image: linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 18px), transparent 100%);
       }
       html.denizen-touch #${DOCK_ID} .denizen-dock-group {
         flex: 0 0 auto;
@@ -269,12 +286,19 @@
         flex-shrink: 0;
       }
       html.denizen-touch #${DOCK_ID} .denizen-dock-chip {
-        min-height: 44px;
-        min-width: 44px;
-        max-width: 52px;
-        padding: 8px 10px !important;
-        font-size: 18px !important;
+        min-height: 40px;
+        min-width: 40px;
+        max-width: 48px;
+        padding: 6px 8px !important;
+        font-size: 17px !important;
         line-height: 1 !important;
+      }
+      html.denizen-touch.denizen-phone #${DOCK_ID} .denizen-dock-chip {
+        min-height: 38px;
+        min-width: 38px;
+        max-width: 44px;
+        padding: 5px 7px !important;
+        font-size: 16px !important;
       }
       html.denizen-touch #${DOCK_ID} #denizen-llm-tel-chip {
         max-width: 48px;
@@ -304,6 +328,19 @@
     document.head.appendChild(s);
   }
 
+  function ensureDockScroll() {
+    if (!dockEl) return null;
+    let scroll = dockEl.querySelector('.denizen-dock-scroll');
+    if (scroll) return scroll;
+    scroll = document.createElement('div');
+    scroll.className = 'denizen-dock-scroll';
+    scroll.setAttribute('aria-label', 'Dock tools');
+    const kids = Array.from(dockEl.children).filter((el) => el.id !== 'denizen-mobile-menu-btn');
+    kids.forEach((el) => scroll.appendChild(el));
+    dockEl.appendChild(scroll);
+    return scroll;
+  }
+
   function ensureDock() {
     if (dockEl) return dockEl;
     dockEl = document.createElement('div');
@@ -320,12 +357,16 @@
 
     document.body.appendChild(dockEl);
     document.body.classList.add('denizen-dock-ready');
+    if (document.documentElement.classList.contains('denizen-touch')) {
+      ensureDockScroll();
+    }
     return dockEl;
   }
 
   const CHIP_ICONS = {
     'denizen-onboarding-replay-chip': '📖',
     'denizen-diag-chip': '⋯',
+    'denizen-mesh-jobs-chip': '⬡',
     'denizen-security-chip': '🛡️',
     'denizen-llm-tel-chip': '⚙',
     'denizen-audio-mode-chip': '🔊',
@@ -342,6 +383,7 @@
       'denizen-presence-chip',
       'denizen-audio-mode-chip',
       'denizen-llm-tel-chip',
+      'denizen-mesh-jobs-chip',
     ]);
     for (const [id, icon] of Object.entries(CHIP_ICONS)) {
       const el = document.getElementById(id);
@@ -379,22 +421,37 @@
     window.DenizenVoiceInput?.rewireTouch?.();
     window.DenizenProximityAudio?.rewireTouch?.();
     window.DenizenLlmTelemetry?.rewireTouch?.();
+    window.DenizenBrowserMirror?.rewireTouch?.();
     window.__DenizenChatBootstrap?.rewireFab?.(window.__DenizenPlayerChat);
     globalThis.DenizenVisitorOnboarding?.rewireReplayChip?.();
   }
 
   function adoptAll() {
     ensureDock();
+    if (document.documentElement.classList.contains('denizen-touch')) {
+      ensureDockScroll();
+    }
     let found = 0;
     let total = 0;
+    let moved = 0;
     for (const [side, ids] of Object.entries(slotMap())) {
       for (const id of ids) {
         total += 1;
+        const el = document.getElementById(id);
+        const group = groups[side];
+        const wasInDock = !!(el && group && el.parentElement === group);
         if (adoptChip(id, side)) found += 1;
+        if (el && group && !wasInDock && el.parentElement === group) moved += 1;
       }
     }
     compactChipLabels();
     wireDockTouch();
+    if (document.documentElement.classList.contains('denizen-touch')) {
+      globalThis.DenizenMobileSidebar?.ensureMenuButton?.();
+    }
+    if (moved > 0) {
+      globalThis.DenizenMobileSidebar?.relayout?.();
+    }
     updateDockHeight();
     return { found, total };
   }
@@ -430,10 +487,10 @@
 
     let passes = 0;
     const poll = setInterval(() => {
-      adoptAll();
+      const { found, total } = adoptAll();
       passes += 1;
-      if (passes > 40) clearInterval(poll);
-    }, 500);
+      if (found >= total || passes >= 12) clearInterval(poll);
+    }, 800);
   }
 
   if (document.readyState === 'loading') {

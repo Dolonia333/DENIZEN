@@ -4,10 +4,10 @@ Single pipeline for rebuilding and verifying `furniture_catalog_openplan.json` o
 
 ## Prerequisites
 
-Serve from the **multbot repo root** so sheet PNGs and JSON load:
+Serve from the **Denizen repo root** so sheet PNGs and JSON load:
 
 ```powershell
-cd c:\Users\zionv\OneDrive\Desktop\multbot
+cd c:\Users\zionv\OneDrive\Desktop\Denizen
 python -m http.server 8080
 ```
 

@@ -101,6 +101,7 @@ function Invoke-DenizenSmoke {
   $base = $BaseUrl.TrimEnd('/')
   $checks = @(
     @{ Name = 'health'; Path = '/api/health' },
+    @{ Name = 'visitor_ping'; Path = '/api/visitor/ping' },
     @{ Name = 'prediction_summary'; Path = '/api/intelligence/prediction-summary' },
     @{ Name = 'trade_suggestions'; Path = '/api/trade-suggestions' }
   )

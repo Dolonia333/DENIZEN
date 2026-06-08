@@ -113,6 +113,23 @@
   <h2>Catalog System Architecture</h2>
   <p>Your game has 6 catalogs. They were built separately and don't share a common format. Here's what each one does, how big it is, and how they connect (or fail to connect) at runtime.</p>
 
+  <div class="card" style="margin-bottom:20px;border-color:var(--accent)">
+    <div class="card-title">🛠️ Openplan catalog pipeline</div>
+    <div class="cat-desc">Rebuild <code>furniture_catalog_openplan</code> objects from the Black Shadow 32 sheet without overlapping rects.</div>
+    <div class="flow" style="margin-top:10px">
+      <div class="flow-node">extract_sheet_objects.py</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node highlight"><a href="sprite-labeler.html" style="color:inherit">sprite-labeler.html</a></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">furniture_catalog_openplan_v2.objects.json</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node highlight"><a href="verify-sprites.html" style="color:inherit">verify-sprites.html</a></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">npm run validate:catalog</div>
+    </div>
+    <div class="cat-desc" style="margin-top:8px">Full steps: <a href="docs/CATALOG_WORKFLOW.md" style="color:var(--accent)">docs/CATALOG_WORKFLOW.md</a> · Extract output: <code>out/sheet_extract/modern_office_black_shadow_32.objects.json</code> (199 objects)</div>
+  </div>
+
   <div class="stats-row">
     <div class="card stat"><div class="stat-num" style="color:var(--accent)">6</div><div class="stat-label">Catalogs total</div></div>
     <div class="card stat"><div class="stat-num" style="color:var(--green)">50,470</div><div class="stat-label">Master objects</div></div>
@@ -147,11 +164,12 @@
     <div class="cat-card">
       <div class="cat-name">🏢 furniture_catalog_openplan</div>
       <div class="cat-file">data/furniture_catalog_openplan.json</div>
-      <div class="cat-count" style="color:var(--green)">11</div>
-      <div class="cat-desc">Open-plan office layout using the <code>mo_black_shadow_32</code> sheet. Used by <code>?layout=openplan</code> and <code>?layout=reference_office</code>. Objects come from the Black Shadow 32×32 spritesheet.</div>
+      <div class="cat-count" style="color:var(--green)">95</div>
+      <div class="cat-desc">Open-plan office layout using the <code>mo_black_shadow_32</code> sheet. Used by <code>?layout=openplan</code> and <code>?layout=reference_office</code>. Clean rebuild target: <code>furniture_catalog_openplan_v2.objects.json</code> via Sprite Labeler.</div>
       <div class="cat-tags">
         <span class="badge badge-green">hand-crafted</span>
         <span class="badge badge-blue">used in game</span>
+        <span class="badge badge-yellow">overlap cleanup</span>
       </div>
     </div>
 

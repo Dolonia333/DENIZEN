@@ -84,7 +84,7 @@ Edit `denizen/.env.production` using values from `DOLONIA_CREDENTIALS.txt`.
 Replace `<NAS-IP>` with your NAS LAN IP.
 
 ```powershell
-cd C:\Users\zionv\OneDrive\Desktop\multbot\denizen
+cd C:\Users\zionv\OneDrive\Desktop\Denizen\denizen
 .\scripts\deploy-production.ps1
 ```
 

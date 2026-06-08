@@ -12,25 +12,38 @@
     .panel { display: none; }
     .panel.active { display: block; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-    .card { background: #16213e; border-radius: 8px; padding: 8px; text-align: center; }
+    .card { background: #16213e; border-radius: 8px; padding: 8px; text-align: center; border: 1px solid transparent; }
+    .card.overlap { border-color: #f85149; }
     .card canvas { display: block; margin: 0 auto 6px; image-rendering: pixelated; image-rendering: crisp-edges; max-width: 128px; max-height: 128px; }
     .card .id { font-size: 11px; word-break: break-all; color: #a0a0a0; }
     .card .rect { font-size: 10px; color: #808080; }
+    .card .warn { font-size: 10px; color: #ffa198; margin-top: 4px; }
+    .statusBar { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 13px; line-height: 1.5; }
+    .statusBar .ok { color: #7ee787; }
+    .statusBar .bad { color: #ffa198; }
+    .statusBar .muted { color: #808080; }
     .loadErr { color: #f88; }
     p { font-size: 14px; margin-bottom: 12px; color: #b0b0b0; }
   </style>
 </head>
 <body>
   <h1>Confirm sprites – open and verify</h1>
-  <p>Each card is one sprite from the catalog. Sheet is cropped at the stored (x,y,w,h). Use this to confirm everything matches your sheets. <strong>Wrong labels?</strong> Use <a href="sprite-labeler.html" style="color:#58a6ff">Sprite Labeler</a> to fix object IDs, or <a href="tile-labeler.html" style="color:#58a6ff">Tile Labeler</a> to label floors/walls tilesets.</p>
+  <p>Each card is one sprite from the catalog. Sheet is cropped at the stored (x,y,w,h). Use this to confirm everything matches your sheets. <strong>Wrong labels?</strong> Use <a href="sprite-labeler.html" style="color:#58a6ff">Sprite Labeler</a> to fix object IDs, or <a href="tile-labeler.html" style="color:#58a6ff">Tile Labeler</a> to label floors/walls tilesets. Workflow: <a href="docs/CATALOG_WORKFLOW.md" style="color:#58a6ff">CATALOG_WORKFLOW.md</a></p>
+  <div id="statusBar" class="statusBar">Loading catalog status…</div>
   <div class="tabs">
-    <button data-panel="openplan" class="active" id="btn-openplan">Openplan</button>
+    <button data-panel="openplan" class="active" id="btn-openplan">Openplan (v1)</button>
+    <button data-panel="openplan-v2" id="btn-openplan-v2">Openplan (v2)</button>
     <button data-panel="interiors" id="btn-interiors">Interiors prefabs</button>
   </div>
 
   <div id="panel-openplan" class="panel active">
     <p><strong>These crops use the (x,y,w,h) in the catalog.</strong> If the image doesn’t match the label (e.g. “bookshelf” shows a couch, “water_cooler” wrong), the catalog rects are wrong for this sheet. Use <a href="sprite-labeler.html" style="color:#58a6ff">Sprite Labeler</a> to pick the correct sprite for each ID. Source: <code>furniture_catalog_openplan.json</code> → sheet <code>mo_black_shadow_32</code>.</p>
     <div id="grid-openplan" class="grid"></div>
+  </div>
+
+  <div id="panel-openplan-v2" class="panel">
+    <p>Source: <code>furniture_catalog_openplan_v2.objects.json</code> (exported from Sprite Labeler). Overlap badges mean two IDs share the same pixel rect.</p>
+    <div id="grid-openplan-v2" class="grid"></div>
   </div>
 
   <div id="panel-interiors" class="panel">
@@ -54,9 +67,42 @@
       return c;
     }
 
-    function addCard(parent, id, rectLabel, canvas) {
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    }
+
+    function rectOf(def) {
+      return {
+        x: def.x || 0,
+        y: def.y || 0,
+        w: Math.max(1, def.w || 32),
+        h: Math.max(1, def.h || 32)
+      };
+    }
+
+    function findOverlaps(objects) {
+      const entries = Object.entries(objects || {}).map(([id, def]) => ({ id, rect: rectOf(def) }));
+      const overlapIds = new Set();
+      const partners = new Map();
+      for (let i = 0; i < entries.length; i++) {
+        for (let j = i + 1; j < entries.length; j++) {
+          const a = entries[i];
+          const b = entries[j];
+          if (!rectsOverlap(a.rect, b.rect)) continue;
+          overlapIds.add(a.id);
+          overlapIds.add(b.id);
+          if (!partners.has(a.id)) partners.set(a.id, new Set());
+          if (!partners.has(b.id)) partners.set(b.id, new Set());
+          partners.get(a.id).add(b.id);
+          partners.get(b.id).add(a.id);
+        }
+      }
+      return { overlapIds, partners, pairCount: [...partners.keys()].length ? Math.ceil([...partners.values()].reduce((n, s) => n + s.size, 0) / 2) : 0 };
+    }
+
+    function addCard(parent, id, rectLabel, canvas, opts = {}) {
       const card = document.createElement('div');
-      card.className = 'card';
+      card.className = 'card' + (opts.overlap ? ' overlap' : '');
       if (canvas) card.appendChild(canvas);
       const idEl = document.createElement('div');
       idEl.className = 'id';
@@ -66,6 +112,12 @@
       rectEl.className = 'rect';
       rectEl.textContent = rectLabel;
       card.appendChild(rectEl);
+      if (opts.overlap && opts.withIds?.length) {
+        const warn = document.createElement('div');
+        warn.className = 'warn';
+        warn.textContent = 'OVERLAP: ' + opts.withIds.join(', ');
+        card.appendChild(warn);
+      }
       parent.appendChild(card);
     }
 
@@ -79,33 +131,88 @@
       });
     }
 
-    async function runOpenplan() {
-      const grid = document.getElementById('grid-openplan');
+    async function renderOpenplanGrid(gridId, btnId, catalogUrl, label) {
+      const grid = document.getElementById(gridId);
+      grid.innerHTML = '';
       let catalog;
       try {
-        const r = await fetch('./data/furniture_catalog_openplan.json');
+        const r = await fetch(catalogUrl);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
         catalog = await r.json();
       } catch (e) {
-        grid.innerHTML = '<span class="loadErr">Could not load catalog: ' + e.message + '</span>';
-        return;
+        grid.innerHTML = '<span class="loadErr">Could not load ' + label + ': ' + e.message + '</span>';
+        document.getElementById(btnId).textContent = label + ' (missing)';
+        return null;
       }
       let img;
       try {
         img = await loadImage(moBlack32);
       } catch (e) {
-        grid.innerHTML = '<span class="loadErr">Could not load sheet. Serve from repo root (e.g. python -m http.server 8000 from multbot). ' + e.message + '</span>';
-        return;
+        grid.innerHTML = '<span class="loadErr">Could not load sheet. Serve from repo root (e.g. python -m http.server 8000 from Denizen). ' + e.message + '</span>';
+        return null;
       }
-      const ids = Object.keys(catalog.objects || {});
-      document.getElementById('btn-openplan').textContent = 'Openplan (' + ids.length + ')';
-      for (const [id, def] of Object.entries(catalog.objects)) {
-        const x = def.x || 0;
-        const y = def.y || 0;
-        const w = Math.max(1, def.w || 32);
-        const h = Math.max(1, def.h || 32);
-        const canvas = drawCrop(img, x, y, w, h);
-        addCard(grid, id, `(${x},${y}) ${w}×${h}`, canvas);
+      const objects = catalog.objects || {};
+      const { overlapIds, partners } = findOverlaps(objects);
+      const ids = Object.keys(objects);
+      document.getElementById(btnId).textContent = label + ' (' + ids.length + (overlapIds.size ? ', ' + overlapIds.size + ' overlap' : '') + ')';
+      for (const [id, def] of Object.entries(objects)) {
+        const r = rectOf(def);
+        const canvas = drawCrop(img, r.x, r.y, r.w, r.h);
+        addCard(grid, id, `(${r.x},${r.y}) ${r.w}×${r.h}`, canvas, {
+          overlap: overlapIds.has(id),
+          withIds: overlapIds.has(id) ? [...(partners.get(id) || [])] : []
+        });
       }
+      return { objectCount: ids.length, overlapCount: overlapIds.size };
+    }
+
+    async function runOpenplan() {
+      return renderOpenplanGrid('grid-openplan', 'btn-openplan', './data/furniture_catalog_openplan.json', 'Openplan v1');
+    }
+
+    async function runOpenplanV2() {
+      return renderOpenplanGrid('grid-openplan-v2', 'btn-openplan-v2', './data/furniture_catalog_openplan_v2.objects.json', 'Openplan v2');
+    }
+
+    async function updateStatusBar(v1Stats, v2Stats) {
+      const bar = document.getElementById('statusBar');
+      let migration = null;
+      try {
+        const r = await fetch('./data/catalog_id_migration.json');
+        if (r.ok) migration = await r.json();
+      } catch (_) { /* optional */ }
+
+      const migrationMap = migration?.map || migration || {};
+      const migrationCount = Object.keys(migrationMap).length;
+      const placementIds = new Set();
+      try {
+        const r = await fetch('./data/furniture_catalog_openplan.json');
+        if (r.ok) {
+          const cat = await r.json();
+          (cat.placements || []).forEach(p => placementIds.add(p.id));
+        }
+      } catch (_) { /* ignore */ }
+
+      const migrated = migrationCount
+        ? [...placementIds].filter(id => migrationMap[id] && migrationMap[id] !== id).length
+        : 0;
+
+      const lines = [];
+      if (v1Stats) {
+        lines.push(`<strong>V1</strong>: ${v1Stats.objectCount} objects` +
+          (v1Stats.overlapCount ? ` · <span class="bad">${v1Stats.overlapCount} overlapping rects</span>` : ' · <span class="ok">no overlaps</span>'));
+      }
+      if (v2Stats) {
+        lines.push(`<strong>V2</strong>: ${v2Stats.objectCount} objects` +
+          (v2Stats.overlapCount ? ` · <span class="bad">${v2Stats.overlapCount} overlapping rects</span>` : ' · <span class="ok">no overlaps</span>'));
+      } else {
+        lines.push('<strong>V2</strong>: <span class="muted">not exported yet — use Sprite Labeler → Save catalog</span>');
+      }
+      lines.push(`<strong>Migration</strong>: ${migrationCount ? migrationCount + ' ID map entries' : '<span class="muted">catalog_id_migration.json not created</span>'}` +
+        (placementIds.size ? ` · ${placementIds.size} placement IDs` : '') +
+        (migrated ? ` · <span class="ok">${migrated} remapped</span>` : ''));
+      lines.push('<span class="muted">CLI: npm run validate:catalog</span>');
+      bar.innerHTML = lines.join('<br>');
     }
 
     async function runInteriors() {
@@ -159,7 +266,9 @@
       });
     });
 
-    runOpenplan();
+    const v1Stats = await runOpenplan();
+    const v2Stats = await runOpenplanV2();
+    await updateStatusBar(v1Stats, v2Stats);
     runInteriors();
   </script>
 </body>

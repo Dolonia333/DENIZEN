@@ -19,7 +19,7 @@ def check(path):
     if len(chinese_lines) > 60:
         print(f'  ... and {len(chinese_lines) - 60} more lines')
 
-check(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\index.html')
-check(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\join.html')
-check(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\invite.html')
-check(r'C:\Users\zionv\OneDrive\Desktop\multbot\Star-Office-UI\frontend\office-agent-push.py')
+check(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\index.html')
+check(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\join.html')
+check(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\invite.html')
+check(r'C:\Users\zionv\OneDrive\Desktop\Denizen\Star-Office-UI\frontend\office-agent-push.py')

@@ -1,0 +1,306 @@
+{
+  "info": {
+    "purpose": "Complete sprite inventory from user reference images — what exists, catalog ID, placed in map.",
+    "generated": "2026-06-07",
+    "catalog": "furniture_catalog_openplan.json",
+    "images": [
+      "Hu4Gzs-f73a993d — open-plan office (target map)",
+      "y5X8s-69bf71a8 — single office + lobby + breakroom",
+      "1GcFbw-916567f7 — city plaza scene + decomposed tileset",
+      "iRmuhY-4b90f9b5 — urban building tileset (prefabs + parts)",
+      "r9ZVOO-6929af0e — helicopter multi-view sheet"
+    ]
+  },
+
+  "images": {
+    "hu4gzs_openplan": {
+      "label": "Hu4Gzs open-plan office (full target map)",
+      "zones": {
+        "open_plan_cubicles": {
+          "sprites": [
+            { "ref": "floor_tile_grey_large", "count": 1, "catalogId": null, "pipeline": "room-builder-tiles / floor", "status": "missing_tile" },
+            { "ref": "wall_white_perimeter", "count": 1, "catalogId": null, "pipeline": "room-builder-tiles / wall", "status": "missing_tile" },
+            { "ref": "cubicle_desk_front", "count": 8, "catalogId": "cubicle_desk_front", "status": "placed" },
+            { "ref": "cubicle_desk_back", "count": 7, "catalogId": "cubicle_desk_back", "status": "placed" },
+            { "ref": "cubicle_divider_panel", "count": 4, "catalogId": "cubicle_divider_full", "status": "placed" },
+            { "ref": "chair_black_front", "count": 6, "catalogId": "chair_black_front_holes", "status": "placed" },
+            { "ref": "chair_black_back", "count": 6, "catalogId": "chair_black_back_no_holes", "status": "placed" },
+            { "ref": "chair_orange_front", "count": 2, "catalogId": "chair_orange_front_holes", "status": "placed" },
+            { "ref": "chair_orange_back", "count": 2, "catalogId": "chair_orange_back_no_holes", "status": "placed" },
+            { "ref": "monitor_dual", "count": 4, "catalogId": "desk_setup_monitors", "status": "placed" },
+            { "ref": "monitor_alt", "count": 2, "catalogId": "desk_setup_monitors_alt", "status": "placed" },
+            { "ref": "laptop_open", "count": 2, "catalogId": "desk_setup_laptop", "status": "placed" },
+            { "ref": "laptop_phone_combo", "count": 1, "catalogId": "desk_setup_laptop_phone", "status": "placed" },
+            { "ref": "laptop_front_angle", "count": 1, "catalogId": "laptop_front_left", "status": "placed" },
+            { "ref": "desk_lamp_silver", "count": 7, "catalogId": "desk_lamp_sheet", "status": "catalog_only" },
+            { "ref": "keyboard", "count": 7, "catalogId": null, "status": "missing", "note": "May be baked into desk_setup rects" },
+            { "ref": "mouse", "count": 7, "catalogId": null, "status": "missing", "note": "May be baked into desk_setup rects" },
+            { "ref": "telephone_grey", "count": 3, "catalogId": "phone", "status": "catalog_only" },
+            { "ref": "paper_stack_desk", "count": 4, "catalogId": "paper_small", "status": "catalog_only" },
+            { "ref": "whiteboard_bar_graph", "count": 1, "catalogId": "whiteboard_graphs", "status": "catalog_only" },
+            { "ref": "whiteboard_pie_chart", "count": 1, "catalogId": "whiteboard_charts", "status": "catalog_only" },
+            { "ref": "bookshelf_tall", "count": 4, "catalogId": "bookshelf_short", "status": "placed" },
+            { "ref": "cert_framed_gold", "count": 2, "catalogId": "cert_1", "status": "placed" },
+            { "ref": "cert_framed_blue", "count": 1, "catalogId": "cert_2", "status": "placed" },
+            { "ref": "pop_art_four_faces", "count": 1, "catalogId": "pop_art_sheet", "status": "placed" },
+            { "ref": "water_cooler_blue_jug", "count": 1, "catalogId": "water_dispenser", "status": "placed" },
+            { "ref": "ac_unit_wall", "count": 1, "catalogId": "ac_unit_small", "status": "placed" },
+            { "ref": "printer_floor_stand", "count": 2, "catalogId": "printer_large_sheet", "status": "catalog_only" },
+            { "ref": "plant_floor_tall", "count": 3, "catalogId": "plant_tree", "status": "placed" },
+            { "ref": "plant_floor_medium", "count": 2, "catalogId": "plant_potted", "status": "placed" },
+            { "ref": "plant_floor_spikey", "count": 2, "catalogId": "plant_spikey", "status": "placed" },
+            { "ref": "trash_can_grey", "count": 1, "catalogId": "trash_can", "status": "placed" },
+            { "ref": "npc_seated_blue_shirt", "count": 1, "catalogId": null, "pipeline": "character sprites", "status": "character" },
+            { "ref": "npc_seated_orange_shirt", "count": 1, "catalogId": null, "pipeline": "character sprites", "status": "character" }
+          ]
+        },
+        "lounge_bottom_left": {
+          "sprites": [
+            { "ref": "floor_plank_light", "count": 1, "catalogId": null, "pipeline": "room-builder-tiles", "status": "missing_tile" },
+            { "ref": "wall_brick_brown", "count": 1, "catalogId": null, "pipeline": "room-builder-tiles", "status": "missing_tile" },
+            { "ref": "sofa_corner_grey", "count": 2, "catalogId": "right_corner_sofa", "status": "placed" },
+            { "ref": "sofa_2seat_grey", "count": 2, "catalogId": "sofa_2person", "status": "placed" },
+            { "ref": "side_table_wood", "count": 1, "catalogId": "small_table_sheet", "status": "catalog_only" },
+            { "ref": "desk_wood_side", "count": 1, "catalogId": "box_desk", "status": "placed" },
+            { "ref": "chair_orange_executive", "count": 1, "catalogId": "chair_orange_back_no_holes", "status": "placed" },
+            { "ref": "money_bundle_large", "count": 3, "catalogId": "money_large", "status": "placed" },
+            { "ref": "money_bundle_small", "count": 2, "catalogId": "money_small", "status": "placed" },
+            { "ref": "plant_corner_large", "count": 2, "catalogId": "plant_tree", "status": "placed" }
+          ]
+        },
+        "side_office_bottom_right": {
+          "sprites": [
+            { "ref": "desk_l_shape_dark", "count": 1, "catalogId": "box_desk", "status": "placed", "note": "Approximate — no dedicated L-desk placed" },
+            { "ref": "desk_rect_wood", "count": 2, "catalogId": "cubicle_desk", "status": "placed" },
+            { "ref": "chair_orange_rolling", "count": 3, "catalogId": "chair_orange_front_holes", "status": "placed" },
+            { "ref": "chair_black_side", "count": 2, "catalogId": "chair_black_side_left", "status": "placed" },
+            { "ref": "monitor_single", "count": 2, "catalogId": "desk_setup_monitors", "status": "placed" },
+            { "ref": "coffee_machine", "count": 1, "catalogId": "coffee_machine", "status": "placed" },
+            { "ref": "cork_bulletin_board", "count": 1, "catalogId": "cork_board_sheet", "status": "catalog_only" },
+            { "ref": "wall_screen_ui", "count": 1, "catalogId": "wall_screen_ui", "status": "placed", "note": "Sheet obj_54 — 4-quadrant wall UI" },
+            { "ref": "bookshelf_short", "count": 1, "catalogId": "bookshelf_short", "status": "placed" }
+          ]
+        },
+        "break_waiting_area": {
+          "sprites": [
+            { "ref": "vending_machine_snacks", "count": 1, "catalogId": "vending_full", "status": "placed" },
+            { "ref": "waiting_chair_row_4", "count": 1, "catalogId": "waiting_row_4", "status": "placed" },
+            { "ref": "water_dispenser", "count": 1, "catalogId": "water_dispenser", "status": "placed" },
+            { "ref": "cert_wall", "count": 1, "catalogId": "cert_2", "status": "placed" }
+          ]
+        }
+      },
+      "summary": { "total_unique": 52, "placed": 38, "catalog_only": 8, "missing": 4, "missing_tile": 3, "character": 2 }
+    },
+
+    "single_office_lobby": {
+      "label": "Single office + lobby + breakroom (y5X8s)",
+      "zones": {
+        "executive_office_top_left": {
+          "sprites": [
+            { "ref": "desk_l_shape_beige", "count": 1, "catalogId": "desk_vertical_left", "status": "catalog_only" },
+            { "ref": "chair_black_executive", "count": 1, "catalogId": "chair_black_front", "status": "catalog_only" },
+            { "ref": "monitor_dual_white", "count": 2, "catalogId": "desk_setup_monitors", "status": "placed" },
+            { "ref": "keyboard_mouse", "count": 1, "catalogId": null, "status": "missing" },
+            { "ref": "telephone", "count": 1, "catalogId": "phone", "status": "catalog_only" },
+            { "ref": "desk_lamp", "count": 1, "catalogId": "desk_lamp_sheet", "status": "catalog_only" },
+            { "ref": "paper_stack_large", "count": 2, "catalogId": "paper_small", "status": "catalog_only" },
+            { "ref": "money_bundle", "count": 3, "catalogId": "money_large", "status": "placed" },
+            { "ref": "printer_desktop", "count": 1, "catalogId": "printer_desktop_sheet", "status": "catalog_only" },
+            { "ref": "shelf_metal_empty", "count": 1, "catalogId": "shelf_metal_empty", "status": "placed", "note": "Singles #91 — empty metal shelf" },
+            { "ref": "whiteboard_charts_color", "count": 1, "catalogId": "whiteboard_charts", "status": "catalog_only" },
+            { "ref": "plant_desk_small", "count": 1, "catalogId": "plant_potted", "status": "placed" },
+            { "ref": "npc_bearded_suit", "count": 1, "catalogId": null, "pipeline": "character", "status": "character" }
+          ]
+        },
+        "open_workstation_top_right": {
+          "sprites": [
+            { "ref": "desk_rect_beige", "count": 1, "catalogId": "cubicle_desk", "status": "placed" },
+            { "ref": "chair_grey", "count": 1, "catalogId": "chair_black_back_no_holes", "status": "placed" },
+            { "ref": "monitor_blue_screen", "count": 1, "catalogId": "desk_setup_monitors", "status": "placed" },
+            { "ref": "bookshelf_filled", "count": 1, "catalogId": "bookshelf_short", "status": "placed" },
+            { "ref": "plant_tall_corner", "count": 1, "catalogId": "plant_tree", "status": "placed" },
+            { "ref": "cert_diploma_wall", "count": 1, "catalogId": "cert_1", "status": "placed" }
+          ]
+        },
+        "lobby_waiting": {
+          "sprites": [
+            { "ref": "chair_pod_grey_pair", "count": 2, "catalogId": "chair_pod_grey", "status": "catalog_only", "note": "Singles #122 — lobby round grey pod; one placement on map" },
+            { "ref": "poster_pop_art", "count": 1, "catalogId": "pop_art_sheet", "status": "placed" },
+            { "ref": "backpack_blue_floor", "count": 1, "catalogId": "backpack_blue", "status": "candidate", "note": "Singles #153 — verify in verify-sprites.html" },
+            { "ref": "door_frame", "count": 1, "catalogId": null, "pipeline": "room-builder", "status": "missing_tile" }
+          ]
+        },
+        "breakroom_bottom_right": {
+          "sprites": [
+            { "ref": "water_cooler", "count": 1, "catalogId": "water_dispenser", "status": "placed" },
+            { "ref": "vending_machine_red", "count": 1, "catalogId": "vending_full", "status": "placed" },
+            { "ref": "coffee_counter_table", "count": 1, "catalogId": "coffee_machine", "status": "placed", "note": "coffee_station_counter pending in reference_office_matches" },
+            { "ref": "chair_blue_plastic", "count": 3, "catalogId": null, "status": "missing", "note": "waiting_chairs_blue_row — no exact match" },
+            { "ref": "plant_large_pair", "count": 2, "catalogId": "plant_spikey", "status": "placed" },
+            { "ref": "npc_seated_breakroom", "count": 1, "catalogId": null, "pipeline": "character", "status": "character" }
+          ]
+        }
+      },
+      "summary": { "total_unique": 28, "placed": 14, "catalog_only": 7, "missing": 5, "missing_tile": 1, "character": 2 }
+    },
+
+    "city_plaza_scene": {
+      "label": "City plaza — finished scene + decomposed parts (1GcFbw)",
+      "note": "Exterior/city assets — not in office catalog. Future: city generator + exteriors pack.",
+      "zones": {
+        "buildings": {
+          "sprites": [
+            { "ref": "building_brick_multistory", "count": 1, "pipeline": "modernexteriors-win", "status": "not_in_office_catalog" },
+            { "ref": "hardware_store_prefab", "count": 1, "pipeline": "modernexteriors-win / prefab", "status": "not_in_office_catalog" },
+            { "ref": "hardware_sign_hammer", "count": 1, "pipeline": "exterior singles", "status": "not_in_office_catalog" },
+            { "ref": "awning_red_white_striped", "count": 1, "pipeline": "exterior singles", "status": "not_in_office_catalog" },
+            { "ref": "info_kiosk_hexagonal", "count": 2, "pipeline": "exterior object", "status": "not_in_office_catalog" },
+            { "ref": "rooftop_garden", "count": 1, "pipeline": "exterior decor", "status": "not_in_office_catalog" },
+            { "ref": "solar_panels_roof", "count": 1, "pipeline": "exterior decor", "status": "not_in_office_catalog" },
+            { "ref": "ac_unit_rooftop", "count": 2, "pipeline": "exterior decor", "status": "not_in_office_catalog" }
+          ]
+        },
+        "infrastructure_tiles": {
+          "sprites": [
+            { "ref": "road_asphalt_segment", "count": "many", "pipeline": "tiles-catalog / city", "status": "not_in_office_catalog" },
+            { "ref": "crosswalk_zebra", "count": "many", "pipeline": "tiles-catalog", "status": "not_in_office_catalog" },
+            { "ref": "sidewalk_concrete", "count": "many", "pipeline": "tiles-catalog", "status": "not_in_office_catalog" },
+            { "ref": "stairs_wide_segment", "count": "many", "pipeline": "modular tiles", "status": "not_in_office_catalog" },
+            { "ref": "stairs_narrow_segment", "count": "many", "pipeline": "modular tiles", "status": "not_in_office_catalog" },
+            { "ref": "bridge_elevated_walkway", "count": 1, "pipeline": "modular tiles", "status": "not_in_office_catalog" },
+            { "ref": "wall_ledge_concrete", "count": "many", "pipeline": "modular tiles", "status": "not_in_office_catalog" },
+            { "ref": "canal_water_tile", "count": "many", "pipeline": "tiles-catalog", "status": "not_in_office_catalog" }
+          ]
+        },
+        "street_props": {
+          "sprites": [
+            { "ref": "street_lamp", "count": 3, "pipeline": "exterior props", "status": "not_in_office_catalog" },
+            { "ref": "traffic_light_pole", "count": 1, "pipeline": "exterior props", "status": "not_in_office_catalog" },
+            { "ref": "bench_park", "count": 2, "pipeline": "exterior props", "status": "not_in_office_catalog" },
+            { "ref": "trash_can_street", "count": 2, "pipeline": "exterior props", "status": "not_in_office_catalog" },
+            { "ref": "plant_pot_street", "count": 4, "pipeline": "exterior props", "status": "not_in_office_catalog" },
+            { "ref": "atm_machine", "count": 1, "pipeline": "exterior props", "status": "not_in_office_catalog" },
+            { "ref": "food_truck", "count": 1, "pipeline": "exterior vehicle", "status": "not_in_office_catalog" },
+            { "ref": "car_green", "count": 1, "pipeline": "exterior vehicle", "status": "not_in_office_catalog" },
+            { "ref": "car_white", "count": 1, "pipeline": "exterior vehicle", "status": "not_in_office_catalog" },
+            { "ref": "graffiti_wall_decal", "count": 2, "pipeline": "exterior decor", "status": "not_in_office_catalog" },
+            { "ref": "cable_hanging_decal", "count": 3, "pipeline": "exterior decor", "status": "not_in_office_catalog" }
+          ]
+        },
+        "characters": {
+          "sprites": [
+            { "ref": "npc_crowd_various", "count": 12, "pipeline": "limezu characters / XP", "status": "character" }
+          ]
+        }
+      },
+      "summary": { "total_unique": 30, "in_office_catalog": 0, "pipeline": "city/exteriors" }
+    },
+
+    "urban_building_tileset": {
+      "label": "Urban building prefabs + modular parts (iRmuhY)",
+      "note": "Top row = assembled prefabs; bottom = atomic modules for city generator.",
+      "zones": {
+        "prefab_assemblies": {
+          "sprites": [
+            { "ref": "hardware_store_complete", "count": 1, "pipeline": "prefab / Aseprite export", "status": "not_in_office_catalog" },
+            { "ref": "apartment_block_stone", "count": 1, "pipeline": "prefab", "status": "not_in_office_catalog" },
+            { "ref": "garage_service_building", "count": 1, "pipeline": "prefab", "status": "not_in_office_catalog" }
+          ]
+        },
+        "facade_modules": {
+          "sprites": [
+            { "ref": "wall_brick_segment", "count": "many", "pipeline": "exterior tile", "status": "not_in_office_catalog" },
+            { "ref": "wall_stone_segment", "count": "many", "pipeline": "exterior tile", "status": "not_in_office_catalog" },
+            { "ref": "window_arched", "count": "many", "pipeline": "exterior tile", "status": "not_in_office_catalog" },
+            { "ref": "window_rect_shuttered", "count": "many", "pipeline": "exterior tile", "status": "not_in_office_catalog" },
+            { "ref": "door_garage_roll_up", "count": 1, "pipeline": "exterior tile", "status": "not_in_office_catalog" },
+            { "ref": "door_glass_storefront", "count": 1, "pipeline": "exterior tile", "status": "not_in_office_catalog" },
+            { "ref": "fire_escape_stairs", "count": "many", "pipeline": "modular exterior", "status": "not_in_office_catalog" },
+            { "ref": "fire_escape_platform", "count": "many", "pipeline": "modular exterior", "status": "not_in_office_catalog" },
+            { "ref": "roof_flat_grey", "count": "many", "pipeline": "exterior tile", "status": "not_in_office_catalog" },
+            { "ref": "skylight_glass_angled", "count": 2, "pipeline": "exterior object", "status": "not_in_office_catalog" }
+          ]
+        },
+        "roof_mechanical": {
+          "sprites": [
+            { "ref": "hvac_unit_large", "count": 3, "pipeline": "exterior prop", "status": "not_in_office_catalog" },
+            { "ref": "vent_duct_l_shape", "count": 4, "pipeline": "exterior prop", "status": "not_in_office_catalog" },
+            { "ref": "pipe_brown_vertical", "count": 6, "pipeline": "exterior prop", "status": "not_in_office_catalog" },
+            { "ref": "chimney_stack", "count": 1, "pipeline": "exterior prop", "status": "not_in_office_catalog" }
+          ]
+        },
+        "street_level": {
+          "sprites": [
+            { "ref": "road_segment", "count": "many", "pipeline": "tiles-catalog", "status": "not_in_office_catalog" },
+            { "ref": "crosswalk_tile", "count": "many", "pipeline": "tiles-catalog", "status": "not_in_office_catalog" },
+            { "ref": "traffic_light_pole", "count": 2, "pipeline": "exterior prop", "status": "not_in_office_catalog" },
+            { "ref": "street_sign_pole", "count": 1, "pipeline": "exterior prop", "status": "not_in_office_catalog" },
+            { "ref": "bench_metal", "count": 2, "pipeline": "exterior prop", "status": "not_in_office_catalog" },
+            { "ref": "bus_shelter", "count": 1, "pipeline": "exterior object", "status": "not_in_office_catalog" }
+          ]
+        },
+        "signage_decor": {
+          "sprites": [
+            { "ref": "sign_hardware_text", "count": 1, "pipeline": "exterior sign", "status": "not_in_office_catalog" },
+            { "ref": "sign_hammer_prop", "count": 1, "pipeline": "exterior sign", "status": "not_in_office_catalog" },
+            { "ref": "awning_red_white", "count": 2, "pipeline": "exterior decor", "status": "not_in_office_catalog" },
+            { "ref": "awning_blue_white", "count": 2, "pipeline": "exterior decor", "status": "not_in_office_catalog" },
+            { "ref": "plant_pot_small", "count": 3, "pipeline": "exterior decor", "status": "not_in_office_catalog" },
+            { "ref": "cat_black", "count": 1, "pipeline": "exterior decor", "status": "not_in_office_catalog" },
+            { "ref": "wall_poster_flyer", "count": 4, "pipeline": "exterior decal", "status": "not_in_office_catalog" },
+            { "ref": "trash_can", "count": 1, "pipeline": "exterior prop", "status": "not_in_office_catalog" }
+          ]
+        }
+      },
+      "summary": { "total_unique": 35, "in_office_catalog": 0, "pipeline": "city/exteriors/prefabs" }
+    },
+
+    "helicopter_sheet": {
+      "label": "Military helicopter multi-view sheet (r9ZVOO)",
+      "note": "Vehicle asset — non-grid, multi-view. Not office furniture.",
+      "sprites": [
+        { "ref": "heli_body_side_right", "count": 1, "pipeline": "vehicle catalog (future)", "status": "not_in_catalog" },
+        { "ref": "heli_body_top_down_nose_down", "count": 1, "pipeline": "vehicle catalog", "status": "not_in_catalog" },
+        { "ref": "heli_body_front_angled", "count": 1, "pipeline": "vehicle catalog", "status": "not_in_catalog" },
+        { "ref": "heli_rotor_blade_single", "count": 1, "pipeline": "vehicle attach/animation", "status": "not_in_catalog" },
+        { "ref": "heli_engine_pod_side", "count": 1, "pipeline": "vehicle attach", "status": "not_in_catalog" },
+        { "ref": "heli_sensor_pod_top", "count": 1, "pipeline": "vehicle attach", "status": "not_in_catalog" },
+        { "ref": "heli_sensor_pod_bottom", "count": 1, "pipeline": "vehicle attach", "status": "not_in_catalog" },
+        { "ref": "soldier_scale_reference", "count": 1, "pipeline": "character", "status": "character" },
+        { "ref": "interaction_zone_turn_on", "count": 1, "pipeline": "metadata/zone", "status": "not_sprite" }
+      ],
+      "summary": { "total_unique": 9, "in_office_catalog": 0, "pipeline": "vehicle/multi-view" }
+    }
+  },
+
+  "cross_cut_summary": {
+    "office_references": {
+      "hu4gzs_plus_single_room_unique": 62,
+      "in_catalog": 45,
+      "placed_on_map": 46,
+      "catalog_but_not_placed": 0,
+      "still_missing": 9,
+      "floor_wall_tiles": 4,
+      "characters": 5,
+      "_rebuild_note": "placed_on_map reflects openplan_rebuild.json expectedAdditions (38 placed + 8 catalog-only refs placed)"
+    },
+    "missing_from_office_catalog": [
+      { "ref": "keyboard", "seen_in": ["hu4gzs", "single_office"], "action": "Check desk_setup rects or cut from sheet" },
+      { "ref": "mouse", "seen_in": ["hu4gzs"], "action": "Check desk_setup rects or cut from sheet" },
+      { "ref": "desk_lamp_silver", "seen_in": ["hu4gzs"], "catalogId": "desk_lamp_sheet", "action": "Place on cubicle desks" },
+      { "ref": "telephone_grey", "seen_in": ["hu4gzs", "single_office"], "catalogId": "phone", "action": "Place on desks" },
+      { "ref": "whiteboard_bar_graph", "seen_in": ["hu4gzs"], "catalogId": "whiteboard_graphs", "action": "Place on top wall" },
+      { "ref": "printer_floor_stand", "seen_in": ["hu4gzs"], "catalogId": "printer_large_sheet", "action": "Place near bookshelf" },
+      { "ref": "wall_screen_ui", "seen_in": ["hu4gzs", "single_office"], "catalogId": "wall_screen_ui", "action": "Placed — sheet obj_54" },
+      { "ref": "chair_pod_grey_lobby", "seen_in": ["single_office"], "catalogId": "chair_pod_grey", "action": "Catalog singles #122; add 2nd placement for pair" },
+      { "ref": "chair_blue_plastic_breakroom", "seen_in": ["single_office"], "action": "Find in sheet — chair_blue_front?" },
+      { "ref": "backpack_blue", "seen_in": ["single_office"], "catalogId": "backpack_blue", "action": "Candidate singles #153 — verify visual match" },
+      { "ref": "shelf_metal_empty", "seen_in": ["single_office"], "catalogId": "shelf_metal_empty", "action": "Placed — singles #91" },
+      { "ref": "side_table_wood", "seen_in": ["hu4gzs"], "catalogId": "small_table_sheet", "action": "Place in lounge" },
+      { "ref": "cork_bulletin_board", "seen_in": ["hu4gzs"], "catalogId": "cork_board_sheet", "action": "Place in side office" }
+    ],
+    "city_exterior_total_unique": 65,
+    "helicopter_total_unique": 9
+  }
+}

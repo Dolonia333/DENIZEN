@@ -70,6 +70,17 @@
       }
     </style>
     <script>
+      (function () {
+        try {
+          window.__DenizenIsTouch = window.matchMedia('(pointer: coarse)').matches
+            || navigator.maxTouchPoints > 0
+            || ('ontouchstart' in window);
+        } catch (_) {
+          window.__DenizenIsTouch = false;
+        }
+      })();
+    </script>
+    <script>
       // Show runtime errors on screen (helps when canvas is just a blank color).
       (function () {
         function ensureOverlay() {
@@ -128,17 +139,7 @@
     <!-- Agent Office System -->
     <script src="./src/agent-actions.js" defer></script>
     <script src="./src/agent-office-manager.js?v=economy2" defer></script>
-    <!-- LLM telemetry panel — bottom-left chip + click-to-expand view -->
-    <script src="./src/llm-telemetry-panel.js?v=lmfix4" defer></script>
-    <!-- Proximity audio (distance/facing volume + convo mute, must load
-         before voice-gate and elevenlabs-provider so they can call into it) -->
-    <script src="./src/proximity-audio.js?v=audio2" defer></script>
-    <!-- Voice gate (Zion-presence flag + speech provider plug) -->
-    <script src="./src/voice-gate.js?v=audio2" defer></script>
-    <!-- ElevenLabs voice provider (auto-installs if /api/tts/health says yes) -->
-    <script src="./src/elevenlabs-provider.js" defer></script>
-    <!-- SFX (ambient + event sounds; missing files silently skipped) -->
-    <script src="./src/sfx.js" defer></script>
+    <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
     <!-- OpenClaw → WorldState bridge (translator must load BEFORE the bridge runner) -->
     <script src="./src/openclaw-translator.js?v=mobfix2" defer></script>
     <script src="./src/openclaw-worldstate-bridge.js?v=mobfix2" defer></script>
@@ -146,37 +147,27 @@
     <script src="./src/openclaw-dispatch.js?v=lucyroute1" defer></script>
     <!-- Mobile haptics (tap / impact / notify vibration patterns) -->
     <script src="./src/mobile-haptics.js?v=mobplay2" defer></script>
-    <!-- Voice input (push-to-talk STT) -->
-    <script src="./src/voice-input.js?v=voiceicon1" defer></script>
+    <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
+    <script src="./src/device-profile.js?v=devprof3" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=bigscreen1" defer></script>
-    <!-- Live office diagnostics chip (bottom-left, polls /api/health every 5s) -->
-    <script src="./src/diag.js" defer></script>
-    <!-- Live mirror of Lucy's Playwright browser (mobile-friendly) -->
-    <script src="./src/browser-mirror-panel.js?v=mobplay6" defer></script>
-    <!-- Bouncer security feed (separate from CEO chat) -->
-    <script src="./src/security-feed.js?v=sec1" defer></script>
+    <script src="./src/mobile-controls.js?v=mobperf4" defer></script>
+    <script src="./src/mobile-sidebar.js?v=mobme10" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
-    <script src="./src/visitor-session.js?v=vis9" defer></script>
-    <script src="./src/visitor-capabilities.js?v=vis2" defer></script>
+    <script src="./src/visitor-session.js?v=vis19" defer></script>
+    <script src="./src/visitor-account-panel.js?v=acct7" defer></script>
+    <script src="./src/visitor-node-ui.js?v=node20" defer></script>
     <script src="./src/visitor-onboarding.js?v=onbteam2" defer></script>
     <script src="./src/visitor-claim-ui.js?v=mobplay6" defer></script>
-    <script src="./src/visitor-handoff-ui.js?v=vis2" defer></script>
-    <script src="./src/visitor-projects-ui.js?v=vis2" defer></script>
-    <script src="./src/visitor-assistant-labels.js?v=vis2" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=mobplay6" defer></script>
+    <script src="./src/player-chat.js?v=chatmob1" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
-    <script src="./src/bottom-dock.js?v=onbteam2" defer></script>
-    <!-- Security Monitor + Robber Visualization -->
-    <script src="./src/security-monitor.js" defer></script>
-    <script src="./src/robber-controller.js" defer></script>
-    <!-- Work Output Feed HUD (live NPC activity panel, Tab to toggle) -->
-    <script src="./src/work-feed.js" defer></script>
-    <!-- Lazy loader for non-critical UI (briefing, proposals, city debug, demo) -->
-    <script src="./src/denizen-lazy-scripts.js?v=lazy1" defer></script>
+    <script src="./src/bottom-dock.js?v=mobme2" defer></script>
+    <!-- Lazy loader — audio, panels, security feed, browser mirror, etc. -->
+    <script src="./src/denizen-lazy-scripts.js?v=lazy2" defer></script>
+    <!-- Openplan wall layout renderer (before scene) -->
+    <script src="./src/openplan-walls.js?v=wall7" defer></script>
     <!-- Game scene -->
-    <script src="./office-scene.js?v=landscape1" defer></script>
+    <script src="./office-scene.js?v=mobperf1" defer></script>
   </head>
   <body>
     <div id="game-container"></div>
