@@ -46,6 +46,8 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | World/Assets | [PATHFINDING.md](PATHFINDING.md) | on GitHub | A* pathing internals and stuck recovery |
 | World/Assets | [SCRIPTS.md](SCRIPTS.md) | on GitHub | Asset/build script reference and usage |
 | Security | [SECURITY.md](SECURITY.md) | on GitHub | Threat model, monitors, and security controls |
+| Operations | [COMPUTE_MESH.md](COMPUTE_MESH.md) | new/local | Distributed compute mesh — queue, fleet agents, APIs, smokes |
+| Operations | [../../infra/README.md](../../infra/README.md) | new/local | Home lab infra — NAS SSH, Kali pull install, Tailscale, orchestrator |
 | Operations | [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md) | on GitHub | Production deployment guidance and runbook |
 | Operations | [ROADMAP.md](ROADMAP.md) | on GitHub | Capability delivery roadmap by phase |
 | Operations | [ROADMAP_SELF_ADVANCEMENT.md](ROADMAP_SELF_ADVANCEMENT.md) | on GitHub | Self-improvement roadmap and governance |
@@ -57,7 +59,16 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | World/Assets | [SFX.md](SFX.md) | on GitHub | Sound effects catalog and playback hooks |
 | Session Notes | [SESSION_2026-06-05.md](SESSION_2026-06-05.md) | new/local | Session log for Jelly migration and model tuning |
 
-## Documentation Gaps Closed In This Pass (2026-06-06)
+## Documentation Gaps Closed In This Pass (2026-06-08)
+
+| Gap | Resolution |
+|-----|------------|
+| Compute mesh undocumented | [COMPUTE_MESH.md](COMPUTE_MESH.md) — full architecture, deploy, troubleshooting |
+| infra/ scripts undocumented | [../../infra/README.md](../../infra/README.md) — NAS, Kali, Tailscale, `finish-all-mesh.py` |
+| Mesh smoke tests not in TESTING.md | Updated [TESTING.md](TESTING.md) |
+| Desktop compute worker thin | Updated [../desktop/README.md](../desktop/README.md) |
+
+## Documentation Gaps Closed (2026-06-06)
 
 | Gap | Resolution |
 |-----|------------|
@@ -81,13 +92,15 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 6. [FULL_WORLD.md](FULL_WORLD.md)
 
 ### Operators
-1. [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
-2. [TESTING.md](TESTING.md)
-3. [INTELLIGENCE_SPINE.md](INTELLIGENCE_SPINE.md)
-4. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
-5. [SECURITY.md](SECURITY.md)
-6. [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)
-7. [SESSION_2026-06-05.md](SESSION_2026-06-05.md)
+1. [COMPUTE_MESH.md](COMPUTE_MESH.md)
+2. [../../infra/README.md](../../infra/README.md)
+3. [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
+4. [TESTING.md](TESTING.md)
+5. [INTELLIGENCE_SPINE.md](INTELLIGENCE_SPINE.md)
+6. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
+7. [SECURITY.md](SECURITY.md)
+8. [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)
+9. [SESSION_2026-06-05.md](SESSION_2026-06-05.md)
 
 ### Developers
 1. [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -96,5 +109,6 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 4. [AGENT_BUS.md](AGENT_BUS.md)
 5. [AI-SYSTEM.md](AI-SYSTEM.md)
 6. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
-7. [TESTING.md](TESTING.md)
-8. [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md)
+7. [COMPUTE_MESH.md](COMPUTE_MESH.md)
+8. [TESTING.md](TESTING.md)
+9. [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md)

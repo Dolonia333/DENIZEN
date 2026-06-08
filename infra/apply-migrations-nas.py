@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import load_infra_env  # noqa: F401 — loads infra/.env
+
 import os
 import re
 import tarfile
@@ -103,12 +105,29 @@ def main() -> int:
     _, out = run(client, "grep '^POSTGRES_PASSWORD=' /volume1/docker/supabase-project/.env | head -1")
     pg_pass = out.strip().split("=", 1)[-1]
 
+    applied: set[int] = set()
+    _, applied_out = run(
+        client,
+        (
+            f"echo \"select version from public.denizen_schema_migrations;\" | "
+            f"{DOCKER} exec -i -e PGPASSWORD='{pg_pass}' {DB_CONTAINER} "
+            f"psql -U postgres -d postgres -t -A"
+        ),
+    )
+    for line in applied_out.splitlines():
+        line = line.strip()
+        if line.isdigit():
+            applied.add(int(line))
+
     for path in files:
         ver = migration_version(path.name) or 0
         if ONLY_SET is not None and ver not in ONLY_SET:
             continue
         if ver in SKIP_VERSIONS:
             print(f"\n==> SKIP {path.name} (platform tables not on fresh Supabase)")
+            continue
+        if ver in applied:
+            print(f"\n==> SKIP {path.name} (already applied)")
             continue
         role = migration_role(ver, path)
         remote = f"{REMOTE_DIR}/{path.name}"

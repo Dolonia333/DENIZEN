@@ -12,7 +12,7 @@
 
 Denizen renders AI agent workflows as a living pixel-art office. 16 NPCs are real AI agents — each one has a personality (`SOUL.md`), a persistent memory (`MEMORY.md`), and a job. They walk around, talk, sit at desks, run meetings, write reports, file bug reports, and execute real tools — and you watch them do it in real time. Instead of staring at terminal logs or dashboards, you see the *shape* of what your agents are doing.
 
-**Built with:** Node.js 22+, Phaser 3, WebSocket, LM Studio (local), Claude / Grok / Gemini / Kimi (cloud), Kali Linux (security investigations).
+**Built with:** Node.js 22+, Phaser 3, WebSocket, LM Studio (local), Claude / Grok / Gemini / Kimi (cloud), Kali Linux (security + compute mesh), Tailscale (home fleet).
 
 ## Quick Start
 
@@ -34,6 +34,7 @@ The recent push moved Denizen from "watch agents work" to "agents who actually g
 - **Phase 1** — Mood system, directive inbox, OpenClaw skill bridge (NPCs can execute real tools), full SOULs for Marcus + Sarah
 - **Phase 2** — Lucy email auto-send + 7-step job pipeline, Bouncer structured Kali investigations with Dan escalation, Work Output Feed UI (Tab key)
 - **Phase 3** — NPCs run Claude Code on real files (isolated worktrees + human-approval gate), multi-step task chains (spec→design→code→review→QA), NPC disagreement detection → Abby arbitrates
+- **Compute mesh** — Three-node home fleet (dolonia GPU host, Synology NAS, Kali laptop): shared job queue, fleet metrics, Denizen Desktop contributor nodes, mesh jobs UI. See [denizen/docs/COMPUTE_MESH.md](denizen/docs/COMPUTE_MESH.md).
 - **Phase 5 spec** — Continuous improvement loop where Abby teaches the team to get better over time. Detailed in [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md).
 
 See [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) for the full capability matrix and build order.
@@ -67,8 +68,11 @@ See [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) for the full capability m
 | [denizen/docs/LIMEZU_PLACEMENT.md](denizen/docs/LIMEZU_PLACEMENT.md) | LimeZu placement and layering guide *(local)* |
 | [denizen/docs/SPRITE_FIX_GUIDE.md](denizen/docs/SPRITE_FIX_GUIDE.md) | Sprite troubleshooting and correction workflow *(local)* |
 | [denizen/docs/SECURITY.md](denizen/docs/SECURITY.md) | Threat categories, detection, and response flow |
+| [denizen/docs/COMPUTE_MESH.md](denizen/docs/COMPUTE_MESH.md) | Distributed compute mesh — job queue, fleet agents, NAS/Kali/Desktop deploy |
+| [infra/README.md](infra/README.md) | Home lab infrastructure — NAS SSH, Kali pull install, Tailscale, migrations |
 | [denizen/docs/PRODUCTION_DEPLOY.md](denizen/docs/PRODUCTION_DEPLOY.md) | Production deployment checklist and runbook |
 | [denizen/docs/TESTING.md](denizen/docs/TESTING.md) | Test pyramid, smoke scripts, pre-deploy checklist |
+| [denizen/desktop/README.md](denizen/desktop/README.md) | Denizen Desktop — setup wizard, compute contributor node, Windows installer |
 | [denizen/docs/SESSION_2026-06-05.md](denizen/docs/SESSION_2026-06-05.md) | Session log for Jelly migration and provider rebalance *(local)* |
 | [denizen/docs/ROADMAP.md](denizen/docs/ROADMAP.md) | Capability roadmap and delivery phases |
 

@@ -49,6 +49,7 @@ Built with **Phaser 3** using the [LimeZu Modern Office](https://limezu.itch.io/
 - [LLM Telemetry](#llm-telemetry)
 - [Proposal Queues (NPC-Initiated Changes)](#proposal-queues-npc-initiated-changes)
 - [Work Output Feed](#work-output-feed)
+- [Compute Mesh](#compute-mesh)
 - [Meeting System](#meeting-system)
   - [Break Room Behavior](#break-room-behavior)
 - [Security Monitor](#security-monitor)
@@ -1134,6 +1135,37 @@ Press **`Tab`** to toggle a terminal-style HUD panel in the bottom-left of the s
 
 ---
 
+## Compute Mesh
+
+Denizen can distribute work across a home or office fleet: dolonia (GPU host), Synology NAS, Kali laptop, and Denizen Desktop nodes share a job queue, report live hardware metrics, and earn contribution credits.
+
+**What ships today:**
+
+- Supabase-backed job queue (`enqueue` → `claim` → `complete`)
+- Headless agents for NAS and Kali (`nas-compute-agent.js`)
+- Denizen Desktop contributor worker (Electron)
+- Auto mesh job producer (`npc_think_batch` every 5 min)
+- Mesh jobs UI panel (dock **⬡ mesh** chip or `?mesh=1`)
+- LM Studio execution on GPU host; mock fallback on headless nodes
+- One-command deploy: `py infra/finish-all-mesh.py`
+
+**Quick verify** (server running on `:8081`):
+
+```powershell
+node scripts/smoke-mesh-complete.js
+node scripts/smoke-mesh-jobs-flow.js
+```
+
+**Full documentation:**
+
+| Doc | Contents |
+|-----|----------|
+| [docs/COMPUTE_MESH.md](docs/COMPUTE_MESH.md) | Architecture, APIs, env vars, troubleshooting |
+| [../infra/README.md](../infra/README.md) | NAS SSH deploy, Kali pull install, Tailscale, migrations |
+| [desktop/README.md](desktop/README.md) | Electron setup wizard + compute opt-in |
+
+---
+
 ## Meeting System
 
 NPCs use the **conference room** for group discussions and smaller desk areas for 1-on-1s:
@@ -1758,8 +1790,11 @@ The `docs/` directory has the canonical deep-dives for the runtime systems:
 | [docs/ROADMAP.md](docs/ROADMAP.md) | **Capability Roadmap** — Phases 1, 2, and 3 complete; Phase 4 (public demo mode, perf tuning, Docker deploy) is next |
 | [docs/SECURITY.md](docs/SECURITY.md) | Threat catalog (10 categories), robber archetype mappings, tuning knobs |
 | [docs/SETUP.md](docs/SETUP.md) | End-to-end install — Node + LM Studio baseline, plus Linux Wireshark/Nmap live feeders |
+| [docs/COMPUTE_MESH.md](docs/COMPUTE_MESH.md) | **Compute mesh** — job queue, fleet agents, NAS/Kali/Desktop deploy |
+| [../infra/README.md](../infra/README.md) | **Home lab infra** — NAS SSH, Kali pull install, Tailscale |
 | [docs/PRODUCTION_DEPLOY.md](docs/PRODUCTION_DEPLOY.md) | Production deployment and operations runbook |
 | [docs/TESTING.md](docs/TESTING.md) | Consolidated testing guide and test execution policy *(in progress)* |
+| [desktop/README.md](desktop/README.md) | Denizen Desktop — wizard, compute worker, Windows installer |
 | [docs/VISITOR_ONBOARDING.md](docs/VISITOR_ONBOARDING.md) | New contributor onboarding flow *(in progress)* |
 | [docs/SESSION_2026-06-05.md](docs/SESSION_2026-06-05.md) | Session log: Jelly migration and provider rebalance *(local)* |
 

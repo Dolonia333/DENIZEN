@@ -76,6 +76,33 @@ What they cover:
 - `smoke-onboarding.js`: visitor code verification, session creation, anti-spoof checks, claim/handoff restrictions
 - `smoke-spine-e2e.js`: health fallback, Job CRM maintenance JSON, prediction summary endpoint
 
+### Compute mesh smokes
+
+Run against a live Denizen server (default `http://127.0.0.1:8081` in the Dolonia lab):
+
+```powershell
+$env:DENIZEN_URL = "http://127.0.0.1:8081"
+node .\scripts\smoke-mesh-complete.js
+node .\scripts\smoke-mesh-jobs-flow.js
+node .\scripts\smoke-nas-fleet.js
+node .\test-compute-integration.js
+```
+
+| Script | Checks |
+|--------|--------|
+| `smoke-mesh-complete.js` | 13 — session, node register/claim/complete, contribution |
+| `smoke-mesh-jobs-flow.js` | 5 — enqueue → queue progress |
+| `smoke-nas-fleet.js` | 4 — fleet report token, NAS metrics in health |
+| `test-compute-integration.js` | 33 — queue transitions, HTTP routes, mocked DB |
+
+Full mesh deploy + smokes in one command (from repo root):
+
+```powershell
+py infra/finish-all-mesh.py
+```
+
+See [COMPUTE_MESH.md](COMPUTE_MESH.md) and [../../infra/README.md](../../infra/README.md).
+
 ## Robinhood live smoke
 
 Use only when Robinhood auth/token is expected:
@@ -96,8 +123,11 @@ Behavior:
 2. `node .\scripts\verify-production-schema.js`
 3. `node .\scripts\smoke-onboarding.js`
 4. `node .\scripts\smoke-spine-e2e.js`
-5. `node .\scripts\robinhood-live-smoke.js` (only if Robinhood features are in scope)
-6. Run full deploy flow from [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
+5. `node .\scripts\smoke-mesh-complete.js` (when compute mesh is enabled)
+6. `node .\scripts\smoke-mesh-jobs-flow.js`
+7. `node .\scripts\robinhood-live-smoke.js` (only if Robinhood features are in scope)
+8. Run full deploy flow from [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
+9. Home lab mesh: `py infra/finish-all-mesh.py` from repo root
 
 ## Quick pass/fail cues
 

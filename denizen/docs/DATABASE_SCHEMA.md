@@ -329,4 +329,19 @@ Use this order in local/prod rollout:
 
 `000013` depends on objects introduced in `000012`, so reversing these can break trigger/policy creation.
 
+### Compute mesh tables (000017–000019, mesh RLS 20260608000001–000003)
+
+| Table | Purpose |
+|-------|---------|
+| `denizen_compute_jobs` | Job queue — `queued` → `assigned` → `done` / `failed` |
+| `denizen_compute_nodes` | Registered worker nodes (desktop, NAS, Kali) with endpoint tokens |
+| `denizen_credits_ledger` | Contribution credits per identity / machine |
+| `denizen_contribution_daily_totals` | Daily rollup for contribution summaries |
+
+Migrations: `20260606000017_denizen_compute_network.sql`, `20260606000018_desktop_agent_link.sql`, `20260606000019_contribution_credits.sql`.
+
+**Production:** server should use `SUPABASE_SERVICE_ROLE_KEY`. Dev NAS may use permissive anon RLS (`20260608000001`–`000003`) — tighten before public launch.
+
+See [COMPUTE_MESH.md](COMPUTE_MESH.md) and [../../infra/README.md](../../infra/README.md).
+
 See also: [Intelligence spine](INTELLIGENCE_SPINE.md) and [Visitor onboarding](VISITOR_ONBOARDING.md).

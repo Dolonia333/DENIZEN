@@ -138,8 +138,38 @@ The deployment scripts do **not** fully automate these:
   - guided smoke: `node .\scripts\robinhood-live-smoke.js`
 - **Cloudflare tunnel operations** (ensuring `denizen.dolonia.cloud` reaches the app on `:8080`)
 
-## 8) Related docs
+## 8) Compute mesh (home fleet / optional production)
+
+For distributed compute across dolonia + NAS + Kali + Desktop nodes:
+
+| Key | Purpose |
+|-----|---------|
+| `SUPABASE_SERVICE_ROLE_KEY` | **Required** for server-side queue (bypasses RLS) |
+| `DENIZEN_FLEET_AGENT_TOKEN` | NAS/Kali metrics + agent bundle auth |
+| `DENIZEN_FLEET_IDENTITY_ID` | Identity for fleet jobs and reports |
+| `DENIZEN_INTERNAL_API_TOKEN` | Protects `POST /api/compute/jobs/enqueue` |
+
+Home lab orchestrator (from repo root):
+
+```powershell
+py infra/finish-all-mesh.py
+```
+
+Mesh smokes (from `denizen/`):
+
+```powershell
+node scripts/smoke-mesh-complete.js
+node scripts/smoke-mesh-jobs-flow.js
+```
+
+Full runbook: [COMPUTE_MESH.md](COMPUTE_MESH.md), [../../infra/README.md](../../infra/README.md).
+
+**Production note:** dev NAS may use permissive anon RLS on compute tables (`20260608000001`–`000003`). Use service role on the server and tighten policies before public launch.
+
+## 9) Related docs
 
 - [SETUP.md](SETUP.md) - local setup and env bootstrapping
+- [COMPUTE_MESH.md](COMPUTE_MESH.md) - distributed compute mesh
+- [../../infra/README.md](../../infra/README.md) - NAS/Kali/Tailscale infrastructure
 - [SCRIPTS.md](SCRIPTS.md) - script reference including operations scripts
 - [TESTING.md](TESTING.md) - pre-deploy and post-deploy test pyramid
