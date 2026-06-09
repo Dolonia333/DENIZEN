@@ -16,7 +16,14 @@ contextBridge.exposeInMainWorld("DenizenDesktop", {
   respondPermission: (opts) => ipcRenderer.invoke("respond-permission", opts),
   sendFeedback: (opts) => ipcRenderer.invoke("send-feedback", opts),
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
+  getUpdateStatus: () => ipcRenderer.invoke("get-update-status"),
   getAppInfo: () => ipcRenderer.invoke("get-app-info"),
+  onUpdateStatus: (callback) => {
+    if (typeof callback !== "function") return () => {};
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on("update-status", handler);
+    return () => ipcRenderer.removeListener("update-status", handler);
+  },
   setDiagnosticsOptIn: (optIn) => ipcRenderer.invoke("set-diagnostics-opt-in", optIn),
   onPermissionPending: (callback) => {
     if (typeof callback !== "function") return () => {};

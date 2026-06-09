@@ -651,6 +651,10 @@ const MIME = {
   '.ttf': 'font/ttf',
   '.ico': 'image/x-icon',
   '.md': 'text/markdown; charset=utf-8',
+  '.yml': 'text/yaml; charset=utf-8',
+  '.yaml': 'text/yaml; charset=utf-8',
+  '.exe': 'application/octet-stream',
+  '.blockmap': 'application/octet-stream',
 };
 
 const OPENCLAW_HOST = '127.0.0.1';

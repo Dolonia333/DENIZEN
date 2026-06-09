@@ -19,7 +19,8 @@
     "catalog:snap": "node scripts/snap-placements.mjs --write",
     "smoke:self-heal": "node scripts/smoke-self-heal.js",
     "smoke:nas": "node scripts/smoke-nas-fleet.js",
-    "smoke:mesh": "node scripts/smoke-mesh-complete.js"
+    "smoke:mesh": "node scripts/smoke-mesh-complete.js",
+    "drain:mesh": "node scripts/drain-mesh-queue.js"
   },
   "repository": {
     "type": "git",

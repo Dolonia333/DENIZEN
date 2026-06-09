@@ -57,6 +57,8 @@ openclaw/.env
 *.tmp
 denizen/desktop/dist/
 denizen/desktop/dist-build/
+denizen/desktop/updates/*.exe
+denizen/desktop/updates/*.blockmap
 infra/kali-agent-bundle.b64
 infra/kali-agent-bundle.tar.gz
 infra/nas-agent-bundle.tar.gz

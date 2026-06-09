@@ -163,35 +163,97 @@ async function reclaimStaleJobs(maxAgeMs = 30 * 60 * 1000) {
   return { reclaimed, failed, checked: assigned.length };
 }
 
+function isProducerThinkBatch(job) {
+  const payload = job?.payload && typeof job.payload === 'object' ? job.payload : {};
+  return job?.job_type === 'npc_think_batch'
+    && (payload.source === 'mesh_producer' || payload.economy_mode != null);
+}
+
+async function failQueuedJob(job, error) {
+  try {
+    const rows = await denizenDb._patch(
+      `${JOB_TABLE}?id=eq.${encodeURIComponent(job.id)}&status=eq.queued`,
+      {
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        error,
+      },
+      { prefer: 'return=representation' },
+    );
+    return !!rows?.[0];
+  } catch (_) {
+    return false;
+  }
+}
+
 /**
- * Fail ancient queued smoke/sim jobs so the queue can drain real work.
+ * Fail ancient queued smoke/sim/producer jobs so the queue can drain real work.
  */
 async function expireOldQueuedJobs(maxAgeMs = 24 * 60 * 60 * 1000) {
   if (!isEnabled()) return { expired: 0 };
   const pending = await listPendingJobs(200);
-  const cutoff = Date.now() - Math.max(3600_000, Number(maxAgeMs) || 24 * 60 * 60 * 1000);
+  const defaultCutoff = Date.now() - Math.max(3600_000, Number(maxAgeMs) || 24 * 60 * 60 * 1000);
+  const producerCutoff = Date.now() - Math.max(
+    30 * 60 * 1000,
+    Number(process.env.DENIZEN_PRODUCER_JOB_MAX_AGE_MS) || 2 * 60 * 60 * 1000,
+  );
+  const simCutoff = Date.now() - Math.max(
+    30 * 60 * 1000,
+    Number(process.env.DENIZEN_SIM_TICK_MAX_AGE_MS) || 60 * 60 * 1000,
+  );
   let expired = 0;
 
   for (const job of pending) {
     const created = job.created_at ? new Date(job.created_at).getTime() : 0;
-    if (!created || created > cutoff) continue;
+    if (!created) continue;
     const payload = job.payload && typeof job.payload === 'object' ? job.payload : {};
     const isSmoke = payload.smoke || payload.source === 'smoke-mesh-jobs-flow' || String(payload.source || '').startsWith('smoke-');
-    if (!isSmoke && job.job_type !== 'sim_tick') continue;
-    try {
-      const rows = await denizenDb._patch(
-        `${JOB_TABLE}?id=eq.${encodeURIComponent(job.id)}&status=eq.queued`,
-        {
-          status: 'failed',
-          completed_at: new Date().toISOString(),
-          error: 'expired: stale queued smoke job',
-        },
-        { prefer: 'return=representation' },
-      );
-      if (rows?.[0]) expired += 1;
-    } catch (_) { /* skip */ }
+    const isProducer = isProducerThinkBatch(job);
+    const cutoff = isProducer ? producerCutoff : (job.job_type === 'sim_tick' ? simCutoff : defaultCutoff);
+    if (created > cutoff) continue;
+    if (!isSmoke && job.job_type !== 'sim_tick' && !isProducer) continue;
+    if (await failQueuedJob(job, 'expired: stale queued mesh job')) expired += 1;
   }
   return { expired, checked: pending.length };
+}
+
+/**
+ * Trim deep queues by failing duplicate producer batches and excess sim ticks.
+ */
+async function trimExcessQueuedJobs({
+  maxPending = Number(process.env.DENIZEN_MESH_MAX_PENDING) || 8,
+  keepProducerBatches = Number(process.env.DENIZEN_MESH_KEEP_PRODUCER_BATCHES) || 2,
+} = {}) {
+  if (!isEnabled()) return { trimmed: 0, checked: 0 };
+  const pending = await listPendingJobs(200);
+  let trimmed = 0;
+
+  const producerBatches = pending
+    .filter(isProducerThinkBatch)
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  for (const job of producerBatches.slice(keepProducerBatches)) {
+    if (await failQueuedJob(job, 'trimmed: excess mesh_producer batch')) trimmed += 1;
+  }
+
+  const simTicks = pending
+    .filter((j) => j.job_type === 'sim_tick')
+    .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+  const keepSim = Math.max(0, maxPending - keepProducerBatches);
+  for (const job of simTicks.slice(0, Math.max(0, simTicks.length - keepSim))) {
+    if (await failQueuedJob(job, 'trimmed: excess sim_tick backlog')) trimmed += 1;
+  }
+
+  const remaining = await listPendingJobs(200);
+  if (remaining.length > maxPending) {
+    const overflow = remaining
+      .filter((j) => j.job_type === 'sim_tick' || isProducerThinkBatch(j))
+      .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+    for (const job of overflow.slice(0, remaining.length - maxPending)) {
+      if (await failQueuedJob(job, 'trimmed: mesh queue over capacity')) trimmed += 1;
+    }
+  }
+
+  return { trimmed, checked: pending.length, max_pending: maxPending };
 }
 
 module.exports = {
@@ -204,5 +266,7 @@ module.exports = {
   listRecentCompletedJobs,
   reclaimStaleJobs,
   expireOldQueuedJobs,
+  trimExcessQueuedJobs,
+  isProducerThinkBatch,
   JOB_TABLE,
 };

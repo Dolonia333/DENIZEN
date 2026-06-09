@@ -30,22 +30,38 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$DistDir = (Join-Path $PSScriptRoot ".." "dist"),
-    [string]$OutDir = (Join-Path $PSScriptRoot ".." "updates-publish"),
+    [string]$DistDir = "",
+    [string]$OutDir = "",
     [ValidateSet("stable", "beta")]
     [string]$Channel = "stable"
 )
 
 $ErrorActionPreference = "Stop"
 
+$scriptRoot = if ($PSScriptRoot) {
+    $PSScriptRoot
+} else {
+    Split-Path -Parent $MyInvocation.MyCommand.Path
+}
+
+if (-not $DistDir) {
+    $DistDir = Join-Path (Join-Path $scriptRoot "..") "dist-build"
+}
+if (-not $OutDir) {
+    $OutDir = Join-Path (Join-Path $scriptRoot "..") "updates"
+}
+
 $resolvedDist = Resolve-Path -Path $DistDir
-$targetRoot = Join-Path $OutDir $Channel
+# electron-updater expects a flat layout at the publish URL root (/desktop/updates/).
+$targetRoot = $OutDir
 New-Item -ItemType Directory -Force -Path $targetRoot | Out-Null
 
-$files = Get-ChildItem -Path $resolvedDist -File | Sort-Object Name
+$files = Get-ChildItem -Path $resolvedDist -File | Where-Object {
+    $_.Name -match '^(latest.*\.ya?ml)$' -or $_.Extension -in '.exe', '.blockmap'
+} | Sort-Object Name
 
 if (-not $files -or $files.Count -eq 0) {
-    throw "No build artifacts found in $resolvedDist. Run npm run build:* first."
+    throw "No update artifacts found in $resolvedDist. Run npm run build:* first."
 }
 
 foreach ($file in $files) {
@@ -54,6 +70,7 @@ foreach ($file in $files) {
 
 Write-Host ""
 Write-Host "Staged $($files.Count) file(s) in: $targetRoot"
-Write-Host "Upload these files to: https://denizen.dolonia.cloud/desktop/updates/"
+Write-Host "Served locally at: /desktop/updates/"
+Write-Host "Remote URL: https://denizen.dolonia.cloud/desktop/updates/"
 Write-Host ""
 Get-ChildItem -Path $targetRoot | Sort-Object Name | Format-Table Name, @{ Label = "Size (KB)"; Expression = { [math]::Round($_.Length / 1KB, 1) } }, LastWriteTime

@@ -101,6 +101,10 @@ async function remediate({ action = 'verify', deps = {} } = {}) {
       const e = await computeQueue.expireOldQueuedJobs();
       steps.push(`expired ${e.expired} stale queued job(s)`);
     }
+    if (computeQueue?.trimExcessQueuedJobs) {
+      const t = await computeQueue.trimExcessQueuedJobs();
+      steps.push(`trimmed ${t.trimmed} excess queued job(s)`);
+    }
   }
 
   if (action === 'restart-lm-studio' || action === 'lm-studio-restart') {

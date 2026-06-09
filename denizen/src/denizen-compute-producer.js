@@ -52,6 +52,12 @@ async function enqueueThinkBatch(getNpcBrains) {
   const now = Date.now();
   if (now - lastEnqueuedAt < MIN_GAP_MS) return null;
 
+  const maxPending = Number(process.env.DENIZEN_MESH_PRODUCER_MAX_PENDING) || 10;
+  const pending = await computeQueue.listPendingJobs(30).catch(() => []);
+  if (pending.length >= maxPending) {
+    return null;
+  }
+
   const npcIds = collectNpcIds(getNpcBrains);
   try {
     const job = await computeQueue.enqueueJob({

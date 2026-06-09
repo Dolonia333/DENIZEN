@@ -141,6 +141,39 @@
       margin-top: 3px;
       flex-shrink: 0;
     }
+    .update-banner {
+      margin: 14px 0 4px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0b1220;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+    .update-banner[data-status="available"],
+    .update-banner[data-status="downloading"] {
+      border-color: #3b82f6;
+      color: #bfdbfe;
+    }
+    .update-banner[data-status="downloaded"] {
+      border-color: #22c55e;
+      color: #86efac;
+    }
+    .update-banner[data-status="error"] {
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+    .update-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .update-actions button {
+      font-size: 12px;
+      padding: 6px 10px;
+    }
   </style>
 </head>
 <body>
@@ -151,6 +184,12 @@
       <h1>Welcome to Denizen Desktop</h1>
       <p>Link this computer to your Denizen account so your agent can help with files, code, and optional compute — always with your approval.</p>
       <div class="machine" id="machine-summary">Detecting hardware…</div>
+      <div class="update-banner" id="update-banner" hidden>
+        <div id="update-message">Checking for updates…</div>
+        <div class="update-actions">
+          <button type="button" data-action="check-updates">Check for updates</button>
+        </div>
+      </div>
       <div class="actions">
         <button class="primary" data-action="next">Get started</button>
       </div>
@@ -461,6 +500,9 @@
           || alert('Open System Settings → Privacy & Security → Accessibility and Screen Recording, then enable Denizen.');
       }
       if (action === 'open-game') window.DenizenDesktop?.openGame?.();
+      if (action === 'check-updates') {
+        void window.DenizenDesktop?.checkForUpdates?.().then(renderUpdateStatus);
+      }
     });
 
     window.DenizenDesktop?.onPermissionPending?.((pending) => {
@@ -472,6 +514,32 @@
         approved,
       }).catch(() => {});
     });
+
+    function renderUpdateStatus(payload) {
+      const banner = document.getElementById('update-banner');
+      const message = document.getElementById('update-message');
+      if (!banner || !message) return;
+      const status = String(payload?.status || 'idle');
+      if (status === 'idle') {
+        banner.hidden = true;
+        return;
+      }
+      banner.hidden = false;
+      banner.dataset.status = status;
+      message.textContent = payload?.message
+        || (payload?.version ? `Update v${payload.version}` : 'Update status unknown');
+    }
+
+    async function refreshUpdateStatus() {
+      const status = await window.DenizenDesktop?.getUpdateStatus?.().catch(() => null);
+      if (status) renderUpdateStatus(status);
+    }
+
+    window.DenizenDesktop?.onUpdateStatus?.((payload) => {
+      renderUpdateStatus(payload);
+    });
+
+    void refreshUpdateStatus();
 
     void loadMachine();
     renderProgress();
