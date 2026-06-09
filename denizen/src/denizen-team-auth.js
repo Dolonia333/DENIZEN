@@ -32,6 +32,41 @@ async function resolveTeamOrg() {
   return org[0];
 }
 
+function configuredOwnerEmail() {
+  return String(process.env.DENIZEN_TEAM_OWNER_EMAIL || '').trim().toLowerCase();
+}
+
+function isConfiguredOwnerEmail(email) {
+  const owner = configuredOwnerEmail();
+  return !!owner && String(email || '').trim().toLowerCase() === owner;
+}
+
+async function orgHasSkillApprover(orgId) {
+  if (!orgId || !denizenDb.enabled) return false;
+  const rows = await denizenDb._get(
+    `denizen_team_accounts?select=id&org_id=eq.${encodeURIComponent(orgId)}&role=in.(owner,admin)&limit=1`,
+  ).catch(() => []);
+  return !!rows?.length;
+}
+
+/** First registrant or DENIZEN_TEAM_OWNER_EMAIL becomes owner; everyone else member. */
+async function resolveTeamMemberRole(email, orgId) {
+  if (isConfiguredOwnerEmail(email)) return 'owner';
+  const hasApprover = await orgHasSkillApprover(orgId);
+  return hasApprover ? 'member' : 'owner';
+}
+
+async function ensureOwnerRoleIfConfigured(account, orgId) {
+  if (!account?.id || !isConfiguredOwnerEmail(account.email)) return account;
+  if (account.role === 'owner') return account;
+  await denizenDb._patch(
+    `denizen_team_accounts?id=eq.${encodeURIComponent(account.id)}`,
+    { role: 'owner' },
+    { prefer: 'return=minimal' },
+  ).catch(() => {});
+  return { ...account, role: 'owner' };
+}
+
 async function registerTeamAccount({ email, displayName, teamCode } = {}) {
   const normalizedEmail = String(email || '').trim().toLowerCase();
   const name = String(displayName || '').trim().slice(0, 200);
@@ -49,13 +84,14 @@ async function registerTeamAccount({ email, displayName, teamCode } = {}) {
     throw new TeamAuthError('Email already registered — use login', 'DENIED');
   }
 
+  const role = await resolveTeamMemberRole(normalizedEmail, org.id);
   const rows = await denizenDb._post(
     'denizen_team_accounts',
     {
       org_id: org.id,
       email: normalizedEmail,
       display_name: name,
-      role: 'member',
+      role,
     },
     { prefer: 'return=representation' },
   );
@@ -101,13 +137,14 @@ async function loginTeamAccount({ email, teamCode } = {}) {
     if (teamCode) {
       const codeCheck = verifyAccessCode(teamCode, 'team');
       if (!codeCheck.ok) throw new TeamAuthError(codeCheck.error || 'Invalid team code', 'DENIED');
+      const role = await resolveTeamMemberRole(normalizedEmail, org.id);
       rows = await denizenDb._post(
         'denizen_team_accounts',
         {
           org_id: org.id,
           email: normalizedEmail,
           display_name: normalizedEmail.split('@')[0],
-          role: 'member',
+          role,
         },
         { prefer: 'return=representation' },
       );
@@ -116,7 +153,8 @@ async function loginTeamAccount({ email, teamCode } = {}) {
     }
   }
 
-  const account = rows[0];
+  let account = rows[0];
+  account = await ensureOwnerRoleIfConfigured(account, org.id);
   await denizenDb._patch(
     `denizen_team_accounts?id=eq.${encodeURIComponent(account.id)}`,
     { last_login_at: new Date().toISOString() },
@@ -150,6 +188,44 @@ async function loginTeamAccount({ email, teamCode } = {}) {
   };
 }
 
+const APPROVER_ROLES = new Set(['owner', 'admin']);
+
+function roleCanApproveSkills(role) {
+  return APPROVER_ROLES.has(String(role || '').toLowerCase());
+}
+
+async function getTeamAccountForSession(sessionId) {
+  if (!sessionId || !denizenDb.enabled) return null;
+  const bySession = await denizenDb._get(
+    `denizen_team_accounts?select=*&visitor_session_id=eq.${encodeURIComponent(sessionId)}&limit=1`,
+  ).catch(() => []);
+  if (bySession?.[0]) return bySession[0];
+
+  const sessionRows = await denizenDb._get(
+    `denizen_visitor_sessions?select=metadata,org_id&limit=1&id=eq.${encodeURIComponent(sessionId)}`,
+  ).catch(() => []);
+  const session = sessionRows?.[0];
+  const email = session?.metadata?.email;
+  const orgId = session?.org_id;
+  if (!email || !orgId) return null;
+
+  const byEmail = await denizenDb._get(
+    `denizen_team_accounts?select=*&org_id=eq.${encodeURIComponent(orgId)}&email=eq.${encodeURIComponent(String(email).trim().toLowerCase())}&limit=1`,
+  ).catch(() => []);
+  return byEmail?.[0] || null;
+}
+
+async function canApproveSkillsForSession(sessionId, { isCeoPrincipal = false } = {}) {
+  if (isCeoPrincipal) return { allowed: true, role: 'ceo' };
+  const account = await getTeamAccountForSession(sessionId);
+  if (!account) return { allowed: false, role: null };
+  return {
+    allowed: roleCanApproveSkills(account.role),
+    role: account.role,
+    account_id: account.id,
+  };
+}
+
 async function linkAccountToSession(email, sessionId, displayName) {
   if (!email || !sessionId) return;
   const normalizedEmail = String(email).trim().toLowerCase();
@@ -178,4 +254,12 @@ module.exports = {
   registerTeamAccount,
   loginTeamAccount,
   linkAccountToSession,
+  getTeamAccountForSession,
+  canApproveSkillsForSession,
+  roleCanApproveSkills,
+  configuredOwnerEmail,
+  isConfiguredOwnerEmail,
+  resolveTeamMemberRole,
+  orgHasSkillApprover,
+  APPROVER_ROLES,
 };

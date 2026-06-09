@@ -1,12 +1,14 @@
 /**
  * First-time visitor onboarding — guided tour after the office scene loads.
- * Team members get a longer walkthrough of day-to-day workflows.
+ * Demo visitors get a sales-oriented tour (value, limits, upgrade path).
+ * Team members get the full day-to-day walkthrough including Lucy → CEO skill gating.
  * Attaches to globalThis.DenizenVisitorOnboarding (no imports).
  */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'denizen-onboarding-seen-v2';
+  const STORAGE_KEY_PREFIX = 'denizen-onboarding-seen-v3';
+  const LEGACY_STORAGE_KEY = 'denizen-onboarding-seen-v2';
   const STYLE_ID = 'denizen-visitor-onboarding-style';
   const OVERLAY_ID = 'denizen-visitor-onboarding';
   const TOUR_CHIP_ID = 'denizen-onboarding-replay-chip';
@@ -26,11 +28,26 @@
     return document.documentElement.classList.contains('denizen-tap-move');
   }
 
+  function isDemoVisitor() {
+    const caps = globalThis.DenizenVisitorCapabilities;
+    if (caps?.isDemo?.()) return true;
+    const sess = globalThis.DenizenVisitorSession;
+    return !!sess?.isDemo?.();
+  }
+
   function isTeamVisitor() {
     const caps = globalThis.DenizenVisitorCapabilities;
     if (caps?.isTeam?.()) return true;
     const sess = globalThis.DenizenVisitorSession;
     return !!sess?.isTeam?.() && !sess?.isDemo?.();
+  }
+
+  function tourTier() {
+    return isTeamVisitor() ? 'team' : 'demo';
+  }
+
+  function storageKey() {
+    return `${STORAGE_KEY_PREFIX}-${tourTier()}`;
   }
 
   function moveLine() {
@@ -50,16 +67,94 @@
     return 'Face an NPC and press C, or tap ⭐ Claim — they become your persistent assistant.';
   }
 
-  /** @type {Array<{ id: string, anchor: string, title: string, tips: string[], teamOnly?: boolean }>} */
+  function chatTips() {
+    if (isDemoVisitor()) {
+      return [
+        'Tap 💬 in the dock (or press Enter / T on desktop) to open chat.',
+        'Ask any NPC “What can you do?” — you are exploring how delegation works in a live AI office.',
+        'Demo chat is real conversation, but sandboxed: no live browser automation, CRM, or team handoffs.',
+        'Try Lucy (ops), Alex (engineering), or Bob (research) to see different roles.',
+      ];
+    }
+    return [
+      'Tap 💬 in the dock (or press Enter / T on desktop) to open chat.',
+      'Ask Lucy about email, calendar, or job applications.',
+      'Ask engineers (Alex, Josh, Edward) about code. Ask Bob or Lucy to research a topic.',
+      'Try: “What can you do?” to see each NPC’s capabilities.',
+    ];
+  }
+
+  function claimTips() {
+    if (isDemoVisitor()) {
+      return [
+        claimLine(),
+        'Claiming shows how a persistent assistant follows you across sessions on a paid team.',
+        'In demo you can claim and chat, but your assistant cannot run team-only tools or custom skills yet.',
+        'Good picks to try: Lucy (CEO’s assistant), Alex (engineering), Roki (quick tasks).',
+      ];
+    }
+    return [
+      claimLine(),
+      'Your assistant remembers context across sessions and can be wired into Cursor, Claude, or ChatGPT.',
+      'Good picks: Lucy (ops/admin), Alex (engineering lead), Roki (intern + quick tasks).',
+    ];
+  }
+
+  function browserTips() {
+    if (isDemoVisitor()) {
+      return [
+        'Tap 🌐 in the dock to preview how live browser work appears in Denizen.',
+        'In demo, agents explain what they would search — team tier runs real browser automation.',
+        'This is one reason teams upgrade: watch research, applications, and competitor checks happen live.',
+      ];
+    }
+    return [
+      'Tap 🌐 in the dock when Lucy (or another NPC) is searching the web.',
+      'You see their browser live — useful for research, competitor checks, and client work.',
+      'Ask in chat: “open a browser” or “search for …” then open 🌐 to follow along.',
+    ];
+  }
+
+  function dailyTips() {
+    if (isDemoVisitor()) {
+      return [
+        'You have seen the core loop: walk → chat → claim → watch the office work.',
+        'Teams upgrade for handoffs, morning briefings, Connect AI, CRM data, and real tool execution.',
+        'When you are ready, use the upgrade step or Log out → Team email login / Team code.',
+      ];
+    }
+    return [
+      'Start of day: Briefing → scan what the team promised overnight.',
+      'Need something done: walk to the right NPC → 💬 chat → be specific.',
+      'Blocked on a teammate: ↗ Hand off with context, not just a ping.',
+      'Need a new capability? Ask Lucy — she packages skill proposals for CEO approval.',
+      'Deep work in your IDE: Connect AI on your claimed assistant.',
+      'Press Tab (desktop) for the live work feed — see what every NPC is doing right now.',
+    ];
+  }
+
+  /** @type {Array<{ id: string, anchor: string, title: string, tips: string[] | (() => string[]), demoOnly?: boolean, teamOnly?: boolean, upgradeAction?: boolean }>} */
   const STEP_DEFS = [
     {
-      id: 'welcome',
+      id: 'welcome-demo',
+      anchor: 'center',
+      title: 'Welcome — explore Denizen',
+      demoOnly: true,
+      tips: [
+        'You are in the demo office — a live pixel workspace where every character is an AI agent.',
+        'Walk around, talk to NPCs, and claim an assistant to see how delegation feels in practice.',
+        'This tour shows what Denizen is and what unlocks when your team goes paid.',
+      ],
+    },
+    {
+      id: 'welcome-team',
       anchor: 'center',
       title: 'Welcome to your AI office',
+      teamOnly: true,
       tips: [
-        'Denizen is a live pixel office where every character is an AI agent doing real work.',
-        'Use it day-to-day to delegate tasks, watch progress, and stay aligned with your team.',
-        'This short tour shows the controls that matter most.',
+        'Denizen is your team’s live office — agents do real work while you delegate, watch, and hand off.',
+        'You have full team access: research, briefings, handoffs, Connect AI, and skill requests through Lucy.',
+        'This tour walks through the controls you will use every day.',
       ],
     },
     {
@@ -75,22 +170,13 @@
       id: 'chat',
       anchor: 'chat-fab',
       title: 'Talk to any NPC',
-      tips: [
-        'Tap 💬 in the dock (or press Enter / T on desktop) to open chat.',
-        'Ask Lucy about email, calendar, or job applications.',
-        'Ask engineers (Alex, Josh, Edward) about code. Ask Bob or Lucy to research a topic.',
-        'Try: “What can you do?” to see each NPC’s capabilities.',
-      ],
+      tips: chatTips,
     },
     {
       id: 'claim',
       anchor: 'claim',
       title: 'Claim your personal assistant',
-      tips: [
-        claimLine,
-        'Your assistant remembers context across sessions and can be wired into Cursor, Claude, or ChatGPT.',
-        'Good picks: Lucy (ops/admin), Alex (engineering lead), Roki (intern + quick tasks).',
-      ],
+      tips: claimTips,
     },
     {
       id: 'voice',
@@ -116,15 +202,46 @@
       id: 'browser',
       anchor: 'browser',
       title: 'Watch live browser work',
+      tips: browserTips,
+    },
+    {
+      id: 'demo-limits',
+      anchor: 'dock',
+      title: 'What demo does not include',
+      demoOnly: true,
       tips: [
-        'Tap 🌐 in the dock when Lucy (or another NPC) is searching the web.',
-        'You see their browser live — useful for research, competitor checks, and demos.',
-        'Ask in chat: “open a browser” or “search for …” then open 🌐 to follow along.',
+        'Demo is a sandbox: no ↗ Hand off, Morning Briefing, Connect AI, or business CRM data.',
+        'Agents will not run real desktop/browser tools or approved custom skills in demo.',
+        'You still see a live office — NPCs think and talk — but execution stays read-only.',
+      ],
+    },
+    {
+      id: 'demo-value',
+      anchor: 'center',
+      title: 'Why teams pay for Denizen',
+      demoOnly: true,
+      tips: [
+        'Persistent assistants wired to your stack — Cursor, Claude, Slack, email — same brain, two interfaces.',
+        'Real execution: agents research, draft, apply, and coordinate overnight while you sleep.',
+        'One office for delegating, watching progress, and handoffs — not another disconnected chat tab.',
+        'New capabilities ship as approved skills, gated by Lucy and leadership so access stays controlled.',
+      ],
+    },
+    {
+      id: 'demo-upgrade',
+      anchor: 'account',
+      title: 'Upgrade to team access',
+      demoOnly: true,
+      upgradeAction: true,
+      tips: [
+        'Log out (account panel, top-right on desktop or Me tab on mobile) → choose Team email login or Team code.',
+        'Your admin can invite you with a team code, or register with work email + code.',
+        'Need access? Message Lucy in chat — she routes upgrade and onboarding requests to leadership.',
       ],
     },
     {
       id: 'handoff',
-      anchor: 'chat-fab',
+      anchor: 'handoff',
       title: 'Hand off to teammates',
       teamOnly: true,
       tips: [
@@ -160,31 +277,98 @@
       ],
     },
     {
+      id: 'team-skills',
+      anchor: 'chat-fab',
+      title: 'Skills Lucy enables (with CEO approval)',
+      teamOnly: true,
+      tips: [
+        'Your assistant ships with core skills — chat, memory, research, and everyday tasks.',
+        'Need something advanced (new automation, CRM action, custom workflow)? Talk to Lucy, the CEO’s assistant.',
+        'Lucy gathers requirements, packages a skill proposal, and runs it by the CEO before your team can use it.',
+        'Try in chat: “Lucy, I need a skill that …” or ↗ Hand off to Lucy with full context.',
+        'After CEO approval, the skill unlocks for your assistant — you do not install it yourself.',
+        'Team leads with admin access may approve proposals from Account → Skills when the CEO delegates that authority.',
+      ],
+    },
+    {
+      id: 'team-agents',
+      anchor: 'game',
+      title: 'Work with every agent in the office',
+      teamOnly: true,
+      tips: [
+        'Your claimed assistant is yours — but any NPC can help when you walk up and chat.',
+        'Engineers (Alex, Josh, Edward) for code; Bob for research; Lucy for ops and skill requests.',
+        'NPCs coordinate behind the scenes — press Tab (desktop) for the live work feed.',
+        'Need Cursor in sync? Connect AI on your claimed assistant, not on every NPC.',
+      ],
+    },
+    {
+      id: 'capabilities-guide',
+      anchor: 'guide',
+      title: 'Capabilities Guide',
+      teamOnly: true,
+      tips: [
+        'Tap Guide in the dock for the full reference: your assistant, team agents, models, mesh, desktop.',
+        'Use it when onboarding teammates — explains browser vs desktop and multi-model routing.',
+        'Super-users: Guide → Desktop power covers permission levels and coworker-class automation.',
+      ],
+    },
+    {
+      id: 'mesh-intro',
+      anchor: 'compute',
+      title: 'Mesh compute (optional super-user path)',
+      teamOnly: true,
+      tips: [
+        'The Compute panel (top-right) shows your node: browser-only until you install Denizen Desktop.',
+        'Download Desktop → Pair this computer → opt in to contribute GPU/CPU to the team mesh.',
+        'Watch fleet jobs in the ⬡ mesh chip. Hardware score 75+ earns Super Node priority.',
+        'Replay the Mesh tour anytime from Guide or the Mesh tour chip in the dock.',
+      ],
+    },
+    {
+      id: 'demo-guide',
+      anchor: 'guide',
+      title: 'See the full capability matrix',
+      demoOnly: true,
+      tips: [
+        'Tap Guide in the dock — compare demo vs team vs desktop super-user capabilities.',
+        'Shows how multiple AIs work together: mesh, cloud APIs, BYOK keys, and Connect AI.',
+        'When you upgrade, the same Guide expands with handoffs, mesh, and desktop power details.',
+      ],
+    },
+    {
       id: 'daily',
       anchor: 'dock',
-      title: 'Your day-to-day cheat sheet',
-      tips: [
-        'Start of day: Briefing → scan what the team promised overnight.',
-        'Need something done: walk to the right NPC → 💬 chat → be specific.',
-        'Blocked on a teammate: ↗ Hand off with context, not just a ping.',
-        'Deep work in your IDE: Connect AI on your claimed assistant.',
-        'Press Tab (desktop) for the live work feed — see what every NPC is doing right now.',
-      ],
+      title: 'Wrap-up',
+      tips: dailyTips,
     },
   ];
 
   function resolveTips(step) {
-    return step.tips.map((t) => (typeof t === 'function' ? t() : t));
+    const raw = typeof step.tips === 'function' ? step.tips() : step.tips;
+    return raw.map((t) => (typeof t === 'function' ? t() : t));
   }
 
   function buildSteps() {
     const team = isTeamVisitor();
-    return STEP_DEFS.filter((s) => !s.teamOnly || team);
+    return STEP_DEFS.filter((s) => {
+      if (s.demoOnly && team) return false;
+      if (s.teamOnly && !team) return false;
+      return true;
+    }).map((s) => {
+      if (s.id !== 'daily') return s;
+      return {
+        ...s,
+        title: team ? 'Your day-to-day cheat sheet' : 'What you have seen',
+      };
+    });
   }
 
   function hasSeenOnboarding() {
     try {
-      return localStorage.getItem(STORAGE_KEY) === '1';
+      if (localStorage.getItem(storageKey()) === '1') return true;
+      if (tourTier() === 'team' && localStorage.getItem(LEGACY_STORAGE_KEY) === '1') return true;
+      return false;
     } catch (_) {
       return false;
     }
@@ -192,7 +376,7 @@
 
   function markSeen() {
     try {
-      localStorage.setItem(STORAGE_KEY, '1');
+      localStorage.setItem(storageKey(), '1');
     } catch (_) {}
   }
 
@@ -245,6 +429,25 @@
         letter-spacing: 0.04em;
         text-transform: uppercase;
       }
+      #${OVERLAY_ID} .onb-tier-badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        vertical-align: middle;
+      }
+      #${OVERLAY_ID} .onb-tier-badge.demo {
+        background: rgba(56, 189, 248, 0.15);
+        color: #7dd3fc;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+      }
+      #${OVERLAY_ID} .onb-tier-badge.team {
+        background: rgba(74, 222, 128, 0.12);
+        color: #86efac;
+        border: 1px solid rgba(74, 222, 128, 0.35);
+      }
       #${OVERLAY_ID} .onb-title {
         margin: 0 0 10px;
         font-size: 15px;
@@ -270,13 +473,15 @@
         gap: 8px;
         justify-content: flex-end;
         align-items: center;
+        flex-wrap: wrap;
         position: sticky;
         bottom: 0;
         background: #020617;
         padding-top: 8px;
       }
       #${OVERLAY_ID} .onb-skip,
-      #${OVERLAY_ID} .onb-next {
+      #${OVERLAY_ID} .onb-next,
+      #${OVERLAY_ID} .onb-upgrade {
         min-height: 44px;
         touch-action: manipulation;
       }
@@ -303,6 +508,22 @@
         cursor: pointer;
       }
       #${OVERLAY_ID} .onb-next:hover { background: #22c55e; }
+      #${OVERLAY_ID} .onb-upgrade {
+        background: transparent;
+        color: #7dd3fc;
+        border: 1px solid rgba(56, 189, 248, 0.45);
+        border-radius: 6px;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 11px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-right: auto;
+      }
+      #${OVERLAY_ID} .onb-upgrade:hover {
+        border-color: #38bdf8;
+        color: #e0f2fe;
+      }
       #${OVERLAY_ID} .onb-dots {
         display: flex;
         gap: 5px;
@@ -348,9 +569,15 @@
     return true;
   }
 
+  function replayChipLabel() {
+    return isTeamVisitor() ? 'Team tour' : 'Demo tour';
+  }
+
   function rewireReplayChip() {
     const chip = document.getElementById(TOUR_CHIP_ID);
     if (!chip) return;
+    chip.textContent = replayChipLabel();
+    chip.title = `Replay the ${isTeamVisitor() ? 'team' : 'demo'} onboarding tour`;
     const clone = chip.cloneNode(true);
     chip.replaceWith(clone);
     const onPress = () => {
@@ -373,8 +600,6 @@
       chip = document.createElement('button');
       chip.id = TOUR_CHIP_ID;
       chip.type = 'button';
-      chip.textContent = 'Tour';
-      chip.title = 'Replay the team onboarding tour';
       document.body.appendChild(chip);
     }
     chip.classList.add('ready');
@@ -435,8 +660,22 @@
         || rectForEl('player-chat-fab')
         || centerRect();
     }
+    if (anchor === 'account') {
+      return rectForEl('denizen-account-panel')
+        || rectForEl('denizen-acct-identity')
+        || centerRect();
+    }
     if (anchor === 'dock') {
       return rectForEl('denizen-bottom-dock') || centerRect();
+    }
+    if (anchor === 'guide') {
+      return rectForEl('denizen-capabilities-guide-chip') || rectForEl('denizen-bottom-dock') || centerRect();
+    }
+    if (anchor === 'compute') {
+      return rectForEl('denizen-node-ui-chip') || centerRect();
+    }
+    if (anchor === 'mesh') {
+      return rectForEl('denizen-mesh-jobs-chip') || rectForEl('denizen-bottom-dock') || centerRect();
     }
     const gc = document.getElementById('game-container');
     if (anchor === 'game' && gc) return gc.getBoundingClientRect();
@@ -480,7 +719,17 @@
     stepUnbinds = [];
   }
 
-  function wireStepButtons(skipBtn, nextBtn) {
+  async function startUpgradeFlow() {
+    markSeen();
+    dismiss({ keepOverlayState: true });
+    try {
+      await globalThis.DenizenVisitorSession?.logout?.();
+    } catch (err) {
+      console.warn('[DenizenVisitorOnboarding] upgrade logout failed:', err?.message || err);
+    }
+  }
+
+  function wireStepButtons(skipBtn, nextBtn, upgradeBtn) {
     clearStepUnbinds();
     const onNext = () => {
       if (stepIndex < activeSteps.length - 1) {
@@ -504,6 +753,19 @@
         stepUnbinds.push(() => skipBtn.removeEventListener('click', handler));
       }
     }
+    if (upgradeBtn) {
+      const handler = (e) => {
+        e?.preventDefault?.();
+        startUpgradeFlow();
+      };
+      if (bind) {
+        const offUp = bind(upgradeBtn, handler, { stop: true });
+        if (typeof offUp === 'function') stepUnbinds.push(offUp);
+      } else {
+        upgradeBtn.addEventListener('click', handler);
+        stepUnbinds.push(() => upgradeBtn.removeEventListener('click', handler));
+      }
+    }
     if (nextBtn) {
       const handler = (e) => {
         e?.preventDefault?.();
@@ -519,8 +781,8 @@
     }
   }
 
-  function dismiss() {
-    markSeen();
+  function dismiss(opts = {}) {
+    if (!opts.keepOverlayState) markSeen();
     delete document.documentElement.dataset.denizenOnboarding;
     clearStepUnbinds();
     if (overlayEl) {
@@ -539,6 +801,17 @@
       .replace(/"/g, '&quot;');
   }
 
+  function tourAriaLabel() {
+    return isTeamVisitor() ? 'Team onboarding tour' : 'Demo onboarding tour';
+  }
+
+  function tierBadgeHtml() {
+    const team = isTeamVisitor();
+    const cls = team ? 'team' : 'demo';
+    const label = team ? 'Team' : 'Demo';
+    return `<span class="onb-tier-badge ${cls}">${label}</span>`;
+  }
+
   function renderStep() {
     if (!overlayEl) return;
     const step = activeSteps[stepIndex];
@@ -548,9 +821,10 @@
     }
 
     const tips = resolveTips(step);
+    const isLast = stepIndex >= activeSteps.length - 1;
     const tooltip = overlayEl.querySelector('.onb-tooltip');
     tooltip.innerHTML = `
-      <p class="onb-step">Step ${stepIndex + 1} of ${activeSteps.length}</p>
+      <p class="onb-step">Step ${stepIndex + 1} of ${activeSteps.length}${tierBadgeHtml()}</p>
       <p class="onb-title">${escapeHtml(step.title)}</p>
       <ul class="onb-tips">
         ${tips.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}
@@ -559,14 +833,16 @@
         <div class="onb-dots">
           ${activeSteps.map((_, i) => `<span class="onb-dot${i === stepIndex ? ' active' : ''}"></span>`).join('')}
         </div>
+        ${step.upgradeAction ? '<button type="button" class="onb-upgrade">Get team access</button>' : ''}
         <button type="button" class="onb-skip">Skip tour</button>
-        <button type="button" class="onb-next">${stepIndex < activeSteps.length - 1 ? 'Next' : 'Start working'}</button>
+        <button type="button" class="onb-next">${isLast ? 'Start working' : 'Next'}</button>
       </div>
     `;
 
     wireStepButtons(
       tooltip.querySelector('.onb-skip'),
       tooltip.querySelector('.onb-next'),
+      tooltip.querySelector('.onb-upgrade'),
     );
 
     requestAnimationFrame(() => positionTooltip(tooltip, step.anchor));
@@ -592,7 +868,7 @@
     overlayEl.id = OVERLAY_ID;
     overlayEl.innerHTML = `
       <div class="onb-backdrop" aria-hidden="true"></div>
-      <div class="onb-tooltip" role="dialog" aria-label="Team onboarding"></div>
+      <div class="onb-tooltip" role="dialog" aria-label="${escapeHtml(tourAriaLabel())}"></div>
     `;
     document.body.appendChild(overlayEl);
 
@@ -621,15 +897,30 @@
     setTimeout(() => waitForSceneReady(sc, pc, attempt + 1), 250);
   }
 
+  function onSessionReady() {
+    mountReplayChip();
+    if (shouldShow()) {
+      if (scene?.player && document.getElementById('game-container')) {
+        setTimeout(showTour, 600);
+      } else {
+        waitForSceneReady(scene, playerChat);
+      }
+    }
+  }
+
+  function onLoggedOut() {
+    dismiss({ keepOverlayState: true });
+  }
+
   const DenizenVisitorOnboarding = {
     attach(sc, pc) {
       scene = sc;
       playerChat = pc;
 
-      const afterSession = () => {
-        mountReplayChip();
-        if (shouldShow()) waitForSceneReady(scene, playerChat);
-      };
+      document.addEventListener('denizen-visitor-session-ready', onSessionReady);
+      document.addEventListener('denizen-visitor-logged-out', onLoggedOut);
+
+      const afterSession = () => onSessionReady();
 
       globalThis.DenizenVisitorSession?.init?.().then(afterSession).catch(afterSession);
 
@@ -637,6 +928,8 @@
     },
 
     detach() {
+      document.removeEventListener('denizen-visitor-session-ready', onSessionReady);
+      document.removeEventListener('denizen-visitor-logged-out', onLoggedOut);
       if (overlayEl?._cleanup) overlayEl._cleanup();
       dismiss();
       document.getElementById(TOUR_CHIP_ID)?.remove();
@@ -657,8 +950,10 @@
 
     resetForTesting() {
       try {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
         localStorage.removeItem('denizen-onboarding-seen');
+        localStorage.removeItem(`${STORAGE_KEY_PREFIX}-demo`);
+        localStorage.removeItem(`${STORAGE_KEY_PREFIX}-team`);
       } catch (_) {}
     },
   };

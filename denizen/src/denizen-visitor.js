@@ -613,16 +613,41 @@ function maskProviderKeys(keys) {
   return out;
 }
 
+async function getSessionProviderKeys(sessionId) {
+  const session = await getSession(sessionId);
+  if (!session) return {};
+  const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
+  const keys = meta.provider_keys && typeof meta.provider_keys === 'object' ? meta.provider_keys : {};
+  const out = {};
+  for (const [name, value] of Object.entries(keys)) {
+    const s = String(value || '').trim();
+    if (s) out[name] = s;
+  }
+  return out;
+}
+
 async function getSessionSettings(sessionId) {
   const session = await getSession(sessionId);
   if (!session) return null;
   const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
   const keys = meta.provider_keys && typeof meta.provider_keys === 'object' ? meta.provider_keys : {};
+  let canApproveSkills = false;
+  let teamRole = null;
+  try {
+    const teamAuth = require('./denizen-team-auth.js');
+    const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+      isCeoPrincipal: meta.is_ceo_principal === true || meta.access_method === 'ceo_code',
+    });
+    canApproveSkills = !!approval.allowed;
+    teamRole = approval.role || null;
+  } catch (_) { /* optional */ }
   return {
     email: meta.email || session.email || null,
     notify_email: meta.notify_email !== false,
     provider_keys: maskProviderKeys(keys),
     provider_keys_set: Object.keys(keys).filter((k) => String(keys[k] || '').trim()),
+    can_approve_skills: canApproveSkills,
+    team_role: teamRole,
   };
 }
 
@@ -680,6 +705,7 @@ module.exports = {
   resolveHandoffTarget,
   buildLucyHandoffAlertBroadcast,
   getSessionSettings,
+  getSessionProviderKeys,
   updateSessionSettings,
   maskProviderKeys,
 };

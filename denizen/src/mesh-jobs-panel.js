@@ -27,6 +27,11 @@
     runningJobs: [],
     recentCompletions: [],
     fleet: [],
+    watchdogAlerts: [],
+    resourcePressure: null,
+    scalePlan: null,
+    scaleActions: [],
+    healthRunbook: null,
     fetchedAt: 0,
     error: null,
   };
@@ -217,8 +222,15 @@
 
   function paintChip() {
     if (!chipEl) return;
-    const { pendingCount, runningCount, dbEnabled, error } = snapshot;
+    const { pendingCount, runningCount, dbEnabled, error, watchdogAlerts, resourcePressure } = snapshot;
     const touch = isTouchUi();
+    const pressureHigh = resourcePressure?.severity === 'critical' || resourcePressure?.severity === 'high';
+    if (watchdogAlerts?.length || pressureHigh) {
+      chipEl.dataset.state = 'busy';
+      chipEl.textContent = touch ? '⬡' : '⬡ mesh ⚠';
+      chipEl.title = watchdogAlerts[0]?.message || 'Mesh watchdog alert';
+      return;
+    }
     if (error) {
       chipEl.dataset.state = 'busy';
       chipEl.textContent = touch ? '⬡' : '⬡ mesh !';
@@ -359,9 +371,11 @@
     if (busy) return;
     busy = true;
     try {
-      const [status, fleet] = await Promise.all([
+      const [status, fleet, pressure, scaleAdvice] = await Promise.all([
         fetchJson(`${STATUS_URL}?limit=25`).catch((err) => ({ _err: err?.message || String(err) })),
         fetchFleet(),
+        fetchJson('/api/compute/resource-pressure').catch(() => null),
+        fetchJson('/api/compute/scale-advice').catch(() => null),
       ]);
 
       if (status._err) {
@@ -380,6 +394,8 @@
           runningJobs: Array.isArray(status.running_jobs) ? status.running_jobs : [],
           recentCompletions: Array.isArray(status.recent_completions) ? status.recent_completions : [],
           fleet,
+          resourcePressure: pressure?.signals || snapshot.resourcePressure,
+          scalePlan: scaleAdvice?.plan || snapshot.scalePlan,
           fetchedAt: Date.now(),
           error: null,
         };
@@ -397,7 +413,59 @@
     }
   }
 
+  function shouldShowMeshPanel() {
+    const caps = globalThis.DenizenVisitorCapabilities;
+    if (!caps) return false;
+    return !!caps.canSeeMeshDashboard?.();
+  }
+
+  function onWsMessage(ev) {
+    const msg = ev.detail;
+    if (!msg) return;
+    if (msg.type === 'mesh_watchdog_alert' && Array.isArray(msg.alerts)) {
+      snapshot.watchdogAlerts = msg.alerts;
+      paintChip();
+      if (panelOpen) renderPanel();
+    }
+    if (msg.type === 'mesh_scale_action') {
+      snapshot.scaleActions = [...(snapshot.scaleActions || []), msg].slice(-8);
+      paintChip();
+      if (panelOpen) renderPanel();
+    }
+    if (msg.type === 'resource_pressure_alert') {
+      snapshot.resourcePressure = {
+        severity: msg.severity,
+        pressures: msg.pressures || [],
+        queue_pending: msg.queue_pending,
+      };
+      paintChip();
+      if (panelOpen) renderPanel();
+    }
+    if (msg.type === 'health_runbook_progress' || msg.type === 'health_runbook_complete') {
+      snapshot.healthRunbook = {
+        phase: msg.phase || (msg.type === 'health_runbook_complete' ? 'complete' : 'progress'),
+        ok: msg.ok,
+        issues: msg.issues,
+      };
+      if (panelOpen) renderPanel();
+    }
+  }
+
   function init() {
+    document.addEventListener('denizen-ws-message', onWsMessage);
+    if (!shouldShowMeshPanel()) {
+      chipEl?.remove();
+      panelEl?.remove();
+      chipEl = null;
+      panelEl = null;
+      document.addEventListener('denizen-dashboard-gate', () => {
+        if (shouldShowMeshPanel() && !chipEl) init();
+      });
+      document.addEventListener('denizen-visitor-session-ready', () => {
+        if (shouldShowMeshPanel() && !chipEl) init();
+      });
+      return;
+    }
     buildUI();
     refresh();
     setInterval(() => {

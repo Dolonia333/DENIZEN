@@ -58,7 +58,8 @@
 
     deferredDone = (async () => {
       await loadParallel([
-        './src/visitor-capabilities.js?v=vis2',
+        './src/visitor-capabilities.js?v=vis4',
+        './src/visitor-dashboard-gate.js?v=dgate1',
         './src/proximity-audio.js?v=audio2',
         './src/voice-gate.js?v=audio2',
       ]);
@@ -94,7 +95,10 @@
       './src/visitor-mcp-connect-ui.js?v=mcp3',
       './src/visitor-briefing-ui.js?v=vis3',
       './src/visitor-voice-walkup.js?v=vis3',
-      './src/proposals-panel.js?v=propfix1',
+      './src/visitor-skill-gap-ui.js?v=sgap1',
+      './src/visitor-agent-inbox.js?v=ainbox1',
+      './src/mesh-alert-toast.js?v=mtoast2',
+      './src/proposals-panel.js?v=propfix2',
       './src/city-debug.js',
     ];
     try {

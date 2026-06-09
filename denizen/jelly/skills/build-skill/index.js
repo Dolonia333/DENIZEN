@@ -16,14 +16,25 @@ module.exports = {
 
     const generateFn = async (spec) => {
       const prompt = deps.skillBuilder.buildGenerationPrompt(spec);
-      const cfg = deps.npcBrains.providers?.kimi
+      const overrides = params?.providerOverrides;
+      let cfg = overrides?.primary
+        || deps.npcBrains.providers?.kimi
+        || deps.npcBrains.providers?.claude
+        || deps.npcBrains.providers?.openai
         || deps.npcBrains.providers?.lmstudio
         || deps.npcBrains.providers?.demo;
       if (!cfg || cfg.type === 'demo') return null;
-      return deps.npcBrains._callProvider(cfg,
+      const code = await deps.npcBrains._callProvider(cfg,
         'You are a careful Node.js tool author. Output ONLY runnable code, no prose, no fences.',
         [{ role: 'user', content: prompt }],
-        { maxTokens: 1200, sliceLen: 6000, kind: 'skill-codegen', npc: npcName });
+        { maxTokens: 1400, sliceLen: 8000, kind: 'skill-codegen', npc: npcName });
+      if (!code && overrides?.fallback) {
+        return deps.npcBrains._callProvider(overrides.fallback,
+          'You are a careful Node.js tool author. Output ONLY runnable code, no prose, no fences.',
+          [{ role: 'user', content: prompt }],
+          { maxTokens: 1400, sliceLen: 8000, kind: 'skill-codegen', npc: npcName });
+      }
+      return code;
     };
 
     const result = await deps.skillBuilder.requestSkill({
@@ -31,6 +42,10 @@ module.exports = {
       name: params?.name,
       purpose: params?.purpose || params?.task,
       params: params?.params || [],
+      researchContext: params?.researchContext || '',
+      githubContext: params?.githubContext || '',
+      requestedBy: params?.requestedBy || null,
+      sourceMessage: params?.sourceMessage || '',
       generateFn,
     });
 
@@ -55,6 +70,11 @@ module.exports = {
       });
     }
     deps.log?.info?.('SkillBuilder', `${npcName} drafted "${result.proposal?.slug || '?'}" → ${result.proposal?.status || 'error'}`);
-    return { ok, output, skill: 'build-skill' };
+    return {
+      ok,
+      output,
+      skill: 'build-skill',
+      proposal: ok ? result.proposal : null,
+    };
   },
 };

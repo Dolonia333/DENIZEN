@@ -240,7 +240,26 @@
     if (panelOpen) renderPanel();
   }
 
+  function shouldShowDiag() {
+    const caps = globalThis.DenizenVisitorCapabilities;
+    if (!caps) return false;
+    return !!caps.canSeeOperatorTelemetry?.();
+  }
+
   function init() {
+    if (!shouldShowDiag()) {
+      chip?.remove();
+      panel?.remove();
+      chip = null;
+      panel = null;
+      document.addEventListener('denizen-dashboard-gate', () => {
+        if (shouldShowDiag() && !chip) init();
+      });
+      document.addEventListener('denizen-visitor-session-ready', () => {
+        if (shouldShowDiag() && !chip) init();
+      });
+      return;
+    }
     buildUI();
     setTimeout(() => {
       pollOnce();

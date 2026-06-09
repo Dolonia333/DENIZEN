@@ -510,7 +510,27 @@
     return items.find((p) => p.kind === kind && p.id === id) || null;
   }
 
+  function canReviewProposals() {
+    const caps = globalThis.DenizenVisitorCapabilities;
+    if (caps?.isCeo?.()) return true;
+    if (caps?.canApproveSkills?.()) return true;
+    const sess = globalThis.DenizenVisitorSession;
+    if (sess?.isCeoPrincipal?.()) return true;
+    return false;
+  }
+
   function buildUI() {
+    if (!canReviewProposals()) {
+      chipEl?.remove();
+      panelEl?.remove();
+      chipEl = null;
+      panelEl = null;
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+      return null;
+    }
     injectStyles();
     if (chipEl && panelEl) return panelEl;
 
@@ -832,10 +852,24 @@
   }
 
   async function init() {
+    if (!canReviewProposals()) {
+      console.log('[Proposals] hidden — approver role required');
+      return;
+    }
     buildUI();
     await probeSoulApply();
     await refresh();
     pollTimer = setInterval(refresh, POLL_MS);
+    document.addEventListener('denizen-visitor-session-ready', () => {
+      if (!canReviewProposals()) {
+        chipEl?.remove();
+        panelEl?.remove();
+        chipEl = null;
+        panelEl = null;
+        return;
+      }
+      if (!chipEl) buildUI();
+    });
 
     try {
       const auto = new URL(window.location.href).searchParams.get('proposals');

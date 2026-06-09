@@ -46,6 +46,9 @@ const permissionRegistry = require('./permission-registry');
 let visitorAccess = null;
 try { visitorAccess = require('./visitor-access'); } catch (_) {}
 
+let playerChatSkillBridge = null;
+try { playerChatSkillBridge = require('./player-chat-skill-bridge'); } catch (_) {}
+
 let denizenDb = null;
 try { denizenDb = require('./denizen-db'); } catch (_) {}
 
@@ -61,6 +64,9 @@ let promptTuning = null;
 try { promptTuning = require('./prompt-tuning'); } catch (_) {}
 let officeDirector = null;
 try { officeDirector = require('./office-director'); } catch (_) {}
+
+let taskResourceAdvisor = null;
+try { taskResourceAdvisor = require('./task-resource-advisor'); } catch (_) {}
 
 class NpcBrainManager {
   constructor() {
@@ -204,6 +210,28 @@ class NpcBrainManager {
       return { allowed: false, reason: 'demo session — real tools need team access' };
     }
     return this.allowAutonomousSkillRun(npcName, opts);
+  }
+
+  /**
+   * When mesh is saturated, use visitor BYOK keys for player chat inference.
+   */
+  _resolveVisitorProviderOverrides(opts = {}) {
+    if (!opts?.sessionId && !opts?.providerKeys) return null;
+    if (!taskResourceAdvisor?.isMeshSaturated) return null;
+    const meshCtx = opts.meshContext || {};
+    if (!taskResourceAdvisor.isMeshSaturated(meshCtx)) return null;
+
+    const keys = opts.providerKeys && typeof opts.providerKeys === 'object' ? opts.providerKeys : {};
+    const anthropicKey = String(keys.anthropic || '').trim();
+    if (anthropicKey && this.providers?.claude) {
+      const base = this.providers.claude;
+      return {
+        primary: { ...base, apiKey: anthropicKey, providerKey: 'anthropic' },
+        fallback: this.providers.lmstudio || base,
+        source: 'visitor_byok_anthropic',
+      };
+    }
+    return null;
   }
 
   /** Autonomous think-loop run_skill gate (directives + player chat bypass). */
@@ -2011,7 +2039,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
           'Data Engineer', 'DevOps Engineer', 'Researcher', 'IT Support', 'QA Engineer',
         ]);
         const buildLine = builders.has(brain.role)
-          ? `\nIf you need a tool that doesn't exist yet, draft one: action:"run_skill", skill:"build-skill", skillParams:{ name:"kebab-name", purpose:"what it does", params:["inputs"] }. The CEO must approve the generated code before it can run — so propose it, then move on; don't wait.`
+          ? `\nIf you need a tool that doesn't exist yet, draft one: action:"run_skill", skill:"build-skill", skillParams:{ name:"kebab-name", purpose:"what it does", params:["inputs"] }. A team lead must approve the generated code before it can run — propose it, then move on; don't wait.`
           : '';
         const skillCdMin = Math.round((promptTuning?.runSkillCooldownMs ?? 900000) / 60000);
         openClawContext = `OpenClaw skills: ${skillLine}${researchLine}${buildLine}\n` +
@@ -2935,12 +2963,14 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       capabilitiesBlock, currentTaskSection, assistantProfileBlock,
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
-      demoToolBlock,
+      demoToolBlock, visitorWorkBlock, lucySkillGateBlock,
     } = sections;
     const coworkerShort = String(coworkerContext || '').split('\n').slice(0, 5).join('\n');
     return `${brain.personality}${memorySection}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
 ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
 ${demoToolBlock || ''}
+${lucySkillGateBlock || ''}
+${visitorWorkBlock || ''}
 ${currentTaskSection}
 ${assistantProfileBlock}${pendingHandoffsBlock}${researchBlock}
 ## Role
@@ -3539,6 +3569,9 @@ ${brain.voiceAnchor || ''}`;
     }
     const title = (h?.title || '').toLowerCase();
     if (npcName === 'Lucy') {
+      if (opts?.sessionId && opts?.displayName) {
+        return `Hey ${opts.displayName} — need research, scheduling, or a new skill for the team? I route skill requests to Dolonia for approval.`;
+      }
       return 'Hey — want me to search something, open my browser, or dig into a topic?';
     }
     if (npcName === 'Bouncer') {
@@ -3599,6 +3632,31 @@ ${brain.voiceAnchor || ''}`;
       pushPlayerMemory(npcName, responseText);
       this._recordAssistantDecision(npcName, { action: 'chat', summary: responseText, outcome: 'ok' }, opts);
       return { text: responseText, delegation: null, actions: [] };
+    }
+
+    if (
+      npcName === 'Lucy'
+      && isVisitor
+      && realWorkOn
+      && playerChatSkillBridge?.isSkillAccessRequest?.(safeMessage)
+    ) {
+      const responseText = `${playerChatSkillBridge.lucySkillGateReply(opts.displayName)} Packaging it now — researching, checking GitHub, and drafting the proposal.`;
+      pushPlayerMemory(playerName, safeMessage);
+      pushPlayerMemory(npcName, responseText);
+      this._recordAssistantDecision(npcName, {
+        action: 'skill_proposal_intake',
+        summary: responseText,
+        outcome: 'pending_ceo',
+      }, opts);
+      return {
+        text: responseText,
+        delegation: null,
+        actions: [{
+          action: 'skill_gap_intake',
+          message: safeMessage,
+          npcName: 'Lucy',
+        }],
+      };
     }
 
     if (isVisitorAssistant) {
@@ -3766,17 +3824,28 @@ ${brain.voiceAnchor || ''}`;
       ? '\n## Demo access\nThis visitor is on the demo tier — chat and in-office [ACTION:...] tags only. Do NOT promise browser control, PC/desktop tasks, run_skill, or external research.\n'
       : '';
 
+    const lucySkillGateBlock = npcName === 'Lucy' && isVisitor && realWorkOn
+      ? `\n## Skill access gate (Lucy → Dolonia)\nYou are the CEO's assistant. Teammates do NOT get new/custom skills automatically.\nWhen they ask for a new skill, tool, automation, or capability you cannot run yet:\n1. Acknowledge what they need in plain language.\n2. Say you are packaging a proposal (research → GitHub scan → build-skill) for Dolonia to approve.\n3. The server runs the skill-gap pipeline automatically when you intake the request.\n4. Do NOT promise the skill works until Dolonia approves.\n5. For straightforward asks you already have (research, scheduling, handoffs), help directly — only gate net-new skills.\nApproved skills unlock for their claimed assistant after Dolonia signs off (Account → Skills for team leads).\n`
+      : '';
+
+    const visitorWorkBlock = isVisitor && realWorkOn && isVisitorAssistant
+      ? `\n## Execute tools for your teammate\nWhen they ask you to DO something, append at the end: [RUN_SKILL:skill-name:{"param":"value"}]. Skills: research, github, coding-agent, browserclaw, supabase, health-check, remediate, docker-sandbox, cloud-vm (DevOps), and CEO-approved custom skills.\nIf no existing skill fits: run research first, then the server skill-gap pipeline will search GitHub and draft build-skill for Dolonia's approval — tell them you're packaging a proposal.\nDo NOT promise a new skill works until Dolonia approves it in Account → Skills.\nDevOps (Oscar, Abby, Edward): docker-sandbox or cloud-vm for isolated workloads; health-check + remediate (incl. restart-lm-studio) when mesh or LM Studio is unhealthy.\n${opts.resource_pressure_block || ''}\n${opts.taskAdvice?.prompt_block || ''}\n`
+      : '';
+
     const chatSections = {
       memorySection, ceoHistorySection, bouncerLiveSection, bouncerReplyRules,
       capabilitiesBlock, currentTaskSection, assistantProfileBlock,
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
-      demoToolBlock,
+      demoToolBlock, visitorWorkBlock, lucySkillGateBlock,
     };
     const systemPrompt = promptTuning?.compactPlayerChat !== false
       ? this._buildCompactPlayerChatSystemPrompt(npcName, brain, h, chatSections)
       : `${brain.personality}${memorySection}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
 ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
+${demoToolBlock || ''}
+${lucySkillGateBlock || ''}
+${visitorWorkBlock || ''}
 ${currentTaskSection}
 ${teamStatus}
 
@@ -3891,9 +3960,13 @@ ${brain.voiceAnchor || ''}`;
       kind: 'chat',
     };
 
+    const providerOverride = this._resolveVisitorProviderOverrides(opts);
+    const activeProvider = providerOverride?.primary || brain.providerConfig;
+    const activeFallback = providerOverride?.fallback ?? brain.fallbackConfig;
+
     let responseText;
     try {
-      responseText = await this._callProvider(brain.providerConfig, systemPrompt, messages, playerOpts);
+      responseText = await this._callProvider(activeProvider, systemPrompt, messages, playerOpts);
     } catch (err) {
       const now = Date.now();
       const lastErr = this._lastErrorLog?.[npcName] || 0;
@@ -3904,9 +3977,9 @@ ${brain.voiceAnchor || ''}`;
         this._lastErrorLog[npcName] = now;
       }
       // Try fallback provider
-      if (brain.fallbackConfig && brain.fallbackConfig !== brain.providerConfig) {
+      if (activeFallback && activeFallback !== activeProvider) {
         try {
-          responseText = await this._callProvider(brain.fallbackConfig, systemPrompt, messages, playerOpts);
+          responseText = await this._callProvider(activeFallback, systemPrompt, messages, playerOpts);
         } catch (e2) {
           responseText = null;
         }
@@ -3930,6 +4003,9 @@ ${brain.voiceAnchor || ''}`;
       const actionName = parts[0].trim();
       const actionParams = parts.slice(1).map(p => p.trim());
       actions.push({ action: actionName, params: actionParams });
+    }
+    if (playerChatSkillBridge?.stripRunSkillTags) {
+      responseText = playerChatSkillBridge.stripRunSkillTags(responseText);
     }
     responseText = this._cleanDisplayText(responseText, npcName);
     if (npcName === 'Bouncer' && this._isReasoningLeak(responseText)) {

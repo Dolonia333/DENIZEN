@@ -63,6 +63,15 @@ const computeProducer = require('./src/denizen-compute-producer');
 const nodeProfiler     = require('./src/denizen-node-profiler');
 const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
+const computeQueue     = require('./src/denizen-compute-queue');
+const playerChatSkills = require('./src/player-chat-skill-bridge');
+const taskResourceAdvisor = require('./src/task-resource-advisor');
+const skillGapOrchestrator = require('./src/skill-gap-orchestrator');
+const skillDiscovery = require('./src/skill-discovery');
+const healthRunbook = require('./src/health-runbook');
+const meshWatchdog = require('./src/mesh-worker-watchdog');
+const resourcePressure = require('./src/resource-pressure');
+const meshScaleAdvisor = require('./src/mesh-scale-advisor');
 const webResearch      = require('./src/web-research');
 const screenObserve    = require('./src/screen-observe');
 const meetingRunner    = require('./src/meeting-runner');
@@ -1045,6 +1054,397 @@ computeProducer.startMeshJobProducer({
   getNpcBrains: () => npcBrains,
 });
 
+const MESH_MAINTAIN_MS = Number(process.env.DENIZEN_MESH_MAINTAIN_MS) || 5 * 60 * 1000;
+const MESH_STALE_MS = Number(process.env.DENIZEN_MESH_STALE_JOB_MS) || 30 * 60 * 1000;
+setInterval(() => {
+  computeQueue.reclaimStaleJobs(MESH_STALE_MS)
+    .then((r) => {
+      if (r.reclaimed > 0) log.info('ComputeQueue', `reclaimed ${r.reclaimed} stale assigned job(s)`);
+    })
+    .catch((err) => console.warn('[ComputeQueue] reclaim failed:', err?.message || err));
+  computeQueue.expireOldQueuedJobs()
+    .then((r) => {
+      if (r.expired > 0) log.info('ComputeQueue', `expired ${r.expired} stale queued job(s)`);
+    })
+    .catch((err) => console.warn('[ComputeQueue] expire failed:', err?.message || err));
+}, MESH_MAINTAIN_MS);
+computeQueue.reclaimStaleJobs(MESH_STALE_MS).catch(() => {});
+computeQueue.expireOldQueuedJobs().catch(() => {});
+
+async function _buildMeshContextForAdvice() {
+  const [pending, assigned] = await Promise.all([
+    computeQueue.listPendingJobs(50).catch(() => []),
+    computeQueue.listAssignedJobs(50).catch(() => []),
+  ]);
+  const fleetSummary = fleetRegistry.buildFleetSummary(null);
+  const fleet = fleetSummary?.fleet || [];
+  const staleAssigned = assigned.filter((j) => {
+    const started = j.started_at ? new Date(j.started_at).getTime() : 0;
+    return started && (Date.now() - started) > MESH_STALE_MS;
+  }).length;
+  let lmReachable = false;
+  try {
+    const h = await new Promise((resolve) => {
+      const req = http.get('http://127.0.0.1:1234/v1/models', { timeout: 2000 }, (res) => {
+        resolve(res.statusCode >= 200 && res.statusCode < 300);
+      });
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => { req.destroy(); resolve(false); });
+    });
+    lmReachable = !!h;
+  } catch (_) {
+    lmReachable = false;
+  }
+  const base = {
+    taskText: '',
+    queuePending: pending.length,
+    assignedStuck: staleAssigned,
+    fleet,
+    lmStudioReachable: lmReachable,
+    denizenRoot: __dirname,
+  };
+  const signals = resourcePressure.gatherSignals(base);
+  return {
+    ...base,
+    resourcePressure: signals,
+    resource_pressure_block: resourcePressure.buildResourcePressureBlock(signals),
+  };
+}
+
+let _lastResourceAlertSeverity = 'low';
+
+function _broadcastOps(m) {
+  const raw = JSON.stringify(m);
+  if (agentWss) {
+    agentWss.clients.forEach((c) => { if (c.readyState === 1) c.send(raw); });
+  }
+}
+
+async function _maybeBroadcastResourcePressure(meshCtx) {
+  const signals = meshCtx?.resourcePressure;
+  if (!signals || !resourcePressure.shouldBroadcastAlert(signals, _lastResourceAlertSeverity)) return;
+  _lastResourceAlertSeverity = signals.severity;
+  _broadcastOps({
+    type: 'resource_pressure_alert',
+    severity: signals.severity,
+    pressures: signals.pressures,
+    queue_pending: signals.queue_pending,
+    ts: Date.now(),
+  });
+}
+
+async function _handleMeshOpsComputeRoutes(req, res, urlPath) {
+  if (urlPath === '/api/compute/resource-pressure' && req.method === 'GET') {
+    const meshCtx = await _buildMeshContextForAdvice();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      signals: meshCtx.resourcePressure,
+      block: meshCtx.resource_pressure_block,
+    }));
+    return true;
+  }
+
+  if (urlPath === '/api/compute/scale-advice' && (req.method === 'GET' || req.method === 'POST')) {
+    const meshCtx = await _buildMeshContextForAdvice();
+    const signals = meshCtx.resourcePressure || {};
+    const plan = meshScaleAdvisor.adviseScale(signals);
+    let autoScale = null;
+    if (req.method === 'POST') {
+      const body = await _readJsonBody(req, 16 * 1024).catch(() => ({}));
+      if (body.execute === true || body.auto === true) {
+        autoScale = await meshScaleAdvisor.executeAutoScale({
+          signals,
+          deps: { computeQueue, probeLmStudio: healthRunbook.probeLmStudio },
+          broadcast: _broadcastOps,
+        });
+      }
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, signals, plan, auto_scale: autoScale }));
+    return true;
+  }
+
+  if (urlPath === '/api/compute/task-advice' && (req.method === 'GET' || req.method === 'POST')) {
+    let taskText = '';
+    let sessionId = null;
+    if (req.method === 'POST') {
+      const body = await _readJsonBody(req, 64 * 1024);
+      taskText = body.task || body.task_text || body.text || '';
+      sessionId = body.session_id || body.sessionId || null;
+    } else {
+      const u = new URL(req.url, 'http://localhost');
+      taskText = u.searchParams.get('task') || u.searchParams.get('text') || '';
+      sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+    }
+    const meshCtx = await _buildMeshContextForAdvice();
+    meshCtx.taskText = taskText;
+    if (sessionId) {
+      const keys = await denizenVisitor.getSessionProviderKeys(sessionId).catch(() => ({}));
+      meshCtx.hasVisitorAnthropicKey = !!keys.anthropic;
+      meshCtx.hasVisitorOpenaiKey = !!keys.openai;
+    }
+    const advice = taskResourceAdvisor.advise(meshCtx);
+    await _maybeBroadcastResourcePressure(meshCtx).catch(() => {});
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, ...advice }));
+    return true;
+  }
+
+  return false;
+}
+
+function _skillGapBroadcast(m) {
+  const raw = JSON.stringify(m);
+  if (agentWss) {
+    agentWss.clients.forEach((c) => { if (c.readyState === 1) c.send(raw); });
+  }
+}
+
+async function _notifyCeoSkillProposal({ proposal, requestedBy, purpose, npcName }) {
+  if (!proposal?.id) return;
+  try {
+    worldState.pushEvent(
+      'skill-proposal',
+      `Skill proposal ${proposal.slug} from ${npcName} for ${requestedBy || 'teammate'}: ${String(purpose || '').slice(0, 80)}`,
+    );
+  } catch (_) {}
+  _skillGapBroadcast({
+    type: 'skill_proposal_pending',
+    proposal: {
+      id: proposal.id,
+      slug: proposal.slug,
+      status: proposal.status,
+      npc: npcName,
+      scanFlags: proposal.scanFlags || [],
+    },
+    requestedBy: requestedBy || null,
+    purpose: String(purpose || '').slice(0, 200),
+    ts: Date.now(),
+  });
+}
+
+async function _buildSkillGapDeps(sessionId, meshContext = {}) {
+  const providerKeys = sessionId
+    ? await denizenVisitor.getSessionProviderKeys(sessionId).catch(() => ({}))
+    : {};
+  return {
+    webResearch,
+    skillBuilder,
+    registry: jelly.registry,
+    approvedMap: _approvedSkillScripts(),
+    denizenRoot: __dirname,
+    npcBrains,
+    providerKeys,
+    meshContext,
+    broadcast: _skillGapBroadcast,
+    runBuildSkill: async (npc, params) => {
+      const r = await runNpcSkill(npc, 'build-skill', params);
+      return {
+        ok: r?.ok !== false,
+        proposal: r?.proposal || null,
+        output: r?.output,
+        error: r?.ok === false ? r?.output : null,
+      };
+    },
+    notifyCeo: _notifyCeoSkillProposal,
+  };
+}
+
+async function _runSkillGapFromChat({
+  ws,
+  npcName,
+  sessionId,
+  message,
+  visitorCtx,
+  visitorToolGate,
+  meshContext,
+}) {
+  const assistantKey = String(visitorCtx?.assistant?.npc_key || '').toLowerCase();
+  const isAssistant = assistantKey && assistantKey === String(npcName || '').toLowerCase();
+  if (!isAssistant && npcName !== 'Lucy') return null;
+
+  if (ws?.readyState === 1) {
+    ws.send(JSON.stringify({
+      type: 'player_chat_response',
+      npcName,
+      text: 'Figuring out how to do that — checking existing skills, researching the web, scanning GitHub, and drafting a proposal for Dolonia…',
+      delegation: null,
+      actions: [{ action: 'skill_gap_pipeline', phase: 'start' }],
+    }));
+  }
+
+  const deps = await _buildSkillGapDeps(sessionId, meshContext);
+  const pipeline = await skillGapOrchestrator.runGapPipeline({
+    npcName,
+    message,
+    requestedBy: visitorCtx?.displayName || null,
+    deps,
+  });
+
+  if (pipeline?.output) {
+    try { npcBrains.injectSkillResult(npcName, 'skill-gap', pipeline.output); } catch (_) {}
+  }
+
+  if (ws?.readyState === 1) {
+    ws.send(JSON.stringify({
+      type: 'player_chat_response',
+      npcName,
+      text: String(pipeline?.output || 'Skill pipeline finished.').slice(0, 2000),
+      delegation: null,
+      actions: [],
+      skill_gap: {
+        ok: !!pipeline?.ok,
+        phase: pipeline?.phase || null,
+        proposal: pipeline?.proposal
+          ? { id: pipeline.proposal.id, slug: pipeline.proposal.slug, status: pipeline.proposal.status }
+          : null,
+      },
+    }));
+  }
+  return pipeline;
+}
+
+async function _executePlayerChatSkillFollowup({
+  ws,
+  npcName,
+  sessionId,
+  message,
+  responseText,
+  visitorCtx,
+  visitorToolGate,
+  meshContext = null,
+  gapAlreadyHandled = false,
+}) {
+  if (!sessionId || !visitorToolGate?.canUseRealWork) return;
+
+  const assistantKey = String(visitorCtx?.assistant?.npc_key || '').toLowerCase();
+  const isAssistant = assistantKey && assistantKey === String(npcName || '').toLowerCase();
+  const approvedMap = _approvedSkillScripts();
+
+  const plan = playerChatSkills.planSkillExecution({
+    npcName,
+    message,
+    responseText,
+    isAssistant,
+    canUseRealWork: visitorToolGate.canUseRealWork,
+  });
+
+  const gapCtx = meshContext || await _buildMeshContextForAdvice().catch(() => ({}));
+
+  if (!plan?.skill) {
+    if (!gapAlreadyHandled && skillGapOrchestrator.shouldOrchestrate({
+      message,
+      plan,
+      registry: jelly.registry,
+      approvedMap,
+      isAssistant,
+      canUseRealWork: visitorToolGate.canUseRealWork,
+    })) {
+      await _runSkillGapFromChat({
+        ws, npcName, sessionId, message, visitorCtx, visitorToolGate, meshContext: gapCtx,
+      });
+    }
+    return;
+  }
+
+  if (!gapAlreadyHandled && plan.skill === 'build-skill' && isAssistant) {
+    await _runSkillGapFromChat({
+      ws, npcName, sessionId, message, visitorCtx, visitorToolGate, meshContext: gapCtx,
+    });
+    return;
+  }
+
+  const skillGate = npcBrains.allowPlayerSkillRun(npcName, {
+    sessionId,
+    sessionTier: visitorToolGate.sessionTier,
+    canUseRealWork: visitorToolGate.canUseRealWork,
+    sessionMetadata: visitorToolGate.sessionMetadata,
+    orgSettings: visitorToolGate.orgSettings,
+  });
+  if (!skillGate.allowed) {
+    if (ws.readyState === 1) {
+      ws.send(JSON.stringify({
+        type: 'player_chat_response',
+        npcName,
+        text: `I can't run ${plan.skill} yet — ${skillGate.reason || 'tool cooldown'}.`,
+        delegation: null,
+        actions: [],
+      }));
+    }
+    return;
+  }
+
+  if (ws.readyState === 1) {
+    ws.send(JSON.stringify({
+      type: 'player_chat_response',
+      npcName,
+      text: `Running ${plan.skill}…`,
+      delegation: null,
+      actions: [{ action: 'run_skill', skill: plan.skill }],
+    }));
+  }
+
+  try {
+    const result = await runNpcSkill(npcName, plan.skill, plan.params || {});
+    const output = typeof result?.output === 'string'
+      ? result.output
+      : (result?.ok === false ? (result.error || 'Skill failed') : JSON.stringify(result?.output ?? result ?? '').slice(0, 1500));
+
+    if (!gapAlreadyHandled && skillGapOrchestrator.shouldOrchestrate({
+      message,
+      skillResult: result,
+      plan,
+      registry: jelly.registry,
+      approvedMap,
+      isAssistant,
+      canUseRealWork: visitorToolGate.canUseRealWork,
+    })) {
+      await _runSkillGapFromChat({
+        ws, npcName, sessionId, message, visitorCtx, visitorToolGate, meshContext: gapCtx,
+      });
+      return;
+    }
+
+    npcBrains.injectSkillResult(npcName, plan.skill, output);
+    if (ws.readyState === 1) {
+      ws.send(JSON.stringify({
+        type: 'player_chat_response',
+        npcName,
+        text: String(output || 'Done.').slice(0, 2000),
+        delegation: null,
+        actions: [],
+        skill_result: { skill: plan.skill, ok: result?.ok !== false },
+      }));
+    }
+  } catch (err) {
+    if (!gapAlreadyHandled && skillGapOrchestrator.shouldOrchestrate({
+      message,
+      skillResult: { ok: false, output: String(err?.message || err) },
+      plan,
+      registry: jelly.registry,
+      approvedMap,
+      isAssistant,
+      canUseRealWork: visitorToolGate.canUseRealWork,
+    })) {
+      await _runSkillGapFromChat({
+        ws, npcName, sessionId, message, visitorCtx, visitorToolGate, meshContext: gapCtx,
+      });
+      return;
+    }
+    if (ws.readyState === 1) {
+      ws.send(JSON.stringify({
+        type: 'player_chat_response',
+        npcName,
+        text: `${plan.skill} failed: ${err?.message || err}`,
+        delegation: null,
+        actions: [],
+        error: String(err?.message || err),
+      }));
+    }
+  }
+}
+
 function _denyVisitorRealTools(ws, npcName) {
   if (ws.readyState === 1) {
     ws.send(JSON.stringify({
@@ -1598,6 +1998,12 @@ const jelly = createJelly({
     bouncerInvTake: _bouncerInvTake,
     githubRepo: GITHUB_REPO,
     runWebSearch: runNpcWebSearch,
+    healthRunbook,
+    computeQueue,
+    fleetRegistry,
+    denizenRoot: __dirname,
+    canRemediate: (npc) => healthRunbook.canRemediate(npc),
+    approvedSkillScripts: _approvedSkillScripts,
   },
 });
 console.log(`[${JELLY.logTag}] ${jelly.listSkills().length} skills loaded — ${JELLY.tagline}`);
@@ -2005,18 +2411,19 @@ const server = http.createServer((req, res) => {
   }
 
   if (urlPath.startsWith('/api/compute/') || urlPath.startsWith('/api/desktop/')) {
-    handleComputeRoutes(req, res)
-      .then((handled) => {
-        if (handled || res.writableEnded) return;
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'Compute route not found' }));
-      })
-      .catch((err) => {
-        if (!res.writableEnded) {
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
-        }
-      });
+    (async () => {
+      const meshHandled = await _handleMeshOpsComputeRoutes(req, res, urlPath).catch(() => false);
+      if (meshHandled || res.writableEnded) return;
+      const handled = await handleComputeRoutes(req, res);
+      if (handled || res.writableEnded) return;
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'Compute route not found' }));
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
     return;
   }
 
@@ -4304,15 +4711,124 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (/^\/api\/skill-proposals\/([^/]+)\/(approve|reject)$/.test(urlPath) && req.method === 'POST') {
-    const [, , , id, decision] = urlPath.split('/');
-    const result = decision === 'approve' ? skillBuilder.approveSkill(id) : skillBuilder.rejectSkill(id);
-    if (result.ok) {
-      _approvedSkillCache = { at: 0, map: {} }; // bust cache so an approved skill is runnable immediately
-      if (agentWss) agentWss.clients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify({ type: 'skill_proposal_decided', id, decision, ts: Date.now() })); });
-      log.info('SkillBuilder', `Skill "${result.proposal?.slug}" ${decision}d by CEO`);
-    }
-    res.writeHead(result.ok ? 200 : 404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(result));
+    (async () => {
+      const [, , , id, decision] = urlPath.split('/');
+      const body = await _readJsonBody(req, 16 * 1024).catch(() => ({}));
+      const sessionId = body.session_id || body.sessionId || null;
+      if (sessionId) {
+        await _verifyVisitorSession(req, sessionId, body);
+        const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+          isCeoPrincipal: body.is_ceo_principal === true,
+        });
+        if (!approval.allowed) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Team lead or admin role required to approve skills' }));
+          return;
+        }
+      }
+      const result = decision === 'approve' ? skillBuilder.approveSkill(id) : skillBuilder.rejectSkill(id);
+      if (result.ok) {
+        _approvedSkillCache = { at: 0, map: {} };
+        if (agentWss) agentWss.clients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify({ type: 'skill_proposal_decided', id, decision, ts: Date.now() })); });
+        log.info('SkillBuilder', `Skill "${result.proposal?.slug}" ${decision}d`);
+      }
+      res.writeHead(result.ok ? 200 : 404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/skill-proposals' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const approval = await teamAuth.canApproveSkillsForSession(sessionId);
+      if (!approval.allowed) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team lead or admin role required' }));
+        return;
+      }
+      const status = u.searchParams.get('status') || 'pending';
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        proposals: skillBuilder.getSkillProposals({ status }),
+        role: approval.role,
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (/^\/api\/visitor\/skill-proposals\/([^/]+)\/(approve|reject)$/.test(urlPath) && req.method === 'POST') {
+    (async () => {
+      const [, , , , id, decision] = urlPath.split('/');
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const approval = await teamAuth.canApproveSkillsForSession(sessionId);
+      if (!approval.allowed) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team lead or admin role required' }));
+        return;
+      }
+      const result = decision === 'approve' ? skillBuilder.approveSkill(id) : skillBuilder.rejectSkill(id);
+      if (result.ok) {
+        _approvedSkillCache = { at: 0, map: {} };
+        if (agentWss) agentWss.clients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify({ type: 'skill_proposal_decided', id, decision, ts: Date.now() })); });
+      }
+      res.writeHead(result.ok ? 200 : 404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: result.ok, ...result, role: approval.role }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/health/runbook' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const scope = body.scope || 'full';
+      const remediateActions = Array.isArray(body.remediate) ? body.remediate : [];
+      const result = await healthRunbook.runHealthRunbook({
+        scope,
+        remediateActions,
+        verifyAfter: body.verify_after !== false,
+        broadcast: _broadcastOps,
+        deps: { computeQueue, fleetRegistry },
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
     return;
   }
 
@@ -6382,6 +6898,16 @@ function sendToCeoClients(payload) {
 }
 
 const agentWss = new WebSocketServer({ noServer: true });
+
+meshWatchdog.startMeshWatchdog({
+  computeQueue,
+  fleetRegistry,
+  broadcast: _broadcastOps,
+  log,
+  resourcePressure,
+  probeLmStudio: healthRunbook.probeLmStudio,
+});
+
 agentWss.on('connection', (ws) => {
   console.log(`[CofounderAgent] WS client connected (${cofounderAgent.wsClients.size + 1} total)`);
   cofounderAgent.addClient(ws);
@@ -7080,7 +7606,10 @@ agentWss.on('connection', (ws) => {
           : Promise.resolve([]);
 
         let _visitorCitedResearch = null;
+        let _visitorCtxForSkills = null;
+        let _taskAdviceForChat = null;
         const responsePromise = Promise.all([visitorLoadPromise, ceoHandoffsPromise]).then(async ([visitorCtx, ceoHandoffs]) => {
+          _visitorCtxForSkills = visitorCtx;
           if (visitorCtx) {
             console.log(`[PlayerChat] ${visitorCtx.displayName} → ${npcName}: "${msg.text}"`);
           }
@@ -7100,6 +7629,21 @@ agentWss.on('connection', (ws) => {
               orgSettings: visitorToolGate.orgSettings,
             }
             : (ceoHandoffs.length ? { pendingHandoffs: ceoHandoffs } : undefined);
+
+          if (playerOpts?.sessionId && visitorToolGate.canUseRealWork
+            && playerChatSkills.isTaskLikeMessage(msg.text)) {
+            const providerKeys = await denizenVisitor.getSessionProviderKeys(playerOpts.sessionId).catch(() => ({}));
+            const meshContext = await _buildMeshContextForAdvice();
+            meshContext.taskText = msg.text;
+            meshContext.hasVisitorAnthropicKey = !!providerKeys.anthropic;
+            meshContext.hasVisitorOpenaiKey = !!providerKeys.openai;
+            _taskAdviceForChat = taskResourceAdvisor.advise(meshContext);
+            playerOpts.providerKeys = providerKeys;
+            playerOpts.meshContext = meshContext;
+            playerOpts.taskAdvice = _taskAdviceForChat;
+            playerOpts.resource_pressure_block = meshContext.resource_pressure_block;
+            await _maybeBroadcastResourcePressure(meshContext).catch(() => {});
+          }
 
           if (visitorCtx?.sessionId && visitorToolGate.canUseRealWork
             && citedResearch.looksLikeResearchQuery(msg.text)) {
@@ -7172,28 +7716,75 @@ agentWss.on('connection', (ws) => {
             }
             global._npcStats.playerChatSucceeded++;
 
+            let outboundText = text;
+            if (_taskAdviceForChat?.recommendation
+              && msg.session_id
+              && visitorToolGate.canUseRealWork
+              && playerChatSkills.isTaskLikeMessage(msg.text)) {
+              outboundText = `${text}\n\n⏱ ${_taskAdviceForChat.recommendation}`;
+            }
+
             if (msg.session_id) {
               visitorIntel.absorbChatContext(msg.session_id, {
                 userMessage: msg.text,
-                npcResponse: text,
+                npcResponse: outboundText,
                 npcKey: npcName,
               }).catch(() => {});
               visitorIntel.recordCommitmentsFromChat(msg.session_id, {
                 userMessage: msg.text,
-                npcResponse: text,
+                npcResponse: outboundText,
                 npcKey: npcName,
               }).catch(() => {});
-              slackChannel.sendToSlack(msg.session_id, `${npcName}: ${text}`).catch(() => {});
+              slackChannel.sendToSlack(msg.session_id, `${npcName}: ${outboundText}`).catch(() => {});
             }
 
             const reply = JSON.stringify({
               type: isIncidentReport ? 'bouncer_security' : 'player_chat_response',
-              npcName, text,
+              npcName, text: outboundText,
               delegation: result.delegation || null,
               actions: result.actions || [],
               citations: _visitorCitedResearch?.citations || null,
+              task_advice: _taskAdviceForChat || null,
             });
             if (ws.readyState === 1) ws.send(reply);
+
+            const gapActions = (result?.actions || []).filter((a) => a?.action === 'skill_gap_intake');
+            if (gapActions.length && msg.session_id && visitorToolGate.canUseRealWork) {
+              for (const gap of gapActions) {
+                _runSkillGapFromChat({
+                  ws,
+                  npcName: gap.npcName || npcName,
+                  sessionId: msg.session_id,
+                  message: gap.message || msg.text,
+                  visitorCtx: _visitorCtxForSkills,
+                  visitorToolGate,
+                  meshContext: _taskAdviceForChat ? { ...await _buildMeshContextForAdvice().catch(() => ({})), taskText: msg.text } : await _buildMeshContextForAdvice().catch(() => ({})),
+                }).catch((err) => {
+                  console.warn('[PlayerChat] skill gap intake failed:', err?.message || err);
+                });
+              }
+            }
+
+            if (msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport) {
+              _executePlayerChatSkillFollowup({
+                ws,
+                npcName,
+                sessionId: msg.session_id,
+                message: msg.text,
+                responseText: text,
+                visitorCtx: _visitorCtxForSkills,
+                visitorToolGate,
+                gapAlreadyHandled: gapActions.length > 0,
+                meshContext: {
+                  ...(await _buildMeshContextForAdvice().catch(() => ({}))),
+                  taskText: msg.text,
+                  hasVisitorAnthropicKey: !!_visitorCtxForSkills?.providerKeys?.anthropic,
+                },
+              }).catch((err) => {
+                console.warn('[PlayerChat] skill followup failed:', err?.message || err);
+              });
+            }
+
             if (!isIncidentReport && !msg.session_id) {
               npcBrains.saveMemory(npcName, `CEO said: "${msg.text}" — I replied: "${text}"${result.delegation ? ` [delegated to ${result.delegation.delegateTo}]` : ''}`);
               npcBrains.setMoodFromExternal(npcName, 'ceo_talked');

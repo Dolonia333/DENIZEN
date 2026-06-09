@@ -83,7 +83,17 @@ function scan(code) {
  *
  * @returns {Promise<object>} the proposal record
  */
-async function requestSkill({ npc, name, purpose, params = [], generateFn } = {}) {
+async function requestSkill({
+  npc,
+  name,
+  purpose,
+  params = [],
+  generateFn,
+  researchContext = '',
+  githubContext = '',
+  requestedBy = null,
+  sourceMessage = '',
+} = {}) {
   const slug = slugify(name || purpose || '');
   if (!NAME_RE.test(slug)) {
     return { ok: false, error: `Invalid skill name "${name}" (slug "${slug}")` };
@@ -97,7 +107,15 @@ async function requestSkill({ npc, name, purpose, params = [], generateFn } = {}
     return { ok: false, error: `Skill "${slug}" already exists.` };
   }
 
-  const spec = { slug, purpose: String(purpose || '').slice(0, 400), params: Array.isArray(params) ? params.slice(0, 8) : [] };
+  const spec = {
+    slug,
+    purpose: String(purpose || '').slice(0, 400),
+    params: Array.isArray(params) ? params.slice(0, 8) : [],
+    researchContext: String(researchContext || '').slice(0, 3500),
+    githubContext: String(githubContext || '').slice(0, 3000),
+    requestedBy: requestedBy || null,
+    sourceMessage: String(sourceMessage || '').slice(0, 500),
+  };
 
   // Generate the code (injected generator, with a safe fallback template).
   let code = null;
@@ -130,6 +148,10 @@ async function requestSkill({ npc, name, purpose, params = [], generateFn } = {}
     scanFlags: flags,
     status,
     pendingPath: path.join('skills-pending', slug, `${slug}.mjs`),
+    requestedBy: spec.requestedBy,
+    sourceMessage: spec.sourceMessage,
+    hasResearchContext: !!spec.researchContext,
+    hasGithubContext: !!spec.githubContext,
     at: new Date().toISOString(),
   };
   store.proposals.unshift(proposal);
@@ -228,10 +250,24 @@ main().catch(e => { console.log(JSON.stringify({ error: String(e && e.message ||
  *  so the server can feed it to whichever model it picks. */
 function buildGenerationPrompt(spec) {
   const params = (spec.params || []).map(p => (typeof p === 'string' ? p : `${p.name}${p.desc ? ' — ' + p.desc : ''}`)).join(', ');
+  const contextBlocks = [];
+  if (spec.researchContext) {
+    contextBlocks.push(`WEB RESEARCH (use for implementation details):\n${spec.researchContext}`);
+  }
+  if (spec.githubContext) {
+    contextBlocks.push(`GITHUB / EXISTING SKILL HINTS (adapt patterns, do not copy secrets):\n${spec.githubContext}`);
+  }
+  if (spec.requestedBy) {
+    contextBlocks.push(`Requested by teammate: ${spec.requestedBy}`);
+  }
+  const contextSection = contextBlocks.length
+    ? `\n\nCONTEXT:\n${contextBlocks.join('\n\n')}\n`
+    : '';
+
   return `Write a single self-contained Node.js ESM skill file named ${spec.slug}.mjs.
 
 Purpose: ${spec.purpose}
-Inputs (passed as --key value CLI args): ${params || '(decide sensible inputs)'}
+Inputs (passed as --key value CLI args): ${params || '(decide sensible inputs)'}${contextSection}
 
 STRICT RULES:
 - Read args from process.argv as --key value pairs.

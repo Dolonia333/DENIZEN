@@ -131,6 +131,69 @@ async function listRecentCompletedJobs(limit = 10) {
   ).catch(() => []);
 }
 
+/**
+ * Reclaim jobs stuck in assigned state (worker died mid-job).
+ */
+async function reclaimStaleJobs(maxAgeMs = 30 * 60 * 1000) {
+  if (!isEnabled()) return { reclaimed: 0, failed: 0 };
+  const assigned = await listAssignedJobs(100);
+  const cutoff = Date.now() - Math.max(60_000, Number(maxAgeMs) || 30 * 60 * 1000);
+  let reclaimed = 0;
+  let failed = 0;
+
+  for (const job of assigned) {
+    const started = job.started_at ? new Date(job.started_at).getTime() : 0;
+    if (!started || started > cutoff) continue;
+    try {
+      const rows = await denizenDb._patch(
+        `${JOB_TABLE}?id=eq.${encodeURIComponent(job.id)}&status=eq.assigned`,
+        {
+          status: 'queued',
+          assigned_node_id: null,
+          started_at: null,
+          error: 'reclaimed: stale assignment',
+        },
+        { prefer: 'return=representation' },
+      );
+      if (rows?.[0]) reclaimed += 1;
+    } catch (_) {
+      failed += 1;
+    }
+  }
+  return { reclaimed, failed, checked: assigned.length };
+}
+
+/**
+ * Fail ancient queued smoke/sim jobs so the queue can drain real work.
+ */
+async function expireOldQueuedJobs(maxAgeMs = 24 * 60 * 60 * 1000) {
+  if (!isEnabled()) return { expired: 0 };
+  const pending = await listPendingJobs(200);
+  const cutoff = Date.now() - Math.max(3600_000, Number(maxAgeMs) || 24 * 60 * 60 * 1000);
+  let expired = 0;
+
+  for (const job of pending) {
+    const created = job.created_at ? new Date(job.created_at).getTime() : 0;
+    if (!created || created > cutoff) continue;
+    const payload = job.payload && typeof job.payload === 'object' ? job.payload : {};
+    const isSmoke = payload.smoke || payload.source === 'smoke-mesh-jobs-flow' || String(payload.source || '').startsWith('smoke-');
+    if (!isSmoke && job.job_type !== 'sim_tick') continue;
+    try {
+      const rows = await denizenDb._patch(
+        `${JOB_TABLE}?id=eq.${encodeURIComponent(job.id)}&status=eq.queued`,
+        {
+          status: 'failed',
+          completed_at: new Date().toISOString(),
+          error: 'expired: stale queued smoke job',
+        },
+        { prefer: 'return=representation' },
+      );
+      if (rows?.[0]) expired += 1;
+    } catch (_) { /* skip */ }
+  }
+  return { expired, checked: pending.length };
+}
+
 module.exports = {
   enqueueJob,
   claimJob,
@@ -139,5 +202,7 @@ module.exports = {
   listPendingJobs,
   listAssignedJobs,
   listRecentCompletedJobs,
+  reclaimStaleJobs,
+  expireOldQueuedJobs,
   JOB_TABLE,
 };

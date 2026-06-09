@@ -96,6 +96,45 @@
         touch-action: manipulation;
       }
       #${ROOT_ID} .acct-logout:hover { border-color: #f87171; background: rgba(248, 113, 113, 0.1); }
+      #${ROOT_ID} .acct-demo-banner {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: rgba(14, 116, 144, 0.12);
+      }
+      #${ROOT_ID} .acct-demo-banner.show { display: flex; }
+      #${ROOT_ID} .acct-demo-banner-title {
+        font-size: 10px;
+        font-weight: 700;
+        color: #7dd3fc;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+      #${ROOT_ID} .acct-demo-banner-copy {
+        font-size: 9px;
+        line-height: 1.4;
+        color: #bae6fd;
+      }
+      #${ROOT_ID} .acct-demo-upgrade {
+        align-self: flex-start;
+        background: transparent;
+        border: 1px solid rgba(56, 189, 248, 0.5);
+        border-radius: 6px;
+        color: #e0f2fe;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 5px 10px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #${ROOT_ID} .acct-demo-upgrade:hover {
+        border-color: #38bdf8;
+        background: rgba(56, 189, 248, 0.12);
+      }
       #${ROOT_ID} .acct-settings {
         display: none;
         flex-direction: column;
@@ -148,6 +187,30 @@
         padding: 6px 10px;
         cursor: pointer;
       }
+      #${ROOT_ID} .acct-skill-card {
+        margin-top: 8px;
+        padding: 8px;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.6);
+      }
+      #${ROOT_ID} .acct-skill-card .acct-skill-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      #${ROOT_ID} .acct-skill-card button {
+        font: inherit;
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px solid #475569;
+        background: #1e293b;
+        color: #e2e8f0;
+        cursor: pointer;
+      }
+      #${ROOT_ID} .acct-skill-card button.approve { border-color: #4ade80; color: #4ade80; }
+      #${ROOT_ID} .acct-skill-card button.reject { border-color: #f87171; color: #fca5a5; }
       #${ROOT_ID} .acct-logout:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -308,12 +371,17 @@
           <button type="button" class="acct-logout" id="denizen-acct-logout">Log out</button>
         </div>
       </div>
+      <div class="acct-demo-banner" id="denizen-acct-demo-banner" hidden>
+        <div class="acct-demo-banner-title">Demo · read-only sandbox</div>
+        <div class="acct-demo-banner-copy">Explore the office and chat with NPCs. Upgrade for handoffs, briefings, real browser work, and team skills approved by Lucy.</div>
+        <button type="button" class="acct-demo-upgrade" id="denizen-acct-demo-upgrade">Get team access</button>
+      </div>
       <div class="acct-stats" id="denizen-acct-stats"></div>
       <div class="acct-settings" id="denizen-acct-settings">
         <div class="acct-settings-title">Connect &amp; notifications</div>
         <div class="acct-settings-hint" id="denizen-acct-email-hint">Email notifications use your login email when Resend is configured on the server.</div>
         <div class="acct-field">
-          <label for="denizen-acct-key-anthropic">Anthropic key (optional — for your external AI clients)</label>
+          <label for="denizen-acct-key-anthropic">Anthropic key (used when mesh is busy)</label>
           <input type="password" id="denizen-acct-key-anthropic" autocomplete="off" placeholder="sk-ant-…" />
         </div>
         <div class="acct-field">
@@ -325,6 +393,11 @@
           Send me Denizen email updates
         </label>
         <button type="button" class="acct-save-btn" id="denizen-acct-save-settings">Save settings</button>
+        <div class="acct-skills-panel" id="denizen-acct-skills-panel" hidden>
+          <div class="acct-settings-title">Skill proposals (team lead)</div>
+          <div class="acct-settings-hint">Approve NPC-authored tools so your team can use them.</div>
+          <div id="denizen-acct-skills-list"></div>
+        </div>
       </div>
     `;
     document.body.appendChild(rootEl);
@@ -353,7 +426,13 @@
       e.stopPropagation();
       onToggle();
     });
-    logoutEl?.addEventListener('click', () => {
+    rootEl.querySelector('#denizen-acct-save-settings')?.addEventListener('click', () => {
+      saveAccountSettings().catch((err) => {
+        console.warn('[DenizenAccountPanel] save settings failed:', err?.message || err);
+      });
+    });
+
+    const runLogout = () => {
       if (busyLogout) return;
       const api = getSessionApi();
       if (typeof api?.logout !== 'function') return;
@@ -367,9 +446,27 @@
           busyLogout = false;
           if (logoutEl) logoutEl.disabled = false;
         });
-    });
+    };
+
+    logoutEl?.addEventListener('click', runLogout);
+    rootEl.querySelector('#denizen-acct-demo-upgrade')?.addEventListener('click', runLogout);
 
     return rootEl;
+  }
+
+  function renderDemoBanner() {
+    if (!rootEl) return;
+    const banner = rootEl.querySelector('#denizen-acct-demo-banner');
+    if (!banner) return;
+    const isDemo = globalThis.DenizenVisitorCapabilities?.isDemo?.()
+      || globalThis.DenizenVisitorSession?.isDemo?.();
+    if (isDemo) {
+      banner.hidden = false;
+      banner.classList.add('show');
+    } else {
+      banner.hidden = true;
+      banner.classList.remove('show');
+    }
   }
 
   async function loadAccountSettings() {
@@ -401,7 +498,84 @@
       }
       const notify = rootEl?.querySelector('#denizen-acct-notify-email');
       if (notify) notify.checked = settings.notify_email !== false;
+      await loadSkillProposals(!!settings.can_approve_skills);
     } catch (_) {}
+  }
+
+  async function decideSkillProposal(id, decision) {
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid || !id) return;
+    const res = await fetch(`/api/visitor/skill-proposals/${encodeURIComponent(id)}/${decision}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(api.authHeaders?.() || {}),
+      },
+      body: JSON.stringify({ session_id: sid }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    await loadSkillProposals(true);
+  }
+
+  async function loadSkillProposals(canApprove) {
+    const panel = rootEl?.querySelector('#denizen-acct-skills-panel');
+    const list = rootEl?.querySelector('#denizen-acct-skills-list');
+    if (!panel || !list) return;
+    if (!canApprove) {
+      panel.hidden = true;
+      list.innerHTML = '';
+      return;
+    }
+    panel.hidden = false;
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid) return;
+    try {
+      const res = await fetch(
+        `/api/visitor/skill-proposals?session_id=${encodeURIComponent(sid)}&status=pending`,
+        { headers: api.authHeaders?.() || {} },
+      );
+      if (!res.ok) {
+        list.innerHTML = '<div class="acct-settings-hint">Could not load skill proposals.</div>';
+        return;
+      }
+      const data = await res.json();
+      const proposals = Array.isArray(data.proposals) ? data.proposals : [];
+      if (!proposals.length) {
+        list.innerHTML = '<div class="acct-settings-hint">No pending skill proposals.</div>';
+        return;
+      }
+      list.innerHTML = proposals.map((p) => `
+        <div class="acct-skill-card" data-skill-id="${p.id}">
+          <div><b>${p.slug || p.name || 'skill'}</b> · ${p.by || p.npc || 'NPC'}</div>
+          <div class="acct-settings-hint">${String(p.purpose || p.description || '').slice(0, 120)}</div>
+          <div class="acct-skill-actions">
+            <button type="button" class="approve" data-action="approve-skill" data-id="${p.id}">Approve</button>
+            <button type="button" class="reject" data-action="reject-skill" data-id="${p.id}">Reject</button>
+          </div>
+        </div>
+      `).join('');
+      list.querySelectorAll('[data-action="approve-skill"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          decideSkillProposal(btn.getAttribute('data-id'), 'approve').catch((err) => {
+            console.warn('[DenizenAccountPanel] approve skill failed:', err?.message || err);
+          });
+        });
+      });
+      list.querySelectorAll('[data-action="reject-skill"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          decideSkillProposal(btn.getAttribute('data-id'), 'reject').catch((err) => {
+            console.warn('[DenizenAccountPanel] reject skill failed:', err?.message || err);
+          });
+        });
+      });
+    } catch (_) {
+      list.innerHTML = '<div class="acct-settings-hint">Skill proposals unavailable.</div>';
+    }
   }
 
   async function saveAccountSettings() {
@@ -454,6 +628,7 @@
         emailEl.hidden = true;
       }
     }
+    renderDemoBanner();
     if (expanded) {
       renderStats();
       loadAccountSettings();
@@ -517,37 +692,45 @@
     html += statRow('Credits', String(credits));
     html += statRow('Contributing', contrib, stats?.contributing ? 'active' : '');
     html += statRow('Status', String(status));
-    if (stats?.contributorState) html += statRow('Node state', String(stats.contributorState));
-    if (superBadge) html += statRow('Badge', superBadge, 'super');
-    if (hostLabel) html += statRow('Link', hostLabel, 'active');
-    if (stats?.lmStudioModel) html += statRow('LM model', String(stats.lmStudioModel));
-    if (stats?.jobsCompleted != null) html += statRow('Jobs done', String(stats.jobsCompleted));
-    if (stats?.hardwareScore != null) html += statRow('HW score', String(stats.hardwareScore));
-    if (stats?.contributionLevel) html += statRow('Level', String(stats.contributionLevel));
+    const caps = globalThis.DenizenVisitorCapabilities;
+    const browserOnly = !!caps?.isBrowserOnlyWeb?.();
+    if (browserOnly && !caps?.hasDesktopIdentity?.()) {
+      html += statRow('Client', 'Browser', 'acct-browser-hide');
+      html += '<div class="acct-stat-row acct-browser-hide"><span>Desktop</span><span class="acct-stat-val"><a href="/desktop/download.html" target="_blank" rel="noopener">Download app</a> for mesh + PC automation</span></div>';
+    } else if (stats?.contributorState) {
+      html += statRow('Node state', String(stats.contributorState), 'acct-desktop-only');
+    }
+    if (superBadge) html += statRow('Badge', superBadge, 'super acct-desktop-only');
+    if (hostLabel) html += statRow('Link', hostLabel, 'active acct-desktop-only');
+    if (stats?.lmStudioModel) html += statRow('LM model', String(stats.lmStudioModel), 'acct-desktop-only');
+    if (stats?.jobsCompleted != null) html += statRow('Jobs done', String(stats.jobsCompleted), 'acct-desktop-only');
+    if (stats?.hardwareScore != null) html += statRow('HW score', String(stats.hardwareScore), 'acct-desktop-only');
+    if (stats?.contributionLevel) html += statRow('Level', String(stats.contributionLevel), 'acct-desktop-only');
+    const hwClass = 'acct-desktop-only';
     if (formatPercent(stats?.cpuPercent)) {
       const cores = Number(stats?.cpuCores) > 0 ? ` · ${stats.cpuCores} cores` : '';
-      html += statRow('CPU live', `${formatPercent(stats.cpuPercent)}${cores}`, 'active');
+      html += statRow('CPU live', `${formatPercent(stats.cpuPercent)}${cores}`, `active ${hwClass}`);
     } else if (Number.isFinite(Number(stats?.cpuCores)) && Number(stats.cpuCores) > 0) {
-      html += statRow('CPU', `${stats.cpuCores} cores`);
+      html += statRow('CPU', `${stats.cpuCores} cores`, hwClass);
     }
     if (formatPercent(stats?.ramUsedPercent)) {
       const used = stats?.ramUsedMb ? ` · ${formatRam(stats.ramUsedMb)} used` : '';
-      html += statRow('RAM live', `${formatPercent(stats.ramUsedPercent)}${used}`, 'active');
+      html += statRow('RAM live', `${formatPercent(stats.ramUsedPercent)}${used}`, `active ${hwClass}`);
     } else if (stats?.ramMb) {
-      html += statRow('RAM', formatRam(stats.ramMb));
+      html += statRow('RAM', formatRam(stats.ramMb), hwClass);
     }
     if (formatPercent(stats?.gpuUtilPercent) || stats?.gpuModel) {
       const parts = [];
       if (formatPercent(stats?.gpuUtilPercent)) parts.push(formatPercent(stats.gpuUtilPercent));
       if (stats?.gpuVramUsedMb) parts.push(`${formatRam(stats.gpuVramUsedMb)} VRAM`);
       if (stats?.gpuModel) parts.push(String(stats.gpuModel));
-      html += statRow('GPU live', parts.join(' · ') || '—', 'active');
+      html += statRow('GPU live', parts.join(' · ') || '—', `active ${hwClass}`);
     } else if (stats?.gpuModel) {
-      html += statRow('GPU', String(stats.gpuModel));
+      html += statRow('GPU', String(stats.gpuModel), hwClass);
     }
     const fleet = Array.isArray(stats?.fleet) ? stats.fleet : [];
     if (fleet.length) {
-      html += statRow('Machines', String(fleet.length));
+      html += statRow('Machines', String(fleet.length), hwClass);
       fleet.slice(0, 4).forEach((machine) => {
         const label = machine?.label || machine?.hostname || machine?.machine_id || 'machine';
         const bits = [];

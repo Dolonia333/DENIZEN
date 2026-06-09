@@ -2462,6 +2462,13 @@ class AgentOfficeManager {
               }
             }
           }
+          if (Array.isArray(msg.busMessages) && msg.busMessages.length) {
+            try {
+              window.dispatchEvent(new CustomEvent('denizen-agent-bus', {
+                detail: { messages: msg.busMessages, ts: msg.ts || Date.now() },
+              }));
+            } catch (_) {}
+          }
           // Fan out a single "tick" event so subscribers can poll.
           try {
             window.dispatchEvent(new CustomEvent('denizen:worldstate', {
@@ -2779,6 +2786,19 @@ class AgentOfficeManager {
 
       case 'assistant_handoff':
         globalThis.DenizenVisitorHandoffUI?.showIncoming?.(msg);
+        break;
+
+      case 'skill_gap_progress':
+      case 'skill_gap_complete':
+      case 'skill_proposal_pending':
+      case 'mesh_watchdog_alert':
+      case 'health_runbook_progress':
+      case 'health_runbook_complete':
+      case 'resource_pressure_alert':
+      case 'mesh_scale_action':
+        try {
+          document.dispatchEvent(new CustomEvent('denizen-ws-message', { detail: msg }));
+        } catch (_) {}
         break;
 
       case 'lucy_handoff_alert': {

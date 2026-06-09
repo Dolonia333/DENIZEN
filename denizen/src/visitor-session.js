@@ -63,6 +63,8 @@
   let accessMethod = null;
   let identityId = null;
   let userEmail = null;
+  let teamRole = null;
+  let canApproveSkills = false;
   let initPromise = null;
   let modalEl = null;
   let officeConfig = null;
@@ -1005,6 +1007,22 @@
     return session;
   }
 
+  async function refreshSessionSettings() {
+    if (!sessionId) return;
+    try {
+      const res = await fetchWithTimeout(
+        `/api/visitor/settings?session_id=${encodeURIComponent(sessionId)}`,
+        { headers: authHeaders() },
+        SESSION_FETCH_MS,
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      const s = data.settings || {};
+      teamRole = s.team_role || null;
+      canApproveSkills = !!s.can_approve_skills;
+    } catch (_) {}
+  }
+
   const DenizenVisitorSession = {
     STORAGE_KEY,
     PROTECTED_NPC_KEYS,
@@ -1094,7 +1112,7 @@
     },
 
     isCeoMode() {
-      return false;
+      return isCeoPrincipalNow();
     },
 
     getTier() {
@@ -1148,7 +1166,14 @@
         tier: ceo ? 'ceo' : (tier || readStore().tier || null),
         accessMethod: accessMethod || readStore().access_method || null,
         sessionId: sessionId || readStore().session_id || null,
+        teamRole: teamRole || null,
+        canApproveSkills: ceo || canApproveSkills,
       };
+    },
+
+    async refreshSettings() {
+      await refreshSessionSettings();
+      return DenizenVisitorSession.getProfile();
     },
 
     async logout() {
@@ -1202,6 +1227,7 @@
         }));
       } catch (_) {}
       DenizenVisitorSession.refreshAssistant().catch(() => null);
+      refreshSessionSettings().catch(() => null);
       return { sessionId, displayName, assistant };
     },
 
@@ -1478,6 +1504,7 @@
           }));
         } catch (_) {}
         DenizenVisitorSession.refreshAssistant().catch(() => null);
+        refreshSessionSettings().catch(() => null);
         return { sessionId, displayName, assistant };
       })();
 

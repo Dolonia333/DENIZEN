@@ -17,6 +17,15 @@ module.exports = {
     if (action === 'pr-list') cmd = `gh pr list --repo ${repo}`;
     else if (action === 'run-list') cmd = `gh run list --repo ${repo} --limit ${params.limit || 5}`;
     else if (action === 'issue-list') cmd = `gh issue list --repo ${repo}`;
+    else if (action === 'skill-search' || action === 'search-skills') {
+      const q = String(params.query || params.task || params.q || 'skill').replace(/"/g, '').slice(0, 100);
+      const limit = Number(params.limit) || 8;
+      cmd = `gh search code "${q}" --repo ${repo} --limit ${limit}`;
+    }
+    else if (action === 'search-repos') {
+      const q = String(params.query || params.task || 'openclaw skill').replace(/"/g, '').slice(0, 100);
+      cmd = `gh search repos "${q}" --limit ${params.limit || 5}`;
+    }
     else cmd = `gh ${action} --repo ${repo}`;
 
     const activity = deps.pcActivity?.record?.({

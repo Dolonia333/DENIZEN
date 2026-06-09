@@ -72,7 +72,9 @@ function loadConfig(denizenRoot) {
 
   for (const [envKey, keyPath] of Object.entries(ENV_KEY_MAP)) {
     const val = process.env[envKey];
-    if (val) deepSet(config, keyPath, val);
+    if (!val) continue;
+    if (envKey === 'BRAVE_API_KEY' && process.env.BRAVE_SEARCH_API_KEY) continue;
+    deepSet(config, keyPath, val);
   }
 
   if (!config.supabase) config.supabase = {};
@@ -94,9 +96,9 @@ function loadConfig(denizenRoot) {
 }
 
 function braveSearchKey(config) {
-  return config?.tools?.web?.search?.apiKey
-    || process.env.BRAVE_SEARCH_API_KEY
+  return process.env.BRAVE_SEARCH_API_KEY
     || process.env.BRAVE_API_KEY
+    || config?.tools?.web?.search?.apiKey
     || '';
 }
 

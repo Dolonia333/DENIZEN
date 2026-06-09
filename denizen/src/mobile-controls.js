@@ -248,6 +248,8 @@
       html.denizen-touch body:not(.denizen-dock-ready) #player-chat-fab,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-mic-button,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-onboarding-replay-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-superuser-replay-chip,
+      html.denizen-touch body:not(.denizen-dock-ready) #denizen-capabilities-guide-chip,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-diag-chip,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-mesh-jobs-chip,
       html.denizen-touch body:not(.denizen-dock-ready) #denizen-security-chip,
@@ -649,6 +651,6 @@
     requiresLandscape: () => true,
     isLandscape,
     setCeoMode,
-    isCeoMode: () => false,
+    isCeoMode: () => !!globalThis.DenizenVisitorSession?.isCeoMode?.(),
   };
 })();

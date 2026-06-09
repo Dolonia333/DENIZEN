@@ -723,6 +723,10 @@
         <a href="/desktop/download.html" target="_blank" rel="noopener">Denizen Desktop</a>
         to profile hardware, approve agent permissions, and contribute compute.
       </div>
+      <div class="node-browser-hint" id="denizen-node-browser-hint">
+        <span id="denizen-node-browser-hint-text">Browser mode — delegate work to the cloud mesh. Pair Desktop to unlock hardware stats, contribution controls, and PC automation.</span>
+        <button type="button" class="node-upgrade-btn" id="denizen-node-guide-btn">Open Guide → Desktop</button>
+      </div>
       <div class="node-contrib-toggle" id="denizen-node-contrib-toggle" role="button" tabindex="0" aria-expanded="false">
         <span>Contribution</span>
         <span>
@@ -980,6 +984,26 @@
     return !!(mode.active || mode.enabled);
   }
 
+  function applyClientModeLayout() {
+    if (!rootEl) return;
+    const caps = globalThis.DenizenVisitorCapabilities;
+    const browserOnly = !!caps?.isBrowserOnlyWeb?.();
+    const fullPanel = !!caps?.canSeeFullComputePanel?.();
+    rootEl.dataset.browserCompact = (browserOnly && !fullPanel) ? '1' : '0';
+    rootEl.dataset.clientMode = caps?.clientModeLabel?.() || 'browser';
+    const hint = rootEl.querySelector('#denizen-node-browser-hint-text');
+    if (hint && browserOnly && !fullPanel) {
+      hint.textContent = 'Browser mode — chat, handoffs, and cloud mesh only. Install Denizen Desktop to unlock live hardware, mesh contribution, and PC automation.';
+    }
+    const guideBtn = rootEl.querySelector('#denizen-node-guide-btn');
+    if (guideBtn && !guideBtn.dataset.wired) {
+      guideBtn.dataset.wired = '1';
+      guideBtn.addEventListener('click', () => {
+        globalThis.DenizenCapabilitiesGuide?.open?.({ tab: 'mesh' });
+      });
+    }
+  }
+
   function render() {
     if (!rootEl) return;
     const creditsEl = rootEl.querySelector('.node-credits');
@@ -1097,6 +1121,7 @@
       const dot = restoreEl.querySelector('.restore-dot');
       if (dot) dot.classList.toggle('idle', !state.contributing);
     }
+    applyClientModeLayout();
   }
 
   function markSessionReady() {
@@ -1397,6 +1422,7 @@
     togglePanel,
     isPanelHidden,
     expandForDrawer,
+    applyClientMode: applyClientModeLayout,
     getState() {
       return { ...state, panelHidden };
     },

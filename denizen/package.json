@@ -16,7 +16,10 @@
     "catalog:rebuild": "py -3 scripts/build_openplan_v2_catalog.py",
     "catalog:merge": "node scripts/merge-catalog.mjs --objects data/furniture_catalog_openplan_v2.objects.json --out data/furniture_catalog_openplan.json",
     "catalog:singles": "node scripts/build-modern-office-singles-catalog.js",
-    "catalog:snap": "node scripts/snap-placements.mjs --write"
+    "catalog:snap": "node scripts/snap-placements.mjs --write",
+    "smoke:self-heal": "node scripts/smoke-self-heal.js",
+    "smoke:nas": "node scripts/smoke-nas-fleet.js",
+    "smoke:mesh": "node scripts/smoke-mesh-complete.js"
   },
   "repository": {
     "type": "git",

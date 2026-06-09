@@ -23,6 +23,20 @@ const REQUIRED_FILES = [
   'visitor-voice-walkup.js',
   'visitor-capabilities.js',
   'visitor-access.js',
+  'skill-gap-orchestrator.js',
+  'skill-discovery.js',
+  'visitor-capabilities-guide.js',
+  'visitor-superuser-onboarding.js',
+  'visitor-skill-gap-ui.js',
+  'visitor-agent-inbox.js',
+  'visitor-dashboard-gate.js',
+  'vm-sandbox.js',
+  'health-runbook.js',
+  'mesh-worker-watchdog.js',
+  'resource-pressure.js',
+  'lm-studio-remediator.js',
+  'cloud-vm-provider.js',
+  'mesh-scale-advisor.js',
   'visitor-session-auth.js',
   'denizen-team-auth.js',
   'denizen-org-policy.js',
@@ -50,6 +64,7 @@ const INDEX_EAGER_SCRIPTS = [
 /** Deferred via denizen-lazy-scripts.js after Phaser boots. */
 const INDEX_LAZY_SCRIPTS = [
   './src/visitor-capabilities.js',
+  './src/visitor-dashboard-gate.js',
   './src/visitor-handoff-ui.js',
   './src/visitor-projects-ui.js',
   './src/visitor-assistant-labels.js',
@@ -87,6 +102,9 @@ const SERVER_ROUTE_MARKERS = [
   'refreshDbMemories',
   'visitor_register',
   'buildLucyHandoffAlertBroadcast',
+  '/api/health/runbook',
+  '/api/compute/resource-pressure',
+  '/api/compute/scale-advice',
 ];
 
 const NODE_MODULES = [
@@ -212,6 +230,13 @@ describe('visitor assistant — 100% completion gate', () => {
         require(path.join(SRC, file));
       }, `require src/${file} should not throw`);
     }
+  });
+
+  it('agent-bus and agent inbox are wired for team visitors', () => {
+    const office = readUtf8('src/agent-office-manager.js');
+    assert.ok(office.includes('denizen-agent-bus'), 'agent-office-manager should dispatch denizen-agent-bus');
+    const lazy = readUtf8('src/denizen-lazy-scripts.js');
+    assert.ok(lazy.includes('visitor-agent-inbox.js'), 'lazy loader should include visitor-agent-inbox');
   });
 
   it('browser visitor modules load in Node without throwing', () => {
