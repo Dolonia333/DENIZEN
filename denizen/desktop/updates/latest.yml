@@ -1,8 +1,8 @@
-version: 0.1.0
+version: 0.1.1
 files:
   - url: Denizen-Setup.exe
-    sha512: N/bf1/z+k7fnUI16fUuHqxp+pFLvPWdtYCQgFAOhAR6vX17EwGonPtFo15kAi/mX6pbXkg2DIb8QvmoIcczJ7w==
-    size: 104421274
+    sha512: UvmsCT6lh8XG6ZmPamhRK6TBRW9PL8ntpm87Y59EgaRcmikRXLJh8O9D2+Ff93az5yOTHxgj9yCMsEGEBVosiQ==
+    size: 208933806
 path: Denizen-Setup.exe
-sha512: N/bf1/z+k7fnUI16fUuHqxp+pFLvPWdtYCQgFAOhAR6vX17EwGonPtFo15kAi/mX6pbXkg2DIb8QvmoIcczJ7w==
-releaseDate: '2026-06-08T07:15:09.202Z'
+sha512: UvmsCT6lh8XG6ZmPamhRK6TBRW9PL8ntpm87Y59EgaRcmikRXLJh8O9D2+Ff93az5yOTHxgj9yCMsEGEBVosiQ==
+releaseDate: '2026-06-09T01:09:48.927Z'
