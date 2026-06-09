@@ -20,7 +20,16 @@
     "smoke:self-heal": "node scripts/smoke-self-heal.js",
     "smoke:nas": "node scripts/smoke-nas-fleet.js",
     "smoke:mesh": "node scripts/smoke-mesh-complete.js",
-    "drain:mesh": "node scripts/drain-mesh-queue.js"
+    "smoke:mesh-jobs": "node scripts/smoke-mesh-jobs-flow.js",
+    "smoke:desktop": "node scripts/smoke-desktop-onboarding.js",
+    "smoke:desktop-release": "node scripts/smoke-desktop-release.js",
+    "smoke:desktop-updates": "node scripts/smoke-desktop-updates.js",
+    "smoke:credits": "node scripts/smoke-credit-economy.js",
+    "smoke:hardware": "node scripts/smoke-hardware-metrics.js",
+    "smoke:onboarding": "node scripts/smoke-onboarding.js",
+    "smoke:spine": "node scripts/smoke-spine-e2e.js",
+    "drain:mesh": "node scripts/drain-mesh-queue.js",
+    "smoke:all": "npm run smoke:self-heal && npm run smoke:nas && npm run smoke:mesh && npm run smoke:mesh-jobs && npm run smoke:desktop && npm run smoke:desktop-release && npm run smoke:desktop-updates && npm run smoke:credits && npm run smoke:hardware && npm run smoke:onboarding && npm run smoke:spine && npm run drain:mesh"
   },
   "repository": {
     "type": "git",
