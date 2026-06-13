@@ -18,7 +18,7 @@ jobs:
         working-directory: denizen/desktop
         run: |
           npm ci
-          npm run build:win
+          npm run build:win -- --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: denizen-desktop-win
@@ -38,7 +38,7 @@ jobs:
         working-directory: denizen/desktop
         run: |
           npm ci
-          npm run build:linux
+          npm run build:linux -- --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: denizen-desktop-linux
@@ -58,7 +58,7 @@ jobs:
         working-directory: denizen/desktop
         run: |
           npm ci
-          npm run build:mac
+          npm run build:mac -- --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: denizen-desktop-mac

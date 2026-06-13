@@ -80,6 +80,9 @@ function checkWorkflow(reasons) {
   if (!workflow.includes('merge-multiple: true')) {
     fail(reasons, 'desktop release workflow does not merge platform artifacts');
   }
+  if ((workflow.match(/--publish never/g) || []).length !== 3) {
+    fail(reasons, 'desktop release workflow must prevent electron-builder from publishing inside build jobs');
+  }
 }
 
 function runFeedbackSmoke(reasons) {
