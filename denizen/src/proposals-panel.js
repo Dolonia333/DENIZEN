@@ -25,6 +25,8 @@
   let selectedId = null;
   let showTechnical = false;
   let soulApplyAvailable = null;
+  let controlsWired = false;
+  let autoOpenChecked = false;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -58,12 +60,40 @@
         border-bottom: 1px solid rgba(148, 163, 184, 0.2);
         background: rgba(15, 23, 42, 0.95);
       }
+      #${PANEL_ID} .prop-shell-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
       #${PANEL_ID} .prop-shell-title {
+        flex: 1;
+        min-width: 0;
         font-size: 11px;
         font-weight: 700;
         letter-spacing: 0.08em;
         color: #94a3b8;
-        margin-bottom: 8px;
+      }
+      #${PANEL_ID} .prop-panel-close {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(30, 41, 59, 0.9);
+        color: #e2e8f0;
+        font: 700 21px/1 system-ui, sans-serif;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #${PANEL_ID} .prop-panel-close:hover {
+        border-color: rgba(96, 165, 250, 0.65);
+        background: rgba(51, 65, 85, 0.95);
       }
       #${PANEL_ID} .prop-filters {
         display: flex;
@@ -266,11 +296,119 @@
         text-align: center;
         font-family: system-ui, sans-serif;
       }
-      html.denizen-phone #${PANEL_ID}.open .prop-body {
+      html.denizen-phone #${PANEL_ID}.open .prop-body,
+      html.denizen-phone-mode #${PANEL_ID}.open .prop-body {
         flex: 1;
         min-height: 0;
       }
+      html.denizen-phone #${PANEL_ID} .prop-shell-header,
+      html.denizen-phone-mode #${PANEL_ID} .prop-shell-header {
+        padding: 8px;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-shell-topline,
+      html.denizen-phone-mode #${PANEL_ID} .prop-shell-topline {
+        margin-bottom: 6px;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-shell-title,
+      html.denizen-phone-mode #${PANEL_ID} .prop-shell-title {
+        font-size: 10px;
+        letter-spacing: 0.05em;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-panel-close,
+      html.denizen-phone-mode #${PANEL_ID} .prop-panel-close {
+        width: 38px;
+        height: 38px;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-filters,
+      html.denizen-phone-mode #${PANEL_ID} .prop-filters {
+        flex-wrap: nowrap;
+        gap: 5px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-filters button,
+      html.denizen-phone-mode #${PANEL_ID} .prop-filters button {
+        flex: 0 0 auto;
+        min-height: 32px;
+        padding: 5px 8px;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-body,
+      html.denizen-phone-mode #${PANEL_ID} .prop-body {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+      html.denizen-phone #${PANEL_ID} .prop-index,
+      html.denizen-phone-mode #${PANEL_ID} .prop-index {
+        border-right: none;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        max-height: 112px;
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-direction: row;
+        padding: 7px;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-index-item,
+      html.denizen-phone-mode #${PANEL_ID} .prop-index-item {
+        flex: 0 0 min(46%, 168px);
+        min-height: 72px;
+        margin-bottom: 0;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-reader,
+      html.denizen-phone-mode #${PANEL_ID} .prop-reader {
+        min-width: 0;
+        padding: 10px;
+        overflow-x: hidden;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-doc,
+      html.denizen-phone-mode #${PANEL_ID} .prop-doc {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 16px 14px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-doc-title,
+      html.denizen-phone-mode #${PANEL_ID} .prop-doc-title {
+        font-size: 17px;
+        padding-right: 0;
+        overflow-wrap: anywhere;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-doc-stamp,
+      html.denizen-phone-mode #${PANEL_ID} .prop-doc-stamp {
+        position: static;
+        transform: none;
+        display: inline-block;
+        margin-bottom: 10px;
+      }
+      html.denizen-phone #${PANEL_ID} .prop-doc-actions button,
+      html.denizen-phone-mode #${PANEL_ID} .prop-doc-actions button {
+        flex: 1 1 120px;
+        min-height: 38px;
+        padding: 8px 10px;
+      }
       @media (max-width: 640px) {
+        #${PANEL_ID} .prop-shell-header {
+          padding: 8px;
+        }
+        #${PANEL_ID} .prop-shell-topline {
+          margin-bottom: 6px;
+        }
+        #${PANEL_ID} .prop-panel-close {
+          width: 40px;
+          height: 40px;
+        }
+        #${PANEL_ID} .prop-filters {
+          gap: 4px;
+        }
+        #${PANEL_ID} .prop-filters button {
+          min-height: 34px;
+          padding: 5px 7px;
+        }
         #${PANEL_ID} .prop-body {
           grid-template-columns: 1fr;
           grid-template-rows: auto 1fr;
@@ -303,8 +441,40 @@
           margin-bottom: 10px;
         }
       }
+      html.denizen-phone.denizen-landscape #${PANEL_ID} .prop-index,
+      html.denizen-phone-mode.denizen-landscape #${PANEL_ID} .prop-index {
+        max-height: 86px;
+      }
+      html.denizen-phone.denizen-landscape #${PANEL_ID} .prop-reader,
+      html.denizen-phone-mode.denizen-landscape #${PANEL_ID} .prop-reader {
+        padding: 10px;
+      }
+      html.denizen-phone.denizen-landscape #${PANEL_ID} .prop-doc,
+      html.denizen-phone-mode.denizen-landscape #${PANEL_ID} .prop-doc {
+        padding: 16px 14px;
+        font-size: 13px;
+      }
     `;
     document.head.appendChild(style);
+  }
+
+  function renderHeader(filtersHtml = '') {
+    return `
+      <div class="prop-shell-header">
+        <div class="prop-shell-topline">
+          <div class="prop-shell-title">PROPOSALS — DOCUMENT REVIEW</div>
+          <button type="button" class="prop-panel-close" data-action="close" aria-label="Close proposals" title="Close proposals">×</button>
+        </div>
+        ${filtersHtml ? `<div class="prop-filters">${filtersHtml}</div>` : ''}
+      </div>`;
+  }
+
+  function renderErrorPanel(message) {
+    if (!panelEl) return;
+    panelEl.innerHTML = `
+      ${renderHeader()}
+      <div class="prop-empty">${message}</div>`;
+    wirePanelEvents();
   }
 
   function esc(s) {
@@ -521,14 +691,7 @@
 
   function buildUI() {
     if (!canReviewProposals()) {
-      chipEl?.remove();
-      panelEl?.remove();
-      chipEl = null;
-      panelEl = null;
-      if (pollTimer) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-      }
+      teardownUI();
       return null;
     }
     injectStyles();
@@ -546,6 +709,8 @@
     });
     chipEl.title = 'Review NPC proposals as documents';
     chipEl.textContent = '📋 proposals';
+    chipEl.setAttribute('aria-controls', PANEL_ID);
+    chipEl.setAttribute('aria-expanded', 'false');
     const openPanel = () => {
       if (!panelOpen) setPanelOpen(true);
       else setPanelOpen(false);
@@ -560,6 +725,7 @@
     panelEl.setAttribute('role', 'dialog');
     panelEl.setAttribute('aria-label', 'Proposal review');
     panelEl.setAttribute('aria-modal', 'true');
+    panelEl.setAttribute('aria-hidden', 'true');
     panelEl.addEventListener('pointerdown', (e) => e.stopPropagation());
     document.body.appendChild(panelEl);
     return panelEl;
@@ -568,8 +734,10 @@
   function setPanelOpen(open) {
     panelOpen = !!open;
     document.documentElement.classList.toggle('denizen-proposals-open', panelOpen);
+    chipEl?.setAttribute('aria-expanded', String(panelOpen));
     if (panelEl) {
       panelEl.classList.toggle('open', panelOpen);
+      panelEl.setAttribute('aria-hidden', panelOpen ? 'false' : 'true');
       if (panelOpen) {
         globalThis.DenizenMobileSidebar?.close?.();
         globalThis.__DenizenPlayerChat?.close?.();
@@ -584,6 +752,18 @@
 
   function togglePanel() {
     setPanelOpen(!panelOpen);
+  }
+
+  function teardownUI() {
+    setPanelOpen(false);
+    chipEl?.remove();
+    panelEl?.remove();
+    chipEl = null;
+    panelEl = null;
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
+    }
   }
 
   async function fetchFeed(status) {
@@ -647,7 +827,7 @@
       lastFeed = { proposals: [], total: 0, error: err.message || String(err) };
       console.warn('[proposals-panel] refresh failed:', err);
       if (panelOpen && panelEl) {
-        panelEl.innerHTML = `<div class="prop-empty">Could not load proposals. (${esc(err.message)})</div>`;
+        renderErrorPanel(`Could not load proposals. (${esc(err.message)})`);
       }
     } finally {
       busy = false;
@@ -657,7 +837,7 @@
   function renderPanel() {
     if (!panelEl) return;
     if (lastFeed.error) {
-      panelEl.innerHTML = `<div class="prop-empty">error: ${esc(lastFeed.error)}</div>`;
+      renderErrorPanel(`error: ${esc(lastFeed.error)}`);
       return;
     }
     const items = shownItems();
@@ -718,16 +898,14 @@
         </article>`;
     }
 
+    const filtersHtml = `
+      ${statusBtns}
+      <span style="width:1px;height:16px;background:rgba(148,163,184,0.3);margin:0 2px"></span>
+      ${kindBtns}
+      <button type="button" class="prop-filter-refresh" title="Refresh">↻</button>`;
+
     panelEl.innerHTML = `
-      <div class="prop-shell-header">
-        <div class="prop-shell-title">PROPOSALS — DOCUMENT REVIEW</div>
-        <div class="prop-filters">
-          ${statusBtns}
-          <span style="width:1px;height:16px;background:rgba(148,163,184,0.3);margin:0 2px"></span>
-          ${kindBtns}
-          <button type="button" class="prop-filter-refresh" title="Refresh">↻</button>
-        </div>
-      </div>
+      ${renderHeader(filtersHtml)}
       <div class="prop-body">
         <nav class="prop-index" aria-label="Proposal documents">${indexHtml}</nav>
         <main class="prop-reader">${readerHtml}</main>
@@ -771,6 +949,10 @@
       }
 
       const action = btn.getAttribute('data-action');
+      if (action === 'close') {
+        setPanelOpen(false);
+        return;
+      }
       if (!action) return;
       const doc = btn.closest('.prop-doc');
       if (!doc) return;
@@ -807,9 +989,12 @@
         ? `/api/skill-proposals/${encodeURIComponent(id)}/${decision === 'approved' ? 'approve' : 'reject'}`
         : `/api/${encodeURIComponent(kind)}-proposal/approve`;
       const body = kind === 'skill' ? undefined : JSON.stringify({ id, decision });
+      // Session + signed CEO grant headers — approval is role-gated server-side
+      const sess = globalThis.DenizenVisitorSession;
+      const auth = typeof sess?.authHeaders === 'function' ? sess.authHeaders() : {};
       const res = await fetch(url, {
         method: 'POST',
-        headers: kind === 'skill' ? undefined : { 'Content-Type': 'application/json' },
+        headers: kind === 'skill' ? auth : { 'Content-Type': 'application/json', ...auth },
         body,
       });
       if (!res.ok) {
@@ -851,42 +1036,78 @@
     await refresh();
   }
 
-  async function init() {
+  async function ensureReady() {
     if (!canReviewProposals()) {
-      console.log('[Proposals] hidden — approver role required');
-      return;
+      teardownUI();
+      return false;
     }
     buildUI();
     await probeSoulApply();
     await refresh();
-    pollTimer = setInterval(refresh, POLL_MS);
-    document.addEventListener('denizen-visitor-session-ready', () => {
-      if (!canReviewProposals()) {
-        chipEl?.remove();
-        panelEl?.remove();
-        chipEl = null;
-        panelEl = null;
-        return;
+    if (!pollTimer) pollTimer = setInterval(refresh, POLL_MS);
+
+    if (!autoOpenChecked) {
+      autoOpenChecked = true;
+      try {
+        const auto = new URL(window.location.href).searchParams.get('proposals');
+        if (auto === '1' || auto === 'open') {
+          setPanelOpen(true);
+          renderPanel();
+        }
+      } catch (_) {}
+    }
+    return true;
+  }
+
+  function wireGlobalControls() {
+    if (controlsWired) return;
+    controlsWired = true;
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panelOpen) {
+        e.preventDefault();
+        setPanelOpen(false);
       }
-      if (!chipEl) buildUI();
     });
 
-    try {
-      const auto = new URL(window.location.href).searchParams.get('proposals');
-      if (auto === '1' || auto === 'open') {
-        setPanelOpen(true);
-        renderPanel();
+    document.addEventListener('denizen-visitor-session-ready', () => {
+      if (!canReviewProposals()) {
+        teardownUI();
+        return;
       }
-    } catch (_) {}
+      ensureReady().catch((err) => console.warn('[Proposals] ready sync failed:', err));
+    });
 
     window.DenizenProposals = {
-      show() { setPanelOpen(true); },
+      show() {
+        ensureReady().then((ok) => {
+          if (ok) setPanelOpen(true);
+        }).catch((err) => console.warn('[Proposals] show failed:', err));
+      },
       hide() { setPanelOpen(false); },
-      toggle: togglePanel,
+      toggle() {
+        ensureReady().then((ok) => {
+          if (ok) togglePanel();
+        }).catch((err) => console.warn('[Proposals] toggle failed:', err));
+      },
       refresh,
-      setFilter(s) { filterStatus = String(s || 'pending'); refresh(); },
+      setFilter(s) {
+        filterStatus = String(s || 'pending');
+        ensureReady().then((ok) => {
+          if (ok) refresh();
+        }).catch((err) => console.warn('[Proposals] filter failed:', err));
+      },
       feed: () => lastFeed,
     };
+  }
+
+  async function init() {
+    wireGlobalControls();
+    const ready = await ensureReady();
+    if (!ready) {
+      console.log('[Proposals] hidden — approver role required');
+      return;
+    }
     console.log('[Proposals] document review panel ready');
   }
 

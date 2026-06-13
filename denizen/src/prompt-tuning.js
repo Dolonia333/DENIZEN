@@ -7,6 +7,8 @@
  * thinks, no real-work nudges, longer skill cooldown).
  */
 
+const { minPasswordLength, isDevPasswordRelaxed } = require('./denizen-team-password.js');
+
 function envInt(name, fallback) {
   const v = parseInt(process.env[name], 10);
   return Number.isFinite(v) ? v : fallback;
@@ -71,6 +73,8 @@ module.exports = {
   ceoAccessCode: String(process.env.DENIZEN_CEO_ACCESS_CODE || 'Dolonia').trim(),
   demoOrgSlug: String(process.env.DENIZEN_DEMO_ORG_SLUG || 'acme'),
   teamOrgSlug: String(process.env.DENIZEN_TEAM_ORG_SLUG || 'zion'),
+  minPasswordLength: minPasswordLength(),
+  devPasswordRelaxed: isDevPasswordRelaxed(),
 };
 
 const CEO_CODE_ALIASES = ['dolonia', 'deloonya'];
@@ -110,6 +114,8 @@ function toClientConfig() {
       teamOrgSlug: t.teamOrgSlug,
       teamCodeRequired: true,
       ceoAccessRequired: !!t.ceoAccessCode,
+      minPasswordLength: t.minPasswordLength,
+      devPasswordRelaxed: t.devPasswordRelaxed,
     },
   };
 }

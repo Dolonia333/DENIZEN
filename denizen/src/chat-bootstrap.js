@@ -236,7 +236,9 @@
 
             const msg = JSON.parse(evt.data);
 
-            if (msg.type === 'bouncer_security') {
+            if (msg.type === 'office_registered') {
+              globalThis.DenizenVisitorSession?.applyOfficeRegistration?.(msg);
+            } else if (msg.type === 'bouncer_security') {
               const line = String(msg.text || '').trim();
               if (line) {
                 window.DenizenSecurityFeed?.ingest?.({ text: line, kind: 'incident' });
@@ -247,6 +249,10 @@
               playerChat._hasActions = !!(msg.actions && msg.actions.length);
 
               playerChat.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error);
+
+            } else if (msg.type === 'player_group_chat_response' && playerChat) {
+
+              playerChat.handleGroupResponse(msg.groupId, msg.npcName, msg.text, msg.error);
 
             } else if (msg.type === 'player_chat_ack' && playerChat) {
 
@@ -359,6 +365,10 @@
             pc._hasActions = !!(msg.actions && msg.actions.length);
 
             pc.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error);
+
+          } else if (msg.type === 'player_group_chat_response') {
+
+            pc.handleGroupResponse(msg.groupId, msg.npcName, msg.text, msg.error);
 
           } else if (msg.type === 'player_chat_ack') {
 

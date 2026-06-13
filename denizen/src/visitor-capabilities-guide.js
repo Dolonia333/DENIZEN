@@ -16,7 +16,7 @@
     { id: 'team', label: 'Team agents' },
     { id: 'models', label: 'AI & models' },
     { id: 'collab', label: 'Collaborate' },
-    { id: 'mesh', label: 'Mesh & desktop' },
+    { id: 'mesh', label: 'City Power' },
     { id: 'desktop-power', label: 'Desktop power', teamOnly: true },
   ];
 
@@ -241,7 +241,7 @@
     const demo = isDemo();
     return `
       <h3>Your access: ${escapeHtml(tierLabel())}</h3>
-      <p>Denizen is a live AI office. You claim one persistent assistant, collaborate with the whole team of NPC agents, and optionally link desktop hardware to the mesh.</p>
+      <p>Denizen is a live AI city. You claim one persistent assistant, collaborate with the whole team, and can turn your computer into a station that helps power the city.</p>
       <table class="cg-matrix">
         <thead><tr><th>Capability</th><th>Demo</th><th>Team</th><th>Desktop super-user</th></tr></thead>
         <tbody>
@@ -251,12 +251,12 @@
           ${tierRow('Hand off & briefing', false, true, true, '')}
           ${tierRow('Connect AI (Cursor, Companion)', false, true, true, '')}
           ${tierRow('Custom skills (Lucy → CEO approve)', false, true, true, '')}
-          ${tierRow('Mesh compute contribution', false, 'opt-in', true, 'Download Denizen Desktop')}
+          ${tierRow('City Power', false, 'opt-in', true, 'Download Denizen Desktop')}
           ${tierRow('PC / screen / file access', false, false, 'ask/trusted', 'Desktop + your permission')}
         </tbody>
       </table>
       ${demo ? '<p class="cg-warn">You are in demo mode. Upgrade via the account banner or Team login for full capabilities.</p>' : ''}
-      ${team ? '<p>Super-users: install Denizen Desktop to put your GPU/CPU on the mesh and unlock coworker-class PC automation with permission prompts.</p>' : ''}
+      ${team ? '<p>Install Denizen Desktop to create your station, unlock approval-first computer help, and optionally add City Power.</p>' : ''}
     `;
   }
 
@@ -366,14 +366,14 @@
     const browserOnly = !!caps().isBrowserOnlyWeb?.();
     return `
       <h3>Your client: ${escapeHtml(caps().clientModeLabel?.() || tierLabel())}</h3>
-      ${browserOnly ? '<p class="cg-warn">Browser-only view — mesh ops, live hardware, and operator telemetry are hidden until you pair Denizen Desktop. Your account keeps full access once paired, even when you use the website.</p>' : ''}
+      ${browserOnly ? '<p class="cg-warn">Browser-only view - pair Denizen Desktop to create your station, see its live status, and manage City Power. Your account stays connected when you return to the website.</p>' : ''}
       <h3>Browser vs Denizen Desktop</h3>
       <table class="cg-matrix">
         <thead><tr><th>Feature</th><th>Browser</th><th>Desktop app</th></tr></thead>
         <tbody>
           ${featureRow('Office game & chat', true, true, '')}
-          ${featureRow('Real hardware profile', false, true, 'CPU/RAM/GPU scored')}
-          ${featureRow('Mesh compute contribution', false, true, 'Opt-in after pairing')}
+          ${featureRow('Station status', false, true, 'See this computer in the city')}
+          ${featureRow('City Power', false, true, 'Optional after pairing')}
           ${featureRow('Earn / spend credits', 'view', true, 'Boost job priority')}
           ${featureRow('Super Node badge (75+ score)', false, superNode ? 'yes' : 'possible', '')}
           ${featureRow('Agent uses your files/screen', false, 'with permission', '')}
@@ -381,13 +381,13 @@
       </table>
       <h3>Your node state: ${escapeHtml(String(state).replace(/_/g, ' '))}</h3>
       <ol>
-        <li><b>Browser only</b> — play the office, delegate work to cloud/mesh brains.</li>
-        <li><b>Download Desktop</b> — Compute panel → Download / Pair this computer.</li>
-        <li><b>Pair</b> — browser opens <code>denizen://pair</code>; wizard syncs capabilities.</li>
-        <li><b>Opt in</b> — toggle Contribute; pick level (off / light / standard / max).</li>
-        <li><b>Super Node</b> — hardware score 75+; priority mesh worker.</li>
+        <li><b>Browser only</b> - explore the city and work with your agents.</li>
+        <li><b>Build your station</b> - download Denizen Desktop from City Power.</li>
+        <li><b>Claim it</b> - connect your Citizen ID from the browser.</li>
+        <li><b>Choose its role</b> - approve local abilities and turn City Power on or off.</li>
+        <li><b>Power station</b> - stronger machines can take on more city work.</li>
       </ol>
-      <p>Watch fleet health in the <b>⬡ mesh</b> chip on the dock. CEOs and hosts also run local LM Studio for the office.</p>
+      <p>Watch the city network in the <b>⬡ power</b> chip on the dock. Technical operators can still inspect the underlying workers and local AI pool.</p>
     `;
   }
 
@@ -404,7 +404,7 @@
         <li>Apply <b>code changes</b> in an isolated worktree (coding-agent)</li>
         <li>Execute <b>approved custom skills</b> against your environment</li>
         <li>Stay synced with <b>Cursor / Companion</b> via Connect AI</li>
-        <li>Contribute <b>GPU/CPU</b> to the mesh when you opt in</li>
+        <li>Add <b>City Power</b> when you opt in</li>
       </ul>
       <p>Every sensitive action can prompt you in the Desktop permission window — you approve, deny, or trust per session.</p>
       <h3>Permission levels (Desktop wizard)</h3>
@@ -492,7 +492,7 @@
         <div class="cg-tabs"></div>
         <div class="cg-body"></div>
         <div class="cg-actions">
-          <button type="button" class="cg-btn cg-super-tour">Super-user mesh tour</button>
+          <button type="button" class="cg-btn cg-super-tour">City Power tour</button>
           <button type="button" class="cg-btn secondary cg-replay-team">Replay team tour</button>
           <button type="button" class="cg-btn secondary cg-close2">Done</button>
         </div>
@@ -520,7 +520,7 @@
       chip.id = CHIP_ID;
       chip.type = 'button';
       chip.textContent = 'Guide';
-      chip.title = 'Capabilities guide — agents, models, mesh, desktop';
+      chip.title = 'Capabilities guide - agents, models, City Power, desktop';
       document.body.appendChild(chip);
     }
     chip.classList.add('ready');

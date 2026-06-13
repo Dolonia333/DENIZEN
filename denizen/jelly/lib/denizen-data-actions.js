@@ -4,6 +4,7 @@ const bridge = require('./bridge-client');
 const { fmtRows } = bridge;
 const orgPolicy = require('../../src/denizen-org-policy');
 const federalPipeline = require('../../src/federal-pipeline');
+const crmMutations = require('../../src/denizen-crm-mutations');
 
 let _cachedOrgId = null;
 
@@ -37,6 +38,18 @@ const ACTIONS = new Set([
   'visitor-claim',
   'assistant-handoff',
   'org-benchmark',
+  'crm-summary',
+  'crm-list-pipeline',
+  'crm-add-contact',
+  'crm-update-deal',
+  'crm-setup-status',
+  'crm-list-industries',
+  'crm-apply-industry',
+  'crm-add-task',
+  'crm-list-tasks',
+  'crm-at-risk',
+  'crm-add-ticket',
+  'crm-list-tickets',
   'help',
 ]);
 
@@ -85,6 +98,30 @@ async function runAction(action, { npcName, params, config }) {
       return assistantHandoff(config, params);
     case 'org-benchmark':
       return orgBenchmark(config, params);
+    case 'crm-summary':
+      return crmSummary(config, params);
+    case 'crm-list-pipeline':
+      return crmListPipeline(config, params);
+    case 'crm-add-contact':
+      return crmAddContact(config, params);
+    case 'crm-update-deal':
+      return crmUpdateDeal(config, params);
+    case 'crm-setup-status':
+      return crmSetupStatus(config, params);
+    case 'crm-list-industries':
+      return crmListIndustries(config, params);
+    case 'crm-apply-industry':
+      return crmApplyIndustry(config, params, npcName);
+    case 'crm-add-task':
+      return crmAddTask(config, params);
+    case 'crm-list-tasks':
+      return crmListTasks(config, params);
+    case 'crm-at-risk':
+      return crmAtRisk(config, params);
+    case 'crm-add-ticket':
+      return crmAddTicket(config, params, npcName);
+    case 'crm-list-tickets':
+      return crmListTickets(config, params);
     default:
       return {
         summary: `Denizen data skills: ${[...ACTIONS].filter((a) => a !== 'help').join(', ')}`,
@@ -594,6 +631,116 @@ async function orgBenchmark(config, params) {
     benchmark: byType,
     sample_size: validated.length,
   };
+}
+
+async function crmSummary(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) {
+    return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  }
+  const rows = await bridge.bridgeQuery(config, {
+    table: 'denizen_crm_workspaces',
+    select: ['org_id', 'state', 'updated_at', 'schema_version'],
+    filters: { org_id: { eq: orgId } },
+    limit: 1,
+  });
+  const row = rows[0];
+  if (!row) {
+    return { summary: 'No CRM workspace saved yet for this team.' };
+  }
+  const state = row.state || {};
+  const contacts = Array.isArray(state.contacts) ? state.contacts.length : 0;
+  const deals = Array.isArray(state.deals) ? state.deals.length : 0;
+  const openDeals = (state.deals || []).filter(
+    (d) => d && !/closed won|closed lost/i.test(String(d.stage || '')),
+  ).length;
+  const tasks = Array.isArray(state.tasks) ? state.tasks.filter((t) => t && !t.done).length : 0;
+  const tickets = Array.isArray(state.supportTickets) ? state.supportTickets : [];
+  const openTickets = tickets.filter((t) => t && (t.status === 'open' || t.status === 'pending')).length;
+  const campaigns = Array.isArray(state.marketingCampaigns) ? state.marketingCampaigns : [];
+  const activeCampaigns = campaigns.filter((c) => c && c.status === 'active').length;
+  return {
+    summary: `CRM: ${contacts} contacts, ${deals} deals (${openDeals} open), ${tasks} open tasks, ${openTickets} open tickets, ${activeCampaigns} active campaign(s). Updated ${row.updated_at || 'unknown'}.`,
+    counts: { contacts, deals, openDeals, openTasks: tasks, openTickets, activeCampaigns },
+    updated_at: row.updated_at,
+  };
+}
+
+async function crmListPipeline(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.listPipeline(orgId, params);
+}
+
+async function crmAddContact(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.addContact(orgId, params);
+}
+
+async function crmUpdateDeal(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const result = await crmMutations.updateDeal(orgId, params);
+  if (/closed won/i.test(String(result.deal?.stage || ''))) {
+    result.note = 'Deal marked won — team office may show a CRM notification.';
+  }
+  return result;
+}
+
+async function crmSetupStatus(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.getSetupStatus(orgId, params);
+}
+
+async function crmListIndustries(config, params) {
+  const industryBridge = require('../../src/denizen-crm-industry-bridge');
+  const q = String(params.query || params.task || '').trim();
+  const rows = industryBridge.listIndustries(q);
+  const limit = Math.min(20, Math.max(1, Number(params.limit) || 12));
+  const slice = rows.slice(0, limit);
+  return {
+    summary: `${rows.length} industry template(s). ${slice.map((r) => `${r.icon} ${r.name} (${r.id})`).join('; ')}`,
+    industries: slice,
+    total: rows.length,
+  };
+}
+
+async function crmApplyIndustry(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.applyIndustry(orgId, { ...params, npcName }, null);
+}
+
+async function crmAddTask(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.addTask(orgId, params);
+}
+
+async function crmListTasks(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.listTasks(orgId, { ...params, overdue: params.overdue ? true : undefined });
+}
+
+async function crmAtRisk(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.listAtRisk(orgId, params);
+}
+
+async function crmAddTicket(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.addTicket(orgId, { ...params, npcName }, null);
+}
+
+async function crmListTickets(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.listTickets(orgId, { ...params, overdue: params.overdue ? true : undefined });
 }
 
 module.exports = {

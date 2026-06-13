@@ -68,20 +68,21 @@
         './src/sfx.js',
         './src/voice-input.js?v=voiceicon1',
         './src/llm-telemetry-panel.js?v=lmfix8',
-        './src/mesh-jobs-panel.js?v=mesh1',
-        './src/browser-mirror-panel.js?v=mobdraw3',
-        './src/diag.js',
+        './src/mesh-jobs-panel.js?v=mesh2',
+        './src/browser-mirror-panel.js?v=mobdraw4',
+        './src/diag.js?v=diag2',
         './src/security-feed.js?v=sec1',
       ]);
       await loadParallel([
         './src/visitor-desktop-pairing.js?v=pair2',
-        './src/visitor-credits-chip.js?v=node6',
-        './src/visitor-handoff-ui.js?v=vis2',
+        './src/visitor-credits-chip.js?v=node7',
+        './src/visitor-handoff-ui.js?v=vis3',
         './src/visitor-projects-ui.js?v=vis2',
         './src/visitor-assistant-labels.js?v=vis2',
         './src/security-monitor.js',
         './src/robber-controller.js',
-        './src/work-feed.js',
+        './src/work-feed.js?v=feed2',
+        './src/content-pipeline-panel.js?v=cp2',
       ]);
       finishDeferred();
     })();
@@ -98,7 +99,7 @@
       './src/visitor-skill-gap-ui.js?v=sgap1',
       './src/visitor-agent-inbox.js?v=ainbox1',
       './src/mesh-alert-toast.js?v=mtoast2',
-      './src/proposals-panel.js?v=propfix2',
+      './src/proposals-panel.js?v=propfix3',
       './src/city-debug.js',
     ];
     try {

@@ -117,6 +117,15 @@
         background: rgba(20, 83, 45, 0.5) !important;
         z-index: 2147483646 !important;
       }
+      /* Full-screen phone drawer has its own ✕ — the floating toggle would
+         cover form fields at the bottom of the drawer */
+      html.denizen-phone.denizen-drawer-open #${MENU_BTN_ID} {
+        display: none !important;
+      }
+      /* Profile lives in the phone app — no floating Me chip on touch */
+      html.denizen-touch #${MENU_BTN_ID} {
+        display: none !important;
+      }
 
       #${BACKDROP_ID} {
         display: none;
@@ -648,26 +657,26 @@
     if (!drawerEl) {
       drawerEl = document.createElement('aside');
       drawerEl.id = DRAWER_ID;
-      drawerEl.setAttribute('aria-label', 'Account and compute menu');
+      drawerEl.setAttribute('aria-label', 'Citizen ID and City Power menu');
       drawerEl.innerHTML = `
         <div class="drawer-head">
           <div class="drawer-grab" aria-hidden="true"></div>
           <div class="drawer-title">Me</div>
           <div class="drawer-toolbar">
             <div class="drawer-tabs" role="tablist" aria-label="Me sections">
-              <button type="button" class="drawer-tab active" data-tab="profile" role="tab" aria-selected="true">Profile</button>
-              <button type="button" class="drawer-tab" data-tab="compute" role="tab" aria-selected="false">Compute</button>
+              <button type="button" class="drawer-tab active" data-tab="profile" role="tab" aria-selected="true">Citizen ID</button>
+              <button type="button" class="drawer-tab" data-tab="compute" role="tab" aria-selected="false">City Power</button>
             </div>
             <button type="button" class="drawer-close" aria-label="Close menu">×</button>
           </div>
-          <div class="drawer-subtitle" id="denizen-drawer-subtitle">Profile &amp; compute</div>
+          <div class="drawer-subtitle" id="denizen-drawer-subtitle">Your place in Denizen</div>
         </div>
         <div id="${BODY_ID}">
           <div id="${FALLBACK_ID}">
             <div class="fb-name" id="denizen-drawer-fb-name">Guest</div>
             <div class="fb-email" id="denizen-drawer-fb-email"></div>
             <button type="button" class="fb-logout" id="denizen-drawer-fb-logout">Log out</button>
-            <div class="fb-hint">Scroll for credits and compute settings.</div>
+            <div class="fb-hint">Scroll for city credits and station settings.</div>
           </div>
         </div>
       `;
@@ -891,8 +900,8 @@
     }
 
     menuBtn.textContent = open ? '✓ Me' : '☰ Me';
-    menuBtn.title = 'Profile, credits & compute';
-    menuBtn.setAttribute('aria-label', 'Open profile, credits and compute');
+    menuBtn.title = 'Citizen ID, city credits, and City Power';
+    menuBtn.setAttribute('aria-label', 'Open Citizen ID and City Power');
     menuBtn.dataset.open = open ? '1' : '0';
     wireMenuButton(menuBtn);
     return menuBtn;

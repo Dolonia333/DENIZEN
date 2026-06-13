@@ -242,6 +242,46 @@ describe('reasoning leak stripping', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Visitor-scoped autonomous skills
+// ---------------------------------------------------------------------------
+
+describe('allowAutonomousSkillRun visitor tier', () => {
+  it('blocks real skills for demo visitor-scoped think cycles', () => {
+    const gate = mgr.allowAutonomousSkillRun('Alex', {
+      skill: 'web-search',
+      officeContext: { visitorScoped: true, canUseRealWork: false },
+    });
+    assert.equal(gate.allowed, false);
+    assert.match(gate.reason, /demo/i);
+  });
+
+  it('allows real skills for team visitor-scoped think cycles', () => {
+    mgr._lastRunSkillAt.set('Alex', 0);
+    const gate = mgr.allowAutonomousSkillRun('Alex', {
+      skill: 'web-search',
+      officeContext: { visitorScoped: true, canUseRealWork: true },
+    });
+    assert.equal(gate.allowed, true);
+  });
+
+  it('_resolveAutonomousRealWork respects visitor scope', () => {
+    assert.equal(
+      mgr._resolveAutonomousRealWork('Alex', { visitorScoped: true, canUseRealWork: false }),
+      false,
+    );
+    assert.equal(
+      mgr._resolveAutonomousRealWork('Alex', { visitorScoped: true, canUseRealWork: true }),
+      true,
+    );
+    const promptTuning = require('../src/prompt-tuning.js');
+    assert.equal(
+      mgr._resolveAutonomousRealWork('Alex', { visitorScoped: false }),
+      promptTuning?.realWorkMode !== false,
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Hierarchy sanity
 // ---------------------------------------------------------------------------
 

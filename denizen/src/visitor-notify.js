@@ -47,8 +47,16 @@ async function logNotification({
   }
 }
 
-async function sendResendEmail({ to, subject, text, html }) {
+async function sendResendEmail({ to, subject, text, html, attachments }) {
   if (!RESEND_API_KEY || !to) return { ok: false, skipped: true, reason: 'no_api_key' };
+  const att = Array.isArray(attachments)
+    ? attachments
+      .map((a) => ({
+        filename: String(a?.filename || 'attachment').trim() || 'attachment',
+        content: String(a?.content || '').trim(),
+      }))
+      .filter((a) => a.content)
+    : [];
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -61,6 +69,7 @@ async function sendResendEmail({ to, subject, text, html }) {
       subject,
       text,
       html: html || undefined,
+      attachments: att.length ? att : undefined,
     }),
   });
   const data = await res.json().catch(() => ({}));

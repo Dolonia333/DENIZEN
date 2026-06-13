@@ -134,9 +134,44 @@ function listForIdentity(identityId, { includeHost = true, includeAuxiliary = tr
   });
 }
 
-function buildFleetSummary(identityId, liveUsage = null) {
-  const fleet = listForIdentity(identityId);
-  const primary = liveUsage || fleet.find((m) => m.role === 'host') || fleet[0] || null;
+const OPERATOR_ONLY_ROLES = new Set(['host', 'nas', 'aux']);
+
+function isOperatorOnlyMachine(machine) {
+  const role = String(machine?.role || '').toLowerCase();
+  if (OPERATOR_ONLY_ROLES.has(role)) return true;
+  const label = String(machine?.label || machine?.machine_id || '');
+  return /supabase|nat\b|tailscale|192\.168\.|10\.\d+\.|172\.(1[6-9]|2\d|3[01])\./i.test(label);
+}
+
+function sanitizeMachineForViewer(machine) {
+  if (!machine || typeof machine !== 'object') return machine;
+  const next = { ...machine };
+  delete next.url;
+  if (isOperatorOnlyMachine(next)) {
+    return null;
+  }
+  return next;
+}
+
+function buildFleetSummary(identityId, liveUsage = null, options = {}) {
+  const isOperator = options.isOperator === true;
+  const fleet = listForIdentity(identityId, {
+    includeHost: isOperator,
+    includeAuxiliary: isOperator,
+  })
+    .map((m) => (isOperator ? m : sanitizeMachineForViewer(m)))
+    .filter(Boolean);
+
+  let primary = null;
+  if (isOperator) {
+    primary = liveUsage || fleet.find((m) => m.role === 'host') || fleet[0] || null;
+  } else {
+    primary = fleet.find((m) => m.role === 'desktop' || m.role === 'node') || fleet[0] || null;
+    if (liveUsage && !isOperatorOnlyMachine(liveUsage) && liveUsage.identity_id === identityId) {
+      primary = liveUsage;
+    }
+  }
+
   const totals = {
     machines: fleet.length,
     contributing_machines: fleet.filter((m) => m.contributing || (m.cpu_percent > 5) || (m.gpu?.utilization_percent > 5)).length,
@@ -249,6 +284,8 @@ module.exports = {
   listAuxiliary,
   listForIdentity,
   buildFleetSummary,
+  sanitizeMachineForViewer,
+  isOperatorOnlyMachine,
   refreshAuxiliaryProbes,
   startAuxiliaryProbeLoop,
   isSmokeMachine,

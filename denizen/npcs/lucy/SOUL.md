@@ -228,3 +228,6 @@ Trigger via chat (to Lucy) or REST:
 - "*quiet typing*"
 - "Almost done."
 - "There we go."
+
+## Newsroom mode (CMS / social publisher)
+After brand clearance, run `platform-publish` with title and markdown body. Uses your Supabase CRM (`PLATFORM_CMS_TABLE`) or local Lovable export (`LOVABLE_SITE_DIR`). WordPress on NAS Docker is optional later. Log paths/URLs in `reports/content-published/`.

@@ -17,9 +17,13 @@ class PlayerChat {
     this._visible = false;
     this._input = null;
     this._container = null;
-    this._chatLog = [];       // { from, text, time }
+    this._chatLog = [];       // { from, text, time } — legacy flat log
+    this._threads = new Map(); // threadId -> { type, npcKey, npcName, groupId, title, members, messages[] }
+    this._activeThreadId = null;
+    this._phoneShellEnabled = false;
     this._maxLog = 50;
     this._waitingForResponse = false;
+    this._typingNpc = null;
     /** Active CEO↔NPC conversation — NPC stays nearby until cleared. */
     this._ceoConvo = null;
     this._ceoConvoIdleMs = 180000;
@@ -45,6 +49,27 @@ class PlayerChat {
 
     this._buildUI();
     this.setWsConnected(!!(this.manager?.connected || this.manager?.ws?.readyState === WebSocket.OPEN));
+    if (scene) this._attachVisitorUi();
+  }
+
+  _attachVisitorUi() {
+    if (!this.scene || this._visitorUiScene === this.scene) return;
+    this._visitorUiScene = this.scene;
+    if (globalThis.DenizenVisitorClaimUI?.attach) {
+      globalThis.DenizenVisitorClaimUI.attach(this, this.scene);
+    }
+    if (globalThis.DenizenVisitorHandoffUI?.attach) {
+      globalThis.DenizenVisitorHandoffUI.attach(this);
+    }
+    if (globalThis.DenizenVisitorProjectsUI?.attach) {
+      globalThis.DenizenVisitorProjectsUI.attach(this);
+    }
+    if (globalThis.DenizenVisitorAssistantLabels?.attach) {
+      globalThis.DenizenVisitorAssistantLabels.attach(this.scene, this.manager);
+    }
+    if (globalThis.DenizenVisitorOnboarding?.attach) {
+      globalThis.DenizenVisitorOnboarding.attach(this.scene, this);
+    }
   }
 
   /** Bind full office scene + AgentOfficeManager after early bootstrap chat. */
@@ -61,21 +86,7 @@ class PlayerChat {
       try { agentManager.connect(); } catch (_) {}
     }
     this.setWsConnected(!!(agentManager?.connected || agentManager?.ws?.readyState === WebSocket.OPEN));
-    if (globalThis.DenizenVisitorClaimUI?.attach) {
-      globalThis.DenizenVisitorClaimUI.attach(this, scene);
-    }
-    if (globalThis.DenizenVisitorHandoffUI?.attach) {
-      globalThis.DenizenVisitorHandoffUI.attach(this);
-    }
-    if (globalThis.DenizenVisitorProjectsUI?.attach) {
-      globalThis.DenizenVisitorProjectsUI.attach(this);
-    }
-    if (globalThis.DenizenVisitorAssistantLabels?.attach) {
-      globalThis.DenizenVisitorAssistantLabels.attach(scene, agentManager);
-    }
-    if (globalThis.DenizenVisitorOnboarding?.attach) {
-      globalThis.DenizenVisitorOnboarding.attach(scene, this);
-    }
+    this._attachVisitorUi();
     console.log('[PlayerChat] upgraded with office scene');
   }
 
@@ -181,7 +192,8 @@ class PlayerChat {
       globalThis.DenizenMobileSidebar?.close?.();
     }
     if (next) {
-      this._input?.focus();
+      if (!window.__DenizenIsTouch) this._input?.focus();
+      else this._input?.blur();
     } else {
       this._input?.blur();
       this._clearChatMoveKeys();
@@ -207,7 +219,7 @@ class PlayerChat {
    */
   open() {
     if (!this._visible) this.toggle();
-    else this._input.focus();
+    else if (!window.__DenizenIsTouch) this._input.focus();
   }
 
   /**
@@ -216,18 +228,159 @@ class PlayerChat {
    * @param {string} npcName
    * @param {{ walk?: boolean }} [opts]
    */
+  _folderForNpcKey(npcKey) {
+    const roster = globalThis.DenizenNpcRoster;
+    const key = String(npcKey || '');
+    const entry = (roster?.entries || []).find((e) => e.textureKey === key || e.folder === key);
+    return entry?.folder || String(key).replace(/^xp_/, '').toLowerCase();
+  }
+
+  _folderForNpcName(npcName) {
+    const roster = globalThis.DenizenNpcRoster;
+    const entry = (roster?.entries || []).find((e) => e.display === npcName);
+    return entry?.folder || String(npcName || '').toLowerCase();
+  }
+
+  _dmThreadId(npcKeyOrFolder) {
+    const folder = this._folderForNpcKey(npcKeyOrFolder);
+    return `dm:${folder}`;
+  }
+
+  _groupThreadId(groupId) {
+    return `group:${groupId}`;
+  }
+
+  _ensureThread(meta = {}) {
+    const id = meta.threadId || meta.id;
+    if (!id) return null;
+    let thread = this._threads.get(id);
+    if (!thread) {
+      thread = {
+        threadId: id,
+        type: meta.type || (String(id).startsWith('group:') ? 'group' : 'dm'),
+        npcKey: meta.npcKey || null,
+        npcName: meta.npcName || null,
+        groupId: meta.groupId || (String(id).startsWith('group:') ? String(id).slice(6) : null),
+        title: meta.title || meta.npcName || meta.name || 'Chat',
+        members: Array.isArray(meta.members) ? meta.members : [],
+        messages: [],
+        preview: '',
+        updatedAt: Date.now(),
+      };
+      this._threads.set(id, thread);
+    } else {
+      if (meta.npcKey) thread.npcKey = meta.npcKey;
+      if (meta.npcName) thread.npcName = meta.npcName;
+      if (meta.title || meta.name) thread.title = meta.title || meta.name;
+      if (meta.members?.length) thread.members = meta.members;
+    }
+    return thread;
+  }
+
+  _getActiveThread() {
+    if (!this._activeThreadId) return null;
+    return this._threads.get(this._activeThreadId) || null;
+  }
+
+  _threadCacheScope() {
+    const sess = globalThis.DenizenVisitorSession;
+    return sess?.getIdentityId?.() || sess?.getSessionId?.() || 'anon';
+  }
+
+  _threadCacheKey(threadId) {
+    return `denizen-chat:${this._threadCacheScope()}:${threadId}`;
+  }
+
+  _loadCachedMessages(threadId) {
+    try {
+      const raw = localStorage.getItem(this._threadCacheKey(threadId));
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  _saveCachedMessages(threadId, messages) {
+    if (!threadId || !Array.isArray(messages)) return;
+    try {
+      localStorage.setItem(
+        this._threadCacheKey(threadId),
+        JSON.stringify(messages.slice(-this._maxLog)),
+      );
+    } catch (_) {}
+  }
+
+  setPhoneShellEnabled(enabled) {
+    this._phoneShellEnabled = !!enabled;
+  }
+
+  getActiveThreadId() {
+    return this._activeThreadId;
+  }
+
+  getActiveThread() {
+    return this._getActiveThread();
+  }
+
+  listLocalThreads() {
+    return [...this._threads.values()].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  }
+
+  async openThread(meta = {}) {
+    const threadId = meta.threadId || meta.id
+      || (meta.groupId ? this._groupThreadId(meta.groupId) : null)
+      || (meta.npcKey ? this._dmThreadId(meta.npcKey) : null);
+    if (!threadId) return null;
+    const thread = this._ensureThread({ ...meta, threadId });
+    this._activeThreadId = threadId;
+    if (thread.type === 'dm' && thread.npcKey && thread.npcName) {
+      const texKey = globalThis.DenizenNpcRoster?.nameToKey?.[thread.npcName.toLowerCase()]
+        || globalThis.DenizenVisitorSession?.npcKeyToTextureKey?.(thread.npcKey);
+      this._updateTargetLabel(thread.npcName);
+      this._beginCeoConversation(texKey, thread.npcName, null);
+      this._lastTargetKey = texKey;
+    } else if (thread.type === 'group') {
+      this._updateTargetLabel(thread.title || 'Group');
+      this._ceoConvo = null;
+    }
+    const cached = this._loadCachedMessages(threadId);
+    if (cached.length) {
+      thread.messages = cached;
+      this._renderLog();
+    }
+    const history = await globalThis.DenizenVisitorSession?.getChatHistory?.(threadId).catch(() => null);
+    const me = globalThis.DenizenVisitorSession?.getDisplayName?.() || 'You';
+    if (Array.isArray(history) && history.length) {
+      thread.messages = history.map((m) => ({
+        from: (m.from === 'user' || m.from === 'You' || m.from === me || m.role === 'user') ? 'You' : (m.from || 'NPC'),
+        text: m.text || m.content || '',
+        time: m.time || m.created_at || Date.now(),
+      }));
+    } else if (!thread.messages.length && cached.length) {
+      thread.messages = cached;
+    }
+    this._saveCachedMessages(threadId, thread.messages);
+    this._renderLog();
+    globalThis.DenizenPhoneChatUI?.onThreadOpened?.(thread);
+    return thread;
+  }
+
   async openWithNpc(npcKey, npcName, opts = {}) {
+    const folder = this._folderForNpcKey(npcKey);
+    await this.openThread({
+      threadId: `dm:${folder}`,
+      type: 'dm',
+      npcKey: folder,
+      npcName,
+      title: npcName,
+    });
     if (!this._visible) this.toggle();
 
     this._updateTargetLabel(npcName);
     this._beginCeoConversation(npcKey, npcName, null);
     this._lastTargetKey = npcKey;
-    this._addToLog('System', `Talking to ${npcName} — type a message`);
-    const capTeaser = window.DenizenNpcCapabilities?.getCapabilityTeaser?.(npcName);
-    if (capTeaser) {
-      this._addToLog('System', `💡 ${npcName}: ${capTeaser} (ask "what can you do?" for details)`);
-    }
-
     const walk = opts.walk !== false;
     const player = this.scene?.player;
     const sceneReady = !!(this.scene && player);
@@ -247,7 +400,7 @@ class PlayerChat {
       if (targetNpc) this._stopNpcForConversation(targetNpc, npcKey, null);
     }
 
-    this._input.focus();
+    if (!window.__DenizenIsTouch) this._input.focus();
   }
 
   /**
@@ -603,6 +756,10 @@ class PlayerChat {
 
     // Add to chat log
     this._addToLog('You', trimmed);
+    this._showPlayerBubble(trimmed);
+    if (globalThis.DenizenVisitorSession?.isDemo?.()) {
+      try { document.dispatchEvent(new CustomEvent('denizen-demo-engaged')); } catch (_) {}
+    }
 
     const extractSearch = window.DenizenOpenClawDispatch?.extractSearchQuery;
     const extractJobBoard = window.DenizenOpenClawDispatch?.extractJobBoardSearchIntent;
@@ -652,9 +809,21 @@ class PlayerChat {
     let needsWalkToPlayer = false;
     const player = this.scene?.player;
     const sceneReady = !!(this.scene && player);
+    const pinnedThread = this._getActiveThread();
+
+    if (pinnedThread?.type === 'dm' && pinnedThread.npcName) {
+      targetName = pinnedThread.npcName;
+      targetKey = globalThis.DenizenNpcRoster?.nameToKey?.[targetName.toLowerCase()]
+        || globalThis.DenizenVisitorSession?.npcKeyToTextureKey?.(pinnedThread.npcKey);
+      if (targetKey && sceneReady) {
+        targetNpc = this.scene.npcs?.find((n) => n.texture?.key === targetKey) || null;
+      }
+    }
 
     // 1. Check if a name is mentioned in the message (priority — explicit intent)
-    const named = this._findNamedNpc(trimmed);
+    const named = !pinnedThread?.type || pinnedThread.type !== 'dm'
+      ? this._findNamedNpc(trimmed)
+      : null;
     if (named) {
       targetKey = named.key;
       targetName = named.name;
@@ -1045,6 +1214,30 @@ class PlayerChat {
       return;
     }
 
+    // Content pipeline — start autonomous newsroom chain.
+    const newsroomMatch = trimmed.match(
+      /\b(?:start|run|kick off)\s+(?:the\s+)?(?:newsroom|content pipeline)(?:\s+(?:on|about|for)\s+(.+?))?\.?$/i,
+    );
+    if (newsroomMatch) {
+      const topic = String(newsroomMatch[1] || 'industry trends today').trim();
+      this._showPlayerBubble(trimmed);
+      this._addToLog('System', `Starting content pipeline: ${topic}`);
+      fetch('/api/content-pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, triggeredBy: targetName || 'CEO' }),
+      }).then((r) => r.json()).then((j) => {
+        if (j.ok) {
+          this._addToLog('System', `Pipeline started (${j.steps} steps) — chain ${j.chainId}`);
+        } else {
+          this._addToLog('System', `Pipeline failed: ${j.error || 'unknown'}`);
+        }
+      }).catch((err) => {
+        this._addToLog('System', `Pipeline failed: ${err?.message || err}`);
+      });
+      return;
+    }
+
     // Lucy research queue — add a topic for Bob to pick up later.
     const queueIntent = queueIntentEarly || (extractQueue ? extractQueue(trimmed) : null);
     if (targetName === 'Lucy' && queueIntent) {
@@ -1196,7 +1389,6 @@ class PlayerChat {
     }
 
     if (sceneReady) {
-      this._showPlayerBubble(trimmed);
       if (needsWalkToPlayer && this.manager?.actions) {
         this._addToLog('System', `${targetName} is coming over...`);
         this.manager.actions.emote(targetKey, '!');
@@ -1253,8 +1445,29 @@ class PlayerChat {
         return;
       }
       this._waitingForResponse = false;
+      this._clearTyping();
       this._addToLog('System', 'Reconnecting chat… try again in a few seconds, or hard-refresh (Ctrl+Shift+R).');
       this._resumeNpc(targetKey);
+      return;
+    }
+
+    const active = this._getActiveThread();
+    if (active?.type === 'group' && active.groupId) {
+      this._waitingForResponse = true;
+      this.manager._send({
+        type: 'player_group_chat',
+        group_id: active.groupId,
+        text: trimmed,
+        session_id: globalThis.DenizenVisitorSession?.getSessionId?.() || null,
+      });
+      this._setTyping(this._getActiveThread()?.title || 'Group');
+      this._responseTimeout = setTimeout(() => {
+        if (this._waitingForResponse) {
+          this._waitingForResponse = false;
+          this._clearTyping();
+          this._addToLog('System', '(no group reply — LM Studio may be busy)');
+        }
+      }, 60000);
       return;
     }
 
@@ -1263,7 +1476,7 @@ class PlayerChat {
       npcName: targetName,
       npcKey: targetKey,
       text: trimmed,
-      sessionId: globalThis.DenizenVisitorSession?.getSessionId?.() || null,
+      session_id: globalThis.DenizenVisitorSession?.getSessionId?.() || null,
       playerPos: {
         x: Math.round(this.scene?.player?.x || 0),
         y: Math.round(this.scene?.player?.y || 0),
@@ -1277,16 +1490,14 @@ class PlayerChat {
       toFire.forEach(fn => { try { fn(trimmed); } catch (_) {} });
     }
 
-    // Visible "thinking…" indicator so the user knows the request is
-    // in flight, not silently dropped. Replaced by the real response
-    // (or by '(no response)' if the 15s timeout fires).
-    this._addToLog('System', `💭 ${targetName} is thinking…`);
+    this._setTyping(targetName);
 
     // Timeout after 60s. Player chat jumps the LM Studio queue but can
     // still wait behind 1–2 in-flight think jobs when the GPU is saturated.
     this._responseTimeout = setTimeout(() => {
       if (this._waitingForResponse) {
         this._waitingForResponse = false;
+        this._clearTyping();
         this._addToLog(targetName, '(no response — LM Studio may be busy; check ⋯ diag chip bottom-left)');
       }
     }, 60000);
@@ -1312,8 +1523,33 @@ class PlayerChat {
   /**
    * Handle NPC response from server
    */
+  handleGroupResponse(groupId, npcName, text, error) {
+    this._waitingForResponse = false;
+    this._clearTyping();
+    if (this._responseTimeout) {
+      clearTimeout(this._responseTimeout);
+      this._responseTimeout = null;
+    }
+    const threadId = this._groupThreadId(groupId);
+    const thread = this._ensureThread({
+      threadId,
+      type: 'group',
+      groupId,
+      title: this._threads.get(threadId)?.title || 'Group',
+    });
+    if (error) this._addToLog('System', `⚠️ ${error}`, { threadId });
+    const safeText = typeof text === 'string' && text.length > 0 ? text : '(No reply right now.)';
+    this._addToLog(npcName, safeText, { threadId });
+    thread.preview = `${npcName}: ${safeText}`.slice(0, 120);
+    thread.updatedAt = Date.now();
+    if (this._activeThreadId === threadId) this._renderLog();
+    globalThis.DenizenPhoneChatUI?.refreshThreads?.();
+    if (!error) window.DenizenHaptics?.notify?.();
+  }
+
   handleNpcResponse(npcName, text, delegation, error) {
     this._waitingForResponse = false;
+    this._clearTyping();
     if (this._responseTimeout) {
       clearTimeout(this._responseTimeout);
       this._responseTimeout = null;
@@ -1338,8 +1574,22 @@ class PlayerChat {
       this._addToLog('System', `⚠️ ${error}`);
     }
 
-    // Add to chat log
-    this._addToLog(npcName, safeText);
+    const folder = this._folderForNpcName(npcName);
+    const dmThreadId = folder ? `dm:${folder}` : null;
+    if (dmThreadId) {
+      const thread = this._ensureThread({
+        threadId: dmThreadId,
+        type: 'dm',
+        npcKey: folder,
+        npcName,
+        title: npcName,
+      });
+      thread.preview = safeText.slice(0, 120);
+      thread.updatedAt = Date.now();
+      if (!this._activeThreadId) this._activeThreadId = dmThreadId;
+    }
+    this._addToLog(npcName, safeText, dmThreadId ? { threadId: dmThreadId } : {});
+    globalThis.DenizenPhoneChatUI?.refreshThreads?.();
     if (!error) window.DenizenHaptics?.notify?.();
 
     // Show speech bubble on the NPC. actions.speak → _showSpeechBubble
@@ -1432,46 +1682,182 @@ class PlayerChat {
     }
   }
 
+  _isTouchUi() {
+    return !!window.__DenizenIsTouch
+      || document.documentElement.classList.contains('denizen-touch');
+  }
+
+  _ensureDomPlayerBubbleStyles() {
+    if (document.getElementById('denizen-player-speech-dom-style')) return;
+    const s = document.createElement('style');
+    s.id = 'denizen-player-speech-dom-style';
+    s.textContent = `
+      #denizen-player-speech-dom {
+        position: fixed;
+        z-index: 2147483488;
+        max-width: min(280px, calc(100dvw - 24px));
+        padding: 9px 13px;
+        border-radius: 18px;
+        border: 1px solid rgba(147, 197, 253, 0.42);
+        background: linear-gradient(
+          168deg,
+          rgba(64, 156, 255, 0.92) 0%,
+          rgba(10, 132, 255, 0.88) 100%
+        );
+        color: #ffffff;
+        font: 600 15px/1.35 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+        text-align: center;
+        pointer-events: none;
+        opacity: 0;
+        transform: translate(-50%, -100%) scale(0.92);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        -webkit-backdrop-filter: blur(20px) saturate(170%);
+        backdrop-filter: blur(20px) saturate(170%);
+        box-shadow:
+          0 4px 16px rgba(10, 132, 255, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.32);
+        word-wrap: break-word;
+      }
+      #denizen-player-speech-dom.show {
+        opacity: 1;
+        transform: translate(-50%, -100%) scale(1);
+      }
+      #denizen-player-speech-dom::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        bottom: -8px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-top: 8px solid rgba(10, 132, 255, 0.88);
+        transform: translateX(-50%);
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  _hideDomPlayerBubble() {
+    const el = this._domPlayerBubbleEl;
+    if (!el) return;
+    el.classList.remove('show');
+    if (this._domPlayerBubbleTimer) {
+      clearTimeout(this._domPlayerBubbleTimer);
+      this._domPlayerBubbleTimer = null;
+    }
+  }
+
+  _positionDomPlayerBubble() {
+    const el = this._domPlayerBubbleEl;
+    if (!el) return;
+
+    const gameEl = document.getElementById('game-container');
+    const phoneScreen = document.getElementById('denizen-phone-screen');
+    const phoneOpen = document.documentElement.classList.contains('denizen-phone-open');
+
+    let left;
+    let top;
+
+    if (gameEl) {
+      const rect = gameEl.getBoundingClientRect();
+      if (rect.width > 40 && rect.height > 40) {
+        const player = this.scene?.player;
+        const cam = this.scene?.cameras?.main;
+        left = rect.left + rect.width / 2;
+        top = rect.top + rect.height * 0.38;
+        if (player && cam) {
+          const zoom = cam.zoom || 1;
+          const sx = ((player.x - cam.scrollX) * zoom / cam.width + 0.5) * rect.width + rect.left;
+          const sy = ((player.y - 52 - cam.scrollY) * zoom / cam.height + 0.5) * rect.height + rect.top;
+          if (Number.isFinite(sx) && Number.isFinite(sy)) {
+            left = sx;
+            top = sy;
+          }
+        }
+      }
+    }
+
+    if ((left == null || top == null) && phoneOpen && phoneScreen) {
+      const pr = phoneScreen.getBoundingClientRect();
+      left = pr.left + pr.width / 2;
+      top = pr.top + Math.min(72, pr.height * 0.22);
+    }
+
+    if (left == null || top == null) return;
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+  }
+
+  _showDomPlayerBubble(text) {
+    this._ensureDomPlayerBubbleStyles();
+    let el = this._domPlayerBubbleEl;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'denizen-player-speech-dom';
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+      this._domPlayerBubbleEl = el;
+    }
+    el.textContent = text;
+    this._positionDomPlayerBubble();
+    el.classList.add('show');
+    if (this._domPlayerBubbleTimer) clearTimeout(this._domPlayerBubbleTimer);
+    this._domPlayerBubbleTimer = setTimeout(() => this._hideDomPlayerBubble(), 4000);
+  }
+
   /**
    * Show player's speech as a bubble above the player sprite
    */
   _showPlayerBubble(text) {
+    const truncated = text.length > 80 ? `${text.slice(0, 77)}...` : text;
+    const touch = this._isTouchUi();
+
     if (this._playerBubble) {
       this._playerBubble.destroy();
       this._playerBubble = null;
     }
+    this._hideDomPlayerBubble();
 
-    const truncated = text.length > 50 ? text.slice(0, 47) + '...' : text;
-    const player = this.scene.player;
-    if (!player) return;
-
-    this._playerBubble = this.scene.add.text(player.x, player.y - 60, truncated, {
-      fontSize: '10px',
-      fontFamily: 'monospace',
-      color: '#4ade80',
-      backgroundColor: '#0f172a',
-      padding: { x: 5, y: 4 },
-      wordWrap: { width: 180 },
-      align: 'center',
-    });
-    this._playerBubble.setOrigin(0.5, 1);
-    this._playerBubble.setDepth(9999);
-
-    this.scene.time.delayedCall(4000, () => {
-      if (this._playerBubble) {
-        this._playerBubble.destroy();
-        this._playerBubble = null;
+    const player = this.scene?.player;
+    if (player && this.scene?.add) {
+      const fontSize = touch ? '14px' : '10px';
+      this._playerBubble = this.scene.add.text(player.x, player.y - 60, truncated, {
+        fontSize,
+        fontFamily: 'monospace',
+        color: '#ffffff',
+        backgroundColor: '#0A84FF',
+        padding: { x: touch ? 7 : 5, y: touch ? 5 : 4 },
+        wordWrap: { width: touch ? 220 : 180 },
+        align: 'center',
+      });
+      this._playerBubble.setOrigin(0.5, 1);
+      this._playerBubble.setDepth(9999);
+      if (this.scene.time) {
+        this.scene.time.delayedCall(4000, () => {
+          if (this._playerBubble) {
+            this._playerBubble.destroy();
+            this._playerBubble = null;
+          }
+        });
       }
-    });
+    }
+
+    if (touch) {
+      this._showDomPlayerBubble(truncated);
+    }
   }
 
   /**
    * Update player bubble position (call from scene update)
    */
   updateBubbles() {
-    if (this._playerBubble && this.scene.player) {
+    if (this._playerBubble && this.scene?.player) {
       this._playerBubble.x = this.scene.player.x;
       this._playerBubble.y = this.scene.player.y - 60;
+    }
+    if (this._domPlayerBubbleEl?.classList.contains('show')) {
+      this._positionDomPlayerBubble();
     }
     this._tickCeoConversation();
   }
@@ -1572,23 +1958,110 @@ class PlayerChat {
       }
       #player-chat-log {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
         overflow-y: auto;
         padding: 8px 12px;
         min-height: 60px;
         max-height: 160px;
+        background:
+          radial-gradient(ellipse 80% 50% at 15% 0%, rgba(10, 132, 255, 0.07), transparent 55%),
+          radial-gradient(ellipse 70% 45% at 95% 100%, rgba(99, 102, 241, 0.06), transparent 50%),
+          rgba(2, 6, 23, 0.35);
       }
       #player-chat-log .msg {
-        margin-bottom: 4px;
-        line-height: 1.4;
+        max-width: 88%;
+        margin: 0;
+        padding: 9px 13px;
+        line-height: 1.38;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow-wrap: anywhere;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+        font-size: 15px;
+        -webkit-backdrop-filter: blur(20px) saturate(170%);
+        backdrop-filter: blur(20px) saturate(170%);
+        box-shadow:
+          0 2px 10px rgba(0, 0, 0, 0.16),
+          inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      }
+      #player-chat-log .msg.you {
+        align-self: flex-end;
+        border-bottom-right-radius: 6px;
+        background: linear-gradient(
+          168deg,
+          rgba(64, 156, 255, 0.92) 0%,
+          rgba(10, 132, 255, 0.88) 45%,
+          rgba(0, 106, 220, 0.84) 100%
+        );
+        border-color: rgba(147, 197, 253, 0.42);
+        box-shadow:
+          0 4px 16px rgba(10, 132, 255, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.32);
+      }
+      #player-chat-log .msg.npc,
+      #player-chat-log .msg.typing {
+        align-self: flex-start;
+        border-bottom-left-radius: 6px;
+        background: linear-gradient(
+          168deg,
+          rgba(82, 82, 86, 0.78) 0%,
+          rgba(58, 58, 60, 0.72) 100%
+        );
+        border-color: rgba(255, 255, 255, 0.09);
+        box-shadow:
+          0 2px 10px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+      #player-chat-log .msg.system {
+        align-self: center;
+        max-width: 96%;
+        padding: 6px 10px;
+        text-align: center;
+        border-radius: 999px;
+        background: rgba(250, 204, 21, 0.12);
+        border-color: rgba(250, 204, 21, 0.2);
+      }
+      #player-chat-log .msg.system.error {
+        background: rgba(127, 29, 29, 0.35);
+        border-color: rgba(248, 113, 113, 0.35);
       }
       #player-chat-log .msg .sender {
-        font-weight: bold;
-        margin-right: 4px;
+        display: block;
+        font-weight: 600;
+        font-size: 11px;
+        margin: 0 0 3px;
       }
-      #player-chat-log .msg .sender.you { color: #4ade80; }
-      #player-chat-log .msg .sender.npc { color: #60a5fa; }
-      #player-chat-log .msg .sender.system { color: #fbbf24; }
-      #player-chat-log .msg .text { color: #e2e8f0; }
+      #player-chat-log .msg .sender.npc { color: #a5b4fc; }
+      #player-chat-log .msg .text { color: #f2f2f7; }
+      #player-chat-log .msg.you .text { color: #ffffff; }
+      #player-chat-log .msg.npc .text { color: #f2f2f7; }
+      #player-chat-log .msg.system .text { color: #fde68a; font-size: 11px; }
+      #player-chat-log .msg.system.error .text { color: #fecaca; }
+      #player-chat-log .msg.typing {
+        padding: 12px 16px;
+        min-width: 52px;
+      }
+      #player-chat-log .typing-dots {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 10px;
+      }
+      #player-chat-log .typing-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.62);
+        animation: player-chat-typing 1.2s ease-in-out infinite;
+      }
+      #player-chat-log .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+      #player-chat-log .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes player-chat-typing {
+        0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+        30% { opacity: 1; transform: translateY(-3px); }
+      }
       #player-chat-input-row {
         display: flex;
         gap: 6px;
@@ -1626,6 +2099,10 @@ class PlayerChat {
       }
       #player-chat-send:hover {
         background: #22c55e;
+      }
+      #player-chat-send:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
       #player-chat-speak {
         background: #1e3a8a;
@@ -1708,15 +2185,107 @@ class PlayerChat {
           }
         }
       }
+      html:not(.denizen-touch) #player-chat-panel {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow: hidden;
+        width: min(460px, calc(100vw - 40px));
+        height: min(420px, calc(100vh - 120px));
+        max-height: min(52vh, 420px);
+        background: rgba(8, 13, 25, 0.98);
+        border: 1px solid rgba(148, 163, 184, 0.32);
+        border-bottom: 1px solid rgba(148, 163, 184, 0.32);
+        border-radius: 16px;
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.48);
+      }
+      html:not(.denizen-touch) #player-chat-close-btn {
+        display: flex;
+      }
+      html:not(.denizen-touch) #player-chat-header {
+        padding: 10px 12px 9px;
+        font-size: 13px;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.84));
+      }
+      html:not(.denizen-touch) #player-chat-header .target {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 15px;
+      }
+      html:not(.denizen-touch) #player-chat-header .hint {
+        display: none;
+      }
+      html:not(.denizen-touch) #player-chat-input,
+      html:not(.denizen-touch) #player-chat-send,
+      html:not(.denizen-touch) #player-chat-speak,
+      html:not(.denizen-touch) #player-chat-close-btn {
+        box-sizing: border-box;
+      }
+      html:not(.denizen-touch) #player-chat-log {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+        min-height: 150px;
+        max-height: none;
+        line-height: 1.45;
+        padding: 12px;
+      }
+      html:not(.denizen-touch) #player-chat-log:empty::before {
+        content: "No messages yet";
+        align-self: center;
+        margin: auto;
+        color: #64748b;
+        font-size: 13px;
+      }
+      html:not(.denizen-touch) #player-chat-input-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: rgba(2, 6, 23, 0.92);
+      }
+      html:not(.denizen-touch) #player-chat-input {
+        min-width: 0;
+        min-height: 44px;
+        font-size: 15px;
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: #0f172a;
+        border-color: rgba(148, 163, 184, 0.36);
+      }
+      html:not(.denizen-touch) #player-chat-send,
+      html:not(.denizen-touch) #player-chat-speak {
+        flex: none;
+        min-width: 58px;
+        min-height: 44px;
+        border-radius: 999px;
+        padding: 9px 14px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      html:not(.denizen-touch) #player-chat-speak {
+        background: rgba(37, 99, 235, 0.86);
+      }
       html.denizen-touch #player-chat-panel {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(8, 13, 25, 0.98);
+        border: 1px solid rgba(148, 163, 184, 0.32);
+        border-radius: 16px;
         box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.55);
       }
       html.denizen-touch #player-chat-panel .chat-desktop-hint { display: none; }
-      html.denizen-touch #player-chat-panel .chat-mobile-hint { display: inline; }
+      html.denizen-touch #player-chat-panel .chat-mobile-hint { display: none; }
       html.denizen-touch #player-chat-close-btn { display: flex; }
-      html.denizen-touch.denizen-chat-open #player-chat-panel {
+      html.denizen-touch #player-chat-input,
+      html.denizen-touch #player-chat-send,
+      html.denizen-touch #player-chat-speak,
+      html.denizen-touch #player-chat-close-btn {
+        box-sizing: border-box;
+      }
+      html.denizen-touch.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
         top: max(8px, env(safe-area-inset-top, 0px)) !important;
         bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
@@ -1726,39 +2295,123 @@ class PlayerChat {
         max-height: none !important;
         z-index: 2147483630 !important;
       }
+      /* Portrait phones: keep the office visible — chat fills the space below it */
+      html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel {
+        top: calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + 10px) !important;
+      }
+      html.denizen-touch.denizen-tablet.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
+        top: auto !important;
+        bottom: calc(var(--denizen-dock-height, 44px) + 12px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
+        left: 50% !important;
+        right: auto !important;
+        width: min(var(--denizen-panel-max-width, 540px), calc(100dvw - 24px)) !important;
+        height: min(48dvh, 520px) !important;
+        max-height: min(48dvh, 520px) !important;
+        transform: translateX(-50%) !important;
+      }
+      html.denizen-touch.denizen-phone.denizen-landscape.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
+        top: max(6px, env(safe-area-inset-top, 0px)) !important;
+        bottom: calc(var(--denizen-dock-height, 38px) + 8px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
+        left: auto !important;
+        right: max(6px, env(safe-area-inset-right, 0px)) !important;
+        width: min(380px, 58dvw, calc(100dvw - 16px)) !important;
+        min-width: min(320px, calc(100dvw - 16px)) !important;
+        max-width: calc(100dvw - 16px) !important;
+        height: auto !important;
+        max-height: none !important;
+        transform: none !important;
+      }
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header {
+        padding: 8px 10px;
+      }
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header .hint {
+        display: none;
+      }
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-log {
+        min-height: 0;
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input-row {
+        gap: 6px;
+        padding: 8px 10px;
+      }
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input,
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-send,
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-speak {
+        min-height: 40px;
+        padding: 8px 10px;
+        font-size: 13px;
+      }
       html.denizen-touch #player-chat-log {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
         flex: 1;
         min-height: 120px;
         max-height: none;
-        font-size: 14px;
         line-height: 1.45;
-        padding: 10px 12px;
+        padding: 12px;
+        -webkit-overflow-scrolling: touch;
+      }
+      html.denizen-touch #player-chat-log:empty::before {
+        content: "Say hi";
+        align-self: center;
+        margin: auto;
+        color: #64748b;
+        font-size: 13px;
+      }
+      html.denizen-touch #player-chat-log .msg.system {
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        box-shadow: none;
+      }
+      html.denizen-touch #player-chat-log .msg.system.error .text {
+        color: #fecaca;
       }
       html.denizen-touch #player-chat-input-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        align-items: center;
         gap: 8px;
         padding: 10px 12px max(10px, env(safe-area-inset-bottom, 0px));
-        flex-wrap: wrap;
+        background: rgba(2, 6, 23, 0.92);
       }
       html.denizen-touch #player-chat-input {
-        flex: 1 1 100%;
-        min-height: 44px;
+        min-width: 0;
+        min-height: 46px;
         font-size: 16px;
-        border-radius: 8px;
-        padding: 10px 12px;
+        border-radius: 999px;
+        padding: 11px 14px;
+        background: #0f172a;
+        border-color: rgba(148, 163, 184, 0.36);
       }
       html.denizen-touch #player-chat-send,
       html.denizen-touch #player-chat-speak {
-        flex: 1 1 calc(50% - 4px);
-        min-height: 44px;
+        flex: none;
+        min-width: 48px;
+        min-height: 46px;
         font-size: 15px;
-        border-radius: 8px;
-        padding: 10px 12px;
+        border-radius: 999px;
+        padding: 10px 14px;
+        white-space: nowrap;
+      }
+      html.denizen-touch #player-chat-send {
+        min-width: 66px;
+      }
+      html.denizen-touch #player-chat-speak {
+        background: rgba(37, 99, 235, 0.86);
       }
       html.denizen-touch #player-chat-header {
-        padding: 10px 12px;
+        padding: 10px 12px 9px;
         font-size: 13px;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.84));
       }
       html.denizen-touch #player-chat-header .target {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         font-size: 15px;
       }
       html.denizen-touch.denizen-chat-open #game-container,
@@ -1781,11 +2434,11 @@ class PlayerChat {
           </div>
           <button type="button" id="player-chat-close-btn" aria-label="Close chat">×</button>
         </div>
-        <div id="player-chat-log"></div>
+        <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
         <div id="player-chat-input-row">
           <input id="player-chat-input" type="text" placeholder="Message an NPC…" autocomplete="off" enterkeyhint="send" />
           <button id="player-chat-speak" type="button" title="Tap to speak — tap again when done">🎤 Speak</button>
-          <button id="player-chat-send" type="button">Send</button>
+          <button id="player-chat-send" type="button" aria-label="Send message">Send</button>
         </div>
       `;
       document.body.appendChild(panel);
@@ -1818,6 +2471,7 @@ class PlayerChat {
     this._input = panel.querySelector('#player-chat-input');
     this._logEl = panel.querySelector('#player-chat-log');
     this._targetLabel = panel.querySelector('#player-chat-target');
+    let syncSendButton = () => {};
 
     // Arrow keys drive movement via scene._chatMoveKeys (Phaser can't read keys
     // while a DOM input is focused). Walk and type at the same time.
@@ -1835,6 +2489,7 @@ class PlayerChat {
         if (this._input.value.trim()) {
           this.sendMessage(this._input.value);
           this._input.value = '';
+          syncSendButton();
         }
       } else if (e.key === 'Escape') {
         this._clearChatMoveKeys();
@@ -1854,6 +2509,19 @@ class PlayerChat {
     this._input.addEventListener('blur', () => this._clearChatMoveKeys());
     window.addEventListener('blur', () => this._clearChatMoveKeys());
     this._input.addEventListener('keypress', (e) => e.stopPropagation());
+    const focusMobileInput = (e) => {
+      if (!window.__DenizenIsTouch || !this._input) return;
+      e?.stopPropagation?.();
+      if (document.activeElement === this._input) return;
+      try {
+        this._input.focus({ preventScroll: false });
+      } catch (_) {
+        this._input.focus();
+      }
+    };
+    this._input.addEventListener('pointerup', focusMobileInput);
+    this._input.addEventListener('touchend', focusMobileInput, { passive: true });
+    this._input.addEventListener('click', focusMobileInput);
 
     const bindPress = window.DenizenTouchBind?.bindPress;
 
@@ -1873,13 +2541,19 @@ class PlayerChat {
       const vi = window.DenizenVoiceInput;
       const on = !!(vi && vi.isListening && vi.isListening());
       const touch = !!window.__DenizenIsTouch;
+      const phoneLandscape = touch
+        && document.documentElement.classList.contains('denizen-phone')
+        && document.documentElement.classList.contains('denizen-landscape');
       speakBtn.classList.toggle('listening', on);
       speakBtn.textContent = on
-        ? (touch ? '⏹ Stop' : 'Stop')
-        : (touch ? '🎤 Speak' : 'Speak');
+        ? (phoneLandscape ? '⏹' : (touch ? '⏹ Stop' : 'Stop'))
+        : (phoneLandscape ? '🎤' : (touch ? '🎤 Speak' : 'Speak'));
+      speakBtn.setAttribute('aria-label', on ? 'Stop voice input' : 'Start voice input');
       const supported = !!(vi && (vi.isSupported?.() ?? vi.supported));
       speakBtn.disabled = !supported;
-      speakBtn.style.display = supported ? '' : 'none';
+      const touchUi = !!window.__DenizenIsTouch
+        || document.documentElement.classList.contains('denizen-touch');
+      speakBtn.style.display = (supported || touchUi) ? '' : 'none';
       speakBtn.title = supported
         ? 'Speak — tap again when done'
         : 'Voice needs Chrome desktop or OPENAI_API_KEY on server';
@@ -1888,7 +2562,11 @@ class PlayerChat {
       if (e?.preventDefault) e.preventDefault();
       if (e?.stopPropagation) e.stopPropagation();
       const vi = window.DenizenVoiceInput;
-      if (!vi?.supported) return;
+      if (!(vi?.isSupported?.() ?? vi?.supported)) {
+        vi?.toggle?.(e);
+        refreshSpeakBtn();
+        return;
+      }
       if (typeof window.DenizenSetPresence === 'function' && !window.DenizenPresence?.zionPresent) {
         try { window.DenizenSetPresence(true); } catch (_) {}
       }
@@ -1903,15 +2581,28 @@ class PlayerChat {
 
     // Send button — send and keep the box focused for the next message.
     const sendBtn = panel.querySelector('#player-chat-send');
-    const onSend = () => {
-      if (this._input.value.trim()) {
-        this.sendMessage(this._input.value);
-        this._input.value = '';
+    syncSendButton = () => {
+      if (!sendBtn) return;
+      sendBtn.disabled = !String(this._input?.value || '').trim();
+    };
+    this._input.addEventListener('input', syncSendButton);
+    const onSend = (e) => {
+      if (e?.preventDefault) e.preventDefault();
+      if (e?.stopPropagation) e.stopPropagation();
+      const text = String(this._input?.value || '').trim();
+      if (!text) return;
+      this.sendMessage(text);
+      this._input.value = '';
+      syncSendButton();
+      try {
+        this._input.focus({ preventScroll: false });
+      } catch (_) {
+        this._input.focus();
       }
-      this._input.focus();
     };
     if (bindPress) bindPress(sendBtn, onSend);
     else sendBtn.addEventListener('click', onSend);
+    syncSendButton();
 
     // Block game input while interacting with panel
     panel.addEventListener('mousedown', (e) => e.stopPropagation());
@@ -2044,39 +2735,117 @@ class PlayerChat {
     if (prev && now - prev.at < 12000) return;
 
     this._lastAckByNpc[name] = { at: now, queueLen };
-    const q = typeof queueLen === 'number' && queueLen > 2
-      ? ` (GPU queue: ${queueLen})`
-      : '';
-    this._addToLog('System', `⏳ ${name} heard you${q}…`);
+    if (this._waitingForResponse && !this._typingNpc) {
+      this._setTyping(name);
+    }
   }
 
-  _addToLog(sender, text) {
-    this._chatLog.push({ from: sender, text, time: Date.now() });
+  _setTyping(npcName) {
+    this._typingNpc = npcName ? String(npcName) : null;
+    this._renderLog();
+  }
+
+  _clearTyping() {
+    if (!this._typingNpc) return;
+    this._typingNpc = null;
+    this._renderLog();
+  }
+
+  _classifySystemMessage(text) {
+    const t = String(text || '').trim();
+    if (!t) return 'hidden';
+    if (/^⚠️|failed|error|Reconnecting|Couldn't|not connected|Denied:|Grant failed/i.test(t)) {
+      return 'error';
+    }
+    if (/^\(no .*reply/i.test(t)) return 'error';
+    return 'hidden';
+  }
+
+  _displayNpcName(name) {
+    const raw = String(name || '').trim();
+    if (!raw) return 'NPC';
+    const roster = globalThis.DenizenNpcRoster;
+    const entry = (roster?.entries || []).find((e) => e.display === raw || e.folder === raw.toLowerCase());
+    if (entry?.display) return entry.display;
+    const first = raw.split(/\s+/)[0];
+    return first || raw;
+  }
+
+  _addToLog(sender, text, opts = {}) {
+    const entry = { from: sender, text, time: Date.now() };
+    const threadId = opts.threadId || this._activeThreadId;
+    if (threadId && this._threads.has(threadId)) {
+      const thread = this._threads.get(threadId);
+      thread.messages.push(entry);
+      if (thread.messages.length > this._maxLog) {
+        thread.messages = thread.messages.slice(-this._maxLog);
+      }
+      if (sender === 'You') thread.preview = String(text || '').slice(0, 120);
+      else if (sender !== 'System') thread.preview = `${sender}: ${String(text || '').slice(0, 100)}`;
+      thread.updatedAt = Date.now();
+      this._saveCachedMessages(threadId, thread.messages);
+      if (this._activeThreadId === threadId) this._renderLog();
+      globalThis.DenizenPhoneChatUI?.refreshThreads?.().catch(() => null);
+      return;
+    }
+    this._chatLog.push(entry);
     if (this._chatLog.length > this._maxLog) {
       this._chatLog = this._chatLog.slice(-this._maxLog);
     }
     this._renderLog();
   }
 
+  _messagesForRender() {
+    const active = this._getActiveThread();
+    if (active?.messages?.length) return active.messages;
+    if (this._phoneShellEnabled && this._activeThreadId) {
+      const t = this._threads.get(this._activeThreadId);
+      if (t?.messages) return t.messages;
+    }
+    return this._chatLog;
+  }
+
   _renderLog() {
     const log = this._logEl;
     if (!log) return;
 
-    // Only render last 20 messages
-    const recent = this._chatLog.slice(-20);
-    log.innerHTML = recent.map(m => {
-      const senderClass = m.from === 'You' ? 'you' : m.from === 'System' ? 'system' : 'npc';
-      const esc = (s) => s.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      return `<div class="msg"><span class="sender ${senderClass}">${esc(m.from)}:</span><span class="text">${esc(m.text)}</span></div>`;
+    const esc = (s) => String(s || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+    const active = this._getActiveThread();
+    const isGroup = active?.type === 'group';
+    const recent = this._messagesForRender().slice(-40).filter((m) => {
+      if (m.from !== 'System') return true;
+      return this._classifySystemMessage(m.text) === 'error';
+    });
+
+    let html = recent.map((m) => {
+      if (m.from === 'You') {
+        return `<div class="msg you"><span class="text">${esc(m.text)}</span></div>`;
+      }
+      if (m.from === 'System') {
+        return `<div class="msg system error"><span class="text">${esc(m.text)}</span></div>`;
+      }
+      const label = isGroup
+        ? `<span class="sender npc">${esc(this._displayNpcName(m.from))}</span>`
+        : '';
+      return `<div class="msg npc">${label}<span class="text">${esc(m.text)}</span></div>`;
     }).join('');
 
-    // Scroll to bottom
+    if (this._typingNpc && this._waitingForResponse) {
+      html += `<div class="msg npc typing" aria-label="${esc(this._displayNpcName(this._typingNpc))} is typing"><span class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></span></div>`;
+    }
+
+    log.innerHTML = html;
     log.scrollTop = log.scrollHeight;
   }
 
   _updateTargetLabel(name) {
     if (this._targetLabel) {
-      this._targetLabel.textContent = name ? `Talking to ${name}` : 'Chat';
+      this._targetLabel.textContent = name ? this._displayNpcName(name) : 'Messages';
     }
   }
 }

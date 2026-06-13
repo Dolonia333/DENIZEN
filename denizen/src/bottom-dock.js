@@ -19,6 +19,7 @@
       'denizen-diag-chip',
       'denizen-security-chip',
       'denizen-mesh-jobs-chip',
+      'denizen-content-pipeline-chip',
       'denizen-llm-tel-chip',
     ],
     center: ['player-chat-fab'],
@@ -40,6 +41,7 @@
       'denizen-diag-chip',
       'denizen-security-chip',
       'denizen-mesh-jobs-chip',
+      'denizen-content-pipeline-chip',
     ],
     center: [
       'denizen-llm-tel-chip',
@@ -72,6 +74,7 @@
         --denizen-dock-height: 56px;
         --denizen-dock-bg: rgba(2, 6, 23, 0.94);
         --denizen-dock-border: #334155;
+        --denizen-dock-peek: 10px;
       }
 
       #${DOCK_ID} {
@@ -93,6 +96,40 @@
         backdrop-filter: blur(10px);
         pointer-events: auto;
         touch-action: manipulation;
+        transform: translateY(0);
+        opacity: 1;
+        transition: transform 0.22s ease, opacity 0.22s ease, box-shadow 0.22s ease;
+      }
+
+      #${DOCK_ID}::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        width: 82px;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.62);
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.18s ease, background 0.18s ease;
+      }
+
+      html.denizen-desktop:not(.denizen-dock-open):not(.denizen-chat-open):not(.denizen-proposals-open):not(.denizen-browser-open):not(.denizen-llm-tel-open):not(.denizen-mesh-jobs-open):not(.denizen-diag-open) #${DOCK_ID}:not(:hover):not(:focus-within) {
+        transform: translateY(calc(100% - var(--denizen-dock-peek)));
+        opacity: 0.72;
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.24);
+      }
+
+      html.denizen-desktop:not(.denizen-dock-open):not(.denizen-chat-open):not(.denizen-proposals-open):not(.denizen-browser-open):not(.denizen-llm-tel-open):not(.denizen-mesh-jobs-open):not(.denizen-diag-open) #${DOCK_ID}:not(:hover):not(:focus-within)::before {
+        opacity: 1;
+      }
+
+      html.denizen-desktop #${DOCK_ID}:hover::before,
+      html.denizen-desktop #${DOCK_ID}:focus-within::before,
+      html.denizen-desktop.denizen-dock-open #${DOCK_ID}::before {
+        opacity: 0.35;
+        background: rgba(74, 222, 128, 0.7);
       }
 
       html.denizen-touch #${DOCK_ID} {
@@ -369,6 +406,8 @@
 
   const CHIP_ICONS = {
     'denizen-onboarding-replay-chip': '📖',
+    'denizen-superuser-replay-chip': '🗺️',
+    'denizen-capabilities-guide-chip': '🧭',
     'denizen-diag-chip': '⋯',
     'denizen-mesh-jobs-chip': '⬡',
     'denizen-security-chip': '🛡️',
@@ -377,6 +416,7 @@
     'denizen-presence-chip': '👤',
     'denizen-browser-mirror-chip': '🌐',
     'denizen-proposals-chip': '📋',
+    'denizen-content-pipeline-chip': '📰',
     'player-chat-fab': '💬',
     'denizen-mic-button': '🎤',
   };
@@ -483,11 +523,61 @@
     }, 120));
   }
 
+  let dockRevealTimer = null;
+
+  function revealDock(ms = 2600) {
+    if (!document.documentElement.classList.contains('denizen-desktop')) return;
+    document.documentElement.classList.add('denizen-dock-open');
+    if (dockRevealTimer) clearTimeout(dockRevealTimer);
+    dockRevealTimer = setTimeout(() => {
+      document.documentElement.classList.remove('denizen-dock-open');
+      dockRevealTimer = null;
+    }, ms);
+  }
+
+  function wireAutoHideDock() {
+    if (!dockEl || dockEl.dataset.autoHideWired === '1') return;
+    dockEl.dataset.autoHideWired = '1';
+    dockEl.addEventListener('pointerenter', () => revealDock(5000));
+    dockEl.addEventListener('pointerdown', () => revealDock(5000));
+    dockEl.addEventListener('focusin', () => revealDock(5000));
+    dockEl.addEventListener('pointerleave', () => revealDock(900));
+    window.addEventListener('mousemove', (e) => {
+      if (!document.documentElement.classList.contains('denizen-desktop')) return;
+      if (window.innerHeight - e.clientY <= 72) revealDock(2200);
+    }, { passive: true });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab' || e.key === 'Alt') revealDock(3000);
+    });
+  }
+
+  /** Lazy-loaded panels create their chips long after boot — adopt them whenever they appear. */
+  function watchLateChips() {
+    if (typeof MutationObserver === 'undefined') return;
+    const ids = new Set();
+    for (const map of [SLOT_MAP_DESKTOP, SLOT_MAP_TOUCH]) {
+      for (const sideIds of Object.values(map)) sideIds.forEach((id) => ids.add(id));
+    }
+    const obs = new MutationObserver((muts) => {
+      for (const m of muts) {
+        for (const node of m.addedNodes) {
+          if (node?.nodeType === 1 && ids.has(node.id)) {
+            adoptAll();
+            return;
+          }
+        }
+      }
+    });
+    obs.observe(document.body, { childList: true });
+  }
+
   function boot() {
     injectStyles();
     ensureDock();
     adoptAll();
     watchDockSize();
+    wireAutoHideDock();
+    watchLateChips();
 
     let passes = 0;
     const poll = setInterval(() => {

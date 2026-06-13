@@ -1299,16 +1299,21 @@ class AgentOfficeManager {
     // Sample the 5 closest interactables to the NPC's current position.
     const nearbyFurniture = this._computeNearbyFurniture(npcKey, 5);
 
+    const sess = globalThis.DenizenVisitorSession;
     const context = {
       description: `Office time: ${new Date().toLocaleTimeString()}. Time of day: ${this._getTimeOfDay()}. Your status: ${agent.status || 'idle'}. Your current mood: ${this._getMood(npcKey)}. ` +
         `Nearby coworkers: ${nearbyNpcs.join(', ')}.`,
       nearbyFurniture,
+      officeId: window.__DenizenOfficeId || sess?.getOfficeId?.() || null,
+      identityId: sess?.getIdentityId?.() || null,
+      isOperatorOffice: !!window.__DenizenIsOperatorOffice,
     };
 
     // Ask server for NPC's decision
     this._send({
       type: 'npc_think',
       npcName: agent.name,
+      office_id: context.officeId,
       context,
     });
 
@@ -2032,7 +2037,23 @@ class AgentOfficeManager {
   /**
    * Handle messages from the server (cofounder agent commands)
    */
+  _shouldHandleOfficeMsg(msg) {
+    const target = msg?.office_id || msg?.officeId;
+    if (!target) return true;
+    const mine = window.__DenizenOfficeId
+      || globalThis.DenizenVisitorSession?.getOfficeId?.()
+      || null;
+    if (!mine) return window.__DenizenCeoMode || !!window.__DenizenIsOperatorOffice;
+    if (target === mine) return true;
+    if (target === 'ceo-operator' && (window.__DenizenIsOperatorOffice || window.__DenizenCeoMode)) {
+      return true;
+    }
+    return false;
+  }
+
   _handleServerMessage(msg) {
+    if (!this._shouldHandleOfficeMsg(msg)) return;
+
     // Demo mode: still allow CEO-facing replies (chat, search briefs, browser mirror).
     const _demoCeoTypes = new Set([
       'player_chat_response',
@@ -2054,6 +2075,15 @@ class AgentOfficeManager {
     // purpose. We only surface unknown types now (see `default:`).
 
     switch (msg.type) {
+      case 'office_registered':
+        globalThis.DenizenVisitorSession?.applyOfficeRegistration?.(msg);
+        window.__DenizenOfficeId = msg.office_id || window.__DenizenOfficeId;
+        window.__DenizenIsOperatorOffice = !!msg.is_operator_office;
+        console.log('[AgentManager] Office registered:', msg.office_id, msg.is_operator_office ? '(operator)' : '');
+        break;
+      case 'office_bus_message':
+        globalThis.DenizenVisitorHandoffUI?.showIncoming?.(msg);
+        break;
       case 'agent_command':
         this._executeAgentCommand(msg);
         break;
@@ -2204,6 +2234,12 @@ class AgentOfficeManager {
         }
 
         console.log(`[AgentManager] ${msg.npcName} responds to CEO: "${msg.text}"${msg.delegation ? ` [delegating to ${msg.delegation.delegateTo}]` : ''}${msg.actions?.length ? ` [${msg.actions.length} actions]` : ''}`);
+        break;
+      }
+      case 'player_group_chat_response': {
+        if (this.scene._playerChat) {
+          this.scene._playerChat.handleGroupResponse(msg.groupId, msg.npcName, msg.text, msg.error);
+        }
         break;
       }
       case 'bouncer_honeypot': {
@@ -2673,10 +2709,31 @@ class AgentOfficeManager {
         break;
       }
       case 'job_standup':
-      case 'job_crm_event': {
+      case 'job_crm_event':
+      case 'crm_event': {
         if (this.scene._playerChat) {
-          const note = msg.report || msg.text || `Job update: ${msg.action || msg.kind || 'event'}`;
-          this.scene._playerChat._addToLog(msg.npcName || 'Lucy', note);
+          const note = msg.kind === 'deal-won'
+            ? `🏆 CRM: ${msg.title || 'Deal won'}${msg.value != null ? ` (${msg.value})` : ''}`
+            : msg.kind === 'pipeline-brief'
+              ? `📊 ${msg.text || msg.report || 'CRM pipeline brief'}`
+              : msg.kind === 'task-overdue'
+                ? `⏰ ${msg.npcName || 'Marcus'}: overdue task "${msg.title || 'Task'}"${msg.due ? ` (due ${msg.due})` : ''}`
+                : msg.kind === 'at-risk'
+                  ? `⚠️ ${msg.npcName || 'Marcus'}: at-risk deal "${msg.title || 'Deal'}"${msg.stage ? ` — ${msg.stage}` : ''}`
+                  : (msg.report || msg.text || `CRM: ${msg.kind || msg.action || 'event'}`);
+          this.scene._playerChat._addToLog(msg.npcName || 'CRM', note);
+        }
+        if (this.scene?._workFeed && msg.kind === 'deal-won') {
+          try {
+            this.scene._workFeed.addEntry({
+              npcName: 'CRM',
+              phase: 'deal-won',
+              phaseEmoji: '🏆',
+              note: `${msg.title || 'Deal won'}${msg.value != null ? ` — ${msg.value}` : ''}`,
+              action: 'crm',
+              ts: Date.now(),
+            });
+          } catch (_) {}
         }
         break;
       }
@@ -2736,6 +2793,22 @@ class AgentOfficeManager {
             `✅ ${msg.npcName} granted access: "${msg.permission}"`
           );
         }
+        break;
+      }
+
+      case 'npc_think_wake': {
+        const wakeKey = Object.entries(this.NPC_NAMES).find(
+          ([, v]) => v.toLowerCase() === msg.npcName?.toLowerCase(),
+        )?.[0];
+        if (wakeKey) this._npcThinkLoop(wakeKey);
+        break;
+      }
+
+      case 'npc_chain_step_assigned': {
+        const assignKey = Object.entries(this.NPC_NAMES).find(
+          ([, v]) => v.toLowerCase() === msg.npc?.toLowerCase(),
+        )?.[0];
+        if (assignKey) this._npcThinkLoop(assignKey);
         break;
       }
 
@@ -3154,7 +3227,8 @@ class AgentOfficeManager {
 
     actions.forEach(act => {
       this.scene.time.delayedCall(delay, () => {
-        console.log(`[AgentManager] ${npcName} executing: ${act.action}`, act.params);
+        const params = Array.isArray(act.params) ? act.params : [];
+        console.log(`[AgentManager] ${npcName} executing: ${act.action}`, params);
 
         switch (act.action) {
           case 'useComputer': {
@@ -3167,7 +3241,7 @@ class AgentOfficeManager {
             break;
 
           case 'goToRoom': {
-            const room = act.params[0] || 'open_office';
+            const room = params[0] || 'open_office';
             this.actions.goToRoom(npcKey, room);
             break;
           }
@@ -3180,8 +3254,8 @@ class AgentOfficeManager {
             break;
 
           case 'speakTo': {
-            const targetName = act.params[0];
-            const spkText = act.params[1] || 'Hey, got a minute?';
+            const targetName = params[0];
+            const spkText = params[1] || 'Hey, got a minute?';
             const targetKey = Object.entries(this.NPC_NAMES).find(
               ([k, v]) => v.toLowerCase() === targetName?.toLowerCase()
             )?.[0] || `xp_${targetName?.toLowerCase()}`;
@@ -3200,7 +3274,7 @@ class AgentOfficeManager {
             break;
           }
           case 'callMeeting': {
-            const attendeeStr = act.params[0] || '';
+            const attendeeStr = params[0] || '';
             const attendees = attendeeStr.split(',').map(n => n.trim()).filter(Boolean);
             this._executeAgentCommand({
               agentId: npcName,
@@ -3214,7 +3288,7 @@ class AgentOfficeManager {
             // instead of a speech bubble. Useful for ambient texture
             // ("I should follow up with Marcus...") that shouldn't
             // pin nearby NPCs into a conversation.
-            const thoughtText = (act.params[0] || '').trim();
+            const thoughtText = (params[0] || '').trim();
             if (thoughtText && this.actions.think) {
               this.actions.think(npcKey, thoughtText);
             }
@@ -3224,7 +3298,7 @@ class AgentOfficeManager {
             // Counterpart to placeFurniture — let NPCs undo or
             // reorganize. Only items whose instanceId starts with "npc_"
             // are removable; the server enforces that.
-            const instanceId = act.params[0] || '';
+            const instanceId = params[0] || '';
             fetch('/api/remove-furniture', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -3245,10 +3319,10 @@ class AgentOfficeManager {
             // here — on next page reload the saved layout brings it in.
             // (A future enhancement: also spawn the sprite live without
             // requiring reload.)
-            const prefabId = act.params[0] || '';
-            const x = parseInt(act.params[1], 10);
-            const y = parseInt(act.params[2], 10);
-            const reason = act.params.slice(3).join(':') || null;
+            const prefabId = params[0] || '';
+            const x = parseInt(params[1], 10);
+            const y = parseInt(params[2], 10);
+            const reason = params.slice(3).join(':') || null;
             fetch('/api/place-furniture', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -3269,8 +3343,8 @@ class AgentOfficeManager {
             // animation does NOT appear instantly — that's by design.
             // Params: [animName, description]. Description may contain
             // colons, so re-join everything after the first param.
-            const animName = (act.params[0] || '').trim();
-            const description = act.params.slice(1).join(':').trim();
+            const animName = (params[0] || '').trim();
+            const description = params.slice(1).join(':').trim();
             fetch('/api/request-animation', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -3295,8 +3369,8 @@ class AgentOfficeManager {
             // Params: [verbName, description]. Description may
             // contain colons, so re-join everything after the first
             // param.
-            const verbName = (act.params[0] || '').trim();
-            const description = act.params.slice(1).join(':').trim();
+            const verbName = (params[0] || '').trim();
+            const description = params.slice(1).join(':').trim();
             fetch('/api/request-capability', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

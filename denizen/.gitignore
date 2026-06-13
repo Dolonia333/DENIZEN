@@ -1,4 +1,6 @@
 node_modules/
+crm/vendor/node_modules/
+crm/dist/
 out/
 .claude/
 *.scanned.json

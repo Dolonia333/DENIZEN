@@ -4,6 +4,8 @@ const computeQueue = require('./denizen-compute-queue.js');
 const denizenDb = require('./denizen-db.js');
 const promptTuning = require('./prompt-tuning.js');
 const npcRoster = require('./npc-roster.js');
+let lmStudioRouter = null;
+try { lmStudioRouter = require('./lm-studio-router.js'); } catch (_) {}
 
 const DEFAULT_INTERVAL_MS = 5 * 60 * 1000;
 const MIN_GAP_MS = 5 * 60 * 1000;
@@ -59,6 +61,13 @@ async function enqueueThinkBatch(getNpcBrains) {
   }
 
   const npcIds = collectNpcIds(getNpcBrains);
+  const mgr = typeof getNpcBrains === 'function' ? getNpcBrains() : null;
+  const queueDepth = mgr?.getQueueDepth?.() || 0;
+  const saturated = lmStudioRouter?.isSaturated?.(queueDepth);
+  const hasRemote = lmStudioRouter?.hasRemoteNodes?.();
+  let priority = promptTuning?.economyMode ? 55 : 50;
+  if (saturated && hasRemote) priority = Math.min(100, priority + 15);
+
   try {
     const job = await computeQueue.enqueueJob({
       jobType: 'npc_think_batch',
@@ -66,8 +75,10 @@ async function enqueueThinkBatch(getNpcBrains) {
         npc_ids: npcIds,
         source: 'mesh_producer',
         economy_mode: !!promptTuning?.economyMode,
+        inference_saturated: saturated,
+        offload_remote: !!(saturated && hasRemote),
       },
-      priority: promptTuning?.economyMode ? 55 : 50,
+      priority,
     });
     if (job?.id) {
       lastEnqueuedAt = now;

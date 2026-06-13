@@ -1,6 +1,7 @@
 'use strict';
 
 const denizenDb = require('./denizen-db.js');
+const sessionAuth = require('./visitor-session-auth.js');
 
 const NODE_TABLE = 'denizen_compute_nodes';
 const IDENTITY_TABLE = 'denizen_user_identities';
@@ -27,19 +28,28 @@ function readHeader(req, name) {
   return '';
 }
 
+function hasForwardingHeaders(req) {
+  return !!(readHeader(req, 'x-forwarded-for')
+    || readHeader(req, 'cf-connecting-ip')
+    || readHeader(req, 'x-real-ip')
+    || readHeader(req, 'forwarded'));
+}
+
 function isLocalOperatorRequest(req) {
   if (!req) return false;
-  if (isLoopbackAddress(req.socket?.remoteAddress)) return true;
-  const clientFlag = String(
-    readHeader(req, 'x-denizen-local-client')
-    || '',
-  ).trim().toLowerCase();
-  return clientFlag === '1' || clientFlag === 'true' || clientFlag === 'yes';
+  // Loopback only counts when the request did NOT arrive through a tunnel or
+  // reverse proxy: cloudflared/ngrok connect from 127.0.0.1 but stamp
+  // forwarding headers, so remote visitors must never qualify as "local".
+  // Client-supplied flags (X-Denizen-Local-Client) are deliberately ignored.
+  return isLoopbackAddress(req.socket?.remoteAddress) && !hasForwardingHeaders(req);
 }
 
 function isCeoPrincipalRequest(req) {
   if (!req) return false;
-  return /^(1|true|yes)$/i.test(String(readHeader(req, 'x-ceo-principal') || ''));
+  // Requires the signed CEO grant issued at CEO-code login — a bare
+  // "X-Ceo-Principal: 1" assertion no longer grants anything.
+  const grant = String(readHeader(req, 'x-denizen-ceo-grant') || '').trim();
+  return !!(grant && sessionAuth.verifyCeoGrant(grant));
 }
 
 function isCeoPrincipalIdentity(identity) {
@@ -48,8 +58,10 @@ function isCeoPrincipalIdentity(identity) {
 }
 
 function isHostOperatorSession(req, identity = null) {
+  // Loopback alone must NOT grant host scope — guests testing from the same
+  // machine (e.g. dog@gmail.com on localhost:8081) would otherwise inherit the
+  // owner's LM Studio stats, fleet, and private NAS/Supabase endpoints.
   return isHostOperatorIdentity(identity)
-    || isLocalOperatorRequest(req)
     || isCeoPrincipalRequest(req)
     || isCeoPrincipalIdentity(identity);
 }
@@ -78,6 +90,26 @@ function shortModelName(model) {
 }
 
 async function probeLmStudio(npcBrains) {
+  let lmStudioRouter = null;
+  try { lmStudioRouter = require('./lm-studio-router'); } catch (_) {}
+  const queueDepth = npcBrains?.getQueueDepth?.() || 0;
+  if (lmStudioRouter?.isEnabled?.()) {
+    const pick = lmStudioRouter.selectEndpoint({ tier: 'main', queueDepth });
+    if (pick?.url) {
+      const lmCfg = npcBrains?.providers?.lmstudio || {};
+      const status = {
+        reachable: lmStudioRouter.anyReachable(),
+        url: pick.url,
+        model: lmCfg.model || process.env.LM_STUDIO_MODEL || null,
+        fastModel: npcBrains?.providers?.['lmstudio-fast']?.model || process.env.LM_STUDIO_FAST_MODEL || null,
+        livenessSource: pick.routed ? `router → ${pick.label || pick.node_id}` : 'router fallback',
+        router: pick,
+        error: null,
+      };
+      if (status.reachable) return status;
+    }
+  }
+
   const lmCfg = npcBrains?.providers?.lmstudio || {};
   const lmStudioUrl = lmCfg.baseUrl || process.env.LM_STUDIO_URL || 'http://localhost:1234';
   const lmHeaders = {};
@@ -188,17 +220,31 @@ async function getOnlineNodeForIdentity(identityId) {
   return null;
 }
 
+function isCeoIdentityEmail(identity) {
+  const email = String(identity?.email_normalized || identity?.email || '').trim().toLowerCase();
+  if (!email) return false;
+  const envEmail = String(process.env.DENIZEN_CEO_IDENTITY_EMAIL || '').trim().toLowerCase();
+  if (envEmail && email === envEmail) return true;
+  return /^ceo@[^@]+\.denizen\.local$/.test(email);
+}
+
 async function markHostOperatorIfLocal(identityId, req, identity = null) {
+  // Persisting the host flag is reserved for the CEO's OWN identity row.
+  // Locality and even a valid CEO grant on the request are request-scoped —
+  // they must never brand a teammate/guest identity as the host (e.g. the
+  // CEO testing a second account from the host machine or with a leftover
+  // grant in the same browser).
   if (!identityId || !isHostOperatorSession(req, identity)) return null;
   if (!isEnabled()) return identity || null;
   const rows = await denizenDb._get(
-    `${IDENTITY_TABLE}?select=id,metadata&limit=1&id=eq.${encodeURIComponent(identityId)}`,
+    `${IDENTITY_TABLE}?select=id,email,email_normalized,metadata&limit=1&id=eq.${encodeURIComponent(identityId)}`,
   );
   const existing = rows?.[0];
   if (!existing?.id) return identity || null;
 
   const meta = parseMetadata(existing.metadata);
   if (meta.is_host_operator) return existing;
+  if (!meta.is_ceo_principal && !isCeoIdentityEmail(existing)) return existing;
 
   meta.is_host_operator = true;
   meta.host_operator_marked_at = new Date().toISOString();

@@ -17,3 +17,7 @@ create policy denizen_user_identities_anon_allow_all
   using (true)
   with check (true);
 
+insert into public.denizen_schema_migrations (version, name)
+values ('20260608000002', 'user_identities_rls_dev_allow_anon')
+on conflict (version) do nothing;
+

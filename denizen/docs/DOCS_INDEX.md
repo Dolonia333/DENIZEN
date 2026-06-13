@@ -34,6 +34,8 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Integrations | [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md) | new/local | Jelly skill executor, supabase-bridge, denizen-data-actions |
 | Integrations | [FEDERAL_PIPELINE.md](FEDERAL_PIPELINE.md) | new/local | RFP pipeline, requirement review, org-gated briefing strip |
 | Integrations | [JOB_CRM.md](JOB_CRM.md) | new/local | Roki job applications, Supabase sync, facts trigger |
+| Meridian CRM (Deal Weaver) | [../crm/USER_GUIDE.md](../crm/USER_GUIDE.md) | new/local | Full UI guide — every tab and button |
+| Meridian CRM (technical) | [../crm/ARCHITECTURE.md](../crm/ARCHITECTURE.md) | new/local | API, sync, real vs UI-only features |
 | Integrations | [NPC_MCP_GATEWAY.md](NPC_MCP_GATEWAY.md) | new/local | Per-NPC MCP gateway, bearer tokens, memory sync (v1.3) |
 | Integrations | [NPC_COMPANION.md](NPC_COMPANION.md) | new/local | Browser extension companion — provider-agnostic sync (v1.6) |
 | NPCs/AI | [NPCS.md](NPCS.md) | on GitHub | Full NPC roster and role definitions |

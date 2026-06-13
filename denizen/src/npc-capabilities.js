@@ -235,6 +235,27 @@ const BY_NAME = {
   },
 };
 
+let _crmPersonas = null;
+try { _crmPersonas = require('./denizen-crm-npc-personas'); } catch (_) {}
+
+const CRM_READ_LINE = 'Read Meridian CRM — pipeline, tasks, setup progress, at-risk deals, and industry templates (/crm/)';
+const CRM_WRITE_LINE = 'Update Meridian CRM — add contacts, move deals, create tasks, apply industry templates';
+const CRM_ASK = ['Summarize our Meridian CRM', 'What CRM setup steps are left?', 'Show overdue CRM tasks'];
+
+for (const name of Object.keys(BY_NAME)) {
+  const cap = BY_NAME[name];
+  if (!cap.canDo.includes(CRM_READ_LINE)) cap.canDo.push(CRM_READ_LINE);
+  const persona = _crmPersonas?.resolvePersona?.(name);
+  if (persona?.canWrite && !cap.canDo.includes(CRM_WRITE_LINE)) cap.canDo.push(CRM_WRITE_LINE);
+  if (persona?.setupOwner?.length) {
+    cap.canDo.push(`Guide CRM onboarding: ${persona.setupOwner.join(', ')}`);
+  }
+  for (const q of CRM_ASK) {
+    if (!cap.askMe.includes(q)) cap.askMe.push(q);
+  }
+  if (!cap.skills.includes('denizen-data')) cap.skills.push('denizen-data');
+}
+
 const DISPLAY_NAMES = Object.keys(BY_NAME);
 
 function isCapabilitiesQuestion(message) {

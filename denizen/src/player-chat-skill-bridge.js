@@ -5,6 +5,9 @@
  * Parses [RUN_SKILL:...] tags from NPC replies and infers skills from user intent.
  */
 
+let crmNpcPersonas = null;
+try { crmNpcPersonas = require('./denizen-crm-npc-personas'); } catch (_) {}
+
 const RUN_SKILL_TAG = /\[RUN_SKILL:([a-z][a-z0-9-]*):([^\]]+)\]/gi;
 
 const SKILL_ALIASES = {
@@ -81,6 +84,14 @@ function inferSkillFromMessage(npcName, message) {
     };
   }
 
+  const crmPlan = crmNpcPersonas?.inferCrmAction?.(msg);
+  if (crmPlan) {
+    const persona = crmNpcPersonas?.resolvePersona?.(name);
+    const writeBlocked = persona && !persona.canWrite && crmNpcPersonas?.isWriteSkill?.(crmPlan.skill);
+    if (!writeBlocked) return crmPlan;
+    return { skill: 'crm-setup-status', params: { task: msg }, source: 'infer-crm-read' };
+  }
+
   if (/\b(research|look\s*up|find\s+out|google|what\s+is|how\s+do\s+i)\b/i.test(msg)) {
     const query = msg
       .replace(/^(?:please\s+)?(?:research|look\s*up|find\s+out|google)\s+/i, '')
@@ -131,7 +142,7 @@ function inferSkillFromMessage(npcName, message) {
 }
 
 function isTaskLikeMessage(message) {
-  return /\b(research|look\s*up|fix|build|code|github|deploy|search|find|create|implement|run|help\s+me|can\s+you)\b/i.test(String(message || ''));
+  return /\b(research|look\s*up|fix|build|code|github|deploy|search|find|create|implement|run|help\s+me|can\s+you|crm|meridian|pipeline|contact|deal|setup|onboarding|industry|task|follow.?up)\b/i.test(String(message || ''));
 }
 
 /** Teammate asking Lucy to enable, unlock, or author a new gated skill. */
@@ -177,6 +188,14 @@ function planSkillExecution({
   forceInfer = false,
 } = {}) {
   if (!canUseRealWork) return null;
+
+  const crmInfer = crmNpcPersonas?.inferCrmAction?.(message);
+  const crmPersona = crmNpcPersonas?.resolvePersona?.(npcName);
+  if (crmInfer && crmPersona) {
+    const writeBlocked = !crmPersona.canWrite && crmNpcPersonas?.isWriteSkill?.(crmInfer.skill);
+    if (!writeBlocked) return crmInfer;
+    return { skill: 'crm-setup-status', params: { task: message }, source: 'infer-crm-read' };
+  }
 
   const tagged = parseRunSkillTags(responseText);
   if (tagged.length) return tagged[0];

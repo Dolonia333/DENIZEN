@@ -50,6 +50,11 @@
       html.denizen-mobile-drawer-mode #${CHIP_ID} {
         display: none !important;
       }
+      /* The node panel already shows credits — only surface the chip when
+         the panel is hidden (its "Compute" restore tab is showing) */
+      body:has(#denizen-node-ui-chip:not([data-panel-hidden="1"])) #${CHIP_ID} {
+        display: none !important;
+      }
     `;
     document.head.appendChild(s);
   }

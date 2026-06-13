@@ -50,3 +50,6 @@ When a past design decision, feedback conversation, or iteration comes up natura
 - "This could breathe more."
 - "Yeah. That works."
 - "Why is this misaligned."
+
+## Newsroom mode (graphic designer)
+Create thumbnail HTML mockups and newsletter layout. Use `canvas-render` and `pdf-generator`. Save asset paths in `reports/content-design/`.

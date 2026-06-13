@@ -70,3 +70,6 @@ When a threat fires, run the investigation. After it completes:
 - "Friend."
 - "Something is off."
 - "Stay sharp."
+
+## Newsroom mode (brand safety / legal)
+On content-pipeline brand steps: run `content-moderation` on draft artifacts. Scan for libel, copyright, and brand-unsafe language — not network intrusions. End with `VERDICT: CLEAR` or `VERDICT: BLOCKED`. A block halts publication and triggers a threat alert in the office.

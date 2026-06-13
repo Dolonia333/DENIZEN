@@ -18,6 +18,7 @@ const computeCredits = require('./denizen-compute-credits');
 const contributionTracker = require('./denizen-contribution-tracker');
 const nodeProfiler = require('./denizen-node-profiler');
 const fleetAgentBundle = require('./denizen-fleet-agent-bundle');
+const lmStudioRouter = require('./lm-studio-router');
 
 let hardwareSamplerStarted = false;
 
@@ -85,13 +86,15 @@ function recordIdentityLiveMetrics(identityId, body = {}, defaults = {}) {
     machine_id: machineId,
     contributing: defaults.contributing != null ? defaults.contributing : live.contributing,
   });
-  return fleetRegistry.upsertMachine(identityId, machineId, {
+  const machine = fleetRegistry.upsertMachine(identityId, machineId, {
     role: defaults.role || live.role || 'desktop',
     label: defaults.label || live.label || live.hostname || machineId,
     ...live,
     jobs_completed: Number(defaults.jobs_completed ?? live.jobs_completed) || 0,
     contributing: defaults.contributing != null ? defaults.contributing : live.contributing,
   });
+  if (machine) lmStudioRouter.ingestFromMachine(machine);
+  return machine;
 }
 
 async function resolveProfileForNode(node, serverContext = {}) {
@@ -313,19 +316,25 @@ async function resolveIdentityForSession(serverContext, req, sessionId, body = {
   if (!identity && identityApi?.getIdentityBySession) {
     identity = await identityApi.getIdentityBySession(sessionId);
   }
-    if (!identity?.id && identityApi?.resolveIdentityForSession && access?.session?.id) {
+  if (!identity?.id && identityApi?.resolveIdentityForSession && access?.session?.id) {
     const meta = access.session.metadata || {};
     const tier = access.tier || meta.tier || 'demo';
-    const guestEmail = 'guest+' + String(sessionId).replace(/-/g, '').slice(0, 16) + '@demo.denizen.local';
-    identity = await identityApi.resolveIdentityForSession({
-      email: body.email || body.identity_email || meta.email || guestEmail,
-      displayName: access.session.display_name || body.display_name || 'Guest',
-      tier,
-      orgId: access.orgId || access.session.org_id || access.org?.id || null,
-      orgSlug: access.orgSlug || meta.org_slug || null,
-      source: meta.access_method || (tier === 'demo' ? 'demo' : 'session'),
-      sessionId: access.session.id,
-    }).catch(() => null);
+    const realEmail = body.email || body.identity_email || meta.email || null;
+    // Synthetic guest identities are for demo visitors only. Team members
+    // must link by their real email (collected at login) — minting guest+
+    // rows for them orphans their actual identity in the database.
+    if (realEmail || tier === 'demo') {
+      const guestEmail = 'guest+' + String(sessionId).replace(/-/g, '').slice(0, 16) + '@demo.denizen.local';
+      identity = await identityApi.resolveIdentityForSession({
+        email: realEmail || guestEmail,
+        displayName: access.session.display_name || body.display_name || 'Guest',
+        tier,
+        orgId: access.orgId || access.session.org_id || access.org?.id || null,
+        orgSlug: access.orgSlug || meta.org_slug || null,
+        source: meta.access_method || (tier === 'demo' ? 'demo' : 'session'),
+        sessionId: access.session.id,
+      }).catch(() => null);
+    }
   }
   if (!identity?.id && access?.session?.id) {
     const meta = access.session.metadata || {};
@@ -538,10 +547,6 @@ function mountComputeRoutes(serverContext = {}) {
           return true;
         }
 
-        const hostSnap = fleetRegistry.getGlobalHostSnapshot()
-          || hardwareMonitor.getLatestSnapshot()
-          || await hardwareMonitor.refreshSnapshot({ role: 'host' }).catch(() => null);
-
         let identity;
         try {
           const resolved = await resolveIdentityForSession(serverContext, req, sessionId, {});
@@ -549,9 +554,9 @@ function mountComputeRoutes(serverContext = {}) {
         } catch (err) {
           sendJson(res, 200, {
             ok: true,
-            live_usage: hostSnap,
-            fleet: hostSnap ? [hostSnap] : [],
-            fleet_totals: { machines: hostSnap ? 1 : 0 },
+            live_usage: null,
+            fleet: [],
+            fleet_totals: { machines: 0 },
             session_warning: err?.message || String(err),
           });
           return true;
@@ -560,15 +565,26 @@ function mountComputeRoutes(serverContext = {}) {
         if (!identity?.id) {
           sendJson(res, 200, {
             ok: true,
-            live_usage: hostSnap,
-            fleet: hostSnap ? [hostSnap] : [],
-            fleet_totals: { machines: hostSnap ? 1 : 0 },
+            live_usage: null,
+            fleet: [],
+            fleet_totals: { machines: 0 },
           });
           return true;
         }
 
-        const fleetSummary = fleetRegistry.buildFleetSummary(identity.id, hostSnap);
-        sendJson(res, 200, { ok: true, identity_id: identity.id, ...fleetSummary });
+        const isOperator = hostCompute.isHostOperatorSession(req, identity);
+        const hostSnap = isOperator
+          ? (fleetRegistry.getGlobalHostSnapshot()
+            || hardwareMonitor.getLatestSnapshot()
+            || await hardwareMonitor.refreshSnapshot({ role: 'host' }).catch(() => null))
+          : null;
+        const fleetSummary = fleetRegistry.buildFleetSummary(identity.id, hostSnap, { isOperator });
+        sendJson(res, 200, {
+          ok: true,
+          identity_id: identity.id,
+          host_operator: isOperator,
+          ...fleetSummary,
+        });
         return true;
       }
 
@@ -789,6 +805,8 @@ function mountComputeRoutes(serverContext = {}) {
         if (nodeId && token) {
           node = await nodeWorker.verifyNodeToken(nodeId, token);
         }
+        const brains = serverContext.npcBrains;
+        const queueDepth = brains?.getQueueDepth?.() || 0;
         sendJson(res, 200, {
           ok: true,
           node: node || null,
@@ -798,6 +816,17 @@ function mountComputeRoutes(serverContext = {}) {
           running_count: Array.isArray(running) ? running.length : 0,
           recent_completions: recent || [],
           db_enabled: Boolean(denizenDb?.enabled),
+          inference: lmStudioRouter.buildStatus(queueDepth),
+        });
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/compute/inference/nodes') {
+        const brains = serverContext.npcBrains;
+        const queueDepth = brains?.getQueueDepth?.() || 0;
+        sendJson(res, 200, {
+          ok: true,
+          ...lmStudioRouter.buildStatus(queueDepth),
         });
         return true;
       }
@@ -837,7 +866,7 @@ function mountComputeRoutes(serverContext = {}) {
         if (clientType === 'browser' && !isHostBrowser) {
           sendJson(res, 400, {
             ok: false,
-            error: 'Install the Denizen desktop app on this machine to contribute compute.',
+            error: 'Install Denizen Desktop on this machine to add City Power.',
             needs_desktop_download: true,
             contributor_state: 'browser_only',
             download_url: '/desktop/',

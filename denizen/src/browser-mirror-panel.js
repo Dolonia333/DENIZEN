@@ -10,7 +10,9 @@
   const STYLE_ID = 'denizen-browser-mirror-styles';
   const POLL_OPEN_MS = 1500;
   const POLL_IDLE_MS = 6000;
-  const FRAME_POLL_MS = 120;
+  const FRAME_POLL_ACTIVE_MS = 220;
+  const FRAME_POLL_BACKUP_MS = 500;
+  const WS_FRAME_ACTIVE_MS = 1800;
   const POS_KEY = 'denizen-bm-panel-pos';
   const SIZE_KEY = 'denizen-bm-panel-size';
   const MIN_W = 280;
@@ -27,8 +29,14 @@
   let shellReady = false;
   let frameLive = false;
   let snapshotShown = false;
-  let lastBlobUrl = null;
   let lastFrameAt = 0;
+  let lastWsFrameAt = 0;
+  let liveSlot = 0;
+  let framePaintRaf = null;
+  let pendingFrame = null;
+  let lastFeedKey = '';
+  let lastStatusKey = '';
+  const frameBlobUrls = [null, null];
   let state = { open: false, status: 'idle', streaming: false, staleFrame: false };
   let boundNpcKey = 'lucy';
 
@@ -209,6 +217,7 @@
         overscroll-behavior: contain;
         touch-action: none;
         cursor: crosshair;
+        contain: layout paint style;
       }
       #${PANEL_ID} .bm-viewport.control-off { cursor: not-allowed; touch-action: auto; }
       #${PANEL_ID} .bm-control-banner {
@@ -225,11 +234,25 @@
         font-size: 10px; font-weight: 600;
       }
       #${PANEL_ID} .bm-live {
-        width: 100%; height: auto; display: none; background: #fff;
-        vertical-align: top; pointer-events: none; user-select: none;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: top center;
+        background: #0a0f1a;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        user-select: none;
         -webkit-user-select: none;
+        will-change: opacity;
       }
-      #${PANEL_ID} .bm-live.on { display: block; }
+      #${PANEL_ID} .bm-live.on {
+        opacity: 1;
+        visibility: visible;
+        z-index: 1;
+      }
       #${PANEL_ID} .bm-idle {
         padding: 32px 24px; text-align: center; color: #64748b; font-size: 12px;
         line-height: 1.55; font-family: system-ui, sans-serif; max-width: 340px; margin: auto;
@@ -241,7 +264,7 @@
         color: #64748b !important;
         opacity: 0.92;
       }
-      html.denizen-touch.denizen-phone #${PANEL_ID}.open {
+      html.denizen-touch.denizen-phone:not(.denizen-phone-mode) #${PANEL_ID}.open {
         top: max(6px, env(safe-area-inset-top, 0px)) !important;
         left: max(6px, env(safe-area-inset-left, 0px)) !important;
         right: max(6px, env(safe-area-inset-right, 0px)) !important;
@@ -253,6 +276,52 @@
         height: auto !important;
         z-index: 100600 !important;
         border-radius: 10px !important;
+      }
+      html.denizen-phone-mode #${PANEL_ID} {
+        display: none !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        border-radius: 12px !important;
+      }
+      html.denizen-phone-mode #${PANEL_ID}.open {
+        display: flex !important;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .bm-drag-hint,
+      html.denizen-phone-mode #${PANEL_ID} .bm-resize-handle {
+        display: none !important;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .bm-header {
+        padding: 8px 10px;
+        cursor: default;
+        touch-action: manipulation;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .bm-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 8px;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .bm-screen {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .bm-viewport {
+        flex: 1 1 auto;
+        min-height: 120px;
+        max-height: none;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .bm-meta {
+        flex: 0 0 auto;
+        margin-top: 6px;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .bm-feed {
+        flex: 0 0 auto;
+        max-height: 72px;
+        margin-top: 6px;
       }
       html.denizen-touch.denizen-phone.denizen-browser-open #denizen-bottom-dock,
       html.denizen-touch.denizen-phone.denizen-drawer-open #denizen-bottom-dock {
@@ -480,7 +549,8 @@
             <div class="bm-url" data-bm="url">about:blank</div>
           </div>
           <div class="bm-viewport">
-            <img class="bm-live" data-bm="live" alt="Lucy browser live feed">
+            <img class="bm-live" data-bm-live="0" data-bm="live" alt="Lucy browser live feed">
+            <img class="bm-live" data-bm-live="1" alt="" aria-hidden="true">
             <div class="bm-control-banner" data-bm="control-banner"></div>
             <div class="bm-idle" data-bm="idle">
               Tell ${npcDisplayName(boundNpcKey)} to <strong>search</strong> something. Their Playwright browser opens on this PC — the live picture appears here within a few seconds.
@@ -522,9 +592,36 @@
     return false;
   }
 
+  function liveImg() {
+    return panelEl?.querySelector(`[data-bm-live="${liveSlot}"]`) || $('[data-bm="live"]');
+  }
+
+  function liveImgs() {
+    return panelEl ? [...panelEl.querySelectorAll('[data-bm-live]')] : [];
+  }
+
+  function revokeFrameBlob(slot) {
+    if (frameBlobUrls[slot]) {
+      URL.revokeObjectURL(frameBlobUrls[slot]);
+      frameBlobUrls[slot] = null;
+    }
+  }
+
+  function wsFeedActive() {
+    return Date.now() - lastWsFrameAt < WS_FRAME_ACTIVE_MS;
+  }
+
+  function framePollDelayMs() {
+    return wsFeedActive() ? FRAME_POLL_BACKUP_MS : FRAME_POLL_ACTIVE_MS;
+  }
+
+  function shouldHttpFramePoll() {
+    return !!(panelOpen && shouldRunLivePoll());
+  }
+
   function updateControlBanner(msg) {
     const banner = $('[data-bm="control-banner"]');
-    const live = $('[data-bm="live"]');
+    const live = liveImg();
     if (!banner) return;
     if (msg) {
       banner.textContent = msg;
@@ -581,8 +678,7 @@
 
   function wireRemoteControl() {
     const viewport = panelEl?.querySelector('.bm-viewport');
-    const live = panelEl?.querySelector('[data-bm="live"]');
-    if (!viewport || !live || viewport.dataset.bmRemote === '1') return;
+    if (!viewport || viewport.dataset.bmRemote === '1') return;
     viewport.dataset.bmRemote = '1';
 
     let pointer = null;
@@ -597,6 +693,8 @@
 
     viewport.addEventListener('wheel', (e) => {
       if (!canControlBrowser()) return;
+      const live = liveImg();
+      if (!live) return;
       e.preventDefault();
       e.stopPropagation();
       const { x, y } = mapBrowserCoords(live, e.clientX, e.clientY);
@@ -620,6 +718,8 @@
 
     viewport.addEventListener('pointermove', (e) => {
       if (!pointer || pointer.id !== e.pointerId || !canControlBrowser()) return;
+      const live = liveImg();
+      if (!live) return;
       const dx = pointer.x - e.clientX;
       const dy = pointer.y - e.clientY;
       if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
@@ -642,8 +742,11 @@
     const endPointer = (e) => {
       if (!pointer || pointer.id !== e.pointerId) return;
       if (!didScroll && canControlBrowser()) {
-        const { x, y } = mapBrowserCoords(live, e.clientX, e.clientY);
-        sendBrowserInput({ type: 'click', x, y });
+        const live = liveImg();
+        if (live) {
+          const { x, y } = mapBrowserCoords(live, e.clientX, e.clientY);
+          sendBrowserInput({ type: 'click', x, y });
+        }
       }
       pointer = null;
       try { viewport.releasePointerCapture(e.pointerId); } catch (_) {}
@@ -848,55 +951,112 @@
 
   function $(sel) { return panelEl ? panelEl.querySelector(sel) : null; }
 
-  function showFrame(src, opts = {}) {
-    const live = $('[data-bm="live"]');
-    const idle = $('[data-bm="idle"]');
-    if (!live) return;
-    live.src = src;
-    live.classList.add('on');
-    if (idle) idle.classList.add('hidden');
-    if (opts.snapshot) {
-      snapshotShown = true;
-      frameLive = false;
-    } else {
-      frameLive = true;
-      snapshotShown = false;
-      lastFrameAt = Date.now();
-    }
-    setChipState();
+  function updateStatusPill() {
     const pill = $('[data-bm="status"]');
-    if (pill) {
-      pill.textContent = statusLabel();
-      pill.className = `bm-status-pill ${statusClass()}`;
+    if (!pill) return;
+    const label = statusLabel();
+    const cls = statusClass();
+    const key = `${label}|${cls}`;
+    if (key === lastStatusKey) return;
+    lastStatusKey = key;
+    pill.textContent = label;
+    pill.className = `bm-status-pill ${cls}`;
+  }
+
+  function applyFramePaint(src, opts = {}) {
+    const imgs = liveImgs();
+    if (!imgs.length || !src) return;
+    const nextSlot = imgs.length > 1 ? 1 - liveSlot : 0;
+    const next = imgs[nextSlot];
+    const cur = imgs[liveSlot];
+    const idle = $('[data-bm="idle"]');
+
+    const finish = () => {
+      next.classList.add('on');
+      if (cur && cur !== next) {
+        cur.classList.remove('on');
+        cur.removeAttribute('src');
+        revokeFrameBlob(liveSlot);
+      }
+      liveSlot = nextSlot;
+      if (idle) idle.classList.add('hidden');
+      if (opts.snapshot) {
+        snapshotShown = true;
+        frameLive = false;
+      } else {
+        frameLive = true;
+        snapshotShown = false;
+        lastFrameAt = Date.now();
+      }
+      setChipState();
+      updateStatusPill();
+      syncViewportControl();
+    };
+
+    if (next.src === src && next.complete) {
+      finish();
+      return;
     }
+
+    revokeFrameBlob(nextSlot);
+    if (src.startsWith('blob:')) frameBlobUrls[nextSlot] = src;
+
+    next.onload = () => {
+      next.onload = null;
+      next.onerror = null;
+      finish();
+    };
+    next.onerror = () => {
+      next.onload = null;
+      next.onerror = null;
+    };
+    next.src = src;
+  }
+
+  function queueFramePaint(src, opts = {}) {
+    pendingFrame = { src, opts };
+    if (framePaintRaf) return;
+    framePaintRaf = requestAnimationFrame(() => {
+      framePaintRaf = null;
+      const job = pendingFrame;
+      pendingFrame = null;
+      if (job) applyFramePaint(job.src, job.opts);
+    });
   }
 
   function clearViewport(msg) {
     frameLive = false;
     snapshotShown = false;
     lastFrameAt = 0;
-    const live = $('[data-bm="live"]');
+    lastWsFrameAt = 0;
+    lastStatusKey = '';
+    if (framePaintRaf) {
+      cancelAnimationFrame(framePaintRaf);
+      framePaintRaf = null;
+    }
+    pendingFrame = null;
+    liveImgs().forEach((img, i) => {
+      img.classList.remove('on');
+      img.removeAttribute('src');
+      revokeFrameBlob(i);
+    });
+    liveSlot = 0;
     const idle = $('[data-bm="idle"]');
-    if (live) { live.classList.remove('on'); live.removeAttribute('src'); }
     if (idle) {
       idle.classList.remove('hidden');
       if (msg) idle.innerHTML = msg;
     }
-    if (lastBlobUrl) { URL.revokeObjectURL(lastBlobUrl); lastBlobUrl = null; }
     setChipState();
-    const pill = $('[data-bm="status"]');
-    if (pill) {
-      pill.textContent = statusLabel();
-      pill.className = `bm-status-pill ${statusClass()}`;
-    }
+    updateStatusPill();
     syncViewportControl();
   }
 
   function onFrame(msg) {
     if (!msg?.data || !panelOpen) return;
     if (msg.npcKey && msg.npcKey !== boundNpcKey) return;
+    lastWsFrameAt = Date.now();
     const mime = msg.format === 'png' ? 'image/png' : 'image/jpeg';
-    showFrame(`data:${mime};base64,${msg.data}`);
+    queueFramePaint(`data:${mime};base64,${msg.data}`);
     if (msg.url || msg.query || msg.title) ingest(msg);
   }
 
@@ -907,18 +1067,17 @@
       if (!res.ok) return;
       const blob = await res.blob();
       if (!blob || blob.size < 80) return;
-      if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
-      lastBlobUrl = URL.createObjectURL(blob);
-      showFrame(lastBlobUrl, { snapshot: true });
+      queueFramePaint(URL.createObjectURL(blob), { snapshot: true });
     } catch (_) {}
   }
 
   async function pullFrame() {
-    if (!panelOpen || !shouldRunLivePoll()) return;
+    if (!shouldHttpFramePoll()) return;
+    if (wsFeedActive()) return;
     try {
       const res = await fetch(`${liveFrameUrl()}?t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) {
-        if (res.status === 404) {
+        if (res.status === 404 && !wsFeedActive()) {
           clearViewport(
             `${npcDisplayName(boundNpcKey)}'s browser isn't running on this PC. <strong>Ask them to search again</strong> to open a new window.`
           );
@@ -928,20 +1087,28 @@
       }
       const blob = await res.blob();
       if (!blob || blob.size < 80) return;
-      if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl);
-      lastBlobUrl = URL.createObjectURL(blob);
-      showFrame(lastBlobUrl);
+      queueFramePaint(URL.createObjectURL(blob));
     } catch (_) {}
   }
 
+  function scheduleFramePollTick() {
+    if (!shouldHttpFramePoll()) return;
+    framePollTimer = setTimeout(async () => {
+      framePollTimer = null;
+      if (!shouldHttpFramePoll()) return;
+      await pullFrame();
+      if (shouldHttpFramePoll()) scheduleFramePollTick();
+    }, framePollDelayMs());
+  }
+
   function startFramePoll() {
-    if (framePollTimer) return;
-    pullFrame();
-    framePollTimer = setInterval(pullFrame, FRAME_POLL_MS);
+    stopFramePoll();
+    if (!wsFeedActive()) pullFrame();
+    scheduleFramePollTick();
   }
 
   function stopFramePoll() {
-    if (framePollTimer) clearInterval(framePollTimer);
+    if (framePollTimer) clearTimeout(framePollTimer);
     framePollTimer = null;
   }
 
@@ -961,13 +1128,26 @@
     }
   }
 
+  function renderActivityFeed(feedEl) {
+    const lines = Array.isArray(state.activityLog) ? [...state.activityLog] : [];
+    if (state.lastActivity && !lines.some((l) => l.line === state.lastActivity)) {
+      lines.push({ line: state.lastActivity, at: Date.now() });
+    }
+    const key = lines.slice(-10).map((e) => `${e.at || ''}:${e.line || ''}`).join('\n');
+    if (key === lastFeedKey) return;
+    lastFeedKey = key;
+    feedEl.innerHTML = lines.length
+      ? lines.slice(-10).map((e) => {
+        const t = e.at ? new Date(e.at).toLocaleTimeString() : '';
+        return `<div class="bm-feed-line"><span style="color:#64748b">${esc(t)}</span> ${esc(e.line || '')}</div>`;
+      }).join('')
+      : '<div class="bm-feed-empty">Activity will show here…</div>';
+    feedEl.scrollTop = feedEl.scrollHeight;
+  }
+
   function updatePanel() {
     if (!panelEl || !shellReady) return;
-    const pill = $('[data-bm="status"]');
-    if (pill) {
-      pill.textContent = statusLabel();
-      pill.className = `bm-status-pill ${statusClass()}`;
-    }
+    updateStatusPill();
     const url = state.url || (state.query ? `search: ${state.query}` : 'about:blank');
     const urlEl = $('[data-bm="url"]');
     if (urlEl) { urlEl.textContent = url; urlEl.title = url; }
@@ -994,19 +1174,7 @@
       }
     }
     const feed = $('[data-bm="feed"]');
-    if (feed) {
-      const lines = Array.isArray(state.activityLog) ? [...state.activityLog] : [];
-      if (state.lastActivity && !lines.some((l) => l.line === state.lastActivity)) {
-        lines.push({ line: state.lastActivity, at: Date.now() });
-      }
-      feed.innerHTML = lines.length
-        ? lines.slice(-10).map((e) => {
-          const t = e.at ? new Date(e.at).toLocaleTimeString() : '';
-          return `<div class="bm-feed-line"><span style="color:#64748b">${esc(t)}</span> ${esc(e.line || '')}</div>`;
-        }).join('')
-        : '<div class="bm-feed-empty">Activity will show here…</div>';
-      feed.scrollTop = feed.scrollHeight;
-    }
+    if (feed) renderActivityFeed(feed);
     updateControlBanner();
     syncFramePoll();
   }
@@ -1119,7 +1287,7 @@
       npcKey: () => boundNpcKey,
       state: () => ({ ...state }),
     };
-    console.log('[BrowserMirror] live feed ready (WS + frame poll)');
+    console.log('[BrowserMirror] live feed ready (WS primary + buffered frame poll)');
   }
 
   if (document.readyState === 'loading') {

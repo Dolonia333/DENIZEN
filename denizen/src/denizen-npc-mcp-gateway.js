@@ -57,9 +57,9 @@ const TOOL_DEFINITIONS = [
   },
 ];
 
-function sendJson(res, status, payload) {
+function sendJson(res, status, payload, extraHeaders) {
   if (res.writableEnded) return;
-  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.writeHead(status, { 'Content-Type': 'application/json', ...(extraHeaders || {}) });
   res.end(JSON.stringify(payload));
 }
 
@@ -280,14 +280,25 @@ async function handleHttpRequest(req, res, npcKeyFromPath) {
     return sendJson(res, 400, { ok: false, error: 'npc_key mismatch' });
   }
 
+  // Advertise the OAuth flow so subscription AIs (Claude.ai, ChatGPT, Cursor)
+  // can connect by URL alone instead of a pasted bearer token.
+  const wwwAuth = (() => {
+    try {
+      // eslint-disable-next-line global-require
+      return require('./denizen-mcp-oauth.js').wwwAuthenticate(getPublicBaseUrl(), npcKey);
+    } catch (_) {
+      return 'Bearer';
+    }
+  })();
+
   const token = extractBearer(req, reqUrl);
   if (!token) {
-    return sendJson(res, 401, { ok: false, error: 'Bearer token required' });
+    return sendJson(res, 401, { ok: false, error: 'Bearer token required' }, { 'WWW-Authenticate': wwwAuth });
   }
 
   const scope = await module.exports.resolveToken(token);
   if (!scope) {
-    return sendJson(res, 401, { ok: false, error: 'invalid or revoked token' });
+    return sendJson(res, 401, { ok: false, error: 'invalid or revoked token' }, { 'WWW-Authenticate': wwwAuth });
   }
 
   if (scope.npc_key !== npcKey) {

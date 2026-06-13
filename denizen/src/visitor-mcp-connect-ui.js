@@ -207,20 +207,37 @@
     const chatgptSteps = (payload.chatgpt?.steps || []).map((s) => `<li>${s}</li>`).join('');
     const claudeSteps = (payload.claude_ai?.steps || []).map((s) => `<li>${s}</li>`).join('');
 
+    const mcpUrl = payload.mcp_url || '';
     const modal = document.createElement('div');
     modal.id = MODAL_ID;
     modal.innerHTML = `
       <div class="mcp-card">
         <h3>Connect your AI to ${displayName}</h3>
-        <p class="mcp-warn">${payload.warning || 'Save this token now — it cannot be retrieved again.'}</p>
+        <p>Use your existing AI subscription — paste one URL and approve. No token to copy.</p>
         <div class="mcp-tabs">
-          <button type="button" class="mcp-tab active" data-tab="companion">Companion<span class="mcp-badge blue">Easiest</span></button>
+          <button type="button" class="mcp-tab active" data-tab="oauth">1-Click<span class="mcp-badge">Easiest</span></button>
+          <button type="button" class="mcp-tab" data-tab="companion">Companion</button>
           <button type="button" class="mcp-tab" data-tab="cursor">Cursor / API</button>
           <button type="button" class="mcp-tab" data-tab="chatgpt">ChatGPT GPT<span class="mcp-badge">Plus OK</span></button>
           <button type="button" class="mcp-tab" data-tab="claude">Claude.ai</button>
         </div>
 
-        <div class="mcp-panel active" data-panel="companion">
+        <div class="mcp-panel active" data-panel="oauth">
+          <p>Works with <strong>Claude.ai</strong>, <strong>ChatGPT</strong> (Pro/Business connectors), <strong>Cursor</strong>, and Claude Desktop. Paste this URL — your AI opens a Denizen sign-in to authorize, then connects itself.</p>
+          <p>MCP URL:</p>
+          <pre>${mcpUrl}</pre>
+          <ol>
+            <li><strong>Claude.ai</strong>: Settings → Connectors → Add custom connector → paste URL → Connect → Authorize</li>
+            <li><strong>ChatGPT</strong>: Settings → Connectors → Add → paste URL → Authorize</li>
+            <li><strong>Cursor</strong>: Settings → MCP → Add → paste URL → it opens the sign-in</li>
+          </ol>
+          <p class="mcp-warn">No bearer token needed — authorization happens in your browser.</p>
+          <div class="mcp-actions">
+            <button type="button" class="mcp-copy" data-copy="url" data-label="URL">Copy URL</button>
+          </div>
+        </div>
+
+        <div class="mcp-panel" data-panel="companion">
           <p>Browser extension — provider-agnostic. Works with any AI; no MCP or API config.</p>
           <ol>
             <li>Install <code>denizen/companion-extension</code> in Chrome (Load unpacked)</li>

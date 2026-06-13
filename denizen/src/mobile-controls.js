@@ -1,12 +1,14 @@
 /**
- * Mobile play — landscape-only on touch devices.
- * Sets html classes: denizen-touch | denizen-landscape | denizen-portrait-blocked
+ * Mobile play — touch devices, portrait and landscape.
+ * Sets html classes: denizen-touch | denizen-landscape | denizen-portrait | denizen-tap-move
+ * Portrait shows a one-time "rotate for a wider view" toast instead of blocking play.
  * Exposes window.__DenizenTouchState for office-scene.js movement + interact.
  */
 (function () {
   'use strict';
 
   const isTouch = (() => {
+    if (typeof window.__DenizenForceTouch === 'boolean') return window.__DenizenForceTouch;
     try {
       return window.matchMedia('(pointer: coarse)').matches
         || navigator.maxTouchPoints > 0
@@ -82,25 +84,27 @@
     return isPhoneLike();
   }
 
-  function syncLayoutClasses() {
-    globalThis.DenizenDeviceProfile?.sync?.();
-    const landscape = isLandscape();
-    const root = document.documentElement;
-    root.classList.toggle('denizen-tap-move', useTapMove() && landscape);
+  let rotateToastShown = false;
+  let rotateToastTimer = null;
 
-    const portraitBlocked = !landscape;
-    root.classList.toggle('denizen-portrait-blocked', portraitBlocked);
-    document.body.classList.toggle('denizen-rotate-blocking', portraitBlocked);
-
+  function syncRotateToast(portrait) {
     const hint = document.getElementById(ROTATE_ID);
-    if (hint) hint.classList.toggle('show', portraitBlocked);
+    if (!hint) return;
+    if (portrait && !rotateToastShown && isPhoneLike()) {
+      rotateToastShown = true;
+      hint.classList.add('show');
+      window.clearTimeout(rotateToastTimer);
+      rotateToastTimer = window.setTimeout(() => hint.classList.remove('show'), 5000);
+    } else if (!portrait) {
+      hint.classList.remove('show');
+    }
   }
 
-  function tryLockLandscape() {
-    if (!isLandscape()) return;
-    try {
-      screen.orientation?.lock?.('landscape').catch(() => {});
-    } catch (_) {}
+  function syncLayoutClasses() {
+    globalThis.DenizenDeviceProfile?.sync?.();
+    const root = document.documentElement;
+    root.classList.toggle('denizen-tap-move', useTapMove());
+    syncRotateToast(!isLandscape());
   }
 
   function injectStyles() {
@@ -112,6 +116,12 @@
         --denizen-play-top: var(--safe-top, env(safe-area-inset-top, 0px));
         --denizen-play-gap: 2px;
         --denizen-keyboard-offset: 0px;
+        --denizen-available-play-h: calc(
+          100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
+                   - max(var(--denizen-play-gap), env(safe-area-inset-bottom, 0px))
+                   - var(--denizen-play-gap)
+        );
+        --denizen-phone-portrait-game-height: calc(100dvw * 9 / 16);
       }
 
       /* Landscape: notch is on the sides — reclaim top/bottom space for the canvas */
@@ -123,6 +133,9 @@
       html.denizen-touch body {
         align-items: center;
         justify-content: center;
+        box-sizing: border-box;
+        height: 100dvh;
+        min-height: 100dvh;
         padding:
           var(--denizen-play-top)
           max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
@@ -135,11 +148,7 @@
           100dvw - max(var(--denizen-play-gap), env(safe-area-inset-left, 0px))
                   - max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
         );
-        --denizen-play-h: calc(
-          100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
-                   - max(var(--denizen-play-gap), env(safe-area-inset-bottom, 0px))
-                   - var(--denizen-play-gap)
-        );
+        --denizen-play-h: var(--denizen-available-play-h);
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
         height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
         max-width: none;
@@ -153,35 +162,43 @@
         border-radius: 2px;
       }
 
-      #${ROTATE_ID} {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 2147483100;
-        background: rgba(2, 6, 23, 0.72);
-        color: #e2e8f0;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        padding: 24px;
-        text-align: center;
-        font: 14px/1.5 system-ui, sans-serif;
-        pointer-events: none;
+      /* Portrait phones crop-zoom the 16:9 office instead of leaving most of the screen empty. */
+      html.denizen-touch.denizen-phone.denizen-portrait {
+        --denizen-phone-portrait-game-height: min(50dvh, var(--denizen-available-play-h));
       }
-      #${ROTATE_ID}.show { display: flex; pointer-events: auto; }
-      #${ROTATE_ID} .icon { font-size: 42px; }
+      html.denizen-touch.denizen-phone.denizen-portrait #game-container {
+        width: calc(var(--denizen-phone-portrait-game-height) * 1.777778);
+        height: var(--denizen-phone-portrait-game-height);
+        flex: 0 0 auto;
+      }
 
-      /* Portrait is not supported — hide all play UI until rotated */
-      html.denizen-touch.denizen-portrait-blocked #game-container,
-      html.denizen-touch.denizen-portrait-blocked #denizen-bottom-dock,
-      html.denizen-touch.denizen-portrait-blocked #denizen-tap-interact,
-      html.denizen-touch.denizen-portrait-blocked #${CONTROLS_ID},
-      html.denizen-touch.denizen-portrait-blocked #player-chat-panel,
-      html.denizen-touch.denizen-portrait-blocked #denizen-visitor-name-modal,
-      html.denizen-touch.denizen-portrait-blocked #denizen-visitor-onboarding {
-        visibility: hidden !important;
-        pointer-events: none !important;
+      /* Portrait hint — non-blocking toast, shown once per session */
+      #${ROTATE_ID} {
+        position: fixed;
+        top: calc(var(--denizen-play-top) + max(10px, env(safe-area-inset-top, 0px)));
+        left: 50%;
+        transform: translateX(-50%) translateY(-8px);
+        z-index: 100500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(2, 6, 23, 0.9);
+        border: 1px solid rgba(96, 165, 250, 0.45);
+        color: #dbeafe;
+        font: 12px/1.3 system-ui, sans-serif;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+      #${ROTATE_ID}.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+      #${ROTATE_ID} .icon { font-size: 16px; }
+
+      /* Portrait: pin the office view to the top — chat and panels use the space below */
+      html.denizen-touch.denizen-portrait body {
+        align-items: flex-start;
       }
 
       #${CONTROLS_ID} {
@@ -194,8 +211,8 @@
         pointer-events: none;
         display: none;
       }
-      /* Tablets only — landscape joystick (phones use tap-to-move) */
-      html.denizen-touch.denizen-landscape:not(.denizen-tap-move) #${CONTROLS_ID} {
+      /* Tablets only — joystick (phones use tap-to-move) */
+      html.denizen-touch:not(.denizen-tap-move) #${CONTROLS_ID} {
         display: block;
       }
       html.denizen-touch.denizen-tap-move #${CONTROLS_ID} {
@@ -225,23 +242,16 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         padding: 0;
       }
-      html.denizen-touch.denizen-tap-move.denizen-landscape #${TAP_INTERACT_ID} {
-        display: block;
+      html.denizen-touch.denizen-tap-move #${TAP_INTERACT_ID} {
+        display: none !important;
       }
       html.denizen-touch.denizen-chat-open #${TAP_INTERACT_ID},
-      html.denizen-touch.denizen-llm-tel-open #${TAP_INTERACT_ID},
-      html.denizen-touch.denizen-rotate-blocking #${TAP_INTERACT_ID} {
+      html.denizen-touch.denizen-llm-tel-open #${TAP_INTERACT_ID} {
         display: none !important;
       }
       #${TAP_INTERACT_ID}:active {
         transform: scale(0.94);
         background: rgba(29, 78, 216, 0.95);
-      }
-
-      /* Block stray taps on the game while rotate hint is up */
-      html.denizen-touch.denizen-rotate-blocking #game-container,
-      html.denizen-touch.denizen-rotate-blocking #game-container canvas {
-        pointer-events: none !important;
       }
 
       /* Hide floating chips until bottom-dock adopts them (prevents overlap flash) */
@@ -286,6 +296,9 @@
         border: 2px solid rgba(34, 197, 94, 0.9);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
       }
+      html.denizen-touch #${CONTROLS_ID} .mc-action {
+        display: none !important;
+      }
       #${CONTROLS_ID} .mc-action {
         position: absolute;
         right: max(14px, env(safe-area-inset-right, 0px));
@@ -306,13 +319,13 @@
         transform: scale(0.96);
       }
 
-      html.denizen-touch #player-chat-panel {
+      html.denizen-touch:not(.denizen-phone-mode) #player-chat-panel {
         bottom: calc(
           var(--denizen-dock-height, 52px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)
         ) !important;
         max-height: min(38dvh, 280px) !important;
       }
-      html.denizen-touch.denizen-landscape #player-chat-panel {
+      html.denizen-touch.denizen-landscape:not(.denizen-phone-mode) #player-chat-panel {
         max-height: min(52dvh, 300px) !important;
       }
 
@@ -320,7 +333,18 @@
       html.denizen-touch.denizen-tablet #denizen-llm-tel-panel,
       html.denizen-touch.denizen-tablet #denizen-proposals-panel,
       html.denizen-touch.denizen-tablet #denizen-browser-mirror-panel,
-      html.denizen-touch #player-chat-panel {
+      html.denizen-touch.denizen-tablet #denizen-npc-team-panel,
+      html.denizen-touch.denizen-tablet #denizen-mesh-jobs-panel,
+      html.denizen-touch.denizen-tablet #denizen-content-pipeline-panel {
+        z-index: 100200 !important;
+        width: calc(100dvw - 16px) !important;
+        max-width: calc(100dvw - 16px) !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        max-height: min(72dvh, 560px) !important;
+        pointer-events: auto !important;
+      }
+      html.denizen-touch:not(.denizen-phone-mode) #player-chat-panel {
         z-index: 100200 !important;
         width: calc(100dvw - 16px) !important;
         max-width: calc(100dvw - 16px) !important;
@@ -332,7 +356,10 @@
       html.denizen-touch.denizen-phone #denizen-diag-panel.open,
       html.denizen-touch.denizen-phone #denizen-llm-tel-panel.open,
       html.denizen-touch.denizen-phone #denizen-proposals-panel.open,
-      html.denizen-touch.denizen-phone #denizen-browser-mirror-panel.open {
+      html.denizen-touch.denizen-phone #denizen-browser-mirror-panel.open,
+      html.denizen-touch.denizen-phone #denizen-npc-team-panel.open,
+      html.denizen-touch.denizen-phone #denizen-mesh-jobs-panel.open,
+      html.denizen-touch.denizen-phone #denizen-content-pipeline-panel.open {
         pointer-events: auto !important;
       }
       html.denizen-touch.denizen-tablet #denizen-diag-panel {
@@ -428,11 +455,16 @@
 
       /* Reliable taps on all Denizen UI buttons (dock, panels, chat) */
       html.denizen-touch #denizen-bottom-dock button,
+      html.denizen-touch #denizen-speak-fab,
       html.denizen-touch #player-chat-panel button,
       html.denizen-touch #denizen-proposals-panel button,
       html.denizen-touch #denizen-browser-mirror-panel button,
       html.denizen-touch #denizen-llm-tel-panel button,
       html.denizen-touch #denizen-diag-panel button,
+      html.denizen-touch #denizen-npc-team-panel button,
+      html.denizen-touch #denizen-npc-team-panel .nt-pick-item,
+      html.denizen-touch #denizen-mesh-jobs-panel button,
+      html.denizen-touch #denizen-content-pipeline-panel button,
       html.denizen-touch #denizen-node-ui-chip button,
       html.denizen-touch #denizen-account-panel button,
       html.denizen-touch #denizen-mobile-menu-btn,
@@ -465,6 +497,7 @@
       target.closest('#denizen-proposals-panel') ||
       target.closest('#denizen-browser-mirror-panel') ||
       target.closest('#denizen-mic-button') ||
+      target.closest('#denizen-speak-fab') ||
       target.closest('#openclaw-ui-panel') ||
       target.closest('#editor-ui') ||
       target.closest(`#${ROTATE_ID}`) ||
@@ -487,8 +520,8 @@
     const el = document.createElement('div');
     el.id = ROTATE_ID;
     el.innerHTML = `
-      <div class="icon">📱↻</div>
-      <div><strong>Rotate your device sideways</strong><br>Denizen only works in landscape on phones and tablets.<br>Tap the office to walk once you rotate.</div>`;
+      <span class="icon">📱↻</span>
+      <span>Rotate for a wider view</span>`;
     document.body.appendChild(el);
   }
 
@@ -621,20 +654,15 @@
     buildVirtualControls();
     buildTapMoveInteract();
     removeCeoUiArtifacts();
-    try { sessionStorage.removeItem('denizen-portrait-ok'); } catch (_) {}
     installKeyboardViewportSync();
     syncLayoutClasses();
-    tryLockLandscape();
 
     window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        syncLayoutClasses();
-        tryLockLandscape();
-      }, 100);
+      setTimeout(syncLayoutClasses, 100);
     });
     window.addEventListener('resize', syncLayoutClasses);
 
-    console.log('[MobilePlay] landscape-only — rotate sideways to play');
+    console.log('[MobilePlay] touch controls ready — portrait and landscape supported');
   }
 
   if (document.readyState === 'loading') {
@@ -648,7 +676,7 @@
     isTouch: () => true,
     isPhoneLike,
     useTapMove,
-    requiresLandscape: () => true,
+    requiresLandscape: () => false,
     isLandscape,
     setCeoMode,
     isCeoMode: () => !!globalThis.DenizenVisitorSession?.isCeoMode?.(),

@@ -293,20 +293,34 @@ async function _listTeammatesRaw(sessionId) {
   const orgId = await getSessionOrgId(sessionId);
   if (!orgId) return [];
 
-  const rows = await denizenDb._get(
-    `denizen_visitor_sessions?select=id,display_name,denizen_user_assistants!inner(npc_key,assistant_name,denizen_npcs(display_name))&org_id=eq.${encodeURIComponent(orgId)}&id=neq.${encodeURIComponent(sessionId)}`,
-  );
+  let rows;
+  try {
+    rows = await denizenDb._get(
+      `denizen_visitor_sessions?select=id,display_name,identity_id,denizen_user_assistants(npc_key,assistant_name,denizen_npcs(display_name))&org_id=eq.${encodeURIComponent(orgId)}&id=neq.${encodeURIComponent(sessionId)}`,
+    );
+  } catch (_) {
+    rows = await denizenDb._get(
+      `denizen_visitor_sessions?select=id,display_name,denizen_user_assistants!inner(npc_key,assistant_name,denizen_npcs(display_name))&org_id=eq.${encodeURIComponent(orgId)}&id=neq.${encodeURIComponent(sessionId)}`,
+    );
+  }
+  const userIdentity = require('./denizen-user-identity.js');
 
-  return (rows || []).map((row) => {
+  return Promise.all((rows || []).map(async (row) => {
     const raw = row.denizen_user_assistants;
     const asst = Array.isArray(raw) ? raw[0] : raw;
+    const npcTeam = row.identity_id
+      ? await userIdentity.getNpcTeam(row.identity_id).catch(() => null)
+      : null;
     return {
       session_id: row.id,
       display_name: row.display_name,
+      identity_id: row.identity_id || null,
       npc_key: asst?.npc_key ?? null,
       assistant_name: asst?.assistant_name ?? null,
+      npc_team_name: npcTeam?.name || null,
+      npc_team_members: Array.isArray(npcTeam?.members) ? npcTeam.members.length : 0,
     };
-  });
+  }));
 }
 
 async function sendHandoff({ fromSessionId, toSessionId, fromNpc, toNpc, message, metadata } = {}) {
@@ -470,6 +484,23 @@ async function isNpcClaimable(npcKey) {
   return { claimable: true, npc_key: key, npc };
 }
 
+/** Team roster: any office NPC in npc-roster except protected keys (no DB claim flag). */
+function isNpcTeamEligible(npcKey) {
+  const npcRoster = require('./npc-roster');
+  const key = String(npcKey || '').trim().toLowerCase();
+  if (!key) {
+    return { eligible: false, reason: 'invalid_npc_key', npc_key: null };
+  }
+  if (PROTECTED_NPC_KEYS.has(key)) {
+    return { eligible: false, reason: 'protected', npc_key: key };
+  }
+  const entry = (npcRoster.entries || []).find((e) => e.folder === key);
+  if (!entry) {
+    return { eligible: false, reason: 'not_in_roster', npc_key: key };
+  }
+  return { eligible: true, npc_key: key, label: entry.display || key };
+}
+
 async function getAssistant(sessionId) {
   _ensureDb();
   if (!sessionId) return null;
@@ -561,6 +592,25 @@ async function claimAssistant({ sessionId, npcKey, assistantName, focus, roleOve
     }
   }
 
+  if (session.identity_id) {
+    try {
+      await require('./denizen-user-identity.js').upsertNpcTeamMember(session.identity_id, {
+        orgId: session.org_id || null,
+        npcKey: key,
+        displayName: assistantName || claimCheck.npc?.display_name || key,
+        role: 'assistant',
+        focus: focus || null,
+        settings: {
+          source: 'npc_claim',
+          session_id: sessionId,
+          claimed_at: now,
+        },
+      });
+    } catch (_) {
+      /* non-fatal: old databases may not have template tables yet */
+    }
+  }
+
   return getAssistant(sessionId);
 }
 
@@ -641,24 +691,60 @@ async function getSessionSettings(sessionId) {
     canApproveSkills = !!approval.allowed;
     teamRole = approval.role || null;
   } catch (_) { /* optional */ }
+  let demoUsername = null;
+  let hasDemoAccount = false;
+  try {
+    const userIdentity = require('./denizen-user-identity.js');
+    const identity = await userIdentity.getIdentityBySession(sessionId);
+    demoUsername = identity?.username || null;
+    hasDemoAccount = !!identity?.password_hash;
+  } catch (_) { /* optional */ }
+
   return {
+    display_name: session.display_name || null,
     email: meta.email || session.email || null,
     notify_email: meta.notify_email !== false,
     provider_keys: maskProviderKeys(keys),
     provider_keys_set: Object.keys(keys).filter((k) => String(keys[k] || '').trim()),
     can_approve_skills: canApproveSkills,
     team_role: teamRole,
+    demo_username: demoUsername,
+    has_demo_account: hasDemoAccount,
+    identity_id: session.identity_id || null,
   };
 }
 
-async function updateSessionSettings(sessionId, { providerKeys, notifyEmail, email } = {}) {
+async function updateSessionSettings(sessionId, {
+  providerKeys,
+  notifyEmail,
+  email,
+  displayName,
+} = {}) {
   const metadata = {};
   if (providerKeys && typeof providerKeys === 'object') {
     metadata.provider_keys = providerKeys;
   }
   if (notifyEmail != null) metadata.notify_email = !!notifyEmail;
   if (email != null) metadata.email = String(email).slice(0, 320);
-  return createOrUpdateSession({ sessionId, metadata });
+  const session = await createOrUpdateSession({
+    sessionId,
+    displayName: displayName != null ? displayName : undefined,
+    metadata: Object.keys(metadata).length ? metadata : undefined,
+  });
+  if (email != null || notifyEmail != null || displayName != null) {
+    try {
+      const userIdentity = require('./denizen-user-identity.js');
+      const identity = await userIdentity.getIdentityBySession(sessionId);
+      if (identity?.id) {
+        await userIdentity.updateIdentityProfile(identity.id, {
+          displayName: displayName != null ? displayName : undefined,
+          email: email != null ? email : undefined,
+          notifyEmail: notifyEmail != null ? notifyEmail : undefined,
+        });
+      }
+    } catch (_) { /* optional identity sync */ }
+  }
+  return session;
 }
 
 function visitorErrorStatus(err) {
@@ -690,6 +776,7 @@ module.exports = {
   claimAssistant,
   updateAssistant,
   isNpcClaimable,
+  isNpcTeamEligible,
   resolveNpcKey,
   getOrCreateCeoBridgeSession,
   ensureOrgMembership,

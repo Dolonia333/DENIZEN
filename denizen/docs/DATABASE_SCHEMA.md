@@ -64,6 +64,9 @@ denizen_office_sessions       ← server boot / restart id (Pier's idempotency)
 
 ── Identity & multi-user ──
 denizen_visitor_sessions
+denizen_user_identities           ← email/session-backed identity spine (000016)
+denizen_identity_npc_team_templates ← per-identity saved NPC team (000100004)
+denizen_identity_npc_team_members   ← roster rows for each team template
 denizen_user_assistants
 denizen_user_projects
 denizen_assistant_messages
@@ -96,11 +99,21 @@ denizen_research_sessions
 denizen_email_drafts
 denizen_task_chains
 
+── CRM (Deal Weaver / Phone app) ──
+denizen_crm_workspaces       ← org-scoped JSON workspace; mirrors to leads/clients on save
+
 ── Office & security ──
 denizen_office_events
 denizen_office_layout
 denizen_security_threats
 denizen_bouncer_runs
+
+── Compute mesh & credits ──
+denizen_compute_nodes
+denizen_compute_jobs
+denizen_node_profiles
+denizen_credits_ledger        ← formula_version, machine_id via 000019
+denizen_contribution_daily_totals
 
 ── Observability ──
 denizen_llm_events            ← replaces llm-telemetry.jsonl over time
@@ -218,7 +231,8 @@ Already in your Supabase — scoped to org via migration `000005`:
 | Domain | Tables | Denizen role |
 |--------|--------|--------------|
 | Website intake | `intake_forms`, `leads`, `newsletter_subscribers` | Lucy triages; facts on every status change |
-| CRM | `clients`, `projects`, `tickets` | Link NPC work to customer records |
+| CRM (phone `/crm/`) | `denizen_crm_workspaces`, `leads`, `clients`, `denizen_entity_registry` | Team JSON workspace (contacts, deals, companies, goals, sequences, …); bidirectional spine; `crm_contact` registry for no-email contacts; `/api/crm/assist` + NPC write skills |
+| CRM (legacy platform) | `clients`, `projects`, `tickets` | Link NPC work to customer records |
 | Gov contracting | `rfps`, `rfp_requirements`, `proposal_outlines`, `past_performance` | Full RFP pipeline; use `workflow_runs` for AI cost |
 | Ingest | `raw_ingest_events`, `awards` | SAM.gov feed → entity registry |
 | Agent bridge | `documents`, `key_value`, `logs` | NPC safe writes |

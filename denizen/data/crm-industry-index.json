@@ -1,0 +1,207 @@
+[
+  {
+    "id": "sales",
+    "name": "B2B Sales",
+    "icon": "💼"
+  },
+  {
+    "id": "saas",
+    "name": "Software as a Service (SaaS)",
+    "icon": "☁️"
+  },
+  {
+    "id": "iaas",
+    "name": "Infrastructure as a Service (IaaS)",
+    "icon": "🖥️"
+  },
+  {
+    "id": "govcon",
+    "name": "Government Contracting",
+    "icon": "🏛️"
+  },
+  {
+    "id": "real-estate",
+    "name": "Real Estate",
+    "icon": "🏠"
+  },
+  {
+    "id": "legal",
+    "name": "Legal / Law Firm",
+    "icon": "⚖️"
+  },
+  {
+    "id": "healthcare",
+    "name": "Healthcare & Life Sciences",
+    "icon": "🏥"
+  },
+  {
+    "id": "consulting",
+    "name": "Consulting",
+    "icon": "📊"
+  },
+  {
+    "id": "education",
+    "name": "Education",
+    "icon": "🎓"
+  },
+  {
+    "id": "recruitment",
+    "name": "Recruitment / HR",
+    "icon": "👔"
+  },
+  {
+    "id": "media",
+    "name": "Photography / Video / Media",
+    "icon": "📸"
+  },
+  {
+    "id": "financial-services",
+    "name": "Financial Services",
+    "icon": "🏦"
+  },
+  {
+    "id": "nonprofit",
+    "name": "Nonprofit",
+    "icon": "💚"
+  },
+  {
+    "id": "manufacturing",
+    "name": "Manufacturing",
+    "icon": "🏭"
+  },
+  {
+    "id": "retail",
+    "name": "Retail",
+    "icon": "🛍️"
+  },
+  {
+    "id": "insurance",
+    "name": "Insurance",
+    "icon": "🛡️"
+  },
+  {
+    "id": "automotive",
+    "name": "Automotive / Dealership",
+    "icon": "🚗"
+  },
+  {
+    "id": "construction",
+    "name": "Construction / Contracting",
+    "icon": "🏗️"
+  },
+  {
+    "id": "hospitality",
+    "name": "Hospitality / Hotels",
+    "icon": "🏨"
+  },
+  {
+    "id": "fitness",
+    "name": "Fitness / Wellness",
+    "icon": "💪"
+  },
+  {
+    "id": "travel",
+    "name": "Travel / Tourism",
+    "icon": "✈️"
+  },
+  {
+    "id": "home-services",
+    "name": "Home Services (HVAC / Plumbing)",
+    "icon": "🔧"
+  },
+  {
+    "id": "accounting",
+    "name": "Accounting / Tax",
+    "icon": "📒"
+  },
+  {
+    "id": "beauty",
+    "name": "Beauty / Salon / Spa",
+    "icon": "💅"
+  },
+  {
+    "id": "events",
+    "name": "Event Planning",
+    "icon": "🎉"
+  },
+  {
+    "id": "logistics",
+    "name": "Logistics / Freight",
+    "icon": "🚚"
+  },
+  {
+    "id": "agency",
+    "name": "Marketing / Creative Agency",
+    "icon": "📈"
+  },
+  {
+    "id": "dental",
+    "name": "Dental Practice",
+    "icon": "🦷"
+  },
+  {
+    "id": "solar",
+    "name": "Solar / Renewable Energy",
+    "icon": "☀️"
+  },
+  {
+    "id": "veterinary",
+    "name": "Veterinary",
+    "icon": "🐾"
+  },
+  {
+    "id": "cybersecurity",
+    "name": "Cybersecurity",
+    "icon": "🔐"
+  },
+  {
+    "id": "msp",
+    "name": "MSP / IT Services",
+    "icon": "🛠️"
+  },
+  {
+    "id": "telecom",
+    "name": "Telecommunications",
+    "icon": "📡"
+  },
+  {
+    "id": "energy-utilities",
+    "name": "Energy & Utilities",
+    "icon": "⚡"
+  },
+  {
+    "id": "ecommerce",
+    "name": "E-Commerce / D2C",
+    "icon": "🛒"
+  },
+  {
+    "id": "aerospace-defense",
+    "name": "Aerospace & Defense",
+    "icon": "🛩️"
+  },
+  {
+    "id": "pharma-life-sciences",
+    "name": "Pharma & Life Sciences",
+    "icon": "🧬"
+  },
+  {
+    "id": "property-management",
+    "name": "Property Management",
+    "icon": "🏢"
+  },
+  {
+    "id": "franchise",
+    "name": "Franchise Development",
+    "icon": "🍔"
+  },
+  {
+    "id": "staffing",
+    "name": "Staffing & Temp Labor",
+    "icon": "👥"
+  },
+  {
+    "id": "custom",
+    "name": "Custom",
+    "icon": "⚙️"
+  }
+]

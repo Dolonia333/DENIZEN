@@ -30,6 +30,54 @@ const visitorAccess = require('./src/visitor-access');
 const sessionAuth = require('./src/visitor-session-auth');
 const teamAuth = require('./src/denizen-team-auth');
 const userIdentity = require('./src/denizen-user-identity');
+const visitorOfficeContext = require('./src/visitor-office-context');
+const officeRegistry = require('./src/visitor-office-registry');
+const officeLayout = require('./src/visitor-office-layout');
+const officeBus = require('./src/office-bus');
+
+function npcFolderToDisplay(folder) {
+  const key = String(folder || '').toLowerCase();
+  const entry = (npcRoster.entries || []).find((e) => e.folder === key);
+  return entry?.display || key;
+}
+
+function npcDisplayToFolder(name) {
+  const raw = String(name || '').trim();
+  const entry = (npcRoster.entries || []).find(
+    (e) => e.display === raw || e.folder === raw.toLowerCase(),
+  );
+  return entry?.folder || raw.toLowerCase();
+}
+
+function _persistChatTurn({ identityId, sessionId, npcName, role, content }) {
+  if (!identityId || !npcName || !content) return;
+  const npcKey = npcDisplayToFolder(npcName);
+  if (!npcKey) return;
+  userIdentity.saveNpcChatTurn({
+    identityId,
+    npcKey,
+    role,
+    content,
+    sessionId: sessionId || null,
+  });
+}
+
+function pickGroupResponders(text, memberKeys, assistant) {
+  const keys = [...new Set((memberKeys || []).map((k) => String(k || '').toLowerCase()).filter(Boolean))];
+  if (!keys.length) return [];
+  const lower = String(text || '').toLowerCase();
+  const mentioned = keys.filter((key) => {
+    const name = npcFolderToDisplay(key).toLowerCase();
+    return name && lower.includes(name);
+  });
+  if (mentioned.length) return mentioned.slice(0, 3);
+  const assistantKey = String(assistant?.npc_key || '').toLowerCase();
+  if (assistantKey && keys.includes(assistantKey)) {
+    return [assistantKey, ...keys.filter((k) => k !== assistantKey)].slice(0, 2);
+  }
+  if (/\b(everyone|team|all|y'all|you all)\b/i.test(text)) return keys.slice(0, 3);
+  return keys.slice(0, 2);
+}
 const visitorNotify = require('./src/visitor-notify');
 const visitorIntel = require('./src/denizen-visitor-intelligence');
 const { startVisitorIntelligenceLoop } = require('./src/visitor-briefing-loop');
@@ -49,14 +97,22 @@ const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
 const taskChain        = require('./src/task-chain');
+const contentPipeline  = require('./src/content-pipeline');
+const { startContentPipelineScheduler } = require('./src/content-pipeline-scheduler');
+const npcThinkRunner   = require('./src/npc-think-runner');
+const { ensureBrowserclawRunning } = require('./jelly/services/browserclaw/ensure.cjs');
 const robinhoodMcp     = require('./src/robinhood-mcp');
 const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
+const mcpOauth         = require('./src/denizen-mcp-oauth');
 const routeRegistry    = require('./src/route-registry');
 const denizenCredits   = require('./src/denizen-credits');
 const { mountComputeRoutes } = require('./src/denizen-compute-routes');
+const { mountCrmRoutes } = require('./src/denizen-crm-routes');
+const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
 const hostCompute      = require('./src/denizen-host-compute');
 const hardwareMonitor  = require('./src/denizen-hardware-monitor');
 const fleetRegistry    = require('./src/denizen-fleet-registry');
+const lmStudioRouter   = require('./src/lm-studio-router');
 const contributionTracker = require('./src/denizen-contribution-tracker');
 const computeSettlement = require('./src/denizen-compute-settlement');
 const computeProducer = require('./src/denizen-compute-producer');
@@ -632,6 +688,7 @@ process.on('unhandledRejection', (err) => {
 });
 // Serve from the project directory — all assets are now in assets/
 const ROOT = __dirname;
+const CRM_DIST = path.join(ROOT, 'crm', 'dist');
 
 const MIME = {
   '.html': 'text/html',
@@ -732,22 +789,50 @@ function _touchVisitorOnline(sessionId) {
 
 function _clearVisitorOnline(sessionId) {
   if (!sessionId || !global._denizenOnlineSessions?.size) return;
-  const clients = agentWss ? agentWss.clients : cofounderAgent.wsClients;
+  const clients = _agentClients();
   for (const c of clients) {
     if (c.readyState === 1 && c._denizenSessionId === sessionId) return;
   }
   global._denizenOnlineSessions.delete(sessionId);
 }
 
+function _agentClients() {
+  return agentWss ? agentWss.clients : cofounderAgent.wsClients;
+}
+
+async function _applyOfficeToSocket(ws, { sessionId, displayName, isCeo } = {}) {
+  ws._denizenSessionId = sessionId || null;
+  ws._denizenIsCeo = !!isCeo;
+  ws._denizenDisplayName = displayName || null;
+  if (isCeo && !sessionId) {
+    const o = officeRegistry.resolveOfficeFromSession(null, { isCeoWs: true });
+    ws._denizenOfficeId = o.officeId;
+    ws._denizenIdentityId = o.identityId;
+    ws._denizenIsOperatorOffice = true;
+    return o;
+  }
+  const session = sessionId ? await denizenVisitor.getSession(sessionId).catch(() => null) : null;
+  const o = officeRegistry.resolveOfficeFromSession(session, { isCeoWs: isCeo });
+  ws._denizenOfficeId = o.officeId;
+  ws._denizenIdentityId = o.identityId || null;
+  ws._denizenIsOperatorOffice = !!o.isOperatorOffice;
+  return o;
+}
+
 function _broadcastToVisitorSession(sessionId, payload) {
   if (!sessionId || !payload) return;
-  const clients = agentWss ? agentWss.clients : cofounderAgent.wsClients;
+  const clients = _agentClients();
   const msg = JSON.stringify(payload);
   for (const ws of clients) {
     if (ws.readyState === 1 && ws._denizenSessionId === sessionId) {
       ws.send(msg);
     }
   }
+}
+
+function _broadcastToOffice(officeId, payload) {
+  if (!officeId || !payload) return;
+  officeRegistry.broadcastAgent(_agentClients(), payload, { officeId });
 }
 
 function _notifyCeoHandoff(handoff) {
@@ -761,13 +846,23 @@ function _notifyCeoHandoff(handoff) {
   _ceoBroadcast(denizenVisitor.buildLucyHandoffAlertBroadcast(handoff));
 }
 
-function _deliverHandoffWs(ws, handoff, { ceoBridge = false } = {}) {
+function _deliverHandoffWs(ws, handoff, { ceoBridge = false, officeId = null } = {}) {
   if (!ws || ws.readyState !== 1 || !handoff?.id) return;
   ws._deliveredHandoffIds = ws._deliveredHandoffIds || new Set();
   if (ws._deliveredHandoffIds.has(handoff.id)) return;
   ws._deliveredHandoffIds.add(handoff.id);
   if (ceoBridge) _notifyCeoHandoff(handoff);
-  ws.send(JSON.stringify({ type: 'assistant_handoff', handoff }));
+  const meta = handoff.metadata && typeof handoff.metadata === 'object' ? handoff.metadata : {};
+  const targetOffice = officeId || meta.to_office_id || ws._denizenOfficeId || null;
+  const payload = {
+    type: meta.office_bus ? 'office_bus_message' : 'assistant_handoff',
+    handoff,
+    office_id: targetOffice,
+    intent: meta.intent || null,
+  };
+  if (officeRegistry.shouldDeliverToSocket(payload, ws)) {
+    ws.send(JSON.stringify(payload));
+  }
 }
 
 function _writeVisitorAccessError(res, err) {
@@ -807,8 +902,23 @@ function _parseVisitorAccessKind(raw) {
   return kind === 'ceo' ? 'ceo' : kind === 'team' ? 'team' : null;
 }
 
-function _respondVisitorAccessVerify(res, code, accessKind) {
-  const result = visitorAccess.verifyAccessCode(code, accessKind);
+async function _respondVisitorAccessVerify(res, code, accessKind) {
+  let result = visitorAccess.verifyAccessCode(code, accessKind);
+  if (!result.ok && accessKind === 'team') {
+    const org = await teamAuth.resolveOrgByTeamCode(code).catch(() => null);
+    if (org?.slug) {
+      result = {
+        ok: true,
+        org_slug: org.slug,
+        tier: 'team',
+        access_grant: sessionAuth.createAccessGrant({
+          tier: 'team',
+          orgSlug: org.slug,
+          accessMethod: 'team_code',
+        }),
+      };
+    }
+  }
   if (!result.ok) {
     res.writeHead(403, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(result));
@@ -824,13 +934,11 @@ function _visitorSessionBodyFromHeaders(req) {
   const metadata = {};
   const accessMethod = header('x-access-method');
   if (accessMethod) metadata.access_method = accessMethod;
-  if (/^(1|true|yes)$/i.test(header('x-ceo-principal') || '')) {
-    metadata.is_ceo_principal = true;
-  }
   return {
     session_id: header('x-session-id'),
     session_token: header('x-session-token'),
     access_grant: header('x-access-grant'),
+    ceo_grant: header('x-denizen-ceo-grant'),
     display_name: header('x-display-name'),
     org_slug: header('x-org-slug'),
     email: header('x-email'),
@@ -849,10 +957,28 @@ async function _createVisitorSession(req, res, body) {
   let tier = null;
   let metadata = body.metadata && typeof body.metadata === 'object' ? { ...body.metadata } : {};
 
+  // Principal status comes from verified grants only — never from
+  // client-asserted metadata or headers.
+  delete metadata.is_ceo_principal;
+  if (/^ceo/i.test(String(metadata.access_method || ''))) delete metadata.access_method;
+  const ceoGrantToken = String(
+    body.ceo_grant || req.headers['x-denizen-ceo-grant'] || '',
+  ).trim() || null;
+  let ceoVerified = !!(ceoGrantToken && sessionAuth.verifyCeoGrant(ceoGrantToken));
+
   if (grantPayload) {
     orgSlug = grantPayload.org_slug;
     tier = grantPayload.tier;
     metadata = { ...visitorAccess.metadataFromAccessGrant(grantPayload), ...metadata };
+  } else if (existingId && ceoVerified) {
+    const access = await visitorAccess.resolveSessionAccess(existingId);
+    orgSlug = access.orgSlug;
+    tier = access.tier;
+    metadata = { ...(access.session?.metadata || {}), ...metadata };
+  } else if (ceoVerified && (body.org_slug || body.orgSlug || metadata.org_slug)) {
+    orgSlug = body.org_slug || body.orgSlug || metadata.org_slug || promptTuning.teamOrgSlug;
+    tier = 'team';
+    metadata = { ...metadata, access_method: metadata.access_method || 'ceo' };
   } else if (existingId && existingToken) {
     await visitorAccess.assertSessionToken(existingId, existingToken);
     const access = await visitorAccess.resolveSessionAccess(existingId);
@@ -877,7 +1003,7 @@ async function _createVisitorSession(req, res, body) {
     return;
   }
 
-  if (tier === 'team' && !grantPayload && !(existingId && existingToken)) {
+  if (tier === 'team' && !grantPayload && !(existingId && (existingToken || ceoVerified)) && !(ceoVerified && orgSlug)) {
     res.writeHead(403, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: false, error: 'team tier requires access_grant', code: 'DENIED' }));
     return;
@@ -893,11 +1019,25 @@ async function _createVisitorSession(req, res, body) {
   metadata.tier = tier || metadata.tier || (resolvedOrg.slug === promptTuning.demoOrgSlug ? 'demo' : 'team');
   metadata.org_slug = resolvedOrg.slug;
 
+  // A CEO-code access grant is signed by us — it counts as verification too.
+  if (grantPayload?.access_method === 'ceo_code') ceoVerified = true;
+  if (ceoVerified) {
+    metadata.is_ceo_principal = true;
+    if (!metadata.access_method) metadata.access_method = 'ceo';
+  }
+
+  // Keep the login email on the session so team-account lookups by session work.
+  const emailForMeta = grantPayload?.email || body.email || body.identity_email || null;
+  if (emailForMeta && !metadata.email) {
+    metadata.email = String(emailForMeta).trim().toLowerCase();
+  }
+
   let sessionToken = null;
   let sessionTokenHash = null;
   const isRefresh = !!(existingId && existingToken);
   const issueToken = tier !== 'demo';
-  if (!isRefresh && issueToken) {
+  const mintToken = issueToken && (!isRefresh || (existingId && !existingToken && ceoVerified));
+  if (mintToken) {
     const created = sessionAuth.createSessionToken();
     sessionToken = created.token;
     sessionTokenHash = created.hash;
@@ -926,17 +1066,30 @@ async function _createVisitorSession(req, res, body) {
     || body.identity_email
     || null;
   if (sessionEmail && session?.id) {
-    linkedIdentity = await _withIdentityTimeout(
-      userIdentity.resolveIdentityForSession({
-        email: sessionEmail,
-        displayName: body.display_name ?? body.displayName,
-        tier: metadata.tier || tier,
-        orgId: resolvedOrg.id,
-        orgSlug: resolvedOrg.slug,
-        source: metadata.access_method || (tier === 'demo' ? 'demo' : 'session'),
-        sessionId: session.id,
-      }),
-    ) || linkedIdentity;
+    // Team-code visitors typed their work email — link their team account
+    // (and through it their real identity) instead of minting a guest one.
+    if (!grantPayload?.email && (metadata.tier || tier) === 'team' && !metadata.is_ceo_principal) {
+      linkedIdentity = await _withIdentityTimeout(
+        teamAuth.linkAccountToSession(
+          sessionEmail,
+          session.id,
+          body.display_name ?? body.displayName,
+        ),
+      ) || linkedIdentity;
+    }
+    if (!linkedIdentity?.id) {
+      linkedIdentity = await _withIdentityTimeout(
+        userIdentity.resolveIdentityForSession({
+          email: sessionEmail,
+          displayName: body.display_name ?? body.displayName,
+          tier: metadata.tier || tier,
+          orgId: resolvedOrg.id,
+          orgSlug: resolvedOrg.slug,
+          source: metadata.access_method || (tier === 'demo' ? 'demo' : 'session'),
+          sessionId: session.id,
+        }),
+      ) || linkedIdentity;
+    }
   }
 
   if (!linkedIdentity?.id && metadata.is_ceo_principal && session?.id) {
@@ -953,6 +1106,11 @@ async function _createVisitorSession(req, res, body) {
         sessionId: session.id,
       }),
     );
+    if (linkedIdentity?.id) {
+      // Stamp the CEO's own identity row so identity-based principal checks
+      // hold even when a request carries no grant (e.g. background jobs).
+      userIdentity.markCeoPrincipal(linkedIdentity.id);
+    }
   }
 
   if (linkedIdentity?.id) {
@@ -979,6 +1137,16 @@ async function _createVisitorSession(req, res, body) {
   };
   if (sessionToken) payload.session_token = sessionToken;
   if (linkedIdentity) payload.identity = userIdentity.toClientIdentity(linkedIdentity);
+  // Rolling refresh: every verified CEO touch gets a fresh grant so the
+  // stored one never expires under an active CEO.
+  if (ceoVerified) payload.ceo_grant = sessionAuth.createCeoGrant();
+  try {
+    const sessionCookie = require('./src/visitor-session-cookie');
+    sessionCookie.setSessionCookies(res, {
+      sessionId: session?.id || existingId || null,
+      sessionToken: sessionToken || existingToken || null,
+    });
+  } catch (_) {}
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(payload));
 }
@@ -990,6 +1158,81 @@ async function _verifyVisitorSession(req, sessionId, body = {}) {
   const token = sessionAuth.extractSessionAuth(req, body);
   await visitorAccess.assertSessionToken(sessionId, token);
   return visitorAccess.resolveSessionAccess(sessionId);
+}
+
+async function _resolveChatIdentityId(session, sessionId) {
+  let identityId = session?.identity_id || null;
+  if (!identityId && sessionId) {
+    const identity = await userIdentity.getIdentityBySession(sessionId).catch(() => null);
+    identityId = identity?.id || null;
+    if (identityId) {
+      await userIdentity.linkSessionToIdentity(identityId, sessionId).catch(() => null);
+    }
+  }
+  if (!identityId && session) {
+    const meta = session.metadata && typeof session.metadata === 'object' ? session.metadata : {};
+    const email = String(meta.email || '').trim().toLowerCase();
+    if (email && email.includes('@')) {
+      const identity = await userIdentity.upsertIdentity({
+        email,
+        displayName: session.display_name,
+        tier: meta.tier || 'team',
+        orgId: session.org_id || null,
+        updateDisplayName: false,
+      }).catch(() => null);
+      if (identity?.id) {
+        identityId = identity.id;
+        await userIdentity.linkSessionToIdentity(identityId, sessionId).catch(() => null);
+      }
+    }
+  }
+  if (!identityId && sessionId) {
+    identityId = `session:${sessionId}`;
+  }
+  return identityId;
+}
+
+async function _batchAddNpcTeamMembers(session, body = {}) {
+  const keys = Array.isArray(body.npc_keys) ? body.npc_keys : (Array.isArray(body.npcKeys) ? body.npcKeys : []);
+  if (!keys.length) {
+    return { status: 400, payload: { ok: false, error: 'npc_keys[] required' } };
+  }
+  if (!session?.identity_id) {
+    return { status: 409, payload: { ok: false, error: 'This session is not linked to a user profile yet' } };
+  }
+  const npcRoster = require('./src/npc-roster');
+  const rosterLabel = (key) => {
+    const entry = (npcRoster.entries || []).find((e) => e.folder === key);
+    return entry?.display || key;
+  };
+  const added = [];
+  const errors = [];
+  for (const rawKey of keys) {
+    const npcKey = String(rawKey || '').trim().toLowerCase();
+    if (!npcKey) continue;
+    try {
+      const eligible = denizenVisitor.isNpcTeamEligible(npcKey);
+      if (!eligible?.eligible) {
+        errors.push({ npc_key: npcKey, error: eligible?.reason || 'ineligible' });
+        continue;
+      }
+      const saved = await userIdentity.upsertNpcTeamMember(session.identity_id, {
+        orgId: session.org_id || null,
+        npcKey,
+        displayName: body.display_name ?? body.displayName ?? rosterLabel(npcKey),
+        role: body.role || 'assistant',
+      });
+      if (!saved) {
+        errors.push({ npc_key: npcKey, error: 'save_failed' });
+        continue;
+      }
+      added.push(npcKey);
+    } catch (err) {
+      errors.push({ npc_key: npcKey, error: err?.message || String(err) });
+    }
+  }
+  const team = await userIdentity.getNpcTeam(session.identity_id);
+  return { status: 200, payload: { ok: true, added, errors, team: team || null } };
 }
 
 async function _resolveVisitorToolGate(sessionId) {
@@ -1007,6 +1250,13 @@ async function _resolveVisitorToolGate(sessionId) {
   }
 }
 
+const handleCrmRoutes = mountCrmRoutes({
+  verifyVisitorSession: _verifyVisitorSession,
+  readJsonBody: _readJsonBody,
+  npcBrains,
+  broadcastToOffice: _broadcastToOffice,
+});
+
 const handleComputeRoutes = mountComputeRoutes({
   internalToken: process.env.DENIZEN_INTERNAL_API_TOKEN || '',
   fleetAgentToken: process.env.DENIZEN_FLEET_AGENT_TOKEN || '',
@@ -1018,10 +1268,15 @@ const handleComputeRoutes = mountComputeRoutes({
   },
 });
 
+lmStudioRouter.startProbeLoop(
+  Number(process.env.LM_STUDIO_PROBE_INTERVAL_MS) || 45000,
+);
+
 hardwareMonitor.startHostSampler({
   intervalMs: 5000,
   onSample: (snap) => {
     fleetRegistry.setGlobalHostSnapshot(snap);
+    lmStudioRouter.ingestFromMachine(snap);
     const hostIdentityId = process.env.DENIZEN_FLEET_IDENTITY_ID || null;
     if (hostIdentityId) {
       const scored = nodeProfiler.scoreHardware({
@@ -1086,18 +1341,20 @@ async function _buildMeshContextForAdvice() {
     const started = j.started_at ? new Date(j.started_at).getTime() : 0;
     return started && (Date.now() - started) > MESH_STALE_MS;
   }).length;
-  let lmReachable = false;
-  try {
-    const h = await new Promise((resolve) => {
-      const req = http.get('http://127.0.0.1:1234/v1/models', { timeout: 2000 }, (res) => {
-        resolve(res.statusCode >= 200 && res.statusCode < 300);
+  let lmReachable = lmStudioRouter.anyReachable();
+  if (!lmReachable) {
+    try {
+      const h = await new Promise((resolve) => {
+        const req = http.get('http://127.0.0.1:1234/v1/models', { timeout: 2000 }, (res) => {
+          resolve(res.statusCode >= 200 && res.statusCode < 300);
+        });
+        req.on('error', () => resolve(false));
+        req.on('timeout', () => { req.destroy(); resolve(false); });
       });
-      req.on('error', () => resolve(false));
-      req.on('timeout', () => { req.destroy(); resolve(false); });
-    });
-    lmReachable = !!h;
-  } catch (_) {
-    lmReachable = false;
+      lmReachable = !!h;
+    } catch (_) {
+      lmReachable = false;
+    }
   }
   const base = {
     taskText: '',
@@ -1320,7 +1577,7 @@ async function _executePlayerChatSkillFollowup({
   meshContext = null,
   gapAlreadyHandled = false,
 }) {
-  if (!sessionId || !visitorToolGate?.canUseRealWork) return;
+  if (!visitorToolGate?.canUseRealWork) return;
 
   const assistantKey = String(visitorCtx?.assistant?.npc_key || '').toLowerCase();
   const isAssistant = assistantKey && assistantKey === String(npcName || '').toLowerCase();
@@ -1506,11 +1763,13 @@ function _mapResearchPriority(p) {
 }
 
 // Wire broadcast into npc-brains so task-chain advancement can send WS events
-npcBrains.setBroadcast((msg) =>
-  (agentWss ? agentWss.clients : new Set()).forEach(c => {
-    if (c.readyState === 1) c.send(typeof msg === 'string' ? msg : JSON.stringify(msg));
-  })
-);
+const _agentBroadcast = (msg, opts = {}) => {
+  officeRegistry.broadcastAgent(_agentClients(), msg, opts);
+};
+
+npcBrains.setBroadcast(_agentBroadcast);
+
+npcBrains.setThinkWake((npcName, reason, opts) => npcThinkRunner.wake(npcName, reason, opts));
 
 // Same broadcaster, wired into the PC activity tracker. Every started /
 // done / failed PC task fans out to the browser as `pc_activity` events
@@ -2025,6 +2284,19 @@ async function runNpcSkill(npcName, skill, skillParams = {}) {
   return jelly.runSkill(npcName, skill, skillParams, { broadcast });
 }
 
+npcThinkRunner.configure({
+  npcBrains,
+  denizenDb,
+  broadcast: _agentBroadcast,
+  runNpcSkill,
+  enrichThinkContext: (npcName, ctx) => visitorOfficeContext.enrichThinkContext(npcName, ctx, {
+    listOnlineSessionIds,
+    denizenVisitor,
+    visitorAccess,
+    userIdentity,
+  }),
+});
+
 // --- Furniture-placement whitelist + per-NPC daily budget ---
 // The whitelist is shared between /api/place-furniture and the prompt
 // hint in src/npc-brains.js. Edit both together if you ever expand it.
@@ -2288,7 +2560,7 @@ function _broadcastFrame() {
     busMessages,
     ts: Date.now(),
   });
-  cofounderAgent.wsClients.forEach(ws => {
+  _agentClients().forEach((ws) => {
     if (ws.readyState === 1) {
       try { ws.send(frame); } catch (_) { /* drop */ }
     }
@@ -2300,13 +2572,9 @@ function _scheduleBroadcast() {
   _broadcastTimer = setTimeout(_broadcastFrame, WS_BROADCAST_INTERVAL_MS);
 }
 
-function _sendImmediate(payload) {
-  const data = JSON.stringify(payload);
-  cofounderAgent.wsClients.forEach(ws => {
-    if (ws.readyState === 1) {
-      try { ws.send(data); } catch (_) {}
-    }
-  });
+function _sendImmediate(payload, opts = {}) {
+  const officeId = opts.officeId ?? payload?.office_id ?? null;
+  officeRegistry.broadcastAgent(_agentClients(), payload, officeId ? { officeId } : {});
 }
 
 worldState.on('change', ({ kind, payload }) => {
@@ -2325,6 +2593,9 @@ agentBus.subscribe('*', (msg) => {
   _agentBusBuffer.push(msg);
   // Cap the buffer in case something pathological happens.
   if (_agentBusBuffer.length > 60) _agentBusBuffer.splice(0, _agentBusBuffer.length - 60);
+  if (msg?.to && msg?.text) {
+    npcThinkRunner.wake(msg.to, `agent_bus:${msg.kind || 'speak'}`, { urgent: true });
+  }
   _scheduleBroadcast();
 });
 
@@ -2389,7 +2660,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ ok: false, error: 'kind must be "team" or "ceo"' }));
         return;
       }
-      _respondVisitorAccessVerify(res, code, accessKind);
+      await _respondVisitorAccessVerify(res, code, accessKind);
     })().catch((err) => {
       if (!res.writableEnded) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -2414,6 +2685,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath.startsWith('/api/crm/')) {
+    (async () => {
+      await handleCrmRoutes(req, res);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
   if (urlPath.startsWith('/api/compute/') || urlPath.startsWith('/api/desktop/')) {
     (async () => {
       const meshHandled = await _handleMeshOpsComputeRoutes(req, res, urlPath).catch(() => false);
@@ -2423,6 +2706,26 @@ const server = http.createServer((req, res) => {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: 'Compute route not found' }));
     })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  // MCP OAuth front door (discovery, registration, authorize/consent, token).
+  if (urlPath.startsWith('/.well-known/oauth') || urlPath.startsWith('/mcp/oauth/')) {
+    mcpOauth.handleOAuthRoute(req, res, urlPath, {
+      getPublicBaseUrl: npcMcpGateway.getPublicBaseUrl,
+      createMcpToken: npcMcpGateway.createMcpToken,
+      guardVisitorFeature: _guardVisitorFeature,
+    }).then((handled) => {
+      if (!handled && !res.writableEnded) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'not found' }));
+      }
+    }).catch((err) => {
       if (!res.writableEnded) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
@@ -2482,37 +2785,53 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // --- Layout save/load API ---
-  const layoutDir = path.join(ROOT, 'layouts');
-  const layoutFile = path.join(layoutDir, 'office-layout.json');
+  // --- Per-office layout save/load API ---
+  async function _resolveLayoutOfficeId(req, sessionId) {
+    if (!sessionId) return officeRegistry.CEO_OFFICE_ID;
+    await _verifyVisitorSession(req, sessionId, {});
+    const session = await denizenVisitor.getSession(sessionId);
+    return officeRegistry.resolveOfficeFromSession(session).officeId;
+  }
 
   if (urlPath === '/api/layout' && req.method === 'POST') {
-    let body = '';
-    req.on('data', (chunk) => { body += chunk; });
-    req.on('end', () => {
-      try {
-        JSON.parse(body); // validate JSON
-        fs.mkdirSync(layoutDir, { recursive: true });
-        fs.writeFileSync(layoutFile, body, 'utf8');
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message }));
+    (async () => {
+      const body = await _readJsonBody(req, 2 * 1024 * 1024);
+      const sessionId = body.session_id || body.sessionId || null;
+      const officeId = await _resolveLayoutOfficeId(req, sessionId);
+      officeLayout.writeLayoutSync(ROOT, officeId, body.layout ?? body);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, office_id: officeId }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
       }
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err?.message || String(err) }));
     });
     return;
   }
 
   if (urlPath === '/api/layout' && req.method === 'GET') {
-    fs.readFile(layoutFile, 'utf8', (err, data) => {
-      if (err) {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const officeId = sessionId
+        ? await _resolveLayoutOfficeId(req, sessionId)
+        : officeRegistry.CEO_OFFICE_ID;
+      const layout = officeLayout.readLayoutSync(ROOT, officeId);
+      if (!layout) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'No saved layout' }));
+        res.end(JSON.stringify({ error: 'No saved layout', office_id: officeId }));
         return;
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(data);
+      res.end(JSON.stringify({ ...layout, office_id: officeId }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err?.message || String(err) }));
     });
     return;
   }
@@ -2567,21 +2886,11 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      // Read-modify-write the layout file. The structure of office-layout.json
-      // is { items: [...] } — we just append.
-      let layout = { items: [] };
-      try {
-        const raw = fs.readFileSync(layoutFile, 'utf8');
-        layout = JSON.parse(raw);
-        if (!Array.isArray(layout.items)) layout.items = [];
-      } catch (_) {
-        fs.mkdirSync(layoutDir, { recursive: true });
-      }
+      const officeId = p.office_id || p.officeId || officeRegistry.CEO_OFFICE_ID;
       const instanceId = `npc_${prefabId}_${Date.now()}`;
       const item = { instanceId, prefabId, x, y, placedBy: by, placedAt: Date.now(), reason };
-      layout.items.push(item);
       try {
-        fs.writeFileSync(layoutFile, JSON.stringify(layout, null, 2), 'utf8');
+        officeLayout.appendFurnitureItem(ROOT, officeId, item);
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'failed to persist layout: ' + err.message }));
@@ -2601,7 +2910,7 @@ const server = http.createServer((req, res) => {
       // Broadcast LIVE so the browser can instantiate the sprite without
       // waiting for a page reload. The client subscribes to
       // 'furniture_placed' and pushes the new item into _interactables.
-      _sendImmediate({ type: 'furniture_placed', item, by });
+      _sendImmediate({ type: 'furniture_placed', item, by, office_id: officeId }, { officeId });
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, item }));
@@ -2634,25 +2943,22 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      let layout = { items: [] };
-      try {
-        const raw = fs.readFileSync(layoutFile, 'utf8');
-        layout = JSON.parse(raw);
-        if (!Array.isArray(layout.items)) layout.items = [];
-      } catch (_) {
+      const officeId = p.office_id || p.officeId || officeRegistry.CEO_OFFICE_ID;
+      const layout = officeLayout.readLayoutSync(ROOT, officeId);
+      if (!layout?.items?.length) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'no layout file' }));
+        res.end(JSON.stringify({ error: 'no layout file', office_id: officeId }));
         return;
       }
-      const idx = layout.items.findIndex(it => it.instanceId === instanceId);
+      const idx = layout.items.findIndex((it) => it.instanceId === instanceId);
       if (idx === -1) {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: `instanceId not found: ${instanceId}` }));
         return;
       }
-      const removed = layout.items.splice(idx, 1)[0];
+      const removed = layout.items[idx];
       try {
-        fs.writeFileSync(layoutFile, JSON.stringify(layout, null, 2), 'utf8');
+        officeLayout.removeFurnitureItem(ROOT, officeId, instanceId);
       } catch (err) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'failed to persist layout: ' + err.message }));
@@ -2661,7 +2967,7 @@ const server = http.createServer((req, res) => {
       try {
         worldState.pushEvent('shipped', `${by} removed ${removed.prefabId} (placed by ${removed.placedBy})`);
       } catch (_) {}
-      _sendImmediate({ type: 'furniture_removed', instanceId, by });
+      _sendImmediate({ type: 'furniture_removed', instanceId, by, office_id: officeId }, { officeId });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, removed }));
     });
@@ -3715,6 +4021,59 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Content pipeline (newsroom task chain preset) ---
+  if (urlPath === '/api/content-pipeline' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(contentPipeline.getPipelineSummary(taskChain)));
+    return;
+  }
+  if (urlPath === '/api/content-pipeline' && req.method === 'POST') {
+    _readJsonBody(req).then((payload) => {
+      const topic = String(payload?.topic || payload?.subject || '').trim();
+      if (!topic) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'topic is required' }));
+        return;
+      }
+      const broadcastFn = (msg) =>
+        (agentWss ? agentWss.clients : new Set()).forEach((c) => {
+          if (c.readyState === 1) c.send(JSON.stringify(msg));
+        });
+      const chain = contentPipeline.startContentPipeline(taskChain, topic, {
+        assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
+        broadcastFn,
+      }, payload || {});
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        chainId: chain.id,
+        name: chain.name,
+        topic,
+        steps: chain.steps.length,
+      }));
+    }).catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    });
+    return;
+  }
+  if (urlPath === '/api/content-pipeline/cancel' && req.method === 'POST') {
+    _readJsonBody(req).then((payload) => {
+      const broadcastFn = (msg) =>
+        (agentWss ? agentWss.clients : new Set()).forEach((c) => {
+          if (c.readyState === 1) c.send(JSON.stringify(msg));
+        });
+      const chainId = payload?.chainId || payload?.chain_id || null;
+      const cancelled = contentPipeline.cancelRunningPipelines(taskChain, broadcastFn, chainId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, cancelled }));
+    }).catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: err.message }));
+    });
+    return;
+  }
+
   // --- Abort any in-flight desktop agent task ---
   if (urlPath === '/api/desktop-abort' && req.method === 'POST') {
     desktopAgent._abortAll = true;
@@ -4719,16 +5078,24 @@ const server = http.createServer((req, res) => {
       const [, , , id, decision] = urlPath.split('/');
       const body = await _readJsonBody(req, 16 * 1024).catch(() => ({}));
       const sessionId = body.session_id || body.sessionId || null;
+      // CEO status comes from the verified grant or a strictly-local request —
+      // body.is_ceo_principal is a client assertion and is ignored.
+      const ceoRequest = hostCompute.isCeoPrincipalRequest(req)
+        || hostCompute.isLocalOperatorRequest(req);
       if (sessionId) {
         await _verifyVisitorSession(req, sessionId, body);
         const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
-          isCeoPrincipal: body.is_ceo_principal === true,
+          isCeoPrincipal: ceoRequest,
         });
         if (!approval.allowed) {
           res.writeHead(403, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ ok: false, error: 'Team lead or admin role required to approve skills' }));
           return;
         }
+      } else if (!ceoRequest) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'CEO or team approver session required' }));
+        return;
       }
       const result = decision === 'approve' ? skillBuilder.approveSkill(id) : skillBuilder.rejectSkill(id);
       if (result.ok) {
@@ -5152,12 +5519,76 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/auth/register-demo' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const sessionToken = sessionAuth.extractSessionAuth(req, body);
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const result = await demoAuth.registerDemoAccount({
+        sessionId,
+        sessionToken,
+        username: body.username,
+        password: body.password,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const status = demoAuth.demoAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/auth/login-demo' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const result = await demoAuth.loginDemoAccount({
+        username: body.username,
+        password: body.password,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const status = demoAuth.demoAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/auth/create-team' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const result = await teamAuth.createTeam({
+        teamName: body.team_name ?? body.teamName,
+        username: body.username,
+        email: body.email,
+        password: body.password,
+        displayName: body.display_name ?? body.displayName,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/auth/register' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 32 * 1024);
       const result = await teamAuth.registerTeamAccount({
         email: body.email,
         displayName: body.display_name ?? body.displayName,
+        username: body.username,
+        password: body.password,
         teamCode: body.team_code ?? body.teamCode,
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -5175,6 +5606,8 @@ const server = http.createServer((req, res) => {
       const body = await _readJsonBody(req, 32 * 1024);
       const result = await teamAuth.loginTeamAccount({
         email: body.email,
+        username: body.username,
+        password: body.password,
         teamCode: body.team_code ?? body.teamCode,
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -5413,10 +5846,12 @@ const server = http.createServer((req, res) => {
       const providerKeys = body.provider_keys || body.providerKeys || null;
       const notifyEmail = body.notify_email ?? body.notifyEmail;
       const email = body.email;
+      const displayName = body.display_name ?? body.displayName;
       const session = await denizenVisitor.updateSessionSettings(sessionId, {
         providerKeys,
         notifyEmail,
         email,
+        displayName,
       });
       const settings = await denizenVisitor.getSessionSettings(sessionId);
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -5426,6 +5861,36 @@ const server = http.createServer((req, res) => {
         return _writeVisitorAccessError(res, err);
       }
       const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/auth/change-password' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const identity = await userIdentity.getIdentityBySession(sessionId);
+      if (!identity?.id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'This session is not linked to a user profile yet' }));
+        return;
+      }
+      await userIdentity.changeIdentityPassword(identity.id, {
+        currentPassword: body.current_password || body.currentPassword,
+        newPassword: body.new_password || body.newPassword,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true }));
+    })().catch((err) => {
+      const status = /incorrect|required|at least/i.test(String(err?.message || '')) ? 400 : 500;
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
@@ -5462,6 +5927,248 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/npc-team' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      const npcKey = u.searchParams.get('npc_key') || u.searchParams.get('npcKey');
+      const soulFlag = String(
+        u.searchParams.get('soul') || u.searchParams.get('include_soul') || '',
+      );
+      const soulHeader = String(req.headers['x-denizen-npc-soul'] || '').trim();
+      const wantSoul = npcKey && (
+        /^(1|true|yes)$/i.test(soulFlag)
+        || soulHeader === '1'
+        || /^true$/i.test(soulHeader)
+      );
+      const identityId = session.identity_id;
+      if (wantSoul) {
+        if (!identityId) {
+          res.writeHead(409, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Profile required' }));
+          return;
+        }
+        const soul = await userIdentity.getNpcTeamMemberSoulView(identityId, npcKey);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, soul }));
+        return;
+      }
+      const team = identityId ? await userIdentity.getNpcTeam(identityId) : null;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, team: team || null }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/npc-team' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      if (!session.identity_id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'This session is not linked to a user profile yet' }));
+        return;
+      }
+      if (body.action === 'soul' || body.soul === true) {
+        const soulKey = body.npc_key || body.npcKey;
+        if (!soulKey) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'npc_key required for soul view' }));
+          return;
+        }
+        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, soulKey);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, soul }));
+        return;
+      }
+      if (body.action === 'batch_add' || body.batch_add === true) {
+        const batch = await _batchAddNpcTeamMembers(session, body);
+        res.writeHead(batch.status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(batch.payload));
+        return;
+      }
+      await userIdentity.updateNpcTeamTemplate(session.identity_id, {
+        orgId: session.org_id || null,
+        name: body.name,
+        purpose: body.purpose,
+        settings: body.settings,
+      });
+      visitorOfficeContext.clearTeamCache(session.identity_id);
+      const team = await userIdentity.getNpcTeam(session.identity_id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, team: team || null }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/npc-team/member' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      if (!session.identity_id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'This session is not linked to a user profile yet' }));
+        return;
+      }
+      if (body.action === 'batch_add' || body.batch_add === true) {
+        const batch = await _batchAddNpcTeamMembers(session, body);
+        res.writeHead(batch.status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(batch.payload));
+        return;
+      }
+      const npcKey = body.npc_key || body.npcKey;
+      if (!npcKey) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and npc_key required' }));
+        return;
+      }
+      if (body.action === 'soul' || body.soul === true) {
+        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, soul }));
+        return;
+      }
+      if (body.active === false || body.remove === true) {
+        await userIdentity.deactivateNpcTeamMember(session.identity_id, npcKey);
+      } else {
+        const eligible = denizenVisitor.isNpcTeamEligible(npcKey);
+        if (!eligible?.eligible) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: `NPC "${npcKey}" cannot be added to a personal team (${eligible?.reason || 'ineligible'})` }));
+          return;
+        }
+        await userIdentity.upsertNpcTeamMember(session.identity_id, {
+          orgId: session.org_id || null,
+          npcKey,
+          displayName: body.display_name ?? body.displayName,
+          role: body.role,
+          focus: body.focus,
+          instructions: body.instructions,
+          job: body.job,
+          sortOrder: body.sort_order ?? body.sortOrder,
+          settings: body.settings,
+        });
+      }
+      const team = await userIdentity.getNpcTeam(session.identity_id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, team: team || null }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/npc-team/members/batch' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 128 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      const batch = await _batchAddNpcTeamMembers(session, body);
+      res.writeHead(batch.status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(batch.payload));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/npc-team/member/soul' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const npcKey = u.searchParams.get('npc_key') || u.searchParams.get('npcKey');
+      if (!sessionId || !npcKey) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and npc_key required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session?.identity_id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Profile required' }));
+        return;
+      }
+      const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, soul }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/claim' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 64 * 1024);
@@ -5487,6 +6194,120 @@ const server = http.createServer((req, res) => {
         return _writeVisitorAccessError(res, err);
       }
       const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/chat/threads' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      const identityId = await _resolveChatIdentityId(session, sessionId);
+      const threads = identityId
+        ? await userIdentity.listChatThreads(identityId)
+        : [];
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, threads }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) return _writeVisitorAccessError(res, err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/chat/history' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const threadId = u.searchParams.get('thread_id') || u.searchParams.get('threadId');
+      if (!sessionId || !threadId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and thread_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      const identityId = await _resolveChatIdentityId(session, sessionId);
+      if (!identityId) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, messages: [] }));
+        return;
+      }
+      const displayName = session?.display_name || 'You';
+      let messages = [];
+      if (String(threadId).startsWith('dm:')) {
+        const npcKey = String(threadId).slice(3);
+        const rows = await userIdentity.loadDmChatHistory(identityId, npcKey, 80);
+        const npcName = npcFolderToDisplay(npcKey);
+        messages = userIdentity.mapChatRowsToMemories(rows, npcName, displayName);
+      } else if (String(threadId).startsWith('group:')) {
+        const groupId = String(threadId).slice(6);
+        const rows = await userIdentity.loadGroupChatHistory(identityId, groupId, 80);
+        messages = userIdentity.mapGroupRowsToMessages(rows, displayName, npcFolderToDisplay);
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, messages }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) return _writeVisitorAccessError(res, err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/chat/groups' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Session not found' }));
+        return;
+      }
+      const identityId = await _resolveChatIdentityId(session, sessionId);
+      const memberNpcKeys = body.member_npc_keys || body.memberNpcKeys || body.npc_keys || body.npcKeys;
+      const group = await userIdentity.createGroupChat({
+        identityId,
+        name: body.name || body.group_name || body.groupName,
+        memberNpcKeys,
+      });
+      if (!group?.id) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Could not create group chat' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        group,
+        thread_id: `group:${group.id}`,
+        storage: group._local ? 'memory' : 'database',
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) return _writeVisitorAccessError(res, err);
+      const status = String(err?.message || '').includes('at least two') ? 400 : 500;
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
@@ -5624,6 +6445,91 @@ const server = http.createServer((req, res) => {
       }
       const status = denizenVisitor.visitorErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/office-bus' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024);
+      const fromSessionId = body.session_id || body.sessionId || body.from_session_id;
+      if (!fromSessionId || !body.message) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and message required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, fromSessionId, body);
+      const busMsg = await officeBus.sendOfficeBusMessage({
+        fromSessionId,
+        toOfficeId: body.to_office_id || body.toOfficeId,
+        toSessionId: body.to_session_id || body.toSessionId,
+        message: body.message,
+        intent: body.intent || 'sync',
+        fromNpc: body.from_npc || body.fromNpc,
+        metadata: body.metadata,
+      }, { denizenVisitor, userIdentity, listOnlineSessionIds });
+      const targetSid = busMsg.to_session_id;
+      if (targetSid) {
+        const clients = _agentClients();
+        for (const c of clients) {
+          if (c.readyState === 1 && c._denizenSessionId === targetSid) {
+            _deliverHandoffWs(c, busMsg, { officeId: busMsg.to_office_id });
+          }
+        }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, message: busMsg }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/offices' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      const myOffice = officeRegistry.resolveOfficeFromSession(session);
+      const teammates = await denizenVisitor.listTeammatesWithPresence(sessionId, listOnlineSessionIds());
+      const onlineOffices = officeRegistry.listOfficesOnline(_agentClients());
+      const offices = teammates.map((tm) => {
+        const officeId = tm.identity_id || `session:${tm.session_id}`;
+        const live = onlineOffices.find((o) => o.sessionId === tm.session_id);
+        return {
+          session_id: tm.session_id,
+          display_name: tm.display_name,
+          office_id: officeId,
+          identity_id: tm.identity_id,
+          assistant_npc: tm.npc_key,
+          assistant_name: tm.assistant_name,
+          online: !!tm.online || !!live,
+          npc_team_name: tm.npc_team_name,
+        };
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        my_office: myOffice,
+        offices,
+        online_offices: onlineOffices,
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
     return;
@@ -6232,6 +7138,9 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ error: 'requires { to, text }' }));
           return;
         }
+        if (payload.to) {
+          npcThinkRunner.wake(payload.to, 'agent_bus_api', { urgent: true });
+        }
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, msg }));
       } catch (err) {
@@ -6307,6 +7216,27 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  function buildHealthHardwarePayload(req) {
+    const hostHardware = fleetRegistry.getGlobalHostSnapshot()
+      || hardwareMonitor.getLatestSnapshot();
+    if (!hostHardware) return null;
+    const auxiliary = fleetRegistry.listAuxiliary();
+    if (hostCompute.isCeoPrincipalRequest(req)) {
+      return {
+        live_usage: hostHardware,
+        fleet: [hostHardware, ...auxiliary],
+        sampled_at: hostHardware.sampled_at || null,
+      };
+    }
+    return {
+      available: true,
+      machines: 1 + auxiliary.length,
+      sampled_at: hostHardware.sampled_at || null,
+      fleet: [],
+      live_usage: null,
+    };
+  }
+
   // --- Office health (one-shot diagnostic the client polls every few seconds) ---
   // Reports: WS clients connected, LM Studio reachability, which providers
   // are configured (names only — never keys), recent provider errors, and
@@ -6325,15 +7255,7 @@ const server = http.createServer((req, res) => {
       };
 
       if (cache.body && (now - cache.at) < cacheTtlMs(cache.body)) {
-        const cachedHost = fleetRegistry.getGlobalHostSnapshot()
-          || hardwareMonitor.getLatestSnapshot();
-        const cachedHardware = cachedHost
-          ? {
-            live_usage: cachedHost,
-            fleet: [cachedHost, ...fleetRegistry.listAuxiliary()],
-            sampled_at: cachedHost.sampled_at || null,
-          }
-          : cache.body.hardware;
+        const cachedHardware = buildHealthHardwarePayload(req) || cache.body.hardware;
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           ...cache.body,
@@ -6417,15 +7339,7 @@ const server = http.createServer((req, res) => {
             .filter(([k]) => k !== 'demo')
             .map(([name, cfg]) => ({ name, type: cfg.type, model: cfg.model || null }));
 
-          const hostHardware = fleetRegistry.getGlobalHostSnapshot()
-            || hardwareMonitor.getLatestSnapshot();
-          const hardwarePayload = hostHardware
-            ? {
-              live_usage: hostHardware,
-              fleet: [hostHardware, ...fleetRegistry.listAuxiliary()],
-              sampled_at: hostHardware.sampled_at || null,
-            }
-            : null;
+          const hardwarePayload = buildHealthHardwarePayload(req);
 
           const body = {
             ok: true,
@@ -6818,6 +7732,60 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Deal Weaver CRM — Vite SPA served at /crm/ (phone app embeds this route)
+  if (urlPath === '/crm' || urlPath.startsWith('/crm/')) {
+    let crmRel = urlPath.replace(/^\/crm\/?/, '') || 'index.html';
+    if (crmRel.endsWith('/')) crmRel += 'index.html';
+    const crmFile = path.resolve(CRM_DIST, crmRel);
+    const crmInside = path.relative(CRM_DIST, crmFile);
+    if (crmInside.startsWith('..') || path.isAbsolute(crmInside)) {
+      res.writeHead(403);
+      res.end('Forbidden');
+      return;
+    }
+    const sendCrmFile = (filePath, fallbackSpa) => {
+      fs.readFile(filePath, (err, data) => {
+        if (err) {
+          if (fallbackSpa) {
+            fs.readFile(path.join(CRM_DIST, 'index.html'), (err2, html) => {
+              if (err2) {
+                res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end('CRM not built. Run: npm run build:crm');
+                return;
+              }
+              res.writeHead(200, {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-store, no-cache, must-revalidate',
+                Pragma: 'no-cache',
+              });
+              res.end(html);
+            });
+            return;
+          }
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
+        const ext = path.extname(filePath).toLowerCase();
+        const headers = { 'Content-Type': MIME[ext] || 'application/octet-stream' };
+        const hashedAsset = /\/crm\/assets\/[^/]+-[A-Za-z0-9_-]+\.(js|css|mjs)$/.test(urlPath);
+        if (hashedAsset) {
+          headers['Cache-Control'] = 'public, max-age=31536000, immutable';
+        } else if (urlPath === '/crm/manifest.json') {
+          headers['Cache-Control'] = 'no-cache';
+        } else if (['.html', '.js', '.css', '.json', '.map'].includes(ext)) {
+          headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+          headers.Pragma = 'no-cache';
+        }
+        res.writeHead(200, headers);
+        res.end(data);
+      });
+    };
+    const spaFallback = !path.extname(crmRel);
+    sendCrmFile(crmFile, spaFallback);
+    return;
+  }
+
   // Default to the game's index.html — also accept legacy /denizen/ and
   // /pixel-office-game/ prefixes so old bookmarks keep working.
   if (urlPath === '/' || urlPath === '/denizen/' || urlPath === '/denizen'
@@ -6987,80 +7955,32 @@ agentWss.on('connection', (ws) => {
           }));
         }
       } else if (msg.type === 'npc_think') {
-        // NPC is asking "what should I do next?"
-        npcBrains.think(msg.npcName, msg.context || {})
-          .then(decision => {
-            // Send the main decision
+        const thinkCtx = {
+          ...(msg.context || {}),
+          officeId: ws._denizenOfficeId || msg.context?.officeId || msg.office_id,
+          visitorSessionId: ws._denizenSessionId || msg.context?.visitorSessionId,
+          identityId: ws._denizenIdentityId || msg.context?.identityId,
+          isOperatorOffice: ws._denizenIsOperatorOffice ?? msg.context?.isOperatorOffice,
+        };
+        npcThinkRunner.runCycle(msg.npcName, thinkCtx)
+          .then((decision) => {
+            if (!decision) return;
             const reply = JSON.stringify({
               type: 'npc_decision',
               npcName: msg.npcName,
               decision,
+              office_id: thinkCtx.officeId || null,
             });
-            if (ws.readyState === 1) ws.send(reply);
-
-            // Broadcast work output to all clients when an NPC starts or finishes a task.
-            // Use save as the note, falling back to message/thought so the feed never
-            // shows a blank "✓ NPC — " entry when save is empty.
-            const workNote = (decision.save || decision.message || decision.thought || '').trim();
-            if (workNote && decision.taskPhase && decision.taskPhase !== 'none') {
-              const phaseEmoji = { starting: '▶', continuing: '⟳', finished: '✓' }[decision.taskPhase] || '•';
-              const workMsg = JSON.stringify({
-                type: 'npc_work_output',
-                npcName: msg.npcName,
-                phase: decision.taskPhase,
-                phaseEmoji,
-                note: workNote.slice(0, 120),
-                action: decision.action || 'work',
-                artifactPath: decision._artifactPath || null,
-                ts: Date.now(),
-              });
-              (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(workMsg); });
-              denizenDb.recordWorkOutput({
-                npcName: msg.npcName,
-                phase: decision.taskPhase,
-                action: decision.action || 'work',
-                note: workNote,
-                artifactPath: decision._artifactPath || null,
-                role: decision.role || null,
-              });
-              // Log artifact to server console when a file lands on disk
-              if (decision._artifactPath) {
-                console.log(`[WorkOutput] ${msg.npcName} saved artifact → ${decision._artifactPath}`);
-              }
-            }
-
-            // Send cascade decisions (leader decisions rippling down to reports)
-            const cascades = decision._cascades || [];
-            delete decision._cascades; // Clean up before sending
-            cascades.forEach((cascade, idx) => {
-              // Stagger cascades so they don't all fire at once
-              setTimeout(() => {
-                const cascadeReply = JSON.stringify({
-                  type: 'npc_cascade',
-                  npcName: cascade.npcName,
-                  fromName: cascade.fromName,
-                  message: cascade.message,
-                });
-                if (ws.readyState === 1) ws.send(cascadeReply);
-              }, (idx + 1) * 3000);
-            });
-
-            // Skill bridge — fire async, NPC picks up result next think cycle
-            if (decision.action === 'run_skill' && decision.skill) {
-              const skillGate = npcBrains.allowAutonomousSkillRun(msg.npcName, { skill: decision.skill });
-              if (!skillGate.allowed) {
-                console.log(`[SkillBridge] Blocked ${msg.npcName} → ${decision.skill}: ${skillGate.reason}`);
-              } else {
-                runNpcSkill(msg.npcName, decision.skill, decision.skillParams || {})
-                  .catch(err => console.warn('[SkillBridge]', err.message));
-              }
+            if (ws.readyState === 1 && officeRegistry.shouldDeliverToSocket(JSON.parse(reply), ws)) {
+              ws.send(reply);
             }
           })
-          .catch(err => console.warn('[NpcBrains] Think error:', err.message));
+          .catch((err) => console.warn('[NpcBrains] Think error:', err.message));
       } else if (msg.type === 'npc_assign_directive') {
         // Any manager can push a mandatory task to a direct report
         if (msg.from && msg.to && msg.task) {
           npcBrains.assignDirective(msg.to, msg.from, msg.task, !!msg.urgent);
+          npcThinkRunner.wake(msg.to, 'ws_directive', { urgent: true });
           if (ws.readyState === 1) ws.send(JSON.stringify({
             type: 'directive_assigned',
             from: msg.from,
@@ -7069,20 +7989,49 @@ agentWss.on('connection', (ws) => {
           }));
         }
       } else if (msg.type === 'visitor_register') {
-        ws._denizenSessionId = msg.session_id || null;
-        ws._denizenIsCeo = !msg.session_id || msg.is_ceo === true;
         ws._deliveredHandoffIds = ws._deliveredHandoffIds || new Set();
-        if (ws._denizenSessionId && !ws._denizenIsCeo) {
-          const sid = ws._denizenSessionId;
-          const displayName = msg.display_name || msg.displayName || null;
-          if (displayName) {
-            _setVisitorOnline(sid, displayName);
-          } else {
-            denizenVisitor.getSession(sid)
-              .then((s) => _setVisitorOnline(sid, s?.display_name || 'Guest'))
-              .catch(() => _setVisitorOnline(sid, 'Guest'));
-          }
-        }
+        const sid = msg.session_id || null;
+        const isCeo = !sid || msg.is_ceo === true;
+        const displayName = msg.display_name || msg.displayName || null;
+        _applyOfficeToSocket(ws, { sessionId: sid, displayName, isCeo })
+          .then((office) => {
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'office_registered',
+                office_id: office.officeId,
+                identity_id: office.identityId,
+                is_operator_office: office.isOperatorOffice,
+                session_id: sid,
+              }));
+            }
+            if (sid && !isCeo) {
+              const markOnline = () => {
+                visitorOfficeContext.wakeVisitorTeam(sid, {
+                  denizenVisitor,
+                  userIdentity,
+                  npcThinkRunner,
+                  visitorAccess,
+                  listOnlineSessionIds,
+                }).catch(() => {});
+              };
+              if (displayName) {
+                _setVisitorOnline(sid, displayName);
+                markOnline();
+              } else {
+                denizenVisitor.getSession(sid)
+                  .then((s) => {
+                    _setVisitorOnline(sid, s?.display_name || 'Guest');
+                    ws._denizenDisplayName = s?.display_name || 'Guest';
+                    markOnline();
+                  })
+                  .catch(() => {
+                    _setVisitorOnline(sid, 'Guest');
+                    markOnline();
+                  });
+              }
+            }
+          })
+          .catch((err) => console.warn('[Office] visitor_register:', err?.message || err));
       } else if (msg.type === 'player_chat') {
         // CEO (player) is talking directly to an NPC
         let npcName = msg.npcName;
@@ -7128,6 +8077,37 @@ agentWss.on('connection', (ws) => {
         const normPlayerText = normalizePlayerUtterance(playerText);
         const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
         const visitorToolGate = await _resolveVisitorToolGate(msg.session_id);
+        const chatCtx = msg.session_id
+          ? await (async () => {
+              const session = await denizenVisitor.getSession(msg.session_id);
+              if (!session) return { identityId: null, sessionId: msg.session_id };
+              return {
+                identityId: await _resolveChatIdentityId(session, msg.session_id),
+                sessionId: msg.session_id,
+              };
+            })().catch(() => ({ identityId: null, sessionId: msg.session_id }))
+          : { identityId: null, sessionId: null };
+        const persistUserTurn = () => {
+          if (!chatCtx.identityId) return;
+          _persistChatTurn({
+            identityId: chatCtx.identityId,
+            sessionId: chatCtx.sessionId,
+            npcName,
+            role: 'user',
+            content: playerText,
+          });
+        };
+        const persistNpcTurn = (text) => {
+          if (!chatCtx.identityId || !text) return;
+          _persistChatTurn({
+            identityId: chatCtx.identityId,
+            sessionId: chatCtx.sessionId,
+            npcName,
+            role: 'npc',
+            content: text,
+          });
+        };
+        persistUserTurn();
         const blockDemoTools = () => {
           if (visitorToolGate.canUseRealWork) return false;
           _denyVisitorRealTools(ws, npcName);
@@ -7175,6 +8155,7 @@ agentWss.on('connection', (ws) => {
         // Instant greeting — no LM Studio queue (play Lucy / yo Lucy / hi)
         if (npcBrains._isGreetingOnly?.(playerText, npcName)) {
           const greetText = npcBrains._greetingReply(npcName, npcBrains._hierarchy[npcName]);
+          persistNpcTurn(greetText);
           if (ws.readyState === 1) {
             ws.send(JSON.stringify({
               type: 'player_chat_response',
@@ -7194,6 +8175,7 @@ agentWss.on('connection', (ws) => {
           const capText = npcCapabilities.formatCapabilitiesReply(npcName, {
             soulSection: brain?.capabilitiesSoul,
           });
+          persistNpcTurn(capText);
           if (ws.readyState === 1) {
             ws.send(JSON.stringify({
               type: 'player_chat_response',
@@ -7584,9 +8566,10 @@ agentWss.on('connection', (ws) => {
               const identity = session.identity_id
                 ? await userIdentity.getIdentityById(session.identity_id).catch(() => null)
                 : await userIdentity.getIdentityBySession(session.id).catch(() => null);
+              const identityId = await _resolveChatIdentityId(session, msg.session_id);
               return {
                 sessionId: session.id,
-                identityId: identity?.id || session.identity_id || null,
+                identityId,
                 displayName: identity?.display_name || session.display_name || 'Guest',
                 assistant,
                 projects,
@@ -7787,6 +8770,21 @@ agentWss.on('connection', (ws) => {
               }).catch((err) => {
                 console.warn('[PlayerChat] skill followup failed:', err?.message || err);
               });
+            } else if (!msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport
+              && playerChatSkills.inferSkillFromMessage?.(npcName, msg.text)?.skill?.startsWith?.('crm-')) {
+              _executePlayerChatSkillFollowup({
+                ws,
+                npcName,
+                sessionId: null,
+                message: msg.text,
+                responseText: text,
+                visitorCtx: _visitorCtxForSkills,
+                visitorToolGate,
+                gapAlreadyHandled: false,
+                meshContext: { taskText: msg.text },
+              }).catch((err) => {
+                console.warn('[PlayerChat] CEO CRM skill followup failed:', err?.message || err);
+              });
             }
 
             if (!isIncidentReport && !msg.session_id) {
@@ -7810,6 +8808,149 @@ agentWss.on('connection', (ws) => {
           });
         })().catch((err) => {
           console.warn('[PlayerChat] handler error:', err?.message || err);
+        });
+      } else if (msg.type === 'player_group_chat') {
+        const sessionId = msg.session_id || msg.sessionId;
+        const groupId = msg.group_id || msg.groupId;
+        const rawText = typeof msg.text === 'string' ? msg.text.trim() : '';
+        if (!sessionId || !groupId || !rawText) {
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_group_chat_response',
+              groupId: groupId || null,
+              error: 'session_id, group_id, and text required',
+              text: 'Could not send — missing group info.',
+            }));
+          }
+          return;
+        }
+        (async () => {
+          const session = await denizenVisitor.getSession(sessionId).catch(() => null);
+          if (!session) {
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_group_chat_response',
+                groupId,
+                error: 'session_not_found',
+                text: 'Session not found — refresh and try again.',
+              }));
+            }
+            return;
+          }
+          const identityId = await _resolveChatIdentityId(session, sessionId);
+          const group = await userIdentity.getGroupChat(identityId, groupId);
+          if (!group) {
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_group_chat_response',
+                groupId,
+                error: 'group_not_found',
+                text: 'That group chat was not found.',
+              }));
+            }
+            return;
+          }
+          const visitorToolGate = await _resolveVisitorToolGate(sessionId);
+          const [assistant, projects, pendingHandoffs, deepProfile, openCommitments] = await Promise.all([
+            denizenVisitor.getAssistant(sessionId).catch(() => null),
+            denizenVisitor.listProjects(sessionId).catch(() => []),
+            denizenVisitor.getPendingHandoffs(sessionId).catch(() => []),
+            visitorIntel.getProfile(sessionId).catch(() => ({})),
+            visitorIntel.listCommitments(sessionId, { status: 'open' }).catch(() => []),
+          ]);
+          const identity = identityId && !String(identityId).startsWith('session:')
+            ? await userIdentity.getIdentityById(identityId).catch(() => null)
+            : null;
+          const displayName = identity?.display_name || session.display_name || 'Guest';
+          const playerOpts = {
+            sessionId: session.id,
+            identityId,
+            displayName,
+            assistant,
+            projects,
+            pendingHandoffs,
+            deepProfile,
+            openCommitments,
+            sessionTier: visitorToolGate.sessionTier,
+            canUseRealWork: visitorToolGate.canUseRealWork,
+            sessionMetadata: visitorToolGate.sessionMetadata,
+            orgSettings: visitorToolGate.orgSettings,
+          };
+
+          userIdentity.saveGroupChatMessage({
+            identityId,
+            groupId,
+            senderType: 'user',
+            content: rawText,
+            sessionId,
+          });
+
+          const historyRows = await userIdentity.loadGroupChatHistory(identityId, groupId, 40);
+          const recentMessages = userIdentity.mapGroupRowsToMessages(historyRows, displayName, npcFolderToDisplay);
+          const memberKeys = Array.isArray(group.member_npc_keys) ? group.member_npc_keys : [];
+          const responders = pickGroupResponders(rawText, memberKeys, assistant);
+          const turnReplies = [];
+          const playerText = fixVoiceMishearings(rawText);
+
+          for (const npcKey of responders) {
+            const npcName = npcFolderToDisplay(npcKey);
+            if (!npcBrains.brains[npcName]) continue;
+            try {
+              const result = await npcBrains.getPlayerResponse(npcName, playerText, {
+                ...playerOpts,
+                groupChat: {
+                  groupId,
+                  groupName: group.name,
+                  members: memberKeys.map(npcFolderToDisplay),
+                  recentMessages,
+                  turnReplies,
+                },
+              });
+              const replyText = (result && typeof result.text === 'string') ? result.text.trim() : '';
+              if (!replyText) continue;
+              userIdentity.saveGroupChatMessage({
+                identityId,
+                groupId,
+                senderType: 'npc',
+                senderNpcKey: npcKey,
+                content: replyText,
+                sessionId,
+              });
+              turnReplies.push({ from: npcName, text: replyText });
+              if (ws.readyState === 1) {
+                ws.send(JSON.stringify({
+                  type: 'player_group_chat_response',
+                  groupId,
+                  npcName,
+                  npcKey,
+                  text: replyText,
+                  delegation: result.delegation || null,
+                  actions: result.actions || [],
+                }));
+              }
+            } catch (err) {
+              console.warn(`[PlayerChat] group reply ${npcName} failed:`, err?.message || err);
+            }
+          }
+
+          if (!turnReplies.length && ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_group_chat_response',
+              groupId,
+              npcName: npcFolderToDisplay(memberKeys[0] || 'Lucy'),
+              text: '(no reply right now)',
+            }));
+          }
+        })().catch((err) => {
+          console.warn('[PlayerChat] group chat error:', err?.message || err);
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_group_chat_response',
+              groupId: msg.group_id || msg.groupId || null,
+              error: err?.message || String(err),
+              text: 'Group chat failed — try again.',
+            }));
+          }
         });
       } else if (msg.type === 'npc_introduce') {
         // Tour stop: Lucy is presenting NPC X to the player. Ask X's
@@ -8216,6 +9357,24 @@ startResearchScheduler({
   assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
 });
 
+const _contentPipelineBroadcast = (msg) => {
+  try {
+    (agentWss ? agentWss.clients : new Set()).forEach((c) => {
+      if (c.readyState === 1) c.send(JSON.stringify(msg));
+    });
+  } catch (_) {}
+};
+startContentPipelineScheduler({
+  taskChain,
+  assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
+  broadcastFn: _contentPipelineBroadcast,
+});
+
+startCrmScheduler({
+  broadcastToOffice: _broadcastToOffice,
+  log,
+});
+
 _resetLucyBrowserOnStartup();
 _startLucyMirrorFrameWatcher();
 
@@ -8264,6 +9423,14 @@ server.listen(PORT, () => {
 
   // Sync LM Studio's active loaded model BEFORE starting the agent loop
   // so every component picks up the right model from the first request.
+  ensureBrowserclawRunning()
+    .then((r) => {
+      if (r?.started) log.info('BrowserClaw', `auto-started at ${r.url}`);
+      else if (r?.ok) log.info('BrowserClaw', `ready at ${r.url}`);
+      else log.warn('BrowserClaw', `not reachable at ${r?.url || '18792'} — trend/browser skills may retry spawn`);
+    })
+    .catch(() => {});
+
   npcBrains.syncLmStudioModel().catch(() => {}).finally(() => {
     if (npcBrains.providers?.lmstudio?.model) {
       cofounderAgent.model = npcBrains.providers.lmstudio.model;

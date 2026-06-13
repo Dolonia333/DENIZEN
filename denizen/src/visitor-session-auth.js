@@ -60,7 +60,9 @@ function verifyAccessGrant(grant) {
 function createCeoGrant() {
   const payload = {
     typ: 'ceo_grant',
-    exp: Date.now() + 24 * 60 * 60 * 1000,
+    // 7 days; the server re-issues a fresh grant on every verified session
+    // touch, so an active CEO never goes stale.
+    exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
     jti: crypto.randomBytes(8).toString('hex'),
   };
   return signPayload(payload);
@@ -95,7 +97,12 @@ function verifySessionToken(token, storedHash) {
 function extractSessionAuth(req, body = {}) {
   const header = req.headers['x-session-token'] || req.headers['x-denizen-session-token'];
   const fromBody = body.session_token || body.sessionToken;
-  return String(header || fromBody || '').trim() || null;
+  let fromCookie = null;
+  try {
+    const cookie = require('./visitor-session-cookie');
+    fromCookie = cookie.sessionTokenFromCookies(req);
+  } catch (_) {}
+  return String(header || fromBody || fromCookie || '').trim() || null;
 }
 
 module.exports = {

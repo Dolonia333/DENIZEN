@@ -28,6 +28,7 @@
   }
 
   function detectTouch() {
+    if (typeof window.__DenizenForceTouch === 'boolean') return window.__DenizenForceTouch;
     try {
       return window.matchMedia('(pointer: coarse)').matches
         || navigator.maxTouchPoints > 0
@@ -49,7 +50,7 @@
     const touch = detectTouch();
     const sw = shortEdge();
     const lw = longEdge();
-    const landscape = lw > sw;
+    const landscape = window.innerWidth > window.innerHeight;
     const phone = touch && sw < PHONE_SHORT_EDGE;
     const tablet = touch && !phone;
     const compact = phone && sw < COMPACT_SHORT_EDGE;
@@ -92,7 +93,9 @@
       html.denizen-touch.denizen-phone #denizen-mesh-jobs-panel.open,
       html.denizen-touch.denizen-phone #denizen-proposals-panel.open,
       html.denizen-touch.denizen-phone #denizen-diag-panel.open,
-      html.denizen-touch.denizen-phone #denizen-browser-mirror-panel.open {
+      html.denizen-touch.denizen-phone #denizen-browser-mirror-panel.open,
+      html.denizen-touch.denizen-phone #denizen-npc-team-panel.open,
+      html.denizen-touch.denizen-phone #denizen-content-pipeline-panel.open {
         top: max(var(--denizen-phone-panel-inset), env(safe-area-inset-top, 0px)) !important;
         left: max(var(--denizen-phone-panel-inset), env(safe-area-inset-left, 0px)) !important;
         right: max(var(--denizen-phone-panel-inset), env(safe-area-inset-right, 0px)) !important;
@@ -122,7 +125,9 @@
       }
       html.denizen-touch.denizen-phone #denizen-llm-tel-panel.open,
       html.denizen-touch.denizen-phone #denizen-mesh-jobs-panel.open,
-      html.denizen-touch.denizen-phone #denizen-proposals-panel.open {
+      html.denizen-touch.denizen-phone #denizen-proposals-panel.open,
+      html.denizen-touch.denizen-phone #denizen-npc-team-panel.open,
+      html.denizen-touch.denizen-phone #denizen-content-pipeline-panel.open {
         display: flex !important;
         flex-direction: column !important;
       }
@@ -136,6 +141,8 @@
       html.denizen-touch.denizen-phone.denizen-proposals-open #denizen-bottom-dock,
       html.denizen-touch.denizen-phone.denizen-diag-open #denizen-bottom-dock,
       html.denizen-touch.denizen-phone.denizen-browser-open #denizen-bottom-dock,
+      html.denizen-touch.denizen-phone.denizen-npc-team-open #denizen-bottom-dock,
+      html.denizen-touch.denizen-phone.denizen-content-pipeline-open #denizen-bottom-dock,
       html.denizen-touch.denizen-phone.denizen-drawer-open #denizen-bottom-dock {
         opacity: 0;
         pointer-events: none;

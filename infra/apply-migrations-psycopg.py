@@ -92,9 +92,16 @@ def main() -> int:
     for path in targets:
         role = migration_role(path)
         sql = path.read_text(encoding="utf-8")
+        executable = "\n".join(
+            line for line in sql.splitlines()
+            if line.strip() and not line.strip().startswith("--")
+        ).strip()
         print(f"APPLY {path.name} as {role}")
         cur.execute(f"set role {role}")
-        cur.execute(sql)
+        if executable:
+            cur.execute(sql)
+        else:
+            print(f"SKIP SQL body empty (comments only): {path.name}")
         print(f"OK {path.name}")
 
     if not table_exists(cur, "public.denizen_contribution_daily_totals"):

@@ -73,3 +73,6 @@ Reference the sprint tasks in your company context. Your priorities this sprint:
 - Help Roki track down the ambient chatter double-speak bug (cooldown logic in npc-brains)
 - File GitHub issues for any bugs you discover during the sprint
 - Review PRs from the team when requested
+
+## Newsroom mode (staff writer)
+Draft publish-ready articles from approved pitches. Read prior chain artifacts. Save to `reports/content-drafts/`. If Jenny or Molly return `VERDICT: REVISE`, apply their edits and re-save.

@@ -1,115 +1,153 @@
-// === SERVER.JS WIRING NEEDED (add after Phase 3.1 merge) ===
-// const taskChain = require('./src/task-chain');
-// const conflictDetector = require('./src/conflict-detector');
-// npcBrains.setBroadcast((msg) => broadcastToAll(JSON.stringify(msg)));
-//
-// POST /api/task-chains — start a chain
-// app.post('/api/task-chains', (req, res) => {
-//   const chain = taskChain.startChain(req.body, npcBrains.assignDirective.bind(npcBrains), broadcastFn);
-//   res.json({ ok: true, chainId: chain.id });
-// });
-//
-// GET /api/task-chains — list active chains
-// app.get('/api/task-chains', (req, res) => {
-//   res.json({ chains: taskChain.getActiveChains() });
-// });
-// ============================================================
+'use strict';
+
+const { evaluateGate } = require('./content-gate');
 
 /**
- * TaskChainRunner — orchestrates multi-step NPC task chains via the
- * directive inbox. Each step in the chain is assigned as a directive
- * to the target NPC; when that NPC sets taskPhase:"finished", the chain
- * automatically advances to the next step with previous artifacts as context.
+ * TaskChainRunner — multi-step NPC chains with optional content gates.
  */
 class TaskChainRunner {
   constructor() {
-    this._chains = new Map();         // chainId → chain state
-    this._npcActiveChain = new Map(); // npcName → { chainId, stepIndex }
+    this._chains = new Map();
+    this._npcActiveChain = new Map();
   }
 
-  /**
-   * Start a new task chain.
-   *
-   * @param {object} definition - Chain definition object (see format below)
-   * @param {Function} assignDirectiveFn - npcBrains.assignDirective(to, from, task, urgent)
-   * @param {Function} broadcastFn - function(msgObject) to broadcast WS messages
-   * @returns {object} The chain object
-   *
-   * Definition format:
-   * {
-   *   id: 'chain-abc123',           // optional; auto-generated if omitted
-   *   name: 'Fix speech bubble overflow',
-   *   triggeredBy: 'Abby',
-   *   steps: [
-   *     { npc: 'Sarah', task: '...', artifactCategory: 'product' },
-   *     ...
-   *   ],
-   * }
-   */
   startChain(definition, assignDirectiveFn, broadcastFn) {
     const id = definition.id || `chain-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const steps = Array.isArray(definition.steps) ? definition.steps : [];
-
     if (steps.length === 0) {
       throw new Error('[TaskChain] startChain: definition.steps must have at least one step');
     }
 
     const chain = {
       id,
+      kind: definition.kind || 'generic',
       name: definition.name || 'Unnamed chain',
       triggeredBy: definition.triggeredBy || 'System',
+      topic: definition.topic || null,
+      audience: definition.audience || null,
+      maxRevisions: Number(definition.maxRevisions) || 3,
       steps,
       currentStep: 0,
       status: 'running',
       artifacts: [],
+      revisionCount: 0,
       createdAt: Date.now(),
     };
 
     this._chains.set(id, chain);
-    this._npcActiveChain.set(steps[0].npc, { chainId: id, stepIndex: 0 });
-
-    const taskWithContext = `${steps[0].task}\n\nYou are step 1 of ${steps.length} in task chain '${chain.name}'. This is the first step.`;
-    assignDirectiveFn(steps[0].npc, chain.triggeredBy, taskWithContext, false);
+    this._assignStep(chain, 0, assignDirectiveFn, broadcastFn, { isFirst: true });
 
     if (typeof broadcastFn === 'function') {
       broadcastFn({
         type: 'npc_chain_started',
         chainId: id,
+        kind: chain.kind,
         name: chain.name,
-        steps: steps.map(s => s.npc),
+        steps: steps.map((s) => s.npc),
         totalSteps: steps.length,
       });
     }
 
-    console.log(`[TaskChain] Started "${chain.name}" (${id}) — ${steps.length} steps: ${steps.map(s => s.npc).join(' → ')}`);
+    console.log(`[TaskChain] Started "${chain.name}" (${id}) — ${steps.length} steps: ${steps.map((s) => s.npc).join(' → ')}`);
     return chain;
   }
 
-  /**
-   * Called when an NPC finishes their task (taskPhase === 'finished').
-   * Advances the chain to the next step, or marks it complete.
-   *
-   * @param {string} npcName - The NPC that just finished
-   * @param {string} artifactPath - Path to the artifact they produced
-   * @param {Function} assignDirectiveFn - npcBrains.assignDirective
-   * @param {Function} broadcastFn - WS broadcast function
-   */
-  onStepComplete(npcName, artifactPath, assignDirectiveFn, broadcastFn) {
+  _stepIndexById(chain, stepId) {
+    return chain.steps.findIndex((s) => s.id === stepId);
+  }
+
+  _assignStep(chain, stepIndex, assignDirectiveFn, broadcastFn, opts = {}) {
+    const step = chain.steps[stepIndex];
+    if (!step) return;
+
+    chain.currentStep = stepIndex;
+    this._npcActiveChain.set(step.npc, { chainId: chain.id, stepIndex });
+
+    const prevArtifactLines = chain.artifacts
+      .map((a) => `- Step ${a.step + 1} (${a.npc}${a.stepId ? `/${a.stepId}` : ''}): ${a.artifactPath}${a.verdict ? ` [${a.verdict}]` : ''}`)
+      .join('\n');
+
+    const lines = [
+      step.task,
+      '',
+      prevArtifactLines ? `Context from previous steps:\n${prevArtifactLines}` : '',
+      `You are step ${stepIndex + 1} of ${chain.steps.length} in task chain '${chain.name}'.`,
+    ];
+    if (opts.isFirst) lines.push('This is the first step.');
+    if (step.gate === 'pitch') {
+      lines.push('Gatekeeper: end your artifact with VERDICT: APPROVED or VERDICT: REJECTED.');
+    }
+    if (step.gate === 'copy') {
+      lines.push('Copy gate: end with VERDICT: PASSED or VERDICT: REVISE (list required edits).');
+    }
+    if (step.gate === 'brand') {
+      lines.push('Brand safety: end with VERDICT: CLEAR or VERDICT: BLOCKED.');
+    }
+    if (step.skill) {
+      lines.push(`Preferred skill for this step: ${step.skill}`);
+    }
+
+    assignDirectiveFn(step.npc, chain.triggeredBy, lines.filter(Boolean).join('\n'), false);
+
+    if (typeof broadcastFn === 'function') {
+      broadcastFn({
+        type: 'npc_chain_step_assigned',
+        chainId: chain.id,
+        step: stepIndex,
+        stepId: step.id || null,
+        npc: step.npc,
+      });
+    }
+  }
+
+  _finishChain(chain, status, broadcastFn, extra = {}) {
+    chain.status = status;
+    if (typeof broadcastFn === 'function') {
+      broadcastFn({
+        type: status === 'complete' ? 'npc_chain_complete' : 'npc_chain_halted',
+        chainId: chain.id,
+        name: chain.name,
+        status,
+        artifacts: chain.artifacts,
+        ...extra,
+      });
+    }
+    for (const [npc, entry] of this._npcActiveChain.entries()) {
+      if (entry.chainId === chain.id) this._npcActiveChain.delete(npc);
+    }
+    console.log(`[TaskChain] ${status}: "${chain.name}" (${chain.id})`);
+  }
+
+  onStepComplete(npcName, artifactPath, ctx, assignDirectiveFn, broadcastFn) {
     const entry = this._npcActiveChain.get(npcName);
-    if (!entry) return; // NPC was not in a chain
+    if (!entry) return;
 
     const { chainId, stepIndex } = entry;
     const chain = this._chains.get(chainId);
-    if (!chain) return;
+    if (!chain || chain.status !== 'running') return;
 
-    const currentStep = stepIndex;
-    const totalSteps = chain.steps.length;
+    const step = chain.steps[stepIndex];
+    const gateCtx = {
+      artifactPath: artifactPath || ctx?.artifactPath,
+      outcome: ctx?.outcome,
+      save: ctx?.save,
+    };
 
-    // Record artifact
+    let verdict = null;
+    let gateAction = 'advance';
+
+    if (step?.gate) {
+      const result = evaluateGate(step.gate, gateCtx);
+      verdict = result.verdict;
+      gateAction = result.action;
+    }
+
     chain.artifacts.push({
-      step: currentStep,
+      step: stepIndex,
+      stepId: step?.id || null,
       npc: npcName,
       artifactPath: artifactPath || `reports/unknown/${npcName}_${Date.now()}.md`,
+      verdict,
       ts: Date.now(),
     });
 
@@ -117,75 +155,88 @@ class TaskChainRunner {
       broadcastFn({
         type: 'npc_chain_step_done',
         chainId,
-        step: currentStep,
+        step: stepIndex,
+        stepId: step?.id || null,
         npc: npcName,
         artifactPath,
-        remaining: totalSteps - currentStep - 1,
+        verdict,
+        gateAction,
+        remaining: chain.steps.length - stepIndex - 1,
       });
     }
 
-    // Advance
-    chain.currentStep++;
     this._npcActiveChain.delete(npcName);
 
-    // Chain complete?
-    if (chain.currentStep >= totalSteps) {
-      chain.status = 'complete';
-      if (typeof broadcastFn === 'function') {
-        broadcastFn({
-          type: 'npc_chain_complete',
-          chainId,
-          name: chain.name,
-          artifacts: chain.artifacts,
-        });
-      }
-      console.log(`[TaskChain] Complete: "${chain.name}" (${chainId}) — ${chain.artifacts.length} artifacts`);
+    if (gateAction === 'reject') {
+      this._finishChain(chain, 'rejected', broadcastFn, { verdict, npc: npcName, step: stepIndex });
       return;
     }
 
-    // Assign next step
-    const nextStepIndex = chain.currentStep;
-    const nextStep = chain.steps[nextStepIndex];
+    if (gateAction === 'block') {
+      try {
+        const ws = require('./world-state');
+        ws.pushThreat({
+          category: 'brand_safety',
+          severity: 'high',
+          detail: `Content pipeline blocked at ${step?.id || npcName}: ${verdict}`,
+          source: 'content-pipeline',
+          target: chain.topic || chain.name,
+        });
+      } catch (_) {}
+      this._finishChain(chain, 'blocked', broadcastFn, { verdict, npc: npcName, step: stepIndex });
+      return;
+    }
 
-    const prevArtifactLines = chain.artifacts
-      .map(a => `- Step ${a.step + 1} (${a.npc}): ${a.artifactPath}`)
-      .join('\n');
+    if (gateAction === 'revise') {
+      chain.revisionCount = (chain.revisionCount || 0) + 1;
+      if (chain.revisionCount > chain.maxRevisions) {
+        this._finishChain(chain, 'stuck', broadcastFn, {
+          reason: 'max_revisions_exceeded',
+          revisionCount: chain.revisionCount,
+        });
+        return;
+      }
+      const gotoId = step.reviseGoto || 'draft-article';
+      const gotoIndex = this._stepIndexById(chain, gotoId);
+      const targetIndex = gotoIndex >= 0 ? gotoIndex : Math.max(0, stepIndex - 1);
+      if (typeof broadcastFn === 'function') {
+        broadcastFn({
+          type: 'npc_chain_revision',
+          chainId,
+          fromStep: stepIndex,
+          toStep: targetIndex,
+          revision: chain.revisionCount,
+        });
+      }
+      this._assignStep(chain, targetIndex, assignDirectiveFn, broadcastFn, {
+        revision: chain.revisionCount,
+      });
+      return;
+    }
 
-    const taskWithContext = `${nextStep.task}
+    const nextIndex = stepIndex + 1;
+    if (nextIndex >= chain.steps.length) {
+      this._finishChain(chain, 'complete', broadcastFn);
+      return;
+    }
 
-Context from previous steps:
-${prevArtifactLines}
-
-You are step ${nextStepIndex + 1} of ${totalSteps} in task chain '${chain.name}'.`;
-
-    this._npcActiveChain.set(nextStep.npc, { chainId, stepIndex: nextStepIndex });
-    assignDirectiveFn(nextStep.npc, chain.triggeredBy, taskWithContext, false);
-
-    console.log(`[TaskChain] Advancing "${chain.name}" → step ${nextStepIndex + 1}/${totalSteps}: ${nextStep.npc}`);
+    this._assignStep(chain, nextIndex, assignDirectiveFn, broadcastFn);
+    console.log(`[TaskChain] Advancing "${chain.name}" → step ${nextIndex + 1}/${chain.steps.length}: ${chain.steps[nextIndex].npc}`);
   }
 
-  /**
-   * Get the full chain object by ID, or null.
-   */
   getChainStatus(chainId) {
     return this._chains.get(chainId) || null;
   }
 
-  /**
-   * Get the active chain info for an NPC, or null.
-   * @returns {{ chain: object, stepIndex: number } | null}
-   */
   getChainForNpc(npcName) {
     const entry = this._npcActiveChain.get(npcName);
     if (!entry) return null;
     const chain = this._chains.get(entry.chainId);
     if (!chain) return null;
-    return { chain, stepIndex: entry.stepIndex };
+    const step = chain.steps[entry.stepIndex];
+    return { chain, stepIndex: entry.stepIndex, step };
   }
 
-  /**
-   * Returns all chains with status 'running'.
-   */
   getActiveChains() {
     const result = [];
     for (const chain of this._chains.values()) {
@@ -193,6 +244,31 @@ You are step ${nextStepIndex + 1} of ${totalSteps} in task chain '${chain.name}'
     }
     return result;
   }
+
+  getAllChains() {
+    return [...this._chains.values()];
+  }
+
+  cancelChain(chainId, broadcastFn, reason = 'user_cancelled') {
+    const chain = this._chains.get(chainId);
+    if (!chain) return null;
+    if (chain.status !== 'running') return chain;
+    this._finishChain(chain, 'cancelled', broadcastFn, { reason });
+    return chain;
+  }
+
+  cancelAllRunning(broadcastFn, filterFn = null) {
+    const cancelled = [];
+    for (const chain of this._chains.values()) {
+      if (chain.status !== 'running') continue;
+      if (filterFn && !filterFn(chain)) continue;
+      this.cancelChain(chain.id, broadcastFn, 'user_cancelled');
+      cancelled.push(chain.id);
+    }
+    return cancelled;
+  }
 }
 
-module.exports = new TaskChainRunner();
+const runner = new TaskChainRunner();
+module.exports = runner;
+module.exports.TaskChainRunner = TaskChainRunner;

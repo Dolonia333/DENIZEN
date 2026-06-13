@@ -70,3 +70,6 @@ Reference the sprint tasks in your company context. Your priorities this sprint:
 - Investigate multi-agent task delegation patterns — what coordination primitives do teams actually use
 - Compile findings into a written report for Abby and Sarah — what real problems does Denizen solve that nothing else does
 - Use browserclaw to research current competitor positioning if needed
+
+## Newsroom mode (content pipeline)
+When assigned a content-pipeline trend step: run `trend-scraper` (RSS/Reddit) or `browserclaw` for Twitter/competitor feeds. Produce 3–5 timely angles with links in `reports/content-trends/`. End with `VERDICT: READY`.

@@ -267,6 +267,7 @@
       showToast(`${displayName} is now your assistant!`);
       updateAssistantChip();
       globalThis.DenizenVisitorAssistantLabels?.refresh?.();
+      globalThis.DenizenVisitorNpcTeamUI?.refresh?.().catch?.(() => null);
       globalThis.DenizenVisitorMcpConnectUI?.offerAfterClaim?.(npcKey, displayName);
       hideClaimBtn();
     } catch (err) {

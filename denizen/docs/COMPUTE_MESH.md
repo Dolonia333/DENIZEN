@@ -231,6 +231,40 @@ All remote nodes need Tailscale for stable reachability:
 infra/repair-tailscale.cmd
 ```
 
+## LM Studio inference pool
+
+When multiple machines run LM Studio, Denizen can **route NPC brains** to the least-loaded GPU instead of always hitting `localhost:1234`.
+
+### How nodes join the pool
+
+1. **Host** — probed every 5s via hardware sampler (`lm_studio` block in live metrics).
+2. **Fleet agents** — NAS / Kali / Desktop heartbeats include the same `lm_studio` probe (local `LM_STUDIO_URL` on that machine).
+3. **Static remotes** — `LM_STUDIO_REMOTE_URLS=http://pc2:1234,http://pc3:1234` in `denizen/.env`.
+
+### Routing behavior
+
+- `npc-brains.js` calls `lm-studio-router` before each LM Studio request.
+- Picks by: reachability, inflight count, GPU util, VRAM (main tier), queue depth (offloads to remotes when host queue ≥ `LM_STUDIO_SATURATED_QUEUE`).
+- Player chat (`priority: high`) still prefers the **host** for latency unless the host is saturated.
+- Failed remote calls trigger **automatic failover** to the next node.
+
+### APIs / UI
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/compute/inference/nodes` | Router status + scored node list |
+| `GET` | `/api/compute/node/status` | Includes `inference` block |
+| Mesh panel **⬡** | LM Studio pool section | Live node list |
+
+### Second PC checklist
+
+1. Install LM Studio; load the same model family as the host.
+2. LM Studio → Server → listen on **0.0.0.0** (not only localhost) so dolonia can reach it over LAN/Tailscale.
+3. Run fleet agent on PC #2 (`nas-compute-agent.js` or Desktop opt-in) **or** add its URL to `LM_STUDIO_REMOTE_URLS`.
+4. Set on PC #2 agent: `LM_STUDIO_URL=http://127.0.0.1:1234` (worker uses local GPU for mesh jobs).
+
+Mesh `npc_think_batch` jobs still execute on whichever node **claims** the job (local LM Studio on that worker). The router handles **interactive** NPC inference (chat, think, skills).
+
 ## Smoke tests
 
 From `denizen/` with server running on `DENIZEN_URL` (default `http://127.0.0.1:8081`):

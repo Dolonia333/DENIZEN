@@ -50,9 +50,11 @@ async function waitForHealth(timeoutMs = 120_000) {
 async function loginCeo(page) {
   const modal = page.locator('#denizen-visitor-name-modal');
   if (await modal.count() === 0) return;
-  await page.locator('[data-action="path-ceo"]').tap({ timeout: 15_000 });
-  await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-  await page.locator('[data-action="submit-ceo-code"]').tap({ timeout: 15_000 });
+  await page.locator('[data-action="path-login"]').tap({ timeout: 15_000 });
+  await page.locator('#denizen-visitor-username-input').fill('Dolonia');
+  await page.locator('#denizen-visitor-password-input').fill('Dolonia');
+  await page.locator('#denizen-visitor-team-code-input').fill('Dolonia');
+  await page.locator('[data-action="submit-login"]').tap({ timeout: 15_000 });
   await page.waitForFunction(
     () => !document.getElementById('denizen-visitor-name-modal'),
     { timeout: 30_000 },
@@ -94,7 +96,7 @@ describe('mobile dock panels match browser mirror sizing', () => {
       hasTouch: true,
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE_URL}/?reset=1&diag=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.goto(`${BASE_URL}/?reset=1&diag=0&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
     await loginCeo(page);
     await page.waitForTimeout(5000);
 
@@ -134,7 +136,7 @@ describe('mobile dock panels match browser mirror sizing', () => {
       hasTouch: true,
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE_URL}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.goto(`${BASE_URL}/?reset=1&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
     await loginCeo(page);
     await page.waitForTimeout(5000);
 
@@ -184,7 +186,7 @@ describe('mobile dock panels match browser mirror sizing', () => {
       hasTouch: true,
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE_URL}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.goto(`${BASE_URL}/?reset=1&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
     await loginCeo(page);
     await page.waitForTimeout(5000);
 
@@ -215,6 +217,57 @@ describe('mobile dock panels match browser mirror sizing', () => {
 
     assert.equal(diagUi.open, true);
     assertBrowserShell(diagUi, 'diag');
+
+    await ctx.close();
+  });
+
+  it('iPhone 14 landscape — phone shell home grid is usable', async () => {
+    const ctx = await browser.newContext({
+      ...devices['iPhone 14'],
+      viewport: { width: 844, height: 390 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE_URL}/?reset=1&diag=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await loginCeo(page);
+    await page.waitForTimeout(5000);
+
+    await page.evaluate(() => window.DenizenPhoneUi?.open?.());
+    await page.waitForFunction(() => document.documentElement.classList.contains('denizen-phone-open'), { timeout: 15_000 });
+
+    const home = await page.evaluate(() => {
+      const screen = document.getElementById('denizen-phone-screen');
+      const grid = document.querySelector('.dzp-grid');
+      const screenRect = screen.getBoundingClientRect();
+      const gridRect = grid.getBoundingClientRect();
+      const visibleApps = [...grid.querySelectorAll('.dzp-app')].filter((a) => {
+        const r = a.getBoundingClientRect();
+        return r.height > 0 && r.bottom <= screenRect.bottom + 2;
+      }).length;
+      return {
+        landscape: document.documentElement.classList.contains('denizen-landscape'),
+        phoneMode: document.documentElement.classList.contains('denizen-phone-mode'),
+        gridHeight: gridRect.height,
+        screenHeight: screenRect.height,
+        visibleApps,
+      };
+    });
+
+    assert.equal(home.landscape, true);
+    assert.equal(home.phoneMode, true);
+    assert.ok(home.gridHeight >= 120, `grid should have room for apps, got ${home.gridHeight}px`);
+    assert.ok(home.visibleApps >= 8, `expected most apps visible, got ${home.visibleApps}`);
+
+    await page.evaluate(() => window.DenizenPhoneUi.openApp('chat'));
+    await page.waitForFunction(() => {
+      const screen = document.getElementById('denizen-phone-screen')?.getBoundingClientRect();
+      const panel = document.getElementById('player-chat-panel')?.getBoundingClientRect();
+      if (!screen || !panel || panel.height < 40) return false;
+      return Math.abs(panel.top - screen.top) < 8
+        && Math.abs(panel.width - screen.width) < 8
+        && Math.abs(panel.height - screen.height) < 8;
+    }, { timeout: 15_000 });
 
     await ctx.close();
   });

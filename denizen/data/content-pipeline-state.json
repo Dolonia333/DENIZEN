@@ -1,0 +1,59 @@
+{
+  "runs": [
+    {
+      "chainId": "chain-1781156294487-er2nzr",
+      "topic": "AI media automation trends",
+      "name": "Content: AI media automation trends",
+      "status": "running",
+      "startedAt": "2026-06-11T05:38:14.488Z",
+      "steps": [
+        {
+          "id": "trends",
+          "npc": "Bob",
+          "gate": null
+        },
+        {
+          "id": "pitch",
+          "npc": "Sarah",
+          "gate": "pitch"
+        },
+        {
+          "id": "draft-article",
+          "npc": "Alex",
+          "gate": null
+        },
+        {
+          "id": "draft-social",
+          "npc": "Josh",
+          "gate": null
+        },
+        {
+          "id": "copy-jenny",
+          "npc": "Jenny",
+          "gate": "copy"
+        },
+        {
+          "id": "fact-molly",
+          "npc": "Molly",
+          "gate": "copy"
+        },
+        {
+          "id": "design",
+          "npc": "Rob",
+          "gate": null
+        },
+        {
+          "id": "brand",
+          "npc": "Bouncer",
+          "gate": "brand"
+        },
+        {
+          "id": "publish",
+          "npc": "Lucy",
+          "gate": null
+        }
+      ]
+    }
+  ],
+  "lastStartedAt": "2026-06-11T05:38:14.488Z"
+}

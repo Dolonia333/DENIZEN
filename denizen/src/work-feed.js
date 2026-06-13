@@ -252,21 +252,21 @@ class WorkFeedPanel {
           top: max(8px, env(safe-area-inset-top, 0px));
           left: max(8px, env(safe-area-inset-left, 0px));
           z-index: 9999;
-          background: rgba(0, 0, 0, 0.6);
-          color: #475569;
-          border: 1px solid #1e293b;
-          border-radius: 4px;
-          padding: 3px 7px;
-          font: 10px/1.4 'Courier New', Courier, monospace;
+          background: rgba(2, 6, 23, 0.75);
+          color: #94a3b8;
+          border: 1px solid #334155;
+          border-radius: 999px;
+          padding: 4px 10px;
+          font: 11px/1.4 system-ui, sans-serif;
           cursor: pointer;
           user-select: none;
-          letter-spacing: 0.04em;
+          letter-spacing: 0.02em;
           transition: color 0.15s, border-color 0.15s;
         }
         #denizen-work-feed-toggle:hover,
         #denizen-work-feed-toggle[data-active="true"] {
-          color: #94a3b8;
-          border-color: #334155;
+          color: #dbeafe;
+          border-color: #60a5fa;
         }
       `;
       document.head.appendChild(style);
@@ -297,9 +297,9 @@ class WorkFeedPanel {
     const btn = document.createElement('button');
     btn.id = 'denizen-work-feed-toggle';
     btn.type = 'button';
-    btn.textContent = '[feed]';
+    btn.textContent = '📋 Feed';
     btn.dataset.active = 'false';
-    btn.title = 'Work Output Feed (Tab)';
+    btn.title = 'Work output feed — what your agents produced (Tab)';
     btn.addEventListener('click', () => this.toggle());
     document.body.appendChild(btn);
     this._toggleBtn = btn;

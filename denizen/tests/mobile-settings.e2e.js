@@ -50,9 +50,11 @@ async function waitForHealth(timeoutMs = 120_000) {
 async function loginCeo(page) {
   const modal = page.locator('#denizen-visitor-name-modal');
   if (await modal.count() === 0) return;
-  await page.locator('[data-action="path-ceo"]').tap({ timeout: 15_000 });
-  await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-  await page.locator('[data-action="submit-ceo-code"]').tap({ timeout: 15_000 });
+  await page.locator('[data-action="path-login"]').tap({ timeout: 15_000 });
+  await page.locator('#denizen-visitor-username-input').fill('Dolonia');
+  await page.locator('#denizen-visitor-password-input').fill('Dolonia');
+  await page.locator('#denizen-visitor-team-code-input').fill('Dolonia');
+  await page.locator('[data-action="submit-login"]').tap({ timeout: 15_000 });
   await page.waitForFunction(
     () => !document.getElementById('denizen-visitor-name-modal'),
     { timeout: 30_000 },
@@ -89,7 +91,7 @@ describe('mobile Settings panel e2e', () => {
       hasTouch: true,
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE_URL}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.goto(`${BASE_URL}/?reset=1&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
     await loginCeo(page);
     await page.waitForTimeout(4000);
     await waitForSettingsChip(page);
@@ -130,7 +132,7 @@ describe('mobile Settings panel e2e', () => {
       hasTouch: true,
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE_URL}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.goto(`${BASE_URL}/?reset=1&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
     await loginCeo(page);
     await page.waitForTimeout(4000);
     await waitForSettingsChip(page);
@@ -200,7 +202,7 @@ describe('mobile Settings panel e2e', () => {
       hasTouch: true,
     });
     const page = await ctx.newPage();
-    await page.goto(`${BASE_URL}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
+    await page.goto(`${BASE_URL}/?reset=1&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
     await loginCeo(page);
     await page.waitForTimeout(4000);
     await waitForSettingsChip(page);

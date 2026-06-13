@@ -1,0 +1,369 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 52% 4%;
+    --foreground: 0 0% 100%;
+    --card: 220 45% 9%;
+    --card-foreground: 0 0% 100%;
+    --popover: 220 45% 9%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 42 87% 55%;
+    --primary-foreground: 222 52% 4%;
+    --secondary: 220 38% 18%;
+    --secondary-foreground: 214 27% 60%;
+    --muted: 221 44% 13%;
+    --muted-foreground: 214 27% 60%;
+    --accent: 263 90% 66%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 92% 66%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 223 39% 18%;
+    --input: 223 39% 18%;
+    --ring: 42 87% 55%;
+    --radius: 0.625rem;
+    --sidebar-background: 220 45% 9%;
+    --sidebar-foreground: 214 27% 60%;
+    --sidebar-primary: 42 87% 55%;
+    --sidebar-primary-foreground: 222 52% 4%;
+    --sidebar-accent: 221 44% 13%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 223 39% 18%;
+    --sidebar-ring: 42 87% 55%;
+
+    --crm-success: 162 72% 48%;
+    --crm-purple: 263 90% 66%;
+    --crm-blue: 213 92% 63%;
+  }
+}
+
+/* ─── GLOBAL RESETS & BASE ─── */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.65;
+  }
+
+  /* Remove default browser tap highlight & outlines */
+  *:focus {
+    outline: none;
+  }
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ─── GLOBAL TRANSITION LAYER ─── */
+@layer components {
+  /* All interactive elements get smooth transitions */
+  button, a, [role="button"], [role="tab"], [role="menuitem"],
+  input, select, textarea, summary {
+    transition: all 0.15s ease-out;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Button press effect */
+  button:active:not(:disabled),
+  [role="button"]:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  /* Cursor pointer on all clickables */
+  button, a, [role="button"], [role="tab"], [role="menuitem"],
+  [role="row"], [data-clickable], summary, label[for] {
+    cursor: pointer;
+  }
+
+  /* Smooth panel/card entrance */
+  .crm-panel-enter {
+    animation: panelEnter 0.2s ease-out both;
+  }
+  @keyframes panelEnter {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Skeleton loading pulse */
+  .crm-skeleton {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted) / 0.6) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  /* Route/page fade transition */
+  .crm-page-fade {
+    animation: pageFade 0.2s ease-out both;
+  }
+  @keyframes pageFade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Active nav pill style */
+  .crm-nav-pill {
+    position: relative;
+    border-radius: 8px;
+    transition: all 0.15s ease-out;
+  }
+  .crm-nav-pill.active {
+    background: hsl(var(--primary) / 0.14);
+  }
+  .crm-nav-pill.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: hsl(var(--primary));
+  }
+}
+
+/* Dashboard panel internal scroll — capped height, themed thumb */
+.crm-panel-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.45) transparent;
+}
+.crm-panel-scroll::-webkit-scrollbar { width: 6px; }
+.crm-panel-scroll::-webkit-scrollbar-track { background: transparent; }
+.crm-panel-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.45);
+  border-radius: 4px;
+}
+.crm-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.65);
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.3); }
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1.15); opacity: 0; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.crm-training-spinner { animation: spin 0.9s linear infinite; }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-slide-in-right { animation: slideInRight 0.18s ease-out; }
+.animate-scale-in { animation: scaleIn 0.15s ease-out; }
+.animate-fade-in { animation: fadeIn 0.15s ease-out; }
+.animate-slide-up { animation: slideUp 0.15s ease-out; }
+
+/* ─── CARD HOVER ─── */
+.crm-card-hover {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s ease-out;
+}
+.crm-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* ─── STAGGERED GRID ─── */
+.crm-stats-grid > * {
+  animation: slideUp 0.3s ease-out both;
+}
+.crm-stats-grid > *:nth-child(1) { animation-delay: 0s; }
+.crm-stats-grid > *:nth-child(2) { animation-delay: 0.05s; }
+.crm-stats-grid > *:nth-child(3) { animation-delay: 0.1s; }
+.crm-stats-grid > *:nth-child(4) { animation-delay: 0.15s; }
+
+/* ─── FONTS ─── */
+.font-mono-data {
+  font-family: 'JetBrains Mono', monospace;
+}
+.font-signature {
+  font-family: 'Caveat', cursive;
+}
+
+/* ─── TABLE ROWS ─── */
+.crm-contact-row {
+  transition: background 0s ease-out !important;
+  cursor: pointer;
+}
+.crm-contact-row:hover {
+  background: hsl(var(--muted) / 0.5) !important;
+}
+
+/* ─── RESPONSIVE GRID RULES ─── */
+.crm-stats-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 1024px) {
+  .crm-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .crm-stats-grid { grid-template-columns: 1fr; }
+}
+
+.crm-dashboard-grid {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 768px) {
+  .crm-dashboard-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .crm-contacts-table { display: none !important; }
+  .crm-contacts-cards { display: flex !important; }
+}
+
+@media (max-width: 768px) {
+  .crm-drawer { width: 100% !important; max-width: 100vw !important; }
+}
+
+@media (max-width: 768px) {
+  .crm-pipeline-col { min-width: 240px !important; flex: 0 0 240px !important; }
+  .crm-pipeline-grid { -webkit-overflow-scrolling: touch; }
+}
+
+.crm-packages-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 1024px) {
+  .crm-packages-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .crm-packages-grid { grid-template-columns: 1fr; }
+}
+
+.crm-onboarding-grid {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 768px) {
+  .crm-onboarding-grid { grid-template-columns: 1fr; }
+}
+
+.crm-intake-answers {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 640px) {
+  .crm-intake-answers { grid-template-columns: 1fr; }
+}
+
+/* ─── EMPTY STATE ─── */
+.crm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+}
+.crm-empty-state .icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+.crm-empty-state .title {
+  font-size: 15px;
+  font-weight: 600;
+  color: hsl(var(--foreground) / 0.7);
+  margin-bottom: 4px;
+}
+.crm-empty-state .desc {
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+/* ─── TOOLTIP DELAY ─── */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease-out;
+  transition-delay: 0s;
+  z-index: 1000;
+  border: 1px solid hsl(var(--border));
+}
+[data-tooltip]:hover::after {
+  opacity: 1;
+  transition-delay: 400ms;
+}
+
+/* ─── REDUCED MOTION: respect system preference globally ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── MOBILE: improve tap targets and prevent iOS text zoom on inputs ─── */
+@media (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important; /* prevents iOS Safari auto-zoom on focus */
+  }
+  button, [role="button"], a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

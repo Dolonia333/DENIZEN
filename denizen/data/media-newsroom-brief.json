@@ -1,0 +1,17 @@
+{
+  "mode": "newsroom",
+  "audience": "practitioners who want signal, not hype",
+  "pipeline": "trend → pitch → draft → copy edit → fact-check → design → brand safety → publish",
+  "roles": {
+    "Bob": "Trend scraper — trend-scraper, browserclaw, research",
+    "Sarah": "Pitch gatekeeper — VERDICT APPROVED/REJECTED",
+    "Alex": "Staff writer — long-form article drafts",
+    "Josh": "Staff writer — social threads and newsletter intros",
+    "Jenny": "Copy editor — VERDICT PASSED/REVISE",
+    "Molly": "Fact-checker — VERDICT PASSED/REVISE",
+    "Rob": "Graphic designer — canvas-render, pdf-generator",
+    "Bouncer": "Brand safety — content-moderation, VERDICT CLEAR/BLOCKED",
+    "Lucy": "CMS publisher — cms-publish",
+    "Abby": "Editor-in-chief — arbitrates conflicts via conflict detector"
+  }
+}

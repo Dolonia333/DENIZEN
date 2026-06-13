@@ -21,6 +21,8 @@ let llmTelemetry = null;
 try { worldState = require('./world-state'); } catch (_) {}
 try { agentBus = require('./agent-bus'); } catch (_) {}
 try { llmTelemetry = require('./llm-telemetry'); } catch (_) {}
+let lmStudioRouter = null;
+try { lmStudioRouter = require('./lm-studio-router'); } catch (_) {}
 
 // NPC real-work tools (Level 1/2/3). Lazy-loaded so the brains still work
 // if npc-tools.js isn't present yet (e.g. during older test runs).
@@ -66,6 +68,12 @@ let officeDirector = null;
 try { officeDirector = require('./office-director'); } catch (_) {}
 
 let taskResourceAdvisor = null;
+
+const REAL_WORK_SKILLS = new Set([
+  'web-search', 'research', 'browserclaw', 'screen-observe', 'desktop-agent',
+  'computer-use-agent', 'job-scraper', 'job-applier', 'trend-scraper',
+  'platform-publish', 'coding-agent', 'github',
+]);
 try { taskResourceAdvisor = require('./task-resource-advisor'); } catch (_) {}
 
 class NpcBrainManager {
@@ -113,6 +121,7 @@ class NpcBrainManager {
     this._sprintClaimDay = {};
     this._initBrains();
     this._applyLmStudioEnvPins();
+    if (lmStudioRouter?.registerBootstrap) lmStudioRouter.registerBootstrap();
     if (promptTuning?.autoClaimSprintTasks !== false) {
       this._seedSprintTasksForAll();
     }
@@ -234,13 +243,92 @@ class NpcBrainManager {
     return null;
   }
 
+  _scopeId(officeContext = {}) {
+    return officeContext?.officeId || officeContext?.identityId || 'global';
+  }
+
+  _officeRuntime(officeId) {
+    const id = String(officeId || 'global');
+    if (!this._officeRuntimes) this._officeRuntimes = new Map();
+    let rt = this._officeRuntimes.get(id);
+    if (!rt) {
+      rt = {
+        lastDecisions: {},
+        taskProgress: {},
+        thinkCycles: {},
+        cyclesSinceSkillRun: {},
+        lastThinkLlmAt: {},
+        lastRunSkillAt: new Map(),
+        pendingSkillResults: new Set(),
+        directives: new Map(),
+      };
+      this._officeRuntimes.set(id, rt);
+    }
+    return rt;
+  }
+
+  _rt(officeContext) {
+    return this._officeRuntime(this._scopeId(officeContext));
+  }
+
+  _resolveAutonomousRealWork(npcName, officeContext = {}) {
+    if (officeContext?.visitorScoped) {
+      return officeContext.canUseRealWork === true;
+    }
+    return promptTuning?.realWorkMode !== false;
+  }
+
+  _stampThinkContext(decision, officeContext) {
+    if (decision && officeContext && typeof officeContext === 'object') {
+      decision._officeContext = officeContext;
+    }
+    return decision;
+  }
+
+  async _buildTeamPurposeOverlay(identityId, visitorDisplayName) {
+    if (!identityId || !userIdentity?.getNpcTeam) return '';
+    try {
+      const team = await userIdentity.getNpcTeam(identityId);
+      const lines = [];
+      if (team?.name) lines.push(`Team: ${team.name}`);
+      if (team?.purpose) lines.push(`Mission: ${team.purpose}`);
+      const roster = (team?.members || [])
+        .filter((m) => m.active !== false)
+        .map((m) => m.display_name || m.npc_key)
+        .slice(0, 10);
+      if (roster.length) lines.push(`Roster: ${roster.join(', ')}`);
+      if (visitorDisplayName) {
+        lines.push(`${visitorDisplayName} is online — prioritize work that helps their team.`);
+      }
+      return lines.length
+        ? `\n\n## Visitor team mission\n${lines.join('\n')}`
+        : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   /** Autonomous think-loop run_skill gate (directives + player chat bypass). */
-  allowAutonomousSkillRun(npcName, { skill } = {}) {
-    if (this._directives.has(npcName)) return { allowed: true };
+  allowAutonomousSkillRun(npcName, opts = {}) {
+    const skill = opts.skill;
+    const officeContext = opts.officeContext || null;
+    const rt = officeContext ? this._rt(officeContext) : null;
+    const directives = rt?.directives || this._directives;
+    const lastRunSkillAt = rt?.lastRunSkillAt || this._lastRunSkillAt;
+    if (directives.has(npcName)) return { allowed: true };
+
+    const skillKey = skill ? String(skill).toLowerCase() : '';
+    if (officeContext?.visitorScoped && officeContext.canUseRealWork === false
+      && skillKey && REAL_WORK_SKILLS.has(skillKey)) {
+      return {
+        allowed: false,
+        reason: 'visitor session is demo — autonomous real tools need team access',
+      };
+    }
 
     const cd = promptTuning?.runSkillCooldownMs ?? 900000;
     const max = promptTuning?.runSkillMaxPerWindow ?? 1;
-    const last = this._lastRunSkillAt.get(npcName) || 0;
+    const last = lastRunSkillAt.get(npcName) || 0;
     const elapsed = Date.now() - last;
 
     if (cd > 0 && last > 0 && elapsed < cd) {
@@ -456,6 +544,30 @@ class NpcBrainManager {
     return String(npcName || '').toLowerCase();
   }
 
+  async _buildTeamMemberOverlay(identityId, npcName) {
+    if (!identityId || !userIdentity?.getNpcTeam) return '';
+    try {
+      const team = await userIdentity.getNpcTeam(identityId);
+      const key = this._npcKeyForName(npcName);
+      const member = (team?.members || []).find((m) => String(m.npc_key).toLowerCase() === key);
+      if (!member) return '';
+      const lines = [];
+      if (member.display_name) lines.push(`This teammate calls you ${member.display_name}.`);
+      if (member.role) lines.push(`Your role for them: ${member.role}.`);
+      if (member.job) lines.push(`Current job assignment: ${member.job}.`);
+      if (member.focus) lines.push(`Focus area: ${member.focus}`);
+      if (member.instructions) {
+        lines.push('Follow these teammate instructions (seed for your SOUL/MEMORY growth):');
+        lines.push(member.instructions);
+      }
+      return lines.length
+        ? `\n\n## Teammate NPC profile\n${lines.join('\n')}`
+        : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
   _isVisitorAssistantForNpc(npcName, assistant) {
     if (!assistant?.npc_key) return false;
     const key = String(assistant.npc_key).toLowerCase();
@@ -501,6 +613,29 @@ class NpcBrainManager {
     ].join('\n');
   }
 
+  _groupChatPromptBlock(groupChat) {
+    if (!groupChat || typeof groupChat !== 'object') return '';
+    const members = Array.isArray(groupChat.members) ? groupChat.members : [];
+    const recent = Array.isArray(groupChat.recentMessages) ? groupChat.recentMessages.slice(-10) : [];
+    const turn = Array.isArray(groupChat.turnReplies) ? groupChat.turnReplies : [];
+    const lines = [
+      '## Group chat',
+      `Thread: ${groupChat.groupName || 'Group'}`,
+      `Participants: ${members.join(', ')}`,
+      'This is a group text thread. Other coworkers may also reply. Keep your message short (1-3 sentences).',
+      'You may respond to the user or briefly react to what another coworker just said in this turn.',
+    ];
+    if (recent.length) {
+      lines.push('', '## Recent messages');
+      recent.forEach((m) => lines.push(`${m.from}: ${String(m.text || '').slice(0, 200)}`));
+    }
+    if (turn.length) {
+      lines.push('', '## Replies already sent this turn (you may build on these)');
+      turn.forEach((m) => lines.push(`${m.from}: ${String(m.text || '').slice(0, 200)}`));
+    }
+    return lines.join('\n');
+  }
+
   _visitorProfilePromptBlock(npcName, visitorContext) {
     const { displayName, assistant, projects, deepProfile, openCommitments } = visitorContext || {};
     const name = displayName || 'User';
@@ -514,7 +649,7 @@ class NpcBrainManager {
       '## Visitor Personal Assistant Context',
       `User: ${name} (not the CEO)`,
       `They claimed you (${npcName}) as their personal assistant${assistantName !== npcName ? ` ("${assistantName}")` : ''}.`,
-      'You are THEIR personal assistant. Greet them by name. You still work in the shared office but prioritize their requests.',
+      'You are THEIR chief of staff in their private office. Greet the CEO by name and prioritize their mission.',
     ];
     if (focus) {
       lines.push(`Focus area: ${focus}`);
@@ -1529,7 +1664,11 @@ class NpcBrainManager {
       ? ` You're in the flow — engaged, efficient.`
       : '';
 
-    const systemPrompt = `${brain.personality}${memorySection}
+    const teamOverlay = context.identityId
+      ? await this._buildTeamMemberOverlay(context.identityId, npcName)
+      : '';
+
+    const systemPrompt = `${brain.personality}${memorySection}${teamOverlay}
 
 ## Your Coworkers
 ${coworkerContext}
@@ -1737,15 +1876,21 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     const brain = this.brains[npcName];
     if (!brain) return { action: 'idle' };
     const _thinkStart = Date.now();
+    const rt = this._rt(officeContext);
 
     // Hard server-side throttle — browser tabs ignore .env and may stack requests.
     const minNpcGap = promptTuning?.thinkMinMs ?? 120000;
-    if (!this._lastThinkLlmAt) this._lastThinkLlmAt = {};
-    const sinceLastLlm = Date.now() - (this._lastThinkLlmAt[npcName] || 0);
-    if (sinceLastLlm < minNpcGap) {
+    const sinceLastLlm = Date.now() - (rt.lastThinkLlmAt[npcName] || 0);
+    const urgentWake = Boolean(
+      officeContext?.urgentWake
+      || officeContext?.wakeReason
+      || rt.directives.has(npcName)
+      || rt.pendingSkillResults.has(npcName),
+    );
+    if (!urgentWake && sinceLastLlm < minNpcGap) {
       global._npcStats = global._npcStats || {};
       global._npcStats.thinkThrottled = (global._npcStats.thinkThrottled || 0) + 1;
-      return {
+      return this._stampThinkContext({
         action: 'work',
         location: 'desk',
         taskPhase: 'continuing',
@@ -1754,7 +1899,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         save: null,
         outcome: 'ok',
         _throttled: true,
-      };
+      }, officeContext);
     }
 
     const gap = promptTuning?.globalThinkGapMs ?? 0;
@@ -1765,8 +1910,8 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       this._lastGlobalThinkAt = Date.now();
     }
 
-    if (promptTuning?.skipThinkWhenSkillPending !== false && this._pendingSkillResults.has(npcName)) {
-      return {
+    if (promptTuning?.skipThinkWhenSkillPending !== false && rt.pendingSkillResults.has(npcName)) {
+      return this._stampThinkContext({
         action: 'work',
         location: 'desk',
         taskPhase: 'continuing',
@@ -1774,30 +1919,31 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         thought: 'Skill result pending — finishing that first.',
         save: null,
         outcome: 'ok',
-      };
+      }, officeContext);
     }
 
     if (officeDirector?.isEnabled?.()) {
       const directorCtx = {
         inbox: this._ensureInbox(npcName),
         officeContext,
-        cycles: this._thinkCycles[npcName] || 0,
-        lastDecision: this._lastDecisions[npcName] || null,
-        taskProgress: this._taskProgress[npcName] || null,
-        hasDirective: this._directives?.has(npcName),
-        pendingSkill: this._pendingSkillResults?.has(npcName),
-        realWorkMode: promptTuning?.realWorkMode,
-        cyclesSinceSkill: this._cyclesSinceSkillRun?.[npcName] || 0,
+        cycles: rt.thinkCycles[npcName] || 0,
+        lastDecision: rt.lastDecisions[npcName] || null,
+        taskProgress: rt.taskProgress[npcName] || null,
+        hasDirective: rt.directives?.has(npcName),
+        pendingSkill: rt.pendingSkillResults?.has(npcName),
+        realWorkMode: this._resolveAutonomousRealWork(npcName, officeContext),
+        cyclesSinceSkill: rt.cyclesSinceSkillRun?.[npcName] || 0,
         realWorkThreshold: promptTuning?.realWorkCyclesWithoutSkill ?? 6,
       };
       if (!officeDirector.needsLlm(npcName, directorCtx)) {
         const hEarly = this._hierarchy[npcName];
         let directed = officeDirector.plan(this, npcName, directorCtx);
-        directed = this._normalizeThinkDecision(npcName, directed);
+        directed = this._normalizeThinkDecision(npcName, directed, officeContext);
         return this._applyAutonomousDecision(npcName, directed, _thinkStart, {
           h: hEarly,
           brain,
           codeContext: null,
+          officeContext,
         });
       }
     }
@@ -1814,6 +1960,20 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     const h = this._hierarchy[npcName];
     const assistantProfileBlock = this._assistantProfilePromptBlock(npcName);
 
+    let teamMemberOverlay = officeContext.teamMemberOverlay || '';
+    let teamPurposeOverlay = officeContext.teamPurposeOverlay || '';
+    if (officeContext.identityId && officeContext.visitorScoped) {
+      if (!teamMemberOverlay) {
+        teamMemberOverlay = await this._buildTeamMemberOverlay(officeContext.identityId, npcName);
+      }
+      if (!teamPurposeOverlay) {
+        teamPurposeOverlay = await this._buildTeamPurposeOverlay(
+          officeContext.identityId,
+          officeContext.visitorDisplayName,
+        );
+      }
+    }
+
     // Cap at 4 recent memories and truncate each — was 10 full memories
     // which could add 500-1000 tokens and push Lucy/Abby over the 4096 limit.
     const recentConversations = (this.memories[npcName] || []).slice(-3)
@@ -1821,9 +1981,9 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       .join('\n');
 
     // Track think cycles for fatigue/variety hints
-    const cycles = this._thinkCycles[npcName] || 0;
-    const lastDecision = this._lastDecisions[npcName] || null;
-    const taskProg = this._taskProgress[npcName] || null;
+    const cycles = rt.thinkCycles[npcName] || 0;
+    const lastDecision = rt.lastDecisions[npcName] || null;
+    const taskProg = rt.taskProgress[npcName] || null;
 
     // Build continuity context
     var continuitySection = '';
@@ -2011,22 +2171,29 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     let openClawContext = null;
     if (OPENCLAW_SKILL_ROLES.has(brain.role)) {
       const browserSupabase = 'web-search (visible browser lookup), research (background web lookup), browserclaw (multi-step browser tasks), screen-observe (read-only: "look at my screen"), desktop-agent (CEO asks to fill forms on their real screen — "fill this out for me on my screen"), supabase-bridge (low-level DB), denizen-data skills (intake-triage, lead-monitor, rfp-status, prediction-brief, outcome-standup, work-history, cost-dashboard, entity-link, etc.). CEO Brave: "open my brave browser".';
+      let crmPersonas = null;
+      try { crmPersonas = require('./denizen-crm-npc-personas'); } catch (_) {}
+      const npcFolder = this._nameToFolder?.[npcName] || String(npcName || '').toLowerCase();
+      const crmPersona = crmPersonas?.resolvePersona?.(npcFolder) || crmPersonas?.resolvePersona?.(npcName);
+      const crmLine = crmPersona
+        ? crmPersonas.crmSkillSuffix(crmPersona.canWrite)
+        : 'crm-summary, crm-list-pipeline (Meridian CRM at /crm/)';
       const skillsByRole = {
-        'CTO': `${browserSupabase}; coding-agent, github, canvas-render, pdf-generator, lm-studio, cost-dashboard, org-benchmark`,
-        'Receptionist (also handles CEO email triage as Secretary)': `${browserSupabase}; job-scraper/job-applier; intake-triage, lead-monitor, client-lookup, prediction-brief, intake-to-client, visitor-claim, assistant-handoff, rfp-status. CRM at /api/job-crm.`,
-        'Security Guard': `${browserSupabase}; visionclaw. Live threats auto-run Kali — do NOT run_skill nmap/zenmap; use talk/report.`,
-        'IT Support': `${browserSupabase}; lm-studio (models, context overflow)`,
-        'DevOps Engineer': `${browserSupabase}; github (CI status), lm-studio (inference queue), cost-dashboard`,
-        'Developer': `${browserSupabase}; github, coding-agent (code changes in worktree)`,
-        'Frontend Developer': `${browserSupabase}; github, coding-agent (UI/HUD files)`,
-        'Backend Developer': `${browserSupabase}; github, coding-agent (server/WebSocket code)`,
-        'Researcher': `${browserSupabase}; rfp-status, rfp-requirement-review, past-performance-match, proposal-outline, prediction-brief`,
-        'Data Engineer': `${browserSupabase}; work-history, cost-dashboard, entity-link, org-benchmark — primary owner of schema and pipelines`,
-        'QA Engineer': `${browserSupabase}; github (file bugs), rfp-requirement-review`,
-        'UI/UX Designer': `${browserSupabase}; canvas-render (mockups), pdf-generator (spec PDFs)`,
-        'Project Manager': `${browserSupabase}; pdf-generator; outcome-standup, rfp-status, prediction-brief — artifacts in reports/pm-reports/`,
-        'Product Manager': `${browserSupabase}; pdf-generator; proposal-outline, rfp-requirement-review, outcome-standup`,
-        'Intern': `${browserSupabase}; market-watch, get-quote, trade-suggest (SUGGESTION ONLY), github (read issues)`,
+        'CTO': `${browserSupabase}; coding-agent, github, canvas-render, pdf-generator, lm-studio, cost-dashboard, org-benchmark; CRM: ${crmLine}`,
+        'Receptionist (also handles CEO email triage as Secretary)': `${browserSupabase}; platform-publish (Supabase CMS / Lovable export), job-scraper/job-applier; intake-triage, lead-monitor, client-lookup, prediction-brief, intake-to-client, visitor-claim, assistant-handoff, rfp-status; CRM: ${crmLine}`,
+        'Security Guard': `${browserSupabase}; content-moderation (draft brand safety), visionclaw. Network threats auto-run Kali — do NOT run_skill nmap/zenmap; use talk/report. CRM read: ${crmLine}`,
+        'IT Support': `${browserSupabase}; lm-studio (models, context overflow). CRM read: ${crmLine}`,
+        'DevOps Engineer': `${browserSupabase}; github (CI status), lm-studio (inference queue), cost-dashboard. CRM read: ${crmLine}`,
+        'Developer': `${browserSupabase}; github, coding-agent (code changes in worktree). CRM read: ${crmLine}`,
+        'Frontend Developer': `${browserSupabase}; github, coding-agent (UI/HUD files). CRM read: ${crmLine}`,
+        'Backend Developer': `${browserSupabase}; github, coding-agent (server/WebSocket code). CRM read: ${crmLine}`,
+        'Researcher': `${browserSupabase}; trend-scraper, rfp-status, rfp-requirement-review, past-performance-match, proposal-outline, prediction-brief. CRM read: ${crmLine}`,
+        'Data Engineer': `${browserSupabase}; work-history, cost-dashboard, entity-link, org-benchmark — primary owner of schema and pipelines. CRM: ${crmLine}`,
+        'QA Engineer': `${browserSupabase}; github (file bugs), rfp-requirement-review. CRM read: ${crmLine}`,
+        'UI/UX Designer': `${browserSupabase}; canvas-render (mockups), pdf-generator (spec PDFs, newsletter layout). CRM: ${crmLine}`,
+        'Project Manager': `${browserSupabase}; pdf-generator; outcome-standup, rfp-status, prediction-brief — artifacts in reports/pm-reports/. CRM: ${crmLine}`,
+        'Product Manager': `${browserSupabase}; pdf-generator; proposal-outline, rfp-requirement-review, outcome-standup — pitch gatekeeper in content pipeline. CRM: ${crmLine}`,
+        'Intern': `${browserSupabase}; market-watch, get-quote, trade-suggest (SUGGESTION ONLY), github (read issues). CRM read: ${crmLine}`,
       };
       const skillLine = skillsByRole[brain.role] || `${browserSupabase} — use run_skill and write a report when done`;
       if (skillLine) {
@@ -2144,10 +2311,11 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       }
     }
 
-    const claimedSprint = this._taskProgress[npcName];
+    const claimedSprint = rt.taskProgress[npcName];
+    const autonomousRealWork = this._resolveAutonomousRealWork(npcName, officeContext);
     const sprintTaskBlock = (claimedSprint?.sprint && claimedSprint.task)
       ? `## Your Claimed Sprint Task\n"${claimedSprint.task}"\n` +
-        (promptTuning?.realWorkMode
+        (autonomousRealWork
           ? 'Use run_skill when needed, then taskPhase finished + save (reports/).\n\n'
           : 'Prefer action work at desk. run_skill at most once per 10 min when blocked.\n\n')
       : '';
@@ -2160,6 +2328,8 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         groundingNote,
         moodBlock,
         sprintTaskBlock,
+        teamPurposeOverlay,
+        teamMemberOverlay,
         planText,
         recentMemory,
         recentConversations,
@@ -2203,6 +2373,8 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       (liveContextBlock ? '## Current State (live)\n' + liveContextBlock + '\n\n' : '') +
       (situationalBlock ? '## Situational\n' + situationalBlock + '\n\n' : '') +
       (assistantProfileBlock ? assistantProfileBlock + '\n\n' : '') +
+      (teamPurposeOverlay ? teamPurposeOverlay + '\n\n' : '') +
+      (teamMemberOverlay ? teamMemberOverlay + '\n\n' : '') +
       (inboxText ? '## Direct Messages To You (since last think)\n' + inboxText + '\n\n' : '') +
       (theoryOfMind ? '## What Others Are Doing\n' + theoryOfMind + '\n\n' : '') +
       (eventsFeed ? '## Recent Office Events\n' + eventsFeed + '\n\n' : '') +
@@ -2238,16 +2410,19 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
     const randomNearby = officeContext?.description?.match(/(\w+) \(/)?.[1];
 
     const nudges = [];
-    const pendingSkill = this._pendingSkillResults.has(npcName);
-    const sinceSkill = this._cyclesSinceSkillRun[npcName] ?? 0;
+    if (officeContext.priorityVisitor && officeContext.visitorDisplayName) {
+      nudges.push(`Your teammate ${officeContext.visitorDisplayName} is online — advance their team mission.`);
+    }
+    const pendingSkill = rt.pendingSkillResults.has(npcName);
+    const sinceSkill = rt.cyclesSinceSkillRun[npcName] ?? 0;
     const realWorkThreshold = promptTuning?.realWorkCyclesWithoutSkill ?? 3;
-    const realWorkOn = promptTuning?.realWorkMode !== false;
+    const realWorkOn = autonomousRealWork;
 
-    if (realWorkOn && !this._directives.has(npcName) && OPENCLAW_SKILL_ROLES.has(brain.role)) {
+    if (realWorkOn && !rt.directives.has(npcName) && OPENCLAW_SKILL_ROLES.has(brain.role)) {
       if (pendingSkill) {
         nudges.push('Skill result is waiting — read it, then taskPhase "finished" + save (report artifact). Do not run_skill again until you finish.');
-      } else if (sinceSkill >= realWorkThreshold && !this._pendingSkillResults.has(npcName)) {
-        const lastSkill = this._lastRunSkillAt.get(npcName) || 0;
+      } else if (sinceSkill >= realWorkThreshold && !rt.pendingSkillResults.has(npcName)) {
+        const lastSkill = rt.lastRunSkillAt.get(npcName) || 0;
         const skillCd = promptTuning?.runSkillCooldownMs ?? 300000;
         if (!skillCd || Date.now() - lastSkill >= skillCd) {
           nudges.push(
@@ -2312,7 +2487,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     }
 
     try {
-      this._lastThinkLlmAt[npcName] = Date.now();
+      rt.lastThinkLlmAt[npcName] = Date.now();
       const response = await this._callProvider(brain.providerConfig, systemPrompt, [
         { role: 'user', content: userPrompt }
       ], {
@@ -2340,10 +2515,12 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
         decision._parseFallback = true;
       }
       if (decision) {
-        const normalized = this._normalizeThinkDecision(npcName, decision);
-        return this._applyAutonomousDecision(npcName, normalized, _thinkStart, { h, brain, codeContext });
+        const normalized = this._normalizeThinkDecision(npcName, decision, officeContext);
+        return this._applyAutonomousDecision(npcName, normalized, _thinkStart, {
+          h, brain, codeContext, officeContext,
+        });
       }
-      return this._fallbackDecision(npcName, brain);
+      return this._stampThinkContext(this._fallbackDecision(npcName, brain), officeContext);
     } catch (err) {
       // Throttle: one log per NPC per 60s. Otherwise a provider outage spams
       // 16 NPCs * multiple retries/min = 200+ identical lines per minute.
@@ -2353,7 +2530,12 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
         log.npcError(npcName, String(err?.message ?? err).slice(0, 100));
         this._lastThinkErrorLog[npcName] = now;
       }
-      return { action: 'error', thought: 'Something went wrong', message: err.message || 'API error — taking a break', target: null };
+      return this._stampThinkContext({
+        action: 'error',
+        thought: 'Something went wrong',
+        message: err.message || 'API error — taking a break',
+        target: null,
+      }, officeContext);
     }
   }
 
@@ -2372,9 +2554,44 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     } else if (config.type === 'openai') {
       return this._callOpenAI(config, systemPrompt, messages, opts);
     } else if (config.type === 'lmstudio') {
-      return this._callLocal(config, systemPrompt, messages, opts);
+      return this._callLocalRouted(config, systemPrompt, messages, opts);
     }
     return Promise.reject(new Error('Unknown provider type'));
+  }
+
+  async _callLocalRouted(config, systemPrompt, messages, opts = {}, attempt = 0) {
+    let routed = config;
+    if (lmStudioRouter?.isEnabled?.()) {
+      const tier = config.providerKey === 'lmstudio-fast' ? 'fast' : 'main';
+      routed = lmStudioRouter.resolveProviderConfig(config, {
+        tier,
+        priority: opts.priority,
+        queueDepth: this.getQueueDepth(),
+        excludeNodeIds: opts._routerExclude || [],
+      });
+    }
+    try {
+      return await this._callLocal(routed, systemPrompt, messages, opts);
+    } catch (err) {
+      const nodeId = routed._routerNodeId;
+      if (attempt < 1 && lmStudioRouter?.isEnabled?.() && nodeId) {
+        lmStudioRouter.markFailure(nodeId, err);
+        const tier = config.providerKey === 'lmstudio-fast' ? 'fast' : 'main';
+        const next = lmStudioRouter.resolveProviderConfig(config, {
+          tier,
+          priority: opts.priority,
+          queueDepth: this.getQueueDepth(),
+          excludeNodeIds: [nodeId],
+        });
+        if (next._routerNodeId && next._routerNodeId !== nodeId) {
+          return this._callLocalRouted(config, systemPrompt, messages, {
+            ...opts,
+            _routerExclude: [...(opts._routerExclude || []), nodeId],
+          }, attempt + 1);
+        }
+      }
+      throw err;
+    }
   }
 
   /**
@@ -2652,6 +2869,8 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     // and let each call's `done()` decrement it.
 
     const { config, systemPrompt, messages, opts, resolve, reject } = this._requestQueue.shift();
+    const routerNodeId = config._routerNodeId;
+    if (routerNodeId && lmStudioRouter?.acquire) lmStudioRouter.acquire(routerNodeId);
     const maxTokens = opts.maxTokens || 150;
     const sliceLen = opts.sliceLen || 150;
 
@@ -2725,6 +2944,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     };
 
     const done = () => {
+      if (routerNodeId && lmStudioRouter?.release) lmStudioRouter.release(routerNodeId);
       this._inflightCount = Math.max(0, this._inflightCount - 1);
       this._processQueue();
     };
@@ -2939,6 +3159,8 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       parts.skillResultBlock,
       parts.moodBlock,
       parts.sprintTaskBlock,
+      parts.teamPurposeOverlay,
+      parts.teamMemberOverlay,
       parts.planText ? `## Today\n${parts.planText}` : '',
       parts.recentMemory ? `## Memory\n${parts.recentMemory}` : '',
       parts.recentConversations ? `## Recent chat\n${parts.recentConversations}` : '',
@@ -2963,7 +3185,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       capabilitiesBlock, currentTaskSection, assistantProfileBlock,
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
-      demoToolBlock, visitorWorkBlock, lucySkillGateBlock,
+      demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock,
     } = sections;
     const coworkerShort = String(coworkerContext || '').split('\n').slice(0, 5).join('\n');
     return `${brain.personality}${memorySection}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
@@ -2971,6 +3193,7 @@ ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
 ${demoToolBlock || ''}
 ${lucySkillGateBlock || ''}
 ${visitorWorkBlock || ''}
+${crmBlock || ''}
 ${currentTaskSection}
 ${assistantProfileBlock}${pendingHandoffsBlock}${researchBlock}
 ## Role
@@ -2991,9 +3214,30 @@ ${rulesTail}
 ${brain.voiceAnchor || ''}`;
   }
 
-  _normalizeThinkDecision(npcName, decision) {
+  async _loadCrmContextForChat(npcName, message) {
+    let crmPersonas = null;
+    try { crmPersonas = require('./denizen-crm-npc-personas'); } catch (_) {}
+    if (!crmPersonas?.isCrmRelatedMessage?.(message)) return '';
+    if (!crmPersonas.resolvePersona(npcName)) return '';
+    try {
+      const denizenDb = require('./denizen-db');
+      const crmStore = require('./denizen-crm-store');
+      const crmSetup = require('./denizen-crm-setup');
+      if (!denizenDb.enabled || !denizenDb.orgId) return '';
+      const row = await crmStore.getWorkspace(denizenDb.orgId);
+      if (!row?.state) return '';
+      const setup = crmSetup.buildSetupSummary(row.state);
+      return crmPersonas.buildPlayerChatCrmBlock(npcName, setup);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  _normalizeThinkDecision(npcName, decision, officeContext = null) {
     if (!decision) return decision;
     const h = this._hierarchy[npcName];
+    const rt = officeContext ? this._rt(officeContext) : null;
+    const pendingSkillResults = rt?.pendingSkillResults || this._pendingSkillResults;
 
     if (decision.action === 'meeting') {
       if (!this._lastNpcMeetingAt) this._lastNpcMeetingAt = new Map();
@@ -3026,7 +3270,7 @@ ${brain.voiceAnchor || ''}`;
     }
 
     if (decision.action === 'run_skill' && decision.skill) {
-      if (this._pendingSkillResults.has(npcName)) {
+      if (pendingSkillResults.has(npcName)) {
         decision.action = 'work';
         decision.skill = null;
         decision.skillParams = null;
@@ -3035,7 +3279,10 @@ ${brain.voiceAnchor || ''}`;
     }
 
     if (decision.action === 'run_skill' && decision.skill) {
-      const gate = this.allowAutonomousSkillRun(npcName, { skill: decision.skill });
+      const gate = this.allowAutonomousSkillRun(npcName, {
+        skill: decision.skill,
+        officeContext,
+      });
       if (!gate.allowed) {
         decision.action = 'work';
         decision.skill = null;
@@ -3043,7 +3290,9 @@ ${brain.voiceAnchor || ''}`;
         if (!decision.message || decision.message.length < 8) {
           decision.message = gate.reason?.includes('cooldown')
             ? `Tool on cooldown — working at my desk (${gate.remainingSec || '?'}s).`
-            : 'Working at my desk instead.';
+            : gate.reason?.includes('demo')
+              ? 'Demo session — staying at my desk for now.'
+              : 'Working at my desk instead.';
         }
       }
     }
@@ -3056,22 +3305,25 @@ ${brain.voiceAnchor || ''}`;
   }
 
   _applyAutonomousDecision(npcName, decision, _thinkStart, ctx = {}) {
-    const { h, brain, codeContext } = ctx;
+    const { h, brain, codeContext, officeContext } = ctx;
+    const rt = officeContext ? this._rt(officeContext) : this._officeRuntime('global');
+    const lastRunSkillAt = rt.lastRunSkillAt;
 
     if (decision.action === 'work') {
-      this._thinkCycles[npcName] = (this._thinkCycles[npcName] || 0) + 1;
+      rt.thinkCycles[npcName] = (rt.thinkCycles[npcName] || 0) + 1;
     } else {
-      this._thinkCycles[npcName] = 0;
+      rt.thinkCycles[npcName] = 0;
     }
 
     if (decision.action === 'run_skill' && decision.skill) {
-      this._cyclesSinceSkillRun[npcName] = 0;
-      this._recordAutonomousSkillRun(npcName);
+      rt.cyclesSinceSkillRun[npcName] = 0;
+      lastRunSkillAt.set(npcName, Date.now());
+      if (!officeContext) this._recordAutonomousSkillRun(npcName);
     } else {
-      this._cyclesSinceSkillRun[npcName] = (this._cyclesSinceSkillRun[npcName] || 0) + 1;
+      rt.cyclesSinceSkillRun[npcName] = (rt.cyclesSinceSkillRun[npcName] || 0) + 1;
     }
 
-    this._lastDecisions[npcName] = {
+    rt.lastDecisions[npcName] = {
       action: decision.action,
       target: decision.target,
       thought: decision.thought,
@@ -3135,19 +3387,20 @@ ${brain.voiceAnchor || ''}`;
     }
 
     if (decision.taskPhase === 'starting' && decision.message) {
-      this._taskProgress[npcName] = {
+      rt.taskProgress[npcName] = {
         task: decision.message.slice(0, 80),
         phase: 'in-progress',
         startedAt: new Date().toLocaleTimeString(),
       };
     } else if (decision.taskPhase === 'finished') {
-      const finishedTask = this._taskProgress[npcName];
-      this._taskProgress[npcName] = null;
+      const finishedTask = rt.taskProgress[npcName];
+      rt.taskProgress[npcName] = null;
       if (finishedTask && !decision.target && h) {
         decision.target = h.reportsTo !== 'CEO' ? h.reportsTo : null;
         if (decision.action !== 'report') decision.action = 'report';
       }
       if (npcTools && decision.save) {
+        const chainCtx = taskChain ? taskChain.getChainForNpc(npcName) : null;
         const artifactOpts = {
           reasoning: decision.reasoning ? String(decision.reasoning).slice(0, 400) : null,
           thought: decision.thought ? String(decision.thought).slice(0, 200) : null,
@@ -3155,6 +3408,7 @@ ${brain.voiceAnchor || ''}`;
           action: decision.action || null,
           target: decision.target || null,
           codeFile: codeContext ? (brain.role && npcTools.ROLE_CODE_FILES[brain.role] || [])[0] || null : null,
+          artifactCategory: chainCtx?.step?.artifactCategory || null,
         };
         const artifactPath = npcTools.writeTaskArtifact(
           npcName,
@@ -3184,13 +3438,29 @@ ${brain.voiceAnchor || ''}`;
           taskChain.onStepComplete(
             npcName,
             artifactPath,
+            {
+              outcome: decision.outcome || null,
+              save: decision.save || null,
+              artifactPath,
+            },
             (to, from, task, urgent) => this.assignDirective(to, from, task, urgent),
             _broadcastFn || null
           );
+          try {
+            const contentPipeline = require('./content-pipeline');
+            const chain = chainInfo.chain;
+            if (chain?.kind === 'content') {
+              contentPipeline.updatePipelineStatus(chain.id, {
+                status: chain.status,
+                currentStep: chain.currentStep,
+                revisionCount: chain.revisionCount || 0,
+              });
+            }
+          } catch (_) {}
         }
       }
-    } else if (decision.taskPhase === 'continuing' && this._taskProgress[npcName]) {
-      this._taskProgress[npcName].phase = 'continuing';
+    } else if (decision.taskPhase === 'continuing' && rt.taskProgress[npcName]) {
+      rt.taskProgress[npcName].phase = 'continuing';
     }
 
     if (decision.outcome === 'blocked' || decision.outcome === 'stuck') {
@@ -3200,13 +3470,13 @@ ${brain.voiceAnchor || ''}`;
     } else if (decision.action === 'meeting') {
       this._updateMood(npcName, 'meeting_called');
     }
-    if ((this._thinkCycles[npcName] || 0) >= 3) {
+    if ((rt.thinkCycles[npcName] || 0) >= 3) {
       this._updateMood(npcName, 'long_work_streak');
     }
 
-    if (decision.taskPhase === 'finished' && this._directives.has(npcName)) {
-      const dir = this._directives.get(npcName);
-      this._directives.delete(npcName);
+    if (decision.taskPhase === 'finished' && rt.directives.has(npcName)) {
+      const dir = rt.directives.get(npcName);
+      rt.directives.delete(npcName);
       if (decision.action !== 'report') {
         decision.action = 'report';
         decision.target = dir.from;
@@ -3348,7 +3618,7 @@ ${brain.voiceAnchor || ''}`;
       artifact: decision._artifactPath || null,
     });
 
-    return decision;
+    return this._stampThinkContext(decision, ctx.officeContext);
   }
 
   /**
@@ -3709,6 +3979,9 @@ ${brain.voiceAnchor || ''}`;
     } else {
       assistantProfileBlock = `## Who Is Talking\nA teammate named ${playerName} is talking to you. They are a visitor in the shared office, not the CEO.`;
     }
+    if (opts.groupChat) {
+      assistantProfileBlock = `${assistantProfileBlock}\n\n${this._groupChatPromptBlock(opts.groupChat)}`;
+    }
 
     // Build role-specific action list
     const roleActions = this._getRoleActions(npcName, h);
@@ -3716,7 +3989,7 @@ ${brain.voiceAnchor || ''}`;
     // Build chain-of-command context
     let chainOfCommand = '';
     if (isVisitorAssistant) {
-      chainOfCommand = "You are this visitor's personal assistant in the shared office.";
+      chainOfCommand = "You are this visitor's chief of staff in their private virtual office — they are the CEO here.";
     } else if (h?.reportsTo === 'CEO') {
       chainOfCommand = 'You report DIRECTLY to the CEO. You are a senior leader.';
     } else {
@@ -3829,15 +4102,21 @@ ${brain.voiceAnchor || ''}`;
       : '';
 
     const visitorWorkBlock = isVisitor && realWorkOn && isVisitorAssistant
-      ? `\n## Execute tools for your teammate\nWhen they ask you to DO something, append at the end: [RUN_SKILL:skill-name:{"param":"value"}]. Skills: research, github, coding-agent, browserclaw, supabase, health-check, remediate, docker-sandbox, cloud-vm (DevOps), and CEO-approved custom skills.\nIf no existing skill fits: run research first, then the server skill-gap pipeline will search GitHub and draft build-skill for Dolonia's approval — tell them you're packaging a proposal.\nDo NOT promise a new skill works until Dolonia approves it in Account → Skills.\nDevOps (Oscar, Abby, Edward): docker-sandbox or cloud-vm for isolated workloads; health-check + remediate (incl. restart-lm-studio) when mesh or LM Studio is unhealthy.\n${opts.resource_pressure_block || ''}\n${opts.taskAdvice?.prompt_block || ''}\n`
+      ? `\n## Execute tools for your teammate\nWhen they ask you to DO something, append at the end: [RUN_SKILL:skill-name:{"param":"value"}]. Skills: research, github, coding-agent, browserclaw, supabase, denizen-data (crm-summary, crm-setup-status, crm-list-pipeline, crm-add-contact, crm-update-deal, crm-add-task, crm-apply-industry), health-check, remediate, docker-sandbox, cloud-vm (DevOps), and CEO-approved custom skills.\nIf no existing skill fits: run research first, then the server skill-gap pipeline will search GitHub and draft build-skill for Dolonia's approval — tell them you're packaging a proposal.\nDo NOT promise a new skill works until Dolonia approves it in Account → Skills.\nDevOps (Oscar, Abby, Edward): docker-sandbox or cloud-vm for isolated workloads; health-check + remediate (incl. restart-lm-studio) when mesh or LM Studio is unhealthy.\n${opts.resource_pressure_block || ''}\n${opts.taskAdvice?.prompt_block || ''}\n`
       : '';
+
+    let crmBlock = '';
+    try {
+      crmBlock = await this._loadCrmContextForChat(npcName, safeMessage) || '';
+      if (crmBlock) crmBlock = `\n${crmBlock}\n`;
+    } catch (_) {}
 
     const chatSections = {
       memorySection, ceoHistorySection, bouncerLiveSection, bouncerReplyRules,
       capabilitiesBlock, currentTaskSection, assistantProfileBlock,
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
-      demoToolBlock, visitorWorkBlock, lucySkillGateBlock,
+      demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock,
     };
     const systemPrompt = promptTuning?.compactPlayerChat !== false
       ? this._buildCompactPlayerChatSystemPrompt(npcName, brain, h, chatSections)
@@ -3846,6 +4125,7 @@ ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
 ${demoToolBlock || ''}
 ${lucySkillGateBlock || ''}
 ${visitorWorkBlock || ''}
+${sections.crmBlock || ''}
 ${currentTaskSection}
 ${teamStatus}
 
@@ -4622,6 +4902,9 @@ ${brain.voiceAnchor || ''}`;
    */
   injectSkillResult(npcName, skill, result) {
     this._pendingSkillResults.set(npcName, { skill, result, ts: Date.now() });
+    if (typeof this._thinkWakeFn === 'function') {
+      this._thinkWakeFn(npcName, `skill:${skill}`, { urgent: true, delayMs: 200 });
+    }
     // Evidence ledger — what the NPC has actually done, used by the grounding
     // check to tell real work apart from confident claims with nothing behind them.
     const ev = this._evidenceLog.get(npcName) || {};
@@ -4724,6 +5007,13 @@ ${brain.voiceAnchor || ''}`;
   assignDirective(targetNpc, fromNpc, task, urgent = false) {
     this._directives.set(targetNpc, { from: fromNpc, task, ts: Date.now(), urgent });
     log.info('Directive', `${fromNpc} → ${targetNpc}: "${String(task).slice(0, 60)}"`);
+    if (typeof this._thinkWakeFn === 'function') {
+      this._thinkWakeFn(targetNpc, urgent ? 'urgent_directive' : 'directive', { urgent: true });
+    }
+  }
+
+  setThinkWake(fn) {
+    this._thinkWakeFn = typeof fn === 'function' ? fn : null;
   }
 
   // ── Commitment tracking — make NPCs follow through on what they SAY ─────────

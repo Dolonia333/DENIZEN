@@ -71,12 +71,22 @@
     </style>
     <script>
       (function () {
+        // ?touch=1 / ?touch=0 forces touch mode on or off (testing narrow layouts in a desktop browser)
+        var force = null;
         try {
-          window.__DenizenIsTouch = window.matchMedia('(pointer: coarse)').matches
+          var q = new URLSearchParams(window.location.search).get('touch');
+          if (q === '1' || q === 'true') force = true;
+          else if (q === '0' || q === 'false') force = false;
+        } catch (_) {}
+        window.__DenizenForceTouch = force;
+        try {
+          window.__DenizenIsTouch = force !== null ? force : (
+            window.matchMedia('(pointer: coarse)').matches
             || navigator.maxTouchPoints > 0
-            || ('ontouchstart' in window);
+            || ('ontouchstart' in window)
+          );
         } catch (_) {
-          window.__DenizenIsTouch = false;
+          window.__DenizenIsTouch = force === true;
         }
       })();
     </script>
@@ -84,29 +94,41 @@
       // Show runtime errors on screen (helps when canvas is just a blank color).
       (function () {
         function ensureOverlay() {
-          let el = document.getElementById('runtime-error');
-          if (!el) {
-            el = document.createElement('pre');
+          let wrap = document.getElementById('runtime-error-wrap');
+          if (!wrap) {
+            wrap = document.createElement('div');
+            wrap.id = 'runtime-error-wrap';
+            wrap.style.cssText = 'position:fixed;left:12px;top:12px;right:12px;z-index:999999;'
+              + 'background:rgba(2,6,23,0.92);border:1px solid #7f1d1d;border-radius:8px;';
+
+            const bar = document.createElement('div');
+            bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;'
+              + 'padding:6px 12px;border-bottom:1px solid #7f1d1d;color:#fca5a5;'
+              + 'font:600 12px/1.2 system-ui,sans-serif;';
+            bar.innerHTML = '<span>Something went wrong — the office keeps running. Details below.</span>';
+
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.textContent = '✕ Dismiss';
+            close.setAttribute('aria-label', 'Dismiss error details');
+            close.style.cssText = 'margin-left:12px;padding:4px 10px;border-radius:6px;cursor:pointer;'
+              + 'background:#1e293b;border:1px solid #475569;color:#e2e8f0;'
+              + 'font:600 11px/1.2 system-ui,sans-serif;flex-shrink:0;';
+            close.addEventListener('click', function () {
+              wrap.remove();
+            });
+            bar.appendChild(close);
+            wrap.appendChild(bar);
+
+            const el = document.createElement('pre');
             el.id = 'runtime-error';
-            el.style.position = 'fixed';
-            el.style.left = '12px';
-            el.style.top = '12px';
-            el.style.right = '12px';
-            el.style.maxHeight = '45vh';
-            el.style.overflow = 'auto';
-            el.style.padding = '10px 12px';
-            el.style.margin = '0';
-            el.style.background = 'rgba(2, 6, 23, 0.92)';
-            el.style.border = '1px solid #7f1d1d';
-            el.style.color = '#fecaca';
-            el.style.fontSize = '12px';
-            el.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace';
-            el.style.whiteSpace = 'pre-wrap';
-            el.style.zIndex = '999999';
-            el.textContent = '';
-            document.body.appendChild(el);
+            el.style.cssText = 'max-height:32vh;overflow:auto;padding:10px 12px;margin:0;'
+              + 'color:#fecaca;font-size:12px;white-space:pre-wrap;'
+              + 'font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;';
+            wrap.appendChild(el);
+            document.body.appendChild(wrap);
           }
-          return el;
+          return wrap.querySelector('#runtime-error');
         }
 
         window.addEventListener('error', function (ev) {
@@ -115,7 +137,11 @@
         });
         window.addEventListener('unhandledrejection', function (ev) {
           const el = ensureOverlay();
-          el.textContent += `[unhandledrejection] ${String(ev.reason)}\n\n`;
+          const reason = ev.reason;
+          const stack = reason && typeof reason === 'object' && reason.stack
+            ? `\n${reason.stack}`
+            : '';
+          el.textContent += `[unhandledrejection] ${String(reason)}${stack}\n\n`;
         });
       })();
     </script>
@@ -135,10 +161,10 @@
     <script src="./src/npc-roster.js" defer></script>
     <script src="./src/npc-capabilities.js?v=cap1" defer></script>
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
-    <script src="./src/touch-bind.js?v=voice1" defer></script>
+    <script src="./src/touch-bind.js?v=voice2" defer></script>
     <!-- Agent Office System -->
     <script src="./src/agent-actions.js" defer></script>
-    <script src="./src/agent-office-manager.js?v=economy2" defer></script>
+    <script src="./src/agent-office-manager.js?v=office1" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
     <!-- OpenClaw → WorldState bridge (translator must load BEFORE the bridge runner) -->
     <script src="./src/openclaw-translator.js?v=mobfix2" defer></script>
@@ -148,28 +174,34 @@
     <!-- Mobile haptics (tap / impact / notify vibration patterns) -->
     <script src="./src/mobile-haptics.js?v=mobplay2" defer></script>
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
-    <script src="./src/device-profile.js?v=devprof3" defer></script>
+    <script src="./src/device-profile.js?v=devprof5" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=mobperf4" defer></script>
-    <script src="./src/mobile-sidebar.js?v=mobme10" defer></script>
+    <script src="./src/mobile-controls.js?v=mobperf6" defer></script>
+    <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
-    <script src="./src/visitor-session.js?v=vis19" defer></script>
-    <script src="./src/visitor-account-panel.js?v=acct7" defer></script>
-    <script src="./src/visitor-node-ui.js?v=node20" defer></script>
-    <script src="./src/visitor-onboarding.js?v=onbv4guide" defer></script>
+    <script src="./src/visitor-session.js?v=vis30" defer></script>
+    <script src="./src/visitor-demo-account-prompt.js?v=demoacct1" defer></script>
+    <script src="./src/visitor-profile-ui.js?v=prof1" defer></script>
+    <script src="./src/visitor-account-panel.js?v=acct8" defer></script>
+    <script src="./src/visitor-node-ui.js?v=node24city" defer></script>
+    <script src="./src/visitor-onboarding.js?v=onbv10pitch" defer></script>
     <script src="./src/visitor-capabilities-guide.js?v=guide1" defer></script>
-    <script src="./src/visitor-superuser-onboarding.js?v=super1" defer></script>
+    <script src="./src/visitor-superuser-onboarding.js?v=super3city" defer></script>
     <script src="./src/visitor-claim-ui.js?v=mobplay6" defer></script>
+    <script src="./src/visitor-npc-team-ui.js?v=npcteam13" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=chatmob1" defer></script>
+    <script src="./src/player-chat.js?v=chatmob5city" defer></script>
+    <script src="./src/denizen-phone-chat-ui.js?v=phchat5" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
-    <script src="./src/bottom-dock.js?v=mobme2" defer></script>
+    <script src="./src/bottom-dock.js?v=mobme4" defer></script>
+    <!-- In-game smartphone HUD — replaces the dock with a Phone button (?phonemode=0 for legacy) -->
+    <script src="./src/denizen-phone-ui.js?v=phone17city" defer></script>
     <!-- Lazy loader — audio, panels, security feed, browser mirror, etc. -->
-    <script src="./src/denizen-lazy-scripts.js?v=lazy2" defer></script>
+    <script src="./src/denizen-lazy-scripts.js?v=lazy5" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=wall7" defer></script>
     <!-- Game scene -->
-    <script src="./office-scene.js?v=mobperf1" defer></script>
+    <script src="./office-scene.js?v=office1" defer></script>
   </head>
   <body>
     <div id="game-container"></div>

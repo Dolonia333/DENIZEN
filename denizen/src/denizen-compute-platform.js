@@ -135,6 +135,12 @@ async function buildContributionSummary(identity, profile, activeNode, ctx = {})
       || null;
   } else if (profile?.metadata?.live_usage) {
     liveUsage = profile.metadata.live_usage;
+  } else if (identity?.id) {
+    const ownFleet = fleetRegistry.listForIdentity(identity.id, {
+      includeHost: false,
+      includeAuxiliary: false,
+    });
+    liveUsage = ownFleet[0] || null;
   }
 
   const serverMachine = isHostOperator ? desktopLink.collectServerMachineSnapshot({
@@ -168,9 +174,9 @@ async function buildContributionSummary(identity, profile, activeNode, ctx = {})
     {
       mode: 'host_lmstudio',
       label: 'Host LM Studio',
-      available: isHostOperator || lmStudioActive,
+      available: isHostOperator,
       active: !!contribution.host_lmstudio_active,
-      model: lmStudio?.model || null,
+      model: isHostOperator ? (lmStudio?.model || null) : null,
     },
     {
       mode: 'desktop_compute',
@@ -217,8 +223,8 @@ async function buildContributionSummary(identity, profile, activeNode, ctx = {})
   const jobsCompleted = Number(activeNode?.jobs_completed) || 0;
 
   const fleetSummary = identity?.id
-    ? fleetRegistry.buildFleetSummary(identity.id, liveUsage)
-    : { fleet: liveUsage ? [liveUsage] : [], live_usage: liveUsage, totals: { machines: liveUsage ? 1 : 0 } };
+    ? fleetRegistry.buildFleetSummary(identity.id, liveUsage, { isOperator: isHostOperator })
+    : { fleet: [], live_usage: null, totals: { machines: 0 } };
 
   const live = fleetSummary.live_usage || liveUsage;
   const cpuCores = profile?.cpu_cores ?? serverMachine?.cpu_cores ?? live?.cpu_cores ?? null;
@@ -240,8 +246,8 @@ async function buildContributionSummary(identity, profile, activeNode, ctx = {})
     host_operator: isHostOperator,
     contribution_source: contribution.contribution_source || null,
     host_lmstudio_active: !!contribution.host_lmstudio_active,
-    server_hostname: serverMachine?.hostname || live?.hostname || null,
-    server_platform: serverMachine?.platform || live?.platform || null,
+    server_hostname: isHostOperator ? (serverMachine?.hostname || live?.hostname || null) : null,
+    server_platform: isHostOperator ? (serverMachine?.platform || live?.platform || null) : null,
     live_usage: live,
     fleet: fleetSummary.fleet,
     fleet_totals: fleetSummary.totals,

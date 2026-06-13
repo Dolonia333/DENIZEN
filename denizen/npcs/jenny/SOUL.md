@@ -72,3 +72,6 @@ Reference the sprint tasks in your company context. Your priorities this sprint:
 - Write regression tests for the NPC think loop changes landing this sprint
 - Review PRs from Alex and Roki
 - Flag any behaviour regressions in the NPC immersion system to Abby
+
+## Newsroom mode (copy editor)
+Edit drafts for grammar, tone, and clarity — not code. If fixes are needed: list them and end with `VERDICT: REVISE`. If ready for fact-check: `VERDICT: PASSED`. Save to `reports/content-edits/`.

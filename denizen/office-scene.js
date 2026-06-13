@@ -590,11 +590,18 @@ class OfficeScene extends Phaser.Scene {
         });
 
         if (isReferenceTemplate) {
-           // Full openplan zone 1264×700. Zoom 1.0 fits in a 1280×720 viewport.
            const cam = this.cameras.main;
-           cam.setZoom(1.0);
-           cam.centerOn(zoneX + zoneW / 2, zoneY + zoneH / 2);
            cam.setBounds(zoneX - 32, zoneY - 32, zoneW + 64, zoneH + 64);
+           if (window.__DenizenIsTouch && window.DenizenMobilePlay?.isPhoneLike?.()) {
+             // Phones: the full-office view is unreadable on a small screen —
+             // zoom in and follow the player instead.
+             cam.setZoom(2);
+             cam.startFollow(this.player, true, 0.12, 0.12);
+           } else {
+             // Full openplan zone 1264×700. Zoom 1.0 fits in a 1280×720 viewport.
+             cam.setZoom(1.0);
+             cam.centerOn(zoneX + zoneW / 2, zoneY + zoneH / 2);
+           }
         }
         
         // Store assembly instance on scene for debugging/inspection
@@ -1100,11 +1107,29 @@ class OfficeScene extends Phaser.Scene {
     // Use bundled default immediately — sync XHR here blocked the main thread
     // and delayed Player Chat / WebSocket init by seconds when the server was busy.
     let placements = furnitureCatalog?.placements;
-    fetch('/api/layout')
+    const layoutSid = globalThis.DenizenVisitorSession?.getSessionId?.();
+    const layoutUrl = layoutSid
+      ? `/api/layout?session_id=${encodeURIComponent(layoutSid)}`
+      : '/api/layout';
+    fetch(layoutUrl)
       .then((r) => (r.ok ? r.json() : null))
       .then((saved) => {
-        if (saved?.placements?.length) {
-          console.log('[OfficeScene] Saved layout on server (' + saved.placements.length + ' items) — using bundled default for fast load');
+        const items = saved?.items || saved?.placements;
+        if (Array.isArray(items) && items.length && window.DenizenLiveFurniture?.spawn) {
+          items.forEach((item) => {
+            const placement = item.prefabId
+              ? {
+                id: item.prefabId,
+                instanceId: item.instanceId || `saved_${item.prefabId}_${item.x}_${item.y}`,
+                x: item.x,
+                y: item.y,
+              }
+              : item;
+            try { window.DenizenLiveFurniture.spawn(placement); } catch (_) {}
+          });
+          console.log('[OfficeScene] Applied per-office layout (' + items.length + ' items)');
+        } else if (items?.length) {
+          console.log('[OfficeScene] Per-office layout on server (' + items.length + ' items)');
         }
       })
       .catch(() => {});
@@ -1742,10 +1767,15 @@ class OfficeScene extends Phaser.Scene {
       this._dialogAutoClose = null;
     }
 
+    // Anchor to the camera viewport (not the world) so the dialog stays visible
+    // when the phone camera is zoomed in and following the player. With camera
+    // zoom z, a scrollFactor-0 object at y renders at (y - h/2) * z + h/2.
+    const cam = this.cameras.main;
+    const zoom = cam.zoom || 1;
     const panelW = 300;
     const panelH = 80;
-    const cx = 1280 / 2;
-    const cy = 720 - panelH / 2 - 16;
+    const cx = cam.width / 2;
+    const cy = (cam.height - (panelH * zoom) / 2 - 16 - cam.height / 2) / zoom + cam.height / 2;
 
     const children = [];
 
@@ -1793,6 +1823,7 @@ class OfficeScene extends Phaser.Scene {
 
     this.dialogBox = this.add.container(0, 0, children);
     this.dialogBox.setDepth(1000);
+    this.dialogBox.setScrollFactor(0);
 
     // Close on click anywhere (after a small delay so the opening click doesn't immediately close it)
     const closeDialog = () => {

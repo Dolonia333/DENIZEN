@@ -27,6 +27,7 @@
     runningJobs: [],
     recentCompletions: [],
     fleet: [],
+    inference: null,
     watchdogAlerts: [],
     resourcePressure: null,
     scalePlan: null,
@@ -185,8 +186,8 @@
     chipEl = document.createElement('button');
     chipEl.id = CHIP_ID;
     chipEl.type = 'button';
-    chipEl.title = 'Mesh compute jobs and fleet';
-    chipEl.textContent = '⬡ mesh';
+    chipEl.title = 'City Power and connected stations';
+    chipEl.textContent = '⬡ power';
     const openPanel = () => setPanelOpen(!panelOpen);
     const bind = globalThis.DenizenTouchBind?.bindPress;
     if (bind) bind(chipEl, openPanel);
@@ -196,7 +197,7 @@
     panelEl = document.createElement('div');
     panelEl.id = PANEL_ID;
     panelEl.setAttribute('role', 'dialog');
-    panelEl.setAttribute('aria-label', 'Mesh jobs');
+    panelEl.setAttribute('aria-label', 'City Power');
     panelEl.addEventListener('pointerdown', (e) => e.stopPropagation());
     document.body.appendChild(panelEl);
   }
@@ -227,20 +228,20 @@
     const pressureHigh = resourcePressure?.severity === 'critical' || resourcePressure?.severity === 'high';
     if (watchdogAlerts?.length || pressureHigh) {
       chipEl.dataset.state = 'busy';
-      chipEl.textContent = touch ? '⬡' : '⬡ mesh ⚠';
-      chipEl.title = watchdogAlerts[0]?.message || 'Mesh watchdog alert';
+      chipEl.textContent = touch ? '⬡' : '⬡ power ⚠';
+      chipEl.title = watchdogAlerts?.[0]?.message || 'City Power alert';
       return;
     }
     if (error) {
       chipEl.dataset.state = 'busy';
-      chipEl.textContent = touch ? '⬡' : '⬡ mesh !';
-      chipEl.title = `Mesh jobs — error: ${error}`;
+      chipEl.textContent = touch ? '⬡' : '⬡ power !';
+      chipEl.title = `City Power error: ${error}`;
       return;
     }
     if (!dbEnabled) {
       chipEl.dataset.state = '';
-      chipEl.textContent = touch ? '⬡' : '⬡ mesh off';
-      chipEl.title = 'Mesh compute — database off';
+      chipEl.textContent = touch ? '⬡' : '⬡ power off';
+      chipEl.title = 'City Power is offline';
       return;
     }
     const active = pendingCount + runningCount;
@@ -248,11 +249,11 @@
     if (touch) {
       chipEl.textContent = '⬡';
       chipEl.title = active > 0
-        ? `Mesh jobs — ${active} active (${pendingCount} pending, ${runningCount} running)`
-        : 'Mesh jobs — idle';
+        ? `City Power - ${active} active (${pendingCount} waiting, ${runningCount} running)`
+        : 'City Power - ready';
     } else {
-      chipEl.textContent = active > 0 ? `⬡ mesh ${active}` : '⬡ mesh';
-      chipEl.title = 'Mesh compute jobs and fleet';
+      chipEl.textContent = active > 0 ? `⬡ power ${active}` : '⬡ power';
+      chipEl.title = 'City Power and connected stations';
     }
   }
 
@@ -276,7 +277,18 @@
     const cpu = m.cpu_percent != null ? ` · cpu ${Math.round(m.cpu_percent)}%` : '';
     return `<div class="mesh-row">
       <div><b>${machineLabel(m)}</b><span class="mesh-meta">${role}${cpu}</span></div>
-      <div class="mesh-meta">jobs completed: ${jobs}</div>
+      <div class="mesh-meta">city work completed: ${jobs}</div>
+    </div>`;
+  }
+
+  function renderInferenceRow(n) {
+    const ok = n.reachable !== false ? '✓' : '✗';
+    const inflight = Number(n.inflight) || 0;
+    const vram = n.vram_mb ? ` · ${Math.round(n.vram_mb / 1024)}GB VRAM` : '';
+    const score = n.score != null ? ` · score ${n.score}` : '';
+    return `<div class="mesh-row${n.reachable === false ? '' : ' done'}">
+      <div><b>${ok} ${n.label || n.node_id}</b><span class="mesh-meta">${vram}${score}</span></div>
+      <div class="mesh-meta">inflight ${inflight} · ${n.url || '—'}</div>
     </div>`;
   }
 
@@ -286,17 +298,17 @@
     const sections = [];
 
     sections.push(`<div class="mesh-summary">
-      <span class="mesh-pill">pending ${s.pendingCount}</span>
-      <span class="mesh-pill">running ${s.runningCount}</span>
-      <span class="mesh-pill">fleet ${s.fleet.length}</span>
-      <span class="mesh-pill">db ${s.dbEnabled ? 'on' : 'off'}</span>
+      <span class="mesh-pill">waiting ${s.pendingCount}</span>
+      <span class="mesh-pill">active ${s.runningCount}</span>
+      <span class="mesh-pill">stations ${s.fleet.length}</span>
+      <span class="mesh-pill">grid ${s.dbEnabled ? 'online' : 'offline'}</span>
     </div>`);
 
     if (s.error) {
       sections.push(`<div class="mesh-section"><div class="mesh-row">⚠ ${s.error}</div></div>`);
     }
 
-    sections.push('<div class="mesh-section"><h3>Pending jobs</h3>');
+    sections.push('<div class="mesh-section"><h3>Waiting city work</h3>');
     if (!s.pendingJobs.length) {
       sections.push('<div class="mesh-empty">(none queued)</div>');
     } else {
@@ -304,7 +316,7 @@
     }
     sections.push('</div>');
 
-    sections.push('<div class="mesh-section"><h3>Running jobs</h3>');
+    sections.push('<div class="mesh-section"><h3>Active city work</h3>');
     if (!s.runningJobs.length) {
       sections.push('<div class="mesh-empty">(none assigned)</div>');
     } else {
@@ -312,15 +324,26 @@
     }
     sections.push('</div>');
 
-    sections.push('<div class="mesh-section"><h3>Fleet</h3>');
+    sections.push('<div class="mesh-section"><h3>Connected stations</h3>');
     if (!s.fleet.length) {
-      sections.push('<div class="mesh-empty">(no machines reported)</div>');
+      sections.push('<div class="mesh-empty">(no stations online)</div>');
     } else {
       sections.push(s.fleet.map(renderFleetRow).join(''));
     }
     sections.push('</div>');
 
-    sections.push('<div class="mesh-section"><h3>Recent completions</h3>');
+    sections.push('<div class="mesh-section"><h3>Local AI pool</h3>');
+    const inf = s.inference;
+    if (!inf?.nodes?.length) {
+      sections.push('<div class="mesh-empty">(no inference nodes — set LM_STUDIO_REMOTE_URLS or add fleet agents with LM Studio)</div>');
+    } else {
+      const sel = inf.selected?.label || inf.selected?.url || '—';
+      sections.push(`<div class="mesh-meta" style="margin-bottom:6px">router: ${inf.enabled ? 'on' : 'off'} · selected: ${sel}${inf.saturated ? ' · saturated' : ''}</div>`);
+      sections.push(inf.nodes.map(renderInferenceRow).join(''));
+    }
+    sections.push('</div>');
+
+    sections.push('<div class="mesh-section"><h3>Recent city work</h3>');
     if (!s.recentCompletions.length) {
       sections.push('<div class="mesh-empty">(none yet)</div>');
     } else {
@@ -331,7 +354,7 @@
     const updated = s.fetchedAt ? fmtTime(new Date(s.fetchedAt).toISOString()) : '—';
     panelEl.innerHTML = `
       <header>
-        <h2>MESH JOBS</h2>
+        <h2>CITY POWER</h2>
         <button type="button" class="mesh-close" aria-label="Close">✕</button>
       </header>
       <div class="mesh-body">
@@ -351,20 +374,15 @@
 
   async function fetchFleet() {
     const sid = getSessionId();
-    if (sid) {
-      try {
-        const live = await fetchJson(
-          `/api/compute/hardware/live?session_id=${encodeURIComponent(sid)}`,
-        );
-        if (Array.isArray(live.fleet) && live.fleet.length) return live.fleet;
-      } catch (_) {}
-    }
+    if (!sid) return [];
     try {
-      const health = await fetchJson(HEALTH_URL);
-      const fleet = health?.hardware?.fleet;
-      if (Array.isArray(fleet) && fleet.length) return fleet;
-    } catch (_) {}
-    return [];
+      const live = await fetchJson(
+        `/api/compute/hardware/live?session_id=${encodeURIComponent(sid)}`,
+      );
+      return Array.isArray(live.fleet) ? live.fleet : [];
+    } catch (_) {
+      return [];
+    }
   }
 
   async function refresh() {
@@ -394,6 +412,7 @@
           runningJobs: Array.isArray(status.running_jobs) ? status.running_jobs : [],
           recentCompletions: Array.isArray(status.recent_completions) ? status.recent_completions : [],
           fleet,
+          inference: status.inference || null,
           resourcePressure: pressure?.signals || snapshot.resourcePressure,
           scalePlan: scaleAdvice?.plan || snapshot.scalePlan,
           fetchedAt: Date.now(),

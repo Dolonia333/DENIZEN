@@ -13,6 +13,8 @@
   let expanded = false;
   let initialized = false;
   let busyLogout = false;
+  let switchingProfile = null;
+  let statsRenderSeq = 0;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -63,6 +65,66 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      #${ROOT_ID} .acct-subline {
+        margin-top: 3px;
+        color: #64748b;
+        font-size: 9px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #${ROOT_ID} .acct-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 6px;
+      }
+      #${ROOT_ID} .acct-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        max-width: 100%;
+        border-radius: 999px;
+        border: 1px solid #334155;
+        color: #cbd5e1;
+        padding: 2px 7px;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      #${ROOT_ID} .acct-badge.team {
+        border-color: rgba(74, 222, 128, 0.5);
+        color: #bbf7d0;
+        background: rgba(34, 197, 94, 0.1);
+      }
+      #${ROOT_ID} .acct-badge.demo {
+        border-color: rgba(56, 189, 248, 0.5);
+        color: #bae6fd;
+        background: rgba(14, 116, 144, 0.12);
+      }
+      #${ROOT_ID} .acct-badge.ceo {
+        border-color: rgba(250, 204, 21, 0.65);
+        color: #fde68a;
+        background: rgba(250, 204, 21, 0.12);
+      }
+      #${ROOT_ID} .acct-rule-card {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid #1f2937;
+        background: rgba(15, 23, 42, 0.52);
+        color: #94a3b8;
+        font-size: 9px;
+        line-height: 1.35;
+      }
+      #${ROOT_ID} .acct-rule-title {
+        color: #e2e8f0;
+        font-size: 10px;
+        font-weight: 700;
       }
       #${ROOT_ID} .acct-actions {
         display: flex;
@@ -254,8 +316,21 @@
         text-transform: uppercase;
         letter-spacing: 0.03em;
       }
-      html[data-denizen-modal="open"] #${ROOT_ID} {
+      #${ROOT_ID}[data-expanded="1"] {
+        max-width: min(360px, calc(100vw - 24px));
+      }
+      #${ROOT_ID}[data-expanded="1"] .acct-identity .acct-name,
+      #${ROOT_ID}[data-expanded="1"] .acct-identity .acct-email,
+      #${ROOT_ID}[data-expanded="1"] .acct-identity .acct-subline,
+      #${ROOT_ID}[data-expanded="1"] .acct-identity .acct-badges {
         display: none;
+      }
+      #${ROOT_ID}[data-expanded="1"] .acct-identity {
+        min-width: 0;
+        flex: 0;
+      }
+      #${ROOT_ID}[data-expanded="1"] .acct-rule-card {
+        margin-bottom: 4px;
       }
       html.denizen-drawer-open #denizen-mobile-drawer-body #${ROOT_ID} {
         display: flex !important;
@@ -340,10 +415,60 @@
     return null;
   }
 
+  function scrubStatsForProfile(stats, profile) {
+    if (!stats) return null;
+    if (isOwnerProfile(profile)) return stats;
+    const next = { ...stats };
+    const statusText = String(next.statusLabel || '').toLowerCase();
+    const hostDerived = !!next.isHostNode
+      || statusText.includes('host')
+      || statusText.includes('lm studio');
+    if (hostDerived) {
+      next.isHostNode = false;
+      next.desktopLinked = false;
+      next.isSuperNode = false;
+      next.contributing = false;
+      next.contributorState = 'browser_only';
+      next.statusLabel = 'browser only';
+      next.lmStudioModel = null;
+      next.jobsCompleted = 0;
+      next.hardwareScore = 0;
+      next.contributionLevel = 'off';
+      next.cpuCores = null;
+      next.ramMb = null;
+      next.gpuModel = null;
+      next.cpuPercent = null;
+      next.ramUsedPercent = null;
+      next.ramUsedMb = null;
+      next.gpuUtilPercent = null;
+      next.gpuVramUsedMb = null;
+      next.contributionModes = [];
+    }
+    if (Array.isArray(next.fleet)) {
+      next.fleet = next.fleet.filter((machine) => {
+        const role = String(machine?.role || '').toLowerCase();
+        if (['host', 'nas', 'aux', 'server'].includes(role)) return false;
+        if (String(machine?.label || '').toLowerCase().includes('nas')) return false;
+        return true;
+      });
+    }
+    return next;
+  }
+
   function formatPercent(value) {
     const n = Number(value);
     if (!Number.isFinite(n)) return null;
     return `${Math.round(n * 10) / 10}%`;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[ch]);
   }
 
   function formatIdentityLabel(profile) {
@@ -352,6 +477,94 @@
       name: profile.displayName || 'Guest',
       email: profile.email || null,
     };
+  }
+
+  function cleanRoleLabel(role) {
+    const raw = String(role || '').trim();
+    if (!raw) return null;
+    return raw.replace(/[_-]+/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+  }
+
+  function accountKind(profile) {
+    const tier = String(profile?.tier || '').toLowerCase();
+    if (tier === 'ceo' || profile?.accessMethod === 'ceo') return 'ceo';
+    if (tier === 'team') return 'team';
+    if (tier === 'demo') return 'demo';
+    return 'guest';
+  }
+
+  function roleForProfile(profile) {
+    if (accountKind(profile) === 'ceo') return 'Owner';
+    return cleanRoleLabel(profile?.teamRole) || (accountKind(profile) === 'team' ? 'Member' : null);
+  }
+
+  function isOwnerProfile(profile) {
+    const role = String(profile?.teamRole || '').toLowerCase();
+    return accountKind(profile) === 'ceo'
+      || profile?.canApproveSkills
+      || role === 'owner'
+      || role === 'admin';
+  }
+
+  function serverDisplayName(slug) {
+    const raw = String(slug || '').trim();
+    if (!raw) return null;
+    if (/^zion$/i.test(raw)) return 'Dolonia';
+    if (/^demo$/i.test(raw)) return 'Demo';
+    return raw.replace(/[-_]+/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+  }
+
+  function updateAccountMeta(profile) {
+    if (!rootEl) return;
+    const kind = accountKind(profile);
+    const serverSlug = profile?.orgSlug || (kind === 'demo' ? 'demo' : null);
+    const serverLabel = serverDisplayName(serverSlug);
+    const role = roleForProfile(profile);
+    const workspaceEl = rootEl.querySelector('#denizen-acct-workspace');
+    const badgesEl = rootEl.querySelector('#denizen-acct-badges');
+    const rulesTitle = rootEl.querySelector('#denizen-acct-rules-title');
+    const rulesCopy = rootEl.querySelector('#denizen-acct-rules-copy');
+
+    if (workspaceEl) {
+      if (kind === 'team') {
+        workspaceEl.textContent = `Team server${serverLabel ? `: ${serverLabel}` : ''}${role ? ` · ${role}` : ''}`;
+      } else if (kind === 'ceo') {
+        workspaceEl.textContent = `Owner server${serverLabel ? `: ${serverLabel}` : ''} · Owner controls`;
+      } else if (kind === 'demo') {
+        workspaceEl.textContent = 'Personal demo account · sandbox';
+      } else {
+        workspaceEl.textContent = 'Guest account · not linked yet';
+      }
+    }
+
+    if (badgesEl) {
+      const badges = [];
+      if (kind === 'team') badges.push(`<span class="acct-badge team">Team</span>`);
+      else if (kind === 'ceo') badges.push(`<span class="acct-badge ceo">Owner</span>`);
+      else if (kind === 'demo') badges.push(`<span class="acct-badge demo">Demo</span>`);
+      else badges.push(`<span class="acct-badge">Guest</span>`);
+      if (serverLabel && isOwnerProfile(profile)) badges.push(`<span class="acct-badge">${escapeHtml(serverLabel)}</span>`);
+      if (role && kind !== 'demo') badges.push(`<span class="acct-badge">${escapeHtml(role)}</span>`);
+      if (profile?.canApproveSkills) badges.push(`<span class="acct-badge team">Approver</span>`);
+      badgesEl.innerHTML = badges.join('');
+    }
+
+    if (rulesTitle) rulesTitle.textContent = kind === 'team' || kind === 'ceo' ? 'Team server rules' : 'Personal server rules';
+    if (rulesCopy) {
+      if (kind === 'ceo') {
+        rulesCopy.textContent = 'Owner account: can manage team-grade tools, approvals, and server-side work.';
+      } else if (kind === 'team') {
+        rulesCopy.textContent = profile?.canApproveSkills
+          ? 'Team account: shared workspace access with approval rights for NPC-created tools.'
+          : 'Team account: shared workspace access under your team policy. Owner/admin approvals are required for new tools.';
+      } else if (kind === 'demo') {
+        rulesCopy.textContent = profile?.demoUsername
+          ? `Demo account @${profile.demoUsername}: chat memory stays yours; team/server tools stay sandboxed until you upgrade.`
+          : 'Personal demo: your profile and chat memory stay tied to your email. Create a username + password to save your progress.';
+      } else {
+        rulesCopy.textContent = 'Guest: log in or create a team so this profile belongs to one user.';
+      }
+    }
   }
 
   function ensureRoot() {
@@ -365,6 +578,8 @@
         <div class="acct-identity" id="denizen-acct-identity" role="button" tabindex="0" aria-expanded="false">
           <div class="acct-name" id="denizen-acct-name">Guest</div>
           <div class="acct-email" id="denizen-acct-email" hidden></div>
+          <div class="acct-subline" id="denizen-acct-workspace">Personal demo account</div>
+          <div class="acct-badges" id="denizen-acct-badges"></div>
         </div>
         <div class="acct-actions">
           <button type="button" class="acct-toggle" id="denizen-acct-toggle" aria-label="Toggle stats">▾</button>
@@ -372,9 +587,14 @@
         </div>
       </div>
       <div class="acct-demo-banner" id="denizen-acct-demo-banner" hidden>
-        <div class="acct-demo-banner-title">Demo · read-only sandbox</div>
-        <div class="acct-demo-banner-copy">Explore the office and chat with NPCs. Upgrade for handoffs, briefings, real browser work, and team skills approved by Lucy.</div>
+        <div class="acct-demo-banner-title">Personal demo · sandbox rules</div>
+        <div class="acct-demo-banner-copy" id="denizen-acct-demo-banner-copy">Save your progress with a username and password, or upgrade to a full team later.</div>
+        <button type="button" class="acct-demo-upgrade" id="denizen-acct-demo-create" hidden>Create demo account</button>
         <button type="button" class="acct-demo-upgrade" id="denizen-acct-demo-upgrade">Get team access</button>
+      </div>
+      <div class="acct-rule-card" id="denizen-acct-rules">
+        <div class="acct-rule-title" id="denizen-acct-rules-title">Server rules</div>
+        <div id="denizen-acct-rules-copy">Your account is loading.</div>
       </div>
       <div class="acct-stats" id="denizen-acct-stats"></div>
       <div class="acct-settings" id="denizen-acct-settings">
@@ -412,7 +632,11 @@
       rootEl.dataset.expanded = expanded ? '1' : '0';
       if (identityEl) identityEl.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       if (toggleEl) toggleEl.textContent = expanded ? '▴' : '▾';
-      if (expanded) renderStats();
+      if (expanded) {
+        renderStats();
+        loadAccountSettings();
+        mountProfileUi();
+      }
     };
 
     identityEl?.addEventListener('click', onToggle);
@@ -450,6 +674,13 @@
 
     logoutEl?.addEventListener('click', runLogout);
     rootEl.querySelector('#denizen-acct-demo-upgrade')?.addEventListener('click', runLogout);
+    rootEl.querySelector('#denizen-acct-demo-create')?.addEventListener('click', () => {
+      globalThis.DenizenVisitorSession?.showDemoAccountModal?.()
+        .then((result) => {
+          if (result?.ok) renderDemoBanner();
+        })
+        .catch(() => null);
+    });
 
     return rootEl;
   }
@@ -460,9 +691,18 @@
     if (!banner) return;
     const isDemo = globalThis.DenizenVisitorCapabilities?.isDemo?.()
       || globalThis.DenizenVisitorSession?.isDemo?.();
+    const hasAccount = globalThis.DenizenVisitorSession?.hasDemoAccount?.();
+    const createBtn = rootEl.querySelector('#denizen-acct-demo-create');
+    const copyEl = rootEl.querySelector('#denizen-acct-demo-banner-copy');
     if (isDemo) {
       banner.hidden = false;
       banner.classList.add('show');
+      if (createBtn) createBtn.hidden = !!hasAccount;
+      if (copyEl) {
+        copyEl.textContent = hasAccount
+          ? 'Demo account saved — log back in anytime from Demo → Log in. Team tools unlock when you join or create a team.'
+          : 'Save your progress with a username and password, or upgrade to a full team later.';
+      }
     } else {
       banner.hidden = true;
       banner.classList.remove('show');
@@ -611,14 +851,20 @@
     await loadAccountSettings();
   }
 
+  function mountProfileUi(tab) {
+    const api = getSessionApi();
+    const profile = switchingProfile || api?.getProfile?.() || {};
+    globalThis.DenizenProfileUI?.mount?.(rootEl, profile, { expandTab: tab });
+  }
+
   function renderProfile() {
     ensureRoot();
     const api = getSessionApi();
-    const profile = api?.getProfile?.() || {};
+    const profile = switchingProfile || api?.getProfile?.() || {};
     const { name, email } = formatIdentityLabel(profile);
     const nameEl = rootEl.querySelector('#denizen-acct-name');
     const emailEl = rootEl.querySelector('#denizen-acct-email');
-    if (nameEl) nameEl.textContent = name;
+    if (nameEl) nameEl.textContent = switchingProfile ? `${name || 'Account'}...` : name;
     if (emailEl) {
       if (email) {
         emailEl.textContent = email;
@@ -628,10 +874,14 @@
         emailEl.hidden = true;
       }
     }
-    renderDemoBanner();
+    updateAccountMeta(profile);
+    if (!switchingProfile) renderDemoBanner();
     if (expanded) {
       renderStats();
-      loadAccountSettings();
+      if (!switchingProfile) {
+        loadAccountSettings();
+        mountProfileUi();
+      }
     }
   }
 
@@ -642,11 +892,24 @@
 
   async function renderStats() {
     if (!rootEl || !expanded) return;
+    const seq = ++statsRenderSeq;
     const statsEl = rootEl.querySelector('#denizen-acct-stats');
     if (!statsEl) return;
 
     const api = getSessionApi();
-    const profile = api?.getProfile?.() || {};
+    const profile = switchingProfile || api?.getProfile?.() || {};
+    if (switchingProfile) {
+      const kind = accountKind(profile);
+      const serverSlug = profile.orgSlug || (kind === 'demo' ? 'demo' : null);
+      const serverLabel = serverDisplayName(serverSlug);
+      let html = '';
+      html += statRow('Account', 'Switching...');
+      if (profile.email) html += statRow('Email', escapeHtml(profile.email));
+      if (serverLabel) html += statRow(kind === 'team' ? 'Team server' : 'Server', escapeHtml(serverLabel));
+      html += statRow('Server rules', 'Refreshing');
+      statsEl.innerHTML = html;
+      return;
+    }
     let stats = getContributionStats();
 
     if (!stats && profile.sessionId) {
@@ -678,7 +941,15 @@
       } catch (_) {}
     }
 
+    if (seq !== statsRenderSeq) return;
+    stats = scrubStatsForProfile(stats, profile);
+
     const tier = profile.tier || stats?.tier || '—';
+    const kind = accountKind(profile);
+    const serverSlug = profile.orgSlug || (kind === 'demo' ? 'demo' : null);
+    const serverLabel = serverDisplayName(serverSlug);
+    const role = roleForProfile(profile);
+    const ownerProfile = isOwnerProfile(profile);
     const access = profile.accessMethod === 'ceo' ? 'CEO · host' : (profile.accessMethod || '—');
     const credits = stats ? Math.round(Number(stats.credits) || 0) : '—';
     const status = stats?.statusLabel || (stats?.contributing ? 'active' : 'browser only');
@@ -687,6 +958,10 @@
     const hostLabel = stats?.isHostNode ? 'host' : (stats?.desktopLinked ? 'desktop linked' : null);
 
     let html = '';
+    html += statRow('Account', kind === 'team' ? 'Team user' : kind === 'ceo' ? 'Owner' : kind === 'demo' ? 'Personal demo' : 'Guest');
+    if (serverLabel) html += statRow(kind === 'team' ? 'Team server' : 'Server', escapeHtml(serverLabel));
+    if (role) html += statRow('Role', escapeHtml(role), profile.canApproveSkills ? 'active' : '');
+    html += statRow('Server rules', profile.canApproveSkills ? 'Can approve tools' : (kind === 'team' ? 'Team policy' : 'Sandboxed'));
     html += statRow('Tier', `<span class="acct-tier">${String(tier).toUpperCase()}</span>`);
     html += statRow('Access', String(access));
     html += statRow('Credits', String(credits));
@@ -696,7 +971,7 @@
     const browserOnly = !!caps?.isBrowserOnlyWeb?.();
     if (browserOnly && !caps?.hasDesktopIdentity?.()) {
       html += statRow('Client', 'Browser', 'acct-browser-hide');
-      html += '<div class="acct-stat-row acct-browser-hide"><span>Desktop</span><span class="acct-stat-val"><a href="/desktop/download.html" target="_blank" rel="noopener">Download app</a> for mesh + PC automation</span></div>';
+      html += '<div class="acct-stat-row acct-browser-hide"><span>Your station</span><span class="acct-stat-val"><a href="/desktop/download.html" target="_blank" rel="noopener">Download Denizen Desktop</a> for approved local help and City Power</span></div>';
     } else if (stats?.contributorState) {
       html += statRow('Node state', String(stats.contributorState), 'acct-desktop-only');
     }
@@ -730,8 +1005,11 @@
     }
     const fleet = Array.isArray(stats?.fleet) ? stats.fleet : [];
     if (fleet.length) {
-      html += statRow('Machines', String(fleet.length), hwClass);
-      fleet.slice(0, 4).forEach((machine) => {
+      const visibleFleet = ownerProfile
+        ? fleet
+        : fleet.filter((machine) => !['host', 'nas', 'aux', 'server'].includes(String(machine?.role || '').toLowerCase()));
+      if (visibleFleet.length) html += statRow('Machines', String(visibleFleet.length), hwClass);
+      visibleFleet.slice(0, ownerProfile ? 4 : 2).forEach((machine) => {
         const label = machine?.label || machine?.hostname || machine?.machine_id || 'machine';
         const bits = [];
         if (formatPercent(machine?.cpu_percent)) bits.push(`CPU ${formatPercent(machine.cpu_percent)}`);
@@ -751,7 +1029,7 @@
       if (activeModes.length) html += statRow('Modes', activeModes.join(', '), 'active');
     }
 
-    statsEl.innerHTML = html;
+    if (seq === statsRenderSeq) statsEl.innerHTML = html;
   }
 
   function init() {
@@ -760,7 +1038,33 @@
     ensureRoot();
     renderProfile();
 
+    const params = new URLSearchParams(location.search);
+    if (params.get('panel') === 'profile') {
+      expanded = true;
+      if (rootEl) {
+        rootEl.dataset.expanded = '1';
+        const identityEl = rootEl.querySelector('#denizen-acct-identity');
+        const toggleEl = rootEl.querySelector('#denizen-acct-toggle');
+        if (identityEl) identityEl.setAttribute('aria-expanded', 'true');
+        if (toggleEl) toggleEl.textContent = '▴';
+      }
+      const tab = params.get('tab') || 'overview';
+      globalThis.DenizenProfileUI?.setTab?.(tab);
+      mountProfileUi(tab);
+      globalThis.DenizenMobileSidebar?.open?.('profile');
+    }
+
+    document.addEventListener('denizen-demo-account-created', () => renderDemoBanner());
     document.addEventListener('denizen-visitor-session-ready', () => {
+      switchingProfile = null;
+      renderProfile();
+    });
+    document.addEventListener('denizen-visitor-profile-updated', () => {
+      switchingProfile = null;
+      renderProfile();
+    });
+    document.addEventListener('denizen-visitor-profile-switching', (event) => {
+      switchingProfile = event.detail || { displayName: 'Switching account' };
       renderProfile();
     });
     document.addEventListener('denizen-visitor-logged-out', () => {
@@ -788,6 +1092,7 @@
     }
     renderStats();
     loadAccountSettings();
+    mountProfileUi('overview');
   }
 
   const DenizenAccountPanel = {

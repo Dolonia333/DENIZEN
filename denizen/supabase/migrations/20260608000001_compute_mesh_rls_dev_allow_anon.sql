@@ -46,3 +46,7 @@ create policy denizen_credits_ledger_anon_allow_all
   using (true)
   with check (true);
 
+insert into public.denizen_schema_migrations (version, name)
+values ('20260608000001', 'compute_mesh_rls_dev_allow_anon')
+on conflict (version) do nothing;
+

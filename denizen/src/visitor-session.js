@@ -62,6 +62,7 @@
   let orgSlug = null;
   let accessMethod = null;
   let identityId = null;
+  let officeId = null;
   let userEmail = null;
   let teamRole = null;
   let canApproveSkills = false;
@@ -84,9 +85,21 @@
         teamOrgSlug: 'zion',
         teamCodeRequired: true,
         ceoAccessRequired: true,
+        minPasswordLength: 6,
+        devPasswordRelaxed: false,
       },
     };
     return officeConfig;
+  }
+
+  function minPasswordLen() {
+    const n = Number(officeConfig?.visitorAccess?.minPasswordLength);
+    return Number.isFinite(n) && n >= 3 ? n : 6;
+  }
+
+  function passwordPlaceholder() {
+    const min = minPasswordLen();
+    return min < 6 ? `Password (${min}+ characters, dev)` : `Password (${min}+ characters)`;
   }
 
   function readStore() {
@@ -103,12 +116,46 @@
     return next;
   }
 
+  function clearActiveSessionMemory() {
+    sessionId = null;
+    sessionToken = null;
+    assistant = null;
+    identityId = null;
+    officeId = null;
+    teamRole = null;
+    canApproveSkills = false;
+    try {
+      delete window.__DenizenOfficeId;
+      delete window.__DenizenIsOperatorOffice;
+    } catch (_) {}
+  }
+
+  function announceProfileSwitching(profile = {}) {
+    try {
+      document.dispatchEvent(new CustomEvent('denizen-visitor-profile-switching', {
+        detail: profile,
+      }));
+    } catch (_) {}
+  }
+
   function isCeoPrincipalNow() {
-    if (accessMethod === 'ceo') return true;
+    // The ACTIVE login wins: a leftover CEO grant in localStorage must not
+    // bleed CEO status onto a team/demo login from the same browser.
+    const method = accessMethod || readStore().access_method || null;
+    if (method === 'ceo') return true;
+    if (method) return false;
     try {
       return !!localStorage.getItem('denizen-ceo-grant');
     } catch (_) {
       return false;
+    }
+  }
+
+  function readCeoGrant() {
+    try {
+      return localStorage.getItem('denizen-ceo-grant') || null;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -117,10 +164,11 @@
     if (sessionId) headers['X-Session-Id'] = sessionId;
     if (sessionToken) headers['X-Session-Token'] = sessionToken;
     if (isCeoPrincipalNow()) {
-      headers['X-Ceo-Principal'] = '1';
-      headers['X-Denizen-Client'] = 'host';
-      headers['X-Denizen-Local-Client'] = '1';
       headers['X-Access-Method'] = 'ceo';
+      // The server verifies the signed grant — bare assertion headers
+      // (X-Ceo-Principal etc.) no longer grant anything.
+      const grant = readCeoGrant();
+      if (grant) headers['X-Denizen-Ceo-Grant'] = grant;
     }
     return headers;
   }
@@ -151,7 +199,8 @@
     const s = document.createElement('style');
     s.id = 'denizen-visitor-session-style';
     s.textContent = `
-      #denizen-visitor-name-modal {
+      #denizen-visitor-name-modal,
+      #denizen-demo-account-modal {
         position: fixed;
         inset: 0;
         z-index: 100900;
@@ -164,6 +213,7 @@
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
       }
+      #denizen-demo-account-modal { z-index: 2147483645; }
       #denizen-visitor-name-modal .vis-card {
         background: #020617;
         border: 1px solid #1f2937;
@@ -174,6 +224,9 @@
         pointer-events: auto;
         position: relative;
         z-index: 1;
+        max-height: calc(100dvh - 32px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
       #denizen-visitor-name-modal h2 {
         margin: 0 0 8px;
@@ -237,7 +290,7 @@
         color: #e2e8f0;
         border: 1px solid #334155;
         border-radius: 8px;
-        padding: 14px 16px;
+        padding: 12px 16px;
         font: inherit;
         font-size: 14px;
         font-weight: 600;
@@ -245,6 +298,9 @@
         text-align: center;
         min-height: 48px;
         touch-action: manipulation;
+      }
+      #denizen-visitor-name-modal .vis-path-title {
+        display: block;
       }
       #denizen-visitor-name-modal .vis-path-btn:hover,
       #denizen-visitor-name-modal .vis-path-btn:active {
@@ -254,6 +310,16 @@
       #denizen-visitor-name-modal .vis-path-btn.ceo {
         border-color: #475569;
         color: #fde68a;
+      }
+      #denizen-visitor-name-modal .vis-path-btn .vis-path-sub {
+        display: block;
+        margin-top: 3px;
+        font-size: 11px;
+        font-weight: 400;
+        color: #94a3b8;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.ceo .vis-path-sub {
+        color: #a8a29e;
       }
       #denizen-visitor-name-modal .vis-back {
         background: transparent;
@@ -293,10 +359,33 @@
         font-size: 10px;
         color: #64748b;
       }
+      #denizen-visitor-name-modal .vis-or {
+        margin: 2px 0 10px;
+        font-size: 10px;
+        color: #475569;
+        text-align: center;
+      }
+      #denizen-visitor-name-modal .vis-team-code-box {
+        margin: 12px 0 16px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        border: 1px solid #4ade80;
+        background: rgba(20, 83, 45, 0.35);
+        text-align: center;
+      }
+      #denizen-visitor-name-modal .vis-team-code-box .code {
+        display: block;
+        margin-top: 6px;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: #bbf7d0;
+      }
       html[data-denizen-modal="open"] #game-container,
       html[data-denizen-modal="open"] #game-container canvas,
       html[data-denizen-modal="open"] #denizen-bottom-dock,
       html[data-denizen-modal="open"] #player-chat-fab,
+      html[data-denizen-modal="open"] #denizen-mobile-menu-btn,
       html[data-denizen-modal="open"] #denizen-mobile-controls,
       html[data-denizen-modal="open"] #denizen-rotate-hint,
       html[data-denizen-modal="open"] #denizen-ceo-shell,
@@ -308,8 +397,89 @@
       html[data-denizen-modal="open"] #denizen-ceo-shell {
         display: none !important;
       }
+      html[data-denizen-modal="open"] #denizen-bottom-dock,
+      html[data-denizen-modal="open"] #denizen-mobile-menu-btn {
+        opacity: 0 !important;
+        visibility: hidden !important;
+      }
       html[data-denizen-modal="open"] #denizen-visitor-name-modal {
-        z-index: 2147483000;
+        z-index: 2147483645;
+      }
+      html.denizen-touch #denizen-visitor-name-modal {
+        align-items: flex-end;
+        justify-content: center;
+        padding: max(12px, env(safe-area-inset-top, 0px))
+          max(12px, env(safe-area-inset-right, 0px))
+          max(12px, env(safe-area-inset-bottom, 0px))
+          max(12px, env(safe-area-inset-left, 0px));
+        box-sizing: border-box;
+        background: rgba(2, 6, 23, 0.76);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-card {
+        width: min(100%, var(--denizen-panel-max-width, 440px));
+        max-height: min(72dvh, calc(100dvh - 28px));
+        padding: 18px;
+        border-color: #334155;
+        border-radius: 16px;
+        box-shadow: 0 -14px 42px rgba(0, 0, 0, 0.62);
+      }
+      html.denizen-touch #denizen-visitor-name-modal h2 {
+        font-size: 22px;
+        letter-spacing: 0;
+      }
+      html.denizen-touch #denizen-visitor-name-modal p {
+        margin-bottom: 14px;
+        font-size: 14px;
+        line-height: 1.35;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-paths {
+        gap: 8px;
+        margin-bottom: 0;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn {
+        min-height: 58px;
+        padding: 10px 12px;
+        text-align: left;
+        border-radius: 10px;
+        font-size: 15px;
+        line-height: 1.2;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-sub {
+        margin-top: 2px;
+        font-size: 12px;
+        line-height: 1.25;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn:first-child {
+        background: #14532d;
+        border-color: #4ade80;
+      }
+      @media (max-height: 430px) {
+        html.denizen-touch #denizen-visitor-name-modal {
+          align-items: center;
+          padding: 8px;
+        }
+        html.denizen-touch #denizen-visitor-name-modal .vis-card {
+          max-height: calc(100dvh - 16px);
+          padding: 12px;
+        }
+        html.denizen-touch #denizen-visitor-name-modal h2 {
+          font-size: 18px;
+        }
+        html.denizen-touch #denizen-visitor-name-modal p {
+          margin-bottom: 8px;
+          font-size: 12px;
+        }
+        html.denizen-touch #denizen-visitor-name-modal .vis-paths {
+          gap: 6px;
+        }
+        html.denizen-touch #denizen-visitor-name-modal .vis-path-btn {
+          min-height: 46px;
+          padding: 8px 10px;
+        }
+        html.denizen-touch #denizen-visitor-name-modal .vis-path-sub {
+          display: none;
+        }
       }
     `;
     document.head.appendChild(s);
@@ -332,9 +502,6 @@
 
   function fetchAbortMessage() {
     const port = String(window.location?.port || '');
-    if (port === '8081') {
-      return 'Port 8081 is not Denizen (often Cursor). Open http://localhost:8080/?layout=openplan instead.';
-    }
     if (usesTunnelSafeTransport()) {
       return 'Denizen cloud login timed out — deploy the latest server (GET verify fallback) and reload.';
     }
@@ -557,6 +724,23 @@
           input?.focus();
           return;
         }
+        // Team joins ask for a work email so the session links to the member's
+        // own identity instead of an anonymous guest one.
+        let email = pendingAccess?.email || null;
+        const emailInput = modalEl.querySelector('#denizen-visitor-name-email-input');
+        if (emailInput) {
+          email = String(emailInput.value || '').trim().toLowerCase() || null;
+          const errEl = modalEl.querySelector('#denizen-vis-error');
+          if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (errEl) {
+              errEl.textContent = 'Enter your work email so your profile stays yours.';
+              errEl.hidden = false;
+            }
+            emailInput.focus();
+            return;
+          }
+          if (errEl) errEl.hidden = true;
+        }
         busy = true;
         if (btn) btn.disabled = true;
         closeModal({
@@ -565,7 +749,8 @@
           tier: pendingAccess?.tier,
           accessMethod: pendingAccess?.accessMethod,
           accessGrant: pendingAccess?.accessGrant || null,
-          email: pendingAccess?.email || null,
+          email,
+          freshPrincipal: true,
         });
       }
 
@@ -583,62 +768,142 @@
           render();
           return;
         }
+        const resolvedTier = data.tier || 'team';
         closeModal({
           displayName: name,
-          orgSlug: data.org_slug || teamSlug,
-          tier: data.tier || 'team',
-          accessMethod,
+          orgSlug: data.org_slug || (resolvedTier === 'demo' ? accessCtx().demoSlug : teamSlug),
+          tier: resolvedTier,
+          accessMethod: resolvedTier === 'demo' ? (accessMethod || 'demo_login') : accessMethod,
           accessGrant: data.access_grant || null,
-          email: data.identity?.email || email,
+          email: data.identity?.email || pendingAccess?.email || null,
+          demoUsername: data.username || data.identity?.username || null,
+          freshPrincipal: true,
         });
       }
 
-      async function submitTeamLogin() {
+      async function tryCeoLogin(teamCode) {
+        const code = String(teamCode || '').trim();
+        if (!code) return false;
+        try {
+          const verified = await verifyAccessCode(code, 'ceo');
+          if (!verified.ok) return false;
+          if (verified.ceo_grant) {
+            try { localStorage.setItem('denizen-ceo-grant', verified.ceo_grant); } catch (_) {}
+          }
+          try { localStorage.setItem('denizen-onboarding-seen', '1'); } catch (_) {}
+          const { teamSlug } = accessCtx();
+          closeModal({
+            displayName: 'Dolonia',
+            orgSlug: verified.org_slug || teamSlug,
+            tier: 'ceo',
+            accessMethod: 'ceo',
+            accessGrant: verified.access_grant || null,
+          });
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      async function submitLogin() {
         if (busy) return;
+        const usernameEl = modalEl.querySelector('#denizen-visitor-username-input');
+        const passwordEl = modalEl.querySelector('#denizen-visitor-password-input');
         const emailEl = modalEl.querySelector('#denizen-visitor-email-input');
         const codeEl = modalEl.querySelector('#denizen-visitor-team-code-input');
         const btn = modalEl.querySelector('#denizen-visitor-name-continue');
         const errEl = modalEl.querySelector('#denizen-vis-error');
+        const username = String(usernameEl?.value || '').trim();
+        const password = String(passwordEl?.value || '');
         const email = String(emailEl?.value || '').trim().toLowerCase();
         const teamCode = String(codeEl?.value || '').trim();
-        if (!email) {
-          emailEl?.focus();
+        if (!username) {
+          usernameEl?.focus();
+          return;
+        }
+        if (!password) {
+          passwordEl?.focus();
           return;
         }
         busy = true;
         if (btn) btn.disabled = true;
         if (errEl) errEl.hidden = true;
         try {
+          if (await tryCeoLogin(teamCode || password)) return;
+          if (!teamCode && !email) {
+            const data = await teamAuthRequest('/api/visitor/auth/login-demo', { username, password });
+            finishTeamAuth(data, username, 'demo_login');
+            return;
+          }
           const data = await teamAuthRequest('/api/visitor/auth/login', {
-            email,
+            username,
+            password,
+            email: email || undefined,
             team_code: teamCode || undefined,
           });
-          finishTeamAuth(data, email.split('@')[0]);
+          finishTeamAuth(data, username);
         } catch (err) {
           if (errEl) {
             errEl.textContent = err?.message || 'Login failed';
             errEl.hidden = false;
           }
           if (btn) btn.disabled = false;
-          emailEl?.focus();
+          passwordEl?.focus();
         } finally {
           busy = false;
         }
       }
 
-      async function submitTeamRegister() {
+      async function submitDemoLogin() {
         if (busy) return;
+        const usernameEl = modalEl.querySelector('#denizen-visitor-username-input');
+        const passwordEl = modalEl.querySelector('#denizen-visitor-password-input');
+        const btn = modalEl.querySelector('#denizen-visitor-name-continue');
+        const errEl = modalEl.querySelector('#denizen-vis-error');
+        const username = String(usernameEl?.value || '').trim();
+        const password = String(passwordEl?.value || '');
+        if (!username) {
+          usernameEl?.focus();
+          return;
+        }
+        if (!password) {
+          passwordEl?.focus();
+          return;
+        }
+        busy = true;
+        if (btn) btn.disabled = true;
+        if (errEl) errEl.hidden = true;
+        try {
+          const data = await teamAuthRequest('/api/visitor/auth/login-demo', { username, password });
+          finishTeamAuth(data, username, 'demo_login');
+        } catch (err) {
+          if (errEl) {
+            errEl.textContent = err?.message || 'Demo login failed';
+            errEl.hidden = false;
+          }
+          if (btn) btn.disabled = false;
+          passwordEl?.focus();
+        } finally {
+          busy = false;
+        }
+      }
+
+      async function submitJoinTeam() {
+        if (busy) return;
+        const usernameEl = modalEl.querySelector('#denizen-visitor-username-input');
+        const passwordEl = modalEl.querySelector('#denizen-visitor-password-input');
         const emailEl = modalEl.querySelector('#denizen-visitor-email-input');
-        const nameEl = modalEl.querySelector('#denizen-visitor-display-input');
         const codeEl = modalEl.querySelector('#denizen-visitor-team-code-input');
         const btn = modalEl.querySelector('#denizen-visitor-name-continue');
         const errEl = modalEl.querySelector('#denizen-vis-error');
+        const username = String(usernameEl?.value || '').trim();
+        const password = String(passwordEl?.value || '');
         const email = String(emailEl?.value || '').trim().toLowerCase();
-        const displayName = String(nameEl?.value || '').trim();
         const teamCode = String(codeEl?.value || '').trim();
-        if (!email || !displayName || !teamCode) {
-          if (!email) emailEl?.focus();
-          else if (!displayName) nameEl?.focus();
+        if (!username || !password || !email || !teamCode) {
+          if (!username) usernameEl?.focus();
+          else if (!password) passwordEl?.focus();
+          else if (!email) emailEl?.focus();
           else codeEl?.focus();
           return;
         }
@@ -647,14 +912,16 @@
         if (errEl) errEl.hidden = true;
         try {
           const data = await teamAuthRequest('/api/visitor/auth/register', {
+            username,
+            password,
             email,
-            display_name: displayName,
+            display_name: username,
             team_code: teamCode,
           });
-          finishTeamAuth(data, displayName, 'website_register');
+          finishTeamAuth(data, username, 'website_register');
         } catch (err) {
           if (errEl) {
-            errEl.textContent = err?.message || 'Registration failed';
+            errEl.textContent = err?.message || 'Could not join team';
             errEl.hidden = false;
           }
           if (btn) btn.disabled = false;
@@ -663,40 +930,109 @@
         }
       }
 
+      async function submitCreateTeam() {
+        if (busy) return;
+        const teamEl = modalEl.querySelector('#denizen-visitor-team-name-input');
+        const usernameEl = modalEl.querySelector('#denizen-visitor-username-input');
+        const passwordEl = modalEl.querySelector('#denizen-visitor-password-input');
+        const emailEl = modalEl.querySelector('#denizen-visitor-email-input');
+        const btn = modalEl.querySelector('#denizen-visitor-name-continue');
+        const errEl = modalEl.querySelector('#denizen-vis-error');
+        const teamName = String(teamEl?.value || '').trim();
+        const username = String(usernameEl?.value || '').trim();
+        const password = String(passwordEl?.value || '');
+        const email = String(emailEl?.value || '').trim().toLowerCase();
+        if (!teamName || !username || !password || !email) {
+          if (!teamName) teamEl?.focus();
+          else if (!username) usernameEl?.focus();
+          else if (!password) passwordEl?.focus();
+          else emailEl?.focus();
+          return;
+        }
+        busy = true;
+        if (btn) btn.disabled = true;
+        if (errEl) errEl.hidden = true;
+        try {
+          const data = await teamAuthRequest('/api/visitor/auth/create-team', {
+            team_name: teamName,
+            username,
+            password,
+            email,
+            display_name: username,
+          });
+          pendingAccess = {
+            orgSlug: data.org_slug,
+            tier: data.tier || 'team',
+            accessMethod: 'team_create',
+            accessGrant: data.access_grant || null,
+            email: data.identity?.email || email,
+            displayName: data.display_name || username,
+            teamCode: data.team_code,
+            teamName: data.team_name || teamName,
+          };
+          step = 'team-created';
+          render();
+        } catch (err) {
+          if (errEl) {
+            errEl.textContent = err?.message || 'Could not create team';
+            errEl.hidden = false;
+          }
+          if (btn) btn.disabled = false;
+        } finally {
+          busy = false;
+        }
+      }
+
+      function finishCreateTeam() {
+        if (!pendingAccess?.accessGrant) return;
+        closeModal({
+          displayName: pendingAccess.displayName,
+          orgSlug: pendingAccess.orgSlug,
+          tier: pendingAccess.tier,
+          accessMethod: pendingAccess.accessMethod,
+          accessGrant: pendingAccess.accessGrant,
+          email: pendingAccess.email,
+          freshPrincipal: true,
+        });
+      }
+
       async function handleAction(action) {
         const { demoSlug } = accessCtx();
         if (action === 'path-demo') {
-          pendingAccess = { orgSlug: demoSlug, tier: 'demo', accessMethod: 'demo' };
+          pendingAccess = { accessMethod: 'demo', orgSlug: demoSlug, tier: 'demo' };
           step = 'demo-email';
           render();
           return;
         }
-        if (action === 'path-team') {
-          pendingAccess = { accessMethod: 'team' };
-          step = 'team-code';
-          render();
-          return;
-        }
-        if (action === 'path-team-email') {
+        if (action === 'path-login') {
           pendingAccess = { accessMethod: 'website_login' };
-          step = 'team-email';
+          step = 'login';
           render();
           return;
         }
-        if (action === 'goto-team-register') {
-          step = 'team-register';
+        if (action === 'path-demo-login') {
+          pendingAccess = { accessMethod: 'demo_login' };
+          step = 'demo-login';
           render();
           return;
         }
-        if (action === 'goto-team-login') {
-          step = 'team-email';
+        if (action === 'goto-create-team') {
+          step = 'create-team';
           render();
           return;
         }
-        if (action === 'path-ceo') {
-          pendingAccess = { accessMethod: 'ceo' };
-          step = 'ceo-code';
+        if (action === 'goto-join-team') {
+          step = 'join-team';
           render();
+          return;
+        }
+        if (action === 'goto-login') {
+          step = 'login';
+          render();
+          return;
+        }
+        if (action === 'finish-create-team') {
+          finishCreateTeam();
           return;
         }
         if (action === 'submit-demo-email') {
@@ -720,33 +1056,32 @@
         }
         if (action === 'back') {
           if (step === 'name') {
-            if (pendingAccess?.accessMethod === 'team') step = 'team-code';
-            else if (pendingAccess?.accessMethod === 'website_login') step = 'team-email';
-            else if (pendingAccess?.accessMethod === 'demo') step = 'demo-email';
-            else if (pendingAccess?.accessMethod === 'ceo') step = 'ceo-code';
-            else step = 'choose';
-          } else if (step === 'team-register') {
-            step = 'team-email';
+            if (pendingAccess?.accessMethod === 'demo') step = 'demo-email';
+            else step = 'login';
+          } else if (step === 'demo-login') {
+            step = pendingAccess?.accessMethod === 'demo' ? 'demo-email' : 'choose';
+          } else if (step === 'join-team' || step === 'create-team' || step === 'team-created') {
+            step = 'login';
           } else {
             step = 'choose';
           }
           render();
           return;
         }
-        if (action === 'submit-team-code') {
-          await submitAccessCode('team');
+        if (action === 'submit-login') {
+          await submitLogin();
           return;
         }
-        if (action === 'submit-team-login') {
-          await submitTeamLogin();
+        if (action === 'submit-demo-login') {
+          await submitDemoLogin();
           return;
         }
-        if (action === 'submit-team-register') {
-          await submitTeamRegister();
+        if (action === 'submit-join-team') {
+          await submitJoinTeam();
           return;
         }
-        if (action === 'submit-ceo-code') {
-          await submitAccessCode('ceo');
+        if (action === 'submit-create-team') {
+          await submitCreateTeam();
           return;
         }
         if (action === 'submit-name') {
@@ -774,10 +1109,11 @@
         if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
         e.preventDefault();
         if (step === 'demo-email') handleAction('submit-demo-email');
-        else if (step === 'team-code') handleAction('submit-team-code');
-        else if (step === 'team-email') handleAction('submit-team-login');
-        else if (step === 'team-register') handleAction('submit-team-register');
-        else if (step === 'ceo-code') handleAction('submit-ceo-code');
+        else if (step === 'login') handleAction('submit-login');
+        else if (step === 'demo-login') handleAction('submit-demo-login');
+        else if (step === 'join-team') handleAction('submit-join-team');
+        else if (step === 'create-team') handleAction('submit-create-team');
+        else if (step === 'team-created') handleAction('finish-create-team');
         else if (step === 'name') handleAction('submit-name');
       });
 
@@ -788,7 +1124,10 @@
         modalEl.querySelectorAll('[data-action]').forEach((btn) => {
           const off = window.DenizenTouchBind.bindPress(
             btn,
-            () => onModalActivate(btn),
+            (e) => {
+              e?.preventDefault?.();
+              onModalActivate(btn);
+            },
             { stop: true },
           );
           if (typeof off === 'function') stepUnbinds.push(off);
@@ -797,7 +1136,6 @@
 
       function render() {
         document.body.appendChild(modalEl);
-        const { teamSlug } = accessCtx();
 
         let focusAfter = false;
 
@@ -805,78 +1143,100 @@
           modalEl.innerHTML = `
             <div class="vis-card">
               <h2>Welcome to Denizen</h2>
-              <p>How would you like to enter?</p>
+              <p>Sign in to your team workspace, or try the demo.</p>
               <div class="vis-paths">
-                <button type="button" class="vis-path-btn" data-action="path-demo">Try demo</button>
-                <button type="button" class="vis-path-btn" data-action="path-team">Team code</button>
-                <button type="button" class="vis-path-btn" data-action="path-team-email">Team email login</button>
-                <button type="button" class="vis-path-btn ceo" data-action="path-ceo">CEO access</button>
+                <button type="button" class="vis-path-btn" data-action="path-login"><span class="vis-path-title">Login</span><span class="vis-path-sub">Username, password, and team code or email</span></button>
+                <button type="button" class="vis-path-btn" data-action="path-demo"><span class="vis-path-title">Demo</span><span class="vis-path-sub">Explore with your email — no team required</span></button>
               </div>
             </div>
           `;
+        } else if (step === 'login') {
+          modalEl.innerHTML = `
+            <div class="vis-card">
+              <button type="button" class="vis-back" data-action="back">← Back</button>
+              <h2>Login</h2>
+              <p>Sign in with your username and password. Use your team code or email to find your workspace.</p>
+              <p class="vis-error" id="denizen-vis-error" hidden></p>
+              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
+              <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="Password" autocomplete="current-password" />
+              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" />
+              <p class="vis-or">or</p>
+              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Email" autocomplete="email" inputmode="email" />
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-login">Log in</button>
+              <div class="vis-link-row">No team yet? <button type="button" class="vis-link" data-action="goto-create-team">Create a team</button></div>
+              <div class="vis-link-row">Have a code but no account? <button type="button" class="vis-link" data-action="goto-join-team">Join a team</button></div>
+            </div>
+          `;
+          focusAfter = true;
+        } else if (step === 'create-team') {
+          modalEl.innerHTML = `
+            <div class="vis-card">
+              <button type="button" class="vis-back" data-action="back">← Back</button>
+              <h2>Create your team</h2>
+              <p>Start a new workspace. You'll get a team code to share with teammates.</p>
+              <p class="vis-error" id="denizen-vis-error" hidden></p>
+              <input class="vis-input" id="denizen-visitor-team-name-input" type="text" maxlength="120" placeholder="Team name" autocomplete="organization" />
+              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Your username" autocomplete="username" />
+              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Your email" autocomplete="email" inputmode="email" />
+              <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="${passwordPlaceholder()}" autocomplete="new-password" />
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-create-team">Create team</button>
+              <div class="vis-link-row">Already have an account? <button type="button" class="vis-link" data-action="goto-login">Log in</button></div>
+            </div>
+          `;
+          focusAfter = true;
+        } else if (step === 'join-team') {
+          modalEl.innerHTML = `
+            <div class="vis-card">
+              <button type="button" class="vis-back" data-action="back">← Back</button>
+              <h2>Join a team</h2>
+              <p>Enter the team code from your invite, then pick a username and password.</p>
+              <p class="vis-error" id="denizen-vis-error" hidden></p>
+              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" />
+              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
+              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Your email" autocomplete="email" inputmode="email" />
+              <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="${passwordPlaceholder()}" autocomplete="new-password" />
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-join-team">Join team</button>
+              <div class="vis-link-row">Already registered? <button type="button" class="vis-link" data-action="goto-login">Log in</button></div>
+            </div>
+          `;
+          focusAfter = true;
+        } else if (step === 'team-created') {
+          const code = pendingAccess?.teamCode || '------';
+          const teamLabel = pendingAccess?.teamName || 'Your team';
+          modalEl.innerHTML = `
+            <div class="vis-card">
+              <h2>${teamLabel} is ready</h2>
+              <p>Share this team code so others can join. Save it somewhere safe.</p>
+              <div class="vis-team-code-box">
+                <span>Team code</span>
+                <span class="code">${code}</span>
+              </div>
+              <button type="button" id="denizen-visitor-name-continue" data-action="finish-create-team">Enter Denizen</button>
+            </div>
+          `;
+        } else if (step === 'demo-login') {
+          modalEl.innerHTML = `
+            <div class="vis-card">
+              <button type="button" class="vis-back" data-action="back">← Back</button>
+              <h2>Demo login</h2>
+              <p>Pick up your saved demo with the username and password you created.</p>
+              <p class="vis-error" id="denizen-vis-error" hidden></p>
+              <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
+              <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="Password" autocomplete="current-password" />
+              <button type="button" id="denizen-visitor-name-continue" data-action="submit-demo-login">Log in</button>
+            </div>
+          `;
+          focusAfter = true;
         } else if (step === 'demo-email') {
           modalEl.innerHTML = `
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
-              <h2>Try the demo</h2>
-              <p>Enter your email so we can save your progress and welcome you back.</p>
+              <h2>Demo</h2>
+              <p>Enter your email so we can save your progress. After you explore a bit, you can create a username and password.</p>
               <p class="vis-error" id="denizen-vis-error" hidden></p>
               <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="you@email.com" autocomplete="email" inputmode="email" />
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-demo-email">Continue</button>
-            </div>
-          `;
-          focusAfter = true;
-        } else if (step === 'team-code') {
-          modalEl.innerHTML = `
-            <div class="vis-card">
-              <button type="button" class="vis-back" data-action="back">← Back</button>
-              <h2>Team code</h2>
-              <p>Enter team code for ${teamSlug}.</p>
-              <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-code-input" type="text" maxlength="32" placeholder="1921" autocomplete="off" inputmode="numeric" />
-              <button type="button" id="denizen-visitor-name-continue" data-action="submit-team-code">Continue</button>
-            </div>
-          `;
-          focusAfter = true;
-        } else if (step === 'team-email') {
-          modalEl.innerHTML = `
-            <div class="vis-card">
-              <button type="button" class="vis-back" data-action="back">← Back</button>
-              <h2>Team email login</h2>
-              <p>Sign in with your work email for ${teamSlug}.</p>
-              <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="you@company.com" autocomplete="email" inputmode="email" />
-              <p class="vis-hint">First time? Add team code below (same as register).</p>
-              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code (optional)" autocomplete="off" inputmode="numeric" />
-              <button type="button" id="denizen-visitor-name-continue" data-action="submit-team-login">Log in</button>
-              <div class="vis-link-row">New here? <button type="button" class="vis-link" data-action="goto-team-register">Register with team code</button></div>
-            </div>
-          `;
-          focusAfter = true;
-        } else if (step === 'team-register') {
-          modalEl.innerHTML = `
-            <div class="vis-card">
-              <button type="button" class="vis-back" data-action="back">← Back</button>
-              <h2>Team register</h2>
-              <p>Create your ${teamSlug} account.</p>
-              <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="you@company.com" autocomplete="email" inputmode="email" />
-              <input class="vis-input" id="denizen-visitor-display-input" type="text" maxlength="64" placeholder="Display name" autocomplete="name" />
-              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" inputmode="numeric" />
-              <button type="button" id="denizen-visitor-name-continue" data-action="submit-team-register">Register</button>
-              <div class="vis-link-row">Already registered? <button type="button" class="vis-link" data-action="goto-team-login">Log in</button></div>
-            </div>
-          `;
-          focusAfter = true;
-        } else if (step === 'ceo-code') {
-          modalEl.innerHTML = `
-            <div class="vis-card">
-              <button type="button" class="vis-back" data-action="back">← Back</button>
-              <h2>CEO access</h2>
-              <p>Enter CEO code.</p>
-              <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-code-input" type="text" maxlength="32" placeholder="Dolonia" autocomplete="off" autocapitalize="words" />
-              <button type="button" id="denizen-visitor-name-continue" data-action="submit-ceo-code">Continue</button>
+              <div class="vis-link-row">Already created a demo account? <button type="button" class="vis-link" data-action="path-demo-login">Log in</button></div>
             </div>
           `;
           focusAfter = true;
@@ -887,6 +1247,7 @@
               <h2>Welcome to Denizen</h2>
               <p>What's your name?</p>
               <input class="vis-input" id="denizen-visitor-name-input" type="text" maxlength="64" placeholder="Your name" autocomplete="name" />
+              <p class="vis-error" id="denizen-vis-error" hidden></p>
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-name">Continue</button>
             </div>
           `;
@@ -900,6 +1261,99 @@
       render();
       fetchOfficeConfig().then(() => render());
     });
+  }
+
+  function showDemoAccountModal() {
+    injectModalStyles();
+    return fetchOfficeConfig().then(() => new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.id = 'denizen-demo-account-modal';
+      overlay.innerHTML = `
+        <div class="vis-card">
+          <h2>Save your demo progress</h2>
+          <p>Create a username and password so you can return to this profile anytime.</p>
+          <p class="vis-error" id="denizen-demo-acct-error" hidden></p>
+          <input class="vis-input" id="denizen-demo-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
+          <input class="vis-input" id="denizen-demo-password-input" type="password" maxlength="128" placeholder="${passwordPlaceholder()}" autocomplete="new-password" />
+          <input class="vis-input" id="denizen-demo-password2-input" type="password" maxlength="128" placeholder="Confirm password" autocomplete="new-password" />
+          <button type="button" id="denizen-visitor-name-continue">Create account</button>
+          <div class="vis-link-row"><button type="button" class="vis-link" data-demo-skip>Not now</button></div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      document.documentElement.dataset.denizenModal = 'open';
+
+      let busy = false;
+      const close = (result) => {
+        delete document.documentElement.dataset.denizenModal;
+        overlay.remove();
+        resolve(result || null);
+      };
+
+      const errEl = overlay.querySelector('#denizen-demo-acct-error');
+      const saveBtn = overlay.querySelector('#denizen-visitor-name-continue');
+      const skipBtn = overlay.querySelector('[data-demo-skip]');
+
+      const submit = async () => {
+        if (busy) return;
+        const username = String(overlay.querySelector('#denizen-demo-username-input')?.value || '').trim();
+        const password = String(overlay.querySelector('#denizen-demo-password-input')?.value || '');
+        const password2 = String(overlay.querySelector('#denizen-demo-password2-input')?.value || '');
+        if (!username || password.length < minPasswordLen()) {
+          if (errEl) {
+            errEl.textContent = `Choose a username and password (${minPasswordLen()}+ characters).`;
+            errEl.hidden = false;
+          }
+          return;
+        }
+        if (password !== password2) {
+          if (errEl) {
+            errEl.textContent = 'Passwords do not match.';
+            errEl.hidden = false;
+          }
+          return;
+        }
+        busy = true;
+        if (saveBtn) saveBtn.disabled = true;
+        if (errEl) errEl.hidden = true;
+        try {
+          const data = await teamAuthRequest('/api/visitor/auth/register-demo', {
+            session_id: sessionId,
+            session_token: sessionToken,
+            username,
+            password,
+          });
+          displayName = data.display_name || username;
+          writeStore({
+            ...readStore(),
+            display_name: displayName,
+            demo_username: data.username || username,
+          });
+          try {
+            document.dispatchEvent(new CustomEvent('denizen-demo-account-created', {
+              detail: { username: data.username || username },
+            }));
+          } catch (_) {}
+          close({ ok: true, username: data.username || username, display_name: displayName });
+        } catch (err) {
+          if (errEl) {
+            errEl.textContent = err?.message || 'Could not create account';
+            errEl.hidden = false;
+          }
+          if (saveBtn) saveBtn.disabled = false;
+        } finally {
+          busy = false;
+        }
+      };
+
+      saveBtn?.addEventListener('click', submit);
+      skipBtn?.addEventListener('click', () => close(null));
+      overlay.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submit();
+        if (e.key === 'Escape') close(null);
+      });
+      setTimeout(() => overlay.querySelector('#denizen-demo-username-input')?.focus(), 60);
+    }));
   }
 
   async function apiJson(url, opts = {}) {
@@ -918,6 +1372,17 @@
   }
 
   async function touchSession(name, opts = {}) {
+    if (opts.freshPrincipal) {
+      announceProfileSwitching({
+        displayName: name,
+        email: opts.email || null,
+        tier: opts.tier || null,
+        accessMethod: opts.accessMethod || null,
+        orgSlug: opts.orgSlug || null,
+      });
+      clearActiveSessionMemory();
+      try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+    }
     const body = { display_name: name };
     if (sessionId) body.session_id = sessionId;
     if (sessionToken) body.session_token = sessionToken;
@@ -925,8 +1390,11 @@
     if (opts.email) body.email = opts.email;
     const meta = {};
     if (opts.accessMethod) meta.access_method = opts.accessMethod;
-    if (opts.accessMethod === 'ceo') meta.is_ceo_principal = true;
     if (Object.keys(meta).length) body.metadata = meta;
+    if (opts.accessMethod === 'ceo' || isCeoPrincipalNow()) {
+      const grant = readCeoGrant();
+      if (grant) body.ceo_grant = grant;
+    }
     if (opts.tier === 'demo' || opts.accessMethod === 'demo') {
       body.demo = true;
     } else if (opts.orgSlug) {
@@ -963,7 +1431,6 @@
         if (opts.email) headers['X-Email'] = opts.email;
         if (opts.orgSlug) headers['X-Org-Slug'] = opts.orgSlug;
         if (opts.accessMethod) headers['X-Access-Method'] = opts.accessMethod;
-        if (opts.accessMethod === 'ceo') headers['X-Ceo-Principal'] = '1';
         if (opts.tier === 'demo' || opts.accessMethod === 'demo') headers['X-Demo'] = '1';
         if (sessionId) headers['X-Session-Id'] = sessionId;
         if (sessionToken) headers['X-Session-Token'] = sessionToken;
@@ -988,6 +1455,9 @@
     }
     if (session.id) sessionId = session.id;
     if (data.session_token) sessionToken = data.session_token;
+    if (data.ceo_grant) {
+      try { localStorage.setItem('denizen-ceo-grant', data.ceo_grant); } catch (_) {}
+    }
     if (opts.orgSlug) orgSlug = opts.orgSlug;
     if (opts.accessMethod) accessMethod = opts.accessMethod;
     if (data.identity?.id) identityId = data.identity.id;
@@ -1002,6 +1472,7 @@
       access_method: accessMethod || opts.accessMethod || readStore().access_method || null,
       identity_id: identityId || data.identity?.id || null,
       email: userEmail || opts.email || null,
+      demo_username: opts.demoUsername || data.identity?.username || readStore().demo_username || null,
     };
     writeStore(store);
     return session;
@@ -1020,6 +1491,14 @@
       const s = data.settings || {};
       teamRole = s.team_role || null;
       canApproveSkills = !!s.can_approve_skills;
+      if (s.has_demo_account && s.demo_username) {
+        writeStore({ ...readStore(), demo_username: s.demo_username });
+      }
+      try {
+        document.dispatchEvent(new CustomEvent('denizen-visitor-profile-updated', {
+          detail: DenizenVisitorSession.getProfile(),
+        }));
+      } catch (_) {}
     } catch (_) {}
   }
 
@@ -1040,6 +1519,10 @@
     getDisplayName() {
       if (isCeoPrincipalNow()) return 'Dolonia';
       return displayName || readStore().display_name || 'Guest';
+    },
+
+    getMinPasswordLength() {
+      return minPasswordLen();
     },
 
     getAssistant() {
@@ -1063,6 +1546,263 @@
         console.warn('[DenizenVisitorSession] refreshAssistant failed:', err?.message || err);
         return assistant;
       }
+    },
+
+    async getNpcTeam() {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout(
+        `/api/visitor/npc-team?session_id=${encodeURIComponent(sid)}`,
+        { headers: authHeaders() },
+        SESSION_FETCH_MS,
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `NPC team request failed (${res.status})`);
+      }
+      return data.team || null;
+    },
+
+    async listChatThreads() {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout(
+        `/api/visitor/chat/threads?session_id=${encodeURIComponent(sid)}`,
+        { headers: authHeaders() },
+        SESSION_FETCH_MS,
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Chat threads request failed (${res.status})`);
+      }
+      return Array.isArray(data.threads) ? data.threads : [];
+    },
+
+    async getChatHistory(threadId) {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout(
+        `/api/visitor/chat/history?session_id=${encodeURIComponent(sid)}&thread_id=${encodeURIComponent(threadId)}`,
+        { headers: authHeaders() },
+        SESSION_FETCH_MS,
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Chat history request failed (${res.status})`);
+      }
+      return Array.isArray(data.messages) ? data.messages : [];
+    },
+
+    async createGroupChat(payload = {}) {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout('/api/visitor/chat/groups', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          name: payload.name,
+          member_npc_keys: payload.member_npc_keys || payload.memberNpcKeys || payload.npc_keys,
+        }),
+      }, SESSION_FETCH_MS);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error('Group chat API missing — restart the Denizen server, then hard-refresh (Ctrl+Shift+R).');
+        }
+        throw new Error(data.error || `Group chat create failed (${res.status})`);
+      }
+      return data;
+    },
+
+    async saveNpcTeam(payload = {}) {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout('/api/visitor/npc-team', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          name: payload.name,
+          purpose: payload.purpose,
+          settings: payload.settings || undefined,
+        }),
+      }, SESSION_FETCH_MS);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `NPC team save failed (${res.status})`);
+      }
+      return data.team || null;
+    },
+
+    async saveNpcTeamMember(payload = {}) {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout('/api/visitor/npc-team/member', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          npc_key: payload.npcKey || payload.npc_key,
+          display_name: payload.displayName || payload.display_name,
+          role: payload.role,
+          job: payload.job,
+          focus: payload.focus,
+          instructions: payload.instructions,
+          sort_order: payload.sortOrder ?? payload.sort_order,
+          active: payload.active,
+          remove: payload.remove,
+          settings: payload.settings || undefined,
+        }),
+      }, SESSION_FETCH_MS);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `NPC team member save failed (${res.status})`);
+      }
+      return data.team || null;
+    },
+
+    async addNpcTeamMembers(npcKeys = [], opts = {}) {
+      const keys = (Array.isArray(npcKeys) ? npcKeys : [])
+        .map((k) => String(k || '').trim().toLowerCase())
+        .filter(Boolean);
+      if (!keys.length) {
+        throw new Error('No NPCs selected');
+      }
+
+      async function addOneByOne() {
+        const added = [];
+        const errors = [];
+        let team = null;
+        for (const npcKey of keys) {
+          try {
+            team = await DenizenVisitorSession.saveNpcTeamMember({
+              npcKey,
+              role: opts.role || 'assistant',
+              displayName: opts.displayName,
+            });
+            added.push(npcKey);
+          } catch (err) {
+            errors.push({ npc_key: npcKey, error: err?.message || String(err) });
+          }
+        }
+        if (!added.length) {
+          throw new Error(errors[0]?.error || 'Could not add NPCs to your team');
+        }
+        return {
+          ok: true,
+          added,
+          errors,
+          team: team || await DenizenVisitorSession.getNpcTeam(),
+        };
+      }
+
+      // One NPC — use the member route directly (most reliable on desktop).
+      if (keys.length === 1) {
+        try {
+          return await addOneByOne();
+        } catch (singleErr) {
+          // Fall through to batch attempts below.
+          if (!usesTunnelSafeTransport()) throw singleErr;
+        }
+      }
+
+      const sid = requireSessionId();
+      const payload = {
+        session_id: sid,
+        npc_keys: keys,
+        role: opts.role,
+        display_name: opts.displayName,
+        action: 'batch_add',
+      };
+
+      async function tryBatchPost(url) {
+        const res = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(payload),
+        }, SESSION_FETCH_MS);
+        const data = await res.json().catch(() => ({}));
+        return { res, data };
+      }
+
+      const batchUrls = [
+        '/api/visitor/npc-team',
+        '/api/visitor/npc-team/members/batch',
+        '/api/visitor/npc-team/member',
+      ];
+      let lastError = 'Batch add failed';
+      for (const url of batchUrls) {
+        const { res, data } = await tryBatchPost(url);
+        if (res.ok && Array.isArray(data?.added)) {
+          return data;
+        }
+        if (res.ok && data?.team && keys.length === 1) {
+          const member = (data.team.members || []).find(
+            (m) => String(m.npc_key).toLowerCase() === keys[0],
+          );
+          if (member) {
+            return { ok: true, added: [keys[0]], errors: data.errors || [], team: data.team };
+          }
+        }
+        lastError = data?.error || `Batch add failed (${res.status})`;
+        if (res.status === 404 || res.status === 405) continue;
+        if (res.status >= 400 && res.status < 500) break;
+      }
+
+      return addOneByOne();
+    },
+
+    async getNpcTeamMemberSoul(npcKey) {
+      const sid = requireSessionId();
+      const normKey = String(npcKey || '').trim().toLowerCase();
+      const keyQ = encodeURIComponent(normKey);
+      const sidQ = encodeURIComponent(sid);
+
+      function pickSoul(data) {
+        return (data?.soul && typeof data.soul === 'object') ? data.soul : null;
+      }
+
+      function soulGetHeaders() {
+        return {
+          ...authHeaders(),
+          'X-Denizen-Npc-Soul': '1',
+        };
+      }
+
+      async function tryGet(url) {
+        const res = await fetchWithTimeout(url, { headers: soulGetHeaders() }, SESSION_FETCH_MS);
+        const data = await res.json().catch(() => ({}));
+        return { res, data, soul: pickSoul(data) };
+      }
+
+      async function tryPost(url, extra = {}) {
+        const res = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            session_id: sid,
+            npc_key: normKey,
+            ...extra,
+          }),
+        }, SESSION_FETCH_MS);
+        const data = await res.json().catch(() => ({}));
+        return { res, data, soul: pickSoul(data) };
+      }
+
+      const attempts = [
+        () => tryPost('/api/visitor/npc-team/member', { action: 'soul' }),
+        () => tryPost('/api/visitor/npc-team', { action: 'soul' }),
+        () => tryGet(`/api/visitor/npc-team?session_id=${sidQ}&npc_key=${keyQ}&soul=1`),
+        () => tryGet(`/api/visitor/npc-team/member/soul?session_id=${sidQ}&npc_key=${keyQ}`),
+      ];
+
+      let lastErr = 'Live SOUL/MEMORY unavailable — restart denizen/server.js';
+      for (const attempt of attempts) {
+        const { res, data, soul } = await attempt();
+        if (soul) return soul;
+        if (!res.ok) {
+          lastErr = data?.error || `Soul view failed (${res.status})`;
+          if (res.status === 404 || res.status === 405) continue;
+          if (res.status >= 400 && res.status < 500) break;
+        }
+      }
+
+      throw new Error(lastErr);
     },
 
     async claimNpc(npcKey, opts = {}) {
@@ -1090,6 +1830,9 @@
         assistant_name: opts.assistantName || key,
         focus: opts.focus || null,
       };
+      if (DenizenVisitorSession.isDemo()) {
+        try { document.dispatchEvent(new CustomEvent('denizen-demo-engaged')); } catch (_) {}
+      }
       return assistant;
     },
 
@@ -1124,6 +1867,14 @@
       return DenizenVisitorSession.getTier() === 'demo';
     },
 
+    hasDemoAccount() {
+      return !!(readStore().demo_username);
+    },
+
+    showDemoAccountModal() {
+      return showDemoAccountModal();
+    },
+
     isTeam() {
       return DenizenVisitorSession.getTier() === 'team';
     },
@@ -1133,12 +1884,7 @@
     },
 
     isCeoPrincipal() {
-      if (DenizenVisitorSession.getAccessMethod() === 'ceo') return true;
-      try {
-        return !!localStorage.getItem('denizen-ceo-grant');
-      } catch (_) {
-        return false;
-      }
+      return isCeoPrincipalNow();
     },
 
     authHeaders(extra = {}) {
@@ -1153,6 +1899,22 @@
       return identityId || readStore().identity_id || null;
     },
 
+    getOfficeId() {
+      return officeId || window.__DenizenOfficeId || identityId || readStore().identity_id || null;
+    },
+
+    applyOfficeRegistration(msg = {}) {
+      if (msg.office_id) {
+        officeId = msg.office_id;
+        window.__DenizenOfficeId = msg.office_id;
+      }
+      if (msg.identity_id) identityId = msg.identity_id;
+      window.__DenizenIsOperatorOffice = !!msg.is_operator_office;
+      try {
+        document.dispatchEvent(new CustomEvent('denizen-office-registered', { detail: msg }));
+      } catch (_) {}
+    },
+
     getEmail() {
       return userEmail || readStore().email || null;
     },
@@ -1162,13 +1924,33 @@
       return {
         displayName: ceo ? 'Dolonia' : (displayName || readStore().display_name || null),
         email: userEmail || readStore().email || null,
+        demoUsername: readStore().demo_username || null,
         identityId: identityId || readStore().identity_id || null,
+        officeId: DenizenVisitorSession.getOfficeId(),
         tier: ceo ? 'ceo' : (tier || readStore().tier || null),
         accessMethod: accessMethod || readStore().access_method || null,
+        orgSlug: orgSlug || readStore().org_slug || null,
         sessionId: sessionId || readStore().session_id || null,
         teamRole: teamRole || null,
         canApproveSkills: ceo || canApproveSkills,
       };
+    },
+
+    applyProfilePatch(patch = {}) {
+      if (patch.displayName != null) displayName = String(patch.displayName).slice(0, 200);
+      if (patch.email != null) userEmail = String(patch.email).slice(0, 320) || null;
+      const store = readStore();
+      writeStore({
+        ...store,
+        display_name: displayName || store.display_name,
+        email: userEmail || store.email || null,
+      });
+      try {
+        document.dispatchEvent(new CustomEvent('denizen-visitor-profile-updated', {
+          detail: DenizenVisitorSession.getProfile(),
+        }));
+      } catch (_) {}
+      return DenizenVisitorSession.getProfile();
     },
 
     async refreshSettings() {
@@ -1177,6 +1959,7 @@
     },
 
     async logout() {
+      announceProfileSwitching({ displayName: 'Signing out', tier: null });
       sessionId = null;
       sessionToken = null;
       displayName = null;
@@ -1185,6 +1968,7 @@
       orgSlug = null;
       accessMethod = null;
       identityId = null;
+      officeId = null;
       userEmail = null;
       initPromise = null;
 
@@ -1215,6 +1999,7 @@
         accessMethod: welcome.accessMethod,
         accessGrant: welcome.accessGrant,
         email: welcome.email || null,
+        demoUsername: welcome.demoUsername || null,
       });
       try {
         document.dispatchEvent(new CustomEvent('denizen-visitor-session-ready', {
@@ -1240,6 +2025,7 @@
           type: 'visitor_register',
           session_id: sid,
           display_name: DenizenVisitorSession.getDisplayName(),
+          identity_id: DenizenVisitorSession.getIdentityId(),
           is_ceo: false,
         }));
       } catch (err) {
@@ -1297,6 +2083,32 @@
         `/api/visitor/teammates?session_id=${encodeURIComponent(sid)}`,
       );
       return data.teammates || [];
+    },
+
+    async sendOfficeBus(payload = {}) {
+      const sid = requireSessionId();
+      const data = await apiJson('/api/visitor/office-bus', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          to_office_id: payload.toOfficeId || payload.to_office_id,
+          to_session_id: payload.toSessionId || payload.to_session_id,
+          message: payload.message,
+          intent: payload.intent || 'sync',
+          from_npc: payload.fromNpc || payload.from_npc,
+          metadata: payload.metadata,
+        }),
+      });
+      return data.message || data;
+    },
+
+    async listTeamOffices() {
+      const sid = requireSessionId();
+      const data = await apiJson(
+        `/api/visitor/offices?session_id=${encodeURIComponent(sid)}`,
+      );
+      return data;
     },
 
     async sendHandoff(payload = {}) {
@@ -1422,13 +2234,27 @@
           displayName = welcome.displayName;
           tier = welcome.tier;
           orgSlug = welcome.orgSlug;
-          await touchSession(displayName, {
-            orgSlug: welcome.orgSlug,
-            tier: welcome.tier,
-            accessMethod: welcome.accessMethod,
-            accessGrant: welcome.accessGrant,
-            email: welcome.email || null,
-          });
+          try {
+            await touchSession(displayName, {
+              orgSlug: welcome.orgSlug,
+              tier: welcome.tier,
+              accessMethod: welcome.accessMethod,
+              accessGrant: welcome.accessGrant,
+              email: welcome.email || null,
+              demoUsername: welcome.demoUsername || null,
+              freshPrincipal: welcome.freshPrincipal !== false,
+            });
+          } catch (err) {
+            console.warn('[DenizenVisitorSession] first session touch failed:', err?.message || err);
+            try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+            sessionId = null;
+            sessionToken = null;
+            displayName = null;
+            tier = null;
+            orgSlug = null;
+            accessMethod = null;
+            return { sessionId: null, displayName: null, assistant: null };
+          }
         } else {
           try {
             const method = accessMethod || stored.access_method || (tier === 'demo' ? 'demo' : null);
@@ -1438,11 +2264,27 @@
                 tier: 'demo',
                 accessMethod: 'demo',
               });
+            } else if ((accessMethod === 'ceo' || isCeoPrincipalNow()) && readCeoGrant()) {
+              const cfg = await fetchOfficeConfig();
+              const teamSlug = cfg?.visitorAccess?.teamOrgSlug || 'zion';
+              await touchSession(displayName || 'Dolonia', {
+                orgSlug: orgSlug || stored.org_slug || teamSlug,
+                tier: 'ceo',
+                accessMethod: 'ceo',
+              });
             } else if (sessionId && sessionToken) {
               await touchSession(displayName, {
                 orgSlug,
                 tier,
                 accessMethod: method,
+              });
+            } else if (sessionId && (accessMethod === 'ceo' || isCeoPrincipalNow())) {
+              const cfg = await fetchOfficeConfig();
+              const teamSlug = cfg?.visitorAccess?.teamOrgSlug || 'zion';
+              await touchSession(displayName || 'Dolonia', {
+                orgSlug: orgSlug || stored.org_slug || teamSlug,
+                tier: tier || 'ceo',
+                accessMethod: 'ceo',
               });
             } else {
               throw new Error('Team session expired — sign in again');
@@ -1484,6 +2326,8 @@
                 accessMethod: welcome.accessMethod,
                 accessGrant: welcome.accessGrant,
                 email: welcome.email || null,
+                demoUsername: welcome.demoUsername || null,
+                freshPrincipal: welcome.freshPrincipal !== false,
               });
             }
           }

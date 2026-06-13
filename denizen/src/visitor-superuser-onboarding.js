@@ -1,12 +1,12 @@
 /**
- * Super-user mesh onboarding — team members who install Denizen Desktop
- * and contribute hardware to the compute mesh.
+ * Optional City Power onboarding for members who connect Denizen Desktop.
+ * Keeps the shared-compute mechanics simple and frames contribution as civic participation.
  * Attaches to globalThis.DenizenSuperuserOnboarding (no imports).
  */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'denizen-superuser-onboarding-v1';
+  const STORAGE_KEY_PREFIX = 'denizen-superuser-onboarding-v2';
   const STYLE_ID = 'denizen-superuser-onboarding-style';
   const OVERLAY_ID = 'denizen-superuser-onboarding';
   const CHIP_ID = 'denizen-superuser-replay-chip';
@@ -14,97 +14,55 @@
   let overlayEl = null;
   let stepIndex = 0;
   let stepUnbinds = [];
+  let desktopLinked = false;
 
   const STEPS = [
     {
-      id: 'compute',
-      anchor: 'compute',
-      title: 'Your compute panel',
-      tips: [
-        'Top-right: credits, node state, and whether you are browser-only or linked to Desktop.',
-        'Browser play is enough for delegating work — the mesh runs NPC brains in the cloud.',
-        'Super-users link real hardware here so the team gets more GPU/CPU capacity.',
-      ],
-    },
-    {
-      id: 'browser-vs-desktop',
+      id: 'welcome',
       anchor: 'center',
-      title: 'Browser vs Denizen Desktop',
+      title: 'Power the city',
       tips: [
-        'Browser: walk the office, chat, hand off, Connect AI — no local file or screen access.',
-        'Desktop: profiles your CPU/RAM/GPU, pairs to this session, and can run coworker-class automation.',
-        'You choose permission mode in the Desktop wizard — ask before each sensitive action, or trusted for power users.',
+        'Denizen Desktop lets your computer become one of the stations that keeps shared city work moving.',
+        'It is optional. You can live and work in Denizen without contributing a device.',
+        'When you do help, the city recognizes it with credits and a visible contribution history.',
       ],
     },
     {
-      id: 'download',
+      id: 'connect',
       anchor: 'compute-download',
-      title: 'Download & pair',
+      title: 'Connect your station',
       tips: [
-        'Compute panel → Download Denizen Desktop for Windows/Mac/Linux.',
-        'Run the setup wizard, then click Pair this computer in the browser.',
-        'Pairing opens denizen://pair — your browser session and Desktop app share one identity.',
+        'Open City Power, download Denizen Desktop, and pair this computer.',
+        'Pairing gives the station your Denizen identity. It does not start contributing until you choose to turn it on.',
       ],
     },
     {
-      id: 'optin',
-      anchor: 'compute-optin',
-      title: 'Opt in to contribute',
-      tips: [
-        'Toggle Contribute when you want this machine on the mesh.',
-        'You earn credits for completed jobs; spend credits to boost priority on your own tasks.',
-        'Turn off anytime — your assistant still works; you just stop lending cycles.',
-      ],
-    },
-    {
-      id: 'levels',
+      id: 'contribution',
       anchor: 'compute-level',
-      title: 'Contribution levels',
+      title: 'Choose how much to give',
       tips: [
-        'Off — advisory only, no mesh jobs on your hardware.',
-        'Light — background capacity when you are idle.',
-        'Standard — balanced share for team inference and codegen.',
-        'Max — prioritize mesh work (best for dedicated workstations).',
+        'Light helps quietly in the background. Standard shares a balanced amount. Max is best for a dedicated station.',
+        'Start with Light. You can change the level or switch City Power off whenever you want.',
       ],
     },
     {
-      id: 'super-node',
+      id: 'credits',
       anchor: 'compute',
-      title: 'Super Node badge',
+      title: 'Build your city credit',
       tips: [
-        'Hardware score 75+ unlocks Super Node — priority worker on the mesh.',
-        'Live CPU/RAM/GPU stats appear after Desktop pairing (browser cannot profile your machine).',
-        'Fleet view lists other contributors — CEOs and hosts often run local LM Studio too.',
+        'Completed shared work earns credits tied to your citizenship.',
+        'Credits can give your own requests more priority, while your contribution helps everyone else get work done.',
+        'Stronger dedicated stations can take on more of the city’s shared work.',
       ],
     },
     {
-      id: 'mesh-jobs',
-      anchor: 'mesh',
-      title: 'Mesh jobs chip (⬡)',
-      tips: [
-        'Dock chip ⬡ shows queued and running jobs across the fleet.',
-        'When the queue is deep, save optional API keys in Account so chat stays fast while mesh catches up.',
-        'Operators watch this during heavy codegen or research bursts.',
-      ],
-    },
-    {
-      id: 'permissions',
+      id: 'control',
       anchor: 'center',
-      title: 'Desktop permissions',
+      title: 'You stay in control',
       tips: [
-        'Desktop wizard sets off / ask / trusted for file, screen, and shell access.',
-        'Ask mode (recommended): every sensitive action shows a permission prompt on your PC.',
-        'Your claimed assistant requests access — not a separate siloed coworker app.',
-      ],
-    },
-    {
-      id: 'coworker',
-      anchor: 'guide',
-      title: 'Coworker-class work — and more',
-      tips: [
-        'With Desktop + permission: screen observe, browser automation, coding-agent worktrees, approved custom skills.',
-        'Same brain as in-world chat and Connect AI (Cursor, Companion, Claude Desktop).',
-        'Open Guide → Desktop power for the full matrix; replay this tour anytime from Guide.',
+        'Contribution and computer permissions are separate choices.',
+        'Use Ask mode so Denizen requests approval before sensitive file, screen, or command access.',
+        'Pause City Power at any time. Your assistant and your place in Denizen remain yours.',
       ],
     },
   ];
@@ -116,9 +74,30 @@
     return !!sess?.isTeam?.() && !sess?.isDemo?.();
   }
 
+  function storageScope() {
+    const sess = globalThis.DenizenVisitorSession;
+    const profile = sess?.getProfile?.() || {};
+    const raw = profile.identityId
+      || profile.email
+      || profile.sessionId
+      || sess?.getSessionId?.()
+      || profile.displayName
+      || 'anonymous';
+    return String(raw)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_.@-]+/g, '-')
+      .slice(0, 80) || 'anonymous';
+  }
+
+  function storageKey() {
+    return `${STORAGE_KEY_PREFIX}-${storageScope()}`;
+  }
+
   function hasSeen() {
     try {
-      return localStorage.getItem(STORAGE_KEY) === '1';
+      if (localStorage.getItem(storageKey()) === '1') return true;
+      return storageScope() === 'anonymous' && localStorage.getItem(STORAGE_KEY_PREFIX) === '1';
     } catch (_) {
       return false;
     }
@@ -126,7 +105,7 @@
 
   function markSeen() {
     try {
-      localStorage.setItem(STORAGE_KEY, '1');
+      localStorage.setItem(storageKey(), '1');
     } catch (_) {}
   }
 
@@ -134,6 +113,7 @@
     const sess = globalThis.DenizenVisitorSession;
     if (sess?.isCeoPrincipal?.()) return false;
     if (!isTeamVisitor()) return false;
+    if (!desktopLinked) return false;
     return !hasSeen();
   }
 
@@ -164,6 +144,7 @@
       }
       #${OVERLAY_ID} .su-tooltip {
         position: fixed;
+        box-sizing: border-box;
         background: #020617;
         border: 1px solid #4c1d95;
         border-radius: 10px;
@@ -264,18 +245,18 @@
   function getAnchorRect(anchor) {
     if (anchor === 'center') return centerRect();
     if (anchor === 'compute') {
-      return rectForEl('denizen-node-ui-chip') || centerRect();
+      return rectForEl('denizen-node-ui-chip') || rectForEl('denizen-phone-fab') || centerRect();
     }
     if (anchor === 'compute-download') {
-      return rectForEl('denizen-node-download') || rectForEl('denizen-node-ui-chip') || centerRect();
+      return rectForEl('denizen-node-download') || rectForEl('denizen-node-ui-chip') || rectForEl('denizen-phone-fab') || centerRect();
     }
     if (anchor === 'compute-optin') {
       const optin = document.getElementById('denizen-node-optin-toggle');
       if (optin) return optin.getBoundingClientRect();
-      return rectForEl('denizen-node-ui-chip') || centerRect();
+      return rectForEl('denizen-node-ui-chip') || rectForEl('denizen-phone-fab') || centerRect();
     }
     if (anchor === 'compute-level') {
-      return rectForEl('denizen-node-level') || rectForEl('denizen-node-ui-chip') || centerRect();
+      return rectForEl('denizen-node-level') || rectForEl('denizen-node-ui-chip') || rectForEl('denizen-phone-fab') || centerRect();
     }
     if (anchor === 'mesh') {
       return rectForEl('denizen-mesh-jobs-chip') || rectForEl('denizen-bottom-dock') || centerRect();
@@ -341,7 +322,7 @@
     stepIndex = 0;
   }
 
-  function wireButtons(skipBtn, nextBtn, guideBtn) {
+  function wireButtons(skipBtn, nextBtn) {
     clearStepUnbinds();
     const onNext = () => {
       if (stepIndex < STEPS.length - 1) {
@@ -368,10 +349,6 @@
     };
     attach(skipBtn, dismiss);
     attach(nextBtn, onNext);
-    attach(guideBtn, () => {
-      dismiss();
-      globalThis.DenizenCapabilitiesGuide?.open?.({ tab: 'desktop-power' });
-    });
   }
 
   function renderStep() {
@@ -384,21 +361,19 @@
     const isLast = stepIndex >= STEPS.length - 1;
     const tooltip = overlayEl.querySelector('.su-tooltip');
     tooltip.innerHTML = `
-      <p class="su-step">Mesh tour · Step ${stepIndex + 1} of ${STEPS.length}</p>
+      <p class="su-step">Power tour · ${stepIndex + 1} of ${STEPS.length}</p>
       <p class="su-title">${escapeHtml(step.title)}</p>
       <ul class="su-tips">
         ${step.tips.map((t) => `<li>${escapeHtml(t)}</li>`).join('')}
       </ul>
       <div class="su-actions">
         <button type="button" class="su-skip">Skip</button>
-        ${step.id === 'coworker' ? '<button type="button" class="su-guide">Open Guide</button>' : ''}
-        <button type="button" class="su-next">${isLast ? 'Done' : 'Next'}</button>
+        <button type="button" class="su-next">${isLast ? 'Return to the city' : 'Continue'}</button>
       </div>
     `;
     wireButtons(
       tooltip.querySelector('.su-skip'),
       tooltip.querySelector('.su-next'),
-      tooltip.querySelector('.su-guide'),
     );
     requestAnimationFrame(() => positionTooltip(tooltip, step.anchor));
   }
@@ -420,7 +395,7 @@
     overlayEl.id = OVERLAY_ID;
     overlayEl.innerHTML = `
       <div class="su-backdrop" aria-hidden="true"></div>
-      <div class="su-tooltip" role="dialog" aria-label="Super-user mesh onboarding"></div>
+      <div class="su-tooltip" role="dialog" aria-label="City Power onboarding"></div>
     `;
     document.body.appendChild(overlayEl);
     stepIndex = 0;
@@ -458,8 +433,8 @@
       chip = document.createElement('button');
       chip.id = CHIP_ID;
       chip.type = 'button';
-      chip.textContent = 'Mesh tour';
-      chip.title = 'Super-user mesh onboarding — Desktop, pairing, contribution';
+      chip.textContent = 'Power tour';
+      chip.title = 'City Power tour — connect, contribute, stay in control';
       document.body.appendChild(chip);
     }
     chip.classList.add('ready');
@@ -477,21 +452,18 @@
 
   function onSessionReady() {
     mountReplayChip();
-    waitForMainTourThenShow();
   }
 
   function init() {
     document.addEventListener('denizen-visitor-session-ready', onSessionReady);
     document.addEventListener('denizen-deferred-scripts-ready', mountReplayChip);
     document.addEventListener('denizen-node-status', (e) => {
-      if (e.detail?.desktopLinked && shouldAutoShow()) {
+      desktopLinked = !!e.detail?.desktopLinked;
+      if (desktopLinked && shouldAutoShow()) {
         waitForMainTourThenShow();
       }
     });
     mountReplayChip();
-    if (globalThis.DenizenVisitorSession?.isTeam?.()) {
-      waitForMainTourThenShow();
-    }
   }
 
   globalThis.DenizenSuperuserOnboarding = {
@@ -505,7 +477,8 @@
     mountReplayChip,
     resetForTesting() {
       try {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEY_PREFIX);
+        localStorage.removeItem(storageKey());
       } catch (_) {}
     },
   };

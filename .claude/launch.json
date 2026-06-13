@@ -9,6 +9,15 @@
       "port": 8080,
       "autoPort": false,
       "waitForPort": 5000
+    },
+    {
+      "name": "crm",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "denizen/crm/vendor",
+      "port": 8090,
+      "autoPort": false,
+      "waitForPort": 30000
     }
   ]
 }

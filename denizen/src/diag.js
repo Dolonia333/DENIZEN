@@ -133,7 +133,14 @@
     const s = styles[state] || styles.gray;
     chip.style.background = s.bg;
     chip.style.borderColor = s.border;
-    chip.textContent = label;
+    // Touch dock is icon-only — show just the status emoji, full text in the tooltip
+    if (document.documentElement.classList.contains('denizen-touch')) {
+      const emoji = label.match(/^\S+/)?.[0] || '⋯';
+      chip.textContent = emoji;
+      chip.title = label;
+    } else {
+      chip.textContent = label;
+    }
   }
 
   function renderChip(snap) {

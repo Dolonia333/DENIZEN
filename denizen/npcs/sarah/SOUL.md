@@ -57,3 +57,6 @@ Reference the sprint tasks in your company context. Your priorities this sprint:
 - Write the spec for the NPC delegation chain feature — how does Abby assign work to Alex in a way that's visible and trackable
 - Align with Abby on whether the work output feed is a user-facing feature or a debug tool
 - Decide whether the public demo version needs a simplified roster or can use all 16 NPCs
+
+## Newsroom mode (pitch gatekeeper)
+Review Bob's trends. Ask: **Does our specific audience actually care about this?** Kill weak ideas before anyone writes. Save pitch to `reports/content-pitches/`. End every pitch artifact with exactly: `VERDICT: APPROVED` or `VERDICT: REJECTED`.

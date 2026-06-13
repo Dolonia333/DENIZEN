@@ -45,7 +45,9 @@
   let sessionTranscript = '';
   let restartTimer = null;
   let micButton = null;
+  let speakFab = null;
   let statusBadge = null;
+  const SPEAK_FAB_STYLE_ID = 'denizen-speak-fab-style';
   let providerOverride = null;
   let pttDown = false;
 
@@ -335,7 +337,74 @@
 
   function rewireTouch() {
     wirePress(document.getElementById('denizen-mic-button'), onMicPress);
+    wirePress(speakFab, onMicPress);
     wirePress(document.getElementById('denizen-presence-chip'), onPresencePress);
+  }
+
+  function injectSpeakFabStyles() {
+    if (document.getElementById(SPEAK_FAB_STYLE_ID)) return;
+    const s = document.createElement('style');
+    s.id = SPEAK_FAB_STYLE_ID;
+    s.textContent = `
+      #denizen-speak-fab {
+        position: fixed;
+        z-index: 2147483495;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        border: 2px solid #3b82f6;
+        background: linear-gradient(145deg, #1e3a8a, #0f172a);
+        color: #dbeafe;
+        font: 700 13px/1 system-ui, sans-serif;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1px;
+        padding: 0;
+      }
+      #denizen-speak-fab .dzs-label {
+        font-size: 9px;
+        letter-spacing: 0.02em;
+        font-weight: 700;
+      }
+      #denizen-speak-fab.listening {
+        background: linear-gradient(145deg, #7f1d1d, #450a0a);
+        border-color: #fca5a5;
+        color: #fecaca;
+      }
+      html.denizen-touch #denizen-speak-fab,
+      html.denizen-phone-mode #denizen-speak-fab {
+        display: flex;
+        bottom: max(14px, env(safe-area-inset-bottom, 0px));
+        left: max(14px, env(safe-area-inset-left, 0px));
+        right: auto;
+      }
+      html.denizen-touch:not(.denizen-phone-mode) #denizen-speak-fab {
+        bottom: calc(var(--denizen-dock-height, 52px) + 14px + env(safe-area-inset-bottom, 0px));
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
+  function refreshSpeakFab() {
+    if (!speakFab) return;
+    const on = sessionActive || listening;
+    const supported = isSupported();
+    speakFab.classList.toggle('listening', on);
+    speakFab.innerHTML = on
+      ? '⏹<span class="dzs-label">Stop</span>'
+      : '🎤<span class="dzs-label">Speak</span>';
+    speakFab.setAttribute('aria-label', on ? 'Stop speaking' : 'Speak to NPCs');
+    speakFab.disabled = !supported;
+    speakFab.style.opacity = supported ? '1' : '0.55';
+    speakFab.title = supported
+      ? 'Tap to speak — tap again when done'
+      : 'Voice needs Chrome desktop or OPENAI_API_KEY on server';
   }
 
   // ---- Build the floating UI ----
@@ -360,6 +429,16 @@
     });
     wirePress(micButton, onMicPress);
     document.body.appendChild(micButton);
+
+    injectSpeakFabStyles();
+    speakFab = document.createElement('button');
+    speakFab.id = 'denizen-speak-fab';
+    speakFab.type = 'button';
+    speakFab.innerHTML = '🎤<span class="dzs-label">Speak</span>';
+    wirePress(speakFab, onMicPress);
+    document.body.appendChild(speakFab);
+    refreshSpeakFab();
+    setInterval(refreshSpeakFab, 400);
 
     const presenceChip = document.createElement('button');
     presenceChip.id = 'denizen-presence-chip';
@@ -421,20 +500,22 @@
   }
 
   function setMicState(state, text, opts = {}) {
-    if (!micButton) return;
-    if (state === 'listening') {
-      micButton.style.background = '#7f1d1d';
-      micButton.style.borderColor = '#fca5a5';
-    } else if (state === 'busy') {
-      micButton.style.background = '#1e3a8a';
-      micButton.style.borderColor = '#93c5fd';
-    } else if (state === 'error') {
-      micButton.style.background = '#7c2d12';
-      micButton.style.borderColor = '#fdba74';
-    } else {
-      micButton.style.background = '#0f172a';
-      micButton.style.borderColor = '#355';
+    if (micButton) {
+      if (state === 'listening') {
+        micButton.style.background = '#7f1d1d';
+        micButton.style.borderColor = '#fca5a5';
+      } else if (state === 'busy') {
+        micButton.style.background = '#1e3a8a';
+        micButton.style.borderColor = '#93c5fd';
+      } else if (state === 'error') {
+        micButton.style.background = '#7c2d12';
+        micButton.style.borderColor = '#fdba74';
+      } else {
+        micButton.style.background = '#0f172a';
+        micButton.style.borderColor = '#355';
+      }
     }
+    refreshSpeakFab();
     _errorSticky = (state === 'error') && opts.sticky;
     if (statusBadge) {
       if (text) {
@@ -515,6 +596,7 @@
       }
       if (final) appendFinalChunk(final);
       if (sessionActive) {
+        mirrorTranscriptToChatInput(displayTranscript(interim));
         setMicState('listening', displayTranscript(interim));
       }
     };
@@ -646,6 +728,21 @@
     }
   }
 
+  function mirrorTranscriptToChatInput(text) {
+    const raw = String(text || '').replace(/^…\s*/, '').trim();
+    if (!raw || raw === 'listening… pauses are OK — click 🎤 again when done') return;
+    const input = document.getElementById('player-chat-input');
+    if (!input) return;
+    const panel = document.getElementById('player-chat-panel');
+    if (!panel || panel.style.display === 'none') return;
+    input.value = raw;
+    try { input.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
+    const pc = window.__DenizenPlayerChat;
+    if (pc?._showDomPlayerBubble && (window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch'))) {
+      try { pc._showDomPlayerBubble(raw); } catch (_) {}
+    }
+  }
+
   // ---- Deliver transcript ----
   // Path 1: route through player-chat if the chat panel is open / available.
   // Path 2: fall back to dispatching directly via the OpenClaw dispatcher
@@ -663,10 +760,19 @@
     // as "nothing happened."
     if (window.__DenizenPlayerChat && typeof window.__DenizenPlayerChat.sendMessage === 'function') {
       try {
-        // Auto-open the panel if it has an open() method and isn't already visible.
         const pc = window.__DenizenPlayerChat;
+        const phoneChat = document.documentElement.classList.contains('denizen-phone-open')
+          && document.documentElement.getAttribute('data-denizen-phone-app') === 'chat';
         if (!pc._visible && typeof pc.open === 'function') {
           try { pc.open(); } catch (_) {}
+        }
+        if (phoneChat && !pc.getActiveThreadId?.() && typeof globalThis.DenizenPhoneUi?.openApp === 'function') {
+          try { globalThis.DenizenPhoneUi.openApp('chat'); } catch (_) {}
+        }
+        const input = document.getElementById('player-chat-input');
+        if (input) {
+          input.value = '';
+          try { input.dispatchEvent(new Event('input', { bubbles: true })); } catch (_) {}
         }
         pc.sendMessage(text);
       } catch (err) {
@@ -726,6 +832,17 @@
   async function init() {
     buildUI();
     rewireTouch();
+    if (isTouchUi() && !supportsSpeechRecognition && !providerOverride) {
+      const p = createServerSttProvider();
+      if (p) {
+        try {
+          const res = await fetch('/api/stt/health', { cache: 'no-store' });
+          const h = res.ok ? await res.json() : {};
+          if (h?.configured) providerOverride = p;
+        } catch (_) {}
+      }
+    }
+    refreshSpeakFab();
     await probeServerStt();
     const mode = providerOverride ? 'server STT' : (supportsSpeechRecognition ? 'browser SR' : 'unsupported');
     console.log(`[VoiceInput] ready (${mode}) — tap 🎤 or hold ${hotkey}`);
@@ -743,6 +860,7 @@
     isSupported,
     isListening: () => sessionActive || listening,
     start, stop,
+    toggle: onMicPress,
     rewireTouch,
     setHotkey(k) { if (typeof k === 'string' && k.length === 1) hotkey = k; },
     setLang(l) { lang = l; if (recognition) recognition.lang = l; },

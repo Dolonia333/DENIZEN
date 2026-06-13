@@ -80,6 +80,16 @@ const ROLE_ARTIFACTS = {
   'Product Manager':     { dir: 'pm-reports',    ext: '.md' },
 };
 
+const CONTENT_ARTIFACT_DIRS = {
+  'content-trends': 'content-trends',
+  'content-pitches': 'content-pitches',
+  'content-drafts': 'content-drafts',
+  'content-edits': 'content-edits',
+  'content-design': 'content-design',
+  'content-legal': 'content-legal',
+  'content-published': 'content-published',
+};
+
 // ── Level 3: pre-approved read-only shell commands ────────────────────────
 // Each value is a function that returns the command string.
 // Only commandKeys listed here can ever be executed.
@@ -246,7 +256,12 @@ function writeArtifact(npcName, category, filename, content) {
  * @returns {string|null}
  */
 function writeTaskArtifact(npcName, role, taskSummary, detail, opts) {
-  const cfg = ROLE_ARTIFACTS[role];
+  const categoryOverride = opts?.artifactCategory && CONTENT_ARTIFACT_DIRS[opts.artifactCategory]
+    ? CONTENT_ARTIFACT_DIRS[opts.artifactCategory]
+    : (opts?.artifactCategory || null);
+  const cfg = categoryOverride
+    ? { dir: categoryOverride, ext: '.md' }
+    : ROLE_ARTIFACTS[role];
   if (!cfg) return null;
 
   // Dedup guard: suppress identical reports filed within the cooldown window.

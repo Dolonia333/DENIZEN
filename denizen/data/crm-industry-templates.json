@@ -1,0 +1,1901 @@
+[
+  {
+    "id": "sales",
+    "name": "B2B Sales",
+    "icon": "💼",
+    "industry": "sales",
+    "pipelineStages": [
+      "Lead",
+      "Qualified",
+      "Proposal",
+      "Negotiation",
+      "Closed Won",
+      "Closed Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "saas",
+    "name": "Software as a Service (SaaS)",
+    "icon": "☁️",
+    "industry": "saas",
+    "pipelineStages": [
+      "Lead",
+      "MQL",
+      "SQL",
+      "Demo",
+      "Trial",
+      "Proposal",
+      "Negotiation",
+      "Closed Won",
+      "Closed Lost",
+      "Churn Risk"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "iaas",
+    "name": "Infrastructure as a Service (IaaS)",
+    "icon": "🖥️",
+    "industry": "iaas",
+    "pipelineStages": [
+      "Inquiry",
+      "Architecture Review",
+      "POC",
+      "Sizing",
+      "Proposal",
+      "Contract",
+      "Provisioned",
+      "Active",
+      "Churned"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "govcon",
+    "name": "Government Contracting",
+    "icon": "🏛️",
+    "industry": "govcon",
+    "pipelineStages": [
+      "Market Research",
+      "Capture",
+      "Pre-RFP",
+      "RFP Released",
+      "Proposal",
+      "Submitted",
+      "Awarded",
+      "Lost",
+      "Protest"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "real-estate",
+    "name": "Real Estate",
+    "icon": "🏠",
+    "industry": "real-estate",
+    "pipelineStages": [
+      "New Lead",
+      "Showing Scheduled",
+      "Offer Made",
+      "Under Contract",
+      "Inspection",
+      "Closed",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "legal",
+    "name": "Legal / Law Firm",
+    "icon": "⚖️",
+    "industry": "legal",
+    "pipelineStages": [
+      "Intake",
+      "Consultation",
+      "Active",
+      "Discovery",
+      "Negotiation",
+      "Trial",
+      "Resolved",
+      "Closed"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "healthcare",
+    "name": "Healthcare & Life Sciences",
+    "icon": "🏥",
+    "industry": "healthcare",
+    "pipelineStages": [
+      "Inquiry",
+      "Consultation",
+      "Treatment Plan",
+      "Scheduled",
+      "In Treatment",
+      "Completed",
+      "Follow-Up"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "consulting",
+    "name": "Consulting",
+    "icon": "📊",
+    "industry": "consulting",
+    "pipelineStages": [
+      "Lead",
+      "Discovery",
+      "Proposal",
+      "SOW Sent",
+      "Active",
+      "Delivery",
+      "Completed",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "education",
+    "name": "Education",
+    "icon": "🎓",
+    "industry": "education",
+    "pipelineStages": [
+      "Inquiry",
+      "Application",
+      "Review",
+      "Accepted",
+      "Enrolled",
+      "Deferred",
+      "Declined"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "recruitment",
+    "name": "Recruitment / HR",
+    "icon": "👔",
+    "industry": "recruitment",
+    "pipelineStages": [
+      "Sourced",
+      "Screen",
+      "Interview",
+      "Technical",
+      "Offer",
+      "Placed",
+      "Rejected"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "media",
+    "name": "Photography / Video / Media",
+    "icon": "📸",
+    "industry": "media",
+    "pipelineStages": [
+      "Inquiry",
+      "Consultation",
+      "Booked",
+      "Pre-Production",
+      "Shoot/Film",
+      "Editing",
+      "Review",
+      "Delivered",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "financial-services",
+    "name": "Financial Services",
+    "icon": "🏦",
+    "industry": "financial-services",
+    "pipelineStages": [
+      "Prospect",
+      "Discovery",
+      "Proposal",
+      "Onboarding",
+      "Active",
+      "Closed Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "nonprofit",
+    "name": "Nonprofit",
+    "icon": "💚",
+    "industry": "nonprofit",
+    "pipelineStages": [
+      "Inquiry",
+      "Cultivation",
+      "Ask",
+      "Pledged",
+      "Received",
+      "Stewardship",
+      "Declined"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "manufacturing",
+    "name": "Manufacturing",
+    "icon": "🏭",
+    "industry": "manufacturing",
+    "pipelineStages": [
+      "RFQ",
+      "Quote",
+      "PO Received",
+      "Production",
+      "Shipped",
+      "Closed Won",
+      "Closed Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "retail",
+    "name": "Retail",
+    "icon": "🛍️",
+    "industry": "retail",
+    "pipelineStages": [
+      "Browse",
+      "Cart",
+      "Checkout",
+      "Fulfilled",
+      "Returned",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "insurance",
+    "name": "Insurance",
+    "icon": "🛡️",
+    "industry": "insurance",
+    "pipelineStages": [
+      "Lead",
+      "Quoted",
+      "Application",
+      "Underwriting",
+      "Bound",
+      "Renewal",
+      "Lapsed"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "automotive",
+    "name": "Automotive / Dealership",
+    "icon": "🚗",
+    "industry": "automotive",
+    "pipelineStages": [
+      "Inquiry",
+      "Test Drive",
+      "Negotiation",
+      "Financing",
+      "Sold",
+      "Delivered",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "construction",
+    "name": "Construction / Contracting",
+    "icon": "🏗️",
+    "industry": "construction",
+    "pipelineStages": [
+      "Lead",
+      "Site Visit",
+      "Estimate",
+      "Bid Submitted",
+      "Awarded",
+      "In Progress",
+      "Completed",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "hospitality",
+    "name": "Hospitality / Hotels",
+    "icon": "🏨",
+    "industry": "hospitality",
+    "pipelineStages": [
+      "Inquiry",
+      "Quote Sent",
+      "Tentative",
+      "Confirmed",
+      "Checked In",
+      "Completed",
+      "Cancelled"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "fitness",
+    "name": "Fitness / Wellness",
+    "icon": "💪",
+    "industry": "fitness",
+    "pipelineStages": [
+      "Lead",
+      "Trial",
+      "Tour",
+      "Joined",
+      "Active",
+      "Renewed",
+      "Cancelled"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "travel",
+    "name": "Travel / Tourism",
+    "icon": "✈️",
+    "industry": "travel",
+    "pipelineStages": [
+      "Inquiry",
+      "Itinerary Sent",
+      "Quoted",
+      "Booked",
+      "Traveling",
+      "Completed",
+      "Cancelled"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "home-services",
+    "name": "Home Services (HVAC / Plumbing)",
+    "icon": "🔧",
+    "industry": "home-services",
+    "pipelineStages": [
+      "Lead",
+      "Estimate",
+      "Scheduled",
+      "In Progress",
+      "Completed",
+      "Invoiced",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "accounting",
+    "name": "Accounting / Tax",
+    "icon": "📒",
+    "industry": "accounting",
+    "pipelineStages": [
+      "Lead",
+      "Consultation",
+      "Proposal",
+      "Engaged",
+      "In Progress",
+      "Filed",
+      "Renewed"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "beauty",
+    "name": "Beauty / Salon / Spa",
+    "icon": "💅",
+    "industry": "beauty",
+    "pipelineStages": [
+      "Inquiry",
+      "Booked",
+      "Confirmed",
+      "Completed",
+      "Rebooked",
+      "No-Show",
+      "Cancelled"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "events",
+    "name": "Event Planning",
+    "icon": "🎉",
+    "industry": "events",
+    "pipelineStages": [
+      "Inquiry",
+      "Proposal",
+      "Booked",
+      "Planning",
+      "Executed",
+      "Completed",
+      "Cancelled"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "logistics",
+    "name": "Logistics / Freight",
+    "icon": "🚚",
+    "industry": "logistics",
+    "pipelineStages": [
+      "Lead",
+      "Quote",
+      "Contract",
+      "Booked",
+      "In Transit",
+      "Delivered",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "agency",
+    "name": "Marketing / Creative Agency",
+    "icon": "📈",
+    "industry": "agency",
+    "pipelineStages": [
+      "Lead",
+      "Discovery",
+      "Pitch",
+      "Proposal",
+      "Won",
+      "Active",
+      "Churned"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "dental",
+    "name": "Dental Practice",
+    "icon": "🦷",
+    "industry": "dental",
+    "pipelineStages": [
+      "New Patient",
+      "Consultation",
+      "Treatment Plan",
+      "Scheduled",
+      "In Treatment",
+      "Completed",
+      "Recall"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "solar",
+    "name": "Solar / Renewable Energy",
+    "icon": "☀️",
+    "industry": "solar",
+    "pipelineStages": [
+      "Lead",
+      "Site Survey",
+      "Proposal",
+      "Signed",
+      "Permitting",
+      "Installed",
+      "Activated",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "veterinary",
+    "name": "Veterinary",
+    "icon": "🐾",
+    "industry": "veterinary",
+    "pipelineStages": [
+      "Inquiry",
+      "Appointment",
+      "Diagnosis",
+      "Treatment Plan",
+      "In Treatment",
+      "Completed",
+      "Follow-Up"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "cybersecurity",
+    "name": "Cybersecurity",
+    "icon": "🔐",
+    "industry": "cybersecurity",
+    "pipelineStages": [
+      "Lead",
+      "Assessment",
+      "Scoping",
+      "Proposal",
+      "SOW Signed",
+      "Active",
+      "Renewal",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "msp",
+    "name": "MSP / IT Services",
+    "icon": "🛠️",
+    "industry": "msp",
+    "pipelineStages": [
+      "Lead",
+      "Discovery",
+      "Audit",
+      "Proposal",
+      "Onboarding",
+      "Active",
+      "Renewal",
+      "Churned"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "telecom",
+    "name": "Telecommunications",
+    "icon": "📡",
+    "industry": "telecom",
+    "pipelineStages": [
+      "Lead",
+      "Qualified",
+      "Design",
+      "Quote",
+      "Contract",
+      "Provisioned",
+      "Active",
+      "Renewed",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "energy-utilities",
+    "name": "Energy & Utilities",
+    "icon": "⚡",
+    "industry": "energy-utilities",
+    "pipelineStages": [
+      "Lead",
+      "Site Assessment",
+      "Proposal",
+      "Regulatory Review",
+      "Awarded",
+      "Active",
+      "Renewal",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "ecommerce",
+    "name": "E-Commerce / D2C",
+    "icon": "🛒",
+    "industry": "ecommerce",
+    "pipelineStages": [
+      "Lead",
+      "Sample Sent",
+      "Wholesale Account",
+      "Active Account",
+      "Reorder",
+      "Churned"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "aerospace-defense",
+    "name": "Aerospace & Defense",
+    "icon": "🛩️",
+    "industry": "aerospace-defense",
+    "pipelineStages": [
+      "Opportunity ID",
+      "B&P",
+      "Proposal",
+      "Award",
+      "Delivery",
+      "Sustainment",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "pharma-life-sciences",
+    "name": "Pharma & Life Sciences",
+    "icon": "🧬",
+    "industry": "pharma-life-sciences",
+    "pipelineStages": [
+      "Lead",
+      "Scientific Review",
+      "Pilot",
+      "Clinical / Regulatory",
+      "Commercial",
+      "Active",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "property-management",
+    "name": "Property Management",
+    "icon": "🏢",
+    "industry": "property-management",
+    "pipelineStages": [
+      "Inquiry",
+      "Tour",
+      "Application",
+      "Lease Signed",
+      "Active",
+      "Renewal",
+      "Vacated"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "franchise",
+    "name": "Franchise Development",
+    "icon": "🍔",
+    "industry": "franchise",
+    "pipelineStages": [
+      "Inquiry",
+      "Discovery Day",
+      "FDD Review",
+      "Signed",
+      "Opening",
+      "Active",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "staffing",
+    "name": "Staffing & Temp Labor",
+    "icon": "👥",
+    "industry": "staffing",
+    "pipelineStages": [
+      "Requisition",
+      "Sourced",
+      "Screened",
+      "Submitted",
+      "Interview",
+      "Offer",
+      "Placed",
+      "Rejected"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  },
+  {
+    "id": "custom",
+    "name": "Custom",
+    "icon": "⚙️",
+    "industry": "custom",
+    "pipelineStages": [
+      "Stage 1",
+      "Stage 2",
+      "Stage 3",
+      "Won",
+      "Lost"
+    ],
+    "contactStatuses": [
+      "Lead",
+      "Prospect",
+      "Customer"
+    ],
+    "noteTypes": [
+      "Call",
+      "Email",
+      "Meeting"
+    ],
+    "customFields": [],
+    "terminology": {
+      "contact": "Contact",
+      "contacts": "Contacts",
+      "deal": "Deal",
+      "deals": "Deals",
+      "pipeline": "Pipeline",
+      "company": "Company",
+      "account": "Account",
+      "accounts": "Accounts",
+      "customers": "Customers",
+      "salesHub": "Sales Hub",
+      "pipelineValue": "Pipeline Value",
+      "note": "Note",
+      "notes": "Notes",
+      "task": "Task",
+      "tasks": "Tasks",
+      "value": "Value",
+      "closeDate": "Close Date",
+      "stage": "Stage"
+    }
+  }
+]

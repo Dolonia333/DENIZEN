@@ -22,3 +22,7 @@ alter table public.denizen_contribution_daily_totals enable row level security;
 drop policy if exists denizen_contribution_daily_totals_deny_all on public.denizen_contribution_daily_totals;
 create policy denizen_contribution_daily_totals_deny_all on public.denizen_contribution_daily_totals
   for all using (false) with check (false);
+
+insert into public.denizen_schema_migrations (version, name)
+values ('20260606000019', 'contribution_credits')
+on conflict (version) do nothing;

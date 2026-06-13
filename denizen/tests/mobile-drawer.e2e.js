@@ -50,12 +50,29 @@ async function waitForHealth(timeoutMs = 120_000) {
 async function loginCeo(page) {
   const modal = page.locator('#denizen-visitor-name-modal');
   if (await modal.count() === 0) return;
-  await page.locator('[data-action="path-ceo"]').tap({ timeout: 15_000 });
-  await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-  await page.locator('[data-action="submit-ceo-code"]').tap({ timeout: 15_000 });
+  await page.locator('[data-action="path-login"]').tap({ timeout: 15_000 });
+  await page.locator('#denizen-visitor-username-input').fill('Dolonia');
+  await page.locator('#denizen-visitor-password-input').fill('Dolonia');
+  await page.locator('#denizen-visitor-team-code-input').fill('Dolonia');
+  await page.locator('[data-action="submit-login"]').tap({ timeout: 15_000 });
   await page.waitForFunction(
     () => !document.getElementById('denizen-visitor-name-modal'),
     { timeout: 30_000 },
+  );
+}
+
+async function openCitizenIdFromPhone(page) {
+  const phoneBtn = page.locator('#denizen-phone-fab');
+  await phoneBtn.waitFor({ state: 'visible', timeout: 30_000 });
+  await phoneBtn.tap({ timeout: 10_000 });
+
+  const citizenId = page.locator('#denizen-phone-screen .dzp-app[data-app="profile"]');
+  await citizenId.waitFor({ state: 'visible', timeout: 10_000 });
+  await citizenId.tap({ timeout: 10_000 });
+
+  await page.waitForFunction(
+    () => globalThis.DenizenMobileSidebar?.isOpen?.() === true,
+    { timeout: 10_000 },
   );
 }
 
@@ -74,7 +91,7 @@ describe('mobile Me drawer e2e', () => {
     }
   });
 
-  it('Me button opens and closes the profile drawer on iPhone landscape', async () => {
+  it('Citizen ID opens and closes the profile drawer on iPhone landscape', async () => {
     const ctx = await browser.newContext({
       ...devices['iPhone 13'],
       viewport: { width: 844, height: 390 },
@@ -89,14 +106,14 @@ describe('mobile Me drawer e2e', () => {
     await loginCeo(page);
     await page.waitForTimeout(3000);
 
-    const meBtn = page.locator('#denizen-mobile-menu-btn');
-    await meBtn.waitFor({ state: 'visible', timeout: 30_000 });
+    const phoneBtn = page.locator('#denizen-phone-fab');
+    await phoneBtn.waitFor({ state: 'visible', timeout: 30_000 });
 
     const before = await page.evaluate(() => ({
       touch: document.documentElement.classList.contains('denizen-touch'),
       landscape: document.documentElement.classList.contains('denizen-landscape'),
       sidebar: !!globalThis.DenizenMobileSidebar,
-      btn: !!document.getElementById('denizen-mobile-menu-btn'),
+      phoneBtn: !!document.getElementById('denizen-phone-fab'),
       drawer: !!document.getElementById('denizen-mobile-drawer'),
       open: globalThis.DenizenMobileSidebar?.isOpen?.() ?? null,
       runtimeError: document.getElementById('runtime-error')?.textContent?.slice(0, 500) || '',
@@ -104,13 +121,13 @@ describe('mobile Me drawer e2e', () => {
 
     assert.equal(before.touch, true, 'expected denizen-touch class');
     assert.equal(before.landscape, true, 'expected landscape mode');
-    assert.equal(before.btn, true, 'Me button should exist');
+    assert.equal(before.phoneBtn, true, 'phone button should exist');
     assert.equal(before.drawer, true, 'drawer shell should exist');
     assert.equal(before.open, false, 'drawer should start closed');
     assert.equal(before.runtimeError, '', `runtime errors: ${before.runtimeError}`);
     assert.equal(pageErrors.length, 0, `page errors: ${pageErrors.join('; ')}`);
 
-    await meBtn.tap({ timeout: 10_000 });
+    await openCitizenIdFromPhone(page);
 
     await page.waitForFunction(() => {
       const drawer = document.getElementById('denizen-mobile-drawer');
@@ -126,14 +143,16 @@ describe('mobile Me drawer e2e', () => {
       title: document.querySelector('#denizen-mobile-drawer .drawer-title')?.textContent || '',
       display: getComputedStyle(document.getElementById('denizen-mobile-drawer')).display,
       backdrop: getComputedStyle(document.getElementById('denizen-mobile-drawer-backdrop')).display,
-      label: document.getElementById('denizen-mobile-menu-btn')?.textContent || '',
+      profileTab: document.querySelector('#denizen-mobile-drawer .drawer-tab[data-tab="profile"]')?.textContent || '',
+      powerTab: document.querySelector('#denizen-mobile-drawer .drawer-tab[data-tab="compute"]')?.textContent || '',
     }));
 
     assert.equal(openState.open, true);
     assert.match(openState.title, /Me/);
     assert.notEqual(openState.display, 'none');
     assert.notEqual(openState.backdrop, 'none');
-    assert.match(openState.label, /Me/);
+    assert.match(openState.profileTab, /Citizen ID/);
+    assert.match(openState.powerTab, /City Power/);
 
     await page.locator('#denizen-mobile-drawer .drawer-tab[data-tab="compute"]').tap({ timeout: 10_000 });
     const computeTab = await page.evaluate(() => ({
@@ -167,11 +186,7 @@ describe('mobile Me drawer e2e', () => {
     await loginCeo(page);
     await page.waitForTimeout(3000);
 
-    await page.locator('#denizen-mobile-menu-btn').tap({ timeout: 10_000 });
-    await page.waitForFunction(
-      () => globalThis.DenizenMobileSidebar?.isOpen?.() === true,
-      { timeout: 10_000 },
-    );
+    await openCitizenIdFromPhone(page);
 
     const phoneUi = await page.evaluate(() => {
       const root = document.documentElement;

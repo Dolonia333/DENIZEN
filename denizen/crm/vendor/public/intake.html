@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Get started — Meridian intake</title>
+  <style>
+    :root {
+      --bg: #080d18;
+      --card: #0d1422;
+      --border: #1c2640;
+      --text: #e2eaf8;
+      --muted: #7a92b8;
+      --accent: #f0b429;
+      --green: #22d3a0;
+      --red: #f85b5b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      background: radial-gradient(ellipse at top, #121b2e 0%, var(--bg) 55%);
+      color: var(--text);
+      padding: 24px 16px 48px;
+    }
+    .wrap { max-width: 520px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin: 0 0 6px; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px; }
+    input, textarea, select {
+      width: 100%;
+      margin-bottom: 16px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #121b2e;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+    textarea { min-height: 88px; resize: vertical; }
+    button {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #080d18;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .msg { margin-top: 16px; padding: 12px 14px; border-radius: 8px; font-size: 0.85rem; display: none; }
+    .msg.ok { display: block; background: #22d3a018; border: 1px solid #22d3a044; color: var(--green); }
+    .msg.err { display: block; background: #f85b5b18; border: 1px solid #f85b5b44; color: var(--red); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) { .row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Tell us about your project</h1>
+    <p class="sub">Submit this form and our team will follow up with a tailored proposal.</p>
+    <form class="card" id="form">
+      <div class="row">
+        <div>
+          <label for="name">Your name *</label>
+          <input id="name" name="name" required autocomplete="name" />
+        </div>
+        <div>
+          <label for="email">Email *</label>
+          <input id="email" name="email" type="email" required autocomplete="email" />
+        </div>
+      </div>
+      <label for="company">Company</label>
+      <input id="company" name="company" autocomplete="organization" />
+      <label for="budget">Expected monthly budget</label>
+      <select id="budget" name="budget">
+        <option value="">Select…</option>
+        <option value="$300–$800/mo">$300–$800/mo</option>
+        <option value="$800–$2,500/mo">$800–$2,500/mo</option>
+        <option value="$2,500+/mo">$2,500+/mo</option>
+      </select>
+      <label for="timeline">How soon to get started?</label>
+      <select id="timeline" name="timeline">
+        <option value="">Select…</option>
+        <option value="Right away">Right away</option>
+        <option value="Within 30 days">Within 30 days</option>
+        <option value="1–3 months">1–3 months</option>
+      </select>
+      <label for="goals">Primary goals</label>
+      <textarea id="goals" name="goals" placeholder="What are you hoping to achieve?"></textarea>
+      <button type="submit" id="submit">Submit intake</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const orgSlug = params.get("org") || params.get("org_slug") || "zion";
+      const form = document.getElementById("form");
+      const msg = document.getElementById("msg");
+      const btn = document.getElementById("submit");
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        msg.className = "msg";
+        msg.textContent = "";
+        btn.disabled = true;
+        const payload = {
+          org_slug: orgSlug,
+          clientName: document.getElementById("name").value.trim(),
+          clientEmail: document.getElementById("email").value.trim(),
+          company: document.getElementById("company").value.trim(),
+          answers: {
+            "What's your expected monthly budget?": document.getElementById("budget").value,
+            "How soon are you looking to get started?": document.getElementById("timeline").value,
+            "What are your primary goals?": document.getElementById("goals").value.trim(),
+          },
+        };
+        try {
+          const res = await fetch("/api/crm/intake", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json().catch(function () { return {}; });
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || "Submission failed");
+          }
+          msg.className = "msg ok";
+          msg.textContent = "Thanks! We received your intake and will be in touch soon.";
+          form.reset();
+        } catch (err) {
+          msg.className = "msg err";
+          msg.textContent = err.message || "Something went wrong. Please try again.";
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

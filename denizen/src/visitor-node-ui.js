@@ -8,7 +8,7 @@
   const STYLE_ID = 'denizen-node-ui-style';
   const ROOT_ID = 'denizen-node-ui-chip';
   const RESTORE_ID = 'denizen-node-ui-restore';
-  const PANEL_HIDDEN_KEY = 'denizen-node-ui-hidden';
+  const PANEL_HIDDEN_KEY_PREFIX = 'denizen-node-ui-hidden';
   const REFRESH_MS = 30000;
 
   let rootEl = null;
@@ -52,10 +52,49 @@
     gpuUtilPercent: null,
     gpuVramUsedMb: null,
     fleet: [],
+    hostOperator: false,
     creditsEconomy: null,
     estimatedJobCredits: null,
     lastError: null,
   };
+
+  const OPERATOR_FLEET_ROLES = new Set(['host', 'nas', 'aux']);
+
+  function isOperatorFleetMachine(machine) {
+    if (!machine || typeof machine !== 'object') return false;
+    const role = String(machine.role || '').toLowerCase();
+    if (OPERATOR_FLEET_ROLES.has(role)) return true;
+    const label = String(machine.label || machine.hostname || machine.machine_id || '');
+    return /supabase|nat\b|tailscale|192\.168\.|10\.\d+\.|172\.(1[6-9]|2\d|3[01])\./i.test(label);
+  }
+
+  function canSeeOperatorFleet() {
+    if (state.hostOperator) return true;
+    return !!getSessionApi()?.isCeoPrincipal?.();
+  }
+
+  function filterFleetForViewer(fleet, hostOperatorOverride) {
+    if (!Array.isArray(fleet)) return [];
+    const maySeeOperator = hostOperatorOverride != null
+      ? (!!hostOperatorOverride || !!getSessionApi()?.isCeoPrincipal?.())
+      : canSeeOperatorFleet();
+    if (maySeeOperator) return fleet;
+    return fleet.filter((m) => m && !isOperatorFleetMachine(m));
+  }
+
+  function resetSensitiveHardwareState() {
+    state.fleet = [];
+    state.hostOperator = false;
+    state.isHostNode = false;
+    state.cpuPercent = null;
+    state.ramUsedPercent = null;
+    state.ramUsedMb = null;
+    state.gpuUtilPercent = null;
+    state.gpuVramUsedMb = null;
+    state.cpuCores = null;
+    state.ramMb = null;
+    state.gpuModel = null;
+  }
 
   let liveRefreshTimer = null;
   const LIVE_REFRESH_MS = 10000;
@@ -83,6 +122,7 @@
         font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
         user-select: none;
+        transition: opacity 0.18s ease, transform 0.18s ease;
       }
       #${ROOT_ID}[data-panel-hidden="1"] {
         display: none !important;
@@ -105,6 +145,13 @@
         box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
         cursor: pointer;
         user-select: none;
+        transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+      }
+      html.denizen-chat-open #${ROOT_ID},
+      html.denizen-chat-open #${RESTORE_ID} {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
       }
       #${RESTORE_ID}:hover {
         color: #e2e8f0;
@@ -404,6 +451,12 @@
         margin-top: 3px;
         line-height: 1.35;
       }
+      #${ROOT_ID}[data-operator-fleet="0"] .node-fleet {
+        display: none !important;
+      }
+      #${ROOT_ID}[data-browser-compact="1"][data-operator-fleet="0"] .node-contrib-body .node-contrib-row:not(.node-contrib-jobs) {
+        display: none;
+      }
       html.denizen-mobile-drawer-mode:not(.denizen-drawer-open) #${ROOT_ID} {
         display: none !important;
       }
@@ -420,6 +473,26 @@
 
   function getSessionId() {
     return getSessionApi()?.getSessionId?.() || null;
+  }
+
+  function storageScope() {
+    const api = getSessionApi();
+    const profile = api?.getProfile?.() || {};
+    const raw = profile.identityId
+      || profile.email
+      || profile.sessionId
+      || api?.getSessionId?.()
+      || profile.displayName
+      || 'anonymous';
+    return String(raw)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_.@-]+/g, '-')
+      .slice(0, 80) || 'anonymous';
+  }
+
+  function panelHiddenKey() {
+    return `${PANEL_HIDDEN_KEY_PREFIX}-${storageScope()}`;
   }
 
   function isLocalClient() {
@@ -444,12 +517,8 @@
     } else {
       headers['X-Denizen-Client'] = 'browser';
     }
-    if (isLocalClient() || ceoHost) {
-      headers['X-Denizen-Local-Client'] = '1';
-    }
-    if (ceoHost) {
-      headers['X-Ceo-Principal'] = '1';
-    }
+    // Host/CEO status is proven by the signed grant that api.authHeaders()
+    // already attaches — assertion headers are ignored by the server now.
     return headers;
   }
 
@@ -467,7 +536,8 @@
 
   function readPanelHidden() {
     try {
-      return localStorage.getItem(PANEL_HIDDEN_KEY) === '1';
+      if (localStorage.getItem(panelHiddenKey()) === '1') return true;
+      return storageScope() === 'anonymous' && localStorage.getItem(PANEL_HIDDEN_KEY_PREFIX) === '1';
     } catch (_) {
       return false;
     }
@@ -475,7 +545,7 @@
 
   function writePanelHidden(hidden) {
     try {
-      localStorage.setItem(PANEL_HIDDEN_KEY, hidden ? '1' : '0');
+      localStorage.setItem(panelHiddenKey(), hidden ? '1' : '0');
     } catch (_) {}
   }
 
@@ -490,9 +560,9 @@
     restoreEl = document.createElement('button');
     restoreEl.id = RESTORE_ID;
     restoreEl.type = 'button';
-    restoreEl.title = 'Show compute panel (Ctrl+Shift+H)';
-    restoreEl.setAttribute('aria-label', 'Show compute panel');
-    restoreEl.innerHTML = '<span class="restore-dot idle" aria-hidden="true"></span><span>Compute</span>';
+    restoreEl.title = 'Show City Power (Ctrl+Shift+H)';
+    restoreEl.setAttribute('aria-label', 'Show City Power');
+    restoreEl.innerHTML = '<span class="restore-dot idle" aria-hidden="true"></span><span>City Power</span>';
     const onRestore = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -578,10 +648,18 @@
   }
 
   function applyLiveSnapshot(live, fleet) {
-    if (!live || typeof live !== 'object') return;
+    const scopedFleet = filterFleetForViewer(Array.isArray(fleet) ? fleet : state.fleet);
+    if (!live || typeof live !== 'object') {
+      state = { ...state, fleet: scopedFleet };
+      return;
+    }
+    if (!canSeeOperatorFleet() && isOperatorFleetMachine(live)) {
+      state = { ...state, fleet: scopedFleet };
+      return;
+    }
     state = {
       ...state,
-      fleet: Array.isArray(fleet) ? fleet : state.fleet,
+      fleet: scopedFleet,
       cpuPercent: live.cpu_percent ?? state.cpuPercent,
       ramUsedPercent: live.ram?.used_percent ?? state.ramUsedPercent,
       ramUsedMb: live.ram?.used_mb ?? state.ramUsedMb,
@@ -594,6 +672,7 @@
   }
 
   async function fetchHealthHardware() {
+    if (!canSeeOperatorFleet()) return null;
     const res = await fetchWithTimeout('/api/health', { method: 'GET' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data?.hardware) return null;
@@ -607,24 +686,30 @@
 
   function mapContributionSummary(summary) {
     if (!summary || typeof summary !== 'object') return {};
+    const hostOperator = !!(summary.host_operator ?? summary.is_host_operator);
     const modes = Array.isArray(summary.contribution_modes) ? summary.contribution_modes : [];
+    const scopedModes = hostOperator
+      ? modes
+      : modes.filter((m) => m?.mode !== 'host_lmstudio');
     const live = summary.live_usage && typeof summary.live_usage === 'object'
       ? summary.live_usage
       : null;
+    const scopedLive = (!hostOperator && live && isOperatorFleetMachine(live)) ? null : live;
     return {
       jobsCompleted: Number(summary.jobs_completed) || 0,
-      hardwareScore: Number(summary.hardware_score) || 0,
+      hardwareScore: hostOperator ? (Number(summary.hardware_score) || 0) : (scopedLive ? (Number(summary.hardware_score) || 0) : 0),
       contributionLevel: String(summary.contribution_level || 'off'),
-      cpuCores: summary.cpu_cores ?? live?.cpu_cores ?? null,
-      ramMb: summary.ram_mb ?? live?.ram?.total_mb ?? null,
-      gpuModel: summary.gpu_model ?? live?.gpu?.model ?? null,
-      contributionModes: modes,
-      cpuPercent: summary.cpu_percent ?? live?.cpu_percent ?? null,
-      ramUsedPercent: summary.ram_used_percent ?? live?.ram?.used_percent ?? null,
-      ramUsedMb: summary.ram_used_mb ?? live?.ram?.used_mb ?? null,
-      gpuUtilPercent: summary.gpu_utilization_percent ?? live?.gpu?.utilization_percent ?? null,
-      gpuVramUsedMb: summary.gpu_vram_used_mb ?? live?.gpu?.vram_used_mb ?? null,
-      fleet: Array.isArray(summary.fleet) ? summary.fleet : [],
+      cpuCores: hostOperator ? (summary.cpu_cores ?? scopedLive?.cpu_cores ?? null) : (scopedLive?.cpu_cores ?? null),
+      ramMb: hostOperator ? (summary.ram_mb ?? scopedLive?.ram?.total_mb ?? null) : (scopedLive?.ram?.total_mb ?? null),
+      gpuModel: hostOperator ? (summary.gpu_model ?? scopedLive?.gpu?.model ?? null) : (scopedLive?.gpu?.model ?? null),
+      contributionModes: scopedModes,
+      cpuPercent: hostOperator ? (summary.cpu_percent ?? scopedLive?.cpu_percent ?? null) : (scopedLive?.cpu_percent ?? null),
+      ramUsedPercent: hostOperator ? (summary.ram_used_percent ?? scopedLive?.ram?.used_percent ?? null) : (scopedLive?.ram?.used_percent ?? null),
+      ramUsedMb: hostOperator ? (summary.ram_used_mb ?? scopedLive?.ram?.used_mb ?? null) : (scopedLive?.ram?.used_mb ?? null),
+      gpuUtilPercent: hostOperator ? (summary.gpu_utilization_percent ?? scopedLive?.gpu?.utilization_percent ?? null) : (scopedLive?.gpu?.utilization_percent ?? null),
+      gpuVramUsedMb: hostOperator ? (summary.gpu_vram_used_mb ?? scopedLive?.gpu?.vram_used_mb ?? null) : (scopedLive?.gpu?.vram_used_mb ?? null),
+      fleet: filterFleetForViewer(Array.isArray(summary.fleet) ? summary.fleet : [], hostOperator),
+      hostOperator,
       creditsEconomy: summary.credits_economy || null,
       estimatedJobCredits: summary.estimated_job_credits || null,
     };
@@ -637,9 +722,14 @@
     const superVal = base.is_super_node ?? base.super_node ?? payload?.is_super_node ?? payload?.super_node;
     const contributingVal = base.contributing ?? payload?.contributing;
     const optInVal = base.opted_in ?? base.opt_in ?? base.is_opted_in ?? payload?.opted_in ?? payload?.opt_in;
-    const hostVal = base.is_host_node ?? base.host_lmstudio_active ?? payload?.is_host_node ?? payload?.host_lmstudio_active;
     const statusLabel = base.status_label ?? payload?.status_label ?? null;
     const lmStudio = base.lm_studio ?? payload?.lm_studio ?? null;
+    const summaryRaw = base.contribution_summary ?? payload?.contribution_summary ?? null;
+    const hostOperator = !!(base.is_host_operator ?? base.host_operator ?? payload?.is_host_operator ?? payload?.host_operator
+      ?? summaryRaw?.host_operator ?? summaryRaw?.is_host_operator);
+    const hostVal = hostOperator
+      ? (base.is_host_node ?? base.host_lmstudio_active ?? payload?.is_host_node ?? payload?.host_lmstudio_active)
+      : false;
     const contributing = contributingVal != null
       ? !!contributingVal
       : (!!optInVal || !!hostVal);
@@ -651,7 +741,6 @@
     const canContribute = !!(base.can_contribute ?? payload?.can_contribute);
     const desktopLinked = !!(base.desktop_linked ?? payload?.desktop_linked);
     const downloadUrl = base.download_url ?? payload?.download_url ?? '/desktop/download.html';
-    const summaryRaw = base.contribution_summary ?? payload?.contribution_summary ?? null;
     const fromSummary = mapContributionSummary(summaryRaw);
     const activeNode = base.active_node ?? payload?.active_node ?? summaryRaw?.active_node ?? null;
     const levelVal = base.contribution_level ?? payload?.contribution_level ?? fromSummary.contributionLevel;
@@ -662,6 +751,7 @@
       optedIn: canContribute && contributing,
       contributing: canContribute && contributing,
       isHostNode: !!hostVal,
+      hostOperator,
       contributorState: String(contributorState),
       needsDesktopDownload: needsDesktop && contributorState === 'browser_only',
       desktopLinked,
@@ -683,7 +773,7 @@
       ramUsedMb: fromSummary.ramUsedMb ?? null,
       gpuUtilPercent: fromSummary.gpuUtilPercent ?? null,
       gpuVramUsedMb: fromSummary.gpuVramUsedMb ?? null,
-      fleet: fromSummary.fleet || [],
+      fleet: filterFleetForViewer(fromSummary.fleet || []),
       creditsEconomy: fromSummary.creditsEconomy ?? null,
       estimatedJobCredits: fromSummary.estimatedJobCredits ?? null,
     };
@@ -706,47 +796,47 @@
         <span class="node-top-actions">
           <span class="node-badges">
             <span class="node-badge node-tier">VISITOR</span>
-            <span class="node-badge node-super" hidden>SUPER NODE</span>
+            <span class="node-badge node-super" hidden>POWER STATION</span>
           </span>
-          <button type="button" class="node-hide-btn" id="denizen-node-hide-btn" title="Hide compute panel (Ctrl+Shift+H)" aria-label="Hide compute panel">−</button>
+          <button type="button" class="node-hide-btn" id="denizen-node-hide-btn" title="Hide City Power (Ctrl+Shift+H)" aria-label="Hide City Power">−</button>
         </span>
       </div>
       <div class="node-optin-row">
         <label class="node-optin-label" for="denizen-node-optin-toggle">
           <input id="denizen-node-optin-toggle" class="node-optin" type="checkbox" />
-          <span>Contribute compute</span>
+          <span>Power the city</span>
         </label>
         <span class="node-meta" id="denizen-node-meta">idle</span>
       </div>
       <div class="node-download" id="denizen-node-download">
-        Browser can't access this machine. Install
+        Connect
         <a href="/desktop/download.html" target="_blank" rel="noopener">Denizen Desktop</a>
-        to profile hardware, approve agent permissions, and contribute compute.
+        to make this computer a city station. You choose when it helps and what permissions it has.
       </div>
       <div class="node-browser-hint" id="denizen-node-browser-hint">
-        <span id="denizen-node-browser-hint-text">Browser mode — delegate work to the cloud mesh. Pair Desktop to unlock hardware stats, contribution controls, and PC automation.</span>
-        <button type="button" class="node-upgrade-btn" id="denizen-node-guide-btn">Open Guide → Desktop</button>
+        <span id="denizen-node-browser-hint-text">You are connected to the city in browser mode. Pair Desktop when you want this computer to contribute City Power or help with approved computer tasks.</span>
+        <button type="button" class="node-upgrade-btn" id="denizen-node-guide-btn">Learn about City Power</button>
       </div>
       <div class="node-contrib-toggle" id="denizen-node-contrib-toggle" role="button" tabindex="0" aria-expanded="false">
-        <span>Contribution</span>
+        <span>Your contribution</span>
         <span>
           <span id="denizen-node-contrib-chevron">▾</span>
           <a href="#" class="node-account-link" id="denizen-node-account-link" hidden>Account</a>
         </span>
       </div>
       <div class="node-contrib-body" id="denizen-node-contrib-body">
-        <div class="node-contrib-row"><span>Jobs done</span><span class="node-contrib-val" id="denizen-node-jobs">0</span></div>
+        <div class="node-contrib-row"><span>Shared jobs</span><span class="node-contrib-val" id="denizen-node-jobs">0</span></div>
         <div class="node-contrib-row"><span>Credits today</span><span class="node-contrib-val" id="denizen-node-credits-today">0</span></div>
         <div class="node-contrib-row node-spend-row">
           <button type="button" class="node-spend-btn" id="denizen-node-spend-btn" disabled>Boost priority (10 cr)</button>
         </div>
-        <div class="node-contrib-row"><span>Est. job credit</span><span class="node-contrib-val" id="denizen-node-est-job">—</span></div>
-        <div class="node-contrib-row"><span>Hardware score</span><span class="node-contrib-val" id="denizen-node-hw-score">0</span></div>
+        <div class="node-contrib-row"><span>Credit per job</span><span class="node-contrib-val" id="denizen-node-est-job">—</span></div>
+        <div class="node-contrib-row"><span>Station score</span><span class="node-contrib-val" id="denizen-node-hw-score">0</span></div>
         <div class="node-contrib-row"><span>CPU <span class="node-live-label">live</span></span><span class="node-contrib-val" id="denizen-node-cpu">—</span></div>
         <div class="node-contrib-row"><span>RAM <span class="node-live-label">live</span></span><span class="node-contrib-val" id="denizen-node-ram">—</span></div>
         <div class="node-contrib-row"><span>GPU <span class="node-live-label">live</span></span><span class="node-contrib-val" id="denizen-node-gpu">—</span></div>
         <div class="node-fleet" id="denizen-node-fleet" hidden>
-          <div class="node-fleet-title">Your machines</div>
+          <div class="node-fleet-title">Your stations</div>
           <div id="denizen-node-fleet-list"></div>
         </div>
         <div class="node-contrib-row">
@@ -758,7 +848,7 @@
             <option value="max">max</option>
           </select>
         </div>
-        <div class="node-contrib-row"><span>How</span><span class="node-contrib-val" id="denizen-node-how">idle</span></div>
+        <div class="node-contrib-row"><span>Current role</span><span class="node-contrib-val" id="denizen-node-how">idle</span></div>
         <div class="node-modes" id="denizen-node-modes"></div>
       </div>
     `;
@@ -993,7 +1083,7 @@
     rootEl.dataset.clientMode = caps?.clientModeLabel?.() || 'browser';
     const hint = rootEl.querySelector('#denizen-node-browser-hint-text');
     if (hint && browserOnly && !fullPanel) {
-      hint.textContent = 'Browser mode — chat, handoffs, and cloud mesh only. Install Denizen Desktop to unlock live hardware, mesh contribution, and PC automation.';
+      hint.textContent = 'You are connected to the city in browser mode. Pair Denizen Desktop when you want this computer to contribute City Power or help with approved computer tasks.';
     }
     const guideBtn = rootEl.querySelector('#denizen-node-guide-btn');
     if (guideBtn && !guideBtn.dataset.wired) {
@@ -1036,8 +1126,8 @@
       if (state.sessionReady && state.needsDesktopDownload) {
         const href = state.downloadUrl || '/desktop/download.html';
         const pairDisabled = busyPairing || !getSessionId();
-        const pairLabel = busyPairing ? 'Creating link…' : 'Pair Desktop';
-        downloadEl.innerHTML = `Browser can't profile this machine. Install <a href="${href}" target="_blank" rel="noopener">Denizen Desktop</a> to link hardware, approve agent access, and contribute compute. <button type="button" class="node-pair-btn" id="denizen-node-pair-btn"${pairDisabled ? ' disabled' : ''}>${pairLabel}</button>`;
+        const pairLabel = busyPairing ? 'Creating link…' : 'Claim station';
+        downloadEl.innerHTML = `Connect <a href="${href}" target="_blank" rel="noopener">Denizen Desktop</a> to make this computer a city station. You choose when it helps and what permissions it has. <button type="button" class="node-pair-btn" id="denizen-node-pair-btn"${pairDisabled ? ' disabled' : ''}>${pairLabel}</button>`;
         downloadEl.hidden = false;
       } else {
         downloadEl.hidden = true;
@@ -1045,6 +1135,7 @@
     }
     rootEl.dataset.error = state.lastError ? '1' : '0';
     rootEl.dataset.host = state.isHostNode ? '1' : '0';
+    rootEl.dataset.operatorFleet = canSeeOperatorFleet() ? '1' : '0';
     rootEl.dataset.needsDesktop = (state.sessionReady && state.needsDesktopDownload) ? '1' : '0';
     rootEl.dataset.contribExpanded = contribExpanded ? '1' : '0';
 
@@ -1077,7 +1168,7 @@
     if (gpuEl) gpuEl.textContent = formatGpuLine();
     const fleetWrap = rootEl.querySelector('#denizen-node-fleet');
     const fleetList = rootEl.querySelector('#denizen-node-fleet-list');
-    const fleet = Array.isArray(state.fleet) ? state.fleet : [];
+    const fleet = filterFleetForViewer(Array.isArray(state.fleet) ? state.fleet : []);
     if (fleetWrap && fleetList) {
       if (fleet.length) {
         fleetWrap.hidden = false;
@@ -1159,12 +1250,19 @@
         { method: 'GET', headers: authHeaders() },
       );
       const data = await res.json().catch(() => ({}));
-      if (data?.live_usage) {
-        applyLiveSnapshot(data.live_usage, data.fleet);
+      if (data?.host_operator != null) state.hostOperator = !!data.host_operator;
+      if (data?.live_usage || Array.isArray(data?.fleet)) {
+        applyLiveSnapshot(data.live_usage || null, data.fleet);
         render();
         emitStatus();
         return data;
       }
+      if (!canSeeOperatorFleet()) {
+        state = { ...state, fleet: [] };
+        render();
+        emitStatus();
+      }
+      return data;
     }
     return fetchHealthHardware();
   }
@@ -1205,6 +1303,7 @@
     await fetchCreditsEconomy().catch(() => null);
     if (liveRes?.ok) {
       const liveData = await liveRes.json().catch(() => ({}));
+      if (liveData?.host_operator != null) state.hostOperator = !!liveData.host_operator;
       const live = liveData.live_usage || null;
       if (live) {
         next = {
@@ -1219,8 +1318,9 @@
           cpuCores: live.cpu_cores ?? next.cpuCores,
         };
       }
-      if (Array.isArray(liveData.fleet)) next.fleet = liveData.fleet;
+      if (Array.isArray(liveData.fleet)) next.fleet = filterFleetForViewer(liveData.fleet);
     }
+    if (next.hostOperator != null) state.hostOperator = !!next.hostOperator;
     state = { ...state, ...next, lastError: null };
     render();
     emitStatus();
@@ -1230,6 +1330,7 @@
   async function fetchStatus() {
     const sid = getSessionId();
     if (!sid) return null;
+    if (state.sessionId && state.sessionId !== sid) resetSensitiveHardwareState();
     state.sessionId = sid;
     state.sessionReady = true;
     const res = await fetchWithTimeout(
@@ -1245,9 +1346,19 @@
       'cpuPercent', 'ramUsedPercent', 'ramUsedMb', 'ramMb',
       'gpuUtilPercent', 'gpuVramUsedMb', 'gpuModel', 'cpuCores', 'fleet',
     ];
-    for (const key of liveFields) {
-      if (next[key] == null && state[key] != null) next[key] = state[key];
+    const viewerIsOperator = !!(next.hostOperator || getSessionApi()?.isCeoPrincipal?.());
+    if (!viewerIsOperator) {
+      for (const key of liveFields) {
+        if (key === 'fleet') next.fleet = filterFleetForViewer(next.fleet || []);
+        else if (next[key] == null) next[key] = null;
+      }
+      next.isHostNode = false;
+    } else {
+      for (const key of liveFields) {
+        if (next[key] == null && state[key] != null) next[key] = state[key];
+      }
     }
+    if (next.hostOperator != null) state.hostOperator = !!next.hostOperator;
     state = { ...state, ...next, lastError: null };
     render();
     emitStatus();
@@ -1262,7 +1373,7 @@
       throw new Error('Invalid contribution level');
     }
     if (!state.canContribute && !state.isHostNode) {
-      throw new Error('Install Denizen Desktop on this machine to contribute compute.');
+      throw new Error('Install Denizen Desktop on this machine to add City Power.');
     }
     busyLevel = true;
     state.lastError = null;
@@ -1311,7 +1422,7 @@
     const sid = getSessionId();
     if (!sid) throw new Error('Session unavailable');
     if (!state.canContribute && !state.isHostNode) {
-      throw new Error('Install Denizen Desktop on this machine to contribute compute.');
+      throw new Error('Install Denizen Desktop on this machine to add City Power.');
     }
     busyToggle = true;
     state.lastError = null;
@@ -1385,12 +1496,19 @@
       };
       if (getSessionId()) markSessionReady();
       refreshStatus();
+      document.addEventListener('denizen-visitor-profile-switching', () => {
+        resetSensitiveHardwareState();
+        stopLiveRefresh();
+        render();
+      });
       document.addEventListener('denizen-visitor-session-ready', () => {
         markSessionReady();
+        if (!globalThis.DenizenMobileSidebar?.isTouchDrawerMode?.()) {
+          panelHidden = readPanelHidden();
+          applyPanelVisibility();
+        }
         refreshStatus();
-        if (getSessionApi()?.isCeoPrincipal?.()) startLiveRefresh();
       });
-      if (getSessionApi()?.isCeoPrincipal?.()) startLiveRefresh();
       startPolling();
       return { ...state };
     })();

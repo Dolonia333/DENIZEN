@@ -253,10 +253,15 @@
         if (!sid || sid === sess?.getSessionId?.()) return;
         const name = tm.display_name || tm.displayName || 'Teammate';
         const asst = tm.assistant_name || tm.npc_key || '';
+        const teamName = tm.npc_team_name || tm.npcTeamName || null;
+        const teamMembers = Number(tm.npc_team_members ?? tm.npcTeamMembers ?? 0) || 0;
         const online = tm.online === true;
         const o = document.createElement('option');
         o.value = `session:${sid}`;
-        o.textContent = `${online ? '🟢 ' : ''}${asst ? `${name} (${asst})` : name}`;
+        const npcLabel = teamName
+          ? `${teamName}${teamMembers ? ` · ${teamMembers} NPCs` : ''}`
+          : (asst ? `${asst}` : 'NPC team not set');
+        o.textContent = `${online ? '🟢 ' : ''}${name} (${npcLabel})`;
         if (online) o.className = 'online-teammate';
         selectEl.appendChild(o);
       });
@@ -289,7 +294,7 @@
         <h3>${prefill.replyTo ? 'Reply to handoff' : 'Hand off to someone'}</h3>
         <p>${prefill.replyTo
     ? 'Send a reply back to the teammate who handed this off.'
-    : 'Your assistant will pass context along — Lucy, the CEO team, or a teammate.'}</p>
+    : 'Your assistant will message their assistant — across private offices in your team.'}</p>
         <label for="denizen-handoff-recipient">Recipient</label>
         <select id="denizen-handoff-recipient"></select>
         <label for="denizen-handoff-message">Message</label>
@@ -342,6 +347,12 @@
           const payload = { message, ...parseRecipient(selectEl.value) };
           if (sess?.isCeoMode?.()) {
             await sess.sendCeoHandoff(payload);
+          } else if (payload.toSessionId) {
+            await sess.sendOfficeBus({
+              toSessionId: payload.toSessionId,
+              message,
+              intent: 'sync',
+            });
           } else {
             await sess.sendHandoff(payload);
           }
