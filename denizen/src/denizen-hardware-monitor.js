@@ -127,7 +127,24 @@ async function collectLiveMetrics(extra = {}) {
   const ram = sampleRam();
   const gpu = await sampleGpu().catch(() => null);
   const cpus = os.cpus() || [];
-  return {
+
+  let lmStudio = extra.lm_studio || null;
+  if (!lmStudio && extra.probe_lm_studio !== false) {
+    try {
+      const { probeLmStudioEndpoint } = require('./lm-studio-probe');
+      const base = process.env.LM_STUDIO_URL
+        || process.env.LM_STUDIO_BASE_URL
+        || 'http://127.0.0.1:1234';
+      lmStudio = await probeLmStudioEndpoint(base, {
+        apiKey: process.env.LM_STUDIO_API_KEY,
+        timeoutMs: 3500,
+      });
+    } catch (_) {
+      lmStudio = null;
+    }
+  }
+
+  const out = {
     sampled_at: new Date().toISOString(),
     machine_id: extra.machine_id || `host-${os.hostname()}`,
     role: extra.role || 'host',
@@ -144,6 +161,8 @@ async function collectLiveMetrics(extra = {}) {
     contributing: extra.contributing != null ? !!extra.contributing : null,
     jobs_completed: Number(extra.jobs_completed) || 0,
   };
+  if (lmStudio) out.lm_studio = lmStudio;
+  return out;
 }
 
 function getLatestSnapshot() {

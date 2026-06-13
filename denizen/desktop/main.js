@@ -21,6 +21,7 @@ const {
   initAutoUpdater,
   getUpdateStatus,
   checkForUpdates,
+  installDownloadedUpdate,
   setMainWindow
 } = require("./auto-updater");
 const {
@@ -68,6 +69,8 @@ let feedbackWindow = null;
 let denizenServerProcess = null;
 
 let tray = null;
+
+let restartUpdateMenuItem = null;
 
 let pendingPairToken = null;
 
@@ -232,6 +235,14 @@ async function waitForServer(port, attempts = 15) {
 
 
 async function ensureDenizenServer() {
+
+  const configuredServerUrl = getConfiguredRemoteServerUrl();
+
+  if (configuredServerUrl) {
+
+    return { url: configuredServerUrl };
+
+  }
 
   const activePort = await findDenizenServerPort();
 
@@ -608,8 +619,39 @@ function derivePermissionFromCapabilities(caps = {}) {
     !!caps.screen_access
   ];
   if (core.every((v) => !v)) return "off";
-  if (core.every((v) => v)) return "trusted";
   return "ask";
+}
+
+
+
+function getConfiguredRemoteServerUrl() {
+
+  const raw = String(readSetupState().serverUrl || "").trim();
+
+  if (!raw) return null;
+
+  try {
+
+    const parsed = new URL(raw);
+
+    const host = parsed.hostname.toLowerCase();
+
+    const isLocal = host === "localhost" || host === "127.0.0.1" || host === "::1";
+
+    if (!isLocal && (parsed.protocol === "https:" || parsed.protocol === "http:")) {
+
+      return raw.replace(/\/+$/, "");
+
+    }
+
+  } catch (_) {
+
+    return null;
+
+  }
+
+  return null;
+
 }
 
 async function claimPairingToken(serverUrl, token, setup = {}) {
@@ -1137,7 +1179,7 @@ function setupIpc() {
 
       ok: true,
 
-      message: "Desktop linked. Denizen can now read approved files, run code, and contribute compute.",
+      message: "Your station is connected. Step into the city and meet your team.",
 
       profile: data.profile || null
 
@@ -1220,6 +1262,8 @@ function setupIpc() {
   ipcMain.handle("get-update-status", async () => getUpdateStatus());
 
   ipcMain.handle("check-for-updates", async () => checkForUpdates());
+
+  ipcMain.handle("install-update", async () => installDownloadedUpdate());
 
   ipcMain.handle("get-app-info", async () => getAppInfo());
 
@@ -1445,6 +1489,22 @@ function setupTray() {
 
     {
 
+      id: "restart-update",
+
+      label: "Restart to finish update",
+
+      visible: false,
+
+      click: () => {
+
+        installDownloadedUpdate();
+
+      }
+
+    },
+
+    {
+
       label: "Send feedback",
 
       click: () => {
@@ -1485,11 +1545,21 @@ function setupTray() {
 
   tray.setContextMenu(menu);
 
+  restartUpdateMenuItem = menu.getMenuItemById("restart-update");
+
   tray.on("double-click", () => {
 
     void openDenizenWindow();
 
   });
+
+}
+
+function updateTrayUpdateStatus(status) {
+
+  if (!restartUpdateMenuItem) return;
+
+  restartUpdateMenuItem.visible = status?.status === "downloaded";
 
 }
 
@@ -1518,6 +1588,14 @@ async function createWindow(startUrl) {
     width: 1280,
 
     height: 800,
+
+    minWidth: 760,
+
+    minHeight: 640,
+
+    backgroundColor: "#071113",
+
+    title: "Denizen",
 
     webPreferences: {
 
@@ -1583,7 +1661,8 @@ app.whenReady().then(async () => {
     const setup = readSetupState();
     initAutoUpdater({
       mainWindow,
-      channel: setup.updateChannel
+      channel: setup.updateChannel,
+      onStatusChange: updateTrayUpdateStatus
     });
   }
 

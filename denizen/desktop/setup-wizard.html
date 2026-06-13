@@ -3,285 +3,671 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Denizen Setup</title>
+  <title>Welcome to Denizen</title>
   <style>
-    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --ink: #f4f7f5;
+      --muted: #9eaaa5;
+      --panel: #0b1518;
+      --panel-soft: #101e21;
+      --line: rgba(180, 210, 201, 0.16);
+      --mint: #7ee3bd;
+      --mint-strong: #46c996;
+      --amber: #f6c768;
+      --danger: #ff9c9c;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(70, 201, 150, 0.13), transparent 28%),
+        linear-gradient(145deg, #061012 0%, #091518 48%, #071113 100%);
+      color: var(--ink);
+    }
+
+    button, input { font: inherit; }
+
+    .app-shell {
+      width: min(1060px, calc(100vw - 48px));
+      min-height: min(650px, calc(100vh - 48px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 38% 62%;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: rgba(7, 16, 18, 0.94);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+    }
+
+    .city-panel {
+      position: relative;
+      min-height: 650px;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(126, 227, 189, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(126, 227, 189, 0.045) 1px, transparent 1px),
+        linear-gradient(165deg, #102729 0%, #0a1b1e 70%);
+      background-size: 28px 28px, 28px 28px, auto;
+      border-right: 1px solid var(--line);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
       display: grid;
       place-items: center;
-      background: #020617;
-      color: #e2e8f0;
+      border: 1px solid rgba(126, 227, 189, 0.55);
+      border-radius: 9px;
+      color: var(--mint);
+      background: rgba(126, 227, 189, 0.08);
+      box-shadow: inset 0 0 18px rgba(126, 227, 189, 0.08);
     }
-    .card {
-      width: min(520px, calc(100vw - 32px));
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 24px;
-      background: rgba(15, 23, 42, 0.96);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+
+    .city-copy {
+      position: relative;
+      z-index: 2;
+      margin-top: 86px;
+      max-width: 290px;
     }
-    h1 { margin: 0 0 8px; font-size: 22px; }
-    p { margin: 0 0 16px; color: #94a3b8; line-height: 1.5; }
-    .step { display: none; }
-    .step.active { display: block; }
-    .machine {
-      font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-      background: #0b1220;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 12px;
-      margin: 12px 0 16px;
-      color: #93c5fd;
+
+    .city-copy h2 {
+      margin: 0 0 14px;
+      font-size: clamp(28px, 3.2vw, 42px);
+      line-height: 1.04;
+      letter-spacing: -0.045em;
     }
-    .progress {
+
+    .city-copy p {
+      margin: 0;
+      color: #b6c4bf;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .city-status {
+      position: relative;
+      z-index: 2;
+      margin-top: auto;
+      width: fit-content;
       display: flex;
-      gap: 6px;
-      margin-bottom: 18px;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border: 1px solid rgba(126, 227, 189, 0.22);
+      border-radius: 999px;
+      background: rgba(4, 12, 13, 0.55);
+      color: #c8d7d2;
+      font-size: 12px;
     }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--mint);
+      box-shadow: 0 0 13px rgba(126, 227, 189, 0.85);
+    }
+
+    .skyline {
+      position: absolute;
+      inset: auto 0 0;
+      height: 235px;
+      opacity: 0.88;
+      pointer-events: none;
+    }
+
+    .building {
+      position: absolute;
+      bottom: 0;
+      width: 56px;
+      border: 1px solid rgba(126, 227, 189, 0.18);
+      border-bottom: 0;
+      background: linear-gradient(180deg, rgba(24, 61, 60, 0.95), rgba(8, 25, 28, 0.98));
+      box-shadow: inset 0 8px rgba(126, 227, 189, 0.03);
+    }
+
+    .building::after {
+      content: "";
+      position: absolute;
+      inset: 14px 11px;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(246, 199, 104, 0.58) 0 5px,
+        transparent 5px 17px
+      );
+      mask: repeating-linear-gradient(to right, #000 0 6px, transparent 6px 14px);
+    }
+
+    .building:nth-child(1) { left: -8px; height: 92px; }
+    .building:nth-child(2) { left: 46px; height: 142px; width: 72px; }
+    .building:nth-child(3) { left: 116px; height: 108px; }
+    .building:nth-child(4) { left: 170px; height: 184px; width: 82px; }
+    .building:nth-child(5) { left: 250px; height: 126px; width: 66px; }
+    .building:nth-child(6) { left: 314px; height: 164px; width: 92px; }
+
+    .setup-panel {
+      min-width: 0;
+      padding: 30px 42px 34px;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, rgba(12, 24, 27, 0.98), rgba(8, 17, 19, 0.98));
+    }
+
+    .topline {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .step-label {
+      color: #82908b;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .progress {
+      width: min(300px, 56%);
+      display: flex;
+      gap: 7px;
+    }
+
     .progress span {
       flex: 1;
       height: 4px;
       border-radius: 999px;
-      background: #1e293b;
+      background: #213033;
+      transition: background 180ms ease, box-shadow 180ms ease;
     }
-    .progress span.done { background: #3b82f6; }
-    .progress span.current { background: #60a5fa; }
+
+    .progress span.done,
+    .progress span.current {
+      background: var(--mint-strong);
+    }
+
+    .progress span.current { box-shadow: 0 0 12px rgba(70, 201, 150, 0.45); }
+
+    .step { display: none; }
+    .step.active { display: flex; flex: 1; flex-direction: column; animation: appear 180ms ease-out; }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .eyebrow {
+      margin-bottom: 12px;
+      color: var(--mint);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 560px;
+      margin: 0 0 14px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.02;
+      letter-spacing: -0.045em;
+    }
+
+    .lead {
+      max-width: 570px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .promise-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 26px;
+    }
+
+    .promise {
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.025);
+      color: #cad5d1;
+      font-size: 12px;
+    }
+
+    .machine-card {
+      margin-top: 22px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgba(126, 227, 189, 0.18);
+      border-radius: 13px;
+      background: rgba(126, 227, 189, 0.045);
+    }
+
+    .machine-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 11px;
+      background: rgba(126, 227, 189, 0.12);
+      color: var(--mint);
+      font-weight: 900;
+    }
+
+    .machine-copy strong { display: block; margin-bottom: 3px; font-size: 13px; }
+    .machine-copy span { color: #8fa09a; font-size: 12px; }
+
+    .cap-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px;
+      margin-top: 23px;
+    }
+
+    .cap-card {
+      min-height: 91px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 11px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 160ms, background 160ms, transform 160ms;
+    }
+
+    .cap-card:hover { transform: translateY(-1px); border-color: rgba(126, 227, 189, 0.34); }
+    .cap-card.selected { border-color: rgba(126, 227, 189, 0.65); background: rgba(126, 227, 189, 0.08); }
+
+    .cap-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: #152528;
+      color: #bed0ca;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .cap-card.selected .cap-icon { color: #071411; background: var(--mint); }
+    .cap-copy strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .cap-copy span { display: block; color: #899a94; font-size: 11px; line-height: 1.35; }
+
+    .toggle {
+      width: 31px;
+      height: 18px;
+      padding: 2px;
+      border-radius: 999px;
+      background: #2a393c;
+      transition: background 160ms;
+    }
+
+    .toggle::after {
+      content: "";
+      display: block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #87938f;
+      transition: transform 160ms, background 160ms;
+    }
+
+    .cap-card.selected .toggle { background: var(--mint-strong); }
+    .cap-card.selected .toggle::after { transform: translateX(13px); background: #071411; }
+
+    .control-note,
+    .os-note {
+      margin-top: 13px;
+      padding: 11px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #0a1416;
+      color: #aebbb7;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .control-note strong { color: var(--mint); }
+
+    .power-card {
+      margin-top: 25px;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 22px;
+      border: 1px solid rgba(246, 199, 104, 0.24);
+      border-radius: 15px;
+      background: linear-gradient(135deg, rgba(246, 199, 104, 0.085), rgba(126, 227, 189, 0.035));
+    }
+
+    .power-card strong { display: block; margin-bottom: 7px; font-size: 15px; }
+    .power-card p { margin: 0; color: #9caaa5; font-size: 12px; line-height: 1.55; }
+
+    .power-meter { display: flex; align-items: end; gap: 4px; height: 44px; }
+    .power-meter span { width: 8px; border-radius: 3px 3px 1px 1px; background: var(--amber); box-shadow: 0 0 10px rgba(246, 199, 104, 0.2); }
+    .power-meter span:nth-child(1) { height: 14px; opacity: 0.45; }
+    .power-meter span:nth-child(2) { height: 24px; opacity: 0.65; }
+    .power-meter span:nth-child(3) { height: 34px; opacity: 0.8; }
+    .power-meter span:nth-child(4) { height: 44px; }
+
     .choice-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 11px;
+      margin-top: 18px;
     }
+
     .choice-btn {
-      border: 1px solid #475569;
-      background: #1e293b;
-      color: #f8fafc;
-      border-radius: 10px;
-      padding: 18px 16px;
+      min-height: 78px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--ink);
       cursor: pointer;
-      font-size: 16px;
-      font-weight: 600;
-      text-align: center;
-      transition: border-color 0.15s, background 0.15s;
+      text-align: left;
+      transition: border-color 160ms, background 160ms;
     }
-    .choice-btn:hover { border-color: #64748b; background: #273449; }
-    .choice-btn.yes { background: #1d4ed8; border-color: #3b82f6; }
-    .choice-btn.yes:hover { background: #2563eb; }
-    .choice-btn.muted { color: #94a3b8; font-weight: 500; }
-    .waiting {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px dashed #475569;
-      background: #0b1220;
-      color: #cbd5e1;
-      margin: 16px 0;
+
+    .choice-btn:hover { border-color: rgba(126, 227, 189, 0.42); background: rgba(126, 227, 189, 0.055); }
+    .choice-btn.primary-choice { border-color: rgba(246, 199, 104, 0.38); background: rgba(246, 199, 104, 0.07); }
+    .choice-btn strong { display: block; margin-bottom: 5px; font-size: 13px; }
+    .choice-btn span { color: #8fa09a; font-size: 11px; }
+
+    .pairing-box {
+      margin-top: 25px;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.025);
     }
+
+    .waiting { display: flex; align-items: center; gap: 13px; color: #d0d9d6; font-size: 13px; }
+
     .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid #334155;
-      border-top-color: #60a5fa;
+      width: 20px;
+      height: 20px;
+      flex: 0 0 auto;
+      border: 2px solid #324144;
+      border-top-color: var(--mint);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      flex-shrink: 0;
     }
+
     @keyframes spin { to { transform: rotate(360deg); } }
-    .os-note {
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      background: #0b1220;
-      color: #cbd5e1;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-    button {
-      border: 1px solid #475569;
-      background: #1e293b;
-      color: #f8fafc;
-      border-radius: 8px;
-      padding: 10px 14px;
-      cursor: pointer;
-    }
-    button.primary { background: #2563eb; border-color: #3b82f6; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .error { color: #fca5a5; font-size: 12px; min-height: 18px; margin-top: 8px; }
+
     .linked-badge {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 6px 10px;
+      width: fit-content;
+      padding: 8px 11px;
+      border: 1px solid rgba(126, 227, 189, 0.42);
       border-radius: 999px;
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.4);
-      color: #86efac;
+      color: var(--mint);
+      background: rgba(126, 227, 189, 0.08);
       font-size: 12px;
+      font-weight: 700;
     }
+
+    .pairing-help { margin: 14px 0 0; color: #87958f; font-size: 11px; line-height: 1.5; }
+    .error { min-height: 18px; margin-top: 9px; color: var(--danger); font-size: 12px; }
+
+    .done-mark {
+      width: 58px;
+      height: 58px;
+      margin: 4px 0 22px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(126, 227, 189, 0.42);
+      border-radius: 17px;
+      color: #071411;
+      background: var(--mint);
+      box-shadow: 0 0 30px rgba(126, 227, 189, 0.18);
+      font-size: 25px;
+      font-weight: 900;
+    }
+
     .diag-opt {
+      margin-top: 22px;
+      padding: 12px 13px;
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      margin: 16px 0 4px;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      background: #0b1220;
-      color: #cbd5e1;
-      font-size: 13px;
-      line-height: 1.5;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: #9caaa5;
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 12px;
+      line-height: 1.45;
       cursor: pointer;
     }
-    .diag-opt input {
-      margin-top: 3px;
-      flex-shrink: 0;
-    }
-    .update-banner {
-      margin: 14px 0 4px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      background: #0b1220;
-      font-size: 13px;
-      line-height: 1.45;
-      color: #cbd5e1;
-    }
-    .update-banner[data-status="available"],
-    .update-banner[data-status="downloading"] {
-      border-color: #3b82f6;
-      color: #bfdbfe;
-    }
-    .update-banner[data-status="downloaded"] {
-      border-color: #22c55e;
-      color: #86efac;
-    }
-    .update-banner[data-status="error"] {
-      border-color: #ef4444;
-      color: #fca5a5;
-    }
-    .update-actions {
+
+    .diag-opt input { margin-top: 2px; accent-color: var(--mint-strong); }
+
+    .actions {
+      margin-top: auto;
+      padding-top: 24px;
       display: flex;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
     }
-    .update-actions button {
-      font-size: 12px;
-      padding: 6px 10px;
+
+    button.action {
+      min-height: 43px;
+      padding: 0 17px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #142225;
+      color: #dce5e2;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      transition: transform 150ms, background 150ms, border-color 150ms;
+    }
+
+    button.action:hover { transform: translateY(-1px); border-color: rgba(126, 227, 189, 0.36); }
+    button.action.primary { border-color: var(--mint); background: var(--mint); color: #06120f; }
+    button.action.primary:hover { background: #91ebca; }
+    button.action:disabled { opacity: 0.42; cursor: not-allowed; transform: none; }
+    button.action.quiet { background: transparent; color: #91a09b; }
+
+    .update-banner {
+      margin-top: 13px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: #aebbb7;
+      background: #0a1416;
+      font-size: 11px;
+    }
+
+    .update-actions { margin-top: 8px; }
+    .update-actions button { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: #142225; color: #cbd5d1; cursor: pointer; font-size: 10px; }
+    .update-banner[data-status="error"] { border-color: rgba(255, 156, 156, 0.4); color: var(--danger); }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 820px) {
+      body { overflow: auto; }
+      .app-shell { width: min(680px, calc(100vw - 24px)); min-height: calc(100vh - 24px); margin: 12px auto; grid-template-columns: 1fr; }
+      .city-panel { min-height: 160px; padding: 24px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .city-copy { margin-top: 28px; max-width: 480px; }
+      .city-copy h2 { font-size: 28px; }
+      .city-copy p, .city-status, .skyline { display: none; }
+      .setup-panel { min-height: 600px; padding: 26px 24px; }
+    }
+
+    @media (max-width: 540px) {
+      .cap-grid, .choice-row { grid-template-columns: 1fr; }
+      .topline { align-items: flex-start; flex-direction: column; }
+      .progress { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="progress" id="progress-bar" aria-hidden="true"></div>
+  <main class="app-shell">
+    <aside class="city-panel" aria-label="Denizen city">
+      <div class="brand"><span class="brand-mark">D</span> DENIZEN</div>
+      <div class="city-copy">
+        <h2>A place for your AI team to live and work.</h2>
+        <p>See what your agents are doing, give them a place in your world, and keep the whole city moving together.</p>
+      </div>
+      <div class="city-status"><span class="status-dot"></span> City systems ready</div>
+      <div class="skyline" aria-hidden="true">
+        <span class="building"></span><span class="building"></span><span class="building"></span>
+        <span class="building"></span><span class="building"></span><span class="building"></span>
+      </div>
+    </aside>
 
-    <div class="step active" data-step="welcome">
-      <h1>Welcome to Denizen Desktop</h1>
-      <p>Link this computer to your Denizen account so your agent can help with files, code, and optional compute — always with your approval.</p>
-      <div class="machine" id="machine-summary">Detecting hardware…</div>
-      <div class="update-banner" id="update-banner" hidden>
-        <div id="update-message">Checking for updates…</div>
-        <div class="update-actions">
-          <button type="button" data-action="check-updates">Check for updates</button>
+    <section class="setup-panel">
+      <div class="topline">
+        <span class="step-label" id="step-label">Welcome</span>
+        <div class="progress" id="progress-bar" aria-label="Setup progress"></div>
+      </div>
+
+      <section class="step active" data-step="welcome">
+        <div class="eyebrow">Become a Denizen</div>
+        <h1>Welcome home.</h1>
+        <p class="lead">Denizen gives your AI team a world you can actually see. This computer becomes your station: a place where agents can help, show their work, and stay accountable to you.</p>
+        <div class="promise-row">
+          <span class="promise">See work as it happens</span>
+          <span class="promise">Stay in control of every action</span>
+          <span class="promise">Power the city on your terms</span>
         </div>
-      </div>
-      <div class="actions">
-        <button class="primary" data-action="next">Get started</button>
-      </div>
-    </div>
+        <div class="machine-card">
+          <div class="machine-icon">PC</div>
+          <div class="machine-copy">
+            <strong>This computer will become a Denizen station</strong>
+            <span id="machine-summary">Getting your station ready...</span>
+          </div>
+        </div>
+        <div class="update-banner" id="update-banner" hidden>
+          <div id="update-message">Checking for updates...</div>
+          <div class="update-actions">
+            <button type="button" data-action="check-updates" id="check-updates-button">Check again</button>
+            <button type="button" data-action="install-update" id="install-update-button" hidden>Restart and update</button>
+          </div>
+        </div>
+        <div class="actions"><button class="action primary" data-action="next">Enter the city</button></div>
+      </section>
 
-    <div class="step" data-step="pairing">
-      <h1>Connect your account</h1>
-      <p id="pairing-lead">Sign in on the Denizen website, then click <strong>Link this computer</strong>. We'll pick up the connection automatically.</p>
-      <div id="pairing-waiting" class="waiting">
-        <div class="spinner"></div>
-        <span>Waiting for browser…</span>
-      </div>
-      <div id="pairing-linked" class="linked-badge" hidden>Account linked</div>
-      <div class="error" id="pairing-error"></div>
-      <div class="actions">
-        <button data-action="retry-pairing">Retry</button>
-        <button class="primary" data-action="next" id="pairing-continue" disabled>Continue</button>
-      </div>
-    </div>
+      <section class="step" data-step="abilities">
+        <div class="eyebrow">Your station</div>
+        <h1>Choose how Denizen can help.</h1>
+        <p class="lead">Turn on only what feels useful. These choices set the boundaries; Denizen will still ask before taking a local action.</p>
+        <div class="cap-grid">
+          <button class="cap-card" type="button" data-cap-toggle="read_files" aria-pressed="false">
+            <span class="cap-icon">RD</span><span class="cap-copy"><strong>Understand files</strong><span>Read documents when you ask</span></span><span class="toggle"></span>
+          </button>
+          <button class="cap-card" type="button" data-cap-toggle="write_files" aria-pressed="false">
+            <span class="cap-icon">WR</span><span class="cap-copy"><strong>Create and update</strong><span>Draft, export, and edit files</span></span><span class="toggle"></span>
+          </button>
+          <button class="cap-card" type="button" data-cap-toggle="run_code" aria-pressed="false">
+            <span class="cap-icon">RUN</span><span class="cap-copy"><strong>Use local tools</strong><span>Run approved scripts and commands</span></span><span class="toggle"></span>
+          </button>
+          <button class="cap-card" type="button" data-cap-toggle="screen_access" aria-pressed="false">
+            <span class="cap-icon">SEE</span><span class="cap-copy"><strong>See your screen</strong><span>Help with what is open in front of you</span></span><span class="toggle"></span>
+          </button>
+        </div>
+        <div class="control-note"><strong>You are the authority.</strong> Enabling a skill does not give Denizen silent access. Local actions remain approval-first.</div>
+        <div class="os-note" id="os-permission-note" hidden></div>
+        <div class="actions">
+          <button class="action quiet" data-action="back">Back</button>
+          <button class="action primary" data-action="next">Continue</button>
+        </div>
+      </section>
 
-    <div class="step" data-step="read_files">
-      <h1>Read your files?</h1>
-      <p>Let Denizen open and read documents on this machine when you ask — for summaries, search, and context.</p>
-      <div class="choice-row">
-        <button class="choice-btn yes" data-cap="read_files" data-value="yes">Yes</button>
-        <button class="choice-btn muted" data-cap="read_files" data-value="no">Not now</button>
-      </div>
-    </div>
+      <section class="step" data-step="city_power">
+        <div class="eyebrow">City Power</div>
+        <h1>Help keep Denizen moving.</h1>
+        <p class="lead">When this computer is idle, it can take on background city work. Your everyday use always comes first, and you can pause City Power anytime.</p>
+        <div class="power-card">
+          <div>
+            <strong>Your station can power part of the city</strong>
+            <p id="power-machine-summary">Checking available station capacity...</p>
+          </div>
+          <div class="power-meter" aria-label="City power meter"><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="choice-row">
+          <button class="choice-btn primary-choice" type="button" data-cap="contribute_compute" data-value="yes">
+            <strong>Add City Power</strong><span>Help with background city work while idle</span>
+          </button>
+          <button class="choice-btn" type="button" data-cap="contribute_compute" data-value="no">
+            <strong>Maybe later</strong><span>Join the city without contributing power</span>
+          </button>
+        </div>
+        <div class="actions"><button class="action quiet" data-action="back">Back</button></div>
+      </section>
 
-    <div class="step" data-step="write_files">
-      <h1>Save and edit files?</h1>
-      <p>Allow Denizen to create or update files here when you approve — drafts, exports, and project changes.</p>
-      <div class="choice-row">
-        <button class="choice-btn yes" data-cap="write_files" data-value="yes">Yes</button>
-        <button class="choice-btn muted" data-cap="write_files" data-value="no">Not now</button>
-      </div>
-    </div>
+      <section class="step" data-step="pairing">
+        <div class="eyebrow">Claim your place</div>
+        <h1>Connect your Citizen ID.</h1>
+        <p class="lead">Return to the browser tab where you downloaded Denizen and choose <strong>Link this computer</strong>. This station will recognize the connection and finish automatically.</p>
+        <div class="pairing-box">
+          <div id="pairing-waiting" class="waiting"><div class="spinner"></div><span>Waiting for your Citizen ID...</span></div>
+          <div id="pairing-linked" class="linked-badge" hidden>Citizen ID connected</div>
+          <p class="pairing-help">Your station choices are saved only after the link is complete.</p>
+          <div class="error" id="pairing-error"></div>
+        </div>
+        <div class="actions">
+          <button class="action quiet" data-action="back">Back</button>
+          <button class="action" data-action="retry-pairing">Check again</button>
+          <button class="action primary" data-action="finish" id="pairing-continue" disabled>Finish setup</button>
+        </div>
+      </section>
 
-    <div class="step" data-step="run_code">
-      <h1>Run code on this machine?</h1>
-      <p>Let Denizen run scripts and terminal commands locally after you confirm — useful for builds, tests, and automation.</p>
-      <div class="choice-row">
-        <button class="choice-btn yes" data-cap="run_code" data-value="yes">Yes</button>
-        <button class="choice-btn muted" data-cap="run_code" data-value="no">Not now</button>
-      </div>
-    </div>
-
-    <div class="step" data-step="screen_access">
-      <h1>See your screen?</h1>
-      <p>Allow Denizen to view your screen when you ask — so it can help with what's on screen, not just files.</p>
-      <div id="os-permission-note" class="os-note" hidden></div>
-      <div class="choice-row">
-        <button class="choice-btn yes" data-cap="screen_access" data-value="yes">Yes</button>
-        <button class="choice-btn muted" data-cap="screen_access" data-value="no">Not now</button>
-      </div>
-    </div>
-
-    <div class="step" data-step="contribute_compute">
-      <h1>Share spare compute?</h1>
-      <p>Optionally let this machine help run background jobs for the Denizen network when you're not busy. You can change this anytime.</p>
-      <div class="choice-row">
-        <button class="choice-btn yes" data-cap="contribute_compute" data-value="yes">Yes</button>
-        <button class="choice-btn muted" data-cap="contribute_compute" data-value="no">Not now</button>
-      </div>
-    </div>
-
-    <div class="step" data-step="done">
-      <h1>You're all set</h1>
-      <p id="done-message">This machine is linked to Denizen. Open the app to start working with your agent.</p>
-      <label class="diag-opt" for="diagnostics-opt-in">
-        <input type="checkbox" id="diagnostics-opt-in" checked />
-        <span>Send anonymous diagnostics to help improve Denizen</span>
-      </label>
-      <div class="actions">
-        <button class="primary" data-action="open-game">Open Denizen</button>
-      </div>
-    </div>
-  </div>
+      <section class="step" data-step="done">
+        <div class="done-mark">D</div>
+        <div class="eyebrow">Station online</div>
+        <h1>Your place in Denizen is ready.</h1>
+        <p class="lead" id="done-message">Your station is connected. Step into the city and meet your team.</p>
+        <label class="diag-opt" for="diagnostics-opt-in">
+          <input type="checkbox" id="diagnostics-opt-in" />
+          <span>Share anonymous diagnostics to help improve Denizen. This is optional and can be changed later.</span>
+        </label>
+        <div class="actions"><button class="action primary" data-action="open-game">Enter Denizen</button></div>
+      </section>
+    </section>
+  </main>
 
   <script>
-    const steps = [
-      'welcome',
-      'pairing',
-      'read_files',
-      'write_files',
-      'run_code',
-      'screen_access',
-      'contribute_compute',
-      'done',
-    ];
-    const capabilitySteps = ['read_files', 'write_files', 'run_code', 'screen_access', 'contribute_compute'];
-
+    const steps = ['welcome', 'abilities', 'city_power', 'pairing', 'done'];
+    const stepNames = ['Welcome', 'Your station', 'City Power', 'Citizen ID', 'Ready'];
+    const progressSteps = steps.slice(0, -1);
     let stepIndex = 0;
     let machine = null;
     let pairingPollTimer = null;
@@ -300,19 +686,20 @@
       document.querySelectorAll('.step').forEach((el) => {
         el.classList.toggle('active', el.dataset.step === steps[stepIndex]);
       });
+      document.getElementById('step-label').textContent = stepNames[stepIndex];
       renderProgress();
       if (steps[stepIndex] === 'pairing') startPairingFlow();
-      if (steps[stepIndex] === 'screen_access') renderOsPermissionNote();
+      if (steps[stepIndex] === 'abilities') renderOsPermissionNote();
     }
 
     function renderProgress() {
       const bar = document.getElementById('progress-bar');
       if (!bar) return;
-      const setupSteps = steps.length - 1;
-      bar.innerHTML = steps.slice(0, -1).map((name, i) => {
+      const visualIndex = steps[stepIndex] === 'done' ? progressSteps.length : stepIndex;
+      bar.innerHTML = progressSteps.map((name, i) => {
         let cls = '';
-        if (i < stepIndex) cls = 'done';
-        else if (i === stepIndex) cls = 'current';
+        if (i < visualIndex) cls = 'done';
+        else if (i === visualIndex) cls = 'current';
         return `<span class="${cls}" title="${name}"></span>`;
       }).join('');
     }
@@ -323,21 +710,14 @@
     }
 
     function setPairingUi(linked) {
-      const waiting = document.getElementById('pairing-waiting');
-      const badge = document.getElementById('pairing-linked');
-      const cont = document.getElementById('pairing-continue');
-      if (waiting) waiting.hidden = !!linked;
-      if (badge) badge.hidden = !linked;
-      if (cont) cont.disabled = !linked;
+      document.getElementById('pairing-waiting').hidden = !!linked;
+      document.getElementById('pairing-linked').hidden = !linked;
+      document.getElementById('pairing-continue').disabled = !linked;
     }
 
     function derivePermissionLevel(caps) {
       const core = [caps.read_files, caps.write_files, caps.run_code, caps.screen_access];
-      const allNo = core.every((v) => !v);
-      const allYes = core.every((v) => v);
-      if (allNo) return 'off';
-      if (allYes) return 'trusted';
-      return 'ask';
+      return core.some(Boolean) ? 'ask' : 'off';
     }
 
     function parsePairingFromLocation() {
@@ -353,11 +733,9 @@
           const deepServer = (deep.searchParams.get('server') || deep.searchParams.get('server_url') || '').trim();
           if (deepToken) return { token: deepToken, serverUrl: deepServer || null };
           const pathToken = String(deep.pathname || '').replace(/^\/+/, '').trim();
-          if (pathToken && pathToken !== 'pair') {
-            return { token: decodeURIComponent(pathToken), serverUrl: deepServer || null };
-          }
+          if (pathToken && pathToken !== 'pair') return { token: decodeURIComponent(pathToken), serverUrl: deepServer || null };
         }
-      } catch (_) { /* ignore */ }
+      } catch (_) { /* Ignore malformed launch URLs. */ }
       return { token: '', serverUrl: null };
     }
 
@@ -412,70 +790,67 @@
       const note = document.getElementById('os-permission-note');
       if (!note) return;
       const platform = window.DenizenDesktop?.platform || '';
+      if (!capabilities.screen_access) {
+        note.hidden = true;
+        return;
+      }
       if (platform === 'darwin') {
         note.hidden = false;
-        note.innerHTML = `
-          macOS may ask for <strong>Accessibility</strong> and <strong>Screen Recording</strong> before Denizen can see your screen.
-          <div class="actions" style="justify-content:flex-start;margin-top:12px;">
-            <button class="primary" data-action="open-os-settings">Open Settings</button>
-          </div>
-        `;
+        note.innerHTML = 'macOS will ask for Accessibility and Screen Recording access when Denizen first needs them. <button class="action" type="button" data-action="open-os-settings">Open Settings</button>';
         return;
       }
       if (platform === 'win32') {
         note.hidden = false;
-        note.textContent = 'On Windows, screen capture may require allowing Denizen in your privacy settings when prompted.';
+        note.textContent = 'Windows may ask you to approve screen access when Denizen first needs it.';
         return;
       }
       note.hidden = true;
     }
 
+    function renderCapability(cap) {
+      const card = document.querySelector(`[data-cap-toggle="${cap}"]`);
+      if (!card) return;
+      card.classList.toggle('selected', !!capabilities[cap]);
+      card.setAttribute('aria-pressed', capabilities[cap] ? 'true' : 'false');
+      if (cap === 'screen_access') renderOsPermissionNote();
+    }
+
     async function loadMachine() {
       machine = await window.DenizenDesktop?.getMachineProfile?.().catch(() => null);
-      const summary = document.getElementById('machine-summary');
-      if (!machine || !summary) return;
-      summary.textContent = [
-        `${machine.platform || 'unknown'} · ${machine.cpu_cores || '?'} cores`,
-        `${machine.ram_mb ? Math.round(machine.ram_mb / 1024) + ' GB RAM' : 'RAM unknown'}`,
-        machine.hostname ? `host ${machine.hostname}` : '',
-      ].filter(Boolean).join(' · ');
+      if (!machine) return;
+      const details = [
+        machine.cpu_cores ? `${machine.cpu_cores} CPU cores` : null,
+        machine.ram_mb ? `${Math.round(machine.ram_mb / 1024)} GB memory` : null,
+        machine.hostname || null,
+      ].filter(Boolean).join(' / ');
+      document.getElementById('machine-summary').textContent = details || 'Station hardware ready';
+      document.getElementById('power-machine-summary').textContent = details
+        ? `${details}. City Power uses only available capacity.`
+        : 'City Power uses only available capacity and can be paused anytime.';
     }
 
     async function finishSetup() {
       if (finishing) return;
       finishing = true;
-      const permission = derivePermissionLevel(capabilities);
       const pairing = await window.DenizenDesktop?.getPairingStatus?.().catch(() => null);
       const result = await window.DenizenDesktop?.completeSetupWizard?.({
         capabilities,
-        permission,
+        permission: derivePermissionLevel(capabilities),
         optIn: capabilities.contribute_compute,
-        diagnosticsOptIn: true,
+        diagnosticsOptIn: !!document.getElementById('diagnostics-opt-in')?.checked,
         sessionId: pairing?.sessionId || null,
         sessionToken: pairing?.sessionToken || null,
         serverUrl: pairing?.serverUrl || null,
       }).catch((err) => ({ ok: false, error: err?.message || String(err) }));
       finishing = false;
       if (!result?.ok) {
-        setPairingError(result?.error || 'Setup failed');
+        setPairingError(result?.error || 'This station could not finish setup. Please try again.');
         showStep(steps.indexOf('pairing'));
         return;
       }
       document.getElementById('done-message').textContent = result.message
-        || 'This machine is linked. Denizen can now sync capabilities with your account.';
+        || 'Your station is connected. Step into the city and meet your team.';
       showStep(steps.indexOf('done'));
-    }
-
-    function onCapabilityChoice(cap, value) {
-      capabilities[cap] = value === 'yes';
-      const idx = steps.indexOf(cap);
-      const next = idx + 1;
-      if (next >= steps.length) return;
-      if (steps[next] === 'done') {
-        void finishSetup();
-        return;
-      }
-      showStep(next);
     }
 
     document.getElementById('diagnostics-opt-in')?.addEventListener('change', (ev) => {
@@ -483,41 +858,44 @@
     });
 
     document.addEventListener('click', (ev) => {
-      const cap = ev.target?.dataset?.cap;
-      const capValue = ev.target?.dataset?.value;
-      if (cap && capValue) {
-        onCapabilityChoice(cap, capValue);
+      const capToggle = ev.target?.closest?.('[data-cap-toggle]')?.dataset?.capToggle;
+      if (capToggle) {
+        capabilities[capToggle] = !capabilities[capToggle];
+        renderCapability(capToggle);
         return;
       }
 
-      const action = ev.target?.dataset?.action;
-      if (!action) return;
+      const choice = ev.target?.closest?.('[data-cap]');
+      if (choice?.dataset?.cap && choice?.dataset?.value) {
+        capabilities[choice.dataset.cap] = choice.dataset.value === 'yes';
+        showStep(steps.indexOf('pairing'));
+        return;
+      }
 
+      const action = ev.target?.closest?.('[data-action]')?.dataset?.action;
+      if (!action) return;
       if (action === 'next') showStep(stepIndex + 1);
+      if (action === 'back') showStep(stepIndex - 1);
+      if (action === 'finish') void finishSetup();
       if (action === 'retry-pairing') void startPairingFlow();
-      if (action === 'open-os-settings') {
-        window.DenizenDesktop?.openOsPermissionSettings?.()
-          || alert('Open System Settings → Privacy & Security → Accessibility and Screen Recording, then enable Denizen.');
-      }
+      if (action === 'open-os-settings') window.DenizenDesktop?.openOsPermissionSettings?.();
       if (action === 'open-game') window.DenizenDesktop?.openGame?.();
-      if (action === 'check-updates') {
-        void window.DenizenDesktop?.checkForUpdates?.().then(renderUpdateStatus);
-      }
+      if (action === 'check-updates') void window.DenizenDesktop?.checkForUpdates?.().then(renderUpdateStatus);
+      if (action === 'install-update') void window.DenizenDesktop?.installUpdate?.();
     });
 
     window.DenizenDesktop?.onPermissionPending?.((pending) => {
       const title = pending?.title || 'Permission request';
       const detail = pending?.detail || pending?.description || '';
       const approved = window.confirm(`${title}\n\n${detail}\n\nAllow this action?`);
-      window.DenizenDesktop?.respondPermission?.({
-        requestId: pending?.id,
-        approved,
-      }).catch(() => {});
+      window.DenizenDesktop?.respondPermission?.({ requestId: pending?.id, approved }).catch(() => {});
     });
 
     function renderUpdateStatus(payload) {
       const banner = document.getElementById('update-banner');
       const message = document.getElementById('update-message');
+      const checkButton = document.getElementById('check-updates-button');
+      const installButton = document.getElementById('install-update-button');
       if (!banner || !message) return;
       const status = String(payload?.status || 'idle');
       if (status === 'idle') {
@@ -526,8 +904,9 @@
       }
       banner.hidden = false;
       banner.dataset.status = status;
-      message.textContent = payload?.message
-        || (payload?.version ? `Update v${payload.version}` : 'Update status unknown');
+      message.textContent = payload?.message || (payload?.version ? `Update v${payload.version}` : 'Update status unknown');
+      if (checkButton) checkButton.hidden = status === 'downloaded';
+      if (installButton) installButton.hidden = status !== 'downloaded';
     }
 
     async function refreshUpdateStatus() {
@@ -535,14 +914,11 @@
       if (status) renderUpdateStatus(status);
     }
 
-    window.DenizenDesktop?.onUpdateStatus?.((payload) => {
-      renderUpdateStatus(payload);
-    });
-
+    window.DenizenDesktop?.onUpdateStatus?.(renderUpdateStatus);
     void refreshUpdateStatus();
-
     void loadMachine();
     renderProgress();
+
     const launchPairing = parsePairingFromLocation();
     if (launchPairing.token) {
       showStep(steps.indexOf('pairing'));

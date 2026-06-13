@@ -1,24 +1,20 @@
 'use strict';
 
-const LM_STUDIO_URL = process.env.LM_STUDIO_URL
+const { normalizeBaseUrl, probeLmStudioEndpoint } = require('./lm-studio-probe');
+
+const LM_STUDIO_URL = normalizeBaseUrl(
+  process.env.LM_STUDIO_URL
   || process.env.LM_STUDIO_BASE_URL
-  || 'http://127.0.0.1:1234';
+  || 'http://127.0.0.1:1234',
+);
 
 function lmStudioBase(url = LM_STUDIO_URL) {
-  return String(url || LM_STUDIO_URL).replace(/\/+$/, '');
+  return normalizeBaseUrl(url || LM_STUDIO_URL);
 }
 
 async function isLmStudioReachable(url = LM_STUDIO_URL) {
-  const base = lmStudioBase(url);
-  try {
-    const res = await fetch(`${base}/v1/models`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(4000),
-    });
-    return res.ok || res.status === 401 || res.status === 403;
-  } catch (_) {
-    return false;
-  }
+  const probe = await probeLmStudioEndpoint(lmStudioBase(url), { timeoutMs: 4000 });
+  return !!probe.reachable;
 }
 
 async function resolveLmStudioModel(base) {

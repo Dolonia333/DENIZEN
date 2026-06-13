@@ -3,17 +3,8 @@ name: Desktop Release
 on:
   push:
     tags:
-      - 'desktop-v*'
+      - 'v0.*'
   workflow_dispatch:
-    inputs:
-      channel:
-        description: Release channel
-        required: true
-        default: stable
-        type: choice
-        options:
-          - stable
-          - beta
 
 jobs:
   build-win:
@@ -28,21 +19,58 @@ jobs:
         run: |
           npm ci
           npm run build:win
-      - name: Stage update manifest
-        working-directory: denizen/desktop
-        shell: pwsh
-        run: |
-          ./scripts/publish-update-manifest.ps1 -DistDir dist-build -OutDir updates -Channel ${{ github.event.inputs.channel || 'stable' }}
       - uses: actions/upload-artifact@v4
         with:
           name: denizen-desktop-win
           path: |
-            denizen/desktop/dist-build/**
-            denizen/desktop/updates/**
+            denizen/desktop/dist-build/*.exe
+            denizen/desktop/dist-build/*.blockmap
+            denizen/desktop/dist-build/latest*.yml
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install and build Linux desktop
+        working-directory: denizen/desktop
+        run: |
+          npm ci
+          npm run build:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: denizen-desktop-linux
+          path: |
+            denizen/desktop/dist-build/*.AppImage
+            denizen/desktop/dist-build/*.blockmap
+            denizen/desktop/dist-build/latest*.yml
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install and build macOS desktop
+        working-directory: denizen/desktop
+        run: |
+          npm ci
+          npm run build:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: denizen-desktop-mac
+          path: |
+            denizen/desktop/dist-build/*.dmg
+            denizen/desktop/dist-build/*.zip
+            denizen/desktop/dist-build/*.blockmap
+            denizen/desktop/dist-build/latest*.yml
 
   release:
-    if: startsWith(github.ref, 'refs/tags/desktop-v')
-    needs: [build-win]
+    if: startsWith(github.ref, 'refs/tags/v0.')
+    needs: [build-win, build-linux, build-mac]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -50,10 +78,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: denizen-desktop-win
+          pattern: denizen-desktop-*
           path: artifacts
+          merge-multiple: true
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/dist-build/**
+          files: artifacts/**
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

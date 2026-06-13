@@ -22,6 +22,7 @@ function requireDenizenSrc(modulePath) {
     } catch (err) {
       lastErr = err;
       if (err?.code !== 'MODULE_NOT_FOUND') throw err;
+      if (!String(err?.message || '').includes(candidate)) throw err;
     }
   }
 

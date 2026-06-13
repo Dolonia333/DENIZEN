@@ -11,66 +11,72 @@
       min-height: 100vh;
       display: grid;
       place-items: center;
-      background: #020617;
-      color: #e2e8f0;
+      background:
+        radial-gradient(circle at 18% 10%, rgba(70, 201, 150, 0.13), transparent 28%),
+        linear-gradient(145deg, #061012, #091518 48%, #071113);
+      color: #f4f7f5;
     }
     .card {
-      width: min(560px, calc(100vw - 32px));
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 28px;
-      background: rgba(15, 23, 42, 0.96);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+      width: min(680px, calc(100vw - 32px));
+      border: 1px solid rgba(180, 210, 201, 0.18);
+      border-radius: 22px;
+      padding: 38px;
+      background: rgba(9, 22, 24, 0.96);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
     }
-    h1 { margin: 0 0 8px; font-size: 24px; }
-    p { margin: 0 0 16px; color: #94a3b8; line-height: 1.5; }
+    .eyebrow { color: #7ee3bd; font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+    h1 { margin: 10px 0 12px; font-size: 38px; letter-spacing: -0.04em; }
+    p { margin: 0 0 16px; color: #9eaaa5; line-height: 1.6; }
     .downloads { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 24px; }
     a.btn, button.btn {
       display: inline-block;
       text-decoration: none;
-      border: 1px solid #475569;
-      background: #1e293b;
-      color: #f8fafc;
-      border-radius: 8px;
+      border: 1px solid rgba(180, 210, 201, 0.18);
+      background: #142225;
+      color: #f4f7f5;
+      border-radius: 10px;
       padding: 12px 18px;
       font-size: 14px;
       cursor: pointer;
     }
-    a.btn.primary { background: #2563eb; border-color: #3b82f6; }
+    a.btn.primary { background: #7ee3bd; border-color: #7ee3bd; color: #06120f; font-weight: 800; }
     button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
     ol {
       margin: 0;
       padding-left: 20px;
-      color: #cbd5e1;
+      color: #cbd5d1;
       line-height: 1.6;
     }
     ol li { margin-bottom: 8px; }
-    .note { font-size: 13px; color: #64748b; margin-top: 20px; }
+    .note { font-size: 12px; color: #71817b; margin-top: 20px; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Download Denizen Desktop</h1>
+    <div class="eyebrow">Build your station</div>
+    <h1>Bring Denizen home.</h1>
     <p>
-      Run Denizen on your machine with real hardware profiling, the setup wizard, and optional compute contribution.
+      Turn this computer into a Denizen station. Your agents can help with approved local tasks, show their work in the city, and optionally add City Power while your computer is idle.
     </p>
 
     <div class="downloads">
-      <a class="btn primary" href="/desktop/updates/Denizen-Setup.exe" download>Download for Windows</a>
-      <button class="btn" type="button" disabled>macOS — coming soon</button>
+      <a class="btn primary" href="https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen-Setup.exe">Download for Windows</a>
+      <a class="btn" href="https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.AppImage">Download for Linux</a>
+      <button class="btn" type="button" disabled>macOS - coming soon</button>
     </div>
 
     <p>Getting started:</p>
     <ol>
-      <li>Download and run <strong>Denizen-Setup.exe</strong>.</li>
-      <li>Launch <strong>Denizen</strong> from the Start menu or desktop shortcut.</li>
-      <li>Complete the setup wizard and link your Denizen account (session ID from browser login).</li>
-      <li>Choose permission level and opt in to compute if you want this machine to contribute.</li>
-      <li>Open Denizen — your agent syncs capabilities with your account.</li>
+      <li>Download and run <strong>Denizen-Setup.exe</strong> on Windows, or <strong>Denizen.AppImage</strong> on Linux.</li>
+      <li>Launch <strong>Denizen</strong> and enter the city.</li>
+      <li>Choose how this station may help. Denizen remains approval-first.</li>
+      <li>Add City Power now, or leave it off and decide later.</li>
+      <li>Connect your Citizen ID by choosing <strong>Link this computer</strong> in the browser.</li>
+      <li>Enter Denizen. Your station and web account stay connected.</li>
     </ol>
 
     <p class="note">
-      Installer path: <code>/desktop/dist/Denizen-Setup.exe</code>. Build with <code>npm run build:win</code> in the <code>desktop</code> folder.
+      Windows 10 or newer, or a modern 64-bit Linux distribution. Future updates download inside Denizen and install when the app restarts. City Power is optional and can be paused at any time.
     </p>
   </div>
 </body>

@@ -102,6 +102,7 @@ Context-isolated bridge (`contextBridge.exposeInMainWorld`). All methods return 
 | `respondPermission(opts)` | `respond-permission` | Approve/deny `{ requestId, approved }` |
 | `sendFeedback(opts)` | `send-feedback` | `POST /api/desktop/feedback` |
 | `checkForUpdates()` | `check-for-updates` | Trigger `electron-updater` check |
+| `installUpdate()` | `install-update` | Restart and install a downloaded update |
 | `getAppInfo()` | `get-app-info` | Version, channel, platform metadata |
 | `setDiagnosticsOptIn(optIn)` | `set-diagnostics-opt-in` | Toggle crash auto-submit in setup state |
 | `onPermissionPending(callback)` | `permission-pending` (event) | Subscribe to permission pushes; returns unsubscribe fn |
@@ -188,31 +189,33 @@ node scripts/smoke-desktop-release.js      # package.json + workflow + files san
 |--------|--------|
 | `smoke-desktop-onboarding.js` | Demo session, `denizen://pair` token create/claim/replay-403, permission enqueue/respond/clear, wizard complete, capabilities sync, trusted auto-approve |
 | `smoke-desktop-feedback.js` | Feedback POST with session + install metadata |
-| `smoke-desktop-release.js` | `electron-updater` dep, `build:mac`/`build:linux` scripts, publish URL, workflow + auto-updater + crash-reporter files; delegates to feedback smoke |
+| `smoke-desktop-release.js` | `electron-updater` dependency, GitHub Releases provider, all platform jobs, workflow + auto-updater + crash-reporter files; delegates to feedback smoke |
 
 ## Release
 
-Desktop builds are published via GitHub Actions (`.github/workflows/desktop-release.yml`) and manual upload to the update server.
+Desktop builds and updater manifests are published together through GitHub Actions (`.github/workflows/desktop-release.yml`) and GitHub Releases.
 
 ### Tag a release
 
 Stable:
 
 ```bash
-git tag desktop-v0.1.1
-git push origin desktop-v0.1.1
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
-Beta (uses `-beta` suffix and `DENIZEN_UPDATE_CHANNEL=beta` in CI):
+Beta:
 
 ```bash
-git tag desktop-v0.1.1-beta
-git push origin desktop-v0.1.1-beta
+git tag v0.1.5-beta.1
+git push origin v0.1.5-beta.1
 ```
 
 Tag pushes build Windows, macOS, and Linux installers in parallel, upload per-OS artifacts, and create a [GitHub Release](https://docs.github.com/en/repositories/releasing-projects-on-github) with all installers attached.
 
-You can also run the workflow manually from **Actions → Desktop Release → Run workflow** and choose `stable` or `beta` (build only; no GitHub Release unless triggered by a tag).
+The desktop workflow listens to `v0.*` tags so it does not run for the main platform's `v1.*` releases.
+
+You can also run the workflow manually from **Actions -> Desktop Release -> Run workflow** to verify all three platform builds. Manual runs create build artifacts but do not create a GitHub Release.
 
 ### CI secrets
 
@@ -220,21 +223,7 @@ No repository secrets are required for the default workflow. GitHub Actions prov
 
 If you publish to GitHub from a local machine with `electron-builder --publish always`, set a personal access token in the environment as `GH_TOKEN` (repo scope). Do not commit tokens to the repo.
 
-### Upload to the update server
-
-After a local or CI build, stage files for the generic update feed:
-
-```powershell
-cd denizen/desktop
-npm run build:win   # or build:mac / build:linux on each platform
-.\scripts\publish-update-manifest.ps1 -Channel stable
-```
-
-This copies `dist-build/*` and `latest*.yml` manifests into `updates-publish/<channel>/`. Upload the **contents** of that folder (flat) to:
-
-`https://denizen.dolonia.cloud/desktop/updates/`
-
-The desktop app checks that URL for auto-updates (`electron-updater`). Stable uses `latest.yml`; beta uses `latest-beta.yml`.
+The release must include `latest.yml`, `latest-linux.yml`, and `latest-mac.yml` beside the platform installers. `electron-updater` reads those assets directly from the public GitHub Release. Stable uses the latest non-prerelease release; beta users follow prerelease manifests.
 
 ## Diagnostics
 

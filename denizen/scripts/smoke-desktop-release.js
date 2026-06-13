@@ -42,12 +42,13 @@ function checkPackageJson(reasons) {
 
   const publish = pkg.build && pkg.build.publish;
   const publishList = Array.isArray(publish) ? publish : publish ? [publish] : [];
-  const hasUrl = publishList.some((entry) => {
-    const url = entry && (entry.url || entry.URL);
-    return typeof url === 'string' && url.trim().length > 0;
+  const hasGithubRelease = publishList.some((entry) => {
+    return entry?.provider === 'github'
+      && entry?.owner === 'Dolonia333'
+      && entry?.repo === 'DENIZEN';
   });
-  if (!hasUrl) {
-    fail(reasons, 'desktop/package.json missing build.publish url');
+  if (!hasGithubRelease) {
+    fail(reasons, 'desktop/package.json missing GitHub Releases publish configuration');
   }
 
   return true;
@@ -66,6 +67,19 @@ function checkFiles(reasons) {
     }
   }
   return ok;
+}
+
+function checkWorkflow(reasons) {
+  const workflow = fs.readFileSync(WORKFLOW, 'utf8');
+  for (const job of ['build-win:', 'build-linux:', 'build-mac:']) {
+    if (!workflow.includes(job)) fail(reasons, `desktop release workflow missing ${job.slice(0, -1)} job`);
+  }
+  if (!workflow.includes("- 'v0.*'")) {
+    fail(reasons, 'desktop release workflow must use semver-compatible desktop v0.* tags');
+  }
+  if (!workflow.includes('merge-multiple: true')) {
+    fail(reasons, 'desktop release workflow does not merge platform artifacts');
+  }
 }
 
 function runFeedbackSmoke(reasons) {
@@ -91,7 +105,7 @@ function runFeedbackSmoke(reasons) {
 function main() {
   const reasons = [];
   checkPackageJson(reasons);
-  checkFiles(reasons);
+  if (checkFiles(reasons)) checkWorkflow(reasons);
   runFeedbackSmoke(reasons);
 
   const ready = reasons.length === 0;

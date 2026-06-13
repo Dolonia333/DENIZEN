@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-  Stage Denizen desktop build outputs for manual upload to the update server.
+  Stage Denizen desktop build outputs for a manual GitHub Release upload.
 
 .DESCRIPTION
-  Copies dist/* and latest*.yml into a local folder tree ready to sync to
-  https://denizen.dolonia.cloud/desktop/updates/
+  Copies installers and latest*.yml into a flat local folder ready to attach
+  to a GitHub Release.
 
   Stable builds produce latest.yml / latest-mac.yml / latest-linux.yml.
   Beta builds produce latest-beta.yml / latest-mac-beta.yml / latest-linux-beta.yml.
-  Upload the contents of the staged folder to the remote updates path (flat layout).
+  Upload the contents of the staged folder to the matching GitHub Release.
 
 .PARAMETER DistDir
   Path to electron-builder output (default: ../dist relative to this script).
@@ -52,12 +52,12 @@ if (-not $OutDir) {
 }
 
 $resolvedDist = Resolve-Path -Path $DistDir
-# electron-updater expects a flat layout at the publish URL root (/desktop/updates/).
+# electron-updater expects the manifests and binaries together in one release.
 $targetRoot = $OutDir
 New-Item -ItemType Directory -Force -Path $targetRoot | Out-Null
 
 $files = Get-ChildItem -Path $resolvedDist -File | Where-Object {
-    $_.Name -match '^(latest.*\.ya?ml)$' -or $_.Extension -in '.exe', '.blockmap'
+    $_.Name -match '^(latest.*\.ya?ml)$' -or $_.Extension -in '.exe', '.blockmap', '.AppImage', '.dmg', '.zip'
 } | Sort-Object Name
 
 if (-not $files -or $files.Count -eq 0) {
@@ -70,7 +70,6 @@ foreach ($file in $files) {
 
 Write-Host ""
 Write-Host "Staged $($files.Count) file(s) in: $targetRoot"
-Write-Host "Served locally at: /desktop/updates/"
-Write-Host "Remote URL: https://denizen.dolonia.cloud/desktop/updates/"
+Write-Host "Attach these files to the matching GitHub Release."
 Write-Host ""
 Get-ChildItem -Path $targetRoot | Sort-Object Name | Format-Table Name, @{ Label = "Size (KB)"; Expression = { [math]::Round($_.Length / 1KB, 1) } }, LastWriteTime

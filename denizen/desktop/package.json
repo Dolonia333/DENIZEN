@@ -1,6 +1,6 @@
 {
   "name": "denizen-desktop",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "private": true,
   "description": "Denizen desktop shell (Electron)",
   "main": "main.js",
@@ -31,8 +31,9 @@
     },
     "publish": [
       {
-        "provider": "generic",
-        "url": "https://denizen.dolonia.cloud/desktop/updates/"
+        "provider": "github",
+        "owner": "Dolonia333",
+        "repo": "DENIZEN"
       }
     ],
     "win": {
@@ -40,10 +41,13 @@
       "signAndEditExecutable": false
     },
     "mac": {
-      "target": ["dmg", "zip"]
+      "target": ["dmg", "zip"],
+      "artifactName": "Denizen.${ext}"
     },
     "linux": {
-      "target": "AppImage"
+      "target": "AppImage",
+      "artifactName": "Denizen.${ext}",
+      "category": "Utility"
     },
     "nsis": {
       "artifactName": "Denizen-Setup.${ext}",
@@ -59,7 +63,9 @@
     "files": [
       "**/*",
       "!dist/**",
-      "!dist-build/**",
+      "!updates/**",
+      "!dist-build*/**",
+      "!dist-review*/**",
       "!dist-old-*/**"
     ]
   }

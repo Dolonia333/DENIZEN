@@ -10,6 +10,7 @@ const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 let mainWindowRef = null;
 let checkTimer = null;
 let startupTimer = null;
+let statusListener = null;
 
 const updateState = {
   status: "idle",
@@ -69,11 +70,13 @@ function sendUpdateStatus(payload) {
 
 function emitUpdateStatus(status, extras = {}) {
   setUpdateState(status, extras);
-  sendUpdateStatus({
+  const payload = {
     status,
     version: extras.version ?? updateState.version,
     message: extras.message ?? updateState.message
-  });
+  };
+  sendUpdateStatus(payload);
+  statusListener?.(payload);
 }
 
 function logUpdate(event, detail = "") {
@@ -81,8 +84,29 @@ function logUpdate(event, detail = "") {
   console.log(`[denizen-desktop:auto-updater] ${event}${suffix}`);
 }
 
+function canCheckForUpdates() {
+  return app.isPackaged
+    && ["win32", "darwin", "linux"].includes(process.platform)
+    && fs.existsSync(path.join(process.resourcesPath, "app-update.yml"));
+}
+
+function friendlyUpdateError(err) {
+  const raw = err?.message || String(err);
+  if (
+    err?.code === "ERR_UPDATER_CHANNEL_FILE_NOT_FOUND"
+    || /cannot find channel/i.test(raw)
+    || /latest(?:-linux|-mac)?[^\s]*\.ya?ml[^\n]*404/i.test(raw)
+  ) {
+    return "Updates are temporarily unavailable for this platform. Please try again later.";
+  }
+  if (/net::ERR_|ENOTFOUND|ETIMEDOUT|network/i.test(raw)) {
+    return "Denizen could not reach the update service. Check your connection and try again.";
+  }
+  return "Denizen could not check for updates. Please try again later.";
+}
+
 async function runUpdateCheck() {
-  if (!app.isPackaged) {
+  if (!canCheckForUpdates()) {
     return;
   }
 
@@ -91,9 +115,8 @@ async function runUpdateCheck() {
   try {
     await autoUpdater.checkForUpdatesAndNotify();
   } catch (err) {
-    const message = err?.message || String(err);
-    logUpdate("error", message);
-    emitUpdateStatus("error", { message });
+    logUpdate("error", err?.message || String(err));
+    emitUpdateStatus("error", { message: friendlyUpdateError(err) });
   }
 }
 
@@ -143,25 +166,25 @@ function bindAutoUpdaterEvents() {
     emitUpdateStatus("downloaded", {
       version,
       message: version
-        ? `Update v${version} downloaded. It will install on quit.`
-        : "Update downloaded. It will install on quit."
+        ? `Update v${version} is ready. Restart Denizen to finish.`
+        : "Your update is ready. Restart Denizen to finish."
     });
   });
 
   autoUpdater.on("error", (err) => {
-    const message = err?.message || String(err);
-    logUpdate("error", message);
-    emitUpdateStatus("error", { message });
+    logUpdate("error", err?.message || String(err));
+    emitUpdateStatus("error", { message: friendlyUpdateError(err) });
   });
 }
 
-function initAutoUpdater({ mainWindow, channel } = {}) {
-  if (!app.isPackaged) {
-    logUpdate("skipped", "(development mode)");
+function initAutoUpdater({ mainWindow, channel, onStatusChange } = {}) {
+  if (!canCheckForUpdates()) {
+    logUpdate("skipped", app.isPackaged ? "(release metadata unavailable)" : "(development mode)");
     return;
   }
 
   mainWindowRef = mainWindow || null;
+  statusListener = typeof onStatusChange === "function" ? onStatusChange : null;
 
   const resolvedChannel = resolveChannel(channel);
   autoUpdater.autoDownload = true;
@@ -192,15 +215,26 @@ function getUpdateStatus() {
 }
 
 function checkForUpdates() {
-  if (!app.isPackaged) {
+  if (!canCheckForUpdates()) {
     return Promise.resolve({
       status: "idle",
       version: null,
-      message: "Updates are disabled in development"
+      message: null
     });
   }
 
   return runUpdateCheck().then(() => getUpdateStatus());
+}
+
+function installDownloadedUpdate() {
+  if (updateState.status !== "downloaded") {
+    return { ok: false, error: "No downloaded update is ready to install." };
+  }
+
+  setTimeout(() => {
+    autoUpdater.quitAndInstall(false, true);
+  }, 150);
+  return { ok: true };
 }
 
 function setMainWindow(mainWindow) {
@@ -211,5 +245,6 @@ module.exports = {
   initAutoUpdater,
   getUpdateStatus,
   checkForUpdates,
+  installDownloadedUpdate,
   setMainWindow
 };

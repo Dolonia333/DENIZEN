@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld("DenizenDesktop", {
   respondPermission: (opts) => ipcRenderer.invoke("respond-permission", opts),
   sendFeedback: (opts) => ipcRenderer.invoke("send-feedback", opts),
   checkForUpdates: () => ipcRenderer.invoke("check-for-updates"),
+  installUpdate: () => ipcRenderer.invoke("install-update"),
   getUpdateStatus: () => ipcRenderer.invoke("get-update-status"),
   getAppInfo: () => ipcRenderer.invoke("get-app-info"),
   onUpdateStatus: (callback) => {
