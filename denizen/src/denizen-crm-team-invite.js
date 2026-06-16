@@ -2,45 +2,67 @@
 
 const denizenDb = require('./denizen-db');
 const { sendResendEmail } = require('./visitor-notify');
+const teamInviteLinks = require('./denizen-team-invite-links.js');
+const invitePlatform = require('./denizen-invite-platform.js');
 
-function publicBaseUrl() {
-  return String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || 'http://localhost:8080').replace(/\/$/, '');
-}
-
-async function inviteTeamMember(orgId, orgSlug, { email, displayName }, inviterName) {
+async function inviteTeamMember(orgId, orgSlug, { email, displayName, platform = 'windows' }, inviterName) {
   const to = String(email || '').trim().toLowerCase();
   const name = String(displayName || '').trim() || to.split('@')[0];
   if (!to || !to.includes('@')) return { ok: false, error: 'valid_email_required' };
+
+  const normalizedPlatform = invitePlatform.normalizeInvitePlatform(platform);
 
   const existing = await denizenDb._get(
     `denizen_team_accounts?select=id&org_id=eq.${encodeURIComponent(orgId)}&email=eq.${encodeURIComponent(to)}&limit=1`,
   ).catch(() => []);
   if (existing?.length) return { ok: false, error: 'already_member' };
 
-  const joinUrl = `${publicBaseUrl()}/`;
-  const text = [
-    `Hi ${name},`,
-    '',
-    `${inviterName || 'A teammate'} invited you to join ${orgSlug || 'their team'} on Denizen CRM.`,
-    '',
-    `1. Open ${joinUrl}`,
-    '2. Sign in with team access (use your org team code if prompted)',
-    `3. Open CRM from the phone app or ${publicBaseUrl()}/crm/`,
-    '',
-    'Once you are in the same organization, shared contacts, deals, and pipeline sync automatically.',
-  ].join('\n');
+  const orgRows = orgId
+    ? await denizenDb._get(
+      `denizen_organizations?select=id,slug,display_name,settings&id=eq.${encodeURIComponent(orgId)}&limit=1`,
+    ).catch(() => [])
+    : [];
+  const org = orgRows?.[0] || { slug: orgSlug, display_name: orgSlug };
+  const teamCode = await teamInviteLinks.resolveTeamCodeForOrg(org);
+  const joinUrl = teamInviteLinks.buildShortJoinUrl(teamCode);
+  const teamLabel = org.display_name || orgSlug || 'Denizen';
+  const text = teamInviteLinks.buildInviteEmailText({
+    name,
+    inviterName,
+    orgSlug: org.slug || orgSlug,
+    orgDisplayName: teamLabel,
+    teamCode,
+    platform: normalizedPlatform,
+  });
 
   const sent = await sendResendEmail({
     to,
-    subject: `You're invited to ${orgSlug || 'Denizen'} CRM`,
+    subject: invitePlatform.inviteEmailSubject({ orgDisplayName: teamLabel, platform: normalizedPlatform }),
     text,
   });
 
+  const downloadPayload = {
+    joinUrl,
+    team_code: teamCode,
+    platform: normalizedPlatform,
+    windows_desktop_url: teamInviteLinks.WINDOWS_DESKTOP_EXE_URL,
+    macos_desktop_url: teamInviteLinks.MACOS_DESKTOP_DMG_URL,
+    linux_desktop_url: teamInviteLinks.LINUX_DESKTOP_APPIMAGE_URL,
+    desktop_download_url: teamInviteLinks.desktopDownloadUrl(),
+    installer_url: invitePlatform.desktopInstallerUrl(normalizedPlatform),
+  };
+
   if (sent.skipped) {
-    return { ok: true, emailed: false, joinUrl, message: 'Resend not configured — share join link manually' };
+    return {
+      ok: true,
+      emailed: false,
+      ...downloadPayload,
+      email_draft: text,
+      message: 'Resend not configured — use mailto or copy the draft below',
+    };
   }
   if (!sent.ok) return { ok: false, error: sent.error || 'email_failed' };
-  return { ok: true, emailed: true, joinUrl };
+  return { ok: true, emailed: true, ...downloadPayload };
 }
 
 module.exports = { inviteTeamMember };
