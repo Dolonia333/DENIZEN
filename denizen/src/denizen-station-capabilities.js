@@ -66,7 +66,7 @@ function assertCapability(profile, cap, { skill = null, kind = null } = {}) {
   return { ok: true, capability: required };
 }
 
-function stationIsOnline(profile, maxAgeMs = 3 * 60 * 1000) {
+function stationIsOnline(profile, maxAgeMs = 6 * 60 * 1000) {
   if (!profile?.desktop_install_id || !profile?.setup_wizard_completed) return false;
   const synced = profile.last_capability_sync_at || profile.desktop_linked_at;
   if (!synced) return false;

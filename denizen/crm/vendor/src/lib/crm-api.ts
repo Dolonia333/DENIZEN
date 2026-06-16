@@ -943,6 +943,7 @@ export function publicIntakePageUrl(orgSlug: string): string {
 export async function inviteCrmTeamMember(payload: {
   email: string;
   displayName?: string;
+  platform?: string;
 }): Promise<{ ok: boolean; emailed?: boolean; joinUrl?: string; error?: string; message?: string }> {
   const session = await ensureDenizenSession();
   if (!session?.session_id) return { ok: false, error: 'no_session' };

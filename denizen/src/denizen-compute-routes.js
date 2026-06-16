@@ -482,13 +482,13 @@ function mountComputeRoutes(serverContext = {}) {
           return true;
         }
 
-        const job = await computeQueue.claimJob(node.id);
+        const profile = await resolveProfileForNode(node, serverContext).catch(() => null);
+        const job = await computeQueue.claimJob(node.id, profile);
         if (!job) {
           sendJson(res, 200, { ok: true, job: null, note: 'No queued jobs available' });
           return true;
         }
 
-        const profile = await resolveProfileForNode(node, serverContext).catch(() => null);
         const live = extractLiveMetrics(body);
         contributionTracker.startJob({
           jobId: job.id,

@@ -50,6 +50,17 @@ class PlayerChat {
     this._buildUI();
     this.setWsConnected(!!(this.manager?.connected || this.manager?.ws?.readyState === WebSocket.OPEN));
     if (scene) this._attachVisitorUi();
+    this._bindDeferredVisitorUi();
+  }
+
+  _bindDeferredVisitorUi() {
+    if (this._deferredVisitorUiBound) return;
+    this._deferredVisitorUiBound = true;
+    document.addEventListener('denizen-deferred-scripts-ready', () => {
+      if (!this.scene) return;
+      this._visitorUiScene = null;
+      this._attachVisitorUi();
+    });
   }
 
   _attachVisitorUi() {
@@ -1548,6 +1559,19 @@ class PlayerChat {
     if (this._activeThreadId === threadId) this._renderLog();
     globalThis.DenizenPhoneChatUI?.refreshThreads?.();
     if (!error) window.DenizenHaptics?.notify?.();
+  }
+
+  handlePlayerChatCancelled(msg = {}) {
+    if (msg.turn_id && this._voiceTurnId && msg.turn_id !== this._voiceTurnId) return;
+    this._voiceStreamLogId = null;
+    this._voiceStreamBuf = null;
+    this._waitingForResponse = false;
+    this._clearTyping();
+    if (this._responseTimeout) {
+      clearTimeout(this._responseTimeout);
+      this._responseTimeout = null;
+    }
+    try { globalThis.DenizenVoiceCallUi?.setMode?.('listening'); } catch (_) {}
   }
 
   handleVoiceStreamToken(npcName, token) {

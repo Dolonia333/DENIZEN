@@ -836,6 +836,21 @@ function _broadcastToVisitorSession(sessionId, payload) {
   }
 }
 
+function _broadcastConnectionUpdate(connection, { event, sessionIds = [] } = {}) {
+  if (!connection) return;
+  const payload = {
+    type: 'visitor_connection_update',
+    event: event || 'update',
+    connection,
+    ts: Date.now(),
+  };
+  const targets = new Set((sessionIds || []).filter(Boolean));
+  if (connection.target_session_id) targets.add(connection.target_session_id);
+  for (const sid of targets) {
+    _broadcastToVisitorSession(sid, payload);
+  }
+}
+
 function _broadcastToOffice(officeId, payload) {
   if (!officeId || !payload) return;
   officeRegistry.broadcastAgent(_agentClients(), payload, { officeId });
@@ -7098,6 +7113,10 @@ const server = http.createServer((req, res) => {
         targetSessionId: body.target_session_id || body.targetSessionId,
         message: body.message,
       });
+      _broadcastConnectionUpdate(connection, {
+        event: 'incoming_request',
+        sessionIds: [connection.target_session_id, sessionId],
+      });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, connection }));
     })().catch((err) => {
@@ -7127,6 +7146,12 @@ const server = http.createServer((req, res) => {
         sessionId,
         connectionId: body.connection_id || body.connectionId,
         action: body.action,
+      });
+      const action = String(body.action || '').toLowerCase();
+      const event = action === 'accept' ? 'accepted' : (action === 'block' ? 'blocked' : 'declined');
+      _broadcastConnectionUpdate(connection, {
+        event,
+        sessionIds: [connection.target_session_id, sessionId],
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, connection }));

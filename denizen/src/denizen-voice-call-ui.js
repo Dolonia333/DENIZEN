@@ -177,7 +177,23 @@
   function openCall(opts = {}) {
     const info = window.DenizenVoiceSession?.start?.(opts) || {};
     show(info.npcName || opts.npcName || 'Assistant');
+    void checkVoiceHealth();
     return info;
+  }
+
+  async function checkVoiceHealth() {
+    if (!sub) return;
+    try {
+      const res = await fetch('/api/voice/health');
+      const data = await res.json().catch(() => ({}));
+      if (!data?.stt?.configured && !window.SpeechRecognition && !window.webkitSpeechRecognition) {
+        sub.textContent = 'Allow microphone — server STT will transcribe your speech';
+      } else if (!data?.tts?.configured) {
+        sub.textContent = 'Listening… (browser voice fallback)';
+      }
+    } catch (_) {
+      /* non-fatal */
+    }
   }
 
   window.addEventListener('keydown', (e) => {

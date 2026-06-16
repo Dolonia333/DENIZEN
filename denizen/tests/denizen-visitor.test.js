@@ -7,6 +7,7 @@ const denizenDb = require('../src/denizen-db.js');
 const {
   createOrUpdateSession,
   claimAssistant,
+  releaseAssistant,
   getAssistant,
   ensureOrgMembership,
   sendHandoff,
@@ -40,9 +41,11 @@ function npcRow(key, { protected: prot = false, claimable = true } = {}) {
 
 describe('denizen-visitor', () => {
   let calls;
+  let hasAssistant;
 
   beforeEach(() => {
     calls = [];
+    hasAssistant = false;
     denizenDb.enabled = true;
     denizenDb.orgId = ORG_ID;
     denizenDb.orgSlug = 'zion';
@@ -230,15 +233,33 @@ describe('denizen-visitor', () => {
         };
       }
 
+      if (url.includes('denizen_user_assistants?select=id,npc_key') && method === 'GET') {
+        return {
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => (hasAssistant ? [{ id: ASSISTANT_ID, npc_key: 'bob' }] : []),
+        };
+      }
+
       if (url.includes('denizen_user_assistants?select=id') && method === 'GET') {
         return {
           ok: true,
           headers: { get: () => 'application/json' },
-          json: async () => [],
+          json: async () => (hasAssistant ? [{ id: ASSISTANT_ID }] : []),
+        };
+      }
+
+      if (url.includes('denizen_user_assistants') && method === 'DELETE') {
+        hasAssistant = false;
+        return {
+          ok: true,
+          headers: { get: () => 'application/json' },
+          json: async () => null,
         };
       }
 
       if (url.includes('denizen_user_assistants') && method === 'POST') {
+        hasAssistant = true;
         return {
           ok: true,
           headers: { get: () => 'application/json' },
@@ -274,14 +295,14 @@ describe('denizen-visitor', () => {
         return {
           ok: true,
           headers: { get: () => 'application/json' },
-          json: async () => [{
+          json: async () => (hasAssistant ? [{
             npc_key: 'bob',
             assistant_name: 'Research Buddy',
             focus: 'papers',
             role_overlay: null,
             claimed_at: '2026-06-06T00:00:00.000Z',
             denizen_npcs: npcRow('bob'),
-          }],
+          }] : []),
         };
       }
 
@@ -365,12 +386,41 @@ describe('denizen-visitor', () => {
   });
 
   it('getAssistant returns claimed NPC', async () => {
+    await claimAssistant({
+      sessionId: SESSION_ID,
+      npcKey: 'Bob',
+      assistantName: 'Research Buddy',
+      focus: 'papers',
+    });
     const assistant = await getAssistant(SESSION_ID);
     assert.ok(assistant);
     assert.equal(assistant.npc_key, 'bob');
     assert.equal(assistant.display_name, 'Bob');
     assert.equal(assistant.assistant_name, 'Research Buddy');
     assert.equal(assistant.focus, 'papers');
+  });
+
+  it('releaseAssistant removes claimed NPC and is idempotent', async () => {
+    await claimAssistant({
+      sessionId: SESSION_ID,
+      npcKey: 'Bob',
+      assistantName: 'Research Buddy',
+    });
+    const released = await releaseAssistant(SESSION_ID);
+    assert.equal(released.released, true);
+    assert.equal(released.npc_key, 'bob');
+
+    const deleteCall = calls.find(
+      (c) => c.method === 'DELETE' && c.url.includes('denizen_user_assistants'),
+    );
+    assert.ok(deleteCall, 'assistant row deleted');
+
+    const again = await releaseAssistant(SESSION_ID);
+    assert.equal(again.released, false);
+    assert.equal(again.npc_key, null);
+
+    const assistant = await getAssistant(SESSION_ID);
+    assert.equal(assistant, null);
   });
 
   it('ensureOrgMembership patches session org_id and posts org member', async () => {

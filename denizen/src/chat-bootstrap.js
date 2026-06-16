@@ -267,11 +267,17 @@
               || msg.type === 'voice_chat_token'
               || msg.type === 'voice_chat_sentence'
               || msg.type === 'voice_chat_done'
+              || msg.type === 'player_chat_cancelled'
             ) {
               globalThis.DenizenVoiceSession?.handleWsMessage?.(msg);
               if (msg.type === 'voice_chat_token' && playerChat) {
                 playerChat.handleVoiceStreamToken?.(msg.npcName, msg.token);
               }
+              if (msg.type === 'player_chat_cancelled' && playerChat) {
+                playerChat.handlePlayerChatCancelled?.(msg);
+              }
+            } else if (msg.type === 'station_task_enqueued' && playerChat) {
+              playerChat._addToLog?.('System', `⚙ Station task queued${msg.kind ? `: ${msg.kind}` : ''}`);
             } else if (msg.type === 'npc_skill_start' && playerChat && msg.skill === 'web-search') {
               playerChat._addToLog('System', 'Lucy\'s browser is launching — tap 🌐 browser in the dock to watch live.');
               window.DenizenBrowserMirror?.ingest?.({

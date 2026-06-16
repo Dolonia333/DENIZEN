@@ -4,6 +4,30 @@ const denizenDb = require('./denizen-db.js');
 
 const JOB_TABLE = 'denizen_compute_jobs';
 
+const JOB_MIN_HARDWARE_SCORE = {
+  embedding_index: 24,
+  npc_think_batch: 16,
+  sim_tick: 8,
+};
+
+const LIGHT_NODE_BLOCKED_TYPES = new Set(['embedding_index', 'npc_think_batch']);
+
+function nodeCanRunJob(nodeProfile, job) {
+  if (!job) return false;
+  if (!nodeProfile) return true;
+  const level = String(nodeProfile.contribution_level || 'standard').toLowerCase();
+  if (level === 'off') return false;
+  const jobType = String(job.job_type || '').trim();
+  const payload = job.payload && typeof job.payload === 'object' ? job.payload : {};
+  const minScore = Number(
+    payload.required_hardware_score ?? JOB_MIN_HARDWARE_SCORE[jobType] ?? 0,
+  );
+  const nodeScore = Number(nodeProfile.hardware_score) || 0;
+  if (nodeScore < minScore) return false;
+  if (level === 'light' && LIGHT_NODE_BLOCKED_TYPES.has(jobType)) return false;
+  return true;
+}
+
 function isEnabled() {
   return Boolean(denizenDb?.enabled);
 }
@@ -34,7 +58,7 @@ async function enqueueJob({ jobType, payload = {}, priority = 50 } = {}) {
   return rows?.[0] || null;
 }
 
-async function claimJob(nodeId) {
+async function claimJob(nodeId, nodeProfile = null) {
   if (!isEnabled() || !nodeId) return null;
   const node = String(nodeId).trim();
   if (!node) return null;
@@ -49,6 +73,7 @@ async function claimJob(nodeId) {
   }
 
   for (const job of candidates) {
+    if (nodeProfile && !nodeCanRunJob(nodeProfile, job)) continue;
     const now = new Date().toISOString();
     let rows = null;
     try {
@@ -268,5 +293,7 @@ module.exports = {
   expireOldQueuedJobs,
   trimExcessQueuedJobs,
   isProducerThinkBatch,
+  nodeCanRunJob,
+  JOB_MIN_HARDWARE_SCORE,
   JOB_TABLE,
 };

@@ -73,6 +73,7 @@ const INDEX_LAZY_SCRIPTS = [
 const REQUIRED_EXPORTS = [
   'createOrUpdateSession',
   'claimAssistant',
+  'releaseAssistant',
   'getAssistant',
   'listProjects',
   'sendHandoff',
@@ -90,6 +91,7 @@ const SERVER_ROUTE_MARKERS = [
   '/api/visitor/auth/login',
   '/api/org/policy',
   '/api/visitor/claim',
+  '/api/visitor/assistant',
   '/api/visitor/handoff',
   '/api/visitor/connections',
   '/api/visitor/connections/request',

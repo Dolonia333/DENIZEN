@@ -2248,10 +2248,33 @@ class AgentOfficeManager {
       case 'voice_chat_filler':
       case 'voice_chat_token':
       case 'voice_chat_sentence':
-      case 'voice_chat_done': {
+      case 'voice_chat_done':
+      case 'player_chat_cancelled': {
         globalThis.DenizenVoiceSession?.handleWsMessage?.(msg);
         if (msg.type === 'voice_chat_token' && this.scene._playerChat) {
           this.scene._playerChat.handleVoiceStreamToken?.(msg.npcName, msg.token);
+        }
+        if (msg.type === 'player_chat_cancelled' && this.scene._playerChat) {
+          this.scene._playerChat.handlePlayerChatCancelled?.(msg);
+        }
+        break;
+      }
+      case 'station_task_enqueued': {
+        this._addWorkFeedEntry(
+          msg.npcName || 'Station',
+          '⚙',
+          `Queued on your Denizen station${msg.kind ? ` (${msg.kind})` : ''}`,
+          null,
+        );
+        if (this.scene?._workFeed) {
+          this.scene._workFeed.addEntry({
+            npcName: msg.npcName || 'Station',
+            phase: 'queued',
+            phaseEmoji: '⚙',
+            note: `Station task${msg.kind ? `: ${msg.kind}` : ''}`,
+            action: msg.taskId || '',
+            ts: msg.ts || Date.now(),
+          });
         }
         break;
       }

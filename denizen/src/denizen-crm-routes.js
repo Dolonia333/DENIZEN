@@ -853,7 +853,11 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         const result = await inviteTeamMember(
           orgId,
           access.orgSlug || null,
-          { email: body.email, displayName: body.displayName || body.display_name },
+          {
+            email: body.email,
+            displayName: body.displayName || body.display_name,
+            platform: body.platform,
+          },
           access.session?.display_name || 'Team',
         );
         if (!result.ok) {

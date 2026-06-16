@@ -361,10 +361,13 @@
       accepted.forEach((conn) => {
         const sid = conn.target_session_id || conn.targetSessionId;
         if (!sid || sid === sess?.getSessionId?.()) return;
+        if (!conn.can_message) return;
         const name = conn.other_display_name || conn.target_display_name || 'Connection';
         const asst = conn.assistant_name || conn.assistant_npc || 'assistant';
         const o = document.createElement('option');
         o.value = `session:${sid}`;
+        o.dataset.connection = '1';
+        o.dataset.canMessage = '1';
         o.textContent = `${name} (connection - ${asst})`;
         group.appendChild(o);
         count += 1;
@@ -402,7 +405,7 @@
     return `${name}${email}`;
   }
 
-  function appendConnectionRow(listEl, conn, { kind, onAccept, onDecline } = {}) {
+  function appendConnectionRow(listEl, conn, { kind, onAccept, onDecline, onBlock } = {}) {
     const row = document.createElement('div');
     row.className = 'denizen-connection-row';
     const title = document.createElement('strong');
@@ -434,6 +437,16 @@
       decline.addEventListener('click', onDecline);
       actions.appendChild(decline);
       actions.appendChild(accept);
+      row.appendChild(actions);
+    } else if (kind === 'accepted' && typeof onBlock === 'function') {
+      const actions = document.createElement('div');
+      actions.className = 'denizen-connection-row-actions';
+      const block = document.createElement('button');
+      block.type = 'button';
+      block.dataset.action = 'block';
+      block.textContent = 'Block';
+      block.addEventListener('click', onBlock);
+      actions.appendChild(block);
       row.appendChild(actions);
     }
     listEl.appendChild(row);
@@ -489,11 +502,20 @@
       });
     });
     outgoing.forEach((conn) => appendConnectionRow(listEl, conn, { kind: 'outgoing' }));
-    accepted
-      .filter((conn) => !conn.can_message)
-      .forEach((conn) => appendConnectionRow(listEl, conn, { kind: 'accepted' }));
+    accepted.forEach((conn) => appendConnectionRow(listEl, conn, {
+      kind: 'accepted',
+      onBlock: async () => {
+        try {
+          await globalThis.DenizenVisitorSession?.respondConnection?.(conn.id, 'block');
+          showToast('Connection blocked');
+          await refreshConnectionPanel(panelEl, selectEl);
+        } catch (err) {
+          showToast(err?.message || 'Could not block connection');
+        }
+      },
+    }));
 
-    if (!incoming.length && !outgoing.length && !accepted.some((conn) => !conn.can_message)) {
+    if (!incoming.length && !outgoing.length && !accepted.length) {
       const empty = document.createElement('div');
       empty.className = 'denizen-connection-muted';
       empty.textContent = 'No outside-team requests pending.';
@@ -614,6 +636,13 @@
           await sess?.sendHandoffReply?.(prefill.replyHandoff, message);
         } else {
           const payload = { message, ...parseRecipient(selectEl.value) };
+          if (payload.toSessionId) {
+            const selected = selectEl.selectedOptions?.[0];
+            if (selected?.dataset?.connection === '1' && selected?.dataset?.canMessage !== '1') {
+              showToast('Their office is offline — wait until they open Denizen.');
+              return;
+            }
+          }
           if (sess?.isCeoMode?.()) {
             await sess.sendCeoHandoff(payload);
           } else if (payload.toSessionId) {
@@ -739,6 +768,26 @@
           const msg = JSON.parse(evt.data);
           if (msg.type === 'assistant_handoff' || msg.type === 'office_bus_message') {
             DenizenVisitorHandoffUI.showIncoming(msg.handoff || msg);
+          } else if (msg.type === 'visitor_connection_update') {
+            const conn = msg.connection || {};
+            const event = msg.event || 'update';
+            if (event === 'incoming_request') {
+              const from = conn.other_display_name || conn.other_email || 'Someone';
+              showToast(`Connection request from ${from}`, {
+                actions: [{ label: 'Open', onClick: () => openModal() }],
+              });
+            } else if (event === 'accepted') {
+              showToast('Connection accepted — you can message their assistant');
+            } else if (event === 'declined') {
+              showToast('Connection request declined');
+            } else if (event === 'blocked') {
+              showToast('Connection blocked');
+            }
+            if (modalEl) {
+              const panelEl = modalEl.querySelector('#denizen-connection-panel');
+              const selectEl = modalEl.querySelector('#denizen-handoff-recipient');
+              if (panelEl && selectEl) refreshConnectionPanel(panelEl, selectEl).catch(() => null);
+            }
           }
         } catch (_) {}
       });

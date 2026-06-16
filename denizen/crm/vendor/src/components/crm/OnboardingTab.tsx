@@ -33,6 +33,7 @@ export function OnboardingTab({
   const [team, setTeam] = useState<CrmTeamMember[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [invitePlatform, setInvitePlatform] = useState("windows");
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
   const [inviteBusy, setInviteBusy] = useState(false);
 
@@ -77,7 +78,11 @@ export function OnboardingTab({
     if (!email) return;
     setInviteBusy(true);
     setInviteStatus(null);
-    const result = await inviteCrmTeamMember({ email, displayName: inviteName.trim() || undefined });
+    const result = await inviteCrmTeamMember({
+      email,
+      displayName: inviteName.trim() || undefined,
+      platform: invitePlatform,
+    });
     setInviteBusy(false);
     if (!result.ok) {
       setInviteStatus(result.error === "already_member" ? "That email is already on your team." : (result.error || "Invite failed"));
@@ -180,6 +185,16 @@ export function OnboardingTab({
                 type="email"
                 style={S.input as React.CSSProperties}
               />
+              <select
+                value={invitePlatform}
+                onChange={(e) => setInvitePlatform(e.target.value)}
+                aria-label="Their computer"
+                style={S.input as React.CSSProperties}
+              >
+                <option value="windows">Windows</option>
+                <option value="macos">macOS</option>
+                <option value="linux">Linux</option>
+              </select>
               <button
                 type="button"
                 onClick={() => void sendInvite()}
