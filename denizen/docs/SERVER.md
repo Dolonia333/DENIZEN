@@ -417,6 +417,30 @@ Full catalog: [SECURITY.md](SECURITY.md).
 
 [denizen-compute-routes.js](../src/denizen-compute-routes.js) is the opposite pattern: **actively mounted** via `mountComputeRoutes()` and called early for `/api/compute/*` and `/api/desktop/*`.
 
+### Desktop station bridge (`/api/desktop/station/*`)
+
+Paired Denizen Desktop apps claim and complete **station tasks** enqueued when NPCs/chat route local work (screen observe, file read/write, run code). Tasks persist in `denizen_station_tasks` (Supabase) with in-memory fallback for local dev.
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/api/desktop/pairing/create` | GET | Browser session creates one-time `denizen://pair` token |
+| `/api/desktop/pairing/claim` | GET | Desktop claims token → binds `session_id` |
+| `/api/desktop/wizard/complete` | POST | Finish setup wizard; stores `desktop_install_id` + capabilities |
+| `/api/desktop/capabilities/sync` | POST/GET | Heartbeat; returns `min_desktop_version`, compute node credentials |
+| `/api/desktop/permission/pending` | GET | Poll outstanding permission prompt |
+| `/api/desktop/permission/request` | POST | NPC requests capability approval (`ask` / `trusted` / `off`) |
+| `/api/desktop/permission/respond` | POST | User approves or denies pending request |
+| `/api/desktop/station/tasks/claim` | GET | Desktop polls next pending task for `install_id` |
+| `/api/desktop/station/tasks/complete` | POST/GET | Desktop reports task result (summary, screenshot, errors) |
+
+**Headers:** desktop clients send `X-Denizen-Client: desktop`, `X-Session-Id`, and `X-Desktop-Install-Id` on station routes.
+
+**Server routing:** [denizen-station-router.js](../src/denizen-station-router.js) checks linked profile + capability flags, optionally waits for permission approval, enqueues via [denizen-station-task-queue.js](../src/denizen-station-task-queue.js), and blocks until complete or timeout.
+
+**Desktop loop:** [desktop/station-task-runner.js](../desktop/station-task-runner.js) claims tasks; [desktop/station-agent.js](../desktop/station-agent.js) executes locally with capability enforcement. Post-wizard settings: **Station settings** (`agent-settings.html`) → `POST /api/desktop/capabilities/sync`.
+
+Smoke: `node scripts/smoke-desktop-onboarding.js` (pairing, wizard, station claim/complete round-trip).
+
 ## Environment variables
 
 Loaded from `denizen/.env` via [load-env.js](../src/load-env.js) (shell vars win). Template: [.env.production.template](../.env.production.template).

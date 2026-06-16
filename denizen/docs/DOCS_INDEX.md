@@ -10,6 +10,9 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 
 | Category | Document | Status | Description |
 |----------|----------|--------|-------------|
+| Overview | [TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md) | new/local | **Start here (engineers)** — whole-platform architecture, subsystems, data model, API surface, deploy |
+| Overview | [PRODUCT_MANUAL.md](PRODUCT_MANUAL.md) | new/local | **Start here (users)** — getting started, NPCs, phone, MCP connect, CRM, compute, troubleshooting |
+| Overview | [PRD.md](PRD.md) | new/local | **Start here (product)** — vision, personas, goals, functional requirements, metrics, risks, roadmap |
 | Getting Started | [SETUP.md](SETUP.md) | on GitHub | End-to-end local setup and runtime prerequisites |
 | Getting Started | [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md) | new/local | New-contributor onboarding path and first-run workflow |
 | Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | on GitHub | Runtime topology, core services, and message flow |

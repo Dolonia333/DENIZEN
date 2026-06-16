@@ -8,7 +8,7 @@ $env:AGENT_TOKEN = "rvJ4Odm7EYmHOxbEtO6dwUIQLv55aYybAyU3uZw6880"
 $GatewayDir = "C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw"
 $BridgeScript = "C:\Users\zionv\OneDrive\Desktop\Denizen\openclaw\supabase-bridge\secure-bridge.py"
 $CloudflaredExe = "C:\Program Files (x86)\cloudflared\cloudflared.exe"
-$DenizenDir = "C:\Users\zionv\OneDrive\Desktop\Denizen\denizen"
+$DenizenDir = "C:\Users\zionv\OneDrive\Desktop\multbot\denizen"
 
 function Test-Port($port) {
     $result = netstat -ano | Select-String "LISTENING" | Select-String ":$port "

@@ -354,6 +354,19 @@ Use this order in local/prod rollout:
 
 Migrations: `20260606000017_denizen_compute_network.sql`, `20260606000018_desktop_agent_link.sql`, `20260606000019_contribution_credits.sql`.
 
+### Station task queue (`denizen_station_tasks`)
+
+| Column | Purpose |
+|--------|---------|
+| `id` | Task id (hex) |
+| `session_id` | Visitor session that enqueued work |
+| `install_id` | Paired desktop install id |
+| `kind` | `screen_observe`, `file_read`, `file_write`, `run_code`, `desktop_agent` |
+| `status` | `pending` → `claimed` → `completed` / `failed` |
+| `payload` / `result` | JSON task input and desktop output |
+
+Migration: `20260614000001_denizen_station_tasks.sql`. Indexed on `(install_id, status)` where `pending`.
+
 **Production:** server should use `SUPABASE_SERVICE_ROLE_KEY`. Dev NAS may use permissive anon RLS (`20260608000001`–`000003`) — tighten before public launch.
 
 See [COMPUTE_MESH.md](COMPUTE_MESH.md) and [../../infra/README.md](../../infra/README.md).
