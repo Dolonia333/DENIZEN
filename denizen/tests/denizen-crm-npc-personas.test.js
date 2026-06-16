@@ -27,9 +27,26 @@ describe('denizen-crm-npc-personas', () => {
     assert.equal(plan?.skill, 'crm-list-pipeline');
   });
 
+  it('infers setup wizard for full setup requests', () => {
+    const plan = inferCrmAction('set up our CRM completely for the team');
+    assert.equal(plan?.skill, 'crm-setup-wizard');
+    assert.equal(plan?.params?.mode, 'interactive');
+  });
+
   it('infers setup status for onboarding questions', () => {
     const plan = inferCrmAction('help me set up our CRM');
     assert.equal(plan?.skill, 'crm-setup-status');
+  });
+
+  it('infers add deal for new deal requests', () => {
+    const plan = inferCrmAction('create a deal for Acme Annual Contract');
+    assert.equal(plan?.skill, 'crm-add-deal');
+  });
+
+  it('infers continue for resume setup', () => {
+    const plan = inferCrmAction('continue CRM setup');
+    assert.equal(plan?.skill, 'crm-setup-wizard');
+    assert.equal(plan?.params?.mode, 'continue');
   });
 
   it('infers industry list when vertical is ambiguous', () => {
