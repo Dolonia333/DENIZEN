@@ -17,6 +17,7 @@
   let modalEl = null;
   let submitting = false;
   const seenHandoffIds = new Set();
+  const seenConnectionRequestIds = new Set();
   let wsListenerBound = false;
 
   function injectStyles() {
@@ -52,7 +53,9 @@
         border: 1px solid #1f2937;
         border-radius: 10px;
         padding: 20px 24px;
-        width: min(420px, calc(100vw - 32px));
+        width: min(520px, calc(100vw - 32px));
+        max-height: min(86vh, 760px);
+        overflow: auto;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
       }
       #${MODAL_ID} h3 {
@@ -72,7 +75,9 @@
         margin-bottom: 4px;
       }
       #denizen-handoff-recipient,
-      #denizen-handoff-message {
+      #denizen-handoff-message,
+      #denizen-connection-email,
+      #denizen-connection-note {
         width: 100%;
         box-sizing: border-box;
         background: #1e293b;
@@ -89,8 +94,86 @@
         min-height: 96px;
         resize: vertical;
       }
+      #denizen-connection-note {
+        min-height: 56px;
+        resize: vertical;
+      }
       #denizen-handoff-recipient:focus,
-      #denizen-handoff-message:focus { border-color: #4ade80; }
+      #denizen-handoff-message:focus,
+      #denizen-connection-email:focus,
+      #denizen-connection-note:focus { border-color: #4ade80; }
+      #denizen-connection-panel {
+        margin: 4px 0 14px;
+        padding: 12px;
+        border: 1px solid #1f2937;
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.68);
+      }
+      .denizen-connection-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .denizen-connection-title {
+        color: #e2e8f0;
+        font-size: 11px;
+        font-weight: bold;
+      }
+      .denizen-connection-muted {
+        color: #64748b;
+        font-size: 10px;
+      }
+      .denizen-connection-list {
+        display: grid;
+        gap: 6px;
+        margin: 0 0 10px;
+      }
+      .denizen-connection-row {
+        display: grid;
+        gap: 3px;
+        padding: 8px;
+        border: 1px solid #1f2937;
+        border-radius: 6px;
+        background: #0f172a;
+      }
+      .denizen-connection-row strong {
+        color: #e2e8f0;
+        font-size: 11px;
+      }
+      .denizen-connection-row span {
+        color: #94a3b8;
+        font-size: 10px;
+      }
+      .denizen-connection-row-actions {
+        display: flex;
+        gap: 6px;
+        justify-content: flex-end;
+        margin-top: 4px;
+      }
+      .denizen-connection-row-actions button,
+      #denizen-connection-request-btn {
+        border-radius: 6px;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #cbd5e1;
+        cursor: pointer;
+        font: inherit;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 6px 10px;
+      }
+      .denizen-connection-row-actions button[data-action="accept"],
+      #denizen-connection-request-btn {
+        background: #4ade80;
+        border-color: transparent;
+        color: #0f172a;
+      }
+      #denizen-connection-request-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
       #denizen-handoff-actions {
         display: flex;
         gap: 8px;
@@ -230,7 +313,7 @@
     return handoffBtn;
   }
 
-  async function buildRecipientOptions(selectEl) {
+  async function buildRecipientOptions(selectEl, connectionData = null) {
     const sess = globalThis.DenizenVisitorSession;
     selectEl.innerHTML = '';
     const defaults = [
@@ -268,6 +351,28 @@
     } catch (err) {
       console.warn('[DenizenVisitorHandoffUI] listTeammates failed:', err?.message || err);
     }
+
+    try {
+      const data = connectionData || await sess?.listConnections?.();
+      const accepted = Array.isArray(data?.connections) ? data.connections : [];
+      const group = document.createElement('optgroup');
+      group.label = 'Accepted connections';
+      let count = 0;
+      accepted.forEach((conn) => {
+        const sid = conn.target_session_id || conn.targetSessionId;
+        if (!sid || sid === sess?.getSessionId?.()) return;
+        const name = conn.other_display_name || conn.target_display_name || 'Connection';
+        const asst = conn.assistant_name || conn.assistant_npc || 'assistant';
+        const o = document.createElement('option');
+        o.value = `session:${sid}`;
+        o.textContent = `${name} (connection - ${asst})`;
+        group.appendChild(o);
+        count += 1;
+      });
+      if (count) selectEl.appendChild(group);
+    } catch (err) {
+      console.warn('[DenizenVisitorHandoffUI] listConnections failed:', err?.message || err);
+    }
   }
 
   function parseRecipient(value) {
@@ -275,6 +380,125 @@
     if (value === 'ceo') return { toCeo: true };
     if (value.startsWith('session:')) return { toSessionId: value.slice(8) };
     return { toDisplayName: value };
+  }
+
+  async function loadConnectionData() {
+    try {
+      const data = await globalThis.DenizenVisitorSession?.listConnections?.();
+      return data || { connections: [], incoming: [], outgoing: [] };
+    } catch (err) {
+      return {
+        error: err?.message || String(err),
+        connections: [],
+        incoming: [],
+        outgoing: [],
+      };
+    }
+  }
+
+  function connectionLabel(conn) {
+    const name = conn?.other_display_name || conn?.target_display_name || 'Connection';
+    const email = conn?.other_email ? ` - ${conn.other_email}` : '';
+    return `${name}${email}`;
+  }
+
+  function appendConnectionRow(listEl, conn, { kind, onAccept, onDecline } = {}) {
+    const row = document.createElement('div');
+    row.className = 'denizen-connection-row';
+    const title = document.createElement('strong');
+    title.textContent = connectionLabel(conn);
+    const detail = document.createElement('span');
+    if (kind === 'incoming') {
+      detail.textContent = conn.request_message || 'Wants to connect assistants across teams.';
+    } else if (kind === 'outgoing') {
+      detail.textContent = 'Waiting for them to accept.';
+    } else if (conn.can_message) {
+      detail.textContent = `Ready for assistant messages${conn.assistant_name ? ` via ${conn.assistant_name}` : ''}.`;
+    } else {
+      detail.textContent = 'Accepted, waiting for their office session.';
+    }
+    row.appendChild(title);
+    row.appendChild(detail);
+    if (kind === 'incoming') {
+      const actions = document.createElement('div');
+      actions.className = 'denizen-connection-row-actions';
+      const accept = document.createElement('button');
+      accept.type = 'button';
+      accept.dataset.action = 'accept';
+      accept.textContent = 'Accept';
+      accept.addEventListener('click', onAccept);
+      const decline = document.createElement('button');
+      decline.type = 'button';
+      decline.dataset.action = 'decline';
+      decline.textContent = 'Decline';
+      decline.addEventListener('click', onDecline);
+      actions.appendChild(decline);
+      actions.appendChild(accept);
+      row.appendChild(actions);
+    }
+    listEl.appendChild(row);
+  }
+
+  async function refreshConnectionPanel(panelEl, selectEl) {
+    const data = await loadConnectionData();
+    await buildRecipientOptions(selectEl, data);
+    renderConnectionPanel(panelEl, selectEl, data);
+    return data;
+  }
+
+  function renderConnectionPanel(panelEl, selectEl, data) {
+    if (!panelEl) return;
+    const listEl = panelEl.querySelector('.denizen-connection-list');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (data?.error) {
+      const row = document.createElement('div');
+      row.className = 'denizen-connection-row';
+      const detail = document.createElement('span');
+      detail.textContent = data.error;
+      row.appendChild(detail);
+      listEl.appendChild(row);
+      return;
+    }
+
+    const incoming = Array.isArray(data?.incoming) ? data.incoming : [];
+    const outgoing = Array.isArray(data?.outgoing) ? data.outgoing : [];
+    const accepted = Array.isArray(data?.connections) ? data.connections : [];
+
+    incoming.forEach((conn) => {
+      appendConnectionRow(listEl, conn, {
+        kind: 'incoming',
+        onAccept: async () => {
+          try {
+            await globalThis.DenizenVisitorSession?.respondConnection?.(conn.id, 'accept');
+            showToast('Connection accepted');
+            await refreshConnectionPanel(panelEl, selectEl);
+          } catch (err) {
+            showToast(err?.message || 'Could not accept connection');
+          }
+        },
+        onDecline: async () => {
+          try {
+            await globalThis.DenizenVisitorSession?.respondConnection?.(conn.id, 'decline');
+            showToast('Connection declined');
+            await refreshConnectionPanel(panelEl, selectEl);
+          } catch (err) {
+            showToast(err?.message || 'Could not decline connection');
+          }
+        },
+      });
+    });
+    outgoing.forEach((conn) => appendConnectionRow(listEl, conn, { kind: 'outgoing' }));
+    accepted
+      .filter((conn) => !conn.can_message)
+      .forEach((conn) => appendConnectionRow(listEl, conn, { kind: 'accepted' }));
+
+    if (!incoming.length && !outgoing.length && !accepted.some((conn) => !conn.can_message)) {
+      const empty = document.createElement('div');
+      empty.className = 'denizen-connection-muted';
+      empty.textContent = 'No outside-team requests pending.';
+      listEl.appendChild(empty);
+    }
   }
 
   function closeModal() {
@@ -294,9 +518,21 @@
         <h3>${prefill.replyTo ? 'Reply to handoff' : 'Hand off to someone'}</h3>
         <p>${prefill.replyTo
     ? 'Send a reply back to the teammate who handed this off.'
-    : 'Your assistant will message their assistant — across private offices in your team.'}</p>
+    : 'Your assistant will message their assistant across your team or accepted outside-team connections.'}</p>
         <label for="denizen-handoff-recipient">Recipient</label>
         <select id="denizen-handoff-recipient"></select>
+        <div id="denizen-connection-panel">
+          <div class="denizen-connection-head">
+            <div class="denizen-connection-title">Outside your team</div>
+            <div class="denizen-connection-muted">Requests require acceptance</div>
+          </div>
+          <div class="denizen-connection-list"></div>
+          <label for="denizen-connection-email">Email</label>
+          <input id="denizen-connection-email" type="email" maxlength="320" placeholder="teammate@company.com">
+          <label for="denizen-connection-note">Request note</label>
+          <textarea id="denizen-connection-note" maxlength="1000" placeholder="I have a question for your team when you have a moment."></textarea>
+          <button type="button" id="denizen-connection-request-btn">Request connection</button>
+        </div>
         <label for="denizen-handoff-message">Message</label>
         <textarea id="denizen-handoff-message" maxlength="2000" placeholder="What should they know?"></textarea>
         <div id="denizen-handoff-actions">
@@ -310,7 +546,17 @@
     const selectEl = modalEl.querySelector('#denizen-handoff-recipient');
     const msgEl = modalEl.querySelector('#denizen-handoff-message');
     const sendBtn = modalEl.querySelector('#denizen-handoff-send');
-    await buildRecipientOptions(selectEl);
+    const panelEl = modalEl.querySelector('#denizen-connection-panel');
+    const emailEl = modalEl.querySelector('#denizen-connection-email');
+    const noteEl = modalEl.querySelector('#denizen-connection-note');
+    const requestBtn = modalEl.querySelector('#denizen-connection-request-btn');
+    let connectionData = prefill.replyTo ? null : await loadConnectionData();
+    await buildRecipientOptions(selectEl, connectionData);
+    if (prefill.replyTo && panelEl) {
+      panelEl.hidden = true;
+    } else {
+      renderConnectionPanel(panelEl, selectEl, connectionData);
+    }
 
     if (prefill.toSessionId) {
       selectEl.value = `session:${prefill.toSessionId}`;
@@ -328,6 +574,29 @@
     modalEl.querySelector('#denizen-handoff-cancel').addEventListener('click', closeModal);
     modalEl.addEventListener('click', (e) => {
       if (e.target === modalEl) closeModal();
+    });
+
+    requestBtn?.addEventListener('click', async () => {
+      const email = String(emailEl?.value || '').trim();
+      if (!email) {
+        emailEl?.focus();
+        return;
+      }
+      requestBtn.disabled = true;
+      try {
+        await globalThis.DenizenVisitorSession?.requestConnection?.({
+          targetEmail: email,
+          message: noteEl?.value || '',
+        });
+        if (emailEl) emailEl.value = '';
+        if (noteEl) noteEl.value = '';
+        showToast('Connection request sent');
+        connectionData = await refreshConnectionPanel(panelEl, selectEl);
+      } catch (err) {
+        showToast(err?.message || 'Connection request failed');
+      } finally {
+        requestBtn.disabled = false;
+      }
     });
 
     const submit = async () => {
@@ -400,6 +669,7 @@
   }
 
   async function ingestHandoff(handoff, { markRead = true } = {}) {
+    if (handoff?.handoff) handoff = handoff.handoff;
     if (!handoff) return;
     const id = handoff.id || handoff.handoff_id;
     if (id && seenHandoffIds.has(id)) return;
@@ -437,6 +707,26 @@
     } catch (err) {
       console.warn('[DenizenVisitorHandoffUI] pollHandoffs failed:', err?.message || err);
     }
+    await pollConnectionRequests();
+  }
+
+  async function pollConnectionRequests() {
+    const sess = globalThis.DenizenVisitorSession;
+    if (!sess?.getSessionId?.()) return;
+    try {
+      const data = await sess.listConnections?.();
+      const incoming = Array.isArray(data?.incoming) ? data.incoming : [];
+      incoming.forEach((conn) => {
+        if (!conn?.id || seenConnectionRequestIds.has(conn.id)) return;
+        seenConnectionRequestIds.add(conn.id);
+        const from = conn.other_display_name || conn.other_email || 'Someone';
+        showToast(`Connection request from ${from}`, {
+          actions: [{ label: 'Open', onClick: () => openModal() }],
+        });
+      });
+    } catch (_) {
+      /* profile-less sessions can still use same-team handoffs */
+    }
   }
 
   function wireWsListener() {
@@ -447,8 +737,8 @@
       ws.addEventListener('message', (evt) => {
         try {
           const msg = JSON.parse(evt.data);
-          if (msg.type === 'assistant_handoff') {
-            DenizenVisitorHandoffUI.showIncoming(msg);
+          if (msg.type === 'assistant_handoff' || msg.type === 'office_bus_message') {
+            DenizenVisitorHandoffUI.showIncoming(msg.handoff || msg);
           }
         } catch (_) {}
       });

@@ -7,6 +7,7 @@
 
 const denizenVisitor = require('./denizen-visitor');
 const userIdentity = require('./denizen-user-identity');
+const visitorConnections = require('./visitor-connections');
 
 const INTENTS = new Set(['status', 'ask_help', 'delegate', 'reply', 'sync']);
 
@@ -58,6 +59,8 @@ async function sendOfficeBusMessage({
   fromNpc,
   metadata,
 }, deps = {}) {
+  const visitor = deps.denizenVisitor || denizenVisitor;
+  const connectionApi = deps.visitorConnections || visitorConnections;
   const intentKey = INTENTS.has(intent) ? intent : 'sync';
   let targetSessionId = toSessionId || null;
 
@@ -73,11 +76,13 @@ async function sendOfficeBusMessage({
     throw new Error('fromSessionId, target, and message required');
   }
 
-  const fromSession = await denizenVisitor.getSession(fromSessionId);
-  const fromOfficeId = fromSession?.identity_id || `session:${fromSessionId}`;
-  const fromAssistant = await denizenVisitor.getAssistant(fromSessionId).catch(() => null);
+  await connectionApi.assertCanMessage({ fromSessionId, toSessionId: targetSessionId }, deps);
 
-  const handoff = await denizenVisitor.sendHandoff({
+  const fromSession = await visitor.getSession(fromSessionId);
+  const fromOfficeId = fromSession?.identity_id || `session:${fromSessionId}`;
+  const fromAssistant = await visitor.getAssistant(fromSessionId).catch(() => null);
+
+  const handoff = await visitor.sendHandoff({
     fromSessionId,
     toSessionId: targetSessionId,
     fromNpc: fromNpc || fromAssistant?.npc_key || 'assistant',
@@ -95,6 +100,7 @@ async function sendOfficeBusMessage({
   return {
     ...handoff,
     to_session_id: targetSessionId,
+    from_display_name: fromSession?.display_name || null,
     from_office_id: fromOfficeId,
     to_office_id: toOfficeId || null,
     intent: intentKey,
