@@ -35,7 +35,11 @@
       return new Error('Pairing request timed out — try again.');
     }
     if (/failed to fetch|network|load failed/i.test(msg)) {
-      return new Error('Cannot reach Denizen server — is it running?');
+      const origin = window.location?.origin || 'this page';
+      if (usesTunnelSafeTransport()) {
+        return new Error(`Cannot reach Denizen at ${origin} — check your connection and hard-refresh.`);
+      }
+      return new Error(`Cannot reach Denizen server at ${origin} — is it running?`);
     }
     return err instanceof Error ? err : new Error(msg || 'Request failed');
   }
@@ -411,8 +415,56 @@
     }
   }
 
+  function wantsAutoPairFromLogin() {
+    try {
+      const value = new URLSearchParams(window.location.search).get('pair_desktop');
+      return value === '1' || value === 'true';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function clearAutoPairQuery() {
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('pair_desktop')) return;
+      url.searchParams.delete('pair_desktop');
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState({}, '', next);
+    } catch (_) {}
+  }
+
+  async function maybeAutoPairFromLogin() {
+    if (!wantsAutoPairFromLogin()) return;
+    clearAutoPairQuery();
+    const api = getSessionApi();
+    if (api?.init) await api.init().catch(() => null);
+
+    const tryPair = () => {
+      if (!api?.getSessionId?.()) return false;
+      createPairingLink().catch(() => null);
+      return true;
+    };
+
+    if (tryPair()) return;
+
+    const onReady = () => {
+      document.removeEventListener('denizen-visitor-session-ready', onReady);
+      window.setTimeout(() => { tryPair(); }, 400);
+    };
+    document.addEventListener('denizen-visitor-session-ready', onReady);
+  }
+
   globalThis.DenizenDesktopPairing = {
     createPairingLink,
     closeModal,
   };
+
+  if (wantsAutoPairFromLogin()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => { maybeAutoPairFromLogin(); }, { once: true });
+    } else {
+      maybeAutoPairFromLogin();
+    }
+  }
 })();

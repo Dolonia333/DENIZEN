@@ -111,16 +111,20 @@
         overflow: hidden;
       }
       html.denizen-touch.denizen-phone.denizen-drawer-open #denizen-mobile-drawer {
-        top: max(var(--denizen-phone-panel-inset), env(safe-area-inset-top, 0px)) !important;
-        left: max(var(--denizen-phone-panel-inset), env(safe-area-inset-left, 0px)) !important;
-        right: max(var(--denizen-phone-panel-inset), env(safe-area-inset-right, 0px)) !important;
-        bottom: max(var(--denizen-phone-panel-inset), env(safe-area-inset-bottom, 0px)) !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
         max-height: none !important;
-        border-radius: 10px !important;
+        border-radius: 0 !important;
+        box-sizing: border-box !important;
         padding:
-          6px
+          max(8px, env(safe-area-inset-top, 0px))
           max(8px, env(safe-area-inset-right, 0px))
-          max(6px, env(safe-area-inset-bottom, 0px))
+          max(8px, env(safe-area-inset-bottom, 0px))
           max(8px, env(safe-area-inset-left, 0px));
       }
       html.denizen-touch.denizen-phone #denizen-llm-tel-panel.open,

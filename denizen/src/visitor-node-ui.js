@@ -811,10 +811,10 @@
       <div class="node-download" id="denizen-node-download">
         Connect
         <a href="/desktop/download.html" target="_blank" rel="noopener">Denizen Desktop</a>
-        to make this computer a city station. You choose when it helps and what permissions it has.
+        to make this computer your office station. You choose when it helps and what permissions it has.
       </div>
       <div class="node-browser-hint" id="denizen-node-browser-hint">
-        <span id="denizen-node-browser-hint-text">You are connected to the city in browser mode. Pair Desktop when you want this computer to contribute City Power or help with approved computer tasks.</span>
+        <span id="denizen-node-browser-hint-text">You are connected to the office in browser mode. Pair Desktop when you want this computer to contribute City Power or help with approved computer tasks.</span>
         <button type="button" class="node-upgrade-btn" id="denizen-node-guide-btn">Learn about City Power</button>
       </div>
       <div class="node-contrib-toggle" id="denizen-node-contrib-toggle" role="button" tabindex="0" aria-expanded="false">
@@ -1083,7 +1083,7 @@
     rootEl.dataset.clientMode = caps?.clientModeLabel?.() || 'browser';
     const hint = rootEl.querySelector('#denizen-node-browser-hint-text');
     if (hint && browserOnly && !fullPanel) {
-      hint.textContent = 'You are connected to the city in browser mode. Pair Denizen Desktop when you want this computer to contribute City Power or help with approved computer tasks.';
+      hint.textContent = 'You are connected to the office in browser mode. Pair Denizen Desktop when you want this computer to contribute City Power or help with approved computer tasks.';
     }
     const guideBtn = rootEl.querySelector('#denizen-node-guide-btn');
     if (guideBtn && !guideBtn.dataset.wired) {
@@ -1124,10 +1124,14 @@
     const downloadEl = rootEl.querySelector('#denizen-node-download');
     if (downloadEl) {
       if (state.sessionReady && state.needsDesktopDownload) {
-        const href = state.downloadUrl || '/desktop/download.html';
+        const platform = globalThis.DenizenClientPlatform?.detect?.() || 'windows';
+        const href = globalThis.DenizenClientPlatform?.directDownloadUrl?.(platform)
+          || state.downloadUrl
+          || '/desktop/download.html';
+        const platformLabel = globalThis.DenizenClientPlatform?.label?.(platform) || 'Desktop';
         const pairDisabled = busyPairing || !getSessionId();
         const pairLabel = busyPairing ? 'Creating link…' : 'Claim station';
-        downloadEl.innerHTML = `Connect <a href="${href}" target="_blank" rel="noopener">Denizen Desktop</a> to make this computer a city station. You choose when it helps and what permissions it has. <button type="button" class="node-pair-btn" id="denizen-node-pair-btn"${pairDisabled ? ' disabled' : ''}>${pairLabel}</button>`;
+        downloadEl.innerHTML = `Connect <a href="${href}" target="_blank" rel="noopener">Denizen Desktop (${platformLabel})</a> to make this computer your office station. You choose when it helps and what permissions it has. <button type="button" class="node-pair-btn" id="denizen-node-pair-btn"${pairDisabled ? ' disabled' : ''}>${pairLabel}</button>`;
         downloadEl.hidden = false;
       } else {
         downloadEl.hidden = true;
@@ -1227,6 +1231,7 @@
     if (sid) markSessionReady();
     return fetchStatus()
       .then(async (result) => {
+        await fetchCreditsEconomy().catch(() => null);
         await fetchLiveHardware().catch(() => null);
         return result;
       })

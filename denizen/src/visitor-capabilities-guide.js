@@ -1,6 +1,6 @@
 /**
- * Capabilities Guide — comprehensive reference for teammates and super-users.
- * Covers: your agent, team agents, multi-model stack, collaboration, mesh/desktop.
+ * Office Guide — comprehensive reference for teammates and super-users.
+ * Covers: your agent, team agents, multi-model stack, collaboration, City Power/desktop.
  * Attaches to globalThis.DenizenCapabilitiesGuide (no imports).
  */
 (function () {
@@ -241,7 +241,7 @@
     const demo = isDemo();
     return `
       <h3>Your access: ${escapeHtml(tierLabel())}</h3>
-      <p>Denizen is a live AI city. You claim one persistent assistant, collaborate with the whole team, and can turn your computer into a station that helps power the city.</p>
+      <p>Denizen starts as a live AI office. You claim one persistent assistant, collaborate with the whole team, and can turn your computer into a station that helps power the city.</p>
       <table class="cg-matrix">
         <thead><tr><th>Capability</th><th>Demo</th><th>Team</th><th>Desktop super-user</th></tr></thead>
         <tbody>
@@ -256,7 +256,7 @@
         </tbody>
       </table>
       ${demo ? '<p class="cg-warn">You are in demo mode. Upgrade via the account banner or Team login for full capabilities.</p>' : ''}
-      ${team ? '<p>Install Denizen Desktop to create your station, unlock approval-first computer help, and optionally add City Power.</p>' : ''}
+      ${team ? '<p>Install Denizen Desktop to create your office station, unlock approval-first computer help, and optionally add City Power.</p>' : ''}
     `;
   }
 
@@ -309,7 +309,7 @@
       <ul>
         <li><b>Walk & chat</b> — talk to any NPC directly; they use their own brain and skills.</li>
         <li><b>Your claimed assistant</b> — persists context for <i>you</i>; best for ongoing work.</li>
-        <li><b>Hand off (↗)</b> — send context to Lucy, a teammate, or leadership from chat.</li>
+        <li><b>Hand off (↗)</b> — send context to Lucy, a teammate, leadership, or an accepted outside-team connection from chat.</li>
         <li><b>Agent-to-agent</b> — NPCs coordinate in the office (meetings, delegation tags, live work feed via Tab). DMs to your claimed assistant appear in the <b>agent inbox</b> toast.</li>
         <li><b>Connect AI</b> — wire Cursor/Companion to your claimed NPC so external AI and in-world assistant share one brain.</li>
       </ul>
@@ -344,7 +344,7 @@
     return `
       <h3>Teammate collaboration</h3>
       <ul>
-        <li><b>↗ Hand off</b> — in chat header; routes to Lucy, CEO, or online teammates.</li>
+        <li><b>↗ Hand off</b> — in chat header; routes to Lucy, CEO, online teammates, or accepted outside-team connections.</li>
         <li><b>Morning briefing</b> — digest of commitments and pipeline (team).</li>
         <li><b>Tab work feed</b> — see what every NPC is doing in real time.</li>
         <li><b>Projects panel</b> — track visitor projects tied to your session.</li>
@@ -366,13 +366,13 @@
     const browserOnly = !!caps().isBrowserOnlyWeb?.();
     return `
       <h3>Your client: ${escapeHtml(caps().clientModeLabel?.() || tierLabel())}</h3>
-      ${browserOnly ? '<p class="cg-warn">Browser-only view - pair Denizen Desktop to create your station, see its live status, and manage City Power. Your account stays connected when you return to the website.</p>' : ''}
+      ${browserOnly ? '<p class="cg-warn">Browser-only view - pair Denizen Desktop to create your office station, see its live status, and manage City Power. Your account stays connected when you return to the website.</p>' : ''}
       <h3>Browser vs Denizen Desktop</h3>
       <table class="cg-matrix">
         <thead><tr><th>Feature</th><th>Browser</th><th>Desktop app</th></tr></thead>
         <tbody>
           ${featureRow('Office game & chat', true, true, '')}
-          ${featureRow('Station status', false, true, 'See this computer in the city')}
+          ${featureRow('Station status', false, true, 'See this computer in your office network')}
           ${featureRow('City Power', false, true, 'Optional after pairing')}
           ${featureRow('Earn / spend credits', 'view', true, 'Boost job priority')}
           ${featureRow('Super Node badge (75+ score)', false, superNode ? 'yes' : 'possible', '')}
@@ -381,13 +381,13 @@
       </table>
       <h3>Your node state: ${escapeHtml(String(state).replace(/_/g, ' '))}</h3>
       <ol>
-        <li><b>Browser only</b> - explore the city and work with your agents.</li>
+        <li><b>Browser only</b> - explore the office and work with your agents.</li>
         <li><b>Build your station</b> - download Denizen Desktop from City Power.</li>
         <li><b>Claim it</b> - connect your Citizen ID from the browser.</li>
         <li><b>Choose its role</b> - approve local abilities and turn City Power on or off.</li>
         <li><b>Power station</b> - stronger machines can take on more city work.</li>
       </ol>
-      <p>Watch the city network in the <b>⬡ power</b> chip on the dock. Technical operators can still inspect the underlying workers and local AI pool.</p>
+      <p>Watch the office-to-city network in the <b>⬡ power</b> chip on the dock. Technical operators can still inspect the underlying workers and local AI pool.</p>
     `;
   }
 
@@ -397,8 +397,11 @@
     }
     return `
       <h3>Beyond Claude Coworker — with your permission</h3>
-      <p>With Denizen Desktop paired and permission mode set to <b>ask</b> or <b>trusted</b>, your claimed assistant can:</p>
+      <p>With Denizen Desktop paired and <b>Cowork mode</b> enabled in the setup wizard, your claimed assistant can run PC skills on <b>your machine</b> (not the cloud server):</p>
       <ul>
+        <li><b>desktop-agent</b> — vision + mouse/keyboard: click, type, fill forms, open apps</li>
+        <li><b>browserclaw / web-search / research</b> — routed to your local screen and browser</li>
+        <li><b>coding-agent / run-code</b> — local scripts and dev tools (with approval)</li>
         <li>Read and act on your <b>real screen</b> (screen-observe, desktop-agent)</li>
         <li>Run <b>browser automation</b> on your machine (browserclaw)</li>
         <li>Apply <b>code changes</b> in an isolated worktree (coding-agent)</li>
@@ -485,7 +488,7 @@
     modalEl.innerHTML = `
       <div class="cg-card" role="dialog" aria-label="Denizen capabilities guide">
         <div class="cg-head">
-          <h2>Capabilities Guide</h2>
+          <h2>Office Guide</h2>
           <span class="cg-tier">${escapeHtml(tierLabel())}</span>
           <button type="button" class="cg-close">Close</button>
         </div>
@@ -520,7 +523,7 @@
       chip.id = CHIP_ID;
       chip.type = 'button';
       chip.textContent = 'Guide';
-      chip.title = 'Capabilities guide - agents, models, City Power, desktop';
+      chip.title = 'Office guide - agents, models, City Power, desktop';
       document.body.appendChild(chip);
     }
     chip.classList.add('ready');

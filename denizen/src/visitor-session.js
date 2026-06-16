@@ -21,6 +21,20 @@
     }
   } catch (_) {}
 
+  let pendingJoinCode = null;
+  try {
+    const inviteParams = new URLSearchParams(window.location.search);
+    const join = inviteParams.get('join') || inviteParams.get('team') || inviteParams.get('code');
+    if (join) {
+      pendingJoinCode = String(join).trim();
+      inviteParams.delete('join');
+      inviteParams.delete('team');
+      inviteParams.delete('code');
+      const qs = inviteParams.toString();
+      window.history.replaceState({}, '', `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`);
+    }
+  } catch (_) {}
+
   const STORAGE_KEY = 'denizen-visitor-session';
   const ROLE_STORAGE_KEY = 'denizen-role';
   const PROTECTED_NPC_KEYS = new Set(['lucy', 'abby', 'bouncer']);
@@ -66,6 +80,7 @@
   let userEmail = null;
   let teamRole = null;
   let canApproveSkills = false;
+  let workPosition = null;
   let initPromise = null;
   let modalEl = null;
   let officeConfig = null;
@@ -138,17 +153,43 @@
     } catch (_) {}
   }
 
+  function isOwnerPrincipalNow() {
+    const storedTier = String(tier || readStore().tier || '').toLowerCase();
+    if (storedTier === 'ceo') return true;
+    const role = String(teamRole || '').toLowerCase();
+    return role === 'owner' || role === 'ceo';
+  }
+
   function isCeoPrincipalNow() {
-    // The ACTIVE login wins: a leftover CEO grant in localStorage must not
-    // bleed CEO status onto a team/demo login from the same browser.
-    const method = accessMethod || readStore().access_method || null;
+    const storedTier = String(tier || readStore().tier || '').toLowerCase();
+    if (storedTier === 'demo') return false;
+    const method = String(accessMethod || readStore().access_method || '').toLowerCase();
+    if (method === 'demo' || method === 'demo_login') return false;
     if (method === 'ceo') return true;
-    if (method) return false;
+    if (isOwnerPrincipalNow()) return true;
+    if (method && method !== 'ceo') return false;
     try {
       return !!localStorage.getItem('denizen-ceo-grant');
     } catch (_) {
       return false;
     }
+  }
+
+  function applyOwnerPrincipalState(extra = {}) {
+    if (!isOwnerPrincipalNow() && !extra.isCeoPrincipal) return false;
+    tier = 'ceo';
+    accessMethod = 'ceo';
+    const store = readStore();
+    writeStore({
+      ...store,
+      tier: 'ceo',
+      access_method: 'ceo',
+      accessMethod: 'ceo',
+    });
+    if (extra.ceoGrant) {
+      try { localStorage.setItem('denizen-ceo-grant', extra.ceoGrant); } catch (_) {}
+    }
+    return true;
   }
 
   function readCeoGrant() {
@@ -163,6 +204,8 @@
     const headers = { 'Content-Type': 'application/json', ...extra };
     if (sessionId) headers['X-Session-Id'] = sessionId;
     if (sessionToken) headers['X-Session-Token'] = sessionToken;
+    if (userEmail) headers['X-Email'] = userEmail;
+    if (displayName) headers['X-Display-Name'] = displayName;
     if (isCeoPrincipalNow()) {
       headers['X-Access-Method'] = 'ceo';
       // The server verifies the signed grant — bare assertion headers
@@ -487,6 +530,8 @@
 
   const SESSION_FETCH_MS = 10000;
   const API_FETCH_MS = 8000;
+  const CLOUD_AUTH_FETCH_MS = 25000;
+  const CLOUD_SESSION_FETCH_MS = 20000;
 
   function usesTunnelSafeTransport() {
     const host = String(window.location?.hostname || '').toLowerCase();
@@ -500,13 +545,48 @@
       || /timeout|timed out|failed to fetch|network|load failed/i.test(msg);
   }
 
+  function authFetchMs() {
+    return usesTunnelSafeTransport() ? CLOUD_AUTH_FETCH_MS : API_FETCH_MS;
+  }
+
+  function sessionFetchMs() {
+    return usesTunnelSafeTransport() ? CLOUD_SESSION_FETCH_MS : SESSION_FETCH_MS;
+  }
+
   function fetchAbortMessage() {
-    const port = String(window.location?.port || '');
     if (usesTunnelSafeTransport()) {
-      return 'Denizen cloud login timed out — deploy the latest server (GET verify fallback) and reload.';
+      return 'Denizen cloud is not responding in time — the server may be down, restarting, or running old code. Wait a minute, hard-refresh (Ctrl+Shift+R), and try again. If it keeps failing, redeploy and restart denizen.dolonia.cloud.';
     }
     const origin = window.location?.origin || 'this page';
     return `Denizen server timed out (${origin}) — restart with npm start and reload.`;
+  }
+
+  function formatTeamAuthError(res, data) {
+    const status = Number(res?.status) || 0;
+    if (status === 524 || status === 502 || status === 503 || status === 504) {
+      if (usesTunnelSafeTransport()) {
+        return 'Denizen cloud timed out (proxy 502/524) — restart the Node server on dolonia.cloud, then hard-refresh.';
+      }
+      return 'Denizen server timed out — restart the server and reload this page.';
+    }
+    if (status === 404 && usesTunnelSafeTransport()) {
+      return 'Login API not found on cloud — deploy the latest Denizen server and restart it, then hard-refresh.';
+    }
+    return data?.error || `Login failed (${status || 'network'})`;
+  }
+
+  function teamAuthHeaderFallback(path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (body.username) headers['X-Username'] = String(body.username);
+    if (body.password) headers['X-Password'] = String(body.password);
+    if (body.email) headers['X-Email'] = String(body.email);
+    const code = body.team_code ?? body.teamCode;
+    if (code) headers['X-Team-Code'] = String(code);
+    const teamName = body.team_name ?? body.teamName;
+    if (teamName) headers['X-Team-Name'] = String(teamName);
+    const displayName = body.display_name ?? body.displayName;
+    if (displayName) headers['X-Display-Name'] = String(displayName);
+    return fetchWithTimeout(path, { method: 'GET', headers }, authFetchMs());
   }
 
   function normalizeFetchError(err) {
@@ -515,7 +595,12 @@
       return new Error(fetchAbortMessage());
     }
     if (/failed to fetch|network|load failed/i.test(msg)) {
-      return new Error('Cannot reach Denizen server — is it running on http://localhost:8080 ?');
+      const origin = window.location?.origin || 'this page';
+      if (usesTunnelSafeTransport()) {
+        return new Error(`Cannot reach Denizen at ${origin} — check your connection and hard-refresh.`);
+      }
+      const port = String(window.location?.port || '8081');
+      return new Error(`Cannot reach Denizen server — is it running on http://127.0.0.1:${port} ?`);
     }
     return err instanceof Error ? err : new Error(msg || 'Request failed');
   }
@@ -538,7 +623,7 @@
       if (usesTunnelSafeTransport()) {
         return 'Denizen cloud timed out (proxy) — redeploy the app server and hard-refresh.';
       }
-      return 'Denizen server timed out — restart the server and use http://localhost:8080.';
+      return 'Denizen server timed out — restart the server and reload this page.';
     }
     if (status === 403) {
       return data?.error || 'Invalid access code';
@@ -595,14 +680,21 @@
   }
 
   async function teamAuthRequest(path, body) {
-    const res = await fetchWithTimeout(path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    const ms = authFetchMs();
+    let res;
+    try {
+      res = await fetchWithTimeout(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }, ms);
+    } catch (err) {
+      if (!usesTunnelSafeTransport() || !isTransientSessionError(err)) throw err;
+      res = await teamAuthHeaderFallback(path, body);
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) {
-      throw new Error(data.error || `Request failed (${res.status})`);
+      throw new Error(formatTeamAuthError(res, data));
     }
     return data;
   }
@@ -616,11 +708,19 @@
       document.body.appendChild(modalEl);
       document.documentElement.dataset.denizenModal = 'open';
 
-      let step = 'choose';
+      let step = pendingJoinCode ? 'join-team' : 'choose';
       let pendingAccess = null;
       let busy = false;
       let unbindPress = null;
       let stepUnbinds = [];
+      const prefilledTeamCode = pendingJoinCode || null;
+      pendingJoinCode = null;
+
+      function applyPrefills() {
+        if (!prefilledTeamCode || !modalEl) return;
+        const codeEl = modalEl.querySelector('#denizen-visitor-team-code-input');
+        if (codeEl && !codeEl.value) codeEl.value = prefilledTeamCode;
+      }
 
       function setGameInputBlocked(block) {
         try {
@@ -656,7 +756,10 @@
       }
 
       function focusFirstInput() {
-        const input = modalEl.querySelector('.vis-input, #denizen-visitor-name-input');
+        const selector = (step === 'join-team' && prefilledTeamCode)
+          ? '#denizen-visitor-username-input'
+          : '.vis-input, #denizen-visitor-name-input';
+        const input = modalEl.querySelector(selector);
         if (input) {
           setTimeout(() => {
             try { input.focus({ preventScroll: true }); } catch (_) { input.focus(); }
@@ -757,7 +860,11 @@
       function finishTeamAuth(data, fallbackName, accessMethod = 'website_login') {
         const { teamSlug } = accessCtx();
         const name = String(data.display_name || fallbackName || '').trim();
-        if (!name) {
+        const isOwner = data.tier === 'ceo' || !!data.ceo_grant || !!data.is_owner;
+        if (data.ceo_grant) {
+          try { localStorage.setItem('denizen-ceo-grant', data.ceo_grant); } catch (_) {}
+        }
+        if (!name && !isOwner) {
           pendingAccess = {
             orgSlug: data.org_slug || teamSlug,
             tier: data.tier || 'team',
@@ -768,41 +875,19 @@
           render();
           return;
         }
-        const resolvedTier = data.tier || 'team';
+        const resolvedTier = isOwner ? 'ceo' : (data.tier || 'team');
         closeModal({
-          displayName: name,
+          displayName: name || (isOwner ? 'Dolonia' : fallbackName),
           orgSlug: data.org_slug || (resolvedTier === 'demo' ? accessCtx().demoSlug : teamSlug),
           tier: resolvedTier,
-          accessMethod: resolvedTier === 'demo' ? (accessMethod || 'demo_login') : accessMethod,
+          accessMethod: isOwner
+            ? 'ceo'
+            : (resolvedTier === 'demo' ? (accessMethod || 'demo_login') : accessMethod),
           accessGrant: data.access_grant || null,
           email: data.identity?.email || pendingAccess?.email || null,
           demoUsername: data.username || data.identity?.username || null,
           freshPrincipal: true,
         });
-      }
-
-      async function tryCeoLogin(teamCode) {
-        const code = String(teamCode || '').trim();
-        if (!code) return false;
-        try {
-          const verified = await verifyAccessCode(code, 'ceo');
-          if (!verified.ok) return false;
-          if (verified.ceo_grant) {
-            try { localStorage.setItem('denizen-ceo-grant', verified.ceo_grant); } catch (_) {}
-          }
-          try { localStorage.setItem('denizen-onboarding-seen', '1'); } catch (_) {}
-          const { teamSlug } = accessCtx();
-          closeModal({
-            displayName: 'Dolonia',
-            orgSlug: verified.org_slug || teamSlug,
-            tier: 'ceo',
-            accessMethod: 'ceo',
-            accessGrant: verified.access_grant || null,
-          });
-          return true;
-        } catch (_) {
-          return false;
-        }
       }
 
       async function submitLogin() {
@@ -829,7 +914,6 @@
         if (btn) btn.disabled = true;
         if (errEl) errEl.hidden = true;
         try {
-          if (await tryCeoLogin(teamCode || password)) return;
           if (!teamCode && !email) {
             const data = await teamAuthRequest('/api/visitor/auth/login-demo', { username, password });
             finishTeamAuth(data, username, 'demo_login');
@@ -1189,9 +1273,11 @@
             <div class="vis-card">
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Join a team</h2>
-              <p>Enter the team code from your invite, then pick a username and password.</p>
+              <p>${prefilledTeamCode
+    ? 'You\'ve been invited to join the team. Pick a username, email, and password.'
+    : 'Enter the team code from your invite, then pick a username and password.'}</p>
               <p class="vis-error" id="denizen-vis-error" hidden></p>
-              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" />
+              <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" value="${prefilledTeamCode ? String(prefilledTeamCode).replace(/"/g, '&quot;') : ''}" />
               <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
               <input class="vis-input" id="denizen-visitor-email-input" type="email" maxlength="120" placeholder="Your email" autocomplete="email" inputmode="email" />
               <input class="vis-input" id="denizen-visitor-password-input" type="password" maxlength="128" placeholder="${passwordPlaceholder()}" autocomplete="new-password" />
@@ -1255,6 +1341,7 @@
         }
 
         wireStepControls();
+        applyPrefills();
         if (focusAfter) focusFirstInput();
       }
 
@@ -1395,8 +1482,9 @@
       const grant = readCeoGrant();
       if (grant) body.ceo_grant = grant;
     }
-    if (opts.tier === 'demo' || opts.accessMethod === 'demo') {
+    if (opts.tier === 'demo' || opts.accessMethod === 'demo' || opts.accessMethod === 'demo_login') {
       body.demo = true;
+      try { localStorage.removeItem('denizen-ceo-grant'); } catch (_) {}
     } else if (opts.orgSlug) {
       body.org_slug = opts.orgSlug;
     }
@@ -1415,14 +1503,14 @@
       res = await fetchWithTimeout('/api/visitor/session/open', {
         method: 'GET',
         headers,
-      }, SESSION_FETCH_MS);
+      }, sessionFetchMs());
     } else {
       try {
         res = await fetchWithTimeout('/api/visitor/session', {
           method: 'POST',
           headers: authHeaders(),
           body: JSON.stringify(body),
-        }, SESSION_FETCH_MS);
+        }, sessionFetchMs());
       } catch (err) {
         if (!isTransientSessionError(err)) throw err;
         const headers = authHeaders();
@@ -1437,7 +1525,7 @@
         res = await fetchWithTimeout('/api/visitor/session/open', {
           method: 'GET',
           headers,
-        }, SESSION_FETCH_MS);
+        }, sessionFetchMs());
       }
     }
     if (!res.ok) {
@@ -1447,8 +1535,8 @@
     const data = await res.json();
     const session = data.session || data;
     if (opts.accessMethod === 'ceo') {
-      displayName = 'Dolonia';
       tier = 'ceo';
+      displayName = String(name || session.display_name || opts.displayName || 'Dolonia').trim();
     } else {
       if (session.display_name) displayName = session.display_name;
       if (opts.tier) tier = opts.tier;
@@ -1491,6 +1579,12 @@
       const s = data.settings || {};
       teamRole = s.team_role || null;
       canApproveSkills = !!s.can_approve_skills;
+      workPosition = s.work_position || null;
+      if (s.is_ceo_principal || s.team_role === 'owner' || s.team_role === 'ceo' || s.tier === 'ceo') {
+        teamRole = s.team_role === 'ceo' ? 'owner' : (teamRole || 'owner');
+        canApproveSkills = true;
+        applyOwnerPrincipalState({ isCeoPrincipal: true, ceoGrant: s.ceo_grant || null });
+      }
       if (s.has_demo_account && s.demo_username) {
         writeStore({ ...readStore(), demo_username: s.demo_username });
       }
@@ -1559,7 +1653,77 @@
       if (!res.ok) {
         throw new Error(data.error || `NPC team request failed (${res.status})`);
       }
-      return data.team || null;
+      return {
+        team: data.team || null,
+        orgTeam: data.org_team || null,
+        canManageOrg: !!data.can_manage_org,
+      };
+    },
+
+    async getOrgNpcTeam() {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout(
+        `/api/visitor/org-npc-team?session_id=${encodeURIComponent(sid)}`,
+        { headers: authHeaders() },
+        SESSION_FETCH_MS,
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Org NPC team request failed (${res.status})`);
+      }
+      return {
+        orgTeam: data.org_team || null,
+        canManage: !!data.can_manage,
+      };
+    },
+
+    async saveOrgNpcTeam(payload = {}) {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout('/api/visitor/org-npc-team', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          name: payload.name,
+          purpose: payload.purpose,
+          settings: payload.settings || undefined,
+        }),
+      }, SESSION_FETCH_MS);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Org NPC team save failed (${res.status})`);
+      }
+      return data.org_team || null;
+    },
+
+    async saveOrgNpcTeamMember(payload = {}) {
+      const sid = requireSessionId();
+      const res = await fetchWithTimeout('/api/visitor/org-npc-team', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          action: 'member',
+          npc_key: payload.npcKey || payload.npc_key,
+          display_name: payload.displayName || payload.display_name,
+          role: payload.role,
+          job: payload.job,
+          focus: payload.focus,
+          instructions: payload.instructions,
+          soul_snippet: payload.soulSnippet ?? payload.soul_snippet,
+          personality: payload.personality,
+          extra_skills: payload.extraSkills ?? payload.extra_skills,
+          sort_order: payload.sortOrder ?? payload.sort_order,
+          active: payload.active,
+          remove: payload.remove,
+          settings: payload.settings || undefined,
+        }),
+      }, SESSION_FETCH_MS);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Org NPC member save failed (${res.status})`);
+      }
+      return data.org_team || null;
     },
 
     async listChatThreads() {
@@ -1643,6 +1807,9 @@
           job: payload.job,
           focus: payload.focus,
           instructions: payload.instructions,
+          soul_snippet: payload.soulSnippet ?? payload.soul_snippet,
+          personality: payload.personality,
+          extra_skills: payload.extraSkills ?? payload.extra_skills,
           sort_order: payload.sortOrder ?? payload.sort_order,
           active: payload.active,
           remove: payload.remove,
@@ -1687,7 +1854,7 @@
           ok: true,
           added,
           errors,
-          team: team || await DenizenVisitorSession.getNpcTeam(),
+          team: team || (await DenizenVisitorSession.getNpcTeam())?.team || null,
         };
       }
 
@@ -1836,6 +2003,21 @@
       return assistant;
     },
 
+    async releaseAssistant() {
+      if (!sessionId) throw new Error('Session not ready');
+      const res = await fetch('/api/visitor/assistant', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || `Release failed (${res.status})`);
+      }
+      assistant = null;
+      return data;
+    },
+
     isMyAssistant(npcKeyOrTexture) {
       if (!assistant?.npc_key) return false;
       const mine = String(assistant.npc_key).toLowerCase();
@@ -1921,24 +2103,33 @@
 
     getProfile() {
       const ceo = isCeoPrincipalNow();
+      const store = readStore();
       return {
-        displayName: ceo ? 'Dolonia' : (displayName || readStore().display_name || null),
-        email: userEmail || readStore().email || null,
-        demoUsername: readStore().demo_username || null,
-        identityId: identityId || readStore().identity_id || null,
+        displayName: ceo ? (displayName || store.display_name || 'Dolonia') : (displayName || store.display_name || null),
+        email: userEmail || store.email || null,
+        demoUsername: store.demo_username || null,
+        identityId: identityId || store.identity_id || null,
         officeId: DenizenVisitorSession.getOfficeId(),
-        tier: ceo ? 'ceo' : (tier || readStore().tier || null),
-        accessMethod: accessMethod || readStore().access_method || null,
-        orgSlug: orgSlug || readStore().org_slug || null,
-        sessionId: sessionId || readStore().session_id || null,
+        tier: ceo ? 'ceo' : (tier || store.tier || null),
+        accessMethod: ceo ? 'ceo' : (accessMethod || store.access_method || null),
+        orgSlug: orgSlug || store.org_slug || null,
+        sessionId: sessionId || store.session_id || null,
         teamRole: teamRole || null,
         canApproveSkills: ceo || canApproveSkills,
+        workPosition: workPosition || null,
+        positionTitle: workPosition?.title || null,
       };
     },
 
     applyProfilePatch(patch = {}) {
       if (patch.displayName != null) displayName = String(patch.displayName).slice(0, 200);
       if (patch.email != null) userEmail = String(patch.email).slice(0, 320) || null;
+      if (patch.workPosition !== undefined) workPosition = patch.workPosition || null;
+      if (patch.positionTitle !== undefined) {
+        workPosition = patch.positionTitle
+          ? { ...(workPosition || {}), title: String(patch.positionTitle).slice(0, 120) }
+          : workPosition;
+      }
       const store = readStore();
       writeStore({
         ...store,
@@ -1970,6 +2161,7 @@
       identityId = null;
       officeId = null;
       userEmail = null;
+      workPosition = null;
       initPromise = null;
 
       try {
@@ -2026,7 +2218,7 @@
           session_id: sid,
           display_name: DenizenVisitorSession.getDisplayName(),
           identity_id: DenizenVisitorSession.getIdentityId(),
-          is_ceo: false,
+          is_ceo: isCeoPrincipalNow(),
         }));
       } catch (err) {
         console.warn('[DenizenVisitorSession] visitor_register failed:', err?.message || err);
@@ -2083,6 +2275,43 @@
         `/api/visitor/teammates?session_id=${encodeURIComponent(sid)}`,
       );
       return data.teammates || [];
+    },
+
+    async listConnections() {
+      const sid = requireSessionId();
+      const data = await apiJson(
+        `/api/visitor/connections?session_id=${encodeURIComponent(sid)}`,
+      );
+      return data;
+    },
+
+    async requestConnection(payload = {}) {
+      const sid = requireSessionId();
+      const data = await apiJson('/api/visitor/connections/request', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          target_email: payload.targetEmail || payload.target_email || payload.email,
+          target_session_id: payload.targetSessionId || payload.target_session_id,
+          message: payload.message,
+        }),
+      });
+      return data.connection || data;
+    },
+
+    async respondConnection(connectionId, action) {
+      const sid = requireSessionId();
+      const data = await apiJson('/api/visitor/connections/respond', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          session_id: sid,
+          connection_id: connectionId,
+          action,
+        }),
+      });
+      return data.connection || data;
     },
 
     async sendOfficeBus(payload = {}) {
@@ -2211,13 +2440,13 @@
         identityId = stored.identity_id || null;
         userEmail = stored.email || null;
 
-        if (accessMethod === 'ceo' || isCeoPrincipalNow()) {
+        if (accessMethod === 'ceo' || (isCeoPrincipalNow() && String(tier || stored.tier || '').toLowerCase() !== 'demo')) {
           accessMethod = 'ceo';
-          displayName = 'Dolonia';
+          displayName = displayName || stored.display_name || 'Dolonia';
           tier = 'ceo';
           writeStore({
             ...stored,
-            display_name: 'Dolonia',
+            display_name: displayName,
             tier: 'ceo',
             access_method: 'ceo',
           });
@@ -2271,12 +2500,14 @@
                 orgSlug: orgSlug || stored.org_slug || teamSlug,
                 tier: 'ceo',
                 accessMethod: 'ceo',
+                email: userEmail || stored.email || null,
               });
             } else if (sessionId && sessionToken) {
               await touchSession(displayName, {
                 orgSlug,
                 tier,
                 accessMethod: method,
+                email: userEmail || stored.email || null,
               });
             } else if (sessionId && (accessMethod === 'ceo' || isCeoPrincipalNow())) {
               const cfg = await fetchOfficeConfig();
@@ -2285,20 +2516,24 @@
                 orgSlug: orgSlug || stored.org_slug || teamSlug,
                 tier: tier || 'ceo',
                 accessMethod: 'ceo',
+                email: userEmail || stored.email || null,
               });
             } else {
               throw new Error('Team session expired — sign in again');
             }
           } catch (err) {
-            const canUseCachedTeamSession = isTransientSessionError(err)
+            // A returning user (reload / browser-back) must not be dumped on the
+            // login screen because the re-validation call hiccuped on a slow DB.
+            // Reuse the cached session on any transient error — demo included
+            // (demo sessions may have no token, which is fine).
+            const canUseCachedSession = isTransientSessionError(err)
               && stored.session_id
-              && stored.session_token
               && stored.tier
-              && stored.tier !== 'demo';
-            if (canUseCachedTeamSession) {
+              && (stored.tier === 'demo' || stored.session_token);
+            if (canUseCachedSession) {
               console.warn('[DenizenVisitorSession] session touch slow/failed — using cached session');
               sessionId = stored.session_id;
-              sessionToken = stored.session_token;
+              sessionToken = stored.session_token || sessionToken;
               displayName = stored.display_name || displayName;
               tier = stored.tier;
               orgSlug = stored.org_slug || orgSlug;
@@ -2337,6 +2572,12 @@
           return { sessionId: null, displayName: null, assistant: null };
         }
 
+        await refreshSessionSettings().catch(() => null);
+        if (isCeoPrincipalNow()) {
+          tier = 'ceo';
+          accessMethod = 'ceo';
+        }
+
         try {
           document.dispatchEvent(new CustomEvent('denizen-visitor-session-ready', {
             detail: {
@@ -2348,7 +2589,6 @@
           }));
         } catch (_) {}
         DenizenVisitorSession.refreshAssistant().catch(() => null);
-        refreshSessionSettings().catch(() => null);
         return { sessionId, displayName, assistant };
       })();
 

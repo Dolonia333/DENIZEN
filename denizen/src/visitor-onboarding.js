@@ -1,5 +1,5 @@
 /**
- * First-time visitor onboarding — a short arrival story after the city loads.
+ * First-time visitor onboarding — a short arrival story after the office loads.
  * The first run explains belonging, people, the phone, claiming, and City Power.
  * Detailed product capabilities stay in the Guide instead of crowding the tour.
  * Attaches to globalThis.DenizenVisitorOnboarding (no imports).
@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY_PREFIX = 'denizen-onboarding-seen-v5';
+  const STORAGE_KEY_PREFIX = 'denizen-onboarding-seen-v6';
   const LEGACY_STORAGE_KEY = 'denizen-onboarding-seen-v2';
   const STYLE_ID = 'denizen-visitor-onboarding-style';
   const OVERLAY_ID = 'denizen-visitor-onboarding';
@@ -89,59 +89,59 @@
 
   function phoneLine() {
     return isTouchUi()
-      ? 'Tap the phone button to open your city key.'
-      : 'Open the phone at the lower-right. It is your city key.';
+      ? 'Tap the phone button to open your office key.'
+      : 'Open the phone at the lower-right. It is your office key.';
   }
 
   function arrivalTips() {
     return [
-      'A denizen is someone who belongs to a place. Here, your AI team does not disappear into a chat box or work somewhere in the dark.',
-      'They live and work in a world you can see. Walk in, meet someone, and ask for what you need.',
+      'Denizen starts as an AI office you can actually see.',
+      'Meet the residents, give them real work, and stay close to what happens next.',
     ];
   }
 
-  function cityTips() {
+  function officeTips() {
     return [
       moveLine(),
-      'Ask a resident for something. They move to a desk, show what they are working on, and keep the job visible while it happens.',
-      'If work gets stuck, you can see it. When it is finished, you can see that too. Ask, watch, know.',
+      'Ask a resident for help. They move to a desk and keep the work visible while it happens.',
+      'Blocked or finished, the office shows you the state of the job.',
     ];
   }
 
   function phoneTips() {
     return [
       phoneLine(),
-      'Chat, your Citizen ID, the city team, and your tools all live here.',
-      'Think of it as one familiar home screen instead of a wall of dashboards.',
+      'Chat, your Citizen ID, your team, and station tools all live here.',
+      'The phone is the key that carries your assistant, credits, and next steps from office to city.',
     ];
   }
 
   function claimTips() {
     return [
       claimLine(),
-      'Your assistant becomes your home base: one familiar person who remembers your work and helps you navigate the city.',
-      'Your identity, your assistant, and the way you participate are the beginning of your Denizen citizenship.',
+      'Your assistant becomes a familiar home base who remembers your work and helps you navigate the office.',
+      'Your Citizen ID keeps that relationship connected when you return.',
     ];
   }
 
   function powerTips() {
     return [
-      'City Power is optional. When you are ready, Denizen Desktop can let your computer help keep the city running.',
-      'You choose when your station contributes and can pause it at any time.',
-      'Helping power shared work earns city credits. It should feel like supporting a place you belong to, not operating infrastructure.',
+      'City Power is optional. Denizen Desktop turns your office machine into a station for background city work while it is idle.',
+      'Your everyday use always comes first, and you can pause City Power anytime.',
+      'Contributing available capacity earns credits for your office.',
     ];
   }
 
   function readyTips() {
     if (isDemoVisitor()) {
       return [
-        'Start by giving one resident a real task and watching the city respond. That is enough for day one.',
-        'Your preview is a safe corner of the city. Join or create a team when you are ready to make your place permanent.',
+        'Start with one useful office task and watch Denizen respond.',
+        'This preview is yours to explore. The city is the next level when you are ready to make your place permanent.',
       ];
     }
     return [
-      'Start by giving one resident a useful task and watching the city respond. The rest will open up from there.',
-      'Your AI team lives here now. Your phone, assistant, and Citizen ID will keep your place familiar when you return.',
+      'Start with one useful office task and watch Denizen respond.',
+      'Your phone, assistant, and Citizen ID will keep your place familiar as your office grows toward the city.',
     ];
   }
 
@@ -151,42 +151,42 @@
       id: 'arrival',
       icon: '◆',
       anchor: 'center',
-      title: 'Welcome to Denizen',
+      title: 'Welcome home.',
       tips: arrivalTips,
     },
     {
-      id: 'city',
+      id: 'office',
       icon: '⌂',
       anchor: 'game',
-      title: 'Ask. Watch. Know.',
-      tips: cityTips,
+      title: 'See the work happen.',
+      tips: officeTips,
     },
     {
       id: 'phone',
       icon: '▣',
       anchor: 'phone',
-      title: 'Your city key',
+      title: 'Your office key',
       tips: phoneTips,
     },
     {
       id: 'claim',
       icon: '★',
       anchor: 'claim',
-      title: 'Choose your person',
+      title: 'Choose your assistant.',
       tips: claimTips,
     },
     {
       id: 'power',
       icon: '◇',
       anchor: 'phone-power',
-      title: 'Help keep the lights on',
+      title: 'Power the city from your office.',
       tips: powerTips,
     },
     {
       id: 'ready',
       icon: '✓',
       anchor: 'center',
-      title: 'You are a denizen now',
+      title: 'Your place is ready.',
       tips: readyTips,
       upgradeAction: true,
     },
@@ -233,123 +233,153 @@
     s.id = STYLE_ID;
     s.textContent = `
       #${OVERLAY_ID} {
+        --onb-ink: #f4f7f5;
+        --onb-muted: #9eaaa5;
+        --onb-panel: #0b1518;
+        --onb-panel-soft: #101e21;
+        --onb-line: rgba(180, 210, 201, 0.16);
+        --onb-mint: #7ee3bd;
+        --onb-mint-strong: #46c996;
+        --onb-amber: #f6c768;
         position: fixed;
         inset: 0;
         z-index: 2147482000;
         pointer-events: none;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         touch-action: manipulation;
       }
       #${OVERLAY_ID} .onb-backdrop {
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at 50% 38%, rgba(34, 197, 94, 0.08), transparent 34%),
-          rgba(2, 6, 23, 0.68);
+          radial-gradient(circle at 18% 10%, rgba(70, 201, 150, 0.14), transparent 30%),
+          linear-gradient(rgba(126, 227, 189, 0.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(126, 227, 189, 0.025) 1px, transparent 1px),
+          rgba(3, 10, 12, 0.76);
+        background-size: auto, 28px 28px, 28px 28px, auto;
+        backdrop-filter: blur(2px);
         pointer-events: auto;
         touch-action: manipulation;
       }
       #${OVERLAY_ID} .onb-focus {
         position: fixed;
-        border: 2px solid rgba(134, 239, 172, 0.9);
-        border-radius: 18px;
+        border: 1px solid rgba(126, 227, 189, 0.72);
+        border-radius: 16px;
         box-shadow:
-          0 0 0 6px rgba(34, 197, 94, 0.12),
-          0 0 34px rgba(34, 197, 94, 0.28);
+          0 0 0 5px rgba(70, 201, 150, 0.1),
+          0 0 30px rgba(70, 201, 150, 0.24);
         pointer-events: none;
         transition: left 180ms ease, top 180ms ease, width 180ms ease, height 180ms ease;
       }
       #${OVERLAY_ID} .onb-tooltip {
         position: fixed;
         box-sizing: border-box;
+        isolation: isolate;
         background:
-          linear-gradient(145deg, rgba(20, 83, 45, 0.2), transparent 48%),
-          #07110d;
-        border: 1px solid rgba(134, 239, 172, 0.32);
-        border-radius: 20px;
-        padding: 20px;
-        width: min(420px, calc(100vw - 28px));
-        max-height: min(76dvh, 560px);
+          radial-gradient(circle at 12% 0%, rgba(70, 201, 150, 0.11), transparent 34%),
+          linear-gradient(180deg, rgba(12, 24, 27, 0.99), rgba(8, 17, 19, 0.99));
+        border: 1px solid var(--onb-line);
+        border-radius: 24px;
+        padding: 26px;
+        width: min(460px, calc(100vw - 28px));
+        max-height: min(78dvh, 590px);
         overflow-y: auto;
-        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.68);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.52);
         pointer-events: auto;
-        color: #e2e8f0;
+        color: var(--onb-ink);
         touch-action: manipulation;
         z-index: 1;
+        scrollbar-color: rgba(126, 227, 189, 0.28) transparent;
+      }
+      #${OVERLAY_ID} .onb-tooltip::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        inset: 0 0 auto;
+        height: 3px;
+        border-radius: 24px 24px 0 0;
+        background: linear-gradient(90deg, var(--onb-mint-strong), rgba(70, 201, 150, 0.08) 72%, transparent);
       }
       #${OVERLAY_ID} .onb-heading {
         display: grid;
-        grid-template-columns: 44px 1fr;
-        gap: 12px;
+        grid-template-columns: 46px 1fr;
+        gap: 14px;
         align-items: center;
-        margin-bottom: 14px;
+        margin-bottom: 18px;
       }
       #${OVERLAY_ID} .onb-icon {
         display: grid;
         place-items: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
-        background: rgba(74, 222, 128, 0.12);
-        border: 1px solid rgba(134, 239, 172, 0.3);
-        color: #bbf7d0;
-        font: 22px/1 ui-sans-serif, system-ui, sans-serif;
+        width: 44px;
+        height: 44px;
+        border-radius: 11px;
+        background: rgba(126, 227, 189, 0.08);
+        border: 1px solid rgba(126, 227, 189, 0.45);
+        color: var(--onb-mint);
+        box-shadow: inset 0 0 18px rgba(126, 227, 189, 0.07);
+        font: 20px/1 ui-sans-serif, system-ui, sans-serif;
       }
       #${OVERLAY_ID} .onb-step {
-        margin: 0 0 4px;
-        font-size: 10px;
-        color: #86efac;
-        font-weight: bold;
-        letter-spacing: 0.12em;
+        margin: 0 0 6px;
+        color: var(--onb-mint);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
       }
       #${OVERLAY_ID} .onb-tier-badge {
         display: inline-block;
-        margin-left: 6px;
-        padding: 2px 6px;
-        border-radius: 4px;
+        margin-left: 8px;
+        padding: 3px 7px;
+        border-radius: 999px;
         font-size: 9px;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.08em;
         vertical-align: middle;
       }
       #${OVERLAY_ID} .onb-tier-badge.demo {
-        background: rgba(56, 189, 248, 0.15);
-        color: #7dd3fc;
-        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: rgba(246, 199, 104, 0.09);
+        color: var(--onb-amber);
+        border: 1px solid rgba(246, 199, 104, 0.3);
       }
       #${OVERLAY_ID} .onb-tier-badge.team {
-        background: rgba(74, 222, 128, 0.12);
-        color: #86efac;
-        border: 1px solid rgba(74, 222, 128, 0.35);
+        background: rgba(126, 227, 189, 0.08);
+        color: var(--onb-mint);
+        border: 1px solid rgba(126, 227, 189, 0.28);
       }
       #${OVERLAY_ID} .onb-title {
         margin: 0;
-        font-size: 20px;
-        line-height: 1.2;
-        color: #f8fafc;
-        font-weight: bold;
+        color: var(--onb-ink);
+        font-size: 26px;
+        line-height: 1.08;
+        letter-spacing: -0.035em;
+        font-weight: 800;
       }
       #${OVERLAY_ID} .onb-copy {
-        margin: 0 0 18px;
-        font: 13px/1.62 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #cbd5e1;
+        display: grid;
+        gap: 9px;
+        margin: 0 0 22px;
+        color: var(--onb-muted);
+        font-size: 14px;
+        line-height: 1.55;
       }
       #${OVERLAY_ID} .onb-copy p {
-        margin: 0 0 9px;
-      }
-      #${OVERLAY_ID} .onb-copy p:last-child {
-        margin-bottom: 0;
+        margin: 0;
+        padding: 11px 12px;
+        border: 1px solid var(--onb-line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.025);
       }
       #${OVERLAY_ID} .onb-actions {
         display: flex;
-        gap: 8px;
+        gap: 9px;
         justify-content: flex-end;
         align-items: center;
         flex-wrap: wrap;
         position: sticky;
         bottom: 0;
-        background: #07110d;
-        padding-top: 8px;
+        margin: 0 -2px -2px;
+        padding: 12px 2px 2px;
+        background: linear-gradient(180deg, rgba(8, 17, 19, 0), rgba(8, 17, 19, 0.98) 28%);
       }
       #${OVERLAY_ID} .onb-skip,
       #${OVERLAY_ID} .onb-next,
@@ -359,58 +389,65 @@
       }
       #${OVERLAY_ID} .onb-skip {
         background: transparent;
-        border: none;
-        color: #64748b;
-        font: inherit;
-        font-size: 11px;
-        cursor: pointer;
-        text-decoration: underline;
-        padding: 8px 10px;
-      }
-      #${OVERLAY_ID} .onb-skip:hover { color: #94a3b8; }
-      #${OVERLAY_ID} .onb-next {
-        background: #86efac;
-        color: #052e16;
-        border: none;
-        border-radius: 999px;
-        padding: 10px 18px;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        color: #82908b;
         font: inherit;
         font-size: 12px;
-        font-weight: bold;
+        font-weight: 700;
         cursor: pointer;
+        padding: 10px 12px;
       }
-      #${OVERLAY_ID} .onb-next:hover { background: #bbf7d0; }
+      #${OVERLAY_ID} .onb-skip:hover {
+        color: #cad5d1;
+        border-color: var(--onb-line);
+        background: rgba(255, 255, 255, 0.025);
+      }
+      #${OVERLAY_ID} .onb-next {
+        background: var(--onb-mint-strong);
+        color: #061411;
+        border: 1px solid rgba(126, 227, 189, 0.62);
+        border-radius: 10px;
+        padding: 10px 17px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(70, 201, 150, 0.16);
+      }
+      #${OVERLAY_ID} .onb-next:hover { background: var(--onb-mint); }
       #${OVERLAY_ID} .onb-upgrade {
         background: transparent;
-        color: #7dd3fc;
-        border: 1px solid rgba(56, 189, 248, 0.45);
-        border-radius: 999px;
+        color: var(--onb-amber);
+        border: 1px solid rgba(246, 199, 104, 0.34);
+        border-radius: 10px;
         padding: 10px 14px;
         font: inherit;
         font-size: 11px;
-        font-weight: bold;
+        font-weight: 800;
         cursor: pointer;
         margin-right: auto;
       }
       #${OVERLAY_ID} .onb-upgrade:hover {
-        border-color: #38bdf8;
-        color: #e0f2fe;
+        border-color: rgba(246, 199, 104, 0.65);
+        background: rgba(246, 199, 104, 0.06);
+        color: #ffe2a0;
       }
       #${OVERLAY_ID} .onb-dots {
         display: flex;
-        gap: 5px;
+        gap: 6px;
+        width: 112px;
         margin-right: auto;
-        flex-wrap: wrap;
-        max-width: 45%;
       }
       #${OVERLAY_ID} .onb-dot {
-        width: 6px;
-        height: 6px;
+        flex: 1;
+        height: 4px;
         border-radius: 999px;
-        background: #1f2937;
-        flex-shrink: 0;
+        background: #213033;
       }
-      #${OVERLAY_ID} .onb-dot.active { background: #4ade80; }
+      #${OVERLAY_ID} .onb-dot.done,
+      #${OVERLAY_ID} .onb-dot.active { background: var(--onb-mint-strong); }
+      #${OVERLAY_ID} .onb-dot.active { box-shadow: 0 0 10px rgba(70, 201, 150, 0.42); }
       html[data-denizen-onboarding="open"] #game-container,
       html[data-denizen-onboarding="open"] #game-container canvas,
       html[data-denizen-onboarding="open"] #denizen-bottom-dock,
@@ -419,9 +456,9 @@
       }
       #${TOUR_CHIP_ID} {
         display: none;
-        background: rgba(15, 23, 42, 0.96);
-        color: #a5f3fc;
-        border: 1px solid rgba(34, 211, 238, 0.35);
+        background: rgba(11, 21, 24, 0.96);
+        color: #7ee3bd;
+        border: 1px solid rgba(126, 227, 189, 0.3);
         border-radius: 999px;
         padding: 6px 11px;
         font: 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -430,14 +467,21 @@
         touch-action: manipulation;
       }
       #${TOUR_CHIP_ID}.ready { display: inline-flex; align-items: center; }
-      #${TOUR_CHIP_ID}:hover { border-color: #22d3ee; color: #e0f2fe; }
+      #${TOUR_CHIP_ID}:hover { border-color: #7ee3bd; color: #d8fff0; }
       @media (max-width: 520px) {
         #${OVERLAY_ID} .onb-tooltip {
-          padding: 17px;
-          border-radius: 18px;
+          padding: 20px;
+          border-radius: 20px;
         }
-        #${OVERLAY_ID} .onb-title { font-size: 18px; }
-        #${OVERLAY_ID} .onb-copy { font-size: 12.5px; }
+        #${OVERLAY_ID} .onb-title { font-size: 22px; }
+        #${OVERLAY_ID} .onb-copy { font-size: 13px; }
+        #${OVERLAY_ID} .onb-actions { gap: 6px; }
+        #${OVERLAY_ID} .onb-dots { width: 84px; }
+        #${OVERLAY_ID} .onb-upgrade {
+          order: -1;
+          width: 100%;
+          margin-right: 0;
+        }
       }
     `;
     document.head.appendChild(s);
@@ -450,7 +494,7 @@
   }
 
   function replayChipLabel() {
-    return 'City tour';
+    return 'Office tour';
   }
 
   function rewireReplayChip() {
@@ -459,7 +503,7 @@
     // Touch dock is icon-only — full label lives in the tooltip
     const touch = document.documentElement.classList.contains('denizen-touch');
     chip.textContent = touch ? '📖' : replayChipLabel();
-    chip.title = 'Replay the Denizen city tour';
+    chip.title = 'Replay the Denizen office tour';
     const clone = chip.cloneNode(true);
     chip.replaceWith(clone);
     const onPress = () => {
@@ -705,7 +749,7 @@
   }
 
   function tourAriaLabel() {
-    return 'Denizen city tour';
+    return 'Denizen office tour';
   }
 
   function tierBadgeHtml() {
@@ -730,7 +774,7 @@
       <div class="onb-heading">
         <span class="onb-icon" aria-hidden="true">${escapeHtml(step.icon || '◆')}</span>
         <div>
-          <p class="onb-step">City tour · ${stepIndex + 1} of ${activeSteps.length}${tierBadgeHtml()}</p>
+          <p class="onb-step">Office tour · ${stepIndex + 1} of ${activeSteps.length}${tierBadgeHtml()}</p>
           <p class="onb-title">${escapeHtml(step.title)}</p>
         </div>
       </div>
@@ -739,11 +783,11 @@
       </div>
       <div class="onb-actions">
         <div class="onb-dots">
-          ${activeSteps.map((_, i) => `<span class="onb-dot${i === stepIndex ? ' active' : ''}"></span>`).join('')}
+          ${activeSteps.map((_, i) => `<span class="onb-dot${i < stepIndex ? ' done' : i === stepIndex ? ' active' : ''}"></span>`).join('')}
         </div>
         ${step.upgradeAction ? '<button type="button" class="onb-upgrade">Make my place permanent</button>' : ''}
         <button type="button" class="onb-skip">Skip</button>
-        <button type="button" class="onb-next">${isLast ? 'Enter the city' : 'Continue'}</button>
+        <button type="button" class="onb-next">${isLast ? 'Enter the office' : 'Continue'}</button>
       </div>
     `;
 

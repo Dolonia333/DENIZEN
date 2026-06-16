@@ -152,6 +152,7 @@ async function resolveOfficeThinkContext(officeId, npcNameOrKey, deps, base = {}
     ...base,
     officeId,
     identityId: identityId || session?.identity_id || null,
+    orgId: session?.org_id || base.orgId || null,
     visitorSessionId: session?.id || base.visitorSessionId || null,
     visitorDisplayName: displayName,
     sessionTier: access?.tier || base.sessionTier,
@@ -198,6 +199,7 @@ async function wakeVisitorTeam(sessionId, deps) {
       officeId,
       visitorSessionId: sessionId,
       identityId: session.identity_id,
+      orgId: session.org_id || null,
       isOperatorOffice: !!session.metadata?.is_ceo_principal,
     });
     delay += 1400;

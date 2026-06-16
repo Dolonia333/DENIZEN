@@ -547,6 +547,10 @@ class OfficeScene extends Phaser.Scene {
         this.player.setFrame(0);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.interactKeys = this.input.keyboard.addKeys({ E: 'E', SPACE: 'SPACE' });
+        // Don't let Phaser preventDefault these keys — they must reach focused
+        // HTML inputs (login modal / chat). See the matching note in the main
+        // create() path below; the body can't scroll so this is safe.
+        this.input.keyboard.clearCaptures();
         this.playerState = 'walk';
         this.playerLocked = false;
         this.facing = 'down';
@@ -1060,17 +1064,44 @@ class OfficeScene extends Phaser.Scene {
       this.npcs.push(npc);
     });
 
-    // Hotkeys: F = toggle follow-chain, W = toggle wander for all NPCs
-    this.aiKeys = this.input.keyboard.addKeys('F,W');
+    // Hotkeys: F = toggle follow-chain. (Wander toggle moved off W so W can
+    // drive player movement — see WASD setup below.)
+    this.aiKeys = this.input.keyboard.addKeys('F');
     this.aiKeys.F.on('down', () => {
       this.npcs.forEach((n) => { n.ai.mode = 'follow'; });
     });
-    this.aiKeys.W.on('down', () => {
-      this.npcs.forEach((n) => { n.ai.mode = 'wander'; n.ai.nextWanderAt = 0; });
-    });
 
     this.cursors = this.input.keyboard.createCursorKeys();
+    // WASD movement, in addition to the arrow keys.
+    this.wasd = this.input.keyboard.addKeys({ up: 'W', left: 'A', down: 'S', right: 'D' });
     this.interactKeys = this.input.keyboard.addKeys({ E: 'E', SPACE: 'SPACE' });
+    // Are we typing in an HTML field (chat / login)? When so, the update loop
+    // ignores movement + interact keys so they reach the field instead of
+    // driving the player.
+    this._typingInField = () => {
+      const el = document.activeElement;
+      return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    };
+    // createCursorKeys()/addKeys() register a preventDefault capture for W, A,
+    // S, D, E, Space and the arrows. That capture fires on the global keydown
+    // BEFORE a focused HTML input receives the character, so it silently eats
+    // those keys in the login modal and chat box — most visibly W and Space.
+    // The login modal mounts before this scene's create() runs, so the old
+    // focusin → disableGlobalCapture() hook never got a chance to release the
+    // capture for that first field. The page body is fixed / overflow:hidden,
+    // so none of these keys can scroll anything; clear the captures outright so
+    // every key reaches a focused field. The Key objects still track isDown, so
+    // movement keeps working.
+    const _kbd = this.input.keyboard;
+    _kbd.clearCaptures();
+    const _isField = (el) => !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    // Belt-and-suspenders: if any later code re-adds a capture, still release it
+    // while a field holds focus (also covers a field focused before this ran).
+    document.addEventListener('focusin', (e) => { if (_isField(e.target)) _kbd.disableGlobalCapture(); });
+    document.addEventListener('focusout', () => {
+      setTimeout(() => { if (!_isField(document.activeElement)) _kbd.enableGlobalCapture(); }, 0);
+    });
+    if (_isField(document.activeElement)) _kbd.disableGlobalCapture();
     this.playerState = 'walk'; // 'walk' | 'interacting'
     this.playerLocked = false;
 
@@ -1926,8 +1957,10 @@ class OfficeScene extends Phaser.Scene {
     }
 
     // Interaction: press E/Space near object in front of player (or mobile Action button).
+    // Ignore E/Space while typing in a field so chat/login keep those keystrokes.
     const touchInteract = !!(window.__DenizenTouchState?.interact);
-    const interactPressed = (this.interactKeys?.E?.isDown || this.interactKeys?.SPACE?.isDown || touchInteract);
+    const interactTyping = this._typingInField ? this._typingInField() : false;
+    const interactPressed = ((!interactTyping) && (this.interactKeys?.E?.isDown || this.interactKeys?.SPACE?.isDown)) || touchInteract;
     if (!this._interactWasDown) this._interactWasDown = false;
     const justPressed = interactPressed && !this._interactWasDown;
     this._interactWasDown = interactPressed;
@@ -1998,10 +2031,11 @@ class OfficeScene extends Phaser.Scene {
     // If interacting, any movement key stands up.
     const chatMove = this._chatMoveKeys || {};
     const touchMove = window.__DenizenTouchState || {};
-    const leftKey = this.cursors.left.isDown || !!chatMove.left || !!touchMove.left;
-    const rightKey = this.cursors.right.isDown || !!chatMove.right || !!touchMove.right;
-    const upKey = this.cursors.up.isDown || !!chatMove.up || !!touchMove.up;
-    const downKey = this.cursors.down.isDown || !!chatMove.down || !!touchMove.down;
+    const typing = this._typingInField ? this._typingInField() : false;
+    const leftKey = (!typing && (this.cursors.left.isDown || this.wasd?.left?.isDown)) || !!chatMove.left || !!touchMove.left;
+    const rightKey = (!typing && (this.cursors.right.isDown || this.wasd?.right?.isDown)) || !!chatMove.right || !!touchMove.right;
+    const upKey = (!typing && (this.cursors.up.isDown || this.wasd?.up?.isDown)) || !!chatMove.up || !!touchMove.up;
+    const downKey = (!typing && (this.cursors.down.isDown || this.wasd?.down?.isDown)) || !!chatMove.down || !!touchMove.down;
     // Pressing a movement (arrow) key stands you up from sitting/interacting.
     if (this.playerLocked && (leftKey || rightKey || upKey || downKey)) {
       standUp();

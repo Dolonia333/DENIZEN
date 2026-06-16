@@ -151,7 +151,9 @@ function metadataFromAccessGrant(grantPayload) {
 function resolveTierFromOrgAndMeta(org, meta) {
   const orgTier = _tierFromOrg(org);
   const metaTier = meta?.tier ? String(meta.tier) : null;
+  // Demo org always wins — sandbox sessions cannot be CEO even with stale metadata.
   if (orgTier === 'demo') return 'demo';
+  if (meta?.is_ceo_principal === true || metaTier === 'ceo') return 'ceo';
   if (metaTier === 'demo' && orgTier !== 'demo') return orgTier;
   return metaTier || orgTier;
 }

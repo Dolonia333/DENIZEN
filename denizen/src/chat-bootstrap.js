@@ -248,7 +248,11 @@
 
               playerChat._hasActions = !!(msg.actions && msg.actions.length);
 
-              playerChat.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error);
+              playerChat.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error, {
+                crmActions: msg.crm_actions,
+              });
+
+              globalThis.DenizenCrmBridge?.handlePlayerChatResponse?.(msg);
 
             } else if (msg.type === 'player_group_chat_response' && playerChat) {
 
@@ -258,6 +262,16 @@
 
               playerChat.logPlayerChatAck(msg.npcName, msg.queueLen);
 
+            } else if (
+              msg.type === 'voice_chat_filler'
+              || msg.type === 'voice_chat_token'
+              || msg.type === 'voice_chat_sentence'
+              || msg.type === 'voice_chat_done'
+            ) {
+              globalThis.DenizenVoiceSession?.handleWsMessage?.(msg);
+              if (msg.type === 'voice_chat_token' && playerChat) {
+                playerChat.handleVoiceStreamToken?.(msg.npcName, msg.token);
+              }
             } else if (msg.type === 'npc_skill_start' && playerChat && msg.skill === 'web-search') {
               playerChat._addToLog('System', 'Lucy\'s browser is launching — tap 🌐 browser in the dock to watch live.');
               window.DenizenBrowserMirror?.ingest?.({
@@ -364,7 +378,11 @@
 
             pc._hasActions = !!(msg.actions && msg.actions.length);
 
-            pc.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error);
+            pc.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error, {
+              crmActions: msg.crm_actions,
+            });
+
+            globalThis.DenizenCrmBridge?.handlePlayerChatResponse?.(msg);
 
           } else if (msg.type === 'player_group_chat_response') {
 

@@ -202,6 +202,14 @@
     closeModal();
 
     const configJson = JSON.stringify(payload.cursor_config || payload.claude_desktop_config, null, 2);
+    const uiInspectConfig = JSON.stringify({
+      mcpServers: {
+        'denizen-ui-inspect': {
+          command: 'node',
+          args: ['denizen/mcp-ui-inspect/start.cjs'],
+        },
+      },
+    }, null, 2);
     const openapiUrl = payload.rest_sync?.openapi_url || payload.chatgpt?.openapi_url || '';
     const gptInstructions = payload.chatgpt?.gpt_instructions || '';
     const chatgptSteps = (payload.chatgpt?.steps || []).map((s) => `<li>${s}</li>`).join('');
@@ -260,10 +268,13 @@
           <pre>${payload.token || ''}</pre>
           <p>Config snippet:</p>
           <pre>${configJson}</pre>
+          <p><strong>Phone UI inspect (local stdio MCP):</strong> tool <code>capture_denizen_phone_app</code> — see <code>denizen/mcp-ui-inspect/README.md</code>.</p>
+          <pre>${uiInspectConfig}</pre>
           <div class="mcp-actions">
             <button type="button" class="mcp-copy" data-copy="url" data-label="URL">Copy URL</button>
             <button type="button" class="mcp-copy" data-copy="token" data-label="token">Copy token</button>
             <button type="button" class="mcp-copy" data-copy="config" data-label="config">Copy config</button>
+            <button type="button" class="mcp-copy" data-copy="ui-inspect" data-label="UI inspect config">Copy UI inspect</button>
           </div>
         </div>
 
@@ -308,6 +319,7 @@
       url: payload.mcp_url || '',
       token: payload.token || '',
       config: configJson,
+      'ui-inspect': uiInspectConfig,
       openapi: openapiUrl,
       gpt: gptInstructions,
       'claude-url': payload.claude_ai?.connector_url || payload.mcp_url || '',
@@ -373,6 +385,92 @@
     btn.onclick = () => openConnectFlow(asst.npc_key, name);
   }
 
+  const OFFER_ID = 'denizen-visitor-mcp-offer';
+
+  function escHtml(value) {
+    return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function injectOfferStyles() {
+    if (document.getElementById(`${OFFER_ID}-style`)) return;
+    const s = document.createElement('style');
+    s.id = `${OFFER_ID}-style`;
+    s.textContent = `
+      #${OFFER_ID} {
+        position: fixed;
+        inset: 0;
+        z-index: 100700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(2, 6, 23, 0.82);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        touch-action: manipulation;
+      }
+      #${OFFER_ID} .mcp-offer-card {
+        background: #020617;
+        border: 1px solid #1f2937;
+        border-radius: 10px;
+        padding: 20px 22px;
+        width: min(380px, calc(100vw - 32px));
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      }
+      #${OFFER_ID} h3 { margin: 0 0 8px; color: #e2e8f0; font-size: 14px; }
+      #${OFFER_ID} p { margin: 0 0 14px; color: #94a3b8; font-size: 11px; line-height: 1.5; }
+      #${OFFER_ID} .mcp-offer-actions { display: flex; gap: 8px; justify-content: flex-end; }
+      #${OFFER_ID} .mcp-offer-actions button {
+        font: inherit;
+        font-size: 11px;
+        font-weight: bold;
+        border-radius: 6px;
+        padding: 8px 14px;
+        cursor: pointer;
+        border: 1px solid #1f2937;
+        min-height: 40px;
+        touch-action: manipulation;
+      }
+      #${OFFER_ID} .mcp-offer-skip { background: #1e293b; color: #94a3b8; }
+      #${OFFER_ID} .mcp-offer-connect { background: #4ade80; color: #0f172a; border-color: transparent; }
+    `;
+    document.head.appendChild(s);
+  }
+
+  // Replaces a blocking window.confirm() — a dismissible, in-app, themed prompt
+  // that doesn't trap the user and matches the rest of the claim flow.
+  function showOfferCard(npcKey, displayName) {
+    injectOfferStyles();
+    document.getElementById(OFFER_ID)?.remove();
+    const name = escHtml(displayName || 'your assistant');
+    const overlay = document.createElement('div');
+    overlay.id = OFFER_ID;
+    overlay.innerHTML = `
+      <div class="mcp-offer-card" role="dialog" aria-label="Connect an external AI">
+        <h3>Connect an external AI to ${name}?</h3>
+        <p>Optional — let ChatGPT, Claude, or Cursor work through ${name}. You can do this anytime from the <strong>Connect AI</strong> button in the chat header.</p>
+        <div class="mcp-offer-actions">
+          <button type="button" class="mcp-offer-skip">Not now</button>
+          <button type="button" class="mcp-offer-connect">Connect</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const close = () => overlay.remove();
+    const skip = overlay.querySelector('.mcp-offer-skip');
+    const connect = overlay.querySelector('.mcp-offer-connect');
+    const onConnect = () => { close(); openConnectFlow(npcKey, displayName); };
+    // Bind via ONE mechanism only (avoid double-firing onConnect → two modals).
+    const bind = globalThis.DenizenTouchBind?.bindPress;
+    if (bind) {
+      if (skip) bind(skip, close, { stop: true });
+      if (connect) bind(connect, onConnect, { stop: true });
+    } else {
+      skip?.addEventListener('click', close);
+      connect?.addEventListener('click', onConnect);
+    }
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  }
+
   const DenizenVisitorMcpConnectUI = {
     attach() {
       injectStyles();
@@ -381,13 +479,13 @@
       console.log('[DenizenVisitorMcpConnectUI] attached');
     },
 
+    openConnect(npcKey = null, displayName = null) {
+      openConnectFlow(npcKey, displayName);
+    },
+
     offerAfterClaim(npcKey, displayName) {
       refreshButton();
-      setTimeout(() => {
-        if (confirm(`Connect an external AI to ${displayName}? (ChatGPT, Claude, or Cursor)`)) {
-          openConnectFlow(npcKey, displayName);
-        }
-      }, 400);
+      setTimeout(() => showOfferCard(npcKey, displayName), 400);
     },
   };
 

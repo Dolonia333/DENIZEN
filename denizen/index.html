@@ -72,11 +72,15 @@
     <script>
       (function () {
         // ?touch=1 / ?touch=0 forces touch mode on or off (testing narrow layouts in a desktop browser)
+        // ?desktop=1 — Electron app: treat as desktop even when the machine has a touchscreen
         var force = null;
         try {
-          var q = new URLSearchParams(window.location.search).get('touch');
+          var params = new URLSearchParams(window.location.search);
+          var q = params.get('touch');
           if (q === '1' || q === 'true') force = true;
           else if (q === '0' || q === 'false') force = false;
+          var desktop = params.get('desktop');
+          if (desktop === '1' || desktop === 'true') force = false;
         } catch (_) {}
         window.__DenizenForceTouch = force;
         try {
@@ -91,8 +95,19 @@
       })();
     </script>
     <script>
-      // Show runtime errors on screen (helps when canvas is just a blank color).
+      // Log runtime errors to console; on-screen overlay is dev-only (not shown to visitors).
       (function () {
+        function showErrorOverlay() {
+          try {
+            const h = String(window.location.hostname || '').toLowerCase();
+            if (h === 'localhost' || h === '127.0.0.1' || h === '[::1]') return true;
+            const q = new URLSearchParams(window.location.search || '');
+            return q.has('debug') || q.get('debug') === 'errors';
+          } catch (_) {
+            return false;
+          }
+        }
+
         function ensureOverlay() {
           let wrap = document.getElementById('runtime-error-wrap');
           if (!wrap) {
@@ -131,17 +146,22 @@
           return wrap.querySelector('#runtime-error');
         }
 
-        window.addEventListener('error', function (ev) {
+        function reportError(kind, text) {
+          console.error(`[Denizen ${kind}]`, text);
+          if (!showErrorOverlay()) return;
           const el = ensureOverlay();
-          el.textContent += `[error] ${ev.message}\n${ev.filename || ''}:${ev.lineno || ''}:${ev.colno || ''}\n\n`;
+          el.textContent += `[${kind}] ${text}\n\n`;
+        }
+
+        window.addEventListener('error', function (ev) {
+          reportError('error', `${ev.message}\n${ev.filename || ''}:${ev.lineno || ''}:${ev.colno || ''}`);
         });
         window.addEventListener('unhandledrejection', function (ev) {
-          const el = ensureOverlay();
           const reason = ev.reason;
           const stack = reason && typeof reason === 'object' && reason.stack
             ? `\n${reason.stack}`
             : '';
-          el.textContent += `[unhandledrejection] ${String(reason)}${stack}\n\n`;
+          reportError('unhandledrejection', `${String(reason)}${stack}`);
         });
       })();
     </script>
@@ -179,18 +199,19 @@
     <script src="./src/mobile-controls.js?v=mobperf6" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
-    <script src="./src/visitor-session.js?v=vis30" defer></script>
+    <script src="./src/visitor-session.js?v=vis32" defer></script>
     <script src="./src/visitor-demo-account-prompt.js?v=demoacct1" defer></script>
-    <script src="./src/visitor-profile-ui.js?v=prof1" defer></script>
-    <script src="./src/visitor-account-panel.js?v=acct8" defer></script>
-    <script src="./src/visitor-node-ui.js?v=node24city" defer></script>
+    <script src="./src/visitor-client-platform.js?v=plat1" defer></script>
+    <script src="./src/visitor-profile-ui.js?v=prof2" defer></script>
+    <script src="./src/visitor-account-panel.js?v=acct9" defer></script>
+    <script src="./src/visitor-node-ui.js?v=node25plat" defer></script>
     <script src="./src/visitor-onboarding.js?v=onbv10pitch" defer></script>
     <script src="./src/visitor-capabilities-guide.js?v=guide1" defer></script>
     <script src="./src/visitor-superuser-onboarding.js?v=super3city" defer></script>
     <script src="./src/visitor-claim-ui.js?v=mobplay6" defer></script>
-    <script src="./src/visitor-npc-team-ui.js?v=npcteam13" defer></script>
+    <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=chatmob5city" defer></script>
+    <script src="./src/player-chat.js?v=chatkbd1" defer></script>
     <script src="./src/denizen-phone-chat-ui.js?v=phchat5" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/bottom-dock.js?v=mobme4" defer></script>
@@ -201,12 +222,13 @@
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=wall7" defer></script>
     <!-- Game scene -->
-    <script src="./office-scene.js?v=office1" defer></script>
+    <script src="./office-scene.js?v=wasd2" defer></script>
   </head>
   <body>
     <div id="game-container"></div>
     <!-- Chat button appears immediately — does not wait for Phaser -->
-    <script src="./src/chat-bootstrap.js?v=sec3"></script>
+    <script src="./src/visitor-crm-bridge.js?v=crmbridge2"></script>
+    <script src="./src/chat-bootstrap.js?v=sec5"></script>
   </body>
 </html>
 
