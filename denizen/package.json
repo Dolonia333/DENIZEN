@@ -7,7 +7,7 @@
     "test": "node --test --test-concurrency=1",
     "test:crm": "node --test tests/denizen-crm-assist.test.js tests/denizen-crm-automations.test.js tests/denizen-crm-digest.test.js tests/denizen-crm-email.test.js tests/denizen-crm-handoffs.test.js tests/denizen-crm-metrics.test.js tests/denizen-crm-mutations.test.js tests/denizen-crm-portal.test.js tests/denizen-crm-routes.test.js tests/denizen-crm-store.test.js tests/denizen-crm-stripe.test.js tests/denizen-crm-webhooks.test.js",
     "test:e2e": "node --test tests/e2e/visitor-assistant.e2e.js",
-    "test:visitor": "node --test tests/denizen-visitor.test.js tests/visitor-chat.test.js tests/visitor-flow.integration.test.js tests/handoff-notify.test.js tests/prediction-loop.test.js tests/mirofish-prediction.test.js tests/visitor-intelligence.test.js tests/visitor-access.test.js tests/denizen-org-policy.test.js tests/platform-identity-bridge.test.js tests/roki-trading-spine.test.js tests/npc-mcp-gateway.test.js tests/companion-api.test.js tests/visitor-complete.test.js",
+    "test:visitor": "node --test tests/denizen-visitor.test.js tests/visitor-connections.test.js tests/visitor-chat.test.js tests/visitor-flow.integration.test.js tests/handoff-notify.test.js tests/prediction-loop.test.js tests/mirofish-prediction.test.js tests/visitor-intelligence.test.js tests/visitor-access.test.js tests/denizen-org-policy.test.js tests/platform-identity-bridge.test.js tests/roki-trading-spine.test.js tests/npc-mcp-gateway.test.js tests/companion-api.test.js tests/visitor-complete.test.js",
     "test:visitor:all": "npm run test:visitor && npm run test:e2e",
     "start": "node --env-file=.env server.js",
     "build:crm": "node scripts/export-industry-index.mjs && cd crm/vendor && npm install --legacy-peer-deps && npm run build && node ../scripts/write-crm-manifest.mjs",
@@ -31,9 +31,10 @@
     "smoke:hardware": "node scripts/smoke-hardware-metrics.js",
     "smoke:onboarding": "node scripts/smoke-onboarding.js",
     "smoke:crm": "node scripts/smoke-crm-api.mjs",
+    "smoke:phone": "node scripts/phone-ui-probe.mjs",
     "smoke:spine": "node scripts/smoke-spine-e2e.js",
     "drain:mesh": "node scripts/drain-mesh-queue.js",
-    "smoke:all": "npm run smoke:self-heal && npm run smoke:nas && npm run smoke:mesh && npm run smoke:mesh-jobs && npm run smoke:desktop && npm run smoke:desktop-release && npm run smoke:desktop-updates && npm run smoke:credits && npm run smoke:hardware && npm run smoke:onboarding && npm run smoke:spine && npm run drain:mesh"
+    "smoke:all": "npm run smoke:self-heal && npm run smoke:nas && npm run smoke:mesh && npm run smoke:mesh-jobs && npm run smoke:desktop && npm run smoke:desktop-release && npm run smoke:desktop-updates && npm run smoke:credits && npm run smoke:hardware && npm run smoke:onboarding && npm run smoke:phone && npm run smoke:crm && npm run smoke:spine && npm run drain:mesh"
   },
   "repository": {
     "type": "git",

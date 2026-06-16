@@ -116,6 +116,7 @@ function toClientConfig() {
       ceoAccessRequired: !!t.ceoAccessCode,
       minPasswordLength: t.minPasswordLength,
       devPasswordRelaxed: t.devPasswordRelaxed,
+      publicUrl: String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '').replace(/\/+$/, '') || null,
     },
   };
 }

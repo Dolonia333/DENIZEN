@@ -65,6 +65,14 @@ function stripRunSkillTags(text) {
   return String(text || '').replace(RUN_SKILL_TAG, '').replace(/\s+$/, '').trim();
 }
 
+function skillParamsContentFromMessage(msg) {
+  const block = String(msg || '').match(/```[\s\S]*?```/);
+  if (block) return block[0].replace(/```/g, '').trim();
+  const quoted = String(msg || '').match(/content\s*[`"']([^`"']+)[`"']/i);
+  if (quoted) return quoted[1];
+  return '';
+}
+
 function inferSkillFromMessage(npcName, message) {
   const msg = String(message || '').trim();
   if (!msg) return null;
@@ -86,10 +94,22 @@ function inferSkillFromMessage(npcName, message) {
 
   const crmPlan = crmNpcPersonas?.inferCrmAction?.(msg);
   if (crmPlan) {
-    const persona = crmNpcPersonas?.resolvePersona?.(name);
-    const writeBlocked = persona && !persona.canWrite && crmNpcPersonas?.isWriteSkill?.(crmPlan.skill);
-    if (!writeBlocked) return crmPlan;
-    return { skill: 'crm-setup-status', params: { task: msg }, source: 'infer-crm-read' };
+    if (crmNpcPersonas?.canNpcRunSkill?.(name, crmPlan.skill)) return crmPlan;
+    return crmNpcPersonas.deferSkillPlan(msg, crmPlan.skill);
+  }
+
+  const businessPlan = crmNpcPersonas?.inferBusinessAction?.(msg);
+  if (businessPlan) {
+    if (crmNpcPersonas?.canNpcRunSkill?.(name, businessPlan.skill)) return businessPlan;
+    return crmNpcPersonas.deferSkillPlan(msg, businessPlan.skill);
+  }
+
+  if (/\b(trend|trending|rss|news)\b/i.test(msg) && /\b(scrape|monitor|watch|feed)\b/i.test(msg)) {
+    return { skill: 'trend-scraper', params: { task: msg }, source: 'infer' };
+  }
+
+  if (/\b(moderate|brand safety|legal scan|review)\b.*\b(content|post|publish)\b/i.test(msg)) {
+    return { skill: 'content-moderation', params: { task: msg }, source: 'infer' };
   }
 
   if (/\b(research|look\s*up|find\s+out|google|what\s+is|how\s+do\s+i)\b/i.test(msg)) {
@@ -112,6 +132,37 @@ function inferSkillFromMessage(npcName, message) {
 
   if (/\b(browser|navigate|scrape|browse)\b/i.test(msg)) {
     return { skill: 'browserclaw', params: { task: msg }, source: 'infer' };
+  }
+
+  if (/\b(read|open|show)\b.*\b(file|document|folder)\b/i.test(msg)) {
+    const pathMatch = msg.match(/(?:file|path)\s+[`"']?([^\s`"']+)[`"']?/i)
+      || msg.match(/[`"']([^`"']+\.[a-z0-9]{1,6})[`"']/i);
+    return {
+      skill: 'file-read',
+      params: { path: pathMatch?.[1] || msg.replace(/.*\b(?:read|open)\b/i, '').trim() },
+      source: 'infer',
+    };
+  }
+
+  if (/\b(write|save|create)\b.*\b(file|document)\b/i.test(msg)) {
+    const pathMatch = msg.match(/(?:to|file|path)\s+[`"']?([^\s`"']+)[`"']?/i);
+    return {
+      skill: 'file-write',
+      params: {
+        path: pathMatch?.[1] || 'notes.txt',
+        content: skillParamsContentFromMessage(msg),
+      },
+      source: 'infer',
+    };
+  }
+
+  if (/\b(run|execute)\b.*\b(code|script|python|node)\b/i.test(msg)) {
+    const cmdMatch = msg.match(/(?:run|execute)\s+(.+)/i);
+    return {
+      skill: 'run-code',
+      params: { command: 'node', args: [cmdMatch?.[1]?.trim() || msg], task: msg },
+      source: 'infer',
+    };
   }
 
   if (/\b(supabase|database|sql|schema)\b/i.test(msg)) {
@@ -186,16 +237,31 @@ function planSkillExecution({
   isAssistant = false,
   canUseRealWork = false,
   forceInfer = false,
+  extraSkills = null,
 } = {}) {
-  if (!canUseRealWork) return null;
-
+  const extras = Array.isArray(extraSkills) ? extraSkills : [];
+  const canRun = (name, skill) => crmNpcPersonas?.canNpcRunSkill?.(name, skill, extras);
   const crmInfer = crmNpcPersonas?.inferCrmAction?.(message);
-  const crmPersona = crmNpcPersonas?.resolvePersona?.(npcName);
-  if (crmInfer && crmPersona) {
-    const writeBlocked = !crmPersona.canWrite && crmNpcPersonas?.isWriteSkill?.(crmInfer.skill);
-    if (!writeBlocked) return crmInfer;
-    return { skill: 'crm-setup-status', params: { task: message }, source: 'infer-crm-read' };
+  const businessInfer = !crmInfer ? crmNpcPersonas?.inferBusinessAction?.(message) : null;
+  const dataInfer = crmInfer || businessInfer;
+  if (dataInfer) {
+    if (!canUseRealWork) {
+      if (crmNpcPersonas?.isWriteSkill?.(dataInfer.skill)) {
+        return {
+          skill: 'crm-setup-status',
+          params: { task: message, demoCoach: true },
+          source: 'infer-crm-demo',
+        };
+      }
+      if (canRun(npcName, dataInfer.skill)) return dataInfer;
+    } else if (canRun(npcName, dataInfer.skill)) {
+      return dataInfer;
+    } else {
+      return crmNpcPersonas.deferSkillPlan(message, dataInfer.skill);
+    }
   }
+
+  if (!canUseRealWork) return null;
 
   const tagged = parseRunSkillTags(responseText);
   if (tagged.length) return tagged[0];

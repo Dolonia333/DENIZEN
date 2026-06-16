@@ -14,6 +14,8 @@ const worldState = require('./src/world-state');
 const agentBus = require('./src/agent-bus');
 const ExternalSink = require('./src/external-sink');
 const elevenLabs = require('./src/elevenlabs-tts');
+const voiceBridge = require('./src/denizen-voice-bridge.js');
+const { createSentenceStream } = require('./src/voice-sentence.js');
 const animationForge = require('./src/animation-forge');
 const soulReflection = require('./src/soul-reflection');
 const npcRoster = require('./src/npc-roster');
@@ -30,10 +32,13 @@ const visitorAccess = require('./src/visitor-access');
 const sessionAuth = require('./src/visitor-session-auth');
 const teamAuth = require('./src/denizen-team-auth');
 const userIdentity = require('./src/denizen-user-identity');
+const userPosition = require('./src/denizen-user-position.js');
+const invitePlatform = require('./src/denizen-invite-platform.js');
 const visitorOfficeContext = require('./src/visitor-office-context');
 const officeRegistry = require('./src/visitor-office-registry');
 const officeLayout = require('./src/visitor-office-layout');
 const officeBus = require('./src/office-bus');
+const visitorConnections = require('./src/visitor-connections');
 
 function npcFolderToDisplay(folder) {
   const key = String(folder || '').toLowerCase();
@@ -92,6 +97,7 @@ const jobApplication = require('./src/job-application');
 const jobCrm         = require('./src/job-crm');
 const desktopAgent = require('./src/desktop-agent');
 const desktopPermissionBridge = require('./src/desktop-permission-bridge');
+const stationRouter = require('./src/denizen-station-router');
 const linuxAgent = require('./src/linux-agent');
 const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
@@ -947,6 +953,143 @@ function _visitorSessionBodyFromHeaders(req) {
   };
 }
 
+function _teamAuthBodyFromHeaders(req) {
+  const h = req.headers || {};
+  const header = (name) => String(h[name] || h[name.toLowerCase()] || '').trim();
+  return {
+    username: header('x-username') || header('x-denizen-username') || undefined,
+    password: header('x-password') || header('x-denizen-password') || undefined,
+    email: header('x-email') || undefined,
+    team_code: header('x-team-code') || header('x-denizen-team-code') || undefined,
+    teamCode: header('x-team-code') || header('x-denizen-team-code') || undefined,
+    team_name: header('x-team-name') || header('x-denizen-team-name') || undefined,
+    teamName: header('x-team-name') || header('x-denizen-team-name') || undefined,
+    display_name: header('x-display-name') || undefined,
+    displayName: header('x-display-name') || undefined,
+  };
+}
+
+async function _readTeamAuthBody(req, maxBytes = 32 * 1024) {
+  if (req.method === 'GET') {
+    return _teamAuthBodyFromHeaders(req);
+  }
+  const body = await _readJsonBody(req, maxBytes);
+  if (body && typeof body === 'object' && Object.keys(body).length) {
+    return body;
+  }
+  const headers = _teamAuthBodyFromHeaders(req);
+  if (headers.username || headers.email || headers.password) {
+    return { ...headers, ...body };
+  }
+  return body;
+}
+
+/** Team/demo login routes — registered early so login never waits behind heavy handlers. */
+function _handleVisitorAuthRoutes(req, res, urlPath) {
+  if (urlPath === '/api/visitor/auth/register-demo' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const sessionToken = sessionAuth.extractSessionAuth(req, body);
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const result = await demoAuth.registerDemoAccount({
+        sessionId,
+        sessionToken,
+        username: body.username,
+        password: body.password,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const status = demoAuth.demoAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/login-demo' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const result = await demoAuth.loginDemoAccount({
+        username: body.username,
+        password: body.password,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const status = demoAuth.demoAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/create-team' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const result = await teamAuth.createTeam({
+        teamName: body.team_name ?? body.teamName,
+        username: body.username,
+        email: body.email,
+        password: body.password,
+        displayName: body.display_name ?? body.displayName,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/register' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const result = await teamAuth.registerTeamAccount({
+        email: body.email,
+        displayName: body.display_name ?? body.displayName,
+        username: body.username,
+        password: body.password,
+        teamCode: body.team_code ?? body.teamCode,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/login' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const result = await teamAuth.loginTeamAccount({
+        email: body.email,
+        username: body.username,
+        password: body.password,
+        teamCode: body.team_code ?? body.teamCode,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  return false;
+}
+
 async function _createVisitorSession(req, res, body) {
   const existingId = body.session_id || body.sessionId || null;
   const existingToken = sessionAuth.extractSessionAuth(req, body);
@@ -972,9 +1115,17 @@ async function _createVisitorSession(req, res, body) {
     metadata = { ...visitorAccess.metadataFromAccessGrant(grantPayload), ...metadata };
   } else if (existingId && ceoVerified) {
     const access = await visitorAccess.resolveSessionAccess(existingId);
-    orgSlug = access.orgSlug;
-    tier = access.tier;
-    metadata = { ...(access.session?.metadata || {}), ...metadata };
+    if (access.isDemo) {
+      orgSlug = access.orgSlug;
+      tier = 'demo';
+      ceoVerified = false;
+      metadata = { ...(access.session?.metadata || {}), ...metadata, tier: 'demo' };
+      delete metadata.is_ceo_principal;
+    } else {
+      orgSlug = access.orgSlug;
+      tier = access.tier;
+      metadata = { ...(access.session?.metadata || {}), ...metadata };
+    }
   } else if (ceoVerified && (body.org_slug || body.orgSlug || metadata.org_slug)) {
     orgSlug = body.org_slug || body.orgSlug || metadata.org_slug || promptTuning.teamOrgSlug;
     tier = 'team';
@@ -1016,14 +1167,33 @@ async function _createVisitorSession(req, res, body) {
     return;
   }
 
+  const isDemoOrg = resolvedOrg.slug === promptTuning.demoOrgSlug
+    || tier === 'demo'
+    || body.demo === true
+    || metadata.access_method === 'demo'
+    || metadata.access_method === 'demo_login';
+  if (isDemoOrg) {
+    ceoVerified = false;
+    tier = 'demo';
+    orgSlug = promptTuning.demoOrgSlug;
+    metadata.tier = 'demo';
+    metadata.access_method = metadata.access_method || 'demo';
+    delete metadata.is_ceo_principal;
+  }
+
   metadata.tier = tier || metadata.tier || (resolvedOrg.slug === promptTuning.demoOrgSlug ? 'demo' : 'team');
   metadata.org_slug = resolvedOrg.slug;
 
-  // A CEO-code access grant is signed by us — it counts as verification too.
+  // A CEO-code or team-owner login grant is signed by us — it counts as verification.
   if (grantPayload?.access_method === 'ceo_code') ceoVerified = true;
+  if (grantPayload?.access_method === 'owner_login') ceoVerified = true;
   if (ceoVerified) {
     metadata.is_ceo_principal = true;
-    if (!metadata.access_method) metadata.access_method = 'ceo';
+    metadata.tier = 'ceo';
+    tier = 'ceo';
+    if (!metadata.access_method || metadata.access_method === 'owner_login') {
+      metadata.access_method = 'ceo';
+    }
   }
 
   // Keep the login email on the session so team-account lookups by session work.
@@ -1053,6 +1223,9 @@ async function _createVisitorSession(req, res, body) {
   });
 
   let linkedIdentity = null;
+  if (session?.identity_id) {
+    linkedIdentity = await userIdentity.getIdentityById(session.identity_id).catch(() => null);
+  }
   if (grantPayload?.email && session?.id) {
     linkedIdentity = await teamAuth.linkAccountToSession(
       grantPayload.email,
@@ -1093,8 +1266,15 @@ async function _createVisitorSession(req, res, body) {
   }
 
   if (!linkedIdentity?.id && metadata.is_ceo_principal && session?.id) {
-    const ceoEmail = process.env.DENIZEN_CEO_IDENTITY_EMAIL
-      || `ceo@${resolvedOrg.slug}.denizen.local`;
+    let ceoEmail = sessionEmail || metadata.email || teamAuth.configuredOwnerEmail();
+    if (!ceoEmail) {
+      const account = await teamAuth.getTeamAccountForSession(session.id).catch(() => null);
+      ceoEmail = account?.email || null;
+    }
+    if (!ceoEmail) {
+      ceoEmail = process.env.DENIZEN_CEO_IDENTITY_EMAIL
+        || `ceo@${resolvedOrg.slug}.denizen.local`;
+    }
     linkedIdentity = await _withIdentityTimeout(
       userIdentity.resolveIdentityForSession({
         email: ceoEmail,
@@ -1113,9 +1293,26 @@ async function _createVisitorSession(req, res, body) {
     }
   }
 
+  if (!linkedIdentity?.id && session?.id) {
+    linkedIdentity = await _withIdentityTimeout(
+      userIdentity.ensureIdentityForSession(session.id, {
+        session,
+        email: sessionEmail || metadata.email || null,
+        displayName: body.display_name ?? body.displayName,
+        tier: metadata.tier || tier,
+        orgId: resolvedOrg.id,
+        orgSlug: resolvedOrg.slug,
+        source: metadata.access_method || (tier === 'demo' ? 'demo' : 'session'),
+      }),
+    ) || linkedIdentity;
+  }
+
   if (linkedIdentity?.id) {
     const identityForNotify = linkedIdentity;
     const notifyTier = metadata.tier || tier;
+    if (ceoVerified) {
+      userIdentity.markCeoPrincipal(linkedIdentity.id);
+    }
     denizenDb.enqueue(async () => {
       if (hostCompute.isLocalOperatorRequest(req)) {
         await hostCompute.markHostOperatorIfLocal(identityForNotify.id, req).catch(() => null);
@@ -1566,6 +1763,19 @@ async function _runSkillGapFromChat({
   return pipeline;
 }
 
+function _canManageOrgNpcTeam(session) {
+  if (!session) return false;
+  if (session.is_ceo_principal || session.tier === 'ceo') return true;
+  const role = String(session.team_role || '').toLowerCase();
+  return role === 'owner' || role === 'admin' || role === 'ceo';
+}
+
+function _hasOrgNpcTeamAccess(session) {
+  if (!session?.org_id) return false;
+  if (_canManageOrgNpcTeam(session)) return true;
+  return session.tier === 'team' || session.tier === 'ceo';
+}
+
 async function _executePlayerChatSkillFollowup({
   ws,
   npcName,
@@ -1577,19 +1787,31 @@ async function _executePlayerChatSkillFollowup({
   meshContext = null,
   gapAlreadyHandled = false,
 }) {
-  if (!visitorToolGate?.canUseRealWork) return;
-
-  const assistantKey = String(visitorCtx?.assistant?.npc_key || '').toLowerCase();
-  const isAssistant = assistantKey && assistantKey === String(npcName || '').toLowerCase();
-  const approvedMap = _approvedSkillScripts();
-
+  let extraSkills = [];
+  if (visitorCtx?.identityId) {
+    try {
+      extraSkills = await userIdentity.getNpcTeamMemberExtraSkills(
+        visitorCtx.identityId,
+        visitorCtx.orgId || null,
+        npcName,
+      );
+    } catch (_) {}
+  }
   const plan = playerChatSkills.planSkillExecution({
     npcName,
     message,
     responseText,
-    isAssistant,
+    isAssistant: String(visitorCtx?.assistant?.npc_key || '').toLowerCase()
+      === String(npcName || '').toLowerCase(),
     canUseRealWork: visitorToolGate.canUseRealWork,
+    extraSkills,
   });
+
+  if (!visitorToolGate?.canUseRealWork && !plan?.skill?.startsWith('crm-')) return;
+
+  const assistantKey = String(visitorCtx?.assistant?.npc_key || '').toLowerCase();
+  const isAssistant = assistantKey && assistantKey === String(npcName || '').toLowerCase();
+  const approvedMap = _approvedSkillScripts();
 
   const gapCtx = meshContext || await _buildMeshContextForAdvice().catch(() => ({}));
 
@@ -1647,10 +1869,36 @@ async function _executePlayerChatSkillFollowup({
   }
 
   try {
-    const result = await runNpcSkill(npcName, plan.skill, plan.params || {});
-    const output = typeof result?.output === 'string'
-      ? result.output
-      : (result?.ok === false ? (result.error || 'Skill failed') : JSON.stringify(result?.output ?? result ?? '').slice(0, 1500));
+    const skillParams = { ...(plan.params || {}) };
+    if (/^crm-/.test(String(plan.skill || '')) && visitorCtx) {
+      skillParams.profile = {
+        ...(skillParams.profile || {}),
+        ...(visitorCtx.displayName ? { name: visitorCtx.displayName } : {}),
+        ...(visitorCtx.workPosition?.title ? { title: visitorCtx.workPosition.title } : {}),
+      };
+      if (visitorCtx.displayName) skillParams.displayName = visitorCtx.displayName;
+      if (visitorCtx.workPosition) skillParams.workPosition = visitorCtx.workPosition;
+      if (visitorCtx.orgSlug) skillParams.orgSlug = visitorCtx.orgSlug;
+      if (visitorCtx.identityId) skillParams.identityId = visitorCtx.identityId;
+      if (sessionId) skillParams.sessionId = sessionId;
+      skillParams.task = skillParams.task || message;
+      skillParams.inviterName = visitorCtx.displayName || npcName;
+    }
+
+    const result = await runNpcSkill(npcName, plan.skill, skillParams, { sessionId });
+    const data = result?.data && typeof result.data === 'object' ? result.data : null;
+    const chatActions = require('./src/denizen-crm-chat-actions');
+    const autoOpen = chatActions.shouldAutoOpenCrm(message);
+    const crmActions = Array.isArray(data?.crm_actions)
+      ? chatActions.normalizeCrmActions(data.crm_actions, { autoOpen })
+      : null;
+    const output = data?.summary
+      || (typeof result?.output === 'string'
+        ? result.output
+        : (result?.ok === false ? (result.error || 'Skill failed') : JSON.stringify(result?.output ?? result ?? '').slice(0, 1500)));
+    const actions = crmActions
+      ? crmActions.map((a) => ({ action: 'open_crm', ...a }))
+      : [];
 
     if (!gapAlreadyHandled && skillGapOrchestrator.shouldOrchestrate({
       message,
@@ -1674,7 +1922,9 @@ async function _executePlayerChatSkillFollowup({
         npcName,
         text: String(output || 'Done.').slice(0, 2000),
         delegation: null,
-        actions: [],
+        actions,
+        crm_actions: crmActions,
+        crm_auto_open: autoOpen,
         skill_result: { skill: plan.skill, ok: result?.ok !== false },
       }));
     }
@@ -1711,7 +1961,7 @@ function _denyVisitorRealTools(ws, npcName) {
     ws.send(JSON.stringify({
       type: 'player_chat_response',
       npcName,
-      text: 'That needs team access — explore the demo with chat and the office tour.',
+      text: 'Demo mode — chat and the office tour work here, but CRM writes (contacts, deals, setup) need team access. Ask me for CRM setup status and I\'ll guide you with links.',
       delegation: null,
       actions: [],
     }));
@@ -1735,14 +1985,20 @@ async function _handleVisitorHandoffPost(req, res) {
   if (!handoffAccess.isDemo && !(body.is_ceo || body.isCeo)) {
     await _verifyVisitorSession(req, fromSessionId, body);
   }
-  if (body.to_ceo ?? body.toCeo) {
+  const toNpcKey = String(body.to_npc ?? body.toNpc ?? '').trim().toLowerCase();
+  const routesToLucy = toNpcKey === 'lucy';
+  const routesToCeo = Boolean((body.to_ceo ?? body.toCeo) || routesToLucy);
+  if (routesToCeo) {
     visitorAccess.assertTeamFeature(handoffAccess, 'to_ceo');
   }
   const target = await denizenVisitor.resolveHandoffTarget({
     toSessionId: body.to_session_id || body.toSessionId,
-    toCeo: body.to_ceo ?? body.toCeo,
+    toCeo: routesToCeo,
     toDisplayName: body.to_display_name ?? body.toDisplayName,
   });
+  if (!(body.is_ceo || body.isCeo) && !target.is_ceo_bridge) {
+    await visitorConnections.assertCanMessage({ fromSessionId, toSessionId: target.session_id });
+  }
   const handoff = await denizenVisitor.sendHandoff({
     fromSessionId,
     toSessionId: target.session_id,
@@ -1753,6 +2009,12 @@ async function _handleVisitorHandoffPost(req, res) {
   });
   res.writeHead(200, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ ok: true, handoff, target }));
+}
+
+function _writeVisitorConnectionError(res, err) {
+  const status = visitorConnections.connectionErrorStatus(err);
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
 }
 
 function _mapResearchPriority(p) {
@@ -2122,125 +2384,158 @@ function buildScreenControlInstruction(playerText) {
 
 async function triggerNpcScreenControl(npcName, playerText, broadcast, opts = {}) {
   const sessionId = opts.sessionId || opts.session_id || null;
-  let permissionLevel = opts.permissionLevel || opts.agent_permission_level || null;
-  if (!permissionLevel && sessionId) {
-    permissionLevel = await desktopPermissionBridge.resolvePermissionLevelForSession(sessionId);
-  }
-  if (!permissionLevel) permissionLevel = 'trusted';
-
-  const taskPreview = String(playerText || '').slice(0, 240);
-  const approval = desktopPermissionBridge.requestDesktopApprovalIfNeeded({
-    sessionId,
-    npcName,
-    capability: 'desktop-agent',
-    detail: taskPreview,
-    permissionLevel,
-  });
-
-  if (!approval.pending && !approval.approved) {
-    const deniedMsg = approval.reason === 'permission_off'
-      ? 'Desktop agent is off for this account. Enable it in the Denizen desktop app.'
-      : 'Desktop action was not approved.';
-    broadcast({
-      type: 'npc_skill_result',
-      npcName, skill: 'desktop-agent', ok: false,
-      output: deniedMsg, ts: Date.now(),
-    });
-    return { ok: false, denied: true, reason: approval.reason || 'denied' };
-  }
-
-  if (approval.pending) {
-    broadcast({
-      type: 'desktop_permission_pending',
-      npcName,
-      requestId: approval.requestId,
-      detail: taskPreview,
-      ts: Date.now(),
-    });
-    try {
-      const decision = await desktopPermissionBridge.waitForDesktopApproval(
-        sessionId,
-        approval.requestId,
-      );
-      if (!decision?.approved) {
-        broadcast({
-          type: 'npc_skill_result',
-          npcName, skill: 'desktop-agent', ok: false,
-          output: 'You declined the desktop action.', ts: Date.now(),
-        });
-        return { ok: false, denied: true, reason: 'rejected' };
-      }
-    } catch (err) {
-      broadcast({
-        type: 'npc_skill_result',
-        npcName, skill: 'desktop-agent', ok: false,
-        output: err?.message || 'Permission request timed out.', ts: Date.now(),
-      });
-      return { ok: false, denied: true, reason: 'timeout' };
-    }
-  }
-
   const instruction = buildScreenControlInstruction(playerText);
+  const taskPreview = String(playerText || '').slice(0, 240);
+
   const act = pcActivity.record({
     npc: npcName, kind: 'desktop-agent',
     task: instruction.slice(0, 240),
     mode: 'visible', status: 'started',
   });
   const t0 = Date.now();
-  return desktopAgent.runDesktopTask({ instruction, broadcast, npcName })
-    .then((result) => {
-      const summary = result?.summary || (result?.ok ? 'Done — check your screen.' : result?.error || 'Task failed.');
-      pcActivity.record({
-        id: act.id, npc: npcName, kind: 'desktop-agent',
-        task: act.task, mode: 'visible',
-        status: result?.ok ? 'done' : 'failed',
-        durationMs: Date.now() - t0,
-        detail: String(summary).slice(0, 240),
-      });
-      try { npcBrains.injectSkillResult(npcName, 'desktop-agent', summary); } catch (_) {}
-      broadcast({
-        type: 'npc_skill_result',
-        npcName, skill: 'desktop-agent', ok: !!result?.ok,
-        output: String(summary).slice(0, 200), ts: Date.now(),
-      });
-      if (result?.ok) {
-        broadcast({
-          type: 'npc_report_to_ceo',
-          npcName,
-          text: String(summary).slice(0, 2000),
-          ts: Date.now(),
-        });
-      }
-      return { ok: !!result?.ok, summary, result };
-    })
-    .catch((err) => {
-      pcActivity.record({
-        id: act.id, npc: npcName, kind: 'desktop-agent',
-        task: act.task, mode: 'visible', status: 'failed',
-        durationMs: Date.now() - t0,
-        detail: String(err?.message || err).slice(0, 240),
-      });
-      throw err;
+
+  const routed = await stationRouter.routeOrRunHost({
+    sessionId,
+    npcName,
+    kind: 'desktop_agent',
+    skill: 'desktop-agent',
+    instruction,
+    permissionLevel: opts.permissionLevel || opts.agent_permission_level || null,
+    broadcast,
+    waitTimeoutMs: 12 * 60 * 1000,
+    hostRunner: async () => desktopAgent.runDesktopTask({ instruction, broadcast, npcName })
+      .then((result) => {
+        const summary = result?.summary || (result?.ok ? 'Done — check your screen.' : result?.error || 'Task failed.');
+        return { ok: !!result?.ok, summary, result, routed: false };
+      }),
+  });
+
+  const summary = routed.summary || routed.error || 'Task finished.';
+  pcActivity.record({
+    id: act.id, npc: npcName, kind: 'desktop-agent',
+    task: act.task, mode: 'visible',
+    status: routed.ok ? 'done' : 'failed',
+    durationMs: Date.now() - t0,
+    detail: String(summary).slice(0, 240),
+  });
+  try { npcBrains.injectSkillResult(npcName, 'desktop-agent', summary); } catch (_) {}
+  broadcast({
+    type: 'npc_skill_result',
+    npcName, skill: 'desktop-agent', ok: !!routed.ok,
+    output: String(summary).slice(0, 200), ts: Date.now(),
+  });
+  if (routed.ok) {
+    broadcast({
+      type: 'npc_report_to_ceo',
+      npcName,
+      text: String(summary).slice(0, 2000),
+      ts: Date.now(),
     });
+  }
+  return routed;
 }
 
 /** Screenshot + vision describe + optional web research (any NPC). */
-function triggerNpcScreenObserve(npcName, instruction, broadcast) {
-  return screenObserve.runScreenObserve({
+async function triggerNpcScreenObserve(npcName, instruction, broadcast, opts = {}) {
+  const sessionId = opts.sessionId || opts.session_id || null;
+
+  const routed = await stationRouter.routeOrRunHost({
+    sessionId,
     npcName,
+    kind: 'screen_observe',
+    skill: 'screen-observe',
     instruction,
+    permissionLevel: opts.permissionLevel || null,
     broadcast,
-    injectSkillResult: (n, skill, text) => {
-      try { npcBrains.injectSkillResult(n, skill, text); } catch (_) {}
-    },
-    runWebSearch: (n, q) => runNpcWebSearch(n, q, { broadcast, quiet: false, headless: false })
-      .then((r) => ({ ok: r.ok, summary: r.summary })),
-    queueResearch: (topic, priority) => {
-      try {
-        researchQueue.addTopic({ topic, priority: priority || 'normal', requestedBy: npcName });
-      } catch (_) {}
+    waitTimeoutMs: 5 * 60 * 1000,
+    hostRunner: async () => {
+      const result = await screenObserve.runScreenObserve({
+        npcName,
+        instruction,
+        broadcast,
+        injectSkillResult: (n, skill, text) => {
+          try { npcBrains.injectSkillResult(n, skill, text); } catch (_) {}
+        },
+        runWebSearch: (n, q) => runNpcWebSearch(n, q, { broadcast, quiet: false, headless: false })
+          .then((r) => ({ ok: r.ok, summary: r.summary })),
+        queueResearch: (topic, priority) => {
+          try {
+            researchQueue.addTopic({ topic, priority: priority || 'normal', requestedBy: npcName });
+          } catch (_) {}
+        },
+      });
+      return {
+        ok: !!result.ok,
+        summary: result.summary,
+        screenshot: result.screenshot,
+        topics: result.topics,
+        searchQuery: result.searchQuery,
+        routed: false,
+      };
     },
   });
+
+  if (routed.routed && routed.ok) {
+    let summary = routed.summary || 'Screen observed.';
+    const topics = Array.isArray(routed.topics) ? routed.topics.filter(Boolean).slice(0, 3) : [];
+    const searchQuery = String(routed.searchQuery || '').trim()
+      || (topics[0] ? `${topics[0]} overview` : '');
+
+    if (screenObserve.autoResearchEnabled() && searchQuery) {
+      try {
+        const wr = await webResearch.research(searchQuery, { count: 4, read: 1 });
+        if (wr.results.length) {
+          summary += `\n\nWeb research for "${searchQuery}":\n${webResearch.formatForNpc(wr).slice(0, 1500)}`;
+        }
+      } catch (_) {}
+    }
+
+    try { npcBrains.injectSkillResult(npcName, 'screen-observe', summary); } catch (_) {}
+    broadcast({
+      type: 'npc_skill_result',
+      npcName,
+      skill: 'screen-observe',
+      ok: true,
+      output: summary.slice(0, 300),
+      screenshot: routed.screenshot || null,
+      ts: Date.now(),
+    });
+    broadcast({
+      type: 'npc_report_to_ceo',
+      npcName,
+      text: summary.slice(0, 2000),
+      ts: Date.now(),
+    });
+    return {
+      ok: true,
+      summary,
+      screenshot: routed.screenshot || null,
+      topics,
+      searchQuery: searchQuery || null,
+    };
+  }
+
+  if (routed.routed) {
+    const msg = routed.summary || routed.error || 'Could not read the screen.';
+    try { npcBrains.injectSkillResult(npcName, 'screen-observe', msg); } catch (_) {}
+    broadcast({
+      type: 'npc_skill_result',
+      npcName,
+      skill: 'screen-observe',
+      ok: false,
+      output: msg,
+      ts: Date.now(),
+    });
+    return { ok: false, summary: msg, screenshot: null };
+  }
+
+  return {
+    ok: !!routed.ok,
+    summary: routed.summary,
+    screenshot: routed.screenshot || null,
+    topics: routed.topics || [],
+    searchQuery: routed.searchQuery || null,
+  };
 }
 
 const jelly = createJelly({
@@ -2275,11 +2570,63 @@ console.log(`[${JELLY.logTag}] ${jelly.listSkills().length} skills loaded — ${
  * Run a Jelly skill on behalf of an NPC. Fires async; result is injected
  * back into the NPC's next think() cycle via npcBrains.injectSkillResult().
  */
-async function runNpcSkill(npcName, skill, skillParams = {}) {
-  const broadcast = (m) => {
+async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
+  const broadcast = opts.broadcast || ((m) => {
     const raw = JSON.stringify(m);
     (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
-  };
+  });
+  const sessionId = opts.sessionId || opts.session_id || null;
+  const normalized = String(skill || '').trim().toLowerCase();
+  const stationBridge = require('./src/denizen-station-skill-bridge');
+  const stationRoute = sessionId
+    ? stationBridge.resolveStationRoute(normalized, skillParams, {
+      fallbackMessage: skillParams.task || skillParams.message || '',
+    })
+    : null;
+  if (stationRoute && sessionId) {
+    const { kind, instruction, payload } = stationRoute;
+    log.info(JELLY.logTag, `${npcName} → station:${kind} (${normalized}) ${String(instruction).slice(0, 120)}`);
+    const routed = await stationRouter.routeOrRunHost({
+      sessionId,
+      npcName,
+      kind,
+      skill: stationRoute.skill || normalized,
+      instruction: String(instruction || '').slice(0, 4000),
+      payload: payload || {},
+      broadcast,
+      waitTimeoutMs: 12 * 60 * 1000,
+      hostRunner: async () => {
+        if (kind === 'desktop_agent') {
+          const result = await desktopAgent.runDesktopTask({
+            instruction,
+            broadcast,
+            npcName,
+          });
+          const summary = result?.summary || (result?.ok ? 'Done.' : result?.error || 'Task failed.');
+          return { ok: !!result?.ok, summary, result, routed: false };
+        }
+        if (kind === 'screen_observe') {
+          return triggerNpcScreenObserve(npcName, instruction, broadcast, { sessionId });
+        }
+        return {
+          ok: false,
+          summary: 'No paired Denizen Desktop station — complete setup wizard on your computer.',
+          routed: false,
+        };
+      },
+    });
+    const summary = routed.summary || routed.error || (routed.ok ? 'Done.' : 'Station task failed.');
+    try { npcBrains.injectSkillResult(npcName, normalized, summary); } catch (_) {}
+    broadcast({
+      type: 'npc_skill_result',
+      npcName,
+      skill: normalized,
+      ok: !!routed.ok,
+      output: String(summary).slice(0, 2000),
+      ts: Date.now(),
+    });
+    return { ok: !!routed.ok, output: summary, routed: !!routed.routed };
+  }
   log.info(JELLY.logTag, `${npcName} → ${skill} ${JSON.stringify(skillParams)}`);
   return jelly.runSkill(npcName, skill, skillParams, { broadcast });
 }
@@ -2630,6 +2977,13 @@ const server = http.createServer((req, res) => {
   // --- Security: check every request for suspicious patterns ---
   securityMonitor.checkHttpRequest(req);
 
+  const inviteMatch = urlPath.match(/^\/(?:invite|join)\/([A-Za-z0-9_-]+)\/?$/);
+  if (inviteMatch && req.method === 'GET') {
+    res.writeHead(302, { Location: `/?join=${encodeURIComponent(inviteMatch[1])}` });
+    res.end();
+    return;
+  }
+
   if (urlPath === '/api/visitor/ping' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true, ts: Date.now() }));
@@ -2682,6 +3036,10 @@ const server = http.createServer((req, res) => {
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
+    return;
+  }
+
+  if (_handleVisitorAuthRoutes(req, res, urlPath)) {
     return;
   }
 
@@ -4528,7 +4886,9 @@ const server = http.createServer((req, res) => {
         const raw = JSON.stringify(m);
         (agentWss ? agentWss.clients : new Set()).forEach((c) => { if (c.readyState === 1) c.send(raw); });
       };
-      triggerNpcScreenObserve(npcName, instruction, broadcast)
+      triggerNpcScreenObserve(npcName, instruction, broadcast, {
+        sessionId: payload.session_id || payload.sessionId || null,
+      })
         .then((r) => {
           res.writeHead(r.ok ? 200 : 500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(r));
@@ -5519,107 +5879,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (urlPath === '/api/visitor/auth/register-demo' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const sessionId = body.session_id || body.sessionId;
-      const sessionToken = sessionAuth.extractSessionAuth(req, body);
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const result = await demoAuth.registerDemoAccount({
-        sessionId,
-        sessionToken,
-        username: body.username,
-        password: body.password,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const status = demoAuth.demoAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/login-demo' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const result = await demoAuth.loginDemoAccount({
-        username: body.username,
-        password: body.password,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const status = demoAuth.demoAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/create-team' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const result = await teamAuth.createTeam({
-        teamName: body.team_name ?? body.teamName,
-        username: body.username,
-        email: body.email,
-        password: body.password,
-        displayName: body.display_name ?? body.displayName,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const status = teamAuth.teamAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/register' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const result = await teamAuth.registerTeamAccount({
-        email: body.email,
-        displayName: body.display_name ?? body.displayName,
-        username: body.username,
-        password: body.password,
-        teamCode: body.team_code ?? body.teamCode,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const status = teamAuth.teamAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/login' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const result = await teamAuth.loginTeamAccount({
-        email: body.email,
-        username: body.username,
-        password: body.password,
-        teamCode: body.team_code ?? body.teamCode,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const status = teamAuth.teamAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
   if (urlPath === '/api/visitor/session' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 64 * 1024);
@@ -5809,6 +6068,119 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/desktop-downloads' && req.method === 'GET') {
+    const desktopDownloads = require('./src/denizen-desktop-downloads.js');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      windows: desktopDownloads.WINDOWS_DESKTOP_URL,
+      mac: desktopDownloads.MACOS_DESKTOP_URL,
+      macos: desktopDownloads.MACOS_DESKTOP_URL,
+      linux: desktopDownloads.LINUX_DESKTOP_URL,
+      download_page: '/desktop/download.html',
+    }));
+    return;
+  }
+
+  if (urlPath === '/api/visitor/team/invite-link' && req.method === 'GET') {
+    (async () => {
+      const teamInviteLinks = require('./src/denizen-team-invite-links.js');
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _verifyVisitorSession(req, sessionId, {});
+      if (access.tier === 'demo' || access.isDemo) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team invite links require a team account' }));
+        return;
+      }
+      const org = access.org || null;
+      if (!org?.id) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Organization not found for session' }));
+        return;
+      }
+      const account = await teamAuth.getTeamAccountForSession(sessionId).catch(() => null);
+      const inviterName = account?.display_name || access.session?.display_name || 'Teammate';
+      const payload = await teamInviteLinks.buildInvitePayloadForOrg(org, { inviterName });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(payload));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/team/invite' && req.method === 'POST') {
+    (async () => {
+      const { inviteTeamMember } = require('./src/denizen-crm-team-invite.js');
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _verifyVisitorSession(req, sessionId, body);
+      if (access.tier === 'demo' || access.isDemo) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team invites require a team account' }));
+        return;
+      }
+      const org = access.org || null;
+      if (!org?.id) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Organization not found for session' }));
+        return;
+      }
+      const principal = await teamAuth.resolveCeoPrincipalForSession(sessionId, { access });
+      const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+        isCeoPrincipal: !!principal?.ceo,
+      });
+      if (!approval.allowed) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Only team owners and admins can send invites' }));
+        return;
+      }
+      const account = await teamAuth.getTeamAccountForSession(sessionId).catch(() => null);
+      const inviterName = account?.display_name || access.session?.display_name || 'Teammate';
+      const result = await inviteTeamMember(
+        org.id,
+        access.orgSlug || org.slug || null,
+        {
+          email: body.email,
+          displayName: body.display_name || body.displayName,
+          platform: invitePlatform.normalizeInvitePlatform(body.platform || 'windows'),
+        },
+        inviterName,
+      );
+      if (!result.ok) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/settings' && req.method === 'GET') {
     (async () => {
       const u = new URL(req.url, 'http://localhost');
@@ -5862,6 +6234,105 @@ const server = http.createServer((req, res) => {
       }
       const status = denizenVisitor.visitorErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position/suggestions' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, suggestions: userPosition.POSITION_SUGGESTIONS }));
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const identity = await userIdentity.getIdentityBySession(sessionId);
+      const position = userPosition.toClientPosition(userPosition.getPositionFromIdentity(identity));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, position, suggestions: userPosition.POSITION_SUGGESTIONS }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position/resolve' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 8 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const title = body.title || body.position_title || body.positionTitle;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      if (!userPosition.normalizeTitle(title)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'title required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const profile = await userPosition.resolvePositionProfile(title, { useLlm: body.use_llm !== false });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, position: userPosition.toClientPosition(profile) }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const title = body.title || body.position_title || body.positionTitle;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      if (!userPosition.normalizeTitle(title)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'title required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const identity = await userIdentity.getIdentityBySession(sessionId);
+      if (!identity?.id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'This session is not linked to a user profile yet' }));
+        return;
+      }
+      const shouldResolve = body.resolve !== false;
+      const position = await userPosition.saveIdentityPosition(identity.id, {
+        title,
+        resolve: shouldResolve,
+        profile: body.profile || null,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, position: userPosition.toClientPosition(position) }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
     return;
@@ -5960,14 +6431,17 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ ok: false, error: 'Profile required' }));
           return;
         }
-        const soul = await userIdentity.getNpcTeamMemberSoulView(identityId, npcKey);
+        const soul = await userIdentity.getNpcTeamMemberSoulView(identityId, npcKey, session.org_id || null);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, soul }));
         return;
       }
       const team = identityId ? await userIdentity.getNpcTeam(identityId) : null;
+      const orgTeam = session.org_id && _hasOrgNpcTeamAccess(session)
+        ? await userIdentity.orgNpcTeam.getOrgTeam(session.org_id).catch(() => null)
+        : null;
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, team: team || null }));
+      res.end(JSON.stringify({ ok: true, team: team || null, org_team: orgTeam, can_manage_org: _canManageOrgNpcTeam(session) }));
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
@@ -6006,7 +6480,7 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ ok: false, error: 'npc_key required for soul view' }));
           return;
         }
-        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, soulKey);
+        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, soulKey, session.org_id || null);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, soul }));
         return;
@@ -6071,7 +6545,7 @@ const server = http.createServer((req, res) => {
         return;
       }
       if (body.action === 'soul' || body.soul === true) {
-        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey);
+        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey, session.org_id || null);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, soul }));
         return;
@@ -6093,6 +6567,9 @@ const server = http.createServer((req, res) => {
           focus: body.focus,
           instructions: body.instructions,
           job: body.job,
+          soulSnippet: body.soul_snippet ?? body.soulSnippet,
+          personality: body.personality,
+          extraSkills: body.extra_skills ?? body.extraSkills,
           sortOrder: body.sort_order ?? body.sortOrder,
           settings: body.settings,
         });
@@ -6156,9 +6633,112 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ ok: false, error: 'Profile required' }));
         return;
       }
-      const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey);
+      const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey, session.org_id || null);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, soul }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/org-npc-team' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session?.org_id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Org membership required' }));
+        return;
+      }
+      if (!_hasOrgNpcTeamAccess(session)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team tier required for org NPC defaults' }));
+        return;
+      }
+      const orgTeam = await userIdentity.orgNpcTeam.getOrgTeam(session.org_id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        org_team: orgTeam,
+        can_manage: _canManageOrgNpcTeam(session),
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/org-npc-team' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 96 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session?.org_id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Org membership required' }));
+        return;
+      }
+      if (!_canManageOrgNpcTeam(session)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Owner or admin required to edit org NPC defaults' }));
+        return;
+      }
+      if (body.action === 'member') {
+        const npcKey = body.npc_key || body.npcKey;
+        if (!npcKey) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'npc_key required' }));
+          return;
+        }
+        if (body.remove === true || body.active === false) {
+          await userIdentity.orgNpcTeam.deactivateOrgMember(session.org_id, npcKey);
+        } else {
+          await userIdentity.orgNpcTeam.upsertOrgMember(session.org_id, {
+            npcKey,
+            displayName: body.display_name ?? body.displayName,
+            role: body.role,
+            focus: body.focus,
+            instructions: body.instructions,
+            job: body.job,
+            soulSnippet: body.soul_snippet ?? body.soulSnippet,
+            personality: body.personality,
+            extraSkills: body.extra_skills ?? body.extraSkills,
+            sortOrder: body.sort_order ?? body.sortOrder,
+            settings: body.settings,
+          });
+        }
+      } else {
+        await userIdentity.orgNpcTeam.updateOrgTemplate(session.org_id, {
+          name: body.name,
+          purpose: body.purpose,
+          settings: body.settings,
+        });
+      }
+      const orgTeam = await userIdentity.orgNpcTeam.getOrgTeam(session.org_id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, org_team: orgTeam }));
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
@@ -6343,6 +6923,32 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/assistant' && req.method === 'DELETE') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024).catch(() => ({}));
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = body.session_id || body.sessionId
+        || u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const result = await denizenVisitor.releaseAssistant(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/projects' && req.method === 'GET') {
     (async () => {
       const u = new URL(req.url, 'http://localhost');
@@ -6450,6 +7056,93 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/connections' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const data = await visitorConnections.listConnections(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...data }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/connections/request' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId || body.from_session_id || body.fromSessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const connection = await visitorConnections.requestConnection({
+        fromSessionId: sessionId,
+        targetEmail: body.target_email || body.targetEmail || body.email,
+        targetSessionId: body.target_session_id || body.targetSessionId,
+        message: body.message,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, connection }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/connections/respond' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId || !(body.connection_id || body.connectionId)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and connection_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const connection = await visitorConnections.respondConnection({
+        sessionId,
+        connectionId: body.connection_id || body.connectionId,
+        action: body.action,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, connection }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/office-bus' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 64 * 1024);
@@ -6468,7 +7161,7 @@ const server = http.createServer((req, res) => {
         intent: body.intent || 'sync',
         fromNpc: body.from_npc || body.fromNpc,
         metadata: body.metadata,
-      }, { denizenVisitor, userIdentity, listOnlineSessionIds });
+      }, { denizenVisitor, userIdentity, visitorConnections, listOnlineSessionIds });
       const targetSid = busMsg.to_session_id;
       if (targetSid) {
         const clients = _agentClients();
@@ -6483,6 +7176,9 @@ const server = http.createServer((req, res) => {
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
       }
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
@@ -6568,6 +7264,10 @@ const server = http.createServer((req, res) => {
         _writeVisitorAccessError(res, err);
         return;
       }
+      if (err instanceof visitorConnections.ConnectionError) {
+        _writeVisitorConnectionError(res, err);
+        return;
+      }
       const status = denizenVisitor.visitorErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
@@ -6579,6 +7279,10 @@ const server = http.createServer((req, res) => {
     _handleVisitorHandoffPost(req, res).catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         _writeVisitorAccessError(res, err);
+        return;
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        _writeVisitorConnectionError(res, err);
         return;
       }
       const status = denizenVisitor.visitorErrorStatus(err);
@@ -7411,6 +8115,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/voice/health' && req.method === 'GET') {
+    const tts = elevenLabs.status();
+    const stt = _resolveSttConfig();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      voice_call: true,
+      streaming_llm: true,
+      sentence_tts: true,
+      hands_free_vad: true,
+      barge_in: true,
+      tts: { configured: !!tts.configured, source: tts.source || null },
+      stt: { configured: !!stt.configured, model: stt.model || null },
+    }));
+    return;
+  }
+
   // --- STT health (server-side fallback transcription capability) ---
   // Client uses this when browser SpeechRecognition is missing (Brave/Simple Browser).
   if (urlPath === '/api/stt/health' && req.method === 'GET') {
@@ -8032,6 +8753,19 @@ agentWss.on('connection', (ws) => {
             }
           })
           .catch((err) => console.warn('[Office] visitor_register:', err?.message || err));
+      } else if (msg.type === 'player_chat_cancel') {
+        const turnId = typeof msg.turn_id === 'string' ? msg.turn_id.trim() : '';
+        if (turnId && ws._activePlayerTurnId === turnId) {
+          ws._activePlayerTurnId = null;
+        }
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({
+            type: 'player_chat_cancelled',
+            turn_id: turnId || null,
+            npcName: typeof msg.npcName === 'string' ? msg.npcName : null,
+            cancelled: true,
+          }));
+        }
       } else if (msg.type === 'player_chat') {
         // CEO (player) is talking directly to an NPC
         let npcName = msg.npcName;
@@ -8062,6 +8796,26 @@ agentWss.on('connection', (ws) => {
           return;
         }
         (async () => {
+        const turnId = typeof msg.turn_id === 'string' && msg.turn_id.trim()
+          ? msg.turn_id.trim()
+          : `turn_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        ws._activePlayerTurnId = turnId;
+        const isTurnActive = () => ws._activePlayerTurnId === turnId;
+        const sendTurnMessage = (payload) => {
+          if (ws.readyState !== 1) return false;
+          if (payload?.type === 'voice_chat_token'
+            || payload?.type === 'voice_chat_sentence'
+            || payload?.type === 'voice_chat_done'
+            || payload?.type === 'voice_chat_filler'
+            || payload?.type === 'player_chat_response'
+            || payload?.type === 'player_chat_ack') {
+            if (!isTurnActive()) return false;
+            ws.send(JSON.stringify({ ...payload, turn_id: turnId }));
+            return true;
+          }
+          ws.send(JSON.stringify(payload));
+          return true;
+        };
         const rawPlayerText = msg.text.trim();
         const originalNpc = npcName;
         npcName = resolveStaffIntentNpc(rawPlayerText, npcName);
@@ -8304,7 +9058,7 @@ agentWss.on('connection', (ws) => {
               actions: [],
             }));
           }
-          triggerNpcScreenObserve('Lucy', `The CEO said: "${playerText}". Read Lucy's browser window and summarize the document in plain English.`, _broadcast)
+          triggerNpcScreenObserve('Lucy', `The CEO said: "${playerText}". Read Lucy's browser window and summarize the document in plain English.`, _broadcast, { sessionId: msg.session_id || null })
             .then((r) => {
               if (r?.summary) {
                 _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: 'Lucy', text: r.summary.slice(0, 2000), ts: Date.now() });
@@ -8449,7 +9203,9 @@ agentWss.on('connection', (ws) => {
             mode: 'visible', status: 'started',
           });
           const t0 = Date.now();
-          triggerNpcScreenObserve(npcName, observeInstruction, _broadcast)
+          triggerNpcScreenObserve(npcName, observeInstruction, _broadcast, {
+            sessionId: msg.session_id || null,
+          })
             .then((result) => {
               if (result.summary && ws.readyState === 1) {
                 ws.send(JSON.stringify({
@@ -8524,11 +9280,14 @@ agentWss.on('connection', (ws) => {
             mode: 'visible', status: 'started',
           });
           const dtChatStart = Date.now();
-          desktopAgent.runDesktopTask({ instruction: msg.text, broadcast: _broadcast })
+          triggerNpcScreenControl('Lucy', msg.text, _broadcast, {
+            sessionId: msg.session_id || null,
+          })
             .then((result) => {
               pcActivity.record({
                 id: dtChatActivity.id, npc: 'Lucy', kind: 'desktop-agent',
-                task: dtChatActivity.task, mode: 'visible', status: 'done',
+                task: dtChatActivity.task, mode: 'visible',
+                status: result?.ok ? 'done' : 'failed',
                 durationMs: Date.now() - dtChatStart,
                 detail: result && typeof result === 'object'
                   ? String(result.summary || result.note || '').slice(0, 240) || null
@@ -8570,7 +9329,9 @@ agentWss.on('connection', (ws) => {
               return {
                 sessionId: session.id,
                 identityId,
+                orgId: session.org_id || null,
                 displayName: identity?.display_name || session.display_name || 'Guest',
+                workPosition: userPosition.getPositionFromIdentity(identity),
                 assistant,
                 projects,
                 pendingHandoffs,
@@ -8604,7 +9365,9 @@ agentWss.on('connection', (ws) => {
             ? {
               sessionId: visitorCtx.sessionId,
               identityId: visitorCtx.identityId,
+              orgId: visitorCtx.orgId || null,
               displayName: visitorCtx.displayName,
+              workPosition: visitorCtx.workPosition || null,
               assistant: visitorCtx.assistant,
               projects: visitorCtx.projects,
               pendingHandoffs: visitorCtx.pendingHandoffs,
@@ -8646,19 +9409,46 @@ agentWss.on('connection', (ws) => {
             return npcBrains.getResponse(npcName, 'CEO', msg.text, { kind: 'incident-report', description: 'You are reporting a security incident to the CEO. Speak in your own voice — stoic, professional, dry. 2-3 sentences max.' })
               .then(text => ({ text: typeof text === 'string' ? text : String(text || ''), delegation: null, actions: [] }));
           }
-          return npcBrains.getPlayerResponse(npcName, msg.text, playerOpts);
+          const chatOpts = playerOpts && typeof playerOpts === 'object' ? { ...playerOpts } : {};
+          if (msg.voice_mode) {
+            const sentenceStream = createSentenceStream((text, index) => {
+              if (!isTurnActive()) return;
+              voiceBridge.sendWs(ws, { type: 'voice_chat_sentence', npcName, text, index, turn_id: turnId });
+            });
+            chatOpts.stream = {
+              onToken: (token) => {
+                if (!isTurnActive()) return;
+                voiceBridge.sendWs(ws, { type: 'voice_chat_token', npcName, token, turn_id: turnId });
+                sentenceStream.push(token);
+              },
+            };
+            chatOpts._voiceSentenceFlush = () => sentenceStream.flush();
+          }
+          return npcBrains.getPlayerResponse(npcName, msg.text, chatOpts).then((result) => {
+            if (msg.voice_mode && chatOpts._voiceSentenceFlush) {
+              if (!isTurnActive()) return result;
+              chatOpts._voiceSentenceFlush();
+              voiceBridge.sendWs(ws, { type: 'voice_chat_done', npcName, text: result?.text || '', turn_id: turnId });
+            }
+            return result;
+          });
         });
 
+        if (msg.voice_mode && ws.readyState === 1 && !isIncidentReport) {
+          if (isTurnActive()) voiceBridge.emitVoiceFiller(ws, npcName, { turn_id: turnId });
+        }
+
         if (ws.readyState === 1 && !isIncidentReport) {
-          ws.send(JSON.stringify({
+          sendTurnMessage({
             type: 'player_chat_ack',
             npcName,
             queueLen: npcBrains.getQueueDepth?.() ?? 0,
-          }));
+          });
         }
 
         responsePromise
           .then(async (result) => {
+            if (!isTurnActive()) return;
             // Server-side: visitor assistant handoffs to Lucy are persisted here.
             // The client receives the action in player_chat_response for visibility;
             // denizenVisitor.sendHandoff writes denizen_assistant_messages for Lucy/WS delivery.
@@ -8697,6 +9487,7 @@ agentWss.on('connection', (ws) => {
                 text: '(no reply — provider error, see diagnostics)',
                 error: errMsg,
                 delegation: null, actions: [],
+                turn_id: turnId,
               });
               if (ws.readyState === 1) ws.send(reply);
               return;
@@ -8732,6 +9523,7 @@ agentWss.on('connection', (ws) => {
               actions: result.actions || [],
               citations: _visitorCitedResearch?.citations || null,
               task_advice: _taskAdviceForChat || null,
+              turn_id: turnId,
             });
             if (ws.readyState === 1) ws.send(reply);
 
@@ -8793,6 +9585,7 @@ agentWss.on('connection', (ws) => {
             }
           })
           .catch(err => {
+            if (!isTurnActive()) return;
             const errMsg = String(err?.message ?? err);
             console.warn('[PlayerChat] Response error:', errMsg);
             _recordNpcError(`getPlayerResponse(${npcName}): ${errMsg}`);
@@ -8803,6 +9596,7 @@ agentWss.on('connection', (ws) => {
               text: 'Got it, I\'ll look into that.',
               error: errMsg,
               delegation: null, actions: [],
+              turn_id: turnId,
             });
             if (ws.readyState === 1) ws.send(fallback);
           });

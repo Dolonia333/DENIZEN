@@ -497,8 +497,15 @@ function extractScreenControlIntent(text) {
   if (/\bdo it (?:on my screen|for me|on my computer|on my pc)\b/i.test(raw)) {
     return true;
   }
-  if (/\b(?:on my (?:screen|computer|pc|machine)|use my (?:pc|computer|screen)|take over (?:my )?(?:screen|computer|pc)|control my (?:screen|computer|mouse|keyboard))\b/i.test(raw)) {
-    return /\b(?:fill|click|type|enter|complete|apply|submit|help me|navigate|go to|open)\b/i.test(raw);
+  if (/\b(?:on my (?:screen|computer|pc|machine)|use my (?:pc|computer|screen)|take over (?:my )?(?:screen|computer|pc)|control my (?:screen|computer|mouse|keyboard|desktop))\b/i.test(raw)) {
+    return /\b(?:fill|click|type|enter|complete|apply|submit|help me|navigate|go to|open|do|run|install|download|search|find|write|edit|move|scroll|cowork)\b/i.test(raw);
+  }
+  if (/\b(?:cowork|co-work|like claude cowork|control (?:this|my) (?:pc|computer)|use (?:this|my) computer)\b/i.test(raw)) {
+    return true;
+  }
+  if (/\b(?:do (?:this|that|it)|handle (?:this|that)|take care of (?:this|that))\b/i.test(raw)
+    && /\b(?:on my (?:pc|computer|machine|desktop)|for me on (?:my )?(?:pc|computer)|locally)\b/i.test(raw)) {
+    return true;
   }
   return false;
 }

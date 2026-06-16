@@ -192,8 +192,9 @@ class PlayerChat {
       globalThis.DenizenMobileSidebar?.close?.();
     }
     if (next) {
-      if (!window.__DenizenIsTouch) this._input?.focus();
-      else this._input?.blur();
+      // Focus the box on open (touch too) so the soft keyboard pops up. This
+      // runs inside the tap that opened chat, which is what iOS/Android require.
+      try { this._input?.focus({ preventScroll: true }); } catch (_) { this._input?.focus(); }
     } else {
       this._input?.blur();
       this._clearChatMoveKeys();
@@ -219,7 +220,7 @@ class PlayerChat {
    */
   open() {
     if (!this._visible) this.toggle();
-    else if (!window.__DenizenIsTouch) this._input.focus();
+    else { try { this._input?.focus({ preventScroll: true }); } catch (_) { this._input?.focus(); } }
   }
 
   /**
@@ -1476,6 +1477,8 @@ class PlayerChat {
       npcName: targetName,
       npcKey: targetKey,
       text: trimmed,
+      voice_mode: !!(this._voiceMode || globalThis.DenizenVoiceSession?.isActive?.()),
+      turn_id: this._voiceTurnId || null,
       session_id: globalThis.DenizenVisitorSession?.getSessionId?.() || null,
       playerPos: {
         x: Math.round(this.scene?.player?.x || 0),
@@ -1547,7 +1550,38 @@ class PlayerChat {
     if (!error) window.DenizenHaptics?.notify?.();
   }
 
-  handleNpcResponse(npcName, text, delegation, error) {
+  handleVoiceStreamToken(npcName, token) {
+    if (!token) return;
+    if (!this._voiceStreamBuf) this._voiceStreamBuf = { npcName, text: '' };
+    if (this._voiceStreamBuf.npcName !== npcName) {
+      this._voiceStreamBuf = { npcName, text: '' };
+    }
+    this._voiceStreamBuf.text += String(token);
+    this._clearTyping();
+    if (!this._voiceStreamLogId) {
+      this._voiceStreamLogId = `voice-stream-${Date.now()}`;
+      this._addToLog(npcName, this._voiceStreamBuf.text, { streamId: this._voiceStreamLogId });
+    } else {
+      const entry = this._chatLog.find((m) => m.streamId === this._voiceStreamLogId);
+      if (entry) {
+        entry.text = this._voiceStreamBuf.text;
+        if (this._activeThreadId) this._renderLog();
+      }
+    }
+    try { globalThis.DenizenVoiceCallUi?.setMode?.('speaking'); } catch (_) {}
+  }
+
+  handleNpcResponse(npcName, text, delegation, error, extras = {}) {
+    this._voiceStreamLogId = null;
+    this._voiceStreamBuf = null;
+    if (globalThis.DenizenVoiceSession?.isActive?.()) {
+      try { globalThis.DenizenVoiceCallUi?.setMode?.('listening'); } catch (_) {}
+      try {
+        if (!globalThis.DenizenVoiceInput?.isListening?.()) {
+          globalThis.DenizenVoiceInput?.start?.();
+        }
+      } catch (_) {}
+    }
     this._waitingForResponse = false;
     this._clearTyping();
     if (this._responseTimeout) {
@@ -1588,7 +1622,10 @@ class PlayerChat {
       thread.updatedAt = Date.now();
       if (!this._activeThreadId) this._activeThreadId = dmThreadId;
     }
-    this._addToLog(npcName, safeText, dmThreadId ? { threadId: dmThreadId } : {});
+    this._addToLog(npcName, safeText, {
+      ...(dmThreadId ? { threadId: dmThreadId } : {}),
+      crmActions: extras.crmActions || null,
+    });
     globalThis.DenizenPhoneChatUI?.refreshThreads?.();
     if (!error) window.DenizenHaptics?.notify?.();
 
@@ -2039,6 +2076,25 @@ class PlayerChat {
       #player-chat-log .msg.npc .text { color: #f2f2f7; }
       #player-chat-log .msg.system .text { color: #fde68a; font-size: 11px; }
       #player-chat-log .msg.system.error .text { color: #fecaca; }
+      #player-chat-log .crm-action-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      #player-chat-log .crm-action-chip {
+        background: rgba(74, 222, 128, 0.12);
+        border: 1px solid rgba(74, 222, 128, 0.45);
+        color: #bbf7d0;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 11px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      #player-chat-log .crm-action-chip:hover {
+        background: rgba(74, 222, 128, 0.22);
+      }
       #player-chat-log .msg.typing {
         padding: 12px 16px;
         min-width: 52px;
@@ -2471,6 +2527,8 @@ class PlayerChat {
     this._input = panel.querySelector('#player-chat-input');
     this._logEl = panel.querySelector('#player-chat-log');
     this._targetLabel = panel.querySelector('#player-chat-target');
+    globalThis.__DenizenPlayerChat = this;
+    this._bindCrmActionClicks();
     let syncSendButton = () => {};
 
     // Arrow keys drive movement via scene._chatMoveKeys (Phaser can't read keys
@@ -2772,7 +2830,13 @@ class PlayerChat {
   }
 
   _addToLog(sender, text, opts = {}) {
-    const entry = { from: sender, text, time: Date.now() };
+    const entry = {
+      from: sender,
+      text,
+      time: Date.now(),
+      crmActions: Array.isArray(opts.crmActions) ? opts.crmActions : null,
+      streamId: opts.streamId || null,
+    };
     const threadId = opts.threadId || this._activeThreadId;
     if (threadId && this._threads.has(threadId)) {
       const thread = this._threads.get(threadId);
@@ -2832,7 +2896,8 @@ class PlayerChat {
       const label = isGroup
         ? `<span class="sender npc">${esc(this._displayNpcName(m.from))}</span>`
         : '';
-      return `<div class="msg npc">${label}<span class="text">${esc(m.text)}</span></div>`;
+      const chips = this._renderCrmActionChips(m.crmActions, esc);
+      return `<div class="msg npc">${label}<span class="text">${esc(m.text)}</span>${chips}</div>`;
     }).join('');
 
     if (this._typingNpc && this._waitingForResponse) {
@@ -2841,6 +2906,53 @@ class PlayerChat {
 
     log.innerHTML = html;
     log.scrollTop = log.scrollHeight;
+  }
+
+  _renderCrmActionChips(actions, esc) {
+    if (!Array.isArray(actions) || !actions.length) return '';
+    const chips = actions.map((action) => {
+      const label = esc(action?.label || action?.tab || 'Open');
+      const attrs = [
+        `data-action-type="${esc(action?.type || 'open_tab')}"`,
+        action.url ? `data-action-url="${esc(action.url)}"` : '',
+        action.text ? `data-action-text="${esc(action.text)}"` : '',
+        action.href ? `data-action-href="${esc(action.href)}"` : '',
+        action.tab ? `data-action-tab="${esc(action.tab)}"` : '',
+        action.subTab || action.sub ? `data-action-sub="${esc(action.subTab || action.sub)}"` : '',
+        action.npc ? `data-action-npc="${esc(action.npc)}"` : '',
+        action.message ? `data-action-message="${esc(action.message)}"` : '',
+      ].filter(Boolean).join(' ');
+      return `<button type="button" class="crm-action-chip" ${attrs}>${label}</button>`;
+    }).join('');
+    return `<div class="crm-action-chips">${chips}</div>`;
+  }
+
+  _bindCrmActionClicks() {
+    const log = this._logEl;
+    if (!log || log._crmBound) return;
+    log._crmBound = true;
+    log.addEventListener('click', (e) => {
+      const btn = e.target?.closest?.('.crm-action-chip');
+      if (!btn) return;
+      const action = {
+        type: btn.dataset.actionType || 'open_tab',
+        url: btn.dataset.actionUrl || null,
+        text: btn.dataset.actionText || null,
+        href: btn.dataset.actionHref || null,
+        tab: btn.dataset.actionTab || null,
+        subTab: btn.dataset.actionSub || null,
+        npc: btn.dataset.actionNpc || null,
+        message: btn.dataset.actionMessage || null,
+        label: btn.textContent || '',
+      };
+      if (action.type === 'ask_npc' && action.message) {
+        const key = this._nameToKey[String(action.npc || '').toLowerCase()];
+        if (key) this._lastTargetKey = key;
+        void this.sendMessage(action.message);
+        return;
+      }
+      globalThis.DenizenCrmBridge?.executeCrmAction?.(action);
+    });
   }
 
   _updateTargetLabel(name) {
