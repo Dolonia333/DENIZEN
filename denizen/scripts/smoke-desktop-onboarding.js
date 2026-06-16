@@ -80,7 +80,8 @@ async function main() {
 
   const wizard = await j('POST', '/api/desktop/wizard/complete', {
     session_id: sessionId,
-    agent_permission_level: 'ask',
+    desktop_install_id: `smoke-install-${tag}`,
+    agent_permission_level: 'trusted',
     opt_in: true,
     desktop_capabilities: {
       read_files: true,
@@ -92,6 +93,49 @@ async function main() {
     'wizard_complete',
     wizard.status === 200 && wizard.ok && wizard.profile?.setup_wizard_completed,
     wizard,
+  ]);
+
+  const installId = wizard.profile?.desktop_install_id || `smoke-install-${tag}`;
+  const stationTaskQueue = require('../src/denizen-station-task-queue');
+  const enqueued = await stationTaskQueue.enqueueTask({
+    sessionId,
+    installId,
+    kind: 'file_read',
+    instruction: `/tmp/smoke-${tag}.txt`,
+  });
+  results.push([
+    'station_enqueue',
+    !!enqueued?.queued && !!enqueued?.task?.id,
+    { queued: enqueued?.queued, taskId: enqueued?.task?.id },
+  ]);
+
+  const stationClaim = enqueued?.task?.id
+    ? await j(
+      'GET',
+      `/api/desktop/station/tasks/claim?install_id=${encodeURIComponent(installId)}`,
+      null,
+      sessionHeaders(sessionId, { 'X-Desktop-Install-Id': installId }),
+    )
+    : { status: 0, ok: false };
+  results.push([
+    'station_claim',
+    stationClaim.status === 200 && stationClaim.ok && stationClaim.task?.id === enqueued?.task?.id,
+    stationClaim,
+  ]);
+
+  const stationComplete = enqueued?.task?.id
+    ? await j('POST', '/api/desktop/station/tasks/complete', {
+      session_id: sessionId,
+      task_id: enqueued.task.id,
+      install_id: installId,
+      ok: true,
+      summary: `smoke read ${tag}`,
+    }, sessionHeaders(sessionId, { 'X-Desktop-Install-Id': installId }))
+    : { status: 0, ok: false };
+  results.push([
+    'station_complete',
+    stationComplete.status === 200 && stationComplete.ok,
+    stationComplete,
   ]);
 
   const permAsk = await j('POST', '/api/desktop/permission/request', {

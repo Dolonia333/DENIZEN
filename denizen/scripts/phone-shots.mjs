@@ -1,6 +1,7 @@
 // Screenshot tour of the Denizen OS phone (post-boot).
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
+import { loginOwner } from './lib/probe-login.mjs';
 
 const BASE_URL = process.argv[2] || 'http://localhost:8080';
 const OUT = 'reports/phone-ui/shots';
@@ -8,18 +9,10 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch();
 
-async function login(page) {
-  if (await page.locator('#denizen-visitor-name-modal').count() === 0) return;
-  await page.locator('[data-action="path-ceo"]').click({ timeout: 15_000 });
-  await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-  await page.locator('[data-action="submit-ceo-code"]').click({ timeout: 15_000 });
-  await page.waitForFunction(() => !document.getElementById('denizen-visitor-name-modal'), { timeout: 30_000 });
-}
-
 async function shots(name, ctx) {
   const page = await ctx.newPage();
   await page.goto(`${BASE_URL}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-  await login(page);
+  await loginOwner(page);
   await page.waitForTimeout(9000);
   await page.evaluate(() => window.DenizenPhoneUi.open());
   await page.waitForTimeout(1600); // past boot splash

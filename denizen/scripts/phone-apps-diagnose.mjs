@@ -2,6 +2,7 @@
 // Usage: node scripts/phone-apps-diagnose.mjs [baseUrl]
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import { loginOwner } from './lib/probe-login.mjs';
 
 const BASE_URL = process.argv[2] || 'http://localhost:8080';
 const OUT = 'reports/phone-ui/diagnose';
@@ -15,12 +16,7 @@ page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(`[console] ${m.text()}`); });
 
 await page.goto(`${BASE_URL}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-if (await page.locator('#denizen-visitor-name-modal').count()) {
-  await page.locator('[data-action="path-ceo"]').click({ timeout: 15_000 });
-  await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-  await page.locator('[data-action="submit-ceo-code"]').click({ timeout: 15_000 });
-  await page.waitForFunction(() => !document.getElementById('denizen-visitor-name-modal'), { timeout: 30_000 });
-}
+await loginOwner(page);
 await page.waitForTimeout(8000);
 
 // What chips/panels exist at all?

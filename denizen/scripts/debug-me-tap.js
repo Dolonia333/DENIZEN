@@ -27,7 +27,7 @@ async function main() {
     await new Promise((r) => setTimeout(r, 500));
   }
 
-  const browser = await chromium.launch();
+  const { loginOwner } = await import('./lib/probe-login.mjs');
   const ctx = await browser.newContext({
     ...devices['iPhone 13'],
     viewport: { width: 844, height: 390 },
@@ -38,12 +38,7 @@ async function main() {
   await page.goto(`${BASE}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForTimeout(2000);
 
-  if (await page.locator('#denizen-visitor-name-modal').count()) {
-    await page.locator('[data-action="path-ceo"]').tap();
-    await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-    await page.locator('[data-action="submit-ceo-code"]').tap();
-    await page.waitForTimeout(5000);
-  }
+  await loginOwner(page);
 
   await page.waitForSelector('#denizen-mobile-menu-btn', { timeout: 30000 });
 
