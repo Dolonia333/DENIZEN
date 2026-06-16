@@ -1,6 +1,6 @@
 {
   "name": "denizen-desktop",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "private": true,
   "description": "Denizen desktop shell (Electron)",
   "main": "main.js",
@@ -17,6 +17,7 @@
     "build:all": "electron-builder --win --mac --linux"
   },
   "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
     "electron-updater": "^6.3.9"
   },
   "devDependencies": {

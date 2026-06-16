@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld("DenizenDesktop", {
   getMachineProfile: () => ipcRenderer.invoke("get-machine-profile"),
   completeSetupWizard: (opts) => ipcRenderer.invoke("complete-setup-wizard", opts),
   openGame: () => ipcRenderer.invoke("open-game"),
+  openPairingBrowser: () => ipcRenderer.invoke("open-pairing-browser"),
+  getPairingBrowserUrl: () => ipcRenderer.invoke("get-pairing-browser-url"),
   claimPairingToken: (tokenOrOpts) => ipcRenderer.invoke("claim-pairing-token", tokenOrOpts),
   getPairingStatus: () => ipcRenderer.invoke("get-pairing-status"),
   getPendingPermission: () => ipcRenderer.invoke("get-pending-permission"),
@@ -19,6 +21,14 @@ contextBridge.exposeInMainWorld("DenizenDesktop", {
   installUpdate: () => ipcRenderer.invoke("install-update"),
   getUpdateStatus: () => ipcRenderer.invoke("get-update-status"),
   getAppInfo: () => ipcRenderer.invoke("get-app-info"),
+  getSetupState: () => ipcRenderer.invoke("get-setup-state"),
+  saveAgentSettings: (opts) => ipcRenderer.invoke("save-agent-settings", opts),
+  onStationTaskProgress: (callback) => {
+    if (typeof callback !== "function") return () => {};
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on("station-task-progress", handler);
+    return () => ipcRenderer.removeListener("station-task-progress", handler);
+  },
   onUpdateStatus: (callback) => {
     if (typeof callback !== "function") return () => {};
     const handler = (_event, data) => callback(data);

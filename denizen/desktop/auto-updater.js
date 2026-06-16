@@ -90,6 +90,23 @@ function canCheckForUpdates() {
     && fs.existsSync(path.join(process.resourcesPath, "app-update.yml"));
 }
 
+function parseSemverParts(version) {
+  const match = String(version || "").match(/^(\d+)\.(\d+)\.(\d+)/);
+  if (!match) return null;
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function isRemoteVersionNewer(remoteVersion, currentVersion = app.getVersion()) {
+  const remote = parseSemverParts(remoteVersion);
+  const current = parseSemverParts(currentVersion);
+  if (!remote || !current) return false;
+  for (let i = 0; i < 3; i += 1) {
+    if (remote[i] > current[i]) return true;
+    if (remote[i] < current[i]) return false;
+  }
+  return false;
+}
+
 function friendlyUpdateError(err) {
   const raw = err?.message || String(err);
   if (
@@ -137,6 +154,14 @@ function bindAutoUpdaterEvents() {
 
   autoUpdater.on("update-available", (info) => {
     const version = info?.version || null;
+    if (!isRemoteVersionNewer(version)) {
+      logUpdate("skip-older-release", version ? `v${version} <= v${app.getVersion()}` : "(unknown)");
+      emitUpdateStatus("not-available", {
+        version: app.getVersion(),
+        message: "You are on the latest version"
+      });
+      return;
+    }
     logUpdate("update-available", version ? `v${version}` : "");
     emitUpdateStatus("available", {
       version,
@@ -187,8 +212,9 @@ function initAutoUpdater({ mainWindow, channel, onStatusChange } = {}) {
   statusListener = typeof onStatusChange === "function" ? onStatusChange : null;
 
   const resolvedChannel = resolveChannel(channel);
+  autoUpdater.allowDowngrade = false;
   autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.channel = resolvedChannel === "beta" ? "beta" : null;
 
   logUpdate("channel", resolvedChannel);

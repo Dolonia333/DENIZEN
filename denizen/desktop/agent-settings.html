@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Denizen Station Settings</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #020617; color: #e2e8f0; padding: 24px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: #94a3b8; line-height: 1.5; }
+    .cap { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 14px; margin: 8px 0; border: 1px solid #334155; border-radius: 10px; background: #0f172a; }
+    .cap strong { display: block; font-size: 14px; }
+    .cap span { font-size: 12px; color: #94a3b8; }
+    button { border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0;
+      padding: 8px 14px; cursor: pointer; font: inherit; }
+    button.primary { background: #2563eb; border-color: #3b82f6; }
+    .actions { margin-top: 20px; display: flex; gap: 10px; }
+    .status { margin-top: 12px; font-size: 12px; color: #4ade80; min-height: 16px; }
+    select { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Station settings</h1>
+  <p>Update what your Denizen station can do on this computer. Changes sync on save.</p>
+  <div id="caps"></div>
+  <label>Permission level
+    <select id="permission">
+      <option value="ask">Ask each time</option>
+      <option value="trusted">Trusted (fewer prompts)</option>
+      <option value="off">Off</option>
+    </select>
+  </label>
+  <div class="actions">
+    <button type="button" id="save" class="primary">Save</button>
+    <button type="button" id="back">Back to city</button>
+  </div>
+  <div class="status" id="status"></div>
+  <script>
+    const CAPS = [
+      { id: 'read_files', title: 'Understand files', sub: 'Read documents when you ask' },
+      { id: 'write_files', title: 'Create and update', sub: 'Draft and edit files' },
+      { id: 'run_code', title: 'Use local tools', sub: 'Run approved scripts' },
+      { id: 'screen_access', title: 'See your screen', sub: 'Screen observe and desktop agent' },
+      { id: 'contribute_compute', title: 'City Power', sub: 'Background mesh work when idle' },
+    ];
+    const capsEl = document.getElementById('caps');
+    const state = { capabilities: {} };
+    CAPS.forEach((c) => {
+      const row = document.createElement('div');
+      row.className = 'cap';
+      row.innerHTML = `<div><strong>${c.title}</strong><span>${c.sub}</span></div>`;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Off';
+      btn.dataset.cap = c.id;
+      btn.onclick = () => {
+        state.capabilities[c.id] = !state.capabilities[c.id];
+        btn.textContent = state.capabilities[c.id] ? 'On' : 'Off';
+      };
+      row.appendChild(btn);
+      capsEl.appendChild(row);
+    });
+    async function load() {
+      const profile = await window.DenizenDesktop.getNodeProfile();
+      const setup = await window.DenizenDesktop.getSetupState?.() || {};
+      const caps = setup.capabilities || {};
+      CAPS.forEach((c) => {
+        state.capabilities[c.id] = !!caps[c.id];
+        const btn = capsEl.querySelector(`[data-cap="${c.id}"]`);
+        if (btn) btn.textContent = state.capabilities[c.id] ? 'On' : 'Off';
+      });
+      document.getElementById('permission').value = setup.permission || profile?.permission || 'ask';
+    }
+    document.getElementById('save').onclick = async () => {
+      const status = document.getElementById('status');
+      status.textContent = 'Saving…';
+      try {
+        await window.DenizenDesktop.saveAgentSettings({
+          capabilities: state.capabilities,
+          permission: document.getElementById('permission').value,
+          optIn: !!state.capabilities.contribute_compute,
+        });
+        status.textContent = 'Saved — capabilities synced.';
+      } catch (err) {
+        status.textContent = err?.message || 'Save failed';
+        status.style.color = '#fca5a5';
+      }
+    };
+    document.getElementById('back').onclick = () => window.DenizenDesktop.openGame();
+    load().catch(() => {});
+  </script>
+</body>
+</html>

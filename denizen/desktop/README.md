@@ -42,10 +42,14 @@ Output: `desktop/dist-build/Denizen-Setup.exe` (NSIS installer, `appId` `com.dol
 Other targets:
 
 ```bash
-npm run build          # all configured targets for current platform
+npm run build:mac     # Denizen.dmg + Denizen.zip (requires macOS to build)
+npm run build:linux   # Denizen.AppImage
+npm run build:all     # all platforms (where supported)
 ```
 
-Serve the installer from the Denizen web root so the download page can link to `/desktop/dist-build/Denizen-Setup.exe`.
+Published releases: [GitHub Releases](https://github.com/Dolonia333/DENIZEN/releases) — `Denizen-Setup.exe`, `Denizen.dmg`, `Denizen.AppImage`.
+
+Serve the installer from the Denizen web root so the download page can link to `/desktop/download.html` (which points at GitHub latest).
 
 ## Architecture
 
@@ -90,7 +94,10 @@ Context-isolated bridge (`contextBridge.exposeInMainWorld`). All methods return 
 | `version` | — (sync) | npm package version string |
 | `platform` | — (sync) | `process.platform` |
 | `isDesktop` | — (sync) | always `true` |
-| `openAgentSettings()` | `open-agent-settings` | Open OS agent / permission settings |
+| `openAgentSettings()` | `open-agent-settings` | Open station settings (`agent-settings.html`) after wizard |
+| `getSetupState()` | `get-setup-state` | Read local setup state (capabilities, permission) |
+| `saveAgentSettings(opts)` | `save-agent-settings` | Save capabilities + sync to server |
+| `onStationTaskProgress(callback)` | `station-task-progress` (event) | Desktop task progress from station loop |
 | `getNodeProfile()` | `get-node-profile` | Contributor node profile from server |
 | `getMachineProfile()` | `get-machine-profile` | Local CPU/RAM/GPU profile (`node-profiler.js`) |
 | `completeSetupWizard(opts)` | `complete-setup-wizard` | Finish wizard → `POST /api/desktop/wizard/complete`, write setup state |
@@ -115,7 +122,13 @@ Background loop started by `maybeStartWorkerLoop()` after wizard completion:
 2. **Compute bootstrap** — if `optIn` and tokens present, registers via `compute-worker.js` and starts claim/complete polling.
 3. **Permission poll** (every 5s) — `GET /api/desktop/permission/pending`; new requests invoke `onPermissionPending` → `openPermissionPrompt()`.
 
+4. **Station task loop** — `station-task-runner.js` claims `/api/desktop/station/tasks/claim`, runs via `station-agent.js` (local capability enforcement), completes via `/api/desktop/station/tasks/complete`. Progress events emit `station-task-progress` to the game window.
+
 `stopWorkerLoop()` runs on `before-quit`.
+
+### agent-settings.html
+
+Post-wizard **Station settings** (tray or `openAgentSettings`) toggles `read_files`, `write_files`, `run_code`, `screen_access`, `contribute_compute`, and permission level. Save calls `saveAgentSettings` → `POST /api/desktop/capabilities/sync`. Server may return `min_desktop_version`; desktop shows an update-required banner when the app is older.
 
 ### denizen-src.js — dev vs packaged
 
@@ -187,7 +200,7 @@ node scripts/smoke-desktop-release.js      # package.json + workflow + files san
 
 | Script | Checks |
 |--------|--------|
-| `smoke-desktop-onboarding.js` | Demo session, `denizen://pair` token create/claim/replay-403, permission enqueue/respond/clear, wizard complete, capabilities sync, trusted auto-approve |
+| `smoke-desktop-onboarding.js` | Demo session, `denizen://pair` token create/claim/replay-403, permission enqueue/respond/clear, wizard complete, station task claim/complete, capabilities sync, trusted auto-approve |
 | `smoke-desktop-feedback.js` | Feedback POST with session + install metadata |
 | `smoke-desktop-release.js` | `electron-updater` dependency, GitHub Releases provider, all platform jobs, workflow + auto-updater + crash-reporter files; delegates to feedback smoke |
 
@@ -262,6 +275,8 @@ See [docs/COMPUTE_MESH.md](../docs/COMPUTE_MESH.md).
 - `POST /api/desktop/register` — link install
 - `POST /api/desktop/wizard/complete` — finish wizard
 - `POST /api/desktop/capabilities/sync` — heartbeat capabilities
+- `GET /api/desktop/station/tasks/claim` — desktop claims next station task
+- `POST /api/desktop/station/tasks/complete` — desktop reports task result
 - `POST /api/desktop/feedback` — user feedback and optional `crash_log_tail`
 - `POST /api/compute/node/*` — compute mesh (register, claim, complete)
 

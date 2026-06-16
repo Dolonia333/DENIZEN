@@ -37,6 +37,15 @@ async function syncCapabilities(getSetup, desktopApi, onSetupPatch) {
   if (!setup?.completed || !setup.sessionId) return null;
 
   const machine = collectMachineProfile();
+  if (setup.capabilities && typeof setup.capabilities === 'object') {
+    machine.capabilities = {
+      read_files: !!setup.capabilities.read_files,
+      write_files: !!setup.capabilities.write_files,
+      run_code: !!setup.capabilities.run_code,
+      screen_access: !!setup.capabilities.screen_access,
+      contribute_compute: !!setup.capabilities.contribute_compute,
+    };
+  }
   let liveMetrics = null;
   try {
     liveMetrics = await collectLiveMetrics({
@@ -59,6 +68,7 @@ async function syncCapabilities(getSetup, desktopApi, onSetupPatch) {
       agent_permission_level: setup.permission || 'ask',
       opt_in: setup.optIn !== false,
       desktop_install_id: setup.desktopInstallId || null,
+      desktop_capabilities: machine.capabilities || setup.capabilities || {},
       app_version: APP_VERSION,
       platform: process.platform,
       arch: process.arch,
@@ -75,7 +85,23 @@ async function syncCapabilities(getSetup, desktopApi, onSetupPatch) {
       nodeToken: node.endpoint_token,
     });
   }
+  const minVersion = String(data?.min_desktop_version || '').trim();
+  if (minVersion && compareSemver(APP_VERSION, minVersion) < 0) {
+    console.warn(`[denizen-desktop] Update required: ${APP_VERSION} < ${minVersion}`);
+    data.update_required = true;
+  }
   return data;
+}
+
+function compareSemver(a, b) {
+  const pa = String(a || '0').split('.').map((n) => parseInt(n, 10) || 0);
+  const pb = String(b || '0').split('.').map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < 3; i += 1) {
+    const da = pa[i] || 0;
+    const db = pb[i] || 0;
+    if (da !== db) return da < db ? -1 : 1;
+  }
+  return 0;
 }
 
 async function pollPendingPermission(getSetup, desktopApi, onPermissionPending) {
@@ -126,12 +152,15 @@ async function bootstrapComputeWorker(getSetup, desktopApi, onSetupPatch) {
   }
 }
 
-function startWorkerLoop({ getSetup, desktopApi, onPermissionPending, onSetupPatch }) {
+function startWorkerLoop({ getSetup, desktopApi, onPermissionPending, onSetupPatch, onSyncResult }) {
   stopWorkerLoop();
 
   const runSync = () => {
     syncCapabilities(getSetup, desktopApi, onSetupPatch)
-      .then(() => bootstrapComputeWorker(getSetup, desktopApi, onSetupPatch))
+      .then((data) => {
+        if (typeof onSyncResult === 'function') onSyncResult(data);
+        return bootstrapComputeWorker(getSetup, desktopApi, onSetupPatch);
+      })
       .catch((err) => {
         console.warn('[denizen-desktop] capabilities sync failed:', err?.message || err);
       });
@@ -154,6 +183,7 @@ module.exports = {
   startWorkerLoop,
   stopWorkerLoop,
   clearLastPendingId,
+  syncCapabilities,
   SYNC_INTERVAL_MS,
   PERMISSION_POLL_MS,
 };

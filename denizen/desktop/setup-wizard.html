@@ -591,7 +591,7 @@
         <p class="lead">Turn on only what feels useful. These choices set the boundaries; Denizen will still ask before taking a local action.</p>
         <div class="cap-grid">
           <button class="cap-card" type="button" data-cap-toggle="read_files" aria-pressed="false">
-            <span class="cap-icon">RD</span><span class="cap-copy"><strong>Understand files</strong><span>Read documents when you ask</span></span><span class="toggle"></span>
+            <span class="cap-icon">RD</span><span class="cap-copy"><strong>Understand files</strong><span>Read documents on this computer when you ask</span></span><span class="toggle"></span>
           </button>
           <button class="cap-card" type="button" data-cap-toggle="write_files" aria-pressed="false">
             <span class="cap-icon">WR</span><span class="cap-copy"><strong>Create and update</strong><span>Draft, export, and edit files</span></span><span class="toggle"></span>
@@ -600,10 +600,15 @@
             <span class="cap-icon">RUN</span><span class="cap-copy"><strong>Use local tools</strong><span>Run approved scripts and commands</span></span><span class="toggle"></span>
           </button>
           <button class="cap-card" type="button" data-cap-toggle="screen_access" aria-pressed="false">
-            <span class="cap-icon">SEE</span><span class="cap-copy"><strong>See your screen</strong><span>Help with what is open in front of you</span></span><span class="toggle"></span>
+            <span class="cap-icon">SEE</span><span class="cap-copy"><strong>See your screen</strong><span>Agents use this computer's display — not the cloud server</span></span><span class="toggle"></span>
           </button>
         </div>
         <div class="control-note"><strong>You are the authority.</strong> Enabling a skill does not give Denizen silent access. Local actions remain approval-first.</div>
+        <div class="choice-row" style="margin-top:12px">
+          <button class="choice-btn primary-choice" type="button" data-action="cowork-preset">
+            <strong>Enable Cowork mode</strong><span>Screen + files + local tools — like Claude Cowork on this PC</span>
+          </button>
+        </div>
         <div class="os-note" id="os-permission-note" hidden></div>
         <div class="actions">
           <button class="action quiet" data-action="back">Back</button>
@@ -636,7 +641,7 @@
       <section class="step" data-step="pairing">
         <div class="eyebrow">Claim your place</div>
         <h1>Connect your Citizen ID.</h1>
-        <p class="lead">Return to the browser tab where you downloaded Denizen and choose <strong>Link this computer</strong>. This station will recognize the connection and finish automatically.</p>
+        <p class="lead">We opened your browser to Denizen. <strong>Log in to your account</strong> in that tab and your Citizen ID will connect automatically. If nothing opened, open <a href="#" id="pairing-browser-link"><strong id="pairing-browser-url">your Denizen city</strong></a> on this computer.</p>
         <div class="pairing-box">
           <div id="pairing-waiting" class="waiting"><div class="spinner"></div><span>Waiting for your Citizen ID...</span></div>
           <div id="pairing-linked" class="linked-badge" hidden>Citizen ID connected</div>
@@ -671,6 +676,7 @@
     let stepIndex = 0;
     let machine = null;
     let pairingPollTimer = null;
+    let pairingBrowserOpened = false;
     let finishing = false;
 
     const capabilities = {
@@ -766,8 +772,26 @@
       return false;
     }
 
+    async function openPairingBrowserOnce() {
+      if (pairingBrowserOpened) return;
+      pairingBrowserOpened = true;
+      const result = await window.DenizenDesktop?.openPairingBrowser?.().catch(() => null);
+      await refreshPairingBrowserUrl(result);
+    }
+
+    async function refreshPairingBrowserUrl(existing) {
+      const result = existing
+        || await window.DenizenDesktop?.getPairingBrowserUrl?.().catch(() => null);
+      const url = result?.url || window.location.origin + '/?pair_desktop=1';
+      const urlEl = document.getElementById('pairing-browser-url');
+      const linkEl = document.getElementById('pairing-browser-link');
+      if (urlEl) urlEl.textContent = url;
+      if (linkEl) linkEl.href = url;
+    }
+
     async function startPairingFlow() {
       setPairingError('');
+      void openPairingBrowserOnce();
       const autoPairing = parsePairingFromLocation();
       if (autoPairing.token) {
         const claimed = await tryClaimPairing(autoPairing);
@@ -801,7 +825,7 @@
       }
       if (platform === 'win32') {
         note.hidden = false;
-        note.textContent = 'Windows may ask you to approve screen access when Denizen first needs it.';
+        note.innerHTML = 'Windows needs Accessibility permission for mouse/keyboard control. Approve when prompted, or open Privacy settings. <button class="action" type="button" data-action="open-os-settings">Open Settings</button>';
         return;
       }
       note.hidden = true;
@@ -857,6 +881,14 @@
       window.DenizenDesktop?.setDiagnosticsOptIn?.(!!ev.target?.checked);
     });
 
+    function enableCoworkPreset() {
+      capabilities.read_files = true;
+      capabilities.write_files = true;
+      capabilities.run_code = true;
+      capabilities.screen_access = true;
+      ['read_files', 'write_files', 'run_code', 'screen_access'].forEach(renderCapability);
+    }
+
     document.addEventListener('click', (ev) => {
       const capToggle = ev.target?.closest?.('[data-cap-toggle]')?.dataset?.capToggle;
       if (capToggle) {
@@ -879,6 +911,7 @@
       if (action === 'finish') void finishSetup();
       if (action === 'retry-pairing') void startPairingFlow();
       if (action === 'open-os-settings') window.DenizenDesktop?.openOsPermissionSettings?.();
+      if (action === 'cowork-preset') enableCoworkPreset();
       if (action === 'open-game') window.DenizenDesktop?.openGame?.();
       if (action === 'check-updates') void window.DenizenDesktop?.checkForUpdates?.().then(renderUpdateStatus);
       if (action === 'install-update') void window.DenizenDesktop?.installUpdate?.();
@@ -898,7 +931,7 @@
       const installButton = document.getElementById('install-update-button');
       if (!banner || !message) return;
       const status = String(payload?.status || 'idle');
-      if (status === 'idle') {
+      if (status === 'idle' || status === 'error') {
         banner.hidden = true;
         return;
       }

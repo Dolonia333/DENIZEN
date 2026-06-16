@@ -1,83 +1,255 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Download Denizen Desktop</title>
+
   <style>
+
     :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+
     body {
+
       margin: 0;
+
       min-height: 100vh;
+
       display: grid;
+
       place-items: center;
+
       background:
+
         radial-gradient(circle at 18% 10%, rgba(70, 201, 150, 0.13), transparent 28%),
+
         linear-gradient(145deg, #061012, #091518 48%, #071113);
+
       color: #f4f7f5;
+
     }
+
     .card {
+
       width: min(680px, calc(100vw - 32px));
+
       border: 1px solid rgba(180, 210, 201, 0.18);
+
       border-radius: 22px;
+
       padding: 38px;
+
       background: rgba(9, 22, 24, 0.96);
+
       box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+
     }
+
     .eyebrow { color: #7ee3bd; font-size: 11px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+
     h1 { margin: 10px 0 12px; font-size: 38px; letter-spacing: -0.04em; }
+
     p { margin: 0 0 16px; color: #9eaaa5; line-height: 1.6; }
+
     .downloads { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 24px; }
+
     a.btn, button.btn {
+
       display: inline-block;
+
       text-decoration: none;
+
       border: 1px solid rgba(180, 210, 201, 0.18);
+
       background: #142225;
+
       color: #f4f7f5;
+
       border-radius: 10px;
+
       padding: 12px 18px;
+
       font-size: 14px;
+
       cursor: pointer;
+
     }
+
     a.btn.primary { background: #7ee3bd; border-color: #7ee3bd; color: #06120f; font-weight: 800; }
-    button.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    a.btn.recommended { box-shadow: 0 0 0 2px rgba(126, 227, 189, 0.35); }
+
     ol {
+
       margin: 0;
+
       padding-left: 20px;
+
       color: #cbd5d1;
+
       line-height: 1.6;
+
     }
+
     ol li { margin-bottom: 8px; }
+
+    .platform-steps { display: none; margin-top: 8px; }
+
+    .platform-steps.active { display: block; }
+
     .note { font-size: 12px; color: #71817b; margin-top: 20px; }
+
+    .detected { font-size: 12px; color: #7ee3bd; margin-bottom: 8px; }
+
   </style>
+
 </head>
+
 <body>
+
   <div class="card">
+
     <div class="eyebrow">Build your station</div>
+
     <h1>Bring Denizen home.</h1>
+
     <p>
+
       Turn this computer into a Denizen station. Your agents can help with approved local tasks, show their work in the city, and optionally add City Power while your computer is idle.
+
     </p>
+
+
+
+    <div class="detected" id="detected-platform" hidden></div>
+
+
 
     <div class="downloads">
-      <a class="btn primary" href="https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen-Setup.exe">Download for Windows</a>
-      <a class="btn" href="https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.AppImage">Download for Linux</a>
-      <button class="btn" type="button" disabled>macOS - coming soon</button>
+
+      <a class="btn" id="btn-windows" href="https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen-Setup.exe">Download for Windows</a>
+
+      <a class="btn" id="btn-mac" href="https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.dmg">Download for macOS</a>
+
+      <a class="btn" id="btn-linux" href="https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.AppImage">Download for Linux</a>
+
     </div>
 
+
+
     <p>Getting started:</p>
+
     <ol>
-      <li>Download and run <strong>Denizen-Setup.exe</strong> on Windows, or <strong>Denizen.AppImage</strong> on Linux.</li>
-      <li>Launch <strong>Denizen</strong> and enter the city.</li>
-      <li>Choose how this station may help. Denizen remains approval-first.</li>
-      <li>Add City Power now, or leave it off and decide later.</li>
-      <li>Connect your Citizen ID by choosing <strong>Link this computer</strong> in the browser.</li>
-      <li>Enter Denizen. Your station and web account stay connected.</li>
+
+      <li>Get an invite link from your team (or join with a team code at the city login screen).</li>
+
+      <li>Create your account — username, email, and password.</li>
+
+      <li>Download Denizen for your computer using the button above.</li>
+
+      <li>Launch Denizen — it opens your browser to log in and pair this computer automatically.</li>
+
+      <li>Add City Power when you're ready, or leave it off and decide later.</li>
+
     </ol>
 
+
+
+    <div class="platform-steps" id="steps-windows">
+
+      <p><strong>Windows:</strong> run <strong>Denizen-Setup.exe</strong> from Downloads. If SmartScreen warns you, choose <strong>More info → Run anyway</strong>.</p>
+
+    </div>
+
+    <div class="platform-steps" id="steps-mac">
+
+      <p><strong>macOS:</strong> open <strong>Denizen.dmg</strong>, drag Denizen into Applications, then open it from Applications. If macOS says the app is from an unidentified developer, open <strong>System Settings → Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.</p>
+
+    </div>
+
+    <div class="platform-steps" id="steps-linux">
+
+      <p><strong>Linux:</strong> <code>chmod +x Denizen.AppImage</code> then run the AppImage.</p>
+
+    </div>
+
+
+
     <p class="note">
-      Windows 10 or newer, or a modern 64-bit Linux distribution. Future updates download inside Denizen and install when the app restarts. City Power is optional and can be paused at any time.
+
+      Windows 10+, macOS 11+, or a modern 64-bit Linux distribution. Future updates download inside Denizen and install when the app restarts. City Power is optional and can be paused at any time.
+
     </p>
+
   </div>
+
+  <script>
+
+    (function () {
+
+      const ua = navigator.userAgent || '';
+
+      const platform = navigator.platform || '';
+
+      let os = 'other';
+
+      if (/Win/i.test(platform) || /Windows/i.test(ua)) os = 'windows';
+
+      else if (/Mac/i.test(platform) || /Macintosh/i.test(ua)) os = 'mac';
+
+      else if (/Linux/i.test(platform) || /Linux/i.test(ua)) os = 'linux';
+
+
+
+      const labels = { windows: 'Windows', mac: 'macOS', linux: 'Linux' };
+
+      const detected = document.getElementById('detected-platform');
+
+      const primaryId = os === 'mac' ? 'btn-mac' : os === 'linux' ? 'btn-linux' : 'btn-windows';
+
+
+
+      ['btn-windows', 'btn-mac', 'btn-linux'].forEach((id) => {
+
+        const el = document.getElementById(id);
+
+        if (!el) return;
+
+        el.classList.toggle('primary', id === primaryId);
+
+        el.classList.toggle('recommended', id === primaryId);
+
+      });
+
+
+
+      if (labels[os]) {
+
+        detected.hidden = false;
+
+        detected.textContent = 'Detected ' + labels[os] + ' — highlighted button is the right download for this computer.';
+
+      }
+
+
+
+      const stepsId = os === 'mac' ? 'steps-mac' : os === 'linux' ? 'steps-linux' : 'steps-windows';
+
+      const steps = document.getElementById(stepsId);
+
+      if (steps) steps.classList.add('active');
+
+    })();
+
+  </script>
+
 </body>
+
 </html>
+
+
