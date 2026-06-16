@@ -1,6 +1,7 @@
 'use strict';
 
 const desktopPermissions = require('./denizen-desktop-permissions');
+const stationCapabilities = require('./denizen-station-capabilities');
 
 const VALID_LEVELS = new Set(['off', 'ask', 'trusted']);
 
@@ -27,14 +28,45 @@ async function resolvePermissionLevelForSession(sessionId) {
  * Enqueue a desktop approval prompt when permission level is 'ask'.
  * @returns {{ pending: boolean, approved?: boolean, requestId?: string, reason?: string }}
  */
+async function resolveProfileForSession(sessionId) {
+  if (!sessionId) return null;
+  try {
+    const userIdentity = require('./denizen-user-identity');
+    const desktopLink = require('./denizen-desktop-link');
+    const identity = await userIdentity.getIdentityBySession(sessionId);
+    if (!identity?.id) return null;
+    return desktopLink.getProfileByIdentity(identity.id);
+  } catch (_) {
+    return null;
+  }
+}
+
 function requestDesktopApprovalIfNeeded({
   sessionId,
   npcName,
   capability = 'desktop-agent',
   detail = '',
   permissionLevel = 'off',
+  profile = null,
+  requiredCapability = null,
 } = {}) {
   const level = normalizeLevel(permissionLevel);
+
+  const capKey = requiredCapability
+    || stationCapabilities.capabilityForSkill(capability)
+    || null;
+  const profileCaps = profile || null;
+  if (capKey && profileCaps) {
+    const capCheck = stationCapabilities.assertCapability(profileCaps, capKey);
+    if (!capCheck.ok) {
+      return {
+        pending: false,
+        approved: false,
+        reason: 'capability_off',
+        message: capCheck.error,
+      };
+    }
+  }
 
   if (level === 'off') {
     return { pending: false, approved: false, reason: 'permission_off' };
@@ -68,6 +100,7 @@ function waitForDesktopApproval(sessionId, requestId, opts = {}) {
 module.exports = {
   requestDesktopApprovalIfNeeded,
   resolvePermissionLevelForSession,
+  resolveProfileForSession,
   waitForDesktopApproval,
   normalizeLevel,
 };

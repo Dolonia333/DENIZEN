@@ -1093,7 +1093,8 @@ class AgentActions {
     // Without this, every autonomous NPC line was silent because the
     // bubble path bypassed the voice layer entirely. Thoughts are
     // intentionally silent — they're internal monologue.
-    if (!isThought && typeof window !== 'undefined' && typeof window.DenizenSpeak === 'function') {
+    if (!isThought && typeof window !== 'undefined' && typeof window.DenizenSpeak === 'function'
+        && !window.DenizenVoiceSession?.isActive?.()) {
       try {
         // Resolve display name from the agent manager. Fall back to npcKey
         // if the manager isn't around (e.g. demo scene).

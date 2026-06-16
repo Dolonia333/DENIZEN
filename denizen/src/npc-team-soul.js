@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const personalityBridge = require('./npc-personality-bridge');
 
 const NPCS_DIR = path.join(__dirname, '..', 'npcs');
 const MAX_EXCERPT = 2400;
@@ -30,17 +31,27 @@ function buildUserBaseline(member = {}) {
     job: settings.job || null,
     focus: member.focus || null,
     instructions: member.instructions || null,
+    soul_snippet: settings.soul_snippet || null,
+    personality: personalityBridge.normalizePersonality(settings.personality),
+    extra_skills: personalityBridge.normalizeExtraSkills(settings.extra_skills),
     saved_at: new Date().toISOString(),
   };
 }
 
 function diffBaselines(prev = {}, next = {}) {
   const changes = [];
-  for (const field of ['display_name', 'role', 'job', 'focus', 'instructions']) {
+  for (const field of ['display_name', 'role', 'job', 'focus', 'instructions', 'soul_snippet']) {
     const a = String(prev[field] || '').trim();
     const b = String(next[field] || '').trim();
     if (a !== b) {
       changes.push({ field, from: a || null, to: b || null, at: next.saved_at });
+    }
+  }
+  for (const field of ['formality', 'verbosity', 'proactivity']) {
+    const a = Number(prev.personality?.[field]);
+    const b = Number(next.personality?.[field]);
+    if (Number.isFinite(a) && Number.isFinite(b) && a !== b) {
+      changes.push({ field: `personality.${field}`, from: a, to: b, at: next.saved_at });
     }
   }
   return changes;
@@ -69,7 +80,7 @@ function mergeMemberSettings(existing = {}, patch = {}, memberFields = {}) {
   };
 }
 
-function buildMemberSoulView(npcKey, member = null) {
+function buildMemberSoulView(npcKey, member = null, effectiveMember = null) {
   const key = String(npcKey || '').trim().toLowerCase();
   const soulPath = path.join(NPCS_DIR, key, 'SOUL.md');
   const memoryPath = path.join(NPCS_DIR, key, 'MEMORY.md');
@@ -81,6 +92,8 @@ function buildMemberSoulView(npcKey, member = null) {
 
   const settings = member?.settings && typeof member.settings === 'object' ? member.settings : {};
   const userBaseline = settings.user_baseline || buildUserBaseline(member || { npc_key: key });
+  const effective = effectiveMember || member;
+  const effectiveSettings = effective?.settings || {};
   const soulRole = extractSection(soulRaw, 'Role');
   const soulIdentity = extractSection(soulRaw, 'Core Identity') || soulRaw.split('\n').slice(0, 6).join('\n');
 
@@ -98,6 +111,12 @@ function buildMemberSoulView(npcKey, member = null) {
   return {
     npc_key: key,
     user_baseline: userBaseline,
+    effective_overlay: personalityBridge.buildTeamMemberPromptOverlay(effective),
+    personality: personalityBridge.normalizePersonality(effectiveSettings.personality || settings.personality),
+    soul_snippet: effectiveSettings.soul_snippet || settings.soul_snippet || null,
+    soul_snippet_identity: settings.soul_snippet || null,
+    soul_snippet_org: effectiveSettings.soul_snippet_org || null,
+    extra_skills: personalityBridge.normalizeExtraSkills(effectiveSettings.extra_skills),
     evolution_log: Array.isArray(settings.evolution_log) ? settings.evolution_log.slice(-20) : [],
     soul: {
       excerpt: soulRaw.slice(0, MAX_EXCERPT),

@@ -2217,7 +2217,10 @@ class AgentOfficeManager {
         const hasActions = Array.isArray(msg.actions) && msg.actions.length > 0;
         if (this.scene._playerChat) {
           this.scene._playerChat._hasActions = hasActions;
-          this.scene._playerChat.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error);
+          this.scene._playerChat.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error, {
+            crmActions: msg.crm_actions,
+          });
+          globalThis.DenizenCrmBridge?.handlePlayerChatResponse?.(msg);
         } else if (respondingKey) {
           this.actions.speak(respondingKey, msg.text);
         }
@@ -2239,6 +2242,16 @@ class AgentOfficeManager {
       case 'player_group_chat_response': {
         if (this.scene._playerChat) {
           this.scene._playerChat.handleGroupResponse(msg.groupId, msg.npcName, msg.text, msg.error);
+        }
+        break;
+      }
+      case 'voice_chat_filler':
+      case 'voice_chat_token':
+      case 'voice_chat_sentence':
+      case 'voice_chat_done': {
+        globalThis.DenizenVoiceSession?.handleWsMessage?.(msg);
+        if (msg.type === 'voice_chat_token' && this.scene._playerChat) {
+          this.scene._playerChat.handleVoiceStreamToken?.(msg.npcName, msg.token);
         }
         break;
       }
@@ -2720,8 +2733,12 @@ class AgentOfficeManager {
                 ? `⏰ ${msg.npcName || 'Marcus'}: overdue task "${msg.title || 'Task'}"${msg.due ? ` (due ${msg.due})` : ''}`
                 : msg.kind === 'at-risk'
                   ? `⚠️ ${msg.npcName || 'Marcus'}: at-risk deal "${msg.title || 'Deal'}"${msg.stage ? ` — ${msg.stage}` : ''}`
-                  : (msg.report || msg.text || `CRM: ${msg.kind || msg.action || 'event'}`);
-          this.scene._playerChat._addToLog(msg.npcName || 'CRM', note);
+                  : msg.kind === 'setup-reminder'
+                ? `📋 ${msg.npcName || 'Sarah'}: ${msg.text || 'CRM setup reminder'}`
+                : (msg.report || msg.text || `CRM: ${msg.kind || msg.action || 'event'}`);
+          this.scene._playerChat._addToLog(msg.npcName || 'CRM', note, {
+            crmActions: Array.isArray(msg.crm_actions) ? msg.crm_actions : null,
+          });
         }
         if (this.scene?._workFeed && msg.kind === 'deal-won') {
           try {

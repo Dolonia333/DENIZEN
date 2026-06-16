@@ -56,6 +56,8 @@ try { denizenDb = require('./denizen-db'); } catch (_) {}
 
 let userIdentity = null;
 try { userIdentity = require('./denizen-user-identity'); } catch (_) {}
+let personalityBridge = null;
+try { personalityBridge = require('./npc-personality-bridge'); } catch (_) {}
 
 // Broadcast function reference — set at server startup via setBroadcast()
 let _broadcastFn = null;
@@ -544,25 +546,14 @@ class NpcBrainManager {
     return String(npcName || '').toLowerCase();
   }
 
-  async _buildTeamMemberOverlay(identityId, npcName) {
-    if (!identityId || !userIdentity?.getNpcTeam) return '';
+  async _buildTeamMemberOverlay(identityId, npcName, orgId = null) {
+    if (!identityId || !userIdentity?.getEffectiveNpcTeamMember) return '';
     try {
-      const team = await userIdentity.getNpcTeam(identityId);
       const key = this._npcKeyForName(npcName);
-      const member = (team?.members || []).find((m) => String(m.npc_key).toLowerCase() === key);
-      if (!member) return '';
-      const lines = [];
-      if (member.display_name) lines.push(`This teammate calls you ${member.display_name}.`);
-      if (member.role) lines.push(`Your role for them: ${member.role}.`);
-      if (member.job) lines.push(`Current job assignment: ${member.job}.`);
-      if (member.focus) lines.push(`Focus area: ${member.focus}`);
-      if (member.instructions) {
-        lines.push('Follow these teammate instructions (seed for your SOUL/MEMORY growth):');
-        lines.push(member.instructions);
-      }
-      return lines.length
-        ? `\n\n## Teammate NPC profile\n${lines.join('\n')}`
-        : '';
+      const merged = await userIdentity.getEffectiveNpcTeamMember(identityId, orgId, key);
+      if (!merged) return '';
+      const block = personalityBridge.buildTeamMemberPromptOverlay(merged);
+      return block ? `\n\n${block}\n` : '';
     } catch (_) {
       return '';
     }
@@ -637,7 +628,7 @@ class NpcBrainManager {
   }
 
   _visitorProfilePromptBlock(npcName, visitorContext) {
-    const { displayName, assistant, projects, deepProfile, openCommitments } = visitorContext || {};
+    const { displayName, assistant, projects, deepProfile, openCommitments, workPosition } = visitorContext || {};
     const name = displayName || 'User';
     const focus = assistant?.focus;
     const roleOverlay = assistant?.role_overlay;
@@ -647,10 +638,14 @@ class NpcBrainManager {
 
     const lines = [
       '## Visitor Personal Assistant Context',
-      `User: ${name} (not the CEO)`,
+      `User: ${name}${workPosition?.title ? ` (${workPosition.title})` : ''} (not the CEO)`,
       `They claimed you (${npcName}) as their personal assistant${assistantName !== npcName ? ` ("${assistantName}")` : ''}.`,
-      'You are THEIR chief of staff in their private office. Greet the CEO by name and prioritize their mission.',
+      'You are THEIR chief of staff in their private office. Greet them by name and prioritize their mission.',
     ];
+    const posBlock = this._formatVisitorPositionBlock(workPosition);
+    if (posBlock) {
+      lines.push('', posBlock);
+    }
     if (focus) {
       lines.push(`Focus area: ${focus}`);
     }
@@ -697,6 +692,16 @@ class NpcBrainManager {
     lines.push('Always align with their priorities while respecting office norms.');
     lines.push('When citing research, use [1], [2] style references matching provided sources.');
     return lines.join('\n');
+  }
+
+  _formatVisitorPositionBlock(workPosition) {
+    if (!workPosition?.title) return '';
+    try {
+      const userPosition = require('./denizen-user-position.js');
+      return userPosition.formatPositionPromptBlock(workPosition);
+    } catch (_) {
+      return '';
+    }
   }
 
   _assistantProfilePromptBlock(npcName) {
@@ -1665,7 +1670,7 @@ class NpcBrainManager {
       : '';
 
     const teamOverlay = context.identityId
-      ? await this._buildTeamMemberOverlay(context.identityId, npcName)
+      ? await this._buildTeamMemberOverlay(context.identityId, npcName, context.orgId || null)
       : '';
 
     const systemPrompt = `${brain.personality}${memorySection}${teamOverlay}
@@ -1963,9 +1968,12 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     let teamMemberOverlay = officeContext.teamMemberOverlay || '';
     let teamPurposeOverlay = officeContext.teamPurposeOverlay || '';
     if (officeContext.identityId && officeContext.visitorScoped) {
-      if (!teamMemberOverlay) {
-        teamMemberOverlay = await this._buildTeamMemberOverlay(officeContext.identityId, npcName);
-      }
+      const mergedOverlay = await this._buildTeamMemberOverlay(
+        officeContext.identityId,
+        npcName,
+        officeContext.orgId || null,
+      );
+      if (mergedOverlay) teamMemberOverlay = mergedOverlay;
       if (!teamPurposeOverlay) {
         teamPurposeOverlay = await this._buildTeamPurposeOverlay(
           officeContext.identityId,
@@ -2543,6 +2551,9 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
    * Call an AI provider API
    */
   _callProvider(config, systemPrompt, messages, opts = {}) {
+    if (opts.stream?.onToken) {
+      return this._callProviderStream(config, systemPrompt, messages, opts);
+    }
     if (!config || config.type === 'demo') {
       // Demo mode — return null so fallback logic kicks in
       return Promise.reject(new Error('Demo mode — no API configured'));
@@ -2802,6 +2813,193 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       req.on('error', (err) => { tel.onError(err); reject(err); });
       req.setTimeout(10000, () => {
         const e = new Error((config.type || 'openai') + ' timeout');
+        tel.onError(e);
+        req.destroy(e);
+      });
+      req.write(body);
+      req.end();
+    });
+  }
+
+  /**
+   * Streaming OpenAI-compatible chat (OpenAI, xAI, LM Studio).
+   * Voice mode bypasses the LM Studio batch queue for lower latency.
+   */
+  _callProviderStream(config, systemPrompt, messages, opts = {}) {
+    if (!config || config.type === 'demo') {
+      return Promise.reject(new Error('Demo mode — no API configured'));
+    }
+    if (config.type === 'anthropic' || config.type === 'google') {
+      return this._callProvider(config, systemPrompt, messages, { ...opts, stream: null });
+    }
+    if (config.type === 'openai') {
+      return this._callOpenAICompatibleStream(config, systemPrompt, messages, opts);
+    }
+    if (config.type === 'lmstudio') {
+      return this._callLocalStream(config, systemPrompt, messages, opts);
+    }
+    return Promise.reject(new Error('Unknown provider type'));
+  }
+
+  _callOpenAICompatibleStream(config, systemPrompt, messages, opts = {}) {
+    const maxTokens = opts.maxTokens || 150;
+    const sliceLen = opts.sliceLen || 500;
+    const tel = this._makeTelHook(config.type || 'openai', config, messages, opts);
+    const onToken = typeof opts.stream?.onToken === 'function' ? opts.stream.onToken : null;
+
+    return new Promise((resolve, reject) => {
+      const oaiMessages = [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+      ];
+      if (messages.length === 0) {
+        oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
+      }
+      const body = JSON.stringify({
+        model: config.model,
+        max_tokens: maxTokens,
+        messages: oaiMessages,
+        stream: true,
+      });
+
+      const url = new URL('/v1/chat/completions', config.baseUrl);
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.apiKey}`,
+      };
+      const req = https.request({
+        hostname: url.hostname,
+        port: url.port || 443,
+        path: url.pathname,
+        method: 'POST',
+        headers,
+      }, (res) => {
+        let full = '';
+        let buf = '';
+        res.on('data', (chunk) => {
+          buf += chunk.toString();
+          const lines = buf.split('\n');
+          buf = lines.pop() || '';
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) continue;
+            const payload = trimmed.slice(5).trim();
+            if (payload === '[DONE]') continue;
+            try {
+              const p = JSON.parse(payload);
+              const delta = p.choices?.[0]?.delta?.content || '';
+              if (delta) {
+                full += delta;
+                if (onToken) onToken(delta);
+              }
+            } catch (_) { /* partial SSE */ }
+          }
+        });
+        res.on('end', () => {
+          const text = full.trim().slice(0, sliceLen);
+          if (!text) {
+            const err = new Error('empty stream response');
+            tel.onError(err);
+            return reject(err);
+          }
+          tel.onResponse(text, null, null);
+          resolve(text);
+        });
+      });
+      req.on('error', (err) => { tel.onError(err); reject(err); });
+      req.setTimeout(opts.streamTimeoutMs || 45000, () => {
+        const e = new Error((config.type || 'openai') + ' stream timeout');
+        tel.onError(e);
+        req.destroy(e);
+      });
+      req.write(body);
+      req.end();
+    });
+  }
+
+  _callLocalStream(config, systemPrompt, messages, opts = {}) {
+    const maxTokens = opts.maxTokens || 150;
+    const sliceLen = opts.sliceLen || 500;
+    const tel = this._makeTelHook(config?.providerKey || 'lmstudio', config, messages, opts);
+    const onToken = typeof opts.stream?.onToken === 'function' ? opts.stream.onToken : null;
+    let routed = config;
+    if (lmStudioRouter?.isEnabled?.()) {
+      const tier = config.providerKey === 'lmstudio-fast' ? 'fast' : 'main';
+      routed = lmStudioRouter.resolveProviderConfig(config, {
+        tier,
+        priority: 'high',
+        queueDepth: 0,
+        excludeNodeIds: opts._routerExclude || [],
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      const oaiMessages = [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+      ];
+      if (messages.length === 0) {
+        oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
+      }
+      const body = JSON.stringify({
+        model: routed.model,
+        max_tokens: maxTokens,
+        temperature: opts.temperature || 0.8,
+        messages: oaiMessages,
+        stream: true,
+        enable_thinking: false,
+      });
+
+      const url = new URL('/v1/chat/completions', routed.baseUrl);
+      const headers = { 'Content-Type': 'application/json' };
+      if (routed.apiKey) headers.Authorization = `Bearer ${routed.apiKey}`;
+
+      const req = http.request({
+        hostname: url.hostname,
+        port: url.port || 1234,
+        path: url.pathname,
+        method: 'POST',
+        headers,
+      }, (res) => {
+        let full = '';
+        let buf = '';
+        res.on('data', (chunk) => {
+          buf += chunk.toString();
+          const lines = buf.split('\n');
+          buf = lines.pop() || '';
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) continue;
+            const payload = trimmed.slice(5).trim();
+            if (payload === '[DONE]') continue;
+            try {
+              const p = JSON.parse(payload);
+              const delta = p.choices?.[0]?.delta?.content || '';
+              if (delta) {
+                full += delta;
+                if (onToken) onToken(delta);
+              }
+            } catch (_) { /* partial SSE */ }
+          }
+        });
+        res.on('end', () => {
+          const text = full.trim().slice(0, sliceLen);
+          if (!text) {
+            const err = new Error('empty LM Studio stream');
+            tel.onError(err);
+            return reject(err);
+          }
+          tel.onResponse(text, null, null);
+          if (typeof globalThis !== 'undefined') {
+            if (!globalThis._npcStats) globalThis._npcStats = {};
+            globalThis._npcStats.lastProviderOkAt = Date.now();
+          }
+          resolve(text);
+        });
+      });
+      req.on('error', (err) => { tel.onError(err); reject(err); });
+      req.setTimeout(opts.streamTimeoutMs || 45000, () => {
+        const e = new Error('LM Studio stream timeout');
         tel.onError(e);
         req.destroy(e);
       });
@@ -3186,9 +3384,10 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
       demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock,
+      visitorTeamOverlay, visitorPurposeOverlay,
     } = sections;
     const coworkerShort = String(coworkerContext || '').split('\n').slice(0, 5).join('\n');
-    return `${brain.personality}${memorySection}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
+    return `${brain.personality}${memorySection}${visitorPurposeOverlay ? `\n\n${visitorPurposeOverlay}` : ''}${visitorTeamOverlay ? `\n\n${visitorTeamOverlay}` : ''}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
 ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
 ${demoToolBlock || ''}
 ${lucySkillGateBlock || ''}
@@ -3866,6 +4065,14 @@ ${brain.voiceAnchor || ''}`;
     const brain = this.brains[npcName];
     if (!brain) return { text: `(${npcName} nods)`, delegation: null, actions: [] };
 
+    const emitVoiceLine = (text) => {
+      const t = String(text || '').trim();
+      if (!t || !opts.stream?.onToken) return;
+      try {
+        opts.stream.onToken(t);
+      } catch (_) {}
+    };
+
     const safeMessage = typeof message === 'string' ? message : String(message ?? '');
     const h = this._hierarchy[npcName];
     const isVisitor = Boolean(opts.sessionId);
@@ -3901,6 +4108,7 @@ ${brain.voiceAnchor || ''}`;
       pushPlayerMemory(playerName, safeMessage);
       pushPlayerMemory(npcName, responseText);
       this._recordAssistantDecision(npcName, { action: 'chat', summary: responseText, outcome: 'ok' }, opts);
+      emitVoiceLine(responseText);
       return { text: responseText, delegation: null, actions: [] };
     }
 
@@ -3963,6 +4171,15 @@ ${brain.voiceAnchor || ''}`;
       ? `\n\n## Your Memories (what you remember from past days)\n${this._sanitize(rawMemory.slice(-memCap))}`
       : '';
 
+    let visitorTeamOverlay = '';
+    let visitorPurposeOverlay = '';
+    if (isVisitor && opts.identityId) {
+      visitorTeamOverlay = await this._buildTeamMemberOverlay(
+        opts.identityId, npcName, opts.orgId || null,
+      );
+      visitorPurposeOverlay = await this._buildTeamPurposeOverlay(opts.identityId, opts.displayName);
+    }
+
     const coworkerContext = this._getCoworkerContext(npcName, playerName);
     let assistantProfileBlock;
     if (isVisitorAssistant) {
@@ -3973,11 +4190,13 @@ ${brain.voiceAnchor || ''}`;
         projects: opts.projects,
         deepProfile: opts.deepProfile,
         openCommitments: opts.openCommitments,
+        workPosition: opts.workPosition,
       });
     } else if (!isVisitor) {
       assistantProfileBlock = this._assistantProfilePromptBlock(npcName);
     } else {
-      assistantProfileBlock = `## Who Is Talking\nA teammate named ${playerName} is talking to you. They are a visitor in the shared office, not the CEO.`;
+      const posBlock = this._formatVisitorPositionBlock(opts.workPosition);
+      assistantProfileBlock = `## Who Is Talking\nA teammate named ${playerName} is talking to you. They are a visitor in the shared office, not the CEO.${posBlock ? `\n\n${posBlock}` : ''}`;
     }
     if (opts.groupChat) {
       assistantProfileBlock = `${assistantProfileBlock}\n\n${this._groupChatPromptBlock(opts.groupChat)}`;
@@ -4034,7 +4253,9 @@ ${brain.voiceAnchor || ''}`;
       : '';
 
     const playerRoleLine = isVisitor
-      ? `${playerName} (a visitor teammate) is talking to you directly.`
+      ? (opts.workPosition?.title
+        ? `${playerName} (${opts.workPosition.title}) is talking to you. Tailor your help to how someone in that role typically works.`
+        : `${playerName} (a visitor teammate) is talking to you directly.`)
       : 'The CEO (your ultimate boss) is talking to you directly.';
     const respondSectionTitle = isVisitor
       ? `## How to Respond to ${playerName}`
@@ -4102,7 +4323,14 @@ ${brain.voiceAnchor || ''}`;
       : '';
 
     const visitorWorkBlock = isVisitor && realWorkOn && isVisitorAssistant
-      ? `\n## Execute tools for your teammate\nWhen they ask you to DO something, append at the end: [RUN_SKILL:skill-name:{"param":"value"}]. Skills: research, github, coding-agent, browserclaw, supabase, denizen-data (crm-summary, crm-setup-status, crm-list-pipeline, crm-add-contact, crm-update-deal, crm-add-task, crm-apply-industry), health-check, remediate, docker-sandbox, cloud-vm (DevOps), and CEO-approved custom skills.\nIf no existing skill fits: run research first, then the server skill-gap pipeline will search GitHub and draft build-skill for Dolonia's approval — tell them you're packaging a proposal.\nDo NOT promise a new skill works until Dolonia approves it in Account → Skills.\nDevOps (Oscar, Abby, Edward): docker-sandbox or cloud-vm for isolated workloads; health-check + remediate (incl. restart-lm-studio) when mesh or LM Studio is unhealthy.\n${opts.resource_pressure_block || ''}\n${opts.taskAdvice?.prompt_block || ''}\n`
+      ? (() => {
+        let crmLine = 'crm-summary, crm-setup-wizard, crm-qualify-submission, crm-pipeline-brief (see denizen-data for full CRM skill list)';
+        try {
+          const op = require('./denizen-crm-operator');
+          crmLine = op.formatRunSkillLine();
+        } catch (_) {}
+        return `\n## Execute tools for your teammate\nWhen they ask you to DO something, append at the end: [RUN_SKILL:skill-name:{"param":"value"}]. Skills: research, github, coding-agent, browserclaw, supabase, denizen-data (${crmLine}), health-check, remediate, docker-sandbox, cloud-vm (DevOps), and CEO-approved custom skills.\nIf no existing skill fits: run research first, then the server skill-gap pipeline will search GitHub and draft build-skill for Dolonia's approval — tell them you're packaging a proposal.\nDo NOT promise a new skill works until Dolonia approves it in Account → Skills.\nDevOps (Oscar, Abby, Edward): docker-sandbox or cloud-vm for isolated workloads; health-check + remediate (incl. restart-lm-studio) when mesh or LM Studio is unhealthy.\n${opts.resource_pressure_block || ''}\n${opts.taskAdvice?.prompt_block || ''}\n`;
+      })()
       : '';
 
     let crmBlock = '';
@@ -4117,10 +4345,11 @@ ${brain.voiceAnchor || ''}`;
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
       demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock,
+      visitorTeamOverlay, visitorPurposeOverlay,
     };
     const systemPrompt = promptTuning?.compactPlayerChat !== false
       ? this._buildCompactPlayerChatSystemPrompt(npcName, brain, h, chatSections)
-      : `${brain.personality}${memorySection}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
+      : `${brain.personality}${memorySection}${visitorPurposeOverlay ? `\n\n${visitorPurposeOverlay}` : ''}${visitorTeamOverlay ? `\n\n${visitorTeamOverlay}` : ''}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
 ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
 ${demoToolBlock || ''}
 ${lucySkillGateBlock || ''}
