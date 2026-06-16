@@ -242,9 +242,6 @@ async function registerDesktopInstall(identityId, payload = {}) {
     || payload.capabilities
     || (machine.capabilities && typeof machine.capabilities === 'object' ? machine.capabilities : null);
   const capabilities = mergeDesktopCapabilities(profile.desktop_capabilities, {
-    read_files: permission !== 'off',
-    write_files: permission === 'trusted',
-    run_code: permission !== 'off',
     contribute_compute: !!payload.opt_in,
     lm_studio: !!payload.lm_studio_detected,
     network_jobs: !!payload.opt_in,
@@ -340,14 +337,14 @@ async function syncDesktopCapabilities(identityId, payload = {}) {
   );
   const optIn = payload.opt_in ?? payload.optIn ?? profile.opt_in;
   const now = new Date().toISOString();
+  const incomingCaps = payload.desktop_capabilities
+    || payload.capabilities
+    || (machine.capabilities && typeof machine.capabilities === 'object' ? machine.capabilities : {});
   const capabilities = mergeDesktopCapabilities(profile.desktop_capabilities, {
-    read_files: permission !== 'off',
-    write_files: permission === 'trusted',
-    run_code: permission !== 'off',
     contribute_compute: !!optIn,
     lm_studio: !!payload.lm_studio_detected,
     network_jobs: !!optIn,
-    ...machine.capabilities,
+    ...incomingCaps,
   });
 
   const liveMetrics = payload.live_metrics || payload.liveMetrics || machine.live_metrics || null;

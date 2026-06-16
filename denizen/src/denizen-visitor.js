@@ -644,6 +644,46 @@ async function updateAssistant({ sessionId, assistantName, focus, roleOverlay } 
   return getAssistant(sessionId);
 }
 
+// Release the session's claimed assistant so the user can pick a different NPC
+// (or go assistant-less). Idempotent: returns { released: false } when there is
+// nothing to release.
+async function releaseAssistant(sessionId) {
+  _ensureDb();
+  if (!sessionId) {
+    throw new VisitorError('sessionId required', 'BAD_INPUT');
+  }
+
+  const existing = await denizenDb._get(
+    `denizen_user_assistants?select=id,npc_key&session_id=eq.${encodeURIComponent(sessionId)}`,
+  );
+  if (!existing?.length) {
+    return { released: false, npc_key: null };
+  }
+  const prevKey = existing[0]?.npc_key || null;
+
+  await denizenDb._delete(
+    `denizen_user_assistants?session_id=eq.${encodeURIComponent(sessionId)}`,
+  );
+
+  if (typeof denizenDb.recordFact === 'function') {
+    try {
+      await denizenDb.recordFact({
+        factType: 'visitor.assistant.released',
+        actorType: 'human',
+        actorId: sessionId,
+        entityType: 'npc',
+        entityId: null,
+        payload: { session_id: sessionId, npc_key: prevKey },
+        tags: ['visitor', 'assistant', 'release'],
+      });
+    } catch (_) {
+      /* non-fatal */
+    }
+  }
+
+  return { released: true, npc_key: prevKey };
+}
+
 /** WS payload for Lucy proactive handoff alert (CEO bridge). */
 function buildLucyHandoffAlertBroadcast(handoff, ts = Date.now()) {
   return { type: 'lucy_handoff_alert', handoff, ts };
@@ -683,21 +723,33 @@ async function getSessionSettings(sessionId) {
   const keys = meta.provider_keys && typeof meta.provider_keys === 'object' ? meta.provider_keys : {};
   let canApproveSkills = false;
   let teamRole = null;
+  let isCeoPrincipal = false;
+  let ceoGrant = null;
   try {
     const teamAuth = require('./denizen-team-auth.js');
+    const sessionAuth = require('./visitor-session-auth.js');
+    const principal = await teamAuth.maybeUpgradeSessionCeoPrincipal(sessionId, session)
+      || await teamAuth.resolveCeoPrincipalForSession(sessionId, { session });
+    isCeoPrincipal = !!principal?.ceo;
     const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
-      isCeoPrincipal: meta.is_ceo_principal === true || meta.access_method === 'ceo_code',
+      isCeoPrincipal,
     });
     canApproveSkills = !!approval.allowed;
-    teamRole = approval.role || null;
+    teamRole = approval.role === 'ceo' ? 'owner' : (approval.role || null);
+    if (isCeoPrincipal) {
+      ceoGrant = sessionAuth.createCeoGrant();
+    }
   } catch (_) { /* optional */ }
   let demoUsername = null;
   let hasDemoAccount = false;
+  let workPosition = null;
   try {
     const userIdentity = require('./denizen-user-identity.js');
+    const userPosition = require('./denizen-user-position.js');
     const identity = await userIdentity.getIdentityBySession(sessionId);
     demoUsername = identity?.username || null;
     hasDemoAccount = !!identity?.password_hash;
+    workPosition = userPosition.toClientPosition(userPosition.getPositionFromIdentity(identity));
   } catch (_) { /* optional */ }
 
   return {
@@ -708,9 +760,13 @@ async function getSessionSettings(sessionId) {
     provider_keys_set: Object.keys(keys).filter((k) => String(keys[k] || '').trim()),
     can_approve_skills: canApproveSkills,
     team_role: teamRole,
+    is_ceo_principal: isCeoPrincipal,
+    tier: isCeoPrincipal ? 'ceo' : (meta.tier || null),
+    ceo_grant: ceoGrant,
     demo_username: demoUsername,
     has_demo_account: hasDemoAccount,
     identity_id: session.identity_id || null,
+    work_position: workPosition,
   };
 }
 
@@ -775,6 +831,7 @@ module.exports = {
   getAssistant,
   claimAssistant,
   updateAssistant,
+  releaseAssistant,
   isNpcClaimable,
   isNpcTeamEligible,
   resolveNpcKey,
