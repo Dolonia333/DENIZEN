@@ -21,19 +21,22 @@ function countStepIds(block) {
   return [...block.matchAll(/\n\s+id:\s*'[^']+'/g)].length;
 }
 
-describe('Denizen city onboarding', () => {
-  it('keeps the first-run city tour short and non-technical', () => {
+describe('Denizen office onboarding', () => {
+  it('keeps the first-run office tour short and non-technical', () => {
     const source = read('src/visitor-onboarding.js');
     const steps = arrayBlock(source, 'STEP_DEFS');
 
     assert.equal(countStepIds(steps), 6);
-    assert.match(source, /A denizen is someone who belongs to a place/);
-    assert.match(source, /work somewhere in the dark/);
-    assert.match(source, /They move to a desk/);
-    assert.match(source, /Ask\. Watch\. Know\./);
-    assert.match(source, /Your city key/);
-    assert.match(source, /beginning of your Denizen citizenship/);
-    assert.match(source, /Help keep the lights on/);
+    assert.match(source, /Denizen starts as an AI office you can actually see/);
+    assert.match(source, /stay close to what happens next/);
+    assert.match(source, /They move to a desk and keep the work visible/);
+    assert.match(source, /See the work happen\./);
+    assert.match(source, /Your office key/);
+    assert.match(source, /Your Citizen ID keeps that relationship connected/);
+    assert.match(source, /Power the city from your office\./);
+    assert.match(source, /--onb-mint: #7ee3bd/);
+    assert.match(source, /--onb-mint-strong: #46c996/);
+    assert.match(source, /font-family: Inter, ui-sans-serif, system-ui/);
     assert.doesNotMatch(steps, /GPU\/CPU|BYOK|LM Studio|mesh jobs|capability matrix/i);
   });
 
@@ -48,14 +51,15 @@ describe('Denizen city onboarding', () => {
     assert.doesNotMatch(steps, /GPU\/CPU|LM Studio|queue|operator/i);
   });
 
-  it('uses the city language on the phone home screen', () => {
+  it('uses office-first language on the phone home screen', () => {
     const source = read('src/denizen-phone-ui.js');
 
     assert.match(source, /label: 'Citizen ID'/);
     assert.match(source, /label: 'City Power'/);
-    assert.match(source, /label: 'City Tour'/);
+    assert.match(source, /label: 'Office Tour'/);
     assert.match(source, /label: 'Power Tour'/);
-    assert.match(source, /label: 'City Guide'/);
+    assert.match(source, /label: 'Office Guide'/);
+    assert.match(source, /Build your office firm/);
   });
 
   it('attaches visitor onboarding during normal office startup', () => {
@@ -66,13 +70,13 @@ describe('Denizen city onboarding', () => {
     assert.match(source, /upgrade\(scene, agentManager\)[\s\S]*?this\._attachVisitorUi\(\)/);
   });
 
-  it('keeps the City Power entry surface in city language', () => {
+  it('keeps City Power framed as office station to city power', () => {
     const nodeUi = read('src/visitor-node-ui.js');
     const sidebar = read('src/mobile-sidebar.js');
 
     assert.match(nodeUi, />Power the city</);
     assert.match(nodeUi, />POWER STATION</);
-    assert.match(nodeUi, /make this computer a city station/);
+    assert.match(nodeUi, /make this computer your office station/);
     assert.match(sidebar, />Citizen ID</);
     assert.match(sidebar, />City Power</);
     assert.match(sidebar, /Your place in Denizen/);

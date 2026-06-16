@@ -95,4 +95,17 @@ describe('team-auth skill approval roles', () => {
       else process.env.DENIZEN_TEAM_OWNER_EMAIL = prev;
     }
   });
+
+  it('treats configured owner and team owner role as one CEO login', () => {
+    const prev = process.env.DENIZEN_TEAM_OWNER_EMAIL;
+    process.env.DENIZEN_TEAM_OWNER_EMAIL = 'owner@dolonia.cloud';
+    try {
+      assert.equal(teamAuth.isTeamOwnerAccount({ email: 'owner@dolonia.cloud', role: 'member' }), true);
+      assert.equal(teamAuth.isTeamOwnerAccount({ email: 'other@dolonia.cloud', role: 'owner' }), true);
+      assert.equal(teamAuth.isTeamOwnerAccount({ email: 'other@dolonia.cloud', role: 'member' }), false);
+    } finally {
+      if (prev == null) delete process.env.DENIZEN_TEAM_OWNER_EMAIL;
+      else process.env.DENIZEN_TEAM_OWNER_EMAIL = prev;
+    }
+  });
 });

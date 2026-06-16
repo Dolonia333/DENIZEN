@@ -91,6 +91,9 @@ const SERVER_ROUTE_MARKERS = [
   '/api/org/policy',
   '/api/visitor/claim',
   '/api/visitor/handoff',
+  '/api/visitor/connections',
+  '/api/visitor/connections/request',
+  '/api/visitor/connections/respond',
   '/api/visitor/projects',
   '/api/visitor/teammates',
   '/api/mcp/tokens',
@@ -109,6 +112,7 @@ const SERVER_ROUTE_MARKERS = [
 
 const NODE_MODULES = [
   'denizen-visitor.js',
+  'visitor-connections.js',
   'denizen-visitor-intelligence.js',
   'visitor-briefing-loop.js',
   'visitor-cited-research.js',
