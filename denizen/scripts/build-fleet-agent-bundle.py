@@ -17,6 +17,11 @@ AGENT_FILES = [
     ("src/denizen-hardware-monitor.js", "src/denizen-hardware-monitor.js"),
     ("src/denizen-node-client.js", "src/denizen-node-client.js"),
     ("src/denizen-mesh-job-runner.js", "src/denizen-mesh-job-runner.js"),
+    ("src/denizen-inference-runtime.js", "src/denizen-inference-runtime.js"),
+    ("src/denizen-embedding-worker.js", "src/denizen-embedding-worker.js"),
+    ("src/denizen-sim-tick.js", "src/denizen-sim-tick.js"),
+    ("src/lm-studio-probe.js", "src/lm-studio-probe.js"),
+    ("src/lm-studio-advertise.js", "src/lm-studio-advertise.js"),
 ]
 
 

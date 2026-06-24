@@ -1,0 +1,25 @@
+# Production image for Synology NAS / Docker hosts.
+# Build: docker build -f Dockerfile.production -t denizen-server:latest .
+FROM node:22-bookworm AS crm-builder
+WORKDIR /build
+COPY package*.json ./
+COPY scripts/export-industry-index.mjs scripts/export-industry-index.mjs
+COPY crm/ crm/
+RUN node scripts/export-industry-index.mjs \
+ && cd crm/vendor \
+ && npm install --legacy-peer-deps \
+ && npm run build \
+ && node ../scripts/write-crm-manifest.mjs
+
+FROM node:22-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+COPY --from=crm-builder /build/crm/dist ./crm/dist
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD sh -c 'wget -q -O /dev/null http://127.0.0.1:$${PORT:-8080}/api/health || exit 1'
+CMD ["node", "server.js"]

@@ -169,7 +169,13 @@ try {
 
   $sqlVerificationQuery = @"
 with required(version) as (
-  values ('20260606000012'), ('20260606000013'), ('20260606000014')
+  values
+    ('20260606000012'),
+    ('20260606000013'),
+    ('20260606000014'),
+    ('20260606000015'),
+    ('20260622000001'),
+    ('20260622000002')
 ),
 found as (
   select version from public.denizen_schema_migrations
@@ -191,6 +197,26 @@ select json_build_object(
     where n.nspname = 'public'
       and p.proname = 'denizen_user_can_access_org'
   ),
+  'denizen_resolve_mcp_token_exists', exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname = 'denizen_resolve_mcp_token'
+  ),
+  'mcp_rpc_search_path_ok', (
+    select coalesce(
+      (select 'extensions' = any(string_to_array(
+        replace(replace(proconfig[1], 'search_path=', ''), ' ', ''), ','
+      ))
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public'
+        and p.proname = 'denizen_resolve_mcp_token'
+        and proconfig is not null),
+      false)
+  ),
+  'mcp_tokens_table_exists', to_regclass('public.denizen_mcp_tokens') is not null,
   'trading_tables', json_build_object(
     'denizen_watchlist_symbols', to_regclass('public.denizen_watchlist_symbols') is not null,
     'denizen_trade_suggestions', to_regclass('public.denizen_trade_suggestions') is not null
@@ -202,6 +228,9 @@ select json_build_object(
   $sqlPass = (
     $sqlVerification.required_versions_present -eq $true -and
     $sqlVerification.denizen_user_can_access_org_exists -eq $true -and
+    $sqlVerification.denizen_resolve_mcp_token_exists -eq $true -and
+    $sqlVerification.mcp_rpc_search_path_ok -eq $true -and
+    $sqlVerification.mcp_tokens_table_exists -eq $true -and
     $sqlVerification.trading_tables.denizen_watchlist_symbols -eq $true -and
     $sqlVerification.trading_tables.denizen_trade_suggestions -eq $true
   )

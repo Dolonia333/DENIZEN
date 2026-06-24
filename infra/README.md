@@ -20,9 +20,9 @@ copy infra\.env.example infra\.env
 |---------|--------------|--------|------|
 | dolonia | `100.71.54.109` | `192.168.1.232` | Denizen host, LM Studio GPU |
 | hp81081d (Kali) | `100.110.205.49` | `192.168.1.240` | Headless compute worker |
-| NAS (Synology) | — | `192.168.1.237` | Self-hosted Supabase + NAS agent |
+| NAS (Synology) | — | `192.168.1.237` | Self-hosted Supabase + **Denizen app** + NAS agent |
 
-**Rule:** remote agents use **Tailscale IP** (`100.71.54.109:8081`) or **public URL** (`https://denizen.dolonia.cloud`), not dolonia's LAN IP.
+**Rule:** remote agents use **public URL** (`https://denizen.dolonia.cloud`) or NAS LAN (`http://192.168.1.237:8888`), not dolonia's LAN IP — unless dolonia is standby.
 
 ## Quick start — full mesh
 
@@ -65,6 +65,40 @@ py infra/probe-nas-agent.py
 Remote install path: `/volume1/docker/denizen-agent/`  
 Logs: `agent.log` on NAS via SSH `tail`.
 
+### Denizen app server on NAS
+
+Full runbook: **[../denizen/docs/MESH_SCALING.md](../denizen/docs/MESH_SCALING.md)** — cutover, redundancy, 100-user capacity.
+
+| Path on NAS | Purpose |
+|-------------|---------|
+| `/volume1/docker/denizen-server/` | Denizen app Docker container (`.env` — not in git) |
+
+**One-command cutover (from your PC):**
+
+```powershell
+py infra/finish-denizen-on-nas.py
+```
+
+**Step by step:**
+
+```powershell
+py infra/provision-nas-server.py      # builds infra/nas-server-bundle/.env
+py infra/deploy-denizen-to-nas.py     # docker build + upload + compose up
+py infra/hotfix-sync-denizen-nas.py   # no local Docker: push changed JS into running container
+py infra/patch-denizen-nas-env.py     # patch .env + recreate (run before hotfix if both needed)
+py infra/repoint-mesh-to-nas.py       # mesh agents -> NAS / public URL
+py infra/probe-denizen-nas.py         # LAN + public health
+py infra/verify-batch3-nas.py         # competency-map, publicDemo, ws cap
+```
+
+Then point Cloudflare tunnel `denizen.dolonia.cloud` → `http://<NAS-IP>:8888`.
+
+| Variable | Default |
+|----------|---------|
+| `SYNO_DENIZEN_PORT` | `8888` |
+| `SYNO_DENIZEN_DIR` | `/volume1/docker/denizen-server` |
+| `DENIZEN_NAS_URL` | `http://192.168.1.237:8888` |
+
 ### Supabase on NAS
 
 Full runbook: **[supabase-project/SYNOLOGY.md](supabase-project/SYNOLOGY.md)** — hardware requirements, File Station upload, compose bring-up, Cloudflare tunnel URLs, and post-install verification.
@@ -91,6 +125,21 @@ py infra/apply-service-role-to-denizen.py    # writes SUPABASE_SERVICE_ROLE_KEY 
 ```
 
 `ONLY_MIGRATIONS=20260608000003 py infra/apply-migrations-nas.py` — apply a single migration.
+
+**Skipped on NAS** (`apply-migrations-nas.py` `SKIP_VERSIONS`): `000005`, `000006`, `000012`, `000013` — require Dolonia platform CMS tables. See `denizen/docs/NAS_PLATFORM_BRIDGE.md`. Runtime: `GET /api/platform-bridge/status`.
+
+**Failover probe** (primary down → repoint tunnel to NAS):
+
+```powershell
+py infra/health-failover-nas.py
+```
+
+**Post-deploy audits:**
+
+```powershell
+py infra/audit-compute-rls-nas.py      # compute anon RLS tightened?
+py infra/probe-mcp-rpc.py              # MCP RPC + Denizen env
+```
 
 Migrate data from Docker Desktop Supabase: `py infra/migrate-desktop-to-nas.py`, then `py infra/verify-migration.py`.
 
@@ -199,6 +248,11 @@ Built by `denizen/scripts/build-fleet-agent-bundle.py` (Python `tarfile`).
 | Script | Purpose |
 |--------|---------|
 | `finish-all-mesh.py` | Full mesh provision + deploy + smokes |
+| `finish-denizen-on-nas.py` | Migrations + deploy Denizen app on NAS + re-point mesh |
+| `provision-nas-server.py` | Build `nas-server-bundle/.env` for Docker deploy |
+| `deploy-denizen-to-nas.py` | Build image locally, upload, `docker compose up` on NAS |
+| `repoint-mesh-to-nas.py` | Point fleet agents at NAS / public URL |
+| `probe-denizen-nas.py` | LAN + public `/api/health` for NAS Denizen server |
 | `provision-nas-agent.py` | NAS bundle `.env` + fleet tokens |
 | `provision-kali-agent.py` | Kali bundle sync + `.env` |
 | `deploy-nas-agent.py` | SSH deploy to Synology |

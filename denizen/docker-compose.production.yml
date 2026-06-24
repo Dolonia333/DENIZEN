@@ -1,0 +1,18 @@
+# Denizen app server on Synology NAS (co-located with Supabase).
+# Deploy: py infra/deploy-denizen-to-nas.py (from repo root on your PC)
+services:
+  denizen:
+    image: denizen-server:latest
+    container_name: denizen-server
+    restart: unless-stopped
+    # Host networking lets the container reach Kong/Postgres on 127.0.0.1 (same NAS).
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "8888"
+      # Passthrough — full config lives in .env (see .env.production.template)
+      DENIZEN_ECONOMY_MODE: "false"
+      DENIZEN_COFOUNDER_LLM: "true"
+      DENIZEN_REAL_WORK_MODE: "true"

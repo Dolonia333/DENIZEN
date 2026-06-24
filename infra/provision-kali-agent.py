@@ -26,6 +26,7 @@ SYNC_FILES = [
     (DENIZEN_DIR / "src" / "denizen-hardware-monitor.js", BUNDLE_DIR / "src" / "denizen-hardware-monitor.js"),
     (DENIZEN_DIR / "src" / "denizen-node-client.js", BUNDLE_DIR / "src" / "denizen-node-client.js"),
     (DENIZEN_DIR / "src" / "denizen-mesh-job-runner.js", BUNDLE_DIR / "src" / "denizen-mesh-job-runner.js"),
+    (DENIZEN_DIR / "src" / "lm-studio-probe.js", BUNDLE_DIR / "src" / "lm-studio-probe.js"),
 ]
 
 

@@ -134,7 +134,12 @@ def main() -> int:
     nas_env_dir.mkdir(parents=True, exist_ok=True)
     nas_env = nas_env_dir / ".env"
     public_url = env.get("DENIZEN_PUBLIC_URL", "https://denizen.dolonia.cloud").rstrip("/")
-    lan_url = os.environ.get("DENIZEN_LAN_URL", f"http://127.0.0.1:{port}").rstrip("/")
+    nas_port = os.environ.get("SYNO_DENIZEN_PORT", "8888")
+    syno_host = os.environ.get("SYNO_HOST", "192.168.1.237")
+    if os.environ.get("DENIZEN_HOST_ON_NAS") == "1":
+        lan_url = os.environ.get("DENIZEN_NAS_URL", f"http://127.0.0.1:{nas_port}").rstrip("/")
+    else:
+        lan_url = os.environ.get("DENIZEN_LAN_URL", f"http://127.0.0.1:{port}").rstrip("/")
     lines = [
         f"DENIZEN_URL={lan_url}",
         f"DENIZEN_PUBLIC_URL={public_url}",

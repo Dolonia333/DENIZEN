@@ -53,6 +53,7 @@ def build_tarball() -> Path:
         (DENIZEN_DIR / "src" / "denizen-hardware-monitor.js", "src/denizen-hardware-monitor.js"),
         (DENIZEN_DIR / "src" / "denizen-node-client.js", "src/denizen-node-client.js"),
         (DENIZEN_DIR / "src" / "denizen-mesh-job-runner.js", "src/denizen-mesh-job-runner.js"),
+        (DENIZEN_DIR / "src" / "lm-studio-probe.js", "src/lm-studio-probe.js"),
     ]
     if BUNDLE_ENV.is_file():
         files.append((BUNDLE_ENV, ".env"))
