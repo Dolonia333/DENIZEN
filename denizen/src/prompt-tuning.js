@@ -63,6 +63,12 @@ module.exports = {
   codeContextChanceIdle: envFloat('DENIZEN_CODE_CONTEXT_CHANCE_IDLE', economy ? 0.03 : 0.04),
   thinkMaxTokens: envInt('DENIZEN_THINK_MAX_TOKENS', economy ? 320 : 360),
   thinkSliceLen: envInt('DENIZEN_THINK_SLICE_LEN', economy ? 1200 : 1500),
+  /** HTTP timeout for autonomous think() LM Studio calls (ms). */
+  lmThinkTimeoutMs: envInt('DENIZEN_LM_THINK_TIMEOUT_MS', economy ? 90000 : 120000),
+  /** Max chars of SOUL injected into autonomous think() (full SOUL still on disk). */
+  thinkSoulMaxChars: envInt('DENIZEN_THINK_SOUL_MAX_CHARS', economy ? 720 : 1100),
+  /** Anthropic prompt caching on static system blocks (BYOK / cloud NPC paths). */
+  anthropicPromptCache: envBool('DENIZEN_ANTHROPIC_PROMPT_CACHE', true),
   evidenceRule: 'Do not claim you fixed, shipped, researched, or filed something unless you ran run_skill or produced an artifact this cycle. Say you will check instead.',
   autoClaimSprintTasks: envBool('DENIZEN_AUTO_CLAIM_SPRINT', !economy),
   /** Off by default — enables run_skill nudges (drives ~27% run_skill in telemetry). Set true to force real tools. */
@@ -80,7 +86,13 @@ module.exports = {
   /** Algorithmic planner for routine think cycles — saves ~85% autonomous LLM calls. */
   hybridDirector: envBool('DENIZEN_HYBRID_DIRECTOR', economy),
   playerChatMaxTokens: envInt('DENIZEN_PLAYER_CHAT_MAX_TOKENS', economy ? 220 : 300),
-  playerChatHistoryMsgs: envInt('DENIZEN_PLAYER_CHAT_HISTORY_MSGS', economy ? 4 : 12),
+  playerChatHistoryMsgs: envInt('DENIZEN_PLAYER_CHAT_HISTORY_MSGS', economy ? 4 : 8),
+  /** Verbatim turns kept in the messages array when compaction is on. */
+  playerChatRecentMsgs: envInt('DENIZEN_PLAYER_CHAT_RECENT_MSGS', economy ? 4 : 6),
+  /** Compact older turns into a summary block once memory exceeds this count. */
+  playerChatCompactAfter: envInt('DENIZEN_PLAYER_CHAT_COMPACT_AFTER', economy ? 6 : 10),
+  playerChatSummaryChars: envInt('DENIZEN_PLAYER_CHAT_SUMMARY_CHARS', economy ? 400 : 520),
+  playerChatCompaction: envBool('DENIZEN_PLAYER_CHAT_COMPACTION', true),
   playerChatMemoryChars: envInt('DENIZEN_PLAYER_CHAT_MEMORY_CHARS', economy ? 320 : 500),
   /** Shorter CEO/visitor chat system prompt — drops the 2k-token action catalog. */
   compactPlayerChat: envBool('DENIZEN_COMPACT_PLAYER_CHAT', economy),

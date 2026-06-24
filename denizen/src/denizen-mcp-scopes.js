@@ -7,7 +7,7 @@
  * Missing scopes on a token = full access (backward compatible).
  */
 
-const ALL_SCOPES = Object.freeze(['read', 'skills', 'crm_write', 'handoff', 'delegate']);
+const ALL_SCOPES = Object.freeze(['read', 'skills', 'crm_write', 'handoff', 'delegate', 'compute']);
 
 const SCOPE_PRESETS = Object.freeze({
   read: ['read'],
@@ -38,6 +38,13 @@ const TOOL_SCOPE = Object.freeze({
   announce_in_office: 'delegate',
   broadcast_task: 'delegate',
   run_as_npc: 'skills',
+  enqueue_compute_job: 'compute',
+  get_job_status: 'read',
+  get_inference_nodes: 'read',
+  enqueue_cursor_work: 'delegate',
+  list_cursor_work: 'read',
+  claim_cursor_work: 'skills',
+  complete_cursor_work: 'skills',
 });
 
 function normalizeScopes(input) {

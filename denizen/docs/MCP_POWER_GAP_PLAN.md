@@ -63,12 +63,21 @@ Phase 1–2 ship on **per-NPC tokens** (already carry `org_id`, `session_id`, `m
 | P4.2 | `denizen_mcp_audit` table + revoke UI in Settings | ✅ |
 | P4.3 | Connect AI: Test MCP button + token rotate | ✅ |
 
-### Phase 5 — Mesh power (backlog)
+### Phase 5 — Mesh power ✅
 
-| ID | Deliverable |
-|----|-------------|
-| P5.1 | `enqueue_compute_job` / `get_job_status` for City Power teams |
-| P5.2 | `get_inference_nodes` — mesh pool status |
+| ID | Deliverable | Status |
+|----|-------------|--------|
+| P5.1 | `enqueue_compute_job` / `get_job_status` for City Power teams | ✅ MCP tools + `GET /api/compute/jobs/:id` |
+| P5.2 | `get_inference_nodes` — mesh pool status | ✅ MCP tool (full node list) |
+
+### Phase 6 — Cursor bridge ✅
+
+| ID | Deliverable | Status |
+|----|-------------|--------|
+| P6.1 | `enqueue_cursor_work` / `list_cursor_work` | ✅ Denizen → Cursor task queue |
+| P6.2 | `claim_cursor_work` / `complete_cursor_work` | ✅ Cursor claims + reports back |
+| P6.3 | `team://cursor-work` resource | ✅ Team MCP resource |
+| P6.4 | Docs | ✅ `docs/DENIZEN_CURSOR_BRIDGE.md` |
 
 ---
 
@@ -87,6 +96,8 @@ Phase 1–2 ship on **per-NPC tokens** (already carry `org_id`, `session_id`, `m
 | `src/denizen-mcp-scopes.js` | Scope presets + tool gating |
 | `src/denizen-mcp-team-tools.js` | Team roster, handoffs, status enrichment |
 | `src/denizen-mcp-crm-tools.js` | First-class CRM tools |
+| `src/denizen-mcp-mesh-tools.js` | Mesh / City Power MCP tools |
+| `src/denizen-mcp-cursor-tools.js` | Denizen ↔ Cursor self-improvement queue |
 | `src/denizen-npc-mcp-gateway.js` | Wire tools + v1.8.0 |
 | `src/denizen-mcp-actions.js` | `run_skill` wait default |
 | `src/npc-brains.js` | `getDirective()` |

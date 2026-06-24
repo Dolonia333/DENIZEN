@@ -23,9 +23,21 @@ DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 PORT = os.environ.get("SYNO_DENIZEN_PORT", "8888")
 
 FILES = [
+    "src/format-provider-error.js",
+    "src/llm-telemetry.js",
     "src/lm-studio-router.js",
-    "src/denizen-host-compute.js",
+    "src/cofounder-agent.js",
+    "src/denizen-hardware-monitor.js",
+    "src/denizen-mcp-mesh-tools.js",
+    "src/denizen-mcp-cursor-tools.js",
+    "src/denizen-mcp-scopes.js",
+    "src/denizen-npc-mcp-gateway.js",
+    "src/denizen-mcp-team-gateway.js",
     "src/denizen-compute-routes.js",
+    "src/visitor-mcp-connect-ui.js",
+    "src/denizen-lazy-scripts.js",
+    "jelly/skills/cursor-bridge/index.js",
+    "src/denizen-host-compute.js",
     "src/npc-brains.js",
     "server.js",
 ]

@@ -14,6 +14,8 @@ const mcpActions = require('./denizen-mcp-actions.js');
 const mcpMarketTools = require('./denizen-mcp-market-tools.js');
 const mcpTeamTools = require('./denizen-mcp-team-tools.js');
 const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
+const mcpMeshTools = require('./denizen-mcp-mesh-tools.js');
+const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
@@ -286,6 +288,12 @@ async function callToolImpl(scope, name, args) {
   if (mcpCrmTools.isCrmTool(name)) {
     return mcpCrmTools.callTool(scope, name, args);
   }
+  if (mcpMeshTools.isMeshTool(name)) {
+    return mcpMeshTools.callTool(scope, name, args);
+  }
+  if (mcpCursorTools.isCursorTool(name)) {
+    return mcpCursorTools.callTool(scope, name, args);
+  }
   switch (name) {
     case 'update_memory': return toolUpdateMemory(scope, args);
     case 'get_status': return toolGetStatus(scope, args);
@@ -321,6 +329,8 @@ function configure(deps = {}) {
   mcpMarketTools.configure(deps);
   mcpTeamTools.configure(deps);
   mcpCrmTools.configure(deps);
+  mcpMeshTools.configure(deps);
+  mcpCursorTools.configure(deps);
 }
 
 function toolsForScope(scope) {
@@ -329,6 +339,8 @@ function toolsForScope(scope) {
     base.push(...mcpTeamTools.toolsForNpc(scope.npc_key));
     base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
     base.push(...mcpMarketTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpMeshTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpCursorTools.toolsForNpc(scope.npc_key));
   }
   return mcpScopes.filterTools(scope, base);
 }
@@ -346,7 +358,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {} },
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.9.0' },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.0.0' },
       },
     });
   }

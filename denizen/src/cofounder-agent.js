@@ -4,10 +4,10 @@
  * Runs on the server (loaded by server.js), sends commands to the game via WebSocket.
  */
 
-require('./load-env');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { formatProviderError } = require('./format-provider-error');
 
 // Shared world-state singleton. Wrapped so unit tests that import this
 // module in isolation don't break if the file moves.
@@ -19,7 +19,12 @@ try { promptTuning = require('./prompt-tuning'); } catch (_) {}
 class CofounderAgent {
   constructor() {
     this.model = process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning';
-    this.baseUrl = process.env.LM_STUDIO_URL || 'http://localhost:1234';
+    let routerUrl = null;
+    try { routerUrl = require('./lm-studio-router').defaultHostUrl?.(); } catch (_) {}
+    this.baseUrl = process.env.LM_STUDIO_URL
+      || process.env.LM_STUDIO_BASE_URL
+      || routerUrl
+      || 'http://localhost:1234';
     this.wsClients = new Set();
 
     // Office state (updated by game client)
@@ -378,12 +383,12 @@ YOUR JOB — create a LIVING office:
       }
     } catch (err) {
       this._consecutiveErrors++;
-      console.warn('[CofounderAgent] Think error:', err.message, err.stack ? err.stack.split('\n')[1] : '');
+      console.warn('[CofounderAgent] Think error:', formatProviderError(err), err.stack ? err.stack.split('\n')[1] : '');
       // Broadcast error so the game can show Abby going to breakroom
       this._broadcast({
         type: 'agent_error',
         agentId: 'Abby',
-        message: err.message || 'API error',
+        message: formatProviderError(err) || 'API error',
         consecutiveErrors: this._consecutiveErrors,
       });
 
@@ -405,8 +410,9 @@ YOUR JOB — create a LIVING office:
       // Always use the live synced model from npcBrains — picks up whatever
       // LM Studio has loaded without needing a restart
       const liveModel = this.npcBrains.providers?.lmstudio?.model || this.model;
+      const liveBase = this.npcBrains.providers?.lmstudio?.baseUrl || this.baseUrl;
       const config = {
-        baseUrl: this.baseUrl,
+        baseUrl: liveBase,
         model: liveModel,
         type: 'lmstudio',
         providerKey: 'lmstudio',

@@ -2613,6 +2613,7 @@ const jelly = createJelly({
     healthRunbook,
     computeQueue,
     fleetRegistry,
+    denizenDb,
     denizenRoot: __dirname,
     canRemediate: (npc) => healthRunbook.canRemediate(npc),
     approvedSkillScripts: _approvedSkillScripts,
@@ -2694,6 +2695,9 @@ npcMcpGateway.configure({
   visitorConnections,
   listOnlineSessionIds,
   notifyCeoHandoff: _notifyCeoHandoff,
+  computeQueue,
+  lmStudioRouter,
+  denizenDb,
   getInferenceHealth: async () => {
     const queueDepth = npcBrains?.getQueueDepth?.() || 0;
     const status = lmStudioRouter.buildStatus(queueDepth);
@@ -2713,6 +2717,9 @@ teamMcpGateway.configure({
   visitorConnections,
   listOnlineSessionIds,
   notifyCeoHandoff: _notifyCeoHandoff,
+  computeQueue,
+  lmStudioRouter,
+  denizenDb,
   getInferenceHealth: async () => {
     const queueDepth = npcBrains?.getQueueDepth?.() || 0;
     const status = lmStudioRouter.buildStatus(queueDepth);

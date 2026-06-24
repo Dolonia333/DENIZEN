@@ -1677,6 +1677,33 @@ function mountComputeRoutes(serverContext = {}) {
         return true;
       }
 
+      const jobStatusMatch = path.match(/^\/api\/compute\/jobs\/([^/]+)$/);
+      if (method === 'GET' && jobStatusMatch && jobStatusMatch[1] !== 'enqueue') {
+        const body = await readBodyOrHeaders(req, url, 4096).catch(() => ({}));
+        const sessionId = extractSessionId(req, body, url);
+        if (!sessionId) {
+          assertInternalRequest(req, body, url, serverContext);
+        }
+        const jobId = decodeURIComponent(jobStatusMatch[1]);
+        const job = await computeQueue.getJobById(jobId);
+        if (!job) {
+          sendJson(res, 404, { ok: false, error: 'job not found', job_id: jobId });
+          return true;
+        }
+        sendJson(res, 200, {
+          ok: true,
+          job_id: job.id,
+          status: job.status,
+          job_type: job.job_type,
+          assigned_node_id: job.assigned_node_id || null,
+          result: job.result || null,
+          error: job.error || null,
+          created_at: job.created_at,
+          completed_at: job.completed_at || null,
+        });
+        return true;
+      }
+
       if (
         path === '/api/compute/jobs/enqueue'
         && (method === 'POST' || method === 'GET')

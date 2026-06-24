@@ -23,6 +23,27 @@ describe('lm-studio-router', () => {
     assert.equal(router.defaultHostUrl(), 'http://100.71.54.109:1234');
   });
 
+  it('remote-only mode excludes loopback nodes from selection', () => {
+    delete process.env.LM_STUDIO_URL;
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://100.71.54.109:1234';
+    router.upsertNode({
+      node_id: 'ghost-host',
+      url: 'http://127.0.0.1:1234',
+      role: 'host',
+      reachable: true,
+      last_probe_at: new Date().toISOString(),
+    });
+    router.upsertNode({
+      node_id: 'remote',
+      url: 'http://100.71.54.109:1234',
+      role: 'remote',
+      reachable: true,
+      last_probe_at: new Date().toISOString(),
+    });
+    const pick = router.selectEndpoint({ tier: 'main' });
+    assert.equal(pick.url, 'http://100.71.54.109:1234');
+  });
+
   it('unprobed nodes are not selected', () => {
     router.upsertNode({
       node_id: 'fresh',

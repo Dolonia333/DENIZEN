@@ -7,6 +7,8 @@
 const crypto = require('node:crypto');
 const npcGateway = require('./denizen-npc-mcp-gateway.js');
 const mcpTeamTools = require('./denizen-mcp-team-tools.js');
+const mcpMeshTools = require('./denizen-mcp-mesh-tools.js');
+const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
@@ -51,6 +53,8 @@ const TEAM_TOOL_DEFINITIONS = [
     },
   },
   ...mcpTeamTools.TEAM_TOOL_DEFINITIONS,
+  ...mcpMeshTools.MESH_TOOL_DEFINITIONS,
+  ...mcpCursorTools.CURSOR_TOOL_DEFINITIONS,
 ];
 
 const TEAM_RESOURCES = [
@@ -64,6 +68,12 @@ const TEAM_RESOURCES = [
     uri: 'team://handoffs',
     name: 'team_handoffs',
     description: 'Pending assistant handoffs for your session',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'team://cursor-work',
+    name: 'cursor_work_queue',
+    description: 'Pending Denizen→Cursor self-improvement tasks',
     mimeType: 'application/json',
   },
 ];
@@ -192,6 +202,10 @@ async function readResource(scope, uri) {
     const inbox = await mcpTeamTools.callTool(scope, 'list_pending_handoffs', { limit: 20 });
     return JSON.stringify(inbox, null, 2);
   }
+  if (uri === 'team://cursor-work') {
+    const queue = await mcpCursorTools.callTool(scope, 'list_cursor_work', { status: 'pending', limit: 25 });
+    return JSON.stringify(queue, null, 2);
+  }
   return null;
 }
 
@@ -203,6 +217,12 @@ async function callToolImpl(scope, name, args) {
     default:
       if (mcpTeamTools.isTeamTool(name)) {
         return mcpTeamTools.callTool(scope, name, args);
+      }
+      if (mcpMeshTools.isMeshTool(name)) {
+        return mcpMeshTools.callTool(scope, name, args);
+      }
+      if (mcpCursorTools.isCursorTool(name)) {
+        return mcpCursorTools.callTool(scope, name, args);
       }
       return { ok: false, error: `unknown team tool: ${name}` };
   }

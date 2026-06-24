@@ -1,0 +1,21 @@
+---
+description: When Denizen MCP is connected, poll the bridge queue and help Denizen fix itself.
+globs:
+alwaysApply: false
+---
+
+# Denizen MCP bridge
+
+If this workspace is Denizen and you have the Denizen MCP server connected (Abby or team token):
+
+1. Call **`list_cursor_work`** — process `urgent` / `high` pending tasks first.
+2. **`claim_cursor_work`** before editing.
+3. Fix in-repo; run relevant tests under `denizen/tests/`.
+4. **`complete_cursor_work`** with summary and `files_changed`.
+5. Use **`get_inference_nodes`** when LM / mesh health is in question.
+6. Use **`run_skill`** `coding-agent` for isolated worktree proposals; use direct edits for hotfixes.
+7. Use **`assign_task`** / **`delegate_task`** to wake in-world NPCs after shipping.
+
+Denizen CRM, coding, and team ops live on the Denizen MCP URL — not Robinhood (trading-only add-on).
+
+See `denizen/docs/DENIZEN_CURSOR_BRIDGE.md`.

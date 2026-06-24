@@ -1,7 +1,7 @@
 'use strict';
 
 const { normalizeBaseUrl, probeLmStudioEndpoint } = require('./lm-studio-probe');
-const { resolveRouterLmUrl, enrichLmStudioBlock } = require('./lm-studio-advertise');
+const { resolveRouterLmUrl, enrichLmStudioBlock, isLoopbackUrl } = require('./lm-studio-advertise');
 
 /** nodeId -> node record */
 const nodes = new Map();
@@ -210,6 +210,7 @@ function release(nodeId) {
 function scoreNode(node, opts = {}) {
   if (!node?.node_id) return -1;
   if (isOnCooldown(node.node_id)) return -1;
+  if (isRemoteOnlyMode() && isLoopbackUrl(node.url)) return -1;
 
   const exclude = new Set((opts.excludeNodeIds || []).map(String));
   if (exclude.has(String(node.node_id))) return -1;
@@ -269,6 +270,15 @@ function selectEndpoint(opts = {}) {
   if (!ranked.length) {
     const remotes = parseRemoteUrls();
     const fallbackUrl = remotes[0] || defaultHostUrl();
+    if (isRemoteOnlyMode() && isLoopbackUrl(fallbackUrl) && remotes[0]) {
+      return {
+        node_id: remotes[0],
+        url: remotes[0],
+        score: 0,
+        routed: false,
+        reason: 'remote_only_fallback',
+      };
+    }
     return {
       node_id: 'fallback',
       url: fallbackUrl,

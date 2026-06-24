@@ -27,7 +27,7 @@ const BY_NAME = {
       'Run web research before making calls',
     ],
     askMe: ['Review our auth approach', 'Call a meeting with the dev team', 'What should we prioritize this sprint?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search', 'pdf-generator', 'canvas-render', 'cost-dashboard', 'work-history', 'org-benchmark'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search', 'pdf-generator', 'canvas-render', 'cost-dashboard', 'work-history', 'org-benchmark', 'health-check', 'remediate'],
   },
   Alex: {
     role: 'Senior Developer',
@@ -41,7 +41,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Fix the WebSocket reconnect bug', 'Review Josh\'s latest PR', 'Who should own this feature?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Bob: {
     role: 'Researcher',
@@ -68,7 +68,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Review the player-chat changes', 'Fix that null check in office-scene', 'Is this PR safe to merge?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Josh: {
     role: 'Frontend Developer',
@@ -81,7 +81,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Fix the mobile dock overlap', 'Polish the chat panel CSS', 'Wire up this button'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Edward: {
     role: 'Backend Developer',
@@ -94,7 +94,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Fix the player_chat handler', 'Add an API endpoint for X', 'Why is the WS dropping?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Roki: {
     role: 'Intern',

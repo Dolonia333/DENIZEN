@@ -41,6 +41,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { formatProviderError } = require('./format-provider-error');
 
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_LOG_FILE = path.join(ROOT, 'data', 'llm-telemetry.jsonl');
@@ -56,8 +57,10 @@ function setDbSink(fn) {
  *  wins; the hint is shown to the operator as "here's what to do." */
 const ERROR_CLASSIFIERS = [
   // Order matters: more specific matches first.
-  { re: /ECONNREFUSED|connect.*refused/i, category: 'provider_down',
+  { re: /ECONNREFUSED|connect.*refused|Connection failed/i, category: 'provider_down',
     hint: 'LM Studio is not running. Start it and load a model on port 1234 (or whatever LM_STUDIO_URL points at).' },
+  { re: /AggregateError/i, category: 'provider_down',
+    hint: 'Could not reach LM Studio (often localhost:1234 inside Docker while LM runs on another machine). Set LM_STUDIO_REMOTE_URLS to your desktop IP.' },
   { re: /ETIMEDOUT|timeout/i, category: 'timeout',
     hint: 'LM Studio is slow or stuck. Check the Server tab — model may be loading, GPU may be saturated.' },
   { re: /HTML.*not loaded|HTML.*404|<!doctype html>/i, category: 'model_not_loaded',
@@ -136,7 +139,7 @@ class LlmTelemetry {
       correlationId: entry.correlationId || null,
     };
     if (entry.error) {
-      const msg = (entry.error.message || entry.error.toString?.() || String(entry.error)).slice(0, 600);
+      const msg = formatProviderError(entry.error).slice(0, 600);
       const { category, hint } = classifyError(msg);
       rec.error = { message: msg, category, hint };
     }
@@ -214,8 +217,8 @@ class LlmTelemetry {
         p50LatencyMs: null, p95LatencyMs: null, p99LatencyMs: null,
         avgLatencyMs: null,
         tokensInTotal: 0, tokensOutTotal: 0, tokensPerMin: 0,
-        callsPerMin: 0, promptToCompletionRatio: null,
-        avgConversationMsgs: null, maxConversationMsgs: null,
+        callsPerMin: 0, promptToCompletionRatio: null, ratioNote: null,
+        avgConversationMsgs: null, maxConversationMsgs: null, avgPromptChars: null,
         byNpc: {}, byProvider: {}, byKind: {}, topErrors: [],
       };
     }
@@ -268,6 +271,10 @@ class LlmTelemetry {
       ? Math.round(convoLens.reduce((a, b) => a + b, 0) / convoLens.length)
       : null;
     const maxConvo = convoLens.length ? Math.max(...convoLens) : null;
+    const promptCharVals = inWindow.map((r) => r.promptChars).filter(Number.isFinite);
+    const avgPromptChars = promptCharVals.length
+      ? Math.round(promptCharVals.reduce((a, b) => a + b, 0) / promptCharVals.length)
+      : null;
 
     return {
       windowMs,
@@ -286,8 +293,10 @@ class LlmTelemetry {
       // for context, not new output — a signal to trim history.
       callsPerMin: +(inWindow.length / (windowMs / 60000)).toFixed(1),
       promptToCompletionRatio: tokensOut > 0 ? +(tokensIn / tokensOut).toFixed(1) : null,
+      ratioNote: 'LM Studio: raw usage tokens (no API cache discount). Check ratioByKind for think vs chat.',
       avgConversationMsgs: avgConvo,
       maxConversationMsgs: maxConvo,
+      avgPromptChars,
       byNpc: groupBy('npc'),
       byProvider: groupBy('provider'),
       byKind: groupBy('kind'),

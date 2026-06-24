@@ -12,6 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const npcRoster = require('./npc-roster');
 const hallucinationGuard = require('./hallucination-guard');
+const { formatProviderError } = require('./format-provider-error');
+const promptBudget = require('./denizen-prompt-budget');
 
 // Shared world-state singleton + agent bus. Loaded lazily in a try/catch so
 // older test fixtures that import npc-brains in isolation don't break.
@@ -898,6 +900,12 @@ class NpcBrainManager {
         else if (this.providers.claude) provider = 'claude';
       }
 
+      // Coordination / patrol roles don't need the 14B reasoning slot — keeps LM queue clear.
+      const fastRoleRe = /receptionist|security guard|secretary|scheduling/i;
+      if (provider === 'lmstudio' && fastRoleRe.test(role) && this.providers['lmstudio-fast']) {
+        provider = 'lmstudio-fast';
+      }
+
       const baseProviderConfig = this.providers[provider] || this.providers.lmstudio || this.providers.demo;
       const providerConfig = { ...baseProviderConfig, providerKey: provider };
 
@@ -908,6 +916,11 @@ class NpcBrainManager {
         // (Personality Quirks, Idle Phrases, Memory & Callbacks) to save ~150-250
         // tokens per call. Full SOUL.md is still on disk; only the prompt copy shrinks.
         personality: this._trimSoulForPrompt(soul),
+        thinkIdentity: promptBudget.extractThinkIdentity(
+          soul,
+          role,
+          promptTuning?.thinkSoulMaxChars ?? 720,
+        ),
         longTermMemory,
         providerConfig,
         fallbackConfig: null, // No paid API fallback — go straight to canned responses
@@ -1707,7 +1720,7 @@ class NpcBrainManager {
       ? await this._buildTeamMemberOverlay(context.identityId, npcName, context.orgId || null)
       : '';
 
-    const systemPrompt = `${brain.personality}${memorySection}${teamOverlay}
+    const systemPrompt = `${brain.thinkIdentity || brain.personality}${memorySection}${teamOverlay}
 
 ## Your Coworkers
 ${coworkerContext}
@@ -2503,7 +2516,9 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       ? `You have a codebase snippet in your context (## Codebase Snippet). You are actively reading/reviewing this code RIGHT NOW. Reference specific function names, line numbers, or observations from it in your "message" and "save" fields. Don't say you "are reading" — say WHAT you found.\n\n`
       : '';
 
-    const userPrompt = `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Decide what to do next. Respond with ONE JSON object only:
+    const userPrompt = leanThink
+      ? promptBudget.compactThinkUserPrompt(nudge, codeInstruction)
+      : `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Decide what to do next. Respond with ONE JSON object only:
 {"action":"work","thought":"one sentence","message":"under 120 chars or empty","target":"","location":"desk","taskPhase":"continuing","save":"brief status note — never claim shipped/fixed unless run_skill ran","outcome":"ok","skill":""}
 
 ACTION MEANINGS:
@@ -2530,9 +2545,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
 
     try {
       rt.lastThinkLlmAt[npcName] = Date.now();
-      const response = await this._callProvider(brain.providerConfig, systemPrompt, [
-        { role: 'user', content: userPrompt }
-      ], {
+      const thinkCallOpts = {
         maxTokens: promptTuning?.thinkMaxTokens ?? 280,
         sliceLen: promptTuning?.thinkSliceLen ?? 400,
         temperature: 0.95,
@@ -2540,7 +2553,15 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
         kind: 'think',
         jsonSchema: NpcBrainManager.DECISION_SCHEMA,
         jsonSchemaName: 'npc_decision',
-      });
+      };
+      thinkCallOpts.systemPromptChars = systemPrompt.length + userPrompt.length;
+      const response = await this._callThinkWithFastFallback(
+        npcName,
+        brain,
+        systemPrompt,
+        userPrompt,
+        thinkCallOpts,
+      );
 
       // Parse the JSON response with the tolerant parser (handles fences,
       // trailing commas, smart quotes, and truncated output from weaker models).
@@ -2578,6 +2599,29 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
         message: err.message || 'API error — taking a break',
         target: null,
       }, officeContext);
+    }
+  }
+
+  /**
+   * Autonomous think LLM call — on main-tier timeout, retry once on lmstudio-fast.
+   */
+  async _callThinkWithFastFallback(npcName, brain, systemPrompt, userPrompt, opts) {
+    const messages = [{ role: 'user', content: userPrompt }];
+    try {
+      return await this._callProvider(brain.providerConfig, systemPrompt, messages, opts);
+    } catch (err) {
+      const msg = String(err?.message || err);
+      const onMain = brain.provider === 'lmstudio'
+        || brain.providerConfig?.providerKey === 'lmstudio';
+      if (!/timeout/i.test(msg) || !onMain || !this.providers['lmstudio-fast']) {
+        throw err;
+      }
+      log.npcError(npcName, 'think timeout on main LM — retrying lmstudio-fast');
+      const fastConfig = {
+        ...this.providers['lmstudio-fast'],
+        providerKey: 'lmstudio-fast',
+      };
+      return this._callProvider(fastConfig, systemPrompt, messages, opts);
     }
   }
 
@@ -2721,7 +2765,8 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       // Capture the prompt's conversation depth so the panel can flag
       // history-bloat — the call that runs against "51 messages" is the
       // single biggest cost driver per the LM Studio logs.
-      conversationMsgs: messages.length,
+      conversationMsgs: opts.conversationMsgs ?? messages.length,
+      promptChars: opts.systemPromptChars || opts.promptChars || null,
       correlationId: opts.correlationId || null,
     };
     const rec = (extra) => {
@@ -2740,11 +2785,19 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     const maxTokens = opts.maxTokens || 100;
     const sliceLen = opts.sliceLen || 150;
     const tel = this._makeTelHook('anthropic', config, messages, opts);
+    const useCache = promptTuning?.anthropicPromptCache !== false;
+    const staticCap = promptTuning?.thinkSoulMaxChars
+      ? Math.round(promptTuning.thinkSoulMaxChars * 2.2)
+      : 1600;
+    const staticPart = systemPrompt.slice(0, staticCap).trim();
+    const dynamicPart = systemPrompt.length > staticCap ? systemPrompt.slice(staticCap).trim() : '';
     return new Promise((resolve, reject) => {
       const bodyObj = {
         model: config.model,
         max_tokens: maxTokens,
-        system: systemPrompt,
+        system: dynamicPart
+          ? promptBudget.buildAnthropicSystem(staticPart, dynamicPart, { enableCache: useCache })
+          : promptBudget.buildAnthropicSystem(systemPrompt, '', { enableCache: useCache }),
         messages: messages.length > 0 ? messages : [{ role: 'user', content: 'Introduce yourself briefly.' }],
       };
       // Structured output for think calls. Anthropic has no JSON mode, so we
@@ -3058,6 +3111,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
         path: url.pathname,
         method: 'POST',
         headers,
+        family: /^(localhost|127\.0\.0\.1)$/i.test(url.hostname) ? 4 : undefined,
       }, (res) => {
         let full = '';
         let buf = '';
@@ -3173,8 +3227,13 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     // Telemetry hook — tag lmstudio vs lmstudio-fast (config.type is always 'lmstudio').
     const _tel = this._makeTelHook(config?.providerKey || config?.type || 'lmstudio', config, messages, opts);
     const _telRecord = (extra) => {
-      if (extra && extra.error) _tel.onError(extra.error);
-      else _tel.onResponse(extra?.responsePreview, extra?.tokensIn, extra?.tokensOut);
+      if (extra && extra.error) {
+        const wrapped = new Error(formatProviderError(extra.error));
+        wrapped.cause = extra.error;
+        _tel.onError(wrapped);
+      } else {
+        _tel.onResponse(extra?.responsePreview, extra?.tokensIn, extra?.tokensOut);
+      }
     };
 
     const oaiMessages = [
@@ -3260,6 +3319,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       path: url.pathname,
       method: 'POST',
       headers,
+      family: /^(localhost|127\.0\.0\.1)$/i.test(url.hostname) ? 4 : undefined,
     }, (res) => {
       const contentType = res.headers['content-type'] || '';
       let data = '';
@@ -3332,9 +3392,11 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       });
     });
     req.on('error', (err) => { markFailure(); done(); _telRecord({ error: err }); reject(err); });
-    const timeoutMs = opts.priority === 'high'
-      ? (promptTuning?.playerChatTimeoutMs ?? 45000)
-      : 180000;
+    const timeoutMs = opts.kind === 'think'
+      ? (promptTuning?.lmThinkTimeoutMs ?? 120000)
+      : opts.priority === 'high'
+        ? (promptTuning?.playerChatTimeoutMs ?? 45000)
+        : 180000;
     req.setTimeout(timeoutMs, () => {
       markFailure();
       const err = new Error(opts.priority === 'high' ? 'Player chat timeout' : 'LM Studio timeout');
@@ -3444,8 +3506,9 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
   }
 
   _buildCompactThinkSystemPrompt(npcName, brain, parts) {
+    const identity = brain.thinkIdentity || brain.personality;
     const blocks = [
-      brain.personality,
+      identity,
       parts.directiveBlock,
       parts.permissionBlock,
       parts.commitmentBlock,
@@ -3485,7 +3548,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       visitorTeamOverlay, visitorPurposeOverlay,
     } = sections;
     const coworkerShort = String(coworkerContext || '').split('\n').slice(0, 5).join('\n');
-    return `${brain.personality}${memorySection}${visitorPurposeOverlay ? `\n\n${visitorPurposeOverlay}` : ''}${visitorTeamOverlay ? `\n\n${visitorTeamOverlay}` : ''}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
+    return `${brain.thinkIdentity || brain.personality}${memorySection}${visitorPurposeOverlay ? `\n\n${visitorPurposeOverlay}` : ''}${visitorTeamOverlay ? `\n\n${visitorTeamOverlay}` : ''}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
 ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
 ${demoToolBlock || ''}
 ${lucySkillGateBlock || ''}
@@ -4564,11 +4627,17 @@ ${brain.voiceAnchor || ''}`;
     // Add to memory (with intent tag if PC-use detected)
     pushPlayerMemory(playerName, this._sanitize(safeMessage) + intentAnnotation);
 
-    const chatHistoryCap = promptTuning?.playerChatHistoryMsgs ?? 12;
-    const messages = getChatMemories().slice(-chatHistoryCap).map(m => ({
-      role: m.from === npcName ? 'assistant' : 'user',
-      content: m.from === npcName ? m.text : `${m.from} says: "${m.text}"`,
-    }));
+    const chatCompaction = promptBudget.compactChatHistory(getChatMemories(), npcName, {
+      enabled: promptTuning?.playerChatCompaction !== false,
+      recentCount: promptTuning?.playerChatRecentMsgs ?? 4,
+      compactAfter: promptTuning?.playerChatCompactAfter ?? 8,
+      maxSummaryChars: promptTuning?.playerChatSummaryChars ?? 480,
+      maxMessages: promptTuning?.playerChatHistoryMsgs ?? 8,
+    });
+    const messages = chatCompaction.messages;
+    const chatContextBlock = chatCompaction.contextSummary
+      ? `\n## Context so far (compacted)\n${chatCompaction.contextSummary}\n`
+      : '';
 
     // Use higher token limits for CEO conversations — they deserve detailed responses
     // Mark player-chat as high-priority so it jumps the LM Studio queue.
@@ -4581,7 +4650,11 @@ ${brain.voiceAnchor || ''}`;
       priority: 'high',
       npc: npcName,
       kind: 'chat',
+      conversationMsgs: chatCompaction.conversationMsgs,
+      systemPromptChars: 0,
     };
+    const finalSystemPrompt = `${systemPrompt}${chatContextBlock}`;
+    playerOpts.systemPromptChars = finalSystemPrompt.length;
 
     const providerOverride = this._resolveVisitorProviderOverrides(opts);
     const activeProvider = providerOverride?.primary || brain.providerConfig;
@@ -4589,7 +4662,7 @@ ${brain.voiceAnchor || ''}`;
 
     let responseText;
     try {
-      responseText = await this._callProvider(activeProvider, systemPrompt, messages, playerOpts);
+      responseText = await this._callProvider(activeProvider, finalSystemPrompt, messages, playerOpts);
     } catch (err) {
       const now = Date.now();
       const lastErr = this._lastErrorLog?.[npcName] || 0;
@@ -4602,7 +4675,7 @@ ${brain.voiceAnchor || ''}`;
       // Try fallback provider
       if (activeFallback && activeFallback !== activeProvider) {
         try {
-          responseText = await this._callProvider(activeFallback, systemPrompt, messages, playerOpts);
+          responseText = await this._callProvider(activeFallback, finalSystemPrompt, messages, playerOpts);
         } catch (e2) {
           responseText = null;
         }

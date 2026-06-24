@@ -266,6 +266,17 @@
       ],
     },
     { label: 'Memory & status', tools: ['get_status', 'update_memory', 'log_activity'] },
+    {
+      label: 'Mesh & City Power',
+      tools: ['enqueue_compute_job', 'get_job_status', 'get_inference_nodes'],
+    },
+    {
+      label: 'Cursor bridge',
+      tools: [
+        'enqueue_cursor_work', 'list_cursor_work',
+        'claim_cursor_work', 'complete_cursor_work',
+      ],
+    },
   ];
 
   const OPTIONAL_ADDONS = [
@@ -289,7 +300,7 @@
   }
 
   const SCOPE_PRESET_OPTIONS = [
-    { id: 'full', label: 'Full access', hint: 'read · skills · CRM · handoffs · delegate' },
+    { id: 'full', label: 'Full access', hint: 'read · skills · CRM · handoffs · delegate · compute' },
     { id: 'standard', label: 'Standard', hint: 'read · skills · handoffs' },
     { id: 'read', label: 'Read only', hint: 'status · memory sync · no skills' },
   ];
