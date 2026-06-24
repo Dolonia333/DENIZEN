@@ -111,6 +111,7 @@ const robinhoodMcp     = require('./src/robinhood-mcp');
 const marketScheduler  = require('./src/denizen-market-scheduler');
 const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
 const teamMcpGateway   = require('./src/denizen-mcp-team-gateway');
+const mcpScopes        = require('./src/denizen-mcp-scopes');
 const mcpOauth         = require('./src/denizen-mcp-oauth');
 const routeRegistry    = require('./src/route-registry');
 const competencyMap    = require('./src/competency-map');
@@ -1801,6 +1802,15 @@ function _canManageOrgNpcTeam(session) {
   if (session.is_ceo_principal || session.tier === 'ceo') return true;
   const role = String(session.team_role || '').toLowerCase();
   return role === 'owner' || role === 'admin' || role === 'ceo';
+}
+
+function _mcpScopesFromBody(body = {}) {
+  if (Array.isArray(body.scopes) && body.scopes.length) {
+    return mcpScopes.normalizeScopes(body.scopes);
+  }
+  const preset = body.scope_preset || body.scopePreset;
+  if (preset) return mcpScopes.normalizeScopes(preset);
+  return mcpScopes.normalizeScopes(null);
 }
 
 function _hasOrgNpcTeamAccess(session) {
@@ -7864,6 +7874,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/mcp/tokens' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', {});
+      const session = await visitorAccess.resolveSessionAccess(sessionId).catch(() => null);
+      const orgWide = _canManageOrgNpcTeam(session);
+      const listed = await denizenDb._rpc('denizen_list_mcp_tokens', {
+        p_org_id: access.orgId,
+        p_session_id: sessionId,
+        p_org_wide: orgWide,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(listed || { ok: false, error: 'list_failed' }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/mcp/tokens' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 32 * 1024);
@@ -7889,6 +7928,7 @@ const server = http.createServer((req, res) => {
         memberId: accounts?.[0]?.id || null,
         sessionId,
         label: body.label || null,
+        scopes: _mcpScopesFromBody(body),
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
@@ -7924,6 +7964,7 @@ const server = http.createServer((req, res) => {
         memberId: accounts?.[0]?.id || null,
         sessionId,
         label: body.label || 'team-operator',
+        scopes: _mcpScopesFromBody(body),
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
@@ -7931,6 +7972,76 @@ const server = http.createServer((req, res) => {
         scope_mode: 'team',
         ...result,
         warning: 'Save this token now — it cannot be retrieved again.',
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/mcp/tokens/revoke' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const tokenId = body.token_id || body.tokenId;
+      if (!sessionId || !tokenId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and token_id required' }));
+        return;
+      }
+      const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
+      const session = await visitorAccess.resolveSessionAccess(sessionId).catch(() => null);
+      const orgWide = _canManageOrgNpcTeam(session);
+      const revoked = await denizenDb._rpc('denizen_revoke_mcp_token', {
+        p_token_id: tokenId,
+        p_org_id: access.orgId,
+        p_session_id: sessionId,
+        p_org_wide: orgWide,
+      });
+      res.writeHead(revoked?.ok ? 200 : 403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(revoked || { ok: false, error: 'revoke_failed' }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/mcp/test' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const bearer = String(body.token || '').trim();
+      const teamMode = body.team === true || body.team === '1' || body.scope_mode === 'team';
+      if (!sessionId || !bearer) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and token required' }));
+        return;
+      }
+      await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
+      const scope = await npcMcpGateway.resolveToken(bearer);
+      if (!scope?.ok) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'invalid or revoked token' }));
+        return;
+      }
+      const tool = teamMode || scope.npc_key === '_team' ? 'team_status' : 'get_status';
+      const result = teamMode || scope.npc_key === '_team'
+        ? await teamMcpGateway.callTool(scope, tool, {})
+        : await npcMcpGateway.callTool(scope, tool, { limit: 5 });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: result?.ok !== false,
+        tool,
+        scopes: scope.scopes || mcpScopes.ALL_SCOPES,
+        result,
       }));
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {

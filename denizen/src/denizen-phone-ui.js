@@ -2755,6 +2755,10 @@
         </div>
       </div>
       <div class="sec">
+        <h3>AI Connections</h3>
+        <div id="dzp-mcp-settings-host"><p class="v">Loading…</p></div>
+      </div>
+      <div class="sec">
         <h3>Interface</h3>
         <div class="row">
           <span>Classic toolbar<br><span class="v">Reload with the legacy bottom dock</span></span>
@@ -2769,6 +2773,7 @@
         </div>
       </div>`;
     settingsEl.classList.add('show');
+    void loadPhoneMcpSettings();
     const onAct = (e) => {
       const act = e.target?.closest?.('[data-act]')?.dataset?.act;
       if (act === 'legacy') {
@@ -2788,6 +2793,20 @@
       }
     };
     settingsEl.onclick = onAct;
+  }
+
+  async function loadPhoneMcpSettings() {
+    const host = settingsEl?.querySelector('#dzp-mcp-settings-host');
+    if (!host) return;
+    try {
+      if (!globalThis.DenizenVisitorMcpConnectUI?.renderSettingsPanel) {
+        await globalThis.DenizenLazyScripts?.load?.(['./src/visitor-mcp-connect-ui.js?v=mcp6gov']);
+        globalThis.DenizenVisitorMcpConnectUI?.attach?.();
+      }
+      await globalThis.DenizenVisitorMcpConnectUI?.renderSettingsPanel?.(host);
+    } catch (_) {
+      host.innerHTML = '<p class="v">Sign in and claim an assistant to connect MCP.</p>';
+    }
   }
 
   function activateApp(app) {

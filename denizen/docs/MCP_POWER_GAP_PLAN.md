@@ -55,13 +55,13 @@ Phase 1–2 ship on **per-NPC tokens** (already carry `org_id`, `session_id`, `m
 | P3.2 | `GET/POST /mcp/team` — `team_status`, `run_as_npc`, `broadcast_task` | ✅ |
 | P3.3 | MCP Resources `team://roster`, `team://handoffs` | ✅ |
 
-### Phase 4 — Governance (backlog)
+### Phase 4 — Governance ✅
 
-| ID | Deliverable |
-|----|-------------|
-| P4.1 | Token scopes: `read`, `skills`, `crm_write`, `handoff`, `delegate` |
-| P4.2 | `denizen_mcp_audit` table + admin revoke UI |
-| P4.3 | Connect AI: Test MCP button + token rotate |
+| ID | Deliverable | Status |
+|----|-------------|--------|
+| P4.1 | Token scopes: `read`, `skills`, `crm_write`, `handoff`, `delegate` | ✅ |
+| P4.2 | `denizen_mcp_audit` table + revoke UI in Settings | ✅ |
+| P4.3 | Connect AI: Test MCP button + token rotate | ✅ |
 
 ### Phase 5 — Mesh power (backlog)
 
@@ -84,6 +84,7 @@ Phase 1–2 ship on **per-NPC tokens** (already carry `org_id`, `session_id`, `m
 
 | File | Role |
 |------|------|
+| `src/denizen-mcp-scopes.js` | Scope presets + tool gating |
 | `src/denizen-mcp-team-tools.js` | Team roster, handoffs, status enrichment |
 | `src/denizen-mcp-crm-tools.js` | First-class CRM tools |
 | `src/denizen-npc-mcp-gateway.js` | Wire tools + v1.8.0 |

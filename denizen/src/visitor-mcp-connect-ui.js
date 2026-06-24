@@ -131,8 +131,140 @@
         background: rgba(96, 165, 250, 0.12);
         color: #93c5fd;
       }
+      .mcp-set { display: flex; flex-direction: column; gap: 10px; }
+      .mcp-set-hint {
+        margin: 0 0 4px;
+        color: #94a3b8;
+        font-size: 11px;
+        line-height: 1.45;
+      }
+      .mcp-set-card {
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: rgba(15, 23, 42, 0.55);
+      }
+      .mcp-set-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .mcp-set-head strong {
+        color: #e2e8f0;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .mcp-set-tag {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #93c5fd;
+        border: 1px solid rgba(96, 165, 250, 0.35);
+        border-radius: 999px;
+        padding: 2px 7px;
+      }
+      .mcp-set-tag.ext { color: #fbbf24; border-color: rgba(251, 191, 36, 0.35); }
+      .mcp-set-sub { color: #64748b; font-size: 10px; margin-bottom: 6px; }
+      .mcp-set-url {
+        color: #cbd5e1;
+        font: 10px/1.4 ui-monospace, monospace;
+        word-break: break-all;
+        margin-bottom: 6px;
+      }
+      .mcp-set-meta { color: #64748b; font-size: 10px; margin-bottom: 8px; }
+      .mcp-set-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .mcp-set-actions button {
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #cbd5e1;
+        border-radius: 10px;
+        cursor: pointer;
+        font: 600 11px/1.2 system-ui, sans-serif;
+        padding: 7px 12px;
+        touch-action: manipulation;
+      }
+      .mcp-set-actions button.primary {
+        border-color: rgba(96, 165, 250, 0.45);
+        color: #93c5fd;
+      }
+      .mcp-set-actions button:hover { border-color: #60a5fa; color: #dbeafe; }
+      .mcp-set-empty { color: #94a3b8; font-size: 11px; line-height: 1.45; margin: 0; }
+      .mcp-set-scope {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 8px;
+        font-size: 10px;
+        color: #94a3b8;
+      }
+      .mcp-set-scope select {
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #cbd5e1;
+        border-radius: 8px;
+        padding: 6px 8px;
+        font: 11px system-ui, sans-serif;
+      }
+      .mcp-set-scope-hint { color: #64748b; font-size: 9px; }
+      .mcp-token-row {
+        border-top: 1px solid #1e293b;
+        padding-top: 8px;
+        margin-top: 8px;
+        font-size: 10px;
+      }
+      .mcp-token-row .mcp-set-meta { margin-bottom: 6px; }
+      #${MODAL_ID} .mcp-test {
+        background: #1e293b;
+        color: #93c5fd;
+        border: 1px solid rgba(96, 165, 250, 0.35);
+      }
+      #${MODAL_ID} .mcp-rotate {
+        background: transparent;
+        color: #94a3b8;
+      }
+      #${MODAL_ID} .mcp-scope-line {
+        color: #64748b;
+        font-size: 10px;
+        margin: 0 0 10px;
+      }
     `;
     document.head.appendChild(s);
+  }
+
+  const EXTERNAL_MCPS = [
+    {
+      id: 'robinhood',
+      title: 'Robinhood Trading',
+      subtitle: 'OAuth in Cursor · read quotes & portfolio',
+      url: 'https://agent.robinhood.com/mcp/trading',
+    },
+  ];
+
+  const SCOPE_PRESET_OPTIONS = [
+    { id: 'full', label: 'Full access', hint: 'read · skills · CRM · handoffs · delegate' },
+    { id: 'standard', label: 'Standard', hint: 'read · skills · handoffs' },
+    { id: 'read', label: 'Read only', hint: 'status · memory sync · no skills' },
+  ];
+
+  function scopeSelectHtml(selected = 'full') {
+    const opts = SCOPE_PRESET_OPTIONS.map((p) => (
+      `<option value="${p.id}" ${p.id === selected ? 'selected' : ''}>${p.label}</option>`
+    )).join('');
+    return `<label class="mcp-set-scope">Access
+      <select data-scope-preset>${opts}</select>
+      <span class="mcp-set-scope-hint">${SCOPE_PRESET_OPTIONS.find((p) => p.id === selected)?.hint || ''}</span>
+    </label>`;
+  }
+
+  function readScopePreset(el) {
+    return el?.querySelector?.('[data-scope-preset]')?.value || 'full';
   }
 
   function sessionAuthHeaders() {
@@ -142,7 +274,7 @@
     return { 'X-Session-Token': token };
   }
 
-  async function createTeamToken() {
+  async function createTeamToken(opts = {}) {
     const sess = globalThis.DenizenVisitorSession;
     const sessionId = sess?.getSessionId?.();
     if (!sessionId) throw new Error('No visitor session');
@@ -155,7 +287,9 @@
       },
       body: JSON.stringify({
         session_id: sessionId,
-        label: 'team-operator',
+        label: opts.label || 'team-operator',
+        scope_preset: opts.scopePreset || opts.scope_preset || 'full',
+        scopes: opts.scopes,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -165,7 +299,241 @@
     return data;
   }
 
-  async function createToken(npcKey) {
+  async function fetchConnectInfo({ npcKey, team } = {}) {
+    const u = new URL('/api/mcp/connect-info', window.location.origin);
+    if (team) u.searchParams.set('team', '1');
+    else if (npcKey) u.searchParams.set('npc_key', npcKey);
+    const sess = globalThis.DenizenVisitorSession;
+    const sid = sess?.getSessionId?.();
+    if (sid) u.searchParams.set('session_id', sid);
+    const res = await fetch(u.toString(), { headers: sessionAuthHeaders() });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  function canUseTeamMcp() {
+    const sess = globalThis.DenizenVisitorSession;
+    const tier = sess?.getAccessTier?.() || sess?.getTier?.();
+    return tier === 'team' || tier === 'owner' || sess?.isTeamSession?.();
+  }
+
+  function getAssistantConnection() {
+    const sess = globalThis.DenizenVisitorSession;
+    const asst = sess?.getAssistant?.();
+    if (!asst?.npc_key || sess?.isProtectedNpc?.(asst.npc_key)) return null;
+    return {
+      id: 'assistant',
+      npcKey: asst.npc_key,
+      title: asst.assistant_name || asst.npc_key,
+      tag: 'Assistant',
+    };
+  }
+
+  async function renderSettingsPanel(hostEl) {
+    if (!hostEl) return;
+    injectStyles();
+    hostEl.innerHTML = '<p class="mcp-set-empty">Loading connections…</p>';
+
+    const cards = [];
+    const assistant = getAssistantConnection();
+    if (assistant) cards.push({ ...assistant, team: false });
+    if (canUseTeamMcp()) {
+      cards.push({
+        id: 'team',
+        npcKey: '_team',
+        title: 'Team operator',
+        tag: 'Whole office',
+        team: true,
+      });
+    }
+
+    if (!cards.length) {
+      hostEl.innerHTML = `
+        <p class="mcp-set-hint">Connect Cursor, Claude, or ChatGPT to your Denizen office.</p>
+        <p class="mcp-set-empty">Claim an assistant in chat first, then return here to connect.</p>`;
+      renderExternalMcpCards(hostEl);
+      return;
+    }
+
+    const infos = await Promise.all(cards.map(async (c) => {
+      try {
+        const info = await fetchConnectInfo({ npcKey: c.team ? null : c.npcKey, team: c.team });
+        return { ...c, info, error: null };
+      } catch (err) {
+        return { ...c, info: null, error: err?.message || 'Unavailable' };
+      }
+    }));
+
+    hostEl.innerHTML = `
+      <p class="mcp-set-hint">One place for every Denizen MCP. Paste the URL in Cursor, Claude, or ChatGPT — or tap Connect for the full setup.</p>
+      <div class="mcp-set" id="mcp-set-denizen"></div>`;
+    const denizenHost = hostEl.querySelector('#mcp-set-denizen');
+
+    for (const row of infos) {
+      const card = document.createElement('div');
+      card.className = 'mcp-set-card';
+      card.dataset.mcpId = row.id;
+      const url = row.info?.mcp_url || '—';
+      const toolCount = Array.isArray(row.info?.tools) ? row.info.tools.length : 0;
+      const meta = row.error
+        ? row.error
+        : (toolCount ? `${toolCount} tools` : 'Ready to connect');
+      card.innerHTML = `
+        <div class="mcp-set-head">
+          <strong>${escHtml(row.title)}</strong>
+          <span class="mcp-set-tag">${escHtml(row.tag)}</span>
+        </div>
+        <div class="mcp-set-url">${escHtml(url)}</div>
+        <div class="mcp-set-meta">${escHtml(meta)}</div>
+        ${scopeSelectHtml('full')}
+        <div class="mcp-set-actions">
+          <button type="button" class="primary" data-act="connect">Connect</button>
+          <button type="button" data-act="copy-url" ${row.info?.mcp_url ? '' : 'disabled'}>Copy URL</button>
+        </div>`;
+      const scopeSelect = card.querySelector('[data-scope-preset]');
+      scopeSelect?.addEventListener('change', () => {
+        const hint = card.querySelector('.mcp-set-scope-hint');
+        const preset = SCOPE_PRESET_OPTIONS.find((p) => p.id === scopeSelect.value);
+        if (hint && preset) hint.textContent = preset.hint;
+      });
+      card.querySelector('[data-act="connect"]')?.addEventListener('click', () => {
+        const preset = readScopePreset(card);
+        if (row.team) openTeamConnectFlow(preset);
+        else openConnectFlow(row.npcKey, row.title, preset);
+      });
+      card.querySelector('[data-act="copy-url"]')?.addEventListener('click', async (e) => {
+        if (!row.info?.mcp_url) return;
+        await copyText(row.info.mcp_url);
+        const btn = e.currentTarget;
+        const prev = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = prev; }, 1500);
+      });
+      denizenHost.appendChild(card);
+    }
+
+    renderExternalMcpCards(hostEl);
+    await renderActiveTokens(hostEl);
+  }
+
+  async function listTokens() {
+    const sess = globalThis.DenizenVisitorSession;
+    const sessionId = sess?.getSessionId?.();
+    if (!sessionId) return { ok: false, tokens: [] };
+    const u = new URL('/api/mcp/tokens', window.location.origin);
+    u.searchParams.set('session_id', sessionId);
+    const res = await fetch(u.toString(), { headers: sessionAuthHeaders() });
+    return res.json().catch(() => ({ ok: false, tokens: [] }));
+  }
+
+  async function revokeToken(tokenId) {
+    const sess = globalThis.DenizenVisitorSession;
+    const sessionId = sess?.getSessionId?.();
+    if (!sessionId || !tokenId) throw new Error('Missing session or token');
+    const res = await fetch('/api/mcp/tokens/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...sessionAuthHeaders() },
+      body: JSON.stringify({ session_id: sessionId, token_id: tokenId }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  }
+
+  async function testMcpConnection(payload) {
+    const sess = globalThis.DenizenVisitorSession;
+    const sessionId = sess?.getSessionId?.();
+    if (!sessionId || !payload?.token) throw new Error('No session or token');
+    const res = await fetch('/api/mcp/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...sessionAuthHeaders() },
+      body: JSON.stringify({
+        session_id: sessionId,
+        token: payload.token,
+        team: payload.npc_key === '_team',
+      }),
+    });
+    return res.json().catch(() => ({ ok: false, error: 'test_failed' }));
+  }
+
+  function formatTokenWhen(iso) {
+    if (!iso) return 'never';
+    try {
+      return new Date(iso).toLocaleString();
+    } catch (_) {
+      return String(iso);
+    }
+  }
+
+  async function renderActiveTokens(hostEl) {
+    const listed = await listTokens();
+    if (!listed.ok || !listed.tokens?.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'mcp-set';
+    wrap.innerHTML = '<p class="mcp-set-hint" style="margin-top:10px">Active tokens — revoke any connection you no longer trust.</p>';
+    for (const t of listed.tokens) {
+      const row = document.createElement('div');
+      row.className = 'mcp-set-card mcp-token-row';
+      const scopes = Array.isArray(t.scopes) ? t.scopes.join(', ') : 'full';
+      const label = t.label || t.npc_key;
+      row.innerHTML = `
+        <div class="mcp-set-head">
+          <strong>${escHtml(label)}</strong>
+          <span class="mcp-set-tag">${escHtml(t.npc_key === '_team' ? 'Team' : 'NPC')}</span>
+        </div>
+        <div class="mcp-set-meta">Scopes: ${escHtml(scopes)} · last used ${escHtml(formatTokenWhen(t.last_used_at))}</div>
+        <div class="mcp-set-actions">
+          <button type="button" data-act="revoke">Revoke</button>
+        </div>`;
+      row.querySelector('[data-act="revoke"]')?.addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        if (!confirm(`Revoke token for ${label}? Connected AIs will stop working.`)) return;
+        btn.disabled = true;
+        try {
+          await revokeToken(t.id);
+          row.remove();
+        } catch (err) {
+          alert(err?.message || 'Could not revoke');
+          btn.disabled = false;
+        }
+      });
+      wrap.appendChild(row);
+    }
+    hostEl.appendChild(wrap);
+  }
+
+  function renderExternalMcpCards(hostEl) {
+    if (!EXTERNAL_MCPS.length) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'mcp-set';
+    wrap.style.marginTop = '6px';
+    for (const ext of EXTERNAL_MCPS) {
+      const card = document.createElement('div');
+      card.className = 'mcp-set-card';
+      card.innerHTML = `
+        <div class="mcp-set-head">
+          <strong>${escHtml(ext.title)}</strong>
+          <span class="mcp-set-tag ext">External</span>
+        </div>
+        <div class="mcp-set-sub">${escHtml(ext.subtitle)}</div>
+        <div class="mcp-set-url">${escHtml(ext.url)}</div>
+        <div class="mcp-set-actions">
+          <button type="button" data-act="copy-url">Copy URL</button>
+        </div>`;
+      card.querySelector('[data-act="copy-url"]')?.addEventListener('click', async (e) => {
+        await copyText(ext.url);
+        const btn = e.currentTarget;
+        const prev = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = prev; }, 1500);
+      });
+      wrap.appendChild(card);
+    }
+    hostEl.appendChild(wrap);
+  }
+
+  async function createToken(npcKey, opts = {}) {
     const sess = globalThis.DenizenVisitorSession;
     const sessionId = sess?.getSessionId?.();
     if (!sessionId) throw new Error('No visitor session');
@@ -179,7 +547,9 @@
       body: JSON.stringify({
         session_id: sessionId,
         npc_key: npcKey,
-        label: 'visitor-ui',
+        label: opts.label || 'visitor-ui',
+        scope_preset: opts.scopePreset || opts.scope_preset || 'full',
+        scopes: opts.scopes,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -239,11 +609,15 @@
     const claudeSteps = (payload.claude_ai?.steps || []).map((s) => `<li>${s}</li>`).join('');
 
     const mcpUrl = payload.mcp_url || '';
+    const scopeLine = Array.isArray(payload.scopes) && payload.scopes.length
+      ? payload.scopes.join(', ')
+      : 'full';
     const modal = document.createElement('div');
     modal.id = MODAL_ID;
     modal.innerHTML = `
       <div class="mcp-card">
         <h3>Connect your AI to ${displayName}</h3>
+        <p class="mcp-scope-line">Token scopes: ${escHtml(scopeLine)}</p>
         <p>Use your existing AI subscription — paste one URL and approve. No token to copy.</p>
         <div class="mcp-tabs">
           <button type="button" class="mcp-tab active" data-tab="oauth">1-Click<span class="mcp-badge">Easiest</span></button>
@@ -332,6 +706,8 @@
         </div>
 
         <div class="mcp-actions">
+          <button type="button" class="mcp-test">Test connection</button>
+          <button type="button" class="mcp-rotate">Rotate token</button>
           <button type="button" class="mcp-close">Done</button>
         </div>
       </div>
@@ -360,6 +736,35 @@
     });
 
     bindCopyButtons(modal, (key) => texts[key] || '');
+    const testBtn = modal.querySelector('.mcp-test');
+    testBtn?.addEventListener('click', async () => {
+      testBtn.disabled = true;
+      const prev = testBtn.textContent;
+      testBtn.textContent = 'Testing…';
+      try {
+        const out = await testMcpConnection(payload);
+        testBtn.textContent = out.ok ? 'Connected ✓' : `Failed: ${out.result?.error || out.error || 'unknown'}`;
+      } catch (err) {
+        testBtn.textContent = `Failed: ${err?.message || 'error'}`;
+      }
+      setTimeout(() => {
+        testBtn.textContent = prev;
+        testBtn.disabled = false;
+      }, 3500);
+    });
+    modal.querySelector('.mcp-rotate')?.addEventListener('click', async () => {
+      if (!confirm('Create a new token and revoke this one? Update Cursor with the new bearer token.')) return;
+      try {
+        if (payload.token_id) await revokeToken(payload.token_id);
+        const fresh = npcKey === '_team'
+          ? await createTeamToken({ scopes: payload.scopes })
+          : await createToken(npcKey, { scopes: payload.scopes });
+        if (npcKey !== '_team') syncCompanion(fresh, displayName);
+        showTokenModal(npcKey, displayName, fresh);
+      } catch (err) {
+        alert(err?.message || 'Could not rotate token');
+      }
+    });
     modal.querySelector('.mcp-close').addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
@@ -372,9 +777,9 @@
     } catch (_) { /* extension optional */ }
   }
 
-  async function openTeamConnectFlow() {
+  async function openTeamConnectFlow(scopePreset = 'full') {
     try {
-      const payload = await createTeamToken();
+      const payload = await createTeamToken({ scopePreset });
       showTokenModal('_team', 'Team Operator', payload);
     } catch (err) {
       console.warn('[DenizenVisitorMcpConnectUI]', err);
@@ -382,9 +787,9 @@
     }
   }
 
-  async function openConnectFlow(npcKey, displayName) {
+  async function openConnectFlow(npcKey, displayName, scopePreset = 'full') {
     try {
-      const payload = await createToken(npcKey);
+      const payload = await createToken(npcKey, { scopePreset });
       syncCompanion(payload, displayName);
       showTokenModal(npcKey, displayName, payload);
     } catch (err) {
@@ -528,7 +933,22 @@
     },
 
     openConnect(npcKey = null, displayName = null) {
-      openConnectFlow(npcKey, displayName);
+      const asst = globalThis.DenizenVisitorSession?.getAssistant?.();
+      const key = npcKey || asst?.npc_key;
+      const name = displayName || asst?.assistant_name || key;
+      if (!key) {
+        alert('Claim an assistant first, then connect MCP.');
+        return;
+      }
+      openConnectFlow(key, name);
+    },
+
+    openTeamConnect() {
+      openTeamConnectFlow();
+    },
+
+    renderSettingsPanel(hostEl) {
+      return renderSettingsPanel(hostEl);
     },
 
     offerAfterClaim(npcKey, displayName) {

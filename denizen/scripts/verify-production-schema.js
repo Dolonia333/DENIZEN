@@ -8,6 +8,7 @@ const requiredTables = [
   'denizen_watchlist_symbols',
   'denizen_trade_suggestions',
   'denizen_mcp_tokens',
+  'denizen_mcp_audit',
 ];
 
 function getBaseUrl() {

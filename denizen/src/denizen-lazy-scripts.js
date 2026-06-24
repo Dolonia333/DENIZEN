@@ -96,7 +96,7 @@
   function afterOffice() {
     const urls = [
       './src/visitor-companion-bridge.js?v=comp1',
-      './src/visitor-mcp-connect-ui.js?v=mcp4oauth',
+      './src/visitor-mcp-connect-ui.js?v=mcp6gov',
       './src/visitor-briefing-ui.js?v=vis3',
       './src/visitor-voice-walkup.js?v=vis3',
       './src/visitor-skill-gap-ui.js?v=sgap1',

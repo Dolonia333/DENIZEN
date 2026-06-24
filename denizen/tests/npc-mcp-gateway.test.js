@@ -294,4 +294,21 @@ describe('npc-mcp-gateway', () => {
 
     await new Promise((resolve) => server.close(resolve));
   });
+
+  it('read-only scope denies run_skill', async () => {
+    const readScope = { ...SCOPE, scopes: ['read'] };
+    const allowed = await gateway.callTool(readScope, 'get_status', { limit: 3 });
+    assert.equal(allowed.ok, true);
+    const denied = await gateway.callTool(readScope, 'run_skill', { skill: 'research' });
+    assert.equal(denied.ok, false);
+    assert.equal(denied.error, 'scope_denied');
+    assert.equal(denied.required_scope, 'skills');
+  });
+
+  it('toolsForScope hides tools outside granted scopes', () => {
+    const readScope = { ...SCOPE, scopes: ['read'] };
+    const names = gateway.toolsForScope(readScope).map((t) => t.name);
+    assert.ok(names.includes('get_status'));
+    assert.ok(!names.includes('run_skill'));
+  });
 });

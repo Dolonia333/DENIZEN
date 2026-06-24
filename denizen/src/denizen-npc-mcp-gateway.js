@@ -14,6 +14,7 @@ const mcpActions = require('./denizen-mcp-actions.js');
 const mcpMarketTools = require('./denizen-mcp-market-tools.js');
 const mcpTeamTools = require('./denizen-mcp-team-tools.js');
 const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
+const mcpScopes = require('./denizen-mcp-scopes.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
@@ -258,7 +259,24 @@ async function toolLogActivity(scope, args) {
   return { ok: true, logged: true, npc_key: scope.npc_key };
 }
 
-async function callTool(scope, name, args) {
+async function logMcpAudit(scope, toolName, result) {
+  if (!denizenDb.enabled || !scope?.org_id) return;
+  try {
+    await denizenDb._rpc('denizen_log_mcp_audit', {
+      p_org_id: scope.org_id,
+      p_token_id: scope.token_id || null,
+      p_npc_key: scope.npc_key,
+      p_tool_name: toolName,
+      p_ok: result?.ok !== false && result?.error !== 'scope_denied',
+      p_error_code: result?.error || null,
+      p_session_id: scope.session_id || null,
+      p_member_id: scope.member_id || null,
+      p_meta: {},
+    });
+  } catch (_) { /* audit must not block tools */ }
+}
+
+async function callToolImpl(scope, name, args) {
   if (mcpMarketTools.isMarketNpc(scope.npc_key) && mcpMarketTools.toolsForNpc(scope.npc_key).some((t) => t.name === name)) {
     return mcpMarketTools.callTool(scope.npc_key, name, args);
   }
@@ -281,6 +299,23 @@ async function callTool(scope, name, args) {
   }
 }
 
+async function callTool(scope, name, args) {
+  const toolName = String(name || '').trim();
+  if (!mcpScopes.toolAllowed(scope, toolName)) {
+    const denied = {
+      ok: false,
+      error: 'scope_denied',
+      required_scope: mcpScopes.requiredScope(toolName),
+      granted_scopes: mcpScopes.scopesFromTokenScope(scope),
+    };
+    logMcpAudit(scope, toolName, denied);
+    return denied;
+  }
+  const result = await callToolImpl(scope, toolName, args);
+  logMcpAudit(scope, toolName, result);
+  return result;
+}
+
 function configure(deps = {}) {
   mcpActions.configure(deps);
   mcpMarketTools.configure(deps);
@@ -295,7 +330,7 @@ function toolsForScope(scope) {
     base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
     base.push(...mcpMarketTools.toolsForNpc(scope.npc_key));
   }
-  return base;
+  return mcpScopes.filterTools(scope, base);
 }
 
 async function handleRpc(scope, req, res, message, sessionId) {
@@ -311,7 +346,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {} },
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.8.0' },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.9.0' },
       },
     });
   }
@@ -717,6 +752,8 @@ async function createMcpToken({
   memberId = null,
   sessionId = null,
   label = null,
+  scopes = null,
+  scopePreset = null,
 } = {}) {
   if (!denizenDb.enabled || !orgId || !npcKey) {
     throw new Error('database unavailable or missing org/npc');
@@ -724,6 +761,7 @@ async function createMcpToken({
 
   const token = crypto.randomBytes(32).toString('base64url');
   const tokenHash = hashSessionToken(token);
+  const normalizedScopes = mcpScopes.normalizeScopes(scopes || scopePreset);
 
   const tokenId = await denizenDb._rpc('denizen_register_mcp_token', {
     p_org_id: orgId,
@@ -732,6 +770,7 @@ async function createMcpToken({
     p_member_id: memberId || null,
     p_session_id: sessionId || null,
     p_label: label || null,
+    p_metadata: { scopes: normalizedScopes },
   });
 
   const baseUrl = getPublicBaseUrl();
@@ -745,6 +784,7 @@ async function createMcpToken({
     token,
     mcp_url: mcpUrl,
     npc_key: npcKey,
+    scopes: normalizedScopes,
     ...onboarding,
     cursor_config: {
       mcpServers: {

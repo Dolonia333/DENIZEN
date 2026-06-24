@@ -31,6 +31,8 @@ SYNC_PATHS = [
     "src/denizen-mcp-market-tools.js",
     "src/denizen-mcp-team-tools.js",
     "src/denizen-mcp-crm-tools.js",
+    "src/denizen-mcp-scopes.js",
+    "src/denizen-lazy-scripts.js",
     "src/denizen-mcp-team-gateway.js",
     "src/denizen-npc-mcp-gateway.js",
     "src/visitor-mcp-connect-ui.js",

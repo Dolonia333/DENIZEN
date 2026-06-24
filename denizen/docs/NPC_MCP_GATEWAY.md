@@ -29,8 +29,12 @@ Dual-write: in-world NPC brains still write `npcs/*/MEMORY.md`; MCP and brain sa
 | `denizen_npc_memories.source` | `npc_brain`, `mcp`, etc. |
 | `denizen_npc_memories.member_id` | Optional team account link |
 | `denizen_mcp_tokens` | Hashed bearer tokens (plaintext shown once) |
-| `denizen_resolve_mcp_token` | Validate token → scope JSON |
+| `denizen_mcp_audit` | Per-tool-call audit log (org + token + tool) |
+| `denizen_resolve_mcp_token` | Validate token → scope JSON (includes `scopes[]`) |
 | `denizen_register_mcp_token` | Register hash after team session check |
+| `denizen_list_mcp_tokens` | List active tokens for session or org admin |
+| `denizen_revoke_mcp_token` | Revoke token (owner session or org admin) |
+| `denizen_log_mcp_audit` | Append audit row from gateway |
 
 Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (`acme`) is blocked.
 
@@ -41,6 +45,9 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 | `GET` | `/mcp/npc/:npcKey` | Bearer | Tool manifest probe |
 | `POST` | `/mcp/npc/:npcKey` | Bearer | JSON-RPC MCP (initialize, tools/list, tools/call) |
 | `POST` | `/api/mcp/tokens` | Visitor session (team tier) | Create per-NPC token — returns plaintext once |
+| `GET` | `/api/mcp/tokens?session_id=` | Visitor session | List active tokens (org admins see all org tokens) |
+| `POST` | `/api/mcp/tokens/revoke` | Visitor session | Revoke a token by `token_id` |
+| `POST` | `/api/mcp/test` | Visitor session | Test bearer token (`get_status` or `team_status`) |
 | `POST` | `/api/mcp/team-tokens` | Visitor session (team tier) | Create org team operator token (`/mcp/team`) |
 | `GET` | `/mcp/team` | Team bearer | Team tool manifest |
 | `POST` | `/mcp/team` | Team bearer | Team JSON-RPC MCP |
@@ -93,6 +100,22 @@ Use **Team MCP** in the office UI or `POST /api/mcp/team-tokens`.
 | `list_team` / `send_handoff` / `list_pending_handoffs` | Team orchestration |
 
 **MCP Resources:** `team://roster`, `team://handoffs`
+
+## Token scopes (v1.9)
+
+Tokens may carry scopes in `metadata.scopes`. Missing scopes = full access (backward compatible).
+
+| Scope | Tools |
+|-------|--------|
+| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, CRM read, market read |
+| `skills` | `run_skill`, `run_as_npc` |
+| `crm_write` | `crm_draft_email` |
+| `handoff` | `send_handoff` |
+| `delegate` | `assign_task`, `delegate_task`, `announce_in_office`, `broadcast_task` |
+
+**Presets** (Settings / Connect AI): `read`, `standard` (read+skills+handoff), `full`.
+
+Every `tools/call` is logged to `denizen_mcp_audit`. Revoke tokens in **Settings → AI Connections**.
 
 ## Client setup
 

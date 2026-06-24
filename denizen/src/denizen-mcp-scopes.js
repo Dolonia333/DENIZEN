@@ -1,0 +1,98 @@
+'use strict';
+
+/**
+ * MCP token scopes — tool access governance (Phase 4).
+ *
+ * Scopes: read, skills, crm_write, handoff, delegate
+ * Missing scopes on a token = full access (backward compatible).
+ */
+
+const ALL_SCOPES = Object.freeze(['read', 'skills', 'crm_write', 'handoff', 'delegate']);
+
+const SCOPE_PRESETS = Object.freeze({
+  read: ['read'],
+  standard: ['read', 'skills', 'handoff'],
+  full: [...ALL_SCOPES],
+});
+
+const TOOL_SCOPE = Object.freeze({
+  update_memory: 'read',
+  get_status: 'read',
+  log_activity: 'read',
+  list_skills: 'read',
+  list_team: 'read',
+  list_pending_handoffs: 'read',
+  crm_pipeline_brief: 'read',
+  crm_list_tasks: 'read',
+  get_market_quote: 'read',
+  get_market_portfolio: 'read',
+  market_watch: 'read',
+  list_trade_suggestions: 'read',
+  get_watchlist: 'read',
+  team_status: 'read',
+  run_skill: 'skills',
+  crm_draft_email: 'crm_write',
+  send_handoff: 'handoff',
+  delegate_task: 'delegate',
+  assign_task: 'delegate',
+  announce_in_office: 'delegate',
+  broadcast_task: 'delegate',
+  run_as_npc: 'skills',
+});
+
+function normalizeScopes(input) {
+  if (input == null || input === '') return [...ALL_SCOPES];
+  if (typeof input === 'string') {
+    const preset = SCOPE_PRESETS[String(input).toLowerCase().trim()];
+    if (preset) return [...preset];
+    return normalizeScopes(input.split(/[,\s]+/).filter(Boolean));
+  }
+  if (!Array.isArray(input)) return [...ALL_SCOPES];
+  const out = [];
+  for (const raw of input) {
+    const s = String(raw || '').toLowerCase().trim();
+    if (ALL_SCOPES.includes(s) && !out.includes(s)) out.push(s);
+  }
+  return out.length ? out : [...ALL_SCOPES];
+}
+
+function scopesFromTokenScope(scope) {
+  if (!scope) return [...ALL_SCOPES];
+  if (Array.isArray(scope.scopes) && scope.scopes.length) {
+    return normalizeScopes(scope.scopes);
+  }
+  return [...ALL_SCOPES];
+}
+
+function requiredScope(toolName) {
+  return TOOL_SCOPE[String(toolName || '').trim()] || 'skills';
+}
+
+function hasScope(scope, needed) {
+  const granted = scopesFromTokenScope(scope);
+  return granted.includes(needed);
+}
+
+function toolAllowed(scope, toolName) {
+  const name = String(toolName || '').trim();
+  if (!name) return false;
+  const needed = requiredScope(name);
+  return hasScope(scope, needed);
+}
+
+function filterTools(scope, tools) {
+  const list = Array.isArray(tools) ? tools : [];
+  return list.filter((t) => toolAllowed(scope, t?.name || t));
+}
+
+module.exports = {
+  ALL_SCOPES,
+  SCOPE_PRESETS,
+  TOOL_SCOPE,
+  normalizeScopes,
+  scopesFromTokenScope,
+  requiredScope,
+  hasScope,
+  toolAllowed,
+  filterTools,
+};

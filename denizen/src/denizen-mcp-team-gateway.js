@@ -7,6 +7,8 @@
 const crypto = require('node:crypto');
 const npcGateway = require('./denizen-npc-mcp-gateway.js');
 const mcpTeamTools = require('./denizen-mcp-team-tools.js');
+const mcpScopes = require('./denizen-mcp-scopes.js');
+const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
 
 const TEAM_NPC_KEY = '_team';
@@ -104,6 +106,27 @@ async function toolTeamStatus(scope) {
   };
 }
 
+function toolsForScope(scope) {
+  return mcpScopes.filterTools(scope, TEAM_TOOL_DEFINITIONS);
+}
+
+async function logTeamAudit(scope, toolName, result) {
+  if (!denizenDb.enabled || !scope?.org_id) return;
+  try {
+    await denizenDb._rpc('denizen_log_mcp_audit', {
+      p_org_id: scope.org_id,
+      p_token_id: scope.token_id || null,
+      p_npc_key: TEAM_NPC_KEY,
+      p_tool_name: toolName,
+      p_ok: result?.ok !== false && result?.error !== 'scope_denied',
+      p_error_code: result?.error || null,
+      p_session_id: scope.session_id || null,
+      p_member_id: scope.member_id || null,
+      p_meta: {},
+    });
+  } catch (_) {}
+}
+
 async function toolRunAsNpc(scope, args) {
   const targetKey = String(args?.npc_key || '').toLowerCase().trim();
   const tool = String(args?.tool || '').trim();
@@ -114,6 +137,16 @@ async function toolRunAsNpc(scope, args) {
     return { ok: false, error: `NPC ${targetKey} is protected — use send_handoff to CEO instead` };
   }
   if (!tool) return { ok: false, error: 'tool required' };
+  if (!mcpScopes.toolAllowed(scope, 'run_as_npc')) {
+    return { ok: false, error: 'scope_denied', required_scope: 'skills' };
+  }
+  if (!mcpScopes.toolAllowed(scope, tool)) {
+    return {
+      ok: false,
+      error: 'scope_denied',
+      required_scope: mcpScopes.requiredScope(tool),
+    };
+  }
 
   const childScope = {
     ...scope,
@@ -162,7 +195,7 @@ async function readResource(scope, uri) {
   return null;
 }
 
-async function callTool(scope, name, args) {
+async function callToolImpl(scope, name, args) {
   switch (name) {
     case 'team_status': return toolTeamStatus(scope, args);
     case 'run_as_npc': return toolRunAsNpc(scope, args);
@@ -173,6 +206,23 @@ async function callTool(scope, name, args) {
       }
       return { ok: false, error: `unknown team tool: ${name}` };
   }
+}
+
+async function callTool(scope, name, args) {
+  const toolName = String(name || '').trim();
+  if (!mcpScopes.toolAllowed(scope, toolName)) {
+    const denied = {
+      ok: false,
+      error: 'scope_denied',
+      required_scope: mcpScopes.requiredScope(toolName),
+      granted_scopes: mcpScopes.scopesFromTokenScope(scope),
+    };
+    logTeamAudit(scope, toolName, denied);
+    return denied;
+  }
+  const result = await callToolImpl(scope, toolName, args);
+  logTeamAudit(scope, toolName, result);
+  return result;
 }
 
 async function createTeamMcpToken(opts = {}) {
@@ -190,6 +240,7 @@ function buildConnectInfo(baseUrl) {
     scope_mode: 'team',
     mcp_url: `${base}/mcp/team`,
     tools: TEAM_TOOL_DEFINITIONS.map((t) => t.name),
+    scopes: mcpScopes.ALL_SCOPES,
     resources: TEAM_RESOURCES.map((r) => r.uri),
     instructions: 'Create via POST /api/mcp/team-tokens (team session). Operate the whole office from one connection.',
   };
@@ -230,7 +281,7 @@ async function handleHttpRequest(req, res) {
       ok: true,
       mcp: true,
       scope_mode: 'team',
-      tools: TEAM_TOOL_DEFINITIONS.map((t) => t.name),
+      tools: toolsForScope(scope).map((t) => t.name),
       resources: TEAM_RESOURCES.map((r) => r.uri),
       protocol: PROTOCOL_VERSION,
     }));
@@ -282,7 +333,7 @@ async function handleHttpRequest(req, res) {
     res.end(JSON.stringify({
       jsonrpc: '2.0',
       id,
-      result: { tools: TEAM_TOOL_DEFINITIONS },
+      result: { tools: toolsForScope(scope) },
     }));
     return;
   }
