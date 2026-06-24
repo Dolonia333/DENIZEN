@@ -5355,6 +5355,18 @@ ${brain.voiceAnchor || ''}`;
     }
   }
 
+  getDirective(npcName) {
+    return this._directives.get(npcName) || null;
+  }
+
+  getAllDirectives() {
+    const out = {};
+    for (const [name, directive] of this._directives.entries()) {
+      if (directive) out[name] = directive;
+    }
+    return out;
+  }
+
   setThinkWake(fn) {
     this._thinkWakeFn = typeof fn === 'function' ? fn : null;
   }

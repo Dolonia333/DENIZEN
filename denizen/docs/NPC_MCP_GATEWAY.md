@@ -40,8 +40,12 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 |--------|------|------|-------------|
 | `GET` | `/mcp/npc/:npcKey` | Bearer | Tool manifest probe |
 | `POST` | `/mcp/npc/:npcKey` | Bearer | JSON-RPC MCP (initialize, tools/list, tools/call) |
-| `POST` | `/api/mcp/tokens` | Visitor session (team tier) | Create token — returns plaintext once |
-| `GET` | `/api/mcp/connect-info?npc_key=roki` | Optional session | Setup instructions |
+| `POST` | `/api/mcp/tokens` | Visitor session (team tier) | Create per-NPC token — returns plaintext once |
+| `POST` | `/api/mcp/team-tokens` | Visitor session (team tier) | Create org team operator token (`/mcp/team`) |
+| `GET` | `/mcp/team` | Team bearer | Team tool manifest |
+| `POST` | `/mcp/team` | Team bearer | Team JSON-RPC MCP |
+| `GET` | `/api/mcp/connect-info?npc_key=roki` | Optional session | Per-NPC setup |
+| `GET` | `/api/mcp/connect-info?team=1` | Optional session | Team operator setup |
 | `GET` | `/api/npc-sync/openapi.json` | None | OpenAPI 3.1 spec for ChatGPT Custom GPT Actions |
 | `GET` | `/api/npc-sync/status` | Bearer (NPC token) | REST alias for `get_status` |
 | `POST` | `/api/npc-sync/memory` | Bearer | REST alias for `update_memory` (`body` or `note`) |
@@ -63,7 +67,32 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 7. **`delegate_task`** — assign work to another teammate NPC
 8. **`announce_in_office`** — speech bubble in the virtual office for live viewers
 
-REST aliases: `POST /api/npc-sync/run-skill`, `POST /api/npc-sync/assign-task`
+**Team orchestration**
+
+9. **`list_team`** — org teammates with claimed NPC and online presence
+10. **`send_handoff`** — message a teammate or escalate to CEO bridge
+11. **`list_pending_handoffs`** — your assistant handoff inbox
+
+**CRM** (NPCs with CRM skills only)
+
+12. **`crm_pipeline_brief`** — pipeline summary
+13. **`crm_list_tasks`** — open CRM tasks
+14. **`crm_draft_email`** — draft email (does not send)
+
+**Market** (Roki only) — see `denizen-mcp-market-tools.js`
+
+### Team operator (`/mcp/team`)
+
+Use **Team MCP** in the office UI or `POST /api/mcp/team-tokens`.
+
+| Tool | Purpose |
+|------|---------|
+| `team_status` | Whole-office snapshot |
+| `run_as_npc` | Run any tool as another NPC |
+| `broadcast_task` | Assign task to many NPCs |
+| `list_team` / `send_handoff` / `list_pending_handoffs` | Team orchestration |
+
+**MCP Resources:** `team://roster`, `team://handoffs`
 
 ## Client setup
 

@@ -98,7 +98,7 @@ async function toolRunSkill(scope, args) {
 
   const display = displayNameForKey(scope.npc_key);
   const params = args?.params && typeof args.params === 'object' ? args.params : {};
-  const wait = args?.wait === true;
+  const wait = args?.wait !== false;
   const broadcast = _deps.broadcast || (() => {});
 
   const promise = _deps.runNpcSkill(display, gate.skill, params, {

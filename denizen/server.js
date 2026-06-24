@@ -110,6 +110,7 @@ const { ensureBrowserclawRunning } = require('./jelly/services/browserclaw/ensur
 const robinhoodMcp     = require('./src/robinhood-mcp');
 const marketScheduler  = require('./src/denizen-market-scheduler');
 const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
+const teamMcpGateway   = require('./src/denizen-mcp-team-gateway');
 const mcpOauth         = require('./src/denizen-mcp-oauth');
 const routeRegistry    = require('./src/route-registry');
 const competencyMap    = require('./src/competency-map');
@@ -2679,6 +2680,38 @@ npcMcpGateway.configure({
   npcBrains,
   broadcast: _broadcastOps,
   robinhoodMcp,
+  denizenVisitor,
+  visitorConnections,
+  listOnlineSessionIds,
+  notifyCeoHandoff: _notifyCeoHandoff,
+  getInferenceHealth: async () => {
+    const queueDepth = npcBrains?.getQueueDepth?.() || 0;
+    const status = lmStudioRouter.buildStatus(queueDepth);
+    return {
+      reachable: status?.any_reachable ?? status?.lmStudio?.reachable ?? false,
+      pool: status?.pool || null,
+      queue_depth: queueDepth,
+    };
+  },
+});
+teamMcpGateway.configure({
+  runNpcSkill,
+  npcBrains,
+  broadcast: _broadcastOps,
+  robinhoodMcp,
+  denizenVisitor,
+  visitorConnections,
+  listOnlineSessionIds,
+  notifyCeoHandoff: _notifyCeoHandoff,
+  getInferenceHealth: async () => {
+    const queueDepth = npcBrains?.getQueueDepth?.() || 0;
+    const status = lmStudioRouter.buildStatus(queueDepth);
+    return {
+      reachable: status?.any_reachable ?? status?.lmStudio?.reachable ?? false,
+      pool: status?.pool || null,
+      queue_depth: queueDepth,
+    };
+  },
 });
 
 npcThinkRunner.configure({
@@ -3163,6 +3196,14 @@ const server = http.createServer((req, res) => {
   const mcpNpcMatch = urlPath.match(/^\/mcp\/npc\/([^/]+)\/?$/);
   if (mcpNpcMatch) {
     npcMcpGateway.handleHttpRequest(req, res, mcpNpcMatch[1]).catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/mcp/team' || urlPath === '/mcp/team/') {
+    teamMcpGateway.handleHttpRequest(req, res).catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
@@ -7833,6 +7874,11 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ ok: false, error: 'session_id and npc_key required' }));
         return;
       }
+      if (npcKey === '_team') {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Use POST /api/mcp/team-tokens for org team MCP' }));
+        return;
+      }
       const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
       const accounts = await denizenDb._get(
         `denizen_team_accounts?select=id&visitor_session_id=eq.${encodeURIComponent(sessionId)}&limit=1`,
@@ -7860,22 +7906,65 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/mcp/team-tokens' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
+      const accounts = await denizenDb._get(
+        `denizen_team_accounts?select=id&visitor_session_id=eq.${encodeURIComponent(sessionId)}&limit=1`,
+      ).catch(() => []);
+      const result = await teamMcpGateway.createTeamMcpToken({
+        orgId: access.orgId,
+        memberId: accounts?.[0]?.id || null,
+        sessionId,
+        label: body.label || 'team-operator',
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        scope_mode: 'team',
+        ...result,
+        warning: 'Save this token now — it cannot be retrieved again.',
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/mcp/connect-info' && req.method === 'GET') {
     (async () => {
       const u = new URL(req.url, 'http://localhost');
+      const teamMode = u.searchParams.get('team') === '1' || u.searchParams.get('scope') === 'team';
       const npcKey = String(u.searchParams.get('npc_key') || u.searchParams.get('npcKey') || '').toLowerCase().trim();
       const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const publicBase = process.env.DENIZEN_PUBLIC_URL
+        || process.env.DENIZEN_URL
+        || `http://localhost:${PORT}`;
+      if (teamMode) {
+        if (sessionId) await _verifyVisitorSession(req, sessionId, {});
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, ...teamMcpGateway.buildConnectInfo(publicBase) }));
+        return;
+      }
       if (!npcKey) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'npc_key required' }));
+        res.end(JSON.stringify({ ok: false, error: 'npc_key required (or team=1)' }));
         return;
       }
       if (sessionId) {
         await _verifyVisitorSession(req, sessionId, {});
       }
-      const publicBase = process.env.DENIZEN_PUBLIC_URL
-        || process.env.DENIZEN_URL
-        || `http://localhost:${PORT}`;
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         ok: true,

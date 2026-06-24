@@ -15,7 +15,7 @@ const SCOPE = {
   org_slug: 'zion',
   npc_key: 'roki',
   member_id: null,
-  session_id: null,
+  session_id: 'sess-test-001',
 };
 
 describe('npc-mcp-gateway', () => {
@@ -34,8 +34,17 @@ describe('npc-mcp-gateway', () => {
 
     gateway.configure({
       runNpcSkill: async (name, skill) => ({ ok: true, output: `${name} ran ${skill}`, npcName: name, skill }),
-      npcBrains: { assignDirective: () => {} },
+      npcBrains: {
+        assignDirective: () => {},
+        getDirective: () => null,
+        getOpenCommitments: () => [],
+      },
       broadcast: () => {},
+      denizenVisitor: {
+        listTeammatesWithPresence: async () => ([]),
+        getPendingHandoffs: async () => ([]),
+      },
+      listOnlineSessionIds: () => new Set(),
     });
 
     gateway.resolveToken = async (token) => (token === 'good-token' ? SCOPE : null);
@@ -67,12 +76,26 @@ describe('npc-mcp-gateway', () => {
     denizenDb.recordWorkOutput = origRecordWork;
   });
 
-  it('exports action MCP tools', () => {
+  it('exports core MCP action tools', () => {
     assert.equal(gateway.TOOL_DEFINITIONS.length, 8);
     const names = gateway.TOOL_DEFINITIONS.map((t) => t.name);
     assert.ok(names.includes('run_skill'));
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('assign_task'));
+  });
+
+  it('toolsForScope includes team tools for all NPCs', () => {
+    const tools = gateway.toolsForScope(SCOPE);
+    const names = tools.map((t) => t.name);
+    assert.ok(names.includes('list_team'));
+    assert.ok(names.includes('send_handoff'));
+    assert.ok(names.includes('get_market_quote'));
+  });
+
+  it('toolsForScope includes CRM tools for Lucy', () => {
+    const tools = gateway.toolsForScope({ ...SCOPE, npc_key: 'lucy' });
+    const names = tools.map((t) => t.name);
+    assert.ok(names.includes('crm_pipeline_brief'));
   });
 
   it('buildConnectInfo returns mcp url and tool list', () => {
@@ -88,11 +111,13 @@ describe('npc-mcp-gateway', () => {
     assert.equal(result.memory_id, 'mem-1');
   });
 
-  it('get_status returns npc and recent memories', async () => {
+  it('get_status returns npc and enriched context', async () => {
     const result = await gateway.callTool(SCOPE, 'get_status', { limit: 5 });
     assert.equal(result.ok, true);
     assert.equal(result.npc.npc_key, 'roki');
     assert.equal(result.recent_mcp_memories.length, 1);
+    assert.ok(Array.isArray(result.skills));
+    assert.equal(result.session_linked, true);
   });
 
   it('log_activity records work output', async () => {

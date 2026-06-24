@@ -12,6 +12,8 @@ const crypto = require('node:crypto');
 const denizenDb = require('./denizen-db.js');
 const mcpActions = require('./denizen-mcp-actions.js');
 const mcpMarketTools = require('./denizen-mcp-market-tools.js');
+const mcpTeamTools = require('./denizen-mcp-team-tools.js');
+const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
@@ -71,7 +73,7 @@ const TOOL_DEFINITIONS = [
       properties: {
         skill: { type: 'string', description: 'Skill name, e.g. canvas-render, research, crm-summary' },
         params: { type: 'object', description: 'Skill parameters (query, task, etc.)' },
-        wait: { type: 'boolean', description: 'If true, block until skill finishes (default false)' },
+        wait: { type: 'boolean', description: 'If false, return immediately (default true — waits for result)' },
         timeout_ms: { type: 'number', description: 'Max wait when wait=true (default 180000)' },
       },
       required: ['skill'],
@@ -227,12 +229,15 @@ async function toolGetStatus(scope, args) {
     ].join('&')).catch(() => []),
   ]);
 
+  const extras = await mcpTeamTools.buildStatusExtras(scope, { work: work || [] });
+
   return {
     ok: true,
     npc: npcRows?.[0] || { npc_key: npcKey, display_name: npcDisplayName(npcKey) },
     recent_mcp_memories: memories,
     recent_work: work || [],
     org_slug: scope.org_slug,
+    ...extras,
   };
 }
 
@@ -257,6 +262,12 @@ async function callTool(scope, name, args) {
   if (mcpMarketTools.isMarketNpc(scope.npc_key) && mcpMarketTools.toolsForNpc(scope.npc_key).some((t) => t.name === name)) {
     return mcpMarketTools.callTool(scope.npc_key, name, args);
   }
+  if (mcpTeamTools.isTeamTool(name)) {
+    return mcpTeamTools.callTool(scope, name, args);
+  }
+  if (mcpCrmTools.isCrmTool(name)) {
+    return mcpCrmTools.callTool(scope, name, args);
+  }
   switch (name) {
     case 'update_memory': return toolUpdateMemory(scope, args);
     case 'get_status': return toolGetStatus(scope, args);
@@ -273,11 +284,17 @@ async function callTool(scope, name, args) {
 function configure(deps = {}) {
   mcpActions.configure(deps);
   mcpMarketTools.configure(deps);
+  mcpTeamTools.configure(deps);
+  mcpCrmTools.configure(deps);
 }
 
 function toolsForScope(scope) {
   const base = [...TOOL_DEFINITIONS];
-  if (scope?.npc_key) base.push(...mcpMarketTools.toolsForNpc(scope.npc_key));
+  if (scope?.npc_key) {
+    base.push(...mcpTeamTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpMarketTools.toolsForNpc(scope.npc_key));
+  }
   return base;
 }
 
@@ -294,7 +311,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {} },
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.7.0' },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.8.0' },
       },
     });
   }
@@ -718,7 +735,9 @@ async function createMcpToken({
   });
 
   const baseUrl = getPublicBaseUrl();
-  const mcpUrl = `${baseUrl}/mcp/npc/${encodeURIComponent(npcKey)}`;
+  const mcpUrl = npcKey === '_team'
+    ? `${baseUrl}/mcp/team`
+    : `${baseUrl}/mcp/npc/${encodeURIComponent(npcKey)}`;
   const onboarding = buildOnboardingPayload({ baseUrl, npcKey, token });
 
   return {
@@ -766,6 +785,7 @@ function buildConnectInfo(npcKey, baseUrl) {
 module.exports = {
   TOOL_DEFINITIONS,
   configure,
+  toolsForScope,
   handleHttpRequest,
   handleRestSync,
   buildOpenApiSpec,
