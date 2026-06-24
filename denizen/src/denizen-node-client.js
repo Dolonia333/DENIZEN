@@ -5,13 +5,31 @@ const DEFAULT_BASE_URL = process.env.DENIZEN_LOCALHOST_URL
 const DEFAULT_POLL_MS = 5000;
 
 let _worker = null;
-let _processJobLocalImpl = async function processJobLocallyDefault(job) {
-  return {
-    ok: false,
-    error: 'processJobLocally not implemented',
-    jobId: job?.id || null,
-  };
-};
+let _processJobLocalImpl = null;
+
+function _defaultProcessJobLocally() {
+  if (_processJobLocalImpl) return _processJobLocalImpl;
+  try {
+    const { processMeshJob } = require('./denizen-mesh-job-runner');
+    _processJobLocalImpl = async (job, ctx = {}) => {
+      const jobType = String(job?.job_type || job?.jobType || '').trim();
+      const payload = job?.payload && typeof job.payload === 'object' ? job.payload : {};
+      const onProgress = typeof ctx.onProgress === 'function' ? ctx.onProgress : null;
+      return processMeshJob(jobType, payload, {
+        onProgress: onProgress
+          ? (ev) => onProgress({ jobId: job?.id, ...(ev || {}) })
+          : null,
+      });
+    };
+  } catch (_) {
+    _processJobLocalImpl = async (job) => ({
+      ok: false,
+      error: 'processJobLocally not implemented',
+      jobId: job?.id || null,
+    });
+  }
+  return _processJobLocalImpl;
+}
 
 function _sleep(ms, signal) {
   return new Promise((resolve) => {
@@ -25,7 +43,8 @@ function _sleep(ms, signal) {
 }
 
 async function processJobLocally(job, ctx = {}) {
-  return _processJobLocalImpl(job, ctx);
+  const impl = _processJobLocalImpl || _defaultProcessJobLocally();
+  return impl(job, ctx);
 }
 
 function setProcessJobLocally(fn) {
@@ -65,6 +84,19 @@ async function _claimJob(baseUrl, identityId, nodeToken, signal) {
   return payload.job || payload;
 }
 
+async function _postProgress(baseUrl, payload, signal) {
+  const res = await fetch(`${baseUrl}/api/compute/node/progress`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`progress failed (${res.status}): ${text.slice(0, 120)}`);
+  }
+}
+
 async function _runWorkerLoop(state) {
   const { identityId, nodeToken, pollIntervalMs, baseUrl, signal } = state;
   while (!signal.aborted) {
@@ -83,7 +115,23 @@ async function _runWorkerLoop(state) {
     }
 
     try {
-      const result = await processJobLocally(job, { identityId, nodeToken, signal });
+      const result = await processJobLocally(job, {
+        identityId,
+        nodeToken,
+        signal,
+        baseUrl,
+        onProgress: (ev) => {
+          const delta = ev?.delta || '';
+          const text = ev?.partial && delta ? null : (ev?.text || null);
+          return _postProgress(baseUrl, {
+            identityId,
+            nodeToken,
+            jobId: job.id,
+            delta,
+            text,
+          }, signal).catch(() => null);
+        },
+      });
       await _postComplete(baseUrl, {
         identityId,
         nodeToken,

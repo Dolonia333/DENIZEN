@@ -9,7 +9,7 @@
     "start": "electron .",
     "prestart": "node scripts/copy-denizen-src.js",
     "prebuild": "node scripts/copy-denizen-src.js",
-    "prebuild:win": "node scripts/copy-denizen-src.js",
+    "prebuild:win": "node scripts/fetch-ollama.js && node scripts/fetch-llama-server.js && node scripts/copy-denizen-src.js",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
@@ -55,6 +55,18 @@
       "allowToChangeInstallationDirectory": true,
       "oneClick": false
     },
+    "extraResources": [
+      {
+        "from": "resources/ollama",
+        "to": "ollama",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "resources/llama",
+        "to": "llama",
+        "filter": ["**/*"]
+      }
+    ],
     "protocols": [
       {
         "name": "Denizen",

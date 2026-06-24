@@ -12,6 +12,35 @@ describe('lm-studio-router', () => {
     delete process.env.LM_STUDIO_REMOTE_URLS;
   });
 
+  it('remote-only mode skips localhost host bootstrap', () => {
+    delete process.env.LM_STUDIO_URL;
+    process.env.LM_STUDIO_REMOTE_URLS = 'http://100.71.54.109:1234';
+    router.registerBootstrap();
+    const nodes = router.listNodes();
+    assert.equal(nodes.length, 1);
+    assert.equal(nodes[0].url, 'http://100.71.54.109:1234');
+    assert.equal(router.isRemoteOnlyMode(), true);
+    assert.equal(router.defaultHostUrl(), 'http://100.71.54.109:1234');
+  });
+
+  it('unprobed nodes are not selected', () => {
+    router.upsertNode({
+      node_id: 'fresh',
+      url: 'http://10.0.0.7:1234',
+      role: 'remote',
+      reachable: true,
+    });
+    router.upsertNode({
+      node_id: 'ready',
+      url: 'http://10.0.0.8:1234',
+      role: 'remote',
+      reachable: true,
+      last_probe_at: new Date().toISOString(),
+    });
+    const pick = router.selectEndpoint({ tier: 'main' });
+    assert.equal(pick.url, 'http://10.0.0.8:1234');
+  });
+
   it('registers bootstrap host and env remotes', () => {
     process.env.LM_STUDIO_URL = 'http://127.0.0.1:1234';
     process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.50:1234';

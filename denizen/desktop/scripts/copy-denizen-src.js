@@ -11,7 +11,11 @@ const MODULES = [
   'denizen-hardware-monitor.js',
   'denizen-node-client.js',
   'denizen-mesh-job-runner.js',
+  'denizen-inference-runtime.js',
+  'denizen-embedding-worker.js',
+  'denizen-sim-tick.js',
   'lm-studio-probe.js',
+  'lm-studio-advertise.js',
 ];
 
 fs.mkdirSync(DESKTOP_SRC, { recursive: true });

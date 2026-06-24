@@ -39,6 +39,9 @@
     downloadUrl: '/desktop/download.html',
     statusLabel: 'browser only',
     lmStudioModel: null,
+    inferenceBackend: null,
+    inferenceMode: null,
+    rpcCapable: false,
     jobsCompleted: 0,
     hardwareScore: 0,
     contributionLevel: 'off',
@@ -56,6 +59,7 @@
     creditsEconomy: null,
     estimatedJobCredits: null,
     lastError: null,
+    brainCatalog: [],
   };
 
   const OPERATOR_FLEET_ROLES = new Set(['host', 'nas', 'aux']);
@@ -724,6 +728,7 @@
     const optInVal = base.opted_in ?? base.opt_in ?? base.is_opted_in ?? payload?.opted_in ?? payload?.opt_in;
     const statusLabel = base.status_label ?? payload?.status_label ?? null;
     const lmStudio = base.lm_studio ?? payload?.lm_studio ?? null;
+    const inference = base.inference ?? payload?.inference ?? lmStudio?.inference ?? null;
     const summaryRaw = base.contribution_summary ?? payload?.contribution_summary ?? null;
     const hostOperator = !!(base.is_host_operator ?? base.host_operator ?? payload?.is_host_operator ?? payload?.host_operator
       ?? summaryRaw?.host_operator ?? summaryRaw?.is_host_operator);
@@ -758,7 +763,14 @@
       canContribute,
       downloadUrl: String(downloadUrl),
       statusLabel: String(statusLabel || (contributing ? 'active' : 'browser only')),
-      lmStudioModel: lmStudio?.model_short || lmStudio?.model || null,
+      lmStudioModel: inference?.main_model
+        || lmStudio?.model_short
+        || lmStudio?.model
+        || null,
+      inferenceBackend: inference?.backend || lmStudio?.backend || null,
+      inferenceMode: inference?.inference_mode
+        || (inference?.rpc_capable && !lmStudio?.reachable ? 'rpc' : (lmStudio?.reachable ? 'direct' : null)),
+      rpcCapable: !!(inference?.rpc_capable || lmStudio?.rpc_capable),
       jobsCompleted: fromSummary.jobsCompleted || Number(activeNode?.jobs_completed) || 0,
       hardwareScore: fromSummary.hardwareScore || Number(base.hardware_score ?? payload?.hardware_score) || 0,
       contributionLevel: String(levelVal || 'off'),
@@ -1061,6 +1073,10 @@
       stats.push(`GPU ${formatPercent(machine.gpu.utilization_percent)}`);
     }
     if (Number(machine.jobs_completed) > 0) stats.push(`${machine.jobs_completed} jobs`);
+    const inf = machine.inference || machine.lm_studio || {};
+    if (inf.backend) stats.push(String(inf.backend));
+    if (inf.rpc_capable && machine.reachable === false) stats.push('mesh RPC');
+    else if (inf.inference_mode === 'rpc') stats.push('RPC');
     return `<div class="node-fleet-card"><div class="name">${label}${role}</div><div class="stats">${stats.join(' · ') || 'awaiting metrics'}</div></div>`;
   }
 
@@ -1183,7 +1199,21 @@
       }
     }
     if (howEl) {
-      howEl.textContent = busyLevel ? 'saving...' : (state.statusLabel || 'idle');
+      if (busyLevel) howEl.textContent = 'saving...';
+      else if (state.lmStudioModel && (state.contributing || state.optedIn)) {
+        const mode = state.inferenceMode === 'rpc' ? 'mesh' : 'direct';
+        const backend = state.inferenceBackend === 'ollama' ? 'Ollama' : 'LM Studio';
+        howEl.textContent = mode === 'rpc'
+          ? `Sharing brain · ${state.lmStudioModel} (${backend}, Denizen mesh — no port setup)`
+          : `Sharing models · ${state.lmStudioModel}`;
+      } else if (state.lmStudioModel && state.desktopLinked) {
+        howEl.textContent = state.rpcCapable
+          ? 'Brain ready — enable City Power (mesh RPC available)'
+          : 'LM Studio ready — flip City Power on to share';
+      } else {
+        const catalogHint = formatBrainCatalogHint();
+        howEl.textContent = catalogHint || state.statusLabel || 'idle';
+      }
     }
     if (levelEl) {
       const level = String(state.contributionLevel || 'off');
@@ -1226,13 +1256,38 @@
     }
   }
 
+  async function fetchBrainCatalog() {
+    const res = await fetchWithTimeout('/api/compute/inference/catalog', {
+      method: 'GET',
+      headers: authHeaders(),
+    }).catch(() => null);
+    if (!res?.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    const models = Array.isArray(data?.models) ? data.models : [];
+    if (models.length) {
+      state.brainCatalog = models;
+    }
+    return data;
+  }
+
+  function formatBrainCatalogHint() {
+    const models = Array.isArray(state.brainCatalog) ? state.brainCatalog : [];
+    if (!models.length) return null;
+    const names = models.slice(0, 3).map((m) => m.label || m.id).filter(Boolean);
+    if (!names.length) return null;
+    return `Suggested brains: ${names.join(', ')} — install Denizen Desktop`;
+  }
+
   async function refresh() {
     const sid = getSessionId();
     if (sid) markSessionReady();
     return fetchStatus()
       .then(async (result) => {
-        await fetchCreditsEconomy().catch(() => null);
-        await fetchLiveHardware().catch(() => null);
+        await Promise.all([
+          fetchCreditsEconomy().catch(() => null),
+          fetchLiveHardware().catch(() => null),
+          fetchBrainCatalog().catch(() => null),
+        ]);
         return result;
       })
       .catch(async (err) => {

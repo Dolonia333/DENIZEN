@@ -7,6 +7,7 @@ const JOB_TABLE = 'denizen_compute_jobs';
 const JOB_MIN_HARDWARE_SCORE = {
   embedding_index: 24,
   npc_think_batch: 16,
+  inference_rpc: 12,
   sim_tick: 8,
 };
 
@@ -58,7 +59,29 @@ async function enqueueJob({ jobType, payload = {}, priority = 50 } = {}) {
   return rows?.[0] || null;
 }
 
-async function claimJob(nodeId, nodeProfile = null) {
+function jobMatchesNode(job, nodeId, nodeProfile = null, opts = {}) {
+  const payload = job?.payload && typeof job.payload === 'object' ? job.payload : {};
+  const target = payload.target_machine_id
+    || payload.target_node_id
+    || payload.targetMachineId
+    || null;
+  if (!target) return true;
+
+  const machineId = String(
+    opts.machineId
+    || nodeProfile?.machine_id
+    || nodeProfile?.machineId
+    || '',
+  ).trim();
+  const node = String(nodeId || '').trim();
+  const want = String(target).trim();
+  if (!want) return true;
+  if (machineId && want === machineId) return true;
+  if (node && want === node) return true;
+  return false;
+}
+
+async function claimJob(nodeId, nodeProfile = null, opts = {}) {
   if (!isEnabled() || !nodeId) return null;
   const node = String(nodeId).trim();
   if (!node) return null;
@@ -73,6 +96,7 @@ async function claimJob(nodeId, nodeProfile = null) {
   }
 
   for (const job of candidates) {
+    if (!jobMatchesNode(job, node, nodeProfile, opts)) continue;
     if (nodeProfile && !nodeCanRunJob(nodeProfile, job)) continue;
     const now = new Date().toISOString();
     let rows = null;
@@ -154,6 +178,43 @@ async function listRecentCompletedJobs(limit = 10) {
   return denizenDb._get(
     `${JOB_TABLE}?select=id,job_type,priority,status,assigned_node_id,completed_at&status=eq.done&order=completed_at.desc&limit=${safeLimit}`,
   ).catch(() => []);
+}
+
+async function getJobById(jobId) {
+  if (!isEnabled() || !jobId) return null;
+  const rows = await denizenDb._getSoft(
+    `${JOB_TABLE}?select=*&id=eq.${encodeURIComponent(String(jobId))}&limit=1`,
+  ).catch(() => []);
+  return rows?.[0] || null;
+}
+
+function _sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, Math.max(0, Number(ms) || 0));
+  });
+}
+
+/**
+ * Poll until a job reaches done/failed or timeout.
+ */
+async function waitForJob(jobId, opts = {}) {
+  if (!isEnabled() || !jobId) return null;
+  const timeoutMs = Math.max(1000, Number(opts.timeoutMs) || 60_000);
+  const pollMs = Math.max(100, Number(opts.pollMs) || 400);
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const job = await getJobById(jobId);
+    if (!job) return null;
+    if (job.status === 'done' || job.status === 'failed') return job;
+    await _sleep(pollMs);
+  }
+
+  const finalJob = await getJobById(jobId);
+  if (finalJob && (finalJob.status === 'done' || finalJob.status === 'failed')) {
+    return finalJob;
+  }
+  return null;
 }
 
 /**
@@ -286,6 +347,9 @@ module.exports = {
   claimJob,
   completeJob,
   failJob,
+  getJobById,
+  waitForJob,
+  jobMatchesNode,
   listPendingJobs,
   listAssignedJobs,
   listRecentCompletedJobs,

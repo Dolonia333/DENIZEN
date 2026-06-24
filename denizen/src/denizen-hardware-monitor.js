@@ -3,6 +3,8 @@
 const os = require('node:os');
 const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
+const { enrichLmStudioBlock } = require('./lm-studio-advertise');
+const inferenceRuntime = require('./denizen-inference-runtime');
 
 const execFileAsync = promisify(execFile);
 
@@ -129,7 +131,26 @@ async function collectLiveMetrics(extra = {}) {
   const cpus = os.cpus() || [];
 
   let lmStudio = extra.lm_studio || null;
-  if (!lmStudio && extra.probe_lm_studio !== false) {
+  let inference = extra.inference || null;
+
+  if (!inference && extra.probe_inference !== false) {
+    try {
+      const probe = await inferenceRuntime.probeInferenceRuntime({
+        timeoutMs: 3500,
+        backend: extra.inference_backend,
+        ollamaUrl: extra.ollama_url,
+        lmStudioUrl: extra.lm_studio_url,
+      });
+      inference = inferenceRuntime.buildInferenceBlockFromProbe(probe, extra);
+      if (!lmStudio && probe.backend === 'lmstudio') {
+        lmStudio = enrichLmStudioBlock(probe, extra);
+      }
+    } catch (_) {
+      inference = null;
+    }
+  }
+
+  if (!lmStudio && !inference && extra.probe_lm_studio !== false) {
     try {
       const { probeLmStudioEndpoint } = require('./lm-studio-probe');
       const base = process.env.LM_STUDIO_URL
@@ -139,6 +160,15 @@ async function collectLiveMetrics(extra = {}) {
         apiKey: process.env.LM_STUDIO_API_KEY,
         timeoutMs: 3500,
       });
+      lmStudio = enrichLmStudioBlock(lmStudio, extra);
+      if (!inference && lmStudio?.reachable) {
+        inference = inferenceRuntime.buildInferenceBlockFromProbe({
+          ...lmStudio,
+          backend: 'lmstudio',
+          reachable_local: true,
+          rpc_capable: true,
+        }, extra);
+      }
     } catch (_) {
       lmStudio = null;
     }
@@ -162,6 +192,7 @@ async function collectLiveMetrics(extra = {}) {
     jobs_completed: Number(extra.jobs_completed) || 0,
   };
   if (lmStudio) out.lm_studio = lmStudio;
+  if (inference) out.inference = inference;
   return out;
 }
 

@@ -15,6 +15,9 @@ const { spawn } = require("child_process");
 const http = require("http");
 
 const { collectMachineProfile } = require("./node-profiler");
+const ollamaManager = require("./ollama-manager");
+const llamaServerManager = require("./llama-server-manager");
+const llamaBrainPull = require("./llama-brain-pull");
 
 const { startWorkerLoop, stopWorkerLoop, clearLastPendingId, syncCapabilities } = require("./node-worker-loop");
 const { startStationTaskLoop, stopStationTaskLoop } = require("./station-task-runner");
@@ -1004,6 +1007,133 @@ function setupIpc() {
 
   ipcMain.handle("get-machine-profile", async () => collectMachineProfile());
 
+  ipcMain.handle("get-inference-status", async () => {
+    try {
+      const { probeInferenceRuntime } = require("../src/denizen-inference-runtime");
+      return await probeInferenceRuntime({ timeoutMs: 4000 });
+    } catch (err) {
+      return { reachable: false, error: err?.message || String(err) };
+    }
+  });
+
+  ipcMain.handle("get-brain-catalog", async () => {
+    const catalogPath = path.join(__dirname, "data", "brain-catalog.json");
+    try {
+      return JSON.parse(fs.readFileSync(catalogPath, "utf8"));
+    } catch (_) {
+      return { version: 1, models: [] };
+    }
+  });
+
+  ipcMain.handle("ensure-ollama", async () => ollamaManager.ensureOllamaRunning());
+
+  ipcMain.handle("ensure-llamacpp", async () => llamaServerManager.ensureLlamaServerRunning());
+
+  ipcMain.handle("pull-brain-model", async (event, opts = {}) => {
+    const { BrowserWindow } = require("electron");
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const emit = (payload) => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send("brain-pull-progress", payload);
+      }
+    };
+
+    const catalogPath = path.join(__dirname, "data", "brain-catalog.json");
+    let catalog = { models: [] };
+    try {
+      catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
+    } catch (_) {}
+
+    const model = String(opts?.model || process.env.OLLAMA_MODEL || "llama3.2").trim();
+    if (!model) return { ok: false, error: "model name required" };
+
+    const entry = llamaBrainPull.resolveCatalogEntry(catalog, model);
+    const useLlamaCpp = opts?.backend === "llamacpp"
+      || entry?.backend === "llamacpp"
+      || /\.gguf$/i.test(entry?.filename || "");
+
+    if (useLlamaCpp) {
+      emit({ model, phase: "starting", percent: 0, backend: "llamacpp" });
+      const bundled = llamaServerManager.bundledLlamaServerPath();
+      if (!bundled && !process.env.LLAMACPP_BIN) {
+        const err = "llama-server not bundled — rebuild with fetch-llama-server or set LLAMACPP_BIN";
+        emit({ model, phase: "error", error: err });
+        return { ok: false, error: err, model, backend: "llamacpp" };
+      }
+      const pulled = await llamaBrainPull.pullGgufModel({
+        model,
+        catalog,
+        onProgress: ({ percent }) => emit({ model, phase: "downloading", percent, backend: "llamacpp" }),
+      });
+      if (!pulled.ok) {
+        emit({ model, phase: "error", error: pulled.error });
+        return { ok: false, ...pulled, backend: "llamacpp" };
+      }
+      process.env.LLAMACPP_MODEL = pulled.path;
+      emit({ model, phase: "finishing", percent: 99, backend: "llamacpp" });
+      const started = await llamaServerManager.ensureLlamaServerRunning({ model: pulled.path });
+      if (!started.ok) {
+        emit({ model, phase: "error", error: started.error });
+        return { ok: false, error: started.error, model, backend: "llamacpp" };
+      }
+      emit({ model, phase: "done", percent: 100, backend: "llamacpp" });
+      const setup = readSetupState();
+      writeSetupState({
+        ...setup,
+        brainModel: model,
+        brainBackend: "llamacpp",
+        llamaCppModelPath: pulled.path,
+      });
+      return { ok: true, model, backend: "llamacpp", path: pulled.path };
+    }
+
+    await ollamaManager.ensureOllamaRunning().catch(() => null);
+
+    const cmd = ollamaManager.ollamaCommand();
+    emit({ model, phase: "starting", percent: 0 });
+
+    return new Promise((resolve) => {
+      const child = spawn(cmd, ["pull", model], {
+        shell: cmd === "ollama",
+        windowsHide: true,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let output = "";
+
+      const onChunk = (chunk) => {
+        output += String(chunk || "");
+        const lines = output.split(/\r?\n/).slice(-6);
+        for (const line of lines) {
+          const pct = line.match(/(\d{1,3})%/);
+          if (pct) {
+            emit({ model, phase: "downloading", percent: Number(pct[1]), line: line.trim() });
+          } else if (/verifying|success|complete/i.test(line)) {
+            emit({ model, phase: "finishing", percent: 99, line: line.trim() });
+          }
+        }
+      };
+
+      child.stdout?.on("data", onChunk);
+      child.stderr?.on("data", onChunk);
+      child.on("error", (err) => {
+        emit({ model, phase: "error", error: err?.message || String(err) });
+        resolve({ ok: false, error: err?.message || String(err), model });
+      });
+      child.on("close", (code) => {
+        if (code === 0) {
+          emit({ model, phase: "done", percent: 100 });
+          const setup = readSetupState();
+          writeSetupState({ ...setup, brainModel: model, brainBackend: "ollama" });
+          resolve({ ok: true, model, output: output.slice(-400) });
+          return;
+        }
+        const errText = output.trim() || `ollama pull exited ${code}`;
+        emit({ model, phase: "error", error: errText });
+        resolve({ ok: false, model, error: errText });
+      });
+    });
+  });
+
 
 
   ipcMain.handle("claim-pairing-token", async (_evt, opts = {}) => {
@@ -1173,6 +1303,18 @@ function setupIpc() {
       ? !!opts.diagnosticsOptIn
       : !!prior.diagnosticsOptIn;
 
+    if (optIn) {
+      await ollamaManager.ensureOllamaRunning().catch(() => null);
+      const setupBrain = readSetupState();
+      if (setupBrain.brainBackend === "llamacpp" || setupBrain.llamaCppModelPath) {
+        await llamaServerManager.ensureLlamaServerRunning({
+          model: setupBrain.llamaCppModelPath || undefined,
+        }).catch(() => null);
+      } else if (llamaServerManager.bundledLlamaServerPath()) {
+        await llamaServerManager.ensureLlamaServerRunning().catch(() => null);
+      }
+    }
+
     if (!sessionId) {
       throw new Error("Pair your account first — use Link this computer in the browser");
     }
@@ -1215,6 +1357,8 @@ function setupIpc() {
       nodeId: data.node?.id || null,
       nodeToken: data.node?.endpoint_token || null,
       diagnosticsOptIn,
+      brainModel: opts.brainModel || opts.brain_model || prior.brainModel || null,
+      brainBackend: opts.brainBackend || opts.brain_backend || prior.brainBackend || null,
       updateChannel: UPDATE_CHANNEL,
       completedAt: Date.now()
     });
@@ -1861,6 +2005,8 @@ app.on("before-quit", () => {
 
   stopWorkerLoop();
   stopStationTaskLoop();
+  ollamaManager.stopOllama();
+  llamaServerManager.stopLlamaServer();
 
   if (denizenServerProcess && !denizenServerProcess.killed) {
 

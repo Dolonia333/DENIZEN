@@ -19,6 +19,9 @@ const contributionTracker = require('./denizen-contribution-tracker');
 const nodeProfiler = require('./denizen-node-profiler');
 const fleetAgentBundle = require('./denizen-fleet-agent-bundle');
 const lmStudioRouter = require('./lm-studio-router');
+const inferenceRpc = require('./denizen-inference-rpc');
+const inferenceProgress = require('./denizen-inference-progress');
+const denizenFederation = require('./denizen-federation');
 const stationTaskQueue = require('./denizen-station-task-queue');
 const desktopAgent = require('./desktop-agent');
 
@@ -360,11 +363,8 @@ async function resolveIdentityForSession(serverContext, req, sessionId, body = {
 
 async function resolveLmStudioSnapshot(req, serverContext = {}) {
   const npcBrains = serverContext.npcBrains;
-  const allowProbe =
-    desktopLink.detectClientType(req) === 'desktop'
-    || hostCompute.isLocalOperatorRequest(req);
   if (npcBrains) {
-    return hostCompute.getLmStudioSnapshot(npcBrains, { allowProbe }).catch(() => null);
+    return hostCompute.getLmStudioSnapshot(npcBrains, { allowProbe: true }).catch(() => null);
   }
   if (typeof serverContext.getLmStudioSnapshot === 'function') {
     return serverContext.getLmStudioSnapshot().catch(() => null);
@@ -483,13 +483,18 @@ function mountComputeRoutes(serverContext = {}) {
         }
 
         const profile = await resolveProfileForNode(node, serverContext).catch(() => null);
-        const job = await computeQueue.claimJob(node.id, profile);
+        const live = extractLiveMetrics(body);
+        const machineId = body.machine_id
+          || body.machineId
+          || live?.machine_id
+          || profile?.machine_id
+          || null;
+        const job = await computeQueue.claimJob(node.id, profile, { machineId });
         if (!job) {
           sendJson(res, 200, { ok: true, job: null, note: 'No queued jobs available' });
           return true;
         }
 
-        const live = extractLiveMetrics(body);
         contributionTracker.startJob({
           jobId: job.id,
           nodeId: node.id,
@@ -536,6 +541,11 @@ function mountComputeRoutes(serverContext = {}) {
         if (!completed) {
           sendJson(res, 409, { ok: false, error: 'Job not assigned to this node or already closed' });
           return true;
+        }
+
+        if (completed.job_type === 'inference_rpc') {
+          const resultText = body.result?.text || body.result?.content || '';
+          inferenceProgress.markDone(jobId, resultText);
         }
 
         await nodeWorker.incrementJobsCompleted(node.id).catch(() => null);
@@ -833,6 +843,97 @@ function mountComputeRoutes(serverContext = {}) {
         return true;
       }
 
+      if (
+        path === '/api/compute/node/progress'
+        && (method === 'GET' || method === 'POST')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 256 * 1024);
+        const token = extractToken(req, body, url);
+        const node = await nodeWorker.resolveNodeAuth({
+          nodeId: body.nodeId || body.node_id || null,
+          identityId: body.identityId || body.identity_id || null,
+          token,
+        });
+        if (!node) {
+          sendJson(res, 401, { ok: false, error: 'Invalid node credentials' });
+          return true;
+        }
+
+        const jobId = body.jobId || body.job_id;
+        if (!jobId) {
+          sendJson(res, 400, { ok: false, error: 'jobId is required' });
+          return true;
+        }
+
+        const delta = body.delta != null ? String(body.delta) : '';
+        const text = body.text != null ? String(body.text) : null;
+        const progress = inferenceProgress.recordProgress(jobId, delta, text);
+        sendJson(res, 200, { ok: true, progress });
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/compute/inference/catalog') {
+        const fs = require('node:fs');
+        const pathMod = require('node:path');
+        const candidates = [
+          pathMod.join(__dirname, '..', 'data', 'brain-catalog.json'),
+          pathMod.join(__dirname, '..', 'desktop', 'data', 'brain-catalog.json'),
+        ];
+        let catalog = { version: 1, models: [] };
+        for (const file of candidates) {
+          try {
+            if (fs.existsSync(file)) {
+              catalog = JSON.parse(fs.readFileSync(file, 'utf8'));
+              break;
+            }
+          } catch (_) {}
+        }
+        sendJson(res, 200, { ok: true, ...catalog });
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/compute/federation/status') {
+        sendJson(res, 200, { ok: true, ...denizenFederation.buildStatus() });
+        return true;
+      }
+
+      if (
+        path === '/api/compute/federation/report'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 256 * 1024);
+        const auth = denizenFederation.verifyFederationRequest(req, body);
+        if (!auth.ok) {
+          sendJson(res, auth.statusCode || 401, { ok: false, error: auth.error });
+          return true;
+        }
+        const result = denizenFederation.ingestPeerReport(body);
+        sendJson(res, 200, result);
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/compute/inference/stream') {
+        const jobId = url.searchParams.get('job_id') || url.searchParams.get('jobId');
+        if (!jobId) {
+          sendJson(res, 400, { ok: false, error: 'job_id required' });
+          return true;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        });
+        const send = (payload) => {
+          if (res.writableEnded) return;
+          res.write(`data: ${JSON.stringify(payload)}\n\n`);
+        };
+        const existing = inferenceProgress.getProgress(jobId);
+        if (existing?.text) send({ text: existing.text, done: !!existing.done });
+        const off = inferenceProgress.subscribe(jobId, (ev) => send(ev));
+        req.on('close', () => off());
+        return true;
+      }
+
       if (method === 'GET' && path === '/api/compute/inference/nodes') {
         const brains = serverContext.npcBrains;
         const queueDepth = brains?.getQueueDepth?.() || 0;
@@ -840,6 +941,80 @@ function mountComputeRoutes(serverContext = {}) {
           ok: true,
           ...lmStudioRouter.buildStatus(queueDepth),
         });
+        return true;
+      }
+
+      if (method === 'POST' && path === '/api/compute/inference/run') {
+        const body = await readJsonBody(req, 512 * 1024);
+        const token = extractToken(req, body, url);
+        const internal = token && token === process.env.DENIZEN_INTERNAL_API_TOKEN;
+        const sessionId = extractSessionId(req, body, url);
+        if (!internal && !sessionId) {
+          sendJson(res, 401, { ok: false, error: 'session or internal token required' });
+          return true;
+        }
+        if (!internal && sessionId) {
+          try {
+            await resolveIdentityForSession(serverContext, req, sessionId, body);
+          } catch (err) {
+            sendJson(res, Number(err?.statusCode || 401), {
+              ok: false,
+              error: err?.message || 'Unauthorized',
+            });
+            return true;
+          }
+        }
+
+        const messages = Array.isArray(body.messages) ? body.messages : [];
+        const mode = String(body.mode || body.inference_mode || 'auto').toLowerCase();
+        const brains = serverContext.npcBrains;
+        const queueDepth = brains?.getQueueDepth?.() || 0;
+        const tier = body.tier === 'fast' ? 'fast' : 'main';
+        let routed = null;
+        if (lmStudioRouter?.isEnabled?.()) {
+          routed = lmStudioRouter.resolveProviderConfig(
+            { model: body.model || null, baseUrl: body.baseUrl || body.base_url || null },
+            { tier, priority: body.priority, queueDepth },
+          );
+        }
+
+        try {
+          const result = await inferenceRpc.runInference({
+            mode: mode === 'auto'
+              ? (routed?._inferenceMode || 'direct')
+              : mode,
+            targetMachineId: body.target_machine_id
+              || body.targetMachineId
+              || routed?._routerNodeId
+              || null,
+            baseUrl: body.baseUrl || body.base_url || routed?.baseUrl || null,
+            model: body.model || routed?.model || null,
+            tier,
+            systemPrompt: body.system_prompt || body.systemPrompt || '',
+            messages,
+            max_tokens: body.max_tokens ?? body.maxTokens,
+            temperature: body.temperature,
+            priority: body.priority,
+            rpc_capable: routed?._rpcCapable,
+            network_reachable: routed?._networkReachable,
+            timeoutMs: body.timeout_ms ?? body.timeoutMs,
+          });
+          sendJson(res, 200, {
+            ok: true,
+            text: result.text,
+            model: result.model || null,
+            backend: result.backend || null,
+            mode: result.mode,
+            node_id: routed?._routerNodeId || null,
+            job_id: result.job_id || null,
+          });
+        } catch (err) {
+          sendJson(res, 502, {
+            ok: false,
+            error: err?.message || String(err),
+            node_id: routed?._routerNodeId || null,
+          });
+        }
         return true;
       }
 

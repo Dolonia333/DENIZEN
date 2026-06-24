@@ -25,6 +25,15 @@
   <h1>Station settings</h1>
   <p>Update what your Denizen station can do on this computer. Changes sync on save.</p>
   <div id="caps"></div>
+  <div id="brain-section" style="margin-top:18px;padding:14px;border:1px solid #334155;border-radius:10px;background:#0f172a;">
+    <strong>Local brain</strong>
+    <p style="margin:8px 0 12px;font-size:13px;color:#94a3b8">Bundled llama.cpp, Ollama, or LM Studio powers City Power inference. Mesh RPC works without opening firewall ports.</p>
+    <p id="brain-status-line" style="font-size:13px;color:#cbd5e1">Checking…</p>
+    <label style="display:block;margin-top:10px;font-size:13px;">Model
+      <select id="brain-model" style="display:block;width:100%;margin-top:6px;"></select>
+    </label>
+    <button type="button" id="pull-brain" style="margin-top:10px;">Download selected brain</button>
+  </div>
   <label>Permission level
     <select id="permission">
       <option value="ask">Ask each time</option>
@@ -89,7 +98,52 @@
       }
     };
     document.getElementById('back').onclick = () => window.DenizenDesktop.openGame();
-    load().catch(() => {});
+
+    async function loadBrainSection() {
+      const statusEl = document.getElementById('brain-status-line');
+      const select = document.getElementById('brain-model');
+      const catalog = await window.DenizenDesktop.getBrainCatalog?.().catch(() => ({ models: [] }));
+      const models = Array.isArray(catalog?.models) ? catalog.models : [];
+      select.innerHTML = models.map((m) =>
+        `<option value="${m.id}">${m.label} (${m.vram_gb} GB VRAM)</option>`
+      ).join('') || '<option value="llama3.2">Llama 3.2</option>';
+      const inf = await window.DenizenDesktop.getInferenceStatus?.().catch(() => null);
+      if (inf?.reachable) {
+        const backend = inf.backend === 'ollama' ? 'Ollama'
+          : inf.backend === 'llamacpp' ? 'llama.cpp'
+          : 'LM Studio';
+        const model = inf.main_model || (inf.models || [])[0] || 'ready';
+        statusEl.textContent = `${backend} connected · ${model}`;
+      } else {
+        statusEl.textContent = 'No brain detected — download a model or start LM Studio.';
+      }
+    }
+
+    document.getElementById('pull-brain').onclick = async () => {
+      const statusEl = document.getElementById('brain-status-line');
+      const model = document.getElementById('brain-model').value;
+      statusEl.textContent = `Downloading ${model}…`;
+      const offProgress = window.DenizenDesktop.onBrainPullProgress?.((ev) => {
+        if (!ev) return;
+        if (ev.phase === 'downloading' && ev.percent != null) {
+          statusEl.textContent = `Downloading ${model}… ${ev.percent}%`;
+        } else if (ev.phase === 'error') {
+          statusEl.textContent = ev.error || 'Download failed';
+        }
+      });
+      await window.DenizenDesktop.ensureOllama?.().catch(() => null);
+      const result = await window.DenizenDesktop.pullBrainModel?.({ model }).catch((e) => ({
+        ok: false,
+        error: e?.message || String(e),
+      }));
+      offProgress?.();
+      statusEl.textContent = result?.ok
+        ? `Downloaded ${model}`
+        : (result?.error || 'Download failed');
+      if (result?.ok) await loadBrainSection();
+    };
+
+    load().then(loadBrainSection).catch(() => {});
   </script>
 </body>
 </html>

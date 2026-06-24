@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "models": [
+    {
+      "id": "llama3.2-3b-instruct-q4",
+      "label": "Llama 3.2 · 3B Instruct (bundled GGUF)",
+      "tier": "fast",
+      "vram_gb": 4,
+      "backend": "llamacpp",
+      "gguf_url": "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "filename": "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+      "description": "Bundled llama-server — no Ollama install required",
+      "recommended": true
+    },
+    {
+      "id": "llama3.2:3b",
+      "label": "Llama 3.2 · 3B (Ollama)",
+      "tier": "fast",
+      "vram_gb": 4,
+      "backend": "ollama",
+      "description": "Light stations — requires Ollama",
+      "recommended": false
+    },
+    {
+      "id": "llama3.2",
+      "label": "Llama 3.2 (Ollama)",
+      "tier": "main",
+      "vram_gb": 8,
+      "backend": "ollama",
+      "description": "Balanced default brain via Ollama",
+      "recommended": false
+    },
+    {
+      "id": "qwen2.5-7b-instruct-q4",
+      "label": "Qwen 2.5 · 7B Instruct (GGUF)",
+      "tier": "main",
+      "vram_gb": 8,
+      "backend": "llamacpp",
+      "gguf_url": "https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "filename": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+      "description": "Strong office/code model via llama.cpp",
+      "recommended": false
+    },
+    {
+      "id": "qwen2.5:7b",
+      "label": "Qwen 2.5 · 7B (Ollama)",
+      "tier": "main",
+      "vram_gb": 8,
+      "backend": "ollama",
+      "description": "Strong for office and code tasks",
+      "recommended": false
+    },
+    {
+      "id": "ministral-3-8b",
+      "label": "Ministral 3 · 8B (Ollama)",
+      "tier": "main",
+      "vram_gb": 10,
+      "backend": "ollama",
+      "description": "Matches many fleet GPU hosts",
+      "recommended": false
+    }
+  ]
+}

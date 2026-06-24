@@ -94,19 +94,45 @@ async function probeLmStudio(npcBrains) {
   try { lmStudioRouter = require('./lm-studio-router'); } catch (_) {}
   const queueDepth = npcBrains?.getQueueDepth?.() || 0;
   if (lmStudioRouter?.isEnabled?.()) {
+    await lmStudioRouter.refreshAll().catch(() => null);
     const pick = lmStudioRouter.selectEndpoint({ tier: 'main', queueDepth });
-    if (pick?.url) {
-      const lmCfg = npcBrains?.providers?.lmstudio || {};
-      const status = {
-        reachable: lmStudioRouter.anyReachable(),
+    const lmCfg = npcBrains?.providers?.lmstudio || {};
+    const poolReachable = lmStudioRouter.anyReachable();
+    if (poolReachable && pick?.url) {
+      const node = lmStudioRouter.listNodes().find((n) => n.node_id === pick.node_id) || {};
+      return {
+        reachable: true,
         url: pick.url,
-        model: lmCfg.model || process.env.LM_STUDIO_MODEL || null,
-        fastModel: npcBrains?.providers?.['lmstudio-fast']?.model || process.env.LM_STUDIO_FAST_MODEL || null,
-        livenessSource: pick.routed ? `router → ${pick.label || pick.node_id}` : 'router fallback',
+        model: node.main_model || lmCfg.model || process.env.LM_STUDIO_MODEL || null,
+        fastModel: node.fast_model
+          || npcBrains?.providers?.['lmstudio-fast']?.model
+          || process.env.LM_STUDIO_FAST_MODEL
+          || null,
+        livenessSource: pick.routed ? `router → ${pick.label || pick.node_id}` : 'router pool',
         router: pick,
+        remote_only: lmStudioRouter.isRemoteOnlyMode?.() || false,
         error: null,
       };
-      if (status.reachable) return status;
+    }
+    if (pick?.url && pick.routed) {
+      const { probeLmStudioEndpoint } = require('./lm-studio-probe');
+      const direct = await probeLmStudioEndpoint(pick.url, {
+        apiKey: process.env.LM_STUDIO_API_KEY,
+      }).catch(() => null);
+      if (direct?.reachable) {
+        return {
+          reachable: true,
+          url: pick.url,
+          model: direct.main_model || lmCfg.model || process.env.LM_STUDIO_MODEL || null,
+          fastModel: npcBrains?.providers?.['lmstudio-fast']?.model
+            || process.env.LM_STUDIO_FAST_MODEL
+            || null,
+          livenessSource: `probe ${pick.label || pick.node_id}`,
+          router: pick,
+          remote_only: lmStudioRouter.isRemoteOnlyMode?.() || false,
+          error: null,
+        };
+      }
     }
   }
 
@@ -167,14 +193,22 @@ async function probeLmStudio(npcBrains) {
 
 function quickLmStudioSnapshot(npcBrains) {
   const lmCfg = npcBrains?.providers?.lmstudio || {};
+  let lmStudioRouter = null;
+  try { lmStudioRouter = require('./lm-studio-router'); } catch (_) {}
+  const routerStatus = lmStudioRouter?.isEnabled?.()
+    ? lmStudioRouter.buildStatus(npcBrains?.getQueueDepth?.() || 0)
+    : null;
+  const pick = routerStatus?.selected;
+  const poolUp = !!routerStatus?.any_reachable;
   return {
-    reachable: false,
-    probe_skipped: true,
-    url: lmCfg.baseUrl || process.env.LM_STUDIO_URL || 'http://localhost:1234',
+    reachable: poolUp,
+    probe_skipped: !poolUp,
+    url: pick?.url || lmCfg.baseUrl || process.env.LM_STUDIO_URL || 'http://localhost:1234',
     model: lmCfg.model || process.env.LM_STUDIO_MODEL || null,
     fastModel: npcBrains?.providers?.['lmstudio-fast']?.model || null,
-    livenessSource: null,
-    error: null,
+    livenessSource: poolUp ? (pick?.routed ? `router → ${pick.label || pick.node_id}` : 'router pool') : null,
+    error: poolUp ? null : 'LM Studio pool unreachable',
+    router: pick || null,
   };
 }
 
@@ -283,6 +317,16 @@ function resolveContributionState({
 
   const modelLabel = shortModelName(lmStudio?.model);
 
+  const inference = lmStudio
+    ? {
+      backend: lmStudio.backend || 'lmstudio',
+      main_model: lmStudio.model || null,
+      reachable_local: lmStudioActive,
+      rpc_capable: lmStudioActive,
+      inference_mode: lmStudioActive ? 'direct' : (lmStudio.reachable ? 'direct' : null),
+    }
+    : null;
+
   return {
     contributing,
     contribution_source: contributionSource,
@@ -297,8 +341,10 @@ function resolveContributionState({
         model_short: modelLabel,
         url: lmStudio.url || null,
         liveness_source: lmStudio.livenessSource || null,
+        rpc_capable: lmStudioActive,
       }
       : null,
+    inference,
     active_node: activeNode
       ? {
         id: activeNode.id,
@@ -350,6 +396,7 @@ function mergeContributionIntoStatus(baseStatus, contribution) {
     opted_in: contribution.contributing,
     opt_in: contribution.contributing,
     lm_studio: contribution.lm_studio,
+    inference: contribution.inference || null,
     active_node: contribution.active_node,
     status_label: contribution.status_label,
   };

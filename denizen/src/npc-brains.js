@@ -23,6 +23,8 @@ try { agentBus = require('./agent-bus'); } catch (_) {}
 try { llmTelemetry = require('./llm-telemetry'); } catch (_) {}
 let lmStudioRouter = null;
 try { lmStudioRouter = require('./lm-studio-router'); } catch (_) {}
+let inferenceRpc = null;
+try { inferenceRpc = require('./denizen-inference-rpc'); } catch (_) {}
 
 // NPC real-work tools (Level 1/2/3). Lazy-loaded so the brains still work
 // if npc-tools.js isn't present yet (e.g. during older test runs).
@@ -819,7 +821,10 @@ class NpcBrainManager {
       // LM Studio — local OpenAI-compatible API
       // Model auto-synced at startup via syncLmStudioModel().
       const lmBase = String(
-        process.env.LM_STUDIO_URL || process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234',
+        (lmStudioRouter?.defaultHostUrl?.())
+        || process.env.LM_STUDIO_URL
+        || process.env.LM_STUDIO_BASE_URL
+        || 'http://localhost:1234',
       ).replace(/\/v1\/?$/, '').replace(/\/+$/, '');
       this.providers.lmstudio = {
         baseUrl: lmBase,
@@ -845,6 +850,18 @@ class NpcBrainManager {
     if (!this.providers.demo) {
       this.providers.demo = { type: 'demo', baseUrl: null, apiKey: null, model: null };
     }
+
+    const publicDemoKey = process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY
+      || (promptTuning?.publicDemoMode && process.env.ANTHROPIC_API_KEY);
+    if (publicDemoKey) {
+      this.providers['claude-haiku'] = {
+        baseUrl: 'https://api.anthropic.com',
+        apiKey: publicDemoKey,
+        model: promptTuning?.publicDemoModel || 'claude-haiku-3-5-20241022',
+        type: 'anthropic',
+      };
+    }
+
     const localProviders = new Set(['demo', 'lmstudio', 'lmstudio-fast']);
     const remoteCount = Object.keys(this.providers).filter(k => !localProviders.has(k)).length;
     this._demoMode = remoteCount === 0; // demo mode only when zero remote providers configured
@@ -856,8 +873,10 @@ class NpcBrainManager {
   _initBrains() {
     // Load NPC identities from soul files (OpenClaw pattern)
     const npcsDir = path.join(__dirname, '..', 'npcs');
+    const demoFolders = promptTuning?.publicDemoNpcFolders;
 
     for (const { folder, display } of npcRoster.entries) {
+      if (demoFolders && !demoFolders.includes(folder)) continue;
       const name = display;
       const soulPath = path.join(npcsDir, folder, 'SOUL.md');
       const memoryPath = path.join(npcsDir, folder, 'MEMORY.md');
@@ -870,9 +889,14 @@ class NpcBrainManager {
       const providerMatch = soul.match(/## Provider\r?\n([\w-]+)/);
       const roleMatch = soul.match(/## Role\r?\n(.+)/);
       const capMatch = soul.match(/## What You Can Do\r?\n([\s\S]+?)(?=\r?\n## )/);
-      const provider = providerMatch?.[1] || 'lmstudio';
+      let provider = providerMatch?.[1] || 'lmstudio';
       const role = roleMatch?.[1]?.trim() || 'Employee';
       const capabilitiesSoul = capMatch ? capMatch[1].trim() : null;
+
+      if (demoFolders && demoFolders.includes(folder) && promptTuning?.publicDemoUseCloud) {
+        if (this.providers['claude-haiku']) provider = 'claude-haiku';
+        else if (this.providers.claude) provider = 'claude';
+      }
 
       const baseProviderConfig = this.providers[provider] || this.providers.lmstudio || this.providers.demo;
       const providerConfig = { ...baseProviderConfig, providerKey: provider };
@@ -956,11 +980,18 @@ class NpcBrainManager {
       const timestamp = new Date().toISOString().slice(0, 16);
       const newLine = `\n- [${timestamp}] ${entry}`;
 
-      // Cap memory file at 200 lines to prevent unbounded growth
+      // Cap memory file at 200 lines / ~2KB to prevent unbounded growth
       let existing = '';
       try { existing = fs.readFileSync(memPath, 'utf-8'); } catch (_) {}
       const lines = existing.split('\n').filter(l => l.trim());
-      if (lines.length >= 200) {
+      const MEMORY_SOFT_CAP = Number(process.env.DENIZEN_MEMORY_SOFT_CAP) || 2048;
+      if (existing.length > MEMORY_SOFT_CAP && lines.length > 8) {
+        const header = lines.slice(0, 2);
+        const recent = lines.slice(-5);
+        const archived = lines.slice(2, -5);
+        const summary = `- [${timestamp}] [ARCHIVE] Earlier memories (${archived.length} entries) compressed for context window.`;
+        fs.writeFileSync(memPath, [...header, summary, ...recent, newLine.trim()].join('\n') + '\n');
+      } else if (lines.length >= 200) {
         // Trim oldest 50 entries, keeping the most recent 150
         const trimmed = lines.slice(lines.length - 150);
         fs.writeFileSync(memPath, trimmed.join('\n') + newLine);
@@ -1506,7 +1537,10 @@ class NpcBrainManager {
    */
   async syncLmStudioModel() {
     if (!this.providers.lmstudio) return;
-    const base = this.providers.lmstudio.baseUrl || 'http://localhost:1234';
+    let base = this.providers.lmstudio.baseUrl || 'http://localhost:1234';
+    if (lmStudioRouter?.isEnabled?.()) {
+      base = lmStudioRouter.activeInferenceUrl({ tier: 'main', queueDepth: 0 }) || base;
+    }
     const mainPin = process.env.LM_STUDIO_MODEL;
     const fastPin = process.env.LM_STUDIO_FAST_MODEL;
 
@@ -2581,10 +2615,74 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
         excludeNodeIds: opts._routerExclude || [],
       });
     }
+
+    if (routed._inferenceMode === 'rpc' && inferenceRpc?.runMeshInference) {
+      try {
+        const onToken = typeof opts.stream?.onToken === 'function' ? opts.stream.onToken : null;
+        const rpc = await inferenceRpc.runMeshInference({
+          targetMachineId: routed._routerNodeId,
+          systemPrompt,
+          messages,
+          model: routed.model,
+          tier: config.providerKey === 'lmstudio-fast' ? 'fast' : 'main',
+          max_tokens: opts.max_tokens ?? opts.maxTokens,
+          temperature: opts.temperature,
+          priority: opts.priority,
+          onToken,
+        });
+        return rpc.text;
+      } catch (err) {
+        const nodeId = routed._routerNodeId;
+        if (attempt < 1 && lmStudioRouter?.isEnabled?.() && nodeId) {
+          lmStudioRouter.markFailure(nodeId, err);
+          const tier = config.providerKey === 'lmstudio-fast' ? 'fast' : 'main';
+          const next = lmStudioRouter.resolveProviderConfig(config, {
+            tier,
+            priority: opts.priority,
+            queueDepth: this.getQueueDepth(),
+            excludeNodeIds: [nodeId, ...(opts._routerExclude || [])],
+          });
+          if (next._routerNodeId && next._routerNodeId !== nodeId) {
+            return this._callLocalRouted(config, systemPrompt, messages, {
+              ...opts,
+              _routerExclude: [...(opts._routerExclude || []), nodeId],
+            }, attempt + 1);
+          }
+        }
+        throw err;
+      }
+    }
+
     try {
       return await this._callLocal(routed, systemPrompt, messages, opts);
     } catch (err) {
       const nodeId = routed._routerNodeId;
+      if (
+        attempt < 1
+        && routed._rpcCapable
+        && inferenceRpc?.runMeshInference
+        && inferenceRpc?.isQueueEnabled?.()
+      ) {
+        try {
+          const onToken = typeof opts.stream?.onToken === 'function' ? opts.stream.onToken : null;
+          const rpc = await inferenceRpc.runMeshInference({
+            targetMachineId: nodeId,
+            systemPrompt,
+            messages,
+            model: routed.model,
+            tier: config.providerKey === 'lmstudio-fast' ? 'fast' : 'main',
+            max_tokens: opts.max_tokens ?? opts.maxTokens,
+            temperature: opts.temperature,
+            priority: opts.priority,
+            onToken,
+          });
+          return rpc.text;
+        } catch (rpcErr) {
+          if (lmStudioRouter?.isEnabled?.() && nodeId) {
+            lmStudioRouter.markFailure(nodeId, rpcErr);
+          }
+        }
+      }
       if (attempt < 1 && lmStudioRouter?.isEnabled?.() && nodeId) {
         lmStudioRouter.markFailure(nodeId, err);
         const tier = config.providerKey === 'lmstudio-fast' ? 'fast' : 'main';
@@ -3666,6 +3764,22 @@ ${brain.voiceAnchor || ''}`;
       this._updateMood(npcName, 'task_blocked');
     } else if (decision.taskPhase === 'finished') {
       this._updateMood(npcName, 'task_finished');
+      try {
+        const outcomeScorer = require('./outcome-scorer');
+        const competencyMap = require('./competency-map');
+        const chainInfo = taskChain?.getChainForNpc(npcName);
+        const scored = outcomeScorer.scoreDecision(decision, {
+          chainAdvanced: Boolean(chainInfo && chainInfo.chain?.currentStep > 0),
+        });
+        competencyMap.recordOutcome(npcName, {
+          score: scored.score,
+          skillDelta: decision.skillDelta || null,
+        });
+        const brain = this.brains[npcName];
+        if (brain?.longTermMemory) {
+          competencyMap.ingestMemorySkills(npcName, brain.longTermMemory);
+        }
+      } catch (_) {}
     } else if (decision.action === 'meeting') {
       this._updateMood(npcName, 'meeting_called');
     }

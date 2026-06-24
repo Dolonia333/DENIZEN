@@ -63,7 +63,12 @@ function startHeartbeatLoop(getSetup, desktopApi) {
           machine_id: setup.desktopInstallId ? `desktop-${setup.desktopInstallId}` : `node-${setup.nodeId}`,
           contributing: !!setup.optIn,
           jobs_completed: 0,
+          brain_model: setup.brainModel || null,
         });
+        if (setup.brainModel && liveMetrics?.inference) {
+          liveMetrics.inference.main_model = setup.brainModel;
+          liveMetrics.inference.fast_model = liveMetrics.inference.fast_model || setup.brainModel;
+        }
       } catch (_) {}
       await desktopApi(
         setup.serverUrl,

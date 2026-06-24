@@ -1,6 +1,8 @@
 # Denizen Compute Mesh
 
-Distributed compute network for Denizen: machines report live hardware metrics, register as worker nodes, claim jobs from a shared queue, execute work (including LM Studio inference on GPU hosts), and award contribution credits.
+Distributed compute network for Denizen: machines report live hardware metrics, register as worker nodes, claim jobs from a shared queue, execute work (including local inference via Ollama or LM Studio on GPU hosts), and award contribution credits.
+
+**Denizen-to-Denizen inference:** See [DENIZEN_INFERENCE_MESH.md](DENIZEN_INFERENCE_MESH.md) for architecture and [GAP_CLOSURE_PLAN.md](GAP_CLOSURE_PLAN.md) for Phase 4+ execution plan.
 
 **Status (Dolonia home lab):** three-node mesh operational — dolonia (host + GPU), Synology NAS, Kali laptop (`hp81081d`).
 
@@ -76,7 +78,9 @@ Remote agents must **not** use `127.0.0.1` or LAN-only URLs unless they are on t
 | `src/denizen-compute-queue.js` | Supabase-backed job queue |
 | `src/denizen-compute-routes.js` | REST API — register, claim, complete, fleet report, bundle download |
 | `src/denizen-compute-producer.js` | Auto mesh job producer |
-| `src/denizen-mesh-job-runner.js` | Shared job execution (LM Studio + mock) |
+| `src/denizen-mesh-job-runner.js` | Shared job execution (inference runtime + mock) |
+| `src/denizen-inference-runtime.js` | Ollama + LM Studio probe and chat |
+| `src/denizen-inference-rpc.js` | Denizen-to-Denizen `inference_rpc` orchestration |
 | `src/denizen-fleet-registry.js` | In-memory fleet metrics aggregation |
 | `src/denizen-fleet-agent-bundle.js` | Agent tarball builder (delegates to Python tarfile) |
 | `src/mesh-jobs-panel.js` | Browser UI panel |
@@ -336,6 +340,7 @@ py infra/apply-migrations-nas.py
 ## Related docs
 
 - [infra/README.md](../../infra/README.md) — NAS SSH, Kali pull install, Tailscale, orchestrator
+- [MESH_SCALING.md](MESH_SCALING.md) — NAS hosting, redundancy, ~100-user capacity
 - [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md) — cloud deploy + service role
 - [TESTING.md](TESTING.md) — smoke script index
 - [desktop/README.md](../desktop/README.md) — Electron contributor node
