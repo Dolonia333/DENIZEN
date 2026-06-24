@@ -142,6 +142,29 @@
     return { 'X-Session-Token': token };
   }
 
+  async function createTeamToken() {
+    const sess = globalThis.DenizenVisitorSession;
+    const sessionId = sess?.getSessionId?.();
+    if (!sessionId) throw new Error('No visitor session');
+
+    const res = await fetch('/api/mcp/team-tokens', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...sessionAuthHeaders(),
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        label: 'team-operator',
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+    return data;
+  }
+
   async function createToken(npcKey) {
     const sess = globalThis.DenizenVisitorSession;
     const sessionId = sess?.getSessionId?.();
@@ -349,6 +372,16 @@
     } catch (_) { /* extension optional */ }
   }
 
+  async function openTeamConnectFlow() {
+    try {
+      const payload = await createTeamToken();
+      showTokenModal('_team', 'Team Operator', payload);
+    } catch (err) {
+      console.warn('[DenizenVisitorMcpConnectUI]', err);
+      alert(err?.message || 'Could not create team MCP token');
+    }
+  }
+
   async function openConnectFlow(npcKey, displayName) {
     try {
       const payload = await createToken(npcKey);
@@ -383,6 +416,21 @@
     const name = asst.assistant_name || asst.npc_key;
     btn.style.display = 'inline';
     btn.onclick = () => openConnectFlow(asst.npc_key, name);
+
+    let teamBtn = document.getElementById('denizen-visitor-team-mcp-btn');
+    if (!teamBtn) {
+      teamBtn = document.createElement('button');
+      teamBtn.id = 'denizen-visitor-team-mcp-btn';
+      teamBtn.type = 'button';
+      teamBtn.textContent = 'Team MCP';
+      teamBtn.title = 'Connect Cursor/Claude to operate the whole office';
+      teamBtn.style.marginLeft = '6px';
+      btn.parentNode?.insertBefore(teamBtn, btn.nextSibling);
+    }
+    const tier = sess?.getAccessTier?.() || sess?.getTier?.();
+    const showTeam = tier === 'team' || tier === 'owner' || sess?.isTeamSession?.();
+    teamBtn.style.display = showTeam ? 'inline' : 'none';
+    teamBtn.onclick = () => openTeamConnectFlow();
   }
 
   const OFFER_ID = 'denizen-visitor-mcp-offer';
