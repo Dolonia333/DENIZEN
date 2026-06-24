@@ -7,6 +7,7 @@ const requiredTables = [
   'denizen_job_applications',
   'denizen_watchlist_symbols',
   'denizen_trade_suggestions',
+  'denizen_mcp_tokens',
 ];
 
 function getBaseUrl() {
@@ -65,6 +66,18 @@ function runOptionalDbVerification(dbUrl) {
     "  select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace",
     "  where n.nspname = 'public' and p.proname = 'denizen_user_can_access_org'",
     '),',
+    "'denizen_resolve_mcp_token_exists', exists (",
+    "  select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace",
+    "  where n.nspname = 'public' and p.proname = 'denizen_resolve_mcp_token'",
+    '),',
+    "'mcp_rpc_search_path_ok', (",
+    "  select coalesce(",
+    "    (select 'extensions' = any(string_to_array(",
+    "      replace(replace(proconfig[1], 'search_path=', ''), ' ', ''), ','",
+    "    )) from pg_proc p join pg_namespace n on n.oid = p.pronamespace",
+    "    where n.nspname = 'public' and p.proname = 'denizen_resolve_mcp_token' and proconfig is not null),",
+    "    false)",
+    '),',
     "'trading_tables', json_build_object(",
     "'denizen_watchlist_symbols', to_regclass('public.denizen_watchlist_symbols') is not null,",
     "'denizen_trade_suggestions', to_regclass('public.denizen_trade_suggestions') is not null",
@@ -109,6 +122,8 @@ function runOptionalDbVerification(dbUrl) {
 
   const ok =
     parsed.denizen_user_can_access_org_exists === true &&
+    parsed.denizen_resolve_mcp_token_exists === true &&
+    parsed.mcp_rpc_search_path_ok === true &&
     parsed.trading_tables?.denizen_watchlist_symbols === true &&
     parsed.trading_tables?.denizen_trade_suggestions === true;
 

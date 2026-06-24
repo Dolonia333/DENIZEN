@@ -59,6 +59,28 @@ def table_exists(cur, name: str) -> bool:
     return cur.fetchone()[0] is not None
 
 
+def mcp_rpc_ok(cur) -> bool:
+    cur.execute(
+        """
+        select exists (
+          select 1 from pg_proc p
+          join pg_namespace n on n.oid = p.pronamespace
+          where n.nspname = 'public' and p.proname = 'denizen_resolve_mcp_token'
+        )
+        and coalesce((
+          select 'extensions' = any(string_to_array(
+            replace(replace(proconfig[1], 'search_path=', ''), ' ', ''), ','
+          ))
+          from pg_proc p
+          join pg_namespace n on n.oid = p.pronamespace
+          where n.nspname = 'public' and p.proname = 'denizen_resolve_mcp_token'
+            and proconfig is not null
+        ), false)
+        """
+    )
+    return bool(cur.fetchone()[0])
+
+
 def main() -> int:
     db_url = load_db_url()
     files = sorted(
@@ -77,9 +99,14 @@ def main() -> int:
         and (migration_version(p.name) or 0) not in done
     ]
 
-    if not targets and table_exists(cur, "public.denizen_contribution_daily_totals"):
+    if not targets and table_exists(cur, "public.denizen_contribution_daily_totals") and mcp_rpc_ok(cur):
         print("MIGRATIONS_ALREADY_APPLIED")
         return 0
+
+    if not targets and not mcp_rpc_ok(cur):
+        extra = [p for p in files if p.name.endswith("20260622000001_mcp_rpc_extensions_search_path.sql")]
+        if extra:
+            targets = [p for p in extra if (migration_version(p.name) or 0) not in done]
 
     if not targets:
         # 000019 has no schema_migrations insert — apply if table still missing.
@@ -108,7 +135,11 @@ def main() -> int:
         print("WARN daily_totals still missing")
         return 1
 
-    print("daily_totals_exists=true")
+    if not mcp_rpc_ok(cur):
+        print("WARN denizen_resolve_mcp_token missing or search_path lacks extensions")
+        return 1
+
+    print("daily_totals_exists=true mcp_rpc_ok=true")
     cur.close()
     conn.close()
     print("MIGRATION_DONE")
