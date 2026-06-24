@@ -106,6 +106,10 @@
       c: ['#facc15', '#854d0e'], gated: true },
     { id: 'crm', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
       available: () => true },
+    { id: 'market', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
+      c: ['#34d399', '#047857'],
+      open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
+      available: () => true },
     { id: 'settings', icon: '⚙️', label: 'Settings', type: 'internal', c: ['#94a3b8', '#334155'] },
   ];
 
@@ -122,6 +126,7 @@
     security: '#denizen-security-feed',
     profile: '#denizen-account-panel',
     compute: '#denizen-node-ui-chip',
+    market: '#denizen-market-panel',
   };
 
   const LAYOUT_STORAGE_KEY = 'denizen-phone-layout';
@@ -1643,14 +1648,20 @@
         flex: 0 0 auto !important;
       }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel.open,
+      ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
       ${M}[${APP_ATTR}="newsroom"] #denizen-content-pipeline-panel.open {
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
       }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel .nt-body,
+      ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
       ${M}[${APP_ATTR}="newsroom"] #denizen-content-pipeline-panel {
         -webkit-overflow-scrolling: touch;
+      }
+      ${M}[${APP_ATTR}="market"] #denizen-market-panel.open {
+        display: block !important;
+        overflow: auto !important;
       }
 
       /* Legacy profile/compute phone rules retired — panels live in .dzp-me-shell */
@@ -2574,7 +2585,7 @@
 
     if (!panelVisible(app.panel)) {
       if (app.open) app.open();
-      if (!panelVisible(app.panel)) $(app.trigger)?.click();
+      else if (app.trigger) $(app.trigger)?.click();
     }
     // Some panels open asynchronously — give them a beat before judging.
     if (!panelVisible(app.panel)) {

@@ -49,9 +49,21 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 
 ### MCP tools
 
+**Sync (memory / status)**
+
 1. **`update_memory`** — append memory for the NPC (syncs to DB + facts spine)
 2. **`get_status`** — NPC roster row, recent MCP memories, recent work output
 3. **`log_activity`** — write to work feed + facts
+
+**Actions (do real work)**
+
+4. **`list_skills`** — skills this NPC may run (design, research, CRM, etc.)
+5. **`run_skill`** — execute a skill (`canvas-render`, `research`, `crm-draft-email`, …)
+6. **`assign_task`** — queue a mandatory task for this NPC (wakes think loop)
+7. **`delegate_task`** — assign work to another teammate NPC
+8. **`announce_in_office`** — speech bubble in the virtual office for live viewers
+
+REST aliases: `POST /api/npc-sync/run-skill`, `POST /api/npc-sync/assign-task`
 
 ## Client setup
 

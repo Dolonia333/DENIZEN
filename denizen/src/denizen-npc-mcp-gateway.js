@@ -4,11 +4,14 @@
  * Per-NPC MCP gateway — Streamable HTTP JSON-RPC.
  * Teammate AIs (Claude, Cursor, etc.) connect to /mcp/npc/:npcKey with a bearer token.
  *
- * Tools: update_memory, get_status, log_activity
+ * Sync: update_memory, get_status, log_activity
+ * Actions: list_skills, run_skill, assign_task, delegate_task, announce_in_office
  */
 
 const crypto = require('node:crypto');
 const denizenDb = require('./denizen-db.js');
+const mcpActions = require('./denizen-mcp-actions.js');
+const mcpMarketTools = require('./denizen-mcp-market-tools.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
@@ -53,6 +56,62 @@ const TOOL_DEFINITIONS = [
         action: { type: 'string', description: 'Optional action verb' },
       },
       required: ['note'],
+    },
+  },
+  {
+    name: 'list_skills',
+    description: 'List OpenClaw/Jelly skills this NPC is allowed to run (research, canvas-render, CRM, etc.).',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'run_skill',
+    description: 'Run a real skill as this NPC (mockups, research, CRM, coding-agent, web-search). Returns immediately unless wait=true.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        skill: { type: 'string', description: 'Skill name, e.g. canvas-render, research, crm-summary' },
+        params: { type: 'object', description: 'Skill parameters (query, task, etc.)' },
+        wait: { type: 'boolean', description: 'If true, block until skill finishes (default false)' },
+        timeout_ms: { type: 'number', description: 'Max wait when wait=true (default 180000)' },
+      },
+      required: ['skill'],
+    },
+  },
+  {
+    name: 'assign_task',
+    description: 'Assign a mandatory task to this NPC (wakes think loop, shows in directive inbox).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task: { type: 'string', description: 'What the NPC should do' },
+        urgent: { type: 'boolean', description: 'Skip think cooldown when true' },
+        from: { type: 'string', description: 'Who assigned it (default MCP teammate)' },
+      },
+      required: ['task'],
+    },
+  },
+  {
+    name: 'delegate_task',
+    description: 'Delegate a task to another teammate NPC by name or folder key.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        to_npc: { type: 'string', description: 'Target NPC, e.g. Josh or josh' },
+        task: { type: 'string', description: 'Task description' },
+        urgent: { type: 'boolean' },
+      },
+      required: ['to_npc', 'task'],
+    },
+  },
+  {
+    name: 'announce_in_office',
+    description: 'Make this NPC say something in the virtual office (speech bubble for connected viewers).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'Line of dialogue' },
+      },
+      required: ['message'],
     },
   },
 ];
@@ -195,12 +254,31 @@ async function toolLogActivity(scope, args) {
 }
 
 async function callTool(scope, name, args) {
+  if (mcpMarketTools.isMarketNpc(scope.npc_key) && mcpMarketTools.toolsForNpc(scope.npc_key).some((t) => t.name === name)) {
+    return mcpMarketTools.callTool(scope.npc_key, name, args);
+  }
   switch (name) {
     case 'update_memory': return toolUpdateMemory(scope, args);
     case 'get_status': return toolGetStatus(scope, args);
     case 'log_activity': return toolLogActivity(scope, args);
+    case 'list_skills': return mcpActions.toolListSkills(scope, args);
+    case 'run_skill': return mcpActions.toolRunSkill(scope, args);
+    case 'assign_task': return mcpActions.toolAssignTask(scope, args);
+    case 'delegate_task': return mcpActions.toolDelegateTask(scope, args);
+    case 'announce_in_office': return mcpActions.toolAnnounce(scope, args);
     default: return { ok: false, error: `unknown tool: ${name}` };
   }
+}
+
+function configure(deps = {}) {
+  mcpActions.configure(deps);
+  mcpMarketTools.configure(deps);
+}
+
+function toolsForScope(scope) {
+  const base = [...TOOL_DEFINITIONS];
+  if (scope?.npc_key) base.push(...mcpMarketTools.toolsForNpc(scope.npc_key));
+  return base;
 }
 
 async function handleRpc(scope, req, res, message, sessionId) {
@@ -216,7 +294,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {} },
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.3.0' },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.7.0' },
       },
     });
   }
@@ -225,7 +303,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
     return sendJson(res, 200, {
       jsonrpc: '2.0',
       id,
-      result: { tools: TOOL_DEFINITIONS },
+      result: { tools: toolsForScope(scope) },
     });
   }
 
@@ -314,7 +392,7 @@ async function handleHttpRequest(req, res, npcKeyFromPath) {
       ok: true,
       mcp: true,
       npc_key: npcKey,
-      tools: TOOL_DEFINITIONS.map((t) => t.name),
+      tools: toolsForScope(scope).map((t) => t.name),
       protocol: PROTOCOL_VERSION,
     });
   }
@@ -421,6 +499,23 @@ async function handleRestSync(req, res, action) {
     return sendJson(res, result?.ok ? 200 : 400, result);
   }
 
+  if (action === 'run-skill' || action === 'assign-task') {
+    if (req.method !== 'POST') {
+      return sendJson(res, 405, { ok: false, error: 'POST only' });
+    }
+    let body;
+    try {
+      body = await readBody(req);
+    } catch (err) {
+      return sendJson(res, 400, { ok: false, error: err?.message || 'invalid json' });
+    }
+    const payload = body || {};
+    const result = action === 'run-skill'
+      ? await callTool(scope, 'run_skill', payload)
+      : await callTool(scope, 'assign_task', payload);
+    return sendJson(res, result?.ok ? 200 : 400, result);
+  }
+
   return sendJson(res, 404, { ok: false, error: 'unknown action' });
 }
 
@@ -433,7 +528,7 @@ function buildOpenApiSpec(baseUrl) {
       description:
         'REST bridge for ChatGPT Custom GPT Actions and other HTTP clients. '
         + 'Create a bearer token in the Denizen office (Connect AI), then configure your client.',
-      version: '1.4.0',
+      version: '1.7.0',
     },
     servers: [{ url: base }],
     components: {
@@ -507,6 +602,51 @@ function buildOpenApiSpec(baseUrl) {
           responses: { 200: { description: 'Activity logged' } },
         },
       },
+      '/api/npc-sync/run-skill': {
+        post: {
+          operationId: 'runNpcSkill',
+          summary: 'Run an allowed skill as this NPC',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['skill'],
+                  properties: {
+                    skill: { type: 'string' },
+                    params: { type: 'object' },
+                    wait: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Skill started or completed' } },
+        },
+      },
+      '/api/npc-sync/assign-task': {
+        post: {
+          operationId: 'assignNpcTask',
+          summary: 'Assign a task to this NPC',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['task'],
+                  properties: {
+                    task: { type: 'string' },
+                    urgent: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Task assigned' } },
+        },
+      },
     },
   };
 }
@@ -536,6 +676,7 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
       gpt_instructions: [
         `You are synced to ${npcDisplayName(npcKey)} in the Denizen virtual office.`,
         'When the user shares decisions, tasks, or context worth remembering, call updateNpcMemory.',
+        'When they want real work, call run_skill (list_skills first). Use assign_task to queue office work.',
         'When they finish work, call logNpcActivity with a short note.',
         'At the start of a session, call getNpcStatus to see what the NPC already knows.',
       ].join(' '),
@@ -611,7 +752,7 @@ function buildConnectInfo(npcKey, baseUrl) {
   return {
     npc_key: npcKey,
     mcp_url: url,
-    tools: TOOL_DEFINITIONS.map((t) => t.name),
+    tools: toolsForScope({ npc_key: npcKey }).map((t) => t.name),
     openapi_url: `${base}/api/npc-sync/openapi.json`,
     paths: {
       cursor_api: 'MCP JSON-RPC at mcp_url (Cursor, Claude Desktop, API clients)',
@@ -624,6 +765,7 @@ function buildConnectInfo(npcKey, baseUrl) {
 
 module.exports = {
   TOOL_DEFINITIONS,
+  configure,
   handleHttpRequest,
   handleRestSync,
   buildOpenApiSpec,
