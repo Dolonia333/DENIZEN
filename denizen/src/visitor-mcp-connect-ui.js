@@ -213,6 +213,15 @@
         font: 11px system-ui, sans-serif;
       }
       .mcp-set-scope-hint { color: #64748b; font-size: 9px; }
+      .mcp-set-jobs {
+        color: #93c5fd;
+        font-size: 10px;
+        line-height: 1.45;
+        margin-bottom: 8px;
+      }
+      .mcp-set-jobs strong { color: #cbd5e1; font-weight: 600; }
+      .mcp-addon-title { margin-top: 12px; margin-bottom: 2px; }
+      .mcp-addon-note { margin-bottom: 8px; }
       .mcp-token-row {
         border-top: 1px solid #1e293b;
         padding-top: 8px;
@@ -238,14 +247,46 @@
     document.head.appendChild(s);
   }
 
-  const EXTERNAL_MCPS = [
+  const JOB_CATEGORIES = [
+    { label: 'CRM', tools: ['crm_pipeline_brief', 'crm_list_tasks', 'crm_draft_email'] },
+    { label: 'Coding & skills', tools: ['run_skill', 'list_skills'] },
+    {
+      label: 'Team & tasks',
+      tools: [
+        'list_team', 'send_handoff', 'list_pending_handoffs',
+        'team_status', 'run_as_npc', 'broadcast_task',
+        'delegate_task', 'assign_task', 'announce_in_office',
+      ],
+    },
+    {
+      label: 'Market',
+      tools: [
+        'get_market_quote', 'get_market_portfolio', 'market_watch',
+        'list_trade_suggestions', 'get_watchlist',
+      ],
+    },
+    { label: 'Memory & status', tools: ['get_status', 'update_memory', 'log_activity'] },
+  ];
+
+  const OPTIONAL_ADDONS = [
     {
       id: 'robinhood',
-      title: 'Robinhood Trading',
-      subtitle: 'OAuth in Cursor · read quotes & portfolio',
+      title: 'Robinhood (trading only)',
+      subtitle: 'Optional second MCP in Cursor — live quotes & portfolio. CRM, coding, and research stay on your Denizen URL via run_skill.',
       url: 'https://agent.robinhood.com/mcp/trading',
     },
   ];
+
+  function formatJobSummary(tools) {
+    if (!Array.isArray(tools) || !tools.length) {
+      return 'CRM · coding · research · team handoffs';
+    }
+    const set = new Set(tools);
+    const labels = JOB_CATEGORIES
+      .filter((c) => c.tools.some((t) => set.has(t)))
+      .map((c) => c.label);
+    return labels.length ? labels.join(' · ') : `${tools.length} MCP tools`;
+  }
 
   const SCOPE_PRESET_OPTIONS = [
     { id: 'full', label: 'Full access', hint: 'read · skills · CRM · handoffs · delegate' },
@@ -350,9 +391,9 @@
 
     if (!cards.length) {
       hostEl.innerHTML = `
-        <p class="mcp-set-hint">Connect Cursor, Claude, or ChatGPT to your Denizen office.</p>
+        <p class="mcp-set-hint">Connect Cursor or Claude to Denizen for CRM, coding, research, and office jobs — one MCP URL.</p>
         <p class="mcp-set-empty">Claim an assistant in chat first, then return here to connect.</p>`;
-      renderExternalMcpCards(hostEl);
+      renderOptionalAddons(hostEl);
       return;
     }
 
@@ -366,7 +407,7 @@
     }));
 
     hostEl.innerHTML = `
-      <p class="mcp-set-hint">One place for every Denizen MCP. Paste the URL in Cursor, Claude, or ChatGPT — or tap Connect for the full setup.</p>
+      <p class="mcp-set-hint">Your Denizen URL runs CRM, coding-agent, research, mockups, and team jobs via <code>run_skill</code> — connect once in Cursor or Claude.</p>
       <div class="mcp-set" id="mcp-set-denizen"></div>`;
     const denizenHost = hostEl.querySelector('#mcp-set-denizen');
 
@@ -375,16 +416,18 @@
       card.className = 'mcp-set-card';
       card.dataset.mcpId = row.id;
       const url = row.info?.mcp_url || '—';
-      const toolCount = Array.isArray(row.info?.tools) ? row.info.tools.length : 0;
+      const tools = row.info?.tools || [];
+      const jobs = formatJobSummary(tools);
       const meta = row.error
         ? row.error
-        : (toolCount ? `${toolCount} tools` : 'Ready to connect');
+        : (tools.length ? `${tools.length} tools` : 'Ready to connect');
       card.innerHTML = `
         <div class="mcp-set-head">
           <strong>${escHtml(row.title)}</strong>
           <span class="mcp-set-tag">${escHtml(row.tag)}</span>
         </div>
         <div class="mcp-set-url">${escHtml(url)}</div>
+        <div class="mcp-set-jobs"><strong>Jobs:</strong> ${escHtml(jobs)}</div>
         <div class="mcp-set-meta">${escHtml(meta)}</div>
         ${scopeSelectHtml('full')}
         <div class="mcp-set-actions">
@@ -413,7 +456,7 @@
       denizenHost.appendChild(card);
     }
 
-    renderExternalMcpCards(hostEl);
+    renderOptionalAddons(hostEl);
     await renderActiveTokens(hostEl);
   }
 
@@ -503,18 +546,25 @@
     hostEl.appendChild(wrap);
   }
 
-  function renderExternalMcpCards(hostEl) {
-    if (!EXTERNAL_MCPS.length) return;
+  function renderOptionalAddons(hostEl) {
+    if (!OPTIONAL_ADDONS.length) return;
+    const title = document.createElement('p');
+    title.className = 'mcp-set-hint mcp-addon-title';
+    title.textContent = 'Optional add-ons';
+    hostEl.appendChild(title);
+    const note = document.createElement('p');
+    note.className = 'mcp-set-sub mcp-addon-note';
+    note.textContent = 'Robinhood is separate — trading quotes only. CRM, coding, and office work use your Denizen URL above.';
+    hostEl.appendChild(note);
     const wrap = document.createElement('div');
     wrap.className = 'mcp-set';
-    wrap.style.marginTop = '6px';
-    for (const ext of EXTERNAL_MCPS) {
+    for (const ext of OPTIONAL_ADDONS) {
       const card = document.createElement('div');
       card.className = 'mcp-set-card';
       card.innerHTML = `
         <div class="mcp-set-head">
           <strong>${escHtml(ext.title)}</strong>
-          <span class="mcp-set-tag ext">External</span>
+          <span class="mcp-set-tag ext">Trading</span>
         </div>
         <div class="mcp-set-sub">${escHtml(ext.subtitle)}</div>
         <div class="mcp-set-url">${escHtml(ext.url)}</div>
@@ -618,7 +668,7 @@
       <div class="mcp-card">
         <h3>Connect your AI to ${displayName}</h3>
         <p class="mcp-scope-line">Token scopes: ${escHtml(scopeLine)}</p>
-        <p>Use your existing AI subscription — paste one URL and approve. No token to copy.</p>
+        <p>CRM, coding, research, and team jobs run through this connection (<code>run_skill</code>, CRM tools). Robinhood is a separate optional add-on for trading only.</p>
         <div class="mcp-tabs">
           <button type="button" class="mcp-tab active" data-tab="oauth">1-Click<span class="mcp-badge">Easiest</span></button>
           <button type="button" class="mcp-tab" data-tab="companion">Companion</button>
