@@ -1950,7 +1950,8 @@ class AgentOfficeManager {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     // Connect to same host/port as the page (server.js serves both HTTP and WS)
-    const url = `${protocol}//${window.location.host}/agent-ws`;
+    const routed = globalThis.DenizenSpectateRouting?.resolveAgentWsUrl?.();
+    const url = routed || `${protocol}//${window.location.host}/agent-ws`;
 
     console.log('[AgentManager] Connecting to', url);
 

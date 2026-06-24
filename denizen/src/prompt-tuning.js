@@ -25,9 +25,26 @@ function envBool(name, fallback = false) {
 }
 
 const economy = envBool('DENIZEN_ECONOMY_MODE', true);
+const publicDemo = envBool('DENIZEN_PUBLIC_DEMO', false);
+
+let _publicDemoFolders = null;
+try {
+  const demoRoster = require('./demo-roster');
+  _publicDemoFolders = demoRoster.publicDemoNpcFolders(process.env);
+} catch (_) {
+  _publicDemoFolders = publicDemo ? ['abby', 'alex', 'lucy', 'bouncer'] : null;
+}
 
 module.exports = {
   economyMode: economy,
+  publicDemoMode: publicDemo || !!_publicDemoFolders,
+  publicDemoNpcFolders: _publicDemoFolders,
+  publicDemoAnthropicKey: String(process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY || ''),
+  publicDemoModel: String(process.env.DENIZEN_PUBLIC_DEMO_MODEL || 'claude-haiku-3-5-20241022'),
+  publicDemoUseCloud: Boolean(
+    process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY
+    || (publicDemo && process.env.ANTHROPIC_API_KEY)
+  ),
   memoryChars: envInt('DENIZEN_MEMORY_CHARS', economy ? 180 : 280),
   thinkMinMs: envInt('DENIZEN_THINK_MIN_MS', economy ? 150000 : 120000),
   thinkMaxMs: envInt('DENIZEN_THINK_MAX_MS', economy ? 240000 : 200000),
@@ -117,6 +134,13 @@ function toClientConfig() {
       minPasswordLength: t.minPasswordLength,
       devPasswordRelaxed: t.devPasswordRelaxed,
       publicUrl: String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '').replace(/\/+$/, '') || null,
+    },
+    publicDemo: {
+      enabled: !!t.publicDemoMode,
+      readOnly: true,
+      npcFolders: t.publicDemoNpcFolders || null,
+      cloudProvider: !!t.publicDemoUseCloud,
+      model: t.publicDemoUseCloud ? t.publicDemoModel : null,
     },
   };
 }

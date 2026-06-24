@@ -97,6 +97,8 @@ describe('visitor-access canUseRealWork', () => {
     assert.ok(DEMO_RESTRICTED_FEATURES.has('to_ceo'));
     assert.ok(DEMO_RESTRICTED_FEATURES.has('research_external'));
     assert.ok(DEMO_RESTRICTED_FEATURES.has('briefing'));
+    assert.ok(DEMO_RESTRICTED_FEATURES.has('mcp_connect'));
+    assert.ok(DEMO_RESTRICTED_FEATURES.has('slack_link'));
   });
 
   it('verifyAccessCode issues signed access_grant for ceo code', () => {

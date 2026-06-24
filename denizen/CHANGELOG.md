@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## [Unreleased] — Production gap closure (2026-06-22)
+
+### Fixed / added
+- MCP token RPC: `search_path` includes `extensions` (migration `20260622000001`)
+- Compute mesh: drop permissive anon RLS in production (`20260622000002`)
+- Production env template: economy off, cofounder LLM, real-work flags
+- MCP smoke test (`npm run smoke:mcp`), extended schema verification
+- Mesh `processJobLocally` default wires `denizen-mesh-job-runner`
+- Public demo scaffold: `?mode=demo`, 4-NPC roster, read-only chat gate
+- MEMORY.md soft cap compression at ~2KB
+- `docs/DEPLOYMENT.md` alias, PM2 `env_production` from `.env.production`
+
+## [v1.6.0] — Compute mesh + desktop worker
+
+- Denizen Desktop compute worker, City Power credits, mesh job producer
+- NAS fleet agent, LM Studio router pool, remote GPU routing
+
+## [v1.5] — NPC companion extension
+
+- Chrome extension companion API, desktop pairing flow
+
+## [v1.4] — NPC sync REST + OpenAPI
+
+- ChatGPT Custom GPT Actions path, REST shim for `get_status` / `update_memory` / `log_activity`
+
+## [v1.3] — NPC MCP gateway
+
+- Per-NPC `/mcp/npc/:key`, bearer tokens, Connect AI modal (Cursor / Claude / ChatGPT)
+
 ## [Unreleased] — Autonomous NPC AI System (Phase 1-6)
 
 ### Why This Was Built

@@ -182,9 +182,31 @@ node scripts/smoke-mesh-jobs-flow.js
 
 Full runbook: [COMPUTE_MESH.md](COMPUTE_MESH.md), [../../infra/README.md](../../infra/README.md).
 
-**Production note:** dev NAS may use permissive anon RLS on compute tables (`20260608000001`–`000003`). Use service role on the server and tighten policies before public launch.
+**Production note:** dev NAS may use permissive anon RLS on compute tables (`20260608000001`–`000003`). Migration `20260622000002` drops anon policies — server must use `SUPABASE_SERVICE_ROLE_KEY`. Audit: `py infra/audit-compute-rls-nas.py`.
 
-## 9) Related docs
+## 9) Production security checklist
+
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` set on Denizen server (not anon-only)
+- [ ] Migration `20260622000002` applied — compute anon RLS dropped
+- [ ] Migration `20260622000001` applied — MCP RPC `search_path` includes `extensions`
+- [ ] `DENIZEN_INTERNAL_API_TOKEN` on `POST /api/compute/jobs/enqueue`
+- [ ] `npm run smoke:mcp` passes against production URL
+- [ ] `DENIZEN_ECONOMY_MODE=false` + `DENIZEN_COFOUNDER_LLM=true` for live office
+
+## 10) Failover and standby (Phase 2 — manual)
+
+Denizen is **single-primary** today: WebSocket sessions and in-memory office state do not replicate.
+
+| Step | Action |
+|------|--------|
+| 1 | Standby host runs same Docker image with `DENIZEN_SERVER_ROLE=standby` (no tunnel traffic) |
+| 2 | Cloudflare tunnel health check → primary `GET /api/health` |
+| 3 | On primary failure, repoint tunnel to standby `:8888` (manual or scripted) |
+| 4 | Clients reconnect WebSocket — expect brief office reset |
+
+See [MESH_SCALING.md](MESH_SCALING.md) Phase 2 for dolonia standby + NAS primary layout.
+
+## 11) Related docs
 
 - [SETUP.md](SETUP.md) - local setup and env bootstrapping
 - [COMPUTE_MESH.md](COMPUTE_MESH.md) - distributed compute mesh

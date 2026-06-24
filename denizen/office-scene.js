@@ -2005,7 +2005,12 @@ class OfficeScene extends Phaser.Scene {
           const task = (this._tasks || []).find((t) => t.id === 'pc_research') || null;
           this._currentTask = task;
           const label = task?.label || 'Accessing Computer';
-          this.showNpcDialog('Computer', `${label}...\nTime: ${this.worldClock?.toString?.() || ''}\n\n(This is a stub – real AI workflow can be wired here later.)`);
+          this.showNpcDialog(
+            'Computer',
+            `${label}\nTime: ${this.worldClock?.toString?.() || ''}\n\n`
+            + 'Walk up to a teammate and press E to chat — they can research and draft work from their desk. '
+            + 'Team visitors can also assign tasks from the CRM panel.',
+          );
           this.playerLocked = true;
           this.playerState = 'interacting';
           this.facing = 'down';

@@ -108,9 +108,12 @@ const { startContentPipelineScheduler } = require('./src/content-pipeline-schedu
 const npcThinkRunner   = require('./src/npc-think-runner');
 const { ensureBrowserclawRunning } = require('./jelly/services/browserclaw/ensure.cjs');
 const robinhoodMcp     = require('./src/robinhood-mcp');
+const marketScheduler  = require('./src/denizen-market-scheduler');
 const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
 const mcpOauth         = require('./src/denizen-mcp-oauth');
 const routeRegistry    = require('./src/route-registry');
+const competencyMap    = require('./src/competency-map');
+const platformBridge   = require('./src/platform-bridge');
 const denizenCredits   = require('./src/denizen-credits');
 const { mountComputeRoutes } = require('./src/denizen-compute-routes');
 const { mountCrmRoutes } = require('./src/denizen-crm-routes');
@@ -119,6 +122,11 @@ const hostCompute      = require('./src/denizen-host-compute');
 const hardwareMonitor  = require('./src/denizen-hardware-monitor');
 const fleetRegistry    = require('./src/denizen-fleet-registry');
 const lmStudioRouter   = require('./src/lm-studio-router');
+const inferenceMetrics = require('./src/denizen-inference-metrics');
+const denizenFederation = require('./src/denizen-federation');
+const { createWorldPubsub } = require('./src/denizen-world-pubsub');
+const agentWsRelay = require('./src/denizen-agent-ws-relay');
+const IS_RELAY_ONLY = agentWsRelay.isRelayOnlyRole();
 const contributionTracker = require('./src/denizen-contribution-tracker');
 const computeSettlement = require('./src/denizen-compute-settlement');
 const computeProducer = require('./src/denizen-compute-producer');
@@ -387,10 +395,15 @@ function _broadcastLucyMirrorUpdate(broadcast) {
   _broadcastNpcMirrorUpdate(broadcast, 'lucy');
 }
 
+let _relayPublishAgentFrame = null;
+
 function _broadcastAgentWs(msg) {
   const raw = JSON.stringify(msg);
   if (!agentWss) return;
   agentWss.clients.forEach((c) => { if (c.readyState === 1) c.send(raw); });
+  if (_relayPublishAgentFrame && msg && typeof msg === 'object') {
+    _relayPublishAgentFrame(msg);
+  }
 }
 
 let _mirrorFrameMtime = 0;
@@ -1521,9 +1534,13 @@ computeSettlement.startSettlementLoop({
   },
 });
 
-computeProducer.startMeshJobProducer({
-  getNpcBrains: () => npcBrains,
-});
+if (!IS_RELAY_ONLY) {
+  computeProducer.startMeshJobProducer({
+    getNpcBrains: () => npcBrains,
+  });
+} else {
+  console.log('[compute-producer] skipped — relay-only node');
+}
 
 const MESH_MAINTAIN_MS = Number(process.env.DENIZEN_MESH_MAINTAIN_MS) || 5 * 60 * 1000;
 const MESH_STALE_MS = Number(process.env.DENIZEN_MESH_STALE_JOB_MS) || 30 * 60 * 1000;
@@ -2042,6 +2059,9 @@ function _mapResearchPriority(p) {
 // Wire broadcast into npc-brains so task-chain advancement can send WS events
 const _agentBroadcast = (msg, opts = {}) => {
   officeRegistry.broadcastAgent(_agentClients(), msg, opts);
+  if (_relayPublishAgentFrame && msg && typeof msg === 'object') {
+    _relayPublishAgentFrame(msg);
+  }
 };
 
 npcBrains.setBroadcast(_agentBroadcast);
@@ -2052,11 +2072,19 @@ npcBrains.setThinkWake((npcName, reason, opts) => npcThinkRunner.wake(npcName, r
 // done / failed PC task fans out to the browser as `pc_activity` events
 // so the telemetry panel's "PC activity" section refreshes instantly
 // without polling.
-pcActivity.setBroadcast((msg) =>
-  (agentWss ? agentWss.clients : new Set()).forEach(c => {
-    if (c.readyState === 1) c.send(typeof msg === 'string' ? msg : JSON.stringify(msg));
-  })
-);
+pcActivity.setBroadcast((msg) => {
+  const raw = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  (agentWss ? agentWss.clients : new Set()).forEach((c) => {
+    if (c.readyState === 1) c.send(raw);
+  });
+  if (_relayPublishAgentFrame) {
+    let payload = msg;
+    if (typeof msg === 'string') {
+      try { payload = JSON.parse(msg); } catch (_) { payload = null; }
+    }
+    if (payload && typeof payload === 'object') _relayPublishAgentFrame(payload);
+  }
+});
 
 // --- Jelly 🪼 — Denizen skill runtime (your tech; OpenClaw optional fallback) ---
 const { createJelly, JELLY } = require('./jelly');
@@ -2646,6 +2674,13 @@ async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
   return jelly.runSkill(npcName, skill, skillParams, { broadcast });
 }
 
+npcMcpGateway.configure({
+  runNpcSkill,
+  npcBrains,
+  broadcast: _broadcastOps,
+  robinhoodMcp,
+});
+
 npcThinkRunner.configure({
   npcBrains,
   denizenDb,
@@ -2902,6 +2937,15 @@ denizenDb.attachWorldState(worldState);
 const WS_BROADCAST_INTERVAL_MS = 500;
 const IMMEDIATE_KINDS = new Set(['presence', 'threat', 'threat-cleared']);
 
+const worldPubsub = createWorldPubsub();
+
+if (worldPubsub.role === 'primary' && worldPubsub.enabled) {
+  _relayPublishAgentFrame = (frame) => worldPubsub.publish(frame).catch(() => null);
+}
+if (IS_RELAY_ONLY) {
+  console.log(`[AgentWS] Relay-only mode (${worldPubsub.role}) — simulation and mutating WS disabled`);
+}
+
 let _pendingChanges = new Map(); // kind -> { kind, payload, ts }
 let _broadcastTimer = null;
 let _agentBusBuffer = [];        // collected agent-bus messages
@@ -2916,17 +2960,19 @@ function _broadcastFrame() {
 
   // One JSON.stringify, one ws.send per client per tick — irrespective of
   // how many mutations happened during the window.
-  const frame = JSON.stringify({
+  const frame = {
     type: 'world_state_batch',
     changes,
     busMessages,
     ts: Date.now(),
-  });
+  };
+  const serialized = JSON.stringify(frame);
   _agentClients().forEach((ws) => {
     if (ws.readyState === 1) {
-      try { ws.send(frame); } catch (_) { /* drop */ }
+      try { ws.send(serialized); } catch (_) { /* drop */ }
     }
   });
+  worldPubsub.publish(frame).catch(() => null);
 }
 
 function _scheduleBroadcast() {
@@ -2937,6 +2983,20 @@ function _scheduleBroadcast() {
 function _sendImmediate(payload, opts = {}) {
   const officeId = opts.officeId ?? payload?.office_id ?? null;
   officeRegistry.broadcastAgent(_agentClients(), payload, officeId ? { officeId } : {});
+  worldPubsub.publish(payload).catch(() => null);
+}
+
+if (worldPubsub.role === 'follower') {
+  worldPubsub.subscribe((frame) => {
+    const serialized = JSON.stringify(frame);
+    _agentClients().forEach((ws) => {
+      if (ws.readyState === 1) {
+        try { ws.send(serialized); } catch (_) { /* drop */ }
+      }
+    });
+  }).catch((err) => {
+    console.warn('[world-pubsub] follower subscribe failed:', err?.message || err);
+  });
 }
 
 worldState.on('change', ({ kind, payload }) => {
@@ -2955,7 +3015,7 @@ agentBus.subscribe('*', (msg) => {
   _agentBusBuffer.push(msg);
   // Cap the buffer in case something pathological happens.
   if (_agentBusBuffer.length > 60) _agentBusBuffer.splice(0, _agentBusBuffer.length - 60);
-  if (msg?.to && msg?.text) {
+  if (msg?.to && msg?.text && !IS_RELAY_ONLY) {
     npcThinkRunner.wake(msg.to, `agent_bus:${msg.kind || 'speak'}`, { urgent: true });
   }
   _scheduleBroadcast();
@@ -2970,15 +3030,8 @@ function safeDecodePath(url) {
 }
 
 const server = http.createServer((req, res) => {
-  // Route registry wiring sketch (kept as comment to avoid broad server.js churn):
-  // const denizenRoutes = routeRegistry.registerDenizenRoutes(server, {
-  //   npcBrains,
-  //   broadcast: broadcastToAll,
-  //   getPredictionSummary,
-  //   robinhoodMcp,
-  //   jobCrm,
-  // });
-  // if (await denizenRoutes.handle(req, res)) return;
+  // Route registry: optional extract for tests/tools — inline handlers in this file remain canonical.
+  // See src/route-registry.js (competency-map, job-crm subset). Do not double-register without audit.
 
   let urlPath = safeDecodePath(req.url);
   const fullUrl = req.url;
@@ -3123,7 +3176,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity)\/?$/);
+  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity|run-skill|assign-task)\/?$/);
   if (npcSyncMatch) {
     npcMcpGateway.handleRestSync(req, res, npcSyncMatch[1]).catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -3565,6 +3618,40 @@ const server = http.createServer((req, res) => {
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(cap));
+    return;
+  }
+
+  // GET /api/competency-map — team skill aggregates (Phase 5.1)
+  if (urlPath === '/api/competency-map' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const minScore = Number(url.searchParams.get('min_score') || 5);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      team: competencyMap.getTeamProfile(),
+      gaps: competencyMap.getTeamGaps(Number.isFinite(minScore) ? minScore : 5),
+    }));
+    return;
+  }
+
+  const competencyNpcMatch = urlPath.match(/^\/api\/competency-map\/([^/]+)$/);
+  if (competencyNpcMatch && req.method === 'GET') {
+    const rawName = decodeURIComponent(competencyNpcMatch[1]);
+    const profile = competencyMap.getNpcProfile(rawName);
+    if (!profile) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'no competency data for NPC' }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, profile }));
+    return;
+  }
+
+  // GET /api/platform-bridge/status — cloud CRM bridge availability
+  if (urlPath === '/api/platform-bridge/status' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, ...platformBridge.platformBridgeStatus() }));
     return;
   }
 
@@ -5825,10 +5912,32 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/public/runtime-config' && req.method === 'GET') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=60',
+    });
+    res.end(JSON.stringify(agentWsRelay.buildRuntimePublicConfig()));
+    return;
+  }
+
   // --- World-state snapshot (read-only) ---
   // Useful for debugging and for the n8n/Supabase integration to know what
   // the office "looks like" before posting an update.
   if (urlPath === '/api/world-state' && req.method === 'GET') {
+    if (agentWsRelay.isFollowerRole()) {
+      (async () => {
+        try {
+          const snapshot = await agentWsRelay.fetchPrimaryWorldSnapshot();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(snapshot));
+        } catch (err) {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+        }
+      })();
+      return;
+    }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(worldState.snapshot()));
     return;
@@ -7993,6 +8102,15 @@ const server = http.createServer((req, res) => {
           wsClients: {
             agent: cofounderAgent.wsClients.size,
             security: securityMonitor.clients?.size || 0,
+            max: MAX_WS_CLIENTS,
+          },
+          ws: {
+            agent: cofounderAgent.wsClients.size,
+            security: securityMonitor.clients?.size || 0,
+            max: MAX_WS_CLIENTS,
+            utilization: MAX_WS_CLIENTS > 0
+              ? Number((cofounderAgent.wsClients.size / MAX_WS_CLIENTS).toFixed(4))
+              : 0,
           },
           stats: global._npcStats,
           recentErrors: (global._npcRecentErrors || []).slice(-5),
@@ -8002,67 +8120,14 @@ const server = http.createServer((req, res) => {
 
       if (!cache.inflight) {
         cache.inflight = (async () => {
-          const lmCfg = npcBrains.providers?.lmstudio || {};
-          const lmStudioUrl = lmCfg.baseUrl || process.env.LM_STUDIO_URL || 'http://localhost:1234';
-          const lmHeaders = {};
-          if (lmCfg.apiKey) lmHeaders.Authorization = `Bearer ${lmCfg.apiKey}`;
-
-          const stats = global._npcStats || {};
-          const lastBrainOk = Math.max(
-            stats.lastProviderOkAt || 0,
-            stats.lastNpcConvAt || 0,
-            stats.lastPlayerChatAt && stats.playerChatSucceeded > 0 ? stats.lastPlayerChatAt : 0,
-          );
           const builtAt = Date.now();
-          const recentBrainOk = lastBrainOk && (builtAt - lastBrainOk) < 30000;
-
-          let lmStudioStatus = {
+          const lmStudioStatus = await hostCompute.probeLmStudio(npcBrains).catch(() => ({
             reachable: false,
-            url: lmStudioUrl,
-            error: null,
-            model: lmCfg.model || null,
+            url: process.env.LM_STUDIO_URL || lmStudioRouter.defaultHostUrl?.() || 'http://localhost:1234',
+            error: 'probe failed',
+            model: npcBrains.providers?.lmstudio?.model || null,
             livenessSource: null,
-          };
-
-          if (recentBrainOk) {
-            const ago = Math.round((builtAt - lastBrainOk) / 1000);
-            lmStudioStatus.reachable = true;
-            lmStudioStatus.livenessSource = `brain call succeeded ${ago}s ago`;
-          } else {
-            const probes = ['/v1/models', '/api/v0/models', '/'];
-            const errors = [];
-            const results = await Promise.all(probes.map(async (path) => {
-              try {
-                const probe = await fetch(`${lmStudioUrl}${path}`, {
-                  method: 'GET',
-                  headers: lmHeaders,
-                  signal: AbortSignal.timeout(5000),
-                });
-                if (probe.ok || probe.status === 401 || probe.status === 403) {
-                  return { ok: true, path, status: probe.status };
-                }
-                return { ok: false, err: `${path}: HTTP ${probe.status}` };
-              } catch (err) {
-                return { ok: false, err: `${path}: ${err?.message || String(err)}` };
-              }
-            }));
-
-            for (const r of results) {
-              if (r.ok) {
-                lmStudioStatus.reachable = true;
-                lmStudioStatus.probedPath = r.path;
-                lmStudioStatus.livenessSource = `probe ${r.path} ok`;
-                if (r.status && r.status !== 200) {
-                  lmStudioStatus.warning = `${r.path} HTTP ${r.status} (auth issue, but server is up)`;
-                }
-                break;
-              }
-              errors.push(r.err);
-            }
-            if (!lmStudioStatus.reachable) {
-              lmStudioStatus.error = errors.join('; ');
-            }
-          }
+          }));
 
           const providers = Object.entries(npcBrains.providers || {})
             .filter(([k]) => k !== 'demo')
@@ -8073,13 +8138,38 @@ const server = http.createServer((req, res) => {
           const body = {
             ok: true,
             ts: builtAt,
+            server: {
+              id: process.env.DENIZEN_SERVER_ID || `host-${process.env.HOSTNAME || 'local'}`,
+              role: process.env.DENIZEN_SERVER_ROLE || 'primary',
+              port: Number(process.env.PORT) || 8080,
+            },
             lmStudio: lmStudioStatus,
+            lmStudioPool: lmStudioRouter.isEnabled()
+              ? lmStudioRouter.buildStatus(npcBrains.getQueueDepth?.() || 0)
+              : null,
+            inference: inferenceMetrics.buildMetrics(),
+            publicDemo: {
+              enabled: process.env.DENIZEN_PUBLIC_DEMO === 'true',
+              haiku_configured: !!(process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY),
+              model: process.env.DENIZEN_PUBLIC_DEMO_MODEL || null,
+            },
+            federation: denizenFederation.buildStatus(),
+            worldPubsub: worldPubsub.buildStatus(),
             providers,
             demoMode: !!npcBrains._demoMode,
             hardware: hardwarePayload,
             wsClients: {
               agent: cofounderAgent.wsClients.size,
               security: securityMonitor.clients?.size || 0,
+              max: MAX_WS_CLIENTS,
+            },
+            ws: {
+              agent: cofounderAgent.wsClients.size,
+              security: securityMonitor.clients?.size || 0,
+              max: MAX_WS_CLIENTS,
+              utilization: MAX_WS_CLIENTS > 0
+                ? Number((cofounderAgent.wsClients.size / MAX_WS_CLIENTS).toFixed(4))
+                : 0,
             },
             stats: global._npcStats,
             recentErrors: (global._npcRecentErrors || []).slice(-5),
@@ -8109,6 +8199,15 @@ const server = http.createServer((req, res) => {
         wsClients: {
           agent: cofounderAgent.wsClients.size,
           security: securityMonitor.clients?.size || 0,
+          max: MAX_WS_CLIENTS,
+        },
+        ws: {
+          agent: cofounderAgent.wsClients.size,
+          security: securityMonitor.clients?.size || 0,
+          max: MAX_WS_CLIENTS,
+          utilization: MAX_WS_CLIENTS > 0
+            ? Number((cofounderAgent.wsClients.size / MAX_WS_CLIENTS).toFixed(4))
+            : 0,
         },
         stats: global._npcStats,
         recentErrors: (global._npcRecentErrors || []).slice(-5),
@@ -8616,6 +8715,8 @@ function sendToCeoClients(payload) {
 }
 
 const agentWss = new WebSocketServer({ noServer: true });
+const MAX_WS_CLIENTS = Number(process.env.DENIZEN_MAX_WS_CLIENTS)
+  || (process.env.DENIZEN_PUBLIC_DEMO === 'true' ? 30 : 50);
 
 meshWatchdog.startMeshWatchdog({
   computeQueue,
@@ -8627,12 +8728,38 @@ meshWatchdog.startMeshWatchdog({
 });
 
 agentWss.on('connection', (ws) => {
+  if (agentWss.clients.size > MAX_WS_CLIENTS) {
+    try { ws.close(1013, 'server at capacity'); } catch (_) {}
+    console.warn(`[AgentWS] Rejected connection — at capacity (${MAX_WS_CLIENTS})`);
+    return;
+  }
   console.log(`[CofounderAgent] WS client connected (${cofounderAgent.wsClients.size + 1} total)`);
   cofounderAgent.addClient(ws);
+
+  if (agentWsRelay.isFollowerRole()) {
+    agentWsRelay.fetchPrimaryWorldSnapshot()
+      .then((snapshot) => {
+        if (ws.readyState !== 1) return;
+        ws.send(JSON.stringify({
+          type: 'world_state_snapshot',
+          snapshot,
+          ts: Date.now(),
+        }));
+      })
+      .catch((err) => {
+        console.warn('[AgentWS] follower world snapshot failed:', err?.message || err);
+      });
+  }
 
   ws.on('message', (data) => {
     try {
       const msg = JSON.parse(data.toString());
+      if (IS_RELAY_ONLY && agentWsRelay.isMutatingClientMessage(msg)) {
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify(agentWsRelay.relayReadonlyError()));
+        }
+        return;
+      }
       if (msg.type === 'npc_conversation') {
         // Resolve the NPC name case-insensitively — cofounder dispatch and
         // LM Studio replies sometimes return lowercased or title-cased names.
@@ -10112,6 +10239,11 @@ server.on('upgrade', (req, socket, head) => {
   }
 
   if (wsPath === '/agent-ws') {
+    if (agentWss.clients.size >= MAX_WS_CLIENTS) {
+      socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n');
+      socket.destroy();
+      return;
+    }
     agentWss.handleUpgrade(req, socket, head, (ws) => {
       agentWss.emit('connection', ws, req);
     });
@@ -10225,6 +10357,16 @@ server.listen(PORT, () => {
       },
     }, { immediate: false });
     log.info('VisitorIntelligence', `scheduler started (${_visitorIntelligenceLoop.intervalMs}ms tick)`);
+
+    if (/^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_MARKET_TICK || 'true'))) {
+      const marketLoop = marketScheduler.startMarketScheduler({
+        robinhoodMcp,
+        broadcast: _broadcastToOffice,
+        npcBrains,
+        log,
+      });
+      if (marketLoop?.ok) log.info('Market', `scheduler started (${marketLoop.tickMs}ms tick, US market hours)`);
+    }
   }).catch(() => {});
 
   const parallel = process.env.LM_STUDIO_PARALLEL || 1;
@@ -10258,6 +10400,10 @@ server.listen(PORT, () => {
       `active main=${npcBrains.providers?.lmstudio?.model} ` +
       `fast=${npcBrains.providers?.['lmstudio-fast']?.model}`
     );
+    if (IS_RELAY_ONLY) {
+      log.info('CofounderAgent', 'skipped — relay-only node');
+      return;
+    }
     // Economy: Abby uses scripted office commands instead of LM Studio thinks.
     if (promptTuning.economyMode && !/^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_COFOUNDER_LLM || ''))) {
       console.log('[CofounderAgent] Economy mode — scripted demo loop (no LLM)');
@@ -10341,9 +10487,11 @@ server.listen(PORT, () => {
     _patrolTimer = setTimeout(runBouncerPatrol, PATROL_INTERVAL_MS);
   }
 
-  // Kick off first patrol after 60s
-  _patrolTimer = setTimeout(runBouncerPatrol, 60 * 1000);
-  log.info('Patrol', 'scheduled — first check in 60s, then every 5 min');
+  // Kick off first patrol after 60s (primary only — followers are relay-only)
+  if (!IS_RELAY_ONLY) {
+    _patrolTimer = setTimeout(runBouncerPatrol, 60 * 1000);
+    log.info('Patrol', 'scheduled — first check in 60s, then every 5 min');
+  }
 });
 
 // Graceful shutdown — stop the security monitor's intervals and child

@@ -56,8 +56,8 @@ Everything the NPCs can do, everything they will be able to do, in order of what
 
 ### 4.1 — Public Demo Mode
 
-**Status:** 🔴 Not built  
-**Files:** `server.js`, `office-scene.js`, new `src/demo-roster.js`
+**Status:** 🟡 Scaffolded (`?mode=demo`, 4-NPC roster, read-only chat gate)  
+**Files:** `src/demo-roster.js`, `src/public-demo-mode.js`, `server.js`, `office-scene.js`
 
 **What it is:**
 - Simplified 4-NPC roster: Abby, Alex, Lucy, Bouncer (or configurable via `?demo_npcs=abby,alex,lucy,bouncer`)

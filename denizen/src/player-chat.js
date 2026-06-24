@@ -752,6 +752,10 @@ class PlayerChat {
    */
   async sendMessage(text) {
     if (!text.trim()) return;
+    if (globalThis.DenizenPublicDemo?.active && globalThis.DenizenPublicDemo?.readOnly) {
+      this._addToLog('System', 'Public demo is watch-only — use Team login for chat.');
+      return;
+    }
     window.DenizenHaptics?.tap?.();
 
     const trimmed = window.DenizenOpenClawDispatch?.fixVoiceMishearings?.(text.trim()) || text.trim();
