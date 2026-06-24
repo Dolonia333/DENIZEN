@@ -157,11 +157,10 @@
 
 
   function wsUrl() {
-
+    const routed = globalThis.DenizenSpectateRouting?.resolveAgentWsUrl?.();
+    if (routed) return routed;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
     return `${protocol}//${window.location.host}/agent-ws`;
-
   }
 
 
@@ -195,30 +194,19 @@
       },
 
       connect() {
-
         if (mgr.ws && (mgr.ws.readyState === WebSocket.OPEN || mgr.ws.readyState === WebSocket.CONNECTING)) {
-
           return;
-
         }
-
-        try {
-
-          mgr.ws = new WebSocket(wsUrl());
-
-          window.__DenizenAgentWs = mgr.ws;
-
-        } catch (err) {
-
-          console.warn('[ChatBootstrap] WebSocket failed:', err);
-
-          mgr._scheduleReconnect(playerChat);
-
-          return;
-
-        }
-
-        mgr.ws.onopen = () => {
+        const openSocket = () => {
+          try {
+            mgr.ws = new WebSocket(wsUrl());
+            window.__DenizenAgentWs = mgr.ws;
+          } catch (err) {
+            console.warn('[ChatBootstrap] WebSocket failed:', err);
+            mgr._scheduleReconnect(playerChat);
+            return;
+          }
+          mgr.ws.onopen = () => {
 
           mgr.connected = true;
 
@@ -317,13 +305,15 @@
         };
 
         mgr.ws.onerror = () => {
-
           mgr.connected = false;
-
           playerChat?.setWsConnected?.(false);
-
         };
-
+        };
+        if (globalThis.DenizenSpectateRouting?.loadConfig) {
+          globalThis.DenizenSpectateRouting.loadConfig().finally(openSocket);
+        } else {
+          openSocket();
+        }
       },
 
       _scheduleReconnect(playerChat) {
