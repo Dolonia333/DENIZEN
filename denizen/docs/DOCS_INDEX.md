@@ -12,6 +12,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 |----------|----------|--------|-------------|
 | Getting Started | [SETUP.md](SETUP.md) | on GitHub | End-to-end local setup and runtime prerequisites |
 | Getting Started | [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md) | new/local | New-contributor onboarding path and first-run workflow |
+| Getting Started | [SCENE_BUILDING_MANUAL.md](SCENE_BUILDING_MANUAL.md) | new/local | Non-coder's manual — press `E` to cut, label & place sprites and build rooms/boundaries by hand |
 | Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | on GitHub | Runtime topology, core services, and message flow |
 | Architecture | [SCENE.md](SCENE.md) | on GitHub | `office-scene.js` layout and ownership map |
 | Architecture | [ACTIONS.md](ACTIONS.md) | on GitHub | NPC action vocabulary and execution semantics |
