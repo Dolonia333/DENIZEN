@@ -11,6 +11,10 @@
 > If you only read one thing, read **Part 1 (Get In)** and **Part 4 (Build a
 > Room)**. The rest is reference for when you get stuck.
 
+**Companion pages:**
+[QUICK_START_PRINTABLE.md](QUICK_START_PRINTABLE.md) (one page, tape to the monitor) ·
+[EDITOR_PANEL_REFERENCE.md](EDITOR_PANEL_REFERENCE.md) (every button, labeled image).
+
 Related deeper docs (for the engineer, not required reading for a first-timer):
 [LIMEZU_PLACEMENT.md](LIMEZU_PLACEMENT.md) ·
 [SPRITE_FIX_GUIDE.md](SPRITE_FIX_GUIDE.md) ·
@@ -212,6 +216,12 @@ What are you working with?
 ## Part 4 — Build a room (the in-game editor)
 
 This is Job B. Everything here happens in the game with **`E`**.
+
+![Annotated Denizen editor panel](images/editor-annotated.png)
+
+*The editor panel, every button labeled. Both side panels are shown together
+here — in the game you see one at a time (the tab you're on). Full button-by-
+button breakdown: [EDITOR_PANEL_REFERENCE.md](EDITOR_PANEL_REFERENCE.md).*
 
 ### Step 1 — Open the editor
 Open `http://localhost:8080/`, click the game, press **`E`**. The panel appears
