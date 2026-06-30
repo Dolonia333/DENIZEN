@@ -17,9 +17,10 @@ module.exports = {
       source: params?.target || params?.ip || params?.source || 'localhost',
       detail: params?.reason || params?.task || `${skill} investigation`,
       severity: params?.severity || 'medium',
+      force: !!(params?.force),
     };
 
-    const gate = deps.bouncerInvTake?.(threat);
+    const gate = deps.bouncerInvTake?.(threat, { force: threat.force });
     if (gate && !gate.allowed) {
       const output = gate.loopback
         ? 'That source is localhost — your own game traffic, not an external attacker. No Kali run needed.'
