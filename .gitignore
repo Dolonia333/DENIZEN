@@ -1,4 +1,7 @@
-# Temp Claude agent working directories
+# MCP preflight tokens (minted locally — never commit)
+.mcp-token.local.json
+.grok/mcp.json
+
 tmpclaude-*-cwd
 
 # Claude settings with local secrets
@@ -23,6 +26,7 @@ denizen/data/roki-watchlist.json
 # NPC-authored skills — quarantined drafts + proposal store (runtime/generated)
 denizen/skills-pending/
 denizen/data/skill-proposals.json
+denizen/data/dossier-proposals.json
 
 # Embedded git repos (tracked separately)
 openclaw/

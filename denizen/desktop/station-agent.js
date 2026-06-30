@@ -310,11 +310,51 @@ async function runCode(task) {
   };
 }
 
+async function runLocalWebSearch(task) {
+  const query = String(task.payload?.query || task.instruction || '').trim();
+  if (!query) return { ok: false, error: 'query required', summary: 'No search query.' };
+
+  const denizenRoot = path.resolve(__dirname, '..');
+  const script = path.join(denizenRoot, 'jelly', 'vendor', 'skills', 'web-search', 'web-search.mjs');
+  if (!fs.existsSync(script)) {
+    return { ok: false, error: 'web-search.mjs missing', summary: 'Browser search script not installed on this station.' };
+  }
+
+  const lingerMs = Number(process.env.LUCY_SEARCH_LINGER_MS || 120_000);
+  const { stdout, stderr } = await execFileAsync(process.execPath, [
+    script,
+    '--query', query,
+    '--headless', 'false',
+    '--linger-ms', String(lingerMs),
+  ], {
+    cwd: path.dirname(script),
+    timeout: 180_000,
+    maxBuffer: 2 * 1024 * 1024,
+    windowsHide: false,
+  });
+
+  let parsed = null;
+  try {
+    const line = stdout.trim().split('\n').filter(Boolean).pop();
+    parsed = line ? JSON.parse(line) : null;
+  } catch (_) {}
+
+  const summary = parsed?.summary || parsed?.error || stderr.slice(0, 300) || stdout.slice(0, 300) || 'Browser search finished.';
+  return {
+    ok: parsed?.success !== false,
+    summary,
+    output: summary,
+    query,
+    parsed,
+  };
+}
+
 async function executeTask(task, ctx) {
   const caps = ctx?.setup?.capabilities || {};
   const kindCap = {
     screen_observe: 'screen_access',
     desktop_agent: 'screen_access',
+    web_search: 'screen_access',
     file_read: 'read_files',
     file_write: 'write_files',
     run_code: 'run_code',
@@ -332,6 +372,8 @@ async function executeTask(task, ctx) {
       return runScreenObserve(task, ctx);
     case 'desktop_agent':
       return runDesktopAgent(task, ctx);
+    case 'web_search':
+      return runLocalWebSearch(task);
     case 'file_read':
       return runFileRead(task);
     case 'file_write':
@@ -349,4 +391,5 @@ module.exports = {
   captureScreenPng,
   resolveAllowedPath,
   allowedRoots,
+  runLocalWebSearch,
 };

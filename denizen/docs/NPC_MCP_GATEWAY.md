@@ -165,6 +165,15 @@ curl -X POST http://localhost:8080/api/mcp/tokens \
 
 For production, set `DENIZEN_PUBLIC_URL=https://denizen.dolonia.cloud` before creating tokens.
 
+## Grok external autonomy
+
+For **cloud Grok** driving the in-office Grok NPC via xAI Responses API + MCP, see [GROK_DENIZEN_AUTONOMY.md](GROK_DENIZEN_AUTONOMY.md).
+
+```bash
+py infra/run-grok-autonomy.py
+py infra/run-grok-autonomy.py --loop --interval 300 --max 10
+```
+
 ## Security
 
 - Tokens stored as SHA-256 hashes only (`visitor-session-auth.hashSessionToken`)

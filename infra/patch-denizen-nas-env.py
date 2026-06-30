@@ -18,19 +18,34 @@ PATCH = {
     "DENIZEN_ECONOMY_MODE": "false",
     "DENIZEN_COFOUNDER_LLM": "true",
     "DENIZEN_REAL_WORK_MODE": "true",
+    "DENIZEN_AUTO_CLAIM_SPRINT": "true",
+    "DENIZEN_REAL_WORK_CYCLES": "2",
     "DENIZEN_PUBLIC_URL": "https://denizen.dolonia.cloud",
     "DENIZEN_PUBLIC_DEMO": "true",
+    "DENIZEN_PUBLIC_DEMO_TRIM_BRAINS": "false",
     "DENIZEN_PUBLIC_DEMO_NPCS": "abby,alex,lucy,bouncer",
     "DENIZEN_PUBLIC_DEMO_MODEL": "claude-haiku-3-5-20241022",
     "DENIZEN_MAX_WS_CLIENTS": "30",
     "DENIZEN_PLATFORM_BRIDGE": "false",
     "DENIZEN_INFERENCE_RPC_TIMEOUT_MS": "120000",
     "DENIZEN_INFERENCE_BACKEND": "auto",
+    "DENIZEN_THINK_USE_FAST_MODEL": "true",
+    "LM_STUDIO_PARALLEL": "1",
+    "BOUNCER_PATROL": "container",
+    "DENIZEN_HOST_IP": "192.168.1.232",
+    "BOUNCER_INVESTIGATION_URL": os.environ.get(
+        "BOUNCER_INVESTIGATION_URL", "http://192.168.1.232:8890"
+    ),
 }
 
 _demo_key = os.environ.get("DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY") or os.environ.get("ANTHROPIC_API_KEY")
 if _demo_key:
     PATCH["DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY"] = _demo_key
+
+# coding-agent / Claude Code CLI reads ANTHROPIC_API_KEY specifically.
+_anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+if _anthropic_key:
+    PATCH["ANTHROPIC_API_KEY"] = _anthropic_key
 
 
 def run(client, cmd, timeout=120):
@@ -84,11 +99,17 @@ def main() -> int:
     print(f"Patched {ENV_PATH}")
 
     code, _ = run(client, f"cd /volume1/docker/denizen-server && {DOCKER} compose -f docker-compose.yml up -d --force-recreate")
-    if code != 0:
-        code, _ = run(client, f"{DOCKER} restart denizen-server")
 
+    # Verify keys reached container (names + length only — never print values).
+    for key in ("ANTHROPIC_API_KEY", "DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY"):
+        run(
+            client,
+            f"{DOCKER} exec denizen-server sh -c 'v=$(printenv {key} 2>/dev/null); "
+            f"if [ -n \"$v\" ]; then echo {key}=SET chars=${{#v}}; else echo {key}=UNSET; fi'",
+        )
     for key in PATCH:
-        run(client, f"{DOCKER} exec denizen-server printenv {key} 2>/dev/null || true")
+        if key not in ("ANTHROPIC_API_KEY", "DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY"):
+            run(client, f"{DOCKER} exec denizen-server printenv {key} 2>/dev/null || true")
 
     client.close()
     return 0

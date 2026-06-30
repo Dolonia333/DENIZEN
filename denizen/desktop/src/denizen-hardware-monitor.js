@@ -5,6 +5,8 @@ const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 const { enrichLmStudioBlock } = require('./lm-studio-advertise');
 const inferenceRuntime = require('./denizen-inference-runtime');
+let lmStudioRouter = null;
+try { lmStudioRouter = require('./lm-studio-router'); } catch (_) {}
 
 const execFileAsync = promisify(execFile);
 
@@ -155,7 +157,7 @@ async function collectLiveMetrics(extra = {}) {
       const { probeLmStudioEndpoint } = require('./lm-studio-probe');
       const base = process.env.LM_STUDIO_URL
         || process.env.LM_STUDIO_BASE_URL
-        || 'http://127.0.0.1:1234';
+        || (lmStudioRouter?.defaultHostUrl?.() || 'http://127.0.0.1:1234');
       lmStudio = await probeLmStudioEndpoint(base, {
         apiKey: process.env.LM_STUDIO_API_KEY,
         timeoutMs: 3500,

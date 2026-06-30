@@ -218,14 +218,29 @@ bash infra/pull-install-kali-agent.sh
 
 Or manual steps — see [infra/README.md](../../infra/README.md) § Kali.
 
-### Denizen Desktop
+### Denizen Desktop (GPU worker on 192.168.1.232)
 
-1. Build installer: `cd denizen/desktop && npm run build:win`
-2. Install `dist-build/Denizen-Setup.exe`
-3. Complete setup wizard → compute opt-in
-4. Worker uses `compute-worker.js` + bundled `denizen-src` modules
+The missing piece for 0 fleet nodes is running the full Denizen Desktop app on the GPU PC (.232) and enabling it as a City Power contributor.
 
-See [desktop/README.md](../desktop/README.md).
+**Exact steps:**
+1. On the .232 machine (the one with LM Studio):
+   - Ensure Denizen Desktop is installed (or build: `cd denizen/desktop && npm run build:win` then install the exe).
+   - Run the app and complete the initial setup wizard (pair to your Denizen server at 192.168.1.237:8888 or the public URL).
+2. Open the in-app phone (or desktop compute panel):
+   - Go to **Compute** tab (or "City Power").
+   - Set contribution **level** to "light" or "host".
+   - Toggle **"Power the city"** / opt-in.
+   - It should report as linked and appear in fleet.
+3. Verify:
+   - In browser: open Compute panel or `?mesh=1` or bottom dock mesh chip.
+   - Run health-check (scope mesh) — fleet_nodes should increase.
+   - Research / web_search jobs will now claim and run with visible browser (`headless: false`).
+
+This registers the node so it can claim `web_search`, inference, etc. from the queue. Once active, pending jobs (currently 6) will start getting assigned.
+
+See the City Power probe script (`scripts/city-power-probe.mjs`) for the exact UI/API flow used in tests.
+
+See [desktop/README.md](../desktop/README.md) for build/pairing details.
 
 ### Tailscale
 

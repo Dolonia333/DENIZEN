@@ -63,6 +63,7 @@ const ACTIONS = new Set([
   'crm-mark-deal-outcome',
   'crm-generate-quote',
   'crm-pipeline-brief',
+  'business-context-brief',
   'crm-dedupe-contacts',
   'crm-audit-workspace',
   'crm-export-snapshot',
@@ -75,6 +76,7 @@ const ACTIONS = new Set([
   'crm-draft-followup',
   'crm-enrich-contact',
   'crm-list-companies',
+  'crm-list-contacts',
   'crm-add-company',
   'crm-link-company',
   'crm-list-quotes',
@@ -187,6 +189,8 @@ async function runAction(action, { npcName, params, config }) {
       return crmGenerateQuote(config, params);
     case 'crm-pipeline-brief':
       return crmPipelineBrief(config, params);
+    case 'business-context-brief':
+      return businessContextBriefAction(config, params);
     case 'crm-dedupe-contacts':
       return crmDedupeContacts(config, params);
     case 'crm-audit-workspace':
@@ -211,6 +215,8 @@ async function runAction(action, { npcName, params, config }) {
       return crmEnrichContact(config, params);
     case 'crm-list-companies':
       return crmListCompanies(config, params);
+    case 'crm-list-contacts':
+      return crmListContacts(config, params);
     case 'crm-add-company':
       return crmAddCompany(config, params, npcName);
     case 'crm-link-company':
@@ -1002,6 +1008,12 @@ async function crmPipelineBrief(config, params) {
   return crmSkills.pipelineBrief(orgId, params);
 }
 
+async function businessContextBriefAction(config, params) {
+  const businessContext = require('../../src/denizen-business-context');
+  const orgId = await defaultOrgId(config);
+  return businessContext.businessContextBrief(orgId, params);
+}
+
 async function crmDedupeContacts(config, params, npcName) {
   const orgId = await defaultOrgId(config);
   const merged = /\bmerge\b/i.test(String(params.task || ''));
@@ -1071,6 +1083,23 @@ async function crmListCompanies(config, params) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
   return crmSkills.listCompanies(orgId, params);
+}
+
+async function crmListContacts(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  // Proxy to existing or implement basic list
+  if (typeof crmSkills.listContacts === 'function') {
+    return crmSkills.listContacts(orgId, params);
+  }
+  // Fallback: load workspace and return contacts (enables full visibility)
+  const { state } = await require('../../src/denizen-crm-mutations').loadOrgWorkspace(orgId);
+  const contacts = Array.isArray(state?.contacts) ? state.contacts : [];
+  return {
+    contacts: contacts.slice(0, params?.limit || 50),
+    total: contacts.length,
+    note: 'Full list via workspace (use enrich for details)'
+  };
 }
 
 async function crmAddCompany(config, params, npcName) {

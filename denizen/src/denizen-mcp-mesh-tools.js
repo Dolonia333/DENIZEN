@@ -11,6 +11,7 @@ const ALLOWED_JOB_TYPES = new Set([
   'inference_rpc',
   'sim_tick',
   'cursor_bridge',
+  'web_search',
 ]);
 
 const MESH_TOOL_DEFINITIONS = [
@@ -64,8 +65,13 @@ function isMeshTool(name) {
   return MESH_TOOL_DEFINITIONS.some((t) => t.name === name);
 }
 
-function toolsForNpc() {
-  return [...MESH_TOOL_DEFINITIONS];
+function toolsForNpc(npcKey) {
+  // Make available to Grok and other capable NPCs for mesh ops
+  const key = String(npcKey || '').toLowerCase();
+  if (key === 'grok' || key === 'oscar' || key.includes('compute')) {
+    return [...MESH_TOOL_DEFINITIONS];
+  }
+  return [];
 }
 
 async function toolEnqueueComputeJob(scope, args) {

@@ -11,6 +11,7 @@
 | [MESH_SCALING.md](MESH_SCALING.md) | NAS hosting, standby, 100-user capacity |
 | [COMPUTE_MESH.md](COMPUTE_MESH.md) | Job queue, fleet agents, router |
 | [ROADMAP.md](ROADMAP.md) | NPC capability phases 4–5 |
+| [MULTI_USER_OFFICE_PLAN.md](MULTI_USER_OFFICE_PLAN.md) | Multi-company offices — DB souls, org isolation, templates |
 | [NAS_PLATFORM_BRIDGE.md](NAS_PLATFORM_BRIDGE.md) | Cloud CRM bridge vs NAS-only |
 
 ---

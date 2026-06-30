@@ -99,6 +99,9 @@ function normalizePlayerUtterance(text) {
 
 const JUNK_SEARCH_QUERY = /^(?:search(?:\s+up)?|google|look\s*up|on\s+the\s+web|the\s+web|web|for|please)$/i;
 
+/** Quick lookup about yourself/capabilities — not a web search. */
+const LOOKUP_ABOUT_SELF = /^(?:yourself|your\s+name|your\s+role|your\s+job|what\s+you\s+can\s+do|your\s+capabilit|how\s+you\s+work|our\s+relationship)\b/i;
+
 function cleanSearchQuery(query) {
   let q = String(query || '')
     .replace(/\s+on\s+the\s+browser\b/gi, '')
@@ -184,9 +187,9 @@ function isGreetingUtterance(text) {
 function isLucySearchIntent(text) {
   const raw = String(text || '').trim();
   if (!raw) return false;
-  if (extractSearchQuery(raw)) return true;
+  if (looksLikeLookupMessage(raw)) return true;
   const norm = normalizePlayerUtterance(fixVoiceMishearings(raw));
-  if (extractSearchQuery(norm)) return true;
+  if (looksLikeLookupMessage(norm)) return true;
   return /\b(?:search|google|look\s+up|browse\s+for)\b/i.test(norm);
 }
 
@@ -404,6 +407,8 @@ function extractSearchQuery(text) {
     /\bsearch(?:\s+(?:the\s+)?web)?(?:\s+for)\s+(.+)/i,
     /\b(?:do you|can you|could you|would you)\s+look\s+up\s+(.+)/i,
     /\blook\s+up\s+(.+)/i,
+    /\blook\s+(?:something|it)\s+up(?:\s+(?:about|on|for))?\s+(.+)/i,
+    /\b(?:can you|could you|would you)\s+look\s+(?:something|it)\s+up(?:\s+(?:about|on|for))?\s+(.+)/i,
   ];
   for (const candidate of [stripped, normalizePlayerUtterance(raw.replace(/\bserch\b/gi, 'search'))]) {
     for (const re of patterns) {
@@ -429,7 +434,40 @@ function extractSearchQuery(text) {
   // Bare hostnames/URLs are not searches unless the user said search/google/look up.
   if (_looksLikeHostname(stripped) && !hasSearchVerb) return null;
 
+  // Deep brief / research-queue — Bob handles those, not DuckDuckGo quick lookup.
+  if (extractResearchBriefIntent(raw) || extractResearchBriefIntent(stripped)) return null;
+  if (extractResearchQueueIntent(raw) || extractResearchQueueIntent(stripped)) return null;
+
+  const lookupPatterns = [
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+|lucy[,:]?\s+)?(?:tell me about|find out about|find info(?:rmation)? (?:on|about)|look into)\s+(.+)/i,
+    /^(?:please\s+|can you\s+|could you\s+|would you\s+)?(?:what is|what's|who is|who's)\s+(.+)/i,
+    /\b(?:can you|could you|would you)\s+(?:find|get)\s+(?:info(?:rmation)?)\s+(?:on|about)\s+(.+)/i,
+    /\b(?:tell me about|find out about|look into)\s+(.+)/i,
+  ];
+  for (const candidate of [stripped, raw]) {
+    for (const re of lookupPatterns) {
+      const m = candidate.match(re);
+      if (m && m[1]) {
+        const query = cleanSearchQuery(m[1]);
+        if (query.length > 1 && !/^(?:the\s+)?web$/i.test(query)
+          && !JUNK_SEARCH_QUERY.test(query) && !LOOKUP_ABOUT_SELF.test(query)) {
+          return query;
+        }
+      }
+    }
+  }
+
   return null;
+}
+
+/** True when the player wants a quick web lookup (CEO Lucy fast-path + skill followup). */
+function looksLikeLookupMessage(text) {
+  const raw = String(text || '').trim();
+  if (!raw) return false;
+  if (extractResearchBriefIntent(raw) || extractResearchQueueIntent(raw)) return false;
+  if (extractSearchQuery(raw)) return true;
+  const norm = normalizePlayerUtterance(fixVoiceMishearings(raw));
+  return !!extractSearchQuery(norm);
 }
 
 /**
@@ -487,6 +525,9 @@ function extractBareSearchTopic(text) {
 function extractScreenControlIntent(text) {
   const raw = String(text || '').trim();
   if (!raw) return false;
+  if (/\b(crm|meridian)\b/i.test(raw) && /\b(enter|add|log|create|save|put|type|insert)\b/i.test(raw)) {
+    return false;
+  }
   if (extractOpenBraveIntent(raw) || extractOpenBrowserIntent(raw)) return false;
   if (/\b(?:fill\s+(?:out|in)|complete (?:this |the )?(?:form|application)|help me (?:fill|apply|complete)|type (?:this |it |that )?for me|enter (?:this |it |that )?for me)\b/i.test(raw)) {
     return true;
@@ -584,6 +625,9 @@ function extractOpenBraveIntent(text) {
 function extractOpenBrowserIntent(text) {
   const raw = fixVoiceMishearings(String(text || '').trim()).replace(/\bbroser\b/gi, 'browser');
   if (!raw) return false;
+  if (/\b(crm|meridian)\b/i.test(raw) && /\b(enter|add|log|create|save|put|type|insert)\b/i.test(raw)) {
+    return false;
+  }
   const norm = normalizePlayerUtterance(raw).replace(/\bbroser\b/gi, 'browser');
   if (extractOpenBraveIntent(raw) || extractOpenBraveIntent(norm)) return false;
   if (extractSearchQuery(raw) || extractSearchQuery(norm) || extractJobBoardSearchIntent(raw)) return false;
@@ -752,6 +796,7 @@ var __OpenClawDispatchApi = {
   normalizePlayerUtterance,
   cleanSearchQuery,
   extractSearchQuery,
+  looksLikeLookupMessage,
   extractBareSearchTopic,
   cleanSearchQuery,
   extractScreenObserveIntent,
@@ -959,6 +1004,7 @@ if (typeof window !== 'undefined') {
     normalizePlayerUtterance,
     cleanSearchQuery,
     extractSearchQuery,
+  looksLikeLookupMessage,
   extractBareSearchTopic,
   cleanSearchQuery,
     extractScreenObserveIntent,

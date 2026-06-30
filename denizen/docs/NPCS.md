@@ -531,6 +531,7 @@ On server boot each NPC **auto-claims** one line from `data/company-brief.json` 
 | `DENIZEN_RUN_SKILL_COOLDOWN_MS` | `900000` | Min ms between autonomous `run_skill` per NPC (15 min) |
 | `DENIZEN_RUN_SKILL_MAX_PER_WINDOW` | `1` | Hard cap per cooldown window (directives bypass) |
 | `DENIZEN_THINK_MIN_MS` / `MAX` | `120000` / `200000` | Think cadence |
+| `DENIZEN_THINK_USE_FAST_MODEL` | `true` | Autonomous think() uses `lmstudio-fast` (Gemma) — keeps 14B free for player chat |
 | `DENIZEN_GLOBAL_THINK_GAP_MS` | `8000` | Serialize thinks so LM Studio queue stays short |
 | `DENIZEN_THINK_STAGGER_MS` | `10000` | Delay between each NPC's first think on boot |
 

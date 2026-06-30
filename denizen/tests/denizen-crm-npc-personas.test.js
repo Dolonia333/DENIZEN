@@ -86,6 +86,19 @@ describe('player-chat-skill-bridge CRM routing', () => {
     const plan = inferSkillFromMessage('Lucy', 'add contact Jane Doe jane@acme.com');
     assert.equal(plan?.skill, 'crm-add-contact');
   });
+
+  it('infers add contact from enter name into CRM phrasing', () => {
+    const plan = inferCrmAction('enter John Smith into the CRM');
+    assert.equal(plan?.skill, 'crm-add-contact');
+    assert.equal(plan?.params?.name, 'John Smith');
+  });
+
+  it('classifies CRM data entry intent', () => {
+    const { isCrmDataEntryIntent, inferCrmWriteAction } = require('../src/denizen-crm-npc-personas');
+    assert.equal(isCrmDataEntryIntent('enter Jane Doe into the CRM'), true);
+    assert.equal(inferCrmWriteAction('enter Jane Doe into the CRM')?.skill, 'crm-add-contact');
+    assert.equal(isCrmDataEntryIntent('search remote jobs'), false);
+  });
 });
 
 describe('denizen-crm-setup', () => {

@@ -1,6 +1,6 @@
 'use strict';
 
-const { bridgeHealth } = require('../../lib/bridge-client');
+const { bridgeHealth, useDirectSupabase } = require('../../lib/bridge-client');
 const { resolveAction, runAction, ACTIONS } = require('../../lib/denizen-data-actions');
 
 const ALIASES = [...ACTIONS].filter((a) => a !== 'help');
@@ -48,7 +48,11 @@ module.exports = {
 
       return { ok: true, output, skill: tag, data: result };
     } catch (err) {
-      const output = `Denizen data skill failed (${tag}): ${err.message}. Start bridge: python denizen/jelly/services/supabase-bridge/secure-bridge.py`;
+      const output = `Denizen data skill failed (${tag}): ${err.message}. ${
+        useDirectSupabase()
+          ? 'Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on this host.'
+          : 'Start bridge: python denizen/jelly/services/supabase-bridge/secure-bridge.py'
+      }`;
       pcActivity.record({
         id: activity.id,
         npc: npcName,

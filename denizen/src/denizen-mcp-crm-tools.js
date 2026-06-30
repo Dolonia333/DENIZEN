@@ -20,6 +20,16 @@ const CRM_TOOL_DEFINITIONS = [
     },
   },
   {
+    name: 'business_context_brief',
+    description: 'Canonical business model + CRM cross-reference + proactive blockers (OMES, teaming, goals).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        npcName: { type: 'string', description: 'Optional NPC name for owner-filtered proactive flags' },
+      },
+    },
+  },
+  {
     name: 'crm_list_tasks',
     description: 'List open CRM tasks and follow-ups.',
     inputSchema: {
@@ -81,6 +91,11 @@ async function callTool(scope, name, args) {
       return _runSkill(scope, 'crm-pipeline-brief', {
         focus: args?.focus || '',
         query: args?.focus || 'pipeline brief',
+      });
+    case 'business_context_brief':
+      return _runSkill(scope, 'business-context-brief', {
+        npcName: args?.npcName || scope.npc_key || '',
+        query: 'business context brief',
       });
     case 'crm_list_tasks':
       return _runSkill(scope, 'crm-list-tasks', {

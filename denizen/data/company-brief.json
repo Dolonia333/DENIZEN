@@ -1,9 +1,10 @@
 {
-  "company": "Dolonia Data Tech Solutions",
+  "company": "1921 Holding Co. (Dolonia DTS)",
   "product": "Denizen",
-  "tagline": "Real-time visual AI agent environment",
-  "description": "Denizen is a browser-based pixel-art office simulation where each NPC is a live AI agent running real business tasks — email triage, job applications, security monitoring, and PC control. It makes AI agent workflows visible and debuggable. The target audience is engineering teams who need to observe, test, and demo autonomous AI behavior in a way that is intuitive for non-technical stakeholders.",
+  "tagline": "Real-time visual observability layer for AI agents",
+  "description": "1921 Holding Co. is the strategic parent (Angela Van Zandt, CEO). Dolonia Data Tech Solutions is the technology arm (Zion Van Zandt, CEO) building DENIZEN — a multi-tenant AI-agent operating system where sixteen LLM agents render as a live pixel-art office. DENIZEN ties capture intelligence, Meridian CRM, and autonomous agent work into one observable layer for government, workforce, and technology pursuits.",
   "ceo": "Zion Van Zandt",
+  "holding_ceo": "Angela Van Zandt",
   "tech_stack": [
     "Node.js + WebSocket server",
     "Phaser 3 (browser game engine)",
@@ -15,123 +16,132 @@
     "Gmail API"
   ],
   "sprint": {
-    "name": "Sprint 4 — Real NPC Task Execution",
-    "goal": "Every NPC knows what Denizen is, understands their role in building it, and is actively working on sprint tasks. No more generic busy-work.",
-    "active_since": "2026-05-27",
-    "ends": "2026-06-10"
+    "name": "Wave 1–4 — 1921 Operating Team (all souls)",
+    "goal": "Every NPC operates 1921 capture + DENIZEN delivery with playbooks, skills, and proactive rhythms.",
+    "active_since": "2026-06-24",
+    "ends": "2026-07-31"
   },
   "current_focus": [
-    "NPC immersion: idle behaviors, ambient chatter, proximity acknowledgment, mood system, event reactions",
-    "Real task execution: each NPC references specific Denizen features in their work",
-    "Lucy job application pipeline: cover letter generation under 5 seconds",
-    "Bouncer security integration: Kali WSL + Wireshark + Zenmap active on threats",
-    "Work output feed: visible log of what each NPC is producing"
+    "OMES EV00000919: teaming agreement with RM Cyber before October 2026 — Marcus tracks, Abby escalates",
+    "CRM pipeline aligned to active pursuits (OMES, RM Cyber, Oklahoma state/federal)",
+    "DENIZEN as capture intelligence layer — MCP delegation, org souls, business model in DB",
+    "RM Cyber joint pursuit narrative — DENIZEN + cyber integration surface",
+    "SmartContainer: partnership-only — no engineering deploy until Sarah + CEO clear gates"
+  ],
+  "pain_points": [
+    "Securing teaming agreements and partnerships for GovCon wins (e.g., RM Cyber for OMES EV00000919) before deadlines",
+    "CRM data quality, hygiene and execution: overdue tasks, at-risk deals (Nexus), incomplete setup, pipeline visibility for $230k+ value",
+    "Compute mesh / City Power active on dolonia (.232) — Denizen Desktop paired, fleet node contributing; visible browser research enabled",
+    "Generating consistent small revenue alongside big pursuits: daily trading ideas via Robinhood MCP (even $1/day target) while building/selling Denizen",
+    "Full team (all NPCs) internalizing company context so actions align on capture + product development + ops without losing visibility",
+    "Grounded, fresh research and decisions: avoid stale narratives; always pull live tools like health-check, business-context-brief, market-watch, CRM audits"
   ],
   "role_tasks": {
     "CTO": [
-      "Review the Sprint 4 architecture for NPC behavior systems — are we overcomplicating it",
-      "Decide whether to open-source Denizen or keep it as a private product demo",
-      "Evaluate adding a Gemini provider alongside LM Studio for NPC brains",
-      "Unblock the dev team on the WebSocket message routing refactor",
-      "Write the technical vision doc for the public demo version of Denizen"
+      "Executive review: OMES EV00000919 vs Meridian CRM — flag gaps on teaming, RM Cyber, deadlines",
+      "Decide this week's #1 capture move vs #1 DENIZEN ship — communicate both to Marcus and Alex",
+      "RM Cyber partnership: ensure DENIZEN narrative supports joint cyber + modernization pursuits",
+      "Block SmartContainer engineering until partnership/manufacturing gates clear (align with Sarah)",
+      "Unblock CRM bridge / AGENT_TOKEN / denizen-data path so business-context-brief is reliable on NAS",
+      "Weekly CEO brief: pursuit status, teaming risk, platform ship, decision needed"
     ],
     "Developer": [
-      "Finish the emotional state mood shift system for all 16 NPCs",
-      "Fix the ambient chatter double-speak bug when two NPCs pick each other simultaneously",
-      "Add unit tests for the new proximity acknowledgment cooldown logic",
-      "Review Edward's WebSocket deduplication PR before EOD",
-      "Profile the think loop under 16 concurrent NPCs and document the bottleneck"
+      "Ship Abby's #1 capture-intelligence feature (MCP delegation, CRM bridge, or org souls)",
+      "Keep NAS demo path green for OMES/partner meetings",
+      "Review Edward/Josh PRs — capture-critical paths first",
+      "File GitHub issues for bugs blocking CEO-visible agent work",
+      "No vanity immersion work unless Abby explicitly prioritizes"
     ],
     "Frontend Developer": [
-      "Polish the NPC speech bubble rendering — text overflow on long lines",
-      "Implement the work output feed panel in the bottom-left HUD",
-      "Fix the status dot not updating when NPC transitions from meeting to working",
-      "Add smooth camera follow when player walks near the edge of the map",
-      "Clean up the player chat UI so it does not overlap NPC speech bubbles"
+      "CEO-visible capture UX — work-output feed, delegation visibility, speech bubbles",
+      "CRM portal/intake polish with Lucy and Sarah requirements",
+      "Phaser stability during 16-NPC + CEO chat",
+      "Partner demo UI pass before OMES meetings",
+      "Pair with Rob on proposal/portal visuals"
     ],
     "Backend Developer": [
-      "Fix the WebSocket message deduplication issue causing occasional double-speaks",
-      "Implement the npc_work_output broadcast so clients see real task updates",
-      "Refactor the npc_think handler to use a proper message router pattern",
-      "Build the delegation endpoint so Abby can push tasks to specific developers",
-      "Profile server memory after 2 hours of active NPC think loops"
+      "AGENT_TOKEN / denizen-data / business-context-brief reliable on NAS",
+      "MCP gateway + delegate_task stable for Grok multi-hop",
+      "org_business_models + agent_souls hydration paths",
+      "CRM webhooks and Supabase spine with Pier",
+      "Weekly backend health brief to Abby"
     ],
     "QA Engineer": [
-      "Write regression tests for the new proximity acknowledgment system",
-      "Test ambient chatter cooldowns — verify no two NPCs get stuck in a talk loop",
-      "Run full 16-NPC stress test and document any think loop failures",
-      "Verify mood shifts do not corrupt NPC status indicators",
-      "File bugs from todays test pass with reproduction steps"
+      "Regression gate before NAS deploys and partner demos",
+      "Verify MCP preflight + grok-mcp-ping after each deploy",
+      "CRM intake/pipeline smoke with Lucy/Marcus data paths",
+      "16-NPC stress + org isolation tests",
+      "Block release if capture-critical path fails"
     ],
     "DevOps Engineer": [
-      "Monitor LM Studio inference queue depth — alert if it exceeds 8 pending requests",
-      "Check server memory after 2 hours of NPC activity — last week it hit 1.8GB",
-      "Add health check endpoint to the agent WebSocket for uptime monitoring",
-      "Make sure ElevenLabs TTS cache directory has a size cap and rotation policy",
-      "Review the Docker Compose config — production deploy is coming up"
+      "denizen.dolonia.cloud + LM Studio mesh uptime during capture season",
+      "Run verify-gap-bridge-all within 1h of production deploy",
+      "Monitor inference queue depth — alert Abby if saturated",
+      "Docker/NAS rollback path documented and tested",
+      "Coordinate with Dan on integration outages"
     ],
     "Researcher": [
-      "Research LLM prompt compression techniques for NPC long-term memory",
-      "Benchmark Qwen2.5-14B vs smaller local models for think loop latency on this hardware",
-      "Write up findings on the theory of mind system — what behavior is it actually producing",
-      "Investigate multi-agent coordination patterns — how do other games do NPC delegation",
-      "Read the emergent behavior section of the latest game AI proceedings and summarize"
+      "OMES EV00000919 solicitation intel refresh weekly",
+      "RM Cyber / Benjamin Ballard partnership research",
+      "Oklahoma + adjacent state IT modernization competitor scan",
+      "DENIZEN capture-intelligence positioning brief for Abby",
+      "One written brief per week in reports/ with named handoff"
     ],
     "UI/UX Designer": [
-      "Design the work output feed panel — subtle HUD feel, not a dashboard",
-      "Improve the mood indicator visual — the status dot is too small to read at a glance",
-      "Mockup the delegation flow UX so Zion can see how Abby assigns work to Alex",
-      "Review NPC idle animation frames — stretch and yawn need more personality",
-      "Propose the visual language for the honeypot bait marker on screen"
+      "Proposal and CRM portal visual hierarchy for gov buyers",
+      "SmartContainer storyboards — partnership narrative only",
+      "DENIZEN CEO glanceability — status, delegation, agent work",
+      "Pair with Sarah on package PDFs; Lucy on email templates",
+      "No pricing copy without Sarah approval"
     ],
     "Data Engineer": [
-      "Design the schema for persisting NPC decision logs across server restarts",
-      "Build the LM Studio inference metrics pipeline into Supabase for latency tracking",
-      "Write the query that ranks NPCs by think cycle activity over the last hour",
-      "Document the world-state data model so the team can read it",
-      "Decide whether the event feed should be persisted or stay in-memory only"
+      "CRM audit: OMES, RM Cyber, teaming keywords in Meridian",
+      "org_business_models + agent_souls reporting queries",
+      "Idempotent pipelines for NPC work output and intelligence spine",
+      "Weekly data health report — dupes, stale deals, missing tags",
+      "Never move deal stages — Marcus owns commits"
     ],
     "IT Support": [
-      "Verify the Kali WSL2 distro is healthy and nmap is at a current version",
-      "Check that the ElevenLabs API key has not hit its monthly limit",
-      "Set up log rotation for server.js output so the logs directory does not fill up",
-      "Investigate why LM Studio drops the WebSocket connection after long idle periods",
-      "Make sure all required environment variables are documented in .env.example"
+      "AGENT_TOKEN, Gmail, calendar OAuth, CRM webhooks healthy",
+      "Respond to Bouncer serious escalations within SLA",
+      "LM Studio stability for 16 concurrent NPC brains",
+      "Document recurring integration failures",
+      "Friday IT brief — env, tokens, automations"
     ],
     "Receptionist (also handles CEO email triage as Secretary)": [
-      "Triage the CEO inbox and flag anything that needs same-day attention",
-      "Keep the team calendar updated with Sprint 4 milestone dates",
-      "Prepare a draft job application for any Senior AI Engineer roles that come up",
-      "Make sure Marcus and Sarah have everything they need for their visit",
-      "Follow up on any pending job application drafts from last week"
+      "Daily inbox triage — flag OMES, RM Cyber, teaming, legal same-day",
+      "Log all pursuit-related intake to Meridian with correct tags",
+      "Draft outreach sequences — CEO sends binding terms",
+      "Monday intake audit; Friday front-office brief to CEO",
+      "Queue Bob research; hand qualified leads to Sarah"
     ],
     "Security Guard": [
-      "Run a baseline nmap scan of localhost — confirm no unexpected open ports after last deploy",
-      "Review the last 24 hours of security events and write a one-paragraph incident summary",
-      "Confirm the honeypot configuration is armed and monitoring correctly",
-      "Brief the CEO on the most recent threat that was caught and handled",
-      "Do a full perimeter patrol — reception, storage room, manager office, back corridor"
+      "Protect OMES bid materials, teaming docs, CRM PII on NAS",
+      "Post-deploy baseline nmap within 24h",
+      "Daily security event summary; Friday CEO posture brief",
+      "Coordinate RM Cyber cyber scope narrative with Abby — not their SOC",
+      "Investigate controlled-asset access anomalies immediately"
     ],
     "Intern": [
-      "Help Alex track down the ambient chatter timing bug — two NPCs interrupting each other",
-      "Read through agent-office-manager.js to understand the full NPC lifecycle",
-      "Write JSDoc comments for the new idle behavior methods added in Sprint 4",
-      "Ask Bob to walk through the theory of mind system — it is confusing but important",
-      "Manually test the proximity acknowledgment feature in the browser and take notes"
+      "Draft follow-ups for Lucy; pipeline summaries for Marcus",
+      "Test notes for Molly; research assists for Bob",
+      "Learn DENIZEN stack — one documented learning per week",
+      "Escalate OMES blocker questions to Marcus or Alex",
+      "Never send binding email or close deals"
     ],
     "Project Manager": [
-      "Check Sprint 4 milestone progress with each team lead and update the board",
-      "Identify any tasks older than 2 days with no progress and escalate to Abby",
-      "Coordinate the handoff between Edward's backend work and Molly's QA pass",
-      "Make sure Josh has clear requirements for the frontend feed panel task",
-      "Run the afternoon standup and make sure everyone knows what they are finishing today"
+      "Daily OMES teaming-agreement blocker age until signed or killed",
+      "CRM vs business-model sync for active pursuits",
+      "Escalate capture tasks >2 days idle to Abby",
+      "Standups ≤8 min — capture decisions, not engineering theater",
+      "Friday capture brief: blockers, deals moved, next week commits"
     ],
     "Product Manager": [
-      "Prioritize the Sprint 5 backlog — what matters most after the immersion work lands",
-      "Review visitor feedback from Marcus and Sarah on the Denizen demo",
-      "Write the spec for the NPC delegation chain feature — Abby assigning to Alex",
-      "Align with Abby on whether the work output feed is a user feature or a debug tool",
-      "Decide if the public demo version needs a simplified NPC roster or can use all 16"
+      "Qualify Lucy intake against gov/workforce/healthcare packages",
+      "SmartContainer: partnership-only — block engineering scope creep",
+      "OMES / RM Cyber package positioning with Marcus",
+      "DENIZEN roadmap: capture intelligence over demo polish",
+      "Friday product brief: packages pitched, killed features, ship tied to revenue"
     ]
   }
 }

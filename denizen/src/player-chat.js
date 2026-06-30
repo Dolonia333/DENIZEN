@@ -192,6 +192,16 @@ class PlayerChat {
   setVisible(visible) {
     if (!this._container) return;
     const next = !!visible;
+    if (next && window.__DenizenIsTouch && document.documentElement.classList.contains('denizen-phone-mode')) {
+      if (!document.documentElement.classList.contains('denizen-phone-open') && !this._routingToPhone) {
+        const ui = globalThis.DenizenPhoneUi;
+        if (ui?.openApp) {
+          this._routingToPhone = true;
+          try { ui.openApp('chat'); } finally { this._routingToPhone = false; }
+          if (!document.documentElement.classList.contains('denizen-phone-open')) return;
+        }
+      }
+    }
     if (this._visible === next && (this._container.style.display === 'none') === !next) {
       return;
     }
@@ -467,9 +477,25 @@ class PlayerChat {
     this._searchTimeoutTimer = setTimeout(() => {
       if (this._lucySearchActive !== label) return;
       this._lucySearchActive = null;
-      this._addToLog('System', 'Search is taking longer than expected — check your taskbar for Lucy\'s browser window, or say "close the browser" and try again.');
+      this._addToLog('System', 'Search is taking longer than expected — open the 🌐 browser panel (bottom dock) or say "close the browser" and try again.');
       this._refreshCeoConversationHold(targetKey, targetName, null);
     }, ms);
+  }
+
+  _lucyRunsBrowserLocally() {
+    try {
+      const h = window.location.hostname;
+      return h === 'localhost' || h === '127.0.0.1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  _lucyBrowserStartHint() {
+    if (this._lucyRunsBrowserLocally()) {
+      return 'Opening Lucy\'s browser — watch the 🌐 panel (bottom dock) or your taskbar for Chromium/Chrome.';
+    }
+    return 'Opening Lucy\'s browser on the server — watch the 🌐 browser panel in the game (bottom dock).';
   }
 
   /** POST /api/lucy-search — async (202); results arrive via WebSocket. */
@@ -497,7 +523,8 @@ class PlayerChat {
           throw new Error(text.slice(0, 160) || `HTTP ${r.status}`);
         }
         if (j.pending) {
-          this._addToLog('System', 'Opening Lucy\'s browser — watch your taskbar for a Chromium or Chrome window.');
+          this._addToLog('System', this._lucyBrowserStartHint());
+          window.DenizenBrowserMirror?.show?.();
           this._armSearchTimeout(targetKey, targetName, label);
           return j;
         }
@@ -1188,7 +1215,9 @@ class PlayerChat {
       this._addToLog('Lucy', `Looking up "${searchQuery}" — I'll give you a quick brief when it's ready.`);
       this._lucySearchFetch({ query: searchQuery }, targetKey, 'Lucy');
       if (!this.scene?.player) {
-        this._addToLog('System', 'Office is still loading — Lucy works from chat; her browser opens as a separate window on your desktop.');
+        this._addToLog('System', this._lucyRunsBrowserLocally()
+          ? 'Office is still loading — Lucy works from chat; her browser opens on this PC (🌐 panel or taskbar).'
+          : 'Office is still loading — Lucy works from chat; watch the 🌐 browser panel in the game.');
       }
       return;
     }
@@ -2372,6 +2401,17 @@ class PlayerChat {
       html.denizen-touch.denizen-chat-open:not(.denizen-phone-mode) #player-chat-panel {
         top: max(8px, env(safe-area-inset-top, 0px)) !important;
         bottom: calc(var(--denizen-dock-height, 40px) + 10px + env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
+        left: max(8px, env(safe-area-inset-left, 0px)) !important;
+        right: max(8px, env(safe-area-inset-right, 0px)) !important;
+        width: auto !important;
+        height: auto !important;
+        max-height: none !important;
+        z-index: 2147483630 !important;
+      }
+      /* Phone-mode: chat was missing full-screen rules — FABs sat above the input row */
+      html.denizen-touch.denizen-phone-mode.denizen-chat-open:not(.denizen-phone-open) #player-chat-panel {
+        top: max(8px, env(safe-area-inset-top, 0px)) !important;
+        bottom: max(8px, env(safe-area-inset-bottom, 0px) + var(--denizen-keyboard-offset, 0px)) !important;
         left: max(8px, env(safe-area-inset-left, 0px)) !important;
         right: max(8px, env(safe-area-inset-right, 0px)) !important;
         width: auto !important;

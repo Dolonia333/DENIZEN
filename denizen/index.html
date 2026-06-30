@@ -182,7 +182,7 @@
     <script src="./src/public-demo-mode.js" defer></script>
     <script src="./src/spectate-routing.js?v=spectate2" defer></script>
     <script src="./src/spectate-ui.js" defer></script>
-    <script src="./src/npc-capabilities.js?v=cap1" defer></script>
+    <script src="./src/npc-capabilities.js?v=cap2roki" defer></script>
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=voice2" defer></script>
     <!-- Agent Office System -->
@@ -219,10 +219,12 @@
     <script src="./src/denizen-phone-chat-ui.js?v=phchat5" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/bottom-dock.js?v=mobme4" defer></script>
-    <!-- In-game smartphone HUD — replaces the dock with a Phone button (?phonemode=0 for legacy) -->
-    <script src="./src/denizen-phone-ui.js?v=phone18market" defer></script>
-    <!-- Lazy loader — audio, panels, security feed, browser mirror, etc. -->
-    <script src="./src/denizen-lazy-scripts.js?v=lazy5" defer></script>
+    <!-- Browser mirror — eager load so phone Browser app always mounts -->
+    <script src="./src/browser-mirror-panel.js?v=lucymirror6" defer></script>
+    <!-- Lazy loader — must run before phone UI -->
+    <script src="./src/denizen-lazy-scripts.js?v=lazy6" defer></script>
+    <!-- In-game smartphone HUD -->
+    <script src="./src/denizen-phone-ui.js?v=phone21browser" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=wall7" defer></script>
     <!-- Game scene -->
@@ -232,7 +234,7 @@
     <div id="game-container"></div>
     <!-- Chat button appears immediately — does not wait for Phaser -->
     <script src="./src/visitor-crm-bridge.js?v=crmbridge2"></script>
-    <script src="./src/chat-bootstrap.js?v=sec5"></script>
+    <script src="./src/chat-bootstrap.js?v=lucymirror2"></script>
   </body>
 </html>
 

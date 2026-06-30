@@ -31,6 +31,8 @@
     "smoke:hardware": "node scripts/smoke-hardware-metrics.js",
     "smoke:onboarding": "node scripts/smoke-onboarding.js",
     "smoke:mcp": "node scripts/smoke-mcp-gateway.js",
+    "grok:autonomy": "node scripts/grok-denizen-autonomy.js",
+    "grok:mcp-ping": "node scripts/grok-mcp-ping.js",
     "smoke:crm": "node scripts/smoke-crm-api.mjs",
     "smoke:phone": "node scripts/phone-ui-probe.mjs",
     "smoke:spine": "node scripts/smoke-spine-e2e.js",

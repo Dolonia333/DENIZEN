@@ -20,6 +20,28 @@ describe('player-chat-skill-bridge', () => {
     assert.match(plan.params.query, /tailscale/i);
   });
 
+  it('parses explicit run_skill CEO orders', () => {
+    const plan = bridge.inferSkillFromMessage(
+      'Bob',
+      'run_skill research on "LLM prompt compression for long-term memory" and save a report',
+    );
+    assert.equal(plan.skill, 'research');
+    assert.match(plan.params.query, /LLM prompt compression/i);
+  });
+
+  it('plans CEO direct orders without assistant claim', () => {
+    const plan = bridge.planSkillExecution({
+      npcName: 'Bob',
+      message: 'run_skill research on prompt compression for NPC memory',
+      responseText: 'On it.',
+      isAssistant: false,
+      canUseRealWork: true,
+      ceoDirectOrder: true,
+      forceInfer: true,
+    });
+    assert.equal(plan.skill, 'research');
+  });
+
   it('plans execution for claimed assistant on task-like messages', () => {
     const plan = bridge.planSkillExecution({
       npcName: 'Bob',
@@ -42,10 +64,23 @@ describe('player-chat-skill-bridge', () => {
     assert.equal(bridge.isSkillAccessRequest('research kubernetes ingress'), false);
   });
 
-  it('formats Lucy skill gate reply with display name', () => {
-    const reply = bridge.lucySkillGateReply('Alex');
-    assert.match(reply, /Alex/);
-    assert.match(reply, /Dolonia/i);
+  it('extracts delegate target from CEO message', () => {
+    assert.equal(
+      bridge.extractDelegateTarget('Abby, have Alex run_skill coding-agent to edit README'),
+      'Alex',
+    );
+    assert.equal(bridge.shouldDeferSkillToDelegatee(
+      'have Alex run_skill coding-agent',
+      null,
+    ), 'Alex');
+  });
+
+  it('enriches coding-agent params with README target', () => {
+    const params = bridge.enrichCodingAgentParams(
+      'add a comment to README',
+      { task: 'add comment' },
+    );
+    assert.deepEqual(params.targetFiles, ['README.md']);
   });
 });
 

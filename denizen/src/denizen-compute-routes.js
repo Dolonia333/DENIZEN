@@ -1059,10 +1059,11 @@ function mountComputeRoutes(serverContext = {}) {
         if (clientType === 'browser' && !isHostBrowser) {
           sendJson(res, 400, {
             ok: false,
-            error: 'Install Denizen Desktop on this machine to add City Power.',
+            error: 'Install Denizen Desktop on this machine to add City Power. Run on 192.168.1.232, pair, then enable in Compute > City Power tab (set level + toggle Power the city). See COMPUTE_MESH.md for full steps.',
             needs_desktop_download: true,
             contributor_state: 'browser_only',
             download_url: '/desktop/',
+            activation_hint: 'On .232: install/run Desktop app -> pair to server -> phone UI Compute/City Power -> opt-in.',
           });
           return true;
         }

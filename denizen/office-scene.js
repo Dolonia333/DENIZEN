@@ -1009,7 +1009,7 @@ class OfficeScene extends Phaser.Scene {
 
     // --- NPCs: spawn all XP characters and make them wander/follow-chain ---
     this.npcs = [];
-    const npcKeys = [
+    let npcKeys = [
       'xp_abby',
       'xp_alex',
       'xp_bob',
@@ -1027,6 +1027,10 @@ class OfficeScene extends Phaser.Scene {
       'xp_rob',
       'xp_roki'
     ];
+    const roster = globalThis.DenizenNpcRoster;
+    if (roster && roster.entries && roster.entries.length > 0) {
+      npcKeys = roster.entries.map(e => 'xp_' + e.folder);
+    }
 
     // Spawn NPCs at desk chairs in the open office and spread others around rooms.
     const deskSpawns = [

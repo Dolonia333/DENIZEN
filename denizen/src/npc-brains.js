@@ -117,8 +117,10 @@ class NpcBrainManager {
     this._sharedTasks = [];       // global task board visible to all NPCs
     this._sessionStart = new Date().toISOString().slice(0, 10);
     this._assistantProfilePath = path.join(__dirname, '..', 'data', 'assistant-profile.json');
+    this._directivesPath = path.join(__dirname, '..', 'data', 'npc-directives.json');
     this._assistantProfile = this._loadAssistantProfile();
     this._companyBrief = this._loadCompanyBrief();
+    this._loadPersistedDirectives();
 
     this._loadProviders();
     this._cyclesSinceSkillRun = {};
@@ -319,9 +321,10 @@ class NpcBrainManager {
     const skill = opts.skill;
     const officeContext = opts.officeContext || null;
     const rt = officeContext ? this._rt(officeContext) : null;
-    const directives = rt?.directives || this._directives;
     const lastRunSkillAt = rt?.lastRunSkillAt || this._lastRunSkillAt;
-    if (directives.has(npcName)) return { allowed: true };
+    if (this._directives.has(npcName) || rt?.directives?.has(npcName)) {
+      return { allowed: true };
+    }
 
     const skillKey = skill ? String(skill).toLowerCase() : '';
     if (officeContext?.visitorScoped && officeContext.canUseRealWork === false
@@ -348,8 +351,11 @@ class NpcBrainManager {
 
     if (npcName === 'Bouncer' && skill) {
       const sk = String(skill).toLowerCase();
-      if (['nmap', 'zenmap', 'wireshark', 'linux-agent'].includes(sk)) {
-        return { allowed: false, reason: 'Bouncer security tools are automatic' };
+      if (['nmap', 'zenmap', 'wireshark'].includes(sk)) {
+        return { allowed: false, reason: 'Use security-linux skill — Kali runs automatically' };
+      }
+      if (['security-linux', 'linux-agent', 'content-moderation'].includes(sk)) {
+        return { allowed: true };
       }
     }
 
@@ -377,13 +383,14 @@ class NpcBrainManager {
     if (threats.length) {
       for (const t of threats) {
         const src = t.source || 'unknown';
-        const local = /^(::1|127\.|localhost)/i.test(String(src));
-        lines.push(`Threat: ${t.category} from ${src}${local ? ' (localhost — likely your own game/server traffic, not a real attacker)' : ''} — ${(t.detail || '').slice(0, 80)}`);
+        const securityIp = require('./security-ip');
+        const local = securityIp.isLocalOrLoopback(src) || securityIp.isHostOperatorIp(src);
+        lines.push(`Threat: ${t.category} from ${src}${local ? ' (localhost/host — likely your own game/server traffic, not a real attacker)' : ''} — ${(t.detail || '').slice(0, 80)}`);
       }
     } else {
       lines.push('No active intruders on the map right now.');
     }
-    lines.push('Do NOT run_skill nmap/zenmap — Kali investigations are automatic with cooldown. Answer the CEO directly.');
+    lines.push('CEO can ask for a manual scan — use run_skill security-linux with category/source. Auto Kali also runs on external threats.');
     lines.push('When citing reports, use ONLY paths from "Latest security reports on disk" below — never invent filenames.');
     return lines.join('\n');
   }
@@ -412,6 +419,45 @@ class NpcBrainManager {
   }
 
   _getCompanyContext(npcName) {
+    try {
+      const businessContext = require('./denizen-business-context');
+      const brief = businessContext.loadCompanyBrief();
+      const model = businessContext.loadBusinessModel();
+      const ent = model?.entity || {};
+      const snapshot = {
+        company: ent.legal_name
+          ? `${ent.legal_name}${ent.technology_dba ? ` (${ent.technology_dba_short || 'DDT'})` : ''}`
+          : (brief?.company || 'Company'),
+        product: brief?.product || model?.product?.name || 'Denizen',
+        entity: ent,
+        certifications: model?.certifications || [],
+        ecosystem: (model?.ecosystem || []).map((e) => `${e.name}: ${e.role || e.status || ''}`.trim()),
+        sprint: brief?.sprint || null,
+        goals: model?.strategic_goals || [],
+        opportunities: (model?.active_opportunities || []).map((o) => businessContext.formatOpportunity?.(o) || o.name),
+        relationships: (model?.key_relationships || []).map((r) => `${r.name} (${r.type})`),
+        current_focus: brief?.current_focus || [],
+        pain_points: brief?.pain_points || [],
+        crm_summary: '',
+        proactive_signals: businessContext.detectProactiveSignals(model, ''),
+        npcName,
+      };
+      const brain = this.brains[npcName];
+      const role = brain ? brain.role : '';
+      const roleTasks = brief?.role_tasks ? (brief.role_tasks[role] || []) : [];
+      const taskLines = roleTasks.slice(0, 2).map((t) => '- ' + t).join('\n');
+      const base = businessContext.buildPromptBlock(snapshot, 1100);
+      return [
+        base,
+        '',
+        (promptTuning?.realWorkMode
+          ? 'Your sprint tasks (auto-claimed — run_skill then finish with artifact):'
+          : 'Your sprint tasks (desk work default; run_skill only when truly blocked):'),
+        taskLines || '- (no tasks defined for this role yet)',
+      ].join('\n');
+    } catch (_) {
+      /* fall through to legacy */
+    }
     const b = this._companyBrief;
     if (!b) return '';
     const brain = this.brains[npcName];
@@ -873,64 +919,163 @@ class NpcBrainManager {
   }
 
   _initBrains() {
-    // Load NPC identities from soul files (OpenClaw pattern)
     const npcsDir = path.join(__dirname, '..', 'npcs');
     const demoFolders = promptTuning?.publicDemoNpcFolders;
 
     for (const { folder, display } of npcRoster.entries) {
       if (demoFolders && !demoFolders.includes(folder)) continue;
-      const name = display;
       const soulPath = path.join(npcsDir, folder, 'SOUL.md');
       const memoryPath = path.join(npcsDir, folder, 'MEMORY.md');
-
-      let soul = '', longTermMemory = '';
+      let soul = '';
+      let longTermMemory = '';
       try { soul = fs.readFileSync(soulPath, 'utf-8'); } catch (_) {}
       try { longTermMemory = fs.readFileSync(memoryPath, 'utf-8'); } catch (_) {}
-
-      // Parse provider and role from SOUL.md sections (CRLF-safe for Windows checkouts)
-      const providerMatch = soul.match(/## Provider\r?\n([\w-]+)/);
-      const roleMatch = soul.match(/## Role\r?\n(.+)/);
-      const capMatch = soul.match(/## What You Can Do\r?\n([\s\S]+?)(?=\r?\n## )/);
-      let provider = providerMatch?.[1] || 'lmstudio';
-      const role = roleMatch?.[1]?.trim() || 'Employee';
-      const capabilitiesSoul = capMatch ? capMatch[1].trim() : null;
-
-      if (demoFolders && demoFolders.includes(folder) && promptTuning?.publicDemoUseCloud) {
-        if (this.providers['claude-haiku']) provider = 'claude-haiku';
-        else if (this.providers.claude) provider = 'claude';
-      }
-
-      // Coordination / patrol roles don't need the 14B reasoning slot — keeps LM queue clear.
-      const fastRoleRe = /receptionist|security guard|secretary|scheduling/i;
-      if (provider === 'lmstudio' && fastRoleRe.test(role) && this.providers['lmstudio-fast']) {
-        provider = 'lmstudio-fast';
-      }
-
-      const baseProviderConfig = this.providers[provider] || this.providers.lmstudio || this.providers.demo;
-      const providerConfig = { ...baseProviderConfig, providerKey: provider };
-
-      this.brains[name] = {
-        provider,
-        role,
-        // Trimmed personality: drops sections that are redundant with voiceAnchor
-        // (Personality Quirks, Idle Phrases, Memory & Callbacks) to save ~150-250
-        // tokens per call. Full SOUL.md is still on disk; only the prompt copy shrinks.
-        personality: this._trimSoulForPrompt(soul),
-        thinkIdentity: promptBudget.extractThinkIdentity(
-          soul,
-          role,
-          promptTuning?.thinkSoulMaxChars ?? 720,
-        ),
-        longTermMemory,
-        providerConfig,
-        fallbackConfig: null, // No paid API fallback — go straight to canned responses
-        voiceAnchor: this._buildVoiceAnchor(soul, name), // injected at END of prompt
-        capabilitiesSoul,
-      };
-      this.memories[name] = [];
-
-      console.log(`[NpcBrains] ${name} (${role}) -> ${provider} [SOUL.md loaded]`);
+      this._registerBrain(display, folder, soul, longTermMemory);
     }
+  }
+
+  _registerBrain(name, folder, soul, longTermMemory) {
+    const demoFolders = promptTuning?.publicDemoNpcFolders;
+    const providerMatch = soul.match(/## Provider\r?\n([\w-]+)/);
+    const roleMatch = soul.match(/## Role\r?\n(.+)/);
+    const capMatch = soul.match(/## What You Can Do\r?\n([\s\S]+?)(?=\r?\n## )/);
+    let provider = providerMatch?.[1] || 'lmstudio';
+    const role = roleMatch?.[1]?.trim() || 'Employee';
+    const capabilitiesSoul = capMatch ? capMatch[1].trim() : null;
+
+    if (demoFolders && demoFolders.includes(folder) && promptTuning?.publicDemoUseCloud) {
+      if (this.providers['claude-haiku']) provider = 'claude-haiku';
+      else if (this.providers.claude) provider = 'claude';
+    }
+
+    const fastRoleRe = /receptionist|security guard|secretary|scheduling/i;
+    if (provider === 'lmstudio' && fastRoleRe.test(role) && this.providers['lmstudio-fast']) {
+      provider = 'lmstudio-fast';
+    }
+
+    const baseProviderConfig = this.providers[provider] || this.providers.lmstudio || this.providers.demo;
+    const providerConfig = { ...baseProviderConfig, providerKey: provider };
+
+    this.brains[name] = {
+      provider,
+      role,
+      personality: this._trimSoulForPrompt(soul),
+      thinkIdentity: promptBudget.extractThinkIdentity(
+        soul,
+        role,
+        promptTuning?.thinkSoulMaxChars ?? 720,
+      ),
+      longTermMemory,
+      providerConfig,
+      fallbackConfig: null,
+      voiceAnchor: this._buildVoiceAnchor(soul, name),
+      capabilitiesSoul,
+      _soulSource: 'file',
+    };
+    this.memories[name] = [];
+    console.log(`[NpcBrains] ${name} (${role}) -> ${provider} [SOUL loaded]`);
+  }
+
+  _applySoulContentToBrain(name, soul, longTermMemory, source = 'database') {
+    const folder = this._nameToFolder[name];
+    if (!folder || !this.brains[name]) return false;
+    const brain = this.brains[name];
+    const meta = require('./agent-souls').parseSoulMeta(soul);
+    let provider = meta.provider;
+    const fastRoleRe = /receptionist|security guard|secretary|scheduling/i;
+    if (provider === 'lmstudio' && fastRoleRe.test(meta.role) && this.providers['lmstudio-fast']) {
+      provider = 'lmstudio-fast';
+    }
+    const baseProviderConfig = this.providers[provider] || this.providers.lmstudio || this.providers.demo;
+    brain.provider = provider;
+    brain.role = meta.role;
+    brain.personality = this._trimSoulForPrompt(soul);
+    brain.thinkIdentity = promptBudget.extractThinkIdentity(
+      soul,
+      meta.role,
+      promptTuning?.thinkSoulMaxChars ?? 720,
+    );
+    brain.longTermMemory = longTermMemory || brain.longTermMemory || '';
+    brain.providerConfig = { ...baseProviderConfig, providerKey: provider };
+    brain.voiceAnchor = this._buildVoiceAnchor(soul, name);
+    brain.capabilitiesSoul = meta.capabilitiesSoul;
+    brain._soulSource = source;
+    return true;
+  }
+
+  _brainOverlayFromSoul(npcName, baseBrain, soul, longTermMemory, source, orgId) {
+    const meta = require('./agent-souls').parseSoulMeta(soul);
+    let provider = meta.provider;
+    const fastRoleRe = /receptionist|security guard|secretary|scheduling/i;
+    if (provider === 'lmstudio' && fastRoleRe.test(meta.role) && this.providers['lmstudio-fast']) {
+      provider = 'lmstudio-fast';
+    }
+    const baseProviderConfig = this.providers[provider] || baseBrain.providerConfig || this.providers.lmstudio;
+    return {
+      provider,
+      role: meta.role,
+      personality: this._trimSoulForPrompt(soul),
+      thinkIdentity: promptBudget.extractThinkIdentity(
+        soul,
+        meta.role,
+        promptTuning?.thinkSoulMaxChars ?? 720,
+      ),
+      longTermMemory: longTermMemory || baseBrain.longTermMemory || '',
+      providerConfig: { ...baseProviderConfig, providerKey: provider },
+      voiceAnchor: this._buildVoiceAnchor(soul, npcName),
+      capabilitiesSoul: meta.capabilitiesSoul,
+      _soulSource: source,
+      _orgId: orgId || null,
+    };
+  }
+
+  async _resolveBrainForOrg(npcName, orgId) {
+    const baseBrain = this.brains[npcName];
+    if (!baseBrain) return null;
+    const oid = orgId ? String(orgId).trim() : '';
+    if (!oid || !denizenDb?.enabled) return baseBrain;
+    if (denizenDb.orgId && oid === String(denizenDb.orgId) && baseBrain._soulSource === 'database') {
+      return baseBrain;
+    }
+    if (!this._orgBrainOverlayCache) this._orgBrainOverlayCache = new Map();
+    const cacheKey = `${oid}:${npcName}`;
+    if (this._orgBrainOverlayCache.has(cacheKey)) {
+      return { ...baseBrain, ...this._orgBrainOverlayCache.get(cacheKey) };
+    }
+    const agentSouls = require('./agent-souls');
+    const row = await agentSouls.loadSoulForOrg(denizenDb, oid, npcName);
+    if (!row?.soul_content?.trim()) return baseBrain;
+    const patch = this._brainOverlayFromSoul(
+      npcName,
+      baseBrain,
+      row.soul_content,
+      row.memory_content || '',
+      row.source || 'org',
+      oid,
+    );
+    this._orgBrainOverlayCache.set(cacheKey, patch);
+    return { ...baseBrain, ...patch };
+  }
+
+  async hydrateAgentSoulsFromDb(orgId = null) {
+    const oid = orgId || denizenDb?.orgId;
+    if (!denizenDb?.enabled || !oid) return { ok: false, reason: 'db_unavailable' };
+
+    const agentSouls = require('./agent-souls');
+    const rows = await agentSouls.listSoulsForOrg(denizenDb, oid);
+    let hydrated = 0;
+    for (const row of rows) {
+      if (!row.soul_content?.trim()) continue;
+      const name = row.display_name || agentSouls.DISPLAY_BY_FOLDER[row.npc_key];
+      if (!name || !this.brains[name]) continue;
+      if (this._applySoulContentToBrain(name, row.soul_content, row.memory_content || '', row.source || 'database')) {
+        hydrated += 1;
+      }
+    }
+    if (hydrated > 0) {
+      console.log(`[NpcBrains] hydrated ${hydrated} soul(s) from agent_souls (org=${oid})`);
+    }
+    return { ok: true, hydrated };
   }
 
   /** Pick one sprint line from company-brief for this NPC (stable per day). */
@@ -1419,6 +1564,12 @@ class NpcBrainManager {
       /Determine (?:Persona|Required|Response)/i,
       /The user is roleplaying/i,
       /\bIdentify Persona and Constraints\b/i,
+      /\b(Dolonia|CEO) is asking\b/i,
+      /This is a direct request/i,
+      /Consult Persona/i,
+      /Capabilities include/i,
+      /previous memory shows/i,
+      /established interest/i,
     ];
     return metaPatterns.some(re => re.test(t));
   }
@@ -1438,7 +1589,7 @@ class NpcBrainManager {
       t = (after.length > 1 ? after[after.length - 1] : '').trim();
     }
 
-    const looksLikeMeta = /Thinking\s*Process|^Analyze the Request|^\d+\.\s*\*?\*?(Analyze|Assess)|Bouncer Lock|Persona Constraints|The user is roleplaying/i.test(t);
+    const looksLikeMeta = /Thinking\s*Process|^Analyze the Request|^\d+\.\s*\*?\*?(Analyze|Assess)|Bouncer Lock|Persona Constraints|The user is roleplaying|\b(Dolonia|CEO) is asking\b|This is a direct request|Consult Persona|Capabilities include|previous memory shows/i.test(t);
     if (!looksLikeMeta) {
       return t.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1').replace(/\s{2,}/g, ' ').trim();
     }
@@ -1452,6 +1603,12 @@ class NpcBrainManager {
       /Persona Constraints/i,
       /The user is roleplaying/i,
       /^\*\s*\*\*/,
+      /\b(Dolonia|CEO) is asking\b/i,
+      /This is a direct request/i,
+      /Consult Persona/i,
+      /Capabilities include/i,
+      /market-watch|get-quote/i,
+      /\bPersona & Capabilities\b/i,
       /\bstoic, observant\b.*\ben couraged\b/i,
       /\bis encouraged\b/i,
     ];
@@ -1925,8 +2082,9 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
    * Returns a JSON action the NPC wants to take, plus _cascades for leaders.
    */
   async think(npcName, officeContext = {}) {
-    const brain = this.brains[npcName];
-    if (!brain) return { action: 'idle' };
+    const baseBrain = this.brains[npcName];
+    if (!baseBrain) return { action: 'idle' };
+    const brain = await this._resolveBrainForOrg(npcName, officeContext.orgId) || baseBrain;
     const _thinkStart = Date.now();
     const rt = this._rt(officeContext);
 
@@ -1936,6 +2094,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     const urgentWake = Boolean(
       officeContext?.urgentWake
       || officeContext?.wakeReason
+      || this._directives.has(npcName)
       || rt.directives.has(npcName)
       || rt.pendingSkillResults.has(npcName),
     );
@@ -1946,7 +2105,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         action: 'work',
         location: 'desk',
         taskPhase: 'continuing',
-        thought: 'Continuing current task.',
+        thought: 'Taking a moment given current office activity.',
         message: null,
         save: null,
         outcome: 'ok',
@@ -1967,8 +2126,8 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         action: 'work',
         location: 'desk',
         taskPhase: 'continuing',
-        message: 'Reviewing last tool output at my desk.',
-        thought: 'Skill result pending — finishing that first.',
+        message: 'Reviewing the fresh tool output in context of the current office state.',
+        thought: 'Skill result just came back — using it with awareness of ongoing projects and team work.',
         save: null,
         outcome: 'ok',
       }, officeContext);
@@ -1981,11 +2140,12 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         cycles: rt.thinkCycles[npcName] || 0,
         lastDecision: rt.lastDecisions[npcName] || null,
         taskProgress: rt.taskProgress[npcName] || null,
-        hasDirective: rt.directives?.has(npcName),
+        hasDirective: this._directives.has(npcName) || rt.directives?.has(npcName),
         pendingSkill: rt.pendingSkillResults?.has(npcName),
         realWorkMode: this._resolveAutonomousRealWork(npcName, officeContext),
         cyclesSinceSkill: rt.cyclesSinceSkillRun?.[npcName] || 0,
         realWorkThreshold: promptTuning?.realWorkCyclesWithoutSkill ?? 6,
+        forceLlm: Boolean(officeContext?.forceLlm),
       };
       if (!officeDirector.needsLlm(npcName, directorCtx)) {
         const hEarly = this._hierarchy[npcName];
@@ -2177,6 +2337,21 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
 
     const companyContext = this._getCompanyContext(npcName);
 
+    // Live office awareness — narrative summary so NPCs speak with real awareness
+    // instead of generic "continuing". Built from actual recent work, directives,
+    // skill results, and mesh/crm state when available.
+    let liveAwareness = '';
+    try {
+      const recent = (rt.recentWork || []).slice(0, 3);
+      const recentSummary = recent.length
+        ? 'Recent activity: ' + recent.map(w => `${w.npc || 'Someone'}: ${w.note || w.message || ''}`).join('; ') + '.'
+        : 'The office is relatively quiet at the moment.';
+      const meshNote = officeContext?.meshStatus ? ` Current mesh: ${officeContext.meshStatus}.` : ' Mesh status unknown — consider checking health-check.';
+      const crmNote = officeContext?.crmSummary ? ` Current CRM: ${officeContext.crmSummary}.` : '';
+      const businessNote = officeContext?.businessContext ? ` Business focus: ${officeContext.businessContext}.` : '';
+      liveAwareness = `## Current Office Awareness (use this to be specific and aware)\n${recentSummary}${meshNote}${crmNote}${businessNote}\nSpeak naturally and in full sentences about what is actually happening right now. Reference the real recent activity, current mesh/CRM/pipeline state, other NPCs' work, and company goals. Be proactive and autonomous — if the context shows blockers or opportunities (e.g. mesh at 0 nodes blocking research, overdue CRM tasks, OMES teaming needs attention), initiate useful actions like running skills (research, crm-*, market-watch), delegating to the right person, announcing in office, or advancing the goal instead of passive or generic status.`;
+    } catch (_) {}
+
     // Level 1 — Code awareness: inject a source-file snippet for code roles.
     // Skip entirely for roles that work with data/briefs rather than code.
     // For active workers (last action was 'work' or 'read') use 60% chance;
@@ -2320,9 +2495,9 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
     const moodBlock = mood !== 'neutral' ? `## Current Mood\nMood: ${mood}. ${moodHints[mood] || ''}\n\n` : '';
 
     // Directive inbox — prepended prominently so it can't be missed
-    const directive = this._directives.get(npcName);
+    const directive = this._directives.get(npcName) || rt.directives.get(npcName);
     const directiveBlock = directive
-      ? `## DIRECT ORDER FROM ${String(directive.from).toUpperCase()}\n${directive.task}\nThis is your mandatory current task. Work on it now. When finished, set taskPhase to "finished" and report back.\n\n`
+      ? `## DIRECT ORDER FROM ${String(directive.from).toUpperCase()}\n${directive.task}\nThis is your mandatory current task. At your desk, use action run_skill with the right skill (research, github, coding-agent, etc.) — then on a later cycle set taskPhase to "finished" and save a report artifact.\n\n`
       : '';
 
     // Granted permissions — explicitly approved scopes; NPC must not re-ask
@@ -2390,6 +2565,7 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         recentConversations,
         continuitySection,
         officeContext,
+        liveAwareness,
         nearbyFurniture,
         roomAffinity,
         fatigueHint,
@@ -2473,7 +2649,7 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
     const realWorkThreshold = promptTuning?.realWorkCyclesWithoutSkill ?? 3;
     const realWorkOn = autonomousRealWork;
 
-    if (realWorkOn && !rt.directives.has(npcName) && OPENCLAW_SKILL_ROLES.has(brain.role)) {
+    if (realWorkOn && !this._directives.has(npcName) && !rt.directives.has(npcName) && OPENCLAW_SKILL_ROLES.has(brain.role)) {
       if (pendingSkill) {
         nudges.push('Skill result is waiting — read it, then taskPhase "finished" + save (report artifact). Do not run_skill again until you finish.');
       } else if (sinceSkill >= realWorkThreshold && !rt.pendingSkillResults.has(npcName)) {
@@ -2509,6 +2685,16 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
     if (worldState?.environment?.meetingInProgress) {
       nudges.push('A meeting is already in progress — do not call another. Work, talk at desks, or take a break.');
     }
+    try {
+      const businessContext = require('./denizen-business-context');
+      const proactiveNudge = businessContext.buildThinkNudge(
+        { proactive_signals: businessContext.detectProactiveSignals(businessContext.loadBusinessModel(), '') },
+        npcName,
+      );
+      if (proactiveNudge && ['Marcus', 'Sarah', 'Abby', 'Lucy', 'Pier', 'Bob', 'Roki', 'Oscar', 'Dan'].includes(npcName)) {
+        nudges.push(proactiveNudge);
+      }
+    } catch (_) {}
 
     const nudge = nudges.length > 0 ? nudges[Math.floor(Math.random() * nudges.length)] : '';
 
@@ -2516,10 +2702,30 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       ? `You have a codebase snippet in your context (## Codebase Snippet). You are actively reading/reviewing this code RIGHT NOW. Reference specific function names, line numbers, or observations from it in your "message" and "save" fields. Don't say you "are reading" — say WHAT you found.\n\n`
       : '';
 
+    const hasDirective = Boolean(directive);
+    const directiveSkill = hasDirective
+      ? this._inferMissingRunSkill(npcName, { thought: directive.task, save: directive.task }, officeContext)
+      : null;
+    const mustRunSkill = hasDirective
+      || (autonomousRealWork && currentTask?.sprint && !pendingSkill)
+      || (autonomousRealWork && sinceSkill >= realWorkThreshold && !pendingSkill && currentTask);
+
+    const jsonExample = mustRunSkill
+      ? (directiveSkill === 'coding-agent'
+        ? '{"action":"run_skill","skill":"coding-agent","skillParams":{"task":"directive task","targetFiles":["README.md"]},"thought":"one sentence","message":"Running coding-agent at my desk","target":"","location":"desk","taskPhase":"continuing","save":"starting coding task","outcome":"ok"}'
+        : directiveSkill === 'github'
+          ? '{"action":"run_skill","skill":"github","skillParams":{"task":"directive task"},"thought":"one sentence","message":"Running github at my desk","target":"","location":"desk","taskPhase":"continuing","save":"starting github task","outcome":"ok"}'
+          : '{"action":"run_skill","skill":"research","skillParams":{"query":"your topic","read":1},"thought":"one sentence","message":"Running tool at my desk","target":"","location":"desk","taskPhase":"continuing","save":"starting tool run","outcome":"ok"}')
+      : '{"action":"work","thought":"one sentence","message":"under 120 chars or empty","target":"","location":"desk","taskPhase":"continuing","save":"brief status note — never claim shipped/fixed unless run_skill ran","outcome":"ok","skill":""}';
+
+    const actionFooter = mustRunSkill
+      ? 'IMPORTANT: You have a DIRECT ORDER or sprint deliverable. Choose action run_skill THIS cycle at desk (location:desk). Set skill and skillParams. Do not pick work/visit/talk instead unless finishing a prior skill result.'
+      : 'IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 min) or you have a DIRECT ORDER. Do not pick run_skill on most cycles.';
+
     const userPrompt = leanThink
       ? promptBudget.compactThinkUserPrompt(nudge, codeInstruction)
-      : `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Decide what to do next. Respond with ONE JSON object only:
-{"action":"work","thought":"one sentence","message":"under 120 chars or empty","target":"","location":"desk","taskPhase":"continuing","save":"brief status note — never claim shipped/fixed unless run_skill ran","outcome":"ok","skill":""}
+      : `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Decide what to do next. Respond with ONLY the JSON object — no analysis, preamble, or chain-of-thought:
+${jsonExample}
 
 ACTION MEANINGS:
 - talk/collaborate/report: interact with a specific coworker (set target)
@@ -2532,7 +2738,7 @@ ACTION MEANINGS:
 - meeting: go to the conference room for a meeting. Set target to whoever you want there — they will physically walk to the conference room and join you. Set location: conference. Use when you need to review work, plan something, or sync with someone face-to-face. Example: {"action":"meeting","target":"Josh","location":"conference","message":"Josh, quick sync in the conference room?"}
 - run_skill: execute an OpenClaw skill tool. Set skill to the skill name and skillParams to the arguments. Everyone: web-search, research, browserclaw, supabase-bridge. Devs: github/coding-agent. Lucy: job-scraper/job-applier.
 
-IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 min) or you have a DIRECT ORDER. Do not pick run_skill on most cycles.`;
+${actionFooter}`;
 
     // Hard prompt-length guard — estimate tokens (chars/4) and warn if close to
     // a typical 8192 context window. At 43:1 prompt:output ratio the model only
@@ -2603,17 +2809,37 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
   }
 
   /**
-   * Autonomous think LLM call — on main-tier timeout, retry once on lmstudio-fast.
+   * Autonomous think() always uses lmstudio-fast when available — call-kind
+   * routing, not NPC role. Player chat keeps SOUL provider (main tier).
+   */
+  _pinThinkToFastSlot(config, opts = {}) {
+    if (opts.kind !== 'think') return config;
+    if (promptTuning?.thinkUseFastModel === false) return config;
+    const fast = this.providers?.['lmstudio-fast'];
+    if (!fast?.model) return config;
+    return {
+      ...config,
+      ...fast,
+      type: 'lmstudio',
+      providerKey: 'lmstudio-fast',
+    };
+  }
+
+  /**
+   * Autonomous think LLM call — fast slot first; on main-tier timeout, retry once on lmstudio-fast.
    */
   async _callThinkWithFastFallback(npcName, brain, systemPrompt, userPrompt, opts) {
+    const thinkConfig = this._pinThinkToFastSlot(brain.providerConfig, { kind: 'think' });
     const messages = [{ role: 'user', content: userPrompt }];
     try {
-      return await this._callProvider(brain.providerConfig, systemPrompt, messages, opts);
+      return await this._callProvider(thinkConfig, systemPrompt, messages, opts);
     } catch (err) {
       const msg = String(err?.message || err);
+      if (!/timeout/i.test(msg)) throw err;
+      if (thinkConfig.providerKey === 'lmstudio-fast') throw err;
       const onMain = brain.provider === 'lmstudio'
         || brain.providerConfig?.providerKey === 'lmstudio';
-      if (!/timeout/i.test(msg) || !onMain || !this.providers['lmstudio-fast']) {
+      if (!onMain || !this.providers['lmstudio-fast']) {
         throw err;
       }
       log.npcError(npcName, 'think timeout on main LM — retrying lmstudio-fast');
@@ -2649,6 +2875,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
   }
 
   async _callLocalRouted(config, systemPrompt, messages, opts = {}, attempt = 0) {
+    config = this._pinThinkToFastSlot(config, opts);
     let routed = config;
     if (lmStudioRouter?.isEnabled?.()) {
       const tier = config.providerKey === 'lmstudio-fast' ? 'fast' : 'main';
@@ -3085,11 +3312,12 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     }
 
     return new Promise((resolve, reject) => {
+      const altMessages = promptBudget.enforceAlternation(messages);
       const oaiMessages = [
         { role: 'system', content: systemPrompt },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
+        ...altMessages.map(m => ({ role: m.role, content: m.content })),
       ];
-      if (messages.length === 0) {
+      if (altMessages.length === 0) {
         oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
       }
       const body = JSON.stringify({
@@ -3174,6 +3402,7 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
    * `getPlayerResponse` sets this; autonomous `think()` does not.
    */
   _callLocal(config, systemPrompt, messages, opts = {}) {
+    config = this._pinThinkToFastSlot(config, opts);
     return new Promise((resolve, reject) => {
       const job = { config, systemPrompt, messages, opts, resolve, reject };
       if (opts.priority === 'high') {
@@ -3224,8 +3453,13 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     const maxTokens = opts.maxTokens || 150;
     const sliceLen = opts.sliceLen || 150;
 
+    const altMessages = promptBudget.enforceAlternation(messages);
+
     // Telemetry hook — tag lmstudio vs lmstudio-fast (config.type is always 'lmstudio').
-    const _tel = this._makeTelHook(config?.providerKey || config?.type || 'lmstudio', config, messages, opts);
+    const _tel = this._makeTelHook(config?.providerKey || config?.type || 'lmstudio', config, altMessages, {
+      ...opts,
+      conversationMsgs: opts.conversationMsgs ?? altMessages.length,
+    });
     const _telRecord = (extra) => {
       if (extra && extra.error) {
         const wrapped = new Error(formatProviderError(extra.error));
@@ -3238,9 +3472,9 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
 
     const oaiMessages = [
       { role: 'system', content: systemPrompt },
-      ...messages.map(m => ({ role: m.role, content: m.content })),
+      ...altMessages.map(m => ({ role: m.role, content: m.content })),
     ];
-    if (messages.length === 0) {
+    if (altMessages.length === 0) {
       oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
     }
 
@@ -3393,7 +3627,11 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
     });
     req.on('error', (err) => { markFailure(); done(); _telRecord({ error: err }); reject(err); });
     const timeoutMs = opts.kind === 'think'
-      ? (promptTuning?.lmThinkTimeoutMs ?? 120000)
+      ? (config.providerKey === 'lmstudio-fast'
+        ? (promptTuning?.lmThinkFastTimeoutMs ?? 45000)
+        : (promptTuning?.lmThinkTimeoutMs ?? 120000))
+      : opts.kind === 'cofounder'
+        ? (promptTuning?.cofounderLmTimeoutMs ?? 90000)
       : opts.priority === 'high'
         ? (promptTuning?.playerChatTimeoutMs ?? 45000)
         : 180000;
@@ -3525,15 +3763,19 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       parts.recentConversations ? `## Recent chat\n${parts.recentConversations}` : '',
       parts.continuitySection ? `## Last decision\n${parts.continuitySection}` : '',
       parts.inboxText ? `## Inbox\n${parts.inboxText}` : '',
+      liveAwareness ? liveAwareness : '',
       parts.officeContext?.description ? `## Office\n${parts.officeContext.description}` : '',
       parts.nearbyFurniture ? `## Nearby\n${parts.nearbyFurniture}` : '',
       parts.roomAffinity ? `## Hangout\n${parts.roomAffinity}` : '',
       parts.fatigueHint ? `## Energy\n${parts.fatigueHint}` : '',
       `## Rules\n${parts.hierarchyRules || ''}\nManage: ${parts.managesStr}. Report to: ${parts.reportsToStr}.`,
       parts.actionWeightHint ? `## Balance\n${parts.actionWeightHint}` : '',
-      `You are ${npcName}, ${brain.role}. Pick the next office action.`,
+      `You are ${npcName}, ${brain.role}.`,
+      '',
+      'Respond in natural, conversational language that demonstrates real awareness of the current situation, recent events, other NPCs\' work, and company goals. Reference specific live details (e.g. "The mesh on .232 is still at zero nodes but...", "Marcus updated the OMES deal...", "Fresh health check shows...").',
+      'Show autonomy — proactively decide useful next actions (research, delegate, announce, use tools, or advance real work) instead of generic status. Avoid templated phrases like "continuing current task".',
+      'The "thought" and "message" fields in your JSON must be written as full, natural, human-like paragraphs that a real aware teammate would say — reference the specific live office awareness (mesh status, CRM, recent work, other NPCs, goals). The JSON is ONLY for the system to extract action/location/etc.; the text must read conversationally and show autonomy. Avoid any robotic or templated language.',
       brain.voiceAnchor || '',
-      'Respond with EXACTLY ONE JSON object (no other text).',
     ].filter(Boolean);
     return blocks.join('\n\n');
   }
@@ -3544,8 +3786,8 @@ IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 m
       capabilitiesBlock, currentTaskSection, assistantProfileBlock,
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
-      demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock,
-      visitorTeamOverlay, visitorPurposeOverlay,
+      demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock, businessBlock,
+      visitorTeamOverlay, visitorPurposeOverlay, marketBlock, infraBlock,
     } = sections;
     const coworkerShort = String(coworkerContext || '').split('\n').slice(0, 5).join('\n');
     return `${brain.thinkIdentity || brain.personality}${memorySection}${visitorPurposeOverlay ? `\n\n${visitorPurposeOverlay}` : ''}${visitorTeamOverlay ? `\n\n${visitorTeamOverlay}` : ''}${ceoHistorySection}${bouncerLiveSection}${bouncerReplyRules}
@@ -3554,6 +3796,9 @@ ${demoToolBlock || ''}
 ${lucySkillGateBlock || ''}
 ${visitorWorkBlock || ''}
 ${crmBlock || ''}
+${businessBlock || ''}
+${marketBlock || ''}
+${infraBlock || ''}
 ${currentTaskSection}
 ${assistantProfileBlock}${pendingHandoffsBlock}${researchBlock}
 ## Role
@@ -3571,10 +3816,55 @@ ${respondSectionTitle}
 ${respondRules}
 ## Rules
 ${rulesTail}
+Speak naturally and with real awareness and autonomy. Reference the current office state (use live details like mesh on .232, OMES, CRM pipeline, recent work by team), recent activities, other NPCs' actions, and company goals in full sentences. Proactively suggest or act on opportunities/blockers. Avoid any scripted, templated, or generic replies. Be a real, aware teammate who knows what's happening.
 ${brain.voiceAnchor || ''}`;
   }
 
-  async _loadCrmContextForChat(npcName, message) {
+  async _fetchMarketObservation() {
+    const rh = require('./robinhood-mcp');
+    return rh.runMarketObservation();
+  }
+
+  _formatRokiMarketBrief(data) {
+    const quotes = Array.isArray(data?.quotes) ? data.quotes : [];
+    if (!quotes.length) {
+      return "Hmm — quote feed's quiet right now. Give me a sec and ask again?";
+    }
+    const bits = quotes.slice(0, 5).map((q) => {
+      const price = Number(q.price || 0).toFixed(2);
+      const ch = q.changePercent != null
+        ? ` (${q.changePercent > 0 ? '+' : ''}${Number(q.changePercent).toFixed(2)}%)`
+        : '';
+      return `${q.symbol} $${price}${ch}`;
+    });
+    const movers = (data.movers || []).slice(0, 2).map((m) => `${m.symbol} ${m.changePercent > 0 ? '+' : ''}${m.changePercent}%`);
+    const src = quotes[0]?.source && quotes[0].source !== 'robinhood' ? ' (Yahoo fallback)' : '';
+    let line = `Okay — quick look${src}: ${bits.join(', ')}.`;
+    if (movers.length) line += ` Biggest movers: ${movers.join(', ')}.`;
+    if (data.buyingPower != null) {
+      line += ` Agentic buying power about $${Number(data.buyingPower).toFixed(0)}.`;
+    }
+    line += ' Just my read — not advice.';
+    return line.length > 480 ? `${line.slice(0, 477)}…` : line;
+  }
+
+  async _loadBusinessContextForChat(npcName, message, orgId = null) {
+    try {
+      const businessContext = require('./denizen-business-context');
+      if (!businessContext.shouldInjectForNpc(npcName)
+        && !businessContext.isBusinessRelatedMessage(message)) {
+        return '';
+      }
+      const denizenDb = require('./denizen-db');
+      const oid = orgId || denizenDb.orgId;
+      const snapshot = await businessContext.buildSnapshot({ orgId: oid, npcName });
+      return businessContext.buildPromptBlock(snapshot, 1200);
+    } catch (_) {
+      return '';
+    }
+  }
+
+  async _loadCrmContextForChat(npcName, message, orgId = null) {
     let crmPersonas = null;
     try { crmPersonas = require('./denizen-crm-npc-personas'); } catch (_) {}
     if (!crmPersonas?.isCrmRelatedMessage?.(message)) return '';
@@ -3583,8 +3873,10 @@ ${brain.voiceAnchor || ''}`;
       const denizenDb = require('./denizen-db');
       const crmStore = require('./denizen-crm-store');
       const crmSetup = require('./denizen-crm-setup');
-      if (!denizenDb.enabled || !denizenDb.orgId) return '';
-      const row = await crmStore.getWorkspace(denizenDb.orgId);
+      const oid = orgId || denizenDb.orgId;
+      if (!denizenDb.enabled || !oid) return '';
+      if (denizenDb.orgId && String(oid) !== String(denizenDb.orgId)) return '';
+      const row = await crmStore.getWorkspace(oid);
       if (!row?.state) return '';
       const setup = crmSetup.buildSetupSummary(row.state);
       return crmPersonas.buildPlayerChatCrmBlock(npcName, setup);
@@ -3593,11 +3885,152 @@ ${brain.voiceAnchor || ''}`;
     }
   }
 
+  _inferMissingRunSkill(npcName, decision, officeContext = null) {
+    const rt = officeContext ? this._rt(officeContext) : null;
+    const directive = this._directives.get(npcName) || rt?.directives?.get(npcName);
+    const taskBlob = [
+      directive?.task,
+      rt?.taskProgress?.[npcName]?.task,
+      this._taskProgress[npcName]?.task,
+      decision.thought,
+      decision.save,
+      decision.message,
+      decision.skillParams?.task,
+      decision.skillParams?.query,
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    if (/\b(pdf-dossier|partnership-dossier|technical-dossier|dossier)\b/.test(taskBlob)) {
+      return 'pdf-dossier';
+    }
+    if (/\b(coding-agent|code|readme|pr\b|pull request|implement|patch|refactor)\b/.test(taskBlob)) {
+      return 'coding-agent';
+    }
+    if (/\b(github|issue|ci\b)\b/.test(taskBlob)) return 'github';
+    if (/\b(research|look up|google)\b/.test(taskBlob)) return 'research';
+
+    const brain = this.brains[npcName];
+    const role = String(brain?.role || '').toLowerCase();
+    if (/developer|devops|qa engineer/.test(role)) return 'coding-agent';
+    if (role.includes('researcher')) return 'research';
+    return null;
+  }
+
   _normalizeThinkDecision(npcName, decision, officeContext = null) {
     if (!decision) return decision;
     const h = this._hierarchy[npcName];
     const rt = officeContext ? this._rt(officeContext) : null;
     const pendingSkillResults = rt?.pendingSkillResults || this._pendingSkillResults;
+
+    if (decision.action === 'run_skill' && !String(decision.skill || '').trim()) {
+      const inferred = this._inferMissingRunSkill(npcName, decision, officeContext);
+      if (inferred) {
+        decision.skill = inferred;
+        decision._skillInferred = true;
+        log.info('ThinkRepair', `${npcName} run_skill missing skill -> ${inferred}`);
+      } else {
+        decision.action = 'work';
+        decision.skill = null;
+        decision.skillParams = null;
+        decision.message = decision.message || 'Tool name missing — continuing at desk.';
+        decision.thought = decision.thought || 'run_skill had no skill field; staying at desk.';
+      }
+    }
+
+    if (decision.action === 'run_skill' && String(decision.skill || '').trim()) {
+      const skill = String(decision.skill).trim().toLowerCase();
+      decision.skillParams = decision.skillParams || {};
+      const directive = this._directives.get(npcName) || rt?.directives?.get(npcName);
+
+      if (skill === 'research') {
+        const hasQuery = String(
+          decision.skillParams.query || decision.skillParams.q || decision.skillParams.topic || '',
+        ).trim();
+        if (!hasQuery) {
+          const q = [
+            directive?.task,
+            decision.skillParams.task,
+            decision.thought,
+            decision.save,
+            decision.message,
+          ].filter(Boolean).join(' ').trim().slice(0, 400);
+          if (q) {
+            decision.skillParams.query = q;
+            if (decision.skillParams.read == null) decision.skillParams.read = 1;
+            log.info('ThinkRepair', `${npcName} research missing query -> filled from context`);
+          }
+        }
+      }
+
+      if (skill === 'pdf-dossier') {
+        const task = decision.skillParams.task || directive?.task || decision.thought || '';
+        if (!decision.skillParams.task && directive?.task) {
+          decision.skillParams.task = directive.task;
+        }
+        const blob = task.toLowerCase();
+        if (!decision.skillParams.type) {
+          if (/partnership|teaming|rm cyber/.test(blob)) decision.skillParams.type = 'partnership-dossier';
+          else if (/technical|denizen/.test(blob)) decision.skillParams.type = 'technical-dossier';
+        }
+        if (!decision.skillParams.recipient && /rm cyber/.test(blob)) {
+          decision.skillParams.recipient = 'RM Cyber';
+        }
+        if (!decision.skillParams.subject) {
+          decision.skillParams.subject = decision.skillParams.type === 'technical-dossier' ? 'denizen' : '1921';
+        }
+        if (decision.skillParams.type === 'technical-dossier' && !decision.skillParams.facts_ref) {
+          decision.skillParams.facts_ref = 'HEAD';
+        }
+      }
+
+      if (skill === 'coding-agent') {
+        const task = decision.skillParams.task || directive?.task || decision.thought || '';
+        if (!decision.skillParams.task && directive?.task) {
+          decision.skillParams.task = directive.task;
+        }
+        if (!decision.skillParams.targetFiles?.length && task) {
+          try {
+            const { inferTargetFilesFromTask } = require('./coding-task-runner');
+            const files = inferTargetFilesFromTask(task, []);
+            if (files.length) {
+              decision.skillParams.targetFiles = files;
+              log.info('ThinkRepair', `${npcName} coding-agent inferred targetFiles: ${files.join(', ')}`);
+            }
+          } catch (_) {}
+        }
+      }
+    }
+
+    const directive = this._directives.get(npcName) || rt?.directives?.get(npcName);
+    const pendingSkill = pendingSkillResults?.has(npcName);
+    if (directive && !pendingSkill) {
+      const passive = ['work', 'wander', 'visit', 'break', 'coffee', 'check', 'talk', 'collaborate', 'meeting', 'read'];
+      const needsForce = passive.includes(decision.action)
+        || (decision.action === 'run_skill' && !String(decision.skill || '').trim());
+      if (needsForce) {
+        const skill = this._inferMissingRunSkill(
+          npcName,
+          { ...decision, thought: directive.task, save: directive.task },
+          officeContext,
+        );
+        if (skill) {
+          decision.action = 'run_skill';
+          decision.skill = skill;
+          decision.skillParams = {
+            ...(decision.skillParams || {}),
+            task: directive.task,
+          };
+          if (skill === 'coding-agent' && !decision.skillParams.targetFiles?.length) {
+            const files = [];
+            if (/\breadme\b/i.test(directive.task)) files.push('README.md');
+            if (files.length) decision.skillParams.targetFiles = files;
+          }
+          decision.location = 'desk';
+          decision.taskPhase = decision.taskPhase || 'continuing';
+          decision._directiveForced = true;
+          log.info('DirectiveForce', `${npcName} -> run_skill ${skill}`);
+        }
+      }
+    }
 
     if (decision.action === 'meeting') {
       if (!this._lastNpcMeetingAt) this._lastNpcMeetingAt = new Map();
@@ -3619,7 +4052,7 @@ ${brain.voiceAnchor || ''}`;
 
     if (npcName === 'Bouncer' && decision.action === 'run_skill') {
       const sk = String(decision.skill || '').toLowerCase();
-      if (['nmap', 'zenmap', 'wireshark', 'linux-agent', 'desktop-agent', 'computer-use-agent'].includes(sk)) {
+      if (['nmap', 'zenmap', 'wireshark', 'desktop-agent', 'computer-use-agent'].includes(sk)) {
         decision.action = 'talk';
         decision.skill = null;
         decision.skillParams = null;
@@ -3850,9 +4283,11 @@ ${brain.voiceAnchor || ''}`;
       this._updateMood(npcName, 'long_work_streak');
     }
 
-    if (decision.taskPhase === 'finished' && rt.directives.has(npcName)) {
-      const dir = rt.directives.get(npcName);
+    if (decision.taskPhase === 'finished' && (this._directives.has(npcName) || rt.directives.has(npcName))) {
+      const dir = this._directives.get(npcName) || rt.directives.get(npcName);
+      this._directives.delete(npcName);
       rt.directives.delete(npcName);
+      this._savePersistedDirectives();
       if (decision.action !== 'report') {
         decision.action = 'report';
         decision.target = dir.from;
@@ -4018,15 +4453,15 @@ ${brain.voiceAnchor || ''}`;
     const seed = (npcName.length * 7 + cycles * 13) % 100;
     const pool = task
       ? [
-          { action: 'work',   thought: `Continuing: ${task.slice(0, 60)}` },
-          { action: 'work',   thought: `Heads-down on ${task.slice(0, 50)}` },
-          { action: 'wander', thought: 'Stretching while I think this through' },
+          { action: 'work',   thought: `Continuing work on: ${task.slice(0, 60)} given current office priorities` },
+          { action: 'work',   thought: `Heads-down on ${task.slice(0, 50)} — aware of the active sprint and mesh/CRM state` },
+          { action: 'wander', thought: 'Stretching while thinking through the current situation' },
         ]
       : [
-          { action: 'work',   thought: `Getting into the ${role} flow` },
-          { action: 'wander', thought: 'Quick lap to clear my head' },
-          { action: 'check',  thought: 'Skimming what others are working on' },
-          { action: 'work',   thought: 'Picking up where I left off' },
+          { action: 'work',   thought: `Getting into the ${role} flow while staying aware of team activity` },
+          { action: 'wander', thought: 'Quick lap to clear my head and observe the office' },
+          { action: 'check',  thought: 'Skimming what others are actually working on right now' },
+          { action: 'work',   thought: 'Picking up where I left off with full awareness of recent events' },
         ];
     const pick = pool[seed % pool.length];
     return {
@@ -4239,8 +4674,9 @@ ${brain.voiceAnchor || ''}`;
   }
 
   async getPlayerResponse(npcName, message, opts = {}) {
-    const brain = this.brains[npcName];
-    if (!brain) return { text: `(${npcName} nods)`, delegation: null, actions: [] };
+    const baseBrain = this.brains[npcName];
+    if (!baseBrain) return { text: `(${npcName} nods)`, delegation: null, actions: [] };
+    const brain = await this._resolveBrainForOrg(npcName, opts.orgId) || baseBrain;
 
     const emitVoiceLine = (text) => {
       const t = String(text || '').trim();
@@ -4342,6 +4778,35 @@ ${brain.voiceAnchor || ''}`;
       this._recordAssistantDecision(npcName, { action: 'chat', summary: responseText, outcome: 'ok' }, opts);
       return { text: responseText, delegation: null, actions: [] };
     }
+
+    try {
+      const officeStatusBrief = require('./office-status-brief');
+      if (officeStatusBrief.isOfficeStatusQuery(safeMessage) && worldState) {
+        const orgId = opts.orgId || worldState.getDefaultOrgId?.() || null;
+        const ws = orgId ? worldState.forOrg(orgId) : worldState;
+        const responseText = officeStatusBrief.buildBrief(ws);
+        pushPlayerMemory(playerName, safeMessage);
+        pushPlayerMemory(npcName, responseText);
+        this._recordAssistantDecision(npcName, { action: 'office_status', summary: responseText, outcome: 'ok' }, opts);
+        emitVoiceLine(responseText);
+        return { text: responseText, delegation: null, actions: [] };
+      }
+    } catch (_) {}
+
+    if (npcName === 'Roki' && npcCapabilities?.isMarketQuestion?.(safeMessage)) {
+      try {
+        const marketData = await this._fetchMarketObservation();
+        const responseText = this._formatRokiMarketBrief(marketData);
+        pushPlayerMemory(playerName, safeMessage);
+        pushPlayerMemory(npcName, responseText);
+        this._recordAssistantDecision(npcName, { action: 'market_brief', summary: responseText, outcome: 'ok' }, opts);
+        emitVoiceLine(responseText);
+        return { text: responseText, delegation: null, actions: [] };
+      } catch (err) {
+        console.warn('[NpcBrains] Roki market brief failed:', err?.message || err);
+      }
+    }
+
     const rawMemory = brain.longTermMemory || '';
     const memCap = promptTuning?.playerChatMemoryChars ?? 500;
     const memorySection = rawMemory.length > 50
@@ -4506,22 +4971,51 @@ ${brain.voiceAnchor || ''}`;
           const op = require('./denizen-crm-operator');
           crmLine = op.formatRunSkillLine();
         } catch (_) {}
-        return `\n## Execute tools for your teammate\nWhen they ask you to DO something, append at the end: [RUN_SKILL:skill-name:{"param":"value"}]. Skills: research, github, coding-agent, browserclaw, supabase, denizen-data (${crmLine}), health-check, remediate, docker-sandbox, cloud-vm (DevOps), and CEO-approved custom skills.\nIf no existing skill fits: run research first, then the server skill-gap pipeline will search GitHub and draft build-skill for Dolonia's approval — tell them you're packaging a proposal.\nDo NOT promise a new skill works until Dolonia approves it in Account → Skills.\nDevOps (Oscar, Abby, Edward): docker-sandbox or cloud-vm for isolated workloads; health-check + remediate (incl. restart-lm-studio) when mesh or LM Studio is unhealthy.\n${opts.resource_pressure_block || ''}\n${opts.taskAdvice?.prompt_block || ''}\n`;
+        return `\n## Execute tools for your teammate\nWhen they ask you to DO something, append at the end: [RUN_SKILL:skill-name:{"param":"value"}]. Skills: research, github, coding-agent, browserclaw, supabase, denizen-data (${crmLine}), health-check, remediate, docker-sandbox, cloud-vm (DevOps), and CEO-approved custom skills.\nCRM contact/deal writes use denizen-data (crm-add-contact, crm-add-deal, etc.) — never browserclaw or a browser for CRM data entry.\nIf no existing skill fits: run research first, then the server skill-gap pipeline will search GitHub and draft build-skill for Dolonia's approval — tell them you're packaging a proposal.\nDo NOT promise a new skill works until Dolonia approves it in Account → Skills.\nDevOps (Oscar, Abby, Edward): docker-sandbox or cloud-vm for isolated workloads; health-check + remediate (incl. restart-lm-studio) when mesh or LM Studio is unhealthy.\n${opts.resource_pressure_block || ''}\n${opts.taskAdvice?.prompt_block || ''}\n`;
       })()
       : '';
 
     let crmBlock = '';
     try {
-      crmBlock = await this._loadCrmContextForChat(npcName, safeMessage) || '';
+      crmBlock = await this._loadCrmContextForChat(npcName, safeMessage, opts.orgId) || '';
       if (crmBlock) crmBlock = `\n${crmBlock}\n`;
     } catch (_) {}
+
+    let businessBlock = '';
+    try {
+      const denizenDb = require('./denizen-db');
+      businessBlock = await this._loadBusinessContextForChat(
+        npcName,
+        safeMessage,
+        opts.orgId || denizenDb.orgId,
+      ) || '';
+      if (businessBlock) businessBlock = `\n${businessBlock}\n`;
+    } catch (_) {}
+
+    let marketBlock = '';
+    if (npcName === 'Roki' && npcCapabilities?.isMarketQuestion?.(safeMessage)) {
+      try {
+        const marketData = await this._fetchMarketObservation();
+        const brief = this._formatRokiMarketBrief(marketData);
+        marketBlock = `\n## Live market data (authoritative — answer in Roki's voice, 2-3 sentences)\n${brief}\n`;
+      } catch (_) {}
+    }
+
+    let infraBlock = '';
+    if (npcName === 'Grok') {
+      try {
+        const liveInfra = require('./live-infra-brief');
+        infraBlock = await liveInfra.buildPromptBlock();
+      } catch (_) {}
+    }
 
     const chatSections = {
       memorySection, ceoHistorySection, bouncerLiveSection, bouncerReplyRules,
       capabilitiesBlock, currentTaskSection, assistantProfileBlock,
       pendingHandoffsBlock, researchBlock, coworkerContext, playerRoleLine,
       chainOfCommand, roleActions, respondSectionTitle, respondRules, rulesTail,
-      demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock,
+      demoToolBlock, visitorWorkBlock, lucySkillGateBlock, crmBlock, businessBlock, marketBlock,
+      infraBlock,
       visitorTeamOverlay, visitorPurposeOverlay,
     };
     const systemPrompt = promptTuning?.compactPlayerChat !== false
@@ -4531,7 +5025,10 @@ ${capabilitiesBlock ? `\n${capabilitiesBlock}\n` : ''}
 ${demoToolBlock || ''}
 ${lucySkillGateBlock || ''}
 ${visitorWorkBlock || ''}
-${sections.crmBlock || ''}
+${crmBlock || ''}
+${businessBlock || ''}
+${marketBlock || ''}
+${infraBlock || ''}
 ${currentTaskSection}
 ${teamStatus}
 
@@ -5220,8 +5717,19 @@ ${brain.voiceAnchor || ''}`;
     if (!folder) return false;
     const soulPath = path.join(__dirname, '..', 'npcs', folder, 'SOUL.md');
     try {
-      brain.personality = fs.readFileSync(soulPath, 'utf-8');
-      return true;
+      if (denizenDb?.enabled && denizenDb.orgId) {
+        denizenDb.getAgentSoul(denizenDb.orgId, folder).then((row) => {
+          if (row?.soul_content) {
+            this._applySoulContentToBrain(npcName, row.soul_content, row.memory_content || '', 'database');
+            return;
+          }
+          const soul = fs.readFileSync(soulPath, 'utf-8');
+          this._applySoulContentToBrain(npcName, soul, brain.longTermMemory || '', 'file');
+        }).catch(() => {});
+        return true;
+      }
+      const soul = fs.readFileSync(soulPath, 'utf-8');
+      return this._applySoulContentToBrain(npcName, soul, brain.longTermMemory || '', 'file');
     } catch (err) {
       console.warn(`[NpcBrains] reloadSoul(${npcName}) failed: ${err.message}`);
       return false;
@@ -5421,7 +5929,14 @@ ${brain.voiceAnchor || ''}`;
    * Push a mandatory task directive from one NPC to another.
    */
   assignDirective(targetNpc, fromNpc, task, urgent = false) {
-    this._directives.set(targetNpc, { from: fromNpc, task, ts: Date.now(), urgent });
+    const entry = { from: fromNpc, task, ts: Date.now(), urgent };
+    this._directives.set(targetNpc, entry);
+    if (this._officeRuntimes) {
+      for (const rt of this._officeRuntimes.values()) {
+        rt.directives.set(targetNpc, entry);
+      }
+    }
+    this._savePersistedDirectives();
     log.info('Directive', `${fromNpc} → ${targetNpc}: "${String(task).slice(0, 60)}"`);
     if (typeof this._thinkWakeFn === 'function') {
       this._thinkWakeFn(targetNpc, urgent ? 'urgent_directive' : 'directive', { urgent: true });
@@ -5438,6 +5953,39 @@ ${brain.voiceAnchor || ''}`;
       if (directive) out[name] = directive;
     }
     return out;
+  }
+
+  _loadPersistedDirectives() {
+    try {
+      if (!fs.existsSync(this._directivesPath)) return;
+      const raw = JSON.parse(fs.readFileSync(this._directivesPath, 'utf8'));
+      const entries = raw?.directives && typeof raw.directives === 'object' ? raw.directives : {};
+      for (const [name, directive] of Object.entries(entries)) {
+        if (!directive?.task) continue;
+        this._directives.set(name, {
+          from: String(directive.from || 'system'),
+          task: String(directive.task),
+          ts: Number(directive.ts) || Date.now(),
+          urgent: !!directive.urgent,
+        });
+      }
+    } catch (err) {
+      console.warn('[NpcBrains] Failed to load npc-directives.json:', String(err?.message || err));
+    }
+  }
+
+  _savePersistedDirectives() {
+    try {
+      const directives = {};
+      for (const [name, directive] of this._directives.entries()) {
+        if (directive) directives[name] = directive;
+      }
+      const dir = path.dirname(this._directivesPath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(this._directivesPath, JSON.stringify({ directives, updated_at: Date.now() }, null, 2));
+    } catch (err) {
+      console.warn('[NpcBrains] Failed to save npc-directives.json:', String(err?.message || err));
+    }
   }
 
   setThinkWake(fn) {

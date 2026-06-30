@@ -15,8 +15,10 @@ function parseFolderList(raw) {
     .filter(Boolean);
 }
 
+/** Trim loaded brains to demo roster only when explicitly opted in (CEO office keeps full team). */
 function publicDemoNpcFolders(env = process.env) {
   if (!envBool(env.DENIZEN_PUBLIC_DEMO)) return null;
+  if (!envBool(env.DENIZEN_PUBLIC_DEMO_TRIM_BRAINS)) return null;
   return parseFolderList(env.DENIZEN_PUBLIC_DEMO_NPCS);
 }
 

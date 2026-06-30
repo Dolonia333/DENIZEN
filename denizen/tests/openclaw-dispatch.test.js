@@ -186,7 +186,18 @@ describe('extractSearchQuery', () => {
     assert.equal(extractSearchQuery('hey lucy serch the web for dog types'), 'dog types');
   });
   it('does not treat dog types as a search when no search verb', () => {
-    assert.equal(extractSearchQuery('tell me about dog types'), null);
+    assert.equal(extractSearchQuery('tell me about dog types'), 'dog types');
+  });
+  it('handles natural lookup phrasing', () => {
+    assert.equal(extractSearchQuery('what is LangSmith'), 'LangSmith');
+    assert.equal(extractSearchQuery('find out about remote AI jobs'), 'remote AI jobs');
+    assert.equal(extractSearchQuery('can you find info on LangSmith pricing'), 'LangSmith pricing');
+    assert.equal(extractSearchQuery('look into competitor agent frameworks'), 'competitor agent frameworks');
+    assert.equal(extractSearchQuery('look something up about goldendoodles'), 'goldendoodles');
+  });
+  it('rejects lookup about Lucy herself', () => {
+    assert.equal(extractSearchQuery('what is your name'), null);
+    assert.equal(extractSearchQuery('tell me about yourself'), null);
   });
   it('returns null for non-search chat', () => {
     assert.equal(extractSearchQuery('hello Lucy'), null);
@@ -237,6 +248,8 @@ describe('extractScreenControlIntent', () => {
   it('does not steal read-only observe', () => {
     assert.equal(extractScreenControlIntent('do you see it'), false);
     assert.equal(extractScreenControlIntent('watch what im doing'), false);
+    assert.equal(extractScreenControlIntent('enter John Smith into the CRM'), false);
+    assert.equal(extractOpenBrowserIntent('open the CRM and add John Smith'), false);
   });
 });
 

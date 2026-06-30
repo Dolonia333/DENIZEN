@@ -23,6 +23,17 @@ describe('denizen-crm-npc-personas extended skills', () => {
     assert.equal(inferCrmAction('give me a CRM pipeline brief')?.skill, 'crm-pipeline-brief');
   });
 
+  it('infers business-context-brief for OMES cross-check', () => {
+    const plan = inferCrmAction(
+      'cross-check our CRM pipeline against the OMES EV00000919 bid — what is the blocker?',
+    );
+    assert.equal(plan?.skill, 'business-context-brief');
+  });
+
+  it('Marcus can run business-context-brief', () => {
+    assert.equal(canNpcRunSkill('Marcus', 'business-context-brief'), true);
+  });
+
   it('infers intake triage business action', () => {
     assert.equal(inferBusinessAction('triage new intake forms')?.skill, 'intake-triage');
   });

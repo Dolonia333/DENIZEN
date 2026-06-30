@@ -78,7 +78,8 @@ async function main() {
     }
 
     // Take screenshot
-    await page.screenshot({ path: outputPath, fullPage: fullpage === "true" });
+    const fullPage = fullpage === "true";
+    await page.screenshot({ path: outputPath, fullPage });
 
     const result = {
       success: true,

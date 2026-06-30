@@ -222,6 +222,18 @@
       .mcp-set-jobs strong { color: #cbd5e1; font-weight: 600; }
       .mcp-addon-title { margin-top: 12px; margin-bottom: 2px; }
       .mcp-addon-note { margin-bottom: 8px; }
+      .mcp-addon-prominent {
+        border-color: rgba(251, 191, 36, 0.35);
+        background: rgba(251, 191, 36, 0.06);
+      }
+      .mcp-addon-section-title {
+        margin: 0 0 6px;
+        color: #fbbf24;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
       .mcp-token-row {
         border-top: 1px solid #1e293b;
         padding-top: 8px;
@@ -248,7 +260,7 @@
   }
 
   const JOB_CATEGORIES = [
-    { label: 'CRM', tools: ['crm_pipeline_brief', 'crm_list_tasks', 'crm_draft_email'] },
+    { label: 'CRM', tools: ['crm_pipeline_brief', 'business_context_brief', 'crm_list_tasks', 'crm_draft_email'] },
     { label: 'Coding & skills', tools: ['run_skill', 'list_skills'] },
     {
       label: 'Team & tasks',
@@ -404,7 +416,7 @@
       hostEl.innerHTML = `
         <p class="mcp-set-hint">Connect Cursor or Claude to Denizen for CRM, coding, research, and office jobs — one MCP URL.</p>
         <p class="mcp-set-empty">Claim an assistant in chat first, then return here to connect.</p>`;
-      renderOptionalAddons(hostEl);
+      renderOptionalAddons(hostEl, { prominent: true });
       return;
     }
 
@@ -419,8 +431,10 @@
 
     hostEl.innerHTML = `
       <p class="mcp-set-hint">Your Denizen URL runs CRM, coding-agent, research, mockups, and team jobs via <code>run_skill</code> — connect once in Cursor or Claude.</p>
-      <div class="mcp-set" id="mcp-set-denizen"></div>`;
+      <div class="mcp-set" id="mcp-set-denizen"></div>
+      <div id="mcp-set-addons"></div>`;
     const denizenHost = hostEl.querySelector('#mcp-set-denizen');
+    const addonsHost = hostEl.querySelector('#mcp-set-addons');
 
     for (const row of infos) {
       const card = document.createElement('div');
@@ -467,7 +481,7 @@
       denizenHost.appendChild(card);
     }
 
-    renderOptionalAddons(hostEl);
+    renderOptionalAddons(addonsHost, { prominent: true });
     await renderActiveTokens(hostEl);
   }
 
@@ -557,21 +571,23 @@
     hostEl.appendChild(wrap);
   }
 
-  function renderOptionalAddons(hostEl) {
+  function renderOptionalAddons(hostEl, { prominent = false } = {}) {
     if (!OPTIONAL_ADDONS.length) return;
     const title = document.createElement('p');
-    title.className = 'mcp-set-hint mcp-addon-title';
-    title.textContent = 'Optional add-ons';
+    title.className = prominent ? 'mcp-addon-section-title' : 'mcp-set-hint mcp-addon-title';
+    title.textContent = prominent ? 'Optional: Robinhood trading MCP' : 'Optional add-ons';
     hostEl.appendChild(title);
     const note = document.createElement('p');
     note.className = 'mcp-set-sub mcp-addon-note';
-    note.textContent = 'Robinhood is separate — trading quotes only. CRM, coding, and office work use your Denizen URL above.';
+    note.textContent = prominent
+      ? 'Separate from Denizen above — live quotes & portfolio for Roki. CRM, coding, and office work stay on your Denizen URL.'
+      : 'Robinhood is separate — trading quotes only. CRM, coding, and office work use your Denizen URL above.';
     hostEl.appendChild(note);
     const wrap = document.createElement('div');
     wrap.className = 'mcp-set';
     for (const ext of OPTIONAL_ADDONS) {
       const card = document.createElement('div');
-      card.className = 'mcp-set-card';
+      card.className = prominent ? 'mcp-set-card mcp-addon-prominent' : 'mcp-set-card';
       card.innerHTML = `
         <div class="mcp-set-head">
           <strong>${escHtml(ext.title)}</strong>
@@ -679,7 +695,12 @@
       <div class="mcp-card">
         <h3>Connect your AI to ${displayName}</h3>
         <p class="mcp-scope-line">Token scopes: ${escHtml(scopeLine)}</p>
-        <p>CRM, coding, research, and team jobs run through this connection (<code>run_skill</code>, CRM tools). Robinhood is a separate optional add-on for trading only.</p>
+        <p>CRM, coding, research, and team jobs run through this connection (<code>run_skill</code>, CRM tools).</p>
+        <div class="mcp-rh-box" style="margin:10px 0;padding:10px 12px;border:1px solid rgba(251,191,36,0.35);border-radius:10px;background:rgba(251,191,36,0.06);">
+          <strong style="color:#fbbf24;">Robinhood (optional, separate)</strong>
+          <p style="margin:6px 0 8px;color:#94a3b8;font-size:12px;line-height:1.45;">Trading-only second MCP for live quotes &amp; portfolio (Roki). Not included in the Denizen URL — add manually in Cursor if you want it.</p>
+          <code style="font-size:11px;word-break:break-all;">https://agent.robinhood.com/mcp/trading</code>
+        </div>
         <div class="mcp-tabs">
           <button type="button" class="mcp-tab active" data-tab="oauth">1-Click<span class="mcp-badge">Easiest</span></button>
           <button type="button" class="mcp-tab" data-tab="companion">Companion</button>

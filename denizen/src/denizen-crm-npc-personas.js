@@ -8,6 +8,7 @@
 const CRM_READ_SKILLS_LIST = [
   'crm-summary', 'crm-setup-status', 'crm-list-pipeline', 'crm-list-tasks', 'crm-at-risk',
   'crm-list-industries', 'crm-list-tickets', 'crm-get-intake-link', 'crm-pipeline-brief',
+  'business-context-brief',
   'crm-recommend-package', 'crm-qualify-deal', 'crm-enrich-contact', 'crm-audit-workspace',
   'crm-export-snapshot', 'crm-draft-followup', 'intake-triage', 'lead-monitor',
   'rfp-pipeline-summary', 'proposal-outline', 'outcome-standup', 'org-benchmark',
@@ -77,6 +78,7 @@ const SKILL_OWNERS = {
   'crm-audit-workspace': 'Pier',
   'crm-export-snapshot': 'Pier',
   'crm-pipeline-brief': 'Abby',
+  'business-context-brief': 'Marcus',
   'crm-setup-wizard': 'Sarah',
   'crm-draft-followup': 'Roki',
   'outcome-standup': 'Abby',
@@ -259,6 +261,12 @@ function inferBusinessAction(message) {
   if (/\b(standup|outcome|shipped|team progress)\b/i.test(msg)) {
     return { skill: 'outcome-standup', params: { task: msg }, source: 'infer-business' };
   }
+  try {
+    const officeStatus = require('./office-status-brief');
+    if (officeStatus.isOfficeStatusQuery(msg)) {
+      return { skill: 'outcome-standup', params: { task: msg, hours: 24 }, source: 'infer-office-status' };
+    }
+  } catch (_) {}
   if (/\b(convert|intake)\b.*\bclient\b/i.test(msg)) {
     return { skill: 'intake-to-client', params: { task: msg }, source: 'infer-business' };
   }
@@ -272,6 +280,12 @@ function inferCrmAction(message) {
   const params = () => ({ ...parseCrmParams(msg), task: msg });
 
   if (!isCrmRelatedMessage(msg)) return null;
+
+  if (/\b(omes|ev\d{6,}|teaming|business context)\b/i.test(msg)
+    || (/\b(blocker|critical)\b/i.test(msg) && /\b(bid|solicitation|pipeline|crm)\b/i.test(msg))
+    || (/\b(cross.?check|compare)\b/i.test(msg) && /\b(pipeline|crm)\b/i.test(msg) && /\b(bid|solicitation)\b/i.test(msg))) {
+    return { skill: 'business-context-brief', params: params(), source: 'infer-crm-business' };
+  }
 
   if (/\b(pipeline|crm)\b.*\bbrief\b/i.test(msg) || /\bbrief\b.*\b(pipeline|crm)\b/i.test(msg)) {
     return { skill: 'crm-pipeline-brief', params: params(), source: 'infer-crm' };
@@ -446,7 +460,11 @@ function inferCrmAction(message) {
     return { skill: 'crm-get-intake-link', params: params(), source: 'infer-crm' };
   }
 
-  if (/\b(add|create|log|new)\b.*\bcontact\b/i.test(msg) || /\bcontact\b.*\b(add|create|log)\b/i.test(msg)) {
+  if (/\b(?:enter|add|put|log|save|create|type|insert)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+(?:into|to|in)\s+(?:the\s+)?(?:crm|meridian|contacts?)\b/i.test(msg)
+    || /\b(enter|add|put|log|save|create|type|insert)\b.*\b(name|contact|person|lead)\b.*\b(crm|meridian|contacts?)\b/i.test(msg)
+    || /\b(crm|meridian|contacts?)\b.*\b(enter|add|put|log|save|create|type|insert)\b.*\b(name|contact|person|lead)\b/i.test(msg)
+    || /\b(add|create|log|new)\b.*\bcontact\b/i.test(msg)
+    || /\bcontact\b.*\b(add|create|log)\b/i.test(msg)) {
     return { skill: 'crm-add-contact', params: params(), source: 'infer-crm' };
   }
   if (/\b(add|create|new|open)\b.*\bdeal\b/i.test(msg) && !/\b(update|move|mark|close|won|lost)\b/i.test(msg)) {
@@ -472,6 +490,12 @@ function parseCrmParams(message) {
 
   const nameM = msg.match(/\b(?:contact|for|named?|add|invite)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
   if (nameM) out.name = nameM[1].trim();
+
+  const enterIntoCrm = msg.match(/\b(?:enter|add|put|log|save|type|insert)\s+(?:a\s+)?(?:name\s+)?(?:for\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:into|to|in)\s+(?:the\s+)?(?:crm|meridian|contacts?)\b/i);
+  if (enterIntoCrm) out.name = enterIntoCrm[1].trim();
+
+  const nameIntoCrm = msg.match(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:into|to|in)\s+(?:the\s+)?(?:crm|meridian|contacts?)\b/i);
+  if (nameIntoCrm && !out.name) out.name = nameIntoCrm[1].trim();
 
   const companyM = msg.match(/\b(?:at|from|company|submission)\s+([A-Z][A-Za-z0-9&.\s-]{2,40})/);
   if (companyM) out.company = companyM[1].trim();
@@ -513,6 +537,22 @@ function deferSkillPlan(message, skill, owner) {
   };
 }
 
+function isCrmDataEntryIntent(message) {
+  const msg = String(message || '');
+  if (!isCrmRelatedMessage(msg)) return false;
+  if (/\b(?:enter|add|put|log|save|create|type|insert)\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\s+(?:into|to|in)\s+(?:the\s+)?(?:crm|meridian|contacts?)\b/i.test(msg)) {
+    return true;
+  }
+  return /\b(enter|add|put|log|save|create|type|insert|update)\b/i.test(msg)
+    && /\b(name|contact|person|lead|email|deal|crm|meridian|contacts?)\b/i.test(msg);
+}
+
+function inferCrmWriteAction(message) {
+  const plan = inferCrmAction(message);
+  if (plan && isWriteSkill(plan.skill)) return plan;
+  return null;
+}
+
 module.exports = {
   CRM_NPC_PERSONAS,
   CRM_READ_SKILLS,
@@ -534,6 +574,8 @@ module.exports = {
   isBusinessRelatedMessage,
   inferBusinessAction,
   inferCrmAction,
+  inferCrmWriteAction,
+  isCrmDataEntryIntent,
   parseCrmParams,
   isWriteSkill,
 };

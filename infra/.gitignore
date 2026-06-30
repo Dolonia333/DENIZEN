@@ -1,4 +1,6 @@
 supabase-upstream/
+# Local NAS/SSH secrets — never commit API keys
+.env
 supabase-project/.env
 supabase-project/.env.old
 supabase-project/DOLONIA_CREDENTIALS.txt

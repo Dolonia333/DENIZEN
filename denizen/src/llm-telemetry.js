@@ -82,7 +82,7 @@ const ERROR_CLASSIFIERS = [
   { re: /aborted|cancel/i, category: 'aborted',
     hint: 'Request was cancelled (timeout or shutdown). Usually not actionable.' },
   { re: /jinja.*template|roles must alternate|conversation roles/i, category: 'role_alternation',
-    hint: 'Chat history has back-to-back user or assistant messages. Mistral/Ministral requires strict alternation. Fixed in npc-brains.js — restart the server.' },
+    hint: 'Chat history had back-to-back user/assistant turns. Server now collapses them before each LM call — restart if this persists after deploy.' },
   { re: /model.*crashed|exit code|has crashed/i, category: 'model_crash',
     hint: 'LM Studio model crashed (likely OOM). LM Studio will auto-reload. Reduce context length or Parallel setting if this recurs.' },
   { re: /model reloaded/i, category: 'model_reloaded',

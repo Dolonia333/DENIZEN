@@ -9,6 +9,7 @@ const JOB_MIN_HARDWARE_SCORE = {
   npc_think_batch: 16,
   inference_rpc: 12,
   sim_tick: 8,
+  web_search: 0,
 };
 
 const LIGHT_NODE_BLOCKED_TYPES = new Set(['embedding_index', 'npc_think_batch']);

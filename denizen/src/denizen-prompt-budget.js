@@ -61,7 +61,7 @@ function compactThinkUserPrompt(nudge, codeInstruction = '') {
   const head = [
     nudge,
     codeInstruction,
-    'Respond with ONE JSON object only.',
+    'Respond with ONLY the JSON object — no analysis, preamble, or chain-of-thought.',
     '{"action":"work|talk|visit|meeting|run_skill|break|wander","thought":"one sentence","message":"≤120 chars or empty","target":"","location":"desk","taskPhase":"continuing|finished","save":"brief note","outcome":"ok","skill":""}',
     'Prefer work or talk. run_skill only on direct order or sprint task.',
   ].filter(Boolean).join('\n\n');
@@ -133,6 +133,18 @@ function enforceAlternation(messages) {
   return out;
 }
 
+/**
+ * Repair chat history for LM calls: alternate roles and drop dangling user
+ * turns left by failed requests (no assistant reply stored).
+ */
+function repairConversationHistory(messages) {
+  let out = enforceAlternation(messages);
+  while (out.length > 0 && out[out.length - 1].role === 'user') {
+    out.pop();
+  }
+  return out;
+}
+
 module.exports = {
   extractThinkIdentity,
   capText,
@@ -140,4 +152,5 @@ module.exports = {
   compactThinkUserPrompt,
   compactChatHistory,
   enforceAlternation,
+  repairConversationHistory,
 };

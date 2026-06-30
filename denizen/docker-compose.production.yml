@@ -16,3 +16,10 @@ services:
       DENIZEN_ECONOMY_MODE: "false"
       DENIZEN_COFOUNDER_LLM: "true"
       DENIZEN_REAL_WORK_MODE: "true"
+      # WSL/Kali nmap patrol is Windows-only; container mode uses TCP probes on NAS.
+      BOUNCER_PATROL: "container"
+      # Route NPC research to visible browser on mesh desktop (LM Studio GPU PC).
+      DENIZEN_MESH_BROWSER: "1"
+      DENIZEN_MESH_BROWSER_HOST: "192.168.1.232"
+      DENIZEN_HOST_IP: "192.168.1.232"
+      BOUNCER_INVESTIGATION_URL: "http://192.168.1.232:8890"

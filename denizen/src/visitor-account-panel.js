@@ -819,7 +819,22 @@
     };
 
     logoutEl?.addEventListener('click', runLogout);
-    rootEl.querySelector('#denizen-acct-demo-upgrade')?.addEventListener('click', runLogout);
+    rootEl.querySelector('#denizen-acct-demo-upgrade')?.addEventListener('click', () => {
+      const api = getSessionApi();
+      if (typeof api?.beginTeamJoinFlow === 'function') {
+        if (busyLogout) return;
+        busyLogout = true;
+        api.beginTeamJoinFlow(null)
+          .catch((err) => {
+            console.warn('[DenizenAccountPanel] team join flow failed:', err?.message || err);
+          })
+          .finally(() => {
+            busyLogout = false;
+          });
+        return;
+      }
+      runLogout();
+    });
     rootEl.querySelector('#denizen-acct-demo-create')?.addEventListener('click', () => {
       globalThis.DenizenVisitorSession?.showDemoAccountModal?.()
         .then((result) => {
@@ -846,8 +861,8 @@
       if (createBtn) createBtn.hidden = !!hasAccount;
       if (copyEl) {
         copyEl.textContent = hasAccount
-          ? 'Demo account saved — log back in anytime from Demo → Log in. Team tools unlock when you join or create a team.'
-          : 'Save your progress with a username and password, or upgrade to a full team later.';
+          ? 'Demo account saved — use Get team access below to join with team code 1921 and your work email.'
+          : 'Save your progress with a username and password, or use Get team access to join the full workspace.';
       }
     } else {
       banner.hidden = true;

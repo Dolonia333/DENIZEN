@@ -391,6 +391,13 @@
       html.denizen-touch:not(.denizen-phone-mode) #denizen-speak-fab {
         bottom: calc(var(--denizen-dock-height, 52px) + 14px + env(safe-area-inset-bottom, 0px));
       }
+      /* Chat has its own speak control — don't stack a second mic over the input row */
+      html.denizen-chat-open #denizen-speak-fab,
+      html.denizen-phone-open #denizen-speak-fab {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.85);
+      }
     `;
     document.head.appendChild(s);
   }

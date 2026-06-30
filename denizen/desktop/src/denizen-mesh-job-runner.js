@@ -3,6 +3,69 @@
 const inferenceRuntime = require('./denizen-inference-runtime');
 const { runEmbeddingIndex } = require('./denizen-embedding-worker');
 const { runSimTick } = require('./denizen-sim-tick');
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+
+function vendorWebSearchScript() {
+  try {
+    const p = require('../jelly/paths').vendorScriptPath('web-search');
+    return p || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+async function runWebSearchJob(payload = {}) {
+  const query = String(payload.query || payload.q || '').trim();
+  if (!query) {
+    return { ok: false, jobType: 'web_search', error: 'query required', completed_at: new Date().toISOString() };
+  }
+  const script = vendorWebSearchScript();
+  if (!script) {
+    return { ok: false, jobType: 'web_search', error: 'web-search.mjs not found', completed_at: new Date().toISOString() };
+  }
+
+  const headless = payload.headless === true ? 'true' : 'false';
+  const lingerMs = Number(process.env.LUCY_SEARCH_LINGER_MS || 120_000);
+
+  return new Promise((resolve) => {
+    const args = ['--query', query, '--headless', headless, '--linger-ms', String(lingerMs)];
+    const proc = spawn(process.execPath, [script, ...args], {
+      cwd: path.dirname(script),
+      env: { ...process.env, LUCY_BROWSER_MODE: process.env.LUCY_BROWSER_MODE || 'auto' },
+      windowsHide: false,
+    });
+    let stdout = '';
+    let stderr = '';
+    proc.stdout?.on('data', (c) => { stdout += c; });
+    proc.stderr?.on('data', (c) => { stderr += c; });
+    proc.on('error', (err) => {
+      resolve({
+        ok: false,
+        jobType: 'web_search',
+        error: err.message,
+        completed_at: new Date().toISOString(),
+      });
+    });
+    proc.on('close', (code) => {
+      let parsed = null;
+      try {
+        const line = stdout.trim().split('\n').filter(Boolean).pop();
+        parsed = line ? JSON.parse(line) : null;
+      } catch (_) {}
+      const summary = parsed?.summary || parsed?.error || stderr.slice(0, 400) || stdout.slice(0, 400);
+      resolve({
+        ok: code === 0 && parsed?.success !== false,
+        jobType: 'web_search',
+        query,
+        summary: summary || 'Browser search finished.',
+        output: summary,
+        parsed,
+        completed_at: new Date().toISOString(),
+      });
+    });
+  });
+}
 
 function mockMeshJob(jobType, payload = {}) {
   const type = String(jobType || '').trim();
@@ -129,6 +192,19 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
       }
     }
     return mockMeshJob(type, safePayload);
+  }
+
+  if (type === 'web_search') {
+    try {
+      return await runWebSearchJob(safePayload);
+    } catch (err) {
+      return {
+        ok: false,
+        jobType: 'web_search',
+        error: err?.message || String(err),
+        completed_at: new Date().toISOString(),
+      };
+    }
   }
 
   return mockMeshJob(type, safePayload);

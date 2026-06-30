@@ -104,6 +104,48 @@ function listAuxiliary() {
     .map((m) => ({ ...m }));
 }
 
+function listAllFleetMachines({ includeHost = true, includeAuxiliary = true } = {}) {
+  const seen = new Set();
+  const out = [];
+
+  const push = (machine) => {
+    if (!machine || isSmokeMachine(machine)) return;
+    const id = String(machine.machine_id || machine.label || '').trim();
+    if (!id || seen.has(id)) return;
+    seen.add(id);
+    out.push({ ...machine });
+  };
+
+  if (includeHost) {
+    const host = getGlobalHostSnapshot();
+    if (host) {
+      const hostId = host.machine_id || `host-${host.hostname || os.hostname()}`;
+      push({
+        ...host,
+        machine_id: hostId,
+        role: host.role || 'host',
+        label: host.label || host.hostname || 'Denizen host',
+      });
+    }
+  }
+
+  if (includeAuxiliary) {
+    for (const aux of listAuxiliary()) push(aux);
+  }
+
+  for (const map of fleetByIdentity.values()) {
+    for (const machine of map.values()) push(machine);
+  }
+
+  const roleOrder = { host: 0, desktop: 1, node: 2, nas: 3, aux: 4 };
+  return out.sort((a, b) => {
+    const ra = roleOrder[a.role] ?? 5;
+    const rb = roleOrder[b.role] ?? 5;
+    if (ra !== rb) return ra - rb;
+    return String(a.label || a.machine_id).localeCompare(String(b.label || b.machine_id));
+  });
+}
+
 function listForIdentity(identityId, { includeHost = true, includeAuxiliary = true } = {}) {
   const map = machineMap(identityId);
   const out = map ? [...map.values()].map((m) => ({ ...m })) : [];
@@ -155,10 +197,10 @@ function sanitizeMachineForViewer(machine) {
 
 function buildFleetSummary(identityId, liveUsage = null, options = {}) {
   const isOperator = options.isOperator === true;
-  const fleet = listForIdentity(identityId, {
-    includeHost: isOperator,
-    includeAuxiliary: isOperator,
-  })
+  const id = String(identityId || '').trim();
+  const fleet = (id
+    ? listForIdentity(id, { includeHost: isOperator, includeAuxiliary: isOperator })
+    : listAllFleetMachines({ includeHost: isOperator, includeAuxiliary: isOperator }))
     .map((m) => (isOperator ? m : sanitizeMachineForViewer(m)))
     .filter(Boolean);
 
@@ -283,6 +325,7 @@ module.exports = {
   upsertAuxiliary,
   listAuxiliary,
   listForIdentity,
+  listAllFleetMachines,
   buildFleetSummary,
   sanitizeMachineForViewer,
   isOperatorOnlyMachine,

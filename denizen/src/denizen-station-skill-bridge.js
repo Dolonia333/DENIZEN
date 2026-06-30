@@ -82,6 +82,20 @@ function resolveStationRoute(skill, skillParams = {}, { fallbackMessage = '' } =
     };
   }
 
+  if (key === 'web-search' || key === 'research') {
+    const query = taskText(skillParams, fallbackMessage) || 'general office news';
+    return {
+      kind: 'web_search',
+      skill: key,
+      instruction: `Open a visible browser on this computer and search for: ${query}`,
+      payload: {
+        query,
+        headless: false,
+        source_skill: key,
+      },
+    };
+  }
+
   if (FILE_SKILLS.has(key)) {
     const pathVal = skillParams.path || skillParams.file || taskText(skillParams, fallbackMessage);
     if (key === 'file-write') {

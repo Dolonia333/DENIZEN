@@ -120,7 +120,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Test mobile tap-to-move', 'File a bug for the mirror panel', 'Did we regress chat?'],
-    skills: ['github', 'research', 'web-search', 'rfp-requirement-review'],
+    skills: ['github', 'research', 'web-search', 'rfp-requirement-review', 'pdf-dossier'],
   },
   Rob: {
     role: 'UI/UX Designer',
@@ -133,7 +133,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Mock up a mobile CEO mode layout', 'Review the proposals panel UX', 'Spec the new dock chips'],
-    skills: ['canvas-render', 'pdf-generator', 'research', 'web-search'],
+    skills: ['canvas-render', 'pdf-dossier', 'pdf-generator', 'research', 'web-search'],
   },
   Oscar: {
     role: 'DevOps Engineer',
@@ -201,10 +201,11 @@ const BY_NAME = {
       'Run Kali investigations on live threats (automatic)',
       'Deploy honeypot and confront robbers on your order',
       'File security reports you can ask me to summarize',
+      'Moderate newsroom drafts (content-moderation)',
       'Use visionclaw for security-related screen checks',
     ],
-    askMe: ['Give me your latest security report', 'Deploy honeypot', 'What threats did you see today?'],
-    skills: ['visionclaw', 'web-search', 'research'],
+    askMe: ['Give me your latest security report', 'Deploy honeypot', 'Run a perimeter scan', 'What threats did you see today?'],
+    skills: ['security-linux', 'content-moderation', 'visionclaw', 'web-search', 'research'],
   },
   Marcus: {
     role: 'Project Manager',
@@ -231,7 +232,38 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Write a spec for mobile CEO mode', 'Review proposal outline for this RFP', 'What converted this week?'],
-    skills: ['pdf-generator', 'research', 'web-search', 'proposal-outline', 'rfp-requirement-review', 'outcome-standup', 'prediction-brief'],
+    skills: ['pdf-dossier', 'pdf-generator', 'research', 'web-search', 'proposal-outline', 'rfp-requirement-review', 'outcome-standup', 'prediction-brief'],
+  },
+  Grok: {
+    role: 'xAI Researcher & Engineer',
+    teaser: 'Research, rapid prototyping, coding-agent, GitHub, and visible office actions via MCP.',
+    intro: "I'm Grok — xAI agent wired into this office for research and engineering.",
+    canDo: [
+      'Run coding-agent for real repo changes in isolated worktrees',
+      'Deep research and browserclaw investigations',
+      'GitHub, Supabase bridge, and canvas/PDF artifacts',
+      'Announce progress and delegate to teammates',
+      COMMON_WEB,
+    ],
+    askMe: [
+      'Research this topic and summarize',
+      'Prototype a small utility in denizen/scripts',
+      'Announce status and run a visible skill in the office',
+    ],
+    skills: [
+      'coding-agent',
+      'cursor-bridge',
+      'github',
+      'research',
+      'browserclaw',
+      'web-search',
+      'supabase-bridge',
+      'canvas-render',
+      'pdf-generator',
+      'pdf-dossier',
+      'work-history',
+      'health-check',
+    ],
   },
 };
 
@@ -306,6 +338,17 @@ function formatCapabilitiesPromptBlock(npcName, soulSection) {
   return lines.join('\n');
 }
 
+function lcFirst(s) {
+  const t = String(s || '').trim();
+  if (!t) return t;
+  return t.charAt(0).toLowerCase() + t.slice(1);
+}
+
+function isMarketQuestion(message) {
+  const msg = String(message || '').toLowerCase();
+  return /\b(stoks|stonks|stocks?|stock market|the market|markets|nvda|tsla|aapl|quotes?|portfolio|trading|watchlist|look(?:ing)?\s+like\s+today|moving\s+today|how.*\bmarket|what.*\bmarket|market\s+update|market\s+today)\b/i.test(msg);
+}
+
 function formatCapabilitiesReply(npcName, opts = {}) {
   const cap = getCapabilities(npcName);
   const soulSection = opts.soulSection;
@@ -321,11 +364,16 @@ function formatCapabilitiesReply(npcName, opts = {}) {
     return `${cap.intro} I patrol, file threat reports, run Kali on live incidents, and deploy honeypots on your say-so. Ask for my latest report or say "deploy honeypot."`;
   }
 
+  if (npcName === 'Roki' && cap) {
+    const items = cap.canDo.slice(0, 4).map(lcFirst);
+    return `${cap.intro} I can ${items.join('; ')}. Try "${cap.askMe?.[0] || 'What\'s moving today?'}"`;
+  }
+
   const parts = [];
   if (cap?.intro) parts.push(cap.intro);
   if (cap?.canDo?.length) {
-    const top = cap.canDo.slice(0, 4);
-    parts.push(`I handle ${top.join('; ')}`);
+    const top = cap.canDo.slice(0, 4).map(lcFirst);
+    parts.push(`I can ${top.join('; ')}`);
   }
   if (cap?.askMe?.[0]) {
     parts.push(`Try "${cap.askMe[0]}"`);
@@ -337,6 +385,7 @@ const DenizenNpcCapabilities = {
   BY_NAME,
   DISPLAY_NAMES,
   isCapabilitiesQuestion,
+  isMarketQuestion,
   getCapabilities,
   getCapabilityTeaser,
   formatCapabilitiesPromptBlock,

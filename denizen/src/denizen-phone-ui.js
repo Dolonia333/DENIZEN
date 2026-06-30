@@ -85,7 +85,12 @@
     { id: 'mesh', icon: '⬡', label: 'Power Grid', type: 'panel', trigger: '#denizen-mesh-jobs-chip', panel: '#denizen-mesh-jobs-panel',
       c: ['#818cf8', '#3730a3'], badgeFrom: '#denizen-mesh-jobs-chip' },
     { id: 'approvals', icon: '📋', label: 'Approvals', type: 'panel', trigger: '#denizen-proposals-chip', panel: '#denizen-proposals-panel',
-      c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip', available: () => true },
+      c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip', available: () => {
+        const caps = globalThis.DenizenVisitorCapabilities;
+        if (caps?.isCeo?.() || caps?.canApproveSkills?.()) return true;
+        const sess = globalThis.DenizenVisitorSession;
+        return !!(sess?.isCeoPrincipal?.() || sess?.getProfile?.()?.canApproveSkills);
+      } },
     { id: 'newsroom', icon: '📰', label: 'Newsroom', type: 'panel', trigger: '#denizen-content-pipeline-chip', panel: '#denizen-content-pipeline-panel',
       c: ['#f97316', '#c2410c'], badgeFrom: '#denizen-content-pipeline-chip', available: () => true },
     { id: 'npcteam', icon: '🏢', label: 'Office Team', type: 'panel', panel: '#denizen-npc-team-panel',
@@ -93,7 +98,10 @@
       open: () => window.DenizenVisitorNpcTeamUI?.show?.(), close: () => window.DenizenVisitorNpcTeamUI?.hide?.(),
       available: () => true },
     { id: 'browser', icon: '🌐', label: 'Browser', type: 'panel', trigger: '#denizen-browser-mirror-chip', panel: '#denizen-browser-mirror-panel',
-      c: ['#38bdf8', '#0369a1'] },
+      c: ['#38bdf8', '#0369a1'],
+      available: () => true,
+      open: () => { ensureBrowserMirrorReady().catch(() => {}); },
+      close: () => window.DenizenBrowserMirror?.hide?.() },
     { id: 'security', icon: '🛡️', label: 'Security', type: 'panel', trigger: '#denizen-security-chip', panel: '#denizen-security-feed',
       c: ['#f87171', '#7f1d1d'] },
     { id: 'profile', icon: '🪪', label: 'Citizen ID', type: 'special-profile', c: ['#2dd4bf', '#0f766e'] },
@@ -364,8 +372,74 @@
     return !!(sess?.isCeoPrincipal?.() || sess?.getProfile?.()?.canApproveSkills);
   }
 
+  const BROWSER_MIRROR_SRC = './src/browser-mirror-panel.js?v=lucymirror6';
+
+  function browserMirrorScriptUrl() {
+    const tagged = document.querySelector('script[src*="browser-mirror-panel"]');
+    if (tagged?.src) return tagged.src;
+    return BROWSER_MIRROR_SRC;
+  }
+  let browserMirrorLoadPromise = null;
+
   function kickLazyLoad() {
     try { globalThis.DenizenLazyScripts?.loadDeferred?.(); } catch (_) {}
+    if (!window.DenizenBrowserMirror) {
+      loadBrowserMirrorScript().catch(() => {});
+    }
+  }
+
+  function loadBrowserMirrorScript() {
+    if (window.DenizenBrowserMirror) return Promise.resolve(true);
+    if (browserMirrorLoadPromise) return browserMirrorLoadPromise;
+    browserMirrorLoadPromise = (async () => {
+      try {
+        if (globalThis.DenizenLazyScripts?.loadDeferred) {
+          await globalThis.DenizenLazyScripts.loadDeferred();
+          if (window.DenizenBrowserMirror) return true;
+        }
+        if (globalThis.DenizenLazyScripts?.load) {
+          await globalThis.DenizenLazyScripts.load([BROWSER_MIRROR_SRC]);
+          if (window.DenizenBrowserMirror) return true;
+        }
+      } catch (_) {}
+      const existing = document.querySelector('script[src*="browser-mirror-panel"]');
+      if (existing && !window.DenizenBrowserMirror) {
+        const ok = await waitFor(() => !!window.DenizenBrowserMirror, 12_000);
+        if (ok) return true;
+      }
+      if (!existing) {
+        await new Promise((resolve) => {
+          const s = document.createElement('script');
+          s.src = browserMirrorScriptUrl();
+          s.async = true;
+          s.onload = () => resolve();
+          s.onerror = () => resolve();
+          document.head.appendChild(s);
+        });
+        const ok = await waitFor(() => !!window.DenizenBrowserMirror, 12_000);
+        if (ok) return true;
+      }
+      return !!(document.getElementById('denizen-browser-mirror-panel')
+        || document.getElementById('denizen-browser-mirror-chip'));
+    })();
+    return browserMirrorLoadPromise;
+  }
+
+  async function ensureBrowserMirrorReady() {
+    const ok = await loadBrowserMirrorScript();
+    if (!ok && !window.DenizenBrowserMirror) return false;
+    scheduleSyncScreenVars();
+    try {
+      window.DenizenBrowserMirror?.show?.();
+    } catch (_) {}
+    scheduleSyncScreenVars();
+    return await waitFor(() => {
+      const el = document.getElementById('denizen-browser-mirror-panel');
+      if (!el || !el.classList.contains('open')) return false;
+      const r = el.getBoundingClientRect();
+      if (r.width > 8 && r.height > 8) return true;
+      return document.documentElement.getAttribute('data-denizen-phone-app') === 'browser';
+    }, 12_000);
   }
 
   function waitFor(test, timeoutMs, stepMs = 250) {
@@ -1467,7 +1541,8 @@
         border-radius: 12px;
       }
 
-      html.denizen-phone-open #${FAB_ID} {
+      html.denizen-phone-open #${FAB_ID},
+      html.denizen-chat-open:not(.denizen-phone-open) #${FAB_ID} {
         opacity: 0;
         pointer-events: none;
         transform: scale(0.85);
@@ -1649,10 +1724,23 @@
       }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel.open,
       ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
+      ${M}[${APP_ATTR}="browser"] #denizen-browser-mirror-panel.open,
       ${M}[${APP_ATTR}="newsroom"] #denizen-content-pipeline-panel.open {
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
+      }
+      ${M}[${APP_ATTR}="browser"] #denizen-browser-mirror-panel.open .bm-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      ${M}[${APP_ATTR}="browser"] #denizen-browser-mirror-panel.open .bm-viewport {
+        flex: 1 1 auto;
+        min-height: 120px;
+        max-height: none;
       }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel .nt-body,
       ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
@@ -2569,6 +2657,22 @@
       return;
     }
 
+    if (app.id === 'browser') {
+      showPlaceholder(`Loading ${app.label}…`);
+      const ready = await ensureBrowserMirrorReady();
+      if (token !== loadingToken || currentApp?.id !== app.id) return;
+      if (!ready) {
+        showPlaceholder(`${app.label} couldn't load — hard-refresh (Ctrl+Shift+R) and try again.`, true);
+        setTimeout(() => { if (currentApp?.id === app.id) goHome(false); }, 3200);
+        return;
+      }
+      hidePlaceholder();
+      armPanelWatch(app);
+      scheduleSyncScreenVars();
+      document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
+      return;
+    }
+
     // Tool not loaded yet? Kick the lazy loader and wait for it right here.
     if (!$(app.panel) && !$(app.trigger)) {
       showPlaceholder(`Loading ${app.label}…`);
@@ -2908,6 +3012,7 @@
     phoneLayout = normalizePhoneLayout(readPhoneLayout());
     buildGrid();
     prefetchCrmBundle();
+    kickLazyLoad();
     shellEl.classList.add('open');
     fabEl?.classList.add('active');
     document.documentElement.classList.add('denizen-phone-open');
@@ -2993,6 +3098,8 @@
     document.documentElement.style.setProperty('--denizen-dock-height', '0px');
 
     document.addEventListener('denizen-deferred-scripts-ready', markScriptsSettled);
+    document.addEventListener('denizen-browser-mirror-ready', () => setTimeout(refreshAppStatuses, 50));
+    loadBrowserMirrorScript().catch(() => {});
     document.addEventListener('denizen-visitor-session-ready', () => setTimeout(refreshAppStatuses, 500));
     document.addEventListener('denizen-visitor-profile-updated', () => setTimeout(refreshAppStatuses, 100));
     document.addEventListener('denizen-visitor-profile-switching', () => setTimeout(refreshAppStatuses, 100));

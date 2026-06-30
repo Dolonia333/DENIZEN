@@ -47,10 +47,11 @@
 
   function visitorCanUseRealTools() {
     const sess = globalThis.DenizenVisitorSession;
-    if (!sess?.getSessionId?.()) return false;
-    if (globalThis.DenizenVisitorCapabilities?.canUseRealTools) {
-      return globalThis.DenizenVisitorCapabilities.canUseRealTools();
-    }
+    const caps = globalThis.DenizenVisitorCapabilities;
+    if (caps?.isCeo?.() || caps?.canUseRealTools?.()) return true;
+    if (sess?.isCeoPrincipal?.()) return true;
+    // Local CEO play has no visitor session — full browser mirror access.
+    if (!sess?.getSessionId?.()) return true;
     return !sess.isDemo?.();
   }
 
@@ -381,6 +382,23 @@
     document.head.appendChild(style);
   }
 
+  function browserRunsLocally() {
+    try {
+      const h = window.location.hostname;
+      return h === 'localhost' || h === '127.0.0.1';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function idleBrowserHint(npcKey) {
+    const name = npcDisplayName(npcKey);
+    if (browserRunsLocally()) {
+      return `Tell ${name} to <strong>search</strong> something. A Chromium window opens on this PC — the live picture also appears here.`;
+    }
+    return `Tell ${name} to <strong>search</strong> something. The browser runs on the server — the live feed appears in this 🌐 panel (no separate window on your PC).`;
+  }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -502,6 +520,15 @@
   function buildUI() {
     injectStyles();
     if (chipEl && panelEl) return;
+    const existingChip = document.getElementById(CHIP_ID);
+    const existingPanel = document.getElementById(PANEL_ID);
+    if (existingChip && existingPanel) {
+      chipEl = existingChip;
+      panelEl = existingPanel;
+      rewireTouch();
+      syncChipAccess();
+      return;
+    }
     chipEl = document.createElement('button');
     chipEl.id = CHIP_ID;
     chipEl.type = 'button';
@@ -553,7 +580,7 @@
             <img class="bm-live" data-bm-live="1" alt="" aria-hidden="true">
             <div class="bm-control-banner" data-bm="control-banner"></div>
             <div class="bm-idle" data-bm="idle">
-              Tell ${npcDisplayName(boundNpcKey)} to <strong>search</strong> something. Their Playwright browser opens on this PC — the live picture appears here within a few seconds.
+              ${idleBrowserHint(boundNpcKey)}
             </div>
           </div>
         </div>
@@ -1216,6 +1243,10 @@
     }
     if (!hasStaleSnapshot()) snapshotShown = false;
     setChipState();
+    if ((patch?.searching || patch?.open || patch?.status === 'searching') && !browserChipLocked()) {
+      ensureShell();
+      setPanelOpen(true);
+    }
     if (panelOpen) { ensureShell(); updatePanel(); }
     if (panelOpen && pollIntervalMs() !== prevMs) schedulePoll();
   }
@@ -1271,7 +1302,15 @@
       }
     } catch (_) {}
     window.DenizenBrowserMirror = {
-      show() { buildUI(); ensureShell(); setPanelOpen(true); },
+      show() {
+        buildUI();
+        if (browserChipLocked()) {
+          showLockedPanel();
+          return;
+        }
+        ensureShell();
+        setPanelOpen(true);
+      },
       hide() { setPanelOpen(false); },
       toggle: togglePanel,
       rewireTouch,
@@ -1288,6 +1327,9 @@
       state: () => ({ ...state }),
     };
     console.log('[BrowserMirror] live feed ready (WS primary + buffered frame poll)');
+    try {
+      document.dispatchEvent(new CustomEvent('denizen-browser-mirror-ready'));
+    } catch (_) {}
   }
 
   if (document.readyState === 'loading') {

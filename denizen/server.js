@@ -9,6 +9,7 @@ const SecurityMonitorServer = require('./security-monitor-server');
 const CofounderAgent = require('./src/cofounder-agent');
 const NpcBrainManager = require('./src/npc-brains');
 const ambientDialogue = require('./src/ambient-dialogue');
+const npcPeerWorkStatus = require('./src/npc-peer-work-status');
 const promptTuning = require('./src/prompt-tuning');
 const worldState = require('./src/world-state');
 const agentBus = require('./src/agent-bus');
@@ -52,6 +53,45 @@ function npcDisplayToFolder(name) {
     (e) => e.display === raw || e.folder === raw.toLowerCase(),
   );
   return entry?.folder || raw.toLowerCase();
+}
+
+function rosterDisplayNameFromChat(msg) {
+  const name = String(msg?.npcName || '').trim();
+  if (name) {
+    const entry = (npcRoster.entries || []).find(
+      (e) => e.display.toLowerCase() === name.toLowerCase(),
+    );
+    if (entry) return entry.display;
+  }
+  const key = String(msg?.npcKey || '').trim();
+  if (key && npcRoster.keyToDisplay?.[key]) return npcRoster.keyToDisplay[key];
+  const folder = key.replace(/^xp_/, '').toLowerCase();
+  if (folder) return npcFolderToDisplay(folder);
+  return name || 'Unknown';
+}
+
+function resolvePlayerChatNpc(msg) {
+  const brains = npcBrains?.brains || {};
+  const hasBrain = (candidate) => {
+    const n = String(candidate || '').trim();
+    if (!n) return null;
+    if (brains[n]) return n;
+    return Object.keys(brains).find((k) => k.toLowerCase() === n.toLowerCase()) || null;
+  };
+  const candidates = [
+    msg?.npcName,
+    npcRoster.keyToDisplay?.[msg?.npcKey],
+    npcFolderToDisplay(String(msg?.npcKey || '').replace(/^xp_/, '')),
+  ];
+  for (const candidate of candidates) {
+    const hit = hasBrain(candidate);
+    if (hit) return { npcName: hit, displayName: hit, hasBrain: true };
+  }
+  return {
+    npcName: null,
+    displayName: rosterDisplayNameFromChat(msg),
+    hasBrain: false,
+  };
 }
 
 function _persistChatTurn({ identityId, sessionId, npcName, role, content }) {
@@ -99,9 +139,12 @@ const desktopAgent = require('./src/desktop-agent');
 const desktopPermissionBridge = require('./src/desktop-permission-bridge');
 const stationRouter = require('./src/denizen-station-router');
 const linuxAgent = require('./src/linux-agent');
+const bouncerInvestigation = require('./src/bouncer-investigation');
+const linuxAgentBridge = bouncerInvestigation.createLinuxAgentBridge();
 const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
+const dossierSystem    = require('./src/dossier-system');
 const taskChain        = require('./src/task-chain');
 const contentPipeline  = require('./src/content-pipeline');
 const { startContentPipelineScheduler } = require('./src/content-pipeline-scheduler');
@@ -137,6 +180,8 @@ const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
 const computeQueue     = require('./src/denizen-compute-queue');
 const playerChatSkills = require('./src/player-chat-skill-bridge');
+const officeStatusBrief = require('./src/office-status-brief');
+const crmNpcPersonas = require('./src/denizen-crm-npc-personas');
 const taskResourceAdvisor = require('./src/task-resource-advisor');
 const skillGapOrchestrator = require('./src/skill-gap-orchestrator');
 const skillDiscovery = require('./src/skill-discovery');
@@ -235,6 +280,36 @@ function _readSearchResult(id, timeoutMs = 120000) {
 
 function lucyBrowserUntilClose() {
   return String(process.env.LUCY_BROWSER_UNTIL_CLOSE || 'true').toLowerCase() !== 'false';
+}
+
+/** Headed browser only when this machine has a display (local Windows/Mac). NAS Docker uses headless + mirror panel. */
+function resolveLucyBrowserHeadless(opts = {}) {
+  if (opts.headless === true) return true;
+  if (opts.headless === false) {
+    if (process.platform === 'linux' && !process.env.DISPLAY) return true;
+    return false;
+  }
+  const env = String(process.env.DENIZEN_LUCY_BROWSER_HEADLESS || '').toLowerCase();
+  if (env === 'true' || env === '1') return true;
+  if (env === 'false' || env === '0') return false;
+  if (process.platform === 'linux' && !process.env.DISPLAY) return true;
+  return false;
+}
+
+let _playwrightBrowsersOk = null;
+function probePlaywrightBrowsers() {
+  if (_playwrightBrowsersOk != null) return _playwrightBrowsersOk;
+  try {
+    const { chromium } = require('playwright');
+    const exe = chromium.executablePath();
+    _playwrightBrowsersOk = !!(exe && fs.existsSync(exe));
+  } catch (_) {
+    _playwrightBrowsersOk = false;
+  }
+  if (!_playwrightBrowsersOk) {
+    console.warn('[LucyBrowser] Playwright Chromium not installed — web search will use background API only. Run: npx playwright install chromium');
+  }
+  return _playwrightBrowsersOk;
 }
 
 function signalCloseLucyBrowser() {
@@ -408,6 +483,16 @@ function _broadcastAgentWs(msg) {
   }
 }
 
+function _broadcastProposalQueueChanged(kind, action, id) {
+  _broadcastAgentWs({
+    type: 'proposal_queue_changed',
+    kind: kind || null,
+    action: action || 'updated',
+    id: id || null,
+    ts: Date.now(),
+  });
+}
+
 let _mirrorFrameMtime = 0;
 function _latestMirrorFrameFile() {
   let best = null;
@@ -577,25 +662,8 @@ const awayNotify       = require('./src/away-notify');
 const { startAll: startResearchScheduler } = require('./src/research-scheduler');
 
 /** Per threat category+source — avoid duplicate Kali/Zenmap runs (client + server). */
-const _bouncerInvCooldown = new Map();
-const BOUNCER_INV_COOLDOWN_MS = parseInt(process.env.BOUNCER_INVESTIGATION_COOLDOWN_MS, 10) || 900000;
-function _bouncerInvKey(threat = {}) {
-  return `${threat.category || 'unknown'}:${threat.source || 'unknown'}`;
-}
-function _bouncerInvTake(threat = {}) {
-  try {
-    const { isLocalOrLoopback, isInternalThreatSource } = require('./src/security-ip');
-    if (isLocalOrLoopback(threat.source) || isInternalThreatSource(threat.source)) {
-      return { allowed: false, key: 'internal', remainingSec: 0, loopback: true };
-    }
-  } catch (_) {}
-  const key = _bouncerInvKey(threat);
-  const last = _bouncerInvCooldown.get(key) || 0;
-  if (Date.now() - last < BOUNCER_INV_COOLDOWN_MS) {
-    return { allowed: false, key, remainingSec: Math.ceil((BOUNCER_INV_COOLDOWN_MS - (Date.now() - last)) / 1000) };
-  }
-  _bouncerInvCooldown.set(key, Date.now());
-  return { allowed: true, key };
+function _bouncerInvTake(threat = {}, opts = {}) {
+  return bouncerInvestigation.takeInvestigationSlot(threat, opts);
 }
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -830,6 +898,7 @@ async function _applyOfficeToSocket(ws, { sessionId, displayName, isCeo } = {}) 
     ws._denizenOfficeId = o.officeId;
     ws._denizenIdentityId = o.identityId;
     ws._denizenIsOperatorOffice = true;
+    ws._denizenOrgId = denizenDb.orgId || worldState.getDefaultOrgId?.() || null;
     return o;
   }
   const session = sessionId ? await denizenVisitor.getSession(sessionId).catch(() => null) : null;
@@ -837,6 +906,7 @@ async function _applyOfficeToSocket(ws, { sessionId, displayName, isCeo } = {}) 
   ws._denizenOfficeId = o.officeId;
   ws._denizenIdentityId = o.identityId || null;
   ws._denizenIsOperatorOffice = !!o.isOperatorOffice;
+  ws._denizenOrgId = session?.org_id || denizenDb.orgId || worldState.getDefaultOrgId?.() || null;
   return o;
 }
 
@@ -1829,6 +1899,9 @@ async function _executePlayerChatSkillFollowup({
   visitorToolGate,
   meshContext = null,
   gapAlreadyHandled = false,
+  ceoLookup = false,
+  ceoDirectOrder = false,
+  forceInfer = false,
 }) {
   let extraSkills = [];
   if (visitorCtx?.identityId) {
@@ -1847,6 +1920,9 @@ async function _executePlayerChatSkillFollowup({
     isAssistant: String(visitorCtx?.assistant?.npc_key || '').toLowerCase()
       === String(npcName || '').toLowerCase(),
     canUseRealWork: visitorToolGate.canUseRealWork,
+    ceoLookup,
+    ceoDirectOrder,
+    forceInfer,
     extraSkills,
   });
 
@@ -1912,7 +1988,9 @@ async function _executePlayerChatSkillFollowup({
   }
 
   try {
-    const skillParams = { ...(plan.params || {}) };
+    const skillParams = plan.skill === 'coding-agent'
+      ? playerChatSkills.enrichCodingAgentParams(message, { ...(plan.params || {}) })
+      : { ...(plan.params || {}) };
     if (/^crm-/.test(String(plan.skill || '')) && visitorCtx) {
       skillParams.profile = {
         ...(skillParams.profile || {}),
@@ -1931,7 +2009,8 @@ async function _executePlayerChatSkillFollowup({
     const result = await runNpcSkill(npcName, plan.skill, skillParams, { sessionId });
     const data = result?.data && typeof result.data === 'object' ? result.data : null;
     const chatActions = require('./src/denizen-crm-chat-actions');
-    const autoOpen = chatActions.shouldAutoOpenCrm(message);
+    const autoOpen = chatActions.shouldAutoOpenCrm(message)
+      && !crmNpcPersonas?.isWriteSkill?.(plan.skill);
     const crmActions = Array.isArray(data?.crm_actions)
       ? chatActions.normalizeCrmActions(data.crm_actions, { autoOpen })
       : null;
@@ -2155,14 +2234,50 @@ function runNpcWebSearch(npcName, query, opts = {}) {
     return Promise.resolve({ ok: false, error: 'query required', query: '', results: [], summary: '' });
   }
 
-  const headless = opts.headless === true;
+  const headless = resolveLucyBrowserHeadless(opts);
   const quiet = opts.quiet === true;
+  const showBrowserUi = true;
   const broadcast = opts.broadcast || ((m) => {
     const raw = JSON.stringify(m);
     (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
   });
 
   const runOnce = async () => {
+  if (!probePlaywrightBrowsers()) {
+    const act = pcActivity.record({
+      npc, kind: 'web-search',
+      task: openOnly ? 'open browser' : `search: ${q.slice(0, 120)}`,
+      mode: 'background', status: 'started',
+    });
+    if (showBrowserUi || !quiet) {
+      broadcast({
+        type: 'npc_skill_start', npcName: npc, skill: 'web-search',
+        skillParams: openOnly ? { openOnly: true } : { query: q }, ts: Date.now(),
+      });
+    }
+    try {
+      const wr = await webResearch.research(q || 'news', { count: 5, read: 1 });
+      const summary = wr.results?.length
+        ? `Playwright isn't installed on this server — used background search:\n\n${webResearch.formatForNpc(wr).slice(0, 2000)}`
+        : `Playwright isn't installed on this server. Ask ops to run: npx playwright install chromium`;
+      pcActivity.record({
+        id: act.id, npc, kind: 'web-search', task: act.task, mode: 'background',
+        status: wr.results?.length ? 'done' : 'failed', durationMs: 0,
+        detail: 'playwright-missing',
+      });
+      if (summary) _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: npc, text: summary, ts: Date.now() });
+      return { ok: !!wr.results?.length, query: q, results: wr.results || [], summary };
+    } catch (err) {
+      pcActivity.record({
+        id: act.id, npc, kind: 'web-search', task: act.task, mode: 'background',
+        status: 'failed', durationMs: 0, detail: String(err?.message || err).slice(0, 200),
+      });
+      const summary = `Browser search unavailable (Playwright not installed on server).`;
+      _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: npc, text: summary, ts: Date.now() });
+      return { ok: false, query: q, results: [], summary, error: err?.message };
+    }
+  }
+
   const mirrorKey = normalizeNpcKey(npc);
   global._activeBrowserNpc = mirrorKey;
   if (q) global._lucyLastSearchQuery = q;
@@ -2200,7 +2315,7 @@ function runNpcWebSearch(npcName, query, opts = {}) {
     task: openOnly ? 'open browser' : `search: ${q.slice(0, 120)}`,
     mode: 'visible', status: 'started',
   });
-  if (!quiet) {
+  if (showBrowserUi || !quiet) {
     broadcast({
       type: 'npc_skill_start', npcName: npc, skill: 'web-search',
       skillParams: openOnly ? { openOnly: true } : { query: q }, ts: Date.now(),
@@ -2274,6 +2389,16 @@ function runNpcWebSearch(npcName, query, opts = {}) {
           readPages: parsed?.readPages || [],
         })
         : `I tried searching "${q}" but hit an error: ${parsed?.error || errOut.trim() || 'no results'}`;
+    if (!ok && q) {
+      try {
+        const wr = await webResearch.research(q, { count: 5, read: 1 });
+        if (wr.results?.length) {
+          results = wr.results;
+          ok = true;
+          summary = `Couldn't open the visible browser on this machine — used background search instead:\n\n${webResearch.formatForNpc(wr).slice(0, 2000)}${staysOpenMsg}`;
+        }
+      } catch (_) {}
+    }
     if (parsed?.keepOpen && ok) global._lucyBrowserOpen = true;
     if (!ok) {
       const errText = String(parsed?.error || errOut || '');
@@ -2326,6 +2451,8 @@ function runNpcWebSearch(npcName, query, opts = {}) {
     }
     if (!quiet) {
       broadcast({ type: 'npc_skill_result', npcName: npc, skill: 'web-search', ok, output: summary.slice(0, 200), ts: Date.now() });
+    }
+    if (showBrowserUi) {
       _broadcastNpcMirrorUpdate(broadcast, mirrorKey);
     }
     try {
@@ -2605,11 +2732,13 @@ const jelly = createJelly({
     skillBuilder,
     robinhoodMcp,
     codingTaskRunner,
-    linuxAgent,
+    linuxAgent: linuxAgentBridge,
     worldState,
     bouncerInvTake: _bouncerInvTake,
     githubRepo: GITHUB_REPO,
     runWebSearch: runNpcWebSearch,
+    runResearch: runNpcWebSearch,
+    runCitedResearch: (q, o) => require('./src/visitor-cited-research').runCitedResearch(q, o),
     healthRunbook,
     computeQueue,
     fleetRegistry,
@@ -2659,6 +2788,20 @@ async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
           });
           const summary = result?.summary || (result?.ok ? 'Done.' : result?.error || 'Task failed.');
           return { ok: !!result?.ok, summary, result, routed: false };
+        }
+        if (kind === 'web_search') {
+          const researchRouter = require('./src/research-router');
+          const query = String(payload?.query || instruction || '').trim();
+          const mesh = await researchRouter.runMeshWebSearch({
+            computeQueue,
+            npcName,
+            query,
+          });
+          if (mesh.routed) {
+            return { ok: !!mesh.ok, summary: mesh.summary || mesh.output, routed: false, mesh: true, job_id: mesh.job_id };
+          }
+          const r = await runNpcWebSearch(npcName, query, { broadcast, headless: false, quiet: false });
+          return { ok: !!r.ok, summary: r.summary || r.error || 'Search finished.', routed: false };
         }
         if (kind === 'screen_observe') {
           return triggerNpcScreenObserve(npcName, instruction, broadcast, { sessionId });
@@ -2996,9 +3139,13 @@ if (IS_RELAY_ONLY) {
   console.log(`[AgentWS] Relay-only mode (${worldPubsub.role}) — simulation and mutating WS disabled`);
 }
 
-let _pendingChanges = new Map(); // kind -> { kind, payload, ts }
+let _pendingChanges = new Map(); // `${orgId}:${kind}` -> { orgId, kind, payload, ts }
 let _broadcastTimer = null;
 let _agentBusBuffer = [];        // collected agent-bus messages
+
+function _defaultOrgId() {
+  return worldState.getDefaultOrgId?.() || denizenDb.orgId || '__default__';
+}
 
 function _broadcastFrame() {
   _broadcastTimer = null;
@@ -3008,21 +3155,28 @@ function _broadcastFrame() {
   _agentBusBuffer = [];
   if (changes.length === 0 && busMessages.length === 0) return;
 
-  // One JSON.stringify, one ws.send per client per tick — irrespective of
-  // how many mutations happened during the window.
-  const frame = {
-    type: 'world_state_batch',
-    changes,
-    busMessages,
-    ts: Date.now(),
-  };
-  const serialized = JSON.stringify(frame);
-  _agentClients().forEach((ws) => {
-    if (ws.readyState === 1) {
-      try { ws.send(serialized); } catch (_) { /* drop */ }
-    }
-  });
-  worldPubsub.publish(frame).catch(() => null);
+  const byOrg = new Map();
+  for (const entry of changes) {
+    const oid = entry.orgId || _defaultOrgId();
+    if (!byOrg.has(oid)) byOrg.set(oid, []);
+    byOrg.get(oid).push(entry);
+  }
+  if (busMessages.length > 0) {
+    const oid = _defaultOrgId();
+    if (!byOrg.has(oid)) byOrg.set(oid, []);
+  }
+
+  for (const [orgId, orgChanges] of byOrg) {
+    const frame = {
+      type: 'world_state_batch',
+      org_id: orgId,
+      changes: orgChanges,
+      busMessages: orgId === _defaultOrgId() ? busMessages : [],
+      ts: Date.now(),
+    };
+    officeRegistry.broadcastAgent(_agentClients(), frame, { orgId });
+    worldPubsub.publish(frame).catch(() => null);
+  }
 }
 
 function _scheduleBroadcast() {
@@ -3031,32 +3185,35 @@ function _scheduleBroadcast() {
 }
 
 function _sendImmediate(payload, opts = {}) {
+  const orgId = opts.orgId ?? payload?.org_id ?? payload?.orgId ?? _defaultOrgId();
   const officeId = opts.officeId ?? payload?.office_id ?? null;
-  officeRegistry.broadcastAgent(_agentClients(), payload, officeId ? { officeId } : {});
-  worldPubsub.publish(payload).catch(() => null);
+  const framed = { ...payload, org_id: orgId };
+  officeRegistry.broadcastAgent(_agentClients(), framed, { officeId: officeId || undefined, orgId });
+  worldPubsub.publish(framed).catch(() => null);
 }
 
 if (worldPubsub.role === 'follower') {
   worldPubsub.subscribe((frame) => {
     const serialized = JSON.stringify(frame);
     _agentClients().forEach((ws) => {
-      if (ws.readyState === 1) {
-        try { ws.send(serialized); } catch (_) { /* drop */ }
-      }
+      if (ws.readyState !== 1) return;
+      if (!officeRegistry.shouldDeliverToSocket(frame, ws)) return;
+      try { ws.send(serialized); } catch (_) { /* drop */ }
     });
   }).catch((err) => {
     console.warn('[world-pubsub] follower subscribe failed:', err?.message || err);
   });
 }
 
-worldState.on('change', ({ kind, payload }) => {
-  const entry = { kind, payload, ts: Date.now() };
+worldState.on('change', ({ orgId, kind, payload }) => {
+  const oid = orgId || _defaultOrgId();
+  const entry = { orgId: oid, kind, payload, ts: Date.now() };
   if (IMMEDIATE_KINDS.has(kind)) {
-    _sendImmediate({ type: 'world_state', ...entry });
+    _sendImmediate({ type: 'world_state', ...entry }, { orgId: oid });
     return;
   }
-  // Latest write wins per kind for the next window.
-  _pendingChanges.set(kind, entry);
+  // Latest write wins per org+kind for the next window.
+  _pendingChanges.set(`${oid}:${kind}`, entry);
   _scheduleBroadcast();
 });
 
@@ -3865,6 +4022,33 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const soulContextMatch = urlPath.match(/^\/api\/soul-proposals\/([^/]+)\/context$/);
+  if (soulContextMatch && req.method === 'GET') {
+    const id = soulContextMatch[1];
+    const file = _readSoulProposalsFile();
+    const record = file.proposals.find((p) => p && p.id === id);
+    if (!record) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: `proposal not found: ${id}` }));
+      return;
+    }
+    const npcSlug = String(record.npcName || '').toLowerCase().replace(/\s+/g, '_');
+    const soulPath = path.join(__dirname, 'npcs', npcSlug, 'SOUL.md');
+    let currentSoul = '';
+    try {
+      currentSoul = fs.readFileSync(soulPath, 'utf8');
+    } catch (_) {
+      currentSoul = '';
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      npcName: record.npcName,
+      currentSoul,
+      proposal: record.proposal || {},
+    }));
+    return;
+  }
+
   // POST /api/soul-proposal/approve — body { id, decision: 'approved'|'rejected', note? }
   // Updates the proposal status in place. Does NOT touch SOUL.md (deferred).
   if (urlPath === '/api/soul-proposal/approve' && req.method === 'POST') {
@@ -3912,6 +4096,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: 'failed to persist decision: ' + err.message }));
         return;
       }
+      _broadcastProposalQueueChanged('soul', decision, id);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, proposal: file.proposals[idx] }));
     });
@@ -4207,6 +4392,40 @@ const server = http.createServer((req, res) => {
           });
         }
       } catch (_) { /* file may not exist yet — fine */ }
+    }
+
+    // NPC code proposals (in-memory + reports/code-reviews/)
+    if (maybe('code')) {
+      for (const p of codingTaskRunner.getProposals()) {
+        if (!p || typeof p !== 'object') continue;
+        const st = p.status === 'pending_review' ? 'pending' : (p.status || 'pending');
+        merged.push({
+          kind: 'code',
+          id: p.id,
+          by: p.npc,
+          status: st,
+          summary: `${p.task || 'code change'} · ${(p.changedFiles || []).join(', ') || 'files TBD'}`.slice(0, 240),
+          ts: Number(p.ts) || 0,
+          raw: p,
+        });
+      }
+    }
+
+    // Branded PDF dossier proposals (persisted data/dossier-proposals.json)
+    if (maybe('dossier')) {
+      for (const p of dossierSystem.getProposals()) {
+        if (!p || typeof p !== 'object') continue;
+        const st = p.status === 'pending_review' ? 'pending' : p.status;
+        merged.push({
+          kind: 'dossier',
+          id: p.id,
+          by: p.npc,
+          status: st || 'pending',
+          summary: `${p.type || 'dossier'}${p.recipient ? ` for ${p.recipient}` : ''} · ${p.subject || ''}`.slice(0, 240),
+          ts: Number(p.ts) || 0,
+          raw: p,
+        });
+      }
     }
 
     // Status filter — 'all' bypasses.
@@ -4632,6 +4851,56 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Bouncer investigation proxy (dolonia agent) ---
+  if (urlPath === '/api/bouncer-investigate' && req.method === 'POST') {
+    if (!bouncerInvestigation.validateInvestigationAuth(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+      return;
+    }
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const threat = payload.threat || payload;
+      try {
+        const result = await bouncerInvestigation.investigate(threat);
+        let reportMd = null;
+        if (result.ok) {
+          reportMd = result.reportMd || linuxAgent.buildReport(threat, result, null);
+          result.reportMd = reportMd;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: result.ok, result, reportMd }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath === '/api/bouncer-patrol' && req.method === 'POST') {
+    if (!bouncerInvestigation.validateInvestigationAuth(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+      return;
+    }
+    (async () => {
+      try {
+        const patrol = await bouncerInvestigation.perimeterPatrol();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: patrol.ok !== false, patrol }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    })();
+    return;
+  }
+
   // --- Bouncer security scan (manual trigger) ---
   // POST /api/bouncer-scan { tool: 'nmap'|'wireshark'|'zenmap', target?: '192.168.1.1', reason?: 'manual' }
   // 'zenmap' and 'nmap' both run nmap via Kali WSL (Zenmap is just a GUI wrapper — nmap is the real tool).
@@ -4670,13 +4939,13 @@ const server = http.createServer((req, res) => {
         let result;
         if (tool === 'nmap' || tool === 'zenmap') {
           // nmap scan — zenmap is just a GUI wrapper, use nmap CLI directly
-          result = await linuxAgent.investigate({ category: 'network_scan', source: target, detail: reason });
+          result = await linuxAgentBridge.investigate({ category: 'network_scan', source: target, detail: reason });
         } else if (tool === 'wireshark') {
           // tcpdump loopback snapshot as Wireshark replacement
           result = await linuxAgent.trafficSnapshot();
           result = { ok: result.ok, summary: result.raw, elapsed: 5000, steps: [{ label: 'tcpdump loopback', output: result.raw }] };
         } else {
-          result = await linuxAgent.perimeterPatrol();
+          result = await linuxAgentBridge.perimeterPatrol();
           result = { ok: result.ok, summary: result.summary, elapsed: result.elapsed, steps: [] };
         }
 
@@ -5134,9 +5403,10 @@ const server = http.createServer((req, res) => {
         category: payload.category || 'unknown',
         source:   payload.source   || null,
         detail:   payload.detail   || payload.category || 'manual investigation',
+        force:    payload.force === true,
       };
 
-      const invGate = _bouncerInvTake(threat);
+      const invGate = _bouncerInvTake(threat, { force: threat.force });
       if (!invGate.allowed) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -5174,7 +5444,14 @@ const server = http.createServer((req, res) => {
       const blStart = Date.now();
 
       // Run the actual investigation in parallel
-      linuxAgent.investigate(threat).then(result => {
+      const invCtx = {
+        broadcast,
+        npcTools,
+        npcBrains,
+        denizenDb,
+        investigationIsSerious,
+      };
+      linuxAgentBridge.investigate(threat).then(async (result) => {
         pcActivity.record({
           id: blActivity.id, npc: 'Bouncer', kind: 'linux-agent',
           task: blActivity.task, mode: blActivity.mode,
@@ -5182,6 +5459,7 @@ const server = http.createServer((req, res) => {
           durationMs: Date.now() - blStart,
           detail: (result.summary || result.error || '').slice(0, 240) || null,
         });
+        const { reportPath } = await bouncerInvestigation.completeInvestigation(threat, result, invCtx);
         broadcast({
           type: 'bouncer_linux_result',
           status: result.ok ? 'done' : 'error',
@@ -5191,8 +5469,9 @@ const server = http.createServer((req, res) => {
           elapsed: result.elapsed,
           steps: result.steps,
           summary: result.summary,
+          reportPath: reportPath || null,
           message: result.ok
-            ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s, ${result.steps.length} commands).`
+            ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s, ${result.steps?.length || 0} commands).`
             : `Linux investigation failed: ${result.error}`,
         });
       }).catch(err => {
@@ -6119,6 +6398,62 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, slug, policy, table: table || null, allowed }));
     })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/org/clone-template' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const ceoRequest = hostCompute.isCeoPrincipalRequest(req)
+        || hostCompute.isLocalOperatorRequest(req);
+      const sessionId = body.session_id || body.sessionId || null;
+      if (sessionId) {
+        await _verifyVisitorSession(req, sessionId, body);
+        const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+          isCeoPrincipal: ceoRequest,
+        });
+        if (!approval.allowed && !ceoRequest) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Team lead or CEO required to clone template pack' }));
+          return;
+        }
+      } else if (!ceoRequest) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'CEO or team approver session required' }));
+        return;
+      }
+      if (!denizenDb.enabled) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Database unavailable' }));
+        return;
+      }
+      const orgSlug = body.org_slug || body.orgSlug;
+      const templatePack = body.template_pack || body.templatePack || '1921-govcon';
+      if (!orgSlug) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'org_slug required' }));
+        return;
+      }
+      const org = await denizenVisitor.resolveOrgBySlug(orgSlug);
+      if (!org?.id) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `Organization "${orgSlug}" not found` }));
+        return;
+      }
+      const agentSouls = require('./src/agent-souls');
+      const result = await agentSouls.cloneTemplatePackToOrg(denizenDb, org.id, templatePack);
+      if (npcBrains?.hydrateAgentSoulsFromDb) {
+        await npcBrains.hydrateAgentSoulsFromDb(org.id).catch(() => null);
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, org_slug: orgSlug, org_id: org.id, ...result }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
@@ -8207,10 +8542,12 @@ const server = http.createServer((req, res) => {
   const approveMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/approve$/);
   if (approveMatch && req.method === 'POST') {
     const proposalId = approveMatch[1];
-    codingTaskRunner.approveProposal(proposalId).then(result => {
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      return codingTaskRunner.approveProposal(proposalId, { note });
+    }).then(result => {
       if (result.ok) {
-        const raw = JSON.stringify({ type: 'npc_code_proposal_approved', proposalId });
-        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+        _broadcastProposalQueueChanged('code', 'approved', proposalId);
       }
       res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
@@ -8225,16 +8562,88 @@ const server = http.createServer((req, res) => {
   const rejectMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/reject$/);
   if (rejectMatch && req.method === 'POST') {
     const proposalId = rejectMatch[1];
-    codingTaskRunner.rejectProposal(proposalId).then(result => {
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      return codingTaskRunner.rejectProposal(proposalId, { note });
+    }).then(result => {
       if (result.ok) {
-        const raw = JSON.stringify({ type: 'npc_code_proposal_rejected', proposalId });
-        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+        _broadcastProposalQueueChanged('code', 'rejected', proposalId);
       }
       res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
     }).catch(err => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err.message }));
+    });
+    return;
+  }
+
+  // --- GET /api/dossier-proposals — branded PDF dossier proposals ---
+  if (urlPath === '/api/dossier-proposals' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ proposals: dossierSystem.getProposals() }));
+    return;
+  }
+
+  const dossierPreviewMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/preview$/);
+  if (dossierPreviewMatch && req.method === 'GET') {
+    const proposalId = dossierPreviewMatch[1];
+    const proposal = dossierSystem.getProposalById(proposalId);
+    if (!proposal) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'proposal not found' }));
+      return;
+    }
+    const u = new URL(req.url, 'http://x');
+    const format = (u.searchParams.get('format') || 'html').toLowerCase();
+    const filePath = dossierSystem.resolveProposalArtifact(proposal, format);
+    if (!filePath) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        error: 'preview file not found',
+        hint: 'Regenerate the dossier on this server or redeploy with reports/dossiers included',
+        outDirRel: proposal.outDirRel || null,
+      }));
+      return;
+    }
+    const ctype = format === 'pdf' ? 'application/pdf' : 'text/html; charset=utf-8';
+    res.writeHead(200, { 'Content-Type': ctype });
+    fs.createReadStream(filePath).pipe(res);
+    return;
+  }
+
+  const dossierApproveMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/approve$/);
+  if (dossierApproveMatch && req.method === 'POST') {
+    const proposalId = dossierApproveMatch[1];
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      const result = dossierSystem.approveProposal(proposalId, { note });
+      if (result.ok) {
+        _broadcastProposalQueueChanged('dossier', 'approved', proposalId);
+      }
+      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
+    });
+    return;
+  }
+
+  const dossierRejectMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/reject$/);
+  if (dossierRejectMatch && req.method === 'POST') {
+    const proposalId = dossierRejectMatch[1];
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      const result = dossierSystem.rejectProposal(proposalId, { note });
+      if (result.ok) {
+        _broadcastProposalQueueChanged('dossier', 'rejected', proposalId);
+      }
+      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
     });
     return;
   }
@@ -8265,21 +8674,49 @@ const server = http.createServer((req, res) => {
     const hostHardware = fleetRegistry.getGlobalHostSnapshot()
       || hardwareMonitor.getLatestSnapshot();
     if (!hostHardware) return null;
-    const auxiliary = fleetRegistry.listAuxiliary();
-    if (hostCompute.isCeoPrincipalRequest(req)) {
-      return {
-        live_usage: hostHardware,
-        fleet: [hostHardware, ...auxiliary],
-        sampled_at: hostHardware.sampled_at || null,
-      };
+    const isCeo = hostCompute.isCeoPrincipalRequest(req);
+    const summary = fleetRegistry.buildFleetSummary(null, null, { isOperator: isCeo });
+    let fleet = summary?.fleet || [];
+    if (!isCeo) {
+      fleet = fleet
+        .filter((m) => m.role === 'desktop' || m.role === 'node')
+        .map((m) => fleetRegistry.sanitizeMachineForViewer(m))
+        .filter(Boolean);
     }
     return {
       available: true,
-      machines: 1 + auxiliary.length,
-      sampled_at: hostHardware.sampled_at || null,
-      fleet: [],
-      live_usage: null,
+      machines: Math.max(fleet.length, 1 + fleetRegistry.listAuxiliary().length),
+      sampled_at: hostHardware.sampled_at || summary?.sampled_at || null,
+      fleet,
+      live_usage: isCeo ? (summary?.live_usage || hostHardware) : null,
     };
+  }
+
+  // Abby cofounder dispatcher thread — in-memory only (not Postgres).
+  if (urlPath === '/api/cofounder/history') {
+    if (req.method === 'GET') {
+      const hist = cofounderAgent.conversationHistory || [];
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        storage: 'in-memory',
+        note: 'Cofounder chat is not in denizen_llm_events or chat tables — restart clears it. Telemetry "N msgs" is per LM request after alternation repair.',
+        length: hist.length,
+        roles: hist.map((m) => m.role),
+        corruptTrailingUser: hist.length > 0 && hist[hist.length - 1].role === 'user',
+        preview: hist.slice(-8).map((m) => ({
+          role: m.role,
+          content: String(m.content || '').slice(0, 160),
+        })),
+      }));
+      return;
+    }
+    if (req.method === 'DELETE') {
+      cofounderAgent.resetConversationHistory?.();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, cleared: true }));
+      return;
+    }
   }
 
   // --- Office health (one-shot diagnostic the client polls every few seconds) ---
@@ -8357,8 +8794,14 @@ const server = http.createServer((req, res) => {
             inference: inferenceMetrics.buildMetrics(),
             publicDemo: {
               enabled: process.env.DENIZEN_PUBLIC_DEMO === 'true',
+              trimBrains: process.env.DENIZEN_PUBLIC_DEMO_TRIM_BRAINS === 'true',
+              npcFolders: promptTuning?.publicDemoNpcFolders || null,
               haiku_configured: !!(process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY),
               model: process.env.DENIZEN_PUBLIC_DEMO_MODEL || null,
+            },
+            lucyBrowser: {
+              playwrightInstalled: probePlaywrightBrowsers(),
+              headlessDefault: resolveLucyBrowserHeadless({}),
             },
             federation: denizenFederation.buildStatus(),
             worldPubsub: worldPubsub.buildStatus(),
@@ -8767,20 +9210,24 @@ const server = http.createServer((req, res) => {
 
   // --- Security test endpoint: simulate threats for testing ---
   if (urlPath === '/security-test') {
-    const category = new URL(req.url, `http://localhost:${PORT}`).searchParams.get('type') || 'network_scan';
-    const severity = new URL(req.url, `http://localhost:${PORT}`).searchParams.get('severity') || 'medium';
-    const detail = new URL(req.url, `http://localhost:${PORT}`).searchParams.get('detail') || `Test ${category} threat`;
+    const url = new URL(req.url, `http://localhost:${PORT}`);
+    const category = url.searchParams.get('type') || 'network_scan';
+    const severity = url.searchParams.get('severity') || 'medium';
+    const detail = url.searchParams.get('detail') || `Test ${category} threat`;
+    const source = url.searchParams.get('source') || (url.searchParams.get('force') === '1' ? '203.0.113.50' : 'test');
+    const force = url.searchParams.get('force') === '1';
 
     securityMonitor._emitThreat({
       category,
       severity,
-      source: 'test',
+      source,
       target: 'test-target',
       detail,
+      force,
     });
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, message: `Simulated ${category} threat` }));
+    res.end(JSON.stringify({ ok: true, message: `Simulated ${category} threat`, source, force }));
     return;
   }
 
@@ -9012,18 +9459,28 @@ agentWss.on('connection', (ws) => {
           }
           return;
         }
-        // Replay past LLM dialogue from MEMORY.md + runtime memories — no fresh LLM.
-        // Player chat and think-loop actions still use AI separately.
+        // Work-status queries use live task state; social chatter stays scripted replay.
         global._npcStats.npcConvReceived++;
         global._npcStats.lastNpcConvAt = Date.now();
-        const response = ambientDialogue.getNpcConversationReply(
+        const workStatusReply = npcPeerWorkStatus.buildWorkStatusReply(
           npcBrains,
           msg.npcName,
           msg.fromName,
           msg.text,
         );
+        const response = workStatusReply
+          || ambientDialogue.getNpcConversationReply(
+            npcBrains,
+            msg.npcName,
+            msg.fromName,
+            msg.text,
+          );
         global._npcStats.npcConvSucceeded++;
-        global._npcStats.npcConvScripted = (global._npcStats.npcConvScripted || 0) + 1;
+        if (workStatusReply) {
+          global._npcStats.npcConvWorkStatus = (global._npcStats.npcConvWorkStatus || 0) + 1;
+        } else {
+          global._npcStats.npcConvScripted = (global._npcStats.npcConvScripted || 0) + 1;
+        }
         if (ws.readyState === 1) {
           ws.send(JSON.stringify({
             type: 'npc_response',
@@ -9031,7 +9488,7 @@ agentWss.on('connection', (ws) => {
             fromName: msg.fromName,
             text: response,
             turn: typeof msg.turn === 'number' ? msg.turn : 1,
-            scripted: true,
+            scripted: !workStatusReply,
           }));
         }
       } else if (msg.type === 'npc_think') {
@@ -9127,14 +9584,38 @@ agentWss.on('connection', (ws) => {
         }
       } else if (msg.type === 'player_chat') {
         // CEO (player) is talking directly to an NPC
-        let npcName = msg.npcName;
-        if (!npcName || !npcBrains.brains[npcName]) {
-          console.warn('[AgentWS] player_chat: unknown or missing npcName');
+        const resolvedNpc = resolvePlayerChatNpc(msg);
+        let npcName = resolvedNpc.npcName;
+        if (!npcName) {
+          const displayName = resolvedNpc.displayName;
+          const rawEarly = typeof msg.text === 'string' ? msg.text.trim() : '';
+          console.warn(
+            '[AgentWS] player_chat: no brain for',
+            displayName,
+            `(npcName=${JSON.stringify(msg.npcName)}, npcKey=${JSON.stringify(msg.npcKey)})`,
+          );
+          if (rawEarly && npcCapabilities.isCapabilitiesQuestion(rawEarly) && displayName !== 'Unknown') {
+            const capText = npcCapabilities.formatCapabilitiesReply(displayName, {});
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName: displayName,
+                text: capText,
+                delegation: null,
+                actions: [],
+              }));
+            }
+            return;
+          }
+          const demoFolders = promptTuning?.publicDemoNpcFolders;
+          const unavailableText = demoFolders?.length
+            ? `${displayName} isn't available in this demo — active staff: ${demoFolders.map(npcFolderToDisplay).join(', ')}.`
+            : `${displayName} isn't loaded on the server right now.`;
           if (ws.readyState === 1) {
             ws.send(JSON.stringify({
               type: 'player_chat_response',
-              npcName: typeof msg.npcName === 'string' && msg.npcName ? msg.npcName : 'Unknown',
-              text: 'That person isn\'t in the office right now.',
+              npcName: displayName,
+              text: unavailableText,
               delegation: null,
               actions: [],
             }));
@@ -9188,6 +9669,7 @@ agentWss.on('connection', (ws) => {
         global._npcStats.lastPlayerChatAt = Date.now();
         const playerText = fixVoiceMishearings(rawPlayerText);
         const normPlayerText = normalizePlayerUtterance(playerText);
+        let ceoLucySearchStarted = false;
         const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
         const visitorToolGate = await _resolveVisitorToolGate(msg.session_id);
         const chatCtx = msg.session_id
@@ -9227,11 +9709,35 @@ agentWss.on('connection', (ws) => {
           return true;
         };
 
+        const crmWritePlan = crmNpcPersonas.inferCrmWriteAction?.(playerText) || null;
+        const blockBrowserForCrm = Boolean(crmWritePlan);
+
+        if (officeStatusBrief.isOfficeStatusQuery(playerText)) {
+          const chatSession = msg.session_id
+            ? await denizenVisitor.getSession(msg.session_id).catch(() => null)
+            : null;
+          const orgId = chatSession?.org_id || worldState.getDefaultOrgId?.() || null;
+          const wsOrg = orgId ? worldState.forOrg(orgId) : worldState;
+          const brief = officeStatusBrief.buildBrief(wsOrg);
+          persistNpcTurn(brief);
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName,
+              text: brief,
+              delegation: null,
+              actions: [],
+            }));
+          }
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
         // Lucy — reopen browser and retry last search.
         const browserRetry = extractBrowserRetryIntent(rawPlayerText)
           || extractBrowserRetryIntent(playerText)
           || extractBrowserRetryIntent(normPlayerText);
-        if (npcName === 'Lucy' && browserRetry?.retrySearch && global._lucyLastSearchQuery) {
+        if (!blockBrowserForCrm && npcName === 'Lucy' && browserRetry?.retrySearch && global._lucyLastSearchQuery) {
           if (blockDemoTools()) return;
           const retryQuery = global._lucyLastSearchQuery;
           if (ws.readyState === 1) ws.send(JSON.stringify({
@@ -9250,7 +9756,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Lucy — open Playwright browser (instant; no LM Studio, no desktop control).
-        if (npcName === 'Lucy' && (wantsLucyBrowserOpen(rawPlayerText)
+        if (!blockBrowserForCrm && npcName === 'Lucy' && (wantsLucyBrowserOpen(rawPlayerText)
           || wantsLucyBrowserOpen(playerText) || wantsLucyBrowserOpen(normPlayerText))) {
           if (blockDemoTools()) return;
           if (ws.readyState === 1) ws.send(JSON.stringify({
@@ -9300,6 +9806,28 @@ agentWss.on('connection', (ws) => {
           }
           global._npcStats.playerChatSucceeded++;
           return;
+        }
+
+        // Roki — live market brief (no LM; avoids reasoning-model leaks)
+        if (npcName === 'Roki' && npcCapabilities.isMarketQuestion?.(playerText)) {
+          try {
+            const marketData = await npcBrains._fetchMarketObservation();
+            const marketText = npcBrains._formatRokiMarketBrief(marketData);
+            persistNpcTurn(marketText);
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName,
+                text: marketText,
+                delegation: null,
+                actions: [],
+              }));
+            }
+            global._npcStats.playerChatSucceeded++;
+            return;
+          } catch (err) {
+            console.warn('[AgentWS] Roki market brief failed:', err?.message || err);
+          }
         }
 
         if (npcName === 'Bouncer') {
@@ -9367,6 +9895,7 @@ agentWss.on('connection', (ws) => {
           if (bare) searchQuery = bare;
         }
         if (searchQuery && isJunkSearchQuery(searchQuery)) searchQuery = null;
+        if (blockBrowserForCrm) searchQuery = null;
         if (npcName === 'Lucy' && isCancelUtterance(playerText)) {
           closeLucyBrowser();
           if (ws.readyState === 1) {
@@ -9457,8 +9986,9 @@ agentWss.on('connection', (ws) => {
           global._npcStats.playerChatSucceeded++;
           return;
         }
-        if (npcName === 'Lucy' && searchQuery) {
+        if (npcName === 'Lucy' && searchQuery && !blockBrowserForCrm) {
           if (blockDemoTools()) return;
+          ceoLucySearchStarted = true;
           if (ws.readyState === 1) ws.send(JSON.stringify({
             type: 'player_chat_response',
             npcName: 'Lucy',
@@ -9486,7 +10016,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Open CEO's real Brave browser (their profile + cookies).
-        if (extractOpenBraveIntent(playerText)) {
+        if (!blockBrowserForCrm && extractOpenBraveIntent(playerText)) {
           if (blockDemoTools()) return;
           const urlMatch = playerText.match(/https?:\/\/\S+/i);
           const url = urlMatch ? urlMatch[0] : null;
@@ -9513,7 +10043,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Screen control — any NPC: click/type/fill on CEO's real screen (when asked).
-        if (extractScreenControlIntent(playerText) && !searchQuery) {
+        if (!blockBrowserForCrm && extractScreenControlIntent(playerText) && !searchQuery) {
           if (blockDemoTools()) return;
           if (ws.readyState === 1) ws.send(JSON.stringify({
             type: 'player_chat_response',
@@ -9853,6 +10383,18 @@ agentWss.on('connection', (ws) => {
             }
             global._npcStats.playerChatSucceeded++;
 
+            if (!result.delegation && !msg.session_id) {
+              const synthDelegate = playerChatSkills.extractDelegateTarget?.(msg.text);
+              if (synthDelegate && synthDelegate !== npcName) {
+                result.delegation = {
+                  delegateTo: synthDelegate,
+                  reason: msg.text,
+                  originalMessage: msg.text,
+                  _synthetic: true,
+                };
+              }
+            }
+
             let outboundText = text;
             if (_taskAdviceForChat?.recommendation
               && msg.session_id
@@ -9904,38 +10446,94 @@ agentWss.on('connection', (ws) => {
             }
 
             if (msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport) {
-              _executePlayerChatSkillFollowup({
-                ws,
-                npcName,
-                sessionId: msg.session_id,
-                message: msg.text,
-                responseText: text,
-                visitorCtx: _visitorCtxForSkills,
-                visitorToolGate,
-                gapAlreadyHandled: gapActions.length > 0,
-                meshContext: {
-                  ...(await _buildMeshContextForAdvice().catch(() => ({}))),
-                  taskText: msg.text,
-                  hasVisitorAnthropicKey: !!_visitorCtxForSkills?.providerKeys?.anthropic,
-                },
-              }).catch((err) => {
-                console.warn('[PlayerChat] skill followup failed:', err?.message || err);
-              });
-            } else if (!msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport
-              && playerChatSkills.inferSkillFromMessage?.(npcName, msg.text)?.skill?.startsWith?.('crm-')) {
-              _executePlayerChatSkillFollowup({
-                ws,
-                npcName,
-                sessionId: null,
-                message: msg.text,
-                responseText: text,
-                visitorCtx: _visitorCtxForSkills,
-                visitorToolGate,
-                gapAlreadyHandled: false,
-                meshContext: { taskText: msg.text },
-              }).catch((err) => {
-                console.warn('[PlayerChat] CEO CRM skill followup failed:', err?.message || err);
-              });
+              const deferTo = playerChatSkills.shouldDeferSkillToDelegatee?.(msg.text, result.delegation);
+              if (!deferTo) {
+                _executePlayerChatSkillFollowup({
+                  ws,
+                  npcName,
+                  sessionId: msg.session_id,
+                  message: msg.text,
+                  responseText: text,
+                  visitorCtx: _visitorCtxForSkills,
+                  visitorToolGate,
+                  gapAlreadyHandled: gapActions.length > 0,
+                  meshContext: {
+                    ...(await _buildMeshContextForAdvice().catch(() => ({}))),
+                    taskText: msg.text,
+                    hasVisitorAnthropicKey: !!_visitorCtxForSkills?.providerKeys?.anthropic,
+                  },
+                }).catch((err) => {
+                  console.warn('[PlayerChat] skill followup failed:', err?.message || err);
+                });
+              }
+            } else if (!msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport) {
+              const deferTo = playerChatSkills.shouldDeferSkillToDelegatee?.(msg.text, result.delegation);
+              const inferred = playerChatSkills.inferSkillFromMessage?.(npcName, msg.text);
+              const lucyLookup = npcName === 'Lucy' && !ceoLucySearchStarted
+                && inferred?.skill === 'research';
+              const ceoDirectOrder = playerChatSkills.isTaskLikeMessage?.(msg.text)
+                || /\brun_skill\b/i.test(msg.text)
+                || Boolean(inferred?.skill);
+
+              if (deferTo && deferTo !== npcName) {
+                const delegateTask = result.delegation?.originalMessage
+                  || result.delegation?.reason
+                  || msg.text;
+                npcBrains.assignDirective(deferTo, npcName, `[From CEO via ${npcName}] ${delegateTask}`, true);
+                const delegateInfer = playerChatSkills.inferSkillFromMessage(deferTo, msg.text);
+                if (delegateInfer?.skill && (/\brun_skill\b/i.test(msg.text) || ceoDirectOrder)) {
+                  _executePlayerChatSkillFollowup({
+                    ws,
+                    npcName: deferTo,
+                    sessionId: null,
+                    message: msg.text,
+                    responseText: text,
+                    visitorCtx: _visitorCtxForSkills,
+                    visitorToolGate,
+                    gapAlreadyHandled: false,
+                    ceoLookup: false,
+                    ceoDirectOrder: true,
+                    forceInfer: true,
+                    meshContext: { taskText: msg.text },
+                  }).catch((err) => {
+                    console.warn('[PlayerChat] delegatee skill followup failed:', err?.message || err);
+                  });
+                }
+              } else if (inferred?.skill?.startsWith?.('crm-') || lucyLookup || ceoDirectOrder) {
+                _executePlayerChatSkillFollowup({
+                  ws,
+                  npcName,
+                  sessionId: null,
+                  message: msg.text,
+                  responseText: text,
+                  visitorCtx: _visitorCtxForSkills,
+                  visitorToolGate,
+                  gapAlreadyHandled: false,
+                  ceoLookup: !!lucyLookup,
+                  ceoDirectOrder: !!ceoDirectOrder,
+                  forceInfer: !!ceoDirectOrder,
+                  meshContext: { taskText: msg.text },
+                }).catch((err) => {
+                  console.warn('[PlayerChat] CEO skill followup failed:', err?.message || err);
+                });
+              }
+            }
+
+            if (result.delegation?.delegateTo && visitorToolGate.canUseRealWork) {
+              const deferTo = playerChatSkills.shouldDeferSkillToDelegatee?.(msg.text, result.delegation);
+              const ceoDelegated = !msg.session_id && deferTo && deferTo !== npcName;
+              if (!ceoDelegated) {
+                const delegateTo = result.delegation.delegateTo;
+                const delegateTask = result.delegation.reason
+                  || result.delegation.originalMessage
+                  || msg.text;
+                npcBrains.assignDirective(
+                  delegateTo,
+                  npcName,
+                  `[From CEO via ${npcName}] ${delegateTask}`,
+                  true,
+                );
+              }
             }
 
             if (!isIncidentReport && !msg.session_id) {
@@ -10193,10 +10791,10 @@ agentWss.on('connection', (ws) => {
 
         // All tools now run via Kali WSL — no desktop agent / GUI dependency
         const scanPromise = (tool === 'nmap' || tool === 'zenmap')
-          ? linuxAgent.investigate({ ...threat, source: sourceIp || threat.source })
+          ? linuxAgentBridge.investigate({ ...threat, source: sourceIp || threat.source })
           : (tool === 'wireshark')
             ? linuxAgent.trafficSnapshot().then(r => ({ ok: r.ok, summary: r.raw, elapsed: 5000, steps: [{ label: 'tcpdump', output: r.raw }] }))
-            : linuxAgent.perimeterPatrol().then(r => ({ ok: r.ok, summary: r.summary, elapsed: r.elapsed, steps: [] }));
+            : linuxAgentBridge.perimeterPatrol().then(r => ({ ok: r.ok, summary: r.summary, elapsed: r.elapsed, steps: [] }));
 
         scanPromise.then(result => {
             pcActivity.record({
@@ -10277,7 +10875,14 @@ agentWss.on('connection', (ws) => {
         const blrStart = Date.now();
 
         // Run the real investigation (fast, direct WSL exec — no vision needed)
-        linuxAgent.investigate(threat).then(result => {
+        const blrCtx = {
+          broadcast: _broadcast,
+          npcTools,
+          npcBrains,
+          denizenDb,
+          investigationIsSerious,
+        };
+        linuxAgentBridge.investigate(threat).then(async (result) => {
           pcActivity.record({
             id: blrActivity.id, npc: 'Bouncer', kind: 'linux-agent',
             task: blrActivity.task, mode: blrActivity.mode,
@@ -10285,25 +10890,7 @@ agentWss.on('connection', (ws) => {
             durationMs: Date.now() - blrStart,
             detail: (result.summary || result.error || '').slice(0, 240) || null,
           });
-          // ── Feature 1: Write structured markdown report ──────────────────
-          let reportPath = null;
-          if (result.ok) {
-            try {
-              const reportMd = linuxAgent.buildReport(threat, result, null);
-              const slug = (threat.category || 'investigation')
-                .toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30);
-              const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-              reportPath = npcTools.writeArtifact(
-                'Bouncer', 'security',
-                `bouncer_${slug}_${dateStr}_${Date.now()}`,
-                reportMd,
-              );
-              if (reportPath) console.log(`[BouncerLinux] Report written: ${reportPath}`);
-            } catch (reportErr) {
-              console.warn('[BouncerLinux] Report write failed:', reportErr?.message);
-            }
-          }
-
+          const { reportPath } = await bouncerInvestigation.completeInvestigation(threat, result, blrCtx);
           _broadcast({
             type: 'bouncer_linux_result',
             status: result.ok ? 'done' : 'error',
@@ -10318,43 +10905,6 @@ agentWss.on('connection', (ws) => {
               ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s).`
               : `WSL error: ${result.error}`,
           });
-
-          // ── Feature 2: Escalate to Dan if investigation is serious ───────
-          if (result.ok && investigationIsSerious(result)) {
-            const danMsg = {
-              type: 'npc_assign_directive',
-              from: 'Bouncer',
-              to: 'Dan',
-              task: `Security escalation: ${threat.category || 'unknown'} threat detected. Review Bouncer's report in reports/security/ and check server configuration.`,
-              urgent: true,
-            };
-            cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(danMsg)); });
-            console.log(`[BouncerLinux] Serious threat — escalating to Dan`);
-          }
-
-          // ── AI report to CEO ──────────────────────────────────────────────
-          if (result.ok && result.summary && ws.readyState === 1) {
-            const fileRef = reportPath ? ` Full report filed at ${reportPath}.` : '';
-            const reportPrompt = [
-              `You just ran security commands in Kali Linux to investigate a ${threat.category || 'unknown'} threat.`,
-              `Here is what you found:\n${result.summary.slice(0, 800)}`,
-              `Report the key findings to Abby (CEO) in one tight paragraph: what was found, how serious, what you did.${fileRef} No alarm, no dramatization. State facts and actions.`,
-            ].join(' ');
-            npcBrains.getResponse('Bouncer', 'CEO', reportPrompt, {
-              kind: 'linux-investigation-report',
-              description: 'Report security investigation findings to CEO. Stoic, professional, one paragraph. Reference report file if available.',
-            }).then(text => {
-              cofounderAgent.wsClients.forEach(c => {
-                if (c.readyState === 1) c.send(JSON.stringify({
-                  type: 'player_chat_response',
-                  npcName: 'Bouncer',
-                  text: typeof text === 'string' ? text : String(text || ''),
-                  delegation: null,
-                  actions: [],
-                }));
-              });
-            }).catch(() => {});
-          }
         }).catch(err => {
           pcActivity.record({
             id: blrActivity.id, npc: 'Bouncer', kind: 'linux-agent',
@@ -10534,6 +11084,7 @@ startCrmScheduler({
 });
 
 _resetLucyBrowserOnStartup();
+probePlaywrightBrowsers();
 _startLucyMirrorFrameWatcher();
 
 const PREDICTION_MAINTENANCE_MS = 6 * 60 * 60 * 1000;
@@ -10543,8 +11094,14 @@ let _visitorIntelligenceLoop = null;
 server.listen(PORT, () => {
   denizenDb.init().then((result) => {
     if (!result?.ok) return;
+    if (denizenDb.orgId) {
+      worldState.setDefaultOrgId(denizenDb.orgId);
+    }
     npcBrains.refreshDbMemories().catch((err) => {
       console.warn('[NpcBrains] initial DB memory refresh failed:', err?.message || err);
+    });
+    npcBrains.hydrateAgentSoulsFromDb().catch((err) => {
+      console.warn('[NpcBrains] agent_souls hydrate failed:', err?.message || err);
     });
     runPredictionMaintenance(denizenDb).catch((err) => {
       console.warn('[DenizenPredictionLoop] initial maintenance failed:', err?.message || err);
@@ -10641,7 +11198,7 @@ server.listen(PORT, () => {
     const patStart = Date.now();
     try {
       log.info('Patrol', 'running perimeter check...');
-      const patrol = await linuxAgent.perimeterPatrol();
+      const patrol = await linuxAgentBridge.perimeterPatrol();
       pcActivity.record({
         id: patActivity.id, npc: 'Bouncer', kind: 'linux-agent',
         task: patActivity.task, mode: 'background',
@@ -10695,9 +11252,11 @@ server.listen(PORT, () => {
   }
 
   // Kick off first patrol after 60s (primary only — followers are relay-only)
-  if (!IS_RELAY_ONLY) {
+  if (!IS_RELAY_ONLY && linuxAgent.isBouncerPatrolEnabled()) {
     _patrolTimer = setTimeout(runBouncerPatrol, 60 * 1000);
     log.info('Patrol', 'scheduled — first check in 60s, then every 5 min');
+  } else if (!IS_RELAY_ONLY) {
+    log.info('Patrol', 'disabled (BOUNCER_PATROL=0 or non-Windows host)');
   }
 });
 

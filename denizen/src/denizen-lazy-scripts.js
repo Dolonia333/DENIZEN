@@ -72,7 +72,7 @@
         './src/voice-input.js?v=voicevc1',
         './src/llm-telemetry-panel.js?v=lmfix8',
         './src/mesh-jobs-panel.js?v=mesh2',
-        './src/browser-mirror-panel.js?v=mobdraw4',
+        './src/browser-mirror-panel.js?v=lucymirror6',
         './src/diag.js?v=diag2',
         './src/security-feed.js?v=sec1',
       ]);

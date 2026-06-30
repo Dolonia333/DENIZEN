@@ -98,6 +98,27 @@ Everything the NPCs can do, everything they will be able to do, in order of what
 
 ---
 
+## Phase 6 — Multi-user offices (multi-company)
+
+**Status:** 🔴 Planned — [MULTI_USER_OFFICE_PLAN.md](MULTI_USER_OFFICE_PLAN.md)  
+**Goal:** Each company gets an isolated 16-agent team (souls, memory, world state, office view).
+
+| Phase | Theme | Status |
+|-------|--------|--------|
+| **6.1** | `agent_souls` table — DB-backed SOUL/MEMORY per `org_id` | 🔴 Not built |
+| **6.2** | World state + think/director loops scoped per org | 🔴 Not built |
+| **6.3** | Auth + WebSocket routing filtered by `org_id` | 🔴 Partial (RLS exists; office runtime global) |
+| **6.4** | Fair LLM queue + per-org rate limits | 🔴 Not built |
+| **6.5** | Template packs + onboarding (1921 GovCon first) | 🔴 Not built |
+
+**Why it matters:** Without Phase 6.1, every new customer shares the same git soul files — multi-tenant CRM/intelligence spine does not extend to agent identity.
+
+**Recommended order:** Phase 6.1 first (exact SQL + `npc-brains.js` load path), then 6.2 → 6.3 → 6.4 → 6.5. See the full plan doc for acceptance criteria and file map.
+
+**Effort:** ~2–3 weeks total · **Depends on:** Production migrations applied (Phase 4.3 / GAP_CLOSURE deploy track)
+
+---
+
 ## Phase 5 — Continuous Improvement Loop
 
 NPCs stop being a static cast and start being a team that measurably grows. Abby observes team capability, identifies gaps, and generates novel work to close them. Outcomes feed back into the system as skill points and mood — successes reinforce, failures get diagnosed. The office gets better at its job week over week without operator intervention.

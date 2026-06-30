@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "updated": "2026-06-24",
+  "dossier_sources": [
+    "1921 Holding Co. Strategic Partnership Dossier (prepared for Benjamin Ballard, RM Cyber, June 2026)",
+    "DENIZEN Technical Dossier v1.6.0"
+  ],
+  "entity": {
+    "legal_name": "1921 Holding Co., LLC",
+    "technology_dba": "Dolonia Data Tech Solutions",
+    "technology_dba_short": "DDT",
+    "uei": "YMP7Z9T1WVX5",
+    "cage_code": "9T6Y5",
+    "location": "Oklahoma City, OK",
+    "hubzone": true,
+    "classification": "federal_prime",
+    "founder_thesis": "Systems that help people navigate complex systems.",
+    "leadership": {
+      "holding_ceo": "Angela Van Zandt",
+      "technology_ceo": "Zion Van Zandt",
+      "engineering_director": "Dr. Ed Van Zandt"
+    },
+    "urls": {
+      "company": "dolonia.cloud",
+      "denizen": "dolonia.denizen.cloud"
+    }
+  },
+  "certifications": ["WOSB", "MBE", "WBE", "SDB", "AABE"],
+  "ecosystem": [
+    {
+      "id": "denizen",
+      "name": "DENIZEN",
+      "role": "Visual AI operating environment for autonomous workflows",
+      "status": "active_development",
+      "version": "1.6.0",
+      "summary": "16 LLM agents, Meridian CRM, intelligence spine (facts→outcomes→predictions), 3-node compute mesh"
+    },
+    {
+      "id": "iwin",
+      "name": "I.W.I.N.",
+      "role": "Intergenerational Workforce Innovative Network — DOL apprenticeship standards",
+      "owner": "Angela Van Zandt"
+    },
+    {
+      "id": "smartcontainer",
+      "name": "SmartContainer",
+      "role": "Modular infrastructure commercialization (workforce, health, AgTech, drone, IoT hubs)",
+      "status": "partnership_development",
+      "discipline": "No deployment until manufacturing and implementation partners secured"
+    },
+    {
+      "id": "dolonia-engineering",
+      "name": "Dolonia Engineering Division",
+      "role": "In-house aerospace, mechanical, manufacturing systems engineering (NAICS 541330)",
+      "director": "Dr. Ed Van Zandt"
+    }
+  ],
+  "markets": ["government_contracting", "workforce_development", "healthcare", "technology", "infrastructure"],
+  "strategic_goals": [
+    "Win and deliver federal and state IT modernization contracts in Oklahoma and adjacent states",
+    "Grow DENIZEN as the visibility layer tying capture, CRM, and agent operations together",
+    "Advance RM Cyber strategic partnership into joint pursuits (not passive investment)",
+    "Keep CRM pipeline aligned to active solicitations, teaming partners, and capture intelligence",
+    "Commercialize SmartContainer only with disciplined manufacturing/deployment partners"
+  ],
+  "capture_method": {
+    "pipeline": "Opportunity → Research → Qualification → Capture planning → DENIZEN intelligence → Teaming → Proposal → Submission → Performance → Knowledge capture",
+    "note": "Each pursuit feeds institutional memory; DENIZEN is the compounding capture layer"
+  },
+  "active_opportunities": [
+    {
+      "id": "omes-ev00000919",
+      "name": "OMES EV00000919",
+      "customer": "Oklahoma OMES",
+      "type": "state_solicitation",
+      "deadline": "2026-10-01",
+      "status": "pursuing",
+      "summary": "State IT modernization vehicle — 1921/DDT pursuing as prime with RM Cyber for cyber teaming scope.",
+      "blockers": [
+        {
+          "id": "teaming-agreement-rm-cyber",
+          "label": "Execute teaming agreement with RM Cyber before submission window closes",
+          "severity": "critical",
+          "owner_npc": "Marcus",
+          "due": "2026-10-01"
+        }
+      ],
+      "partners": [
+        {
+          "name": "RM Cyber",
+          "contact": "Benjamin Ballard",
+          "role": "teaming_partner",
+          "status": "active_dialogue",
+          "notes": "Strategic partnership dossier shared June 2026; cyber scope for OMES bid — agreement not yet signed"
+        }
+      ],
+      "crm_keywords": ["OMES", "EV00000919", "RM Cyber", "teaming", "Oklahoma"]
+    }
+  ],
+  "key_relationships": [
+    {
+      "name": "RM Cyber",
+      "type": "strategic_teaming_partner",
+      "contact": "Benjamin Ballard",
+      "context": "Cybersecurity and infrastructure depth; joint government modernization, workforce tech, rural innovation, healthcare systems, smart infrastructure, AI-enabled operations",
+      "objective": "Joint pursuits — not passive capital"
+    },
+    {
+      "name": "Oklahoma OMES",
+      "type": "customer",
+      "context": "EV00000919 solicitation"
+    }
+  ],
+  "joint_pursuit_areas": [
+    "Government modernization (compliance-grade delivery + secure infrastructure)",
+    "Workforce technology (I.W.I.N. pipelines + technical platforms)",
+    "Rural innovation (SmartContainer hubs + connectivity/security)",
+    "Healthcare systems (telehealth + compliance + secure operations)",
+    "Smart infrastructure (IoT + monitoring + cyber-hardening)",
+    "AI-enabled operations (DENIZEN + RM Cyber security posture)"
+  ],
+  "execution_proof": [
+    "City of Edmond stormwater education contract (delivered)",
+    "OMMA Compliance Inspector I (state regulatory fluency)",
+    "I.W.I.N. apprenticeship standards (DOL-aligned)",
+    "Federal and state capture/proposal support"
+  ],
+  "product": {
+    "name": "DENIZEN",
+    "tagline": "Real-time visual observability layer for AI agents",
+    "commercial_role": "Capture intelligence, CRM integration, executive dashboards, agent team operations",
+    "integration_hook_for_partners": "Natural surface for RM Cyber cybersecurity, monitoring, and infrastructure integration"
+  }
+}

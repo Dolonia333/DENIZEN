@@ -9,6 +9,14 @@ function canRemediate(npcName) {
   return DEVOPS_NPCS.has(String(npcName || ''));
 }
 
+function resolveLmStudioUrl() {
+  const direct = String(process.env.LM_STUDIO_URL || '').replace(/\/v1\/?$/, '').trim();
+  if (direct) return direct;
+  const remote = String(process.env.LM_STUDIO_REMOTE_URLS || '').split(',')[0].trim().replace(/\/v1\/?$/, '');
+  if (remote) return remote;
+  return 'http://127.0.0.1:1234';
+}
+
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -38,8 +46,9 @@ async function check({ scope = 'full', deps = {} } = {}) {
   }
 
   if (scope === 'lm-studio' || scope === 'lm' || scope === 'full') {
-    const lm = await probeLmStudio(process.env.LM_STUDIO_URL?.replace(/\/v1\/?$/, '') || 'http://127.0.0.1:1234');
-    sections.lm_studio = lm;
+    const lmUrl = resolveLmStudioUrl();
+    const lm = await probeLmStudio(lmUrl);
+    sections.lm_studio = { ...lm, url: lmUrl };
     if (!lm.reachable) issues.push('lm_studio_unreachable');
   }
 
@@ -213,4 +222,5 @@ module.exports = {
   runHealthRunbook,
   canRemediate,
   probeLmStudio,
+  resolveLmStudioUrl,
 };

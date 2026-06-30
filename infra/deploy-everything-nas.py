@@ -22,15 +22,41 @@ PORT = os.environ.get("SYNO_DENIZEN_PORT", "8888")
 
 FILES = [
     "server.js",
+    "src/openclaw-dispatch.js",
+    "src/agent-office-manager.js",
+    "src/browser-mirror-panel.js",
+    "src/player-chat.js",
+    "src/browser-mirror-panel.js",
+    "src/player-chat-skill-bridge.js",
+    "src/npc-peer-work-status.js",
     "src/format-provider-error.js",
     "src/llm-telemetry.js",
     "src/llm-telemetry-panel.js",
     "src/lm-studio-router.js",
     "src/cofounder-agent.js",
-    "src/denizen-hardware-monitor.js",
     "src/prompt-tuning.js",
+    "src/demo-roster.js",
+    "src/denizen-hardware-monitor.js",
     "src/denizen-prompt-budget.js",
     "src/npc-brains.js",
+    "src/denizen-business-context.js",
+    "src/generic-soul-pack.js",
+    "src/agent-souls.js",
+    "data/templates/generic-office/business-model.json",
+    "data/templates/generic-office/company-brief.json",
+    "src/denizen-db.js",
+    "src/world-state.js",
+    "src/visitor-office-registry.js",
+    "scripts/seed-agent-souls.js",
+    "supabase/migrations/20260624000001_agent_souls.sql",
+    "supabase/migrations/20260624000002_add_grok_npc.sql",
+    "supabase/migrations/20260624000003_org_business_models.sql",
+    "scripts/seed-org-business-model.js",
+    "scripts/smoke-org-soul-isolation.js",
+    "scripts/clone-template-pack.js",
+    "scripts/grok-mcp-ping.js",
+    "src/denizen-mcp-actions.js",
+    "src/coding-task-runner.js",
     "src/npc-capabilities.js",
     "src/denizen-mcp-mesh-tools.js",
     "src/denizen-mcp-cursor-tools.js",
@@ -41,8 +67,35 @@ FILES = [
     "src/denizen-host-compute.js",
     "src/visitor-mcp-connect-ui.js",
     "src/denizen-lazy-scripts.js",
+    "src/denizen-phone-ui.js",
+    "index.html",
     "jelly/skills/cursor-bridge/index.js",
     "npcs/lucy/SOUL.md",
+    "npcs/abby/SOUL.md",
+    "npcs/abby/MEMORY.md",
+    "npcs/conference_man/SOUL.md",
+    "npcs/conference_woman/SOUL.md",
+    "npcs/alex/SOUL.md",
+    "npcs/bob/SOUL.md",
+    "npcs/jenny/SOUL.md",
+    "npcs/dan/SOUL.md",
+    "npcs/edward/SOUL.md",
+    "npcs/josh/SOUL.md",
+    "npcs/molly/SOUL.md",
+    "npcs/oscar/SOUL.md",
+    "npcs/pier/SOUL.md",
+    "npcs/rob/SOUL.md",
+    "npcs/roki/SOUL.md",
+    "npcs/bouncer/SOUL.md",
+    "npcs/grok/SOUL.md",
+    "assets/Grok.png",
+    "src/npc-roster.js",
+    "data/business-model.json",
+    "data/company-brief.json",
+    "jelly/lib/denizen-data-actions.js",
+    "src/denizen-crm-npc-personas.js",
+    "src/denizen-mcp-crm-tools.js",
+    "src/denizen-mcp-scopes.js",
 ]
 
 
@@ -105,6 +158,17 @@ def main() -> int:
         "/mcp/team",
     ):
         run(client, f"curl -fsS -m 15 http://127.0.0.1:{PORT}{path} | head -c 1500")
+
+    verify = run(
+        client,
+        f"{DOCKER} exec denizen-server grep -c _pinThinkToFastSlot /app/src/npc-brains.js",
+    ).strip()
+    if verify and verify != "0":
+        print(f"ok think-routing patch present ({verify} refs)")
+    else:
+        print("FAILED: _pinThinkToFastSlot missing in container npc-brains.js", file=sys.stderr)
+        client.close()
+        return 1
 
     client.close()
     print("\n==> Full deploy complete")

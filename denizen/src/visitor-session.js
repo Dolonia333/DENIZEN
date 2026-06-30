@@ -145,6 +145,67 @@
     } catch (_) {}
   }
 
+  function resetStoredSessionForSwitch() {
+    announceProfileSwitching({ displayName: 'Switching account', tier: null });
+    clearActiveSessionMemory();
+    displayName = null;
+    tier = null;
+    orgSlug = null;
+    accessMethod = null;
+    identityId = null;
+    userEmail = null;
+    workPosition = null;
+    initPromise = null;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(ROLE_STORAGE_KEY);
+      localStorage.removeItem('denizen-ceo-grant');
+    } catch (_) {}
+    clearCeoUiMode();
+  }
+
+  async function applyWelcomeSession(welcome) {
+    if (!welcome) {
+      return { sessionId: null, displayName: null, assistant: null };
+    }
+    displayName = welcome.displayName;
+    tier = welcome.tier;
+    orgSlug = welcome.orgSlug;
+    accessMethod = welcome.accessMethod;
+    try {
+      await touchSession(displayName, {
+        orgSlug: welcome.orgSlug,
+        tier: welcome.tier,
+        accessMethod: welcome.accessMethod,
+        accessGrant: welcome.accessGrant,
+        email: welcome.email || null,
+        demoUsername: welcome.demoUsername || null,
+        freshPrincipal: welcome.freshPrincipal !== false,
+      });
+    } catch (err) {
+      console.warn('[DenizenVisitorSession] session touch failed:', err?.message || err);
+      resetStoredSessionForSwitch();
+      return { sessionId: null, displayName: null, assistant: null };
+    }
+    await refreshSessionSettings().catch(() => null);
+    if (isCeoPrincipalNow()) {
+      tier = 'ceo';
+      accessMethod = 'ceo';
+    }
+    try {
+      document.dispatchEvent(new CustomEvent('denizen-visitor-session-ready', {
+        detail: {
+          sessionId,
+          tier,
+          accessMethod,
+          identityId,
+        },
+      }));
+    } catch (_) {}
+    DenizenVisitorSession.refreshAssistant().catch(() => null);
+    return { sessionId, displayName, assistant };
+  }
+
   function announceProfileSwitching(profile = {}) {
     try {
       document.dispatchEvent(new CustomEvent('denizen-visitor-profile-switching', {
@@ -915,8 +976,13 @@
         if (errEl) errEl.hidden = true;
         try {
           if (!teamCode && !email) {
-            const data = await teamAuthRequest('/api/visitor/auth/login-demo', { username, password });
-            finishTeamAuth(data, username, 'demo_login');
+            if (errEl) {
+              errEl.textContent = 'Team login needs your team code or work email. Demo accounts: use Demo → Log in, or Join a team to upgrade.';
+              errEl.hidden = false;
+            }
+            (teamCode ? codeEl : emailEl)?.focus();
+            if (btn) btn.disabled = false;
+            busy = false;
             return;
           }
           const data = await teamAuthRequest('/api/visitor/auth/login', {
@@ -1005,7 +1071,10 @@
           finishTeamAuth(data, username, 'website_register');
         } catch (err) {
           if (errEl) {
-            errEl.textContent = err?.message || 'Could not join team';
+            const msg = String(err?.message || 'Could not join team');
+            errEl.textContent = /already (exists|registered)/i.test(msg)
+              ? `${msg} — use Log in with team code ${teamCode || '1921'}, your email, and password.`
+              : msg;
             errEl.hidden = false;
           }
           if (btn) btn.disabled = false;
@@ -1249,6 +1318,7 @@
               <button type="button" id="denizen-visitor-name-continue" data-action="submit-login">Log in</button>
               <div class="vis-link-row">No team yet? <button type="button" class="vis-link" data-action="goto-create-team">Create a team</button></div>
               <div class="vis-link-row">Have a code but no account? <button type="button" class="vis-link" data-action="goto-join-team">Join a team</button></div>
+              <div class="vis-link-row">On a demo account? <button type="button" class="vis-link" data-action="goto-join-team">Join your team</button></div>
             </div>
           `;
           focusAfter = true;
@@ -1274,8 +1344,8 @@
               <button type="button" class="vis-back" data-action="back">← Back</button>
               <h2>Join a team</h2>
               <p>${prefilledTeamCode
-    ? 'You\'ve been invited to join the team. Pick a username, email, and password.'
-    : 'Enter the team code from your invite, then pick a username and password.'}</p>
+    ? 'You\'ve been invited to join the team. Pick a username, work email, and password (separate from any demo login).'
+    : 'Enter the team code from your invite, then pick a username, work email, and password. Demo logins do not carry over — create team credentials here.'}</p>
               <p class="vis-error" id="denizen-vis-error" hidden></p>
               <input class="vis-input" id="denizen-visitor-team-code-input" type="text" maxlength="32" placeholder="Team code" autocomplete="off" value="${prefilledTeamCode ? String(prefilledTeamCode).replace(/"/g, '&quot;') : ''}" />
               <input class="vis-input" id="denizen-visitor-username-input" type="text" maxlength="64" placeholder="Username" autocomplete="username" />
@@ -2151,61 +2221,24 @@
 
     async logout() {
       announceProfileSwitching({ displayName: 'Signing out', tier: null });
-      sessionId = null;
-      sessionToken = null;
-      displayName = null;
-      assistant = null;
-      tier = null;
-      orgSlug = null;
-      accessMethod = null;
-      identityId = null;
-      officeId = null;
-      userEmail = null;
-      workPosition = null;
-      initPromise = null;
-
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(ROLE_STORAGE_KEY);
-        localStorage.removeItem('denizen-onboarding-seen');
-        localStorage.removeItem('denizen-ceo-grant');
-      } catch (_) {}
-
-      clearCeoUiMode();
+      resetStoredSessionForSwitch();
 
       try {
         document.dispatchEvent(new CustomEvent('denizen-visitor-logged-out'));
       } catch (_) {}
 
       const welcome = await showWelcomeModal();
-      if (!welcome) {
-        return { sessionId: null, displayName: null, assistant: null };
-      }
-      displayName = welcome.displayName;
-      tier = welcome.tier;
-      orgSlug = welcome.orgSlug;
-      accessMethod = welcome.accessMethod;
-      await touchSession(displayName, {
-        orgSlug: welcome.orgSlug,
-        tier: welcome.tier,
-        accessMethod: welcome.accessMethod,
-        accessGrant: welcome.accessGrant,
-        email: welcome.email || null,
-        demoUsername: welcome.demoUsername || null,
-      });
+      return applyWelcomeSession(welcome);
+    },
+
+    async beginTeamJoinFlow(teamCode) {
+      resetStoredSessionForSwitch();
+      pendingJoinCode = teamCode ? String(teamCode).trim() : null;
       try {
-        document.dispatchEvent(new CustomEvent('denizen-visitor-session-ready', {
-          detail: {
-            sessionId,
-            tier,
-            accessMethod,
-            identityId,
-          },
-        }));
+        document.dispatchEvent(new CustomEvent('denizen-visitor-logged-out'));
       } catch (_) {}
-      DenizenVisitorSession.refreshAssistant().catch(() => null);
-      refreshSessionSettings().catch(() => null);
-      return { sessionId, displayName, assistant };
+      const welcome = await showWelcomeModal();
+      return applyWelcomeSession(welcome);
     },
 
     registerWebSocket(ws) {
@@ -2429,6 +2462,15 @@
 
       initPromise = (async () => {
         clearCeoUiMode();
+        await fetchOfficeConfig();
+
+        const inviteCode = pendingJoinCode;
+        if (inviteCode) {
+          resetStoredSessionForSwitch();
+          pendingJoinCode = inviteCode;
+          const welcome = await showWelcomeModal();
+          return applyWelcomeSession(welcome);
+        }
 
         const stored = readStore();
         sessionId = stored.session_id || null;
@@ -2460,30 +2502,7 @@
             displayName = null;
             return { sessionId: null, displayName: null, assistant: null };
           }
-          displayName = welcome.displayName;
-          tier = welcome.tier;
-          orgSlug = welcome.orgSlug;
-          try {
-            await touchSession(displayName, {
-              orgSlug: welcome.orgSlug,
-              tier: welcome.tier,
-              accessMethod: welcome.accessMethod,
-              accessGrant: welcome.accessGrant,
-              email: welcome.email || null,
-              demoUsername: welcome.demoUsername || null,
-              freshPrincipal: welcome.freshPrincipal !== false,
-            });
-          } catch (err) {
-            console.warn('[DenizenVisitorSession] first session touch failed:', err?.message || err);
-            try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
-            sessionId = null;
-            sessionToken = null;
-            displayName = null;
-            tier = null;
-            orgSlug = null;
-            accessMethod = null;
-            return { sessionId: null, displayName: null, assistant: null };
-          }
+          return applyWelcomeSession(welcome);
         } else {
           try {
             const method = accessMethod || stored.access_method || (tier === 'demo' ? 'demo' : null);
@@ -2551,19 +2570,7 @@
               if (!welcome) {
                 return { sessionId: null, displayName: null, assistant: null };
               }
-              displayName = welcome.displayName;
-              tier = welcome.tier;
-              orgSlug = welcome.orgSlug;
-              accessMethod = welcome.accessMethod;
-              await touchSession(displayName, {
-                orgSlug: welcome.orgSlug,
-                tier: welcome.tier,
-                accessMethod: welcome.accessMethod,
-                accessGrant: welcome.accessGrant,
-                email: welcome.email || null,
-                demoUsername: welcome.demoUsername || null,
-                freshPrincipal: welcome.freshPrincipal !== false,
-              });
+              return applyWelcomeSession(welcome);
             }
           }
         }

@@ -6,8 +6,9 @@ const assert = require('node:assert/strict');
 const roster = require('../src/npc-roster.js');
 
 describe('npc-roster', () => {
-  it('has 16 NPCs aligned with office cast', () => {
-    assert.equal(roster.entries.length, 16);
+  it('has 17 NPCs including Grok', () => {
+    assert.equal(roster.entries.length, 17);
+    assert.ok(roster.nameToKey.grok, 'xp_grok');
   });
 
   it('maps display names to texture keys (Marcus / Sarah)', () => {

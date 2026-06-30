@@ -267,13 +267,14 @@
             } else if (msg.type === 'station_task_enqueued' && playerChat) {
               playerChat._addToLog?.('System', `⚙ Station task queued${msg.kind ? `: ${msg.kind}` : ''}`);
             } else if (msg.type === 'npc_skill_start' && playerChat && msg.skill === 'web-search') {
-              playerChat._addToLog('System', 'Lucy\'s browser is launching — tap 🌐 browser in the dock to watch live.');
+              playerChat._addToLog('System', 'Lucy\'s browser is launching — watch the 🌐 browser panel.');
               window.DenizenBrowserMirror?.ingest?.({
                 searching: true,
                 open: true,
                 status: 'searching',
                 query: msg.skillParams?.query || '',
               });
+              window.DenizenBrowserMirror?.show?.();
             } else if (msg.type === 'lucy_browser_mirror' || msg.type === 'npc_browser_mirror') {
               window.DenizenBrowserMirror?.ingest?.(msg);
             } else if (msg.type === 'lucy_browser_frame' || msg.type === 'npc_browser_frame') {
@@ -389,13 +390,14 @@
             pc.logPlayerChatAck(msg.npcName, msg.queueLen);
 
           } else if (msg.type === 'npc_skill_start' && msg.skill === 'web-search') {
-            pc._addToLog('System', 'Lucy\'s browser is launching — tap 🌐 browser in the dock to watch live.');
+            pc._addToLog('System', 'Lucy\'s browser is launching — watch the 🌐 browser panel.');
             window.DenizenBrowserMirror?.ingest?.({
               searching: true,
               open: true,
               status: 'searching',
               query: msg.skillParams?.query || '',
             });
+            window.DenizenBrowserMirror?.show?.();
           } else if (msg.type === 'lucy_browser_mirror' || msg.type === 'npc_browser_mirror') {
             window.DenizenBrowserMirror?.ingest?.(msg);
           } else if (msg.type === 'lucy_browser_frame' || msg.type === 'npc_browser_frame') {

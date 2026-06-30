@@ -105,6 +105,7 @@ class AgentOfficeManager {
       xp_pier: 'data_engineer',
       xp_rob: 'designer',
       xp_roki: 'intern',
+      xp_grok: 'researcher',
     };
 
     // Register agents with their roles
@@ -2623,6 +2624,7 @@ class AgentOfficeManager {
             status: 'searching',
             query: msg.skillParams?.query || '',
           });
+          window.DenizenBrowserMirror?.show?.();
           break;
         }
         const skillNpcKey = Object.entries(this.NPC_NAMES).find(
@@ -2905,6 +2907,14 @@ class AgentOfficeManager {
       case 'skill_gap_progress':
       case 'skill_gap_complete':
       case 'skill_proposal_pending':
+      case 'npc_code_proposal':
+      case 'npc_dossier_proposal':
+      case 'proposal_queue_changed':
+      case 'npc_code_proposal_approved':
+      case 'npc_code_proposal_rejected':
+      case 'npc_dossier_proposal_approved':
+      case 'npc_dossier_proposal_rejected':
+      case 'skill_proposal_decided':
       case 'mesh_watchdog_alert':
       case 'health_runbook_progress':
       case 'health_runbook_complete':
@@ -2912,6 +2922,9 @@ class AgentOfficeManager {
       case 'mesh_scale_action':
         try {
           document.dispatchEvent(new CustomEvent('denizen-ws-message', { detail: msg }));
+          if (/proposal|dossier|skill_proposal/i.test(msg.type || '')) {
+            document.dispatchEvent(new CustomEvent('denizen-proposals-changed', { detail: msg }));
+          }
         } catch (_) {}
         break;
 

@@ -854,8 +854,80 @@ function _topicMatch(a, b) {
   return true;
 }
 
-// Singleton — every subsystem imports the same instance.
-const worldState = new WorldState();
+/**
+ * Per-org world-state buckets. Each org gets an isolated WorldState instance;
+ * change events are re-emitted on the registry with `orgId` attached.
+ */
+class WorldStateRegistry extends EventEmitter {
+  constructor() {
+    super();
+    this.setMaxListeners(64);
+    /** @type {Map<string, WorldState>} */
+    this._states = new Map();
+    this._defaultOrgId = process.env.DENIZEN_ORG_SLUG || '__default__';
+  }
+
+  getDefaultOrgId() {
+    return this._defaultOrgId;
+  }
+
+  setDefaultOrgId(orgId) {
+    const id = String(orgId || '').trim();
+    if (id) this._defaultOrgId = id;
+    return this._defaultOrgId;
+  }
+
+  forOrg(orgId) {
+    const id = String(orgId || this._defaultOrgId).trim() || this._defaultOrgId;
+    if (!this._states.has(id)) {
+      const ws = new WorldState();
+      ws.on('change', (evt) => {
+        try {
+          this.emit('change', { ...evt, orgId: id });
+        } catch (_) { /* drop */ }
+      });
+      this._states.set(id, ws);
+    }
+    return this._states.get(id);
+  }
+
+  listOrgIds() {
+    return [...this._states.keys()];
+  }
+}
+
+const registry = new WorldStateRegistry();
+
+function _activeWorldState() {
+  return registry.forOrg(registry.getDefaultOrgId());
+}
+
+// Proxy — existing imports keep using the default org bucket.
+const worldState = new Proxy(registry, {
+  get(target, prop, receiver) {
+    if (prop === 'forOrg') return target.forOrg.bind(target);
+    if (prop === 'getDefaultOrgId') return target.getDefaultOrgId.bind(target);
+    if (prop === 'setDefaultOrgId') return target.setDefaultOrgId.bind(target);
+    if (prop === 'listOrgIds') return target.listOrgIds.bind(target);
+    if (prop === 'WorldState') return WorldState;
+    if (prop === 'WorldStateRegistry') return WorldStateRegistry;
+    if (prop === '_topicFingerprint') return _topicFingerprint;
+    if (prop === 'on' || prop === 'off' || prop === 'once' || prop === 'removeListener'
+        || prop === 'removeAllListeners' || prop === 'listenerCount' || prop === 'listeners') {
+      const fn = target[prop];
+      return typeof fn === 'function' ? fn.bind(target) : fn;
+    }
+    const ws = _activeWorldState();
+    const val = ws[prop];
+    return typeof val === 'function' ? val.bind(ws) : val;
+  },
+  set(_target, prop, value) {
+    _activeWorldState()[prop] = value;
+    return true;
+  },
+});
+
 module.exports = worldState;
 module.exports.WorldState = WorldState;
+module.exports.WorldStateRegistry = WorldStateRegistry;
 module.exports._topicFingerprint = _topicFingerprint;

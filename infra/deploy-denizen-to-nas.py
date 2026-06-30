@@ -258,8 +258,16 @@ def _tar_filter(tarinfo: tarfile.TarInfo) -> tarfile.TarInfo | None:
 
     parts = Path(tarinfo.name).parts
 
-    if any(part in SOURCE_SKIP_DIRS for part in parts):
+    if any(part in SOURCE_SKIP_DIRS - {"reports"} for part in parts):
+        return None
 
+    if "reports" in parts:
+        try:
+            idx = parts.index("reports")
+            if idx + 1 < len(parts) and parts[idx + 1] == "dossiers":
+                return tarinfo
+        except ValueError:
+            pass
         return None
 
     return tarinfo
@@ -274,9 +282,16 @@ def pack_denizen_source(tmp_dir: Path) -> Path:
 
     log(f"==> Packing Denizen source ({DENIZEN_DIR})")
 
+    dossiers_dir = DENIZEN_DIR / "reports" / "dossiers"
+
     with tarfile.open(tar_path, "w:gz") as tar:
 
         tar.add(DENIZEN_DIR, arcname="denizen", filter=_tar_filter)
+
+        if dossiers_dir.is_dir():
+            n = sum(1 for _ in dossiers_dir.rglob("*") if _.is_file())
+            log(f"    Including {n} dossier artifact file(s) from reports/dossiers")
+            tar.add(dossiers_dir, arcname="denizen/reports/dossiers")
 
     log(f"    Source tarball: {tar_path.stat().st_size // (1024 * 1024)} MB")
 

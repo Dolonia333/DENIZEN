@@ -55,6 +55,8 @@ module.exports = {
   cofounderMeetingCooldownMs: envInt('DENIZEN_COFOUNDER_MEETING_COOLDOWN_MS', 300000),
   cofounderThinkMinMs: envInt('DENIZEN_COFOUNDER_THINK_MIN_MS', economy ? 60000 : 45000),
   cofounderThinkMaxMs: envInt('DENIZEN_COFOUNDER_THINK_MAX_MS', economy ? 120000 : 90000),
+  /** Abby office-dispatcher LM timeout (JSON commands, not deep reasoning). */
+  cofounderLmTimeoutMs: envInt('DENIZEN_COFOUNDER_LM_TIMEOUT_MS', economy ? 60000 : 90000),
   compactLiveContext: envBool('DENIZEN_COMPACT_LIVE_CONTEXT', true),
   compactThinkPrompt: envBool('DENIZEN_COMPACT_THINK_PROMPT', true),
   includePcAccessBlock: envBool('DENIZEN_INCLUDE_PC_ACCESS', false),
@@ -65,6 +67,13 @@ module.exports = {
   thinkSliceLen: envInt('DENIZEN_THINK_SLICE_LEN', economy ? 1200 : 1500),
   /** HTTP timeout for autonomous think() LM Studio calls (ms). */
   lmThinkTimeoutMs: envInt('DENIZEN_LM_THINK_TIMEOUT_MS', economy ? 90000 : 120000),
+  /** HTTP timeout when think() uses the fast local slot (Gemma etc.). */
+  lmThinkFastTimeoutMs: envInt('DENIZEN_LM_THINK_FAST_TIMEOUT_MS', 45000),
+  /**
+   * Route autonomous think() through lmstudio-fast (small JSON decisions).
+   * SOUL Provider still applies to player chat and NPC↔NPC dialogue.
+   */
+  thinkUseFastModel: envBool('DENIZEN_THINK_USE_FAST_MODEL', true),
   /** Max chars of SOUL injected into autonomous think() (full SOUL still on disk). */
   thinkSoulMaxChars: envInt('DENIZEN_THINK_SOUL_MAX_CHARS', economy ? 720 : 1100),
   /** Anthropic prompt caching on static system blocks (BYOK / cloud NPC paths). */
@@ -95,7 +104,7 @@ module.exports = {
   playerChatCompaction: envBool('DENIZEN_PLAYER_CHAT_COMPACTION', true),
   playerChatMemoryChars: envInt('DENIZEN_PLAYER_CHAT_MEMORY_CHARS', economy ? 320 : 500),
   /** Shorter CEO/visitor chat system prompt — drops the 2k-token action catalog. */
-  compactPlayerChat: envBool('DENIZEN_COMPACT_PLAYER_CHAT', economy),
+  compactPlayerChat: envBool('DENIZEN_COMPACT_PLAYER_CHAT', true),
   playerChatTimeoutMs: envInt('DENIZEN_PLAYER_CHAT_TIMEOUT_MS', 45000),
   /** Visitor onboarding — team/demo org slugs and access codes (server-side only). */
   teamCode: String(process.env.DENIZEN_TEAM_CODE || '1921'),
