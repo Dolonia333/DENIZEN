@@ -37,6 +37,9 @@ PATCH = {
         "BOUNCER_INVESTIGATION_URL", "http://192.168.1.232:8890"
     ),
 }
+_token = os.environ.get("BOUNCER_INVESTIGATION_TOKEN", "").strip()
+if _token:
+    PATCH["BOUNCER_INVESTIGATION_TOKEN"] = _token
 
 _demo_key = os.environ.get("DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY") or os.environ.get("ANTHROPIC_API_KEY")
 if _demo_key:
