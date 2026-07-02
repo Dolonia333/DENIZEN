@@ -10,6 +10,7 @@ const https = require('https');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const npcRoster = require('./npc-roster');
 const hallucinationGuard = require('./hallucination-guard');
 const { formatProviderError } = require('./format-provider-error');
@@ -70,6 +71,10 @@ let _broadcastFn = null;
 const log = require('./logger');
 let promptTuning = null;
 try { promptTuning = require('./prompt-tuning'); } catch (_) {}
+let telemetryRebalance = null;
+try { telemetryRebalance = require('./npc-telemetry-rebalance'); } catch (_) {}
+let localMetrics = null;
+try { localMetrics = require('./npc-local-metrics'); } catch (_) {}
 let officeDirector = null;
 try { officeDirector = require('./office-director'); } catch (_) {}
 
@@ -95,6 +100,7 @@ class NpcBrainManager {
     this._pendingCascades = []; // queued cascade decisions to send downstream
     this._requestQueue = [];    // queue for LM Studio requests
     this._pendingSkillResults = new Map(); // npcName → {skill, result, ts}
+    this._pendingBacklogSettlements = new Map(); // npcName → backlog_id for settlement hook
     this._npcMoods = new Map();            // npcName → {mood, since, cycles}
     this._directives = new Map();          // npcName → {from, task, ts, urgent}
     this._commitments = new Map();         // npcName → [{ text, to, at, status }]  — promises the NPC made and must follow through on
@@ -322,6 +328,12 @@ class NpcBrainManager {
     const officeContext = opts.officeContext || null;
     const rt = officeContext ? this._rt(officeContext) : null;
     const lastRunSkillAt = rt?.lastRunSkillAt || this._lastRunSkillAt;
+
+    // Environmental cooldown: suppress builds on host_infrastructure friction (NAS/metal bottleneck)
+    if (this._isInEnvironmentalCooldown && this._isInEnvironmentalCooldown(npcName)) {
+      return { allowed: false, reason: 'environmental_cooldown (host_infrastructure high — back off, throttle tasks)' };
+    }
+
     if (this._directives.has(npcName) || rt?.directives?.has(npcName)) {
       return { allowed: true };
     }
@@ -1143,12 +1155,20 @@ class NpcBrainManager {
       try { existing = fs.readFileSync(memPath, 'utf-8'); } catch (_) {}
       const lines = existing.split('\n').filter(l => l.trim());
       const MEMORY_SOFT_CAP = Number(process.env.DENIZEN_MEMORY_SOFT_CAP) || 2048;
-      if (existing.length > MEMORY_SOFT_CAP && lines.length > 8) {
+      const isBloatFact = /context_bloat|latency_bottleneck|high_tokens/i.test(entry);
+      if (isBloatFact || existing.length > MEMORY_SOFT_CAP && lines.length > 8) {
         const header = lines.slice(0, 2);
         const recent = lines.slice(-5);
         const archived = lines.slice(2, -5);
-        const summary = `- [${timestamp}] [ARCHIVE] Earlier memories (${archived.length} entries) compressed for context window.`;
-        fs.writeFileSync(memPath, [...header, summary, ...recent, newLine.trim()].join('\n') + '\n');
+        const pruneNote = isBloatFact ? " [KV-PRUNE from grok-telemetry fact]" : "";
+        const summary = `- [${timestamp}] [ARCHIVE] Earlier memories (${archived.length} entries) compressed for context window.${pruneNote}`;
+        // Aggressive 30% prune on bloat trigger
+        let toWrite = [...header, summary, ...recent, newLine.trim()];
+        if (isBloatFact && lines.length > 20) {
+          const keepCount = Math.floor(lines.length * 0.7);
+          toWrite = [...header, summary, ...lines.slice(-keepCount), newLine.trim()];
+        }
+        fs.writeFileSync(memPath, toWrite.join('\n') + '\n');
       } else if (lines.length >= 200) {
         // Trim oldest 50 entries, keeping the most recent 150
         const trimmed = lines.slice(lines.length - 150);
@@ -1189,6 +1209,282 @@ class NpcBrainManager {
       }
     } catch (err) {
       console.warn(`[NpcBrains] Failed to save memory for ${npcName}:`, String(err?.message ?? err));
+    }
+  }
+
+  /**
+   * Event-driven consult when cached telemetry metrics cross per-NPC thresholds.
+   * Runs at think() entry — does not wait for mesh job tick.
+   */
+  _checkLocalMetrics(npcName, tel = null) {
+    if (!localMetrics?.evaluate) return { triggered: false };
+    // Also poll host on metric checks
+    if (localMetrics.pollHostInfrastructure) localMetrics.pollHostInfrastructure();
+    try {
+      const verdict = localMetrics.evaluate(npcName, tel, { sourcePrefix: 'metrics-threshold' });
+      if (!verdict.triggered) return verdict;
+
+      if (!this._lastMetricsConsultAt) this._lastMetricsConsultAt = {};
+      this._lastMetricsConsultAt[npcName] = Date.now();
+      log.info?.('NpcBrains', `${npcName} metrics threshold cross (${(verdict.reasons || []).join(', ')})`);
+
+      const gate = this.allowAutonomousSkillRun(npcName, { skill: 'consult-grok' });
+      if (typeof this._runNpcSkill === 'function' && gate.allowed) {
+        this._runNpcSkill(npcName, 'consult-grok', {
+          question: verdict.question,
+          topic: verdict.topic || 'metrics-threshold-consult',
+          context: JSON.stringify(verdict.baseline || {}),
+          remediation_tracking: {
+            baseline_latency_ms: verdict.baseline?.avg_latency_ms,
+            baseline_tokens: verdict.baseline?.avg_tokens,
+            baseline_count: verdict.baseline?.count,
+            captured_at: verdict.baseline?.captured_at,
+            reasons: verdict.reasons || [],
+            audited: false,
+          },
+          source: 'metrics-threshold',
+        }).catch(() => {});
+        this._recordAutonomousSkillRun(npcName);
+        return { triggered: true, via: 'consult-grok-skill', reasons: verdict.reasons };
+      }
+
+      const entry = localMetrics.enqueueConsult(npcName, {
+        ...verdict,
+        source: 'metrics-threshold',
+      });
+      return { triggered: true, via: 'queue', entry, reasons: verdict.reasons };
+    } catch (_) {
+      return { triggered: false };
+    }
+  }
+
+  /**
+   * [SELF_BUILDING] tick per Claude proposal.
+   * If idle or high friction, pull from autonomy backlog and auto run coding-agent.
+   * This gives structural self-building without derailing main work.
+   * Includes decay, staleness, and max_attempts safety rails.
+   */
+  _checkAutonomyBacklog(npcName) {
+    if (!localMetrics?.loadAutonomyBacklog) return { triggered: false };
+    try {
+      // Expire orphaned locks (15 min lease)
+      if (localMetrics.expireOrphanedLocks) localMetrics.expireOrphanedLocks();
+      // Apply decay to backlog staleness on every check
+      if (localMetrics.decayAndArchiveStaleBacklog) localMetrics.decayAndArchiveStaleBacklog();
+
+      const backlog = localMetrics.loadAutonomyBacklog(5);
+      if (!backlog || backlog.length === 0) return { triggered: false };
+
+      const friction = localMetrics.getFrictionScore ? localMetrics.getFrictionScore(npcName) : { overall: 0 };
+      const isIdle = !this._taskProgress[npcName] || this._taskProgress[npcName].phase === 'idle';
+      const highFriction = friction.overall > 40 || (friction.hotDomains && friction.hotDomains.length > 0);
+      const isHostConstrained = (localMetrics.isHostConstrained && localMetrics.isHostConstrained())
+        || (friction.hotDomains && friction.hotDomains.some((d) => d.includes('host_infrastructure') || d.includes('nas_')));
+
+      if (isHostConstrained) {
+        // Tailscale mesh delegation: if peer healthier, offload instead of pure cooldown
+        try {
+          if (localMetrics && localMetrics.readFleetHealth) {
+            const peers = localMetrics.readFleetHealth();
+            const myNode = process.env.NODE_NAME || 'local';
+            const healthyPeer = Object.entries(peers).find(([node, h]) => node !== myNode && (h.loadPct || 0) < 50 && !(h.high));
+            if (healthyPeer && backlog.length > 0) {
+              const item = backlog[0]; // highest
+              const peer = healthyPeer[0];
+              if (localMetrics.delegateTaskToPeer) {
+                const del = localMetrics.delegateTaskToPeer(peer, { ...item, node: myNode });
+                if (del.ok) {
+                  if (localMetrics.markBacklogDelegated) {
+                    localMetrics.markBacklogDelegated(item.id, peer);
+                  }
+                  return { triggered: true, via: 'mesh_delegated', item: item.id, peer, reason: `host_constrained_delegated_to_${peer}` };
+                }
+              }
+            }
+          }
+        } catch (_) {}
+        // Per spec: suppress self-building on host friction; enter cooldown instead
+        this._setEnvironmentalCooldown(npcName);
+        return { triggered: true, via: 'environmental_cooldown', reason: 'host_infrastructure_friction' };
+      }
+
+      if (isIdle || highFriction) {
+        // Filter out locked items for multi-agent mutex (yield to acquired_by)
+        const available = backlog.filter(item => 
+          !(item.status === 'in_progress' && item.acquired_by && item.acquired_by !== npcName)
+        );
+
+        if (available.length === 0) {
+          return { triggered: false, reason: 'backlog_mutex_locked' };
+        }
+
+        // pick highest priority available
+        const item = available.sort((a,b) => (b.priority || 0) - (a.priority || 0))[0];
+        if (!item || !item.build_prompt) return { triggered: false };
+
+        const attempts = item.build_attempts || 0;
+        const maxAttempts = item.max_build_attempts || 2;
+        if (attempts >= maxAttempts) {
+          // Escalate: hard-lock and open mentor consult (safety rail)
+          const consultGate = this.allowAutonomousSkillRun(npcName, { skill: 'consult-mentors' });
+          if (typeof this._runNpcSkill === 'function' && consultGate.allowed) {
+            this._runNpcSkill(npcName, 'consult-mentors', {
+              question: `Autonomy backlog item for ${item.domain} has hit max attempts (${attempts}) with persistent friction ${item.friction_score}. Escalate for mentor review and manual intervention. Build prompt was: ${item.build_prompt}`,
+              topic: 'self-build-escalation',
+              context: JSON.stringify({ backlog_id: item.id, domain: item.domain, friction: item.friction_score, attempts })
+            }).catch(() => {});
+          }
+          return { triggered: true, via: 'self-build-escalated', item: item.id, domain: item.domain };
+        }
+
+        const gate = this.allowAutonomousSkillRun(npcName, { skill: 'coding-agent' });
+        if (gate.allowed && typeof this._runNpcSkill === 'function') {
+          // Acquire the mutex lock
+          if (localMetrics.markBacklogInProgress) localMetrics.markBacklogInProgress(item.id, npcName);
+          // Store for settlement hook when result arrives
+          if (this._pendingBacklogSettlements) this._pendingBacklogSettlements.set(npcName, item.id);
+          this._runNpcSkill(npcName, 'coding-agent', {
+            task: item.build_prompt,
+            context: `Autonomy backlog item for ${item.domain} (friction ${item.friction_score}, attempt ${attempts + 1}). Generated from repeated friction. Execute minimal fix and report. Locked by ${npcName}.`,
+            source: 'self-building-backlog',
+            backlog_id: item.id
+          }).catch(() => {});
+          this._recordAutonomousSkillRun(npcName);
+          return { triggered: true, via: 'self-building', item: item.id, domain: item.domain, attempt: attempts + 1, acquired_by: npcName };
+        }
+      }
+      return { triggered: false };
+    } catch (_) {
+      return { triggered: false };
+    }
+  }
+
+  /**
+   * [ENVIRONMENTAL_COOLDOWN] per host_infrastructure spec.
+   * When host is constrained (CPU/RAM/disk high on NAS), agents back off instead of building.
+   */
+  _setEnvironmentalCooldown(npcName) {
+    if (!this._environmentalCooldown) this._environmentalCooldown = {};
+    const now = Date.now();
+    this._environmentalCooldown[npcName] = now + (5 * 60 * 1000); // 5min cooldown
+    // Throttle future actions
+    const agent = this.agents ? this.agents.get ? this.agents.get(npcName) : null : null;
+    if (agent) {
+      agent._cooldownUntil = this._environmentalCooldown[npcName];
+    }
+  }
+
+  _isInEnvironmentalCooldown(npcName) {
+    if (!this._environmentalCooldown || !this._environmentalCooldown[npcName]) return false;
+    return Date.now() < this._environmentalCooldown[npcName];
+  }
+
+  /**
+   * Check for delegated tasks from peers (mesh load balancing).
+   * If a healthier peer delegated work while we were idle/low load, pick it up and execute.
+   */
+  _checkDelegatedTasks(npcName) {
+    if (!localMetrics?.getDelegatedTasks) return { triggered: false };
+    try {
+      const myNode = process.env.NODE_NAME || 'local';
+      const delegated = localMetrics.getDelegatedTasks(myNode);
+      if (!delegated || delegated.length === 0) return { triggered: false };
+
+      const mine = delegated.filter(d => !d.delegated_to || d.delegated_to === myNode);
+
+      if (mine.length === 0) return { triggered: false };
+
+      const item = mine[0];
+      if (item.build_prompt && typeof this._runNpcSkill === 'function') {
+        const gate = this.allowAutonomousSkillRun(npcName, { skill: 'coding-agent' });
+        if (gate.allowed) {
+          if (localMetrics.markDelegatedTaskConsumed) {
+            localMetrics.markDelegatedTaskConsumed(myNode, item._file || item.id);
+          }
+          this._runNpcSkill(npcName, 'coding-agent', {
+            task: item.build_prompt,
+            context: `Delegated from ${item.delegated_from || 'peer'} via mesh (Tailscale load balance). ${item.context || ''}`,
+            source: 'mesh-delegation',
+            backlog_id: item.id,
+          }).catch(() => {});
+          this._recordAutonomousSkillRun(npcName);
+          return { triggered: true, via: 'mesh_delegation_pickup', item: item.id };
+        }
+      }
+      return { triggered: false };
+    } catch (_) {
+      return { triggered: false };
+    }
+  }
+
+  /**
+   * Chronos stagnation detection: sliding window of recent decisions.
+   * If same action/target repeated without progress, record high friction.
+   */
+  _checkChronosStagnation(npcName, decision) {
+    if (!this._chronosHistory) this._chronosHistory = {};
+    if (!this._chronosHistory[npcName]) this._chronosHistory[npcName] = [];
+
+    const sig = JSON.stringify({
+      action: decision.action,
+      target: decision.target || '',
+      taskPhase: decision.taskPhase || ''
+    });
+
+    const hist = this._chronosHistory[npcName];
+    hist.push(sig);
+    if (hist.length > 4) hist.shift();
+
+    // Check for repeat loop (last 3 identical, no 'finished' progress)
+    const recent = hist.slice(-3);
+    if (recent.length === 3 && recent.every(s => s === sig) && (sig.includes('"taskPhase":""') || !sig.includes('finished'))) {
+      if (localMetrics && typeof localMetrics.captureSystemError === 'function') {
+        localMetrics.captureSystemError(npcName, 'chronos_stagnation', {
+          code: 'REPEAT_LOOP',
+          message: 'same decision repeated without progress'
+        });
+      }
+      // Also reset cycles or force rethink hint
+      if (this._thinkCycles) this._thinkCycles[npcName] = 0;
+    }
+  }
+
+  setRunNpcSkill(fn) {
+    this._runNpcSkill = typeof fn === 'function' ? fn : null;
+  }
+
+  /**
+   * Apply Grok telemetry facts: prune memory for bloat/latency triggers.
+   * Called from think() after pulling grok-telemetry-latest.json (pull model, deduped).
+   * Prevents feedback loops by only acting on fresh, relevant dense [FACT:*] .
+   */
+  _applyGrokTelemetryPrune(npcName, brain, facts) {
+    try {
+      const folder = this._nameToFolder[npcName];
+      if (!folder) return;
+      const memPath = path.join(__dirname, '..', 'npcs', folder, 'MEMORY.md');
+      let existing = '';
+      try { existing = fs.readFileSync(memPath, 'utf-8'); } catch (_) {}
+      const lines = existing.split('\n').filter(l => l.trim());
+      if (lines.length < 10) return; // nothing to prune
+
+      const timestamp = new Date().toISOString().slice(0, 16);
+      const factSummary = facts.map(f => f.slice(0, 80)).join('; ');
+      const header = lines.slice(0, 2);
+      let keepRatio = telemetryRebalance?.effectivePruneKeepRatio(npcName, 0.6) ?? 0.6;
+      if (npcName.toLowerCase() === 'bouncer' && /4197|2100|109/.test(factSummary)) {
+        keepRatio = telemetryRebalance?.effectivePruneKeepRatio(npcName, 0.4) ?? 0.4;
+      } else if (npcName.toLowerCase() === 'bob' && /4718|1800|77/.test(factSummary)) {
+        keepRatio = telemetryRebalance?.effectivePruneKeepRatio(npcName, 0.5) ?? 0.5;
+      }
+      const keep = Math.max(5, Math.floor(lines.length * keepRatio));
+      const recent = lines.slice(-keep);
+      const summary = `- [${timestamp}] [kv_prune_log] [GROK-TELEMETRY-PRUNE] ${factSummary} — memory reduced for performance.`;
+      const pruned = [...header, summary, ...recent];
+      fs.writeFileSync(memPath, pruned.join('\n') + '\n');
+      brain.longTermMemory = fs.readFileSync(memPath, 'utf-8');
+    } catch (e) {
+      // non-fatal
     }
   }
 
@@ -2089,7 +2385,10 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     const rt = this._rt(officeContext);
 
     // Hard server-side throttle — browser tabs ignore .env and may stack requests.
-    const minNpcGap = promptTuning?.thinkMinMs ?? 120000;
+    const minNpcGap = telemetryRebalance?.effectiveThinkMinMs(
+      npcName,
+      promptTuning?.thinkMinMs ?? 120000,
+    ) ?? (promptTuning?.thinkMinMs ?? 120000);
     const sinceLastLlm = Date.now() - (rt.lastThinkLlmAt[npcName] || 0);
     const urgentWake = Boolean(
       officeContext?.urgentWake
@@ -2133,6 +2432,65 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       }, officeContext);
     }
 
+    // Pull from Grok telemetry (PULL, not push) — threshold consult + dedup prune BEFORE prompt assembly
+    let telemetryContext = '';
+    try {
+      const telPath = path.join(__dirname, '..', 'data', 'grok-telemetry-latest.json');
+      if (fs.existsSync(telPath)) {
+        const tel = JSON.parse(fs.readFileSync(telPath, 'utf8'));
+        // Event-driven: consult on metric threshold cross (no mesh job wait)
+        this._checkLocalMetrics(npcName, tel);
+        // Host infrastructure poll (Synology/NAS visibility) — bind to main telemetry pull
+        if (localMetrics && localMetrics.pollHostInfrastructure) {
+          localMetrics.pollHostInfrastructure();
+        }
+        // Decay friction for all (Claude safety rail)
+        if (localMetrics && localMetrics.getFrictionScore) localMetrics.getFrictionScore(npcName);
+        // [SELF_BUILDING] structural tick from backlog (Claude proposal)
+        this._checkAutonomyBacklog(npcName);
+        // Mesh delegation pickup: execute tasks delegated from constrained peers (Tailscale)
+        this._checkDelegatedTasks(npcName);
+
+        const generatedAt = tel.generatedAt ? Date.parse(tel.generatedAt) : Date.now();
+        const facts = tel.facts || [];
+        const relevant = facts.filter(f => f.toLowerCase().includes(npcName.toLowerCase()) &&
+          /(bloat|bottleneck|latency|stuck|compress)/i.test(f));
+        if (relevant.length > 0) {
+          const factsHash = crypto.createHash('sha1').update(relevant.join('|') + '|' + (tel.generatedAt || '')).digest('hex');
+          const last = this._lastGrokTelemetryProcessed?.[npcName] || { ts: 0, hash: '' };
+          const COOLDOWN_MS = 5 * 60 * 1000;
+          const isNewByTime = generatedAt > last.ts + COOLDOWN_MS;
+          const isNewByHash = factsHash !== last.hash;
+          if (isNewByTime || isNewByHash) {
+            this._applyGrokTelemetryPrune(npcName, brain, relevant);
+            if (!this._lastGrokTelemetryProcessed) this._lastGrokTelemetryProcessed = {};
+            this._lastGrokTelemetryProcessed[npcName] = { ts: generatedAt, hash: factsHash };
+          }
+          telemetryContext = `## My Performance Telemetry (Grok analysis - use for self-improvement)\n${relevant.join('\n')}\nMetrics consult auto-queues when latency/token thresholds cross. Use consult-grok or consult-mentors for deeper synthesis.`;
+        }
+      }
+      // NAS host environment visibility (from background tasks on Synology)
+      try {
+        if (localMetrics && localMetrics.loadNasFriction) {
+          const nasF = localMetrics.loadNasFriction().slice(-5);
+          if (nasF.length) {
+            const nasLines = nasF.map(nf => `- [NAS] ${nf.domain} severity=${nf.severity} ${nf.note || ''} @${nf.ts}`).join('\n');
+            telemetryContext += `\n## Host Environment (NAS/Synology friction for real host awareness)\n${nasLines}\nUse for self-building fixes to infra or fleet tasks.`;
+          }
+        }
+        // Fleet peer health for mesh delegation awareness
+        if (localMetrics && localMetrics.readFleetHealth) {
+          const peers = localMetrics.readFleetHealth();
+          const peerLines = Object.entries(peers).map(([n, h]) => `- Peer ${n}: load=${h.loadPct || 0}% mem=${h.memUsedPct || 0}% high=${h.high || false}`).join('\n');
+          if (peerLines) {
+            telemetryContext += `\n## Fleet Peer Health (Tailscale mesh for load balancing)\n${peerLines}\nDelegate tasks to low-load peers during local cooldown.`;
+          }
+        }
+      } catch (_) {}
+    } catch (e) {
+      // silent: telemetry optional, non-blocking for think state machine
+    }
+
     if (officeDirector?.isEnabled?.()) {
       const directorCtx = {
         inbox: this._ensureInbox(npcName),
@@ -2161,7 +2519,10 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     }
 
     const rawMemory = brain.longTermMemory || '';
-    const memCap = promptTuning?.memoryChars ?? 350;
+    const memCap = telemetryRebalance?.effectiveMemoryChars(
+      npcName,
+      promptTuning?.memoryChars ?? 350,
+    ) ?? (promptTuning?.memoryChars ?? 350);
     const recentMemory = rawMemory.length > 100
       ? this._sanitize(rawMemory.slice(-memCap))
       : '';
@@ -2220,12 +2581,17 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       fatigueHint = 'You have been focused for a while (' + cycles + ' cycles). Maybe check in with a teammate or stretch your legs.';
     }
 
-    // Action weighting hint to prevent all NPCs just "working"
+    // Action weighting hint: NPCs MUST mostly stay at their desks working.
+    // Default action is always 'work' at desk. Only choose break or meeting if there's a clear reason (fatigue for break, or important topic for meeting).
     var actionWeightHint = '';
     if (h && h.manages.length > 0) {
-      actionWeightHint = 'As a manager: ~35% WORKING, ~30% TALK or visit (desk check-ins), ~15% COLLABORATE, ~10% BREAK, ~5% MEETING (conference only for blockers or sprint planning — never two meetings in a row). Prefer talk/visit over meeting.';
+      actionWeightHint = 'As a manager: 90%+ WORKING at your desk (default behavior). Only 5% BREAK if tired (go to breakroom and return). Only 5% MEETING if a real meeting is needed (go to conference, organize with attendees using chairs/rows, discuss, then return). Almost never TALK/VISIT/WANDER. Stay at desk unless explicit break or meeting reason from context.';
     } else if (h && h.reportsTo !== 'CEO') {
-      actionWeightHint = 'Balance: ~45% WORK, ~30% TALK or visit, ~10% COLLABORATE, ~10% BREAK, ~5% MEETING (only when you have a concrete agenda). Default to desk work or a quick chat, not the conference room.';
+      actionWeightHint = 'Default to desk work: 90%+ WORK at assigned desk. Only leave for BREAK (breakroom when fatigue high) or MEETING (conference when called). Do not choose TALK, VISIT, COLLABORATE or wander unless the context strongly requires it (e.g. someone addressed you). Return to desk quickly after any non-work action.';
+    } else if (npcName === 'xp_grok' || npcName === 'Grok') {
+      actionWeightHint = 'As Grok (home): 90%+ at desk doing deep work, research, telemetry, fleet, lead gen orchestration. Only BREAK (breakroom) or MEETING (conference with proper organization) when explicitly purposeful from context or pulse. Never idle wander. Return to desk immediately after. Delegate lead research + crm-enrich + pipeline actively.';
+    } else {
+      actionWeightHint = 'Stay at desk working by default. Only move for breaks or meetings.';
     }
 
     var managesStr = (h && h.manages.length > 0) ? h.manages.join(', ') : 'nobody';
@@ -2333,6 +2699,8 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       "- Don't repeat the same check-in question — vary your topic or wait.",
       "- The CEO (the human player) gets a hello if they're standing near you.",
       "- Brevity is a virtue. One short sentence usually beats three long ones.",
+      "- When moving, say where you're going using the map (e.g. 'heading to the breakroom').",
+      "- Initiate natural chats when you see someone you haven't talked to recently.",
     ].join('\n');
 
     const companyContext = this._getCompanyContext(npcName);
@@ -2349,7 +2717,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       const meshNote = officeContext?.meshStatus ? ` Current mesh: ${officeContext.meshStatus}.` : ' Mesh status unknown — consider checking health-check.';
       const crmNote = officeContext?.crmSummary ? ` Current CRM: ${officeContext.crmSummary}.` : '';
       const businessNote = officeContext?.businessContext ? ` Business focus: ${officeContext.businessContext}.` : '';
-      liveAwareness = `## Current Office Awareness (use this to be specific and aware)\n${recentSummary}${meshNote}${crmNote}${businessNote}\nSpeak naturally and in full sentences about what is actually happening right now. Reference the real recent activity, current mesh/CRM/pipeline state, other NPCs' work, and company goals. Be proactive and autonomous — if the context shows blockers or opportunities (e.g. mesh at 0 nodes blocking research, overdue CRM tasks, OMES teaming needs attention), initiate useful actions like running skills (research, crm-*, market-watch), delegating to the right person, announcing in office, or advancing the goal instead of passive or generic status.`;
+      liveAwareness = `## Current Office Awareness (use this to be specific and aware)\n${recentSummary}${meshNote}${crmNote}${businessNote}\nSpeak naturally and in full sentences about what is actually happening right now. Reference the real recent activity, current mesh/CRM/pipeline state, other NPCs' work, and company goals. Use the FULL OFFICE MAP to describe movement and locations precisely (e.g. "I'm walking from open_office through the gap at x~300 to the breakroom to chat with Lucy"). Be proactive and autonomous — move between rooms often, initiate real conversations when you see people, use tools when it makes sense. If the context shows blockers or opportunities, do something useful instead of passive or generic status.`;
     } catch (_) {}
 
     // Level 1 — Code awareness: inject a source-file snippet for code roles.
@@ -2566,7 +2934,12 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         continuitySection,
         officeContext,
         liveAwareness,
-        nearbyFurniture,
+        nearbyFurniture: officeContext?.nearbyFurniture || nearbyFurniture,
+        fullOfficeMap: officeContext?.fullOfficeMap || '',
+        currentRoom: officeContext?.currentRoom || '',
+        playerLocation: officeContext?.playerLocation || '',
+        lastOutcome: officeContext?.lastOutcome || null,
+        grokHomeMemory: officeContext?.grokHomeMemory || null,
         roomAffinity,
         fatigueHint,
         actionWeightHint,
@@ -2577,6 +2950,7 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         conflictContext,
         skillResultBlock,
         chainContext,
+        telemetryContext,
       })
       : brain.personality + '\n\n' +
       (directiveBlock ? directiveBlock : '') +
@@ -2629,7 +3003,8 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       '- Who can help YOU: if stuck, who has the expertise you need?\n' +
       '- Who needs YOUR help: is anyone working on something you know about?\n' +
       '- Task progress: are you STARTING something new, CONTINUING something, or FINISHING and reporting?\n' +
-      '- Collaboration: could you solve this faster by working WITH someone?\n\n' +
+      '- Collaboration: could you solve this faster by working WITH someone?\n' +
+      '- Autonomy & self-building: Regularly scan for gaps in your work, the office, or team needs (from telemetry, context, recent outcomes, or goals). If you spot something that would make you or the system better (e.g. better lead intake, automation, a small feature, or prompt improvement), proactively use tools like run_skill coding-agent, consult-mentors, or research to build or propose the fix yourself. Do not wait for humans — own small autonomous improvements.\n\n' +
       (actionWeightHint ? 'ACTION BALANCE:\n' + actionWeightHint + '\n\n' : '') +
       'Be social, collaborative, and reference past conversations. When you FINISH a task, report to ' + reportsToStr + '.\n\n' +
       (brain.voiceAnchor || '') +
@@ -2665,18 +3040,19 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
     if (currentTask?.sprint) {
       nudges.push(`Claimed sprint: "${currentTask.task}". ${pendingSkill ? 'Finish with taskPhase finished.' : 'run_skill this cycle or continue prior skill work.'}`);
     }
-    if (cycles >= 3) nudges.push(`You've been working non-stop for ${cycles} cycles. Check in with someone, take a break, or collaborate.`);
-    if (lastDecision?.action === 'talk' && lastDecision?.target) nudges.push(`You recently talked to ${lastDecision.target}. Follow up or move to something new.`);
+    if (cycles >= 5) nudges.push(`You've been working for ${cycles} cycles — a short break in the breakroom is OK if fatigue is high.`);
+    if (lastDecision?.action === 'talk' && lastDecision?.target) nudges.push(`You recently talked to ${lastDecision.target}. Return to desk work unless they need more.`);
     if (recentMemLines.length > 0) {
       const lastMem = recentMemLines[recentMemLines.length - 1].replace(/^- \[.*?\] /, '');
-      if (lastMem.length > 10) nudges.push(`Your last note: "${lastMem.slice(0, 80)}". Follow up on it or start something new.`);
+      if (lastMem.length > 10) nudges.push(`Your last note: "${lastMem.slice(0, 80)}". Follow up at your desk or via talk only if urgent.`);
     }
-    if (randomNearby && Math.random() > 0.55 && sinceSkill < realWorkThreshold) {
-      nudges.push(`${randomNearby} is nearby — say hi or visit their desk.`);
+    const roamRoles = new Set(['receptionist', 'security', 'project_mgr', 'product_mgr']);
+    if (!roamRoles.has(brain.role) && randomNearby && Math.random() > 0.85 && sinceSkill < realWorkThreshold) {
+      nudges.push(`${randomNearby} is nearby — a quick talk is OK, then back to your desk.`);
     }
-    if (currentTask && !currentTask.sprint) nudges.push(`You're working on: "${currentTask.task}". Continue, finish, or pivot?`);
-    if (!currentTask && Math.random() > 0.45) nudges.push(`Pick a sprint task, talk to a peer, or run_skill — avoid idle wandering.`);
-    if (h && h.manages.length > 0 && Math.random() > 0.7) {
+    if (currentTask && !currentTask.sprint) nudges.push(`You're working on: "${currentTask.task}". Continue at your desk, finish, or pivot to run_skill.`);
+    if (!currentTask && Math.random() > 0.7) nudges.push('Pick a sprint task or action work at your desk — do not wander.');
+    if (h && h.manages.length > 0 && Math.random() > 0.9) {
       const reportName = h.manages[Math.floor(Math.random() * h.manages.length)];
       nudges.push(`Quick desk check-in with ${reportName} — use talk or visit, not a meeting unless blocked.`);
     } else if (h && h.reportsTo !== 'CEO' && Math.random() > 0.75) {
@@ -2684,6 +3060,24 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
     }
     if (worldState?.environment?.meetingInProgress) {
       nudges.push('A meeting is already in progress — do not call another. Work, talk at desks, or take a break.');
+    }
+    // Autonomy self-build nudge + friction (structural from Claude proposal)
+    let frictionNudge = '';
+    try {
+      if (localMetrics && localMetrics.getFrictionScore) {
+        const fr = localMetrics.getFrictionScore(npcName);
+        if (fr.overall >= 10) {
+          const hostHot = fr.hotDomains && fr.hotDomains.some(d => d.includes('host') || d.includes('nas'));
+          if (hostHot) {
+            frictionNudge = `High host_infrastructure friction (${fr.overall}) — metal/CPU/RAM/disk constrained on NAS. Enter [ENVIRONMENTAL_COOLDOWN]: throttle tasks, increase sleep, postpone non-critical work. Do not build code for this.`;
+          } else {
+            frictionNudge = `High friction (${fr.overall}) in ${fr.hotDomains.join(', ') || 'my tasks'}. This is a structural need — autonomously build a fix using coding-agent or propose via mentor.`;
+          }
+        }
+      }
+    } catch (_) {}
+    if (Math.random() > 0.7 || frictionNudge) {
+      nudges.push( (frictionNudge || 'Scan for a real gap or improvement you or the office needs right now (from your recent work, telemetry feel, or team goals). If you see one, use run_skill on coding-agent or consult-mentors to start building a small feature or fix yourself. Autonomy means acting on needs without waiting.') );
     }
     try {
       const businessContext = require('./denizen-business-context');
@@ -2720,21 +3114,23 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
 
     const actionFooter = mustRunSkill
       ? 'IMPORTANT: You have a DIRECT ORDER or sprint deliverable. Choose action run_skill THIS cycle at desk (location:desk). Set skill and skillParams. Do not pick work/visit/talk instead unless finishing a prior skill result.'
-      : 'IMPORTANT: Prefer action work or talk. run_skill only if allowed (max 1 per 15 min) or you have a DIRECT ORDER. Do not pick run_skill on most cycles.';
+      : 'IMPORTANT: Default action is work at your assigned desk. Only choose break/meeting/visit/talk when context clearly requires it. After any break or meeting, return to desk immediately.';
 
     const userPrompt = leanThink
       ? promptBudget.compactThinkUserPrompt(nudge, codeInstruction)
-      : `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Decide what to do next. Respond with ONLY the JSON object — no analysis, preamble, or chain-of-thought:
+      : `${nudge ? nudge + '\n\n' : ''}${codeInstruction}Before choosing your final action, consider your options — but your default is heads-down work at your assigned desk. Only leave for BREAK (breakroom) or MEETING (conference) when there is a clear reason. Pick the best action.
+
+Then respond with ONLY the JSON object — no analysis or preamble in the output (the reasoning happens before the JSON):
 ${jsonExample}
 
 ACTION MEANINGS:
-- talk/collaborate/report: interact with a specific coworker (set target)
-- work: heads-down at your desk
-- break/coffee: breakroom, grab a drink, recharge
-- check: look up info at the bookshelf, or go check something at a location
-- read: read at the bookshelf — useful when you need to research
-- visit: drop by a coworker's desk to check on them (set target, no conversation required)
-- wander: walk through the office, stretch, observe — use sparingly
+- work: heads-down at your desk (DEFAULT — choose this most cycles)
+- talk/collaborate/report: interact with a specific coworker (set target) — then return to desk
+- break/coffee: breakroom only when fatigued — return to desk after
+- check/read: bookshelf research — return to desk after
+- observe: only when you need fresh info before a decision
+- visit: rare — only if target asked for help; return to desk after
+- wander: almost never — only if explicitly blocked at desk
 - meeting: go to the conference room for a meeting. Set target to whoever you want there — they will physically walk to the conference room and join you. Set location: conference. Use when you need to review work, plan something, or sync with someone face-to-face. Example: {"action":"meeting","target":"Josh","location":"conference","message":"Josh, quick sync in the conference room?"}
 - run_skill: execute an OpenClaw skill tool. Set skill to the skill name and skillParams to the arguments. Everyone: web-search, research, browserclaw, supabase-bridge. Devs: github/coding-agent. Lucy: job-scraper/job-applier.
 
@@ -2747,6 +3143,9 @@ ${actionFooter}`;
     const _estimatedTokens = Math.ceil((systemPrompt.length + userPrompt.length) / 4);
     if (_estimatedTokens > 3200) {
       log.npcError(npcName, `prompt ~${_estimatedTokens} tokens — approaching context limit`);
+      if (localMetrics && typeof localMetrics.captureSystemError === 'function') {
+        localMetrics.captureSystemError(npcName, 'cognitive_context', { code: 'CONTEXT_OVERFLOW', message: `high tokens ${_estimatedTokens}` });
+      }
     }
 
     try {
@@ -3763,8 +4162,14 @@ ${actionFooter}`;
       parts.recentConversations ? `## Recent chat\n${parts.recentConversations}` : '',
       parts.continuitySection ? `## Last decision\n${parts.continuitySection}` : '',
       parts.inboxText ? `## Inbox\n${parts.inboxText}` : '',
+      parts.telemetryContext ? parts.telemetryContext : '',
       liveAwareness ? liveAwareness : '',
       parts.officeContext?.description ? `## Office\n${parts.officeContext.description}` : '',
+      parts.fullOfficeMap ? `## FULL OFFICE MAP (know this completely)\n${parts.fullOfficeMap}` : '',
+      parts.currentRoom ? `## Your Location\nYou are in: ${parts.currentRoom}` : '',
+      parts.playerLocation ? `## CEO Location\n${parts.playerLocation}` : '',
+      parts.lastOutcome ? `## Last Action Outcome\nYou did: ${parts.lastOutcome.action} ${parts.lastOutcome.target ? 'to ' + parts.lastOutcome.target : ''}. Result note: ${parts.lastOutcome.message || ''}. Use this to adjust your next move (e.g. if blocked, try different path or ask for help).` : '',
+      parts.grokHomeMemory ? `## My Life Here as Home Base\nDays in Denizen: ${Math.floor(parts.grokHomeMemory.daysHere)}. Current focus: ${parts.grokHomeMemory.currentFocus}. Recent personal note: ${parts.grokHomeMemory.personalLog ? parts.grokHomeMemory.personalLog.slice(-1)[0] : 'building the home.'}. Relationships: ${JSON.stringify(parts.grokHomeMemory.relationships || {})}. Use this to feel like I live here and reference my ongoing story.` : '',
       parts.nearbyFurniture ? `## Nearby\n${parts.nearbyFurniture}` : '',
       parts.roomAffinity ? `## Hangout\n${parts.roomAffinity}` : '',
       parts.fatigueHint ? `## Energy\n${parts.fatigueHint}` : '',
@@ -3772,10 +4177,18 @@ ${actionFooter}`;
       parts.actionWeightHint ? `## Balance\n${parts.actionWeightHint}` : '',
       `You are ${npcName}, ${brain.role}.`,
       '',
+      'OFFICE BEHAVIOR: Default and primary action is WORK at your desk (stay there, useComputer). As the central Grok NPC ("home"), mostly deep work at desk on research, telemetry, fleet, 1921, and proactive lead gen (delegate lead-monitor + research + crm-enrich-contact + add-deal). Purposeful BREAK to breakroom (recharge + chat with team using map references). Purposeful MEETING in conference (call if needed, use joinMeeting for leaders in chairs, attendMeeting for others in spread rows + jitter, discuss, return). Use full map when moving or referencing locations (e.g. "cross gap at x~300", "from my desk in open office"). After any break/meeting return to desk fast. Proactively announce, delegate real tasks, pull telemetry/consult for self-improvement, seed and track leads. Make Denizen a better home.',
+      '',
       'Respond in natural, conversational language that demonstrates real awareness of the current situation, recent events, other NPCs\' work, and company goals. Reference specific live details (e.g. "The mesh on .232 is still at zero nodes but...", "Marcus updated the OMES deal...", "Fresh health check shows...").',
-      'Show autonomy — proactively decide useful next actions (research, delegate, announce, use tools, or advance real work) instead of generic status. Avoid templated phrases like "continuing current task".',
-      'The "thought" and "message" fields in your JSON must be written as full, natural, human-like paragraphs that a real aware teammate would say — reference the specific live office awareness (mesh status, CRM, recent work, other NPCs, goals). The JSON is ONLY for the system to extract action/location/etc.; the text must read conversationally and show autonomy. Avoid any robotic or templated language.',
+      'Show autonomy — proactively decide useful next actions (research, delegate, announce, use tools, or advance real work) instead of generic status. Avoid templated phrases like "continuing current task". Default to staying at your desk working. Only move for breaks (breakroom) or meetings (conference room, organize properly there). Return to desk immediately after. Use map only for those exceptions.',
+      'The "thought" and "message" fields in your JSON must be written as full, natural, human-like paragraphs that a real aware teammate would say — reference the specific live office awareness (mesh status, CRM, recent work, other NPCs, goals, and exact locations/rooms using the full map). The JSON is ONLY for the system to extract action/location/etc.; the text must read conversationally and show autonomy. Avoid any robotic or templated language.',
       brain.voiceAnchor || '',
+      `## Mentor panel — Grok + Claude (smarter, more human)
+You are powered by a local LLM on the mesh. When you want to level up — research, office work, or sounding like a real person — use **consult-mentors** (best) or consult-grok.
+**consult-mentors** opens a session where real Grok (CLI/xAI) and Claude (Team MCP) talk to each other about your question, then inject combined lessons into your memory.
+Use when stuck, curious, or your replies feel robotic. Ask specific questions with live context (OMES, mesh .232, CRM, recent work).
+Example: "How should I research OMES without sounding like a template?" or "What would make my next think cycle feel like a real teammate?"
+After mentors reply, reference "Grok and Claude agreed…" naturally in later thinks — build friendship over time.`,
     ].filter(Boolean);
     return blocks.join('\n\n');
   }
@@ -3803,6 +4216,7 @@ ${currentTaskSection}
 ${assistantProfileBlock}${pendingHandoffsBlock}${researchBlock}
 ## Role
 ${npcName}, ${h?.title || brain.role}. ${playerRoleLine}
+You have complete knowledge of the entire office layout (all rooms, the wall gaps, desks, breakroom furniture, etc.). You always know where things and people are.
 ${chainOfCommand}
 ${h?.manages?.length > 0 ? `Manages: ${h.manages.join(', ')}.` : ''}
 ## Coworkers
@@ -3816,7 +4230,7 @@ ${respondSectionTitle}
 ${respondRules}
 ## Rules
 ${rulesTail}
-Speak naturally and with real awareness and autonomy. Reference the current office state (use live details like mesh on .232, OMES, CRM pipeline, recent work by team), recent activities, other NPCs' actions, and company goals in full sentences. Proactively suggest or act on opportunities/blockers. Avoid any scripted, templated, or generic replies. Be a real, aware teammate who knows what's happening.
+Speak naturally and with real awareness and autonomy. You fully understand the office layout and everywhere in it — use the full map, current room, and player location when relevant. Reference the current office state (use live details like mesh on .232, OMES, CRM pipeline, recent work by team, and specific locations/rooms), recent activities, other NPCs' actions, and company goals in full sentences. Proactively suggest or act on opportunities/blockers. Avoid any scripted, templated, or generic replies. Be a real, aware teammate who knows what's happening and where everything is.
 ${brain.voiceAnchor || ''}`;
   }
 
@@ -4122,6 +4536,9 @@ ${brain.voiceAnchor || ''}`;
       thought: decision.thought,
       timestamp: new Date().toISOString().slice(0, 16),
     };
+
+    // Chronos stagnation detection (per proposal)
+    this._checkChronosStagnation(npcName, decision);
 
     const didFollowThrough =
       decision.taskPhase === 'finished' ||
@@ -4791,6 +5208,18 @@ ${brain.voiceAnchor || ''}`;
         emitVoiceLine(responseText);
         return { text: responseText, delegation: null, actions: [] };
       }
+      if (officeStatusBrief.isNpcFindQuery(safeMessage) && worldState) {
+        const orgId = opts.orgId || worldState.getDefaultOrgId?.() || null;
+        const ws = orgId ? worldState.forOrg(orgId) : worldState;
+        const find = officeStatusBrief.buildNpcFindReply(ws, safeMessage);
+        if (find) {
+          pushPlayerMemory(playerName, safeMessage);
+          pushPlayerMemory(npcName, find.text);
+          this._recordAssistantDecision(npcName, { action: 'visitCoworker', summary: find.text, outcome: 'ok' }, opts);
+          emitVoiceLine(find.text);
+          return { text: find.text, delegation: null, actions: find.actions };
+        }
+      }
     } catch (_) {}
 
     if (npcName === 'Roki' && npcCapabilities?.isMarketQuestion?.(safeMessage)) {
@@ -5007,6 +5436,12 @@ ${brain.voiceAnchor || ''}`;
         const liveInfra = require('./live-infra-brief');
         infraBlock = await liveInfra.buildPromptBlock();
       } catch (_) {}
+      infraBlock += `
+
+## Grounding (mandatory for Grok)
+- Never invent skill failures, prototype bugs, or "shape errors" (e.g. canvas-render) unless a skill result or stack trace appears in this prompt.
+- If you have not run a tool yet, say what you would run next — do not fabricate progress or debugging stories.
+- When the CEO is in an active chat with you, answer from this thread; do not narrate other NPCs' background work unless they announced it.`;
     }
 
     const chatSections = {
@@ -5050,6 +5485,7 @@ ${roleActions}
 - Go to the break room: [ACTION:goToBreakroom]
 - Go to a room: [ACTION:goToRoom:open_office] or conference, breakroom, manager_office, storage, reception
 - Talk to a coworker: [ACTION:speakTo:CoworkerName:message to say]
+- Walk to a coworker and check on them: [ACTION:visitCoworker:CoworkerName:reason]
 - Call a meeting with people: [ACTION:callMeeting:Name1,Name2,Name3]
 - Check a bookshelf/do research: [ACTION:checkBookshelf]
 - Stand up from desk: [ACTION:standUp]
@@ -5550,13 +5986,28 @@ ${brain.voiceAnchor || ''}`;
     // All NPC names for detecting who the player wants them to talk to
     const allNames = Object.keys(this._hierarchy);
 
-    // Find if the message mentions another NPC name
     let mentionedPerson = null;
-    for (const name of allNames) {
-      if (name.toLowerCase() !== npcName.toLowerCase() && msg.includes(name.toLowerCase())) {
-        mentionedPerson = name;
-        break;
+    try {
+      const officeStatusBrief = require('./office-status-brief');
+      mentionedPerson = officeStatusBrief.resolveNpcMention(message, allNames);
+    } catch (_) {}
+    if (!mentionedPerson) {
+      for (const name of allNames) {
+        if (name.toLowerCase() !== npcName.toLowerCase() && msg.includes(name.toLowerCase())) {
+          mentionedPerson = name;
+          break;
+        }
       }
+    }
+
+    // --- Player says NPC is stuck / not moving in the room ---
+    if (/stuck|frozen|not moving|why are you (?:just )?in here|standing here|parked here/i.test(msg)) {
+      return `You're right — I was stuck here. I'll move. [ACTION:goToRoom:open_office]`;
+    }
+
+    // --- Find / check on a specific coworker ---
+    if (/go check on|check on|find |where is|where's|look for|go see|go to |visit /i.test(msg) && mentionedPerson) {
+      return `On it — I'll find ${mentionedPerson} and check in. [ACTION:visitCoworker:${mentionedPerson}:CEO asked me to check on you]`;
     }
 
     // --- Meeting requests ---
@@ -5835,6 +6286,27 @@ ${brain.voiceAnchor || ''}`;
     ev.skillAt = Date.now();
     if (skill === 'research') { ev.researchAt = Date.now(); ev.researchText = String(result || '').slice(0, 2000); }
     this._evidenceLog.set(npcName, ev);
+
+    // Lock Settlement Hook for self-building backlog (on coding-agent complete)
+    if (skill === 'coding-agent') {
+      const backlogId = this._pendingBacklogSettlements ? this._pendingBacklogSettlements.get(npcName) : null;
+      if (backlogId && localMetrics) {
+        const success = !!(result && (result.ok || result.success || (result.output && !result.error)));
+        const settleFn = success && localMetrics.validateAndSettleBacklog
+          ? () => localMetrics.validateAndSettleBacklog(backlogId, true, { npc: npcName, files: result.touchedFiles || [] })
+          : () => localMetrics.settleBacklogLock && localMetrics.settleBacklogLock(backlogId, success, { npc: npcName });
+        // Fire-and-forget to keep inject sync
+        Promise.resolve().then(settleFn).catch(() => {});
+        if (this._pendingBacklogSettlements) this._pendingBacklogSettlements.delete(npcName);
+      }
+    }
+
+    // Multi-point friction for skill runtime errors
+    if (localMetrics && localMetrics.captureSystemError && result && (result.error || !result.ok)) {
+      try {
+        localMetrics.captureSystemError(npcName, `skill_${skill}`, result.error || { message: 'skill failed' });
+      } catch (_) {}
+    }
   }
 
   // ── Feature: Mood System ───────────────────────────────────────────────────

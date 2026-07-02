@@ -81,6 +81,29 @@ function mockMeshJob(jobType, payload = {}) {
     };
   }
 
+  if (type === 'grok_telemetry_check') {
+    // Run the Python telemetry + auto-consult job
+    const { spawnSync } = require('node:child_process');
+    const script = path.join(__dirname, '..', '..', 'infra', 'grok-mesh-telemetry-job.py');
+    try {
+      const pythonBin = process.env.DENIZEN_PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
+      const res = spawnSync(pythonBin, [script], {
+        cwd: path.dirname(script),
+        encoding: 'utf8',
+        timeout: 60000,
+        env: { ...process.env, GROK_AGENT: '1' },
+      });
+      return {
+        ok: res.status === 0,
+        jobType: type,
+        output: (res.stdout || '') + (res.stderr || ''),
+        completed_at: new Date().toISOString(),
+      };
+    } catch (e) {
+      return { ok: false, jobType: type, error: e.message };
+    }
+  }
+
   return {
     ok: false,
     jobType: type || 'unknown',
