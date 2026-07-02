@@ -121,6 +121,7 @@ const costProjector    = require('./src/cost-projector');
 const skillBuilder     = require('./src/skill-builder');
 const computeQueue     = require('./src/denizen-compute-queue');
 const playerChatSkills = require('./src/player-chat-skill-bridge');
+const chatAttachments = require('./src/chat-attachments');
 const taskResourceAdvisor = require('./src/task-resource-advisor');
 const skillGapOrchestrator = require('./src/skill-gap-orchestrator');
 const skillDiscovery = require('./src/skill-discovery');
@@ -8049,17 +8050,22 @@ agentWss.on('connection', (ws) => {
           return;
         }
         if (typeof msg.text !== 'string' || !msg.text.trim()) {
-          console.warn('[AgentWS] player_chat: invalid text payload');
-          if (ws.readyState === 1) {
-            ws.send(JSON.stringify({
-              type: 'player_chat_response',
-              npcName: npcName,
-              text: 'I did not catch that. Try again?',
-              delegation: null,
-              actions: [],
-            }));
+          if (Array.isArray(msg.attachments) && msg.attachments.length) {
+            // Attachment-only drop (photo/file with no text) is a valid message.
+            msg.text = 'I just shared some files with you — take a look.';
+          } else {
+            console.warn('[AgentWS] player_chat: invalid text payload');
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName: npcName,
+                text: 'I did not catch that. Try again?',
+                delegation: null,
+                actions: [],
+              }));
+            }
+            return;
           }
-          return;
         }
         (async () => {
         const rawPlayerText = msg.text.trim();
@@ -8646,7 +8652,24 @@ agentWss.on('connection', (ws) => {
             return npcBrains.getResponse(npcName, 'CEO', msg.text, { kind: 'incident-report', description: 'You are reporting a security incident to the CEO. Speak in your own voice — stoic, professional, dry. 2-3 sentences max.' })
               .then(text => ({ text: typeof text === 'string' ? text : String(text || ''), delegation: null, actions: [] }));
           }
-          return npcBrains.getPlayerResponse(npcName, msg.text, playerOpts);
+
+          // Files/photos dropped in chat → analyze (vision for images, inline for
+          // text) and append the result to what the brain sees. Runs after the ack
+          // so the client shows typing while vision works.
+          if (Array.isArray(msg.attachments) && msg.attachments.length && !msg._attachmentBlock) {
+            const processed = await chatAttachments.processChatAttachments(msg.attachments)
+              .catch((err) => ({ ok: false, contextBlock: '', saved: [], error: err?.message || String(err) }));
+            if (processed.ok) {
+              msg._attachmentBlock = processed.contextBlock;
+              msg._attachmentInfo = processed.saved;
+              console.log(`[PlayerChat] ${npcName} received ${processed.saved.length} attachment(s): ${processed.saved.map((a) => a.name).join(', ')}`);
+            } else {
+              msg._attachmentBlock = `\n\n[Note: the sender tried to attach file(s) but they could not be processed (${processed.error}). Tell them what went wrong.]`;
+              console.warn('[PlayerChat] attachment processing failed:', processed.error);
+            }
+          }
+          const textForBrain = msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text;
+          return npcBrains.getPlayerResponse(npcName, textForBrain, playerOpts);
         });
 
         if (ws.readyState === 1 && !isIncidentReport) {
@@ -8752,12 +8775,13 @@ agentWss.on('connection', (ws) => {
               }
             }
 
+            const _msgWithAttachments = msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text;
             if (msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport) {
               _executePlayerChatSkillFollowup({
                 ws,
                 npcName,
                 sessionId: msg.session_id,
-                message: msg.text,
+                message: _msgWithAttachments,
                 responseText: text,
                 visitorCtx: _visitorCtxForSkills,
                 visitorToolGate,
@@ -8771,24 +8795,28 @@ agentWss.on('connection', (ws) => {
                 console.warn('[PlayerChat] skill followup failed:', err?.message || err);
               });
             } else if (!msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport
-              && playerChatSkills.inferSkillFromMessage?.(npcName, msg.text)?.skill?.startsWith?.('crm-')) {
+              && (playerChatSkills.inferSkillFromMessage?.(npcName, _msgWithAttachments)?.skill?.startsWith?.('crm-')
+                || (msg._attachmentInfo?.length && playerChatSkills.parseRunSkillTags?.(text)?.length))) {
               _executePlayerChatSkillFollowup({
                 ws,
                 npcName,
                 sessionId: null,
-                message: msg.text,
+                message: _msgWithAttachments,
                 responseText: text,
                 visitorCtx: _visitorCtxForSkills,
                 visitorToolGate,
                 gapAlreadyHandled: false,
-                meshContext: { taskText: msg.text },
+                meshContext: { taskText: _msgWithAttachments },
               }).catch((err) => {
                 console.warn('[PlayerChat] CEO CRM skill followup failed:', err?.message || err);
               });
             }
 
             if (!isIncidentReport && !msg.session_id) {
-              npcBrains.saveMemory(npcName, `CEO said: "${msg.text}" — I replied: "${text}"${result.delegation ? ` [delegated to ${result.delegation.delegateTo}]` : ''}`);
+              const attachNote = msg._attachmentInfo?.length
+                ? ` [CEO shared files: ${msg._attachmentInfo.map((a) => `${a.name} (${a.kind}) → ${a.url}`).join(', ')}]`
+                : '';
+              npcBrains.saveMemory(npcName, `CEO said: "${msg.text}"${attachNote} — I replied: "${text}"${result.delegation ? ` [delegated to ${result.delegation.delegateTo}]` : ''}`);
               npcBrains.setMoodFromExternal(npcName, 'ceo_talked');
             }
           })

@@ -739,8 +739,22 @@ class PlayerChat {
    * Send a player message to an NPC
    */
   async sendMessage(text) {
-    if (!text.trim()) return;
+    const hasAttachments = !!(this._pendingAttachments && this._pendingAttachments.length);
+    if (!text.trim() && !hasAttachments) return;
+
+    // Dedupe identical text sent twice in quick succession (double Enter, voice echo).
+    const _sendNow = Date.now();
+    if (text.trim() && this._lastSendText === text.trim()
+      && _sendNow - (this._lastSendAt || 0) < 700 && !hasAttachments) {
+      return;
+    }
+    this._lastSendAt = _sendNow;
+    this._lastSendText = text.trim();
+
     window.DenizenHaptics?.tap?.();
+
+    // Files/photos queued via 📎, drag-drop, or paste ride along on this message.
+    const outgoingAttachments = hasAttachments ? this._takePendingAttachments() : [];
 
     const trimmed = window.DenizenOpenClawDispatch?.fixVoiceMishearings?.(text.trim()) || text.trim();
     const normalized = window.DenizenOpenClawDispatch?.normalizePlayerUtterance?.(trimmed) || trimmed;
@@ -755,8 +769,10 @@ class PlayerChat {
     }
 
     // Add to chat log
-    this._addToLog('You', trimmed);
-    this._showPlayerBubble(trimmed);
+    this._addToLog('You', trimmed || '📎', {
+      attachments: outgoingAttachments.map((a) => ({ name: a.name, mime: a.mime, thumbUrl: a.thumbUrl })),
+    });
+    if (trimmed) this._showPlayerBubble(trimmed);
     if (globalThis.DenizenVisitorSession?.isDemo?.()) {
       try { document.dispatchEvent(new CustomEvent('denizen-demo-engaged')); } catch (_) {}
     }
@@ -1476,6 +1492,9 @@ class PlayerChat {
       npcName: targetName,
       npcKey: targetKey,
       text: trimmed,
+      attachments: outgoingAttachments.length
+        ? outgoingAttachments.map(({ name, mime, size, data }) => ({ name, mime, size, data }))
+        : undefined,
       session_id: globalThis.DenizenVisitorSession?.getSessionId?.() || null,
       playerPos: {
         x: Math.round(this.scene?.player?.x || 0),
@@ -2122,6 +2141,62 @@ class PlayerChat {
         color: #fecaca;
         border-color: #fca5a5;
       }
+      #player-chat-attach {
+        background: #1e293b;
+        color: #94a3b8;
+        border: 1px solid #334155;
+        border-radius: 4px;
+        padding: 6px 8px;
+        cursor: pointer;
+        font-size: 12px;
+        line-height: 1;
+      }
+      #player-chat-attach:hover { color: #e2e8f0; border-color: #4ade80; }
+      #player-chat-attach-chips {
+        display: none;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 8px 0 8px;
+      }
+      #player-chat-attach-chips.has-items { display: flex; }
+      .pc-attach-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 6px;
+        padding: 3px 6px;
+        font-size: 10px;
+        color: #cbd5e1;
+        max-width: 180px;
+      }
+      .pc-attach-chip img {
+        width: 28px; height: 28px;
+        object-fit: cover;
+        border-radius: 4px;
+        display: block;
+      }
+      .pc-attach-chip .pc-chip-name {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .pc-attach-chip .pc-chip-x {
+        cursor: pointer; color: #f87171; font-weight: bold; padding: 0 2px;
+      }
+      #player-chat-panel.pc-drag-over {
+        outline: 2px dashed #4ade80;
+        outline-offset: -4px;
+      }
+      .msg .pc-msg-attachments { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 6px; }
+      .msg .pc-msg-attachments img {
+        max-width: 180px; max-height: 130px;
+        border-radius: 6px; border: 1px solid #334155; display: block;
+      }
+      .msg .pc-msg-file-chip {
+        display: inline-flex; align-items: center; gap: 4px;
+        background: #1e293b; border: 1px solid #334155; border-radius: 6px;
+        padding: 3px 8px; font-size: 10px; color: #cbd5e1;
+      }
       #player-chat-fab {
         background: #1e293b;
         color: #e2e8f0;
@@ -2435,7 +2510,10 @@ class PlayerChat {
           <button type="button" id="player-chat-close-btn" aria-label="Close chat">×</button>
         </div>
         <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
+        <div id="player-chat-attach-chips" aria-label="Pending attachments"></div>
         <div id="player-chat-input-row">
+          <button id="player-chat-attach" type="button" title="Attach a file or photo (or drag-drop / paste)" aria-label="Attach file">📎</button>
+          <input id="player-chat-file" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.csv,.json,.log,.yaml,.yml" style="display:none" />
           <input id="player-chat-input" type="text" placeholder="Message an NPC…" autocomplete="off" enterkeyhint="send" />
           <button id="player-chat-speak" type="button" title="Tap to speak — tap again when done">🎤 Speak</button>
           <button id="player-chat-send" type="button" aria-label="Send message">Send</button>
@@ -2471,6 +2549,42 @@ class PlayerChat {
     this._input = panel.querySelector('#player-chat-input');
     this._logEl = panel.querySelector('#player-chat-log');
     this._targetLabel = panel.querySelector('#player-chat-target');
+
+    // --- Attachments: 📎 picker, drag-drop onto the panel, paste into the input ---
+    this._pendingAttachments = this._pendingAttachments || [];
+    this._attachChipsEl = panel.querySelector('#player-chat-attach-chips');
+    const attachBtn = panel.querySelector('#player-chat-attach');
+    const fileInput = panel.querySelector('#player-chat-file');
+    if (attachBtn && fileInput) {
+      attachBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', () => {
+        this._addPendingFiles(fileInput.files);
+        fileInput.value = '';
+      });
+    }
+    panel.addEventListener('dragover', (e) => {
+      if (e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes('Files')) {
+        e.preventDefault();
+        panel.classList.add('pc-drag-over');
+      }
+    });
+    panel.addEventListener('dragleave', (e) => {
+      if (!panel.contains(e.relatedTarget)) panel.classList.remove('pc-drag-over');
+    });
+    panel.addEventListener('drop', (e) => {
+      panel.classList.remove('pc-drag-over');
+      if (e.dataTransfer?.files?.length) {
+        e.preventDefault();
+        this._addPendingFiles(e.dataTransfer.files);
+      }
+    });
+    this._input.addEventListener('paste', (e) => {
+      const files = Array.from(e.clipboardData?.files || []);
+      if (files.length) {
+        e.preventDefault();
+        this._addPendingFiles(files);
+      }
+    });
     let syncSendButton = () => {};
 
     // Arrow keys drive movement via scene._chatMoveKeys (Phaser can't read keys
@@ -2771,8 +2885,128 @@ class PlayerChat {
     return first || raw;
   }
 
+  /**
+   * Skill-result notifications for the chat log. Deliberately quiet:
+   * ambient skills (web-search/research) and other NPCs' skill lines never
+   * appear in an open DM — the NPC's own reply carries the result instead.
+   */
+  notifySkillResult(npcName, skill, _ok) {
+    const s = String(skill || '').toLowerCase();
+    if (s === 'web-search' || s === 'websearch' || s === 'research') return;
+    const activeNpc = this._getActiveThread?.()?.npcName || this._ceoConvo?.npcName || null;
+    if (activeNpc && String(npcName) !== String(activeNpc)) return;
+    // Own-NPC skill in its own DM: a subtle system note only.
+    if (activeNpc) this._addToLog('System', `${npcName} finished ${skill}.`);
+  }
+
+  /**
+   * Queue files (from 📎 picker, drag-drop, or paste) to send with the next message.
+   * Keeps full base64 for the wire and a small canvas thumbnail for display so
+   * cached thread messages stay tiny.
+   */
+  _addPendingFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    if (!Array.isArray(this._pendingAttachments)) this._pendingAttachments = [];
+    const MAX = 3;
+    const IMG_CAP = 6 * 1024 * 1024;
+    const TXT_CAP = 512 * 1024;
+    for (const f of files) {
+      if (this._pendingAttachments.length >= MAX) {
+        this._addToLog('System', `Max ${MAX} attachments per message — extra files skipped.`);
+        break;
+      }
+      const isImage = /^image\//i.test(f.type || '');
+      if (f.size > (isImage ? IMG_CAP : TXT_CAP)) {
+        this._addToLog('System', `${f.name} is too large (max ${isImage ? '6MB for images' : '512KB for files'}).`);
+        continue;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || '');
+        const att = {
+          name: f.name || 'file',
+          mime: f.type || '',
+          size: f.size,
+          data: dataUrl.slice(dataUrl.indexOf(',') + 1),
+          thumbUrl: null,
+        };
+        this._pendingAttachments.push(att);
+        this._renderAttachChips();
+        if (isImage) {
+          this._makeThumb(dataUrl, (thumb) => {
+            att.thumbUrl = thumb;
+            this._renderAttachChips();
+          });
+        }
+      };
+      reader.readAsDataURL(f);
+    }
+  }
+
+  /** Downscale an image data URL to a ≤160px JPEG thumbnail (bounded size). */
+  _makeThumb(dataUrl, cb) {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, 160 / Math.max(img.width, img.height, 1));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          cb(canvas.toDataURL('image/jpeg', 0.7));
+        } catch (_) { cb(null); }
+      };
+      img.onerror = () => cb(null);
+      img.src = dataUrl;
+    } catch (_) { cb(null); }
+  }
+
+  _renderAttachChips() {
+    const el = this._attachChipsEl;
+    if (!el) return;
+    const items = this._pendingAttachments || [];
+    el.innerHTML = '';
+    el.classList.toggle('has-items', items.length > 0);
+    items.forEach((att, i) => {
+      const chip = document.createElement('span');
+      chip.className = 'pc-attach-chip';
+      if (att.thumbUrl) {
+        const img = document.createElement('img');
+        img.src = att.thumbUrl;
+        chip.appendChild(img);
+      }
+      const name = document.createElement('span');
+      name.className = 'pc-chip-name';
+      name.textContent = att.name;
+      chip.appendChild(name);
+      const x = document.createElement('span');
+      x.className = 'pc-chip-x';
+      x.textContent = '×';
+      x.title = 'Remove';
+      x.onclick = () => {
+        this._pendingAttachments.splice(i, 1);
+        this._renderAttachChips();
+      };
+      chip.appendChild(x);
+      el.appendChild(chip);
+    });
+  }
+
+  /** Take (and clear) pending attachments for sending. */
+  _takePendingAttachments() {
+    const items = this._pendingAttachments || [];
+    this._pendingAttachments = [];
+    this._renderAttachChips();
+    return items;
+  }
+
   _addToLog(sender, text, opts = {}) {
     const entry = { from: sender, text, time: Date.now() };
+    if (Array.isArray(opts.attachments) && opts.attachments.length) {
+      entry.attachments = opts.attachments;
+    }
     const threadId = opts.threadId || this._activeThreadId;
     if (threadId && this._threads.has(threadId)) {
       const thread = this._threads.get(threadId);
@@ -2822,9 +3056,22 @@ class PlayerChat {
       return this._classifySystemMessage(m.text) === 'error';
     });
 
+    // Attachment previews: thumbUrl is generated locally by our own FileReader/canvas
+    // (never from server or NPC text) and gated to data:image/ URLs only.
+    const attachHtml = (m) => {
+      if (!Array.isArray(m.attachments) || !m.attachments.length) return '';
+      const parts = m.attachments.map((a) => {
+        if (a.thumbUrl && /^data:image\//.test(a.thumbUrl)) {
+          return `<img src="${a.thumbUrl}" alt="${esc(a.name)}" title="${esc(a.name)}" />`;
+        }
+        return `<span class="pc-msg-file-chip">📄 ${esc(a.name)}</span>`;
+      }).join('');
+      return `<div class="pc-msg-attachments">${parts}</div>`;
+    };
+
     let html = recent.map((m) => {
       if (m.from === 'You') {
-        return `<div class="msg you"><span class="text">${esc(m.text)}</span></div>`;
+        return `<div class="msg you"><span class="text">${esc(m.text)}</span>${attachHtml(m)}</div>`;
       }
       if (m.from === 'System') {
         return `<div class="msg system error"><span class="text">${esc(m.text)}</span></div>`;
