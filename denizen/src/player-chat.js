@@ -2534,7 +2534,7 @@ class PlayerChat {
         <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
         <div id="player-chat-attach-chips" aria-label="Pending attachments"></div>
         <div id="player-chat-input-row">
-          <button id="player-chat-attach" type="button" title="Attach a file or photo (or drag-drop / paste)" aria-label="Attach file">📎</button>
+          <button id="player-chat-attach" type="button" title="Attach a file or photo (or drag-drop / paste)" aria-label="Attach file">＋</button>
           <input id="player-chat-file" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.csv,.json,.log,.yaml,.yml" style="display:none" />
           <input id="player-chat-input" type="text" placeholder="Message an NPC…" autocomplete="off" enterkeyhint="send" />
           <button id="player-chat-speak" type="button" title="Tap to speak — tap again when done">🎤 Speak</button>
@@ -3078,6 +3078,8 @@ class PlayerChat {
   _renderLog() {
     const log = this._logEl;
     if (!log) return;
+    const prevScroll = log.scrollTop;
+    const nearBottom = (log.scrollHeight - log.scrollTop - log.clientHeight) < 80;
 
     const esc = (s) => String(s || '')
       .replace(/&/g, '&amp;')
@@ -3123,7 +3125,14 @@ class PlayerChat {
     }
 
     log.innerHTML = html;
-    log.scrollTop = log.scrollHeight;
+    // Stick to bottom only if the user was already there or just sent a
+    // message — never yank them away from reading older messages.
+    const lastMsg = recent[recent.length - 1];
+    if (nearBottom || lastMsg?.from === 'You' || this._waitingForResponse) {
+      log.scrollTop = log.scrollHeight;
+    } else {
+      log.scrollTop = prevScroll;
+    }
   }
 
   _updateTargetLabel(name) {

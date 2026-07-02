@@ -211,6 +211,7 @@
       }
       #player-chat-panel[data-phone-chat="1"] #player-chat-input,
       #player-chat-panel[data-phone-chat="1"] #player-chat-send,
+      #player-chat-panel[data-phone-chat="1"] #player-chat-attach,
       #player-chat-panel[data-phone-chat="1"] #player-chat-speak {
         pointer-events: auto !important;
         touch-action: manipulation;
@@ -220,9 +221,107 @@
       #player-chat-panel[data-phc-view="group-pick"] #player-chat-log,
       #player-chat-panel[data-phc-view="threads"] #player-chat-input-row,
       #player-chat-panel[data-phc-view="contacts"] #player-chat-input-row,
-      #player-chat-panel[data-phc-view="group-pick"] #player-chat-input-row {
+      #player-chat-panel[data-phc-view="group-pick"] #player-chat-input-row,
+      #player-chat-panel[data-phc-view="threads"] #player-chat-attach-chips,
+      #player-chat-panel[data-phc-view="contacts"] #player-chat-attach-chips,
+      #player-chat-panel[data-phc-view="group-pick"] #player-chat-attach-chips {
         display: none !important;
         pointer-events: none !important;
+      }
+      /* ChatGPT-style composer bar in the phone thread view */
+      #player-chat-panel[data-phone-chat="1"] #player-chat-input-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+        padding: 5px 6px;
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 26px;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-attach {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 24px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-attach:active {
+        background: rgba(51,65,85,.6);
+        color: #e2e8f0;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-input {
+        flex: 1;
+        min-width: 0;
+        background: transparent;
+        border: none;
+        outline: none;
+        box-shadow: none;
+        color: #e2e8f0;
+        font-size: 16px; /* ≥16px prevents iOS zoom-on-focus */
+        padding: 8px 2px;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-speak {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        max-width: 38px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 0; /* hide whatever label the voice module writes */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-speak::before {
+        content: '🎤';
+        font-size: 18px;
+        line-height: 1;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-speak.listening::before {
+        content: '⏹';
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-send {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        max-width: 38px;
+        border-radius: 50%;
+        background: #4ade80;
+        color: #0f172a;
+        border: none;
+        font-size: 0; /* replace 'Send' text with the arrow glyph */
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-send::before {
+        content: '↑';
+        font-size: 19px;
+        line-height: 1;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-attach-chips {
+        margin: 0 12px;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-attach-chips.has-items {
+        padding: 6px 0 0 0;
       }
       #player-chat-panel[data-phone-chat="1"] #player-chat-header { display: none; }
       #player-chat-panel[data-phone-chat="1"] #player-chat-log {
@@ -576,7 +675,17 @@
   }
 
   function setView(next) {
+    const changed = view !== next;
     view = next;
+    if (changed) {
+      // Switching views shows a different list — start it at the top and
+      // invalidate the render cache so it repaints even if HTML matches.
+      const wrap = document.getElementById('phc-list-wrap');
+      if (wrap) {
+        wrap._phcLastHtml = null;
+        wrap.scrollTop = 0;
+      }
+    }
     const panel = document.getElementById('player-chat-panel');
     if (panel) {
       panel.dataset.phcView = view;
@@ -765,14 +874,27 @@
     }
   }
 
+  /**
+   * Set list HTML without losing the user's scroll position: skip identical
+   * re-renders entirely (refreshThreads fires on every incoming message), and
+   * restore scrollTop when content genuinely changed.
+   */
+  function setListHtml(wrap, html) {
+    if (wrap._phcLastHtml === html) return;
+    const prevScroll = wrap.scrollTop;
+    wrap.innerHTML = html;
+    wrap._phcLastHtml = html;
+    wrap.scrollTop = prevScroll;
+  }
+
   function renderThreads() {
     const wrap = document.getElementById('phc-list-wrap');
     if (!wrap) return;
     if (!threads.length) {
-      wrap.innerHTML = '<div class="phc-empty">No conversations yet.<br>Tap <b>Contacts</b> to message an NPC.</div>';
+      setListHtml(wrap, '<div class="phc-empty">No conversations yet.<br>Tap <b>Contacts</b> to message an NPC.</div>');
       return;
     }
-    wrap.innerHTML = threads.map((t) => {
+    setListHtml(wrap, threads.map((t) => {
       const id = t.threadId || t.thread_id;
       const isGroup = t.type === 'group' || String(id).startsWith('group:');
       const npcKey = t.npc_key || t.npcKey || (isGroup ? null : String(id).replace(/^dm:/, ''));
@@ -788,7 +910,7 @@
           <div class="phc-thread-preview">${esc(preview)}</div>
         </div>
       </button>`;
-    }).join('');
+    }).join(''));
   }
 
   function renderContacts() {
@@ -802,18 +924,18 @@
           ? `${pickCount} selected — ${pickCount < 2 ? `pick ${2 - pickCount} more` : 'ready to create'}`
           : 'Tap NPC cards to add them to the group (green = selected).');
       const statusWarn = !!(panelStatus && (creatingGroup === false));
-      wrap.innerHTML = `
+      setListHtml(wrap, `
         <div class="phc-group-bar">Pick <b>2 or more</b> coworkers, then tap <b>Create group</b> below.</div>
         ${statusLine ? `<div class="phc-status${statusWarn ? ' warn' : ''}">${esc(statusLine)}</div>` : ''}
         <div class="phc-contacts-grid" id="phc-group-grid">${contacts.map((c) => `
           <button type="button" class="phc-contact${groupPick.has(c.key) ? ' selected' : ''}" data-action="pick-npc" data-npc-key="${esc(c.key)}">
             ${portraitHtml(c.key, 2, '')}
             <div class="phc-contact-name">${esc(c.label)}</div>
-          </button>`).join('')}</div>`;
+          </button>`).join('')}</div>`);
       renderGroupFooter();
       return;
     }
-    wrap.innerHTML = `
+    setListHtml(wrap, `
       <button type="button" class="phc-new-group-card" data-action="new-group">
         <span class="phc-new-group-icon">＋</span>
         <span class="phc-new-group-label">New group chat</span>
@@ -823,7 +945,7 @@
       <button type="button" class="phc-contact" data-action="open-dm" data-npc-key="${esc(c.key)}" data-npc-name="${esc(c.label)}">
         ${portraitHtml(c.key, 2, '')}
         <div class="phc-contact-name">${esc(c.label)}</div>
-      </button>`).join('')}</div>`;
+      </button>`).join('')}</div>`);
   }
 
   function render() {
@@ -833,10 +955,29 @@
     updateNav();
   }
 
+  /** Compact glyphs for the round phone composer buttons; originals restored on close. */
+  function setComposerGlyphs(phone) {
+    const send = document.getElementById('player-chat-send');
+    const speak = document.getElementById('player-chat-speak');
+    if (send) {
+      if (phone) {
+        if (!send._deskLabel) send._deskLabel = send.textContent;
+        send.textContent = '↑';
+      } else if (send._deskLabel) send.textContent = send._deskLabel;
+    }
+    if (speak) {
+      if (phone) {
+        if (!speak._deskLabel) speak._deskLabel = speak.textContent;
+        speak.textContent = '🎤';
+      } else if (speak._deskLabel) speak.textContent = speak._deskLabel;
+    }
+  }
+
   function activate() {
     const panel = ensureShell();
     if (!panel) return;
     panel.dataset.phoneChat = '1';
+    setComposerGlyphs(true);
     chat()?.setPhoneShellEnabled?.(true);
     if (view !== 'group-pick' && !groupMode) {
       setView(chat()?.getActiveThreadId?.() ? 'thread' : 'threads');
@@ -853,6 +994,7 @@
       delete panel.dataset.phoneChat;
       delete panel.dataset.phcView;
     }
+    setComposerGlyphs(false);
     chat()?.setPhoneShellEnabled?.(false);
     groupMode = false;
     groupPick.clear();
