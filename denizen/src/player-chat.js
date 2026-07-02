@@ -763,21 +763,16 @@ class PlayerChat {
     const trimmed = window.DenizenOpenClawDispatch?.fixVoiceMishearings?.(text.trim()) || text.trim();
     const normalized = window.DenizenOpenClawDispatch?.normalizePlayerUtterance?.(trimmed) || trimmed;
 
-    const now = Date.now();
-    if (trimmed === this._lastSendText && now - (this._lastSendAt || 0) < 700) {
-      return;
-    }
-    this._lastSendText = trimmed;
-    this._lastSendAt = now;
+    // (dedupe already handled at the top of sendMessage — a second check here
+    // would see the _lastSendText we just recorded and kill every send)
 
     const wantsBrowserOpen = window.DenizenOpenClawDispatch?.wantsLucyBrowserOpen?.(trimmed) || false;
 
-    // If the user is actively chatting, treat that as presence and turn
-    // voice on automatically so NPC replies can be heard without requiring
-    // a manual Alt+V toggle first.
+    // If the user is actively chatting, treat that as presence and turn voice
+    // on automatically. Fire-and-forget: a stalled presence call must never
+    // block sending the message (it used to await here and could hang sends).
     if (!globalThis.DenizenPresence?.zionPresent && typeof globalThis.DenizenSetPresence === 'function') {
-      try { await globalThis.DenizenSetPresence(true); }
-      catch (_) { /* non-fatal; chat still proceeds */ }
+      Promise.resolve().then(() => globalThis.DenizenSetPresence(true)).catch(() => {});
     }
 
     // Add to chat log
@@ -2602,8 +2597,12 @@ class PlayerChat {
       return !!row && getComputedStyle(row).display !== 'none';
     };
     const hasFiles = (e) => !!(e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes('Files'));
+    const hasLinkOrText = (e) => {
+      const types = e.dataTransfer?.types ? Array.from(e.dataTransfer.types) : [];
+      return types.includes('text/uri-list') || types.includes('text/plain');
+    };
     document.addEventListener('dragover', (e) => {
-      if (!chatDropActive() || !hasFiles(e)) return;
+      if (!chatDropActive() || !(hasFiles(e) || hasLinkOrText(e))) return;
       e.preventDefault();
       panel.classList.add('pc-drag-over');
     }, { capture: true });
@@ -2617,6 +2616,20 @@ class PlayerChat {
         e.preventDefault();
         e.stopPropagation();
         this._addPendingFiles(e.dataTransfer.files);
+        return;
+      }
+      // A dropped link or text snippet goes into the input (never navigate away).
+      const uri = e.dataTransfer?.getData?.('text/uri-list') || e.dataTransfer?.getData?.('text/plain') || '';
+      const dropped = String(uri).split(/\r?\n/)[0].trim();
+      if (dropped) {
+        e.preventDefault();
+        e.stopPropagation();
+        const cur = this._input?.value || '';
+        if (this._input) {
+          this._input.value = cur ? `${cur.replace(/\s+$/, '')} ${dropped}` : dropped;
+          this._input.dispatchEvent(new Event('input', { bubbles: true }));
+          try { this._input.focus(); } catch (_) {}
+        }
       }
     }, { capture: true });
     this._input.addEventListener('paste', (e) => {
@@ -2641,7 +2654,7 @@ class PlayerChat {
       }
       e.stopPropagation();
       if (e.key === 'Enter') {
-        if (this._input.value.trim()) {
+        if (this._input.value.trim() || this._pendingAttachments?.length) {
           this.sendMessage(this._input.value);
           this._input.value = '';
           syncSendButton();
@@ -2738,14 +2751,16 @@ class PlayerChat {
     const sendBtn = panel.querySelector('#player-chat-send');
     syncSendButton = () => {
       if (!sendBtn) return;
-      sendBtn.disabled = !String(this._input?.value || '').trim();
+      sendBtn.disabled = !String(this._input?.value || '').trim()
+        && !(this._pendingAttachments && this._pendingAttachments.length);
     };
+    this._syncSendButton = syncSendButton;
     this._input.addEventListener('input', syncSendButton);
     const onSend = (e) => {
       if (e?.preventDefault) e.preventDefault();
       if (e?.stopPropagation) e.stopPropagation();
       const text = String(this._input?.value || '').trim();
-      if (!text) return;
+      if (!text && !this._pendingAttachments?.length) return;
       this.sendMessage(text);
       this._input.value = '';
       syncSendButton();
@@ -3019,6 +3034,7 @@ class PlayerChat {
   }
 
   _renderAttachChips() {
+    try { this._syncSendButton?.(); } catch (_) {}
     const el = this._attachChipsEl;
     if (!el) return;
     const items = this._pendingAttachments || [];
