@@ -194,6 +194,23 @@ function createDenizenRouteHandler(deps = {}) {
       return true;
     }
 
+    const competencyMap = safeRequire('./competency-map');
+    if (method === 'GET' && path === '/api/competency-map' && competencyMap) {
+      const minScore = Number(url.searchParams.get('min_score') || 5);
+      sendJson(res, 200, {
+        ok: true,
+        team: competencyMap.getTeamProfile(),
+        gaps: competencyMap.getTeamGaps(Number.isFinite(minScore) ? minScore : 5),
+      });
+      return true;
+    }
+
+    const platformBridge = safeRequire('./platform-bridge');
+    if (method === 'GET' && path === '/api/platform-bridge/status' && platformBridge) {
+      sendJson(res, 200, { ok: true, ...platformBridge.platformBridgeStatus() });
+      return true;
+    }
+
     return false;
   };
 }

@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "template_pack": "generic-office",
+  "entity": {
+    "legal_name": "Your Company",
+    "technology_dba": "Your Company",
+    "founder_thesis": "Build useful products with a visible AI team.",
+    "leadership": {
+      "ceo": "The CEO (player)"
+    }
+  },
+  "strategic_goals": [
+    "Ship Denizen as a visual AI agent office for your workflows",
+    "Keep CRM intake and team coordination organized",
+    "Learn what automations matter before over-building"
+  ],
+  "active_opportunities": [],
+  "product": {
+    "name": "DENIZEN",
+    "tagline": "Real-time visual observability layer for AI agents",
+    "commercial_role": "Demo and team operations — not tied to a specific customer pursuit"
+  }
+}

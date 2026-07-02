@@ -7,6 +7,8 @@
 
 let crmNpcPersonas = null;
 try { crmNpcPersonas = require('./denizen-crm-npc-personas'); } catch (_) {}
+let openclawDispatch = null;
+try { openclawDispatch = require('./openclaw-dispatch'); } catch (_) {}
 
 const RUN_SKILL_TAG = /\[RUN_SKILL:([a-z][a-z0-9-]*):([^\]]+)\]/gi;
 
@@ -20,6 +22,49 @@ const SKILL_ALIASES = {
 function normalizeSkillName(name) {
   const raw = String(name || '').trim().toLowerCase();
   return SKILL_ALIASES[raw] || raw;
+}
+
+const DELEGATE_NPC_NAMES = [
+  'Abby', 'Alex', 'Marcus', 'Sarah', 'Edward', 'Josh', 'Molly', 'Oscar', 'Pier', 'Rob',
+  'Roki', 'Bouncer', 'Dan', 'Lucy', 'Jenny', 'Bob',
+];
+
+/** CEO message names another NPC to execute (e.g. "have Alex run_skill …"). */
+function extractDelegateTarget(message) {
+  const msg = String(message || '');
+  const m = msg.match(/\b(?:have|ask|tell|get)\s+([A-Z][a-z]+)\s+(?:to\s+)?(?:run_skill|run)\b/);
+  if (!m) return null;
+  const name = m[1];
+  return DELEGATE_NPC_NAMES.includes(name) ? name : null;
+}
+
+/** When CEO delegates, speaker must not run the inferred skill. */
+function shouldDeferSkillToDelegatee(message, delegation) {
+  const target = delegation?.delegateTo || extractDelegateTarget(message);
+  return target || null;
+}
+
+function inferCodingTargetFiles(message, params = {}) {
+  if (Array.isArray(params.targetFiles) && params.targetFiles.length) {
+    return params.targetFiles;
+  }
+  const msg = String(message || '');
+  const files = [];
+  const quoted = msg.match(/[`"']([^`"']+\.[a-z0-9]{1,8})[`"']/gi) || [];
+  for (const q of quoted) {
+    const f = q.replace(/[`"']/g, '').trim();
+    if (f && !files.includes(f)) files.push(f);
+  }
+  if (/\breadme\b/i.test(msg) && !files.includes('README.md')) files.push('README.md');
+  return files;
+}
+
+function enrichCodingAgentParams(message, params = {}) {
+  const out = { ...params };
+  if (!out.task) out.task = String(message || '').trim();
+  const targets = inferCodingTargetFiles(message, out);
+  if (targets.length) out.targetFiles = targets;
+  return out;
 }
 
 function parseParamsBlob(blob) {
@@ -65,11 +110,31 @@ function stripRunSkillTags(text) {
   return String(text || '').replace(RUN_SKILL_TAG, '').replace(/\s+$/, '').trim();
 }
 
+function skillParamsContentFromMessage(msg) {
+  const block = String(msg || '').match(/```[\s\S]*?```/);
+  if (block) return block[0].replace(/```/g, '').trim();
+  const quoted = String(msg || '').match(/content\s*[`"']([^`"']+)[`"']/i);
+  if (quoted) return quoted[1];
+  return '';
+}
+
 function inferSkillFromMessage(npcName, message) {
   const msg = String(message || '').trim();
   if (!msg) return null;
   const lower = msg.toLowerCase();
   const name = String(npcName || '');
+
+  const runSkillExplicit = msg.match(/\brun_skill\s*:?\s*([a-z][a-z0-9-]*)/i);
+  if (runSkillExplicit) {
+    const skill = normalizeSkillName(runSkillExplicit[1]);
+    const quoted = msg.match(/(?:on|for|about)\s+["']([^"']+)["']/i);
+    const topic = quoted?.[1]?.trim()
+      || msg.replace(/^[\s\S]*?\brun_skill\s*:?\s*[a-z][a-z0-9-]*\s*/i, '').replace(/\s+and\s+save.*$/i, '').trim();
+    if (skill === 'research' || skill === 'web-search') {
+      return { skill: 'research', params: { query: topic || msg, read: 1 }, source: 'infer-explicit' };
+    }
+    return { skill, params: { task: topic || msg }, source: 'infer-explicit' };
+  }
 
   if (/\b(build|create|draft)\b.*\b(skill|tool)\b/i.test(msg)) {
     const purpose = msg.replace(/^(?:please\s+)?(?:build|create|draft)\s+(?:a\s+)?(?:skill|tool)\s+(?:to\s+|for\s+)?/i, '').trim();
@@ -86,10 +151,22 @@ function inferSkillFromMessage(npcName, message) {
 
   const crmPlan = crmNpcPersonas?.inferCrmAction?.(msg);
   if (crmPlan) {
-    const persona = crmNpcPersonas?.resolvePersona?.(name);
-    const writeBlocked = persona && !persona.canWrite && crmNpcPersonas?.isWriteSkill?.(crmPlan.skill);
-    if (!writeBlocked) return crmPlan;
-    return { skill: 'crm-setup-status', params: { task: msg }, source: 'infer-crm-read' };
+    if (crmNpcPersonas?.canNpcRunSkill?.(name, crmPlan.skill)) return crmPlan;
+    return crmNpcPersonas.deferSkillPlan(msg, crmPlan.skill);
+  }
+
+  const businessPlan = crmNpcPersonas?.inferBusinessAction?.(msg);
+  if (businessPlan) {
+    if (crmNpcPersonas?.canNpcRunSkill?.(name, businessPlan.skill)) return businessPlan;
+    return crmNpcPersonas.deferSkillPlan(msg, businessPlan.skill);
+  }
+
+  if (/\b(trend|trending|rss|news)\b/i.test(msg) && /\b(scrape|monitor|watch|feed)\b/i.test(msg)) {
+    return { skill: 'trend-scraper', params: { task: msg }, source: 'infer' };
+  }
+
+  if (/\b(moderate|brand safety|legal scan|review)\b.*\b(content|post|publish)\b/i.test(msg)) {
+    return { skill: 'content-moderation', params: { task: msg }, source: 'infer' };
   }
 
   if (/\b(research|look\s*up|find\s+out|google|what\s+is|how\s+do\s+i)\b/i.test(msg)) {
@@ -104,6 +181,33 @@ function inferSkillFromMessage(npcName, message) {
     return { skill: 'github', params: { task: msg }, source: 'infer' };
   }
 
+  if (/\b(dossier|partnership\s+(?:pdf|brief|dossier)|technical\s+dossier|capability\s+statement|pdf\s+dossier)\b/i.test(msg)) {
+    const params = { task: msg };
+    if (/partnership|teaming|rm\s*cyber/i.test(msg)) {
+      params.type = 'partnership-dossier';
+      params.reader = 'partner';
+      params.subject = '1921';
+      params.skin = '1921';
+      const forMatch = msg.match(/\bfor\s+([A-Z][A-Za-z0-9\s.&-]{2,40})/);
+      if (forMatch) params.recipient = forMatch[1].trim();
+      else if (/rm\s*cyber/i.test(msg)) params.recipient = 'RM Cyber';
+    } else if (/technical|denizen/i.test(msg)) {
+      params.type = 'technical-dossier';
+      params.subject = 'denizen';
+      params.skin = 'denizen';
+      params.facts_ref = 'HEAD';
+    } else if (/capability\s+statement|gov\s+buyer/i.test(msg)) {
+      params.type = 'capability-statement';
+      params.subject = '1921';
+      params.skin = '1921';
+    }
+    return { skill: 'pdf-dossier', params, source: 'infer-dossier' };
+  }
+
+  if (/\b(pdf|report)\b/i.test(msg) && /\b(generate|build|draft|write)\b/i.test(msg)) {
+    return { skill: 'pdf-generator', params: { task: msg }, source: 'infer' };
+  }
+
   if (/\b(code|fix|bug|implement|refactor|patch)\b/i.test(msg)
     && /\b(dev|developer|senior|backend|frontend|intern)\b/i.test(name)
       || ['Alex', 'Josh', 'Edward', 'Jenny', 'Roki'].includes(name)) {
@@ -111,7 +215,39 @@ function inferSkillFromMessage(npcName, message) {
   }
 
   if (/\b(browser|navigate|scrape|browse)\b/i.test(msg)) {
+    if (crmNpcPersonas?.isCrmDataEntryIntent?.(msg)) return null;
     return { skill: 'browserclaw', params: { task: msg }, source: 'infer' };
+  }
+
+  if (/\b(read|open|show)\b.*\b(file|document|folder)\b/i.test(msg)) {
+    const pathMatch = msg.match(/(?:file|path)\s+[`"']?([^\s`"']+)[`"']?/i)
+      || msg.match(/[`"']([^`"']+\.[a-z0-9]{1,6})[`"']/i);
+    return {
+      skill: 'file-read',
+      params: { path: pathMatch?.[1] || msg.replace(/.*\b(?:read|open)\b/i, '').trim() },
+      source: 'infer',
+    };
+  }
+
+  if (/\b(write|save|create)\b.*\b(file|document)\b/i.test(msg)) {
+    const pathMatch = msg.match(/(?:to|file|path)\s+[`"']?([^\s`"']+)[`"']?/i);
+    return {
+      skill: 'file-write',
+      params: {
+        path: pathMatch?.[1] || 'notes.txt',
+        content: skillParamsContentFromMessage(msg),
+      },
+      source: 'infer',
+    };
+  }
+
+  if (/\b(run|execute)\b.*\b(code|script|python|node)\b/i.test(msg)) {
+    const cmdMatch = msg.match(/(?:run|execute)\s+(.+)/i);
+    return {
+      skill: 'run-code',
+      params: { command: 'node', args: [cmdMatch?.[1]?.trim() || msg], task: msg },
+      source: 'infer',
+    };
   }
 
   if (/\b(supabase|database|sql|schema)\b/i.test(msg)) {
@@ -186,24 +322,44 @@ function planSkillExecution({
   isAssistant = false,
   canUseRealWork = false,
   forceInfer = false,
+  ceoLookup = false,
+  ceoDirectOrder = false,
+  extraSkills = null,
 } = {}) {
-  if (!canUseRealWork) return null;
-
+  const extras = Array.isArray(extraSkills) ? extraSkills : [];
+  const canRun = (name, skill) => crmNpcPersonas?.canNpcRunSkill?.(name, skill, extras);
   const crmInfer = crmNpcPersonas?.inferCrmAction?.(message);
-  const crmPersona = crmNpcPersonas?.resolvePersona?.(npcName);
-  if (crmInfer && crmPersona) {
-    const writeBlocked = !crmPersona.canWrite && crmNpcPersonas?.isWriteSkill?.(crmInfer.skill);
-    if (!writeBlocked) return crmInfer;
-    return { skill: 'crm-setup-status', params: { task: message }, source: 'infer-crm-read' };
+  const businessInfer = !crmInfer ? crmNpcPersonas?.inferBusinessAction?.(message) : null;
+  const dataInfer = crmInfer || businessInfer;
+  if (dataInfer) {
+    if (!canUseRealWork) {
+      if (crmNpcPersonas?.isWriteSkill?.(dataInfer.skill)) {
+        return {
+          skill: 'crm-setup-status',
+          params: { task: message, demoCoach: true },
+          source: 'infer-crm-demo',
+        };
+      }
+      if (canRun(npcName, dataInfer.skill)) return dataInfer;
+    } else if (canRun(npcName, dataInfer.skill)) {
+      return dataInfer;
+    } else {
+      return crmNpcPersonas.deferSkillPlan(message, dataInfer.skill);
+    }
   }
+
+  if (!canUseRealWork) return null;
 
   const tagged = parseRunSkillTags(responseText);
   if (tagged.length) return tagged[0];
 
-  if (!isAssistant && !forceInfer) return null;
+  const inferLookup = ceoLookup
+    || (npcName === 'Lucy' && openclawDispatch?.looksLikeLookupMessage?.(message));
+  if (!isAssistant && !forceInfer && !inferLookup && !ceoDirectOrder) return null;
 
   const infer = inferSkillFromMessage(npcName, message);
-  if (infer && (isAssistant || forceInfer) && isTaskLikeMessage(message)) {
+  const taskLike = isTaskLikeMessage(message) || /\brun_skill\b/i.test(message);
+  if (infer && (isAssistant || forceInfer || inferLookup || ceoDirectOrder) && taskLike) {
     return infer;
   }
 
@@ -220,4 +376,8 @@ module.exports = {
   isSkillAccessRequest,
   lucySkillGateReply,
   normalizeSkillName,
+  extractDelegateTarget,
+  shouldDeferSkillToDelegatee,
+  inferCodingTargetFiles,
+  enrichCodingAgentParams,
 };

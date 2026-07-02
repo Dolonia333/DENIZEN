@@ -4,11 +4,23 @@
  * Per-NPC MCP gateway — Streamable HTTP JSON-RPC.
  * Teammate AIs (Claude, Cursor, etc.) connect to /mcp/npc/:npcKey with a bearer token.
  *
- * Tools: update_memory, get_status, log_activity
+ * Sync: update_memory, get_status, log_activity
+ * Actions: list_skills, run_skill, assign_task, delegate_task, announce_in_office
  */
 
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 const denizenDb = require('./denizen-db.js');
+const mcpActions = require('./denizen-mcp-actions.js');
+const mcpMarketTools = require('./denizen-mcp-market-tools.js');
+const mcpTeamTools = require('./denizen-mcp-team-tools.js');
+const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
+const mcpMeshTools = require('./denizen-mcp-mesh-tools.js');
+const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
+const mcpScopes = require('./denizen-mcp-scopes.js');
+const mcpResources = require('./denizen-mcp-resources.js');
+const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const { hashSessionToken } = require('./visitor-session-auth.js');
 
 const PROTOCOL_VERSION = '2024-11-05';
@@ -53,6 +65,62 @@ const TOOL_DEFINITIONS = [
         action: { type: 'string', description: 'Optional action verb' },
       },
       required: ['note'],
+    },
+  },
+  {
+    name: 'list_skills',
+    description: 'List OpenClaw/Jelly skills this NPC is allowed to run (research, canvas-render, CRM, etc.).',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'run_skill',
+    description: 'Run a real skill as this NPC (mockups, research, CRM, coding-agent, web-search). Returns immediately unless wait=true.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        skill: { type: 'string', description: 'Skill name, e.g. canvas-render, research, crm-summary' },
+        params: { type: 'object', description: 'Skill parameters (query, task, etc.)' },
+        wait: { type: 'boolean', description: 'If false, return immediately (default true — waits for result)' },
+        timeout_ms: { type: 'number', description: 'Max wait when wait=true (default 180000)' },
+      },
+      required: ['skill'],
+    },
+  },
+  {
+    name: 'assign_task',
+    description: 'Assign a mandatory task to this NPC (wakes think loop, shows in directive inbox).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        task: { type: 'string', description: 'What the NPC should do' },
+        urgent: { type: 'boolean', description: 'Skip think cooldown when true' },
+        from: { type: 'string', description: 'Who assigned it (default MCP teammate)' },
+      },
+      required: ['task'],
+    },
+  },
+  {
+    name: 'delegate_task',
+    description: 'Delegate a task to another teammate NPC by name or folder key.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        to_npc: { type: 'string', description: 'Target NPC, e.g. Josh or josh' },
+        task: { type: 'string', description: 'Task description' },
+        urgent: { type: 'boolean' },
+      },
+      required: ['to_npc', 'task'],
+    },
+  },
+  {
+    name: 'announce_in_office',
+    description: 'Make this NPC say something in the virtual office (speech bubble for connected viewers).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'Line of dialogue' },
+      },
+      required: ['message'],
     },
   },
 ];
@@ -131,7 +199,7 @@ async function toolUpdateMemory(scope, args) {
   await denizenDb.recordFact({
     orgId: scope.org_id,
     factType: 'npc.memory.updated',
-    actorType: 'mcp',
+    actorType: 'system',
     actorId: scope.npc_key,
     payload: {
       body: body.slice(0, 200),
@@ -168,12 +236,15 @@ async function toolGetStatus(scope, args) {
     ].join('&')).catch(() => []),
   ]);
 
+  const extras = await mcpTeamTools.buildStatusExtras(scope, { work: work || [] });
+
   return {
     ok: true,
     npc: npcRows?.[0] || { npc_key: npcKey, display_name: npcDisplayName(npcKey) },
     recent_mcp_memories: memories,
     recent_work: work || [],
     org_slug: scope.org_slug,
+    ...extras,
   };
 }
 
@@ -194,13 +265,109 @@ async function toolLogActivity(scope, args) {
   return { ok: true, logged: true, npc_key: scope.npc_key };
 }
 
-async function callTool(scope, name, args) {
+async function logMcpAudit(scope, toolName, result) {
+  if (!denizenDb.enabled || !scope?.org_id) return;
+  try {
+    await denizenDb._rpc('denizen_log_mcp_audit', {
+      p_org_id: scope.org_id,
+      p_token_id: scope.token_id || null,
+      p_npc_key: scope.npc_key,
+      p_tool_name: toolName,
+      p_ok: result?.ok !== false && result?.error !== 'scope_denied',
+      p_error_code: result?.error || null,
+      p_session_id: scope.session_id || null,
+      p_member_id: scope.member_id || null,
+      p_meta: {},
+    });
+  } catch (_) { /* audit must not block tools */ }
+}
+
+async function callToolImpl(scope, name, args) {
+  if (mcpMarketTools.isMarketNpc(scope.npc_key) && mcpMarketTools.toolsForNpc(scope.npc_key).some((t) => t.name === name)) {
+    return mcpMarketTools.callTool(scope.npc_key, name, args);
+  }
+  if (mcpTeamTools.isTeamTool(name)) {
+    return mcpTeamTools.callTool(scope, name, args);
+  }
+  if (mcpCrmTools.isCrmTool(name)) {
+    return mcpCrmTools.callTool(scope, name, args);
+  }
+  if (mcpMeshTools.isMeshTool(name)) {
+    return mcpMeshTools.callTool(scope, name, args);
+  }
+  if (mcpCursorTools.isCursorTool(name)) {
+    return mcpCursorTools.callTool(scope, name, args);
+  }
+  if (mcpMentorTools.isMentorTool(name)) {
+    return mcpMentorTools.callTool(scope, name, args);
+  }
   switch (name) {
     case 'update_memory': return toolUpdateMemory(scope, args);
     case 'get_status': return toolGetStatus(scope, args);
     case 'log_activity': return toolLogActivity(scope, args);
+    case 'list_skills': return mcpActions.toolListSkills(scope, args);
+    case 'run_skill': return mcpActions.toolRunSkill(scope, args);
+    case 'assign_task': return mcpActions.toolAssignTask(scope, args);
+    case 'delegate_task': return mcpActions.toolDelegateTask(scope, args);
+    case 'announce_in_office': return mcpActions.toolAnnounce(scope, args);
     default: return { ok: false, error: `unknown tool: ${name}` };
   }
+}
+
+async function callTool(scope, name, args) {
+  const toolName = String(name || '').trim();
+  if (!mcpScopes.toolAllowed(scope, toolName)) {
+    const denied = {
+      ok: false,
+      error: 'scope_denied',
+      required_scope: mcpScopes.requiredScope(toolName),
+      granted_scopes: mcpScopes.scopesFromTokenScope(scope),
+    };
+    logMcpAudit(scope, toolName, denied);
+    return denied;
+  }
+  const result = await callToolImpl(scope, toolName, args);
+  logMcpAudit(scope, toolName, result);
+  return result;
+}
+
+function configure(deps = {}) {
+  mcpActions.configure(deps);
+  mcpMarketTools.configure(deps);
+  mcpTeamTools.configure(deps);
+  mcpCrmTools.configure(deps);
+  mcpMeshTools.configure(deps);
+  mcpCursorTools.configure(deps);
+  mcpMentorTools.configure({
+    announceInOffice: ({ npcName, message }) => {
+      if (typeof deps.broadcast === 'function') {
+        deps.broadcast({
+          type: 'npc_response',
+          npcName,
+          fromName: 'Mentor panel',
+          text: String(message || '').slice(0, 500),
+          turn: 1,
+          ts: Date.now(),
+        });
+      }
+    },
+    refreshNpcMemories: () => deps.npcBrains?.refreshDbMemories?.(),
+  });
+}
+
+function toolsForScope(scope) {
+  const base = [...TOOL_DEFINITIONS];
+  if (scope?.npc_key) {
+    base.push(...mcpTeamTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpCrmTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpMarketTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpMeshTools.toolsForNpc(scope.npc_key));
+    base.push(...mcpCursorTools.toolsForNpc(scope.npc_key));
+    if (scope.npc_key === 'grok' || scope.npc_key === '_team') {
+      base.push(...mcpMentorTools.toolsForGateway());
+    }
+  }
+  return mcpScopes.filterTools(scope, base);
 }
 
 async function handleRpc(scope, req, res, message, sessionId) {
@@ -210,13 +377,19 @@ async function handleRpc(scope, req, res, message, sessionId) {
     const sid = sessionId || crypto.randomBytes(16).toString('hex');
     _sessions.set(sid, { scope, at: Date.now() });
     if (sessionId) res.setHeader('Mcp-Session-Id', sid);
+    const capabilities = { tools: {} };
+    // Expose telemetry as first-class resource for external AIs (Claude, Cursor, etc.)
+    // This decouples the Intelligence Spine from local filesystem.
+    if (scope.npc_key === 'grok') {
+      capabilities.resources = {};
+    }
     return sendJson(res, 200, {
       jsonrpc: '2.0',
       id,
       result: {
         protocolVersion: PROTOCOL_VERSION,
-        capabilities: { tools: {} },
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '1.3.0' },
+        capabilities,
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.0.0' },
       },
     });
   }
@@ -225,7 +398,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
     return sendJson(res, 200, {
       jsonrpc: '2.0',
       id,
-      result: { tools: TOOL_DEFINITIONS },
+      result: { tools: toolsForScope(scope) },
     });
   }
 
@@ -249,6 +422,68 @@ async function handleRpc(scope, req, res, message, sessionId) {
         error: { code: -32000, message: err?.message || String(err) },
       });
     }
+  }
+
+  // MCP Resources: telemetry spine (full + per-NPC templates)
+  if (method === 'resources/list') {
+    if (scope.npc_key !== 'grok') {
+      return sendJson(res, 200, { jsonrpc: '2.0', id, result: { resources: [] } });
+    }
+    return sendJson(res, 200, {
+      jsonrpc: '2.0',
+      id,
+      result: { resources: [...mcpResources.grokResourcesList(), ...mcpResources.mentorResourcesList()] },
+    });
+  }
+
+  if (method === 'resources/templates/list') {
+    if (scope.npc_key !== 'grok') {
+      return sendJson(res, 200, { jsonrpc: '2.0', id, result: { resourceTemplates: [] } });
+    }
+    return sendJson(res, 200, {
+      jsonrpc: '2.0',
+      id,
+      result: {
+        resourceTemplates: [
+          ...mcpResources.GROK_RESOURCE_TEMPLATES,
+          ...mcpResources.MENTOR_RESOURCE_TEMPLATES,
+        ],
+      },
+    });
+  }
+
+  if (method === 'resources/read') {
+    const uri = params?.uri;
+    if (mcpResources.canReadTelemetry(scope, uri)) {
+      try {
+        const text = mcpResources.readResource(uri);
+        if (text == null) {
+          return sendJson(res, 200, {
+            jsonrpc: '2.0',
+            id,
+            error: { code: -32602, message: 'Resource not found' },
+          });
+        }
+        return sendJson(res, 200, {
+          jsonrpc: '2.0',
+          id,
+          result: {
+            contents: [{ uri, mimeType: 'application/json', text }],
+          },
+        });
+      } catch (err) {
+        return sendJson(res, 200, {
+          jsonrpc: '2.0',
+          id,
+          error: { code: -32000, message: `Failed to read telemetry: ${err.message}` },
+        });
+      }
+    }
+    return sendJson(res, 200, {
+      jsonrpc: '2.0',
+      id,
+      error: { code: -32602, message: 'Resource not found or not accessible for this scope' },
+    });
   }
 
   if (method === 'notifications/initialized') {
@@ -314,7 +549,7 @@ async function handleHttpRequest(req, res, npcKeyFromPath) {
       ok: true,
       mcp: true,
       npc_key: npcKey,
-      tools: TOOL_DEFINITIONS.map((t) => t.name),
+      tools: toolsForScope(scope).map((t) => t.name),
       protocol: PROTOCOL_VERSION,
     });
   }
@@ -421,6 +656,23 @@ async function handleRestSync(req, res, action) {
     return sendJson(res, result?.ok ? 200 : 400, result);
   }
 
+  if (action === 'run-skill' || action === 'assign-task') {
+    if (req.method !== 'POST') {
+      return sendJson(res, 405, { ok: false, error: 'POST only' });
+    }
+    let body;
+    try {
+      body = await readBody(req);
+    } catch (err) {
+      return sendJson(res, 400, { ok: false, error: err?.message || 'invalid json' });
+    }
+    const payload = body || {};
+    const result = action === 'run-skill'
+      ? await callTool(scope, 'run_skill', payload)
+      : await callTool(scope, 'assign_task', payload);
+    return sendJson(res, result?.ok ? 200 : 400, result);
+  }
+
   return sendJson(res, 404, { ok: false, error: 'unknown action' });
 }
 
@@ -433,7 +685,7 @@ function buildOpenApiSpec(baseUrl) {
       description:
         'REST bridge for ChatGPT Custom GPT Actions and other HTTP clients. '
         + 'Create a bearer token in the Denizen office (Connect AI), then configure your client.',
-      version: '1.4.0',
+      version: '1.7.0',
     },
     servers: [{ url: base }],
     components: {
@@ -507,6 +759,51 @@ function buildOpenApiSpec(baseUrl) {
           responses: { 200: { description: 'Activity logged' } },
         },
       },
+      '/api/npc-sync/run-skill': {
+        post: {
+          operationId: 'runNpcSkill',
+          summary: 'Run an allowed skill as this NPC',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['skill'],
+                  properties: {
+                    skill: { type: 'string' },
+                    params: { type: 'object' },
+                    wait: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Skill started or completed' } },
+        },
+      },
+      '/api/npc-sync/assign-task': {
+        post: {
+          operationId: 'assignNpcTask',
+          summary: 'Assign a task to this NPC',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['task'],
+                  properties: {
+                    task: { type: 'string' },
+                    urgent: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: 'Task assigned' } },
+        },
+      },
     },
   };
 }
@@ -536,6 +833,7 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
       gpt_instructions: [
         `You are synced to ${npcDisplayName(npcKey)} in the Denizen virtual office.`,
         'When the user shares decisions, tasks, or context worth remembering, call updateNpcMemory.',
+        'When they want real work, call run_skill (list_skills first). Use assign_task to queue office work.',
         'When they finish work, call logNpcActivity with a short note.',
         'At the start of a session, call getNpcStatus to see what the NPC already knows.',
       ].join(' '),
@@ -559,6 +857,8 @@ async function createMcpToken({
   memberId = null,
   sessionId = null,
   label = null,
+  scopes = null,
+  scopePreset = null,
 } = {}) {
   if (!denizenDb.enabled || !orgId || !npcKey) {
     throw new Error('database unavailable or missing org/npc');
@@ -566,6 +866,7 @@ async function createMcpToken({
 
   const token = crypto.randomBytes(32).toString('base64url');
   const tokenHash = hashSessionToken(token);
+  const normalizedScopes = mcpScopes.normalizeScopes(scopes || scopePreset);
 
   const tokenId = await denizenDb._rpc('denizen_register_mcp_token', {
     p_org_id: orgId,
@@ -574,10 +875,13 @@ async function createMcpToken({
     p_member_id: memberId || null,
     p_session_id: sessionId || null,
     p_label: label || null,
+    p_metadata: { scopes: normalizedScopes },
   });
 
   const baseUrl = getPublicBaseUrl();
-  const mcpUrl = `${baseUrl}/mcp/npc/${encodeURIComponent(npcKey)}`;
+  const mcpUrl = npcKey === '_team'
+    ? `${baseUrl}/mcp/team`
+    : `${baseUrl}/mcp/npc/${encodeURIComponent(npcKey)}`;
   const onboarding = buildOnboardingPayload({ baseUrl, npcKey, token });
 
   return {
@@ -585,6 +889,7 @@ async function createMcpToken({
     token,
     mcp_url: mcpUrl,
     npc_key: npcKey,
+    scopes: normalizedScopes,
     ...onboarding,
     cursor_config: {
       mcpServers: {
@@ -611,7 +916,7 @@ function buildConnectInfo(npcKey, baseUrl) {
   return {
     npc_key: npcKey,
     mcp_url: url,
-    tools: TOOL_DEFINITIONS.map((t) => t.name),
+    tools: toolsForScope({ npc_key: npcKey }).map((t) => t.name),
     openapi_url: `${base}/api/npc-sync/openapi.json`,
     paths: {
       cursor_api: 'MCP JSON-RPC at mcp_url (Cursor, Claude Desktop, API clients)',
@@ -624,6 +929,8 @@ function buildConnectInfo(npcKey, baseUrl) {
 
 module.exports = {
   TOOL_DEFINITIONS,
+  configure,
+  toolsForScope,
   handleHttpRequest,
   handleRestSync,
   buildOpenApiSpec,

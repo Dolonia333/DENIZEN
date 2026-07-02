@@ -5,6 +5,7 @@ const { fmtRows } = bridge;
 const orgPolicy = require('../../src/denizen-org-policy');
 const federalPipeline = require('../../src/federal-pipeline');
 const crmMutations = require('../../src/denizen-crm-mutations');
+const crmSkills = require('../../src/denizen-crm-skills');
 
 let _cachedOrgId = null;
 
@@ -50,6 +51,48 @@ const ACTIONS = new Set([
   'crm-at-risk',
   'crm-add-ticket',
   'crm-list-tickets',
+  'crm-setup-wizard',
+  'crm-add-deal',
+  'crm-update-profile',
+  'crm-get-intake-link',
+  'crm-update-contact',
+  'crm-qualify-submission',
+  'crm-draft-email',
+  'crm-enroll-sequence',
+  'crm-move-deal',
+  'crm-mark-deal-outcome',
+  'crm-generate-quote',
+  'crm-pipeline-brief',
+  'business-context-brief',
+  'crm-dedupe-contacts',
+  'crm-audit-workspace',
+  'crm-export-snapshot',
+  'crm-schedule-followup',
+  'crm-recommend-package',
+  'crm-invite-teammate',
+  'crm-intake-to-pipeline',
+  'crm-qualify-deal',
+  'crm-save-at-risk-deal',
+  'crm-draft-followup',
+  'crm-enrich-contact',
+  'crm-list-companies',
+  'crm-list-contacts',
+  'crm-add-company',
+  'crm-link-company',
+  'crm-list-quotes',
+  'crm-portal-link',
+  'crm-list-automations',
+  'crm-add-automation',
+  'crm-analytics-summary',
+  'crm-marketing-funnel',
+  'crm-calendar-status',
+  'crm-sync-calendar',
+  'crm-list-meetings',
+  'crm-schedule-meeting',
+  'crm-add-sequence',
+  'crm-add-email-template',
+  'crm-import-contacts',
+  'crm-add-note',
   'help',
 ]);
 
@@ -108,6 +151,14 @@ async function runAction(action, { npcName, params, config }) {
       return crmUpdateDeal(config, params);
     case 'crm-setup-status':
       return crmSetupStatus(config, params);
+    case 'crm-setup-wizard':
+      return crmSetupWizard(config, params);
+    case 'crm-add-deal':
+      return crmAddDeal(config, params);
+    case 'crm-update-profile':
+      return crmUpdateProfile(config, params);
+    case 'crm-get-intake-link':
+      return crmGetIntakeLink(config, params);
     case 'crm-list-industries':
       return crmListIndustries(config, params);
     case 'crm-apply-industry':
@@ -122,6 +173,82 @@ async function runAction(action, { npcName, params, config }) {
       return crmAddTicket(config, params, npcName);
     case 'crm-list-tickets':
       return crmListTickets(config, params);
+    case 'crm-update-contact':
+      return crmUpdateContact(config, params);
+    case 'crm-qualify-submission':
+      return crmQualifySubmission(config, params);
+    case 'crm-draft-email':
+      return crmDraftEmail(config, params, npcName);
+    case 'crm-enroll-sequence':
+      return crmEnrollSequence(config, params);
+    case 'crm-move-deal':
+      return crmMoveDeal(config, params);
+    case 'crm-mark-deal-outcome':
+      return crmMarkDealOutcome(config, params);
+    case 'crm-generate-quote':
+      return crmGenerateQuote(config, params);
+    case 'crm-pipeline-brief':
+      return crmPipelineBrief(config, params);
+    case 'business-context-brief':
+      return businessContextBriefAction(config, params);
+    case 'crm-dedupe-contacts':
+      return crmDedupeContacts(config, params);
+    case 'crm-audit-workspace':
+      return crmAuditWorkspace(config, params);
+    case 'crm-export-snapshot':
+      return crmExportSnapshot(config, params);
+    case 'crm-schedule-followup':
+      return crmScheduleFollowup(config, params);
+    case 'crm-recommend-package':
+      return crmRecommendPackage(config, params);
+    case 'crm-invite-teammate':
+      return crmInviteTeammate(config, params);
+    case 'crm-intake-to-pipeline':
+      return crmIntakeToPipeline(config, params);
+    case 'crm-qualify-deal':
+      return crmQualifyDeal(config, params);
+    case 'crm-save-at-risk-deal':
+      return crmSaveAtRiskDeal(config, params);
+    case 'crm-draft-followup':
+      return crmDraftFollowup(config, params);
+    case 'crm-enrich-contact':
+      return crmEnrichContact(config, params);
+    case 'crm-list-companies':
+      return crmListCompanies(config, params);
+    case 'crm-list-contacts':
+      return crmListContacts(config, params);
+    case 'crm-add-company':
+      return crmAddCompany(config, params, npcName);
+    case 'crm-link-company':
+      return crmLinkCompany(config, params, npcName);
+    case 'crm-list-quotes':
+      return crmListQuotes(config, params);
+    case 'crm-portal-link':
+      return crmPortalLink(config, params, npcName);
+    case 'crm-list-automations':
+      return crmListAutomations(config, params);
+    case 'crm-add-automation':
+      return crmAddAutomation(config, params, npcName);
+    case 'crm-analytics-summary':
+      return crmAnalyticsSummary(config, params);
+    case 'crm-marketing-funnel':
+      return crmMarketingFunnel(config, params);
+    case 'crm-calendar-status':
+      return crmCalendarStatus(config, params);
+    case 'crm-sync-calendar':
+      return crmSyncCalendar(config, params, npcName);
+    case 'crm-list-meetings':
+      return crmListMeetings(config, params);
+    case 'crm-schedule-meeting':
+      return crmScheduleMeeting(config, params, npcName);
+    case 'crm-add-sequence':
+      return crmAddSequence(config, params, npcName);
+    case 'crm-add-email-template':
+      return crmAddEmailTemplate(config, params, npcName);
+    case 'crm-import-contacts':
+      return crmImportContacts(config, params, npcName);
+    case 'crm-add-note':
+      return crmAddNote(config, params, npcName);
     default:
       return {
         summary: `Denizen data skills: ${[...ACTIONS].filter((a) => a !== 'help').join(', ')}`,
@@ -167,9 +294,13 @@ async function leadMonitor(config, params) {
     limit: Number(params.limit) || 15,
   });
   const open = leads.filter((l) => !/archiv|spam|lost/i.test(l.status || ''));
+  const suggestions = open.slice(0, 3).map(l => `Use crm-enrich-contact for ${l.name} (${l.email || l.company || 'n/a'}) with source '${l.source || 'lead'}' then crm-add-deal if fit is strong (1921/OMES/RM Cyber keywords)`);
   return {
-    summary: `${leads.length} lead(s) fetched (${open.length} open). ${fmtRows(open, 6)}`,
-    leads,
+    summary: `${leads.length} lead(s) fetched (${open.length} open). ${fmtRows(open, 6)}. Actionable: ${suggestions.join('; ')} — run via run_skill denizen-data lead-monitor + crm-enrich-contact + crm-add-deal. High fit ones get tagged research-lead automatically on enrich.`,
+    leads: open,
+    grok_suggestions: suggestions,
+    openCount: open.length,
+    suggestedActions: open.slice(0, 2).map(l => ({ action: 'crm-enrich-contact', params: { name: l.name, email: l.email, company: l.company, source: l.source, score: 55 } })),
   };
 }
 
@@ -691,7 +822,99 @@ async function crmUpdateDeal(config, params) {
 async function crmSetupStatus(config, params) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
-  return crmMutations.getSetupStatus(orgId, params);
+  const wizard = require('../../src/denizen-crm-setup-wizard');
+  const chatActions = require('../../src/denizen-crm-chat-actions');
+  const result = await crmMutations.getSetupStatus(orgId, params);
+  const lines = [result.summary];
+  if (params.demoCoach) {
+    lines.unshift('Demo mode — I can guide you through CRM setup, but saving changes needs a team account (Citizen ID → Team access).');
+  }
+  if (params.deferTo && params.deferredSkill) {
+    lines.unshift(`That action (${params.deferredSkill}) is owned by ${params.deferTo} — ask them in chat or tap Ask ${params.deferTo} below.`);
+  }
+  return {
+    ...result,
+    summary: lines.join('\n'),
+    crm_actions: chatActions.normalizeCrmActions([
+      ...wizard.proposeSetupActions(result.setup, params.task || params.message),
+      ...(params.deferTo ? [chatActions.askNpcAction(params.deferTo, params.task || 'Help with CRM', `Ask ${params.deferTo}`)] : []),
+    ]),
+  };
+}
+
+async function crmSetupWizard(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const wizard = require('../../src/denizen-crm-setup-wizard');
+  const industryBridge = require('../../src/denizen-crm-industry-bridge');
+  let industryId = params.industryId || params.templateId || params.industry;
+  if (!industryId && params.task) {
+    industryId = wizard.inferIndustryId(params);
+  }
+  let mode = params.mode || 'run_all';
+  if (mode === 'run_all' && !params.forceBatch) mode = 'interactive';
+  if (/\b(continue|next step|keep going)\b/i.test(String(params.task || ''))) mode = 'continue';
+  const out = await wizard.runSetupWizard(orgId, {
+    mode: params.stepId ? 'run_step' : mode,
+    stepId: params.stepId || params.step || null,
+    identityId: params.identityId || null,
+    sessionId: params.sessionId || null,
+    orgSlug: params.orgSlug || config?.orgSlug || process.env.DENIZEN_ORG_SLUG || null,
+    profile: params.profile || null,
+    displayName: params.displayName || null,
+    workPosition: params.workPosition || null,
+    industryId,
+    contact: params.contact || (params.name || params.email ? {
+      name: params.name,
+      email: params.email,
+      company: params.company,
+    } : null),
+    deal: params.deal || (params.title && !params.name ? { title: params.title, contact: params.contact, value: params.value } : null),
+    seedPackages: params.seedPackages !== false,
+    task: params.task || '',
+    teamCount: params.teamCount || null,
+    inviterName: params.inviterName || null,
+    inviteEmail: params.inviteEmail || null,
+    inviteName: params.inviteName || null,
+    platform: params.platform || null,
+  });
+  const chatActions = require('../../src/denizen-crm-chat-actions');
+  return {
+    ...out,
+    crm_actions: chatActions.normalizeCrmActions(out.crm_actions || []),
+  };
+}
+
+async function crmAddDeal(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const result = await crmMutations.addDeal(orgId, params);
+  const wizard = require('../../src/denizen-crm-setup-wizard');
+  return {
+    ...result,
+    crm_actions: [wizard.navAction('sales', 'Open pipeline', { subTab: 'pipeline' })],
+  };
+}
+
+async function crmUpdateProfile(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.updateUserProfile(orgId, params.profile || params);
+}
+
+async function crmGetIntakeLink(config, params) {
+  const wizard = require('../../src/denizen-crm-setup-wizard');
+  const chatActions = require('../../src/denizen-crm-chat-actions');
+  const orgSlug = params.orgSlug || config?.orgSlug || process.env.DENIZEN_ORG_SLUG || '';
+  const intakeUrl = wizard.buildIntakeUrl(orgSlug);
+  return {
+    summary: `Public intake form — copy and share with prospects:\n${intakeUrl}`,
+    intake_url: intakeUrl,
+    crm_actions: chatActions.normalizeCrmActions([
+      chatActions.copyLinkAction(intakeUrl, 'Copy intake link'),
+      wizard.navAction('intake', 'Open intake settings'),
+    ]),
+  };
 }
 
 async function crmListIndustries(config, params) {
@@ -741,6 +964,232 @@ async function crmListTickets(config, params) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
   return crmMutations.listTickets(orgId, { ...params, overdue: params.overdue ? true : undefined });
+}
+
+async function crmWrap(orgId, params, npcName, fn) {
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return fn(orgId, { ...params, senderName: params.senderName || npcName, npcName }, params.identityId || null);
+}
+
+async function crmUpdateContact(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.updateContact);
+}
+
+async function crmQualifySubmission(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.qualifySubmission);
+}
+
+async function crmDraftEmail(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.draftEmail);
+}
+
+async function crmEnrollSequence(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.enrollSequenceSkill);
+}
+
+async function crmMoveDeal(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.moveDeal);
+}
+
+async function crmMarkDealOutcome(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.markDealOutcome);
+}
+
+async function crmGenerateQuote(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.generateQuote);
+}
+
+async function crmPipelineBrief(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.pipelineBrief(orgId, params);
+}
+
+async function businessContextBriefAction(config, params) {
+  const businessContext = require('../../src/denizen-business-context');
+  const orgId = await defaultOrgId(config);
+  return businessContext.businessContextBrief(orgId, params);
+}
+
+async function crmDedupeContacts(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  const merged = /\bmerge\b/i.test(String(params.task || ''));
+  return crmWrap(orgId, { ...params, merge: merged || params.merge }, npcName, crmSkills.dedupeContacts);
+}
+
+async function crmAuditWorkspace(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.auditWorkspace(orgId);
+}
+
+async function crmExportSnapshot(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.exportSnapshot(orgId);
+}
+
+async function crmScheduleFollowup(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.scheduleFollowup);
+}
+
+async function crmRecommendPackage(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.recommendPackage(orgId, params);
+}
+
+async function crmInviteTeammate(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, {
+    ...params,
+    orgSlug: params.orgSlug || config?.orgSlug || process.env.DENIZEN_ORG_SLUG,
+  }, npcName, crmSkills.inviteTeammateSkill);
+}
+
+async function crmIntakeToPipeline(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.intakeToPipeline);
+}
+
+async function crmQualifyDeal(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.qualifyDeal(orgId, params);
+}
+
+async function crmSaveAtRiskDeal(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.saveAtRiskDeal);
+}
+
+async function crmDraftFollowup(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.draftFollowup(orgId, params);
+}
+
+async function crmEnrichContact(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.enrichContact(orgId, params);
+}
+
+async function crmListCompanies(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.listCompanies(orgId, params);
+}
+
+async function crmListContacts(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  // Proxy to existing or implement basic list
+  if (typeof crmSkills.listContacts === 'function') {
+    return crmSkills.listContacts(orgId, params);
+  }
+  // Fallback: load workspace and return contacts (enables full visibility)
+  const { state } = await require('../../src/denizen-crm-mutations').loadOrgWorkspace(orgId);
+  const contacts = Array.isArray(state?.contacts) ? state.contacts : [];
+  return {
+    contacts: contacts.slice(0, params?.limit || 50),
+    total: contacts.length,
+    note: 'Full list via workspace (use enrich for details)'
+  };
+}
+
+async function crmAddCompany(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.addCompany);
+}
+
+async function crmLinkCompany(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.linkContactCompany);
+}
+
+async function crmListQuotes(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.listQuotes(orgId, params);
+}
+
+async function crmPortalLink(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.portalLink);
+}
+
+async function crmListAutomations(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.listAutomations(orgId);
+}
+
+async function crmAddAutomation(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.addAutomation);
+}
+
+async function crmAnalyticsSummary(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.analyticsSummary(orgId);
+}
+
+async function crmMarketingFunnel(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.marketingFunnel(orgId);
+}
+
+async function crmCalendarStatus(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.calendarStatusSkill(orgId, params);
+}
+
+async function crmSyncCalendar(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.syncCalendarSkill);
+}
+
+async function crmListMeetings(config, params) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmSkills.listMeetings(orgId, params);
+}
+
+async function crmScheduleMeeting(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.scheduleMeeting);
+}
+
+async function crmAddSequence(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.addSequence);
+}
+
+async function crmAddEmailTemplate(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.addEmailTemplate);
+}
+
+async function crmImportContacts(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.importContacts);
+}
+
+async function crmAddNote(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  return crmWrap(orgId, params, npcName, crmSkills.addNote);
 }
 
 module.exports = {

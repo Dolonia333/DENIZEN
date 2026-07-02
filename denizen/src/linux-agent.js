@@ -28,6 +28,38 @@ const BASELINE_PATH  = path.join(PROJECT_ROOT, 'data', 'bouncer-baseline.json');
 const WSL_DISTRO = process.env.WSL_DISTRO || 'kali-linux';
 const CMD_TIMEOUT_MS = 20000;
 
+/** Whether the 5-min Bouncer perimeter patrol should run (WSL nmap on Windows). */
+function isBouncerPatrolEnabled() {
+  const v = String(process.env.BOUNCER_PATROL || '').trim().toLowerCase();
+  if (v === '0' || v === 'false' || v === 'no') return false;
+  if (v === '1' || v === 'true' || v === 'yes' || v === 'container') return true;
+  return process.platform === 'win32';
+}
+
+function parseHostPort(raw, fallbackHost, fallbackPort) {
+  const s = String(raw || '').trim();
+  if (!s) return { host: fallbackHost, port: fallbackPort };
+  try {
+    const u = new URL(s.includes('://') ? s : `http://${s}`);
+    return {
+      host: u.hostname || fallbackHost,
+      port: parseInt(u.port, 10) || fallbackPort,
+    };
+  } catch (_) {
+    return { host: fallbackHost, port: fallbackPort };
+  }
+}
+
+/** WebSocket + LM Studio targets for patrol probes (respects PORT / LM_STUDIO_* env). */
+function getPatrolProbeTargets() {
+  const wsPort = parseInt(process.env.PORT, 10) || 8080;
+  const lmRaw = process.env.LM_STUDIO_URL
+    || String(process.env.LM_STUDIO_REMOTE_URLS || '').split(',')[0].trim()
+    || '';
+  const lm = parseHostPort(lmRaw, '127.0.0.1', 1234);
+  return { ws: { host: '127.0.0.1', port: wsPort }, lm };
+}
+
 // ── Threat → command sets ────────────────────────────────────────────────────
 
 const THREAT_COMMANDS = {
@@ -232,7 +264,9 @@ function extractIp(str) {
  * Returns structured { ports: [{port, state, service, version}], raw }
  */
 async function baselineScan() {
-  const DENIZEN_PORTS = '8080,1234,5432,3000,80,443,8443,27017';
+  const { ws, lm } = getPatrolProbeTargets();
+  const extra = [ws.port, lm.port, 5432, 3000, 80, 443, 8443, 27017];
+  const DENIZEN_PORTS = [...new Set(extra)].join(',');
   const r = await runCommand(`nmap -sV -p ${DENIZEN_PORTS} --open localhost 2>/dev/null`);
   const raw = r.stdout || r.stderr || '(no output)';
 
@@ -484,19 +518,55 @@ function buildReport(threat, investigation, whoisData) {
 }
 
 /**
+ * Container / NAS patrol — TCP probes only (no WSL). Enabled with BOUNCER_PATROL=container.
+ */
+async function perimeterPatrolContainer() {
+  const start = Date.now();
+  const { ws, lm } = getPatrolProbeTargets();
+  const [wsServer, lmStudio] = await Promise.all([
+    probePort(ws.host, ws.port),
+    probePort(lm.host, lm.port),
+  ]);
+  const elapsed = Date.now() - start;
+  const openPorts = [];
+  if (wsServer.open) openPorts.push({ port: String(ws.port), service: 'denizen-ws', state: 'open' });
+  if (lmStudio.open) openPorts.push({ port: String(lm.port), service: 'lm-studio', state: 'open' });
+
+  return {
+    ok: true,
+    elapsed,
+    openPorts,
+    wsServer,
+    lmStudio,
+    summary: [
+      `Container patrol (TCP probes, no WSL nmap)`,
+      `WebSocket server (${ws.host}:${ws.port}): ${wsServer.open ? 'UP' : 'DOWN'}`,
+      `LM Studio (${lm.host}:${lm.port}): ${lmStudio.open ? 'UP' : 'DOWN'}`,
+      `Elapsed: ${elapsed}ms`,
+    ].join('\n'),
+  };
+}
+
+/**
  * Full perimeter check — everything Bouncer does on a patrol cycle.
  * Compares current open ports against the stored baseline and saves a new one.
  * Returns a summary object with all findings and comparison deltas.
  */
 async function perimeterPatrol() {
+  const patrolMode = String(process.env.BOUNCER_PATROL || '').trim().toLowerCase();
+  if (process.platform !== 'win32' && patrolMode === 'container') {
+    return perimeterPatrolContainer();
+  }
   const start    = Date.now();
   const baseline = loadBaseline();
   const scan     = await baselineScan();
 
+  const { ws, lm } = getPatrolProbeTargets();
+
   // Quick port probes on Denizen's critical services
   const [wsServer, lmStudio] = await Promise.all([
-    probePort('localhost', 8080),
-    probePort('localhost', 1234),
+    probePort(ws.host, ws.port),
+    probePort(lm.host, lm.port),
   ]);
 
   // Auth log check + active connections
@@ -562,8 +632,8 @@ async function perimeterPatrol() {
     baselineComparison: comparisonLines.join('\n'),
     summary: [
       `Baseline scan: ${openPorts.length} open port(s) — ${openPorts.map(p => `${p.port}/${p.service}`).join(', ') || 'none'}`,
-      `WebSocket server (8080): ${wsServer.open ? 'UP' : 'DOWN'}`,
-      `LM Studio (1234): ${lmStudio.open ? 'UP' : 'DOWN'}`,
+      `WebSocket server (${ws.port}): ${wsServer.open ? 'UP' : 'DOWN'}`,
+      `LM Studio (${lm.host}:${lm.port}): ${lmStudio.open ? 'UP' : 'DOWN'}`,
       ...comparisonLines,
       `Elapsed: ${elapsed}ms`,
     ].join('\n'),
@@ -574,6 +644,8 @@ module.exports = {
   runCommand,
   investigate,
   extractIp,
+  isBouncerPatrolEnabled,
+  getPatrolProbeTargets,
   // Structured reporting
   buildReport,
   // Baseline
@@ -587,4 +659,5 @@ module.exports = {
   dnsInvestigate,
   checkTshark,
   perimeterPatrol,
+  perimeterPatrolContainer,
 };

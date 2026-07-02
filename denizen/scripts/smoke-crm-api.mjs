@@ -4,8 +4,9 @@
  * Usage: node scripts/smoke-crm-api.mjs [baseUrl]
  */
 import { chromium } from 'playwright';
+import { loginOwner } from './lib/probe-login.mjs';
 
-const base = (process.argv[2] || process.env.DENIZEN_URL || 'http://localhost:8080').replace(/\/$/, '');
+const base = (process.argv[2] || process.env.DENIZEN_URL || 'http://127.0.0.1:8081').replace(/\/$/, '');
 const failures = [];
 
 function check(name, cond, detail = '') {
@@ -21,13 +22,7 @@ try {
   await page.goto(`${base}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.waitForTimeout(1500);
 
-  if (await page.locator('#denizen-visitor-name-modal').count()) {
-    await page.click('[data-action="path-ceo"]');
-    await page.waitForTimeout(400);
-    await page.fill('#denizen-visitor-code-input', 'Dolonia');
-    await page.click('[data-action="submit-ceo-code"]');
-    await page.waitForTimeout(10_000);
-  }
+  await loginOwner(page);
 
   const health = await page.evaluate(async () => {
     const res = await fetch('/api/crm/health');

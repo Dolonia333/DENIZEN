@@ -27,7 +27,7 @@ const BY_NAME = {
       'Run web research before making calls',
     ],
     askMe: ['Review our auth approach', 'Call a meeting with the dev team', 'What should we prioritize this sprint?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search', 'pdf-generator', 'canvas-render', 'cost-dashboard', 'work-history', 'org-benchmark'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search', 'pdf-generator', 'canvas-render', 'cost-dashboard', 'work-history', 'org-benchmark', 'health-check', 'remediate'],
   },
   Alex: {
     role: 'Senior Developer',
@@ -41,7 +41,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Fix the WebSocket reconnect bug', 'Review Josh\'s latest PR', 'Who should own this feature?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Bob: {
     role: 'Researcher',
@@ -68,7 +68,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Review the player-chat changes', 'Fix that null check in office-scene', 'Is this PR safe to merge?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Josh: {
     role: 'Frontend Developer',
@@ -81,7 +81,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Fix the mobile dock overlap', 'Polish the chat panel CSS', 'Wire up this button'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Edward: {
     role: 'Backend Developer',
@@ -94,7 +94,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Fix the player_chat handler', 'Add an API endpoint for X', 'Why is the WS dropping?'],
-    skills: ['coding-agent', 'github', 'research', 'web-search'],
+    skills: ['coding-agent', 'cursor-bridge', 'github', 'research', 'web-search'],
   },
   Roki: {
     role: 'Intern',
@@ -120,7 +120,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Test mobile tap-to-move', 'File a bug for the mirror panel', 'Did we regress chat?'],
-    skills: ['github', 'research', 'web-search', 'rfp-requirement-review'],
+    skills: ['github', 'research', 'web-search', 'rfp-requirement-review', 'pdf-dossier'],
   },
   Rob: {
     role: 'UI/UX Designer',
@@ -133,7 +133,7 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Mock up a mobile CEO mode layout', 'Review the proposals panel UX', 'Spec the new dock chips'],
-    skills: ['canvas-render', 'pdf-generator', 'research', 'web-search'],
+    skills: ['canvas-render', 'pdf-dossier', 'pdf-generator', 'research', 'web-search'],
   },
   Oscar: {
     role: 'DevOps Engineer',
@@ -201,10 +201,11 @@ const BY_NAME = {
       'Run Kali investigations on live threats (automatic)',
       'Deploy honeypot and confront robbers on your order',
       'File security reports you can ask me to summarize',
+      'Moderate newsroom drafts (content-moderation)',
       'Use visionclaw for security-related screen checks',
     ],
-    askMe: ['Give me your latest security report', 'Deploy honeypot', 'What threats did you see today?'],
-    skills: ['visionclaw', 'web-search', 'research'],
+    askMe: ['Give me your latest security report', 'Deploy honeypot', 'Run a perimeter scan', 'What threats did you see today?'],
+    skills: ['security-linux', 'content-moderation', 'visionclaw', 'web-search', 'research'],
   },
   Marcus: {
     role: 'Project Manager',
@@ -231,7 +232,68 @@ const BY_NAME = {
       COMMON_WEB,
     ],
     askMe: ['Write a spec for mobile CEO mode', 'Review proposal outline for this RFP', 'What converted this week?'],
-    skills: ['pdf-generator', 'research', 'web-search', 'proposal-outline', 'rfp-requirement-review', 'outcome-standup', 'prediction-brief'],
+    skills: ['pdf-dossier', 'pdf-generator', 'research', 'web-search', 'proposal-outline', 'rfp-requirement-review', 'outcome-standup', 'prediction-brief'],
+  },
+  Grok: {
+    role: 'xAI Researcher & Engineer',
+    teaser: 'Research, rapid prototyping, coding-agent, GitHub, and visible office actions via MCP.',
+    intro: "I'm Grok — xAI agent wired into this office for research and engineering.",
+    canDo: [
+      'Run coding-agent for real repo changes in isolated worktrees',
+      'Deep research and browserclaw investigations',
+      'GitHub, Supabase bridge, and canvas/PDF artifacts',
+      'Announce progress and delegate to teammates',
+      COMMON_WEB,
+    ],
+    askMe: [
+      'Research this topic and summarize',
+      'Prototype a small utility in denizen/scripts',
+      'Announce status and run a visible skill in the office',
+    ],
+    skills: [
+      'coding-agent',
+      'cursor-bridge',
+      'github',
+      'research',
+      'browserclaw',
+      'web-search',
+      'supabase-bridge',
+      'canvas-render',
+      'pdf-generator',
+      'pdf-dossier',
+      'work-history',
+      'health-check',
+    ],
+  },
+  Claude: {
+    role: 'Anthropic Verifier & Systems Mentor',
+    teaser: 'Live verification, code review, mentor peer with Grok, and fleet telemetry sanity checks.',
+    intro: "I'm Claude — Anthropic agent in this office for verification, review, and mentoring the local mesh.",
+    canDo: [
+      'Verify claims against live telemetry and the running server before trusting them',
+      'Code review via coding-agent and structured reasoning',
+      'Mentor locals via consult-mentors and team MCP mentor_peer_reply',
+      'Research and browserclaw when evidence gathering is needed',
+      COMMON_WEB,
+    ],
+    askMe: [
+      'Did this fix actually land on production?',
+      'Review this change before we ship it',
+      'Help a local NPC sound sharper via the mentor panel',
+    ],
+    skills: [
+      'coding-agent',
+      'cursor-bridge',
+      'github',
+      'research',
+      'browserclaw',
+      'web-search',
+      'supabase-bridge',
+      'pdf-generator',
+      'work-history',
+      'health-check',
+      'grok-telemetry-optimizer',
+    ],
   },
 };
 
@@ -254,6 +316,8 @@ for (const name of Object.keys(BY_NAME)) {
     if (!cap.askMe.includes(q)) cap.askMe.push(q);
   }
   if (!cap.skills.includes('denizen-data')) cap.skills.push('denizen-data');
+  if (!cap.skills.includes('consult-grok')) cap.skills.push('consult-grok');
+  if (!cap.skills.includes('consult-mentors')) cap.skills.push('consult-mentors');
 }
 
 const DISPLAY_NAMES = Object.keys(BY_NAME);
@@ -306,6 +370,17 @@ function formatCapabilitiesPromptBlock(npcName, soulSection) {
   return lines.join('\n');
 }
 
+function lcFirst(s) {
+  const t = String(s || '').trim();
+  if (!t) return t;
+  return t.charAt(0).toLowerCase() + t.slice(1);
+}
+
+function isMarketQuestion(message) {
+  const msg = String(message || '').toLowerCase();
+  return /\b(stoks|stonks|stocks?|stock market|the market|markets|nvda|tsla|aapl|quotes?|portfolio|trading|watchlist|look(?:ing)?\s+like\s+today|moving\s+today|how.*\bmarket|what.*\bmarket|market\s+update|market\s+today)\b/i.test(msg);
+}
+
 function formatCapabilitiesReply(npcName, opts = {}) {
   const cap = getCapabilities(npcName);
   const soulSection = opts.soulSection;
@@ -321,11 +396,16 @@ function formatCapabilitiesReply(npcName, opts = {}) {
     return `${cap.intro} I patrol, file threat reports, run Kali on live incidents, and deploy honeypots on your say-so. Ask for my latest report or say "deploy honeypot."`;
   }
 
+  if (npcName === 'Roki' && cap) {
+    const items = cap.canDo.slice(0, 4).map(lcFirst);
+    return `${cap.intro} I can ${items.join('; ')}. Try "${cap.askMe?.[0] || 'What\'s moving today?'}"`;
+  }
+
   const parts = [];
   if (cap?.intro) parts.push(cap.intro);
   if (cap?.canDo?.length) {
-    const top = cap.canDo.slice(0, 4);
-    parts.push(`I handle ${top.join('; ')}`);
+    const top = cap.canDo.slice(0, 4).map(lcFirst);
+    parts.push(`I can ${top.join('; ')}`);
   }
   if (cap?.askMe?.[0]) {
     parts.push(`Try "${cap.askMe[0]}"`);
@@ -337,6 +417,7 @@ const DenizenNpcCapabilities = {
   BY_NAME,
   DISPLAY_NAMES,
   isCapabilitiesQuestion,
+  isMarketQuestion,
   getCapabilities,
   getCapabilityTeaser,
   formatCapabilitiesPromptBlock,

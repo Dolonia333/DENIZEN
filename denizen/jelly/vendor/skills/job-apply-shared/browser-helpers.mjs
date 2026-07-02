@@ -670,19 +670,19 @@ export async function getPersistentBrowser(opts = {}) {
           ...launchOpts,
           executablePath: plan.executablePath,
         });
-        console.error(`[browser-helpers] Brave (${plan.executablePath}) — ${plan.reason}`);
+        console.log(`[browser-helpers] Brave (${plan.executablePath}) — ${plan.reason}`);
       } catch (err) {
         if (opts.browserMode === "brave") throw err;
-        console.error(`[browser-helpers] Brave unavailable (${err?.message || err}); falling back to Playwright Chromium`);
+        console.log(`[browser-helpers] Brave unavailable (${err?.message || err}); falling back to Playwright Chromium`);
       }
     }
     if (!context && plan.channel) {
       try {
         context = await chromium.launchPersistentContext(userDataDir, { ...launchOpts, channel: plan.channel });
-        console.error(`[browser-helpers] ${plan.engine} (${plan.channel}) — ${plan.reason}`);
+        console.log(`[browser-helpers] ${plan.engine} (${plan.channel}) — ${plan.reason}`);
       } catch (err) {
         if (opts.browserMode === "chrome" || opts.browserMode === "msedge" || opts.browserMode === "edge") throw err;
-        console.error(`[browser-helpers] ${plan.channel} unavailable (${err?.message || err}); falling back to Playwright Chromium`);
+        console.log(`[browser-helpers] ${plan.channel} unavailable (${err?.message || err}); falling back to Playwright Chromium`);
       }
     }
     if (!context) {
@@ -691,7 +691,7 @@ export async function getPersistentBrowser(opts = {}) {
         try {
           if (attempt > 0) await new Promise((r) => setTimeout(r, 1200 * attempt));
           context = await chromium.launchPersistentContext(userDataDir, launchOpts);
-          console.error(`[browser-helpers] bundled Chromium — ${plan.reason}`);
+          console.log(`[browser-helpers] bundled Chromium — ${plan.reason}`);
         } catch (err) {
           lastErr = err;
           const msg = String(err?.message || err);

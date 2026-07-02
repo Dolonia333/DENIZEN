@@ -18,7 +18,10 @@ function classifyFleet(fleet = []) {
   for (const m of fleet) {
     const sampled = m.sampled_at || m.updated_at;
     const age = sampled ? now - new Date(sampled).getTime() : Infinity;
-    if (m.reachable === false) offline.push(m);
+    const inf = m.inference && typeof m.inference === 'object' ? m.inference : {};
+    const lm = m.lm_studio && typeof m.lm_studio === 'object' ? m.lm_studio : {};
+    const rpcLocal = (inf.rpc_capable || lm.rpc_capable) && (inf.reachable_local ?? lm.reachable_local);
+    if (m.reachable === false && !rpcLocal) offline.push(m);
     else if (m.stale || age > STALE_NODE_MS) stale.push(m);
     else healthy.push(m);
   }
@@ -52,7 +55,9 @@ async function runWatchdogTick({ computeQueue, fleetRegistry, broadcast, log, re
     }
   }
 
-  const fleet = fleetRegistry?.buildFleetSummary?.(null)?.fleet || [];
+  const fleet = fleetRegistry?.listAllFleetMachines?.()
+    || fleetRegistry?.buildFleetSummary?.(null)?.fleet
+    || [];
   const { stale, offline } = classifyFleet(fleet);
 
   const alerts = [];
@@ -119,7 +124,9 @@ async function runWatchdogTick({ computeQueue, fleetRegistry, broadcast, log, re
   }
 
   if (meshScaleAdvisor && resourcePressure?.gatherSignals) {
-    const fleet = fleetRegistry?.buildFleetSummary?.(null)?.fleet || [];
+    const fleet = fleetRegistry?.listAllFleetMachines?.()
+      || fleetRegistry?.buildFleetSummary?.(null)?.fleet
+      || [];
     let lmStudioReachable = true;
     if (typeof probeLmStudio === 'function') {
       const lm = await probeLmStudio().catch(() => ({ reachable: false }));

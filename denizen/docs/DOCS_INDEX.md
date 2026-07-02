@@ -10,6 +10,9 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 
 | Category | Document | Status | Description |
 |----------|----------|--------|-------------|
+| Overview | [TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md) | new/local | **Start here (engineers)** — whole-platform architecture, subsystems, data model, API surface, deploy |
+| Overview | [PRODUCT_MANUAL.md](PRODUCT_MANUAL.md) | new/local | **Start here (users)** — getting started, NPCs, phone, MCP connect, CRM, compute, troubleshooting |
+| Overview | [PRD.md](PRD.md) | new/local | **Start here (product)** — vision, personas, goals, functional requirements, metrics, risks, roadmap |
 | Getting Started | [SETUP.md](SETUP.md) | on GitHub | End-to-end local setup and runtime prerequisites |
 | Getting Started | [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md) | new/local | New-contributor onboarding path and first-run workflow |
 | Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | on GitHub | Runtime topology, core services, and message flow |
@@ -37,6 +40,8 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Meridian CRM (Deal Weaver) | [../crm/USER_GUIDE.md](../crm/USER_GUIDE.md) | new/local | Full UI guide — every tab and button |
 | Meridian CRM (technical) | [../crm/ARCHITECTURE.md](../crm/ARCHITECTURE.md) | new/local | API, sync, real vs UI-only features |
 | Integrations | [NPC_MCP_GATEWAY.md](NPC_MCP_GATEWAY.md) | new/local | Per-NPC MCP gateway, bearer tokens, memory sync (v1.3) |
+| Integrations | [GROK_DENIZEN_AUTONOMY.md](GROK_DENIZEN_AUTONOMY.md) | new/local | xAI Responses API → Grok NPC MCP autonomy loop |
+| Integrations | [GROK_BUILD.md](GROK_BUILD.md) | new/local | Grok Build terminal agent + Denizen MCP |
 | Integrations | [NPC_COMPANION.md](NPC_COMPANION.md) | new/local | Browser extension companion — provider-agnostic sync (v1.6) |
 | NPCs/AI | [NPCS.md](NPCS.md) | on GitHub | Full NPC roster and role definitions |
 | NPCs/AI | [SOCIAL_BEHAVIOR.md](SOCIAL_BEHAVIOR.md) | on GitHub | Social interaction heuristics and behaviors |
@@ -56,6 +61,10 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Operations | [../../infra/README.md](../../infra/README.md) | new/local | Home lab infra — NAS SSH, Kali pull install, Tailscale, orchestrator |
 | Operations | [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md) | on GitHub | Production deployment guidance and runbook |
 | Operations | [ROADMAP.md](ROADMAP.md) | on GitHub | Capability delivery roadmap by phase |
+| Operations | [MULTI_USER_OFFICE_PLAN.md](MULTI_USER_OFFICE_PLAN.md) | new/local | **Multi-company plan** — DB souls, org-scoped world state, auth routing, fair compute, templates |
+| Operations | [EXECUTION_BOARD.md](EXECUTION_BOARD.md) | new/local | Active slices, backlog, verify commands — **start here for execution** |
+| Operations | [1921_TEMPLATE.md](1921_TEMPLATE.md) | new/local | 1921 GovCon master template pack (souls + business model) |
+| Operations | [BRANDED_DOSSIER_SYSTEM.md](BRANDED_DOSSIER_SYSTEM.md) | new/local | **Canon** — branded PDF dossier skeleton, skins, honesty pass, pdf-dossier skill |
 | Operations | [ROADMAP_SELF_ADVANCEMENT.md](ROADMAP_SELF_ADVANCEMENT.md) | on GitHub | Self-improvement roadmap and governance |
 | Operations | [HARNESS_EVALUATION.md](HARNESS_EVALUATION.md) | on GitHub | Evaluation harness behavior and criteria |
 | Operations | [PROPOSAL_REVIEW.md](PROPOSAL_REVIEW.md) | on GitHub | Operator review workflow for queued proposals |

@@ -1,0 +1,31 @@
+# Production image for Synology NAS / Docker hosts.
+# Build: docker build -f Dockerfile.production -t denizen-server:latest .
+FROM node:22-bookworm AS crm-builder
+WORKDIR /build
+COPY package*.json ./
+COPY scripts/export-industry-index.mjs scripts/export-industry-index.mjs
+COPY crm/ crm/
+RUN node scripts/export-industry-index.mjs \
+ && cd crm/vendor \
+ && npm install --legacy-peer-deps \
+ && npm run build \
+ && node ../scripts/write-crm-manifest.mjs
+
+FROM node:22-bookworm-slim
+WORKDIR /app
+ENV NODE_ENV=production
+# coding-agent, github, and worktree-based skills require git in the image.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends git ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+# Install Playwright Chromium for Lucy web-search + browser mirror (headless on NAS).
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+COPY package*.json ./
+RUN npm ci --omit=dev \
+ && npx playwright install --with-deps chromium
+COPY . .
+COPY --from=crm-builder /build/crm/dist ./crm/dist
+EXPOSE 8080 8888
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "server.js"]

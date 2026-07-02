@@ -163,6 +163,16 @@
       html.denizen-drawer-open #${DRAWER_ID},
       #${TOGGLE_ID}:checked + #${BACKDROP_ID} + #${DRAWER_ID} {
         display: flex !important;
+        flex-direction: column !important;
+        box-sizing: border-box !important;
+      }
+      html.denizen-touch.denizen-phone.denizen-drawer-open #${DRAWER_ID} {
+        inset: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        border-radius: 0 !important;
       }
 
       #${DRAWER_ID} .drawer-head {
@@ -231,6 +241,7 @@
       }
       #${BODY_ID} {
         flex: 1;
+        min-height: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         display: flex;
@@ -468,12 +479,15 @@
         padding: 0 2px;
       }
       html.denizen-phone #${BODY_ID} {
+        flex: 1 1 auto;
+        min-height: 0;
+        width: 100%;
+        box-sizing: border-box;
         gap: 8px;
+        align-items: stretch;
+        align-self: stretch;
+        padding-inline: 0;
         padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
-      }
-      html.denizen-phone #${BODY_ID} {
-        align-items: flex-start;
-        padding-inline: 10px;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel,
       html.denizen-phone #${BODY_ID} #denizen-node-ui-chip {
@@ -484,31 +498,35 @@
         box-sizing: border-box !important;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel {
-        width: auto !important;
+        width: 100% !important;
         max-width: 100% !important;
         min-width: 0 !important;
-        align-self: flex-start !important;
+        align-self: stretch !important;
         margin-inline: 0 !important;
         padding: 8px 10px !important;
       }
       html.denizen-phone #${BODY_ID} #denizen-node-ui-chip {
         width: 100% !important;
         max-width: 100% !important;
+        align-self: stretch !important;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel .acct-top {
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
-        width: auto;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel .acct-identity {
-        width: auto;
+        width: 100%;
         max-width: 100%;
+        min-width: 0;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel .acct-actions {
         flex-direction: row;
         align-items: center;
-        width: auto;
+        width: 100%;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel .acct-name {
         font-size: 15px !important;
@@ -521,8 +539,10 @@
         flex-direction: column !important;
         gap: 4px !important;
         padding-top: 6px !important;
-        width: auto;
+        width: 100%;
         min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel .acct-stat-row {
         font-size: 12px !important;
@@ -531,8 +551,10 @@
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        width: auto;
+        width: 100%;
         min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
       }
       html.denizen-phone #${BODY_ID} #denizen-account-panel .acct-stat-val {
         font-size: 13px !important;
@@ -605,6 +627,23 @@
         font-size: 14px !important;
         padding: 10px 12px !important;
       }
+      html.denizen-phone #${BODY_ID} #denizen-account-panel #prof-shell {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      html.denizen-phone #${BODY_ID} #denizen-account-panel #prof-shell .prof-panel.active {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
       html.denizen-phone #${BODY_ID} #denizen-node-ui-chip .node-fleet-card {
         padding: 5px 8px;
       }
@@ -676,7 +715,7 @@
             <div class="fb-name" id="denizen-drawer-fb-name">Guest</div>
             <div class="fb-email" id="denizen-drawer-fb-email"></div>
             <button type="button" class="fb-logout" id="denizen-drawer-fb-logout">Log out</button>
-            <div class="fb-hint">Scroll for city credits and station settings.</div>
+            <div class="fb-hint">Scroll for office credits and station settings.</div>
           </div>
         </div>
       `;
@@ -900,7 +939,7 @@
     }
 
     menuBtn.textContent = open ? '✓ Me' : '☰ Me';
-    menuBtn.title = 'Citizen ID, city credits, and City Power';
+    menuBtn.title = 'Citizen ID, office credits, and City Power';
     menuBtn.setAttribute('aria-label', 'Open Citizen ID and City Power');
     menuBtn.dataset.open = open ? '1' : '0';
     wireMenuButton(menuBtn);

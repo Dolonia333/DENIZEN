@@ -41,6 +41,21 @@ describe('health-runbook', () => {
     assert.ok(poll.attempts.length >= 1);
   });
 
+  it('resolveLmStudioUrl prefers remote pool on NAS', () => {
+    const prevUrl = process.env.LM_STUDIO_URL;
+    const prevRemote = process.env.LM_STUDIO_REMOTE_URLS;
+    try {
+      delete process.env.LM_STUDIO_URL;
+      process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.232:1234';
+      assert.equal(healthRunbook.resolveLmStudioUrl(), 'http://192.168.1.232:1234');
+    } finally {
+      if (prevUrl === undefined) delete process.env.LM_STUDIO_URL;
+      else process.env.LM_STUDIO_URL = prevUrl;
+      if (prevRemote === undefined) delete process.env.LM_STUDIO_REMOTE_URLS;
+      else process.env.LM_STUDIO_REMOTE_URLS = prevRemote;
+    }
+  });
+
   it('remediate verify-poll action returns poll metadata', async () => {
     const result = await healthRunbook.remediate({
       action: 'verify-poll',

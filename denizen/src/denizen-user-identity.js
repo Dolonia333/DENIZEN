@@ -7,9 +7,17 @@
 
 const denizenDb = require('./denizen-db.js');
 const npcTeamSoul = require('./npc-team-soul');
+const orgNpcTeam = require('./denizen-org-npc-team');
+const personalityBridge = require('./npc-personality-bridge');
 
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
+}
+
+const PERSISTED_IDENTITY_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isPersistedIdentityId(id) {
+  return typeof id === 'string' && PERSISTED_IDENTITY_RE.test(id);
 }
 
 function isEnabled() {
@@ -198,6 +206,100 @@ async function resolveIdentityForSession({
   return identity;
 }
 
+async function ensureIdentityForSession(sessionId, {
+  session = null,
+  email = null,
+  displayName = null,
+  tier = null,
+  orgId = null,
+  orgSlug = null,
+  source = null,
+} = {}) {
+  if (!isEnabled() || !sessionId) return null;
+
+  let identity = await getIdentityBySession(sessionId);
+  if (identity?.id) {
+    const emailNorm = normalizeEmail(identity.email_normalized || identity.email);
+    const isSyntheticCeo = /^ceo@[^@]+\.denizen\.local$/.test(emailNorm);
+    if (isSyntheticCeo) {
+      try {
+        const teamAuth = require('./denizen-team-auth.js');
+        const account = await teamAuth.getTeamAccountForSession(sessionId);
+        const accountEmail = normalizeEmail(account?.email);
+        if (accountEmail && accountEmail !== emailNorm) {
+          const preferred = await resolveIdentityForSession({
+            email: accountEmail,
+            displayName: displayName || account.display_name || session?.display_name,
+            tier: teamAuth.isTeamOwnerAccount(account) ? 'ceo' : 'team',
+            orgId: orgId || session?.org_id || account.org_id,
+            orgSlug,
+            source: 'team_account',
+            teamAccountId: account.id,
+            sessionId,
+            updateDisplayName: false,
+          }).catch(() => null);
+          if (preferred?.id) {
+            if (teamAuth.isTeamOwnerAccount(account)) {
+              markCeoPrincipal(preferred.id);
+            }
+            return preferred;
+          }
+        }
+      } catch (_) {}
+    }
+    return identity;
+  }
+
+  const meta = session?.metadata && typeof session.metadata === 'object'
+    ? session.metadata
+    : {};
+  const resolvedEmail = normalizeEmail(email || meta.email);
+  const resolvedTier = tier || meta.tier || 'team';
+  const resolvedOrgId = orgId || session?.org_id || null;
+  const resolvedName = displayName || session?.display_name || null;
+  const resolvedSource = source || meta.access_method || 'session';
+
+  if (resolvedEmail) {
+    identity = await resolveIdentityForSession({
+      email: resolvedEmail,
+      displayName: resolvedName,
+      tier: resolvedTier,
+      orgId: resolvedOrgId,
+      orgSlug,
+      source: resolvedSource,
+      sessionId,
+      updateDisplayName: false,
+    }).catch(() => null);
+    if (identity?.id) return identity;
+  }
+
+  try {
+    const teamAuth = require('./denizen-team-auth.js');
+    const account = await teamAuth.getTeamAccountForSession(sessionId);
+    if (account?.email) {
+      identity = await resolveIdentityForSession({
+        email: account.email,
+        displayName: resolvedName || account.display_name,
+        tier: teamAuth.isTeamOwnerAccount(account) ? 'ceo' : 'team',
+        orgId: resolvedOrgId || account.org_id,
+        orgSlug,
+        source: 'team_account',
+        teamAccountId: account.id,
+        sessionId,
+        updateDisplayName: false,
+      }).catch(() => null);
+      if (identity?.id) {
+        if (teamAuth.isTeamOwnerAccount(account)) {
+          markCeoPrincipal(identity.id);
+        }
+        return identity;
+      }
+    }
+  } catch (_) {}
+
+  return null;
+}
+
 function markCeoPrincipal(identityId) {
   if (!isEnabled() || !identityId) return;
   denizenDb.enqueue(async () => {
@@ -254,6 +356,9 @@ function toClientNpcTeam(template, members = []) {
         focus: m.focus || null,
         instructions: m.instructions || null,
         job: settings.job || null,
+        soul_snippet: settings.soul_snippet || null,
+        personality: personalityBridge.normalizePersonality(settings.personality),
+        extra_skills: personalityBridge.normalizeExtraSkills(settings.extra_skills),
         sort_order: Number(m.sort_order) || 0,
         active: m.active !== false,
         settings,
@@ -333,9 +438,23 @@ async function getNpcTeamMember(identityId, npcKey) {
   return rows?.[0] || null;
 }
 
-async function getNpcTeamMemberSoulView(identityId, npcKey) {
+async function getEffectiveNpcTeamMember(identityId, orgId, npcKey) {
+  const key = String(npcKey || '').trim().toLowerCase();
+  if (!key) return null;
+  const identityMember = identityId ? await getNpcTeamMember(identityId, key) : null;
+  const orgMember = orgId ? await orgNpcTeam.getOrgMember(orgId, key) : null;
+  return personalityBridge.mergeMemberProfiles(orgMember, identityMember);
+}
+
+async function getNpcTeamMemberExtraSkills(identityId, orgId, npcKey) {
+  const merged = await getEffectiveNpcTeamMember(identityId, orgId, npcKey);
+  return personalityBridge.normalizeExtraSkills(merged?.settings?.extra_skills);
+}
+
+async function getNpcTeamMemberSoulView(identityId, npcKey, orgId = null) {
   const member = await getNpcTeamMember(identityId, npcKey);
-  return npcTeamSoul.buildMemberSoulView(npcKey, member);
+  const effective = await getEffectiveNpcTeamMember(identityId, orgId, npcKey);
+  return npcTeamSoul.buildMemberSoulView(npcKey, member, effective);
 }
 
 async function upsertNpcTeamMember(identityId, {
@@ -346,6 +465,9 @@ async function upsertNpcTeamMember(identityId, {
   focus = null,
   instructions = null,
   job = null,
+  soulSnippet = null,
+  personality = null,
+  extraSkills = null,
   sortOrder = 0,
   settings = {},
 } = {}) {
@@ -357,12 +479,22 @@ async function upsertNpcTeamMember(identityId, {
     `denizen_identity_npc_team_members?select=*&identity_id=eq.${encodeURIComponent(identityId)}&npc_key=eq.${encodeURIComponent(key)}&limit=1`,
   );
   const existing = existingRows?.[0] || null;
+  const settingsPatch = {
+    ...(settings && typeof settings === 'object' ? settings : {}),
+  };
+  if (job !== undefined && job !== null) settingsPatch.job = String(job).slice(0, 500);
+  if (soulSnippet !== undefined) {
+    settingsPatch.soul_snippet = personalityBridge.sanitizeSoulSnippet(soulSnippet) || null;
+  }
+  if (personality !== undefined && personality !== null) {
+    settingsPatch.personality = personalityBridge.normalizePersonality(personality);
+  }
+  if (extraSkills !== undefined) {
+    settingsPatch.extra_skills = personalityBridge.normalizeExtraSkills(extraSkills);
+  }
   const mergedSettings = npcTeamSoul.mergeMemberSettings(
     existing?.settings,
-    {
-      ...(settings && typeof settings === 'object' ? settings : {}),
-      ...(job !== undefined && job !== null ? { job: String(job).slice(0, 500) } : {}),
-    },
+    settingsPatch,
     {
       npc_key: key,
       display_name: displayName ?? existing?.display_name ?? key,
@@ -711,6 +843,7 @@ function saveGroupChatMessage({ identityId, groupId, senderType, senderNpcKey, c
 
 module.exports = {
   normalizeEmail,
+  isPersistedIdentityId,
   isEnabled,
   getIdentityById,
   getIdentityByEmail,
@@ -720,6 +853,7 @@ module.exports = {
   changeIdentityPassword,
   linkSessionToIdentity,
   resolveIdentityForSession,
+  ensureIdentityForSession,
   markCeoPrincipal,
   toClientIdentity,
   toClientNpcTeam,
@@ -727,9 +861,12 @@ module.exports = {
   updateNpcTeamTemplate,
   getNpcTeam,
   getNpcTeamMember,
+  getEffectiveNpcTeamMember,
+  getNpcTeamMemberExtraSkills,
   getNpcTeamMemberSoulView,
   upsertNpcTeamMember,
   deactivateNpcTeamMember,
+  orgNpcTeam,
   loadNpcChatHistory,
   mapChatRowsToMemories,
   saveNpcChatTurn,

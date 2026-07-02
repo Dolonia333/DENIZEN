@@ -29,8 +29,12 @@ Dual-write: in-world NPC brains still write `npcs/*/MEMORY.md`; MCP and brain sa
 | `denizen_npc_memories.source` | `npc_brain`, `mcp`, etc. |
 | `denizen_npc_memories.member_id` | Optional team account link |
 | `denizen_mcp_tokens` | Hashed bearer tokens (plaintext shown once) |
-| `denizen_resolve_mcp_token` | Validate token → scope JSON |
+| `denizen_mcp_audit` | Per-tool-call audit log (org + token + tool) |
+| `denizen_resolve_mcp_token` | Validate token → scope JSON (includes `scopes[]`) |
 | `denizen_register_mcp_token` | Register hash after team session check |
+| `denizen_list_mcp_tokens` | List active tokens for session or org admin |
+| `denizen_revoke_mcp_token` | Revoke token (owner session or org admin) |
+| `denizen_log_mcp_audit` | Append audit row from gateway |
 
 Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (`acme`) is blocked.
 
@@ -40,8 +44,15 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 |--------|------|------|-------------|
 | `GET` | `/mcp/npc/:npcKey` | Bearer | Tool manifest probe |
 | `POST` | `/mcp/npc/:npcKey` | Bearer | JSON-RPC MCP (initialize, tools/list, tools/call) |
-| `POST` | `/api/mcp/tokens` | Visitor session (team tier) | Create token — returns plaintext once |
-| `GET` | `/api/mcp/connect-info?npc_key=roki` | Optional session | Setup instructions |
+| `POST` | `/api/mcp/tokens` | Visitor session (team tier) | Create per-NPC token — returns plaintext once |
+| `GET` | `/api/mcp/tokens?session_id=` | Visitor session | List active tokens (org admins see all org tokens) |
+| `POST` | `/api/mcp/tokens/revoke` | Visitor session | Revoke a token by `token_id` |
+| `POST` | `/api/mcp/test` | Visitor session | Test bearer token (`get_status` or `team_status`) |
+| `POST` | `/api/mcp/team-tokens` | Visitor session (team tier) | Create org team operator token (`/mcp/team`) |
+| `GET` | `/mcp/team` | Team bearer | Team tool manifest |
+| `POST` | `/mcp/team` | Team bearer | Team JSON-RPC MCP |
+| `GET` | `/api/mcp/connect-info?npc_key=roki` | Optional session | Per-NPC setup |
+| `GET` | `/api/mcp/connect-info?team=1` | Optional session | Team operator setup |
 | `GET` | `/api/npc-sync/openapi.json` | None | OpenAPI 3.1 spec for ChatGPT Custom GPT Actions |
 | `GET` | `/api/npc-sync/status` | Bearer (NPC token) | REST alias for `get_status` |
 | `POST` | `/api/npc-sync/memory` | Bearer | REST alias for `update_memory` (`body` or `note`) |
@@ -49,9 +60,62 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 
 ### MCP tools
 
+**Sync (memory / status)**
+
 1. **`update_memory`** — append memory for the NPC (syncs to DB + facts spine)
 2. **`get_status`** — NPC roster row, recent MCP memories, recent work output
 3. **`log_activity`** — write to work feed + facts
+
+**Actions (do real work)**
+
+4. **`list_skills`** — skills this NPC may run (design, research, CRM, etc.)
+5. **`run_skill`** — execute a skill (`canvas-render`, `research`, `crm-draft-email`, …)
+6. **`assign_task`** — queue a mandatory task for this NPC (wakes think loop)
+7. **`delegate_task`** — assign work to another teammate NPC
+8. **`announce_in_office`** — speech bubble in the virtual office for live viewers
+
+**Team orchestration**
+
+9. **`list_team`** — org teammates with claimed NPC and online presence
+10. **`send_handoff`** — message a teammate or escalate to CEO bridge
+11. **`list_pending_handoffs`** — your assistant handoff inbox
+
+**CRM** (NPCs with CRM skills only)
+
+12. **`crm_pipeline_brief`** — pipeline summary
+13. **`crm_list_tasks`** — open CRM tasks
+14. **`crm_draft_email`** — draft email (does not send)
+
+**Market** (Roki only) — see `denizen-mcp-market-tools.js`
+
+### Team operator (`/mcp/team`)
+
+Use **Team MCP** in the office UI or `POST /api/mcp/team-tokens`.
+
+| Tool | Purpose |
+|------|---------|
+| `team_status` | Whole-office snapshot |
+| `run_as_npc` | Run any tool as another NPC |
+| `broadcast_task` | Assign task to many NPCs |
+| `list_team` / `send_handoff` / `list_pending_handoffs` | Team orchestration |
+
+**MCP Resources:** `team://roster`, `team://handoffs`
+
+## Token scopes (v1.9)
+
+Tokens may carry scopes in `metadata.scopes`. Missing scopes = full access (backward compatible).
+
+| Scope | Tools |
+|-------|--------|
+| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, CRM read, market read |
+| `skills` | `run_skill`, `run_as_npc` |
+| `crm_write` | `crm_draft_email` |
+| `handoff` | `send_handoff` |
+| `delegate` | `assign_task`, `delegate_task`, `announce_in_office`, `broadcast_task` |
+
+**Presets** (Settings / Connect AI): `read`, `standard` (read+skills+handoff), `full`.
+
+Every `tools/call` is logged to `denizen_mcp_audit`. Revoke tokens in **Settings → AI Connections**.
 
 ## Client setup
 
@@ -100,6 +164,15 @@ curl -X POST http://localhost:8080/api/mcp/tokens \
 ```
 
 For production, set `DENIZEN_PUBLIC_URL=https://denizen.dolonia.cloud` before creating tokens.
+
+## Grok external autonomy
+
+For **cloud Grok** driving the in-office Grok NPC via xAI Responses API + MCP, see [GROK_DENIZEN_AUTONOMY.md](GROK_DENIZEN_AUTONOMY.md).
+
+```bash
+py infra/run-grok-autonomy.py
+py infra/run-grok-autonomy.py --loop --interval 300 --max 10
+```
 
 ## Security
 

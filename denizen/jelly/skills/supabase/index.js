@@ -1,5 +1,14 @@
 'use strict';
 
+const {
+  bridgeHealth,
+  bridgeQuery,
+  bridgeInsert,
+  bridgeUpdate,
+  bridgeRequest,
+  useDirectSupabase,
+} = require('../../lib/bridge-client');
+
 module.exports = {
   meta: {
     name: 'supabase',
@@ -9,8 +18,6 @@ module.exports = {
   },
   async run({ npcName, params, deps, config }) {
     const pcActivity = deps.pcActivity;
-    const bridgeUrl = (config?.supabase?.bridgeUrl || process.env.SUPABASE_BRIDGE_URL || 'http://127.0.0.1:18790').replace(/\/$/, '');
-    const token = config?.supabase?.agentToken || process.env.AGENT_TOKEN || '';
     const action = params?.action || 'health';
     const sbStart = Date.now();
     const activity = pcActivity.record({
@@ -19,47 +26,51 @@ module.exports = {
       mode: 'background', status: 'started',
     });
 
-    const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-    let path = '/health';
-    let method = 'GET';
-    let body = null;
-    if (action === 'tables') path = '/tables';
-    else if (action === 'query') {
-      path = '/query';
-      method = 'POST';
-      body = {
-        table: params.table,
-        select: params.select,
-        filters: params.filters,
-        order: params.order,
-        limit: Number(params.limit) || 10,
-      };
-    } else if (action === 'insert') {
-      path = '/insert';
-      method = 'POST';
-      const rows = params.rows || (params.data ? [params.data] : []);
-      body = { table: params.table, rows: Array.isArray(rows) ? rows : [rows] };
-    } else if (action === 'update') {
-      path = '/update';
-      method = 'POST';
-      body = { table: params.table, filters: params.filters, data: params.data };
-    } else if (action === 'delete') {
-      path = '/delete';
-      method = 'POST';
-      body = { table: params.table, filters: params.filters };
-    }
-
     try {
-      const res = await fetch(`${bridgeUrl}${path}`, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      const text = await res.text();
       let data;
-      try { data = JSON.parse(text); } catch { data = { raw: text }; }
+      let ok = true;
+      if (action === 'health') {
+        data = await bridgeHealth(config);
+      } else if (action === 'tables') {
+        data = useDirectSupabase()
+          ? { ok: true, mode: 'direct', note: 'Use query action with a table name on NAS direct PostgREST.' }
+          : await bridgeRequest(config, '/tables');
+      } else if (action === 'query') {
+        const rows = await bridgeQuery(config, {
+          table: params.table,
+          select: params.select,
+          filters: params.filters,
+          order: params.order,
+          limit: Number(params.limit) || 10,
+        });
+        data = { rows, count: rows.length };
+        ok = true;
+      } else if (action === 'insert') {
+        const rows = params.rows || (params.data ? [params.data] : []);
+        data = await bridgeInsert(config, {
+          table: params.table,
+          rows: Array.isArray(rows) ? rows : [rows],
+        });
+      } else if (action === 'update') {
+        data = await bridgeUpdate(config, {
+          table: params.table,
+          filters: params.filters,
+          data: params.data,
+        });
+      } else if (action === 'delete') {
+        if (useDirectSupabase()) {
+          throw new Error('DELETE not exposed in direct PostgREST mode — use denizen-data skills');
+        }
+        data = await bridgeRequest(config, '/delete', {
+          method: 'POST',
+          body: { table: params.table, filters: params.filters },
+        });
+      } else {
+        throw new Error(`Unknown supabase action: ${action}`);
+      }
+
       const output = JSON.stringify(data).slice(0, 800);
-      const ok = res.ok;
+      ok = ok && data?.ok !== false;
       pcActivity.record({
         id: activity.id, npc: npcName, kind: 'supabase-bridge', task: activity.task,
         mode: 'background', status: ok ? 'done' : 'failed',
@@ -67,7 +78,10 @@ module.exports = {
       });
       return { ok, output, skill: 'supabase-bridge' };
     } catch (err) {
-      const output = `Supabase bridge unavailable (${bridgeUrl}): ${err.message}. Start: python denizen/jelly/services/supabase-bridge/secure-bridge.py`;
+      const hint = useDirectSupabase()
+        ? 'Direct PostgREST mode is active — check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
+        : 'Start bridge: python denizen/jelly/services/supabase-bridge/secure-bridge.py';
+      const output = `Supabase bridge unavailable: ${err.message}. ${hint}`;
       pcActivity.record({
         id: activity.id, npc: npcName, kind: 'supabase-bridge', task: activity.task,
         mode: 'background', status: 'failed',

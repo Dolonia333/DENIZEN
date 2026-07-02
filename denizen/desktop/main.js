@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, shell, Menu, nativeImage } = require("electron");
+const { app, BrowserWindow, ipcMain, Tray, shell, Menu, nativeImage, desktopCapturer, screen } = require("electron");
 
 const path = require("path");
 
@@ -15,8 +15,13 @@ const { spawn } = require("child_process");
 const http = require("http");
 
 const { collectMachineProfile } = require("./node-profiler");
+const ollamaManager = require("./ollama-manager");
+const llamaServerManager = require("./llama-server-manager");
+const llamaBrainPull = require("./llama-brain-pull");
 
-const { startWorkerLoop, stopWorkerLoop, clearLastPendingId } = require("./node-worker-loop");
+const { startWorkerLoop, stopWorkerLoop, clearLastPendingId, syncCapabilities } = require("./node-worker-loop");
+const { startStationTaskLoop, stopStationTaskLoop } = require("./station-task-runner");
+const stationAgent = require("./station-agent");
 const {
   initAutoUpdater,
   getUpdateStatus,
@@ -40,11 +45,19 @@ const DEFAULT_SERVER_URL = String(
   process.env.DENIZEN_SERVER_URL || `http://127.0.0.1:${PORT}`
 ).replace(/\/+$/, "");
 
+const PUBLIC_DENIZEN_URL = String(
+  process.env.DENIZEN_PUBLIC_URL
+  || process.env.DENIZEN_SERVER_URL
+  || "https://denizen.dolonia.cloud"
+).replace(/\/+$/, "");
+
 const SERVER_ENTRY = path.resolve(__dirname, "..", "server.js");
 
 const GAME_ENTRY = path.resolve(__dirname, "..", "index.html");
 
 const WIZARD_ENTRY = path.join(__dirname, "setup-wizard.html");
+
+const AGENT_SETTINGS_ENTRY = path.join(__dirname, "agent-settings.html");
 
 const PERMISSION_PROMPT = path.join(__dirname, "permission-prompt.html");
 
@@ -234,6 +247,25 @@ async function waitForServer(port, attempts = 15) {
 
 
 
+async function resolvePairingServerUrl() {
+  const configured = getConfiguredRemoteServerUrl();
+  if (configured) return configured;
+
+  const activePort = await findDenizenServerPort();
+  if (await probeDenizenHealth(activePort)) {
+    return `http://127.0.0.1:${activePort}`;
+  }
+
+  if (app.isPackaged) {
+    return PUBLIC_DENIZEN_URL;
+  }
+
+  const target = await ensureDenizenServer();
+  const base = String(target?.url || DEFAULT_SERVER_URL).replace(/\/+$/, "");
+  if (base.startsWith("file:")) return PUBLIC_DENIZEN_URL;
+  return base;
+}
+
 async function ensureDenizenServer() {
 
   const configuredServerUrl = getConfiguredRemoteServerUrl();
@@ -258,7 +290,7 @@ async function ensureDenizenServer() {
 
     cwd: path.resolve(__dirname, ".."),
 
-    env: { ...process.env, PORT: String(PORT) },
+    env: { ...process.env, PORT: String(PORT), ELECTRON_RUN_AS_NODE: "1" },
 
     stdio: "inherit"
 
@@ -748,15 +780,23 @@ function extractPairTokenFromUrl(rawUrl) {
 
 
 
-function wizardUrlWithPair(token, serverUrl) {
+function isHttpUrl(value) {
 
-  const url = new URL(pathToFileURL(WIZARD_ENTRY).toString());
+  return /^https?:\/\//i.test(String(value || ""));
 
-  if (token) url.searchParams.set("pair", token);
+}
 
-  if (serverUrl) url.searchParams.set("server", serverUrl);
 
-  return url.toString();
+
+function wizardLoadWithPair(token, serverUrl) {
+
+  const query = {};
+
+  if (token) query.pair = String(token);
+
+  if (serverUrl) query.server = String(serverUrl);
+
+  return { file: WIZARD_ENTRY, query };
 
 }
 
@@ -876,8 +916,27 @@ function maybeStartWorkerLoop() {
 
       void openPermissionPrompt(pending);
 
-    }
+    },
 
+    onSyncResult: (data) => {
+      if (!data?.update_required || !mainWindow || mainWindow.isDestroyed()) return;
+      mainWindow.webContents.send("update-status", {
+        status: "required",
+        message: `Update required — install Denizen Desktop ${data.min_desktop_version || ""} or newer.`,
+        minVersion: data.min_desktop_version || null,
+      });
+    },
+
+  });
+
+  startStationTaskLoop({
+    getSetup: readSetupState,
+    desktopApi: postDesktopApi,
+    onProgress: (progress) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("station-task-progress", progress);
+      }
+    },
   });
 
 }
@@ -900,7 +959,7 @@ async function handleDenizenProtocolUrl(rawUrl) {
 
   if (mainWindow && !mainWindow.isDestroyed()) {
 
-    await mainWindow.loadURL(wizardUrlWithPair(pairing.token, pairing.serverUrl));
+    await mainWindow.loadFile(WIZARD_ENTRY, { query: wizardLoadWithPair(pairing.token, pairing.serverUrl).query });
 
     mainWindow.focus();
 
@@ -910,7 +969,7 @@ async function handleDenizenProtocolUrl(rawUrl) {
 
 
 
-  await createWindow(wizardUrlWithPair(pairing.token, pairing.serverUrl));
+  await createWindow(wizardLoadWithPair(pairing.token, pairing.serverUrl));
 
 }
 
@@ -947,6 +1006,133 @@ function registerProtocolHandler() {
 function setupIpc() {
 
   ipcMain.handle("get-machine-profile", async () => collectMachineProfile());
+
+  ipcMain.handle("get-inference-status", async () => {
+    try {
+      const { probeInferenceRuntime } = require("../src/denizen-inference-runtime");
+      return await probeInferenceRuntime({ timeoutMs: 4000 });
+    } catch (err) {
+      return { reachable: false, error: err?.message || String(err) };
+    }
+  });
+
+  ipcMain.handle("get-brain-catalog", async () => {
+    const catalogPath = path.join(__dirname, "data", "brain-catalog.json");
+    try {
+      return JSON.parse(fs.readFileSync(catalogPath, "utf8"));
+    } catch (_) {
+      return { version: 1, models: [] };
+    }
+  });
+
+  ipcMain.handle("ensure-ollama", async () => ollamaManager.ensureOllamaRunning());
+
+  ipcMain.handle("ensure-llamacpp", async () => llamaServerManager.ensureLlamaServerRunning());
+
+  ipcMain.handle("pull-brain-model", async (event, opts = {}) => {
+    const { BrowserWindow } = require("electron");
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const emit = (payload) => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send("brain-pull-progress", payload);
+      }
+    };
+
+    const catalogPath = path.join(__dirname, "data", "brain-catalog.json");
+    let catalog = { models: [] };
+    try {
+      catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
+    } catch (_) {}
+
+    const model = String(opts?.model || process.env.OLLAMA_MODEL || "llama3.2").trim();
+    if (!model) return { ok: false, error: "model name required" };
+
+    const entry = llamaBrainPull.resolveCatalogEntry(catalog, model);
+    const useLlamaCpp = opts?.backend === "llamacpp"
+      || entry?.backend === "llamacpp"
+      || /\.gguf$/i.test(entry?.filename || "");
+
+    if (useLlamaCpp) {
+      emit({ model, phase: "starting", percent: 0, backend: "llamacpp" });
+      const bundled = llamaServerManager.bundledLlamaServerPath();
+      if (!bundled && !process.env.LLAMACPP_BIN) {
+        const err = "llama-server not bundled — rebuild with fetch-llama-server or set LLAMACPP_BIN";
+        emit({ model, phase: "error", error: err });
+        return { ok: false, error: err, model, backend: "llamacpp" };
+      }
+      const pulled = await llamaBrainPull.pullGgufModel({
+        model,
+        catalog,
+        onProgress: ({ percent }) => emit({ model, phase: "downloading", percent, backend: "llamacpp" }),
+      });
+      if (!pulled.ok) {
+        emit({ model, phase: "error", error: pulled.error });
+        return { ok: false, ...pulled, backend: "llamacpp" };
+      }
+      process.env.LLAMACPP_MODEL = pulled.path;
+      emit({ model, phase: "finishing", percent: 99, backend: "llamacpp" });
+      const started = await llamaServerManager.ensureLlamaServerRunning({ model: pulled.path });
+      if (!started.ok) {
+        emit({ model, phase: "error", error: started.error });
+        return { ok: false, error: started.error, model, backend: "llamacpp" };
+      }
+      emit({ model, phase: "done", percent: 100, backend: "llamacpp" });
+      const setup = readSetupState();
+      writeSetupState({
+        ...setup,
+        brainModel: model,
+        brainBackend: "llamacpp",
+        llamaCppModelPath: pulled.path,
+      });
+      return { ok: true, model, backend: "llamacpp", path: pulled.path };
+    }
+
+    await ollamaManager.ensureOllamaRunning().catch(() => null);
+
+    const cmd = ollamaManager.ollamaCommand();
+    emit({ model, phase: "starting", percent: 0 });
+
+    return new Promise((resolve) => {
+      const child = spawn(cmd, ["pull", model], {
+        shell: cmd === "ollama",
+        windowsHide: true,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      let output = "";
+
+      const onChunk = (chunk) => {
+        output += String(chunk || "");
+        const lines = output.split(/\r?\n/).slice(-6);
+        for (const line of lines) {
+          const pct = line.match(/(\d{1,3})%/);
+          if (pct) {
+            emit({ model, phase: "downloading", percent: Number(pct[1]), line: line.trim() });
+          } else if (/verifying|success|complete/i.test(line)) {
+            emit({ model, phase: "finishing", percent: 99, line: line.trim() });
+          }
+        }
+      };
+
+      child.stdout?.on("data", onChunk);
+      child.stderr?.on("data", onChunk);
+      child.on("error", (err) => {
+        emit({ model, phase: "error", error: err?.message || String(err) });
+        resolve({ ok: false, error: err?.message || String(err), model });
+      });
+      child.on("close", (code) => {
+        if (code === 0) {
+          emit({ model, phase: "done", percent: 100 });
+          const setup = readSetupState();
+          writeSetupState({ ...setup, brainModel: model, brainBackend: "ollama" });
+          resolve({ ok: true, model, output: output.slice(-400) });
+          return;
+        }
+        const errText = output.trim() || `ollama pull exited ${code}`;
+        emit({ model, phase: "error", error: errText });
+        resolve({ ok: false, model, error: errText });
+      });
+    });
+  });
 
 
 
@@ -1117,6 +1303,18 @@ function setupIpc() {
       ? !!opts.diagnosticsOptIn
       : !!prior.diagnosticsOptIn;
 
+    if (optIn) {
+      await ollamaManager.ensureOllamaRunning().catch(() => null);
+      const setupBrain = readSetupState();
+      if (setupBrain.brainBackend === "llamacpp" || setupBrain.llamaCppModelPath) {
+        await llamaServerManager.ensureLlamaServerRunning({
+          model: setupBrain.llamaCppModelPath || undefined,
+        }).catch(() => null);
+      } else if (llamaServerManager.bundledLlamaServerPath()) {
+        await llamaServerManager.ensureLlamaServerRunning().catch(() => null);
+      }
+    }
+
     if (!sessionId) {
       throw new Error("Pair your account first — use Link this computer in the browser");
     }
@@ -1159,6 +1357,8 @@ function setupIpc() {
       nodeId: data.node?.id || null,
       nodeToken: data.node?.endpoint_token || null,
       diagnosticsOptIn,
+      brainModel: opts.brainModel || opts.brain_model || prior.brainModel || null,
+      brainBackend: opts.brainBackend || opts.brain_backend || prior.brainBackend || null,
       updateChannel: UPDATE_CHANNEL,
       completedAt: Date.now()
     });
@@ -1172,6 +1372,14 @@ function setupIpc() {
     };
 
     maybeStartWorkerLoop();
+
+    if (app.isPackaged) {
+      initAutoUpdater({
+        mainWindow,
+        channel: UPDATE_CHANNEL,
+        onStatusChange: updateTrayUpdateStatus
+      });
+    }
 
 
 
@@ -1205,6 +1413,18 @@ function setupIpc() {
 
   });
 
+  ipcMain.handle("open-pairing-browser", async () => {
+    const base = await resolvePairingServerUrl();
+    const pairUrl = `${base}/?pair_desktop=1`;
+    await shell.openExternal(pairUrl);
+    return { ok: true, url: pairUrl, serverUrl: base };
+  });
+
+  ipcMain.handle("get-pairing-browser-url", async () => {
+    const base = await resolvePairingServerUrl();
+    return { ok: true, url: `${base}/?pair_desktop=1`, serverUrl: base };
+  });
+
 
 
   ipcMain.handle("open-os-permission-settings", async () => {
@@ -1233,10 +1453,37 @@ function setupIpc() {
 
     }
 
-    console.log("[denizen-desktop] open-agent-settings", setup);
+    await mainWindow?.loadFile(AGENT_SETTINGS_ENTRY);
 
     return true;
 
+  });
+
+  ipcMain.handle("get-setup-state", async () => readSetupState());
+
+  ipcMain.handle("save-agent-settings", async (_evt, opts = {}) => {
+    const prior = readSetupState();
+    const capabilities = {
+      ...(prior.capabilities || {}),
+      ...(opts.capabilities && typeof opts.capabilities === "object" ? opts.capabilities : {}),
+    };
+    const next = {
+      ...prior,
+      capabilities,
+      permission: opts.permission || prior.permission || "ask",
+      optIn: opts.optIn !== undefined ? !!opts.optIn : prior.optIn,
+    };
+    writeSetupState(next);
+    try {
+      await syncCapabilities(
+        () => readSetupState(),
+        postDesktopApi,
+        (patch) => writeSetupState({ ...readSetupState(), ...patch }),
+      );
+    } catch (err) {
+      console.warn("[denizen-desktop] save-agent-settings sync failed:", err?.message || err);
+    }
+    return { ok: true, capabilities };
   });
 
 
@@ -1369,7 +1616,7 @@ async function openDenizenWindow() {
 
   if (!setup.completed) {
 
-    await createWindow(pathToFileURL(WIZARD_ENTRY).toString());
+    await createWindow(WIZARD_ENTRY);
 
     return;
 
@@ -1581,7 +1828,7 @@ function setupTrayStub() {
 
 
 
-async function createWindow(startUrl) {
+async function createWindow(start) {
 
   mainWindow = new BrowserWindow({
 
@@ -1611,13 +1858,41 @@ async function createWindow(startUrl) {
 
 
 
-  await mainWindow.loadURL(startUrl);
+  if (isHttpUrl(start)) {
+
+    await mainWindow.loadURL(String(start));
+
+  } else if (start && typeof start === "object" && start.file) {
+
+    await mainWindow.loadFile(start.file, { query: start.query || {} });
+
+  } else {
+
+    await mainWindow.loadFile(String(start || WIZARD_ENTRY));
+
+  }
 
   setMainWindow(mainWindow);
 
 }
 
 
+
+async function capturePrimaryScreenPng() {
+  const display = screen.getPrimaryDisplay();
+  const { width, height } = display.size || { width: 1920, height: 1080 };
+  const sources = await desktopCapturer.getSources({
+    types: ["screen"],
+    thumbnailSize: { width, height },
+  });
+  const primary = sources[0];
+  if (!primary?.thumbnail) {
+    throw new Error("No screen source available");
+  }
+  return primary.thumbnail.toPNG();
+}
+
+stationAgent.setCaptureScreen(capturePrimaryScreenPng);
 
 app.whenReady().then(async () => {
 
@@ -1645,7 +1920,7 @@ app.whenReady().then(async () => {
 
   if (!setup.completed) {
 
-    await createWindow(pathToFileURL(WIZARD_ENTRY).toString());
+    await createWindow(WIZARD_ENTRY);
 
   } else {
 
@@ -1659,18 +1934,20 @@ app.whenReady().then(async () => {
 
   if (app.isPackaged) {
     const setup = readSetupState();
-    initAutoUpdater({
-      mainWindow,
-      channel: setup.updateChannel,
-      onStatusChange: updateTrayUpdateStatus
-    });
+    if (setup.completed) {
+      initAutoUpdater({
+        mainWindow,
+        channel: setup.updateChannel,
+        onStatusChange: updateTrayUpdateStatus
+      });
+    }
   }
 
   app.on("activate", () => {
 
     if (BrowserWindow.getAllWindows().length === 0) {
 
-      void createWindow(pathToFileURL(WIZARD_ENTRY).toString());
+      void createWindow(WIZARD_ENTRY);
 
     }
 
@@ -1727,6 +2004,9 @@ app.on("window-all-closed", () => {
 app.on("before-quit", () => {
 
   stopWorkerLoop();
+  stopStationTaskLoop();
+  ollamaManager.stopOllama();
+  llamaServerManager.stopLlamaServer();
 
   if (denizenServerProcess && !denizenServerProcess.killed) {
 

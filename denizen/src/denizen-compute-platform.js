@@ -50,6 +50,28 @@ function normalizeContributionLevel(level) {
   return null;
 }
 
+function hardwareFromLiveMetrics(live = {}) {
+  const gpu = live.gpu && typeof live.gpu === 'object' ? live.gpu : {};
+  return {
+    cpuCores: live.cpu_cores ?? null,
+    ramMb: live.ram?.total_mb ?? null,
+    vramMb: gpu.vram_total_mb ?? null,
+    gpu: gpu.model ?? null,
+  };
+}
+
+async function syncProfileFromLiveMetrics(identityId, live, { optIn = true } = {}) {
+  if (!isEnabled() || !identityId || !live || typeof live !== 'object') return null;
+  const hw = hardwareFromLiveMetrics(live);
+  if (!hw.cpuCores && !hw.ramMb && !hw.vramMb && !hw.gpu) return null;
+  return upsertProfileForIdentity(identityId, {
+    optIn,
+    hardware: hw,
+    contributionLevel: 'standard',
+    idleOnly: false,
+  });
+}
+
 async function upsertProfileForIdentity(identityId, {
   optIn = false,
   hardware = {},
@@ -289,6 +311,7 @@ function buildStatusPayload(identity, profile) {
   const credits = Number(identity?.credits_balance) || 0;
   return {
     ok: true,
+    identity_id: identity?.id || null,
     credits_balance: credits,
     credits,
     node_tier: tier,
@@ -305,6 +328,12 @@ function buildStatusPayload(identity, profile) {
 
 async function getStatusForIdentity(identity, ctx = {}) {
   if (!identity?.id) return null;
+
+  const userIdentity = safeRequire('./denizen-user-identity.js');
+  if (userIdentity?.isPersistedIdentityId?.(identity.id) && userIdentity.getIdentityById) {
+    const fresh = await userIdentity.getIdentityById(identity.id).catch(() => null);
+    if (fresh) identity = fresh;
+  }
 
   let profile = null;
   try {
@@ -387,27 +416,41 @@ async function getStatusForIdentity(identity, ctx = {}) {
   };
 }
 
-function buildSessionHostStatus({ sessionTier = 'team', lmStudio = null, req = null } = {}) {
-  const hostMeta = hostCompute.isHostOperatorSession(req, null)
+async function buildSessionHostStatus({
+  sessionTier = 'team',
+  lmStudio = null,
+  req = null,
+  session = null,
+  sessionId = null,
+} = {}) {
+  const userIdentity = safeRequire('./denizen-user-identity.js');
+  let identity = null;
+  const sid = sessionId || session?.id || null;
+  if (sid && userIdentity?.ensureIdentityForSession) {
+    identity = await userIdentity.ensureIdentityForSession(sid, { session }).catch(() => null);
+  }
+  const credits = Number(identity?.credits_balance) || 0;
+
+  const hostMeta = hostCompute.isHostOperatorSession(req, identity)
     ? { is_host_operator: true, is_ceo_principal: hostCompute.isCeoPrincipalRequest(req) }
     : {};
   const contribution = hostCompute.resolveContributionState({
-    identity: { metadata: hostMeta },
+    identity: identity || { metadata: hostMeta },
     profile: null,
     req,
     lmStudio,
     activeNode: null,
   });
   const clientState = desktopLink.resolveContributorState({
-    identity: null,
+    identity,
     profile: null,
     req,
     hostContribution: contribution,
   });
   const base = {
     ok: true,
-    credits_balance: 0,
-    credits: 0,
+    credits_balance: credits,
+    credits,
     tier: sessionTier,
     node_tier: contribution.host_lmstudio_active ? 'contributor' : sessionTier,
     opted_in: clientState.can_contribute,
@@ -415,7 +458,8 @@ function buildSessionHostStatus({ sessionTier = 'team', lmStudio = null, req = n
     hardware_score: 0,
     contribution_level: clientState.can_contribute ? 'standard' : 'off',
     profile: null,
-    identity_pending: true,
+    identity_pending: !identity?.id,
+    identity_id: identity?.id || null,
   };
   return {
     ...hostCompute.mergeContributionIntoStatus(base, contribution),
@@ -427,8 +471,10 @@ function buildSessionHostStatus({ sessionTier = 'team', lmStudio = null, req = n
 
 module.exports = {
   hardwareFromBody,
+  hardwareFromLiveMetrics,
   getProfileByIdentity,
   upsertProfileForIdentity,
+  syncProfileFromLiveMetrics,
   buildStatusPayload,
   buildContributionSummary,
   getStatusForIdentity,

@@ -132,9 +132,13 @@ These helpers power org-scoped read access across onboarding-adjacent and busine
 |---|---|---|
 | Create visitor session | Yes | Yes |
 | Claim assistant NPC | Yes (non-protected) | Yes |
+| AI chat with NPCs (LM Studio) | Yes | Yes |
+| In-office actions (walk, meet, delegate) | Yes | Yes |
 | Team handoff to CEO | No | Yes |
-| Briefings/proactive team workflows | Restricted | Enabled |
-| Real tool execution | Denied | Allowed (subject to org settings) |
+| Briefings / proactive team workflows | Restricted | Enabled |
+| Connect AI (MCP — Cursor, ChatGPT, Claude) | No | Yes |
+| Slack link / external research | No | Yes |
+| Real tool execution (`run_skill`) | Denied | Allowed (subject to org settings) |
 | Business table visibility | Restricted by org policy | Allowed by org policy + RLS |
 
 ---

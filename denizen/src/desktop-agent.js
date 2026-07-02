@@ -532,12 +532,116 @@ async function runObserveOnly({ instruction, broadcast, npcName } = {}) {
   }
 }
 
+function getLmVisionConfig() {
+  let cfg = {};
+  try { cfg = require('../jelly/config-provider').getConfig(); } catch (_) {}
+  return {
+    baseUrl: process.env.LM_STUDIO_BASE_URL || 'http://localhost:1234',
+    model: process.env.LM_STUDIO_VISION_MODEL || process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning',
+    apiKey: process.env.LM_STUDIO_API_KEY || cfg?.models?.providers?.lmstudio?.apiKey || 'lm-studio',
+  };
+}
+
+function getDesktopSystemPrompt() {
+  return [
+    'You are a desktop automation agent with full control of this PC.',
+    'You can see the screen via screenshots and control the mouse, keyboard, and apps.',
+    'Each turn you must output EXACTLY ONE JSON action on a single line, like:',
+    '{"action":"click","x":100,"y":200}',
+    '{"action":"type","text":"hello"}',
+    '{"action":"key","key":"ctrl+c"}',
+    '{"action":"scroll","x":500,"y":400,"direction":"down","amount":3}',
+    '{"action":"open_app","app":"Wireshark"}',
+    '{"action":"read_clipboard"}',
+    '{"action":"done","summary":"what you accomplished including key findings"}',
+    '{"action":"blocked","reason":"why you cannot proceed"}',
+    'Valid actions: click, right_click, double_click, type, key, scroll, move, open_app, read_clipboard, write_clipboard, done, blocked',
+    'Be precise with pixel coordinates from the screenshot. Output ONLY the JSON, nothing else.',
+    'Do NOT open banking, private files, or sensitive apps unless explicitly asked.',
+    'If an app is not installed, call blocked immediately rather than searching for it.',
+    'NEVER click final Submit / Send / Pay unless the CEO explicitly said "submit" or "send it".',
+  ].join('\n');
+}
+
+function getObserveSystemPrompt() {
+  return [
+    'You are a read-only screen observer for an AI assistant.',
+    'Describe what is on the CEO\'s screen: active app, browser, URL bar, page title,',
+    'visible text they typed, forms, buttons, errors, and anything they asked about.',
+    'Do NOT suggest clicks or typing unless the CEO explicitly asked you to act.',
+    'Output EXACTLY ONE JSON object:',
+    '{"action":"done","summary":"2-4 sentences describing the screen","topics":["up to 3 nouns worth researching"],"searchQuery":"one web search phrase to learn more about something unclear on screen"}',
+    'If nothing useful is visible, still describe what you can see.',
+  ].join('\n');
+}
+
+async function describeScreenshotBuffer({ instruction, screenshotBuf, broadcast, npcName } = {}) {
+  const lmCfg = getLmVisionConfig();
+  const systemPrompt = getObserveSystemPrompt();
+  const screenshotB64 = Buffer.isBuffer(screenshotBuf)
+    ? screenshotBuf.toString('base64')
+    : String(screenshotBuf || '');
+
+  const _broadcast = (type, data) => {
+    if (!broadcast) return;
+    try { broadcast({ type, ...data, npcName: npcName || 'Lucy' }); } catch (_) {}
+  };
+
+  _broadcast('desktop_task_screenshot', { screenshot: screenshotB64 });
+
+  const messages = [{
+    role: 'user',
+    content: [
+      { type: 'text', text: `CEO request: ${instruction}\n\nDescribe this screen read-only.` },
+      { type: 'image_url', image_url: { url: `data:image/png;base64,${screenshotB64}` } },
+    ],
+  }];
+
+  const raw = await _callVisionModel(messages, systemPrompt, lmCfg);
+  const parsed = _parseResponse(raw);
+  if (parsed.error) {
+    return { ok: false, error: parsed.error, screenshotB64 };
+  }
+
+  let summary = parsed.text || '';
+  let topics = [];
+  let searchQuery = '';
+  try {
+    const jsonMatch = summary.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const obj = JSON.parse(jsonMatch[0]);
+      summary = obj.summary || summary;
+      topics = Array.isArray(obj.topics) ? obj.topics : [];
+      searchQuery = obj.searchQuery || '';
+    }
+  } catch (_) {}
+
+  if (!summary && parsed.done) summary = 'Screen captured — vision model returned no summary.';
+
+  return { ok: true, summary, topics, searchQuery, screenshotB64 };
+}
+
+async function visionStep({ messages, systemPrompt, mode = 'desktop' } = {}) {
+  const lmCfg = getLmVisionConfig();
+  const prompt = systemPrompt || (mode === 'observe' ? getObserveSystemPrompt() : getDesktopSystemPrompt());
+  const raw = await _callVisionModel(messages, prompt, lmCfg);
+  return _parseResponse(raw);
+}
+
 module.exports = {
   runDesktopTask,
   runObserveOnly,
+  describeScreenshotBuffer,
+  visionStep,
   openBraveBrowser,
   resolveBravePath,
   takeScreenshot,
+  executeAction,
+  getLmVisionConfig,
+  getDesktopSystemPrompt,
+  getObserveSystemPrompt,
+  callVisionModel: _callVisionModel,
+  parseVisionResponse: _parseResponse,
   get _abortAll() { return _abortFlag; },
   set _abortAll(v) { _abortFlag = !!v; },
 };

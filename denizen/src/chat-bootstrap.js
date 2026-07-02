@@ -157,11 +157,10 @@
 
 
   function wsUrl() {
-
+    const routed = globalThis.DenizenSpectateRouting?.resolveAgentWsUrl?.();
+    if (routed) return routed;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
     return `${protocol}//${window.location.host}/agent-ws`;
-
   }
 
 
@@ -195,30 +194,19 @@
       },
 
       connect() {
-
         if (mgr.ws && (mgr.ws.readyState === WebSocket.OPEN || mgr.ws.readyState === WebSocket.CONNECTING)) {
-
           return;
-
         }
-
-        try {
-
-          mgr.ws = new WebSocket(wsUrl());
-
-          window.__DenizenAgentWs = mgr.ws;
-
-        } catch (err) {
-
-          console.warn('[ChatBootstrap] WebSocket failed:', err);
-
-          mgr._scheduleReconnect(playerChat);
-
-          return;
-
-        }
-
-        mgr.ws.onopen = () => {
+        const openSocket = () => {
+          try {
+            mgr.ws = new WebSocket(wsUrl());
+            window.__DenizenAgentWs = mgr.ws;
+          } catch (err) {
+            console.warn('[ChatBootstrap] WebSocket failed:', err);
+            mgr._scheduleReconnect(playerChat);
+            return;
+          }
+          mgr.ws.onopen = () => {
 
           mgr.connected = true;
 
@@ -248,7 +236,11 @@
 
               playerChat._hasActions = !!(msg.actions && msg.actions.length);
 
-              playerChat.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error);
+              playerChat.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error, {
+                crmActions: msg.crm_actions,
+              });
+
+              globalThis.DenizenCrmBridge?.handlePlayerChatResponse?.(msg);
 
             } else if (msg.type === 'player_group_chat_response' && playerChat) {
 
@@ -258,14 +250,31 @@
 
               playerChat.logPlayerChatAck(msg.npcName, msg.queueLen);
 
+            } else if (
+              msg.type === 'voice_chat_filler'
+              || msg.type === 'voice_chat_token'
+              || msg.type === 'voice_chat_sentence'
+              || msg.type === 'voice_chat_done'
+              || msg.type === 'player_chat_cancelled'
+            ) {
+              globalThis.DenizenVoiceSession?.handleWsMessage?.(msg);
+              if (msg.type === 'voice_chat_token' && playerChat) {
+                playerChat.handleVoiceStreamToken?.(msg.npcName, msg.token);
+              }
+              if (msg.type === 'player_chat_cancelled' && playerChat) {
+                playerChat.handlePlayerChatCancelled?.(msg);
+              }
+            } else if (msg.type === 'station_task_enqueued' && playerChat) {
+              playerChat._addToLog?.('System', `⚙ Station task queued${msg.kind ? `: ${msg.kind}` : ''}`);
             } else if (msg.type === 'npc_skill_start' && playerChat && msg.skill === 'web-search') {
-              playerChat._addToLog('System', 'Lucy\'s browser is launching — tap 🌐 browser in the dock to watch live.');
+              playerChat._addToLog('System', 'Lucy\'s browser is launching — watch the 🌐 browser panel.');
               window.DenizenBrowserMirror?.ingest?.({
                 searching: true,
                 open: true,
                 status: 'searching',
                 query: msg.skillParams?.query || '',
               });
+              window.DenizenBrowserMirror?.show?.();
             } else if (msg.type === 'lucy_browser_mirror' || msg.type === 'npc_browser_mirror') {
               window.DenizenBrowserMirror?.ingest?.(msg);
             } else if (msg.type === 'lucy_browser_frame' || msg.type === 'npc_browser_frame') {
@@ -297,13 +306,15 @@
         };
 
         mgr.ws.onerror = () => {
-
           mgr.connected = false;
-
           playerChat?.setWsConnected?.(false);
-
         };
-
+        };
+        if (globalThis.DenizenSpectateRouting?.loadConfig) {
+          globalThis.DenizenSpectateRouting.loadConfig().finally(openSocket);
+        } else {
+          openSocket();
+        }
       },
 
       _scheduleReconnect(playerChat) {
@@ -364,7 +375,11 @@
 
             pc._hasActions = !!(msg.actions && msg.actions.length);
 
-            pc.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error);
+            pc.handleNpcResponse(msg.npcName, msg.text, msg.delegation, msg.error, {
+              crmActions: msg.crm_actions,
+            });
+
+            globalThis.DenizenCrmBridge?.handlePlayerChatResponse?.(msg);
 
           } else if (msg.type === 'player_group_chat_response') {
 
@@ -375,13 +390,14 @@
             pc.logPlayerChatAck(msg.npcName, msg.queueLen);
 
           } else if (msg.type === 'npc_skill_start' && msg.skill === 'web-search') {
-            pc._addToLog('System', 'Lucy\'s browser is launching — tap 🌐 browser in the dock to watch live.');
+            pc._addToLog('System', 'Lucy\'s browser is launching — watch the 🌐 browser panel.');
             window.DenizenBrowserMirror?.ingest?.({
               searching: true,
               open: true,
               status: 'searching',
               query: msg.skillParams?.query || '',
             });
+            window.DenizenBrowserMirror?.show?.();
           } else if (msg.type === 'lucy_browser_mirror' || msg.type === 'npc_browser_mirror') {
             window.DenizenBrowserMirror?.ingest?.(msg);
           } else if (msg.type === 'lucy_browser_frame' || msg.type === 'npc_browser_frame') {

@@ -1,0 +1,10 @@
+# Lightweight Python sidecar for grok-mesh-telemetry-job (no Node/Python in main image).
+# Build on NAS: docker build -f infra/Dockerfile.telemetry-sidecar -t denizen-telemetry-sidecar:latest .
+FROM python:3.12-slim
+WORKDIR /app
+COPY infra/grok-analyze-telemetry.py infra/grok-analyze-telemetry.py
+COPY infra/grok-mesh-telemetry-job.py infra/grok-mesh-telemetry-job.py
+RUN mkdir -p /app/data
+ENV GROK_AGENT=1
+ENV PYTHONUNBUFFERED=1
+CMD ["python3", "infra/grok-mesh-telemetry-job.py"]

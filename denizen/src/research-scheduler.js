@@ -9,6 +9,9 @@ const {
   runScheduledResearch,
 } = require('./away-notify');
 
+let researchQueueMod = null;
+try { researchQueueMod = require('./research-queue'); } catch (_) {}
+
 const ROOT = path.resolve(__dirname, '..');
 const STATE_FILE = path.join(ROOT, 'data', 'research-scheduler-state.json');
 const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
@@ -84,10 +87,37 @@ function startScheduler(deps = {}, opts = {}) {
         ts: Date.now(),
       });
     }
+
+    // Targeted lead gen seeding (low freq): auto queue business prospects tied to 1921/OMES focus
+    if (Math.random() < 0.12 && researchQueueMod && typeof researchQueueMod.addTopic === 'function') {
+      const leadTopics = [
+        'OMES EV00000919 teaming partners RM Cyber 2026',
+        'Oklahoma federal GovCon contractors needing modernization tools',
+        'RM Cyber partnership opportunities 1921',
+        'WOSB SDB capture prospects AI office software federal',
+      ];
+      try {
+        const t = leadTopics[Math.floor(Math.random() * leadTopics.length)];
+        researchQueueMod.addTopic({ topic: t, priority: 7, assignedTo: 'Bob', notes: 'auto lead-gen from scheduler' });
+        _safeBroadcast(deps.broadcast, { type: 'research_scheduler_started', item: { topic: t }, assignedTo: 'Bob', ts: Date.now() });
+      } catch (_) {}
+    }
   };
 
   if (immediate) {
     runTick().catch(() => {});
+    // Seed a couple lead-gen topics early if queue is empty or short (helps demo autonomy)
+    setTimeout(() => {
+      try {
+        if (researchQueueMod && typeof researchQueueMod.listTopics === 'function') {
+          const current = researchQueueMod.listTopics({ limit: 5 }) || [];
+          if (current.length < 3) {
+            researchQueueMod.addTopic({ topic: 'OMES teaming partners and similar GovCon modernization needs 2026', priority: 8, assignedTo: 'Bob', notes: 'lead-gen seed' });
+            researchQueueMod.addTopic({ topic: 'WOSB/SDB contractors in Oklahoma or federal IT looking for capture tools', priority: 7, assignedTo: 'Bob', notes: 'lead-gen seed' });
+          }
+        }
+      } catch (_) {}
+    }, 8000);
   }
   const timer = setInterval(() => { runTick().catch(() => {}); }, intervalMs);
 

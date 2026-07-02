@@ -668,6 +668,89 @@ class DenizenDb {
     return this._get(parts.join('&'));
   }
 
+  async getAgentSoul(orgId, npcKey) {
+    const targetOrgId = orgId || this.orgId;
+    if (!this.enabled || !targetOrgId || !npcKey) return null;
+    const rows = await this._getSoft(
+      `agent_souls?select=npc_key,display_name,soul_content,memory_content,template_pack,updated_at`
+      + `&org_id=eq.${encodeURIComponent(targetOrgId)}`
+      + `&npc_key=eq.${encodeURIComponent(npcKey)}`
+      + '&limit=1',
+    );
+    return rows?.[0] || null;
+  }
+
+  async listAgentSouls(orgId) {
+    const targetOrgId = orgId || this.orgId;
+    if (!this.enabled || !targetOrgId) return [];
+    return this._getSoft(
+      `agent_souls?select=npc_key,display_name,soul_content,memory_content,template_pack,updated_at`
+      + `&org_id=eq.${encodeURIComponent(targetOrgId)}`
+      + '&order=npc_key.asc',
+    ) || [];
+  }
+
+  async upsertAgentSoul({
+    orgId,
+    npcKey,
+    displayName,
+    soulContent,
+    memoryContent = '',
+    templatePack = null,
+  }) {
+    const targetOrgId = orgId || this.orgId;
+    if (!this.enabled || !targetOrgId || !npcKey) return null;
+    const row = {
+      org_id: targetOrgId,
+      npc_key: npcKey,
+      display_name: displayName || null,
+      soul_content: String(soulContent || ''),
+      memory_content: String(memoryContent || ''),
+      template_pack: templatePack || null,
+      updated_at: new Date().toISOString(),
+    };
+    const inserted = await this._postSoft(
+      'agent_souls?on_conflict=org_id,npc_key',
+      row,
+      { prefer: 'resolution=merge-duplicates,return=representation' },
+    );
+    return inserted?.[0] || row;
+  }
+
+  async getOrgBusinessModel(orgId) {
+    const targetOrgId = orgId || this.orgId;
+    if (!this.enabled || !targetOrgId) return null;
+    const rows = await this._getSoft(
+      `org_business_models?select=org_id,template_pack,business_model,company_brief,updated_at`
+      + `&org_id=eq.${encodeURIComponent(targetOrgId)}`
+      + '&limit=1',
+    );
+    return rows?.[0] || null;
+  }
+
+  async upsertOrgBusinessModel({
+    orgId,
+    templatePack = null,
+    businessModel = null,
+    companyBrief = null,
+  }) {
+    const targetOrgId = orgId || this.orgId;
+    if (!this.enabled || !targetOrgId) return null;
+    const row = {
+      org_id: targetOrgId,
+      template_pack: templatePack || null,
+      business_model: businessModel || {},
+      company_brief: companyBrief || {},
+      updated_at: new Date().toISOString(),
+    };
+    const inserted = await this._postSoft(
+      'org_business_models?on_conflict=org_id',
+      row,
+      { prefer: 'resolution=merge-duplicates,return=representation' },
+    );
+    return inserted?.[0] || row;
+  }
+
   async _getSoft(path, ms = 2500) {
     if (!this.enabled) return null;
     try {

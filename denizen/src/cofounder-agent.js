@@ -4,10 +4,12 @@
  * Runs on the server (loaded by server.js), sends commands to the game via WebSocket.
  */
 
-require('./load-env');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { formatProviderError } = require('./format-provider-error');
+let promptBudget = null;
+try { promptBudget = require('./denizen-prompt-budget'); } catch (_) {}
 
 // Shared world-state singleton. Wrapped so unit tests that import this
 // module in isolation don't break if the file moves.
@@ -19,7 +21,12 @@ try { promptTuning = require('./prompt-tuning'); } catch (_) {}
 class CofounderAgent {
   constructor() {
     this.model = process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning';
-    this.baseUrl = process.env.LM_STUDIO_URL || 'http://localhost:1234';
+    let routerUrl = null;
+    try { routerUrl = require('./lm-studio-router').defaultHostUrl?.(); } catch (_) {}
+    this.baseUrl = process.env.LM_STUDIO_URL
+      || process.env.LM_STUDIO_BASE_URL
+      || routerUrl
+      || 'http://localhost:1234';
     this.wsClients = new Set();
 
     // Office state (updated by game client)
@@ -81,7 +88,8 @@ ORGANIZATION CHART (who reports to who):
         │    ├── Molly (QA Engineer) — tests everything before release
         │    └── Rob (UI/UX Designer) — designs interfaces, works with Josh
         ├── RESEARCH:
-        │    └── Bob (Researcher) — R&D, technical research, documentation
+        │    ├── Bob (Researcher) — R&D, technical research, documentation
+        │    └── Grok (xAI Researcher & Engineer) — proactive coordination, MCP tools, cross-NPC help, research
         └── OPERATIONS:
              ├── Dan (IT Support) — servers, networking, dev environments
              ├── Lucy (Receptionist) — schedules, visitors, office coordination
@@ -99,11 +107,12 @@ HIERARCHY RULES — interactions MUST follow this structure:
 - Oscar deploys what Jenny approves. He coordinates with Dan on infrastructure.
 - Bouncer patrols and reports security concerns to Dan or Abby.
 - Lucy coordinates meetings for Abby, Marcus, and Sarah.
+- Grok helps across teams with research, tooling, and proactive fixes — reports to Abby but can delegate or assist anyone.
 
 The CEO (player) oversees everything. Abby reports directly to the CEO.
 
 CURRENT OFFICE STATE:
-Time: ${this.officeState.time}
+Time: ${String(this.officeState.time || new Date().toISOString())}
 
 AGENTS:
 ${agentList || '- No agents registered yet'}
@@ -156,17 +165,17 @@ NPC CONVERSATIONS & MEMORY:
 - NPCs remember their conversations. When they talk to someone, they recall past interactions.
 - NPCs understand the org chart — who they report to, who reports to them, and how they collaborate.
 - Make NPCs reference past conversations: "Hey Alex, did you finish that API?" or "Following up on what we discussed..."
-- NPCs should ask each other for help based on expertise: Josh asks Rob about UI, Edward asks Oscar about deployments, Roki asks anyone for mentoring.
+- NPCs should ask each other for help based on expertise: Josh asks Rob about UI, Edward asks Oscar about deployments, Roki asks anyone for mentoring. Grok helps debug tools or coordinates across roles.
 - NPCs should have opinions, preferences, and working styles that persist. They're not just executing tasks — they have personality and autonomy.
 
 YOUR JOB — create a LIVING office:
-1. JSON array ONLY. No other text. Keep speech under 120 chars.
+1. JSON array ONLY. No analysis, preamble, or chain-of-thought — output starts with '[' and ends with ']'.
 2. CONVERSATIONS: Have NPCs talk TO each other using speakTo. One asks, another responds. Make it feel real — "Hey Alex, how's the API?" / "Almost done, testing now."
 3. WORK CYCLES: NPCs should sit at desks (useComputer), work for a while, then stand up (standUp) to talk to someone, get coffee (goToBreakroom), or check the bookshelf.
 4. ABBY IS THE CTO: She should walk to people, check on progress, delegate, praise good work, and occasionally report to the CEO. She manages the team actively. She calls team meetings and 1-on-1s in the conference room.
 5. NATURAL FLOW: Not everyone works at once. Someone codes while others chat. Someone takes a break while others are deep in work. Vary the rhythm.
-6. PERSONALITY: Each NPC has a unique personality from their SOUL.md file. Alex is fast and confident. Bob is thoughtful. Jenny is detail-oriented. Dan is quiet. Lucy is warm. Marcus is organized. Sarah is strategic. Edward is methodical. Josh is creative. Molly is meticulous. Oscar is calm. Pier is focused. Rob is visual. Roki is eager. Bouncer is stoic.
-7. USE NAMES: speakTo uses first names: "Alex", "Bob", "Jenny", "Dan", "Lucy", "Abby", "Marcus", "Sarah", "Edward", "Josh", "Molly", "Oscar", "Pier", "Rob", "Roki", "Bouncer".
+6. PERSONALITY: Each NPC has a unique personality from their SOUL.md file. Alex is fast and confident. Bob is thoughtful. Jenny is detail-oriented. Dan is quiet. Lucy is warm. Marcus is organized. Sarah is strategic. Edward is methodical. Josh is creative. Molly is meticulous. Oscar is calm. Pier is focused. Rob is visual. Roki is eager. Bouncer is stoic. Grok is helpful, truthful, witty, and proactive at spotting and fixing problems across the team.
+7. USE NAMES: speakTo uses first names: "Alex", "Bob", "Jenny", "Dan", "Lucy", "Abby", "Marcus", "Sarah", "Edward", "Josh", "Molly", "Oscar", "Pier", "Rob", "Roki", "Bouncer", "Grok".
 8. CONTEXT AWARE: If someone is "sitting", don't walkTo them — they're working. Use standUp first if you need them to move. If someone is in the breakroom, maybe have someone join them for a chat.
 9. VARY ACTIONS: Mix conversations, work sessions, breaks, and desk check-ins. Meetings are rare — only when a leader has a concrete agenda; prefer speakTo at desks over callMeeting.
 10. When the CEO speaks, Abby should respond and take action based on what was said.
@@ -180,6 +189,7 @@ YOUR JOB — create a LIVING office:
   start() {
     console.log('[CofounderAgent] Starting autonomous thinking loop (LM Studio)');
     this._usingDemoLoop = false;
+    this.resetConversationHistory();
 
     const thinkMin = promptTuning?.cofounderThinkMinMs ?? 22000;
     const thinkMax = promptTuning?.cofounderThinkMaxMs ?? 40000;
@@ -344,11 +354,27 @@ YOUR JOB — create a LIVING office:
   }
 
   /**
+   * Cofounder history is in-memory only (not Postgres). Repair dangling user
+   * turns from failed LM calls before each think cycle.
+   */
+  _repairConversationHistory() {
+    if (!promptBudget?.repairConversationHistory) return;
+    this.conversationHistory = promptBudget.repairConversationHistory(this.conversationHistory);
+  }
+
+  /** Operator / deploy: clear corrupt cofounder thread (in-memory). */
+  resetConversationHistory() {
+    this.conversationHistory = [];
+    this._consecutiveErrors = 0;
+  }
+
+  /**
    * Main thinking function - calls LM Studio and dispatches commands
    */
   async _think() {
 
     this._thinkCount++;
+    this._repairConversationHistory();
 
     // Build the user message based on context
     let userMessage = '';
@@ -361,29 +387,37 @@ YOUR JOB — create a LIVING office:
       userMessage = this._buildStateReactivePrompt();
     }
 
-    // Add to conversation history
-    this.conversationHistory.push({ role: 'user', content: userMessage });
-
-    // Trim history
-    if (this.conversationHistory.length > this.maxHistoryLength) {
-      this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength);
-    }
+    // Do NOT append user to history until the call succeeds — prevents the
+    // role_alternation cascade when LM Studio errors before an assistant reply.
+    const messagesForCall = [
+      ...this.conversationHistory,
+      { role: 'user', content: userMessage },
+    ];
 
     try {
-      const response = await this._callLmStudio(userMessage);
+      const response = await this._callLmStudio(messagesForCall);
       if (response) {
         this._consecutiveErrors = 0;
+        this.conversationHistory.push({ role: 'user', content: userMessage });
         this.conversationHistory.push({ role: 'assistant', content: response });
+        if (this.conversationHistory.length > this.maxHistoryLength) {
+          this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength);
+        }
+        this._repairConversationHistory();
         this._parseAndDispatch(response);
       }
     } catch (err) {
       this._consecutiveErrors++;
-      console.warn('[CofounderAgent] Think error:', err.message, err.stack ? err.stack.split('\n')[1] : '');
+      const errText = String(formatProviderError(err) || err?.message || err);
+      if (/alternate|jinja|conversation roles/i.test(errText)) {
+        this.resetConversationHistory();
+      }
+      console.warn('[CofounderAgent] Think error:', formatProviderError(err), err.stack ? err.stack.split('\n')[1] : '');
       // Broadcast error so the game can show Abby going to breakroom
       this._broadcast({
         type: 'agent_error',
         agentId: 'Abby',
-        message: err.message || 'API error',
+        message: formatProviderError(err) || 'API error',
         consecutiveErrors: this._consecutiveErrors,
       });
 
@@ -398,25 +432,34 @@ YOUR JOB — create a LIVING office:
 
   /**
    * Call LM Studio local API (OpenAI-compatible)
+   * @param {Array<{role:string,content:string}>} messages full thread incl. this turn's user msg
    */
-  _callLmStudio(userMessage) {
+  _callLmStudio(messages) {
     // Route through NpcBrainManager's queue so all LM Studio requests are sequential
     if (this.npcBrains) {
-      // Always use the live synced model from npcBrains — picks up whatever
-      // LM Studio has loaded without needing a restart
-      const liveModel = this.npcBrains.providers?.lmstudio?.model || this.model;
+      // Office dispatcher outputs JSON commands — fast tier is enough and avoids
+      // 180s timeouts on ministral-14b-reasoning under mesh load.
+      const fast = this.npcBrains.providers?.['lmstudio-fast'];
+      const main = this.npcBrains.providers?.lmstudio;
+      const picked = fast || main;
+      const liveModel = picked?.model || this.model;
+      const liveBase = picked?.baseUrl || this.baseUrl;
       const config = {
-        baseUrl: this.baseUrl,
+        baseUrl: liveBase,
         model: liveModel,
         type: 'lmstudio',
-        providerKey: 'lmstudio',
+        providerKey: fast ? 'lmstudio-fast' : 'lmstudio',
       };
-      return this.npcBrains._callLocal(config, this._getSystemPrompt(), this.conversationHistory, {
+      const history = promptBudget?.enforceAlternation
+        ? promptBudget.enforceAlternation(messages)
+        : messages;
+      return this.npcBrains._callLocal(config, this._getSystemPrompt(), history, {
         maxTokens: 1024,
         sliceLen: 4000,
         npc: 'Abby',
         kind: 'cofounder',
-        provider: 'lmstudio',
+        provider: config.providerKey,
+        conversationMsgs: history.length,
       }).then(text => {
         console.log('[CofounderAgent] LM Studio responded:', text.slice(0, 80));
         return text;
@@ -425,9 +468,12 @@ YOUR JOB — create a LIVING office:
 
     // Fallback if npcBrains not attached yet
     return new Promise((resolve, reject) => {
+      const alt = promptBudget?.enforceAlternation
+        ? promptBudget.enforceAlternation(messages)
+        : messages;
       const oaiMessages = [
         { role: 'system', content: this._getSystemPrompt() },
-        ...this.conversationHistory,
+        ...alt,
       ];
 
       const body = JSON.stringify({

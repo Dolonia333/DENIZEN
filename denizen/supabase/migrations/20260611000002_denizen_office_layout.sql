@@ -13,3 +13,7 @@ create index if not exists denizen_office_layout_identity_idx
 
 comment on table public.denizen_office_layout is
   'Per-identity virtual office layout; office_id usually equals identity_id';
+
+insert into public.denizen_schema_migrations (version, name)
+values ('20260611000002', 'denizen_office_layout')
+on conflict (version) do nothing;

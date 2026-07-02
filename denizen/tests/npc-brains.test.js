@@ -306,3 +306,26 @@ describe('_hierarchy', () => {
     }
   });
 });
+
+describe('_resolveBrainForOrg', () => {
+  it('overlays generic soul for non-operator org', async () => {
+    const denizenDb = require('../src/denizen-db');
+    const origOrgId = denizenDb.orgId;
+    const origEnabled = denizenDb.enabled;
+    const origGet = denizenDb.getAgentSoul;
+    denizenDb.enabled = true;
+    denizenDb.orgId = 'zion-operator-test-uuid';
+    denizenDb.getAgentSoul = async () => null;
+    if (mgr._orgBrainOverlayCache) mgr._orgBrainOverlayCache.clear();
+    try {
+      const brain = await mgr._resolveBrainForOrg('Abby', 'acme-demo-test-uuid');
+      assert.match(brain.personality, /generic Denizen office/i);
+      assert.doesNotMatch(brain.personality, /OMES EV00000919/i);
+    } finally {
+      denizenDb.orgId = origOrgId;
+      denizenDb.enabled = origEnabled;
+      denizenDb.getAgentSoul = origGet;
+      if (mgr._orgBrainOverlayCache) mgr._orgBrainOverlayCache.clear();
+    }
+  });
+});

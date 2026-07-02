@@ -22,6 +22,8 @@ const NPC_ROSTER_ENTRIES = [
   { folder: 'pier', display: 'Pier', textureKey: 'xp_pier', assetName: 'Pier', gender: 'male' },
   { folder: 'rob', display: 'Rob', textureKey: 'xp_rob', assetName: 'Rob', gender: 'male' },
   { folder: 'roki', display: 'Roki', textureKey: 'xp_roki', assetName: 'Roki', gender: 'male' },
+  { folder: 'grok', display: 'Grok', textureKey: 'xp_grok', assetName: 'Grok', gender: 'male' },
+  { folder: 'claude', display: 'Claude', textureKey: 'xp_claude', assetName: 'Claude', gender: 'neutral' },
 ];
 
 const nameToKey = Object.fromEntries(

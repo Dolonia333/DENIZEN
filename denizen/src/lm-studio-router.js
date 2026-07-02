@@ -1,6 +1,12 @@
 'use strict';
 
 const { normalizeBaseUrl, probeLmStudioEndpoint } = require('./lm-studio-probe');
+const {
+  resolveRouterLmUrl,
+  enrichLmStudioBlock,
+  isLoopbackUrl,
+  preferServerProbeUrl,
+} = require('./lm-studio-advertise');
 
 /** nodeId -> node record */
 const nodes = new Map();
@@ -29,31 +35,45 @@ function isEnabled() {
   return true;
 }
 
-function defaultHostUrl() {
-  return normalizeBaseUrl(
-    process.env.LM_STUDIO_URL
-    || process.env.LM_STUDIO_BASE_URL
-    || 'http://127.0.0.1:1234',
-  );
-}
-
 function parseRemoteUrls() {
   const raw = String(process.env.LM_STUDIO_REMOTE_URLS || '').trim();
   if (!raw) return [];
   return raw.split(',').map((s) => normalizeBaseUrl(s)).filter(Boolean);
 }
 
-function upsertNode(partial = {}) {
-  const url = normalizeBaseUrl(partial.url);
-  if (!url) return null;
+/** NAS / headless primaries often have no local LM Studio — only remotes. */
+function isRemoteOnlyMode() {
+  const local = String(
+    process.env.LM_STUDIO_URL
+    || process.env.LM_STUDIO_BASE_URL
+    || '',
+  ).trim();
+  return !local && parseRemoteUrls().length > 0;
+}
 
-  const nodeId = String(partial.node_id || partial.nodeId || partial.machine_id || url);
+function defaultHostUrl() {
+  const local = String(
+    process.env.LM_STUDIO_URL
+    || process.env.LM_STUDIO_BASE_URL
+    || '',
+  ).trim();
+  if (local) return normalizeBaseUrl(local);
+  const remotes = parseRemoteUrls();
+  if (remotes.length) return remotes[0];
+  return normalizeBaseUrl('http://127.0.0.1:1234');
+}
+
+function upsertNode(partial = {}) {
+  const url = partial.url ? normalizeBaseUrl(partial.url) : null;
+  if (!url && !partial.rpc_capable) return null;
+
+  const nodeId = String(partial.node_id || partial.nodeId || partial.machine_id || url || 'node');
   const prev = nodes.get(nodeId) || {};
   const next = {
     ...prev,
     ...partial,
     node_id: nodeId,
-    url,
+    url: url || prev.url || null,
     updated_at: new Date().toISOString(),
   };
   nodes.set(nodeId, next);
@@ -63,48 +83,77 @@ function upsertNode(partial = {}) {
 function ingestFromMachine(machine = {}) {
   if (!machine || typeof machine !== 'object') return null;
 
+  const inference = machine.inference && typeof machine.inference === 'object'
+    ? machine.inference
+    : {};
   const lm = machine.lm_studio && typeof machine.lm_studio === 'object'
     ? machine.lm_studio
     : {};
-  const url = normalizeBaseUrl(
-    lm.url
-    || machine.lm_studio_url
-    || (machine.role === 'host' ? defaultHostUrl() : null),
-  );
-  if (!url) return null;
+  const routerUrl = resolveRouterLmUrl(machine, lm)
+    || normalizeBaseUrl(
+      inference.advertise_url
+      || inference.url
+      || lm.url
+      || machine.lm_studio_url
+      || (machine.role === 'host' ? defaultHostUrl() : null),
+    );
+  const url = preferServerProbeUrl(routerUrl, machine) || routerUrl;
+  if (!url && !inference.rpc_capable) return null;
 
   const gpu = machine.gpu || {};
   const nodeId = machine.machine_id || url;
   const prev = nodes.get(nodeId) || {};
+  const reachableLocal = inference.reachable_local != null
+    ? !!inference.reachable_local
+    : (lm.reachable_local != null ? !!lm.reachable_local : !!inference.reachable || !!lm.reachable);
+  const rpcCapable = inference.rpc_capable != null
+    ? !!inference.rpc_capable
+    : (reachableLocal && machine.contributing !== false);
+
   return upsertNode({
     node_id: nodeId,
     machine_id: machine.machine_id || null,
     label: machine.label || machine.hostname || machine.machine_id || url,
     role: machine.role || 'node',
-    url,
+    url: url || prev.url || null,
     reachable: lm.reachable != null ? !!lm.reachable : (prev.reachable ?? false),
-    models: Array.isArray(lm.models) ? lm.models : prev.models,
-    main_model: lm.main_model || lm.mainModel || null,
-    fast_model: lm.fast_model || lm.fastModel || null,
+    reachable_local: reachableLocal,
+    rpc_capable: rpcCapable,
+    network_reachable: inference.network_reachable != null
+      ? !!inference.network_reachable
+      : (lm.network_reachable != null ? !!lm.network_reachable : prev.network_reachable ?? null),
+    inference_backend: inference.backend || lm.backend || prev.inference_backend || 'lmstudio',
+    models: Array.isArray(inference.models) && inference.models.length
+      ? inference.models
+      : (Array.isArray(lm.models) ? lm.models : prev.models),
+    main_model: inference.main_model || lm.main_model || lm.mainModel || null,
+    fast_model: inference.fast_model || lm.fast_model || lm.fastModel || null,
     vram_mb: Number(gpu.vram_total_mb ?? machine.vram_mb) || null,
     gpu_util: Number(gpu.utilization_percent) || null,
     cpu_percent: Number(machine.cpu_percent) || null,
     contributing: machine.contributing != null ? !!machine.contributing : true,
     source: 'fleet',
-    last_probe_at: lm.probed_at || lm.last_probe_at || null,
+    last_probe_at: inference.probed_at || lm.probed_at || lm.last_probe_at || machine.sampled_at || null,
+    heartbeat_at: machine.sampled_at || new Date().toISOString(),
   });
 }
 
 function registerBootstrap() {
-  const hostUrl = defaultHostUrl();
-  upsertNode({
-    node_id: `host-${hostUrl}`,
-    machine_id: `host-${hostUrl}`,
-    label: 'Denizen host',
-    role: 'host',
-    url: hostUrl,
-    source: 'bootstrap',
-  });
+  if (!isRemoteOnlyMode()) {
+    const hostUrl = normalizeBaseUrl(
+      process.env.LM_STUDIO_URL
+      || process.env.LM_STUDIO_BASE_URL
+      || 'http://127.0.0.1:1234',
+    );
+    upsertNode({
+      node_id: `host-${hostUrl}`,
+      machine_id: `host-${hostUrl}`,
+      label: 'Denizen host',
+      role: 'host',
+      url: hostUrl,
+      source: 'bootstrap',
+    });
+  }
 
   for (const url of parseRemoteUrls()) {
     upsertNode({
@@ -165,19 +214,25 @@ function release(nodeId) {
 }
 
 function scoreNode(node, opts = {}) {
-  if (!node?.url) return -1;
+  if (!node?.node_id) return -1;
   if (isOnCooldown(node.node_id)) return -1;
+  if (isRemoteOnlyMode() && isLoopbackUrl(node.url)) return -1;
 
   const exclude = new Set((opts.excludeNodeIds || []).map(String));
   if (exclude.has(String(node.node_id))) return -1;
 
   const probedAt = node.last_probe_at ? new Date(node.last_probe_at).getTime() : 0;
-  const probeAge = probedAt ? Date.now() - probedAt : Infinity;
-  const reachable = node.reachable !== false && probeAge < STALE_PROBE_MS * 3;
+  const heartbeatAt = node.heartbeat_at ? new Date(node.heartbeat_at).getTime() : 0;
+  const freshnessAt = Math.max(probedAt, heartbeatAt);
+  if (!freshnessAt) return -1;
 
-  if (!reachable && node.reachable === false) return -1;
+  const probeAge = Date.now() - freshnessAt;
+  const directReachable = node.reachable === true && probeAge < STALE_PROBE_MS * 3;
+  const rpcCapable = node.rpc_capable === true && node.reachable_local !== false;
+  if (!directReachable && !rpcCapable) return -1;
 
-  let score = reachable ? 80 : 40;
+  let score = directReachable ? 80 : 52;
+  if (rpcCapable && !directReachable) score += 8;
 
   score -= (Number(node.inflight) || 0) * 18;
   if (node.gpu_util != null) score -= Number(node.gpu_util) * 0.35;
@@ -190,14 +245,14 @@ function scoreNode(node, opts = {}) {
     score += Math.min(45, vram / 256);
   }
 
-  if (opts.priority === 'high' && node.role === 'host') score += 22;
+  if (opts.priority === 'high' && node.role === 'host' && !isRemoteOnlyMode()) score += 22;
 
   const queueDepth = Number(opts.queueDepth) || 0;
   if (queueDepth >= SATURATED_QUEUE_DEPTH && node.role !== 'host') {
     score += Math.min(35, queueDepth * 4);
   }
 
-  if (probeAge > STALE_PROBE_MS) score -= 12;
+  if (probeAge > STALE_PROBE_MS) score -= directReachable ? 12 : 6;
   if (node.contributing === false) score -= 25;
 
   return Math.round(score * 10) / 10;
@@ -219,9 +274,20 @@ function selectEndpoint(opts = {}) {
     .sort((a, b) => b.score - a.score);
 
   if (!ranked.length) {
+    const remotes = parseRemoteUrls();
+    const fallbackUrl = remotes[0] || defaultHostUrl();
+    if (isRemoteOnlyMode() && isLoopbackUrl(fallbackUrl) && remotes[0]) {
+      return {
+        node_id: remotes[0],
+        url: remotes[0],
+        score: 0,
+        routed: false,
+        reason: 'remote_only_fallback',
+      };
+    }
     return {
       node_id: 'fallback',
-      url: defaultHostUrl(),
+      url: fallbackUrl,
       score: 0,
       routed: false,
       reason: 'no_nodes',
@@ -262,6 +328,8 @@ function resolveProviderConfig(config, opts = {}) {
 
   const node = nodes.get(pick.node_id) || {};
   const model = pickModelForTier(node, tier, config?.model);
+  const directReachable = node.reachable === true;
+  const inferenceMode = directReachable && node.url ? 'direct' : (node.rpc_capable ? 'rpc' : 'direct');
 
   return {
     ...config,
@@ -270,6 +338,9 @@ function resolveProviderConfig(config, opts = {}) {
     _routerNodeId: pick.node_id,
     _routerScore: pick.score,
     _routerRouted: pick.routed,
+    _inferenceMode: inferenceMode,
+    _rpcCapable: !!node.rpc_capable,
+    _networkReachable: node.network_reachable != null ? !!node.network_reachable : directReachable,
   };
 }
 
@@ -303,9 +374,9 @@ async function refreshAll() {
 function anyReachable() {
   const now = Date.now();
   return listNodes().some((n) => {
-    if (n.reachable === false || isOnCooldown(n.node_id)) return false;
+    if (n.reachable !== true || isOnCooldown(n.node_id)) return false;
     const probedAt = n.last_probe_at ? new Date(n.last_probe_at).getTime() : 0;
-    if (!probedAt) return n.role === 'host';
+    if (!probedAt) return false;
     return now - probedAt < STALE_PROBE_MS * 4;
   });
 }
@@ -329,12 +400,17 @@ function buildStatus(queueDepth = 0) {
     role: n.role,
     url: n.url,
     reachable: n.reachable,
+    reachable_local: n.reachable_local,
+    rpc_capable: n.rpc_capable,
+    inference_backend: n.inference_backend || null,
+    inference_mode: n.reachable && n.url ? 'direct' : (n.rpc_capable ? 'rpc' : 'none'),
     inflight: n.inflight || 0,
     vram_mb: n.vram_mb,
     gpu_util: n.gpu_util,
     models: (n.models || []).slice(0, 6),
     main_model: n.main_model || null,
     last_probe_at: n.last_probe_at || null,
+    heartbeat_at: n.heartbeat_at || null,
     score: scoreNode(n, { tier: 'main', queueDepth }),
   }));
 
@@ -374,9 +450,15 @@ function clearRegistryForTests() {
   failureCooldown.clear();
 }
 
+function activeInferenceUrl(opts = {}) {
+  const pick = selectEndpoint(opts);
+  return pick?.url || defaultHostUrl();
+}
+
 module.exports = {
   clearRegistryForTests,
   isEnabled,
+  isRemoteOnlyMode,
   registerBootstrap,
   upsertNode,
   ingestFromMachine,
@@ -395,4 +477,6 @@ module.exports = {
   startProbeLoop,
   stopProbeLoop,
   defaultHostUrl,
+  activeInferenceUrl,
+  parseRemoteUrls,
 };

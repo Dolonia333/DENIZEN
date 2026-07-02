@@ -44,8 +44,16 @@ const AUTH_ENDPOINT     = 'https://robinhood.com/oauth';
 const TOKEN_ENDPOINT    = 'https://api.robinhood.com/oauth2/token/';
 const REGISTER_ENDPOINT = 'https://agent.robinhood.com/oauth/trading/register';
 const SCOPE             = 'internal';
-const REDIRECT_URI      = `http://localhost:${process.env.PORT || 8080}/api/market/auth/callback`;
 const DEFAULT_DENIZEN_BASE_URL = `http://localhost:${process.env.PORT || 8080}`;
+
+function getRedirectUri() {
+  if (process.env.ROBINHOOD_REDIRECT_URI) {
+    return process.env.ROBINHOOD_REDIRECT_URI.replace(/\/$/, '');
+  }
+  const base = process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL;
+  if (base) return `${String(base).replace(/\/$/, '')}/api/market/auth/callback`;
+  return `http://localhost:${process.env.PORT || 8080}/api/market/auth/callback`;
+}
 const MCP_TIMEOUT_MS    = 15000;
 
 // Default watchlist for Roki
@@ -85,19 +93,28 @@ function getAuthConnectUrl(baseUrl = DEFAULT_DENIZEN_BASE_URL) {
  * Returns the client_id.
  */
 function registerClient() {
-  const existing = getClientId();
-  if (existing) return Promise.resolve(existing);
+  const redirectUri = getRedirectUri();
+  const saved = loadOAuth();
+  if (saved.client_id && saved.registered_redirect_uri === redirectUri) {
+    return Promise.resolve(saved.client_id);
+  }
 
   return httpsPost('agent.robinhood.com', '/oauth/trading/register', {
     client_name: 'Denizen',
-    redirect_uris: [REDIRECT_URI],
+    redirect_uris: [redirectUri],
     grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code'],
     scope: SCOPE,
     token_endpoint_auth_method: 'none',
   }).then(data => {
     const clientId = data.client_id;
-    saveOAuth({ client_id: clientId });
+    saveOAuth({
+      client_id: clientId,
+      registered_redirect_uri: redirectUri,
+      pending_state: null,
+      access_token: null,
+      refresh_token: null,
+    });
     return clientId;
   });
 }
@@ -123,11 +140,11 @@ async function buildAuthUrl() {
   _pendingVerifier = verifier;
 
   const state = crypto.randomBytes(8).toString('hex');
-  saveOAuth({ pending_state: state });
+  saveOAuth({ pending_state: state, pkce_verifier: verifier });
 
   const params = new URLSearchParams({
     client_id:             clientId,
-    redirect_uri:          REDIRECT_URI,
+    redirect_uri:          getRedirectUri(),
     response_type:         'code',
     scope:                 SCOPE,
     code_challenge:        challenge,
@@ -148,7 +165,7 @@ async function handleCallback(code, state) {
     throw new Error('OAuth state mismatch — possible CSRF');
   }
 
-  const verifier = _pendingVerifier;
+  const verifier = _pendingVerifier || saved.pkce_verifier;
   if (!verifier) throw new Error('No PKCE verifier found — restart the auth flow');
 
   const clientId = getClientId();
@@ -158,7 +175,7 @@ async function handleCallback(code, state) {
     grant_type:    'authorization_code',
     code,
     client_id:     clientId,
-    redirect_uri:  REDIRECT_URI,
+    redirect_uri:  getRedirectUri(),
     code_verifier: verifier,
   }).toString();
 
@@ -171,6 +188,7 @@ async function handleCallback(code, state) {
     token_type:    data.token_type    || 'Bearer',
     authorized_at: new Date().toISOString(),
     pending_state: null,
+    pkce_verifier: null,
   });
 
   _pendingVerifier = null;
@@ -331,6 +349,43 @@ function callTool(toolName, toolArgs = {}) {
   return mcpRequest('tools/call', { name: toolName, arguments: toolArgs });
 }
 
+function unwrapToolResult(result) {
+  if (!result) return null;
+  if (result.data) return result;
+  const text = result.content?.find((c) => c.type === 'text')?.text;
+  if (!text) return result;
+  try { return JSON.parse(text); } catch (_) { return { raw: text }; }
+}
+
+async function getDefaultAccountNumber() {
+  const payload = unwrapToolResult(await callTool('get_accounts', {}));
+  const accounts = payload?.data?.accounts || [];
+  const pick = accounts.find((a) => a.is_default && a.agentic_allowed !== false)
+    || accounts.find((a) => a.agentic_allowed !== false)
+    || accounts[0];
+  if (!pick?.account_number) throw new Error('No Robinhood brokerage account found');
+  return pick.account_number;
+}
+
+function normalizeEquityQuote(entry) {
+  const quote = entry?.quote || entry || {};
+  const close = entry?.close || {};
+  const price = Number(quote.last_non_reg_trade_price || quote.last_trade_price || close.price || 0);
+  const prev = Number(quote.adjusted_previous_close || quote.previous_close || close.price || 0);
+  const change = prev ? price - prev : null;
+  return {
+    symbol: quote.symbol || close.symbol,
+    price,
+    previousClose: prev,
+    change: change == null ? null : Number(change.toFixed(4)),
+    changePercent: change == null || !prev ? null : Number(((change / prev) * 100).toFixed(2)),
+    bid: Number(quote.bid_price || 0) || null,
+    ask: Number(quote.ask_price || 0) || null,
+    marketTime: quote.venue_last_non_reg_trade_time || quote.venue_last_trade_time || null,
+    source: 'robinhood',
+  };
+}
+
 // ─── MCP session init ─────────────────────────────────────────────────────────
 
 async function initialize() {
@@ -369,9 +424,9 @@ async function getQuote(symbols) {
   if (isAuthenticated()) {
     try {
       await initialize();
-      const rh = await callTool('get_quote', { symbols: syms });
-      const items = Array.isArray(rh) ? rh : (rh?.quotes || null);
-      if (items && items.length) return items.map(q => ({ ...q, source: q.source || 'robinhood' }));
+      const rh = unwrapToolResult(await callTool('get_equity_quotes', { symbols: syms }));
+      const items = rh?.data?.results || [];
+      if (items.length) return items.map(normalizeEquityQuote);
     } catch (_) {
       // fall through to free feed
     }
@@ -381,17 +436,20 @@ async function getQuote(symbols) {
 
 async function getPortfolio() {
   await initialize();
-  return callTool('get_portfolio', {});
+  const accountNumber = await getDefaultAccountNumber();
+  return unwrapToolResult(await callTool('get_portfolio', { account_number: accountNumber }));
 }
 
 async function getPositions() {
   await initialize();
-  return callTool('get_positions', {});
+  const accountNumber = await getDefaultAccountNumber();
+  return unwrapToolResult(await callTool('get_equity_positions', { account_number: accountNumber }));
 }
 
 async function getOrderHistory(limit = 20) {
   await initialize();
-  return callTool('get_orders', { limit });
+  const accountNumber = await getDefaultAccountNumber();
+  return unwrapToolResult(await callTool('get_equity_orders', { account_number: accountNumber, limit }));
 }
 
 /**
@@ -425,11 +483,15 @@ async function runMarketObservation() {
     .slice(0, 3);
 
   const quoteSource = items[0]?.source || 'none';
+  let buyingPower = null;
+  const bpRaw = portfolio?.data?.buying_power?.buying_power ?? portfolio?.buying_power?.buying_power;
+  if (bpRaw != null && Number.isFinite(Number(bpRaw))) buyingPower = Number(bpRaw);
 
   return {
     watchlist,
     quotes: items,
     portfolio,
+    buyingPower,
     movers,
     quoteSource,                       // 'yahoo' | 'stooq' | 'robinhood' | 'none'
     robinhoodConnected: isAuthenticated(),
@@ -515,6 +577,14 @@ function loadSuggestions() {
  */
 function createSuggestion(params) {
   const suggestions = loadSuggestions();
+  let rationale = String(params.rationale || '').slice(0, 600);
+  const bp = params.buyingPower ?? params.buying_power;
+  if (bp != null && !/\$\d/.test(rationale)) {
+    const budget = Number(bp);
+    if (Number.isFinite(budget) && budget > 0) {
+      rationale = `${rationale} (Sized for ~$${budget.toFixed(2)} buying power.)`.trim();
+    }
+  }
   const entry = {
     id:           `sug_${Date.now()}_${(Math.random() * 0xffff | 0).toString(16)}`,
     at:           new Date().toISOString(),
@@ -522,7 +592,7 @@ function createSuggestion(params) {
     symbol:       (params.symbol  || '').toUpperCase(),
     action:       params.action   || 'watch',
     quantity:     params.quantity || null,
-    rationale:    (params.rationale || '').slice(0, 600),
+    rationale,
     currentPrice: params.currentPrice || null,
     targetPrice:  params.targetPrice  || null,
     status:       'suggested',
@@ -580,6 +650,7 @@ module.exports = {
   handleCallback,
   refreshToken,
   getClientId,
+  getRedirectUri,
   registerClient,
   // Watchlist
   loadWatchlist, saveWatchlist, addToWatchlist, removeFromWatchlist,

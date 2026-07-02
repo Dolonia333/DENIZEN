@@ -140,7 +140,7 @@
         position: absolute;
         inset: 0;
         background: rgba(2, 6, 23, 0.55);
-        pointer-events: auto;
+        pointer-events: none;
       }
       #${OVERLAY_ID} .su-tooltip {
         position: fixed;

@@ -239,6 +239,131 @@ async function addTicket(orgId, params = {}, identityId = null) {
   return { summary: `Created support ticket "${ticket.subject}" for ${ticket.contact}.`, ticket };
 }
 
+const STARTER_PACKAGES = [
+  {
+    id: 1,
+    name: 'Starter',
+    tier: 'starter',
+    tagline: 'Perfect for small teams',
+    color: '#6366f1',
+    icon: '🚀',
+    lineItems: [
+      { id: 1, name: 'Platform Access (5 users)', price: 299, unit: '/mo', included: true },
+      { id: 2, name: 'Basic Analytics', price: 0, unit: '', included: true },
+      { id: 3, name: 'Email Support', price: 0, unit: '', included: true },
+    ],
+    features: ['5 users', '10GB storage', 'Email support', 'Standard reports'],
+    addOns: [{ id: 1, name: 'Extra User Seat', price: 25, unit: '/mo' }],
+    bestFor: ['1-10 employees', 'Early stage'],
+  },
+  {
+    id: 2,
+    name: 'Professional',
+    tier: 'pro',
+    tagline: 'For growing teams that need more power',
+    color: '#f0b429',
+    icon: '⚡',
+    lineItems: [
+      { id: 1, name: 'Platform Access (25 users)', price: 799, unit: '/mo', included: true },
+      { id: 2, name: 'Advanced Analytics', price: 0, unit: '', included: true },
+      { id: 3, name: 'Priority Support', price: 0, unit: '', included: true },
+    ],
+    features: ['25 users', '100GB storage', 'Priority support', 'API access'],
+    addOns: [{ id: 1, name: 'Dedicated CSM', price: 199, unit: '/mo' }],
+    bestFor: ['10-50 employees', 'Growing revenue'],
+  },
+  {
+    id: 3,
+    name: 'Enterprise',
+    tier: 'enterprise',
+    tagline: 'Unlimited scale with white-glove service',
+    color: '#10b981',
+    icon: '🏢',
+    lineItems: [
+      { id: 1, name: 'Platform Access (unlimited)', price: 2499, unit: '/mo', included: true },
+      { id: 2, name: 'Full Analytics Suite', price: 0, unit: '', included: true },
+      { id: 3, name: '24/7 Dedicated Support', price: 0, unit: '', included: true },
+    ],
+    features: ['Unlimited users', '24/7 support', 'SSO', 'Dedicated CSM'],
+    addOns: [],
+    bestFor: ['50+ employees', 'Enterprise deals'],
+  },
+];
+
+async function addDeal(orgId, params = {}, identityId = null) {
+  const title = String(params.title || '').trim();
+  if (!title) throw new Error('title required');
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const deals = Array.isArray(state.deals) ? [...state.deals] : [];
+  if (deals.some((d) => String(d?.title || '').toLowerCase() === title.toLowerCase())) {
+    const existing = deals.find((d) => String(d?.title || '').toLowerCase() === title.toLowerCase());
+    return { summary: `Deal already exists: "${existing.title}"`, deal: existing };
+  }
+  const deal = {
+    id: nextId(deals),
+    title,
+    contact: String(params.contact || '').trim(),
+    value: Number(params.value) || 0,
+    stage: String(params.stage || 'Qualified'),
+    probability: Number(params.probability) || 30,
+    closeDate: String(params.closeDate || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10)),
+    daysInStage: 0,
+    health: String(params.health || 'good'),
+  };
+  deals.push(deal);
+  const next = { ...state, deals };
+  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  return { summary: `Created deal "${deal.title}" (${deal.stage}, $${deal.value}).`, deal };
+}
+
+async function updateUserProfile(orgId, params = {}, identityId = null) {
+  const name = String(params.name || params.displayName || '').trim();
+  const email = String(params.email || '').trim();
+  const title = String(params.title || params.position || '').trim();
+  if (!name && !email && !title) {
+    return { summary: 'No profile fields to update.', profile: null };
+  }
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const userPrefs = { ...(state.userPrefs || {}) };
+  const profile = { ...(userPrefs.profile || {}) };
+  if (name) profile.name = name;
+  if (email) profile.email = email;
+  if (title) profile.title = title;
+  userPrefs.profile = profile;
+  const next = { ...state, userPrefs };
+  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  return {
+    summary: `Updated CRM profile${name ? ` for ${name}` : ''}${title ? ` (${title})` : ''}.`,
+    profile,
+  };
+}
+
+async function seedStarterPackages(orgId, params = {}, identityId = null) {
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const packages = Array.isArray(state.packages) ? state.packages : [];
+  if (packages.length > 0) {
+    return { summary: `${packages.length} package(s) already configured — skipped seeding.`, packages };
+  }
+  const seeded = STARTER_PACKAGES.map((pkg, idx) => ({ ...pkg, id: idx + 1 }));
+  const next = { ...state, packages: seeded };
+  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  return { summary: `Seeded ${seeded.length} starter packages (Starter, Professional, Enterprise).`, packages: seeded };
+}
+
+async function markOnboardingFlag(orgId, flag, identityId = null) {
+  const key = String(flag || '').trim();
+  if (!key) throw new Error('flag required');
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const onboarding = state.onboarding && typeof state.onboarding === 'object'
+    ? { ...state.onboarding }
+    : {};
+  onboarding[key] = true;
+  if (key === 'triedAi') onboarding.triedAiAt = new Date().toISOString();
+  const next = { ...state, onboarding };
+  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+  return { summary: `Marked onboarding flag "${key}".`, onboarding };
+}
+
 async function listTickets(orgId, params = {}) {
   const { state } = await loadOrgWorkspace(orgId);
   const today = new Date().toISOString().slice(0, 10);
@@ -273,6 +398,7 @@ async function listTickets(orgId, params = {}) {
 module.exports = {
   listPipeline,
   addContact,
+  addDeal,
   updateDeal,
   addTask,
   listTasks,
@@ -281,5 +407,9 @@ module.exports = {
   getSetupStatus,
   addTicket,
   listTickets,
+  updateUserProfile,
+  seedStarterPackages,
+  markOnboardingFlag,
+  STARTER_PACKAGES,
   loadOrgWorkspace,
 };

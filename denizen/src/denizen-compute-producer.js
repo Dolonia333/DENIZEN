@@ -91,6 +91,27 @@ async function enqueueThinkBatch(getNpcBrains) {
   }
 }
 
+async function enqueueGrokTelemetryCheck() {
+  if (!isProducerEnabled() || !denizenDb?.enabled) return null;
+  try {
+    const job = await computeQueue.enqueueJob({
+      jobType: 'grok_telemetry_check',
+      payload: {
+        source: 'mesh_producer',
+        note: 'Run grok-mesh-telemetry-job.py to analyze and auto-enqueue consults',
+      },
+      priority: 40,
+    });
+    if (job?.id) {
+      console.log('[compute-producer] enqueued grok_telemetry_check');
+    }
+    return job;
+  } catch (err) {
+    console.warn('[compute-producer] telemetry enqueue failed:', err?.message || err);
+    return null;
+  }
+}
+
 function startMeshJobProducer(ctx = {}) {
   if (!isProducerEnabled()) {
     return { ok: false, reason: 'disabled' };
@@ -106,6 +127,10 @@ function startMeshJobProducer(ctx = {}) {
   const getNpcBrains = ctx.getNpcBrains;
   const tick = () => {
     enqueueThinkBatch(getNpcBrains).catch(() => {});
+    // Occasionally enqueue telemetry check (every ~3 ticks)
+    if (Math.random() < 0.33) {
+      enqueueGrokTelemetryCheck().catch(() => {});
+    }
   };
 
   const initialDelayMs = Math.min(60_000, intervalMs);

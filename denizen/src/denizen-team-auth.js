@@ -3,7 +3,7 @@
 const denizenDb = require('./denizen-db.js');
 const denizenVisitor = require('./denizen-visitor.js');
 const promptTuning = require('./prompt-tuning.js');
-const { createAccessGrant } = require('./visitor-session-auth.js');
+const { createAccessGrant, createCeoGrant } = require('./visitor-session-auth.js');
 const { verifyAccessCode } = require('./visitor-access.js');
 const userIdentity = require('./denizen-user-identity.js');
 const { hashPassword, verifyPassword, assertPasswordMinLength } = require('./denizen-team-password.js');
@@ -86,6 +86,7 @@ async function orgHasSkillApprover(orgId) {
 
 async function resolveTeamMemberRole(email, orgId) {
   if (isConfiguredOwnerEmail(email)) return 'owner';
+  if (configuredOwnerEmail()) return 'member';
   const hasApprover = await orgHasSkillApprover(orgId);
   return hasApprover ? 'member' : 'owner';
 }
@@ -140,18 +141,27 @@ function assertPassword(account, password) {
   if (pass) return;
 }
 
+function isTeamOwnerAccount(account) {
+  if (!account) return false;
+  if (isConfiguredOwnerEmail(account.email)) return true;
+  return String(account.role || '').toLowerCase() === 'owner';
+}
+
 async function sessionBundle(account, org, accessMethod, source) {
+  const isOwner = isTeamOwnerAccount(account);
+  const grantAccessMethod = isOwner ? 'owner_login' : accessMethod;
+
   const access_grant = createAccessGrant({
     tier: 'team',
     orgSlug: org.slug,
-    accessMethod,
+    accessMethod: grantAccessMethod,
     email: account.email,
   });
 
   const identity = await userIdentity.upsertIdentity({
     email: account.email,
     displayName: account.display_name,
-    tier: 'team',
+    tier: isOwner ? 'ceo' : 'team',
     orgId: org.id,
     orgSlug: org.slug,
     source,
@@ -159,13 +169,20 @@ async function sessionBundle(account, org, accessMethod, source) {
     updateDisplayName: accessMethod !== 'website_login',
   });
 
+  if (isOwner && identity?.id) {
+    userIdentity.markCeoPrincipal(identity.id);
+  }
+
   return {
     account,
     org_slug: org.slug,
-    tier: 'team',
+    tier: isOwner ? 'ceo' : 'team',
     access_grant,
+    ceo_grant: isOwner ? createCeoGrant() : null,
     display_name: account.display_name,
     identity: userIdentity.toClientIdentity(identity),
+    team_role: account.role || null,
+    is_owner: isOwner,
   };
 }
 
@@ -404,8 +421,96 @@ async function getTeamAccountForSession(sessionId) {
   return byEmail?.[0] || null;
 }
 
+async function resolveCeoPrincipalForSession(sessionId, { session = null, access = null } = {}) {
+  const resolvedSession = session || access?.session || null;
+  const meta = resolvedSession?.metadata && typeof resolvedSession.metadata === 'object'
+    ? resolvedSession.metadata
+    : {};
+  const sessionTier = String(access?.tier || meta.tier || '').toLowerCase();
+  const accessMethod = String(meta.access_method || '').toLowerCase();
+  if (
+    sessionTier === 'demo'
+    || accessMethod === 'demo'
+    || accessMethod === 'demo_login'
+  ) {
+    return { ceo: false, tier: 'demo', source: null };
+  }
+
+  if (
+    meta.is_ceo_principal === true
+    || meta.access_method === 'ceo'
+    || meta.access_method === 'owner_login'
+    || meta.access_method === 'ceo_code'
+    || access?.tier === 'ceo'
+    || meta.tier === 'ceo'
+  ) {
+    return { ceo: true, tier: 'ceo', source: 'session' };
+  }
+
+  const account = await getTeamAccountForSession(sessionId);
+  if (isTeamOwnerAccount(account)) {
+    return { ceo: true, tier: 'ceo', source: 'team_owner', email: account.email || null };
+  }
+
+  try {
+    const userIdentity = require('./denizen-user-identity');
+    const identity = await userIdentity.getIdentityBySession(sessionId);
+    const idMeta = identity?.metadata && typeof identity.metadata === 'object'
+      ? identity.metadata
+      : {};
+    if (
+      identity?.tier === 'ceo'
+      || idMeta.is_ceo_principal === true
+      || isConfiguredOwnerEmail(identity?.email_normalized || identity?.email)
+    ) {
+      return {
+        ceo: true,
+        tier: 'ceo',
+        source: 'identity',
+        email: identity?.email_normalized || identity?.email || null,
+      };
+    }
+  } catch (_) {}
+
+  return {
+    ceo: false,
+    tier: access?.tier || meta.tier || 'team',
+    source: null,
+  };
+}
+
+async function maybeUpgradeSessionCeoPrincipal(sessionId, session = null) {
+  if (!sessionId || !denizenDb.enabled) return null;
+  const existing = session || await denizenVisitor.getSession(sessionId).catch(() => null);
+  if (!existing?.id) return null;
+
+  const principal = await resolveCeoPrincipalForSession(sessionId, { session: existing });
+  if (!principal.ceo || existing.metadata?.is_ceo_principal) return principal;
+  const meta = existing.metadata && typeof existing.metadata === 'object' ? existing.metadata : {};
+  const sessionTier = String(meta.tier || '').toLowerCase();
+  const accessMethod = String(meta.access_method || '').toLowerCase();
+  if (sessionTier === 'demo' || accessMethod === 'demo' || accessMethod === 'demo_login') {
+    return principal;
+  }
+
+  const metadata = {
+    ...(existing.metadata && typeof existing.metadata === 'object' ? existing.metadata : {}),
+    is_ceo_principal: true,
+    tier: 'ceo',
+    access_method: 'ceo',
+  };
+  await denizenVisitor.createOrUpdateSession({
+    sessionId,
+    metadata,
+  }).catch(() => null);
+
+  return principal;
+}
+
 async function canApproveSkillsForSession(sessionId, { isCeoPrincipal = false } = {}) {
   if (isCeoPrincipal) return { allowed: true, role: 'ceo' };
+  const principal = await resolveCeoPrincipalForSession(sessionId);
+  if (principal.ceo) return { allowed: true, role: 'ceo' };
   const account = await getTeamAccountForSession(sessionId);
   if (!account) return { allowed: false, role: null };
   return {
@@ -434,15 +539,27 @@ async function linkAccountToSession(email, sessionId, displayName) {
     { visitor_session_id: sessionId },
     { prefer: 'return=minimal' },
   ).catch(() => {});
-  return userIdentity.resolveIdentityForSession({
+
+  const accountRows = await denizenDb._get(
+    `denizen_team_accounts?select=*&org_id=eq.${encodeURIComponent(org.id)}&email=eq.${encodeURIComponent(normalizedEmail)}&limit=1`,
+  ).catch(() => []);
+  const account = accountRows?.[0] || null;
+  const isOwner = isTeamOwnerAccount(account);
+  if (account) await ensureOwnerRoleIfConfigured(account, org.id);
+
+  const identity = await userIdentity.resolveIdentityForSession({
     email: normalizedEmail,
     displayName,
-    tier: 'team',
+    tier: isOwner ? 'ceo' : 'team',
     orgId: org.id,
     orgSlug: org.slug,
     source: 'website_login',
     sessionId,
   }).catch(() => null);
+  if (isOwner && identity?.id) {
+    userIdentity.markCeoPrincipal(identity.id);
+  }
+  return identity;
 }
 
 module.exports = {
@@ -460,6 +577,9 @@ module.exports = {
   roleCanApproveSkills,
   configuredOwnerEmail,
   isConfiguredOwnerEmail,
+  isTeamOwnerAccount,
+  resolveCeoPrincipalForSession,
+  maybeUpgradeSessionCeoPrincipal,
   resolveTeamMemberRole,
   orgHasSkillApprover,
   APPROVER_ROLES,

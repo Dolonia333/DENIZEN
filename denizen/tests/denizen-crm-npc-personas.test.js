@@ -27,9 +27,26 @@ describe('denizen-crm-npc-personas', () => {
     assert.equal(plan?.skill, 'crm-list-pipeline');
   });
 
+  it('infers setup wizard for full setup requests', () => {
+    const plan = inferCrmAction('set up our CRM completely for the team');
+    assert.equal(plan?.skill, 'crm-setup-wizard');
+    assert.equal(plan?.params?.mode, 'interactive');
+  });
+
   it('infers setup status for onboarding questions', () => {
     const plan = inferCrmAction('help me set up our CRM');
     assert.equal(plan?.skill, 'crm-setup-status');
+  });
+
+  it('infers add deal for new deal requests', () => {
+    const plan = inferCrmAction('create a deal for Acme Annual Contract');
+    assert.equal(plan?.skill, 'crm-add-deal');
+  });
+
+  it('infers continue for resume setup', () => {
+    const plan = inferCrmAction('continue CRM setup');
+    assert.equal(plan?.skill, 'crm-setup-wizard');
+    assert.equal(plan?.params?.mode, 'continue');
   });
 
   it('infers industry list when vertical is ambiguous', () => {
@@ -68,6 +85,19 @@ describe('player-chat-skill-bridge CRM routing', () => {
   it('allows Lucy to add contacts', () => {
     const plan = inferSkillFromMessage('Lucy', 'add contact Jane Doe jane@acme.com');
     assert.equal(plan?.skill, 'crm-add-contact');
+  });
+
+  it('infers add contact from enter name into CRM phrasing', () => {
+    const plan = inferCrmAction('enter John Smith into the CRM');
+    assert.equal(plan?.skill, 'crm-add-contact');
+    assert.equal(plan?.params?.name, 'John Smith');
+  });
+
+  it('classifies CRM data entry intent', () => {
+    const { isCrmDataEntryIntent, inferCrmWriteAction } = require('../src/denizen-crm-npc-personas');
+    assert.equal(isCrmDataEntryIntent('enter Jane Doe into the CRM'), true);
+    assert.equal(inferCrmWriteAction('enter Jane Doe into the CRM')?.skill, 'crm-add-contact');
+    assert.equal(isCrmDataEntryIntent('search remote jobs'), false);
   });
 });
 

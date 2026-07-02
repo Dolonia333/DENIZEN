@@ -11,12 +11,8 @@
     { "instanceId": "wall_perim_right", "type": "v", "label": "Perimeter right", "x": 1248, "startY": 64, "endY": 656, "shadowSide": "left" },
     { "instanceId": "wall_tj_div_top", "type": "tjunction", "label": "Divider ∩ top", "x": 848, "y": 0, "side": "right" },
     { "instanceId": "wall_tj_div_bot", "type": "tjunction", "label": "Divider ∩ bottom", "x": 848, "y": 656, "side": "right" },
-    { "instanceId": "wall_div_v_top", "type": "v", "label": "Center divider (top)", "x": 848, "startY": 64, "endY": 160, "shadowSide": "right" },
-    { "instanceId": "wall_div_v_mid", "type": "v", "label": "Center divider (mid)", "x": 848, "startY": 256, "endY": 416, "shadowSide": "right" },
-    { "instanceId": "wall_div_v_bot", "type": "v", "label": "Center divider (bot)", "x": 848, "startY": 512, "endY": 656, "shadowSide": "right" },
-    { "instanceId": "wall_div_h_left_a", "type": "h", "label": "Break room wall (left)", "startX": 0, "y": 448, "endX": 288 },
-    { "instanceId": "wall_div_h_left_b", "type": "h", "label": "Break room wall (right)", "startX": 384, "y": 448, "endX": 848 },
-    { "instanceId": "wall_div_h_right_a", "type": "h", "label": "Manager wall (left)", "startX": 848, "y": 256, "endX": 1000 },
-    { "instanceId": "wall_div_h_right_b", "type": "h", "label": "Manager wall (right)", "startX": 1096, "y": 256, "endX": 1280 }
+    { "instanceId": "wall_div_v_center", "type": "v", "label": "Center divider (manager + conference doors)", "x": 848, "startY": 64, "endY": 656, "shadowSide": "right", "doorGaps": [[160, 256], [328, 424]] },
+    { "instanceId": "wall_div_h_south", "type": "h", "label": "South divider (breakroom + reception doors)", "startX": 0, "y": 448, "endX": 848, "doorGaps": [[288, 384], [560, 656]] },
+    { "instanceId": "wall_div_h_right", "type": "h", "label": "CEO office ↔ meeting room", "startX": 848, "y": 256, "endX": 1280, "doorGaps": [[1000, 1096]] }
   ]
 }

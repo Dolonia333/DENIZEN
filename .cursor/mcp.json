@@ -3,6 +3,16 @@
     "supabase-local": {
       "type": "http",
       "url": "http://127.0.0.1:54321/mcp?features=database,development,debugging,docs"
+    },
+    "denizen-ui-inspect": {
+      "command": "node",
+      "args": [
+        "C:/Users/zionv/OneDrive/Desktop/multbot/denizen/mcp-ui-inspect/start.cjs"
+      ]
+    },
+    "robinhood-trading": {
+      "type": "http",
+      "url": "https://agent.robinhood.com/mcp/trading"
     }
   }
 }

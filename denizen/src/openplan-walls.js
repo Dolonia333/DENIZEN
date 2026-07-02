@@ -39,6 +39,77 @@
     return shadowSide === 'left' ? 'right' : 'left';
   }
 
+  function drawDoorOpening(scene, x0, x1, y) {
+    const w = x1 - x0;
+    if (w < T) return [];
+    const objs = [];
+    // Lintel across the opening (matches horizontal wall trim)
+    objs.push(...drawTopTrim(scene, x0 + w / 2, y, w));
+    // Side jambs (visual only — no physics; NPCs walk through the opening)
+    const jambH = BAND_H;
+    const faceH = BAND_H - TRIM_H;
+    objs.push(scene.add.rectangle(x0 + TRIM_W / 2, y + jambH / 2, TRIM_W, jambH, TRIM, 1).setDepth(5));
+    objs.push(scene.add.rectangle(x1 - TRIM_W / 2, y + jambH / 2, TRIM_W, jambH, TRIM, 1).setDepth(5));
+    objs.push(scene.add.tileSprite(x0 + T / 2, y + TRIM_H + faceH / 2, T, faceH, 'wall_face_v').setDepth(3));
+    objs.push(scene.add.tileSprite(x1 - T / 2, y + TRIM_H + faceH / 2, T, faceH, 'wall_face_v').setDepth(3));
+    return objs;
+  }
+
+  function drawHWallWithGaps(scene, startX, y, endX, doorGaps, obstacles) {
+    const gaps = (doorGaps || [])
+      .map((g) => [Math.max(startX, g[0]), Math.min(endX, g[1])])
+      .filter(([a, b]) => b - a >= T)
+      .sort((a, b) => a[0] - b[0]);
+    let cursor = startX;
+    const all = [];
+    for (const [gx0, gx1] of gaps) {
+      if (gx0 > cursor) all.push(...drawHWall(scene, cursor, y, gx0, obstacles));
+      all.push(...drawDoorOpening(scene, gx0, gx1, y));
+      cursor = gx1;
+    }
+    if (endX > cursor) all.push(...drawHWall(scene, cursor, y, endX, obstacles));
+    return all;
+  }
+
+  function drawDoorOpeningV(scene, y0, y1, x, shadowSide) {
+    const h = y1 - y0;
+    if (h < T) return [];
+    const objs = [];
+    const back = vBackSide(shadowSide || 'right');
+    const faceW = T - TRIM_W;
+    const faceX = back === 'left' ? x + TRIM_W + faceW / 2 : x + faceW / 2;
+
+    // Top/bottom jambs — same trim language as horizontal door side posts
+    objs.push(scene.add.rectangle(faceX, y0 + TRIM_H / 2, faceW, TRIM_H, TRIM, 1).setDepth(5));
+    objs.push(scene.add.rectangle(faceX, y1 - TRIM_H / 2, faceW, TRIM_H, TRIM, 1).setDepth(5));
+    objs.push(...drawBackTrimV(scene, x, y0, TRIM_H, back));
+    objs.push(...drawBackTrimV(scene, x, y1 - TRIM_H, TRIM_H, back));
+
+    const openH = Math.max(T, h - TRIM_H * 2);
+    const midY = y0 + TRIM_H + openH / 2;
+    objs.push(scene.add.tileSprite(x + TRIM_W / 2, midY, TRIM_W, openH, 'wall_face_v').setDepth(3));
+    objs.push(scene.add.tileSprite(x + T - TRIM_W / 2, midY, TRIM_W, openH, 'wall_face_v').setDepth(3));
+    return objs;
+  }
+
+  function drawVWallWithGaps(scene, x, startY, endY, doorGaps, shadowSide, obstacles) {
+    const y0 = Math.min(startY, endY);
+    const y1 = Math.max(startY, endY);
+    const gaps = (doorGaps || [])
+      .map((g) => [Math.max(y0, g[0]), Math.min(y1, g[1])])
+      .filter(([a, b]) => b - a >= T)
+      .sort((a, b) => a[0] - b[0]);
+    let cursor = y0;
+    const all = [];
+    for (const [gy0, gy1] of gaps) {
+      if (gy0 > cursor) all.push(...drawVWall(scene, x, cursor, gy0, shadowSide, obstacles));
+      all.push(...drawDoorOpeningV(scene, gy0, gy1, x, shadowSide));
+      cursor = gy1;
+    }
+    if (y1 > cursor) all.push(...drawVWall(scene, x, cursor, y1, shadowSide, obstacles));
+    return all;
+  }
+
   function drawHWall(scene, startX, y, endX, obstacles) {
     const w = endX - startX;
     if (w <= 0) return [];
@@ -122,9 +193,17 @@
     const data = { ...seg };
     let visuals = [];
     if (data.type === 'h') {
-      visuals = drawHWall(scene, data.startX, data.y, data.endX, obstacles);
+      if (Array.isArray(data.doorGaps) && data.doorGaps.length) {
+        visuals = drawHWallWithGaps(scene, data.startX, data.y, data.endX, data.doorGaps, obstacles);
+      } else {
+        visuals = drawHWall(scene, data.startX, data.y, data.endX, obstacles);
+      }
     } else if (data.type === 'v') {
-      visuals = drawVWall(scene, data.x, data.startY, data.endY, data.shadowSide || 'right', obstacles);
+      if (Array.isArray(data.doorGaps) && data.doorGaps.length) {
+        visuals = drawVWallWithGaps(scene, data.x, data.startY, data.endY, data.doorGaps, data.shadowSide || 'right', obstacles);
+      } else {
+        visuals = drawVWall(scene, data.x, data.startY, data.endY, data.shadowSide || 'right', obstacles);
+      }
     } else if (data.type === 'corner') {
       visuals = drawBoxCorner(scene, data.x, data.y, data.role || 'tr', obstacles);
     } else if (data.type === 'tjunction') {

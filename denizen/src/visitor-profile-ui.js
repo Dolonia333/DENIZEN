@@ -18,6 +18,9 @@
   let activeTab = 'overview';
   let deepProfile = null;
   let settingsCache = null;
+  let positionCache = null;
+  let positionDraft = null;
+  let positionSuggestions = [];
   let statusTimer = null;
 
   function getSessionApi() {
@@ -50,6 +53,11 @@
     const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
     try {
       return await fetch(url, { ...opts, signal: ctrl.signal });
+    } catch (err) {
+      if (err?.name === 'AbortError') {
+        throw new Error('Request timed out — server may be slow or offline.');
+      }
+      throw err;
     } finally {
       clearTimeout(timer);
     }
@@ -155,6 +163,32 @@
         padding: 6px 8px;
       }
       .prof-field textarea { min-height: 56px; resize: vertical; }
+      .prof-position-card {
+        margin-top: 6px;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: rgba(15, 23, 42, 0.55);
+      }
+      .prof-position-summary {
+        font-size: 10px;
+        color: #cbd5e1;
+        line-height: 1.45;
+        margin: 6px 0;
+      }
+      .prof-position-list {
+        margin: 4px 0 0;
+        padding-left: 16px;
+        font-size: 9px;
+        color: #94a3b8;
+        line-height: 1.4;
+      }
+      .prof-position-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
       .prof-chip-list {
         display: flex;
         flex-wrap: wrap;
@@ -224,6 +258,90 @@
       html.denizen-phone #denizen-mobile-drawer-body .prof-header-name {
         font-size: 16px;
       }
+      html.denizen-phone #denizen-mobile-drawer-body #denizen-account-panel .prof-tabs,
+      html.denizen-phone #denizen-mobile-drawer-body #denizen-account-panel .prof-panel,
+      html.denizen-phone #denizen-mobile-drawer-body #denizen-account-panel .prof-header {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      html.denizen-phone #denizen-mobile-drawer-body #denizen-account-panel .prof-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      html.denizen-phone #denizen-mobile-drawer-body #denizen-account-panel .prof-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-tab {
+        flex: 0 0 auto;
+        font-size: 10px;
+        padding: 6px 11px;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-header-name {
+        font-size: 15px;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-row .prof-btn {
+        align-self: stretch;
+        text-align: center;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .acct-stat-row {
+        gap: 6px;
+      }
+      .prof-mcp-card {
+        margin-bottom: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(96, 165, 250, 0.35);
+        background: rgba(30, 58, 138, 0.15);
+      }
+      .prof-mcp-card .prof-hint { color: #93c5fd; }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .acct-stat-val {
+        max-width: 55%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-header-name {
+        font-size: 16px;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-tab {
+        font-size: 11px;
+        padding: 7px 12px;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel[data-dzp-docked="1"] .prof-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin-bottom: 6px;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel[data-dzp-docked="1"] .prof-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel[data-dzp-docked="1"] .prof-tab {
+        flex: 0 0 auto;
+        font-size: 9px;
+        padding: 5px 9px;
+        letter-spacing: 0.03em;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-field input,
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #denizen-account-panel .prof-field textarea {
+        font-size: 12px;
+      }
     `;
     document.head.appendChild(s);
   }
@@ -246,7 +364,13 @@
     const name = profile?.displayName || 'Guest';
     const email = profile?.email || '';
     const tier = profile?.tier || 'guest';
-    const meta = email || (profile?.demoUsername ? `@${profile.demoUsername}` : 'Not signed in');
+    const positionTitle = profile?.workPosition?.title || positionCache?.title || '';
+    const metaParts = [];
+    if (positionTitle) metaParts.push(positionTitle);
+    if (email) metaParts.push(email);
+    else if (profile?.demoUsername) metaParts.push(`@${profile.demoUsername}`);
+    else if (!positionTitle) metaParts.push('Not signed in');
+    const meta = metaParts.join(' · ');
     return `
       <div class="prof-header">
         <div class="prof-avatar" style="background:${tierAccent(tier)}">${escapeHtml(initials(name))}</div>
@@ -281,6 +405,23 @@
     `).join('')}</div>`;
   }
 
+  function renderConnectExtras(rootEl) {
+    const panel = rootEl.querySelector('#prof-panel-connect');
+    if (!panel || panel.querySelector('#prof-mcp-connect')) return;
+    const card = document.createElement('div');
+    card.id = 'prof-mcp-connect';
+    card.className = 'prof-mcp-card';
+    card.innerHTML = `
+      <div class="prof-section-title">External AI (MCP)</div>
+      <div class="prof-hint">Connect Cursor, ChatGPT, or Claude to your Denizen NPC tools.</div>
+      <button type="button" class="prof-btn secondary" id="prof-open-mcp">Connect MCP</button>
+    `;
+    panel.insertBefore(card, panel.firstChild);
+    card.querySelector('#prof-open-mcp')?.addEventListener('click', () => {
+      globalThis.DenizenVisitorMcpConnectUI?.openConnect?.();
+    });
+  }
+
   function mountShell(rootEl, profile) {
     injectStyles();
     if (!rootEl.querySelector('#prof-shell')) {
@@ -310,12 +451,14 @@
         rootEl.appendChild(shell);
       }
       bindTabHandlers(rootEl);
+      renderConnectExtras(rootEl);
     } else {
       const header = rootEl.querySelector('.prof-header');
       if (header) header.outerHTML = renderHeader(profile);
       const tabs = rootEl.querySelector('.prof-tabs');
       if (tabs) tabs.outerHTML = renderTabs();
       bindTabHandlers(rootEl);
+      renderConnectExtras(rootEl);
     }
     syncTabPanels(rootEl);
   }
@@ -343,6 +486,21 @@
     });
   }
 
+  function renderPositionPreview(position) {
+    if (!position?.title) {
+      return '<div class="prof-hint" id="prof-position-preview">Type a title and click Understand role — Denizen will learn how that job typically works.</div>';
+    }
+    const resp = Array.isArray(position.responsibilities) ? position.responsibilities.slice(0, 4) : [];
+    return `
+      <div class="prof-position-card" id="prof-position-preview">
+        <div class="prof-section-title">How Denizen sees this role</div>
+        <div class="prof-position-summary">${escapeHtml(position.summary || '')}</div>
+        ${resp.length ? `<ul class="prof-position-list">${resp.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}</ul>` : ''}
+        ${position.how_to_help ? `<div class="prof-hint" style="margin-top:6px">${escapeHtml(position.how_to_help)}</div>` : ''}
+      </div>
+    `;
+  }
+
   function renderIdentityPanel(rootEl) {
     const panel = rootEl.querySelector('#prof-panel-identity');
     if (!panel) return;
@@ -350,9 +508,14 @@
     const profile = api?.getProfile?.() || {};
     const hasPassword = !!settingsCache?.has_demo_account || profile.tier === 'team';
     const minPass = getSessionApi()?.getMinPasswordLength?.() || 6;
+    const position = positionDraft || positionCache || profile.workPosition || null;
+    const suggestions = positionSuggestions.length ? positionSuggestions : [
+      'CEO', 'Product Manager', 'Software Engineer', 'Designer', 'Executive Assistant', 'Intern',
+    ];
+    const datalistOptions = suggestions.map((s) => `<option value="${escapeHtml(s)}"></option>`).join('');
     panel.innerHTML = `
       <div class="prof-section-title">Your identity</div>
-      <div class="prof-hint">Name and email sync across Denizen, CRM header, and team roster.</div>
+      <div class="prof-hint">Who you are — name, email, and the work you do. Overview shows your account ID (tier, server, credits).</div>
       <div class="prof-field">
         <label for="prof-display-name">Display name</label>
         <input type="text" id="prof-display-name" maxlength="200" value="${escapeHtml(profile.displayName || '')}" />
@@ -362,6 +525,21 @@
         <input type="email" id="prof-email" maxlength="320" value="${escapeHtml(profile.email || settingsCache?.email || '')}" placeholder="you@company.com" />
       </div>
       <button type="button" class="prof-btn" id="prof-save-identity">Save identity</button>
+
+      <div class="prof-section-title" style="margin-top:12px">Work position</div>
+      <div class="prof-hint">Type any title — Product Manager, CEO, Intern, Assistant. Denizen searches what that role means so NPCs know how to help you.</div>
+      <div class="prof-field">
+        <label for="prof-position-title">Position title</label>
+        <input type="text" id="prof-position-title" maxlength="120" list="prof-position-suggestions"
+          value="${escapeHtml(position?.title || '')}" placeholder="e.g. Product Manager" />
+        <datalist id="prof-position-suggestions">${datalistOptions}</datalist>
+      </div>
+      <div class="prof-position-actions">
+        <button type="button" class="prof-btn secondary" id="prof-resolve-position">Understand role</button>
+        <button type="button" class="prof-btn" id="prof-save-position">Save position</button>
+      </div>
+      ${renderPositionPreview(position)}
+
       ${hasPassword ? `
         <div class="prof-section-title" style="margin-top:10px">Security</div>
         <div class="prof-hint">Change the password you use to log back into this account.</div>
@@ -380,6 +558,12 @@
     `;
     panel.querySelector('#prof-save-identity')?.addEventListener('click', () => {
       saveIdentity(rootEl).catch((err) => setStatus(rootEl, err?.message || 'Save failed', true));
+    });
+    panel.querySelector('#prof-resolve-position')?.addEventListener('click', () => {
+      resolvePosition(rootEl).catch((err) => setStatus(rootEl, err?.message || 'Could not understand role', true));
+    });
+    panel.querySelector('#prof-save-position')?.addEventListener('click', () => {
+      savePosition(rootEl).catch((err) => setStatus(rootEl, err?.message || 'Save position failed', true));
     });
     panel.querySelector('#prof-save-password')?.addEventListener('click', () => {
       savePassword(rootEl).catch((err) => setStatus(rootEl, err?.message || 'Password update failed', true));
@@ -462,28 +646,124 @@
     const api = getSessionApi();
     const sid = api?.getSessionId?.();
     if (!sid) return null;
-    const res = await fetchWithTimeout(
-      `/api/visitor/settings?session_id=${encodeURIComponent(sid)}`,
-      { headers: api.authHeaders?.() || {} },
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    settingsCache = data.settings || {};
-    return settingsCache;
+    try {
+      const res = await fetchWithTimeout(
+        `/api/visitor/settings?session_id=${encodeURIComponent(sid)}`,
+        { headers: api.authHeaders?.() || {} },
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      settingsCache = data.settings || {};
+      return settingsCache;
+    } catch (err) {
+      console.warn('[DenizenProfileUI] loadSettings failed:', err?.message || err);
+      return null;
+    }
   }
 
   async function loadDeepProfile() {
     const api = getSessionApi();
     const sid = api?.getSessionId?.();
     if (!sid) return null;
-    const res = await fetchWithTimeout(
-      `/api/visitor/profile?session_id=${encodeURIComponent(sid)}`,
-      { headers: api.authHeaders?.() || {} },
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    deepProfile = data.profile || { preferences: [], vips: [] };
-    return deepProfile;
+    try {
+      const res = await fetchWithTimeout(
+        `/api/visitor/profile?session_id=${encodeURIComponent(sid)}`,
+        { headers: api.authHeaders?.() || {} },
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      deepProfile = data.profile || { preferences: [], vips: [] };
+      return deepProfile;
+    } catch (err) {
+      console.warn('[DenizenProfileUI] loadDeepProfile failed:', err?.message || err);
+      deepProfile = deepProfile || { preferences: [], vips: [] };
+      return deepProfile;
+    }
+  }
+
+  async function loadPosition() {
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid) return null;
+    try {
+      const res = await fetchWithTimeout(
+        `/api/visitor/position?session_id=${encodeURIComponent(sid)}`,
+        { headers: api.authHeaders?.() || {} },
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      positionCache = data.position || null;
+      positionSuggestions = Array.isArray(data.suggestions) ? data.suggestions : positionSuggestions;
+      if (positionCache?.title && api?.applyProfilePatch) {
+        api.applyProfilePatch({ workPosition: positionCache });
+      }
+      return positionCache;
+    } catch (err) {
+      console.warn('[DenizenProfileUI] loadPosition failed:', err?.message || err);
+      return null;
+    }
+  }
+
+  async function resolvePosition(rootEl) {
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid) throw new Error('Not signed in');
+    const title = rootEl.querySelector('#prof-position-title')?.value?.trim();
+    if (!title) throw new Error('Enter a position title first');
+    setStatus(rootEl, 'Understanding role…');
+    const res = await fetchWithTimeout('/api/visitor/position/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(api.authHeaders?.() || {}) },
+      body: JSON.stringify({ session_id: sid, title }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    positionDraft = data.position || null;
+    const preview = rootEl.querySelector('#prof-position-preview');
+    if (preview) {
+      preview.outerHTML = renderPositionPreview(positionDraft);
+    }
+    setStatus(rootEl, positionDraft?.source === 'llm' ? 'Role understood (AI)' : 'Role understood');
+  }
+
+  async function savePosition(rootEl) {
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid) throw new Error('Not signed in');
+    const title = rootEl.querySelector('#prof-position-title')?.value?.trim();
+    if (!title) throw new Error('Enter a position title first');
+    setStatus(rootEl, 'Saving position…');
+    const res = await fetchWithTimeout('/api/visitor/position', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(api.authHeaders?.() || {}) },
+      body: JSON.stringify({
+        session_id: sid,
+        title,
+        profile: positionDraft?.title === title ? positionDraft : undefined,
+        resolve: !positionDraft || positionDraft.title !== title,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    positionCache = data.position || null;
+    positionDraft = null;
+    if (typeof api.applyProfilePatch === 'function') {
+      api.applyProfilePatch({ workPosition: positionCache });
+    }
+    const preview = rootEl.querySelector('#prof-position-preview');
+    if (preview) {
+      preview.outerHTML = renderPositionPreview(positionCache);
+    }
+    const metaEl = rootEl.querySelector('#prof-header-meta');
+    const profile = api.getProfile?.() || {};
+    if (metaEl) {
+      const parts = [];
+      if (profile.workPosition?.title) parts.push(profile.workPosition.title);
+      if (profile.email) parts.push(profile.email);
+      metaEl.textContent = parts.join(' · ') || metaEl.textContent;
+    }
+    globalThis.DenizenAccountPanel?.renderProfile?.();
+    setStatus(rootEl, 'Position saved — NPCs will tailor help to your role');
   }
 
   async function saveIdentity(rootEl) {
@@ -559,7 +839,12 @@
   async function mount(rootEl, profile, { expandTab } = {}) {
     if (expandTab) activeTab = expandTab;
     mountShell(rootEl, profile);
-    await Promise.all([loadSettings(), loadDeepProfile()]);
+    try {
+      await Promise.all([loadSettings(), loadDeepProfile(), loadPosition()]);
+    } catch (err) {
+      console.warn('[DenizenProfileUI] mount failed:', err?.message || err);
+      setStatus(rootEl, 'Some profile data could not load. You can still edit below.', true);
+    }
     renderIdentityPanel(rootEl);
     if (activeTab === 'memory') renderMemoryPanel(rootEl);
   }

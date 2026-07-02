@@ -9,6 +9,14 @@ function canRemediate(npcName) {
   return DEVOPS_NPCS.has(String(npcName || ''));
 }
 
+function resolveLmStudioUrl() {
+  const direct = String(process.env.LM_STUDIO_URL || '').replace(/\/v1\/?$/, '').trim();
+  if (direct) return direct;
+  const remote = String(process.env.LM_STUDIO_REMOTE_URLS || '').split(',')[0].trim().replace(/\/v1\/?$/, '');
+  if (remote) return remote;
+  return 'http://127.0.0.1:1234';
+}
+
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
@@ -38,16 +46,26 @@ async function check({ scope = 'full', deps = {} } = {}) {
   }
 
   if (scope === 'lm-studio' || scope === 'lm' || scope === 'full') {
-    const lm = await probeLmStudio(process.env.LM_STUDIO_URL?.replace(/\/v1\/?$/, '') || 'http://127.0.0.1:1234');
-    sections.lm_studio = lm;
+    const lmUrl = resolveLmStudioUrl();
+    const lm = await probeLmStudio(lmUrl);
+    sections.lm_studio = { ...lm, url: lmUrl };
     if (!lm.reachable) issues.push('lm_studio_unreachable');
   }
 
   if (scope === 'mesh' || scope === 'full') {
     const pending = computeQueue ? await computeQueue.listPendingJobs(50).catch(() => []) : [];
     const assigned = computeQueue ? await computeQueue.listAssignedJobs(50).catch(() => []) : [];
-    const fleet = fleetRegistry?.buildFleetSummary?.(null)?.fleet || [];
-    const staleNodes = fleet.filter((m) => m.stale || m.reachable === false);
+    const fleet = fleetRegistry?.listAllFleetMachines?.()
+      || fleetRegistry?.buildFleetSummary?.(null)?.fleet
+      || [];
+    const staleNodes = fleet.filter((m) => {
+      if (m.stale) return true;
+      if (m.reachable !== false) return false;
+      const inf = m.inference && typeof m.inference === 'object' ? m.inference : {};
+      const lm = m.lm_studio && typeof m.lm_studio === 'object' ? m.lm_studio : {};
+      const rpcOk = (inf.rpc_capable || lm.rpc_capable) && (inf.reachable_local ?? lm.reachable_local);
+      return !rpcOk;
+    });
     sections.mesh = {
       queue_pending: pending.length,
       queue_assigned: assigned.length,
@@ -213,4 +231,5 @@ module.exports = {
   runHealthRunbook,
   canRemediate,
   probeLmStudio,
+  resolveLmStudioUrl,
 };

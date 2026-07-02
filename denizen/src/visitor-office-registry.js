@@ -23,10 +23,14 @@ const OFFICE_SCOPED_WS_TYPES = new Set([
   'assistant_handoff',
 ]);
 
-/** Always delivered to every connected client (security, operator alerts). */
-const GLOBAL_WS_TYPES = new Set([
+/** Org-scoped — fan-out only to sockets with matching org_id. */
+const ORG_SCOPED_WS_TYPES = new Set([
   'world_state',
   'world_state_batch',
+]);
+
+/** Always delivered to every connected client (security, operator alerts). */
+const GLOBAL_WS_TYPES = new Set([
   'threat',
   'threat-cleared',
   'presence',
@@ -114,6 +118,13 @@ function attachOfficeId(payload, officeId) {
 function shouldDeliverToSocket(msg, ws) {
   if (!msg || typeof msg !== 'object') return true;
   const type = msg.type;
+
+  const targetOrg = msg.org_id ?? msg.orgId ?? null;
+  if (targetOrg && (ORG_SCOPED_WS_TYPES.has(type) || type === 'presence')) {
+    const mineOrg = ws?._denizenOrgId ?? null;
+    if (mineOrg && mineOrg !== targetOrg) return false;
+  }
+
   if (GLOBAL_WS_TYPES.has(type)) return true;
   if (!OFFICE_SCOPED_WS_TYPES.has(type)) {
     const target = msg.office_id ?? msg.officeId ?? null;
@@ -141,7 +152,12 @@ function forEachAgentClient(clients, fn) {
 
 function broadcastAgent(clients, msg, opts = {}) {
   const officeId = opts.officeId ?? msg?.office_id ?? msg?.officeId ?? null;
-  const payload = officeId ? attachOfficeId(msg, officeId) : msg;
+  const orgId = opts.orgId ?? msg?.org_id ?? msg?.orgId ?? null;
+  let payload = msg;
+  if (officeId) payload = attachOfficeId(payload, officeId);
+  if (orgId && typeof payload === 'object' && payload) {
+    payload = { ...payload, org_id: orgId };
+  }
   const raw = typeof payload === 'string' ? payload : JSON.stringify(payload);
   forEachAgentClient(clients, (ws) => {
     if (!shouldDeliverToSocket(typeof payload === 'object' ? payload : msg, ws)) return;
@@ -179,6 +195,7 @@ function isLucyCeoInOffice(isOperatorOffice) {
 module.exports = {
   CEO_OFFICE_ID,
   OFFICE_SCOPED_WS_TYPES,
+  ORG_SCOPED_WS_TYPES,
   GLOBAL_WS_TYPES,
   normalizeOfficeId,
   resolveOfficeFromSession,

@@ -20,6 +20,7 @@
   let claiming = false;
   let keyListener = null;
   let pendingClaim = null;
+  let pendingRelease = null;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -50,6 +51,8 @@
       #${BTN_ID}:hover { background: #1e293b; border-color: #4ade80; }
       #${CHIP_ID} {
         display: none;
+        align-items: center;
+        gap: 6px;
         margin-left: 8px;
         padding: 2px 8px;
         border-radius: 999px;
@@ -59,6 +62,25 @@
         font-size: 10px;
         font-weight: bold;
         vertical-align: middle;
+      }
+      #${CHIP_ID} .dz-asst-release {
+        border: none;
+        background: transparent;
+        color: #4ade80;
+        cursor: pointer;
+        font: inherit;
+        font-size: 10px;
+        line-height: 1;
+        padding: 2px 5px;
+        border-radius: 999px;
+        opacity: 0.7;
+        touch-action: manipulation;
+      }
+      #${CHIP_ID} .dz-asst-release:hover { opacity: 1; background: rgba(74, 222, 128, 0.18); }
+      #${CHIP_ID} .dz-asst-release.armed {
+        color: #fca5a5;
+        opacity: 1;
+        background: rgba(248, 113, 113, 0.18);
       }
       #${TOAST_ID} {
         position: fixed;
@@ -238,22 +260,92 @@
     if (!chip) {
       chip = document.createElement('span');
       chip.id = CHIP_ID;
+      chip.innerHTML = '<span class="dz-asst-name"></span>'
+        + '<button type="button" class="dz-asst-release" title="Release this assistant" aria-label="Release this assistant">✕</button>';
       headerTarget.parentNode?.insertBefore(chip, headerTarget.nextSibling);
       assistantChip = chip;
+      const relBtn = chip.querySelector('.dz-asst-release');
+      if (relBtn) {
+        // Bind via ONE mechanism only — double-binding fires the handler twice
+        // per tap, which would arm and confirm the release in a single click.
+        if (globalThis.DenizenTouchBind?.bindPress) {
+          globalThis.DenizenTouchBind.bindPress(relBtn, onReleaseClick, { stop: true });
+        } else {
+          relBtn.addEventListener('click', onReleaseClick);
+        }
+      }
     }
 
     const asst = sess?.getAssistant?.();
+    const nameEl = chip.querySelector('.dz-asst-name');
     if (!asst?.npc_key) {
       chip.style.display = 'none';
-      chip.textContent = '';
+      disarmRelease();
       return;
     }
 
     const name = asst.assistant_name
       || npcDisplayName(sess.npcKeyToTextureKey(asst.npc_key))
       || asst.npc_key;
-    chip.style.display = 'inline';
-    chip.textContent = `Your assistant: ${name}`;
+    if (nameEl) nameEl.textContent = `Your assistant: ${name}`;
+    chip.style.display = 'inline-flex';
+  }
+
+  let releaseArmed = false;
+  let releaseArmTimer = null;
+
+  function disarmRelease() {
+    releaseArmed = false;
+    if (releaseArmTimer) { clearTimeout(releaseArmTimer); releaseArmTimer = null; }
+    const relBtn = document.getElementById(CHIP_ID)?.querySelector('.dz-asst-release');
+    if (relBtn) {
+      relBtn.textContent = '✕';
+      relBtn.classList.remove('armed');
+      relBtn.title = 'Release this assistant';
+    }
+  }
+
+  // Two-click confirm: the chip is always visible, so a single ✕ must not
+  // discard the user's assistant (and its focus) by accident.
+  function onReleaseClick(e) {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    const relBtn = document.getElementById(CHIP_ID)?.querySelector('.dz-asst-release');
+    if (!relBtn) return;
+    if (!releaseArmed) {
+      releaseArmed = true;
+      relBtn.textContent = 'Release?';
+      relBtn.classList.add('armed');
+      relBtn.title = 'Click again to confirm';
+      if (releaseArmTimer) clearTimeout(releaseArmTimer);
+      releaseArmTimer = setTimeout(disarmRelease, 3200);
+      return;
+    }
+    disarmRelease();
+    doReleaseAssistant();
+  }
+
+  async function doReleaseAssistant() {
+    const sess = globalThis.DenizenVisitorSession;
+    const asst = sess?.getAssistant?.();
+    if (!asst?.npc_key) return;
+    const name = asst.assistant_name
+      || npcDisplayName(sess.npcKeyToTextureKey?.(asst.npc_key))
+      || asst.npc_key;
+    try {
+      // releaseAssistant() clears local state on success, so reflect it in the
+      // UI immediately rather than waiting behind a refetch round-trip.
+      await sess.releaseAssistant();
+      showToast(`${name} is no longer your assistant`);
+      updateAssistantChip();
+      globalThis.DenizenVisitorAssistantLabels?.refresh?.();
+      globalThis.DenizenVisitorNpcTeamUI?.refresh?.().catch?.(() => null);
+      tick();
+      sess.refreshAssistant().catch(() => null);
+    } catch (err) {
+      showToast(err?.message || 'Could not release assistant');
+      console.warn('[DenizenVisitorClaimUI] release failed:', err);
+    }
   }
 
   async function onClaimClick(npcKey, textureKey, displayName) {
@@ -281,6 +373,7 @@
   function hideClaimBtn() {
     if (claimBtn) claimBtn.style.display = 'none';
     pendingClaim = null;
+    pendingRelease = null;
   }
 
   function showClaimBtn(label, npcKey, textureKey, displayName) {
@@ -289,7 +382,21 @@
     btn.style.display = 'block';
     positionClaimBtn();
     pendingClaim = { npcKey, textureKey, displayName };
+    pendingRelease = null;
     btn.onclick = () => onClaimClick(npcKey, textureKey, displayName);
+  }
+
+  // Release from the proximity pill — the only path that's reachable on phone,
+  // where the chat header (and its chip ✕) is hidden. Deliberate single tap on
+  // a button literally labelled "Release …" while facing your own assistant.
+  function showReleaseBtn(name) {
+    const btn = ensureClaimBtn();
+    btn.textContent = `✕ Release ${name} as assistant`;
+    btn.style.display = 'block';
+    positionClaimBtn();
+    pendingClaim = null;
+    pendingRelease = { name };
+    btn.onclick = () => { pendingRelease = null; doReleaseAssistant(); };
   }
 
   function isTypingInInput() {
@@ -332,10 +439,6 @@
     updateAssistantChip();
 
     const assistant = sess.getAssistant?.();
-    if (assistant?.npc_key) {
-      hideClaimBtn();
-      return;
-    }
 
     const facingNpc = playerChat._findFacingNpc?.();
     if (!facingNpc?.texture?.key) {
@@ -350,13 +453,23 @@
       return;
     }
 
+    // Facing your current assistant — offer to release them (reachable on phone,
+    // where the chat-header chip is hidden).
+    if (assistant?.npc_key && sess.isMyAssistant?.(textureKey)) {
+      const myName = assistant.assistant_name || npcDisplayName(textureKey);
+      showReleaseBtn(myName);
+      return;
+    }
+
     const displayName = npcDisplayName(textureKey);
-    showClaimBtn(
-      `⭐ Claim ${displayName} as my assistant`,
-      npcKey,
-      textureKey,
-      displayName,
-    );
+    // Surface the keyboard shortcut on desktop; touch devices have no C key.
+    const shortcutHint = window.__DenizenIsTouch ? '' : ' (C)';
+    // With an assistant already claimed, facing a different NPC offers a swap;
+    // claimNpc upserts server-side, so claiming the new one replaces the old.
+    const label = assistant?.npc_key
+      ? `⭐ Make ${displayName} your assistant instead${shortcutHint}`
+      : `⭐ Claim ${displayName} as my assistant${shortcutHint}`;
+    showClaimBtn(label, npcKey, textureKey, displayName);
   }
 
   const DenizenVisitorClaimUI = {

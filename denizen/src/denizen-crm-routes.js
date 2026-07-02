@@ -13,11 +13,13 @@ const { handleResendWebhook } = require('./denizen-crm-resend-webhook');
 const crmStripe = require('./denizen-crm-stripe');
 const crmCalendar = require('./denizen-crm-calendar');
 const { inviteTeamMember } = require('./denizen-crm-team-invite');
+const crmSetupWizard = require('./denizen-crm-setup-wizard');
 const denizenDb = require('./denizen-db');
 const denizenVisitor = require('./denizen-visitor');
 const sessionAuth = require('./visitor-session-auth');
 const visitorAccess = require('./visitor-access');
 const sessionCookie = require('./visitor-session-cookie');
+const teamAuth = require('./denizen-team-auth');
 
 function sessionIdFrom(req, body, url) {
   return String(
@@ -62,14 +64,97 @@ function crmPublicBase() {
   return String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || 'http://localhost:8080').replace(/\/$/, '');
 }
 
+function isDemoAccess(access) {
+  return !!access?.isDemo
+    || String(access?.tier || '').toLowerCase() === 'demo'
+    || String(access?.orgSlug || '').toLowerCase() === 'acme';
+}
+
+function isLegacyCeoLabel(name) {
+  return /^dolonia$/i.test(String(name || '').trim());
+}
+
+function isGuestLabel(name) {
+  return /^guest$/i.test(String(name || '').trim());
+}
+
+function isDemoPlaceholderName(name) {
+  const n = String(name || '').trim();
+  return !n || isLegacyCeoLabel(n) || isGuestLabel(n);
+}
+
+function isCeoAccess(access, principal) {
+  if (isDemoAccess(access)) return false;
+  const meta = access.session?.metadata && typeof access.session.metadata === 'object'
+    ? access.session.metadata
+    : {};
+  return !!principal?.ceo
+    || String(access.tier || meta.tier || '').toLowerCase() === 'ceo'
+    || meta.is_ceo_principal === true
+    || meta.access_method === 'ceo';
+}
+
+function resolveCrmVisitorProfile(access, identityRow, sessionDisplayName, { principal } = {}) {
+  const isDemo = isDemoAccess(access);
+  const isCeo = isCeoAccess(access, principal);
+  const username = identityRow?.username || null;
+  const sessionName = String(sessionDisplayName || '').trim();
+
+  if (isCeo) {
+    let displayName = sessionName;
+    if (!displayName || isGuestLabel(displayName)) {
+      const idName = String(identityRow?.display_name || '').trim();
+      displayName = idName && !isGuestLabel(idName) ? idName : 'Dolonia';
+    }
+    return { displayName: displayName || 'Dolonia', username, isDemo: false, isCeo: true };
+  }
+
+  if (isDemo) {
+    let displayName = isDemoPlaceholderName(sessionName) ? null : sessionName;
+    const idRaw = String(identityRow?.display_name || '').trim();
+    if (!displayName && idRaw && !isDemoPlaceholderName(idRaw)) displayName = idRaw;
+    if (!displayName) displayName = username || null;
+    if (!displayName) {
+      const meta = access.session?.metadata && typeof access.session.metadata === 'object'
+        ? access.session.metadata
+        : {};
+      const email = identityRow?.email || meta.email || null;
+      if (email && String(email).includes('@')) displayName = String(email).split('@')[0];
+    }
+    return {
+      displayName: displayName || username || 'Demo user',
+      username,
+      isDemo: true,
+      isCeo: false,
+    };
+  }
+
+  let displayName = sessionName || identityRow?.display_name || username || null;
+  if (isGuestLabel(displayName) || isLegacyCeoLabel(displayName)) {
+    displayName = identityRow?.display_name || username || null;
+  }
+  if (isGuestLabel(displayName)) displayName = username || null;
+  return {
+    displayName: displayName || username || 'Team member',
+    username,
+    isDemo: false,
+    isCeo: false,
+  };
+}
+
 async function verifyCrmSession(req, sessionId, body, verifyVisitorSession) {
   try {
     return await verifyVisitorSession(req, sessionId, body);
   } catch (err) {
     if (err?.code !== 'DENIED') throw err;
+    let access = null;
+    try {
+      access = await visitorAccess.resolveSessionAccess(sessionId);
+    } catch (_) { /* fall through */ }
+    if (access && isDemoAccess(access)) return access;
     const grant = String(req.headers['x-denizen-ceo-grant'] || '').trim();
     if (!grant || !sessionAuth.verifyCeoGrant(grant)) throw err;
-    return visitorAccess.resolveSessionAccess(sessionId);
+    return access || visitorAccess.resolveSessionAccess(sessionId);
   }
 }
 
@@ -148,6 +233,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'POST /api/crm/intake-handoff',
           'GET /api/crm/team',
           'POST /api/crm/team/invite',
+          'POST /api/crm/setup-wizard',
         ],
       });
       return true;
@@ -163,16 +249,76 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         }
         const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
         const orgId = await resolveOrgIdAsync(access);
+        const isDemo = isDemoAccess(access);
+        const principal = isDemo
+          ? { ceo: false, tier: 'demo', source: null }
+          : (
+            await teamAuth.maybeUpgradeSessionCeoPrincipal(sessionId, access.session)
+            || await teamAuth.resolveCeoPrincipalForSession(sessionId, { access })
+          );
+        const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+          isCeoPrincipal: !isDemo && !!principal?.ceo,
+        });
         let email = null;
         let identityId = access.session?.identity_id || null;
-        if (identityId && denizenDb.enabled) {
-          const idRows = await denizenDb._get(
-            `denizen_user_identities?select=display_name,email&id=eq.${encodeURIComponent(identityId)}&limit=1`,
-          ).catch(() => []);
-          email = idRows?.[0]?.email || null;
-          if (!access.session?.display_name && idRows?.[0]?.display_name) {
-            access.session = { ...access.session, display_name: idRows[0].display_name };
+        let workPosition = null;
+        let identityRow = null;
+        try {
+          const userIdentity = require('./denizen-user-identity.js');
+          if (identityId && denizenDb.enabled) {
+            const idRows = await denizenDb._get(
+              `denizen_user_identities?select=display_name,email,metadata,username&id=eq.${encodeURIComponent(identityId)}&limit=1`,
+            ).catch(() => []);
+            identityRow = idRows?.[0] || null;
+          } else if (sessionId) {
+            identityRow = await userIdentity.getIdentityBySession(sessionId).catch(() => null);
+            identityId = identityRow?.id || identityId;
           }
+          email = identityRow?.email || access.session?.metadata?.email || null;
+          try {
+            const userPosition = require('./denizen-user-position.js');
+            workPosition = userPosition.toClientPosition(
+              userPosition.getPositionFromIdentity(identityRow),
+            );
+          } catch (_) { /* optional */ }
+        } catch (_) { /* optional identity */ }
+        const profile = resolveCrmVisitorProfile(access, identityRow, access.session?.display_name, { principal });
+        const isCeo = profile.isCeo;
+        if (
+          isDemo
+          && profile.displayName
+          && !isDemoPlaceholderName(profile.displayName)
+          && isDemoPlaceholderName(access.session?.display_name)
+          && denizenDb.enabled
+        ) {
+          const meta = access.session?.metadata && typeof access.session.metadata === 'object'
+            ? { ...access.session.metadata }
+            : {};
+          delete meta.is_ceo_principal;
+          meta.tier = 'demo';
+          meta.access_method = meta.access_method || 'demo';
+          await denizenVisitor.createOrUpdateSession({
+            sessionId,
+            displayName: profile.displayName,
+            metadata: meta,
+          }).catch(() => {});
+        } else if (
+          isCeo
+          && profile.displayName
+          && (isGuestLabel(access.session?.display_name) || !access.session?.display_name)
+          && denizenDb.enabled
+        ) {
+          const meta = access.session?.metadata && typeof access.session.metadata === 'object'
+            ? { ...access.session.metadata }
+            : {};
+          meta.is_ceo_principal = true;
+          meta.tier = 'ceo';
+          meta.access_method = 'ceo';
+          await denizenVisitor.createOrUpdateSession({
+            sessionId,
+            displayName: profile.displayName,
+            metadata: meta,
+          }).catch(() => {});
         }
         json(res, 200, {
           ok: true,
@@ -180,11 +326,16 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           org_slug: access.orgSlug || null,
           org_display_name: access.org?.display_name || null,
           org_id: orgId,
-          display_name: access.session?.display_name || null,
+          display_name: profile.displayName,
+          username: profile.username,
           email,
           identity_id: identityId,
-          ceo: !!(access.session?.metadata?.is_ceo_principal || access.session?.metadata?.access_method === 'ceo'),
-          tier: access.tier || null,
+          ceo: isCeo,
+          is_owner: isCeo || (!isDemo && approval.role === 'owner'),
+          team_role: isDemo ? null : (approval.role === 'ceo' ? 'owner' : (approval.role || null)),
+          can_approve_skills: !!approval.allowed,
+          tier: isDemo ? 'demo' : (isCeo ? 'ceo' : (principal?.tier || access.tier || null)),
+          work_position: workPosition,
         });
         return true;
       } catch (err) {
@@ -227,6 +378,36 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         return true;
       } catch (err) {
         if (!res.writableEnded) json(res, 401, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    if (path === '/api/crm/setup-wizard' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req, 256 * 1024);
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const result = await crmSetupWizard.runSetupWizard(orgId, {
+          mode: body.mode || (body.stepId || body.step ? 'run_step' : 'run_all'),
+          stepId: body.stepId || body.step || null,
+          identityId: access.session?.identity_id || null,
+          orgSlug: access.orgSlug || body.orgSlug || null,
+          profile: body.profile || null,
+          industryId: body.industryId || body.templateId || body.industry || null,
+          contact: body.contact || null,
+          deal: body.deal || null,
+          seedPackages: body.seedPackages !== false,
+        });
+        json(res, 200, { ok: true, ...result });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
         return true;
       }
     }
@@ -661,10 +842,22 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
           return true;
         }
+        const principal = await teamAuth.resolveCeoPrincipalForSession(sessionId, { access });
+        const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+          isCeoPrincipal: !!principal?.ceo,
+        });
+        if (!approval.allowed) {
+          json(res, 403, { ok: false, error: 'Only team owners and admins can invite members' });
+          return true;
+        }
         const result = await inviteTeamMember(
           orgId,
           access.orgSlug || null,
-          { email: body.email, displayName: body.displayName || body.display_name },
+          {
+            email: body.email,
+            displayName: body.displayName || body.display_name,
+            platform: body.platform,
+          },
           access.session?.display_name || 'Team',
         );
         if (!result.ok) {
@@ -690,6 +883,10 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
           return true;
         }
+        const isDemoTeam = isDemoAccess(access);
+        const teamPrincipal = isDemoTeam
+          ? { ceo: false }
+          : await teamAuth.resolveCeoPrincipalForSession(sessionId, { access });
         const accounts = await denizenDb._get(
           `denizen_team_accounts?select=display_name,email,role&org_id=eq.${encodeURIComponent(orgId)}&order=display_name`,
         ).catch(() => []);
@@ -697,14 +894,26 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           `denizen_user_identities?select=display_name,email,tier&org_id=eq.${encodeURIComponent(orgId)}&order=display_name`,
         ).catch(() => []);
         let selfEmail = null;
-        const identityId = access.session?.identity_id || null;
-        if (identityId) {
-          const idRows = await denizenDb._get(
-            `denizen_user_identities?select=email,display_name&id=eq.${encodeURIComponent(identityId)}&limit=1`,
-          ).catch(() => []);
-          selfEmail = idRows?.[0]?.email || null;
-        }
-        const selfName = access.session?.display_name || null;
+        let identityRow = null;
+        let identityId = access.session?.identity_id || null;
+        try {
+          const userIdentity = require('./denizen-user-identity.js');
+          if (identityId) {
+            const idRows = await denizenDb._get(
+              `denizen_user_identities?select=email,display_name,username&id=eq.${encodeURIComponent(identityId)}&limit=1`,
+            ).catch(() => []);
+            identityRow = idRows?.[0] || null;
+          } else if (sessionId) {
+            identityRow = await userIdentity.getIdentityBySession(sessionId).catch(() => null);
+          }
+          selfEmail = identityRow?.email || access.session?.metadata?.email || null;
+        } catch (_) { /* optional */ }
+        const selfName = resolveCrmVisitorProfile(
+          access,
+          identityRow,
+          access.session?.display_name,
+          { principal: teamPrincipal },
+        ).displayName;
         const memberMap = new Map();
         for (const row of accounts || []) {
           if (!row?.email) continue;
@@ -721,7 +930,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           memberMap.set(key, {
             display_name: row.display_name,
             email: row.email,
-            role: row.tier === 'team' ? 'member' : (row.tier || 'member'),
+            role: row.tier === 'ceo' ? 'owner' : (row.tier === 'team' ? 'member' : (row.tier || 'member')),
           });
         }
         const members = [...memberMap.values()]

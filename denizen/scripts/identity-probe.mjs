@@ -5,6 +5,7 @@
 // 2. Spoofed CEO/local headers + metadata must grant nothing.
 // Usage (from denizen/): node --env-file=.env scripts/identity-probe.mjs [baseUrl]
 import { chromium } from 'playwright';
+import { joinTeamProbe } from './lib/probe-login.mjs';
 
 const BASE_URL = process.argv[2] || 'http://localhost:8080';
 const TEAM_CODE = process.env.DENIZEN_TEAM_CODE || '1921';
@@ -33,25 +34,29 @@ const ctx = await browser.newContext({
 });
 const page = await ctx.newPage();
 await page.goto(`${BASE_URL}/?reset=1&phonemode=0`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-await page.locator('[data-action="path-team"]').click({ timeout: 15_000 });
-await page.locator('#denizen-visitor-code-input').fill(TEAM_CODE);
-await page.locator('[data-action="submit-team-code"]').click({ timeout: 15_000 });
-await page.waitForSelector('#denizen-visitor-name-input', { timeout: 15_000 });
+await joinTeamProbe(page, {
+  teamCode: TEAM_CODE,
+  username: 'Probe Teammate',
+  email: EMAIL,
+});
+await page.waitForFunction(() => !document.getElementById('denizen-visitor-name-modal'), { timeout: 30_000 }).catch(() => null);
 
-const emailFieldExists = await page.locator('#denizen-visitor-name-email-input').count() > 0;
-check('team join asks for work email', emailFieldExists);
-
-await page.locator('#denizen-visitor-name-input').fill('Probe Teammate');
-if (emailFieldExists) {
-  // empty email must be rejected
-  await page.locator('[data-action="submit-name"]').click();
-  await page.waitForTimeout(400);
-  const blocked = await page.evaluate(() => !!document.getElementById('denizen-visitor-name-modal'));
-  check('empty email is rejected', blocked);
-  await page.locator('#denizen-visitor-name-email-input').fill(EMAIL);
+// Legacy name-only step after join
+const nameInput = page.locator('#denizen-visitor-name-input');
+if (await nameInput.count()) {
+  const emailFieldExists = await page.locator('#denizen-visitor-name-email-input').count() > 0;
+  check('team join asks for work email', emailFieldExists);
+  await nameInput.fill('Probe Teammate');
+  if (emailFieldExists) {
+    await page.locator('[data-action="submit-name"]').click();
+    await page.waitForTimeout(400);
+    const blocked = await page.evaluate(() => !!document.getElementById('denizen-visitor-name-modal'));
+    check('empty email is rejected', blocked);
+    await page.locator('#denizen-visitor-name-email-input').fill(EMAIL);
+  }
+  await page.locator('[data-action="submit-name"]').click({ timeout: 15_000 });
+  await page.waitForFunction(() => !document.getElementById('denizen-visitor-name-modal'), { timeout: 30_000 });
 }
-await page.locator('[data-action="submit-name"]').click({ timeout: 15_000 });
-await page.waitForFunction(() => !document.getElementById('denizen-visitor-name-modal'), { timeout: 30_000 });
 await page.waitForTimeout(5_000);
 
 const clientProfile = await page.evaluate(() => globalThis.DenizenVisitorSession?.getProfile?.() || {});

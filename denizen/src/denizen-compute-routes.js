@@ -19,6 +19,11 @@ const contributionTracker = require('./denizen-contribution-tracker');
 const nodeProfiler = require('./denizen-node-profiler');
 const fleetAgentBundle = require('./denizen-fleet-agent-bundle');
 const lmStudioRouter = require('./lm-studio-router');
+const inferenceRpc = require('./denizen-inference-rpc');
+const inferenceProgress = require('./denizen-inference-progress');
+const denizenFederation = require('./denizen-federation');
+const stationTaskQueue = require('./denizen-station-task-queue');
+const desktopAgent = require('./desktop-agent');
 
 let hardwareSamplerStarted = false;
 
@@ -95,6 +100,16 @@ function recordIdentityLiveMetrics(identityId, body = {}, defaults = {}) {
   });
   if (machine) lmStudioRouter.ingestFromMachine(machine);
   return machine;
+}
+
+function resolveLiveMetricsForNode(node, bodyLive) {
+  if (bodyLive && typeof bodyLive === 'object') return bodyLive;
+  if (!node?.identity_id) return null;
+  const machines = fleetRegistry.listForIdentity(node.identity_id, {
+    includeHost: false,
+    includeAuxiliary: false,
+  });
+  return machines.find((m) => m.role === 'desktop' || m.contributing) || machines[0] || null;
 }
 
 async function resolveProfileForNode(node, serverContext = {}) {
@@ -336,25 +351,30 @@ async function resolveIdentityForSession(serverContext, req, sessionId, body = {
       }).catch(() => null);
     }
   }
-  if (!identity?.id && access?.session?.id) {
+  if (!identity?.id && identityApi?.ensureIdentityForSession && access?.session?.id) {
     const meta = access.session.metadata || {};
-    identity = {
-      id: `session:${access.session.id}`,
-      display_name: access.session.display_name || body.display_name || 'Guest',
-      tier: access.tier || meta.tier || 'demo',
-      source: meta.access_method || 'session',
-    };
+    identity = await identityApi.ensureIdentityForSession(sessionId, {
+      session: access.session,
+      email: body.email || body.identity_email || meta.email || null,
+      displayName: access.session.display_name || body.display_name || null,
+      tier: access.tier || meta.tier || null,
+      orgId: access.orgId || access.session.org_id || access.org?.id || null,
+      orgSlug: access.orgSlug || meta.org_slug || null,
+      source: meta.access_method || null,
+    }).catch(() => null);
+  }
+  if (identity?.id && identityApi?.isPersistedIdentityId?.(identity.id) && identityApi.getIdentityById) {
+    identity = await identityApi.getIdentityById(identity.id).catch(() => identity) || identity;
+  } else if (identity?.id && String(identity.id).startsWith('session:')) {
+    identity = null;
   }
   return { access, identity };
 }
 
 async function resolveLmStudioSnapshot(req, serverContext = {}) {
   const npcBrains = serverContext.npcBrains;
-  const allowProbe =
-    desktopLink.detectClientType(req) === 'desktop'
-    || hostCompute.isLocalOperatorRequest(req);
   if (npcBrains) {
-    return hostCompute.getLmStudioSnapshot(npcBrains, { allowProbe }).catch(() => null);
+    return hostCompute.getLmStudioSnapshot(npcBrains, { allowProbe: true }).catch(() => null);
   }
   if (typeof serverContext.getLmStudioSnapshot === 'function') {
     return serverContext.getLmStudioSnapshot().catch(() => null);
@@ -445,12 +465,17 @@ function mountComputeRoutes(serverContext = {}) {
           return true;
         }
         if (node.identity_id) {
+          const live = extractLiveMetrics(body);
           recordIdentityLiveMetrics(node.identity_id, body, {
             role: 'node',
             machine_id: body.machine_id || body.machineId || `node-${node.id}`,
             jobs_completed: node.jobs_completed,
             contributing: true,
           });
+          if (live) {
+            computePlatform.syncProfileFromLiveMetrics(node.identity_id, live, { optIn: true })
+              .catch(() => null);
+          }
         }
         sendJson(res, 200, { ok: true, node });
         return true;
@@ -472,21 +497,27 @@ function mountComputeRoutes(serverContext = {}) {
           return true;
         }
 
-        const job = await computeQueue.claimJob(node.id);
+        const profile = await resolveProfileForNode(node, serverContext).catch(() => null);
+        const live = resolveLiveMetricsForNode(node, extractLiveMetrics(body));
+        const effectiveProfile = computeQueue.buildEffectiveNodeProfile(profile, live);
+        const machineId = body.machine_id
+          || body.machineId
+          || live?.machine_id
+          || profile?.machine_id
+          || null;
+        const job = await computeQueue.claimJob(node.id, effectiveProfile, { machineId });
         if (!job) {
           sendJson(res, 200, { ok: true, job: null, note: 'No queued jobs available' });
           return true;
         }
 
-        const profile = await resolveProfileForNode(node, serverContext).catch(() => null);
-        const live = extractLiveMetrics(body);
         contributionTracker.startJob({
           jobId: job.id,
           nodeId: node.id,
           identityId: node.identity_id,
           jobType: job.job_type,
-          hardwareScore: profile?.hardware_score || 0,
-          contributionLevel: profile?.contribution_level || 'standard',
+          hardwareScore: effectiveProfile?.hardware_score || 0,
+          contributionLevel: effectiveProfile?.contribution_level || 'standard',
           liveMetrics: live,
         });
 
@@ -526,6 +557,11 @@ function mountComputeRoutes(serverContext = {}) {
         if (!completed) {
           sendJson(res, 409, { ok: false, error: 'Job not assigned to this node or already closed' });
           return true;
+        }
+
+        if (completed.job_type === 'inference_rpc') {
+          const resultText = body.result?.text || body.result?.content || '';
+          inferenceProgress.markDone(jobId, resultText);
         }
 
         await nodeWorker.incrementJobsCompleted(node.id).catch(() => null);
@@ -772,10 +808,12 @@ function mountComputeRoutes(serverContext = {}) {
           const sessionTier = access?.tier || access?.session?.metadata?.tier || 'team';
 
           if (!identity?.id) {
-            sendJson(res, 200, computePlatform.buildSessionHostStatus({
+            sendJson(res, 200, await computePlatform.buildSessionHostStatus({
               sessionTier,
               lmStudio,
               req,
+              session: access?.session || null,
+              sessionId,
             }));
             return true;
           }
@@ -821,6 +859,97 @@ function mountComputeRoutes(serverContext = {}) {
         return true;
       }
 
+      if (
+        path === '/api/compute/node/progress'
+        && (method === 'GET' || method === 'POST')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 256 * 1024);
+        const token = extractToken(req, body, url);
+        const node = await nodeWorker.resolveNodeAuth({
+          nodeId: body.nodeId || body.node_id || null,
+          identityId: body.identityId || body.identity_id || null,
+          token,
+        });
+        if (!node) {
+          sendJson(res, 401, { ok: false, error: 'Invalid node credentials' });
+          return true;
+        }
+
+        const jobId = body.jobId || body.job_id;
+        if (!jobId) {
+          sendJson(res, 400, { ok: false, error: 'jobId is required' });
+          return true;
+        }
+
+        const delta = body.delta != null ? String(body.delta) : '';
+        const text = body.text != null ? String(body.text) : null;
+        const progress = inferenceProgress.recordProgress(jobId, delta, text);
+        sendJson(res, 200, { ok: true, progress });
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/compute/inference/catalog') {
+        const fs = require('node:fs');
+        const pathMod = require('node:path');
+        const candidates = [
+          pathMod.join(__dirname, '..', 'data', 'brain-catalog.json'),
+          pathMod.join(__dirname, '..', 'desktop', 'data', 'brain-catalog.json'),
+        ];
+        let catalog = { version: 1, models: [] };
+        for (const file of candidates) {
+          try {
+            if (fs.existsSync(file)) {
+              catalog = JSON.parse(fs.readFileSync(file, 'utf8'));
+              break;
+            }
+          } catch (_) {}
+        }
+        sendJson(res, 200, { ok: true, ...catalog });
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/compute/federation/status') {
+        sendJson(res, 200, { ok: true, ...denizenFederation.buildStatus() });
+        return true;
+      }
+
+      if (
+        path === '/api/compute/federation/report'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 256 * 1024);
+        const auth = denizenFederation.verifyFederationRequest(req, body);
+        if (!auth.ok) {
+          sendJson(res, auth.statusCode || 401, { ok: false, error: auth.error });
+          return true;
+        }
+        const result = denizenFederation.ingestPeerReport(body);
+        sendJson(res, 200, result);
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/compute/inference/stream') {
+        const jobId = url.searchParams.get('job_id') || url.searchParams.get('jobId');
+        if (!jobId) {
+          sendJson(res, 400, { ok: false, error: 'job_id required' });
+          return true;
+        }
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        });
+        const send = (payload) => {
+          if (res.writableEnded) return;
+          res.write(`data: ${JSON.stringify(payload)}\n\n`);
+        };
+        const existing = inferenceProgress.getProgress(jobId);
+        if (existing?.text) send({ text: existing.text, done: !!existing.done });
+        const off = inferenceProgress.subscribe(jobId, (ev) => send(ev));
+        req.on('close', () => off());
+        return true;
+      }
+
       if (method === 'GET' && path === '/api/compute/inference/nodes') {
         const brains = serverContext.npcBrains;
         const queueDepth = brains?.getQueueDepth?.() || 0;
@@ -828,6 +957,80 @@ function mountComputeRoutes(serverContext = {}) {
           ok: true,
           ...lmStudioRouter.buildStatus(queueDepth),
         });
+        return true;
+      }
+
+      if (method === 'POST' && path === '/api/compute/inference/run') {
+        const body = await readJsonBody(req, 512 * 1024);
+        const token = extractToken(req, body, url);
+        const internal = token && token === process.env.DENIZEN_INTERNAL_API_TOKEN;
+        const sessionId = extractSessionId(req, body, url);
+        if (!internal && !sessionId) {
+          sendJson(res, 401, { ok: false, error: 'session or internal token required' });
+          return true;
+        }
+        if (!internal && sessionId) {
+          try {
+            await resolveIdentityForSession(serverContext, req, sessionId, body);
+          } catch (err) {
+            sendJson(res, Number(err?.statusCode || 401), {
+              ok: false,
+              error: err?.message || 'Unauthorized',
+            });
+            return true;
+          }
+        }
+
+        const messages = Array.isArray(body.messages) ? body.messages : [];
+        const mode = String(body.mode || body.inference_mode || 'auto').toLowerCase();
+        const brains = serverContext.npcBrains;
+        const queueDepth = brains?.getQueueDepth?.() || 0;
+        const tier = body.tier === 'fast' ? 'fast' : 'main';
+        let routed = null;
+        if (lmStudioRouter?.isEnabled?.()) {
+          routed = lmStudioRouter.resolveProviderConfig(
+            { model: body.model || null, baseUrl: body.baseUrl || body.base_url || null },
+            { tier, priority: body.priority, queueDepth },
+          );
+        }
+
+        try {
+          const result = await inferenceRpc.runInference({
+            mode: mode === 'auto'
+              ? (routed?._inferenceMode || 'direct')
+              : mode,
+            targetMachineId: body.target_machine_id
+              || body.targetMachineId
+              || routed?._routerNodeId
+              || null,
+            baseUrl: body.baseUrl || body.base_url || routed?.baseUrl || null,
+            model: body.model || routed?.model || null,
+            tier,
+            systemPrompt: body.system_prompt || body.systemPrompt || '',
+            messages,
+            max_tokens: body.max_tokens ?? body.maxTokens,
+            temperature: body.temperature,
+            priority: body.priority,
+            rpc_capable: routed?._rpcCapable,
+            network_reachable: routed?._networkReachable,
+            timeoutMs: body.timeout_ms ?? body.timeoutMs,
+          });
+          sendJson(res, 200, {
+            ok: true,
+            text: result.text,
+            model: result.model || null,
+            backend: result.backend || null,
+            mode: result.mode,
+            node_id: routed?._routerNodeId || null,
+            job_id: result.job_id || null,
+          });
+        } catch (err) {
+          sendJson(res, 502, {
+            ok: false,
+            error: err?.message || String(err),
+            node_id: routed?._routerNodeId || null,
+          });
+        }
         return true;
       }
 
@@ -857,7 +1060,13 @@ function mountComputeRoutes(serverContext = {}) {
 
         if (!identity?.id) {
           const sessionTier = access?.tier || access?.session?.metadata?.tier || 'team';
-          sendJson(res, 200, computePlatform.buildSessionHostStatus({ sessionTier, lmStudio, req }));
+          sendJson(res, 200, await computePlatform.buildSessionHostStatus({
+            sessionTier,
+            lmStudio,
+            req,
+            session: access?.session || null,
+            sessionId,
+          }));
           return true;
         }
 
@@ -866,10 +1075,11 @@ function mountComputeRoutes(serverContext = {}) {
         if (clientType === 'browser' && !isHostBrowser) {
           sendJson(res, 400, {
             ok: false,
-            error: 'Install Denizen Desktop on this machine to add City Power.',
+            error: 'Install Denizen Desktop on this machine to add City Power. Run on 192.168.1.232, pair, then enable in Compute > City Power tab (set level + toggle Power the city). See COMPUTE_MESH.md for full steps.',
             needs_desktop_download: true,
             contributor_state: 'browser_only',
             download_url: '/desktop/',
+            activation_hint: 'On .232: install/run Desktop app -> pair to server -> phone UI Compute/City Power -> opt-in.',
           });
           return true;
         }
@@ -963,8 +1173,13 @@ function mountComputeRoutes(serverContext = {}) {
         const capability = body.capability || 'action';
         const detail = body.detail || body.action || body.instruction || '';
         let permissionLevel = body.agent_permission_level || body.permission_level || null;
-        if (!permissionLevel) {
-          permissionLevel = await desktopPermissionBridge.resolvePermissionLevelForSession(sessionId);
+        let profile = null;
+        if (!permissionLevel || body.capability) {
+          profile = await desktopPermissionBridge.resolveProfileForSession(sessionId);
+          if (!permissionLevel) {
+            permissionLevel = profile?.agent_permission_level
+              || await desktopPermissionBridge.resolvePermissionLevelForSession(sessionId);
+          }
         }
         const result = desktopPermissionBridge.requestDesktopApprovalIfNeeded({
           sessionId,
@@ -972,6 +1187,8 @@ function mountComputeRoutes(serverContext = {}) {
           capability,
           detail,
           permissionLevel: permissionLevel || 'ask',
+          profile,
+          requiredCapability: body.required_capability || body.requiredCapability || null,
         });
         sendJson(res, 200, {
           ok: true,
@@ -1090,6 +1307,205 @@ function mountComputeRoutes(serverContext = {}) {
           fleet_machine: fleetMachine,
           min_desktop_version: resolveMinDesktopVersion(),
         });
+        return true;
+      }
+
+      if (method === 'GET' && path === '/api/desktop/station/tasks/claim') {
+        const body = await readBodyOrHeaders(req, url, 16 * 1024);
+        const sessionId = extractSessionId(req, body, url);
+        const installId = String(
+          body.install_id || body.installId
+          || headerValue(req, 'x-desktop-install-id')
+          || url.searchParams.get('install_id')
+          || '',
+        ).trim();
+        if (!sessionId || !installId) {
+          sendJson(res, 400, { ok: false, error: 'session_id and install_id required' });
+          return true;
+        }
+        const { identity } = await resolveIdentityForSession(serverContext, req, sessionId, body);
+        if (!identity?.id) {
+          sendJson(res, 404, { ok: false, error: 'Identity not found' });
+          return true;
+        }
+        const profile = await desktopLink.getProfileByIdentity(identity.id);
+        if (!profile?.desktop_install_id || profile.desktop_install_id !== installId) {
+          sendJson(res, 403, { ok: false, error: 'install_id does not match linked station' });
+          return true;
+        }
+        const task = await stationTaskQueue.claimTask(installId);
+        sendJson(res, 200, { ok: true, task });
+        return true;
+      }
+
+      if (
+        path === '/api/desktop/station/tasks/complete'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 4 * 1024 * 1024);
+        const sessionId = extractSessionId(req, body, url);
+        const taskId = String(body.task_id || body.taskId || url.searchParams.get('task_id') || '').trim();
+        const installId = String(
+          body.install_id || body.installId
+          || headerValue(req, 'x-desktop-install-id')
+          || '',
+        ).trim();
+        if (!sessionId || !taskId) {
+          sendJson(res, 400, { ok: false, error: 'session_id and task_id required' });
+          return true;
+        }
+        const task = await stationTaskQueue.getTask(taskId);
+        if (!task) {
+          sendJson(res, 404, { ok: false, error: 'task not found' });
+          return true;
+        }
+        if (installId && task.install_id !== installId) {
+          sendJson(res, 403, { ok: false, error: 'install_id mismatch' });
+          return true;
+        }
+        const result = body.result && typeof body.result === 'object'
+          ? body.result
+          : {
+            ok: body.ok !== false,
+            summary: body.summary || body.output || null,
+            error: body.error || null,
+            screenshot: body.screenshot || body.screenshotB64 || null,
+            topics: body.topics || [],
+            searchQuery: body.searchQuery || null,
+          };
+        const completed = await stationTaskQueue.completeTask(taskId, result);
+        sendJson(res, completed.ok ? 200 : 404, completed);
+        return true;
+      }
+
+      if (
+        path === '/api/desktop/station/vision'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 8 * 1024 * 1024);
+        const sessionId = extractSessionId(req, body, url);
+        if (!sessionId) {
+          sendJson(res, 400, { ok: false, error: 'session_id required' });
+          return true;
+        }
+        const mode = String(body.mode || 'desktop').trim().toLowerCase();
+        const screenshotB64 = String(body.screenshot || body.screenshotB64 || '').trim();
+        const instruction = String(body.instruction || '').slice(0, 4000);
+        const messages = Array.isArray(body.messages) ? body.messages : null;
+
+        if (!screenshotB64 && mode !== 'messages') {
+          sendJson(res, 400, { ok: false, error: 'screenshot required' });
+          return true;
+        }
+
+        if (mode === 'observe') {
+          const buf = Buffer.from(screenshotB64, 'base64');
+          const observe = await desktopAgent.describeScreenshotBuffer({
+            instruction: instruction || 'Describe what is on my screen.',
+            screenshotBuf: buf,
+            npcName: body.npcName || body.npc_name || 'Lucy',
+          });
+          sendJson(res, observe.ok ? 200 : 500, { ok: !!observe.ok, ...observe });
+          return true;
+        }
+
+        const visionMessages = messages || [{
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: instruction || 'What is your next action? Output only JSON.',
+            },
+            {
+              type: 'image_url',
+              image_url: { url: `data:image/png;base64,${screenshotB64}` },
+            },
+          ],
+        }];
+
+        const parsed = await desktopAgent.visionStep({
+          messages: visionMessages,
+          mode: mode === 'observe' ? 'observe' : 'desktop',
+        });
+        sendJson(res, 200, { ok: true, parsed });
+        return true;
+      }
+
+      if (
+        path === '/api/desktop/station/files/read'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 64 * 1024);
+        const sessionId = extractSessionId(req, body, url);
+        const installId = String(body.install_id || body.installId || '').trim();
+        const filePath = String(body.path || '').trim();
+        if (!sessionId || !installId || !filePath) {
+          sendJson(res, 400, { ok: false, error: 'session_id, install_id, and path required' });
+          return true;
+        }
+        const routed = await require('./denizen-station-router').routeOrRunHost({
+          sessionId,
+          npcName: body.npcName || 'Denizen',
+          kind: 'file_read',
+          skill: 'file-read',
+          instruction: filePath,
+          payload: { path: filePath },
+          permissionLevel: body.agent_permission_level || null,
+        });
+        sendJson(res, routed.ok ? 200 : 400, routed);
+        return true;
+      }
+
+      if (
+        path === '/api/desktop/station/files/write'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 1024 * 1024);
+        const sessionId = extractSessionId(req, body, url);
+        const installId = String(body.install_id || body.installId || '').trim();
+        const filePath = String(body.path || '').trim();
+        const content = String(body.content ?? '');
+        if (!sessionId || !installId || !filePath) {
+          sendJson(res, 400, { ok: false, error: 'session_id, install_id, path, and content required' });
+          return true;
+        }
+        const routed = await require('./denizen-station-router').routeOrRunHost({
+          sessionId,
+          npcName: body.npcName || 'Denizen',
+          kind: 'file_write',
+          skill: 'file-write',
+          instruction: filePath,
+          payload: { path: filePath, content },
+          permissionLevel: body.agent_permission_level || null,
+        });
+        sendJson(res, routed.ok ? 200 : 400, routed);
+        return true;
+      }
+
+      if (
+        path === '/api/desktop/station/run'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 256 * 1024);
+        const sessionId = extractSessionId(req, body, url);
+        const installId = String(body.install_id || body.installId || '').trim();
+        const command = String(body.command || '').trim();
+        const args = Array.isArray(body.args) ? body.args.map(String) : [];
+        const cwd = body.cwd ? String(body.cwd) : null;
+        if (!sessionId || !installId || !command) {
+          sendJson(res, 400, { ok: false, error: 'session_id, install_id, and command required' });
+          return true;
+        }
+        const routed = await require('./denizen-station-router').routeOrRunHost({
+          sessionId,
+          npcName: body.npcName || 'Denizen',
+          kind: 'run_code',
+          skill: 'run_code',
+          instruction: command,
+          payload: { command, args, cwd },
+          permissionLevel: body.agent_permission_level || null,
+        });
+        sendJson(res, routed.ok ? 200 : 400, routed);
         return true;
       }
 
@@ -1274,6 +1690,33 @@ function mountComputeRoutes(serverContext = {}) {
           ok: true,
           spend: option,
           result: spent,
+        });
+        return true;
+      }
+
+      const jobStatusMatch = path.match(/^\/api\/compute\/jobs\/([^/]+)$/);
+      if (method === 'GET' && jobStatusMatch && jobStatusMatch[1] !== 'enqueue') {
+        const body = await readBodyOrHeaders(req, url, 4096).catch(() => ({}));
+        const sessionId = extractSessionId(req, body, url);
+        if (!sessionId) {
+          assertInternalRequest(req, body, url, serverContext);
+        }
+        const jobId = decodeURIComponent(jobStatusMatch[1]);
+        const job = await computeQueue.getJobById(jobId);
+        if (!job) {
+          sendJson(res, 404, { ok: false, error: 'job not found', job_id: jobId });
+          return true;
+        }
+        sendJson(res, 200, {
+          ok: true,
+          job_id: job.id,
+          status: job.status,
+          job_type: job.job_type,
+          assigned_node_id: job.assigned_node_id || null,
+          result: job.result || null,
+          error: job.error || null,
+          created_at: job.created_at,
+          completed_at: job.completed_at || null,
         });
         return true;
       }

@@ -55,7 +55,7 @@ create or replace function public.denizen_resolve_mcp_token(p_token text)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_hash text;

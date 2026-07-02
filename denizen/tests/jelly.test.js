@@ -63,6 +63,8 @@ describe('Jelly skill-registry', () => {
     assert.ok(names.includes('supabase'));
     assert.ok(names.includes('github'));
     assert.ok(names.includes('job-pipeline'));
+    assert.ok(names.includes('consult-grok'));
+    assert.ok(names.includes('consult-mentors'));
   });
 
   it('resolves aliases to canonical skill', () => {

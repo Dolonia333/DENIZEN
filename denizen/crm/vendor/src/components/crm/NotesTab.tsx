@@ -449,6 +449,18 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages.length]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!selectedCard || (e.key !== "Delete" && e.key !== "Backspace")) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable) return;
+      e.preventDefault();
+      deleteCard(selectedCard.id);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedCard]);
+
   // ── Toggle floating panel ──
   const togglePanel = (type: "chat" | "activity") => {
     setFloatingPanels(prev => {
@@ -891,6 +903,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
   const renderCard = (card: BoardCard) => {
     const cursorUser = getCardCursor(card.id);
     const isHovered = hoveredCard === card.id;
+    const isSelected = selectedCard?.id === card.id;
     const isActiveDrag = draggingCardId === card.id || resizingCardId === card.id;
 
     return (
@@ -907,9 +920,11 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
             position: "relative" as const, width: "100%",
           }),
           ...(card.type === "divider" ? {
-            background: "transparent", border: "none", borderRadius: 0,
-            borderBottom: `2px dashed ${card.color || T.bg4}66`,
-            padding: "0 12px", display: "flex", alignItems: "center", cursor: "grab",
+            background: isSelected ? `${card.color || T.accent}11` : "transparent",
+            border: "none", borderRadius: 6,
+            borderBottom: `2px dashed ${card.color || T.bg4}${isSelected ? "cc" : "66"}`,
+            padding: "4px 12px", display: "flex", alignItems: "center", cursor: "grab",
+            minHeight: 32,
           } : {
             background: T.bg2, border: `1px solid ${T.bg3}`, borderRadius: 12,
             cursor: viewMode === "canvas" ? (isActiveDrag ? "grabbing" : "grab") : "default",
@@ -950,7 +965,33 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
         )}
 
         {card.type === "divider" ? (
-          <span style={{ fontSize: 10, fontWeight: 700, color: card.color || T.text3, letterSpacing: "0.15em", textTransform: "uppercase" }}>{card.title}</span>
+          <div style={{ display: "flex", alignItems: "center", width: "100%", gap: 8 }}>
+            <button
+              className="divider-delete-btn"
+              title="Delete divider"
+              onClick={e => { e.stopPropagation(); deleteCard(card.id); }}
+              style={{
+                background: T.bg3, border: `1px solid ${T.bg4}`, borderRadius: 4,
+                color: T.red || "#ef4444", fontSize: 11, cursor: "pointer",
+                opacity: 1,
+                padding: "2px 7px", flexShrink: 0, lineHeight: 1.2, fontWeight: 700,
+              }}
+              onMouseDown={e => e.stopPropagation()}
+            >✕</button>
+            {editingCard === card.id ? (
+              <input autoFocus
+                value={card.title}
+                onChange={e => updateCard(card.id, { title: e.target.value })}
+                onBlur={() => setEditingCard(null)}
+                onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}
+                style={{ background: "transparent", border: "none", outline: "none", color: card.color || T.text3, fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", flex: 1, padding: 0 }}
+              />
+            ) : (
+              <span onDoubleClick={e => { e.stopPropagation(); setEditingCard(card.id); }}
+                style={{ fontSize: 10, fontWeight: 700, color: card.color || T.text3, letterSpacing: "0.15em", textTransform: "uppercase", flex: 1, cursor: "text" }}>{card.title}</span>
+            )}
+          </div>
         ) : (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, flexShrink: 0 }}>
@@ -1494,6 +1535,16 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
                 onMouseLeave={e => { e.currentTarget.style.background = T.bg2; e.currentTarget.style.color = T.text2; e.currentTarget.style.borderColor = T.bg3; }}
               >{t.icon} {t.label}</button>
             ))}
+            {selectedCard?.type === "divider" && (
+              <button
+                onClick={() => deleteCard(selectedCard.id)}
+                style={{
+                  padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+                  cursor: "pointer", background: `${T.red || "#ef4444"}18`,
+                  border: `1px solid ${T.red || "#ef4444"}55`, color: T.red || "#ef4444",
+                }}
+              >✕ Delete divider</button>
+            )}
           </div>
 
           <div style={{ display: "flex", background: T.bg2, borderRadius: 8, border: `1px solid ${T.bg3}`, overflow: "hidden" }}>
@@ -1688,6 +1739,7 @@ export function NotesTab({ boards: externalBoards, onBoardsChange, currentUserNa
       <style>{`
         .notes-card:hover .resize-handle { opacity: 1 !important; background: ${T.accent}44; }
         .notes-card:hover .resize-handle:hover { background: ${T.accent}88; }
+        .notes-card:hover .divider-delete-btn { opacity: 1 !important; }
         .notes-card--dragging { opacity: 0.96; }
         .notes-card--dragging .resize-handle { opacity: 1 !important; }
         @keyframes typingBounce {

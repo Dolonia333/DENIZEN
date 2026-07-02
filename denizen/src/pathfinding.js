@@ -3,6 +3,9 @@
  * Builds a walkability grid from the scene's obstacles and uses A* to navigate NPCs.
  */
 
+let _localMetrics = null;
+try { _localMetrics = require('./npc-local-metrics'); } catch (_) {}
+
 class OfficePathfinder {
   /**
    * @param {number} worldW - World width in pixels
@@ -60,12 +63,18 @@ class OfficePathfinder {
     if (Array.isArray(scene._interactables)) {
       scene._interactables.forEach(item => {
         if (!item.sprite || !item.def) return;
-        // Only block desks and large furniture (not seats/decor — NPCs need to reach those)
         const type = item.def.type;
-        if (type === 'seat' || type === 'decor') return;
+        const id = String(item.id || item.def.id || '').toLowerCase();
+        // Skip seats, decor, *and* couches/sofas (breakroom needs floor space around them)
+        // Also treat anything with couch/sofa/bench in the id
+        const isSeatLike = type === 'seat' || type === 'decor' ||
+          /couch|sofa|bench|seat/i.test(id);
+        if (isSeatLike) return;
+
         const s = item.sprite;
         const w = s.displayWidth;
-        const h = Math.min(s.displayHeight * 0.4, 24); // Only block bottom portion
+        // Smaller footprint for surfaces in crowded areas (breakroom, reception)
+        const h = Math.min(s.displayHeight * 0.35, 18);
         const x = s.x - w / 2;
         const y = s.y - h; // bottom-anchored
         if (w > 20) {
@@ -79,6 +88,87 @@ class OfficePathfinder {
     this._computeSoftCost();
 
     console.log(`[Pathfinder] Grid built: ${this.cols}x${this.rows} (${cs}px cells), ${this._countBlocked()} blocked cells`);
+  }
+
+  /**
+   * Force walkable corridors through known doorways (matches openplan_walls.json gaps).
+   * Call after buildFromScene — walls/furniture may over-block doorway cells.
+   */
+  carveDoorwayGaps() {
+    const cs = this.cellSize || 8;
+    const gaps = [
+      { x0: 278, x1: 398, y0: 412, y1: 478, label: 'breakroom_north' },
+      { x0: 550, x1: 666, y0: 412, y1: 478, label: 'reception_north' },
+      { x0: 832, x1: 864, y0: 150, y1: 266, label: 'manager_west' },
+      { x0: 832, x1: 864, y0: 318, y1: 434, label: 'conference_west' },
+      { x0: 988, x1: 1118, y0: 232, y1: 292, label: 'ceo_to_meeting' },
+    ];
+    let carved = 0;
+    for (const gap of gaps) {
+      for (let py = gap.y0; py <= gap.y1; py += cs / 2) {
+        for (let px = gap.x0; px <= gap.x1; px += cs / 2) {
+          const g = this.toGrid(px, py);
+          if (g.x < 0 || g.x >= this.cols || g.y < 0 || g.y >= this.rows) continue;
+          const idx = g.y * this.cols + g.x;
+          if (this.grid[idx] !== 0) carved++;
+          this.grid[idx] = 0;
+          if (this.softCost) this.softCost[idx] = 0;
+        }
+      }
+    }
+    if (carved > 0) {
+      console.log(`[Pathfinder] Carved ${carved} doorway cells across ${gaps.length} gaps`);
+    }
+  }
+
+  /** Rough room zone for doorway routing (matches agent-actions ROOMS). */
+  zoneAt(px, py) {
+    if (py < 445) {
+      if (px >= 848 && py < 250) return 'manager_office';
+      if (px >= 848 && py <= 445) return 'conference';
+      return 'open_office';
+    }
+    if (px < 280) return 'breakroom';
+    if (px < 848) return 'reception';
+    return 'storage';
+  }
+
+  /** Hub waypoints in doorway gaps — used when direct A* fails across zones. */
+  static get DOORWAY_HUBS() {
+    return [
+      { x: 336, y: 462, zones: ['breakroom', 'open_office'] },
+      { x: 608, y: 462, zones: ['reception', 'open_office'] },
+      { x: 864, y: 208, zones: ['manager_office', 'open_office'] },
+      { x: 864, y: 376, zones: ['conference', 'open_office'] },
+      { x: 1048, y: 268, zones: ['manager_office', 'conference'] },
+    ];
+  }
+
+  /**
+   * Find path with doorway hub fallback when direct route fails or crosses zones.
+   */
+  findPathSmart(startX, startY, endX, endY) {
+    const direct = this.findPath(startX, startY, endX, endY);
+    if (direct && direct.length > 0) return direct;
+
+    const zStart = this.zoneAt(startX, startY);
+    const zEnd = this.zoneAt(endX, endY);
+    if (zStart === zEnd) return direct;
+
+    const hubs = OfficePathfinder.DOORWAY_HUBS.filter((h) =>
+      h.zones.includes(zStart) || h.zones.includes(zEnd) || h.zones.includes('open_office'),
+    );
+
+    let best = null;
+    for (const hub of hubs) {
+      const leg1 = this.findPath(startX, startY, hub.x, hub.y);
+      const leg2 = this.findPath(hub.x, hub.y, endX, endY);
+      if (leg1 && leg2 && leg2.length >= 0) {
+        const combined = leg1.length ? [...leg1, ...leg2] : leg2;
+        if (!best || combined.length < best.length) best = combined;
+      }
+    }
+    return best || direct;
   }
 
   /**
@@ -140,7 +230,112 @@ class OfficePathfinder {
         }
       }
     }
+    // Last resort: larger search (up to 96px) so we rarely fail
+    if (maxRadiusPx < 96) return this.findWalkableNear(px, py, 96);
     return null;
+  }
+
+  /**
+   * Pick a random walkable point in the office, preferring open areas away from avoid point.
+   * Tries multiple samples and snaps each with findWalkableNear. Returns pixel {x,y} or null.
+   */
+  sampleSafeWalkTarget(avoidX = null, avoidY = null, minDistPx = 140, maxAttempts = 14) {
+    const cs = this.cellSize;
+    const margin = 70;
+    const minGX = Math.floor(margin / cs), maxGX = Math.floor((this.worldW - margin) / cs);
+    // Allow deeper into bottom areas (breakroom, reception) while still respecting perimeter blocks
+    const minGY = Math.floor(80 / cs), maxGY = Math.floor((this.worldH - 55) / cs);
+
+    let best = null;
+    let bestScore = -Infinity;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const gx = Math.floor(Math.random() * (maxGX - minGX + 1)) + minGX;
+      const gy = Math.floor(Math.random() * (maxGY - minGY + 1)) + minGY;
+      if (!this.isWalkable(gx, gy)) continue;
+      const cand = this.toPixel(gx, gy);
+
+      // Snap to guarantee reachable (also handles soft near-edge cases)
+      const snapped = this.findWalkableNear(cand.x, cand.y, 32);
+      if (!snapped) continue;
+
+      let score = 1;
+      if (avoidX != null && avoidY != null) {
+        const d = Math.hypot(snapped.x - avoidX, snapped.y - avoidY);
+        if (d < minDistPx) continue;
+        score += Math.min(d / 300, 3); // prefer farther
+      }
+      // Slight bias to center of office
+      const cx = this.worldW / 2, cy = this.worldH / 2;
+      score += 0.5 * (1 - Math.hypot(snapped.x - cx, snapped.y - cy) / 500);
+
+      if (score > bestScore) {
+        bestScore = score;
+        best = snapped;
+      }
+    }
+    return best;
+  }
+
+  /**
+   * Force an NPC sprite to a safe walkable cell near its current position.
+   * Used as last-resort unstick. Returns the position it was moved to (or null).
+   */
+  forceSnapToWalkable(npc) {
+    if (!npc) return null;
+    const snapped = this.findWalkableNear(npc.x, npc.y, 64);
+    if (snapped) {
+      npc.x = snapped.x;
+      npc.y = snapped.y;
+      if (npc.body) {
+        npc.body.velocity.x = 0;
+        npc.body.velocity.y = 0;
+      }
+      return snapped;
+    }
+    return null;
+  }
+
+  /**
+   * Find a good walkable approach/standing position near the given player (or target) coords.
+   * Tries offsets around the position so NPCs don't target the exact pixel the player is on
+   * or a blocked spot right next to them. Prefers positions ~30-60px away.
+   * Returns a snapped {x,y} or null.
+   */
+  findGoodApproachNear(x, y, minOffset = 28, maxRadius = 72) {
+    if (!x || !y) return this.findWalkableNear(x || 400, y || 300, maxRadius);
+
+    // Try the 4 main directions + diagonals at a few distances
+    const dirs = [
+      { dx: 1, dy: 0 }, { dx: -1, dy: 0 }, { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
+      { dx: 0.7, dy: 0.7 }, { dx: -0.7, dy: 0.7 }, { dx: 0.7, dy: -0.7 }, { dx: -0.7, dy: -0.7 }
+    ];
+
+    let best = null;
+    let bestDist = Infinity;
+
+    for (let r = minOffset; r <= maxRadius; r += 8) {
+      for (const d of dirs) {
+        const tx = x + d.dx * r;
+        const ty = y + d.dy * r;
+        const snapped = this.findWalkableNear(tx, ty, 20);  // small local snap
+        if (snapped) {
+          const dFromOrig = Math.hypot(snapped.x - x, snapped.y - y);
+          // Prefer a nice offset distance, not too close to player sprite
+          if (dFromOrig >= minOffset - 6 && dFromOrig < bestDist) {
+            bestDist = dFromOrig;
+            best = snapped;
+          }
+        }
+      }
+      if (best) break; // found a decent one at this ring
+    }
+
+    if (!best) {
+      // last resort larger search
+      best = this.findWalkableNear(x, y, maxRadius);
+    }
+    return best;
   }
 
   /**
@@ -426,7 +621,10 @@ class NpcPathFollower {
    * @returns {boolean} True if a path was found
    */
   navigateTo(targetX, targetY) {
-    const path = this.pathfinder.findPath(this.npc.x, this.npc.y, targetX, targetY);
+    const finder = typeof this.pathfinder.findPathSmart === 'function'
+      ? 'findPathSmart'
+      : 'findPath';
+    const path = this.pathfinder[finder](this.npc.x, this.npc.y, targetX, targetY);
 
     if (path && path.length > 0) {
       this.waypoints = path;
@@ -495,6 +693,12 @@ class NpcPathFollower {
           this.waypoints = null;
           this._stuckCount = 0;
           this._totalStuckTime = 0;
+          try {
+            if (_localMetrics && _localMetrics.captureSystemError && this.npc && (this.npc.name || this.npc.npcName)) {
+              const n = this.npc.name || this.npc.npcName;
+              _localMetrics.captureSystemError(n, 'mesh_navigation', { code: 'STUCK', message: 'path stuck 8s+' });
+            }
+          } catch (_) {}
           return null;
         }
 
@@ -508,11 +712,17 @@ class NpcPathFollower {
             this.waypoints = null;
             this._rerouteCount = 0;
             this._totalStuckTime = 0;
+            try {
+              if (_localMetrics && _localMetrics.captureSystemError && this.npc && (this.npc.name || this.npc.npcName)) {
+                const n = this.npc.name || this.npc.npcName;
+                _localMetrics.captureSystemError(n, 'mesh_navigation', { code: 'UNROUTABLE', message: 'too many reroutes' });
+              }
+            } catch (_) {}
             return null;
           }
 
           // Apply a small random nudge to break free before rerouting
-          const nudgeAmt = 8 + Math.random() * 8;
+          const nudgeAmt = 10 + Math.random() * 12;
           const nudgeAngle = Math.random() * Math.PI * 2;
           this.npc.x += Math.cos(nudgeAngle) * nudgeAmt;
           this.npc.y += Math.sin(nudgeAngle) * nudgeAmt;
@@ -526,11 +736,24 @@ class NpcPathFollower {
             return this.update(speed, delta);
           }
 
-          // Last resort: reroute from current position
-          const rerouted = this.pathfinder.findPath(this.npc.x, this.npc.y, finalTarget.x, finalTarget.y);
+          // Snap final target to nearest walkable (handles desks/chairs that drifted slightly)
+          let goalX = finalTarget.x, goalY = finalTarget.y;
+          const snapped = this.pathfinder.findWalkableNear(finalTarget.x, finalTarget.y, 56);
+          if (snapped) { goalX = snapped.x; goalY = snapped.y; }
+
+          // Last resort: reroute from current (nudged) position to (possibly snapped) goal
+          const rerouted = this.pathfinder.findPathSmart
+            ? this.pathfinder.findPathSmart(this.npc.x, this.npc.y, goalX, goalY)
+            : this.pathfinder.findPath(this.npc.x, this.npc.y, goalX, goalY);
           if (!rerouted || rerouted.length === 0) {
             this.waypoints = null;
             this._totalStuckTime = 0;
+            try {
+              if (_localMetrics && _localMetrics.captureSystemError && this.npc && (this.npc.name || this.npc.npcName)) {
+                const n = this.npc.name || this.npc.npcName;
+                _localMetrics.captureSystemError(n, 'mesh_navigation', { code: 'UNROUTABLE', message: 'no path after reroute' });
+              }
+            } catch (_) {}
             return null;
           }
           this.waypoints = rerouted;
@@ -564,6 +787,33 @@ class NpcPathFollower {
   stop() {
     this.waypoints = null;
     this.waypointIndex = 0;
+  }
+
+  /**
+   * Aggressive unstick: clear path, apply jitter, try to snap self to walkable, and optionally
+   * set a brand new destination. Returns true if we moved somewhere new.
+   */
+  forceUnstick(newTarget = null) {
+    this.waypoints = null;
+    this.waypointIndex = 0;
+    this._stuckTimer = 0;
+    this._stuckCount = 0;
+    this._rerouteCount = 0;
+    this._totalStuckTime = 0;
+
+    // Jitter
+    const j = 14 + Math.random() * 10;
+    const a = Math.random() * Math.PI * 2;
+    this.npc.x += Math.cos(a) * j;
+    this.npc.y += Math.sin(a) * j;
+
+    // Snap to a guaranteed walkable tile
+    const snapped = this.pathfinder.forceSnapToWalkable(this.npc);
+    if (newTarget) {
+      const ok = this.navigateTo(newTarget.x, newTarget.y);
+      return ok;
+    }
+    return !!snapped;
   }
 }
 

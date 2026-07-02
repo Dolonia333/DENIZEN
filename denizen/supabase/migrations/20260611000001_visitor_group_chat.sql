@@ -36,3 +36,7 @@ create policy denizen_visitor_group_chat_deny_all on public.denizen_visitor_grou
 drop policy if exists denizen_visitor_group_chat_message_deny_all on public.denizen_visitor_group_chat_message;
 create policy denizen_visitor_group_chat_message_deny_all on public.denizen_visitor_group_chat_message
   for all using (false);
+
+insert into public.denizen_schema_migrations (version, name)
+values ('20260611000001', 'visitor_group_chat')
+on conflict (version) do nothing;

@@ -5,6 +5,7 @@ const { chromium, devices } = require('playwright');
 const url = process.argv[2] || 'http://127.0.0.1:8080';
 
 (async () => {
+  const { loginOwner } = await import('./lib/probe-login.mjs');
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ ...devices['iPhone 13'] });
   const page = await ctx.newPage();
@@ -18,11 +19,8 @@ const url = process.argv[2] || 'http://127.0.0.1:8080';
   console.log('modal visible:', modal > 0);
 
   if (modal > 0) {
-    await page.locator('[data-action="path-ceo"]').tap({ timeout: 10_000 });
-    await page.waitForTimeout(800);
-    await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-    await page.locator('[data-action="submit-ceo-code"]').tap({ timeout: 10_000 });
-    await page.waitForTimeout(5000);
+    await loginOwner(page);
+    await page.waitForTimeout(3000);
   }
 
   const state = await page.evaluate(() => ({

@@ -83,8 +83,14 @@ class AgentActions {
         // Re-path when the player has moved enough, or the throttle elapsed.
         const moved = st.lastPx == null || Math.hypot(player.x - st.lastPx, player.y - st.lastPy) > 20;
         if (moved || now - st.lastRetargetAt > this.FOLLOW_RETARGET_MS) {
-          const side = npc.x <= player.x ? -1 : 1; // trail beside, not on top of, the player
-          npc.ai.taskTarget = { x: player.x + side * 28, y: player.y + 8 };
+          const pf = this.scene?._pathfinder;
+          let tx = player.x, ty = player.y;
+          if (pf && typeof pf.findGoodApproachNear === 'function') {
+            const app = pf.findGoodApproachNear(player.x, player.y, 30, 64);
+            if (app) { tx = app.x; ty = app.y; }
+          }
+          const side = npc.x <= player.x ? -1 : 1;
+          npc.ai.taskTarget = { x: tx + side * 8, y: ty + 6 };  // small final bias
           npc.ai.taskState = 'walking';
           st.lastRetargetAt = now; st.lastPx = player.x; st.lastPy = player.y;
         }
@@ -113,27 +119,83 @@ class AgentActions {
   }
 
   /**
-   * Find the nearest chair to a desk (searches _interactables for seats within range)
+   * Find the nearest chair to a desk (searches _interactables for seats within range).
+   * Prefers chairs aligned with the desk (same column, south side for cubicles).
    */
-  _findChairNearDesk(desk, range = 80) {
+  _findChairNearDesk(desk, range = 96) {
     if (!this.scene._interactables || !desk?.sprite) return null;
 
     let best = null;
-    let bestDist = range;
+    let bestScore = Infinity;
 
     this.scene._interactables.forEach(it => {
       if (!it.def || !it.sprite) return;
       const isSeat = it.def.type === 'seat' || (it.id && /chair|seat|stool/i.test(it.id));
       if (!isSeat) return;
 
-      const d = Math.hypot(it.sprite.x - desk.sprite.x, it.sprite.y - desk.sprite.y);
-      if (d < bestDist) {
-        bestDist = d;
+      const dx = it.sprite.x - desk.sprite.x;
+      const dy = it.sprite.y - desk.sprite.y;
+      const d = Math.hypot(dx, dy);
+      if (d > range) return;
+
+      let score = d;
+      // Cubicle chairs usually sit south of (below) the desk surface
+      if (dy < -20) score += 100;
+      // Penalize chairs far to the side — wrong pod neighbor
+      score += Math.abs(dx) * 0.35;
+
+      if (score < bestScore) {
+        bestScore = score;
         best = it;
       }
     });
 
     return best;
+  }
+
+  /**
+   * Exact pixel position where an NPC should sit for a chair (matches player sit offsets).
+   */
+  _getChairSitPos(chair, desk = null) {
+    if (!chair?.sprite) {
+      if (desk?.sprite) {
+        return { x: desk.sprite.x, y: desk.sprite.y + 24, facing: 'up', backFacing: true };
+      }
+      return null;
+    }
+
+    const chairInfo = this._getChairFacing(chair, desk);
+    const def = chair.def || {};
+    const snap = def.snap_offset || { x: 0, y: 0 };
+    const id = (chair.id || '').toLowerCase();
+    let x = chair.sprite.x + (snap.x || 0);
+    let y = chair.sprite.y + (snap.y || 0);
+
+    // Match office-scene player sit offsets (front-facing chairs sit slightly lower)
+    if (/front/.test(id) || chairInfo.facing === 'down') {
+      y += 12;
+    }
+
+    return { x, y, ...chairInfo };
+  }
+
+  /**
+   * Snap NPC sprite to a chair sit pose (position, frame, depth).
+   */
+  _applySitPose(npc, npcKey, chair, sit) {
+    npc.body?.setVelocity(0, 0);
+    npc.x = sit.x;
+    npc.y = sit.y;
+    npc.ai.facing = sit.facing;
+    npc.anims.stop();
+    if (sit.facing === 'up') npc.setFrame(12);
+    else if (sit.facing === 'down') npc.setFrame(0);
+    else if (sit.facing === 'left') npc.setFrame(4);
+    else npc.setFrame(8);
+    npc.ai.taskState = 'sitting';
+    if (chair?.sprite) {
+      this._applySitDepth(npc, npcKey, chair, sit);
+    }
   }
 
   /**
@@ -146,6 +208,12 @@ class AgentActions {
 
     // Check sprite name for explicit facing info
     const chairId = (chair.id || '').toLowerCase();
+    if (/side_left/.test(chairId)) {
+      return { facing: 'right', backFacing: false };
+    }
+    if (/side_right/.test(chairId)) {
+      return { facing: 'left', backFacing: false };
+    }
     if (/back/.test(chairId)) {
       // Chair sprite shows the back → NPC faces UP (away from camera, toward desk)
       // Chair renders ON TOP of NPC
@@ -232,8 +300,18 @@ class AgentActions {
         }
 
         // Add slight random offset so multiple NPCs don't stack on the exact same pixel
-        const ox = x + (Math.random() - 0.5) * 12;
-        const oy = y + (Math.random() - 0.5) * 12;
+        let ox = x + (Math.random() - 0.5) * 12;
+        let oy = y + (Math.random() - 0.5) * 12;
+
+        // Snap to actual walkable cell so pathing rarely fails
+        const pf = this.scene?._pathfinder;
+        if (pf && typeof pf.findWalkableNear === 'function') {
+          const snapped = pf.findWalkableNear(ox, oy, 56);
+          if (snapped) { ox = snapped.x; oy = snapped.y; }
+        }
+
+        if (npc._pathFollower) npc._pathFollower.stop();
+        npc.body && npc.body.setVelocity(0, 0);
 
         npc.ai.mode = 'agent_task';
         npc.ai.taskTarget = { x: ox, y: oy };
@@ -244,9 +322,10 @@ class AgentActions {
           loop: true,
           callback: () => {
             const dist = Math.hypot(ox - npc.x, oy - npc.y);
-            if (dist <= 10 || npc.ai.taskState === 'working') {
+            if (dist <= 10 || npc.ai.taskState === 'arrived') {
               checkInterval.remove();
               npc.body.setVelocity(0, 0);
+              if (npc._pathFollower) npc._pathFollower.stop();
               // Brief idle pause on arrival — looks like settling into position
               this.scene.time.delayedCall(200, () => {
                 npc.ai.taskState = 'arrived';
@@ -259,145 +338,148 @@ class AgentActions {
         this.scene.time.delayedCall(12000, () => {
           checkInterval.remove();
           npc.body.setVelocity(0, 0);
+          if (npc._pathFollower) npc._pathFollower.stop();
+          // If we timed out far away, force unstick so we don't stay broken
+          const d = npc.ai.taskTarget ? Math.hypot(npc.x - npc.ai.taskTarget.x, npc.y - npc.ai.taskTarget.y) : 0;
+          if (d > 80 && this.scene._unstickNpc) this.scene._unstickNpc(npc);
           resolve();
         });
       });
     });
   }
 
+  _cancelDeskWalk(npcKey) {
+    const npc = this._getNpc(npcKey);
+    if (!npc?.ai) return;
+    if (npc.ai._deskSitInterval) {
+      npc.ai._deskSitInterval.remove();
+      npc.ai._deskSitInterval = null;
+    }
+    if (npc.ai._deskSitTimeout) {
+      npc.ai._deskSitTimeout.remove();
+      npc.ai._deskSitTimeout = null;
+    }
+    npc.ai._sitSnap = null;
+    if (npc._pathFollower) npc._pathFollower.stop();
+    npc.body?.setVelocity(0, 0);
+  }
+
+  isSeatedAtDesk(npcKey, deskId) {
+    if (!this._sittingNpcs.has(npcKey)) return false;
+    const desk = this._getFurniture(deskId);
+    const chair = this._findChairNearDesk(desk);
+    const sit = this._getChairSitPos(chair, desk);
+    if (!sit) return false;
+    const npc = this._getNpc(npcKey);
+    if (!npc) return false;
+    return Math.hypot(npc.x - sit.x, npc.y - sit.y) < 40;
+  }
+
+  _sitAtDeskNow(npcKey, deskId) {
+    this._cancelDeskWalk(npcKey);
+    const npc = this._getNpc(npcKey);
+    const desk = this._getFurniture(deskId);
+    if (!npc || !desk?.sprite) return false;
+    const chair = this._findChairNearDesk(desk);
+    const sit = this._getChairSitPos(chair, desk);
+    if (!sit) return false;
+    if (npc.body) {
+      npc.body.setSize(10, 8);
+      npc.body.setOffset(3, 16);
+      npc.body.setVelocity(0, 0);
+    }
+    this._applySitPose(npc, npcKey, chair, sit);
+    npc.ai.mode = 'agent_task';
+    npc.ai.taskTarget = null;
+    this._showTypingIndicator(npc, npcKey);
+    return true;
+  }
+
   /**
-   * useComputer(npcKey, deskId) - Walk to desk's chair, sit properly, show working
+   * useComputer(npcKey, deskId, opts) - Sit at desk chair. opts.instant skips walking.
    */
-  useComputer(npcKey, deskId) {
+  useComputer(npcKey, deskId, opts = {}) {
     return this.queueAction(npcKey, () => {
       return new Promise((resolve) => {
+        if (this.isSeatedAtDesk(npcKey, deskId)) {
+          resolve();
+          return;
+        }
+
         const npc = this._getNpc(npcKey);
         const desk = this._getFurniture(deskId);
         if (!npc || !desk?.sprite) { resolve(); return; }
 
-        // If already sitting, stand up first
-        if (this._sittingNpcs.has(npcKey)) {
-          this._standUpNpc(npcKey);
+        const chair = this._findChairNearDesk(desk);
+        const sit = this._getChairSitPos(chair, desk);
+        if (!sit) { resolve(); return; }
+
+        const dist = Math.hypot(npc.x - sit.x, npc.y - sit.y);
+        const instant = opts.instant === true || npcKey === 'xp_grok' || dist < 120;
+
+        if (instant) {
+          this._sitAtDeskNow(npcKey, deskId);
+          resolve();
+          return;
         }
 
-        // Find the chair near this desk
-        const chair = this._findChairNearDesk(desk);
-        const chairInfo = this._getChairFacing(chair, desk);
+        if (this._sittingNpcs.has(npcKey)) this._standUpNpc(npcKey);
+        this._cancelDeskWalk(npcKey);
 
-        // Target position: in front of the chair (where NPC stands to sit)
-        let targetX, targetY;
-        if (chair?.sprite) {
-          targetX = chair.sprite.x;
-          // Position NPC at the chair — offset slightly based on facing
-          if (chairInfo.backFacing) {
-            // Back-facing: NPC goes to chair Y (sits behind desk looking up)
-            targetY = chair.sprite.y;
-          } else {
-            // Front-facing: NPC goes to chair Y
-            targetY = chair.sprite.y;
-          }
-        } else {
-          // No chair found — just stand near the desk
-          targetX = desk.sprite.x;
-          targetY = desk.sprite.y + 24;
+        let approachX = sit.x;
+        let approachY = sit.y;
+        const pf2 = this.scene?._pathfinder;
+        if (pf2?.findWalkableNear) {
+          const s = pf2.findWalkableNear(sit.x, sit.y, 40);
+          if (s) { approachX = s.x; approachY = s.y; }
         }
 
         npc.ai.mode = 'agent_task';
-        npc.ai.taskTarget = { x: targetX, y: targetY };
+        npc.ai.taskTarget = { x: approachX, y: approachY };
+        npc.ai._sitSnap = sit;
         npc.ai.taskState = 'walking';
+        npc.body?.setSize(6, 4);
+        npc.body?.setOffset(5, 20);
 
-        // Shrink collision body while walking to desk so NPC can squeeze through tight furniture gaps
-        npc.body.setSize(6, 4);
-        npc.body.setOffset(5, 20);
+        let finished = false;
+        const finishSit = () => {
+          if (finished) return;
+          finished = true;
+          this._cancelDeskWalk(npcKey);
+          this._sitAtDeskNow(npcKey, deskId);
+          resolve();
+        };
 
-        const checkInterval = this.scene.time.addEvent({
+        npc.ai._deskSitInterval = this.scene.time.addEvent({
           delay: 100,
           loop: true,
           callback: () => {
-            const dist = Math.hypot(targetX - npc.x, targetY - npc.y);
-            if (dist <= 14 || npc.ai.taskState === 'working') {
-              checkInterval.remove();
-
-              // Restore normal collision body
-              npc.body.setSize(10, 8);
-              npc.body.setOffset(3, 16);
-
-              // Snap NPC to chair position and sit
-              npc.body.setVelocity(0, 0);
-              npc.x = targetX;
-              npc.y = targetY;
-
-              // Set facing direction
-              npc.ai.facing = chairInfo.facing;
-
-              // Stop animation — set idle frame based on facing
-              npc.anims.stop();
-              if (chairInfo.facing === 'up') npc.setFrame(12);
-              else if (chairInfo.facing === 'down') npc.setFrame(0);
-              else if (chairInfo.facing === 'left') npc.setFrame(4);
-              else npc.setFrame(8);
-
-              // Adjust depth for proper chair layering
-              npc.ai.taskState = 'sitting';
-              if (chair?.sprite) {
-                this._applySitDepth(npc, npcKey, chair, chairInfo);
-              }
-
-              // Show typing indicator
-              this._showTypingIndicator(npc, npcKey);
-              resolve();
-            }
-          }
+            const d = Math.hypot(approachX - npc.x, approachY - npc.y);
+            if (d <= 20 || (npc.ai._sitSnap && d <= 36)) finishSit();
+          },
         });
 
-        this.scene.time.delayedCall(12000, () => {
-          checkInterval.remove();
-          npc.body.setVelocity(0, 0);
-          // Restore collision body if walk timed out
-          npc.body.setSize(10, 8);
-          npc.body.setOffset(3, 16);
-          resolve();
-        });
+        npc.ai._deskSitTimeout = this.scene.time.delayedCall(4500, finishSit);
       });
     });
   }
 
   /**
-   * teleportToDesk(npcKey, deskId) - Instantly place NPC at desk chair (no walking)
+   * teleportToDesk(npcKey, deskId) - Instantly place NPC at desk chair (queued, cancels walk)
    */
   teleportToDesk(npcKey, deskId) {
+    return this.useComputer(npcKey, deskId, { instant: true });
+  }
+
+  /**
+   * Re-snap a seated NPC to the current chair position (after layout edit).
+   */
+  resnapSeatedNpc(npcKey, chair, desk = null) {
     const npc = this._getNpc(npcKey);
-    const desk = this._getFurniture(deskId);
-    if (!npc || !desk?.sprite) return;
-
-    const chair = this._findChairNearDesk(desk);
-    const chairInfo = this._getChairFacing(chair, desk);
-
-    const tx = chair?.sprite ? chair.sprite.x : desk.sprite.x;
-    const ty = chair?.sprite ? chair.sprite.y : desk.sprite.y + 24;
-
-    npc.x = tx;
-    npc.y = ty;
-    npc.body.setVelocity(0, 0);
-    npc.ai.mode = 'agent_task';
-    npc.ai.taskState = 'sitting';
-    npc.ai.facing = chairInfo.facing;
-    npc.anims.stop();
-    if (chairInfo.facing === 'up') npc.setFrame(12);
-    else if (chairInfo.facing === 'down') npc.setFrame(0);
-    else if (chairInfo.facing === 'left') npc.setFrame(4);
-    else npc.setFrame(8);
-
-    if (chair?.sprite) {
-      this._applySitDepth(npc, npcKey, chair, chairInfo);
-    }
-    this._sittingNpcs.set(npcKey, {
-      chairSprite: chair?.sprite || null,
-      origDepth: npc.depth,
-      origY: npc.y,
-      chairInfo,
-    });
-    this._showTypingIndicator(npc, npcKey);
+    if (!npc || !this._sittingNpcs.has(npcKey)) return;
+    const sit = this._getChairSitPos(chair, desk);
+    if (!sit) return;
+    this._applySitPose(npc, npcKey, chair, sit);
   }
 
   /**
@@ -460,42 +542,31 @@ class AgentActions {
           this._standUpNpc(npcKey);
         }
 
-        const targetX = furniture.sprite.x;
-        const targetY = furniture.sprite.y;
+        const sit = this._getChairSitPos(furniture, null);
+        if (!sit) { resolve(); return; }
+
+        let approachX = sit.x;
+        let approachY = sit.y;
+        const pf = this.scene?._pathfinder;
+        if (pf?.findWalkableNear) {
+          const s = pf.findWalkableNear(sit.x, sit.y, 40);
+          if (s) { approachX = s.x; approachY = s.y; }
+        }
 
         npc.ai.mode = 'agent_task';
-        npc.ai.taskTarget = { x: targetX, y: targetY };
+        npc.ai.taskTarget = { x: approachX, y: approachY };
+        npc.ai._sitSnap = sit;
         npc.ai.taskState = 'walking';
 
         const checkInterval = this.scene.time.addEvent({
           delay: 100,
           loop: true,
           callback: () => {
-            const dist = Math.hypot(targetX - npc.x, targetY - npc.y);
-            if (dist <= 14) {
+            const dist = Math.hypot(approachX - npc.x, approachY - npc.y);
+            if (dist <= 18) {
               checkInterval.remove();
-              npc.body.setVelocity(0, 0);
-              npc.x = targetX;
-              npc.y = targetY;
-              npc.ai.taskState = 'sitting';
-              npc.ai.facing = 'down';
-              npc.anims.stop();
-              npc.setFrame(0);
-
-              // Depth: NPC in front of chair for front-facing
-              const isFront = /front/i.test(furniture.id || '');
-              if (isFront) {
-                npc.setDepth(furniture.sprite.depth + 0.5);
-              } else {
-                npc.setDepth(furniture.sprite.depth - 0.5);
-              }
-
-              this._sittingNpcs.set(npcKey, {
-                chairSprite: furniture.sprite,
-                origDepth: npc.depth,
-                origY: npc.y,
-                chairInfo: { facing: 'down', backFacing: !isFront },
-              });
+              this._applySitPose(npc, npcKey, furniture, sit);
+              npc.ai._sitSnap = null;
               resolve();
             }
           }
@@ -784,8 +855,41 @@ class AgentActions {
     if (this._sittingNpcs.has(npcKey)) {
       this._standUpNpc(npcKey);
     }
-    const bx = 80 + Math.random() * 150;
-    const by = 520 + Math.random() * 80;
+    const room = this.ROOMS.breakroom;
+    const pf = this.scene?._pathfinder;
+
+    let bx = 80 + Math.random() * 150;
+    let by = 490 + Math.random() * 70;  // safer band: avoid sofa cluster at ~548-576 and very bottom
+
+    // Prefer a walkable cell; try a few samples inside the room rect for a good one
+    if (pf && typeof pf.findWalkableNear === 'function') {
+      let best = null;
+      let bestScore = -1;
+      for (let i = 0; i < 8; i++) {
+        const tx = room.xMin + 20 + Math.random() * (room.xMax - room.xMin - 40);
+        const ty = room.yMin + 20 + Math.random() * (room.yMax - room.yMin - 80); // keep away from bottom wall
+        const snapped = pf.findWalkableNear(tx, ty, 36);
+        if (snapped) {
+          // score: prefer a bit of open space (avoid furniture y's) and not too close to walls
+          const sofaY = 555;
+          const distToSofaBand = Math.abs(snapped.y - sofaY);
+          let score = distToSofaBand;
+          // slight preference for middle of the gap entrance side
+          if (snapped.x > 140 && snapped.x < 260) score += 20;
+          if (score > bestScore) {
+            bestScore = score;
+            best = snapped;
+          }
+        }
+      }
+      if (best) {
+        bx = best.x;
+        by = best.y;
+      } else {
+        const s = pf.findWalkableNear(bx, by, 48);
+        if (s) { bx = s.x; by = s.y; }
+      }
+    }
     return this.walkTo(npcKey, bx, by);
   }
 
@@ -801,8 +905,13 @@ class AgentActions {
       return it.sprite && it.id && /coffee|espresso|kettle|vending|snack|fridge|microwave/i.test(it.id);
     });
     if (item && item.sprite) {
-      const x = item.sprite.x + Phaser.Math.Between(-10, 10);
-      const y = item.sprite.y + 20 + Phaser.Math.Between(-6, 6);
+      let x = item.sprite.x + Phaser.Math.Between(-12, 12);
+      let y = item.sprite.y + 18 + Phaser.Math.Between(-4, 4);  // stand slightly in front
+      const pf = this.scene?._pathfinder;
+      if (pf && typeof pf.findWalkableNear === 'function') {
+        const s = pf.findWalkableNear(x, y, 32);
+        if (s) { x = s.x; y = s.y; }
+      }
       return this.walkTo(npcKey, x, y);
     }
     return this.goToBreakroom(npcKey);
@@ -872,8 +981,14 @@ class AgentActions {
   goToRoom(npcKey, roomKey) {
     const room = this.ROOMS[roomKey];
     if (!room) return this.walkTo(npcKey, 400, 300);
-    const x = (room.xMin + room.xMax) / 2 + Phaser.Math.Between(-30, 30);
-    const y = (room.yMin + room.yMax) / 2 + Phaser.Math.Between(-20, 20);
+    let x = (room.xMin + room.xMax) / 2 + Phaser.Math.Between(-30, 30);
+    let y = (room.yMin + room.yMax) / 2 + Phaser.Math.Between(-20, 20);
+    // Snap using pathfinder when possible
+    const pf = this.scene?._pathfinder;
+    if (pf && typeof pf.findWalkableNear === 'function') {
+      const s = pf.findWalkableNear(x, y, 40);
+      if (s) { x = s.x; y = s.y; }
+    }
     return this.walkTo(npcKey, x, y);
   }
 
@@ -951,20 +1066,30 @@ class AgentActions {
 
         const room = this.ROOMS.conference;
         // Standing positions: rows behind the chairs, spread across the room
-        // Track how many are already standing so we can stagger them
+        // Use size for stable index to avoid snapshot issues when multiple enter
         this._standingMeetingNpcs.add(npcKey);
-        const standIndex = [...this._standingMeetingNpcs].indexOf(npcKey);
+        const standIndex = this._standingMeetingNpcs.size - 1;
 
-        // Arrange in 2 rows of up to 5, spread across the conference room width
+        // Arrange in rows, spread across the conference room width with good spacing
         const cols = 5;
         const row = Math.floor(standIndex / cols);
         const col = standIndex % cols;
-        const startX = room.xMin + 40;
-        const spacingX = (room.xMax - room.xMin - 80) / (cols - 1);
-        const startY = room.yMax - 20 + (row * 28); // Below the chairs, in rows
+        const startX = room.xMin + 50;
+        const spacingX = (room.xMax - room.xMin - 100) / (cols - 1);
+        // More vertical spacing for rows to prevent piling
+        const startY = room.yMax - 30 + (row * 36); 
 
-        const targetX = startX + col * spacingX;
-        const targetY = startY;
+        let targetX = startX + col * spacingX;
+        let targetY = startY;
+
+        // Add jitter so they don't stack exactly on the grid point
+        const jitter = 12;
+        targetX += (Math.random() - 0.5) * jitter;
+        targetY += (Math.random() - 0.5) * (jitter * 0.7);
+
+        // Clamp to conference room bounds with margin so they don't go outside
+        targetX = Math.max(room.xMin + 30, Math.min(room.xMax - 30, targetX));
+        targetY = Math.max(room.yMin + 20, Math.min(room.yMax - 15, targetY));
 
         npc.ai.mode = 'agent_task';
         npc.ai.taskTarget = { x: targetX, y: targetY };
@@ -982,6 +1107,29 @@ class AgentActions {
               // Face upward toward the table/presenters
               npc.anims.stop();
               npc.setFrame(0); // facing up/front
+
+              // Final anti-pile nudge relative to other standing meeting NPCs + stable spacing
+              const others = Array.from(this._standingMeetingNpcs || [])
+                .filter(k => k !== npcKey)
+                .map(k => this._getNpc(k))
+                .filter(Boolean);
+              let nudgeX = 0, nudgeY = 0;
+              others.forEach(o => {
+                const dx = npc.x - o.x;
+                const dy = npc.y - o.y;
+                const d = Math.hypot(dx, dy);
+                if (d > 0 && d < 26) {
+                  const strength = (26 - d) / 26 * 8;
+                  nudgeX += (dx / d) * strength;
+                  nudgeY += (dy / d) * strength;
+                }
+              });
+              npc.x += nudgeX;
+              npc.y += nudgeY;
+
+              // Extra row spread nudge based on index
+              if (standIndex % 2 === 0) npc.y -= 4;
+
               resolve();
             }
           }
@@ -1020,26 +1168,54 @@ class AgentActions {
           this._standUpNpc(npcKey);
         }
 
-        const targetX = player.x + 32;
-        const targetY = player.y;
+        // Use smart approach finder so NPCs can reach the player no matter where the player is standing
+        let targetX = player.x + 32;
+        let targetY = player.y;
+        const pf = this.scene?._pathfinder;
+        if (pf && typeof pf.findGoodApproachNear === 'function') {
+          const good = pf.findGoodApproachNear(player.x, player.y, 28, 70);
+          if (good) {
+            targetX = good.x;
+            targetY = good.y;
+          } else {
+            const snap = pf.findWalkableNear(player.x + 32, player.y, 48);
+            if (snap) { targetX = snap.x; targetY = snap.y; }
+          }
+        } else if (pf && typeof pf.findWalkableNear === 'function') {
+          const snap = pf.findWalkableNear(targetX, targetY, 48);
+          if (snap) { targetX = snap.x; targetY = snap.y; }
+        }
 
         npc.ai.mode = 'agent_task';
         npc.ai.taskTarget = { x: targetX, y: targetY };
         npc.ai.taskState = 'walking';
 
         const checkInterval = this.scene.time.addEvent({
-          delay: 100,
+          delay: 120,
           loop: true,
           callback: () => {
-            const dist = Math.hypot(targetX - npc.x, targetY - npc.y);
-            if (dist <= 24) {
+            const livePlayer = this.scene.player;
+            const livePf = this.scene?._pathfinder;
+            // Re-snap / adjust target occasionally if player moved
+            let curTx = targetX, curTy = targetY;
+            if (livePlayer && livePf && typeof livePf.findGoodApproachNear === 'function' && (Math.random() < 0.25)) {
+              const refreshed = livePf.findGoodApproachNear(livePlayer.x, livePlayer.y, 26, 65);
+              if (refreshed) { curTx = refreshed.x; curTy = refreshed.y; npc.ai.taskTarget = { x: curTx, y: curTy }; }
+            }
+            const dist = Math.hypot(curTx - npc.x, curTy - npc.y);
+            const pDist = livePlayer ? Math.hypot(livePlayer.x - npc.x, livePlayer.y - npc.y) : 999;
+            const arrival = (pDist < 48) ? 48 : 26;
+            if (dist <= arrival || pDist < 42) {
               checkInterval.remove();
               npc.body.setVelocity(0, 0);
               npc.ai.taskState = 'reporting';
-              npc.ai.facing = player.x < npc.x ? 'left' : 'right';
+              if (livePlayer) npc.ai.facing = livePlayer.x < npc.x ? 'left' : 'right';
               npc.anims.stop();
-              if (npc.ai.facing === 'left') npc.setFrame(4);
-              else npc.setFrame(8);
+              const f = npc.ai.facing || 'down';
+              if (f === 'left') npc.setFrame(4);
+              else if (f === 'right') npc.setFrame(8);
+              else if (f === 'up') npc.setFrame(12);
+              else npc.setFrame(0);
               resolve();
             }
           }
@@ -1047,6 +1223,7 @@ class AgentActions {
 
         this.scene.time.delayedCall(12000, () => {
           checkInterval.remove();
+          npc.body.setVelocity(0, 0);
           resolve();
         });
       });
@@ -1093,7 +1270,8 @@ class AgentActions {
     // Without this, every autonomous NPC line was silent because the
     // bubble path bypassed the voice layer entirely. Thoughts are
     // intentionally silent — they're internal monologue.
-    if (!isThought && typeof window !== 'undefined' && typeof window.DenizenSpeak === 'function') {
+    if (!isThought && typeof window !== 'undefined' && typeof window.DenizenSpeak === 'function'
+        && !window.DenizenVoiceSession?.isActive?.()) {
       try {
         // Resolve display name from the agent manager. Fall back to npcKey
         // if the manager isn't around (e.g. demo scene).

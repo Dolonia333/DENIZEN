@@ -4,6 +4,57 @@ const denizenDb = require('./denizen-db.js');
 
 const JOB_TABLE = 'denizen_compute_jobs';
 
+const JOB_MIN_HARDWARE_SCORE = {
+  embedding_index: 24,
+  npc_think_batch: 16,
+  inference_rpc: 12,
+  sim_tick: 8,
+  web_search: 0,
+  grok_telemetry_check: 0,  // Python analysis + MCP, no heavy GPU needed
+};
+
+const LIGHT_NODE_BLOCKED_TYPES = new Set(['embedding_index']);
+
+function buildEffectiveNodeProfile(profile, live = null) {
+  if (!live || typeof live !== 'object') return profile || null;
+  const nodeProfiler = require('./denizen-node-profiler.js');
+  const gpu = live.gpu && typeof live.gpu === 'object' ? live.gpu : {};
+  const scored = nodeProfiler.scoreHardware({
+    gpu: gpu.model || profile?.gpu_model,
+    vramMb: gpu.vram_total_mb ?? profile?.vram_mb,
+    ramMb: live.ram?.total_mb ?? profile?.ram_mb,
+    cpuCores: live.cpu_cores ?? profile?.cpu_cores,
+  });
+  const hardwareScore = Math.max(Number(profile?.hardware_score) || 0, scored.score);
+  let contributionLevel = String(profile?.contribution_level || 'standard').toLowerCase();
+  if (contributionLevel === 'light' && hardwareScore >= 40 && live.contributing !== false) {
+    contributionLevel = 'standard';
+  }
+  if (contributionLevel === 'off' && live.contributing && hardwareScore >= 16) {
+    contributionLevel = 'standard';
+  }
+  if (!profile) {
+    return { hardware_score: hardwareScore, contribution_level: contributionLevel };
+  }
+  return { ...profile, hardware_score: hardwareScore, contribution_level: contributionLevel };
+}
+
+function nodeCanRunJob(nodeProfile, job) {
+  if (!job) return false;
+  if (!nodeProfile) return true;
+  const level = String(nodeProfile.contribution_level || 'standard').toLowerCase();
+  if (level === 'off') return false;
+  const jobType = String(job.job_type || '').trim();
+  const payload = job.payload && typeof job.payload === 'object' ? job.payload : {};
+  const minScore = Number(
+    payload.required_hardware_score ?? JOB_MIN_HARDWARE_SCORE[jobType] ?? 0,
+  );
+  const nodeScore = Number(nodeProfile.hardware_score) || 0;
+  if (nodeScore < minScore) return false;
+  if (level === 'light' && LIGHT_NODE_BLOCKED_TYPES.has(jobType)) return false;
+  return true;
+}
+
 function isEnabled() {
   return Boolean(denizenDb?.enabled);
 }
@@ -34,7 +85,29 @@ async function enqueueJob({ jobType, payload = {}, priority = 50 } = {}) {
   return rows?.[0] || null;
 }
 
-async function claimJob(nodeId) {
+function jobMatchesNode(job, nodeId, nodeProfile = null, opts = {}) {
+  const payload = job?.payload && typeof job.payload === 'object' ? job.payload : {};
+  const target = payload.target_machine_id
+    || payload.target_node_id
+    || payload.targetMachineId
+    || null;
+  if (!target) return true;
+
+  const machineId = String(
+    opts.machineId
+    || nodeProfile?.machine_id
+    || nodeProfile?.machineId
+    || '',
+  ).trim();
+  const node = String(nodeId || '').trim();
+  const want = String(target).trim();
+  if (!want) return true;
+  if (machineId && want === machineId) return true;
+  if (node && want === node) return true;
+  return false;
+}
+
+async function claimJob(nodeId, nodeProfile = null, opts = {}) {
   if (!isEnabled() || !nodeId) return null;
   const node = String(nodeId).trim();
   if (!node) return null;
@@ -49,6 +122,8 @@ async function claimJob(nodeId) {
   }
 
   for (const job of candidates) {
+    if (!jobMatchesNode(job, node, nodeProfile, opts)) continue;
+    if (nodeProfile && !nodeCanRunJob(nodeProfile, job)) continue;
     const now = new Date().toISOString();
     let rows = null;
     try {
@@ -129,6 +204,43 @@ async function listRecentCompletedJobs(limit = 10) {
   return denizenDb._get(
     `${JOB_TABLE}?select=id,job_type,priority,status,assigned_node_id,completed_at&status=eq.done&order=completed_at.desc&limit=${safeLimit}`,
   ).catch(() => []);
+}
+
+async function getJobById(jobId) {
+  if (!isEnabled() || !jobId) return null;
+  const rows = await denizenDb._getSoft(
+    `${JOB_TABLE}?select=*&id=eq.${encodeURIComponent(String(jobId))}&limit=1`,
+  ).catch(() => []);
+  return rows?.[0] || null;
+}
+
+function _sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, Math.max(0, Number(ms) || 0));
+  });
+}
+
+/**
+ * Poll until a job reaches done/failed or timeout.
+ */
+async function waitForJob(jobId, opts = {}) {
+  if (!isEnabled() || !jobId) return null;
+  const timeoutMs = Math.max(1000, Number(opts.timeoutMs) || 60_000);
+  const pollMs = Math.max(100, Number(opts.pollMs) || 400);
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const job = await getJobById(jobId);
+    if (!job) return null;
+    if (job.status === 'done' || job.status === 'failed') return job;
+    await _sleep(pollMs);
+  }
+
+  const finalJob = await getJobById(jobId);
+  if (finalJob && (finalJob.status === 'done' || finalJob.status === 'failed')) {
+    return finalJob;
+  }
+  return null;
 }
 
 /**
@@ -257,10 +369,14 @@ async function trimExcessQueuedJobs({
 }
 
 module.exports = {
+  buildEffectiveNodeProfile,
   enqueueJob,
   claimJob,
   completeJob,
   failJob,
+  getJobById,
+  waitForJob,
+  jobMatchesNode,
   listPendingJobs,
   listAssignedJobs,
   listRecentCompletedJobs,
@@ -268,5 +384,7 @@ module.exports = {
   expireOldQueuedJobs,
   trimExcessQueuedJobs,
   isProducerThinkBatch,
+  nodeCanRunJob,
+  JOB_MIN_HARDWARE_SCORE,
   JOB_TABLE,
 };

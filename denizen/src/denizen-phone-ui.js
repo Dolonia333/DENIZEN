@@ -53,7 +53,7 @@
   // type 'panel'    : opens an existing floating panel, constrained to the screen
   // type 'action'   : proxies a toggle chip; stays on the grid with live state
   // type 'launch'   : closes the phone, then triggers (tours / full-screen guides)
-  // type 'internal' : renders its own screen inside the phone (Settings)
+  // type 'internal' : renders its own screen inside the phone (Settings / Office Guide)
   // type 'navigate' : leave the phone and open a full Denizen page (CRM at /crm/)
   // c: [light, dark] icon tile gradient; dock placement comes from saved home layout
   const APPS = [
@@ -85,26 +85,38 @@
     { id: 'mesh', icon: '⬡', label: 'Power Grid', type: 'panel', trigger: '#denizen-mesh-jobs-chip', panel: '#denizen-mesh-jobs-panel',
       c: ['#818cf8', '#3730a3'], badgeFrom: '#denizen-mesh-jobs-chip' },
     { id: 'approvals', icon: '📋', label: 'Approvals', type: 'panel', trigger: '#denizen-proposals-chip', panel: '#denizen-proposals-panel',
-      c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip', available: () => true },
+      c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip', available: () => {
+        const caps = globalThis.DenizenVisitorCapabilities;
+        if (caps?.isCeo?.() || caps?.canApproveSkills?.()) return true;
+        const sess = globalThis.DenizenVisitorSession;
+        return !!(sess?.isCeoPrincipal?.() || sess?.getProfile?.()?.canApproveSkills);
+      } },
     { id: 'newsroom', icon: '📰', label: 'Newsroom', type: 'panel', trigger: '#denizen-content-pipeline-chip', panel: '#denizen-content-pipeline-panel',
       c: ['#f97316', '#c2410c'], badgeFrom: '#denizen-content-pipeline-chip', available: () => true },
-    { id: 'npcteam', icon: '🏢', label: 'City Team', type: 'panel', panel: '#denizen-npc-team-panel',
+    { id: 'npcteam', icon: '🏢', label: 'Office Team', type: 'panel', panel: '#denizen-npc-team-panel',
       c: ['#f472b6', '#9d174d'],
       open: () => window.DenizenVisitorNpcTeamUI?.show?.(), close: () => window.DenizenVisitorNpcTeamUI?.hide?.(),
       available: () => true },
     { id: 'browser', icon: '🌐', label: 'Browser', type: 'panel', trigger: '#denizen-browser-mirror-chip', panel: '#denizen-browser-mirror-panel',
-      c: ['#38bdf8', '#0369a1'] },
+      c: ['#38bdf8', '#0369a1'],
+      available: () => true,
+      open: () => { ensureBrowserMirrorReady().catch(() => {}); },
+      close: () => window.DenizenBrowserMirror?.hide?.() },
     { id: 'security', icon: '🛡️', label: 'Security', type: 'panel', trigger: '#denizen-security-chip', panel: '#denizen-security-feed',
       c: ['#f87171', '#7f1d1d'] },
     { id: 'profile', icon: '🪪', label: 'Citizen ID', type: 'special-profile', c: ['#2dd4bf', '#0f766e'] },
     { id: 'compute', icon: '💠', label: 'City Power', type: 'special-compute', c: ['#c084fc', '#7e22ce'] },
-    { id: 'tour', icon: '📖', label: 'City Tour', type: 'launch', trigger: '#denizen-onboarding-replay-chip',
+    { id: 'tour', icon: '📖', label: 'Office Tour', type: 'launch', trigger: '#denizen-onboarding-replay-chip',
       c: ['#67e8f9', '#155e75'], gated: true },
     { id: 'meshtour', icon: '🗺️', label: 'Power Tour', type: 'launch', trigger: '#denizen-superuser-replay-chip',
       c: ['#a3e635', '#3f6212'], gated: true },
-    { id: 'guide', icon: '🧭', label: 'City Guide', type: 'launch', trigger: '#denizen-capabilities-guide-chip',
+    { id: 'guide', icon: '🧭', label: 'Office Guide', type: 'internal',
       c: ['#facc15', '#854d0e'], gated: true },
     { id: 'crm', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
+      available: () => true },
+    { id: 'market', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
+      c: ['#34d399', '#047857'],
+      open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
       available: () => true },
     { id: 'settings', icon: '⚙️', label: 'Settings', type: 'internal', c: ['#94a3b8', '#334155'] },
   ];
@@ -122,12 +134,56 @@
     security: '#denizen-security-feed',
     profile: '#denizen-account-panel',
     compute: '#denizen-node-ui-chip',
+    market: '#denizen-market-panel',
   };
 
   const LAYOUT_STORAGE_KEY = 'denizen-phone-layout';
+  const OFFICE_GUIDE_STORAGE_KEY = 'denizen-office-guide-progress-v1';
   const MAX_DOCK_APPS = 4;
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'profile', 'npcteam'];
   const FOLDER_PREFIX = 'folder:';
+  const OFFICE_GUIDE_STEPS = [
+    {
+      id: 'phone',
+      tag: 'START',
+      title: 'Phone is the key',
+      body: 'Your phone carries chat, Citizen ID, your assistant, City Power, and every next step. It keeps your place connected when you come back.',
+      action: 'Open Citizen ID',
+      act: 'profile',
+    },
+    {
+      id: 'assistant',
+      tag: 'TEAM',
+      title: 'Claim your assistant',
+      body: 'Meet someone in the office, claim them, and make them your familiar home base for real work and follow-up.',
+      action: 'Open chat',
+      act: 'chat',
+    },
+    {
+      id: 'firm',
+      tag: 'OFFICE',
+      title: 'Build your office firm',
+      body: 'Start with one useful task. The office gives the work a visible place: desks, teammates, handoffs, accepted connections, status, and memory.',
+      action: 'Open Office Team',
+      act: 'npcteam',
+    },
+    {
+      id: 'station',
+      tag: 'STATION',
+      title: 'Claim this machine',
+      body: 'Pair Denizen Desktop when you want this device to become your office station. You choose its permissions and when it helps.',
+      action: 'Open City Power',
+      act: 'compute',
+    },
+    {
+      id: 'city',
+      tag: 'CITY NEXT',
+      title: 'Power the city',
+      body: 'Once your office station is ready, idle capacity can help shared city work and earn credits. The city is the next level your office powers.',
+      action: 'Power Tour',
+      act: 'meshtour',
+    },
+  ];
 
   const appById = Object.fromEntries(APPS.map((a) => [a.id, a]));
 
@@ -264,6 +320,7 @@
   let toastEl = null;
   let fabEl = null;
   let settingsEl = null;
+  let officeGuideActiveId = OFFICE_GUIDE_STEPS[0]?.id || null;
   let pressFn = null;
   let currentApp = null;
   let clockTimer = null;
@@ -274,6 +331,12 @@
   let screenObs = null;
   let scriptsSettled = false;
   let batteryState = { level: 0.87, charging: false };
+  // Back-button trap: while the phone overlay is open we keep one extra history
+  // entry on the stack so the browser/hardware Back gesture closes the open app
+  // (then the phone) instead of navigating away from the game — which would
+  // dump the user back on the login page.
+  let phoneBackTrap = false;
+  let suppressPhonePop = false;
 
   function $(sel) { return document.querySelector(sel); }
 
@@ -309,8 +372,74 @@
     return !!(sess?.isCeoPrincipal?.() || sess?.getProfile?.()?.canApproveSkills);
   }
 
+  const BROWSER_MIRROR_SRC = './src/browser-mirror-panel.js?v=lucymirror6';
+
+  function browserMirrorScriptUrl() {
+    const tagged = document.querySelector('script[src*="browser-mirror-panel"]');
+    if (tagged?.src) return tagged.src;
+    return BROWSER_MIRROR_SRC;
+  }
+  let browserMirrorLoadPromise = null;
+
   function kickLazyLoad() {
     try { globalThis.DenizenLazyScripts?.loadDeferred?.(); } catch (_) {}
+    if (!window.DenizenBrowserMirror) {
+      loadBrowserMirrorScript().catch(() => {});
+    }
+  }
+
+  function loadBrowserMirrorScript() {
+    if (window.DenizenBrowserMirror) return Promise.resolve(true);
+    if (browserMirrorLoadPromise) return browserMirrorLoadPromise;
+    browserMirrorLoadPromise = (async () => {
+      try {
+        if (globalThis.DenizenLazyScripts?.loadDeferred) {
+          await globalThis.DenizenLazyScripts.loadDeferred();
+          if (window.DenizenBrowserMirror) return true;
+        }
+        if (globalThis.DenizenLazyScripts?.load) {
+          await globalThis.DenizenLazyScripts.load([BROWSER_MIRROR_SRC]);
+          if (window.DenizenBrowserMirror) return true;
+        }
+      } catch (_) {}
+      const existing = document.querySelector('script[src*="browser-mirror-panel"]');
+      if (existing && !window.DenizenBrowserMirror) {
+        const ok = await waitFor(() => !!window.DenizenBrowserMirror, 12_000);
+        if (ok) return true;
+      }
+      if (!existing) {
+        await new Promise((resolve) => {
+          const s = document.createElement('script');
+          s.src = browserMirrorScriptUrl();
+          s.async = true;
+          s.onload = () => resolve();
+          s.onerror = () => resolve();
+          document.head.appendChild(s);
+        });
+        const ok = await waitFor(() => !!window.DenizenBrowserMirror, 12_000);
+        if (ok) return true;
+      }
+      return !!(document.getElementById('denizen-browser-mirror-panel')
+        || document.getElementById('denizen-browser-mirror-chip'));
+    })();
+    return browserMirrorLoadPromise;
+  }
+
+  async function ensureBrowserMirrorReady() {
+    const ok = await loadBrowserMirrorScript();
+    if (!ok && !window.DenizenBrowserMirror) return false;
+    scheduleSyncScreenVars();
+    try {
+      window.DenizenBrowserMirror?.show?.();
+    } catch (_) {}
+    scheduleSyncScreenVars();
+    return await waitFor(() => {
+      const el = document.getElementById('denizen-browser-mirror-panel');
+      if (!el || !el.classList.contains('open')) return false;
+      const r = el.getBoundingClientRect();
+      if (r.width > 8 && r.height > 8) return true;
+      return document.documentElement.getAttribute('data-denizen-phone-app') === 'browser';
+    }, 12_000);
   }
 
   function waitFor(test, timeoutMs, stepMs = 250) {
@@ -323,6 +452,104 @@
       };
       tick();
     });
+  }
+
+  let meShellEl = null;
+  let meBodyEl = null;
+  let meSubtitleEl = null;
+  let meTab = 'profile';
+  const mePanelHomes = {};
+
+  function rememberMePanel(id) {
+    const el = document.getElementById(id);
+    if (!el || !meBodyEl || meBodyEl.contains(el)) return;
+    mePanelHomes[id] = { parent: el.parentElement, nextSibling: el.nextSibling };
+    el.dataset.dzpDocked = '1';
+    meBodyEl.appendChild(el);
+  }
+
+  function restoreMePanel(id) {
+    const el = document.getElementById(id);
+    const home = mePanelHomes[id];
+    if (!el) return;
+    delete el.dataset.dzpDocked;
+    if (!home?.parent) return;
+    const { parent, nextSibling } = home;
+    if (nextSibling && nextSibling.parentElement === parent) {
+      parent.insertBefore(el, nextSibling);
+    } else {
+      parent.appendChild(el);
+    }
+    delete mePanelHomes[id];
+  }
+
+  function dockMePanels() {
+    if (isTouch() || !meBodyEl) return;
+    rememberMePanel('denizen-account-panel');
+    rememberMePanel('denizen-node-ui-chip');
+  }
+
+  function undockMePanels() {
+    restoreMePanel('denizen-node-ui-chip');
+    restoreMePanel('denizen-account-panel');
+  }
+
+  function updateMeSubtitle() {
+    if (!meSubtitleEl) return;
+    const sess = globalThis.DenizenVisitorSession;
+    const profile = sess?.getProfile?.() || {};
+    const name = profile.displayName || sess?.getDisplayName?.() || 'Guest';
+    const credits = globalThis.DenizenNodeUI?.getState?.()?.credits;
+    const creditsLabel = Number.isFinite(credits) ? ` · ${Math.round(credits)} credits` : '';
+    meSubtitleEl.textContent = `${name}${creditsLabel}`;
+  }
+
+  function setMeTab(tab) {
+    meTab = tab === 'compute' ? 'compute' : 'profile';
+    if (meShellEl) meShellEl.dataset.tab = meTab;
+    meShellEl?.querySelectorAll('.dzp-me-tab').forEach((btn) => {
+      const on = btn.dataset.tab === meTab;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    if (meBodyEl) meBodyEl.scrollTop = 0;
+  }
+
+  function closeMeShell() {
+    undockMePanels();
+    meShellEl?.classList.remove('open');
+    meShellEl?.setAttribute('aria-hidden', 'true');
+    shellEl?.querySelector(`#${FRAME_ID}`)?.classList.remove('dzp-me-open');
+  }
+
+  function openMeInPhone(tab) {
+    buildShell();
+    setAppOpenUi({
+      id: 'me',
+      icon: tab === 'compute' ? '💠' : '🪪',
+      label: tab === 'compute' ? 'City Power' : 'Citizen ID',
+      type: 'special-me',
+    });
+    shellEl.querySelector(`#${FRAME_ID}`).classList.add('dzp-me-open');
+    meShellEl.classList.add('open');
+    meShellEl.setAttribute('aria-hidden', 'false');
+    setMeTab(tab);
+    dockMePanels();
+    globalThis.DenizenNodeUI?.showPanel?.({ persist: false });
+    globalThis.DenizenAccountPanel?.expandForPhone?.();
+    globalThis.DenizenAccountPanel?.renderProfile?.();
+    globalThis.DenizenNodeUI?.expandForDrawer?.();
+    updateMeSubtitle();
+    requestAnimationFrame(scheduleSyncScreenVars);
+    if (!$('#denizen-account-panel')) showPlaceholder('Profile is still loading — hang tight.');
+  }
+
+  function dockProfilePanel() {
+    dockMePanels();
+  }
+
+  function undockProfilePanel() {
+    undockMePanels();
   }
 
   // ---- Styles --------------------------------------------------------------
@@ -435,6 +662,8 @@
         flex-direction: column;
         width: min(390px, calc(100vw - 36px));
         height: min(760px, calc(100dvh - 36px));
+        max-height: calc(100dvh - 20px);
+        min-height: 0;
         background: linear-gradient(165deg, #1a2334, #0b1220 40%, #060b16);
         border: 1px solid #46556e;
         border-radius: 34px;
@@ -443,6 +672,36 @@
           inset 0 0 0 3px #18202f,
           inset 0 0 0 5px #020617;
         overflow: visible;
+      }
+      /* Laptop / desktop / tablet phone mode: fit viewport, pin nav to chin */
+      html.denizen-phone-mode #${FRAME_ID} {
+        width: min(400px, calc(100vw - 48px));
+        height: min(720px, calc(100dvh - 24px));
+        max-height: calc(100dvh - 24px);
+      }
+      html.denizen-desktop.denizen-phone-mode #${FRAME_ID} {
+        width: min(440px, calc(100vw - 72px));
+        height: min(860px, calc(100dvh - 72px));
+        max-height: calc(100dvh - 24px);
+      }
+      @media (max-height: 820px) {
+        html.denizen-phone-mode #${FRAME_ID} {
+          height: min(calc(100dvh - 24px), 720px);
+          width: min(400px, calc(100vw - 48px));
+          max-height: calc(100dvh - 16px);
+        }
+      }
+      @media (max-height: 700px) {
+        html.denizen-phone-mode #${FRAME_ID} {
+          height: calc(100dvh - 16px);
+          width: min(380px, calc(100vw - 32px));
+          max-height: calc(100dvh - 12px);
+        }
+      }
+      @media (max-width: 520px) {
+        html.denizen-phone-mode #${FRAME_ID} {
+          width: calc(100vw - 32px);
+        }
       }
       html.denizen-touch.denizen-phone #${FRAME_ID} {
         width: calc(100dvw - 14px);
@@ -648,8 +907,10 @@
       #${FRAME_ID} .dzp-homescr {
         position: absolute;
         inset: 0;
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        height: 100%;
+        min-height: 0;
         background:
           radial-gradient(120% 60% at 50% 108%, rgba(56, 122, 223, 0.28), transparent 60%),
           radial-gradient(80% 40% at 80% -5%, rgba(125, 211, 252, 0.12), transparent 65%),
@@ -670,6 +931,7 @@
       #${FRAME_ID}.dzp-app-open .dzp-homescr { display: none; }
 
       #${FRAME_ID} .dzp-widget {
+        grid-row: 1;
         flex: 0 0 auto;
         padding: 20px 20px 6px;
         user-select: none;
@@ -680,7 +942,7 @@
       #${FRAME_ID} .dzp-widget .g { color: #7dd3fc; font: 600 11px/1.6 system-ui, sans-serif; letter-spacing: 0.06em; }
 
       #${FRAME_ID} .dzp-grid {
-        flex: 1 1 auto;
+        grid-row: 2;
         min-height: 0;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -691,8 +953,9 @@
         -webkit-overflow-scrolling: touch;
       }
 
-      /* favorites dock */
+      /* favorites dock — row 3 = bottom of home screen (above gesture nav) */
       #${FRAME_ID} .dzp-dock {
+        grid-row: 3;
         flex: 0 0 auto;
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -752,7 +1015,6 @@
         -webkit-backdrop-filter: blur(8px);
         backdrop-filter: blur(8px);
       }
-      #${FRAME_ID} .dzp-homescr { position: relative; }
       #${FRAME_ID} .dzp-grid .dzp-slot-empty {
         min-height: 72px;
         border-radius: 17px;
@@ -1024,9 +1286,143 @@
       }
       #${FRAME_ID} .dzp-settings button:hover { border-color: #60a5fa; color: #dbeafe; }
 
-      /* ---- Gesture nav: back / home pill / close ---- */
+      #${FRAME_ID} .dzp-settings.dzp-office-guide {
+        gap: 12px;
+        background:
+          radial-gradient(80% 34% at 18% 0%, rgba(45, 212, 191, 0.16), transparent 62%),
+          linear-gradient(168deg, #07141f, #050a14 68%);
+      }
+      #${FRAME_ID} .dzp-office-guide .og-hero {
+        border: 1px solid rgba(45, 212, 191, 0.22);
+        border-radius: 16px;
+        padding: 14px;
+        background: rgba(15, 23, 42, 0.52);
+      }
+      #${FRAME_ID} .dzp-office-guide .og-kicker {
+        display: inline-flex;
+        margin-bottom: 8px;
+        color: #5eead4;
+        font: 800 10px/1.2 system-ui, sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      #${FRAME_ID} .dzp-office-guide h3 {
+        margin: 0 0 8px;
+        color: #f8fafc;
+        font: 800 19px/1.12 system-ui, sans-serif;
+      }
+      #${FRAME_ID} .dzp-office-guide p {
+        margin: 0;
+        color: #b6c4d3;
+        font: 12px/1.48 system-ui, sans-serif;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-progress {
+        height: 7px;
+        margin-top: 12px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(148, 163, 184, 0.18);
+      }
+      #${FRAME_ID} .dzp-office-guide .og-progress span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #5eead4, #a3e635);
+      }
+      #${FRAME_ID} .dzp-office-guide .og-progress-label {
+        margin-top: 7px;
+        color: #94a3b8;
+        font: 700 10px/1.2 system-ui, sans-serif;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-step-list {
+        display: grid;
+        gap: 8px;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-step {
+        display: grid;
+        grid-template-columns: 24px 1fr auto;
+        align-items: center;
+        gap: 9px;
+        width: 100%;
+        text-align: left;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        background: rgba(15, 23, 42, 0.56);
+        color: #dbeafe;
+        border-radius: 12px;
+        padding: 10px;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-step.active {
+        border-color: rgba(94, 234, 212, 0.54);
+        background: rgba(20, 184, 166, 0.1);
+      }
+      #${FRAME_ID} .dzp-office-guide .og-check {
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.36);
+        color: transparent;
+        font: 800 12px/1 system-ui, sans-serif;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-step.done .og-check {
+        color: #052e2b;
+        border-color: #5eead4;
+        background: #5eead4;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-step-main {
+        min-width: 0;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-step-title {
+        display: block;
+        color: #f1f5f9;
+        font: 800 12px/1.25 system-ui, sans-serif;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-step-tag {
+        display: block;
+        margin-top: 3px;
+        color: #7dd3fc;
+        font: 800 9px/1.2 system-ui, sans-serif;
+        letter-spacing: 0.08em;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-caret {
+        color: #64748b;
+        font: 800 14px/1 system-ui, sans-serif;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-detail {
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 16px;
+        padding: 14px;
+        background: rgba(2, 6, 23, 0.42);
+      }
+      #${FRAME_ID} .dzp-office-guide .og-detail .og-tag {
+        margin-bottom: 8px;
+        color: #7dd3fc;
+        font: 800 10px/1.2 system-ui, sans-serif;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-actions button {
+        min-height: 38px;
+        border-radius: 10px;
+        font-size: 11px;
+      }
+      #${FRAME_ID} .dzp-office-guide .og-actions .primary {
+        border-color: rgba(94, 234, 212, 0.48);
+        color: #ccfbf1;
+        background: rgba(20, 184, 166, 0.14);
+      }
+
+      /* ---- Gesture nav: back / home pill / close — pinned to phone chin ---- */
       #${FRAME_ID} .dzp-nav {
         flex: 0 0 auto;
+        margin-top: auto;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -1103,6 +1499,7 @@
       }
       /* Home: clock already in status bar — use full screen height for apps */
       html.denizen-touch.denizen-phone.denizen-landscape #${FRAME_ID} .dzp-homescr {
+        display: flex;
         flex-direction: row;
         align-items: stretch;
       }
@@ -1144,10 +1541,11 @@
         border-radius: 12px;
       }
 
-      html.denizen-phone-open #${FAB_ID} {
-        opacity: 0;
-        pointer-events: none;
-        transform: scale(0.85);
+      html.denizen-phone-open #${FAB_ID},
+      html.denizen-chat-open #${FAB_ID} {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
       }
       ${M} #player-chat-fab,
       ${M} #denizen-bottom-dock #player-chat-fab {
@@ -1155,9 +1553,161 @@
       }
 
       /* ---- Panel containment: each app's panel renders inside the screen ---- */
-      ${Object.entries(PANEL_FOR_APP).map(([app, sel]) =>
+      ${Object.entries(PANEL_FOR_APP).filter(([id]) => id !== 'profile' && id !== 'compute').map(([app, sel]) =>
         `${M}[${APP_ATTR}="${app}"] ${sel} { ${geometry} }`
       ).join('\n')}
+
+      /* Me shell — Citizen ID | City Power tabs (matches mobile drawer, inside phone) */
+      #${FRAME_ID}.dzp-me-open .dzp-appbar { display: none !important; }
+      #${FRAME_ID} .dzp-me-shell {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        flex-direction: column;
+        background: #050a14;
+        overflow: hidden;
+      }
+      #${FRAME_ID} .dzp-me-shell.open {
+        display: flex;
+      }
+      #${FRAME_ID} .dzp-me-head {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px 8px 4px;
+      }
+      #${FRAME_ID} .dzp-me-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      #${FRAME_ID} .dzp-me-tabs {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        gap: 4px;
+        padding: 3px;
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid #1e293b;
+      }
+      #${FRAME_ID} .dzp-me-tab {
+        flex: 1;
+        min-height: 36px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: #94a3b8;
+        font: 600 12px/1 system-ui, sans-serif;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #${FRAME_ID} .dzp-me-tab.active {
+        background: rgba(59, 130, 246, 0.22);
+        color: #e2e8f0;
+        box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.45);
+      }
+      #${FRAME_ID} .dzp-me-close {
+        flex: 0 0 auto;
+        min-width: 36px;
+        min-height: 36px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: rgba(15, 23, 42, 0.9);
+        color: #e2e8f0;
+        font: 600 18px/1 system-ui, sans-serif;
+        cursor: pointer;
+      }
+      #${FRAME_ID} .dzp-me-subtitle {
+        color: #94a3b8;
+        font: 500 11px/1.3 system-ui, sans-serif;
+        padding: 0 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #${FRAME_ID} .dzp-me-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0 8px 10px;
+      }
+      #${FRAME_ID} .dzp-me-shell[data-tab="profile"] .dzp-me-body #denizen-node-ui-chip {
+        display: none !important;
+      }
+      #${FRAME_ID} .dzp-me-shell[data-tab="compute"] .dzp-me-body #denizen-account-panel {
+        display: none !important;
+      }
+      #${FRAME_ID} .dzp-me-body #denizen-account-panel,
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip {
+        position: static !important;
+        top: auto !important;
+        right: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+        margin: 0 !important;
+        transform: none !important;
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: auto !important;
+        box-shadow: none !important;
+        border-radius: 10px !important;
+        box-sizing: border-box !important;
+        padding: 10px 12px !important;
+        font: 14px/1.45 system-ui, sans-serif !important;
+        gap: 8px !important;
+        flex: 0 0 auto !important;
+        overflow: visible !important;
+      }
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip[data-panel-hidden="1"] {
+        display: flex !important;
+      }
+      #${FRAME_ID} .dzp-me-body #denizen-account-panel .acct-toggle,
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip .node-hide-btn,
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip .node-contrib-toggle {
+        display: none !important;
+      }
+      #${FRAME_ID} .dzp-me-body #denizen-account-panel #prof-shell {
+        flex: 1 1 auto;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      #${FRAME_ID} .dzp-me-body #denizen-account-panel #prof-shell .prof-panel.active {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip .node-contrib-body {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 10px !important;
+      }
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip .node-contrib-row:has(#denizen-node-level),
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip .node-fleet,
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip .node-modes,
+      #${FRAME_ID} .dzp-me-body #denizen-node-ui-chip .node-download {
+        grid-column: 1 / -1;
+      }
 
       ${M}[${APP_ATTR}="chat"] #player-chat-panel {
         display: flex !important;
@@ -1173,20 +1723,36 @@
         flex: 0 0 auto !important;
       }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel.open,
+      ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
+      ${M}[${APP_ATTR}="browser"] #denizen-browser-mirror-panel.open,
       ${M}[${APP_ATTR}="newsroom"] #denizen-content-pipeline-panel.open {
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
       }
+      ${M}[${APP_ATTR}="browser"] #denizen-browser-mirror-panel.open .bm-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      ${M}[${APP_ATTR}="browser"] #denizen-browser-mirror-panel.open .bm-viewport {
+        flex: 1 1 auto;
+        min-height: 120px;
+        max-height: none;
+      }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel .nt-body,
+      ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
       ${M}[${APP_ATTR}="newsroom"] #denizen-content-pipeline-panel {
         -webkit-overflow-scrolling: touch;
       }
+      ${M}[${APP_ATTR}="market"] #denizen-market-panel.open {
+        display: block !important;
+        overflow: auto !important;
+      }
 
-      /* Profile / Compute cards are display-hidden in phone mode — re-show inside
-         the app (compute respects its own data-panel-hidden minimize toggle). */
-      ${M}.denizen-desktop[${APP_ATTR}="profile"] #denizen-account-panel { display: block !important; }
-      ${M}.denizen-desktop[${APP_ATTR}="compute"] #denizen-node-ui-chip:not([data-panel-hidden="1"]) { display: flex !important; }
+      /* Legacy profile/compute phone rules retired — panels live in .dzp-me-shell */
     `;
     document.head.appendChild(s);
   }
@@ -1277,7 +1843,7 @@
           <span class="dzp-cam"><span class="speaker"></span><span class="lens"></span></span>
           <span class="dzp-status-right">
             <span class="dzp-signal"><i></i><i></i><i></i><i></i></span>
-            <span class="dzp-carrier">CITY</span>
+            <span class="dzp-carrier">OFFICE</span>
             <span class="dzp-batt"><span class="fill"></span></span>
             <span class="dzp-batt-pct">87%</span>
           </span>
@@ -1308,6 +1874,19 @@
               <div class="dzp-folder-grid" role="menu"></div>
             </div>
           </div>
+          <div class="dzp-me-shell" aria-hidden="true" data-tab="profile">
+            <div class="dzp-me-head">
+              <div class="dzp-me-toolbar">
+                <div class="dzp-me-tabs" role="tablist" aria-label="Citizen ID and City Power">
+                  <button type="button" class="dzp-me-tab active" data-tab="profile" role="tab" aria-selected="true">Citizen ID</button>
+                  <button type="button" class="dzp-me-tab" data-tab="compute" role="tab" aria-selected="false">City Power</button>
+                </div>
+                <button type="button" class="dzp-me-close" aria-label="Back to home">×</button>
+              </div>
+              <div class="dzp-me-subtitle"></div>
+            </div>
+            <div class="dzp-me-body"></div>
+          </div>
           <div class="dzp-settings"></div>
           <div class="dzp-placeholder"><div class="spin"></div><div class="msg"></div></div>
           <div class="dzp-toast"></div>
@@ -1336,18 +1915,25 @@
     batteryEl = shellEl.querySelector('.dzp-batt');
     toastEl = shellEl.querySelector('.dzp-toast');
     settingsEl = shellEl.querySelector('.dzp-settings');
+    meShellEl = shellEl.querySelector('.dzp-me-shell');
+    meBodyEl = shellEl.querySelector('.dzp-me-body');
+    meSubtitleEl = shellEl.querySelector('.dzp-me-subtitle');
 
     const bind = window.DenizenTouchBind?.bindPress;
     pressFn = (el, fn) => { if (bind) bind(el, fn); else el.addEventListener('click', fn); };
     pressFn(shellEl.querySelector('.dzp-home'), () => goHome(true));
     pressFn(shellEl.querySelector('.dzp-back'), () => goHome(true));
+    pressFn(meShellEl?.querySelector('.dzp-me-close'), () => goHome(true));
+    meShellEl?.querySelectorAll('.dzp-me-tab').forEach((tabBtn) => {
+      pressFn(tabBtn, () => setMeTab(tabBtn.dataset.tab));
+    });
     pressFn(shellEl.querySelector('.dzp-nav-back'), () => {
       if (currentApp) goHome(true);
-      else closePhone();
+      else closePhoneFromUi();
     });
-    pressFn(shellEl.querySelector('.dzp-close'), closePhone);
+    pressFn(shellEl.querySelector('.dzp-close'), closePhoneFromUi);
     shellEl.addEventListener('pointerdown', (e) => {
-      if (e.target === shellEl) closePhone();
+      if (e.target === shellEl) closePhoneFromUi();
     });
 
     pressFn(editBarEl.querySelector('.dzp-edit-done'), () => exitEditMode(true));
@@ -1830,6 +2416,121 @@
     homeScrEl?.addEventListener('pointerdown', startLongPress);
   }
 
+  function escapeHtml(text) {
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function readOfficeGuideProgress() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(OFFICE_GUIDE_STORAGE_KEY) || '{}');
+      const done = Array.isArray(raw.done) ? raw.done.filter(Boolean) : [];
+      const active = raw.active && OFFICE_GUIDE_STEPS.some((s) => s.id === raw.active)
+        ? raw.active
+        : officeGuideActiveId;
+      return { done: new Set(done), active };
+    } catch (_) {
+      return { done: new Set(), active: officeGuideActiveId };
+    }
+  }
+
+  function writeOfficeGuideProgress(progress) {
+    try {
+      localStorage.setItem(OFFICE_GUIDE_STORAGE_KEY, JSON.stringify({
+        done: [...(progress.done || [])],
+        active: progress.active || officeGuideActiveId,
+      }));
+    } catch (_) {}
+  }
+
+  function toggleOfficeGuideStep(stepId) {
+    const progress = readOfficeGuideProgress();
+    if (progress.done.has(stepId)) progress.done.delete(stepId);
+    else progress.done.add(stepId);
+    progress.active = stepId;
+    officeGuideActiveId = stepId;
+    writeOfficeGuideProgress(progress);
+  }
+
+  function runOfficeGuideAction(act) {
+    if (!act) return;
+    if (act === 'capabilities') {
+      globalThis.DenizenCapabilitiesGuide?.open?.({ tab: 'overview' });
+      return;
+    }
+    const app = appById[act];
+    if (!app) return;
+    clearAppUi();
+    activateApp(app);
+  }
+
+  function renderOfficeGuide(app) {
+    setAppOpenUi(app);
+    settingsEl?.classList.add('show', 'dzp-office-guide');
+    const progress = readOfficeGuideProgress();
+    const fallbackStep = OFFICE_GUIDE_STEPS[0];
+    const activeStep = OFFICE_GUIDE_STEPS.find((s) => s.id === progress.active) || fallbackStep;
+    officeGuideActiveId = activeStep?.id || fallbackStep?.id || null;
+    progress.active = officeGuideActiveId;
+    writeOfficeGuideProgress(progress);
+    const doneCount = OFFICE_GUIDE_STEPS.filter((step) => progress.done.has(step.id)).length;
+    const pct = OFFICE_GUIDE_STEPS.length ? Math.round((doneCount / OFFICE_GUIDE_STEPS.length) * 100) : 0;
+    const isDone = activeStep && progress.done.has(activeStep.id);
+    settingsEl.innerHTML = `
+      <div class="og-hero">
+        <span class="og-kicker">Office first</span>
+        <h3>Office Guide</h3>
+        <p>Your phone is the office key. Build your firm here, then use City Power to grow into the city.</p>
+        <div class="og-progress" aria-hidden="true"><span style="width:${pct}%"></span></div>
+        <div class="og-progress-label">${doneCount} of ${OFFICE_GUIDE_STEPS.length} office steps complete</div>
+      </div>
+      <div class="og-step-list" role="list">
+        ${OFFICE_GUIDE_STEPS.map((step) => `
+          <button type="button" class="og-step${step.id === activeStep.id ? ' active' : ''}${progress.done.has(step.id) ? ' done' : ''}" data-step="${escapeHtml(step.id)}" role="listitem">
+            <span class="og-check" aria-hidden="true">✓</span>
+            <span class="og-step-main">
+              <span class="og-step-title">${escapeHtml(step.title)}</span>
+              <span class="og-step-tag">${escapeHtml(step.tag)}</span>
+            </span>
+            <span class="og-caret" aria-hidden="true">›</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="og-detail">
+        <div class="og-tag">${escapeHtml(activeStep.tag)}</div>
+        <h3>${escapeHtml(activeStep.title)}</h3>
+        <p>${escapeHtml(activeStep.body)}</p>
+        <div class="og-actions">
+          <button type="button" class="primary" data-act="${escapeHtml(activeStep.act)}">${escapeHtml(activeStep.action)}</button>
+          <button type="button" data-complete="${escapeHtml(activeStep.id)}">${isDone ? 'Mark open' : 'Mark done'}</button>
+          <button type="button" data-act="capabilities">Full guide</button>
+        </div>
+      </div>
+    `;
+    settingsEl.onclick = (e) => {
+      const stepBtn = e.target?.closest?.('[data-step]');
+      if (stepBtn) {
+        officeGuideActiveId = stepBtn.dataset.step;
+        const next = readOfficeGuideProgress();
+        next.active = officeGuideActiveId;
+        writeOfficeGuideProgress(next);
+        renderOfficeGuide(app);
+        return;
+      }
+      const completeBtn = e.target?.closest?.('[data-complete]');
+      if (completeBtn) {
+        toggleOfficeGuideStep(completeBtn.dataset.complete);
+        renderOfficeGuide(app);
+        return;
+      }
+      const actBtn = e.target?.closest?.('[data-act]');
+      if (actBtn) runOfficeGuideAction(actBtn.dataset.act);
+    };
+  }
+
   function resetPhoneLayout() {
     phoneLayout = defaultPhoneLayout();
     writePhoneLayout(phoneLayout);
@@ -1898,12 +2599,17 @@
 
   function clearAppUi() {
     const closingId = currentApp?.id || null;
+    if (closingId === 'me') {
+      closeMeShell();
+      if (!isTouch()) globalThis.DenizenNodeUI?.hidePanel?.({ persist: false });
+    }
     currentApp = null;
     document.documentElement.removeAttribute(APP_ATTR);
     shellEl?.querySelector(`#${FRAME_ID}`)?.classList.remove('dzp-app-open');
     const ph = shellEl?.querySelector('.dzp-placeholder');
     if (ph) { ph.classList.remove('show', 'err'); }
-    settingsEl?.classList.remove('show');
+    settingsEl?.classList.remove('show', 'dzp-office-guide');
+    if (settingsEl) settingsEl.onclick = null;
     loadingToken += 1;
     if (appWatchTimer) { clearInterval(appWatchTimer); appWatchTimer = null; }
     refreshAppStatuses();
@@ -1951,6 +2657,22 @@
       return;
     }
 
+    if (app.id === 'browser') {
+      showPlaceholder(`Loading ${app.label}…`);
+      const ready = await ensureBrowserMirrorReady();
+      if (token !== loadingToken || currentApp?.id !== app.id) return;
+      if (!ready) {
+        showPlaceholder(`${app.label} couldn't load — hard-refresh (Ctrl+Shift+R) and try again.`, true);
+        setTimeout(() => { if (currentApp?.id === app.id) goHome(false); }, 3200);
+        return;
+      }
+      hidePlaceholder();
+      armPanelWatch(app);
+      scheduleSyncScreenVars();
+      document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
+      return;
+    }
+
     // Tool not loaded yet? Kick the lazy loader and wait for it right here.
     if (!$(app.panel) && !$(app.trigger)) {
       showPlaceholder(`Loading ${app.label}…`);
@@ -1967,7 +2689,7 @@
 
     if (!panelVisible(app.panel)) {
       if (app.open) app.open();
-      if (!panelVisible(app.panel)) $(app.trigger)?.click();
+      else if (app.trigger) $(app.trigger)?.click();
     }
     // Some panels open asynchronously — give them a beat before judging.
     if (!panelVisible(app.panel)) {
@@ -2002,12 +2724,21 @@
       if (typeof window.DenizenSetPresence === 'function' && !window.DenizenPresence?.zionPresent) {
         try { window.DenizenSetPresence(true); } catch (_) {}
       }
-      if (voice.isListening?.()) voice.stop();
-      else voice.start();
-      setTimeout(() => {
-        refreshAppStatuses();
-        showToast(voice.isListening?.() ? 'Listening — tap Speak again when done' : 'Voice stopped');
-      }, 200);
+      if (window.DenizenVoiceSession?.isActive?.()) {
+        window.DenizenVoiceSession.stop();
+        window.DenizenVoiceCallUi?.hide?.();
+        showToast('Voice call ended');
+      } else if (window.DenizenVoiceCallUi?.openCall) {
+        window.DenizenVoiceCallUi.openCall();
+        showToast('Voice call — speak naturally');
+      } else if (voice.isListening?.()) {
+        voice.stop();
+        showToast('Voice stopped');
+      } else {
+        voice.start();
+        showToast('Listening — tap Speak again when done');
+      }
+      setTimeout(refreshAppStatuses, 200);
       return;
     }
     let trigger = $(app.trigger);
@@ -2035,7 +2766,7 @@
       trigger = $(app.trigger);
       if (!trigger) { showToast(`${app.label} isn't available for this account`); return; }
     }
-    closePhone();
+    closePhoneFromUi();
     setTimeout(() => trigger.click(), 180);
   }
 
@@ -2102,8 +2833,11 @@
   function renderSettings(app) {
     setAppOpenUi(app);
     const sess = globalThis.DenizenVisitorSession;
-    const role = sess?.isCeoPrincipal?.() ? 'CEO' : (sess?.getTier?.() || 'visitor');
+    const role = sess?.isCeoPrincipal?.() ? 'CEO' : (
+      String(sess?.getProfile?.()?.teamRole || '').toLowerCase() === 'owner' ? 'CEO' : (sess?.getTier?.() || 'visitor')
+    );
     const mode = isTouch() ? 'Touch' : 'Desktop';
+    settingsEl.classList.remove('dzp-office-guide');
     settingsEl.innerHTML = `
       <div class="sec">
         <h3>About this phone</h3>
@@ -2125,6 +2859,10 @@
         </div>
       </div>
       <div class="sec">
+        <h3>AI Connections</h3>
+        <div id="dzp-mcp-settings-host"><p class="v">Loading…</p></div>
+      </div>
+      <div class="sec">
         <h3>Interface</h3>
         <div class="row">
           <span>Classic toolbar<br><span class="v">Reload with the legacy bottom dock</span></span>
@@ -2139,6 +2877,7 @@
         </div>
       </div>`;
     settingsEl.classList.add('show');
+    void loadPhoneMcpSettings();
     const onAct = (e) => {
       const act = e.target?.closest?.('[data-act]')?.dataset?.act;
       if (act === 'legacy') {
@@ -2154,42 +2893,48 @@
         resetPhoneLayout();
       } else if (act === 'guide') {
         const guide = APPS.find((a) => a.id === 'guide');
-        if (guide) runLaunchApp(guide);
+        if (guide) renderOfficeGuide(guide);
       }
     };
     settingsEl.onclick = onAct;
+  }
+
+  async function loadPhoneMcpSettings() {
+    const host = settingsEl?.querySelector('#dzp-mcp-settings-host');
+    if (!host) return;
+    try {
+      if (!globalThis.DenizenVisitorMcpConnectUI?.renderSettingsPanel) {
+        await globalThis.DenizenLazyScripts?.load?.(['./src/visitor-mcp-connect-ui.js?v=mcp7jobs']);
+        globalThis.DenizenVisitorMcpConnectUI?.attach?.();
+      }
+      await globalThis.DenizenVisitorMcpConnectUI?.renderSettingsPanel?.(host);
+    } catch (_) {
+      host.innerHTML = '<p class="v">Sign in and claim an assistant to connect MCP.</p>';
+    }
   }
 
   function activateApp(app) {
     if (app.type === 'action') { runActionApp(app); return; }
     if (app.type === 'launch') { runLaunchApp(app); return; }
     if (app.type === 'navigate') { runNavigateApp(app); return; }
-    if (app.type === 'internal') { renderSettings(app); return; }
-    if (app.type === 'special-profile') {
-      if (isTouch()) {
-        closePhone();
-        setTimeout(() => globalThis.DenizenMobileSidebar?.open?.(), 120);
-        return;
-      }
-      setAppOpenUi(app);
-      if (!$('#denizen-account-panel')) showPlaceholder('Profile is still loading — hang tight.');
+    if (app.type === 'internal') {
+      if (app.id === 'guide') renderOfficeGuide(app);
+      else renderSettings(app);
       return;
     }
-    if (app.type === 'special-compute') {
+    if (app.type === 'special-profile' || app.type === 'special-compute') {
       if (isTouch()) {
-        closePhone();
+        closePhoneFromUi();
+        const tab = app.id === 'compute' ? 'compute' : 'profile';
         setTimeout(() => {
           globalThis.DenizenMobileSidebar?.open?.();
-          document.querySelector('#denizen-mobile-drawer .drawer-tab[data-tab="compute"]')?.click();
+          if (tab === 'compute') {
+            document.querySelector('#denizen-mobile-drawer .drawer-tab[data-tab="compute"]')?.click();
+          }
         }, 120);
         return;
       }
-      setAppOpenUi(app);
-      if (globalThis.DenizenNodeUI?.showPanel) {
-        globalThis.DenizenNodeUI.showPanel({ persist: false });
-      } else if (!$('#denizen-node-ui-chip')) {
-        showPlaceholder('Compute panel is still loading — hang tight.');
-      }
+      openMeInPhone(app.id === 'compute' ? 'compute' : 'profile');
       return;
     }
     openPanelApp(app);
@@ -2229,11 +2974,45 @@
     setTimeout(() => boot.classList.add('done'), 1050);
   }
 
+  // ---- Back-button trap -----------------------------------------------------
+  function armPhoneBackTrap() {
+    if (phoneBackTrap) return;
+    try {
+      window.history.pushState({ dzpPhone: 1 }, '');
+      phoneBackTrap = true;
+    } catch (_) {}
+  }
+
+  // Pop the trap we pushed (used when the phone is closed via UI, not Back), so
+  // the history stack stays clean and the next Back press behaves normally.
+  function disarmPhoneBackTrap() {
+    if (!phoneBackTrap) return;
+    phoneBackTrap = false;
+    suppressPhonePop = true;
+    try { window.history.back(); } catch (_) { suppressPhonePop = false; }
+  }
+
+  function onPhonePopState() {
+    if (suppressPhonePop) { suppressPhonePop = false; return; }
+    if (!phoneBackTrap) return; // not our entry — let the browser navigate
+    phoneBackTrap = false; // the browser just popped our trap
+    if (!shellEl?.classList.contains('open')) return;
+    if (currentApp) {
+      // Step out of the open app back to the home grid, keep trapping Back.
+      goHome(true);
+      armPhoneBackTrap();
+    } else {
+      // At the home grid — Back closes the phone (trap already consumed).
+      closePhone();
+    }
+  }
+
   function openPhone() {
     buildShell();
     phoneLayout = normalizePhoneLayout(readPhoneLayout());
     buildGrid();
     prefetchCrmBundle();
+    kickLazyLoad();
     shellEl.classList.add('open');
     fabEl?.classList.add('active');
     document.documentElement.classList.add('denizen-phone-open');
@@ -2246,8 +3025,11 @@
     clockTimer = setInterval(paintClock, 15_000);
     if (statusTimer) clearInterval(statusTimer);
     statusTimer = setInterval(refreshAppStatuses, 1_200);
+    armPhoneBackTrap();
   }
 
+  // Pure close — no history side effects. Safe to call from the popstate
+  // handler (where the trap is already gone) and from closePhoneFromUi().
   function closePhone() {
     closeCurrentApp(true);
     closeFolderSheet();
@@ -2257,10 +3039,24 @@
     document.documentElement.classList.remove('denizen-phone-open');
     if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
     if (statusTimer) { clearInterval(statusTimer); statusTimer = null; }
+    // Release keyboard focus so WASD/arrows reach Phaser again after using phone apps.
+    try {
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+        el.blur();
+      }
+      window.game?.input?.keyboard?.enableGlobalCapture?.();
+    } catch (_) {}
+  }
+
+  // Close triggered by the user (FAB / Esc / external API): also drop the trap.
+  function closePhoneFromUi() {
+    disarmPhoneBackTrap();
+    closePhone();
   }
 
   function togglePhone() {
-    if (shellEl?.classList.contains('open')) closePhone();
+    if (shellEl?.classList.contains('open')) closePhoneFromUi();
     else openPhone();
   }
 
@@ -2270,7 +3066,7 @@
     fabEl.id = FAB_ID;
     fabEl.type = 'button';
     fabEl.innerHTML = '📱<span class="dzp-fab-badge"></span>';
-    fabEl.title = 'Open your city key — chat, Citizen ID, City Power, and tools';
+    fabEl.title = 'Open your office key — chat, Citizen ID, City Power, and tools';
     fabEl.setAttribute('aria-label', 'Open phone');
     const bind = window.DenizenTouchBind?.bindPress;
     if (bind) bind(fabEl, togglePhone);
@@ -2310,6 +3106,8 @@
     document.documentElement.style.setProperty('--denizen-dock-height', '0px');
 
     document.addEventListener('denizen-deferred-scripts-ready', markScriptsSettled);
+    document.addEventListener('denizen-browser-mirror-ready', () => setTimeout(refreshAppStatuses, 50));
+    loadBrowserMirrorScript().catch(() => {});
     document.addEventListener('denizen-visitor-session-ready', () => setTimeout(refreshAppStatuses, 500));
     document.addEventListener('denizen-visitor-profile-updated', () => setTimeout(refreshAppStatuses, 100));
     document.addEventListener('denizen-visitor-profile-switching', () => setTimeout(refreshAppStatuses, 100));
@@ -2320,8 +3118,10 @@
       if (e.key !== 'Escape') return;
       if (!shellEl?.classList.contains('open')) return;
       if (currentApp) goHome(true);
-      else closePhone();
+      else closePhoneFromUi();
     });
+
+    window.addEventListener('popstate', onPhonePopState);
   }
 
   if (document.readyState === 'loading') {
@@ -2332,7 +3132,7 @@
 
   window.DenizenPhoneUi = {
     open: openPhone,
-    close: closePhone,
+    close: closePhoneFromUi,
     toggle: togglePhone,
     goHome,
     openApp: (id) => {

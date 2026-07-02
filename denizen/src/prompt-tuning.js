@@ -25,9 +25,26 @@ function envBool(name, fallback = false) {
 }
 
 const economy = envBool('DENIZEN_ECONOMY_MODE', true);
+const publicDemo = envBool('DENIZEN_PUBLIC_DEMO', false);
+
+let _publicDemoFolders = null;
+try {
+  const demoRoster = require('./demo-roster');
+  _publicDemoFolders = demoRoster.publicDemoNpcFolders(process.env);
+} catch (_) {
+  _publicDemoFolders = publicDemo ? ['abby', 'alex', 'lucy', 'bouncer'] : null;
+}
 
 module.exports = {
   economyMode: economy,
+  publicDemoMode: publicDemo || !!_publicDemoFolders,
+  publicDemoNpcFolders: _publicDemoFolders,
+  publicDemoAnthropicKey: String(process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY || ''),
+  publicDemoModel: String(process.env.DENIZEN_PUBLIC_DEMO_MODEL || 'claude-haiku-3-5-20241022'),
+  publicDemoUseCloud: Boolean(
+    process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY
+    || (publicDemo && process.env.ANTHROPIC_API_KEY)
+  ),
   memoryChars: envInt('DENIZEN_MEMORY_CHARS', economy ? 180 : 280),
   thinkMinMs: envInt('DENIZEN_THINK_MIN_MS', economy ? 150000 : 120000),
   thinkMaxMs: envInt('DENIZEN_THINK_MAX_MS', economy ? 240000 : 200000),
@@ -38,7 +55,11 @@ module.exports = {
   cofounderMeetingCooldownMs: envInt('DENIZEN_COFOUNDER_MEETING_COOLDOWN_MS', 300000),
   cofounderThinkMinMs: envInt('DENIZEN_COFOUNDER_THINK_MIN_MS', economy ? 60000 : 45000),
   cofounderThinkMaxMs: envInt('DENIZEN_COFOUNDER_THINK_MAX_MS', economy ? 120000 : 90000),
+  /** Abby office-dispatcher LM timeout (JSON commands, not deep reasoning). */
+  cofounderLmTimeoutMs: envInt('DENIZEN_COFOUNDER_LM_TIMEOUT_MS', economy ? 60000 : 90000),
   compactLiveContext: envBool('DENIZEN_COMPACT_LIVE_CONTEXT', true),
+  /** Player-first: skip client autonomous NPC bursts (think walks, tours, desk snaps). */
+  lightOffice: envBool('DENIZEN_LIGHT_OFFICE', true),
   compactThinkPrompt: envBool('DENIZEN_COMPACT_THINK_PROMPT', true),
   includePcAccessBlock: envBool('DENIZEN_INCLUDE_PC_ACCESS', false),
   infraContextChance: envFloat('DENIZEN_INFRA_CONTEXT_CHANCE', economy ? 0.04 : 0.06),
@@ -46,6 +67,19 @@ module.exports = {
   codeContextChanceIdle: envFloat('DENIZEN_CODE_CONTEXT_CHANCE_IDLE', economy ? 0.03 : 0.04),
   thinkMaxTokens: envInt('DENIZEN_THINK_MAX_TOKENS', economy ? 320 : 360),
   thinkSliceLen: envInt('DENIZEN_THINK_SLICE_LEN', economy ? 1200 : 1500),
+  /** HTTP timeout for autonomous think() LM Studio calls (ms). */
+  lmThinkTimeoutMs: envInt('DENIZEN_LM_THINK_TIMEOUT_MS', economy ? 90000 : 120000),
+  /** HTTP timeout when think() uses the fast local slot (Gemma etc.). */
+  lmThinkFastTimeoutMs: envInt('DENIZEN_LM_THINK_FAST_TIMEOUT_MS', 45000),
+  /**
+   * Route autonomous think() through lmstudio-fast (small JSON decisions).
+   * SOUL Provider still applies to player chat and NPC↔NPC dialogue.
+   */
+  thinkUseFastModel: envBool('DENIZEN_THINK_USE_FAST_MODEL', true),
+  /** Max chars of SOUL injected into autonomous think() (full SOUL still on disk). */
+  thinkSoulMaxChars: envInt('DENIZEN_THINK_SOUL_MAX_CHARS', economy ? 720 : 1100),
+  /** Anthropic prompt caching on static system blocks (BYOK / cloud NPC paths). */
+  anthropicPromptCache: envBool('DENIZEN_ANTHROPIC_PROMPT_CACHE', true),
   evidenceRule: 'Do not claim you fixed, shipped, researched, or filed something unless you ran run_skill or produced an artifact this cycle. Say you will check instead.',
   autoClaimSprintTasks: envBool('DENIZEN_AUTO_CLAIM_SPRINT', !economy),
   /** Off by default — enables run_skill nudges (drives ~27% run_skill in telemetry). Set true to force real tools. */
@@ -63,10 +97,16 @@ module.exports = {
   /** Algorithmic planner for routine think cycles — saves ~85% autonomous LLM calls. */
   hybridDirector: envBool('DENIZEN_HYBRID_DIRECTOR', economy),
   playerChatMaxTokens: envInt('DENIZEN_PLAYER_CHAT_MAX_TOKENS', economy ? 220 : 300),
-  playerChatHistoryMsgs: envInt('DENIZEN_PLAYER_CHAT_HISTORY_MSGS', economy ? 4 : 12),
+  playerChatHistoryMsgs: envInt('DENIZEN_PLAYER_CHAT_HISTORY_MSGS', economy ? 4 : 8),
+  /** Verbatim turns kept in the messages array when compaction is on. */
+  playerChatRecentMsgs: envInt('DENIZEN_PLAYER_CHAT_RECENT_MSGS', economy ? 4 : 6),
+  /** Compact older turns into a summary block once memory exceeds this count. */
+  playerChatCompactAfter: envInt('DENIZEN_PLAYER_CHAT_COMPACT_AFTER', economy ? 6 : 10),
+  playerChatSummaryChars: envInt('DENIZEN_PLAYER_CHAT_SUMMARY_CHARS', economy ? 400 : 520),
+  playerChatCompaction: envBool('DENIZEN_PLAYER_CHAT_COMPACTION', true),
   playerChatMemoryChars: envInt('DENIZEN_PLAYER_CHAT_MEMORY_CHARS', economy ? 320 : 500),
   /** Shorter CEO/visitor chat system prompt — drops the 2k-token action catalog. */
-  compactPlayerChat: envBool('DENIZEN_COMPACT_PLAYER_CHAT', economy),
+  compactPlayerChat: envBool('DENIZEN_COMPACT_PLAYER_CHAT', true),
   playerChatTimeoutMs: envInt('DENIZEN_PLAYER_CHAT_TIMEOUT_MS', 45000),
   /** Visitor onboarding — team/demo org slugs and access codes (server-side only). */
   teamCode: String(process.env.DENIZEN_TEAM_CODE || '1921'),
@@ -109,6 +149,7 @@ function toClientConfig() {
     hybridDirector: t.hybridDirector,
     compactPlayerChat: t.compactPlayerChat,
     playerChatHistoryMsgs: t.playerChatHistoryMsgs,
+    lightOffice: t.lightOffice,
     visitorAccess: {
       demoOrgSlug: t.demoOrgSlug,
       teamOrgSlug: t.teamOrgSlug,
@@ -116,6 +157,14 @@ function toClientConfig() {
       ceoAccessRequired: !!t.ceoAccessCode,
       minPasswordLength: t.minPasswordLength,
       devPasswordRelaxed: t.devPasswordRelaxed,
+      publicUrl: String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '').replace(/\/+$/, '') || null,
+    },
+    publicDemo: {
+      enabled: !!t.publicDemoMode,
+      readOnly: true,
+      npcFolders: t.publicDemoNpcFolders || null,
+      cloudProvider: !!t.publicDemoUseCloud,
+      model: t.publicDemoUseCloud ? t.publicDemoModel : null,
     },
   };
 }

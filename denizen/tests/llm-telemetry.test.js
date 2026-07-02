@@ -25,6 +25,11 @@ describe('classifyError', () => {
     assert.equal(c.category, 'provider_down');
     assert.match(c.hint, /not running/i);
   });
+  it('maps AggregateError → provider_down', () => {
+    const c = classifyError('Connection failed (ECONNREFUSED; ECONNREFUSED)');
+    assert.equal(c.category, 'provider_down');
+    assert.match(c.hint, /LM Studio/i);
+  });
   it('maps timeout → timeout', () => {
     assert.equal(classifyError('LM Studio timeout').category, 'timeout');
     assert.equal(classifyError('ETIMEDOUT').category, 'timeout');

@@ -1,5 +1,6 @@
 // Probe group chat picker clicks
 import { chromium } from 'playwright';
+import { loginOwner } from './lib/probe-login.mjs';
 
 const BASE = process.argv[2] || 'http://localhost:8080';
 
@@ -10,12 +11,7 @@ page.on('pageerror', (e) => errors.push(e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
 
 await page.goto(`${BASE}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 90_000 });
-if (await page.locator('#denizen-visitor-name-modal').count()) {
-  await page.locator('[data-action="path-ceo"]').click();
-  await page.locator('#denizen-visitor-code-input').fill('Dolonia');
-  await page.locator('[data-action="submit-ceo-code"]').click();
-  await page.waitForFunction(() => !document.getElementById('denizen-visitor-name-modal'), { timeout: 30_000 });
-}
+await loginOwner(page);
 await page.waitForTimeout(6000);
 await page.click('#denizen-phone-fab');
 await page.waitForSelector('#denizen-phone-shell.open');

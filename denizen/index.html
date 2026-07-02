@@ -2,6 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script>
+    /* Movement bootstrap — runs before any deferred bundle; keys always reach the game. */
+    (function () {
+      window.__DenizenMoveFix = 'v7';
+      if (!window.__DenizenRawMoveKeys) {
+        window.__DenizenRawMoveKeys = { up: false, down: false, left: false, right: false };
+        var map = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', W: 'up', s: 'down', S: 'down', a: 'left', A: 'left', d: 'right', D: 'right' };
+        function setKey(e, on) { var d = map[e.key]; if (d) window.__DenizenRawMoveKeys[d] = on; }
+        window.addEventListener('keydown', function (e) { setKey(e, true); }, true);
+        window.addEventListener('keyup', function (e) { setKey(e, false); }, true);
+        window.addEventListener('blur', function () {
+          Object.keys(window.__DenizenRawMoveKeys).forEach(function (k) { window.__DenizenRawMoveKeys[k] = false; });
+        });
+      }
+    })();
+    </script>
     <title>DENIZEN</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -72,11 +88,15 @@
     <script>
       (function () {
         // ?touch=1 / ?touch=0 forces touch mode on or off (testing narrow layouts in a desktop browser)
+        // ?desktop=1 — Electron app: treat as desktop even when the machine has a touchscreen
         var force = null;
         try {
-          var q = new URLSearchParams(window.location.search).get('touch');
+          var params = new URLSearchParams(window.location.search);
+          var q = params.get('touch');
           if (q === '1' || q === 'true') force = true;
           else if (q === '0' || q === 'false') force = false;
+          var desktop = params.get('desktop');
+          if (desktop === '1' || desktop === 'true') force = false;
         } catch (_) {}
         window.__DenizenForceTouch = force;
         try {
@@ -91,8 +111,19 @@
       })();
     </script>
     <script>
-      // Show runtime errors on screen (helps when canvas is just a blank color).
+      // Log runtime errors to console; on-screen overlay is dev-only (not shown to visitors).
       (function () {
+        function showErrorOverlay() {
+          try {
+            const h = String(window.location.hostname || '').toLowerCase();
+            if (h === 'localhost' || h === '127.0.0.1' || h === '[::1]') return true;
+            const q = new URLSearchParams(window.location.search || '');
+            return q.has('debug') || q.get('debug') === 'errors';
+          } catch (_) {
+            return false;
+          }
+        }
+
         function ensureOverlay() {
           let wrap = document.getElementById('runtime-error-wrap');
           if (!wrap) {
@@ -131,17 +162,22 @@
           return wrap.querySelector('#runtime-error');
         }
 
-        window.addEventListener('error', function (ev) {
+        function reportError(kind, text) {
+          console.error(`[Denizen ${kind}]`, text);
+          if (!showErrorOverlay()) return;
           const el = ensureOverlay();
-          el.textContent += `[error] ${ev.message}\n${ev.filename || ''}:${ev.lineno || ''}:${ev.colno || ''}\n\n`;
+          el.textContent += `[${kind}] ${text}\n\n`;
+        }
+
+        window.addEventListener('error', function (ev) {
+          reportError('error', `${ev.message}\n${ev.filename || ''}:${ev.lineno || ''}:${ev.colno || ''}`);
         });
         window.addEventListener('unhandledrejection', function (ev) {
-          const el = ensureOverlay();
           const reason = ev.reason;
           const stack = reason && typeof reason === 'object' && reason.stack
             ? `\n${reason.stack}`
             : '';
-          el.textContent += `[unhandledrejection] ${String(reason)}${stack}\n\n`;
+          reportError('unhandledrejection', `${String(reason)}${stack}`);
         });
       })();
     </script>
@@ -159,12 +195,15 @@
     <!-- Pathfinding -->
     <script src="./src/pathfinding.js" defer></script>
     <script src="./src/npc-roster.js" defer></script>
-    <script src="./src/npc-capabilities.js?v=cap1" defer></script>
+    <script src="./src/public-demo-mode.js" defer></script>
+    <script src="./src/spectate-routing.js?v=spectate2" defer></script>
+    <script src="./src/spectate-ui.js" defer></script>
+    <script src="./src/npc-capabilities.js?v=cap2roki" defer></script>
     <!-- Touch tap helper — must load before any dock chip / panel scripts -->
     <script src="./src/touch-bind.js?v=voice2" defer></script>
     <!-- Agent Office System -->
     <script src="./src/agent-actions.js" defer></script>
-    <script src="./src/agent-office-manager.js?v=office1" defer></script>
+    <script src="./src/agent-office-manager.js?v=freezefix7" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
     <!-- OpenClaw → WorldState bridge (translator must load BEFORE the bridge runner) -->
     <script src="./src/openclaw-translator.js?v=mobfix2" defer></script>
@@ -179,34 +218,42 @@
     <script src="./src/mobile-controls.js?v=mobperf6" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
-    <script src="./src/visitor-session.js?v=vis30" defer></script>
+    <script src="./src/visitor-session.js?v=freeze28fix1" defer></script>
     <script src="./src/visitor-demo-account-prompt.js?v=demoacct1" defer></script>
-    <script src="./src/visitor-profile-ui.js?v=prof1" defer></script>
-    <script src="./src/visitor-account-panel.js?v=acct8" defer></script>
-    <script src="./src/visitor-node-ui.js?v=node24city" defer></script>
-    <script src="./src/visitor-onboarding.js?v=onbv10pitch" defer></script>
+    <script src="./src/visitor-client-platform.js?v=plat1" defer></script>
+    <script src="./src/visitor-profile-ui.js?v=prof2" defer></script>
+    <script src="./src/visitor-account-panel.js?v=acct9" defer></script>
+    <script src="./src/visitor-node-ui.js?v=node25plat" defer></script>
+    <script src="./src/visitor-onboarding.js?v=freeze28fix1" defer></script>
     <script src="./src/visitor-capabilities-guide.js?v=guide1" defer></script>
-    <script src="./src/visitor-superuser-onboarding.js?v=super3city" defer></script>
+    <script src="./src/visitor-superuser-onboarding.js?v=freeze28fix1" defer></script>
     <script src="./src/visitor-claim-ui.js?v=mobplay6" defer></script>
-    <script src="./src/visitor-npc-team-ui.js?v=npcteam13" defer></script>
+    <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
+    <script src="./src/visitor-market-panel.js?v=market2" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
     <script src="./src/player-chat.js?v=attach1" defer></script>
     <script src="./src/denizen-phone-chat-ui.js?v=phchat5" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/bottom-dock.js?v=mobme4" defer></script>
-    <!-- In-game smartphone HUD — replaces the dock with a Phone button (?phonemode=0 for legacy) -->
-    <script src="./src/denizen-phone-ui.js?v=phone17city" defer></script>
-    <!-- Lazy loader — audio, panels, security feed, browser mirror, etc. -->
-    <script src="./src/denizen-lazy-scripts.js?v=lazy5" defer></script>
+    <!-- Browser mirror — eager load so phone Browser app always mounts -->
+    <script src="./src/browser-mirror-panel.js?v=lucymirror6" defer></script>
+    <!-- Lazy loader — must run before phone UI -->
+    <script src="./src/denizen-lazy-scripts.js?v=lazy6" defer></script>
+    <!-- In-game smartphone HUD -->
+    <script src="./src/denizen-phone-ui.js?v=phone22movefix" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=wall7" defer></script>
+    <!-- Movement guard + freeze watchdog — must load before scene -->
+    <script src="./src/movement-guard.js?v=freezefix7" defer></script>
+    <script src="./src/freeze-watchdog.js?v=freezefix7" defer></script>
     <!-- Game scene -->
-    <script src="./office-scene.js?v=office1" defer></script>
+    <script src="./office-scene.js?v=freezefix7" defer></script>
   </head>
   <body>
     <div id="game-container"></div>
     <!-- Chat button appears immediately — does not wait for Phaser -->
-    <script src="./src/chat-bootstrap.js?v=sec3"></script>
+    <script src="./src/visitor-crm-bridge.js?v=crmbridge2"></script>
+    <script src="./src/chat-bootstrap.js?v=lucymirror2"></script>
   </body>
 </html>
 

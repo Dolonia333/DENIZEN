@@ -99,12 +99,14 @@
     bound = true;
     window.addEventListener('keydown', (ev) => {
       if (ev.repeat) return;
-      if (ev.key.toLowerCase() !== HOLD_KEY) return;
+      const key = ev.key;
+      if (!key || key.toLowerCase() !== HOLD_KEY) return;
       if (ev.target?.matches('input, textarea, [contenteditable]')) return;
       startHold();
     });
     window.addEventListener('keyup', (ev) => {
-      if (ev.key.toLowerCase() !== HOLD_KEY) return;
+      const key = ev.key;
+      if (!key || key.toLowerCase() !== HOLD_KEY) return;
       stopHold();
     });
   }

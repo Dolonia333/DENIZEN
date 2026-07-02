@@ -21,12 +21,19 @@
   let panelOpen = false;
   let lastFeed = { proposals: [], total: 0 };
   let filterStatus = 'pending';
-  let filterKinds = new Set(['animation', 'soul', 'capability', 'skill']);
+  let filterKinds = new Set(['animation', 'soul', 'capability', 'skill', 'code', 'dossier']);
   let selectedId = null;
   let showTechnical = false;
   let soulApplyAvailable = null;
   let controlsWired = false;
   let autoOpenChecked = false;
+  let serverMeta = { label: '' };
+  let soulContextCache = new Map();
+  let citationChecks = new Map();
+  let noteModal = null;
+  let pendingDecision = null;
+  let toastTimer = null;
+  let lastFlash = null;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -59,6 +66,24 @@
         padding: 10px 12px;
         border-bottom: 1px solid rgba(148, 163, 184, 0.2);
         background: rgba(15, 23, 42, 0.95);
+        position: relative;
+      }
+      #${PANEL_ID} .prop-toast {
+        margin-top: 8px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font: 600 12px/1.35 system-ui, sans-serif;
+        color: #ecfdf5;
+        background: rgba(6, 95, 70, 0.92);
+        border: 1px solid rgba(52, 211, 153, 0.55);
+      }
+      #${PANEL_ID} .prop-toast.error {
+        color: #fef2f2;
+        background: rgba(127, 29, 29, 0.92);
+        border-color: rgba(252, 165, 165, 0.55);
+      }
+      #${PANEL_ID} .prop-toast[hidden] {
+        display: none !important;
       }
       #${PANEL_ID} .prop-shell-topline {
         display: flex;
@@ -121,6 +146,7 @@
         display: grid;
         grid-template-columns: 200px 1fr;
         overflow: hidden;
+        position: relative;
       }
       #${PANEL_ID} .prop-index {
         overflow-y: auto;
@@ -164,7 +190,9 @@
         overflow: hidden;
       }
       #${PANEL_ID} .prop-reader {
+        position: relative;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         padding: 14px 16px 18px;
         background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
       }
@@ -275,10 +303,23 @@
         border: none;
         cursor: pointer;
         transition: opacity 0.15s;
+        touch-action: manipulation;
       }
-      #${PANEL_ID} .prop-doc-actions button:disabled {
+      #${PANEL_ID} .prop-doc-actions button:disabled,
+      #${PANEL_ID} .prop-doc-actions button[aria-disabled="true"] {
         opacity: 0.45;
         cursor: not-allowed;
+      }
+      #${PANEL_ID} .prop-dossier-gate {
+        margin: 12px 0 0;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(217, 119, 6, 0.35);
+        background: rgba(254, 243, 199, 0.85);
+        color: #92400e;
+        font-family: system-ui, sans-serif;
+        font-size: 12px;
+        line-height: 1.45;
       }
       #${PANEL_ID} .prop-btn-approve { background: #16a34a; color: #fff; }
       #${PANEL_ID} .prop-btn-reject { background: #dc2626; color: #fff; }
@@ -385,11 +426,21 @@
         display: inline-block;
         margin-bottom: 10px;
       }
+      html.denizen-phone #${PANEL_ID} .prop-doc-actions,
+      html.denizen-phone-mode #${PANEL_ID} .prop-doc-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 4;
+        margin-top: 16px;
+        padding: 12px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+        background: linear-gradient(180deg, rgba(250, 248, 245, 0) 0%, #faf8f5 28%);
+        box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.08);
+      }
       html.denizen-phone #${PANEL_ID} .prop-doc-actions button,
       html.denizen-phone-mode #${PANEL_ID} .prop-doc-actions button {
         flex: 1 1 120px;
-        min-height: 38px;
-        padding: 8px 10px;
+        min-height: 44px;
+        padding: 10px 12px;
       }
       @media (max-width: 640px) {
         #${PANEL_ID} .prop-shell-header {
@@ -454,18 +505,199 @@
         padding: 16px 14px;
         font-size: 13px;
       }
+      #${PANEL_ID} .prop-shell-subtitle {
+        font-size: 10px;
+        color: #64748b;
+        margin-top: 2px;
+        font-family: system-ui, sans-serif;
+      }
+      #${PANEL_ID} .prop-filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 4px;
+      }
+      #${PANEL_ID} .prop-filter-row:last-child {
+        margin-bottom: 0;
+      }
+      #${PANEL_ID} .prop-filter-label {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        min-width: 42px;
+        font-family: system-ui, sans-serif;
+      }
+      #${PANEL_ID} .prop-index-priority {
+        display: inline-block;
+        font-size: 8px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        padding: 1px 5px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+        font-family: system-ui, sans-serif;
+      }
+      #${PANEL_ID} .prop-index-priority.ceo { background: #7f1d1d; color: #fecaca; }
+      #${PANEL_ID} .prop-index-priority.ext { background: #713f12; color: #fde68a; }
+      #${PANEL_ID} .prop-citation-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, sans-serif;
+        font-size: 12px;
+      }
+      #${PANEL_ID} .prop-citation-item {
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.65);
+      }
+      #${PANEL_ID} .prop-citation-item label {
+        display: block;
+      }
+      #${PANEL_ID} .prop-cite-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        min-width: 132px;
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(15, 23, 42, 0.2);
+        background: #fff;
+        color: #0f172a;
+        font: 600 12px system-ui, sans-serif;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      #${PANEL_ID} .prop-cite-toggle.checked {
+        background: #dcfce7;
+        border-color: #16a34a;
+        color: #166534;
+      }
+      #${PANEL_ID} .prop-citation-item a {
+        color: #1d4ed8;
+        word-break: break-all;
+      }
+      #${PANEL_ID} .prop-preview-frame {
+        width: 100%;
+        min-height: 320px;
+        border: 1px solid rgba(15, 23, 42, 0.15);
+        border-radius: 4px;
+        background: #fff;
+        margin-top: 8px;
+      }
+      #${PANEL_ID} .prop-diff-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 11px;
+      }
+      #${PANEL_ID} .prop-diff-col {
+        background: rgba(15, 23, 42, 0.06);
+        border-radius: 4px;
+        padding: 8px 10px;
+        max-height: 240px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      #${PANEL_ID} .prop-diff-col.add { border-left: 3px solid #15803d; }
+      #${PANEL_ID} .prop-diff-col.drop { border-left: 3px solid #b91c1c; }
+      #${PANEL_ID} .prop-diff-col.current { border-left: 3px solid #64748b; }
+      #${PANEL_ID} .prop-note-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 80;
+        background: rgba(15, 23, 42, 0.82);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        pointer-events: auto;
+      }
+      #${PANEL_ID} .prop-note-modal button {
+        touch-action: manipulation;
+        min-height: 44px;
+      }
+      #${PANEL_ID} .prop-note-card {
+        width: min(420px, 100%);
+        background: #1e293b;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 10px;
+        padding: 14px;
+        font-family: system-ui, sans-serif;
+      }
+      #${PANEL_ID} .prop-note-card h4 {
+        margin: 0 0 8px;
+        color: #e2e8f0;
+        font-size: 13px;
+      }
+      #${PANEL_ID} .prop-note-card textarea {
+        width: 100%;
+        min-height: 88px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: #0f172a;
+        color: #e2e8f0;
+        padding: 8px 10px;
+        font: 12px/1.4 system-ui, sans-serif;
+        resize: vertical;
+      }
+      #${PANEL_ID} .prop-note-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        justify-content: flex-end;
+      }
+      #${PANEL_ID} .prop-post-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      #${PANEL_ID} .prop-post-actions a,
+      #${PANEL_ID} .prop-post-actions button {
+        font-size: 11px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid rgba(15, 23, 42, 0.2);
+        background: #f1f5f9;
+        color: #0f172a;
+        text-decoration: none;
+        cursor: pointer;
+        font-family: system-ui, sans-serif;
+      }
+      @media (max-width: 640px) {
+        #${PANEL_ID} .prop-diff-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     `;
     document.head.appendChild(style);
   }
 
-  function renderHeader(filtersHtml = '') {
+  function renderHeader(filtersHtml = '', subtitle = '') {
+    const toastHtml = lastFlash && Date.now() - lastFlash.at < 4000
+      ? `<div class="prop-toast${lastFlash.isError ? ' error' : ''}" role="status" aria-live="polite">${esc((lastFlash.isError ? '⚠ ' : '✓ ') + lastFlash.msg)}</div>`
+      : '<div class="prop-toast" hidden></div>';
     return `
       <div class="prop-shell-header">
         <div class="prop-shell-topline">
-          <div class="prop-shell-title">PROPOSALS — DOCUMENT REVIEW</div>
-          <button type="button" class="prop-panel-close" data-action="close" aria-label="Close proposals" title="Close proposals">×</button>
+          <div class="prop-shell-title">
+            APPROVALS
+            ${subtitle ? `<div class="prop-shell-subtitle">${esc(subtitle)}</div>` : ''}
+          </div>
+          <button type="button" class="prop-panel-close" data-action="close" aria-label="Close approvals" title="Close">×</button>
         </div>
         ${filtersHtml ? `<div class="prop-filters">${filtersHtml}</div>` : ''}
+        ${toastHtml}
       </div>`;
   }
 
@@ -490,6 +722,8 @@
     if (kind === 'soul') return 'SOUL Revision';
     if (kind === 'capability') return 'Capability Request';
     if (kind === 'skill') return 'Skill Proposal';
+    if (kind === 'code') return 'Code Proposal';
+    if (kind === 'dossier') return 'PDF Dossier';
     return String(kind || 'Proposal');
   }
 
@@ -498,6 +732,8 @@
     if (kind === 'soul') return 'SOUL';
     if (kind === 'capability') return 'CAP';
     if (kind === 'skill') return 'SKILL';
+    if (kind === 'code') return 'CODE';
+    if (kind === 'dossier') return 'PDF';
     return String(kind || '?').slice(0, 4).toUpperCase();
   }
 
@@ -507,6 +743,8 @@
     if (p.kind === 'soul') return (r.proposal && r.proposal.summary) || p.summary || 'SOUL edit';
     if (p.kind === 'capability') return r.verbName || r.name || p.summary || 'New capability';
     if (p.kind === 'skill') return r.name || r.slug || p.summary || 'New skill';
+    if (p.kind === 'code') return r.task || p.summary || 'Code change';
+    if (p.kind === 'dossier') return `${r.type || 'dossier'}${r.recipient ? ` · ${r.recipient}` : ''}`;
     return p.summary || 'Proposal';
   }
 
@@ -534,6 +772,159 @@
       });
     } catch (_) {
       return String(ts);
+    }
+  }
+
+  function proposalKey(p) {
+    return selectionKey(p);
+  }
+
+  function priorityBadges(p) {
+    const r = p.raw || {};
+    const badges = [];
+    if (r.requiresAngelaReview) badges.push({ cls: 'ceo', text: 'CEO REVIEW' });
+    if (p.kind === 'dossier' && r.recipient) badges.push({ cls: 'ext', text: 'EXTERNAL' });
+    if (Array.isArray(r.flags) && r.flags.some((f) => f.blocking)) badges.push({ cls: 'ceo', text: 'FLAGS' });
+    return badges;
+  }
+
+  function getCitationChecks(key, count) {
+    if (!citationChecks.has(key)) citationChecks.set(key, new Set());
+    const set = citationChecks.get(key);
+    return { set, checkedCount: set.size, allChecked: count > 0 && set.size >= count };
+  }
+
+  function renderDossierCitations(p) {
+    const r = p.raw || {};
+    const citations = r.recipientResearch?.citations || [];
+    if (!citations.length) {
+      return '<div class="prop-doc-section muted"><p>No Bob research citations attached.</p></div>';
+    }
+    const key = proposalKey(p);
+    const { set } = getCitationChecks(key, citations.length);
+    const items = citations.map((c) => {
+      const verified = set.has(c.index);
+      const cls = verified ? 'prop-cite-toggle checked' : 'prop-cite-toggle';
+      const label = verified ? '✓ Verified' : 'Tap to verify';
+      return `<li class="prop-citation-item">
+        <button type="button" class="${cls}" data-action="cite-toggle" data-citation-check="${esc(key)}" data-cite-index="${c.index}">${label}</button>
+        <div class="prop-cite-body">
+          <strong>[${c.index}] ${esc(c.title || 'Source')}</strong><br>
+          <a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.url)}</a><br>
+          ${esc(c.snippet || c.title || '')}<br>
+          <em style="color:#64748b;font-size:10px">Verify against Ben / business-model.json</em>
+        </div>
+      </li>`;
+    }).join('');
+    return `<div class="prop-doc-section">
+      <h3>Bob research — verify line by line</h3>
+      <ul class="prop-citation-list">${items}</ul>
+    </div>`;
+  }
+
+  function renderDossierPreview(p) {
+    const id = p.id;
+    const htmlUrl = `/api/dossier-proposals/${encodeURIComponent(id)}/preview?format=html`;
+    const pdfUrl = `/api/dossier-proposals/${encodeURIComponent(id)}/preview?format=pdf`;
+    return `<div class="prop-doc-section">
+      <h3>Preview</h3>
+      <iframe class="prop-preview-frame" src="${esc(htmlUrl)}" title="Dossier HTML preview"></iframe>
+      <div class="prop-post-actions">
+        <a href="${esc(pdfUrl)}" target="_blank" rel="noopener">Download PDF</a>
+        <a href="${esc(htmlUrl)}" target="_blank" rel="noopener">Open HTML</a>
+      </div>
+    </div>`;
+  }
+
+  function renderSoulDiff(p, context) {
+    const prop = (p.raw?.proposal) || {};
+    const add = prop.addToSoul || '';
+    const drop = prop.dropFromSoul || '';
+    const current = context?.currentSoul || '';
+    if (!add && !drop && !current) return '';
+    return `<div class="prop-doc-section">
+      <h3>SOUL diff</h3>
+      <div class="prop-diff-grid">
+        <div>
+          <div style="font-size:10px;font-weight:700;margin-bottom:4px;color:#64748b">CURRENT SOUL.md</div>
+          <div class="prop-diff-col current">${esc(current.slice(0, 6000) || '(empty or unreadable)')}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;margin-bottom:4px;color:#64748b">PROPOSED CHANGES</div>
+          ${add ? `<div class="prop-diff-col add">${esc(add)}</div>` : ''}
+          ${drop ? `<div class="prop-diff-col drop">${esc(drop)}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderCodeDiff(p) {
+    const r = p.raw || {};
+    const diff = r.diff || '';
+    if (!diff) return '';
+    return `<div class="prop-doc-section">
+      <h3>Diff ${r.gitMode ? `(mode: ${esc(r.gitMode)})` : ''}</h3>
+      <pre>${esc(String(diff).slice(0, 12000))}</pre>
+    </div>`;
+  }
+
+  function renderPostApproveActions(p) {
+    const status = (p.status || '').toLowerCase();
+    if (status !== 'approved' && status !== 'pending') return '';
+    if (p.kind === 'dossier') {
+      const pdfUrl = `/api/dossier-proposals/${encodeURIComponent(p.id)}/preview?format=pdf`;
+      const htmlUrl = `/api/dossier-proposals/${encodeURIComponent(p.id)}/preview?format=html`;
+      return `<div class="prop-post-actions">
+        <a href="${esc(pdfUrl)}" target="_blank" rel="noopener">Download PDF</a>
+        <a href="${esc(htmlUrl)}" target="_blank" rel="noopener">Open HTML draft</a>
+      </div>`;
+    }
+    if (p.kind === 'code' && p.raw?.reportPath) {
+      return `<div class="prop-post-actions"><span style="font-size:11px;color:#64748b">Report: ${esc(p.raw.reportPath)}</span></div>`;
+    }
+    return '';
+  }
+
+  function renderNoteModalHtml() {
+    if (!noteModal) return '';
+    const { decision, requireNote } = noteModal;
+    const title = decision === 'rejected' ? 'Reject — reason required' : 'Approve — optional note';
+    return `<div class="prop-note-modal" data-note-modal="1">
+      <div class="prop-note-card">
+        <h4>${esc(title)}</h4>
+        <textarea id="prop-note-text" placeholder="${requireNote ? 'Explain why this is rejected…' : 'Optional note for audit trail…'}"></textarea>
+        <div class="prop-note-actions">
+          <button type="button" class="prop-btn-secondary" data-action="note-cancel">Cancel</button>
+          <button type="button" class="prop-btn-${decision === 'rejected' ? 'reject' : 'approve'}" data-action="note-submit">${decision === 'rejected' ? 'Reject' : 'Confirm approve'}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  async function fetchSoulContext(p) {
+    const cacheKey = `${p.kind}:${p.id}`;
+    if (soulContextCache.has(cacheKey)) return soulContextCache.get(cacheKey);
+    try {
+      const res = await fetch(`/api/soul-proposals/${encodeURIComponent(p.id)}/context`, { cache: 'no-store' });
+      if (!res.ok) return null;
+      const json = await res.json();
+      soulContextCache.set(cacheKey, json);
+      return json;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function fetchServerMeta() {
+    try {
+      const res = await fetch('/api/health', { cache: 'no-store' });
+      if (!res.ok) return;
+      const j = await res.json();
+      const id = j.server?.id || window.location.hostname;
+      const port = j.server?.port || window.location.port;
+      serverMeta.label = port ? `${id}:${port}` : String(id);
+    } catch (_) {
+      serverMeta.label = window.location.host || '';
     }
   }
 
@@ -573,6 +964,32 @@
           body: String(r.code).slice(0, 4000),
           muted: true,
         });
+      }
+    } else if (p.kind === 'code') {
+      if (r.task) sections.push({ title: 'Task', body: r.task });
+      if (r.gitMode) sections.push({ title: 'Edit mode', body: r.gitMode });
+      if (r.targetFiles?.length) sections.push({ title: 'Target files', body: r.targetFiles.join('\n') });
+      if (r.changedFiles?.length) sections.push({ title: 'Changed files', body: r.changedFiles.join('\n') });
+      if (r.reportPath) sections.push({ title: 'Report', body: r.reportPath });
+    } else if (p.kind === 'dossier') {
+      if (r.type) sections.push({ title: 'Document type', body: r.type });
+      if (r.recipient) sections.push({ title: 'Recipient', body: r.recipient });
+      if (r.subject) sections.push({ title: 'Subject', body: r.subject });
+      if (r.skin) sections.push({ title: 'Skin', body: r.skin });
+      if (r.repo_pin) {
+        sections.push({
+          title: 'Repo pin',
+          body: `commit ${r.repo_pin.short || r.repo_pin.commit} · ${r.repo_pin.test_files} test files`,
+        });
+      }
+      const blocking = (r.flags || []).filter((f) => f.blocking);
+      if (blocking.length) {
+        sections.push({ title: 'Honesty flags (blocking)', body: JSON.stringify(blocking, null, 2).slice(0, 2000), tone: 'drop' });
+      } else if (Array.isArray(r.flags) && r.flags.length) {
+        sections.push({ title: 'Honesty flags (advisory)', body: JSON.stringify(r.flags, null, 2).slice(0, 1200), muted: true });
+      }
+      if (r.requiresAngelaReview) {
+        sections.push({ title: 'Review gate', body: 'Requires holding CEO review before external use.', tone: 'drop' });
       }
     }
 
@@ -650,12 +1067,24 @@
     } else {
       chipEl.style.background = '#0f172a';
       chipEl.style.borderColor = '#355';
-      chipEl.textContent = '📋 proposals';
+      chipEl.textContent = '📋 approvals';
     }
   }
 
   function flash(msg, isError) {
+    lastFlash = { msg, isError: !!isError, at: Date.now() };
+    if (panelOpen && panelEl) renderPanel();
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      if (lastFlash && Date.now() - lastFlash.at >= 3200) {
+        lastFlash = null;
+        if (panelOpen && panelEl) renderPanel();
+      }
+    }, 3400);
     if (!chipEl) return;
+    try {
+      if (getComputedStyle(chipEl).visibility === 'hidden') return;
+    } catch (_) {}
     const prevText = chipEl.textContent;
     const prevBg = chipEl.style.background;
     const prevBorder = chipEl.style.borderColor;
@@ -686,6 +1115,7 @@
     if (caps?.canApproveSkills?.()) return true;
     const sess = globalThis.DenizenVisitorSession;
     if (sess?.isCeoPrincipal?.()) return true;
+    if (sess?.getProfile?.()?.canApproveSkills) return true;
     return false;
   }
 
@@ -707,8 +1137,8 @@
       padding: '4px 10px', font: '11px monospace',
       cursor: 'pointer', maxWidth: '300px',
     });
-    chipEl.title = 'Review NPC proposals as documents';
-    chipEl.textContent = '📋 proposals';
+    chipEl.title = 'Review NPC proposals — animations, SOUL, code, PDF dossiers';
+    chipEl.textContent = '📋 approvals';
     chipEl.setAttribute('aria-controls', PANEL_ID);
     chipEl.setAttribute('aria-expanded', 'false');
     const openPanel = () => {
@@ -834,6 +1264,59 @@
     }
   }
 
+  let soulContextForSelected = null;
+  let soulContextLoading = false;
+
+  function renderPanelExtras(selected, { skipDossier = false } = {}) {
+    if (!selected) return '';
+    let extra = '';
+    if (!skipDossier && selected.kind === 'dossier') {
+      extra += renderDossierCitations(selected);
+      if (selected.status === 'pending' || selected.status === 'approved') {
+        extra += renderDossierPreview(selected);
+      }
+    }
+    if (selected.kind === 'soul') {
+      extra += renderSoulDiff(selected, soulContextForSelected);
+    }
+    if (selected.kind === 'code') {
+      extra += renderCodeDiff(selected);
+    }
+    extra += renderPostApproveActions(selected);
+    return extra;
+  }
+
+  function renderDocActions(selected, items, { dossierOk, canAct, canApply }) {
+    const approveBlocked = canAct && !dossierOk;
+    const approveAttrs = approveBlocked ? ' aria-disabled="true" title="Verify all Bob citations first"' : '';
+    return `<div class="prop-doc-actions">
+      ${canAct ? `<button type="button" class="prop-btn-approve" data-action="approve"${approveAttrs}>Approve</button>` : ''}
+      ${canAct ? `<button type="button" class="prop-btn-reject" data-action="reject">Reject</button>` : ''}
+      ${canApply ? `<button type="button" class="prop-btn-apply" data-action="apply">Apply to SOUL.md</button>` : ''}
+      ${canAct && items.length > 1 ? `<button type="button" class="prop-btn-secondary" data-action="next">Review next →</button>` : ''}
+      <button type="button" class="prop-btn-secondary" data-action="toggle-tech">${showTechnical ? 'Hide technical' : 'Show technical'}</button>
+    </div>`;
+  }
+
+  function renderDossierGate(p, dossierOk) {
+    const citations = p.raw?.recipientResearch?.citations || [];
+    if (!citations.length || dossierOk || (p.status || '').toLowerCase() !== 'pending') return '';
+    const key = proposalKey(p);
+    const checked = getCitationChecks(key, citations.length).checkedCount;
+    return `<div class="prop-dossier-gate" role="status">
+      Approve is locked until you verify all Bob citations (${checked}/${citations.length} checked).
+      Scroll up to the checklist, then tap Approve again.
+    </div>`;
+  }
+
+  function dossierCanApprove(p) {
+    const r = p.raw || {};
+    const citations = r.recipientResearch?.citations || [];
+    if (!citations.length) return true;
+    const key = proposalKey(p);
+    return getCitationChecks(key, citations.length).allChecked;
+  }
+
   function renderPanel() {
     if (!panelEl) return;
     if (lastFeed.error) {
@@ -849,26 +1332,34 @@
       return `<button type="button" class="prop-filter-status${active}" data-status="${s}">${s}</button>`;
     }).join('');
 
-    const kindBtns = ['animation', 'soul', 'capability'].map((k) => {
+    const kindList = ['animation', 'soul', 'capability', 'skill', 'code', 'dossier'];
+    const kindLabels = { animation: 'ANIM', soul: 'SOUL', capability: 'CAP', skill: 'SKILL', code: 'CODE', dossier: 'PDF' };
+    const kindBtns = kindList.map((k) => {
       const on = filterKinds.has(k);
       const active = on ? ' active' : '';
-      return `<button type="button" class="prop-filter-kind${active}" data-kind="${k}">${kindShort(k)}</button>`;
+      return `<button type="button" class="prop-filter-kind${active}" data-kind="${k}" title="${esc(kindLabel(k))}">${kindLabels[k] || k.toUpperCase()}</button>`;
     }).join('');
 
     const indexHtml = items.length
       ? items.map((p) => {
         const key = selectionKey(p);
         const sel = key === selectedId ? ' selected' : '';
+        const badges = priorityBadges(p).map((b) =>
+          `<span class="prop-index-priority ${b.cls}">${esc(b.text)}</span>`,
+        ).join('');
         return `<button type="button" class="prop-index-item${sel}" data-select="${esc(key)}">
+          ${badges}
           <div class="prop-index-kind">${esc(kindShort(p.kind))} · ${esc(p.status)}</div>
           <div class="prop-index-summary">${esc(docTitle(p))}</div>
         </button>`;
       }).join('')
-      : '<div class="prop-empty">No proposals match these filters.</div>';
+      : '<div class="prop-empty">Nothing in this queue — NPCs will add work here when they propose changes.</div>';
 
     let readerHtml;
-    if (!selected) {
-      readerHtml = '<div class="prop-empty">Select a document from the list to read it.</div>';
+    if (!items.length) {
+      readerHtml = '<div class="prop-empty">Adjust filters or wait for new proposals.</div>';
+    } else if (!selected) {
+      readerHtml = '<div class="prop-empty">Select a document from the list above.</div>';
     } else {
       const r = selected.raw || {};
       const author = selected.by || r.npcName || r.by || 'unknown';
@@ -877,6 +1368,14 @@
       const stampClass = ['pending', 'approved', 'rejected', 'applied'].includes(status) ? status : 'pending';
       const canAct = status === 'pending';
       const canApply = selected.kind === 'soul' && status === 'approved' && soulApplyAvailable;
+      const dossierOk = selected.kind !== 'dossier' || dossierCanApprove(selected);
+      const dossierFront = selected.kind === 'dossier'
+        ? `${renderDossierCitations(selected)}${renderDossierGate(selected, dossierOk)}`
+        : '';
+      const dossierPreview = selected.kind === 'dossier'
+        && (status === 'pending' || status === 'approved')
+        ? renderDossierPreview(selected)
+        : '';
 
       readerHtml = `
         <article class="prop-doc" data-kind="${esc(selected.kind)}" data-id="${esc(selected.id)}">
@@ -888,30 +1387,38 @@
             ${formatDate(ts)} · Ref ${esc(selected.id)}
           </div>
           ${renderDocumentSections(selected)}
+          ${dossierFront}
+          ${renderDocActions(selected, items, { dossierOk, canAct, canApply })}
+          ${dossierPreview}
+          ${renderPanelExtras(selected, { skipDossier: true })}
           ${showTechnical ? `<div class="prop-doc-section muted"><h3>Raw data</h3><pre>${esc(JSON.stringify(r, null, 2))}</pre></div>` : ''}
-          <div class="prop-doc-actions">
-            ${canAct ? `<button type="button" class="prop-btn-approve" data-action="approve">Approve</button>` : ''}
-            ${canAct ? `<button type="button" class="prop-btn-reject" data-action="reject">Reject</button>` : ''}
-            ${canApply ? `<button type="button" class="prop-btn-apply" data-action="apply">Apply to SOUL.md</button>` : ''}
-            <button type="button" class="prop-btn-secondary" data-action="toggle-tech">${showTechnical ? 'Hide technical' : 'Show technical'}</button>
-          </div>
         </article>`;
     }
 
     const filtersHtml = `
-      ${statusBtns}
-      <span style="width:1px;height:16px;background:rgba(148,163,184,0.3);margin:0 2px"></span>
-      ${kindBtns}
-      <button type="button" class="prop-filter-refresh" title="Refresh">↻</button>`;
+      <div class="prop-filter-row"><span class="prop-filter-label">STATUS</span>${statusBtns}</div>
+      <div class="prop-filter-row"><span class="prop-filter-label">KIND</span>${kindBtns}<button type="button" class="prop-filter-refresh" title="Refresh">↻</button></div>`;
+
+    const subtitle = serverMeta.label ? `Server · ${serverMeta.label}` : '';
 
     panelEl.innerHTML = `
-      ${renderHeader(filtersHtml)}
+      ${renderHeader(filtersHtml, subtitle)}
       <div class="prop-body">
-        <nav class="prop-index" aria-label="Proposal documents">${indexHtml}</nav>
+        <nav class="prop-index" aria-label="Approval queue">${indexHtml}</nav>
         <main class="prop-reader">${readerHtml}</main>
-      </div>`;
+      </div>
+      ${renderNoteModalHtml()}`;
 
     wirePanelEvents();
+
+    if (selected?.kind === 'soul' && !soulContextForSelected && !soulContextLoading) {
+      soulContextLoading = true;
+      fetchSoulContext(selected).then((ctx) => {
+        soulContextForSelected = ctx;
+        soulContextLoading = false;
+        if (panelOpen && findSelected(shownItems())?.id === selected.id) renderPanel();
+      }).catch(() => { soulContextLoading = false; });
+    }
   }
 
   function wirePanelEvents() {
@@ -944,13 +1451,45 @@
       }
       if (btn.hasAttribute('data-select')) {
         selectedId = btn.getAttribute('data-select');
+        soulContextForSelected = null;
+        noteModal = null;
         renderPanel();
+        return;
+      }
+
+      if (btn.getAttribute('data-action') === 'note-cancel') {
+        noteModal = null;
+        renderPanel();
+        return;
+      }
+      if (btn.getAttribute('data-action') === 'note-submit') {
+        if (!noteModal) return;
+        const ta = panelEl.querySelector('#prop-note-text');
+        const note = String(ta?.value || '').trim();
+        if (noteModal.requireNote && !note) {
+          flash('Rejection requires a note', true);
+          return;
+        }
+        const { kind, id, decision } = noteModal;
+        noteModal = null;
+        await decide(kind, id, decision, note || null);
         return;
       }
 
       const action = btn.getAttribute('data-action');
       if (action === 'close') {
         setPanelOpen(false);
+        return;
+      }
+      if (action === 'cite-toggle') {
+        const key = btn.getAttribute('data-citation-check');
+        const idx = Number(btn.getAttribute('data-cite-index'));
+        if (!key || Number.isNaN(idx)) return;
+        if (!citationChecks.has(key)) citationChecks.set(key, new Set());
+        const set = citationChecks.get(key);
+        if (set.has(idx)) set.delete(idx);
+        else set.add(idx);
+        renderPanel();
         return;
       }
       if (!action) return;
@@ -963,52 +1502,122 @@
         renderPanel();
         return;
       }
-      if (action === 'approve') await decide(kind, id, 'approved');
-      else if (action === 'reject') await decide(kind, id, 'rejected');
-      else if (action === 'apply') await applySoul(id);
+      if (action === 'next') {
+        const items = shownItems();
+        const idx = items.findIndex((p) => selectionKey(p) === selectedId);
+        if (idx >= 0 && idx < items.length - 1) {
+          selectedId = selectionKey(items[idx + 1]);
+          soulContextForSelected = null;
+          renderPanel();
+        }
+        return;
+      }
+      if (action === 'approve') {
+        if (btn.getAttribute('aria-disabled') === 'true') {
+          flash('Verify all Bob citations first', true);
+          return;
+        }
+        if (kind === 'dossier') {
+          const sel = findSelected(shownItems());
+          if (sel && !dossierCanApprove(sel)) {
+            flash('Verify all Bob citations first', true);
+            return;
+          }
+        }
+        btn.disabled = true;
+        try {
+          await decide(kind, id, 'approved', null);
+        } finally {
+          btn.disabled = false;
+        }
+        return;
+      }
+      if (action === 'reject') {
+        noteModal = { kind, id, decision: 'rejected', requireNote: true };
+        renderPanel();
+        panelEl.querySelector('#prop-note-text')?.focus?.({ preventScroll: true });
+        return;
+      }
+      if (action === 'apply') await applySoul(id);
     };
 
-    let lastPressAt = 0;
-    let lastPressKey = '';
-    panelEl.addEventListener('pointerup', (e) => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
-      const btn = e.target?.closest?.('button');
-      const key = btn ? (btn.id || btn.className || 'btn') : '';
-      const now = Date.now();
-      if (key && key === lastPressKey && now - lastPressAt < 320) return;
-      lastPressKey = key;
-      lastPressAt = now;
-      onPanelPress(e);
+    panelEl.addEventListener('change', (e) => {
+      const cb = e.target;
+      if (!cb?.dataset?.citationCheck) return;
+      const key = cb.dataset.citationCheck;
+      const idx = Number(cb.dataset.citeIndex);
+      if (!citationChecks.has(key)) citationChecks.set(key, new Set());
+      const set = citationChecks.get(key);
+      if (cb.checked) set.add(idx);
+      else set.delete(idx);
+      renderPanel();
     });
+
+    const delegate = globalThis.DenizenTouchBind?.delegatePress;
+    if (delegate) {
+      delegate(panelEl, 'button', (_e, btn) => {
+        onPanelPress({ target: btn });
+      }, { stop: true });
+    } else {
+      panelEl.addEventListener('pointerup', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        onPanelPress(e);
+      });
+    }
     panelEl.addEventListener('pointerdown', (e) => e.stopPropagation());
   }
 
-  async function decide(kind, id, decision) {
+  async function decide(kind, id, decision, note) {
     try {
-      const url = kind === 'skill'
-        ? `/api/skill-proposals/${encodeURIComponent(id)}/${decision === 'approved' ? 'approve' : 'reject'}`
-        : `/api/${encodeURIComponent(kind)}-proposal/approve`;
-      const body = kind === 'skill' ? undefined : JSON.stringify({ id, decision });
-      // Session + signed CEO grant headers — approval is role-gated server-side
       const sess = globalThis.DenizenVisitorSession;
+      const sessionId = typeof sess?.getSessionId === 'function' ? sess.getSessionId() : null;
       const auth = typeof sess?.authHeaders === 'function' ? sess.authHeaders() : {};
+      let url;
+      let body;
+      let headers = { 'Content-Type': 'application/json' };
+      if (kind === 'skill') {
+        url = `/api/skill-proposals/${encodeURIComponent(id)}/${decision === 'approved' ? 'approve' : 'reject'}`;
+        body = JSON.stringify({ session_id: sessionId });
+        headers = { 'Content-Type': 'application/json' };
+      } else if (kind === 'code') {
+        url = `/api/code-proposals/${encodeURIComponent(id)}/${decision === 'approved' ? 'approve' : 'reject'}`;
+        body = JSON.stringify({ note: note || null, session_id: sessionId });
+      } else if (kind === 'dossier') {
+        url = `/api/dossier-proposals/${encodeURIComponent(id)}/${decision === 'approved' ? 'approve' : 'reject'}`;
+        body = JSON.stringify({ note: note || null, session_id: sessionId });
+      } else {
+        url = `/api/${encodeURIComponent(kind)}-proposal/approve`;
+        body = JSON.stringify({ id, decision, note: note || null, session_id: sessionId });
+      }
       const res = await fetch(url, {
         method: 'POST',
-        headers: kind === 'skill' ? auth : { 'Content-Type': 'application/json', ...auth },
+        headers: { ...headers, ...auth },
         body,
       });
       if (!res.ok) {
         const text = await res.text();
+        let errMsg = text;
+        try { errMsg = JSON.parse(text).error || text; } catch (_) {}
         console.warn(`[Proposals] ${kind} ${decision} failed: HTTP ${res.status} ${text}`);
-        flash(`${decision} failed: HTTP ${res.status}`, true);
+        await refresh();
+        flash(String(errMsg).slice(0, 120) || `${decision} failed`, true);
         return;
       }
-      flash(`${kind} ${decision}`, false);
+      soulContextForSelected = null;
+      noteModal = null;
+      const items = shownItems();
+      const idx = items.findIndex((p) => p.kind === kind && p.id === id);
+      if (decision === 'approved' && idx >= 0 && idx < items.length - 1) {
+        selectedId = selectionKey(items[idx + 1]);
+      }
     } catch (err) {
       console.warn(`[Proposals] ${kind} ${decision} threw:`, err);
+      await refresh();
       flash(`${decision} failed`, true);
+      return;
     }
     await refresh();
+    flash(`${kind} ${decision}`, false);
   }
 
   async function applySoul(id) {
@@ -1042,7 +1651,7 @@
       return false;
     }
     buildUI();
-    await probeSoulApply();
+    await Promise.all([probeSoulApply(), fetchServerMeta()]);
     await refresh();
     if (!pollTimer) pollTimer = setInterval(refresh, POLL_MS);
 
@@ -1076,6 +1685,42 @@
         return;
       }
       ensureReady().catch((err) => console.warn('[Proposals] ready sync failed:', err));
+    });
+
+    document.addEventListener('denizen-proposals-changed', () => {
+      refresh().catch((err) => console.warn('[Proposals] live refresh failed:', err));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!panelOpen || noteModal) return;
+      const tag = (e.target?.tagName || '').toLowerCase();
+      if (tag === 'textarea' || tag === 'input') return;
+      if (e.key === 'a' && !e.metaKey && !e.ctrlKey) {
+        const doc = panelEl?.querySelector('.prop-doc');
+        if (doc) doc.querySelector('[data-action="approve"]')?.click();
+      }
+      if (e.key === 'r' && !e.metaKey && !e.ctrlKey) {
+        const doc = panelEl?.querySelector('.prop-doc');
+        if (doc) doc.querySelector('[data-action="reject"]')?.click();
+      }
+      if (e.key === 'j') {
+        const items = shownItems();
+        const idx = items.findIndex((p) => selectionKey(p) === selectedId);
+        if (idx >= 0 && idx < items.length - 1) {
+          selectedId = selectionKey(items[idx + 1]);
+          soulContextForSelected = null;
+          renderPanel();
+        }
+      }
+      if (e.key === 'k') {
+        const items = shownItems();
+        const idx = items.findIndex((p) => selectionKey(p) === selectedId);
+        if (idx > 0) {
+          selectedId = selectionKey(items[idx - 1]);
+          soulContextForSelected = null;
+          renderPanel();
+        }
+      }
     });
 
     window.DenizenProposals = {

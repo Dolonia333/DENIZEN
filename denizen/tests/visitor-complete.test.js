@@ -73,6 +73,7 @@ const INDEX_LAZY_SCRIPTS = [
 const REQUIRED_EXPORTS = [
   'createOrUpdateSession',
   'claimAssistant',
+  'releaseAssistant',
   'getAssistant',
   'listProjects',
   'sendHandoff',
@@ -90,7 +91,11 @@ const SERVER_ROUTE_MARKERS = [
   '/api/visitor/auth/login',
   '/api/org/policy',
   '/api/visitor/claim',
+  '/api/visitor/assistant',
   '/api/visitor/handoff',
+  '/api/visitor/connections',
+  '/api/visitor/connections/request',
+  '/api/visitor/connections/respond',
   '/api/visitor/projects',
   '/api/visitor/teammates',
   '/api/mcp/tokens',
@@ -109,6 +114,7 @@ const SERVER_ROUTE_MARKERS = [
 
 const NODE_MODULES = [
   'denizen-visitor.js',
+  'visitor-connections.js',
   'denizen-visitor-intelligence.js',
   'visitor-briefing-loop.js',
   'visitor-cited-research.js',

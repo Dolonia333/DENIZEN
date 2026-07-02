@@ -9,11 +9,14 @@ const SecurityMonitorServer = require('./security-monitor-server');
 const CofounderAgent = require('./src/cofounder-agent');
 const NpcBrainManager = require('./src/npc-brains');
 const ambientDialogue = require('./src/ambient-dialogue');
+const npcPeerWorkStatus = require('./src/npc-peer-work-status');
 const promptTuning = require('./src/prompt-tuning');
 const worldState = require('./src/world-state');
 const agentBus = require('./src/agent-bus');
 const ExternalSink = require('./src/external-sink');
 const elevenLabs = require('./src/elevenlabs-tts');
+const voiceBridge = require('./src/denizen-voice-bridge.js');
+const { createSentenceStream } = require('./src/voice-sentence.js');
 const animationForge = require('./src/animation-forge');
 const soulReflection = require('./src/soul-reflection');
 const npcRoster = require('./src/npc-roster');
@@ -30,10 +33,13 @@ const visitorAccess = require('./src/visitor-access');
 const sessionAuth = require('./src/visitor-session-auth');
 const teamAuth = require('./src/denizen-team-auth');
 const userIdentity = require('./src/denizen-user-identity');
+const userPosition = require('./src/denizen-user-position.js');
+const invitePlatform = require('./src/denizen-invite-platform.js');
 const visitorOfficeContext = require('./src/visitor-office-context');
 const officeRegistry = require('./src/visitor-office-registry');
 const officeLayout = require('./src/visitor-office-layout');
 const officeBus = require('./src/office-bus');
+const visitorConnections = require('./src/visitor-connections');
 
 function npcFolderToDisplay(folder) {
   const key = String(folder || '').toLowerCase();
@@ -47,6 +53,45 @@ function npcDisplayToFolder(name) {
     (e) => e.display === raw || e.folder === raw.toLowerCase(),
   );
   return entry?.folder || raw.toLowerCase();
+}
+
+function rosterDisplayNameFromChat(msg) {
+  const name = String(msg?.npcName || '').trim();
+  if (name) {
+    const entry = (npcRoster.entries || []).find(
+      (e) => e.display.toLowerCase() === name.toLowerCase(),
+    );
+    if (entry) return entry.display;
+  }
+  const key = String(msg?.npcKey || '').trim();
+  if (key && npcRoster.keyToDisplay?.[key]) return npcRoster.keyToDisplay[key];
+  const folder = key.replace(/^xp_/, '').toLowerCase();
+  if (folder) return npcFolderToDisplay(folder);
+  return name || 'Unknown';
+}
+
+function resolvePlayerChatNpc(msg) {
+  const brains = npcBrains?.brains || {};
+  const hasBrain = (candidate) => {
+    const n = String(candidate || '').trim();
+    if (!n) return null;
+    if (brains[n]) return n;
+    return Object.keys(brains).find((k) => k.toLowerCase() === n.toLowerCase()) || null;
+  };
+  const candidates = [
+    msg?.npcName,
+    npcRoster.keyToDisplay?.[msg?.npcKey],
+    npcFolderToDisplay(String(msg?.npcKey || '').replace(/^xp_/, '')),
+  ];
+  for (const candidate of candidates) {
+    const hit = hasBrain(candidate);
+    if (hit) return { npcName: hit, displayName: hit, hasBrain: true };
+  }
+  return {
+    npcName: null,
+    displayName: rosterDisplayNameFromChat(msg),
+    hasBrain: false,
+  };
 }
 
 function _persistChatTurn({ identityId, sessionId, npcName, role, content }) {
@@ -92,19 +137,28 @@ const jobApplication = require('./src/job-application');
 const jobCrm         = require('./src/job-crm');
 const desktopAgent = require('./src/desktop-agent');
 const desktopPermissionBridge = require('./src/desktop-permission-bridge');
+const stationRouter = require('./src/denizen-station-router');
 const linuxAgent = require('./src/linux-agent');
+const bouncerInvestigation = require('./src/bouncer-investigation');
+const linuxAgentBridge = bouncerInvestigation.createLinuxAgentBridge();
 const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
+const dossierSystem    = require('./src/dossier-system');
 const taskChain        = require('./src/task-chain');
 const contentPipeline  = require('./src/content-pipeline');
 const { startContentPipelineScheduler } = require('./src/content-pipeline-scheduler');
 const npcThinkRunner   = require('./src/npc-think-runner');
 const { ensureBrowserclawRunning } = require('./jelly/services/browserclaw/ensure.cjs');
 const robinhoodMcp     = require('./src/robinhood-mcp');
+const marketScheduler  = require('./src/denizen-market-scheduler');
 const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
+const teamMcpGateway   = require('./src/denizen-mcp-team-gateway');
+const mcpScopes        = require('./src/denizen-mcp-scopes');
 const mcpOauth         = require('./src/denizen-mcp-oauth');
 const routeRegistry    = require('./src/route-registry');
+const competencyMap    = require('./src/competency-map');
+const platformBridge   = require('./src/platform-bridge');
 const denizenCredits   = require('./src/denizen-credits');
 const { mountComputeRoutes } = require('./src/denizen-compute-routes');
 const { mountCrmRoutes } = require('./src/denizen-crm-routes');
@@ -113,6 +167,11 @@ const hostCompute      = require('./src/denizen-host-compute');
 const hardwareMonitor  = require('./src/denizen-hardware-monitor');
 const fleetRegistry    = require('./src/denizen-fleet-registry');
 const lmStudioRouter   = require('./src/lm-studio-router');
+const inferenceMetrics = require('./src/denizen-inference-metrics');
+const denizenFederation = require('./src/denizen-federation');
+const { createWorldPubsub } = require('./src/denizen-world-pubsub');
+const agentWsRelay = require('./src/denizen-agent-ws-relay');
+const IS_RELAY_ONLY = agentWsRelay.isRelayOnlyRole();
 const contributionTracker = require('./src/denizen-contribution-tracker');
 const computeSettlement = require('./src/denizen-compute-settlement');
 const computeProducer = require('./src/denizen-compute-producer');
@@ -122,6 +181,8 @@ const skillBuilder     = require('./src/skill-builder');
 const computeQueue     = require('./src/denizen-compute-queue');
 const playerChatSkills = require('./src/player-chat-skill-bridge');
 const chatAttachments = require('./src/chat-attachments');
+const officeStatusBrief = require('./src/office-status-brief');
+const crmNpcPersonas = require('./src/denizen-crm-npc-personas');
 const taskResourceAdvisor = require('./src/task-resource-advisor');
 const skillGapOrchestrator = require('./src/skill-gap-orchestrator');
 const skillDiscovery = require('./src/skill-discovery');
@@ -220,6 +281,36 @@ function _readSearchResult(id, timeoutMs = 120000) {
 
 function lucyBrowserUntilClose() {
   return String(process.env.LUCY_BROWSER_UNTIL_CLOSE || 'true').toLowerCase() !== 'false';
+}
+
+/** Headed browser only when this machine has a display (local Windows/Mac). NAS Docker uses headless + mirror panel. */
+function resolveLucyBrowserHeadless(opts = {}) {
+  if (opts.headless === true) return true;
+  if (opts.headless === false) {
+    if (process.platform === 'linux' && !process.env.DISPLAY) return true;
+    return false;
+  }
+  const env = String(process.env.DENIZEN_LUCY_BROWSER_HEADLESS || '').toLowerCase();
+  if (env === 'true' || env === '1') return true;
+  if (env === 'false' || env === '0') return false;
+  if (process.platform === 'linux' && !process.env.DISPLAY) return true;
+  return false;
+}
+
+let _playwrightBrowsersOk = null;
+function probePlaywrightBrowsers() {
+  if (_playwrightBrowsersOk != null) return _playwrightBrowsersOk;
+  try {
+    const { chromium } = require('playwright');
+    const exe = chromium.executablePath();
+    _playwrightBrowsersOk = !!(exe && fs.existsSync(exe));
+  } catch (_) {
+    _playwrightBrowsersOk = false;
+  }
+  if (!_playwrightBrowsersOk) {
+    console.warn('[LucyBrowser] Playwright Chromium not installed — web search will use background API only. Run: npx playwright install chromium');
+  }
+  return _playwrightBrowsersOk;
 }
 
 function signalCloseLucyBrowser() {
@@ -382,10 +473,25 @@ function _broadcastLucyMirrorUpdate(broadcast) {
   _broadcastNpcMirrorUpdate(broadcast, 'lucy');
 }
 
+let _relayPublishAgentFrame = null;
+
 function _broadcastAgentWs(msg) {
   const raw = JSON.stringify(msg);
   if (!agentWss) return;
   agentWss.clients.forEach((c) => { if (c.readyState === 1) c.send(raw); });
+  if (_relayPublishAgentFrame && msg && typeof msg === 'object') {
+    _relayPublishAgentFrame(msg);
+  }
+}
+
+function _broadcastProposalQueueChanged(kind, action, id) {
+  _broadcastAgentWs({
+    type: 'proposal_queue_changed',
+    kind: kind || null,
+    action: action || 'updated',
+    id: id || null,
+    ts: Date.now(),
+  });
 }
 
 let _mirrorFrameMtime = 0;
@@ -556,26 +662,34 @@ const researchBrief    = require('./src/research-brief');
 const awayNotify       = require('./src/away-notify');
 const { startAll: startResearchScheduler } = require('./src/research-scheduler');
 
-/** Per threat category+source — avoid duplicate Kali/Zenmap runs (client + server). */
-const _bouncerInvCooldown = new Map();
-const BOUNCER_INV_COOLDOWN_MS = parseInt(process.env.BOUNCER_INVESTIGATION_COOLDOWN_MS, 10) || 900000;
-function _bouncerInvKey(threat = {}) {
-  return `${threat.category || 'unknown'}:${threat.source || 'unknown'}`;
-}
-function _bouncerInvTake(threat = {}) {
+function findLatestResearchBrief() {
   try {
-    const { isLocalOrLoopback, isInternalThreatSource } = require('./src/security-ip');
-    if (isLocalOrLoopback(threat.source) || isInternalThreatSource(threat.source)) {
-      return { allowed: false, key: 'internal', remainingSec: 0, loopback: true };
-    }
-  } catch (_) {}
-  const key = _bouncerInvKey(threat);
-  const last = _bouncerInvCooldown.get(key) || 0;
-  if (Date.now() - last < BOUNCER_INV_COOLDOWN_MS) {
-    return { allowed: false, key, remainingSec: Math.ceil((BOUNCER_INV_COOLDOWN_MS - (Date.now() - last)) / 1000) };
-  }
-  _bouncerInvCooldown.set(key, Date.now());
-  return { allowed: true, key };
+    // Use the same dir logic as research-brief.js for consistency
+    const dir = process.env.RESEARCH_REPORTS_DIR
+      ? path.resolve(process.env.RESEARCH_REPORTS_DIR)
+      : path.join(__dirname, 'reports', 'research');
+    if (!fs.existsSync(dir)) return null;
+    const files = fs.readdirSync(dir)
+      .filter(f => f.endsWith('.md') || f.endsWith('.txt'))
+      .map(f => ({ f, m: fs.statSync(path.join(dir, f)).mtimeMs }))
+      .sort((a, b) => b.m - a.m);
+    if (!files.length) return null;
+    const latest = path.join(dir, files[0].f);
+    const content = fs.readFileSync(latest, 'utf8');
+    // Extract a clean summary
+    const lines = content.split('\n').filter(l => l.trim());
+    const execSummary = lines.find(l => /executive|summary|key facts/i.test(l)) || '';
+    return {
+      path: latest,
+      summary: execSummary ? content.split(execSummary)[1]?.slice(0, 800) || content.slice(0, 1200) : content.slice(0, 1200),
+      content: content.slice(0, 4000)
+    };
+  } catch (_) { return null; }
+}
+
+/** Per threat category+source — avoid duplicate Kali/Zenmap runs (client + server). */
+function _bouncerInvTake(threat = {}, opts = {}) {
+  return bouncerInvestigation.takeInvestigationSlot(threat, opts);
 }
 
 // Voice map (per-NPC ElevenLabs voice IDs). Loaded once at startup;
@@ -810,6 +924,7 @@ async function _applyOfficeToSocket(ws, { sessionId, displayName, isCeo } = {}) 
     ws._denizenOfficeId = o.officeId;
     ws._denizenIdentityId = o.identityId;
     ws._denizenIsOperatorOffice = true;
+    ws._denizenOrgId = denizenDb.orgId || worldState.getDefaultOrgId?.() || null;
     return o;
   }
   const session = sessionId ? await denizenVisitor.getSession(sessionId).catch(() => null) : null;
@@ -817,6 +932,7 @@ async function _applyOfficeToSocket(ws, { sessionId, displayName, isCeo } = {}) 
   ws._denizenOfficeId = o.officeId;
   ws._denizenIdentityId = o.identityId || null;
   ws._denizenIsOperatorOffice = !!o.isOperatorOffice;
+  ws._denizenOrgId = session?.org_id || denizenDb.orgId || worldState.getDefaultOrgId?.() || null;
   return o;
 }
 
@@ -828,6 +944,21 @@ function _broadcastToVisitorSession(sessionId, payload) {
     if (ws.readyState === 1 && ws._denizenSessionId === sessionId) {
       ws.send(msg);
     }
+  }
+}
+
+function _broadcastConnectionUpdate(connection, { event, sessionIds = [] } = {}) {
+  if (!connection) return;
+  const payload = {
+    type: 'visitor_connection_update',
+    event: event || 'update',
+    connection,
+    ts: Date.now(),
+  };
+  const targets = new Set((sessionIds || []).filter(Boolean));
+  if (connection.target_session_id) targets.add(connection.target_session_id);
+  for (const sid of targets) {
+    _broadcastToVisitorSession(sid, payload);
   }
 }
 
@@ -948,6 +1079,143 @@ function _visitorSessionBodyFromHeaders(req) {
   };
 }
 
+function _teamAuthBodyFromHeaders(req) {
+  const h = req.headers || {};
+  const header = (name) => String(h[name] || h[name.toLowerCase()] || '').trim();
+  return {
+    username: header('x-username') || header('x-denizen-username') || undefined,
+    password: header('x-password') || header('x-denizen-password') || undefined,
+    email: header('x-email') || undefined,
+    team_code: header('x-team-code') || header('x-denizen-team-code') || undefined,
+    teamCode: header('x-team-code') || header('x-denizen-team-code') || undefined,
+    team_name: header('x-team-name') || header('x-denizen-team-name') || undefined,
+    teamName: header('x-team-name') || header('x-denizen-team-name') || undefined,
+    display_name: header('x-display-name') || undefined,
+    displayName: header('x-display-name') || undefined,
+  };
+}
+
+async function _readTeamAuthBody(req, maxBytes = 32 * 1024) {
+  if (req.method === 'GET') {
+    return _teamAuthBodyFromHeaders(req);
+  }
+  const body = await _readJsonBody(req, maxBytes);
+  if (body && typeof body === 'object' && Object.keys(body).length) {
+    return body;
+  }
+  const headers = _teamAuthBodyFromHeaders(req);
+  if (headers.username || headers.email || headers.password) {
+    return { ...headers, ...body };
+  }
+  return body;
+}
+
+/** Team/demo login routes — registered early so login never waits behind heavy handlers. */
+function _handleVisitorAuthRoutes(req, res, urlPath) {
+  if (urlPath === '/api/visitor/auth/register-demo' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const sessionToken = sessionAuth.extractSessionAuth(req, body);
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const result = await demoAuth.registerDemoAccount({
+        sessionId,
+        sessionToken,
+        username: body.username,
+        password: body.password,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const status = demoAuth.demoAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/login-demo' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const result = await demoAuth.loginDemoAccount({
+        username: body.username,
+        password: body.password,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const demoAuth = require('./src/denizen-demo-auth.js');
+      const status = demoAuth.demoAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/create-team' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const result = await teamAuth.createTeam({
+        teamName: body.team_name ?? body.teamName,
+        username: body.username,
+        email: body.email,
+        password: body.password,
+        displayName: body.display_name ?? body.displayName,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/register' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const result = await teamAuth.registerTeamAccount({
+        email: body.email,
+        displayName: body.display_name ?? body.displayName,
+        username: body.username,
+        password: body.password,
+        teamCode: body.team_code ?? body.teamCode,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/login' && (req.method === 'POST' || req.method === 'GET')) {
+    (async () => {
+      const body = await _readTeamAuthBody(req, 32 * 1024);
+      const result = await teamAuth.loginTeamAccount({
+        email: body.email,
+        username: body.username,
+        password: body.password,
+        teamCode: body.team_code ?? body.teamCode,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      const status = teamAuth.teamAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
+    });
+    return true;
+  }
+
+  return false;
+}
+
 async function _createVisitorSession(req, res, body) {
   const existingId = body.session_id || body.sessionId || null;
   const existingToken = sessionAuth.extractSessionAuth(req, body);
@@ -973,9 +1241,17 @@ async function _createVisitorSession(req, res, body) {
     metadata = { ...visitorAccess.metadataFromAccessGrant(grantPayload), ...metadata };
   } else if (existingId && ceoVerified) {
     const access = await visitorAccess.resolveSessionAccess(existingId);
-    orgSlug = access.orgSlug;
-    tier = access.tier;
-    metadata = { ...(access.session?.metadata || {}), ...metadata };
+    if (access.isDemo) {
+      orgSlug = access.orgSlug;
+      tier = 'demo';
+      ceoVerified = false;
+      metadata = { ...(access.session?.metadata || {}), ...metadata, tier: 'demo' };
+      delete metadata.is_ceo_principal;
+    } else {
+      orgSlug = access.orgSlug;
+      tier = access.tier;
+      metadata = { ...(access.session?.metadata || {}), ...metadata };
+    }
   } else if (ceoVerified && (body.org_slug || body.orgSlug || metadata.org_slug)) {
     orgSlug = body.org_slug || body.orgSlug || metadata.org_slug || promptTuning.teamOrgSlug;
     tier = 'team';
@@ -1017,14 +1293,33 @@ async function _createVisitorSession(req, res, body) {
     return;
   }
 
+  const isDemoOrg = resolvedOrg.slug === promptTuning.demoOrgSlug
+    || tier === 'demo'
+    || body.demo === true
+    || metadata.access_method === 'demo'
+    || metadata.access_method === 'demo_login';
+  if (isDemoOrg) {
+    ceoVerified = false;
+    tier = 'demo';
+    orgSlug = promptTuning.demoOrgSlug;
+    metadata.tier = 'demo';
+    metadata.access_method = metadata.access_method || 'demo';
+    delete metadata.is_ceo_principal;
+  }
+
   metadata.tier = tier || metadata.tier || (resolvedOrg.slug === promptTuning.demoOrgSlug ? 'demo' : 'team');
   metadata.org_slug = resolvedOrg.slug;
 
-  // A CEO-code access grant is signed by us — it counts as verification too.
+  // A CEO-code or team-owner login grant is signed by us — it counts as verification.
   if (grantPayload?.access_method === 'ceo_code') ceoVerified = true;
+  if (grantPayload?.access_method === 'owner_login') ceoVerified = true;
   if (ceoVerified) {
     metadata.is_ceo_principal = true;
-    if (!metadata.access_method) metadata.access_method = 'ceo';
+    metadata.tier = 'ceo';
+    tier = 'ceo';
+    if (!metadata.access_method || metadata.access_method === 'owner_login') {
+      metadata.access_method = 'ceo';
+    }
   }
 
   // Keep the login email on the session so team-account lookups by session work.
@@ -1054,6 +1349,9 @@ async function _createVisitorSession(req, res, body) {
   });
 
   let linkedIdentity = null;
+  if (session?.identity_id) {
+    linkedIdentity = await userIdentity.getIdentityById(session.identity_id).catch(() => null);
+  }
   if (grantPayload?.email && session?.id) {
     linkedIdentity = await teamAuth.linkAccountToSession(
       grantPayload.email,
@@ -1094,8 +1392,15 @@ async function _createVisitorSession(req, res, body) {
   }
 
   if (!linkedIdentity?.id && metadata.is_ceo_principal && session?.id) {
-    const ceoEmail = process.env.DENIZEN_CEO_IDENTITY_EMAIL
-      || `ceo@${resolvedOrg.slug}.denizen.local`;
+    let ceoEmail = sessionEmail || metadata.email || teamAuth.configuredOwnerEmail();
+    if (!ceoEmail) {
+      const account = await teamAuth.getTeamAccountForSession(session.id).catch(() => null);
+      ceoEmail = account?.email || null;
+    }
+    if (!ceoEmail) {
+      ceoEmail = process.env.DENIZEN_CEO_IDENTITY_EMAIL
+        || `ceo@${resolvedOrg.slug}.denizen.local`;
+    }
     linkedIdentity = await _withIdentityTimeout(
       userIdentity.resolveIdentityForSession({
         email: ceoEmail,
@@ -1114,9 +1419,26 @@ async function _createVisitorSession(req, res, body) {
     }
   }
 
+  if (!linkedIdentity?.id && session?.id) {
+    linkedIdentity = await _withIdentityTimeout(
+      userIdentity.ensureIdentityForSession(session.id, {
+        session,
+        email: sessionEmail || metadata.email || null,
+        displayName: body.display_name ?? body.displayName,
+        tier: metadata.tier || tier,
+        orgId: resolvedOrg.id,
+        orgSlug: resolvedOrg.slug,
+        source: metadata.access_method || (tier === 'demo' ? 'demo' : 'session'),
+      }),
+    ) || linkedIdentity;
+  }
+
   if (linkedIdentity?.id) {
     const identityForNotify = linkedIdentity;
     const notifyTier = metadata.tier || tier;
+    if (ceoVerified) {
+      userIdentity.markCeoPrincipal(linkedIdentity.id);
+    }
     denizenDb.enqueue(async () => {
       if (hostCompute.isLocalOperatorRequest(req)) {
         await hostCompute.markHostOperatorIfLocal(identityForNotify.id, req).catch(() => null);
@@ -1310,9 +1632,13 @@ computeSettlement.startSettlementLoop({
   },
 });
 
-computeProducer.startMeshJobProducer({
-  getNpcBrains: () => npcBrains,
-});
+if (!IS_RELAY_ONLY) {
+  computeProducer.startMeshJobProducer({
+    getNpcBrains: () => npcBrains,
+  });
+} else {
+  console.log('[compute-producer] skipped — relay-only node');
+}
 
 const MESH_MAINTAIN_MS = Number(process.env.DENIZEN_MESH_MAINTAIN_MS) || 5 * 60 * 1000;
 const MESH_STALE_MS = Number(process.env.DENIZEN_MESH_STALE_JOB_MS) || 30 * 60 * 1000;
@@ -1567,6 +1893,28 @@ async function _runSkillGapFromChat({
   return pipeline;
 }
 
+function _canManageOrgNpcTeam(session) {
+  if (!session) return false;
+  if (session.is_ceo_principal || session.tier === 'ceo') return true;
+  const role = String(session.team_role || '').toLowerCase();
+  return role === 'owner' || role === 'admin' || role === 'ceo';
+}
+
+function _mcpScopesFromBody(body = {}) {
+  if (Array.isArray(body.scopes) && body.scopes.length) {
+    return mcpScopes.normalizeScopes(body.scopes);
+  }
+  const preset = body.scope_preset || body.scopePreset;
+  if (preset) return mcpScopes.normalizeScopes(preset);
+  return mcpScopes.normalizeScopes(null);
+}
+
+function _hasOrgNpcTeamAccess(session) {
+  if (!session?.org_id) return false;
+  if (_canManageOrgNpcTeam(session)) return true;
+  return session.tier === 'team' || session.tier === 'ceo';
+}
+
 async function _executePlayerChatSkillFollowup({
   ws,
   npcName,
@@ -1577,20 +1925,38 @@ async function _executePlayerChatSkillFollowup({
   visitorToolGate,
   meshContext = null,
   gapAlreadyHandled = false,
+  ceoLookup = false,
+  ceoDirectOrder = false,
+  forceInfer = false,
 }) {
-  if (!visitorToolGate?.canUseRealWork) return;
-
-  const assistantKey = String(visitorCtx?.assistant?.npc_key || '').toLowerCase();
-  const isAssistant = assistantKey && assistantKey === String(npcName || '').toLowerCase();
-  const approvedMap = _approvedSkillScripts();
-
+  let extraSkills = [];
+  if (visitorCtx?.identityId) {
+    try {
+      extraSkills = await userIdentity.getNpcTeamMemberExtraSkills(
+        visitorCtx.identityId,
+        visitorCtx.orgId || null,
+        npcName,
+      );
+    } catch (_) {}
+  }
   const plan = playerChatSkills.planSkillExecution({
     npcName,
     message,
     responseText,
-    isAssistant,
+    isAssistant: String(visitorCtx?.assistant?.npc_key || '').toLowerCase()
+      === String(npcName || '').toLowerCase(),
     canUseRealWork: visitorToolGate.canUseRealWork,
+    ceoLookup,
+    ceoDirectOrder,
+    forceInfer,
+    extraSkills,
   });
+
+  if (!visitorToolGate?.canUseRealWork && !plan?.skill?.startsWith('crm-')) return;
+
+  const assistantKey = String(visitorCtx?.assistant?.npc_key || '').toLowerCase();
+  const isAssistant = assistantKey && assistantKey === String(npcName || '').toLowerCase();
+  const approvedMap = _approvedSkillScripts();
 
   const gapCtx = meshContext || await _buildMeshContextForAdvice().catch(() => ({}));
 
@@ -1648,10 +2014,39 @@ async function _executePlayerChatSkillFollowup({
   }
 
   try {
-    const result = await runNpcSkill(npcName, plan.skill, plan.params || {});
-    const output = typeof result?.output === 'string'
-      ? result.output
-      : (result?.ok === false ? (result.error || 'Skill failed') : JSON.stringify(result?.output ?? result ?? '').slice(0, 1500));
+    const skillParams = plan.skill === 'coding-agent'
+      ? playerChatSkills.enrichCodingAgentParams(message, { ...(plan.params || {}) })
+      : { ...(plan.params || {}) };
+    if (/^crm-/.test(String(plan.skill || '')) && visitorCtx) {
+      skillParams.profile = {
+        ...(skillParams.profile || {}),
+        ...(visitorCtx.displayName ? { name: visitorCtx.displayName } : {}),
+        ...(visitorCtx.workPosition?.title ? { title: visitorCtx.workPosition.title } : {}),
+      };
+      if (visitorCtx.displayName) skillParams.displayName = visitorCtx.displayName;
+      if (visitorCtx.workPosition) skillParams.workPosition = visitorCtx.workPosition;
+      if (visitorCtx.orgSlug) skillParams.orgSlug = visitorCtx.orgSlug;
+      if (visitorCtx.identityId) skillParams.identityId = visitorCtx.identityId;
+      if (sessionId) skillParams.sessionId = sessionId;
+      skillParams.task = skillParams.task || message;
+      skillParams.inviterName = visitorCtx.displayName || npcName;
+    }
+
+    const result = await runNpcSkill(npcName, plan.skill, skillParams, { sessionId });
+    const data = result?.data && typeof result.data === 'object' ? result.data : null;
+    const chatActions = require('./src/denizen-crm-chat-actions');
+    const autoOpen = chatActions.shouldAutoOpenCrm(message)
+      && !crmNpcPersonas?.isWriteSkill?.(plan.skill);
+    const crmActions = Array.isArray(data?.crm_actions)
+      ? chatActions.normalizeCrmActions(data.crm_actions, { autoOpen })
+      : null;
+    const output = data?.summary
+      || (typeof result?.output === 'string'
+        ? result.output
+        : (result?.ok === false ? (result.error || 'Skill failed') : JSON.stringify(result?.output ?? result ?? '').slice(0, 1500)));
+    const actions = crmActions
+      ? crmActions.map((a) => ({ action: 'open_crm', ...a }))
+      : [];
 
     if (!gapAlreadyHandled && skillGapOrchestrator.shouldOrchestrate({
       message,
@@ -1675,7 +2070,9 @@ async function _executePlayerChatSkillFollowup({
         npcName,
         text: String(output || 'Done.').slice(0, 2000),
         delegation: null,
-        actions: [],
+        actions,
+        crm_actions: crmActions,
+        crm_auto_open: autoOpen,
         skill_result: { skill: plan.skill, ok: result?.ok !== false },
       }));
     }
@@ -1712,7 +2109,7 @@ function _denyVisitorRealTools(ws, npcName) {
     ws.send(JSON.stringify({
       type: 'player_chat_response',
       npcName,
-      text: 'That needs team access — explore the demo with chat and the office tour.',
+      text: 'Demo mode — chat and the office tour work here, but CRM writes (contacts, deals, setup) need team access. Ask me for CRM setup status and I\'ll guide you with links.',
       delegation: null,
       actions: [],
     }));
@@ -1736,14 +2133,20 @@ async function _handleVisitorHandoffPost(req, res) {
   if (!handoffAccess.isDemo && !(body.is_ceo || body.isCeo)) {
     await _verifyVisitorSession(req, fromSessionId, body);
   }
-  if (body.to_ceo ?? body.toCeo) {
+  const toNpcKey = String(body.to_npc ?? body.toNpc ?? '').trim().toLowerCase();
+  const routesToLucy = toNpcKey === 'lucy';
+  const routesToCeo = Boolean((body.to_ceo ?? body.toCeo) || routesToLucy);
+  if (routesToCeo) {
     visitorAccess.assertTeamFeature(handoffAccess, 'to_ceo');
   }
   const target = await denizenVisitor.resolveHandoffTarget({
     toSessionId: body.to_session_id || body.toSessionId,
-    toCeo: body.to_ceo ?? body.toCeo,
+    toCeo: routesToCeo,
     toDisplayName: body.to_display_name ?? body.toDisplayName,
   });
+  if (!(body.is_ceo || body.isCeo) && !target.is_ceo_bridge) {
+    await visitorConnections.assertCanMessage({ fromSessionId, toSessionId: target.session_id });
+  }
   const handoff = await denizenVisitor.sendHandoff({
     fromSessionId,
     toSessionId: target.session_id,
@@ -1756,6 +2159,12 @@ async function _handleVisitorHandoffPost(req, res) {
   res.end(JSON.stringify({ ok: true, handoff, target }));
 }
 
+function _writeVisitorConnectionError(res, err) {
+  const status = visitorConnections.connectionErrorStatus(err);
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+}
+
 function _mapResearchPriority(p) {
   const s = String(p || '').toLowerCase();
   if (s === 'urgent' || s === 'high') return 8;
@@ -1766,9 +2175,13 @@ function _mapResearchPriority(p) {
 // Wire broadcast into npc-brains so task-chain advancement can send WS events
 const _agentBroadcast = (msg, opts = {}) => {
   officeRegistry.broadcastAgent(_agentClients(), msg, opts);
+  if (_relayPublishAgentFrame && msg && typeof msg === 'object') {
+    _relayPublishAgentFrame(msg);
+  }
 };
 
 npcBrains.setBroadcast(_agentBroadcast);
+npcBrains.setRunNpcSkill((npcName, skill, params) => runNpcSkill(npcName, skill, params));
 
 npcBrains.setThinkWake((npcName, reason, opts) => npcThinkRunner.wake(npcName, reason, opts));
 
@@ -1776,11 +2189,19 @@ npcBrains.setThinkWake((npcName, reason, opts) => npcThinkRunner.wake(npcName, r
 // done / failed PC task fans out to the browser as `pc_activity` events
 // so the telemetry panel's "PC activity" section refreshes instantly
 // without polling.
-pcActivity.setBroadcast((msg) =>
-  (agentWss ? agentWss.clients : new Set()).forEach(c => {
-    if (c.readyState === 1) c.send(typeof msg === 'string' ? msg : JSON.stringify(msg));
-  })
-);
+pcActivity.setBroadcast((msg) => {
+  const raw = typeof msg === 'string' ? msg : JSON.stringify(msg);
+  (agentWss ? agentWss.clients : new Set()).forEach((c) => {
+    if (c.readyState === 1) c.send(raw);
+  });
+  if (_relayPublishAgentFrame) {
+    let payload = msg;
+    if (typeof msg === 'string') {
+      try { payload = JSON.parse(msg); } catch (_) { payload = null; }
+    }
+    if (payload && typeof payload === 'object') _relayPublishAgentFrame(payload);
+  }
+});
 
 // --- Jelly 🪼 — Denizen skill runtime (your tech; OpenClaw optional fallback) ---
 const { createJelly, JELLY } = require('./jelly');
@@ -1840,14 +2261,50 @@ function runNpcWebSearch(npcName, query, opts = {}) {
     return Promise.resolve({ ok: false, error: 'query required', query: '', results: [], summary: '' });
   }
 
-  const headless = opts.headless === true;
+  const headless = resolveLucyBrowserHeadless(opts);
   const quiet = opts.quiet === true;
+  const showBrowserUi = true;
   const broadcast = opts.broadcast || ((m) => {
     const raw = JSON.stringify(m);
     (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
   });
 
   const runOnce = async () => {
+  if (!probePlaywrightBrowsers()) {
+    const act = pcActivity.record({
+      npc, kind: 'web-search',
+      task: openOnly ? 'open browser' : `search: ${q.slice(0, 120)}`,
+      mode: 'background', status: 'started',
+    });
+    if (showBrowserUi || !quiet) {
+      broadcast({
+        type: 'npc_skill_start', npcName: npc, skill: 'web-search',
+        skillParams: openOnly ? { openOnly: true } : { query: q }, ts: Date.now(),
+      });
+    }
+    try {
+      const wr = await webResearch.research(q || 'news', { count: 5, read: 1 });
+      const summary = wr.results?.length
+        ? `Playwright isn't installed on this server — used background search:\n\n${webResearch.formatForNpc(wr).slice(0, 2000)}`
+        : `Playwright isn't installed on this server. Ask ops to run: npx playwright install chromium`;
+      pcActivity.record({
+        id: act.id, npc, kind: 'web-search', task: act.task, mode: 'background',
+        status: wr.results?.length ? 'done' : 'failed', durationMs: 0,
+        detail: 'playwright-missing',
+      });
+      if (summary) _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: npc, text: summary, ts: Date.now() });
+      return { ok: !!wr.results?.length, query: q, results: wr.results || [], summary };
+    } catch (err) {
+      pcActivity.record({
+        id: act.id, npc, kind: 'web-search', task: act.task, mode: 'background',
+        status: 'failed', durationMs: 0, detail: String(err?.message || err).slice(0, 200),
+      });
+      const summary = `Browser search unavailable (Playwright not installed on server).`;
+      _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: npc, text: summary, ts: Date.now() });
+      return { ok: false, query: q, results: [], summary, error: err?.message };
+    }
+  }
+
   const mirrorKey = normalizeNpcKey(npc);
   global._activeBrowserNpc = mirrorKey;
   if (q) global._lucyLastSearchQuery = q;
@@ -1885,7 +2342,7 @@ function runNpcWebSearch(npcName, query, opts = {}) {
     task: openOnly ? 'open browser' : `search: ${q.slice(0, 120)}`,
     mode: 'visible', status: 'started',
   });
-  if (!quiet) {
+  if (showBrowserUi || !quiet) {
     broadcast({
       type: 'npc_skill_start', npcName: npc, skill: 'web-search',
       skillParams: openOnly ? { openOnly: true } : { query: q }, ts: Date.now(),
@@ -1951,14 +2408,48 @@ function runNpcWebSearch(npcName, query, opts = {}) {
     const staysOpenMsg = parsed?.keepOpen
       ? '\n\nBrowser stays open until you say "close the browser".'
       : lingerSec ? `\n\n(Browser stays open ~${Math.round(lingerSec / 60)} min so you can browse.)` : '';
-    let summary = parsed?.openOnly && ok
+
+    // Always check for research briefs first if the query is about findings (Bob research etc.)
+    let summary;
+    const lowerQ = String(q || '').toLowerCase();
+    if (lowerQ.includes('what did you find') || lowerQ.includes('research findings') || lowerQ.includes('bob research') || lowerQ.includes('what did bob find')) {
+      try {
+        const latestBrief = findLatestResearchBrief();
+        if (latestBrief) {
+          summary = `Bob's latest research brief:\n${latestBrief.summary || latestBrief.content.slice(0, 1500)}\n\nFile: ${latestBrief.path}`;
+          // Treat as success
+          resolve({ ok: true, summary });
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // Clean error output — ignore normal browser selection logs
+    let cleanErr = (parsed?.error || errOut || '').trim();
+    cleanErr = cleanErr
+      .split('\n')
+      .filter(line => !/\[browser-helpers\]/.test(line))
+      .join('\n')
+      .trim() || 'no results';
+
+    summary = parsed?.openOnly && ok
       ? `Browser's open (${browserLabel}). What should I look up for you?${staysOpenMsg}`
       : ok && (results.length || (parsed?.readPages || []).length)
         ? await buildLucySearchBrief(npcBrains, q, results, {
           staysOpenMsg,
           readPages: parsed?.readPages || [],
         })
-        : `I tried searching "${q}" but hit an error: ${parsed?.error || errOut.trim() || 'no results'}`;
+        : `I tried searching "${q}" but hit an error: ${cleanErr}`;
+    if (!ok && q) {
+      try {
+        const wr = await webResearch.research(q, { count: 5, read: 1 });
+        if (wr.results?.length) {
+          results = wr.results;
+          ok = true;
+          summary = `Couldn't open the visible browser on this machine — used background search instead:\n\n${webResearch.formatForNpc(wr).slice(0, 2000)}${staysOpenMsg}`;
+        }
+      } catch (_) {}
+    }
     if (parsed?.keepOpen && ok) global._lucyBrowserOpen = true;
     if (!ok) {
       const errText = String(parsed?.error || errOut || '');
@@ -2011,6 +2502,8 @@ function runNpcWebSearch(npcName, query, opts = {}) {
     }
     if (!quiet) {
       broadcast({ type: 'npc_skill_result', npcName: npc, skill: 'web-search', ok, output: summary.slice(0, 200), ts: Date.now() });
+    }
+    if (showBrowserUi) {
       _broadcastNpcMirrorUpdate(broadcast, mirrorKey);
     }
     try {
@@ -2123,125 +2616,158 @@ function buildScreenControlInstruction(playerText) {
 
 async function triggerNpcScreenControl(npcName, playerText, broadcast, opts = {}) {
   const sessionId = opts.sessionId || opts.session_id || null;
-  let permissionLevel = opts.permissionLevel || opts.agent_permission_level || null;
-  if (!permissionLevel && sessionId) {
-    permissionLevel = await desktopPermissionBridge.resolvePermissionLevelForSession(sessionId);
-  }
-  if (!permissionLevel) permissionLevel = 'trusted';
-
-  const taskPreview = String(playerText || '').slice(0, 240);
-  const approval = desktopPermissionBridge.requestDesktopApprovalIfNeeded({
-    sessionId,
-    npcName,
-    capability: 'desktop-agent',
-    detail: taskPreview,
-    permissionLevel,
-  });
-
-  if (!approval.pending && !approval.approved) {
-    const deniedMsg = approval.reason === 'permission_off'
-      ? 'Desktop agent is off for this account. Enable it in the Denizen desktop app.'
-      : 'Desktop action was not approved.';
-    broadcast({
-      type: 'npc_skill_result',
-      npcName, skill: 'desktop-agent', ok: false,
-      output: deniedMsg, ts: Date.now(),
-    });
-    return { ok: false, denied: true, reason: approval.reason || 'denied' };
-  }
-
-  if (approval.pending) {
-    broadcast({
-      type: 'desktop_permission_pending',
-      npcName,
-      requestId: approval.requestId,
-      detail: taskPreview,
-      ts: Date.now(),
-    });
-    try {
-      const decision = await desktopPermissionBridge.waitForDesktopApproval(
-        sessionId,
-        approval.requestId,
-      );
-      if (!decision?.approved) {
-        broadcast({
-          type: 'npc_skill_result',
-          npcName, skill: 'desktop-agent', ok: false,
-          output: 'You declined the desktop action.', ts: Date.now(),
-        });
-        return { ok: false, denied: true, reason: 'rejected' };
-      }
-    } catch (err) {
-      broadcast({
-        type: 'npc_skill_result',
-        npcName, skill: 'desktop-agent', ok: false,
-        output: err?.message || 'Permission request timed out.', ts: Date.now(),
-      });
-      return { ok: false, denied: true, reason: 'timeout' };
-    }
-  }
-
   const instruction = buildScreenControlInstruction(playerText);
+  const taskPreview = String(playerText || '').slice(0, 240);
+
   const act = pcActivity.record({
     npc: npcName, kind: 'desktop-agent',
     task: instruction.slice(0, 240),
     mode: 'visible', status: 'started',
   });
   const t0 = Date.now();
-  return desktopAgent.runDesktopTask({ instruction, broadcast, npcName })
-    .then((result) => {
-      const summary = result?.summary || (result?.ok ? 'Done — check your screen.' : result?.error || 'Task failed.');
-      pcActivity.record({
-        id: act.id, npc: npcName, kind: 'desktop-agent',
-        task: act.task, mode: 'visible',
-        status: result?.ok ? 'done' : 'failed',
-        durationMs: Date.now() - t0,
-        detail: String(summary).slice(0, 240),
-      });
-      try { npcBrains.injectSkillResult(npcName, 'desktop-agent', summary); } catch (_) {}
-      broadcast({
-        type: 'npc_skill_result',
-        npcName, skill: 'desktop-agent', ok: !!result?.ok,
-        output: String(summary).slice(0, 200), ts: Date.now(),
-      });
-      if (result?.ok) {
-        broadcast({
-          type: 'npc_report_to_ceo',
-          npcName,
-          text: String(summary).slice(0, 2000),
-          ts: Date.now(),
-        });
-      }
-      return { ok: !!result?.ok, summary, result };
-    })
-    .catch((err) => {
-      pcActivity.record({
-        id: act.id, npc: npcName, kind: 'desktop-agent',
-        task: act.task, mode: 'visible', status: 'failed',
-        durationMs: Date.now() - t0,
-        detail: String(err?.message || err).slice(0, 240),
-      });
-      throw err;
+
+  const routed = await stationRouter.routeOrRunHost({
+    sessionId,
+    npcName,
+    kind: 'desktop_agent',
+    skill: 'desktop-agent',
+    instruction,
+    permissionLevel: opts.permissionLevel || opts.agent_permission_level || null,
+    broadcast,
+    waitTimeoutMs: 12 * 60 * 1000,
+    hostRunner: async () => desktopAgent.runDesktopTask({ instruction, broadcast, npcName })
+      .then((result) => {
+        const summary = result?.summary || (result?.ok ? 'Done — check your screen.' : result?.error || 'Task failed.');
+        return { ok: !!result?.ok, summary, result, routed: false };
+      }),
+  });
+
+  const summary = routed.summary || routed.error || 'Task finished.';
+  pcActivity.record({
+    id: act.id, npc: npcName, kind: 'desktop-agent',
+    task: act.task, mode: 'visible',
+    status: routed.ok ? 'done' : 'failed',
+    durationMs: Date.now() - t0,
+    detail: String(summary).slice(0, 240),
+  });
+  try { npcBrains.injectSkillResult(npcName, 'desktop-agent', summary); } catch (_) {}
+  broadcast({
+    type: 'npc_skill_result',
+    npcName, skill: 'desktop-agent', ok: !!routed.ok,
+    output: String(summary).slice(0, 200), ts: Date.now(),
+  });
+  if (routed.ok) {
+    broadcast({
+      type: 'npc_report_to_ceo',
+      npcName,
+      text: String(summary).slice(0, 2000),
+      ts: Date.now(),
     });
+  }
+  return routed;
 }
 
 /** Screenshot + vision describe + optional web research (any NPC). */
-function triggerNpcScreenObserve(npcName, instruction, broadcast) {
-  return screenObserve.runScreenObserve({
+async function triggerNpcScreenObserve(npcName, instruction, broadcast, opts = {}) {
+  const sessionId = opts.sessionId || opts.session_id || null;
+
+  const routed = await stationRouter.routeOrRunHost({
+    sessionId,
     npcName,
+    kind: 'screen_observe',
+    skill: 'screen-observe',
     instruction,
+    permissionLevel: opts.permissionLevel || null,
     broadcast,
-    injectSkillResult: (n, skill, text) => {
-      try { npcBrains.injectSkillResult(n, skill, text); } catch (_) {}
-    },
-    runWebSearch: (n, q) => runNpcWebSearch(n, q, { broadcast, quiet: false, headless: false })
-      .then((r) => ({ ok: r.ok, summary: r.summary })),
-    queueResearch: (topic, priority) => {
-      try {
-        researchQueue.addTopic({ topic, priority: priority || 'normal', requestedBy: npcName });
-      } catch (_) {}
+    waitTimeoutMs: 5 * 60 * 1000,
+    hostRunner: async () => {
+      const result = await screenObserve.runScreenObserve({
+        npcName,
+        instruction,
+        broadcast,
+        injectSkillResult: (n, skill, text) => {
+          try { npcBrains.injectSkillResult(n, skill, text); } catch (_) {}
+        },
+        runWebSearch: (n, q) => runNpcWebSearch(n, q, { broadcast, quiet: false, headless: false })
+          .then((r) => ({ ok: r.ok, summary: r.summary })),
+        queueResearch: (topic, priority) => {
+          try {
+            researchQueue.addTopic({ topic, priority: priority || 'normal', requestedBy: npcName });
+          } catch (_) {}
+        },
+      });
+      return {
+        ok: !!result.ok,
+        summary: result.summary,
+        screenshot: result.screenshot,
+        topics: result.topics,
+        searchQuery: result.searchQuery,
+        routed: false,
+      };
     },
   });
+
+  if (routed.routed && routed.ok) {
+    let summary = routed.summary || 'Screen observed.';
+    const topics = Array.isArray(routed.topics) ? routed.topics.filter(Boolean).slice(0, 3) : [];
+    const searchQuery = String(routed.searchQuery || '').trim()
+      || (topics[0] ? `${topics[0]} overview` : '');
+
+    if (screenObserve.autoResearchEnabled() && searchQuery) {
+      try {
+        const wr = await webResearch.research(searchQuery, { count: 4, read: 1 });
+        if (wr.results.length) {
+          summary += `\n\nWeb research for "${searchQuery}":\n${webResearch.formatForNpc(wr).slice(0, 1500)}`;
+        }
+      } catch (_) {}
+    }
+
+    try { npcBrains.injectSkillResult(npcName, 'screen-observe', summary); } catch (_) {}
+    broadcast({
+      type: 'npc_skill_result',
+      npcName,
+      skill: 'screen-observe',
+      ok: true,
+      output: summary.slice(0, 300),
+      screenshot: routed.screenshot || null,
+      ts: Date.now(),
+    });
+    broadcast({
+      type: 'npc_report_to_ceo',
+      npcName,
+      text: summary.slice(0, 2000),
+      ts: Date.now(),
+    });
+    return {
+      ok: true,
+      summary,
+      screenshot: routed.screenshot || null,
+      topics,
+      searchQuery: searchQuery || null,
+    };
+  }
+
+  if (routed.routed) {
+    const msg = routed.summary || routed.error || 'Could not read the screen.';
+    try { npcBrains.injectSkillResult(npcName, 'screen-observe', msg); } catch (_) {}
+    broadcast({
+      type: 'npc_skill_result',
+      npcName,
+      skill: 'screen-observe',
+      ok: false,
+      output: msg,
+      ts: Date.now(),
+    });
+    return { ok: false, summary: msg, screenshot: null };
+  }
+
+  return {
+    ok: !!routed.ok,
+    summary: routed.summary,
+    screenshot: routed.screenshot || null,
+    topics: routed.topics || [],
+    searchQuery: routed.searchQuery || null,
+  };
 }
 
 const jelly = createJelly({
@@ -2257,14 +2783,17 @@ const jelly = createJelly({
     skillBuilder,
     robinhoodMcp,
     codingTaskRunner,
-    linuxAgent,
+    linuxAgent: linuxAgentBridge,
     worldState,
     bouncerInvTake: _bouncerInvTake,
     githubRepo: GITHUB_REPO,
     runWebSearch: runNpcWebSearch,
+    runResearch: runNpcWebSearch,
+    runCitedResearch: (q, o) => require('./src/visitor-cited-research').runCitedResearch(q, o),
     healthRunbook,
     computeQueue,
     fleetRegistry,
+    denizenDb,
     denizenRoot: __dirname,
     canRemediate: (npc) => healthRunbook.canRemediate(npc),
     approvedSkillScripts: _approvedSkillScripts,
@@ -2276,14 +2805,125 @@ console.log(`[${JELLY.logTag}] ${jelly.listSkills().length} skills loaded — ${
  * Run a Jelly skill on behalf of an NPC. Fires async; result is injected
  * back into the NPC's next think() cycle via npcBrains.injectSkillResult().
  */
-async function runNpcSkill(npcName, skill, skillParams = {}) {
-  const broadcast = (m) => {
+async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
+  const broadcast = opts.broadcast || ((m) => {
     const raw = JSON.stringify(m);
     (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
-  };
+  });
+  const sessionId = opts.sessionId || opts.session_id || null;
+  const normalized = String(skill || '').trim().toLowerCase();
+  const stationBridge = require('./src/denizen-station-skill-bridge');
+  const stationRoute = sessionId
+    ? stationBridge.resolveStationRoute(normalized, skillParams, {
+      fallbackMessage: skillParams.task || skillParams.message || '',
+    })
+    : null;
+  if (stationRoute && sessionId) {
+    const { kind, instruction, payload } = stationRoute;
+    log.info(JELLY.logTag, `${npcName} → station:${kind} (${normalized}) ${String(instruction).slice(0, 120)}`);
+    const routed = await stationRouter.routeOrRunHost({
+      sessionId,
+      npcName,
+      kind,
+      skill: stationRoute.skill || normalized,
+      instruction: String(instruction || '').slice(0, 4000),
+      payload: payload || {},
+      broadcast,
+      waitTimeoutMs: 12 * 60 * 1000,
+      hostRunner: async () => {
+        if (kind === 'desktop_agent') {
+          const result = await desktopAgent.runDesktopTask({
+            instruction,
+            broadcast,
+            npcName,
+          });
+          const summary = result?.summary || (result?.ok ? 'Done.' : result?.error || 'Task failed.');
+          return { ok: !!result?.ok, summary, result, routed: false };
+        }
+        if (kind === 'web_search') {
+          const researchRouter = require('./src/research-router');
+          const query = String(payload?.query || instruction || '').trim();
+          const mesh = await researchRouter.runMeshWebSearch({
+            computeQueue,
+            npcName,
+            query,
+          });
+          if (mesh.routed) {
+            return { ok: !!mesh.ok, summary: mesh.summary || mesh.output, routed: false, mesh: true, job_id: mesh.job_id };
+          }
+          const r = await runNpcWebSearch(npcName, query, { broadcast, headless: false, quiet: false });
+          return { ok: !!r.ok, summary: r.summary || r.error || 'Search finished.', routed: false };
+        }
+        if (kind === 'screen_observe') {
+          return triggerNpcScreenObserve(npcName, instruction, broadcast, { sessionId });
+        }
+        return {
+          ok: false,
+          summary: 'No paired Denizen Desktop station — complete setup wizard on your computer.',
+          routed: false,
+        };
+      },
+    });
+    const summary = routed.summary || routed.error || (routed.ok ? 'Done.' : 'Station task failed.');
+    try { npcBrains.injectSkillResult(npcName, normalized, summary); } catch (_) {}
+    broadcast({
+      type: 'npc_skill_result',
+      npcName,
+      skill: normalized,
+      ok: !!routed.ok,
+      output: String(summary).slice(0, 2000),
+      ts: Date.now(),
+    });
+    return { ok: !!routed.ok, output: summary, routed: !!routed.routed };
+  }
   log.info(JELLY.logTag, `${npcName} → ${skill} ${JSON.stringify(skillParams)}`);
   return jelly.runSkill(npcName, skill, skillParams, { broadcast });
 }
+
+npcMcpGateway.configure({
+  runNpcSkill,
+  npcBrains,
+  broadcast: _broadcastOps,
+  robinhoodMcp,
+  denizenVisitor,
+  visitorConnections,
+  listOnlineSessionIds,
+  notifyCeoHandoff: _notifyCeoHandoff,
+  computeQueue,
+  lmStudioRouter,
+  denizenDb,
+  getInferenceHealth: async () => {
+    const queueDepth = npcBrains?.getQueueDepth?.() || 0;
+    const status = lmStudioRouter.buildStatus(queueDepth);
+    return {
+      reachable: status?.any_reachable ?? status?.lmStudio?.reachable ?? false,
+      pool: status?.pool || null,
+      queue_depth: queueDepth,
+    };
+  },
+});
+teamMcpGateway.configure({
+  runNpcSkill,
+  npcBrains,
+  broadcast: _broadcastOps,
+  robinhoodMcp,
+  denizenVisitor,
+  visitorConnections,
+  listOnlineSessionIds,
+  notifyCeoHandoff: _notifyCeoHandoff,
+  computeQueue,
+  lmStudioRouter,
+  denizenDb,
+  getInferenceHealth: async () => {
+    const queueDepth = npcBrains?.getQueueDepth?.() || 0;
+    const status = lmStudioRouter.buildStatus(queueDepth);
+    return {
+      reachable: status?.any_reachable ?? status?.lmStudio?.reachable ?? false,
+      pool: status?.pool || null,
+      queue_depth: queueDepth,
+    };
+  },
+});
 
 npcThinkRunner.configure({
   npcBrains,
@@ -2541,9 +3181,22 @@ denizenDb.attachWorldState(worldState);
 const WS_BROADCAST_INTERVAL_MS = 500;
 const IMMEDIATE_KINDS = new Set(['presence', 'threat', 'threat-cleared']);
 
-let _pendingChanges = new Map(); // kind -> { kind, payload, ts }
+const worldPubsub = createWorldPubsub();
+
+if (worldPubsub.role === 'primary' && worldPubsub.enabled) {
+  _relayPublishAgentFrame = (frame) => worldPubsub.publish(frame).catch(() => null);
+}
+if (IS_RELAY_ONLY) {
+  console.log(`[AgentWS] Relay-only mode (${worldPubsub.role}) — simulation and mutating WS disabled`);
+}
+
+let _pendingChanges = new Map(); // `${orgId}:${kind}` -> { orgId, kind, payload, ts }
 let _broadcastTimer = null;
 let _agentBusBuffer = [];        // collected agent-bus messages
+
+function _defaultOrgId() {
+  return worldState.getDefaultOrgId?.() || denizenDb.orgId || '__default__';
+}
 
 function _broadcastFrame() {
   _broadcastTimer = null;
@@ -2553,19 +3206,28 @@ function _broadcastFrame() {
   _agentBusBuffer = [];
   if (changes.length === 0 && busMessages.length === 0) return;
 
-  // One JSON.stringify, one ws.send per client per tick — irrespective of
-  // how many mutations happened during the window.
-  const frame = JSON.stringify({
-    type: 'world_state_batch',
-    changes,
-    busMessages,
-    ts: Date.now(),
-  });
-  _agentClients().forEach((ws) => {
-    if (ws.readyState === 1) {
-      try { ws.send(frame); } catch (_) { /* drop */ }
-    }
-  });
+  const byOrg = new Map();
+  for (const entry of changes) {
+    const oid = entry.orgId || _defaultOrgId();
+    if (!byOrg.has(oid)) byOrg.set(oid, []);
+    byOrg.get(oid).push(entry);
+  }
+  if (busMessages.length > 0) {
+    const oid = _defaultOrgId();
+    if (!byOrg.has(oid)) byOrg.set(oid, []);
+  }
+
+  for (const [orgId, orgChanges] of byOrg) {
+    const frame = {
+      type: 'world_state_batch',
+      org_id: orgId,
+      changes: orgChanges,
+      busMessages: orgId === _defaultOrgId() ? busMessages : [],
+      ts: Date.now(),
+    };
+    officeRegistry.broadcastAgent(_agentClients(), frame, { orgId });
+    worldPubsub.publish(frame).catch(() => null);
+  }
 }
 
 function _scheduleBroadcast() {
@@ -2574,18 +3236,35 @@ function _scheduleBroadcast() {
 }
 
 function _sendImmediate(payload, opts = {}) {
+  const orgId = opts.orgId ?? payload?.org_id ?? payload?.orgId ?? _defaultOrgId();
   const officeId = opts.officeId ?? payload?.office_id ?? null;
-  officeRegistry.broadcastAgent(_agentClients(), payload, officeId ? { officeId } : {});
+  const framed = { ...payload, org_id: orgId };
+  officeRegistry.broadcastAgent(_agentClients(), framed, { officeId: officeId || undefined, orgId });
+  worldPubsub.publish(framed).catch(() => null);
 }
 
-worldState.on('change', ({ kind, payload }) => {
-  const entry = { kind, payload, ts: Date.now() };
+if (worldPubsub.role === 'follower') {
+  worldPubsub.subscribe((frame) => {
+    const serialized = JSON.stringify(frame);
+    _agentClients().forEach((ws) => {
+      if (ws.readyState !== 1) return;
+      if (!officeRegistry.shouldDeliverToSocket(frame, ws)) return;
+      try { ws.send(serialized); } catch (_) { /* drop */ }
+    });
+  }).catch((err) => {
+    console.warn('[world-pubsub] follower subscribe failed:', err?.message || err);
+  });
+}
+
+worldState.on('change', ({ orgId, kind, payload }) => {
+  const oid = orgId || _defaultOrgId();
+  const entry = { orgId: oid, kind, payload, ts: Date.now() };
   if (IMMEDIATE_KINDS.has(kind)) {
-    _sendImmediate({ type: 'world_state', ...entry });
+    _sendImmediate({ type: 'world_state', ...entry }, { orgId: oid });
     return;
   }
-  // Latest write wins per kind for the next window.
-  _pendingChanges.set(kind, entry);
+  // Latest write wins per org+kind for the next window.
+  _pendingChanges.set(`${oid}:${kind}`, entry);
   _scheduleBroadcast();
 });
 
@@ -2594,7 +3273,7 @@ agentBus.subscribe('*', (msg) => {
   _agentBusBuffer.push(msg);
   // Cap the buffer in case something pathological happens.
   if (_agentBusBuffer.length > 60) _agentBusBuffer.splice(0, _agentBusBuffer.length - 60);
-  if (msg?.to && msg?.text) {
+  if (msg?.to && msg?.text && !IS_RELAY_ONLY) {
     npcThinkRunner.wake(msg.to, `agent_bus:${msg.kind || 'speak'}`, { urgent: true });
   }
   _scheduleBroadcast();
@@ -2609,15 +3288,8 @@ function safeDecodePath(url) {
 }
 
 const server = http.createServer((req, res) => {
-  // Route registry wiring sketch (kept as comment to avoid broad server.js churn):
-  // const denizenRoutes = routeRegistry.registerDenizenRoutes(server, {
-  //   npcBrains,
-  //   broadcast: broadcastToAll,
-  //   getPredictionSummary,
-  //   robinhoodMcp,
-  //   jobCrm,
-  // });
-  // if (await denizenRoutes.handle(req, res)) return;
+  // Route registry: optional extract for tests/tools — inline handlers in this file remain canonical.
+  // See src/route-registry.js (competency-map, job-crm subset). Do not double-register without audit.
 
   let urlPath = safeDecodePath(req.url);
   const fullUrl = req.url;
@@ -2630,6 +3302,13 @@ const server = http.createServer((req, res) => {
 
   // --- Security: check every request for suspicious patterns ---
   securityMonitor.checkHttpRequest(req);
+
+  const inviteMatch = urlPath.match(/^\/(?:invite|join)\/([A-Za-z0-9_-]+)\/?$/);
+  if (inviteMatch && req.method === 'GET') {
+    res.writeHead(302, { Location: `/?join=${encodeURIComponent(inviteMatch[1])}` });
+    res.end();
+    return;
+  }
 
   if (urlPath === '/api/visitor/ping' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -2683,6 +3362,10 @@ const server = http.createServer((req, res) => {
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
+    return;
+  }
+
+  if (_handleVisitorAuthRoutes(req, res, urlPath)) {
     return;
   }
 
@@ -2744,6 +3427,14 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/mcp/team' || urlPath === '/mcp/team/') {
+    teamMcpGateway.handleHttpRequest(req, res).catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/npc-sync/openapi.json' && req.method === 'GET') {
     const publicBase = npcMcpGateway.getPublicBaseUrl();
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -2751,7 +3442,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity)\/?$/);
+  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity|run-skill|assign-task)\/?$/);
   if (npcSyncMatch) {
     npcMcpGateway.handleRestSync(req, res, npcSyncMatch[1]).catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -2799,9 +3490,14 @@ const server = http.createServer((req, res) => {
       const body = await _readJsonBody(req, 2 * 1024 * 1024);
       const sessionId = body.session_id || body.sessionId || null;
       const officeId = await _resolveLayoutOfficeId(req, sessionId);
-      officeLayout.writeLayoutSync(ROOT, officeId, body.layout ?? body);
+      const incoming = body.layout ?? body;
+      const existing = officeLayout.readLayoutSync(ROOT, officeId) || {};
+      const merged = { ...existing, ...incoming };
+      if (Array.isArray(incoming.placements)) merged.placements = incoming.placements;
+      if (Array.isArray(incoming.items)) merged.items = incoming.items;
+      officeLayout.writeLayoutSync(ROOT, officeId, merged);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, office_id: officeId }));
+      res.end(JSON.stringify({ ok: true, office_id: officeId, placements: (merged.placements || []).length }));
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
@@ -3196,6 +3892,40 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // GET /api/competency-map — team skill aggregates (Phase 5.1)
+  if (urlPath === '/api/competency-map' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const minScore = Number(url.searchParams.get('min_score') || 5);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      team: competencyMap.getTeamProfile(),
+      gaps: competencyMap.getTeamGaps(Number.isFinite(minScore) ? minScore : 5),
+    }));
+    return;
+  }
+
+  const competencyNpcMatch = urlPath.match(/^\/api\/competency-map\/([^/]+)$/);
+  if (competencyNpcMatch && req.method === 'GET') {
+    const rawName = decodeURIComponent(competencyNpcMatch[1]);
+    const profile = competencyMap.getNpcProfile(rawName);
+    if (!profile) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'no competency data for NPC' }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, profile }));
+    return;
+  }
+
+  // GET /api/platform-bridge/status — cloud CRM bridge availability
+  if (urlPath === '/api/platform-bridge/status' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, ...platformBridge.platformBridgeStatus() }));
+    return;
+  }
+
   // GET /api/capability-proposals[?status=pending|approved|rejected]
   if (urlPath === '/api/capability-proposals' && req.method === 'GET') {
     const store = _readCapabilityStore();
@@ -3348,6 +4078,33 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const soulContextMatch = urlPath.match(/^\/api\/soul-proposals\/([^/]+)\/context$/);
+  if (soulContextMatch && req.method === 'GET') {
+    const id = soulContextMatch[1];
+    const file = _readSoulProposalsFile();
+    const record = file.proposals.find((p) => p && p.id === id);
+    if (!record) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: `proposal not found: ${id}` }));
+      return;
+    }
+    const npcSlug = String(record.npcName || '').toLowerCase().replace(/\s+/g, '_');
+    const soulPath = path.join(__dirname, 'npcs', npcSlug, 'SOUL.md');
+    let currentSoul = '';
+    try {
+      currentSoul = fs.readFileSync(soulPath, 'utf8');
+    } catch (_) {
+      currentSoul = '';
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      npcName: record.npcName,
+      currentSoul,
+      proposal: record.proposal || {},
+    }));
+    return;
+  }
+
   // POST /api/soul-proposal/approve — body { id, decision: 'approved'|'rejected', note? }
   // Updates the proposal status in place. Does NOT touch SOUL.md (deferred).
   if (urlPath === '/api/soul-proposal/approve' && req.method === 'POST') {
@@ -3395,6 +4152,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: 'failed to persist decision: ' + err.message }));
         return;
       }
+      _broadcastProposalQueueChanged('soul', decision, id);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, proposal: file.proposals[idx] }));
     });
@@ -3690,6 +4448,40 @@ const server = http.createServer((req, res) => {
           });
         }
       } catch (_) { /* file may not exist yet — fine */ }
+    }
+
+    // NPC code proposals (in-memory + reports/code-reviews/)
+    if (maybe('code')) {
+      for (const p of codingTaskRunner.getProposals()) {
+        if (!p || typeof p !== 'object') continue;
+        const st = p.status === 'pending_review' ? 'pending' : (p.status || 'pending');
+        merged.push({
+          kind: 'code',
+          id: p.id,
+          by: p.npc,
+          status: st,
+          summary: `${p.task || 'code change'} · ${(p.changedFiles || []).join(', ') || 'files TBD'}`.slice(0, 240),
+          ts: Number(p.ts) || 0,
+          raw: p,
+        });
+      }
+    }
+
+    // Branded PDF dossier proposals (persisted data/dossier-proposals.json)
+    if (maybe('dossier')) {
+      for (const p of dossierSystem.getProposals()) {
+        if (!p || typeof p !== 'object') continue;
+        const st = p.status === 'pending_review' ? 'pending' : p.status;
+        merged.push({
+          kind: 'dossier',
+          id: p.id,
+          by: p.npc,
+          status: st || 'pending',
+          summary: `${p.type || 'dossier'}${p.recipient ? ` for ${p.recipient}` : ''} · ${p.subject || ''}`.slice(0, 240),
+          ts: Number(p.ts) || 0,
+          raw: p,
+        });
+      }
     }
 
     // Status filter — 'all' bypasses.
@@ -4115,6 +4907,56 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Bouncer investigation proxy (dolonia agent) ---
+  if (urlPath === '/api/bouncer-investigate' && req.method === 'POST') {
+    if (!bouncerInvestigation.validateInvestigationAuth(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+      return;
+    }
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', async () => {
+      let payload;
+      try { payload = JSON.parse(body || '{}'); }
+      catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      const threat = payload.threat || payload;
+      try {
+        const result = await bouncerInvestigation.investigate(threat);
+        let reportMd = null;
+        if (result.ok) {
+          reportMd = result.reportMd || linuxAgent.buildReport(threat, result, null);
+          result.reportMd = reportMd;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: result.ok, result, reportMd }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath === '/api/bouncer-patrol' && req.method === 'POST') {
+    if (!bouncerInvestigation.validateInvestigationAuth(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+      return;
+    }
+    (async () => {
+      try {
+        const patrol = await bouncerInvestigation.perimeterPatrol();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: patrol.ok !== false, patrol }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    })();
+    return;
+  }
+
   // --- Bouncer security scan (manual trigger) ---
   // POST /api/bouncer-scan { tool: 'nmap'|'wireshark'|'zenmap', target?: '192.168.1.1', reason?: 'manual' }
   // 'zenmap' and 'nmap' both run nmap via Kali WSL (Zenmap is just a GUI wrapper — nmap is the real tool).
@@ -4153,13 +4995,13 @@ const server = http.createServer((req, res) => {
         let result;
         if (tool === 'nmap' || tool === 'zenmap') {
           // nmap scan — zenmap is just a GUI wrapper, use nmap CLI directly
-          result = await linuxAgent.investigate({ category: 'network_scan', source: target, detail: reason });
+          result = await linuxAgentBridge.investigate({ category: 'network_scan', source: target, detail: reason });
         } else if (tool === 'wireshark') {
           // tcpdump loopback snapshot as Wireshark replacement
           result = await linuxAgent.trafficSnapshot();
           result = { ok: result.ok, summary: result.raw, elapsed: 5000, steps: [{ label: 'tcpdump loopback', output: result.raw }] };
         } else {
-          result = await linuxAgent.perimeterPatrol();
+          result = await linuxAgentBridge.perimeterPatrol();
           result = { ok: result.ok, summary: result.summary, elapsed: result.elapsed, steps: [] };
         }
 
@@ -4529,7 +5371,9 @@ const server = http.createServer((req, res) => {
         const raw = JSON.stringify(m);
         (agentWss ? agentWss.clients : new Set()).forEach((c) => { if (c.readyState === 1) c.send(raw); });
       };
-      triggerNpcScreenObserve(npcName, instruction, broadcast)
+      triggerNpcScreenObserve(npcName, instruction, broadcast, {
+        sessionId: payload.session_id || payload.sessionId || null,
+      })
         .then((r) => {
           res.writeHead(r.ok ? 200 : 500, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(r));
@@ -4615,9 +5459,10 @@ const server = http.createServer((req, res) => {
         category: payload.category || 'unknown',
         source:   payload.source   || null,
         detail:   payload.detail   || payload.category || 'manual investigation',
+        force:    payload.force === true,
       };
 
-      const invGate = _bouncerInvTake(threat);
+      const invGate = _bouncerInvTake(threat, { force: threat.force });
       if (!invGate.allowed) {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -4655,7 +5500,14 @@ const server = http.createServer((req, res) => {
       const blStart = Date.now();
 
       // Run the actual investigation in parallel
-      linuxAgent.investigate(threat).then(result => {
+      const invCtx = {
+        broadcast,
+        npcTools,
+        npcBrains,
+        denizenDb,
+        investigationIsSerious,
+      };
+      linuxAgentBridge.investigate(threat).then(async (result) => {
         pcActivity.record({
           id: blActivity.id, npc: 'Bouncer', kind: 'linux-agent',
           task: blActivity.task, mode: blActivity.mode,
@@ -4663,6 +5515,7 @@ const server = http.createServer((req, res) => {
           durationMs: Date.now() - blStart,
           detail: (result.summary || result.error || '').slice(0, 240) || null,
         });
+        const { reportPath } = await bouncerInvestigation.completeInvestigation(threat, result, invCtx);
         broadcast({
           type: 'bouncer_linux_result',
           status: result.ok ? 'done' : 'error',
@@ -4672,8 +5525,9 @@ const server = http.createServer((req, res) => {
           elapsed: result.elapsed,
           steps: result.steps,
           summary: result.summary,
+          reportPath: reportPath || null,
           message: result.ok
-            ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s, ${result.steps.length} commands).`
+            ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s, ${result.steps?.length || 0} commands).`
             : `Linux investigation failed: ${result.error}`,
         });
       }).catch(err => {
@@ -4806,11 +5660,12 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, note: `Researching "${topic}" — brief incoming.` }));
       const session = researchSessions.startSession({ topic, npcName: 'Bob' });
-      researchBrief.runFullResearch(topic, { count: 5, read: 2, npcBrains })
+      const isLeadTopic = /lead|prospect|client|partner|govcon|omes|rm cyber|federal|1921|capture/i.test(topic);
+      researchBrief.runFullResearch(topic, { count: 5, read: 2, npcBrains, leadMode: isLeadTopic })
         .then((result) => {
           try { researchSessions.linkSessionToBrief(session.id, result.filePath); } catch (_) {}
           const text = `Research brief ready: "${topic}"\n${result.filePath}\n${(result.summary || '').slice(0, 400)}`;
-          _ceoBroadcast({
+          const payload = {
             type: 'research_brief_done',
             npcName: 'Bob',
             topic,
@@ -4818,7 +5673,49 @@ const server = http.createServer((req, res) => {
             summary: result.summary || text,
             text,
             ts: Date.now(),
-          });
+          };
+          if (result.leadCandidates && result.leadCandidates.length) {
+            payload.leadCandidates = result.leadCandidates;
+            payload.note = `Extracted ${result.leadCandidates.length} candidate leads for crm-enrich-contact`;
+          }
+          _ceoBroadcast(payload);
+
+          // Fix: inject the findings into Bob so he can answer "what did you find" naturally
+          if (npcBrains && typeof npcBrains.injectSkillResult === 'function') {
+            const findings = result.summary || `Completed research on ${topic}. See ${result.filePath}`;
+            npcBrains.injectSkillResult('Bob', 'research', findings);
+            // also give Lucy visibility for pipeline work
+            try { npcBrains.injectSkillResult('Lucy', 'research', findings); } catch (_) {}
+            if (result.leadCandidates && result.leadCandidates.length) {
+              const candText = `Lead candidates from research: ${result.leadCandidates.map(c => `${c.name || c.company} (${c.email || c.url || ''})`).join('; ')}. Use crm-enrich-contact then crm-add-deal for high fits.`;
+              try { npcBrains.injectSkillResult('Lucy', 'lead-research', candText); } catch (_) {}
+              try { npcBrains.injectSkillResult('Bob', 'lead-research', candText); } catch (_) {}
+
+              // Auto-suggest concrete actions + enqueue enrich for top candidates
+              result.leadCandidates.slice(0, 2).forEach((cand, i) => {
+                const enrichParams = { name: cand.name || cand.company, email: cand.email, company: cand.company || '', source: 'research-brief', notes: cand.why || 'from ' + topic, score: 60, researchMatch: true };
+                _ceoBroadcast({
+                  type: 'crm_lead_candidate',
+                  npcName: 'Grok',
+                  candidate: cand,
+                  suggested: { skill: 'crm-enrich-contact', params: enrichParams },
+                  ts: Date.now(),
+                });
+                // Strong injection for immediate follow-through
+                const act = `ACTION: crm-enrich-contact for ${cand.name || cand.company}. Then crm-add-deal if 1921 fit.`;
+                try { npcBrains.injectSkillResult('Lucy', 'lead-candidate-' + i, act + ' ' + candText); } catch (_) {}
+              });
+            }
+          }
+          // Also log activity for the office
+          try {
+            _ceoBroadcast({
+              type: 'npc_report_to_ceo',
+              npcName: 'Bob',
+              text: `I finished the research on "${topic}". Key points: ${(result.summary || '').slice(0, 300)}`,
+              ts: Date.now(),
+            });
+          } catch (_) {}
         })
         .catch(err => {
           _ceoBroadcast({
@@ -5078,7 +5975,8 @@ const server = http.createServer((req, res) => {
     (async () => {
       const [, , , id, decision] = urlPath.split('/');
       const body = await _readJsonBody(req, 16 * 1024).catch(() => ({}));
-      const sessionId = body.session_id || body.sessionId || null;
+      const headerSession = _visitorSessionBodyFromHeaders(req);
+      const sessionId = body.session_id || body.sessionId || headerSession.session_id || null;
       // CEO status comes from the verified grant or a strictly-local request —
       // body.is_ceo_principal is a client assertion and is ignored.
       const ceoRequest = hostCompute.isCeoPrincipalRequest(req)
@@ -5451,10 +6349,32 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/public/runtime-config' && req.method === 'GET') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=60',
+    });
+    res.end(JSON.stringify(agentWsRelay.buildRuntimePublicConfig()));
+    return;
+  }
+
   // --- World-state snapshot (read-only) ---
   // Useful for debugging and for the n8n/Supabase integration to know what
   // the office "looks like" before posting an update.
   if (urlPath === '/api/world-state' && req.method === 'GET') {
+    if (agentWsRelay.isFollowerRole()) {
+      (async () => {
+        try {
+          const snapshot = await agentWsRelay.fetchPrimaryWorldSnapshot();
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(snapshot));
+        } catch (err) {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+        }
+      })();
+      return;
+    }
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(worldState.snapshot()));
     return;
@@ -5520,107 +6440,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (urlPath === '/api/visitor/auth/register-demo' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const sessionId = body.session_id || body.sessionId;
-      const sessionToken = sessionAuth.extractSessionAuth(req, body);
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const result = await demoAuth.registerDemoAccount({
-        sessionId,
-        sessionToken,
-        username: body.username,
-        password: body.password,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const status = demoAuth.demoAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/login-demo' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const result = await demoAuth.loginDemoAccount({
-        username: body.username,
-        password: body.password,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const demoAuth = require('./src/denizen-demo-auth.js');
-      const status = demoAuth.demoAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/create-team' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const result = await teamAuth.createTeam({
-        teamName: body.team_name ?? body.teamName,
-        username: body.username,
-        email: body.email,
-        password: body.password,
-        displayName: body.display_name ?? body.displayName,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const status = teamAuth.teamAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/register' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const result = await teamAuth.registerTeamAccount({
-        email: body.email,
-        displayName: body.display_name ?? body.displayName,
-        username: body.username,
-        password: body.password,
-        teamCode: body.team_code ?? body.teamCode,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const status = teamAuth.teamAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
-  if (urlPath === '/api/visitor/auth/login' && req.method === 'POST') {
-    (async () => {
-      const body = await _readJsonBody(req, 32 * 1024);
-      const result = await teamAuth.loginTeamAccount({
-        email: body.email,
-        username: body.username,
-        password: body.password,
-        teamCode: body.team_code ?? body.teamCode,
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, ...result }));
-    })().catch((err) => {
-      const status = teamAuth.teamAuthErrorStatus(err);
-      res.writeHead(status, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
-    });
-    return;
-  }
-
   if (urlPath === '/api/visitor/session' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 64 * 1024);
@@ -5679,6 +6498,62 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, slug, policy, table: table || null, allowed }));
     })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/org/clone-template' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const ceoRequest = hostCompute.isCeoPrincipalRequest(req)
+        || hostCompute.isLocalOperatorRequest(req);
+      const sessionId = body.session_id || body.sessionId || null;
+      if (sessionId) {
+        await _verifyVisitorSession(req, sessionId, body);
+        const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+          isCeoPrincipal: ceoRequest,
+        });
+        if (!approval.allowed && !ceoRequest) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Team lead or CEO required to clone template pack' }));
+          return;
+        }
+      } else if (!ceoRequest) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'CEO or team approver session required' }));
+        return;
+      }
+      if (!denizenDb.enabled) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Database unavailable' }));
+        return;
+      }
+      const orgSlug = body.org_slug || body.orgSlug;
+      const templatePack = body.template_pack || body.templatePack || '1921-govcon';
+      if (!orgSlug) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'org_slug required' }));
+        return;
+      }
+      const org = await denizenVisitor.resolveOrgBySlug(orgSlug);
+      if (!org?.id) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: `Organization "${orgSlug}" not found` }));
+        return;
+      }
+      const agentSouls = require('./src/agent-souls');
+      const result = await agentSouls.cloneTemplatePackToOrg(denizenDb, org.id, templatePack);
+      if (npcBrains?.hydrateAgentSoulsFromDb) {
+        await npcBrains.hydrateAgentSoulsFromDb(org.id).catch(() => null);
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, org_slug: orgSlug, org_id: org.id, ...result }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
@@ -5810,6 +6685,119 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/desktop-downloads' && req.method === 'GET') {
+    const desktopDownloads = require('./src/denizen-desktop-downloads.js');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      windows: desktopDownloads.WINDOWS_DESKTOP_URL,
+      mac: desktopDownloads.MACOS_DESKTOP_URL,
+      macos: desktopDownloads.MACOS_DESKTOP_URL,
+      linux: desktopDownloads.LINUX_DESKTOP_URL,
+      download_page: '/desktop/download.html',
+    }));
+    return;
+  }
+
+  if (urlPath === '/api/visitor/team/invite-link' && req.method === 'GET') {
+    (async () => {
+      const teamInviteLinks = require('./src/denizen-team-invite-links.js');
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _verifyVisitorSession(req, sessionId, {});
+      if (access.tier === 'demo' || access.isDemo) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team invite links require a team account' }));
+        return;
+      }
+      const org = access.org || null;
+      if (!org?.id) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Organization not found for session' }));
+        return;
+      }
+      const account = await teamAuth.getTeamAccountForSession(sessionId).catch(() => null);
+      const inviterName = account?.display_name || access.session?.display_name || 'Teammate';
+      const payload = await teamInviteLinks.buildInvitePayloadForOrg(org, { inviterName });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(payload));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/team/invite' && req.method === 'POST') {
+    (async () => {
+      const { inviteTeamMember } = require('./src/denizen-crm-team-invite.js');
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _verifyVisitorSession(req, sessionId, body);
+      if (access.tier === 'demo' || access.isDemo) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team invites require a team account' }));
+        return;
+      }
+      const org = access.org || null;
+      if (!org?.id) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Organization not found for session' }));
+        return;
+      }
+      const principal = await teamAuth.resolveCeoPrincipalForSession(sessionId, { access });
+      const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+        isCeoPrincipal: !!principal?.ceo,
+      });
+      if (!approval.allowed) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Only team owners and admins can send invites' }));
+        return;
+      }
+      const account = await teamAuth.getTeamAccountForSession(sessionId).catch(() => null);
+      const inviterName = account?.display_name || access.session?.display_name || 'Teammate';
+      const result = await inviteTeamMember(
+        org.id,
+        access.orgSlug || org.slug || null,
+        {
+          email: body.email,
+          displayName: body.display_name || body.displayName,
+          platform: invitePlatform.normalizeInvitePlatform(body.platform || 'windows'),
+        },
+        inviterName,
+      );
+      if (!result.ok) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/settings' && req.method === 'GET') {
     (async () => {
       const u = new URL(req.url, 'http://localhost');
@@ -5863,6 +6851,105 @@ const server = http.createServer((req, res) => {
       }
       const status = denizenVisitor.visitorErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position/suggestions' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, suggestions: userPosition.POSITION_SUGGESTIONS }));
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const identity = await userIdentity.getIdentityBySession(sessionId);
+      const position = userPosition.toClientPosition(userPosition.getPositionFromIdentity(identity));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, position, suggestions: userPosition.POSITION_SUGGESTIONS }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position/resolve' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 8 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const title = body.title || body.position_title || body.positionTitle;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      if (!userPosition.normalizeTitle(title)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'title required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const profile = await userPosition.resolvePositionProfile(title, { useLlm: body.use_llm !== false });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, position: userPosition.toClientPosition(profile) }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/position' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const title = body.title || body.position_title || body.positionTitle;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      if (!userPosition.normalizeTitle(title)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'title required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const identity = await userIdentity.getIdentityBySession(sessionId);
+      if (!identity?.id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'This session is not linked to a user profile yet' }));
+        return;
+      }
+      const shouldResolve = body.resolve !== false;
+      const position = await userPosition.saveIdentityPosition(identity.id, {
+        title,
+        resolve: shouldResolve,
+        profile: body.profile || null,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, position: userPosition.toClientPosition(position) }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
     return;
@@ -5961,14 +7048,17 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ ok: false, error: 'Profile required' }));
           return;
         }
-        const soul = await userIdentity.getNpcTeamMemberSoulView(identityId, npcKey);
+        const soul = await userIdentity.getNpcTeamMemberSoulView(identityId, npcKey, session.org_id || null);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, soul }));
         return;
       }
       const team = identityId ? await userIdentity.getNpcTeam(identityId) : null;
+      const orgTeam = session.org_id && _hasOrgNpcTeamAccess(session)
+        ? await userIdentity.orgNpcTeam.getOrgTeam(session.org_id).catch(() => null)
+        : null;
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, team: team || null }));
+      res.end(JSON.stringify({ ok: true, team: team || null, org_team: orgTeam, can_manage_org: _canManageOrgNpcTeam(session) }));
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
@@ -6007,7 +7097,7 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ ok: false, error: 'npc_key required for soul view' }));
           return;
         }
-        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, soulKey);
+        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, soulKey, session.org_id || null);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, soul }));
         return;
@@ -6072,7 +7162,7 @@ const server = http.createServer((req, res) => {
         return;
       }
       if (body.action === 'soul' || body.soul === true) {
-        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey);
+        const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey, session.org_id || null);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true, soul }));
         return;
@@ -6094,6 +7184,9 @@ const server = http.createServer((req, res) => {
           focus: body.focus,
           instructions: body.instructions,
           job: body.job,
+          soulSnippet: body.soul_snippet ?? body.soulSnippet,
+          personality: body.personality,
+          extraSkills: body.extra_skills ?? body.extraSkills,
           sortOrder: body.sort_order ?? body.sortOrder,
           settings: body.settings,
         });
@@ -6157,9 +7250,112 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ ok: false, error: 'Profile required' }));
         return;
       }
-      const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey);
+      const soul = await userIdentity.getNpcTeamMemberSoulView(session.identity_id, npcKey, session.org_id || null);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, soul }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/org-npc-team' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session?.org_id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Org membership required' }));
+        return;
+      }
+      if (!_hasOrgNpcTeamAccess(session)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Team tier required for org NPC defaults' }));
+        return;
+      }
+      const orgTeam = await userIdentity.orgNpcTeam.getOrgTeam(session.org_id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        org_team: orgTeam,
+        can_manage: _canManageOrgNpcTeam(session),
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/org-npc-team' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 96 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const session = await denizenVisitor.getSession(sessionId);
+      if (!session?.org_id) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Org membership required' }));
+        return;
+      }
+      if (!_canManageOrgNpcTeam(session)) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Owner or admin required to edit org NPC defaults' }));
+        return;
+      }
+      if (body.action === 'member') {
+        const npcKey = body.npc_key || body.npcKey;
+        if (!npcKey) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'npc_key required' }));
+          return;
+        }
+        if (body.remove === true || body.active === false) {
+          await userIdentity.orgNpcTeam.deactivateOrgMember(session.org_id, npcKey);
+        } else {
+          await userIdentity.orgNpcTeam.upsertOrgMember(session.org_id, {
+            npcKey,
+            displayName: body.display_name ?? body.displayName,
+            role: body.role,
+            focus: body.focus,
+            instructions: body.instructions,
+            job: body.job,
+            soulSnippet: body.soul_snippet ?? body.soulSnippet,
+            personality: body.personality,
+            extraSkills: body.extra_skills ?? body.extraSkills,
+            sortOrder: body.sort_order ?? body.sortOrder,
+            settings: body.settings,
+          });
+        }
+      } else {
+        await userIdentity.orgNpcTeam.updateOrgTemplate(session.org_id, {
+          name: body.name,
+          purpose: body.purpose,
+          settings: body.settings,
+        });
+      }
+      const orgTeam = await userIdentity.orgNpcTeam.getOrgTeam(session.org_id);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, org_team: orgTeam }));
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
@@ -6344,6 +7540,32 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/assistant' && req.method === 'DELETE') {
+    (async () => {
+      const body = await _readJsonBody(req, 64 * 1024).catch(() => ({}));
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = body.session_id || body.sessionId
+        || u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const result = await denizenVisitor.releaseAssistant(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...result }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      const status = denizenVisitor.visitorErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/projects' && req.method === 'GET') {
     (async () => {
       const u = new URL(req.url, 'http://localhost');
@@ -6451,6 +7673,103 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/visitor/connections' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, {});
+      const data = await visitorConnections.listConnections(sessionId);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...data }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/connections/request' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId || body.from_session_id || body.fromSessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const connection = await visitorConnections.requestConnection({
+        fromSessionId: sessionId,
+        targetEmail: body.target_email || body.targetEmail || body.email,
+        targetSessionId: body.target_session_id || body.targetSessionId,
+        message: body.message,
+      });
+      _broadcastConnectionUpdate(connection, {
+        event: 'incoming_request',
+        sessionIds: [connection.target_session_id, sessionId],
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, connection }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/visitor/connections/respond' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId || !(body.connection_id || body.connectionId)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and connection_id required' }));
+        return;
+      }
+      await _verifyVisitorSession(req, sessionId, body);
+      const connection = await visitorConnections.respondConnection({
+        sessionId,
+        connectionId: body.connection_id || body.connectionId,
+        action: body.action,
+      });
+      const action = String(body.action || '').toLowerCase();
+      const event = action === 'accept' ? 'accepted' : (action === 'block' ? 'blocked' : 'declined');
+      _broadcastConnectionUpdate(connection, {
+        event,
+        sessionIds: [connection.target_session_id, sessionId],
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, connection }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/visitor/office-bus' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 64 * 1024);
@@ -6469,7 +7788,7 @@ const server = http.createServer((req, res) => {
         intent: body.intent || 'sync',
         fromNpc: body.from_npc || body.fromNpc,
         metadata: body.metadata,
-      }, { denizenVisitor, userIdentity, listOnlineSessionIds });
+      }, { denizenVisitor, userIdentity, visitorConnections, listOnlineSessionIds });
       const targetSid = busMsg.to_session_id;
       if (targetSid) {
         const clients = _agentClients();
@@ -6484,6 +7803,9 @@ const server = http.createServer((req, res) => {
     })().catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         return _writeVisitorAccessError(res, err);
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        return _writeVisitorConnectionError(res, err);
       }
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
@@ -6569,6 +7891,10 @@ const server = http.createServer((req, res) => {
         _writeVisitorAccessError(res, err);
         return;
       }
+      if (err instanceof visitorConnections.ConnectionError) {
+        _writeVisitorConnectionError(res, err);
+        return;
+      }
       const status = denizenVisitor.visitorErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
@@ -6580,6 +7906,10 @@ const server = http.createServer((req, res) => {
     _handleVisitorHandoffPost(req, res).catch((err) => {
       if (err instanceof visitorAccess.VisitorAccessError) {
         _writeVisitorAccessError(res, err);
+        return;
+      }
+      if (err instanceof visitorConnections.ConnectionError) {
+        _writeVisitorConnectionError(res, err);
         return;
       }
       const status = denizenVisitor.visitorErrorStatus(err);
@@ -6986,6 +8316,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/mcp/tokens' && req.method === 'GET') {
+    (async () => {
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', {});
+      const session = await visitorAccess.resolveSessionAccess(sessionId).catch(() => null);
+      const orgWide = _canManageOrgNpcTeam(session);
+      const listed = await denizenDb._rpc('denizen_list_mcp_tokens', {
+        p_org_id: access.orgId,
+        p_session_id: sessionId,
+        p_org_wide: orgWide,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(listed || { ok: false, error: 'list_failed' }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/mcp/tokens' && req.method === 'POST') {
     (async () => {
       const body = await _readJsonBody(req, 32 * 1024);
@@ -6994,6 +8353,11 @@ const server = http.createServer((req, res) => {
       if (!sessionId || !npcKey) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: false, error: 'session_id and npc_key required' }));
+        return;
+      }
+      if (npcKey === '_team') {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'Use POST /api/mcp/team-tokens for org team MCP' }));
         return;
       }
       const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
@@ -7006,6 +8370,7 @@ const server = http.createServer((req, res) => {
         memberId: accounts?.[0]?.id || null,
         sessionId,
         label: body.label || null,
+        scopes: _mcpScopesFromBody(body),
       });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
@@ -7023,22 +8388,136 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (urlPath === '/api/mcp/team-tokens' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 32 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      if (!sessionId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id required' }));
+        return;
+      }
+      const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
+      const accounts = await denizenDb._get(
+        `denizen_team_accounts?select=id&visitor_session_id=eq.${encodeURIComponent(sessionId)}&limit=1`,
+      ).catch(() => []);
+      const result = await teamMcpGateway.createTeamMcpToken({
+        orgId: access.orgId,
+        memberId: accounts?.[0]?.id || null,
+        sessionId,
+        label: body.label || 'team-operator',
+        scopes: _mcpScopesFromBody(body),
+      });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        scope_mode: 'team',
+        ...result,
+        warning: 'Save this token now — it cannot be retrieved again.',
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/mcp/tokens/revoke' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const tokenId = body.token_id || body.tokenId;
+      if (!sessionId || !tokenId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and token_id required' }));
+        return;
+      }
+      const access = await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
+      const session = await visitorAccess.resolveSessionAccess(sessionId).catch(() => null);
+      const orgWide = _canManageOrgNpcTeam(session);
+      const revoked = await denizenDb._rpc('denizen_revoke_mcp_token', {
+        p_token_id: tokenId,
+        p_org_id: access.orgId,
+        p_session_id: sessionId,
+        p_org_wide: orgWide,
+      });
+      res.writeHead(revoked?.ok ? 200 : 403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(revoked || { ok: false, error: 'revoke_failed' }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath === '/api/mcp/test' && req.method === 'POST') {
+    (async () => {
+      const body = await _readJsonBody(req, 16 * 1024);
+      const sessionId = body.session_id || body.sessionId;
+      const bearer = String(body.token || '').trim();
+      const teamMode = body.team === true || body.team === '1' || body.scope_mode === 'team';
+      if (!sessionId || !bearer) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'session_id and token required' }));
+        return;
+      }
+      await _guardVisitorFeature(req, sessionId, 'mcp_connect', body);
+      const scope = await npcMcpGateway.resolveToken(bearer);
+      if (!scope?.ok) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'invalid or revoked token' }));
+        return;
+      }
+      const tool = teamMode || scope.npc_key === '_team' ? 'team_status' : 'get_status';
+      const result = teamMode || scope.npc_key === '_team'
+        ? await teamMcpGateway.callTool(scope, tool, {})
+        : await npcMcpGateway.callTool(scope, tool, { limit: 5 });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: result?.ok !== false,
+        tool,
+        scopes: scope.scopes || mcpScopes.ALL_SCOPES,
+        result,
+      }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        return _writeVisitorAccessError(res, err);
+      }
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   if (urlPath === '/api/mcp/connect-info' && req.method === 'GET') {
     (async () => {
       const u = new URL(req.url, 'http://localhost');
+      const teamMode = u.searchParams.get('team') === '1' || u.searchParams.get('scope') === 'team';
       const npcKey = String(u.searchParams.get('npc_key') || u.searchParams.get('npcKey') || '').toLowerCase().trim();
       const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const publicBase = process.env.DENIZEN_PUBLIC_URL
+        || process.env.DENIZEN_URL
+        || `http://localhost:${PORT}`;
+      if (teamMode) {
+        if (sessionId) await _verifyVisitorSession(req, sessionId, {});
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, ...teamMcpGateway.buildConnectInfo(publicBase) }));
+        return;
+      }
       if (!npcKey) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'npc_key required' }));
+        res.end(JSON.stringify({ ok: false, error: 'npc_key required (or team=1)' }));
         return;
       }
       if (sessionId) {
         await _verifyVisitorSession(req, sessionId, {});
       }
-      const publicBase = process.env.DENIZEN_PUBLIC_URL
-        || process.env.DENIZEN_URL
-        || `http://localhost:${PORT}`;
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         ok: true,
@@ -7163,10 +8642,12 @@ const server = http.createServer((req, res) => {
   const approveMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/approve$/);
   if (approveMatch && req.method === 'POST') {
     const proposalId = approveMatch[1];
-    codingTaskRunner.approveProposal(proposalId).then(result => {
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      return codingTaskRunner.approveProposal(proposalId, { note });
+    }).then(result => {
       if (result.ok) {
-        const raw = JSON.stringify({ type: 'npc_code_proposal_approved', proposalId });
-        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+        _broadcastProposalQueueChanged('code', 'approved', proposalId);
       }
       res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
@@ -7181,16 +8662,88 @@ const server = http.createServer((req, res) => {
   const rejectMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/reject$/);
   if (rejectMatch && req.method === 'POST') {
     const proposalId = rejectMatch[1];
-    codingTaskRunner.rejectProposal(proposalId).then(result => {
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      return codingTaskRunner.rejectProposal(proposalId, { note });
+    }).then(result => {
       if (result.ok) {
-        const raw = JSON.stringify({ type: 'npc_code_proposal_rejected', proposalId });
-        (agentWss ? agentWss.clients : new Set()).forEach(c => { if (c.readyState === 1) c.send(raw); });
+        _broadcastProposalQueueChanged('code', 'rejected', proposalId);
       }
       res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
     }).catch(err => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err.message }));
+    });
+    return;
+  }
+
+  // --- GET /api/dossier-proposals — branded PDF dossier proposals ---
+  if (urlPath === '/api/dossier-proposals' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ proposals: dossierSystem.getProposals() }));
+    return;
+  }
+
+  const dossierPreviewMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/preview$/);
+  if (dossierPreviewMatch && req.method === 'GET') {
+    const proposalId = dossierPreviewMatch[1];
+    const proposal = dossierSystem.getProposalById(proposalId);
+    if (!proposal) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'proposal not found' }));
+      return;
+    }
+    const u = new URL(req.url, 'http://x');
+    const format = (u.searchParams.get('format') || 'html').toLowerCase();
+    const filePath = dossierSystem.resolveProposalArtifact(proposal, format);
+    if (!filePath) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        error: 'preview file not found',
+        hint: 'Regenerate the dossier on this server or redeploy with reports/dossiers included',
+        outDirRel: proposal.outDirRel || null,
+      }));
+      return;
+    }
+    const ctype = format === 'pdf' ? 'application/pdf' : 'text/html; charset=utf-8';
+    res.writeHead(200, { 'Content-Type': ctype });
+    fs.createReadStream(filePath).pipe(res);
+    return;
+  }
+
+  const dossierApproveMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/approve$/);
+  if (dossierApproveMatch && req.method === 'POST') {
+    const proposalId = dossierApproveMatch[1];
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      const result = dossierSystem.approveProposal(proposalId, { note });
+      if (result.ok) {
+        _broadcastProposalQueueChanged('dossier', 'approved', proposalId);
+      }
+      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
+    });
+    return;
+  }
+
+  const dossierRejectMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/reject$/);
+  if (dossierRejectMatch && req.method === 'POST') {
+    const proposalId = dossierRejectMatch[1];
+    _readJsonBody(req, 16 * 1024).then((body) => {
+      const note = body?.note ? String(body.note).slice(0, 400) : null;
+      const result = dossierSystem.rejectProposal(proposalId, { note });
+      if (result.ok) {
+        _broadcastProposalQueueChanged('dossier', 'rejected', proposalId);
+      }
+      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    }).catch((err) => {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
     });
     return;
   }
@@ -7221,21 +8774,49 @@ const server = http.createServer((req, res) => {
     const hostHardware = fleetRegistry.getGlobalHostSnapshot()
       || hardwareMonitor.getLatestSnapshot();
     if (!hostHardware) return null;
-    const auxiliary = fleetRegistry.listAuxiliary();
-    if (hostCompute.isCeoPrincipalRequest(req)) {
-      return {
-        live_usage: hostHardware,
-        fleet: [hostHardware, ...auxiliary],
-        sampled_at: hostHardware.sampled_at || null,
-      };
+    const isCeo = hostCompute.isCeoPrincipalRequest(req);
+    const summary = fleetRegistry.buildFleetSummary(null, null, { isOperator: isCeo });
+    let fleet = summary?.fleet || [];
+    if (!isCeo) {
+      fleet = fleet
+        .filter((m) => m.role === 'desktop' || m.role === 'node')
+        .map((m) => fleetRegistry.sanitizeMachineForViewer(m))
+        .filter(Boolean);
     }
     return {
       available: true,
-      machines: 1 + auxiliary.length,
-      sampled_at: hostHardware.sampled_at || null,
-      fleet: [],
-      live_usage: null,
+      machines: Math.max(fleet.length, 1 + fleetRegistry.listAuxiliary().length),
+      sampled_at: hostHardware.sampled_at || summary?.sampled_at || null,
+      fleet,
+      live_usage: isCeo ? (summary?.live_usage || hostHardware) : null,
     };
+  }
+
+  // Abby cofounder dispatcher thread — in-memory only (not Postgres).
+  if (urlPath === '/api/cofounder/history') {
+    if (req.method === 'GET') {
+      const hist = cofounderAgent.conversationHistory || [];
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        storage: 'in-memory',
+        note: 'Cofounder chat is not in denizen_llm_events or chat tables — restart clears it. Telemetry "N msgs" is per LM request after alternation repair.',
+        length: hist.length,
+        roles: hist.map((m) => m.role),
+        corruptTrailingUser: hist.length > 0 && hist[hist.length - 1].role === 'user',
+        preview: hist.slice(-8).map((m) => ({
+          role: m.role,
+          content: String(m.content || '').slice(0, 160),
+        })),
+      }));
+      return;
+    }
+    if (req.method === 'DELETE') {
+      cofounderAgent.resetConversationHistory?.();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, cleared: true }));
+      return;
+    }
   }
 
   // --- Office health (one-shot diagnostic the client polls every few seconds) ---
@@ -7265,6 +8846,15 @@ const server = http.createServer((req, res) => {
           wsClients: {
             agent: cofounderAgent.wsClients.size,
             security: securityMonitor.clients?.size || 0,
+            max: MAX_WS_CLIENTS,
+          },
+          ws: {
+            agent: cofounderAgent.wsClients.size,
+            security: securityMonitor.clients?.size || 0,
+            max: MAX_WS_CLIENTS,
+            utilization: MAX_WS_CLIENTS > 0
+              ? Number((cofounderAgent.wsClients.size / MAX_WS_CLIENTS).toFixed(4))
+              : 0,
           },
           stats: global._npcStats,
           recentErrors: (global._npcRecentErrors || []).slice(-5),
@@ -7274,67 +8864,14 @@ const server = http.createServer((req, res) => {
 
       if (!cache.inflight) {
         cache.inflight = (async () => {
-          const lmCfg = npcBrains.providers?.lmstudio || {};
-          const lmStudioUrl = lmCfg.baseUrl || process.env.LM_STUDIO_URL || 'http://localhost:1234';
-          const lmHeaders = {};
-          if (lmCfg.apiKey) lmHeaders.Authorization = `Bearer ${lmCfg.apiKey}`;
-
-          const stats = global._npcStats || {};
-          const lastBrainOk = Math.max(
-            stats.lastProviderOkAt || 0,
-            stats.lastNpcConvAt || 0,
-            stats.lastPlayerChatAt && stats.playerChatSucceeded > 0 ? stats.lastPlayerChatAt : 0,
-          );
           const builtAt = Date.now();
-          const recentBrainOk = lastBrainOk && (builtAt - lastBrainOk) < 30000;
-
-          let lmStudioStatus = {
+          const lmStudioStatus = await hostCompute.probeLmStudio(npcBrains).catch(() => ({
             reachable: false,
-            url: lmStudioUrl,
-            error: null,
-            model: lmCfg.model || null,
+            url: process.env.LM_STUDIO_URL || lmStudioRouter.defaultHostUrl?.() || 'http://localhost:1234',
+            error: 'probe failed',
+            model: npcBrains.providers?.lmstudio?.model || null,
             livenessSource: null,
-          };
-
-          if (recentBrainOk) {
-            const ago = Math.round((builtAt - lastBrainOk) / 1000);
-            lmStudioStatus.reachable = true;
-            lmStudioStatus.livenessSource = `brain call succeeded ${ago}s ago`;
-          } else {
-            const probes = ['/v1/models', '/api/v0/models', '/'];
-            const errors = [];
-            const results = await Promise.all(probes.map(async (path) => {
-              try {
-                const probe = await fetch(`${lmStudioUrl}${path}`, {
-                  method: 'GET',
-                  headers: lmHeaders,
-                  signal: AbortSignal.timeout(5000),
-                });
-                if (probe.ok || probe.status === 401 || probe.status === 403) {
-                  return { ok: true, path, status: probe.status };
-                }
-                return { ok: false, err: `${path}: HTTP ${probe.status}` };
-              } catch (err) {
-                return { ok: false, err: `${path}: ${err?.message || String(err)}` };
-              }
-            }));
-
-            for (const r of results) {
-              if (r.ok) {
-                lmStudioStatus.reachable = true;
-                lmStudioStatus.probedPath = r.path;
-                lmStudioStatus.livenessSource = `probe ${r.path} ok`;
-                if (r.status && r.status !== 200) {
-                  lmStudioStatus.warning = `${r.path} HTTP ${r.status} (auth issue, but server is up)`;
-                }
-                break;
-              }
-              errors.push(r.err);
-            }
-            if (!lmStudioStatus.reachable) {
-              lmStudioStatus.error = errors.join('; ');
-            }
-          }
+          }));
 
           const providers = Object.entries(npcBrains.providers || {})
             .filter(([k]) => k !== 'demo')
@@ -7345,13 +8882,44 @@ const server = http.createServer((req, res) => {
           const body = {
             ok: true,
             ts: builtAt,
+            server: {
+              id: process.env.DENIZEN_SERVER_ID || `host-${process.env.HOSTNAME || 'local'}`,
+              role: process.env.DENIZEN_SERVER_ROLE || 'primary',
+              port: Number(process.env.PORT) || 8080,
+            },
             lmStudio: lmStudioStatus,
+            lmStudioPool: lmStudioRouter.isEnabled()
+              ? lmStudioRouter.buildStatus(npcBrains.getQueueDepth?.() || 0)
+              : null,
+            inference: inferenceMetrics.buildMetrics(),
+            publicDemo: {
+              enabled: process.env.DENIZEN_PUBLIC_DEMO === 'true',
+              trimBrains: process.env.DENIZEN_PUBLIC_DEMO_TRIM_BRAINS === 'true',
+              npcFolders: promptTuning?.publicDemoNpcFolders || null,
+              haiku_configured: !!(process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY),
+              model: process.env.DENIZEN_PUBLIC_DEMO_MODEL || null,
+            },
+            lucyBrowser: {
+              playwrightInstalled: probePlaywrightBrowsers(),
+              headlessDefault: resolveLucyBrowserHeadless({}),
+            },
+            federation: denizenFederation.buildStatus(),
+            worldPubsub: worldPubsub.buildStatus(),
             providers,
             demoMode: !!npcBrains._demoMode,
             hardware: hardwarePayload,
             wsClients: {
               agent: cofounderAgent.wsClients.size,
               security: securityMonitor.clients?.size || 0,
+              max: MAX_WS_CLIENTS,
+            },
+            ws: {
+              agent: cofounderAgent.wsClients.size,
+              security: securityMonitor.clients?.size || 0,
+              max: MAX_WS_CLIENTS,
+              utilization: MAX_WS_CLIENTS > 0
+                ? Number((cofounderAgent.wsClients.size / MAX_WS_CLIENTS).toFixed(4))
+                : 0,
             },
             stats: global._npcStats,
             recentErrors: (global._npcRecentErrors || []).slice(-5),
@@ -7381,6 +8949,15 @@ const server = http.createServer((req, res) => {
         wsClients: {
           agent: cofounderAgent.wsClients.size,
           security: securityMonitor.clients?.size || 0,
+          max: MAX_WS_CLIENTS,
+        },
+        ws: {
+          agent: cofounderAgent.wsClients.size,
+          security: securityMonitor.clients?.size || 0,
+          max: MAX_WS_CLIENTS,
+          utilization: MAX_WS_CLIENTS > 0
+            ? Number((cofounderAgent.wsClients.size / MAX_WS_CLIENTS).toFixed(4))
+            : 0,
         },
         stats: global._npcStats,
         recentErrors: (global._npcRecentErrors || []).slice(-5),
@@ -7408,6 +8985,23 @@ const server = http.createServer((req, res) => {
       voiceMapEntries: Object.keys(_voiceMap.npcs || {}).length,
       rosterGender: byGender,
       autoAssignByGender: _voiceMap.autoAssignByGender !== false,
+    }));
+    return;
+  }
+
+  if (urlPath === '/api/voice/health' && req.method === 'GET') {
+    const tts = elevenLabs.status();
+    const stt = _resolveSttConfig();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      ok: true,
+      voice_call: true,
+      streaming_llm: true,
+      sentence_tts: true,
+      hands_free_vad: true,
+      barge_in: true,
+      tts: { configured: !!tts.configured, source: tts.source || null },
+      stt: { configured: !!stt.configured, model: stt.model || null },
     }));
     return;
   }
@@ -7716,20 +9310,24 @@ const server = http.createServer((req, res) => {
 
   // --- Security test endpoint: simulate threats for testing ---
   if (urlPath === '/security-test') {
-    const category = new URL(req.url, `http://localhost:${PORT}`).searchParams.get('type') || 'network_scan';
-    const severity = new URL(req.url, `http://localhost:${PORT}`).searchParams.get('severity') || 'medium';
-    const detail = new URL(req.url, `http://localhost:${PORT}`).searchParams.get('detail') || `Test ${category} threat`;
+    const url = new URL(req.url, `http://localhost:${PORT}`);
+    const category = url.searchParams.get('type') || 'network_scan';
+    const severity = url.searchParams.get('severity') || 'medium';
+    const detail = url.searchParams.get('detail') || `Test ${category} threat`;
+    const source = url.searchParams.get('source') || (url.searchParams.get('force') === '1' ? '203.0.113.50' : 'test');
+    const force = url.searchParams.get('force') === '1';
 
     securityMonitor._emitThreat({
       category,
       severity,
-      source: 'test',
+      source,
       target: 'test-target',
       detail,
+      force,
     });
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, message: `Simulated ${category} threat` }));
+    res.end(JSON.stringify({ ok: true, message: `Simulated ${category} threat`, source, force }));
     return;
   }
 
@@ -7871,6 +9469,8 @@ function sendToCeoClients(payload) {
 }
 
 const agentWss = new WebSocketServer({ noServer: true });
+const MAX_WS_CLIENTS = Number(process.env.DENIZEN_MAX_WS_CLIENTS)
+  || (process.env.DENIZEN_PUBLIC_DEMO === 'true' ? 30 : 50);
 
 meshWatchdog.startMeshWatchdog({
   computeQueue,
@@ -7882,12 +9482,38 @@ meshWatchdog.startMeshWatchdog({
 });
 
 agentWss.on('connection', (ws) => {
+  if (agentWss.clients.size > MAX_WS_CLIENTS) {
+    try { ws.close(1013, 'server at capacity'); } catch (_) {}
+    console.warn(`[AgentWS] Rejected connection — at capacity (${MAX_WS_CLIENTS})`);
+    return;
+  }
   console.log(`[CofounderAgent] WS client connected (${cofounderAgent.wsClients.size + 1} total)`);
   cofounderAgent.addClient(ws);
+
+  if (agentWsRelay.isFollowerRole()) {
+    agentWsRelay.fetchPrimaryWorldSnapshot()
+      .then((snapshot) => {
+        if (ws.readyState !== 1) return;
+        ws.send(JSON.stringify({
+          type: 'world_state_snapshot',
+          snapshot,
+          ts: Date.now(),
+        }));
+      })
+      .catch((err) => {
+        console.warn('[AgentWS] follower world snapshot failed:', err?.message || err);
+      });
+  }
 
   ws.on('message', (data) => {
     try {
       const msg = JSON.parse(data.toString());
+      if (IS_RELAY_ONLY && agentWsRelay.isMutatingClientMessage(msg)) {
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify(agentWsRelay.relayReadonlyError()));
+        }
+        return;
+      }
       if (msg.type === 'npc_conversation') {
         // Resolve the NPC name case-insensitively — cofounder dispatch and
         // LM Studio replies sometimes return lowercased or title-cased names.
@@ -7933,18 +9559,28 @@ agentWss.on('connection', (ws) => {
           }
           return;
         }
-        // Replay past LLM dialogue from MEMORY.md + runtime memories — no fresh LLM.
-        // Player chat and think-loop actions still use AI separately.
+        // Work-status queries use live task state; social chatter stays scripted replay.
         global._npcStats.npcConvReceived++;
         global._npcStats.lastNpcConvAt = Date.now();
-        const response = ambientDialogue.getNpcConversationReply(
+        const workStatusReply = npcPeerWorkStatus.buildWorkStatusReply(
           npcBrains,
           msg.npcName,
           msg.fromName,
           msg.text,
         );
+        const response = workStatusReply
+          || ambientDialogue.getNpcConversationReply(
+            npcBrains,
+            msg.npcName,
+            msg.fromName,
+            msg.text,
+          );
         global._npcStats.npcConvSucceeded++;
-        global._npcStats.npcConvScripted = (global._npcStats.npcConvScripted || 0) + 1;
+        if (workStatusReply) {
+          global._npcStats.npcConvWorkStatus = (global._npcStats.npcConvWorkStatus || 0) + 1;
+        } else {
+          global._npcStats.npcConvScripted = (global._npcStats.npcConvScripted || 0) + 1;
+        }
         if (ws.readyState === 1) {
           ws.send(JSON.stringify({
             type: 'npc_response',
@@ -7952,7 +9588,7 @@ agentWss.on('connection', (ws) => {
             fromName: msg.fromName,
             text: response,
             turn: typeof msg.turn === 'number' ? msg.turn : 1,
-            scripted: true,
+            scripted: !workStatusReply,
           }));
         }
       } else if (msg.type === 'npc_think') {
@@ -8033,16 +9669,53 @@ agentWss.on('connection', (ws) => {
             }
           })
           .catch((err) => console.warn('[Office] visitor_register:', err?.message || err));
+      } else if (msg.type === 'player_chat_cancel') {
+        const turnId = typeof msg.turn_id === 'string' ? msg.turn_id.trim() : '';
+        if (turnId && ws._activePlayerTurnId === turnId) {
+          ws._activePlayerTurnId = null;
+        }
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({
+            type: 'player_chat_cancelled',
+            turn_id: turnId || null,
+            npcName: typeof msg.npcName === 'string' ? msg.npcName : null,
+            cancelled: true,
+          }));
+        }
       } else if (msg.type === 'player_chat') {
         // CEO (player) is talking directly to an NPC
-        let npcName = msg.npcName;
-        if (!npcName || !npcBrains.brains[npcName]) {
-          console.warn('[AgentWS] player_chat: unknown or missing npcName');
+        const resolvedNpc = resolvePlayerChatNpc(msg);
+        let npcName = resolvedNpc.npcName;
+        if (!npcName) {
+          const displayName = resolvedNpc.displayName;
+          const rawEarly = typeof msg.text === 'string' ? msg.text.trim() : '';
+          console.warn(
+            '[AgentWS] player_chat: no brain for',
+            displayName,
+            `(npcName=${JSON.stringify(msg.npcName)}, npcKey=${JSON.stringify(msg.npcKey)})`,
+          );
+          if (rawEarly && npcCapabilities.isCapabilitiesQuestion(rawEarly) && displayName !== 'Unknown') {
+            const capText = npcCapabilities.formatCapabilitiesReply(displayName, {});
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName: displayName,
+                text: capText,
+                delegation: null,
+                actions: [],
+              }));
+            }
+            return;
+          }
+          const demoFolders = promptTuning?.publicDemoNpcFolders;
+          const unavailableText = demoFolders?.length
+            ? `${displayName} isn't available in this demo — active staff: ${demoFolders.map(npcFolderToDisplay).join(', ')}.`
+            : `${displayName} isn't loaded on the server right now.`;
           if (ws.readyState === 1) {
             ws.send(JSON.stringify({
               type: 'player_chat_response',
-              npcName: typeof msg.npcName === 'string' && msg.npcName ? msg.npcName : 'Unknown',
-              text: 'That person isn\'t in the office right now.',
+              npcName: displayName,
+              text: unavailableText,
               delegation: null,
               actions: [],
             }));
@@ -8068,6 +9741,26 @@ agentWss.on('connection', (ws) => {
           }
         }
         (async () => {
+        const turnId = typeof msg.turn_id === 'string' && msg.turn_id.trim()
+          ? msg.turn_id.trim()
+          : `turn_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        ws._activePlayerTurnId = turnId;
+        const isTurnActive = () => ws._activePlayerTurnId === turnId;
+        const sendTurnMessage = (payload) => {
+          if (ws.readyState !== 1) return false;
+          if (payload?.type === 'voice_chat_token'
+            || payload?.type === 'voice_chat_sentence'
+            || payload?.type === 'voice_chat_done'
+            || payload?.type === 'voice_chat_filler'
+            || payload?.type === 'player_chat_response'
+            || payload?.type === 'player_chat_ack') {
+            if (!isTurnActive()) return false;
+            ws.send(JSON.stringify({ ...payload, turn_id: turnId }));
+            return true;
+          }
+          ws.send(JSON.stringify(payload));
+          return true;
+        };
         const rawPlayerText = msg.text.trim();
         const originalNpc = npcName;
         npcName = resolveStaffIntentNpc(rawPlayerText, npcName);
@@ -8081,6 +9774,7 @@ agentWss.on('connection', (ws) => {
         global._npcStats.lastPlayerChatAt = Date.now();
         const playerText = fixVoiceMishearings(rawPlayerText);
         const normPlayerText = normalizePlayerUtterance(playerText);
+        let ceoLucySearchStarted = false;
         const _broadcast = (m) => cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(m)); });
         const visitorToolGate = await _resolveVisitorToolGate(msg.session_id);
         const chatCtx = msg.session_id
@@ -8120,11 +9814,35 @@ agentWss.on('connection', (ws) => {
           return true;
         };
 
+        const crmWritePlan = crmNpcPersonas.inferCrmWriteAction?.(playerText) || null;
+        const blockBrowserForCrm = Boolean(crmWritePlan);
+
+        if (officeStatusBrief.isOfficeStatusQuery(playerText)) {
+          const chatSession = msg.session_id
+            ? await denizenVisitor.getSession(msg.session_id).catch(() => null)
+            : null;
+          const orgId = chatSession?.org_id || worldState.getDefaultOrgId?.() || null;
+          const wsOrg = orgId ? worldState.forOrg(orgId) : worldState;
+          const brief = officeStatusBrief.buildBrief(wsOrg);
+          persistNpcTurn(brief);
+          if (ws.readyState === 1) {
+            ws.send(JSON.stringify({
+              type: 'player_chat_response',
+              npcName,
+              text: brief,
+              delegation: null,
+              actions: [],
+            }));
+          }
+          global._npcStats.playerChatSucceeded++;
+          return;
+        }
+
         // Lucy — reopen browser and retry last search.
         const browserRetry = extractBrowserRetryIntent(rawPlayerText)
           || extractBrowserRetryIntent(playerText)
           || extractBrowserRetryIntent(normPlayerText);
-        if (npcName === 'Lucy' && browserRetry?.retrySearch && global._lucyLastSearchQuery) {
+        if (!blockBrowserForCrm && npcName === 'Lucy' && browserRetry?.retrySearch && global._lucyLastSearchQuery) {
           if (blockDemoTools()) return;
           const retryQuery = global._lucyLastSearchQuery;
           if (ws.readyState === 1) ws.send(JSON.stringify({
@@ -8143,7 +9861,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Lucy — open Playwright browser (instant; no LM Studio, no desktop control).
-        if (npcName === 'Lucy' && (wantsLucyBrowserOpen(rawPlayerText)
+        if (!blockBrowserForCrm && npcName === 'Lucy' && (wantsLucyBrowserOpen(rawPlayerText)
           || wantsLucyBrowserOpen(playerText) || wantsLucyBrowserOpen(normPlayerText))) {
           if (blockDemoTools()) return;
           if (ws.readyState === 1) ws.send(JSON.stringify({
@@ -8193,6 +9911,28 @@ agentWss.on('connection', (ws) => {
           }
           global._npcStats.playerChatSucceeded++;
           return;
+        }
+
+        // Roki — live market brief (no LM; avoids reasoning-model leaks)
+        if (npcName === 'Roki' && npcCapabilities.isMarketQuestion?.(playerText)) {
+          try {
+            const marketData = await npcBrains._fetchMarketObservation();
+            const marketText = npcBrains._formatRokiMarketBrief(marketData);
+            persistNpcTurn(marketText);
+            if (ws.readyState === 1) {
+              ws.send(JSON.stringify({
+                type: 'player_chat_response',
+                npcName,
+                text: marketText,
+                delegation: null,
+                actions: [],
+              }));
+            }
+            global._npcStats.playerChatSucceeded++;
+            return;
+          } catch (err) {
+            console.warn('[AgentWS] Roki market brief failed:', err?.message || err);
+          }
         }
 
         if (npcName === 'Bouncer') {
@@ -8260,6 +10000,7 @@ agentWss.on('connection', (ws) => {
           if (bare) searchQuery = bare;
         }
         if (searchQuery && isJunkSearchQuery(searchQuery)) searchQuery = null;
+        if (blockBrowserForCrm) searchQuery = null;
         if (npcName === 'Lucy' && isCancelUtterance(playerText)) {
           closeLucyBrowser();
           if (ws.readyState === 1) {
@@ -8310,7 +10051,7 @@ agentWss.on('connection', (ws) => {
               actions: [],
             }));
           }
-          triggerNpcScreenObserve('Lucy', `The CEO said: "${playerText}". Read Lucy's browser window and summarize the document in plain English.`, _broadcast)
+          triggerNpcScreenObserve('Lucy', `The CEO said: "${playerText}". Read Lucy's browser window and summarize the document in plain English.`, _broadcast, { sessionId: msg.session_id || null })
             .then((r) => {
               if (r?.summary) {
                 _ceoBroadcast({ type: 'npc_report_to_ceo', npcName: 'Lucy', text: r.summary.slice(0, 2000), ts: Date.now() });
@@ -8350,8 +10091,9 @@ agentWss.on('connection', (ws) => {
           global._npcStats.playerChatSucceeded++;
           return;
         }
-        if (npcName === 'Lucy' && searchQuery) {
+        if (npcName === 'Lucy' && searchQuery && !blockBrowserForCrm) {
           if (blockDemoTools()) return;
+          ceoLucySearchStarted = true;
           if (ws.readyState === 1) ws.send(JSON.stringify({
             type: 'player_chat_response',
             npcName: 'Lucy',
@@ -8379,7 +10121,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Open CEO's real Brave browser (their profile + cookies).
-        if (extractOpenBraveIntent(playerText)) {
+        if (!blockBrowserForCrm && extractOpenBraveIntent(playerText)) {
           if (blockDemoTools()) return;
           const urlMatch = playerText.match(/https?:\/\/\S+/i);
           const url = urlMatch ? urlMatch[0] : null;
@@ -8406,7 +10148,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Screen control — any NPC: click/type/fill on CEO's real screen (when asked).
-        if (extractScreenControlIntent(playerText) && !searchQuery) {
+        if (!blockBrowserForCrm && extractScreenControlIntent(playerText) && !searchQuery) {
           if (blockDemoTools()) return;
           if (ws.readyState === 1) ws.send(JSON.stringify({
             type: 'player_chat_response',
@@ -8455,7 +10197,9 @@ agentWss.on('connection', (ws) => {
             mode: 'visible', status: 'started',
           });
           const t0 = Date.now();
-          triggerNpcScreenObserve(npcName, observeInstruction, _broadcast)
+          triggerNpcScreenObserve(npcName, observeInstruction, _broadcast, {
+            sessionId: msg.session_id || null,
+          })
             .then((result) => {
               if (result.summary && ws.readyState === 1) {
                 ws.send(JSON.stringify({
@@ -8530,11 +10274,14 @@ agentWss.on('connection', (ws) => {
             mode: 'visible', status: 'started',
           });
           const dtChatStart = Date.now();
-          desktopAgent.runDesktopTask({ instruction: msg.text, broadcast: _broadcast })
+          triggerNpcScreenControl('Lucy', msg.text, _broadcast, {
+            sessionId: msg.session_id || null,
+          })
             .then((result) => {
               pcActivity.record({
                 id: dtChatActivity.id, npc: 'Lucy', kind: 'desktop-agent',
-                task: dtChatActivity.task, mode: 'visible', status: 'done',
+                task: dtChatActivity.task, mode: 'visible',
+                status: result?.ok ? 'done' : 'failed',
                 durationMs: Date.now() - dtChatStart,
                 detail: result && typeof result === 'object'
                   ? String(result.summary || result.note || '').slice(0, 240) || null
@@ -8576,7 +10323,9 @@ agentWss.on('connection', (ws) => {
               return {
                 sessionId: session.id,
                 identityId,
+                orgId: session.org_id || null,
                 displayName: identity?.display_name || session.display_name || 'Guest',
+                workPosition: userPosition.getPositionFromIdentity(identity),
                 assistant,
                 projects,
                 pendingHandoffs,
@@ -8610,7 +10359,9 @@ agentWss.on('connection', (ws) => {
             ? {
               sessionId: visitorCtx.sessionId,
               identityId: visitorCtx.identityId,
+              orgId: visitorCtx.orgId || null,
               displayName: visitorCtx.displayName,
+              workPosition: visitorCtx.workPosition || null,
               assistant: visitorCtx.assistant,
               projects: visitorCtx.projects,
               pendingHandoffs: visitorCtx.pendingHandoffs,
@@ -8652,10 +10403,24 @@ agentWss.on('connection', (ws) => {
             return npcBrains.getResponse(npcName, 'CEO', msg.text, { kind: 'incident-report', description: 'You are reporting a security incident to the CEO. Speak in your own voice — stoic, professional, dry. 2-3 sentences max.' })
               .then(text => ({ text: typeof text === 'string' ? text : String(text || ''), delegation: null, actions: [] }));
           }
-
+          const chatOpts = playerOpts && typeof playerOpts === 'object' ? { ...playerOpts } : {};
+          if (msg.voice_mode) {
+            const sentenceStream = createSentenceStream((text, index) => {
+              if (!isTurnActive()) return;
+              voiceBridge.sendWs(ws, { type: 'voice_chat_sentence', npcName, text, index, turn_id: turnId });
+            });
+            chatOpts.stream = {
+              onToken: (token) => {
+                if (!isTurnActive()) return;
+                voiceBridge.sendWs(ws, { type: 'voice_chat_token', npcName, token, turn_id: turnId });
+                sentenceStream.push(token);
+              },
+            };
+            chatOpts._voiceSentenceFlush = () => sentenceStream.flush();
+          }
           // Files/photos dropped in chat → analyze (vision for images, inline for
-          // text) and append the result to what the brain sees. Runs after the ack
-          // so the client shows typing while vision works.
+          // text) and append to what the brain sees. Runs after the ack so the
+          // client shows typing while vision works.
           if (Array.isArray(msg.attachments) && msg.attachments.length && !msg._attachmentBlock) {
             const processed = await chatAttachments.processChatAttachments(msg.attachments)
               .catch((err) => ({ ok: false, contextBlock: '', saved: [], error: err?.message || String(err) }));
@@ -8664,24 +10429,38 @@ agentWss.on('connection', (ws) => {
               msg._attachmentInfo = processed.saved;
               console.log(`[PlayerChat] ${npcName} received ${processed.saved.length} attachment(s): ${processed.saved.map((a) => a.name).join(', ')}`);
             } else {
-              msg._attachmentBlock = `\n\n[Note: the sender tried to attach file(s) but they could not be processed (${processed.error}). Tell them what went wrong.]`;
+              msg._attachmentBlock = `
+
+[Note: the sender tried to attach file(s) but they could not be processed (${processed.error}). Tell them what went wrong.]`;
               console.warn('[PlayerChat] attachment processing failed:', processed.error);
             }
           }
           const textForBrain = msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text;
-          return npcBrains.getPlayerResponse(npcName, textForBrain, playerOpts);
+          return npcBrains.getPlayerResponse(npcName, textForBrain, chatOpts).then((result) => {
+            if (msg.voice_mode && chatOpts._voiceSentenceFlush) {
+              if (!isTurnActive()) return result;
+              chatOpts._voiceSentenceFlush();
+              voiceBridge.sendWs(ws, { type: 'voice_chat_done', npcName, text: result?.text || '', turn_id: turnId });
+            }
+            return result;
+          });
         });
 
+        if (msg.voice_mode && ws.readyState === 1 && !isIncidentReport) {
+          if (isTurnActive()) voiceBridge.emitVoiceFiller(ws, npcName, { turn_id: turnId });
+        }
+
         if (ws.readyState === 1 && !isIncidentReport) {
-          ws.send(JSON.stringify({
+          sendTurnMessage({
             type: 'player_chat_ack',
             npcName,
             queueLen: npcBrains.getQueueDepth?.() ?? 0,
-          }));
+          });
         }
 
         responsePromise
           .then(async (result) => {
+            if (!isTurnActive()) return;
             // Server-side: visitor assistant handoffs to Lucy are persisted here.
             // The client receives the action in player_chat_response for visibility;
             // denizenVisitor.sendHandoff writes denizen_assistant_messages for Lucy/WS delivery.
@@ -8720,11 +10499,24 @@ agentWss.on('connection', (ws) => {
                 text: '(no reply — provider error, see diagnostics)',
                 error: errMsg,
                 delegation: null, actions: [],
+                turn_id: turnId,
               });
               if (ws.readyState === 1) ws.send(reply);
               return;
             }
             global._npcStats.playerChatSucceeded++;
+
+            if (!result.delegation && !msg.session_id) {
+              const synthDelegate = playerChatSkills.extractDelegateTarget?.(msg.text);
+              if (synthDelegate && synthDelegate !== npcName) {
+                result.delegation = {
+                  delegateTo: synthDelegate,
+                  reason: msg.text,
+                  originalMessage: msg.text,
+                  _synthetic: true,
+                };
+              }
+            }
 
             let outboundText = text;
             if (_taskAdviceForChat?.recommendation
@@ -8755,6 +10547,7 @@ agentWss.on('connection', (ws) => {
               actions: result.actions || [],
               citations: _visitorCitedResearch?.citations || null,
               task_advice: _taskAdviceForChat || null,
+              turn_id: turnId,
             });
             if (ws.readyState === 1) ws.send(reply);
 
@@ -8775,52 +10568,105 @@ agentWss.on('connection', (ws) => {
               }
             }
 
-            const _msgWithAttachments = msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text;
             if (msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport) {
-              _executePlayerChatSkillFollowup({
-                ws,
-                npcName,
-                sessionId: msg.session_id,
-                message: _msgWithAttachments,
-                responseText: text,
-                visitorCtx: _visitorCtxForSkills,
-                visitorToolGate,
-                gapAlreadyHandled: gapActions.length > 0,
-                meshContext: {
-                  ...(await _buildMeshContextForAdvice().catch(() => ({}))),
-                  taskText: msg.text,
-                  hasVisitorAnthropicKey: !!_visitorCtxForSkills?.providerKeys?.anthropic,
-                },
-              }).catch((err) => {
-                console.warn('[PlayerChat] skill followup failed:', err?.message || err);
-              });
-            } else if (!msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport
-              && (playerChatSkills.inferSkillFromMessage?.(npcName, _msgWithAttachments)?.skill?.startsWith?.('crm-')
-                || (msg._attachmentInfo?.length && playerChatSkills.parseRunSkillTags?.(text)?.length))) {
-              _executePlayerChatSkillFollowup({
-                ws,
-                npcName,
-                sessionId: null,
-                message: _msgWithAttachments,
-                responseText: text,
-                visitorCtx: _visitorCtxForSkills,
-                visitorToolGate,
-                gapAlreadyHandled: false,
-                meshContext: { taskText: _msgWithAttachments },
-              }).catch((err) => {
-                console.warn('[PlayerChat] CEO CRM skill followup failed:', err?.message || err);
-              });
+              const deferTo = playerChatSkills.shouldDeferSkillToDelegatee?.(msg.text, result.delegation);
+              if (!deferTo) {
+                _executePlayerChatSkillFollowup({
+                  ws,
+                  npcName,
+                  sessionId: msg.session_id,
+                  message: msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text,
+                  responseText: text,
+                  visitorCtx: _visitorCtxForSkills,
+                  visitorToolGate,
+                  gapAlreadyHandled: gapActions.length > 0,
+                  meshContext: {
+                    ...(await _buildMeshContextForAdvice().catch(() => ({}))),
+                    taskText: msg.text,
+                    hasVisitorAnthropicKey: !!_visitorCtxForSkills?.providerKeys?.anthropic,
+                  },
+                }).catch((err) => {
+                  console.warn('[PlayerChat] skill followup failed:', err?.message || err);
+                });
+              }
+            } else if (!msg.session_id && visitorToolGate.canUseRealWork && !isIncidentReport) {
+              const deferTo = playerChatSkills.shouldDeferSkillToDelegatee?.(msg.text, result.delegation);
+              const inferred = playerChatSkills.inferSkillFromMessage?.(npcName, msg.text);
+              const lucyLookup = npcName === 'Lucy' && !ceoLucySearchStarted
+                && inferred?.skill === 'research';
+              const ceoDirectOrder = playerChatSkills.isTaskLikeMessage?.(msg.text)
+                || /\brun_skill\b/i.test(msg.text)
+                || Boolean(inferred?.skill);
+
+              if (deferTo && deferTo !== npcName) {
+                const delegateTask = result.delegation?.originalMessage
+                  || result.delegation?.reason
+                  || msg.text;
+                npcBrains.assignDirective(deferTo, npcName, `[From CEO via ${npcName}] ${delegateTask}`, true);
+                const delegateInfer = playerChatSkills.inferSkillFromMessage(deferTo, msg.text);
+                if (delegateInfer?.skill && (/\brun_skill\b/i.test(msg.text) || ceoDirectOrder)) {
+                  _executePlayerChatSkillFollowup({
+                    ws,
+                    npcName: deferTo,
+                    sessionId: null,
+                    message: msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text,
+                    responseText: text,
+                    visitorCtx: _visitorCtxForSkills,
+                    visitorToolGate,
+                    gapAlreadyHandled: false,
+                    ceoLookup: false,
+                    ceoDirectOrder: true,
+                    forceInfer: true,
+                    meshContext: { taskText: msg.text },
+                  }).catch((err) => {
+                    console.warn('[PlayerChat] delegatee skill followup failed:', err?.message || err);
+                  });
+                }
+              } else if (inferred?.skill?.startsWith?.('crm-') || lucyLookup || ceoDirectOrder) {
+                _executePlayerChatSkillFollowup({
+                  ws,
+                  npcName,
+                  sessionId: null,
+                  message: msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text,
+                  responseText: text,
+                  visitorCtx: _visitorCtxForSkills,
+                  visitorToolGate,
+                  gapAlreadyHandled: false,
+                  ceoLookup: !!lucyLookup,
+                  ceoDirectOrder: !!ceoDirectOrder,
+                  forceInfer: !!ceoDirectOrder,
+                  meshContext: { taskText: msg.text },
+                }).catch((err) => {
+                  console.warn('[PlayerChat] CEO skill followup failed:', err?.message || err);
+                });
+              }
+            }
+
+            if (result.delegation?.delegateTo && visitorToolGate.canUseRealWork) {
+              const deferTo = playerChatSkills.shouldDeferSkillToDelegatee?.(msg.text, result.delegation);
+              const ceoDelegated = !msg.session_id && deferTo && deferTo !== npcName;
+              if (!ceoDelegated) {
+                const delegateTo = result.delegation.delegateTo;
+                const delegateTask = result.delegation.reason
+                  || result.delegation.originalMessage
+                  || msg.text;
+                npcBrains.assignDirective(
+                  delegateTo,
+                  npcName,
+                  `[From CEO via ${npcName}] ${delegateTask}`,
+                  true,
+                );
+              }
             }
 
             if (!isIncidentReport && !msg.session_id) {
-              const attachNote = msg._attachmentInfo?.length
-                ? ` [CEO shared files: ${msg._attachmentInfo.map((a) => `${a.name} (${a.kind}) → ${a.url}`).join(', ')}]`
-                : '';
+              const attachNote = msg._attachmentInfo?.length ? ` [CEO shared files: ${msg._attachmentInfo.map((a) => `${a.name} (${a.kind}) → ${a.url}`).join(', ')}]` : '';
               npcBrains.saveMemory(npcName, `CEO said: "${msg.text}"${attachNote} — I replied: "${text}"${result.delegation ? ` [delegated to ${result.delegation.delegateTo}]` : ''}`);
               npcBrains.setMoodFromExternal(npcName, 'ceo_talked');
             }
           })
           .catch(err => {
+            if (!isTurnActive()) return;
             const errMsg = String(err?.message ?? err);
             console.warn('[PlayerChat] Response error:', errMsg);
             _recordNpcError(`getPlayerResponse(${npcName}): ${errMsg}`);
@@ -8831,6 +10677,7 @@ agentWss.on('connection', (ws) => {
               text: 'Got it, I\'ll look into that.',
               error: errMsg,
               delegation: null, actions: [],
+              turn_id: turnId,
             });
             if (ws.readyState === 1) ws.send(fallback);
           });
@@ -9068,10 +10915,10 @@ agentWss.on('connection', (ws) => {
 
         // All tools now run via Kali WSL — no desktop agent / GUI dependency
         const scanPromise = (tool === 'nmap' || tool === 'zenmap')
-          ? linuxAgent.investigate({ ...threat, source: sourceIp || threat.source })
+          ? linuxAgentBridge.investigate({ ...threat, source: sourceIp || threat.source })
           : (tool === 'wireshark')
             ? linuxAgent.trafficSnapshot().then(r => ({ ok: r.ok, summary: r.raw, elapsed: 5000, steps: [{ label: 'tcpdump', output: r.raw }] }))
-            : linuxAgent.perimeterPatrol().then(r => ({ ok: r.ok, summary: r.summary, elapsed: r.elapsed, steps: [] }));
+            : linuxAgentBridge.perimeterPatrol().then(r => ({ ok: r.ok, summary: r.summary, elapsed: r.elapsed, steps: [] }));
 
         scanPromise.then(result => {
             pcActivity.record({
@@ -9152,7 +10999,14 @@ agentWss.on('connection', (ws) => {
         const blrStart = Date.now();
 
         // Run the real investigation (fast, direct WSL exec — no vision needed)
-        linuxAgent.investigate(threat).then(result => {
+        const blrCtx = {
+          broadcast: _broadcast,
+          npcTools,
+          npcBrains,
+          denizenDb,
+          investigationIsSerious,
+        };
+        linuxAgentBridge.investigate(threat).then(async (result) => {
           pcActivity.record({
             id: blrActivity.id, npc: 'Bouncer', kind: 'linux-agent',
             task: blrActivity.task, mode: blrActivity.mode,
@@ -9160,25 +11014,7 @@ agentWss.on('connection', (ws) => {
             durationMs: Date.now() - blrStart,
             detail: (result.summary || result.error || '').slice(0, 240) || null,
           });
-          // ── Feature 1: Write structured markdown report ──────────────────
-          let reportPath = null;
-          if (result.ok) {
-            try {
-              const reportMd = linuxAgent.buildReport(threat, result, null);
-              const slug = (threat.category || 'investigation')
-                .toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30);
-              const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-              reportPath = npcTools.writeArtifact(
-                'Bouncer', 'security',
-                `bouncer_${slug}_${dateStr}_${Date.now()}`,
-                reportMd,
-              );
-              if (reportPath) console.log(`[BouncerLinux] Report written: ${reportPath}`);
-            } catch (reportErr) {
-              console.warn('[BouncerLinux] Report write failed:', reportErr?.message);
-            }
-          }
-
+          const { reportPath } = await bouncerInvestigation.completeInvestigation(threat, result, blrCtx);
           _broadcast({
             type: 'bouncer_linux_result',
             status: result.ok ? 'done' : 'error',
@@ -9193,43 +11029,6 @@ agentWss.on('connection', (ws) => {
               ? `Kali investigation complete (${(result.elapsed / 1000).toFixed(1)}s).`
               : `WSL error: ${result.error}`,
           });
-
-          // ── Feature 2: Escalate to Dan if investigation is serious ───────
-          if (result.ok && investigationIsSerious(result)) {
-            const danMsg = {
-              type: 'npc_assign_directive',
-              from: 'Bouncer',
-              to: 'Dan',
-              task: `Security escalation: ${threat.category || 'unknown'} threat detected. Review Bouncer's report in reports/security/ and check server configuration.`,
-              urgent: true,
-            };
-            cofounderAgent.wsClients.forEach(c => { if (c.readyState === 1) c.send(JSON.stringify(danMsg)); });
-            console.log(`[BouncerLinux] Serious threat — escalating to Dan`);
-          }
-
-          // ── AI report to CEO ──────────────────────────────────────────────
-          if (result.ok && result.summary && ws.readyState === 1) {
-            const fileRef = reportPath ? ` Full report filed at ${reportPath}.` : '';
-            const reportPrompt = [
-              `You just ran security commands in Kali Linux to investigate a ${threat.category || 'unknown'} threat.`,
-              `Here is what you found:\n${result.summary.slice(0, 800)}`,
-              `Report the key findings to Abby (CEO) in one tight paragraph: what was found, how serious, what you did.${fileRef} No alarm, no dramatization. State facts and actions.`,
-            ].join(' ');
-            npcBrains.getResponse('Bouncer', 'CEO', reportPrompt, {
-              kind: 'linux-investigation-report',
-              description: 'Report security investigation findings to CEO. Stoic, professional, one paragraph. Reference report file if available.',
-            }).then(text => {
-              cofounderAgent.wsClients.forEach(c => {
-                if (c.readyState === 1) c.send(JSON.stringify({
-                  type: 'player_chat_response',
-                  npcName: 'Bouncer',
-                  text: typeof text === 'string' ? text : String(text || ''),
-                  delegation: null,
-                  actions: [],
-                }));
-              });
-            }).catch(() => {});
-          }
         }).catch(err => {
           pcActivity.record({
             id: blrActivity.id, npc: 'Bouncer', kind: 'linux-agent',
@@ -9321,6 +11120,11 @@ server.on('upgrade', (req, socket, head) => {
   }
 
   if (wsPath === '/agent-ws') {
+    if (agentWss.clients.size >= MAX_WS_CLIENTS) {
+      socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n');
+      socket.destroy();
+      return;
+    }
     agentWss.handleUpgrade(req, socket, head, (ws) => {
       agentWss.emit('connection', ws, req);
     });
@@ -9404,6 +11208,7 @@ startCrmScheduler({
 });
 
 _resetLucyBrowserOnStartup();
+probePlaywrightBrowsers();
 _startLucyMirrorFrameWatcher();
 
 const PREDICTION_MAINTENANCE_MS = 6 * 60 * 60 * 1000;
@@ -9413,8 +11218,14 @@ let _visitorIntelligenceLoop = null;
 server.listen(PORT, () => {
   denizenDb.init().then((result) => {
     if (!result?.ok) return;
+    if (denizenDb.orgId) {
+      worldState.setDefaultOrgId(denizenDb.orgId);
+    }
     npcBrains.refreshDbMemories().catch((err) => {
       console.warn('[NpcBrains] initial DB memory refresh failed:', err?.message || err);
+    });
+    npcBrains.hydrateAgentSoulsFromDb().catch((err) => {
+      console.warn('[NpcBrains] agent_souls hydrate failed:', err?.message || err);
     });
     runPredictionMaintenance(denizenDb).catch((err) => {
       console.warn('[DenizenPredictionLoop] initial maintenance failed:', err?.message || err);
@@ -9434,6 +11245,16 @@ server.listen(PORT, () => {
       },
     }, { immediate: false });
     log.info('VisitorIntelligence', `scheduler started (${_visitorIntelligenceLoop.intervalMs}ms tick)`);
+
+    if (/^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_MARKET_TICK || 'true'))) {
+      const marketLoop = marketScheduler.startMarketScheduler({
+        robinhoodMcp,
+        broadcast: _broadcastToOffice,
+        npcBrains,
+        log,
+      });
+      if (marketLoop?.ok) log.info('Market', `scheduler started (${marketLoop.tickMs}ms tick, US market hours)`);
+    }
   }).catch(() => {});
 
   const parallel = process.env.LM_STUDIO_PARALLEL || 1;
@@ -9467,6 +11288,10 @@ server.listen(PORT, () => {
       `active main=${npcBrains.providers?.lmstudio?.model} ` +
       `fast=${npcBrains.providers?.['lmstudio-fast']?.model}`
     );
+    if (IS_RELAY_ONLY) {
+      log.info('CofounderAgent', 'skipped — relay-only node');
+      return;
+    }
     // Economy: Abby uses scripted office commands instead of LM Studio thinks.
     if (promptTuning.economyMode && !/^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_COFOUNDER_LLM || ''))) {
       console.log('[CofounderAgent] Economy mode — scripted demo loop (no LLM)');
@@ -9497,7 +11322,7 @@ server.listen(PORT, () => {
     const patStart = Date.now();
     try {
       log.info('Patrol', 'running perimeter check...');
-      const patrol = await linuxAgent.perimeterPatrol();
+      const patrol = await linuxAgentBridge.perimeterPatrol();
       pcActivity.record({
         id: patActivity.id, npc: 'Bouncer', kind: 'linux-agent',
         task: patActivity.task, mode: 'background',
@@ -9550,9 +11375,13 @@ server.listen(PORT, () => {
     _patrolTimer = setTimeout(runBouncerPatrol, PATROL_INTERVAL_MS);
   }
 
-  // Kick off first patrol after 60s
-  _patrolTimer = setTimeout(runBouncerPatrol, 60 * 1000);
-  log.info('Patrol', 'scheduled — first check in 60s, then every 5 min');
+  // Kick off first patrol after 60s (primary only — followers are relay-only)
+  if (!IS_RELAY_ONLY && linuxAgent.isBouncerPatrolEnabled()) {
+    _patrolTimer = setTimeout(runBouncerPatrol, 60 * 1000);
+    log.info('Patrol', 'scheduled — first check in 60s, then every 5 min');
+  } else if (!IS_RELAY_ONLY) {
+    log.info('Patrol', 'disabled (BOUNCER_PATROL=0 or non-Windows host)');
+  }
 });
 
 // Graceful shutdown — stop the security monitor's intervals and child

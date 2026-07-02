@@ -2,6 +2,18 @@ import { useEffect, useMemo, useState } from "react";
 import { T, S, type Contact, type Deal, type Package, type Submission } from "@/lib/crm-data";
 import { fetchCrmTeam, inviteCrmTeamMember, type CrmTeamMember } from "@/lib/crm-api";
 import { markCrmUserEdited } from "@/lib/crm-api";
+import type { IndustryConfig } from "@/lib/industry-config";
+
+const SETUP_STEPS = [
+  { id: "profile", label: "Set up your profile", owner: "Dan", tab: "settings" },
+  { id: "invite", label: "Invite team members", owner: "Lucy", tab: "onboarding" },
+  { id: "packages", label: "Build your packages", owner: "Sarah", tab: "packages" },
+  { id: "intake", label: "Share public intake form", owner: "Lucy", tab: "intake" },
+  { id: "contact", label: "Add your first contact", owner: "Lucy", tab: "contacts" },
+  { id: "deal", label: "Create your first deal", owner: "Marcus", tab: "sales" },
+  { id: "industry", label: "Pick your industry template", owner: "Sarah", tab: "settings" },
+  { id: "ai", label: "Try the Meridian AI assistant", owner: "Abby", tab: "ai" },
+] as const;
 
 interface Props {
   contacts: Contact[];
@@ -9,17 +21,19 @@ interface Props {
   packages: Package[];
   submissions: Submission[];
   profile?: { name: string; role: string };
+  industryConfig?: IndustryConfig;
   onboarding?: Record<string, unknown>;
   onUpdateOnboarding?: (next: Record<string, unknown>) => void;
   onNavigate?: (tab: string) => void;
 }
 
 export function OnboardingTab({
-  contacts, deals, packages, submissions, profile, onboarding = {}, onUpdateOnboarding, onNavigate,
+  contacts, deals, packages, submissions, profile, industryConfig, onboarding = {}, onUpdateOnboarding, onNavigate,
 }: Props) {
   const [team, setTeam] = useState<CrmTeamMember[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
+  const [invitePlatform, setInvitePlatform] = useState("windows");
   const [inviteStatus, setInviteStatus] = useState<string | null>(null);
   const [inviteBusy, setInviteBusy] = useState(false);
 
@@ -27,17 +41,21 @@ export function OnboardingTab({
     void fetchCrmTeam().then(({ members }) => setTeam(members));
   }, []);
 
-  const checklist = useMemo(() => [
-    { id: "profile", label: "Set up your profile", done: !!(profile?.name && profile.name !== "Guest"), tab: "settings" },
-    { id: "invite", label: "Invite team members", done: team.length > 1, tab: "onboarding" },
-    { id: "packages", label: "Build your packages", done: packages.length > 0, tab: "packages" },
-    { id: "intake", label: "Share public intake form", done: submissions.length > 0, tab: "intake" },
-    { id: "contact", label: "Add your first contact", done: contacts.length > 0, tab: "contacts" },
-    { id: "deal", label: "Create your first deal", done: deals.length > 0, tab: "sales" },
-    { id: "ai", label: "Try the AI Assistant", done: !!onboarding.triedAi, tab: "ai" },
-  ], [profile, team, packages, submissions, contacts, deals, onboarding.triedAi]);
+  const checklist = useMemo(() => SETUP_STEPS.map((step) => {
+    let done = false;
+    if (step.id === "profile") done = !!(profile?.name && profile.name !== "Guest");
+    if (step.id === "invite") done = team.length > 1;
+    if (step.id === "packages") done = packages.length > 0;
+    if (step.id === "intake") done = submissions.length > 0;
+    if (step.id === "contact") done = contacts.length > 0;
+    if (step.id === "deal") done = deals.length > 0;
+    if (step.id === "industry") done = !!(industryConfig?.id && industryConfig.id !== "custom");
+    if (step.id === "ai") done = !!onboarding.triedAi;
+    return { ...step, done };
+  }), [profile, team, packages, submissions, contacts, deals, industryConfig, onboarding.triedAi]);
 
   const doneCount = checklist.filter((c) => c.done).length;
+  const nextStep = checklist.find((c) => !c.done) || null;
 
   const markAiTried = () => {
     onUpdateOnboarding?.({ ...onboarding, triedAi: true });
@@ -45,12 +63,26 @@ export function OnboardingTab({
     onNavigate?.("ai");
   };
 
+  const askInOfficeChat = (owner: string, label: string) => {
+    const message = `Help me with CRM setup: ${label}`;
+    const chat = (globalThis as typeof globalThis & { __DenizenPlayerChat?: { sendMessage?: (t: string) => void } }).__DenizenPlayerChat;
+    if (chat?.sendMessage) {
+      void chat.sendMessage(message);
+      return;
+    }
+    void navigator.clipboard?.writeText(message);
+  };
+
   const sendInvite = async () => {
     const email = inviteEmail.trim();
     if (!email) return;
     setInviteBusy(true);
     setInviteStatus(null);
-    const result = await inviteCrmTeamMember({ email, displayName: inviteName.trim() || undefined });
+    const result = await inviteCrmTeamMember({
+      email,
+      displayName: inviteName.trim() || undefined,
+      platform: invitePlatform,
+    });
     setInviteBusy(false);
     if (!result.ok) {
       setInviteStatus(result.error === "already_member" ? "That email is already on your team." : (result.error || "Invite failed"));
@@ -70,33 +102,55 @@ export function OnboardingTab({
     <div>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text0, margin: 0 }}>Team Setup</h1>
-        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>Configure your workspace and invite teammates</p>
+        <p style={{ fontSize: 13, color: T.text2, marginTop: 4 }}>
+          {doneCount} of {checklist.length} complete
+          {nextStep ? ` — next: ${nextStep.label} (${nextStep.owner})` : " — you're all set"}
+        </p>
       </div>
 
       <div className="crm-onboarding-grid" style={{ display: "grid", gap: 16 }}>
         <div style={{ ...S.card }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text0, marginBottom: 16 }}>Getting Started</div>
           {checklist.map((item) => (
-            <button
+            <div
               key={item.id}
-              type="button"
-              onClick={() => item.id === "ai" && !item.done ? markAiTried() : onNavigate?.(item.tab)}
               style={{
                 display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: `1px solid ${T.bg3}`,
-                width: "100%", background: "none", border: "none", borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: T.bg3,
-                cursor: "pointer", textAlign: "left",
               }}
             >
-              <div style={{
-                width: 20, height: 20, borderRadius: T.radius.sm,
-                border: `2px solid ${item.done ? T.green : T.bg5}`,
-                background: item.done ? T.green : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10,
-              }}>{item.done && "✓"}</div>
-              <span style={{ fontSize: 13, color: item.done ? T.text3 : T.text1, textDecoration: item.done ? "line-through" : "none" }}>{item.label}</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => item.id === "ai" && !item.done ? markAiTried() : onNavigate?.(item.tab)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, flex: 1,
+                  background: "none", border: "none", cursor: "pointer", textAlign: "left", padding: 0,
+                }}
+              >
+                <div style={{
+                  width: 20, height: 20, borderRadius: T.radius.sm,
+                  border: `2px solid ${item.done ? T.green : T.bg5}`,
+                  background: item.done ? T.green : "transparent",
+                  display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10,
+                }}>{item.done && "✓"}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: item.done ? T.text3 : T.text1, textDecoration: item.done ? "line-through" : "none" }}>{item.label}</div>
+                  <div style={{ fontSize: 10, color: T.text3, marginTop: 2 }}>{item.owner} · office chat or CRM</div>
+                </div>
+              </button>
+              {!item.done && (
+                <button
+                  type="button"
+                  onClick={() => askInOfficeChat(item.owner, item.label)}
+                  style={{ ...S.btnGhost, padding: "4px 10px", fontSize: 10, whiteSpace: "nowrap" }}
+                >
+                  Ask {item.owner}
+                </button>
+              )}
+            </div>
           ))}
-          <div style={{ marginTop: 12, fontSize: 12, color: T.text3 }}>{doneCount} of {checklist.length} completed</div>
+          <div style={{ marginTop: 12, fontSize: 12, color: T.text3 }}>
+            Say <span style={{ color: T.accent }}>continue CRM setup</span> in office chat for step-by-step help.
+          </div>
         </div>
 
         <div style={{ ...S.card }}>
@@ -131,6 +185,16 @@ export function OnboardingTab({
                 type="email"
                 style={S.input as React.CSSProperties}
               />
+              <select
+                value={invitePlatform}
+                onChange={(e) => setInvitePlatform(e.target.value)}
+                aria-label="Their computer"
+                style={S.input as React.CSSProperties}
+              >
+                <option value="windows">Windows</option>
+                <option value="macos">macOS</option>
+                <option value="linux">Linux</option>
+              </select>
               <button
                 type="button"
                 onClick={() => void sendInvite()}

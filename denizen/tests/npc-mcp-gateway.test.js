@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const http = require('node:http');
 
 const gateway = require('../src/denizen-npc-mcp-gateway.js');
+const mcpActions = require('../src/denizen-mcp-actions.js');
 const denizenDb = require('../src/denizen-db.js');
 
 const SCOPE = {
@@ -14,7 +15,7 @@ const SCOPE = {
   org_slug: 'zion',
   npc_key: 'roki',
   member_id: null,
-  session_id: null,
+  session_id: 'sess-test-001',
 };
 
 describe('npc-mcp-gateway', () => {
@@ -30,6 +31,21 @@ describe('npc-mcp-gateway', () => {
     origList = denizenDb.listNpcMemories;
     origRecordFact = denizenDb.recordFact;
     origRecordWork = denizenDb.recordWorkOutput;
+
+    gateway.configure({
+      runNpcSkill: async (name, skill) => ({ ok: true, output: `${name} ran ${skill}`, npcName: name, skill }),
+      npcBrains: {
+        assignDirective: () => {},
+        getDirective: () => null,
+        getOpenCommitments: () => [],
+      },
+      broadcast: () => {},
+      denizenVisitor: {
+        listTeammatesWithPresence: async () => ([]),
+        getPendingHandoffs: async () => ([]),
+      },
+      listOnlineSessionIds: () => new Set(),
+    });
 
     gateway.resolveToken = async (token) => (token === 'good-token' ? SCOPE : null);
     denizenDb.enabled = true;
@@ -60,12 +76,26 @@ describe('npc-mcp-gateway', () => {
     denizenDb.recordWorkOutput = origRecordWork;
   });
 
-  it('exports three MCP tools', () => {
-    assert.equal(gateway.TOOL_DEFINITIONS.length, 3);
-    assert.deepEqual(
-      gateway.TOOL_DEFINITIONS.map((t) => t.name),
-      ['update_memory', 'get_status', 'log_activity'],
-    );
+  it('exports core MCP action tools', () => {
+    assert.equal(gateway.TOOL_DEFINITIONS.length, 8);
+    const names = gateway.TOOL_DEFINITIONS.map((t) => t.name);
+    assert.ok(names.includes('run_skill'));
+    assert.ok(names.includes('list_skills'));
+    assert.ok(names.includes('assign_task'));
+  });
+
+  it('toolsForScope includes team tools for all NPCs', () => {
+    const tools = gateway.toolsForScope(SCOPE);
+    const names = tools.map((t) => t.name);
+    assert.ok(names.includes('list_team'));
+    assert.ok(names.includes('send_handoff'));
+    assert.ok(names.includes('get_market_quote'));
+  });
+
+  it('toolsForScope includes CRM tools for Lucy', () => {
+    const tools = gateway.toolsForScope({ ...SCOPE, npc_key: 'lucy' });
+    const names = tools.map((t) => t.name);
+    assert.ok(names.includes('crm_pipeline_brief'));
   });
 
   it('buildConnectInfo returns mcp url and tool list', () => {
@@ -81,11 +111,13 @@ describe('npc-mcp-gateway', () => {
     assert.equal(result.memory_id, 'mem-1');
   });
 
-  it('get_status returns npc and recent memories', async () => {
+  it('get_status returns npc and enriched context', async () => {
     const result = await gateway.callTool(SCOPE, 'get_status', { limit: 5 });
     assert.equal(result.ok, true);
     assert.equal(result.npc.npc_key, 'roki');
     assert.equal(result.recent_mcp_memories.length, 1);
+    assert.ok(Array.isArray(result.skills));
+    assert.equal(result.session_linked, true);
   });
 
   it('log_activity records work output', async () => {
@@ -94,6 +126,47 @@ describe('npc-mcp-gateway', () => {
     const result = await gateway.callTool(SCOPE, 'log_activity', { note: 'Reviewed PR' });
     assert.equal(result.ok, true);
     assert.equal(logged, true);
+  });
+
+  it('list_skills returns Rob design skills', async () => {
+    const scope = { ...SCOPE, npc_key: 'rob' };
+    const result = await gateway.callTool(scope, 'list_skills', {});
+    assert.equal(result.ok, true);
+    assert.ok(result.skills.includes('canvas-render'));
+  });
+
+  it('run_skill starts allowed skill', async () => {
+    const scope = { ...SCOPE, npc_key: 'rob' };
+    const result = await gateway.callTool(scope, 'run_skill', {
+      skill: 'research',
+      params: { query: 'mobile UX patterns' },
+      wait: true,
+    });
+    assert.equal(result.ok, true);
+    assert.match(result.output, /research/);
+  });
+
+  it('run_skill rejects disallowed skill', async () => {
+    const scope = { ...SCOPE, npc_key: 'rob' };
+    const result = await gateway.callTool(scope, 'run_skill', { skill: 'coding-agent' });
+    assert.equal(result.ok, false);
+    assert.ok(result.allowed);
+  });
+
+  it('assign_task queues directive', async () => {
+    let assigned = false;
+    gateway.configure({
+      runNpcSkill: async (name, skill) => ({ ok: true, output: `${name} ran ${skill}`, npcName: name, skill }),
+      npcBrains: {
+        assignDirective: (to, from, task) => {
+          if (to === 'Roki' && task.includes('mockup')) assigned = true;
+        },
+      },
+      broadcast: () => {},
+    });
+    const result = await gateway.callTool(SCOPE, 'assign_task', { task: 'Review mockup' });
+    assert.equal(result.ok, true);
+    assert.equal(assigned, true);
   });
 
   it('rejects requests without bearer token', async () => {
@@ -152,8 +225,8 @@ describe('npc-mcp-gateway', () => {
     assert.equal(spec.openapi, '3.1.0');
     assert.ok(spec.paths['/api/npc-sync/status']);
     assert.ok(spec.paths['/api/npc-sync/memory']);
-    assert.ok(spec.paths['/api/npc-sync/activity']);
-    assert.equal(spec.servers[0].url, 'http://localhost:8080');
+    assert.ok(spec.paths['/api/npc-sync/run-skill']);
+    assert.ok(spec.paths['/api/npc-sync/assign-task']);
   });
 
   it('REST GET /status returns NPC status with bearer token', async () => {
@@ -220,5 +293,22 @@ describe('npc-mcp-gateway', () => {
     assert.equal(logged, true);
 
     await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('read-only scope denies run_skill', async () => {
+    const readScope = { ...SCOPE, scopes: ['read'] };
+    const allowed = await gateway.callTool(readScope, 'get_status', { limit: 3 });
+    assert.equal(allowed.ok, true);
+    const denied = await gateway.callTool(readScope, 'run_skill', { skill: 'research' });
+    assert.equal(denied.ok, false);
+    assert.equal(denied.error, 'scope_denied');
+    assert.equal(denied.required_scope, 'skills');
+  });
+
+  it('toolsForScope hides tools outside granted scopes', () => {
+    const readScope = { ...SCOPE, scopes: ['read'] };
+    const names = gateway.toolsForScope(readScope).map((t) => t.name);
+    assert.ok(names.includes('get_status'));
+    assert.ok(!names.includes('run_skill'));
   });
 });

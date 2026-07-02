@@ -591,7 +591,7 @@
         <p class="lead">Turn on only what feels useful. These choices set the boundaries; Denizen will still ask before taking a local action.</p>
         <div class="cap-grid">
           <button class="cap-card" type="button" data-cap-toggle="read_files" aria-pressed="false">
-            <span class="cap-icon">RD</span><span class="cap-copy"><strong>Understand files</strong><span>Read documents when you ask</span></span><span class="toggle"></span>
+            <span class="cap-icon">RD</span><span class="cap-copy"><strong>Understand files</strong><span>Read documents on this computer when you ask</span></span><span class="toggle"></span>
           </button>
           <button class="cap-card" type="button" data-cap-toggle="write_files" aria-pressed="false">
             <span class="cap-icon">WR</span><span class="cap-copy"><strong>Create and update</strong><span>Draft, export, and edit files</span></span><span class="toggle"></span>
@@ -600,10 +600,15 @@
             <span class="cap-icon">RUN</span><span class="cap-copy"><strong>Use local tools</strong><span>Run approved scripts and commands</span></span><span class="toggle"></span>
           </button>
           <button class="cap-card" type="button" data-cap-toggle="screen_access" aria-pressed="false">
-            <span class="cap-icon">SEE</span><span class="cap-copy"><strong>See your screen</strong><span>Help with what is open in front of you</span></span><span class="toggle"></span>
+            <span class="cap-icon">SEE</span><span class="cap-copy"><strong>See your screen</strong><span>Agents use this computer's display — not the cloud server</span></span><span class="toggle"></span>
           </button>
         </div>
         <div class="control-note"><strong>You are the authority.</strong> Enabling a skill does not give Denizen silent access. Local actions remain approval-first.</div>
+        <div class="choice-row" style="margin-top:12px">
+          <button class="choice-btn primary-choice" type="button" data-action="cowork-preset">
+            <strong>Enable Cowork mode</strong><span>Screen + files + local tools — like Claude Cowork on this PC</span>
+          </button>
+        </div>
         <div class="os-note" id="os-permission-note" hidden></div>
         <div class="actions">
           <button class="action quiet" data-action="back">Back</button>
@@ -614,17 +619,21 @@
       <section class="step" data-step="city_power">
         <div class="eyebrow">City Power</div>
         <h1>Help keep Denizen moving.</h1>
-        <p class="lead">When this computer is idle, it can take on background city work. Your everyday use always comes first, and you can pause City Power anytime.</p>
+        <p class="lead">When this computer is idle, it can take on background city work <strong>and run a local brain</strong> for the office — via bundled llama.cpp, Ollama, or LM Studio. Your everyday use always comes first, and you can pause City Power anytime.</p>
         <div class="power-card">
           <div>
             <strong>Your station can power part of the city</strong>
             <p id="power-machine-summary">Checking available station capacity...</p>
+            <p id="brain-status" class="pairing-help">Checking for a local brain (llama.cpp, Ollama, or LM Studio)...</p>
+            <label class="pairing-help" for="brain-model-select" id="brain-model-wrap" hidden>Starter brain
+              <select id="brain-model-select" style="display:block;margin-top:6px;width:100%;max-width:320px;"></select>
+            </label>
           </div>
           <div class="power-meter" aria-label="City power meter"><span></span><span></span><span></span><span></span></div>
         </div>
         <div class="choice-row">
           <button class="choice-btn primary-choice" type="button" data-cap="contribute_compute" data-value="yes">
-            <strong>Add City Power</strong><span>Help with background city work while idle</span>
+            <strong>Add City Power</strong><span>Share GPU + background work (Denizen-to-Denizen mesh)</span>
           </button>
           <button class="choice-btn" type="button" data-cap="contribute_compute" data-value="no">
             <strong>Maybe later</strong><span>Join the city without contributing power</span>
@@ -636,7 +645,7 @@
       <section class="step" data-step="pairing">
         <div class="eyebrow">Claim your place</div>
         <h1>Connect your Citizen ID.</h1>
-        <p class="lead">Return to the browser tab where you downloaded Denizen and choose <strong>Link this computer</strong>. This station will recognize the connection and finish automatically.</p>
+        <p class="lead">We opened your browser to Denizen. <strong>Log in to your account</strong> in that tab and your Citizen ID will connect automatically. If nothing opened, open <a href="#" id="pairing-browser-link"><strong id="pairing-browser-url">your Denizen city</strong></a> on this computer.</p>
         <div class="pairing-box">
           <div id="pairing-waiting" class="waiting"><div class="spinner"></div><span>Waiting for your Citizen ID...</span></div>
           <div id="pairing-linked" class="linked-badge" hidden>Citizen ID connected</div>
@@ -671,6 +680,7 @@
     let stepIndex = 0;
     let machine = null;
     let pairingPollTimer = null;
+    let pairingBrowserOpened = false;
     let finishing = false;
 
     const capabilities = {
@@ -766,8 +776,26 @@
       return false;
     }
 
+    async function openPairingBrowserOnce() {
+      if (pairingBrowserOpened) return;
+      pairingBrowserOpened = true;
+      const result = await window.DenizenDesktop?.openPairingBrowser?.().catch(() => null);
+      await refreshPairingBrowserUrl(result);
+    }
+
+    async function refreshPairingBrowserUrl(existing) {
+      const result = existing
+        || await window.DenizenDesktop?.getPairingBrowserUrl?.().catch(() => null);
+      const url = result?.url || window.location.origin + '/?pair_desktop=1';
+      const urlEl = document.getElementById('pairing-browser-url');
+      const linkEl = document.getElementById('pairing-browser-link');
+      if (urlEl) urlEl.textContent = url;
+      if (linkEl) linkEl.href = url;
+    }
+
     async function startPairingFlow() {
       setPairingError('');
+      void openPairingBrowserOnce();
       const autoPairing = parsePairingFromLocation();
       if (autoPairing.token) {
         const claimed = await tryClaimPairing(autoPairing);
@@ -801,7 +829,7 @@
       }
       if (platform === 'win32') {
         note.hidden = false;
-        note.textContent = 'Windows may ask you to approve screen access when Denizen first needs it.';
+        note.innerHTML = 'Windows needs Accessibility permission for mouse/keyboard control. Approve when prompted, or open Privacy settings. <button class="action" type="button" data-action="open-os-settings">Open Settings</button>';
         return;
       }
       note.hidden = true;
@@ -827,6 +855,77 @@
       document.getElementById('power-machine-summary').textContent = details
         ? `${details}. City Power uses only available capacity.`
         : 'City Power uses only available capacity and can be paused anytime.';
+      await loadBrainStatus();
+    }
+
+    async function loadBrainStatus() {
+      const el = document.getElementById('brain-status');
+      const wrap = document.getElementById('brain-model-wrap');
+      const select = document.getElementById('brain-model-select');
+      const catalog = await window.DenizenDesktop?.getBrainCatalog?.().catch(() => ({ models: [] }));
+      const models = Array.isArray(catalog?.models) ? catalog.models : [];
+      if (select && models.length) {
+        select.innerHTML = models.map((m) => {
+          const rec = m.recommended ? ' ★' : '';
+          const backend = m.backend === 'llamacpp' ? ' · GGUF' : m.backend === 'ollama' ? ' · Ollama' : '';
+          return `<option value="${m.id}">${m.label}${rec} · ${m.vram_gb}GB${backend}</option>`;
+        }).join('');
+      }
+      const status = await window.DenizenDesktop?.getInferenceStatus?.().catch(() => null);
+      if (!status) {
+        el.textContent = 'Pick a bundled GGUF brain below, or install Ollama / LM Studio.';
+        if (wrap) wrap.hidden = false;
+        return;
+      }
+      if (status.reachable) {
+        const model = status.main_model || (status.models || [])[0] || 'model ready';
+        const backend = status.backend === 'ollama' ? 'Ollama'
+          : status.backend === 'llamacpp' ? 'llama.cpp'
+          : 'LM Studio';
+        el.innerHTML = `<strong>${backend} connected.</strong> Using <code>${model}</code>. The city can reach your brain via Denizen mesh — no port forwarding required.`;
+        if (wrap) wrap.hidden = true;
+        return;
+      }
+      el.innerHTML = 'No local brain detected yet. Pick a model below (bundled GGUF needs no Ollama), or install LM Studio, then '
+        + '<button class="action" type="button" data-action="pull-brain">Download brain</button>.';
+      if (wrap) wrap.hidden = false;
+    }
+
+    async function pullStarterBrain() {
+      const el = document.getElementById('brain-status');
+      const select = document.getElementById('brain-model-select');
+      const model = select?.value || 'llama3.2-3b-instruct-q4';
+      const catalog = await window.DenizenDesktop?.getBrainCatalog?.().catch(() => ({ models: [] }));
+      const entry = (catalog?.models || []).find((m) => m.id === model);
+      if (el) el.textContent = `Downloading ${model} — this may take a few minutes...`;
+      window.DenizenDesktop?.onBrainPullProgress?.((ev) => {
+        if (!el || !ev) return;
+        if (ev.phase === 'downloading' && ev.percent != null) {
+          el.textContent = `Downloading ${model}… ${ev.percent}%`;
+        } else if (ev.phase === 'error') {
+          el.textContent = ev.error || 'Download failed';
+        }
+      });
+      if (entry?.backend !== 'llamacpp') {
+        await window.DenizenDesktop?.ensureOllama?.().catch(() => null);
+      }
+      const result = await window.DenizenDesktop?.pullBrainModel?.({
+        model,
+        backend: entry?.backend,
+      }).catch((err) => ({
+        ok: false,
+        error: err?.message || String(err),
+      }));
+      if (!result?.ok) {
+        if (el) {
+          el.textContent = result?.error
+            || (entry?.backend === 'llamacpp'
+              ? 'Could not download GGUF — check disk space and retry.'
+              : 'Could not download brain. Install Ollama from ollama.com first, then try again.');
+        }
+        return;
+      }
+      await loadBrainStatus();
     }
 
     async function finishSetup() {
@@ -857,6 +956,14 @@
       window.DenizenDesktop?.setDiagnosticsOptIn?.(!!ev.target?.checked);
     });
 
+    function enableCoworkPreset() {
+      capabilities.read_files = true;
+      capabilities.write_files = true;
+      capabilities.run_code = true;
+      capabilities.screen_access = true;
+      ['read_files', 'write_files', 'run_code', 'screen_access'].forEach(renderCapability);
+    }
+
     document.addEventListener('click', (ev) => {
       const capToggle = ev.target?.closest?.('[data-cap-toggle]')?.dataset?.capToggle;
       if (capToggle) {
@@ -879,6 +986,8 @@
       if (action === 'finish') void finishSetup();
       if (action === 'retry-pairing') void startPairingFlow();
       if (action === 'open-os-settings') window.DenizenDesktop?.openOsPermissionSettings?.();
+      if (action === 'cowork-preset') enableCoworkPreset();
+      if (action === 'pull-brain') void pullStarterBrain();
       if (action === 'open-game') window.DenizenDesktop?.openGame?.();
       if (action === 'check-updates') void window.DenizenDesktop?.checkForUpdates?.().then(renderUpdateStatus);
       if (action === 'install-update') void window.DenizenDesktop?.installUpdate?.();
@@ -898,7 +1007,7 @@
       const installButton = document.getElementById('install-update-button');
       if (!banner || !message) return;
       const status = String(payload?.status || 'idle');
-      if (status === 'idle') {
+      if (status === 'idle' || status === 'error') {
         banner.hidden = true;
         return;
       }

@@ -10,11 +10,16 @@
 
   let panelEl = null;
   let team = null;
+  let orgTeam = null;
+  let canManageOrg = false;
+  let rosterMode = 'personal';
   let loading = false;
   let view = 'roster';
   let selectedKey = null;
+  let orgSelectedKey = null;
   let soulCache = {};
   let draftEdits = {};
+  let orgDraftEdits = {};
   let pickSelected = new Set();
   let batchAdding = false;
   let panelStatus = '';
@@ -175,6 +180,29 @@
         padding: 8px 10px; font: inherit; font-size: 11px; outline: none;
       }
       #${PANEL_ID} textarea { min-height: 64px; resize: vertical; line-height: 1.35; }
+      #${PANEL_ID} .nt-slider-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #${PANEL_ID} .nt-slider-wrap input[type="range"] {
+        flex: 1;
+        padding: 0;
+        height: 28px;
+        accent-color: #4ade80;
+      }
+      #${PANEL_ID} .nt-slider-val {
+        min-width: 28px;
+        text-align: right;
+        color: #94a3b8;
+        font-size: 10px;
+      }
+      #${PANEL_ID} .nt-hint {
+        font-size: 9px;
+        color: #64748b;
+        line-height: 1.35;
+        margin: -4px 0 8px 100px;
+      }
       #${PANEL_ID} input:focus, #${PANEL_ID} textarea:focus, #${PANEL_ID} select:focus { border-color: #4ade80; }
       #${PANEL_ID} .nt-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-top: 8px; }
       #${PANEL_ID} button.nt-btn {
@@ -437,6 +465,57 @@
     document.head.appendChild(s);
   }
 
+  function personalityFromMember(m) {
+    const p = m?.personality || m?.settings?.personality || {};
+    return {
+      formality: Number.isFinite(Number(p.formality)) ? Number(p.formality) : 50,
+      verbosity: Number.isFinite(Number(p.verbosity)) ? Number(p.verbosity) : 50,
+      proactivity: Number.isFinite(Number(p.proactivity)) ? Number(p.proactivity) : 50,
+    };
+  }
+
+  function extraSkillsText(m) {
+    const list = m?.extra_skills || m?.settings?.extra_skills;
+    return Array.isArray(list) ? list.join(', ') : '';
+  }
+
+  function soulSnippetText(m) {
+    return m?.soul_snippet || m?.settings?.soul_snippet || '';
+  }
+
+  function sliderRow(label, field, value, readOnly = false) {
+    const disabled = readOnly ? ' disabled' : '';
+    return `<div class="nt-row"><label>${label}</label><div class="nt-slider-wrap">
+      <input type="range" data-field="${field}" min="0" max="100" value="${value}"${disabled} />
+      <span class="nt-slider-val" data-for="${field}">${value}</span>
+    </div></div>`;
+  }
+
+  function wireSliders() {
+    if (!panelEl) return;
+    for (const input of panelEl.querySelectorAll('input[type="range"][data-field]')) {
+      input.oninput = () => {
+        const span = panelEl.querySelector(`.nt-slider-val[data-for="${input.dataset.field}"]`);
+        if (span) span.textContent = input.value;
+      };
+    }
+  }
+
+  function orgMembers() {
+    return Array.isArray(orgTeam?.members) ? orgTeam.members : [];
+  }
+
+  function orgMemberByKey(key) {
+    return orgMembers().find((m) => String(m.npc_key).toLowerCase() === String(key).toLowerCase());
+  }
+
+  function mergeOrgDraft(member) {
+    const key = member.npc_key;
+    const d = orgDraftEdits[key];
+    if (!d) return member;
+    return { ...member, ...d };
+  }
+
   function togglePick(npcKey) {
     const key = String(npcKey || '').trim().toLowerCase();
     if (!key) return;
@@ -473,6 +552,27 @@
       if (selectedKey) loadSoul(selectedKey).then((s) => { detailSoul = s; render(); });
       else render();
     }
+    else if (action === 'mode-personal') { rosterMode = 'personal'; render(); }
+    else if (action === 'mode-org') { rosterMode = 'org'; render(); }
+    else if (action === 'open-org-member') openOrgMember(target.dataset.npcKey).catch((e) => showToast(e?.message || 'Open failed'));
+    else if (action === 'back-org-roster') {
+      const fields = panelEl.querySelector('[data-field="displayName"]') ? readMemberForm() : null;
+      if (orgSelectedKey && fields) orgDraftEdits[orgSelectedKey] = { ...orgDraftEdits[orgSelectedKey], ...fields, job: fields.job };
+      view = 'roster';
+      rosterMode = 'org';
+      orgSelectedKey = null;
+      render();
+    }
+    else if (action === 'save-org-member') saveOrgMember().catch((e) => showToast(e?.message || 'Save failed'));
+    else if (action === 'remove-org-member') removeOrgMember().catch((e) => showToast(e?.message || 'Remove failed'));
+    else if (action === 'save-org-template') saveOrgTemplate().catch((e) => showToast(e?.message || 'Save failed'));
+    else if (action === 'add-org-member') {
+      const key = target.dataset.npcKey;
+      if (!key || !canManageOrg) return;
+      api().saveOrgNpcTeamMember({ npcKey: key, role: 'assistant' })
+        .then((ot) => { orgTeam = ot; showToast('Org default added'); openOrgMember(key); })
+        .catch((e) => showToast(e?.message || 'Add failed'));
+    }
   }
 
   function wirePanelButtons() {
@@ -484,6 +584,7 @@
         runPanelAction(btn.dataset.action, btn);
       };
     }
+    wireSliders();
   }
 
   function ensurePanel() {
@@ -523,9 +624,14 @@
     if (loading) return;
     loading = true;
     try {
-      team = await api()?.getNpcTeam?.() || blankTeam();
+      const bundle = await api()?.getNpcTeam?.();
+      team = bundle?.team || blankTeam();
+      orgTeam = bundle?.orgTeam || null;
+      canManageOrg = !!bundle?.canManageOrg;
     } catch (_) {
       team = blankTeam();
+      orgTeam = null;
+      canManageOrg = false;
     } finally {
       loading = false;
     }
@@ -539,13 +645,59 @@
     render();
   }
 
+  async function saveOrgTemplate() {
+    const name = panelEl.querySelector('#nt-org-name')?.value?.trim() || 'Org NPC defaults';
+    const purpose = panelEl.querySelector('#nt-org-purpose')?.value?.trim() || '';
+    orgTeam = await api().saveOrgNpcTeam({ name, purpose });
+    showToast('Org defaults saved');
+    render();
+  }
+
+  async function saveOrgMember() {
+    if (!orgSelectedKey || !canManageOrg) return;
+    const fields = readMemberForm();
+    orgTeam = await api().saveOrgNpcTeamMember({
+      npcKey: orgSelectedKey,
+      displayName: fields.displayName || orgSelectedKey,
+      role: fields.role || 'assistant',
+      job: fields.job || '',
+      focus: fields.focus || '',
+      instructions: fields.instructions || '',
+      soulSnippet: fields.soulSnippet || '',
+      extraSkills: fields.extraSkills || '',
+      personality: fields.personality,
+    });
+    delete orgDraftEdits[orgSelectedKey];
+    showToast('Org default saved');
+    render();
+  }
+
+  async function removeOrgMember() {
+    if (!orgSelectedKey || !canManageOrg) return;
+    orgTeam = await api().saveOrgNpcTeamMember({ npcKey: orgSelectedKey, remove: true });
+    delete orgDraftEdits[orgSelectedKey];
+    orgSelectedKey = null;
+    view = 'roster';
+    rosterMode = 'org';
+    showToast('Org default removed');
+    render();
+  }
+
   function readMemberForm() {
+    const personality = {
+      formality: Number(panelEl.querySelector('[data-field="formality"]')?.value ?? 50),
+      verbosity: Number(panelEl.querySelector('[data-field="verbosity"]')?.value ?? 50),
+      proactivity: Number(panelEl.querySelector('[data-field="proactivity"]')?.value ?? 50),
+    };
     return {
       displayName: panelEl.querySelector('[data-field="displayName"]')?.value?.trim(),
       role: panelEl.querySelector('[data-field="role"]')?.value?.trim(),
       job: panelEl.querySelector('[data-field="job"]')?.value?.trim(),
       focus: panelEl.querySelector('[data-field="focus"]')?.value?.trim(),
       instructions: panelEl.querySelector('[data-field="instructions"]')?.value?.trim(),
+      soulSnippet: panelEl.querySelector('[data-field="soulSnippet"]')?.value?.trim(),
+      extraSkills: panelEl.querySelector('[data-field="extraSkills"]')?.value?.trim(),
+      personality,
     };
   }
 
@@ -559,6 +711,9 @@
       job: fields.job || '',
       focus: fields.focus || '',
       instructions: fields.instructions || '',
+      soulSnippet: fields.soulSnippet || '',
+      extraSkills: fields.extraSkills || '',
+      personality: fields.personality,
     });
     delete draftEdits[selectedKey];
     delete soulCache[selectedKey];
@@ -724,6 +879,11 @@
 
     return `
       ${identityBannerHtml()}
+      ${orgTeam ? `<div class="nt-tabs">
+        <button type="button" class="nt-tab${rosterMode === 'personal' ? ' active' : ''}" data-action="mode-personal">My team</button>
+        <button type="button" class="nt-tab${rosterMode === 'org' ? ' active' : ''}" data-action="mode-org">Org defaults</button>
+      </div>` : ''}
+      ${rosterMode === 'org' && orgTeam ? orgRosterHtml() : `
       <div class="nt-section">
         <div class="nt-row"><label>Company</label><input id="nt-name" maxlength="160" value="${esc(data.name || 'My NPC team')}" /></div>
         <div class="nt-row"><label>Purpose</label><textarea id="nt-purpose" maxlength="1000" placeholder="What should this NPC company accomplish?">${esc(data.purpose || '')}</textarea></div>
@@ -733,7 +893,7 @@
       <div class="nt-section">
         <div style="font-size:10px;color:#64748b;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Team ID cards</div>
         ${cards}
-      </div>`;
+      </div>`}`;
   }
 
   function fmtWhen(iso) {
@@ -768,7 +928,14 @@
       baseline.job && `Job: ${baseline.job}`,
       baseline.focus && `Focus: ${baseline.focus}`,
       baseline.instructions && `Instructions:\n${baseline.instructions}`,
+      baseline.soul_snippet && `SOUL snippet:\n${baseline.soul_snippet}`,
+      baseline.personality && `Personality: formality ${baseline.personality.formality}, verbosity ${baseline.personality.verbosity}, proactivity ${baseline.personality.proactivity}`,
+      baseline.extra_skills?.length && `Extra skills: ${baseline.extra_skills.join(', ')}`,
     ].filter(Boolean).join('\n') || '(not saved yet — fill the ID card tab and tap Save)';
+
+    const effectiveBlock = soul?.effective_overlay
+      ? `<div class="nt-soul-block"><h4>Effective prompt overlay (org + you)</h4>${esc(String(soul.effective_overlay).slice(0, 1800))}</div>`
+      : '';
 
     const driftHtml = drift.length
       ? drift.map((d) => `<div class="nt-drift-row"><b>${esc(d.kind)}</b> — you set “${esc(d.user)}” · SOUL.md has “${esc(d.soul)}”</div>`).join('')
@@ -795,6 +962,7 @@
 
     return `
       ${soul?.offline ? `<div class="nt-empty" style="margin-bottom:8px">⚠ ${esc(soul.fetch_error || 'Live SOUL/MEMORY could not be loaded')} — showing your saved ID card below. Restart <code>denizen/server.js</code> if this persists.</div>` : ''}
+      ${effectiveBlock}
       <div class="nt-soul-block"><h4>What you originally set</h4>${esc(baselineText)}</div>
       ${driftHtml}
       <div class="nt-soul-block">
@@ -813,10 +981,30 @@
       <div class="nt-empty" style="margin-top:6px">MEMORY.md captures task patterns so repeat work needs less hand-holding. Compare “what you set” vs live SOUL/MEMORY to see growth.</div>`;
   }
 
+  function memberProfileFields(m, { readOnly = false } = {}) {
+    const p = personalityFromMember(m);
+    const disabled = readOnly ? ' disabled' : '';
+    return `
+      <div class="nt-row"><label>Name</label><input data-field="displayName" maxlength="80" value="${esc(m.display_name || m.npc_key)}"${disabled} /></div>
+      <div class="nt-row"><label>Role</label><input data-field="role" maxlength="80" value="${esc(m.role || 'assistant')}" placeholder="Researcher, scheduler..."${disabled} /></div>
+      <div class="nt-row"><label>Job</label><input data-field="job" maxlength="500" value="${esc(m.job || m.settings?.job || '')}" placeholder="Current assignment"${disabled} /></div>
+      <div class="nt-row"><label>Focus</label><textarea data-field="focus" maxlength="500" placeholder="Ongoing priority"${disabled}>${esc(m.focus || '')}</textarea></div>
+      <div class="nt-row"><label>Instructions</label><textarea data-field="instructions" maxlength="1200" placeholder="Tone, process, handoffs"${disabled}>${esc(m.instructions || '')}</textarea></div>
+      <div style="font-size:10px;color:#64748b;margin:8px 0 4px;text-transform:uppercase;letter-spacing:0.05em">Personality sliders</div>
+      ${sliderRow('Formality', 'formality', p.formality, readOnly)}
+      <div class="nt-hint">Low = casual · High = formal</div>
+      ${sliderRow('Verbosity', 'verbosity', p.verbosity, readOnly)}
+      <div class="nt-hint">Low = ultra-brief · High = thorough</div>
+      ${sliderRow('Proactivity', 'proactivity', p.proactivity, readOnly)}
+      <div class="nt-hint">Low = answer only · High = suggest next steps</div>
+      <div class="nt-row"><label>SOUL snippet</label><textarea data-field="soulSnippet" maxlength="2500" placeholder="Custom overlay on base SOUL.md for this teammate"${disabled}>${esc(soulSnippetText(m))}</textarea></div>
+      <div class="nt-hint">Merged with org defaults; yours wins when set.</div>
+      <div class="nt-row"><label>Extra skills</label><input data-field="extraSkills" maxlength="240" value="${esc(extraSkillsText(m))}" placeholder="crm-summary, research (comma-separated)"${disabled} /></div>
+      <div class="nt-hint">Approved skills beyond the NPC's default allowlist.</div>`;
+  }
+
   function detailHtml(member, soul, tab) {
     const m = mergeDraft(member);
-    const job = m.job || m.settings?.job || '';
-
     const profileTab = `
       <div class="nt-detail-card">
         ${portraitHtml(m.npc_key, 3)}
@@ -826,11 +1014,7 @@
           <div class="nt-idcard-key">${esc(m.npc_key)}</div>
         </div>
       </div>
-      <div class="nt-row"><label>Name</label><input data-field="displayName" maxlength="80" value="${esc(m.display_name || m.npc_key)}" /></div>
-      <div class="nt-row"><label>Role</label><input data-field="role" maxlength="80" value="${esc(m.role || 'assistant')}" placeholder="Researcher, scheduler, copywriter..." /></div>
-      <div class="nt-row"><label>Job</label><input data-field="job" maxlength="500" value="${esc(job)}" placeholder="Current assignment — e.g. Draft Q2 newsletter" /></div>
-      <div class="nt-row"><label>Focus</label><textarea data-field="focus" maxlength="500" placeholder="Ongoing priority area">${esc(m.focus || '')}</textarea></div>
-      <div class="nt-row"><label>Instructions</label><textarea data-field="instructions" maxlength="1200" placeholder="Tone, process, handoffs — seeds SOUL.md & MEMORY.md as they work">${esc(m.instructions || '')}</textarea></div>
+      ${memberProfileFields(m)}
       <div class="nt-actions">
         <button type="button" class="nt-btn nt-danger" data-action="remove-member">Remove</button>
         <button type="button" class="nt-btn nt-primary" data-action="save-member">Save ID card</button>
@@ -849,12 +1033,94 @@
       <div class="nt-section">${tab === 'soul' ? soulTab : profileTab}</div>`;
   }
 
+  function orgDetailHtml(member, tab) {
+    const m = mergeOrgDraft(member);
+    const readOnly = !canManageOrg;
+    const profileTab = `
+      <div class="nt-detail-card">
+        ${portraitHtml(m.npc_key, 3)}
+        <div>
+          <div class="nt-idcard-name">${esc(m.display_name || m.npc_key)}</div>
+          <div class="nt-idcard-role">${esc(m.role || 'assistant')} · org default</div>
+          <div class="nt-idcard-key">${esc(m.npc_key)}</div>
+        </div>
+      </div>
+      ${readOnly ? '<div class="nt-status nt-status-info">Read-only — org owner/admin can edit these defaults.</div>' : ''}
+      ${memberProfileFields(m, { readOnly })}
+      ${canManageOrg ? `<div class="nt-actions">
+        <button type="button" class="nt-btn nt-danger" data-action="remove-org-member">Remove</button>
+        <button type="button" class="nt-btn nt-primary" data-action="save-org-member">Save org default</button>
+      </div>` : ''}`;
+
+    return `
+      <div class="nt-actions" style="justify-content:flex-start;margin-bottom:8px">
+        <button type="button" class="nt-btn" data-action="back-org-roster">← Org defaults</button>
+      </div>
+      <div class="nt-section">${profileTab}</div>`;
+  }
+
+  function orgRosterHtml() {
+    const data = orgTeam || { name: 'Org NPC defaults', purpose: '', members: [] };
+    const list = orgMembers();
+    const used = new Set(list.map((m) => String(m.npc_key).toLowerCase()));
+    const available = npcOptions().filter((o) => !used.has(String(o.key).toLowerCase()));
+
+    const cards = list.length
+      ? `<div class="nt-grid">${list.map((m) => {
+        const mm = mergeOrgDraft(m);
+        const job = mm.job || mm.settings?.job || '';
+        return `<button type="button" class="nt-idcard" data-action="open-org-member" data-npc-key="${esc(m.npc_key)}">
+          <div class="nt-idcard-top">${portraitHtml(m.npc_key, 2)}<div>
+            <div class="nt-idcard-name">${esc(mm.display_name || m.npc_key)}</div>
+            <div class="nt-idcard-role">${esc(mm.role || 'assistant')}</div>
+          </div></div>
+          ${job ? `<div class="nt-idcard-job">${esc(job.slice(0, 80))}</div>` : ''}
+          <div class="nt-idcard-key">${esc(m.npc_key)}</div>
+        </button>`;
+      }).join('')}</div>`
+      : '<div class="nt-empty">No org-wide NPC defaults yet. Team admins can add defaults every teammate inherits.</div>';
+
+    const addGrid = canManageOrg && available.length
+      ? `<div style="margin-top:10px;font-size:10px;color:#64748b">Add org default:</div>
+        <div class="nt-pick-grid">${available.slice(0, 12).map((o) =>
+          `<button type="button" class="nt-pick-item" data-action="add-org-member" data-npc-key="${esc(o.key)}">
+            ${portraitHtml(o.key, 1.5)}<span>${esc(o.label)}</span>
+          </button>`).join('')}</div>`
+      : '';
+
+    return `
+      <div class="nt-section">
+        <div class="nt-row"><label>Org</label><input id="nt-org-name" maxlength="160" value="${esc(data.name || 'Org NPC defaults')}"${canManageOrg ? '' : ' disabled'} /></div>
+        <div class="nt-row"><label>Mission</label><textarea id="nt-org-purpose" maxlength="1000"${canManageOrg ? '' : ' disabled'}>${esc(data.purpose || '')}</textarea></div>
+        ${canManageOrg ? '<div class="nt-actions"><button type="button" class="nt-btn nt-primary" data-action="save-org-template">Save org profile</button></div>' : ''}
+      </div>
+      <div class="nt-section">${cards}${addGrid}</div>`;
+  }
+
   let detailTab = 'profile';
   let detailSoul = null;
 
   function render() {
     ensurePanel();
     const data = team || blankTeam();
+
+    if (view === 'org-detail' && orgSelectedKey) {
+      const member = orgMemberByKey(orgSelectedKey);
+      if (!member) {
+        view = 'roster';
+        rosterMode = 'org';
+        orgSelectedKey = null;
+      } else {
+        panelEl.innerHTML = `
+          <div class="nt-head">
+            <div class="nt-title"><h2>Org NPC default</h2><p>Shared defaults for your organization — teammates inherit unless they override.</p></div>
+            <button type="button" class="nt-close" data-action="close">×</button>
+          </div>
+          <div class="nt-body">${orgDetailHtml(member, detailTab)}</div>`;
+        wirePanelButtons();
+        return;
+      }
+    }
 
     if (view === 'detail' && selectedKey) {
       const member = memberByKey(selectedKey);
@@ -883,6 +1149,13 @@
       </div>
       <div class="nt-body">${rosterHtml(data)}</div>`;
     wirePanelButtons();
+  }
+
+  async function openOrgMember(npcKey) {
+    orgSelectedKey = npcKey;
+    view = 'org-detail';
+    detailTab = 'profile';
+    render();
   }
 
   async function openMember(npcKey) {
@@ -928,12 +1201,15 @@
 
   document.addEventListener('denizen-visitor-profile-switching', () => {
     team = null;
+    orgTeam = null;
     soulCache = {};
     draftEdits = {};
+    orgDraftEdits = {};
     setPanelOpen(false);
   });
   document.addEventListener('denizen-visitor-profile-updated', () => {
     team = null;
+    orgTeam = null;
     soulCache = {};
   });
 
@@ -943,6 +1219,7 @@
     render,
     refresh: async () => {
       team = null;
+      orgTeam = null;
       soulCache = {};
       await loadTeam();
       if (panelEl?.classList.contains('open')) render();

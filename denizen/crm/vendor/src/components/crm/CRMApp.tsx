@@ -19,7 +19,7 @@ import { CRM_ROLES, getRole, DEFAULT_ROLE_ID } from "@/lib/crm-roles";
 import { DEFAULT_LEAD_MODEL_STATE, type LeadModelState } from "@/lib/crm-lead-model";
 import { IndustryConfigBridge } from "@/lib/crm-industry-bridge";
 import type { ProspectorLead } from "./AIProspector";
-import { ensureDenizenSession, markCrmDemoLoaded, markCrmUserEdited, postCrmEvent, intakeHandoff, fetchCrmWorkspace, fetchCrmTeam, fetchCrmSession, fetchVisitorAssistant, type CrmSendEmailResult, type CrmWorkspaceState, type CrmTeamMember } from "@/lib/crm-api";
+import { ensureDenizenSession, markCrmDemoLoaded, markCrmUserEdited, postCrmEvent, intakeHandoff, fetchCrmWorkspace, fetchCrmTeam, fetchCrmSession, fetchVisitorAssistant, isCeoPrincipalSession, resolveProfileDisplayName, type CrmSendEmailResult, type CrmWorkspaceState, type CrmTeamMember } from "@/lib/crm-api";
 import { appendAudit, restoreWorkspace, type ClearableEntity, type RestoreMode } from "@/lib/crm-data-management";
 import { EmailComposeModal, type ComposeSeed } from "./EmailComposeModal";
 import { CommandPalette } from "./CommandPalette";
@@ -144,6 +144,54 @@ export default function CRMApp() {
   }, [tab]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && isKnownCrmTab(tabParam)) {
+      const { tab: resolvedTab, subTab } = resolveCrmNav(tabParam);
+      setTab(resolvedTab);
+      if (subTab) setNavSubTab(subTab);
+    }
+    const subParam = params.get('sub');
+    if (subParam) setNavSubTab(subParam);
+
+    const urlPrefill: Record<string, string> = {};
+    for (const key of ['name', 'email', 'company', 'phone', 'title']) {
+      const val = params.get(key);
+      if (val) urlPrefill[key] = val;
+    }
+
+    try {
+      const prefillRaw = sessionStorage.getItem('denizen-crm-prefill');
+      if (prefillRaw) sessionStorage.removeItem('denizen-crm-prefill');
+      const storedPrefill = prefillRaw ? JSON.parse(prefillRaw) : {};
+      const prefill = { ...storedPrefill, ...urlPrefill };
+      if (prefill.name || prefill.email || prefill.company) {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('crm-prefill', { detail: prefill }));
+        }, 400);
+      }
+    } catch (_) {}
+  }, []);
+
+  useEffect(() => {
+    const onPrefill = (e: Event) => {
+      const detail = ((e as CustomEvent).detail || {}) as Record<string, string>;
+      if (!detail.name && !detail.email && !detail.company) return;
+      setFormData({
+        name: detail.name || '',
+        email: detail.email || '',
+        company: detail.company || '',
+        phone: detail.phone || '',
+        status: detail.status || industryConfig.contactStatuses[0] || 'Lead',
+      });
+      setTab('contacts');
+      setModal('add-contact');
+    };
+    window.addEventListener('crm-prefill', onPrefill);
+    return () => window.removeEventListener('crm-prefill', onPrefill);
+  }, [industryConfig]);
+
+  useEffect(() => {
     const onChatUnread = (e: Event) => {
       setChatUnread(Number((e as CustomEvent).detail?.unread) || 0);
     };
@@ -261,23 +309,36 @@ export default function CRMApp() {
   }, [marketingCampaigns, setMarketingCampaigns, trackUsage]);
 
   useEffect(() => {
-    void fetchCrmSession().then((info) => {
+    void (async () => {
+      const [info, team] = await Promise.all([fetchCrmSession(), fetchCrmTeam()]);
       if (!info) return;
-      const name = info.display_name || "Guest";
-      const role = info.ceo || info.tier === "ceo" ? "CEO" : "Team member";
-      setDenizenProfile({ name, role });
+      const name = resolveProfileDisplayName(info.display_name, {
+        tier: info.tier,
+        username: info.username,
+        ceo: info.ceo,
+        org_slug: info.org_slug,
+        email: info.email,
+      })
+        || (info.ceo ? "Dolonia" : null)
+        || info.username
+        || (info.email ? info.email.split("@")[0] : null)
+        || (info.tier === "demo" || String(info.org_slug || "").toLowerCase() === "acme" ? "Demo user" : "Team member");
+      const roleLabel = (session: NonNullable<Awaited<ReturnType<typeof fetchCrmSession>>>) => {
+        if (session.tier === "demo" || String(session.org_slug || "").toLowerCase() === "acme") {
+          const title = String(session.work_position?.title || "").trim();
+          return title || "Demo user";
+        }
+        if (session.ceo || session.tier === "ceo" || session.is_owner) return "CEO";
+        const tr = String(session.team_role || "").toLowerCase();
+        if (tr === "owner") return "Owner";
+        if (tr === "admin") return "Admin";
+        return "Team member";
+      };
+      setDenizenProfile({ name, role: roleLabel(info) });
       if (info.email) setSelfEmail(info.email);
-    });
-    void fetchCrmTeam().then(({ members, self }) => {
-      setCrmTeam(members);
-      if (self?.email) setSelfEmail(self.email);
-      if (self?.display_name) {
-        setDenizenProfile((prev) => ({
-          name: self.display_name || prev.name,
-          role: prev.role,
-        }));
-      }
-    });
+      setCrmTeam(team.members);
+      if (team.self?.email) setSelfEmail(team.self.email);
+    })();
     void fetchVisitorAssistant().then((a) => {
       if (a?.npc_key) setClaimedNpcKey(String(a.npc_key));
     });
@@ -1111,6 +1172,7 @@ export default function CRMApp() {
           packages={packages}
           submissions={submissions}
           profile={denizenProfile}
+          industryConfig={industryConfig}
           onboarding={onboarding}
           onUpdateOnboarding={setOnboarding}
           onNavigate={handleNavigate}

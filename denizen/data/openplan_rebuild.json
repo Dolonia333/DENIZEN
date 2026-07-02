@@ -23,7 +23,7 @@
       "inputs": ["data/openplan_zones.json", "data/room-builder-tiles.json"],
       "walls": {
         "perimeter": { "insetPx": 16, "topThickTiles": 3 },
-        "verticalDivider": { "x": 848, "doorGaps": [{ "y0": 160, "y1": 256 }, { "y0": 416, "y1": 512 }] },
+        "verticalDivider": { "x": 848, "doorGaps": [{ "y0": 160, "y1": 256 }, { "y0": 328, "y1": 424 }] },
         "horizontalDividerLeft": { "y": 448, "doorGap": { "x0": 288, "x1": 384 } },
         "horizontalDividerRight": { "y": 256, "doorGap": { "x0": 1000, "x1": 1096 } }
       }

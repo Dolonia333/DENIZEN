@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { loginOwner } from './lib/probe-login.mjs';
 
 const base = process.argv[2] || 'http://localhost:8081';
 
@@ -7,13 +8,7 @@ const page = await browser.newPage();
 await page.goto(`${base}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 await page.waitForTimeout(2000);
 
-if (await page.locator('#denizen-visitor-name-modal').count()) {
-  await page.click('[data-action="path-ceo"]');
-  await page.waitForTimeout(500);
-  await page.fill('#denizen-visitor-code-input', 'Dolonia');
-  await page.click('[data-action="submit-ceo-code"]');
-  await page.waitForTimeout(12000);
-}
+await loginOwner(page);
 
 const office = await page.evaluate(() => ({
   store: JSON.parse(localStorage.getItem('denizen-visitor-session') || '{}'),

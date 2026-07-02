@@ -131,7 +131,7 @@ async function writeBrief({ topic, searchResults, pages, npcBrains } = {}) {
   };
 }
 
-async function runFullResearch(topic, { count = 5, read = 2, npcBrains } = {}) {
+async function runFullResearch(topic, { count = 5, read = 2, npcBrains, leadMode = false } = {}) {
   const safeTopic = String(topic || '').trim();
   if (!safeTopic) throw new Error('topic is required');
 
@@ -159,6 +159,11 @@ async function runFullResearch(topic, { count = 5, read = 2, npcBrains } = {}) {
     npcBrains,
   });
 
+  let leadCandidates = null;
+  if (leadMode) {
+    leadCandidates = _extractLeadCandidates(safeTopic, results, pages);
+  }
+
   return {
     topic: safeTopic,
     results,
@@ -166,7 +171,55 @@ async function runFullResearch(topic, { count = 5, read = 2, npcBrains } = {}) {
     summary: brief.summary,
     filePath: brief.filePath,
     error: search.error || null,
+    leadCandidates,
   };
+}
+
+// Simple heuristic extractor for lead gen: pull company-like names + urls/emails from snippets/pages for crm-enrich
+function _extractLeadCandidates(topic, results, pages) {
+  const cands = [];
+  const seen = new Set();
+  const push = (name, company, email, url, why) => {
+    if (!name && !company) return;
+    const key = (name || company || '').toLowerCase().slice(0, 60);
+    if (seen.has(key)) return;
+    seen.add(key);
+    cands.push({ name: name || company, company: company || '', email: email || null, url: url || '', why: why || topic, source: 'research' });
+  };
+
+  const textBlob = [
+    ...(results || []).map(r => `${r.title} ${r.snippet}`),
+    ...(pages || []).map(p => `${p.title} ${p.text}`)
+  ].join('\n');
+
+  // crude patterns for companies / orgs + signals
+  const companyRe = /\b([A-Z][A-Za-z&.\- ]{2,28}(?:Inc|LLC|Ltd|Corp|Corporation|Cyber|Systems|Tech|Solutions|Partners|Group|Holdings|Consulting|Defense|Federal))\b/g;
+  let m;
+  while ((m = companyRe.exec(textBlob)) && cands.length < 6) {
+    push(null, m[1].trim(), null, '', 'research match');
+  }
+
+  // emails
+  const emailRe = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  while ((m = emailRe.exec(textBlob)) && cands.length < 8) {
+    const em = m[1];
+    const local = em.split('@')[0];
+    push(local.replace(/[._-]/g, ' '), null, em, '', 'email signal from research');
+  }
+
+  // urls as weak signals (root domain often company)
+  (results || []).slice(0, 4).forEach(r => {
+    try {
+      const u = new URL(r.url);
+      const host = u.hostname.replace(/^www\./, '');
+      if (!seen.has(host) && host.includes('.')) {
+        seen.add(host);
+        cands.push({ name: '', company: host.split('.')[0], email: null, url: r.url, why: 'web result', source: 'research' });
+      }
+    } catch (_) {}
+  });
+
+  return cands.slice(0, 5);
 }
 
 module.exports = {
@@ -174,4 +227,5 @@ module.exports = {
   formatBriefMarkdown,
   writeBrief,
   runFullResearch,
+  _extractLeadCandidates, // internal but exposed for tests/server use
 };

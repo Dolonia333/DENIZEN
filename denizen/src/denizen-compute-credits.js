@@ -6,6 +6,7 @@ const BASE_JOB_CREDITS = {
   npc_think_batch: 5,
   embedding_index: 8,
   sim_tick: 2,
+  grok_telemetry_check: 1,
 };
 
 const EXPECTED_JOB_DURATION_MS = {

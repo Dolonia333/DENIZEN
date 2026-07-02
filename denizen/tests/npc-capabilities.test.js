@@ -33,4 +33,23 @@ describe('npc-capabilities', () => {
     const reply = caps.formatCapabilitiesReply('Lucy');
     assert.match(reply, /email|PC|job/i);
   });
+
+  it('Roki reply uses natural grammar', () => {
+    const reply = caps.formatCapabilitiesReply('Roki');
+    assert.match(reply, /I can take smaller tasks/i);
+    assert.doesNotMatch(reply, /I handle Take/i);
+  });
+
+  it('Grok lists MCP-visible skills', () => {
+    const cap = caps.getCapabilities('Grok');
+    assert.ok(cap.skills.includes('coding-agent'));
+    assert.ok(cap.skills.includes('research'));
+  });
+
+  it('detects market questions', () => {
+    assert.equal(caps.isMarketQuestion('what are the stocks looking like today'), true);
+    assert.equal(caps.isMarketQuestion('what are the stoks looking like today'), true);
+    assert.equal(caps.isMarketQuestion('NVDA price?'), true);
+    assert.equal(caps.isMarketQuestion('fix the bug'), false);
+  });
 });

@@ -1,0 +1,16 @@
+{
+  "name": "denizen-mcp-ui-inspect",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stdio MCP server — capture Denizen phone app screenshots for agents",
+  "bin": {
+    "denizen-mcp-ui-inspect": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}

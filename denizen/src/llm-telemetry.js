@@ -41,6 +41,9 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { formatProviderError } = require('./format-provider-error');
+let localMetrics = null;
+try { localMetrics = require('./npc-local-metrics'); } catch (_) {}
 
 const ROOT = path.resolve(__dirname, '..');
 const DEFAULT_LOG_FILE = path.join(ROOT, 'data', 'llm-telemetry.jsonl');
@@ -56,8 +59,10 @@ function setDbSink(fn) {
  *  wins; the hint is shown to the operator as "here's what to do." */
 const ERROR_CLASSIFIERS = [
   // Order matters: more specific matches first.
-  { re: /ECONNREFUSED|connect.*refused/i, category: 'provider_down',
+  { re: /ECONNREFUSED|connect.*refused|Connection failed/i, category: 'provider_down',
     hint: 'LM Studio is not running. Start it and load a model on port 1234 (or whatever LM_STUDIO_URL points at).' },
+  { re: /AggregateError/i, category: 'provider_down',
+    hint: 'Could not reach LM Studio (often localhost:1234 inside Docker while LM runs on another machine). Set LM_STUDIO_REMOTE_URLS to your desktop IP.' },
   { re: /ETIMEDOUT|timeout/i, category: 'timeout',
     hint: 'LM Studio is slow or stuck. Check the Server tab — model may be loading, GPU may be saturated.' },
   { re: /HTML.*not loaded|HTML.*404|<!doctype html>/i, category: 'model_not_loaded',
@@ -79,7 +84,7 @@ const ERROR_CLASSIFIERS = [
   { re: /aborted|cancel/i, category: 'aborted',
     hint: 'Request was cancelled (timeout or shutdown). Usually not actionable.' },
   { re: /jinja.*template|roles must alternate|conversation roles/i, category: 'role_alternation',
-    hint: 'Chat history has back-to-back user or assistant messages. Mistral/Ministral requires strict alternation. Fixed in npc-brains.js — restart the server.' },
+    hint: 'Chat history had back-to-back user/assistant turns. Server now collapses them before each LM call — restart if this persists after deploy.' },
   { re: /model.*crashed|exit code|has crashed/i, category: 'model_crash',
     hint: 'LM Studio model crashed (likely OOM). LM Studio will auto-reload. Reduce context length or Parallel setting if this recurs.' },
   { re: /model reloaded/i, category: 'model_reloaded',
@@ -136,9 +141,18 @@ class LlmTelemetry {
       correlationId: entry.correlationId || null,
     };
     if (entry.error) {
-      const msg = (entry.error.message || entry.error.toString?.() || String(entry.error)).slice(0, 600);
+      const msg = formatProviderError(entry.error).slice(0, 600);
       const { category, hint } = classifyError(msg);
       rec.error = { message: msg, category, hint };
+      // Structural friction tracking (Claude proposal) — repeated LLM errors in a domain = "need" to auto-build fix
+      if (rec.npc) {
+        try {
+          if (localMetrics && localMetrics.recordFriction) {
+            const domain = `llm_${rec.kind || rec.error.category || 'general'}`;
+            localMetrics.recordFriction(rec.npc, domain, 2);
+          }
+        } catch (_) {}
+      }
     }
     // Carry OpenClaw-specific status field through normalization so the
     // panel and stats can branch on it without inventing a 2nd ring.
@@ -214,8 +228,8 @@ class LlmTelemetry {
         p50LatencyMs: null, p95LatencyMs: null, p99LatencyMs: null,
         avgLatencyMs: null,
         tokensInTotal: 0, tokensOutTotal: 0, tokensPerMin: 0,
-        callsPerMin: 0, promptToCompletionRatio: null,
-        avgConversationMsgs: null, maxConversationMsgs: null,
+        callsPerMin: 0, promptToCompletionRatio: null, ratioNote: null,
+        avgConversationMsgs: null, maxConversationMsgs: null, avgPromptChars: null,
         byNpc: {}, byProvider: {}, byKind: {}, topErrors: [],
       };
     }
@@ -268,6 +282,10 @@ class LlmTelemetry {
       ? Math.round(convoLens.reduce((a, b) => a + b, 0) / convoLens.length)
       : null;
     const maxConvo = convoLens.length ? Math.max(...convoLens) : null;
+    const promptCharVals = inWindow.map((r) => r.promptChars).filter(Number.isFinite);
+    const avgPromptChars = promptCharVals.length
+      ? Math.round(promptCharVals.reduce((a, b) => a + b, 0) / promptCharVals.length)
+      : null;
 
     return {
       windowMs,
@@ -286,8 +304,10 @@ class LlmTelemetry {
       // for context, not new output — a signal to trim history.
       callsPerMin: +(inWindow.length / (windowMs / 60000)).toFixed(1),
       promptToCompletionRatio: tokensOut > 0 ? +(tokensIn / tokensOut).toFixed(1) : null,
+      ratioNote: 'LM Studio: raw usage tokens (no API cache discount). Check ratioByKind for think vs chat.',
       avgConversationMsgs: avgConvo,
       maxConversationMsgs: maxConvo,
+      avgPromptChars,
       byNpc: groupBy('npc'),
       byProvider: groupBy('provider'),
       byKind: groupBy('kind'),

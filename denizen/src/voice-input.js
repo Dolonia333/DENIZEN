@@ -50,6 +50,10 @@
   const SPEAK_FAB_STYLE_ID = 'denizen-speak-fab-style';
   let providerOverride = null;
   let pttDown = false;
+  let handsFree = false;
+  let silenceTimer = null;
+  let silenceMs = 650;
+  let speechStartedInSession = false;
 
   // ---- Detect support ----
   const SR = typeof window !== 'undefined'
@@ -387,12 +391,21 @@
       html.denizen-touch:not(.denizen-phone-mode) #denizen-speak-fab {
         bottom: calc(var(--denizen-dock-height, 52px) + 14px + env(safe-area-inset-bottom, 0px));
       }
+      /* Chat has its own speak control — don't stack a second mic over the input row */
+      html.denizen-chat-open #denizen-speak-fab,
+      html.denizen-phone-open #denizen-speak-fab {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
     `;
     document.head.appendChild(s);
   }
 
   function refreshSpeakFab() {
     if (!speakFab) return;
+    const chatOpen = document.documentElement.classList.contains('denizen-chat-open')
+      || document.documentElement.classList.contains('denizen-phone-open');
     const on = sessionActive || listening;
     const supported = isSupported();
     speakFab.classList.toggle('listening', on);
@@ -401,7 +414,13 @@
       : '🎤<span class="dzs-label">Speak</span>';
     speakFab.setAttribute('aria-label', on ? 'Stop speaking' : 'Speak to NPCs');
     speakFab.disabled = !supported;
-    speakFab.style.opacity = supported ? '1' : '0.55';
+    if (chatOpen) {
+      speakFab.style.display = 'none';
+      speakFab.style.opacity = '';
+    } else {
+      speakFab.style.display = '';
+      speakFab.style.opacity = supported ? '1' : '0.55';
+    }
     speakFab.title = supported
       ? 'Tap to speak — tap again when done'
       : 'Voice needs Chrome desktop or OPENAI_API_KEY on server';
@@ -567,6 +586,7 @@
     }
     const toSend = sessionTranscript.trim();
     sessionTranscript = '';
+    speechStartedInSession = false;
     if (toSend && autosubmit) {
       setMicState('busy', `→ ${toSend}`);
       deliver(toSend);
@@ -577,7 +597,26 @@
     setTimeout(() => { if (!_errorSticky) setMicState('idle', ''); }, 1500);
   }
 
-  // ---- Recognition lifecycle ----
+  function resetSilenceTimer() {
+    if (!handsFree || !sessionActive) return;
+    if (silenceTimer) clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      if (sessionActive) stop();
+    }, silenceMs);
+  }
+
+  function clearSilenceTimer() {
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+      silenceTimer = null;
+    }
+  }
+
+  function setHandsFree(next) {
+    handsFree = !!next;
+    if (!handsFree) clearSilenceTimer();
+  }
+
   function ensureRecognition() {
     if (!supportsSpeechRecognition) return null;
     if (recognition) return recognition;
@@ -595,9 +634,29 @@
         else interim += r[0].transcript;
       }
       if (final) appendFinalChunk(final);
+      const hasSpeech = Boolean(String(interim || '').trim() || String(final || '').trim());
+      if (sessionActive && hasSpeech && !speechStartedInSession) {
+        speechStartedInSession = true;
+        try {
+          window.DenizenVoiceSession?.onUserSpeechStart?.();
+        } catch (_) {}
+        try {
+          document.dispatchEvent(new CustomEvent('denizen:voice-user-speech-start', {
+            detail: { source: 'stt_onresult' },
+          }));
+        } catch (_) {}
+      }
       if (sessionActive) {
-        mirrorTranscriptToChatInput(displayTranscript(interim));
-        setMicState('listening', displayTranscript(interim));
+        const rendered = displayTranscript(interim);
+        mirrorTranscriptToChatInput(rendered);
+        setMicState('listening', rendered);
+        try {
+          document.dispatchEvent(new CustomEvent('denizen:voice-user-interim', {
+            detail: { text: String(interim || '').trim() },
+          }));
+        } catch (_) {}
+        resetSilenceTimer();
+        try { window.DenizenVoiceCallUi?.setMode?.('listening'); } catch (_) {}
       }
     };
 
@@ -669,7 +728,9 @@
   async function start() {
     if (sessionActive || _starting) return;
     _starting = true;
+    try { window.DenizenVoiceSession?.onMicStart?.(); } catch (_) {}
     sessionTranscript = '';
+    speechStartedInSession = false;
     sessionActive = true;
     if (providerOverride) {
       // External provider takes over (e.g. Whisper-via-server).
@@ -689,7 +750,10 @@
       }
       r.start();
       listening = true;
-      setMicState('listening', 'listening… pauses are OK — click 🎤 again when done');
+      setMicState('listening', handsFree
+        ? 'listening… pause to send'
+        : 'listening… pauses are OK — click 🎤 again when done');
+      if (handsFree) resetSilenceTimer();
     } catch (err) {
       sessionActive = false;
       // Most common: InvalidStateError when the previous session hasn't
@@ -710,8 +774,10 @@
 
   function stop() {
     if (!sessionActive && !listening) return;
+    clearSilenceTimer();
     const wasActive = sessionActive;
     sessionActive = false;
+    speechStartedInSession = false;
     if (providerOverride && typeof providerOverride.stop === 'function') {
       try { providerOverride.stop(); } catch (_) {}
       listening = false;
@@ -751,6 +817,15 @@
     if (!transcript || !transcript.trim()) return;
     const text = window.DenizenOpenClawDispatch?.fixVoiceMishearings?.(transcript.trim())
       || transcript.trim();
+
+    if (window.DenizenVoiceSession?.isActive?.()) {
+      try {
+        window.DenizenVoiceSession.sendUtterance(text);
+        return;
+      } catch (err) {
+        console.warn('[VoiceInput] voice session deliver failed:', err?.message || err);
+      }
+    }
 
     // PlayerChat exposes itself to globals once instantiated. Auto-open
     // the panel so the user can SEE "[NPC] is coming over…" /
@@ -862,9 +937,15 @@
     start, stop,
     toggle: onMicPress,
     rewireTouch,
+    refreshSpeakFab,
     setHotkey(k) { if (typeof k === 'string' && k.length === 1) hotkey = k; },
     setLang(l) { lang = l; if (recognition) recognition.lang = l; },
     setAutosubmit(b) { autosubmit = !!b; },
+    setHandsFree,
+    setHandsFreeSilenceMs(ms) {
+      const n = Number(ms);
+      if (Number.isFinite(n) && n >= 300 && n <= 3000) silenceMs = Math.round(n);
+    },
     setProvider(provider) {
       // provider: { start(deliver, setStatus), stop?() }
       providerOverride = provider || null;

@@ -1,0 +1,40 @@
+{
+  "company": "Your Company",
+  "product": "Denizen",
+  "tagline": "Real-time visual observability layer for AI agents",
+  "description": "A generic Denizen office template — sixteen AI teammates in a pixel-art workspace. Customize company name, souls, and business model when you clone a template pack to your org.",
+  "ceo": "The CEO",
+  "sprint": {
+    "name": "Getting started — Denizen office",
+    "goal": "Learn the team, explore chat and delegation, customize your company context.",
+    "active_since": "2026-06-24",
+    "ends": "2026-08-01"
+  },
+  "current_focus": [
+    "Meet the 16-agent roster and learn each role",
+    "Try player chat and in-office delegation",
+    "Customize souls and business model for your company (team tier)"
+  ],
+  "role_tasks": {
+    "CTO": [
+      "Explain Denizen architecture to the CEO on request",
+      "Prioritize one small ship item per week",
+      "Delegate engineering work to Alex and Edward"
+    ],
+    "Receptionist (also handles CEO email triage as Secretary)": [
+      "Welcome visitors and explain what Denizen can do",
+      "Triage demo-tier questions — no binding commitments",
+      "Hand product questions to Sarah"
+    ],
+    "Project Manager": [
+      "Track open tasks on the team board",
+      "Run short standups when asked",
+      "Surface blockers to Abby"
+    ],
+    "Product Manager": [
+      "Explain Denizen product value in plain language",
+      "Help CEO prioritize features to explore",
+      "Defer pricing and contracts to the CEO"
+    ]
+  }
+}

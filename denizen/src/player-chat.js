@@ -28,6 +28,9 @@ class PlayerChat {
     this._ceoConvo = null;
     this._ceoConvoIdleMs = 180000;
     this._ceoConvoWalkDist = 40;
+    /** Dedupe voice + Send double-fires within one utterance. */
+    this._lastSendText = '';
+    this._lastSendAt = 0;
     this._ceoConvoHoldMs = 300000;
     this._ceoReapproachAt = 0;
     this._ceoConvoIdleTimer = null;
@@ -188,6 +191,7 @@ class PlayerChat {
     this._container.style.display = next ? 'flex' : 'none';
     document.documentElement.classList.toggle('denizen-chat-open', next);
     this._syncFabLabel();
+    try { globalThis.DenizenVoiceInput?.refreshSpeakFab?.(); } catch (_) {}
     if (next && window.__DenizenIsTouch) {
       globalThis.DenizenMobileSidebar?.close?.();
     }
@@ -758,6 +762,14 @@ class PlayerChat {
 
     const trimmed = window.DenizenOpenClawDispatch?.fixVoiceMishearings?.(text.trim()) || text.trim();
     const normalized = window.DenizenOpenClawDispatch?.normalizePlayerUtterance?.(trimmed) || trimmed;
+
+    const now = Date.now();
+    if (trimmed === this._lastSendText && now - (this._lastSendAt || 0) < 700) {
+      return;
+    }
+    this._lastSendText = trimmed;
+    this._lastSendAt = now;
+
     const wantsBrowserOpen = window.DenizenOpenClawDispatch?.wantsLucyBrowserOpen?.(trimmed) || false;
 
     // If the user is actively chatting, treat that as presence and turn
@@ -2493,6 +2505,13 @@ class PlayerChat {
       html.denizen-touch.denizen-chat-open #game-container canvas {
         pointer-events: none !important;
       }
+      /* Chat has its own mic — hide global speak + phone FABs until chat closes */
+      html.denizen-chat-open #denizen-speak-fab,
+      html.denizen-chat-open #denizen-phone-fab {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
     `;
     document.head.appendChild(style);
 
@@ -2873,6 +2892,20 @@ class PlayerChat {
     }
     if (/^\(no .*reply/i.test(t)) return 'error';
     return 'hidden';
+  }
+
+  /**
+   * Background skill completion — never impersonate NPCs or spam robot lines in open chat.
+   */
+  notifySkillResult(npcName, skill, ok = true) {
+    const sk = String(skill || '').trim();
+    if (!sk || sk === 'web-search' || sk === 'research') return;
+    if (!String(npcName || '').trim() || !this._visible) return;
+    const thread = this._getActiveThread();
+    const activeNpc = thread?.type === 'dm'
+      ? thread.npcName
+      : (this._ceoConvo?.npcName || null);
+    if (activeNpc) return;
   }
 
   _displayNpcName(name) {

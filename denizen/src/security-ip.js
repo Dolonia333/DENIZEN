@@ -19,12 +19,34 @@ function isLocalOrLoopback(ip) {
   return false;
 }
 
-/** Dev / local triggers — do not spawn robbers or run Kali. */
-function isInternalThreatSource(source) {
+function hostOperatorIps() {
+  const raw = String(process.env.DENIZEN_HOST_IP || process.env.DENIZEN_MESH_BROWSER_HOST || '').trim();
+  if (!raw) return [];
+  return raw.split(/[,;\s]+/).map(normalizeIp).filter(Boolean);
+}
+
+/** This machine's LAN/Tailscale IP — game server self-traffic, not an external attacker. */
+function isHostOperatorIp(ip) {
+  const n = normalizeIp(ip);
+  if (!n) return false;
+  return hostOperatorIps().includes(n);
+}
+
+/** Dev / local triggers — do not spawn robbers or run Kali (unless force). */
+function isInternalThreatSource(source, opts = {}) {
+  if (opts.force) return false;
   const s = String(source || '').trim().toLowerCase();
   if (!s) return false;
   if (isLocalOrLoopback(s)) return true;
-  return s === 'filesystem' || s === 'internal' || s === 'local';
+  if (isHostOperatorIp(s)) return true;
+  if (s === 'filesystem' || s === 'internal' || s === 'local' || s === 'test') return true;
+  return false;
 }
 
-module.exports = { normalizeIp, isLocalOrLoopback, isInternalThreatSource };
+module.exports = {
+  normalizeIp,
+  isLocalOrLoopback,
+  isHostOperatorIp,
+  hostOperatorIps,
+  isInternalThreatSource,
+};

@@ -42,4 +42,29 @@ describe('npc-team-soul', () => {
     assert.ok(view.soul.excerpt.length > 20);
     assert.ok(view.user_baseline.job === 'Scan trends');
   });
+
+  it('buildMemberSoulView merges effective overlay from org+identity', () => {
+    const view = npcTeamSoul.buildMemberSoulView(
+      'bob',
+      {
+        npc_key: 'bob',
+        display_name: 'Bob',
+        role: 'Researcher',
+        settings: { soul_snippet: 'Identity snippet' },
+      },
+      {
+        npc_key: 'bob',
+        display_name: 'Bob',
+        role: 'Researcher',
+        settings: {
+          soul_snippet: 'Identity snippet',
+          personality: { formality: 25, verbosity: 50, proactivity: 50 },
+          extra_skills: ['research'],
+        },
+      },
+    );
+    assert.match(view.effective_overlay, /Identity snippet/);
+    assert.equal(view.personality.formality, 25);
+    assert.deepEqual(view.extra_skills, ['research']);
+  });
 });

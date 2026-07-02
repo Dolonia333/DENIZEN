@@ -15,6 +15,7 @@
   let busyLogout = false;
   let switchingProfile = null;
   let statsRenderSeq = 0;
+  let roleMetaLoaded = false;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -249,6 +250,33 @@
         padding: 6px 10px;
         cursor: pointer;
       }
+      #${ROOT_ID} .acct-invite-panel {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      #${ROOT_ID} .acct-invite-url {
+        width: 100%;
+        margin: 8px 0;
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(0,0,0,0.25);
+        color: inherit;
+        font-size: 11px;
+        box-sizing: border-box;
+      }
+      #${ROOT_ID} .acct-invite-copy {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(126, 227, 189, 0.35);
+        background: rgba(126, 227, 189, 0.12);
+        color: #b7f5d8;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 600;
+      }
       #${ROOT_ID} .acct-skill-card {
         margin-top: 8px;
         padding: 8px;
@@ -289,16 +317,25 @@
       }
       #${ROOT_ID} .acct-stat-row {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 8px;
         color: #94a3b8;
         font-size: 10px;
+        min-width: 0;
+      }
+      #${ROOT_ID} .acct-stat-row > span:first-child {
+        flex: 0 0 auto;
+        max-width: 42%;
       }
       #${ROOT_ID} .acct-stat-val {
         color: #93c5fd;
         font-weight: 600;
         text-align: right;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
       #${ROOT_ID} .acct-stat-val.super {
         color: #fde68a;
@@ -338,8 +375,57 @@
       html.denizen-phone #denizen-mobile-drawer-body #${ROOT_ID} {
         min-width: 0 !important;
         max-width: 100% !important;
-        width: auto !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
         box-shadow: none !important;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}:not([data-dzp-docked="1"]) {
+        position: fixed !important;
+        top: var(--dzp-screen-top, 20vh) !important;
+        left: var(--dzp-screen-left, 30vw) !important;
+        width: var(--dzp-screen-w, 340px) !important;
+        height: var(--dzp-screen-h, 500px) !important;
+        right: auto !important;
+        bottom: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+      }
+      html.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-expanded="1"] {
+        max-width: none !important;
+        width: 100% !important;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-dzp-docked="1"] {
+        font-size: 12px;
+        line-height: 1.4;
+        padding: 10px 12px 16px !important;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-dzp-docked="1"] .prof-tab,
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-dzp-docked="1"] .acct-stat-row {
+        font-size: 11px;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-dzp-docked="1"] .acct-stat-row {
+        flex-wrap: wrap;
+        gap: 2px 8px;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-dzp-docked="1"] .acct-stat-row > span:first-child {
+        max-width: 100%;
+        flex: 1 1 100%;
+        color: #64748b;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-dzp-docked="1"] .acct-stat-val {
+        max-width: 100%;
+        flex: 1 1 100%;
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      html.denizen-desktop.denizen-phone-mode[data-denizen-phone-app="profile"] #${ROOT_ID}[data-dzp-docked="1"] .acct-rule-card {
+        margin-bottom: 6px;
+        padding: 6px 8px;
+        font-size: 10px;
       }
     `;
     document.head.appendChild(s);
@@ -354,6 +440,11 @@
     const timer = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
     try {
       return await fetch(url, { ...opts, signal: ctrl.signal });
+    } catch (err) {
+      if (err?.name === 'AbortError') {
+        throw new Error('Request timed out — server may be slow or offline.');
+      }
+      throw err;
     } finally {
       clearTimeout(timer);
     }
@@ -488,12 +579,15 @@
   function accountKind(profile) {
     const tier = String(profile?.tier || '').toLowerCase();
     if (tier === 'ceo' || profile?.accessMethod === 'ceo') return 'ceo';
+    const role = String(profile?.teamRole || '').toLowerCase();
+    if (role === 'owner' || role === 'ceo' || profile?.canApproveSkills && role === 'owner') return 'ceo';
     if (tier === 'team') return 'team';
     if (tier === 'demo') return 'demo';
     return 'guest';
   }
 
   function roleForProfile(profile) {
+    if (profile?.workPosition?.title) return profile.workPosition.title;
     if (accountKind(profile) === 'ceo') return 'Owner';
     return cleanRoleLabel(profile?.teamRole) || (accountKind(profile) === 'team' ? 'Member' : null);
   }
@@ -539,6 +633,13 @@
 
     if (badgesEl) {
       const badges = [];
+      const tierPending = String(profile?.tier || '').toLowerCase() === 'team'
+        && !profile?.teamRole
+        && !roleMetaLoaded
+        && !switchingProfile;
+      if (tierPending) {
+        badges.push('<span class="acct-badge">Loading…</span>');
+      } else {
       if (kind === 'team') badges.push(`<span class="acct-badge team">Team</span>`);
       else if (kind === 'ceo') badges.push(`<span class="acct-badge ceo">Owner</span>`);
       else if (kind === 'demo') badges.push(`<span class="acct-badge demo">Demo</span>`);
@@ -546,6 +647,7 @@
       if (serverLabel && isOwnerProfile(profile)) badges.push(`<span class="acct-badge">${escapeHtml(serverLabel)}</span>`);
       if (role && kind !== 'demo') badges.push(`<span class="acct-badge">${escapeHtml(role)}</span>`);
       if (profile?.canApproveSkills) badges.push(`<span class="acct-badge team">Approver</span>`);
+      }
       badgesEl.innerHTML = badges.join('');
     }
 
@@ -613,6 +715,23 @@
           Send me Denizen email updates
         </label>
         <button type="button" class="acct-save-btn" id="denizen-acct-save-settings">Save settings</button>
+        <div class="acct-invite-panel" id="denizen-acct-invite-panel" hidden>
+          <div class="acct-settings-title">Invite teammates</div>
+          <div class="acct-settings-hint">Email an invite with account link + Denizen Desktop install steps for their computer.</div>
+          <input class="acct-invite-url" id="denizen-acct-invite-name" type="text" placeholder="Their name (optional)" autocomplete="name" />
+          <input class="acct-invite-url" id="denizen-acct-invite-email" type="email" placeholder="their@email.com" autocomplete="email" inputmode="email" />
+          <label class="acct-settings-hint" for="denizen-acct-invite-platform" style="display:block;margin-top:4px">Their computer</label>
+          <select class="acct-invite-url" id="denizen-acct-invite-platform" aria-label="Invite platform">
+            <option value="windows">Windows</option>
+            <option value="mac">macOS</option>
+            <option value="linux">Linux</option>
+          </select>
+          <button type="button" class="acct-invite-copy" id="denizen-acct-invite-send">Email invite</button>
+          <input class="acct-invite-url" id="denizen-acct-invite-url" type="text" readonly aria-label="Team invite link" />
+          <button type="button" class="acct-invite-copy" id="denizen-acct-invite-copy">Copy invite link</button>
+          <div class="acct-settings-hint" id="denizen-acct-invite-install" hidden></div>
+          <div class="acct-settings-hint" id="denizen-acct-invite-status" hidden></div>
+        </div>
         <div class="acct-skills-panel" id="denizen-acct-skills-panel" hidden>
           <div class="acct-settings-title">Skill proposals (team lead)</div>
           <div class="acct-settings-hint">Approve NPC-authored tools so your team can use them.</div>
@@ -655,6 +774,33 @@
         console.warn('[DenizenAccountPanel] save settings failed:', err?.message || err);
       });
     });
+    rootEl.querySelector('#denizen-acct-invite-copy')?.addEventListener('click', () => {
+      const input = rootEl.querySelector('#denizen-acct-invite-url');
+      const url = String(input?.value || '').trim();
+      if (!url) return;
+      const copy = () => {
+        const btn = rootEl.querySelector('#denizen-acct-invite-copy');
+        if (btn) {
+          const prev = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = prev; }, 1800);
+        }
+      };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(url).then(copy).catch(() => null);
+      } else if (input) {
+        input.select();
+        try { document.execCommand('copy'); copy(); } catch (_) {}
+      }
+    });
+    rootEl.querySelector('#denizen-acct-invite-send')?.addEventListener('click', () => {
+      sendTeamInviteEmail().catch((err) => {
+        console.warn('[DenizenAccountPanel] invite email failed:', err?.message || err);
+      });
+    });
+    rootEl.querySelector('#denizen-acct-invite-platform')?.addEventListener('change', (e) => {
+      updateInviteInstallHint(e.target?.value);
+    });
 
     const runLogout = () => {
       if (busyLogout) return;
@@ -673,7 +819,22 @@
     };
 
     logoutEl?.addEventListener('click', runLogout);
-    rootEl.querySelector('#denizen-acct-demo-upgrade')?.addEventListener('click', runLogout);
+    rootEl.querySelector('#denizen-acct-demo-upgrade')?.addEventListener('click', () => {
+      const api = getSessionApi();
+      if (typeof api?.beginTeamJoinFlow === 'function') {
+        if (busyLogout) return;
+        busyLogout = true;
+        api.beginTeamJoinFlow(null)
+          .catch((err) => {
+            console.warn('[DenizenAccountPanel] team join flow failed:', err?.message || err);
+          })
+          .finally(() => {
+            busyLogout = false;
+          });
+        return;
+      }
+      runLogout();
+    });
     rootEl.querySelector('#denizen-acct-demo-create')?.addEventListener('click', () => {
       globalThis.DenizenVisitorSession?.showDemoAccountModal?.()
         .then((result) => {
@@ -700,12 +861,159 @@
       if (createBtn) createBtn.hidden = !!hasAccount;
       if (copyEl) {
         copyEl.textContent = hasAccount
-          ? 'Demo account saved — log back in anytime from Demo → Log in. Team tools unlock when you join or create a team.'
-          : 'Save your progress with a username and password, or upgrade to a full team later.';
+          ? 'Demo account saved — use Get team access below to join with team code 1921 and your work email.'
+          : 'Save your progress with a username and password, or use Get team access to join the full workspace.';
       }
     } else {
       banner.hidden = true;
       banner.classList.remove('show');
+    }
+  }
+
+  let invitePayloadCache = null;
+
+  function detectInvitePlatform() {
+    return globalThis.DenizenClientPlatform?.detect?.() || 'windows';
+  }
+
+  function invitePlatformLabel(platform) {
+    return globalThis.DenizenClientPlatform?.label?.(platform) || 'Windows';
+  }
+
+  function updateInviteInstallHint(platform) {
+    const el = rootEl?.querySelector('#denizen-acct-invite-install');
+    if (!el) return;
+    const p = platform || rootEl?.querySelector('#denizen-acct-invite-platform')?.value || 'windows';
+    const urls = invitePayloadCache || globalThis.DenizenClientPlatform?.DIRECT || {};
+    let url = urls.installer_url;
+    if (!url) {
+      if (p === 'mac') url = urls.macos_desktop_url || urls.mac;
+      else if (p === 'linux') url = urls.linux_desktop_url || urls.linux;
+      else url = urls.windows_desktop_url || urls.windows;
+    }
+    if (!url) {
+      url = globalThis.DenizenClientPlatform?.directDownloadUrl?.(p);
+    }
+    if (!url) {
+      el.hidden = true;
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML = `${invitePlatformLabel(p)} installer: <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url.split('/').pop() || 'Download')}</a>`;
+  }
+
+  function syncInvitePlatformSelect() {
+    const select = rootEl?.querySelector('#denizen-acct-invite-platform');
+    if (!select) return;
+    const detected = detectInvitePlatform();
+    if ([...select.options].some((o) => o.value === detected)) {
+      select.value = detected;
+    }
+    updateInviteInstallHint(select.value);
+  }
+
+  async function loadTeamInviteLink() {
+    const panel = rootEl?.querySelector('#denizen-acct-invite-panel');
+    const input = rootEl?.querySelector('#denizen-acct-invite-url');
+    if (!panel || !input) return;
+    const kind = accountKind(getSessionApi()?.getProfile?.() || {});
+    if (kind !== 'team' && kind !== 'ceo') {
+      panel.hidden = true;
+      return;
+    }
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    if (!sid) {
+      panel.hidden = true;
+      return;
+    }
+    try {
+      const res = await fetch(
+        `/api/visitor/team/invite-link?session_id=${encodeURIComponent(sid)}`,
+        { headers: api.authHeaders?.() || {} },
+      );
+      if (!res.ok) {
+        panel.hidden = true;
+        return;
+      }
+      const data = await res.json();
+      invitePayloadCache = data;
+      const url = data.short_join_url || data.join_url || '';
+      if (!url) {
+        panel.hidden = true;
+        return;
+      }
+      input.value = url;
+      panel.hidden = false;
+      syncInvitePlatformSelect();
+    } catch (_) {
+      panel.hidden = true;
+    }
+  }
+
+  function setInviteStatus(message, isError = false) {
+    const el = rootEl?.querySelector('#denizen-acct-invite-status');
+    if (!el) return;
+    if (!message) {
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = message;
+    el.style.color = isError ? '#fca5a5' : '#9ae6b4';
+  }
+
+  async function sendTeamInviteEmail() {
+    const api = getSessionApi();
+    const sid = api?.getSessionId?.();
+    const email = String(rootEl?.querySelector('#denizen-acct-invite-email')?.value || '').trim().toLowerCase();
+    const displayName = String(rootEl?.querySelector('#denizen-acct-invite-name')?.value || '').trim();
+    const platform = rootEl?.querySelector('#denizen-acct-invite-platform')?.value || detectInvitePlatform();
+    const btn = rootEl?.querySelector('#denizen-acct-invite-send');
+    if (!sid) {
+      setInviteStatus('Sign in to send invites.', true);
+      return;
+    }
+    if (!email || !email.includes('@')) {
+      setInviteStatus('Enter a valid email address.', true);
+      rootEl?.querySelector('#denizen-acct-invite-email')?.focus();
+      return;
+    }
+    if (btn) btn.disabled = true;
+    setInviteStatus('Sending…');
+    try {
+      const res = await fetch('/api/visitor/team/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(api.authHeaders?.() || {}),
+        },
+        body: JSON.stringify({
+          session_id: sid,
+          email,
+          display_name: displayName || undefined,
+          platform,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || `Invite failed (${res.status})`);
+      }
+      if (data.emailed) {
+        setInviteStatus(`Invite sent to ${email} (${invitePlatformLabel(data.platform || platform)}).`);
+        return;
+      }
+      const subjectLabels = { windows: 'Windows', mac: 'Mac', linux: 'Linux' };
+      const subject = encodeURIComponent(`Join Denizen — ${subjectLabels[data.platform || platform] || 'Desktop'} setup`);
+      const body = encodeURIComponent(data.email_draft || '');
+      const mailto = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${body}`;
+      window.location.href = mailto;
+      setInviteStatus('Email server not configured — opened your mail app with a draft instead.');
+    } catch (err) {
+      setInviteStatus(err?.message || 'Could not send invite', true);
+    } finally {
+      if (btn) btn.disabled = false;
     }
   }
 
@@ -739,6 +1047,7 @@
       const notify = rootEl?.querySelector('#denizen-acct-notify-email');
       if (notify) notify.checked = settings.notify_email !== false;
       await loadSkillProposals(!!settings.can_approve_skills);
+      await loadTeamInviteLink();
     } catch (_) {}
   }
 
@@ -851,10 +1160,15 @@
     await loadAccountSettings();
   }
 
-  function mountProfileUi(tab) {
+  function mountProfileUi(tab = 'overview') {
     const api = getSessionApi();
     const profile = switchingProfile || api?.getProfile?.() || {};
-    globalThis.DenizenProfileUI?.mount?.(rootEl, profile, { expandTab: tab });
+    const mountPromise = globalThis.DenizenProfileUI?.mount?.(rootEl, profile, { expandTab: tab });
+    if (mountPromise?.catch) {
+      mountPromise.catch((err) => {
+        console.warn('[DenizenAccountPanel] profile UI mount failed:', err?.message || err);
+      });
+    }
   }
 
   function renderProfile() {
@@ -960,7 +1274,10 @@
     let html = '';
     html += statRow('Account', kind === 'team' ? 'Team user' : kind === 'ceo' ? 'Owner' : kind === 'demo' ? 'Personal demo' : 'Guest');
     if (serverLabel) html += statRow(kind === 'team' ? 'Team server' : 'Server', escapeHtml(serverLabel));
-    if (role) html += statRow('Role', escapeHtml(role), profile.canApproveSkills ? 'active' : '');
+    if (role) html += statRow('Position', escapeHtml(role), profile.canApproveSkills ? 'active' : '');
+    if (profile?.teamRole && profile?.workPosition?.title && cleanRoleLabel(profile.teamRole)) {
+      html += statRow('Team access', escapeHtml(cleanRoleLabel(profile.teamRole)));
+    }
     html += statRow('Server rules', profile.canApproveSkills ? 'Can approve tools' : (kind === 'team' ? 'Team policy' : 'Sandboxed'));
     html += statRow('Tier', `<span class="acct-tier">${String(tier).toUpperCase()}</span>`);
     html += statRow('Access', String(access));
@@ -1060,6 +1377,7 @@
       renderProfile();
     });
     document.addEventListener('denizen-visitor-profile-updated', () => {
+      roleMetaLoaded = true;
       switchingProfile = null;
       renderProfile();
     });
@@ -1075,6 +1393,9 @@
         if (toggleEl) toggleEl.textContent = '▾';
       }
       renderProfile();
+    });
+    document.addEventListener('denizen-phone-app-close', (event) => {
+      if (event?.detail?.appId === 'profile') collapseForPhone();
     });
     window.addEventListener('denizen-node-status', () => {
       if (expanded) renderStats();
@@ -1095,11 +1416,24 @@
     mountProfileUi('overview');
   }
 
+  function collapseForPhone() {
+    expanded = false;
+    if (rootEl) {
+      rootEl.dataset.expanded = '0';
+      const identityEl = rootEl.querySelector('#denizen-acct-identity');
+      const toggleEl = rootEl.querySelector('#denizen-acct-toggle');
+      if (identityEl) identityEl.setAttribute('aria-expanded', 'false');
+      if (toggleEl) toggleEl.textContent = '▾';
+    }
+  }
+
   const DenizenAccountPanel = {
     init,
     renderProfile,
     renderStats,
     expandForDrawer,
+    expandForPhone: expandForDrawer,
+    collapseForPhone,
   };
 
   globalThis.DenizenAccountPanel = DenizenAccountPanel;

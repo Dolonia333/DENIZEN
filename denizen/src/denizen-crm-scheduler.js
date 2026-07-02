@@ -26,7 +26,7 @@ const _atRiskSent = new Map();
 
 const _ticketSlaSent = new Map();
 
-const _inactiveSent = new Map();
+const _setupNudgeSent = new Map();
 
 
 
@@ -314,6 +314,28 @@ function startCrmScheduler(deps = {}) {
 
         }
 
+      }
+
+      const setupSummary = crmSetup.buildSetupSummary(state);
+      const setupKey = `${oid}:setup:${new Date().toISOString().slice(0, 10)}`;
+      if (hour === 10
+        && !_setupNudgeSent.has(setupKey)
+        && setupSummary.onboarding?.completed < setupSummary.onboarding?.total
+        && crmSetup.shouldNotify(state, 'setup-reminder')) {
+        _setupNudgeSent.set(setupKey, Date.now());
+        const setupWizard = require('./denizen-crm-setup-wizard');
+        const orgSlug = denizenDb.orgSlug || process.env.DENIZEN_ORG_SLUG || null;
+        const nudge = setupWizard.buildSetupNudge(state, { orgSlug });
+        if (nudge && typeof broadcastToOffice === 'function') {
+          broadcastToOffice(oid, {
+            type: 'crm_event',
+            kind: 'setup-reminder',
+            npcName: nudge.npcName,
+            text: nudge.text,
+            crm_actions: nudge.crm_actions,
+            at: new Date().toISOString(),
+          });
+        }
       }
 
     } catch (err) {

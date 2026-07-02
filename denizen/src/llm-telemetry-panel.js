@@ -1047,6 +1047,9 @@
           ${s.avgConversationMsgs != null
             ? `<div><span style="color:#64748b">History depth:</span> avg ${s.avgConversationMsgs} msgs · max <b style="color:${convoColor}">${s.maxConversationMsgs}</b> msgs per call${s.maxConversationMsgs > 40 ? ' <span style="color:#fda4af; font-size:10px">— trim history</span>' : ''}</div>`
             : ''}
+          ${s.avgPromptChars != null
+            ? `<div><span style="color:#64748b">Est. prompt size:</span> ~${s.avgPromptChars} chars/call <span style="color:#64748b; font-size:10px">(think uses trimmed SOUL)</span></div>`
+            : ''}
         </div>
       </div>
 

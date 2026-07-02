@@ -1,6 +1,8 @@
 # Denizen Compute Mesh
 
-Distributed compute network for Denizen: machines report live hardware metrics, register as worker nodes, claim jobs from a shared queue, execute work (including LM Studio inference on GPU hosts), and award contribution credits.
+Distributed compute network for Denizen: machines report live hardware metrics, register as worker nodes, claim jobs from a shared queue, execute work (including local inference via Ollama or LM Studio on GPU hosts), and award contribution credits.
+
+**Denizen-to-Denizen inference:** See [DENIZEN_INFERENCE_MESH.md](DENIZEN_INFERENCE_MESH.md) for architecture and [GAP_CLOSURE_PLAN.md](GAP_CLOSURE_PLAN.md) for Phase 4+ execution plan.
 
 **Status (Dolonia home lab):** three-node mesh operational — dolonia (host + GPU), Synology NAS, Kali laptop (`hp81081d`).
 
@@ -76,7 +78,9 @@ Remote agents must **not** use `127.0.0.1` or LAN-only URLs unless they are on t
 | `src/denizen-compute-queue.js` | Supabase-backed job queue |
 | `src/denizen-compute-routes.js` | REST API — register, claim, complete, fleet report, bundle download |
 | `src/denizen-compute-producer.js` | Auto mesh job producer |
-| `src/denizen-mesh-job-runner.js` | Shared job execution (LM Studio + mock) |
+| `src/denizen-mesh-job-runner.js` | Shared job execution (inference runtime + mock) |
+| `src/denizen-inference-runtime.js` | Ollama + LM Studio probe and chat |
+| `src/denizen-inference-rpc.js` | Denizen-to-Denizen `inference_rpc` orchestration |
 | `src/denizen-fleet-registry.js` | In-memory fleet metrics aggregation |
 | `src/denizen-fleet-agent-bundle.js` | Agent tarball builder (delegates to Python tarfile) |
 | `src/mesh-jobs-panel.js` | Browser UI panel |
@@ -214,14 +218,29 @@ bash infra/pull-install-kali-agent.sh
 
 Or manual steps — see [infra/README.md](../../infra/README.md) § Kali.
 
-### Denizen Desktop
+### Denizen Desktop (GPU worker on 192.168.1.232)
 
-1. Build installer: `cd denizen/desktop && npm run build:win`
-2. Install `dist-build/Denizen-Setup.exe`
-3. Complete setup wizard → compute opt-in
-4. Worker uses `compute-worker.js` + bundled `denizen-src` modules
+The missing piece for 0 fleet nodes is running the full Denizen Desktop app on the GPU PC (.232) and enabling it as a City Power contributor.
 
-See [desktop/README.md](../desktop/README.md).
+**Exact steps:**
+1. On the .232 machine (the one with LM Studio):
+   - Ensure Denizen Desktop is installed (or build: `cd denizen/desktop && npm run build:win` then install the exe).
+   - Run the app and complete the initial setup wizard (pair to your Denizen server at 192.168.1.237:8888 or the public URL).
+2. Open the in-app phone (or desktop compute panel):
+   - Go to **Compute** tab (or "City Power").
+   - Set contribution **level** to "light" or "host".
+   - Toggle **"Power the city"** / opt-in.
+   - It should report as linked and appear in fleet.
+3. Verify:
+   - In browser: open Compute panel or `?mesh=1` or bottom dock mesh chip.
+   - Run health-check (scope mesh) — fleet_nodes should increase.
+   - Research / web_search jobs will now claim and run with visible browser (`headless: false`).
+
+This registers the node so it can claim `web_search`, inference, etc. from the queue. Once active, pending jobs (currently 6) will start getting assigned.
+
+See the City Power probe script (`scripts/city-power-probe.mjs`) for the exact UI/API flow used in tests.
+
+See [desktop/README.md](../desktop/README.md) for build/pairing details.
 
 ### Tailscale
 
@@ -336,6 +355,7 @@ py infra/apply-migrations-nas.py
 ## Related docs
 
 - [infra/README.md](../../infra/README.md) — NAS SSH, Kali pull install, Tailscale, orchestrator
+- [MESH_SCALING.md](MESH_SCALING.md) — NAS hosting, redundancy, ~100-user capacity
 - [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md) — cloud deploy + service role
 - [TESTING.md](TESTING.md) — smoke script index
 - [desktop/README.md](../desktop/README.md) — Electron contributor node

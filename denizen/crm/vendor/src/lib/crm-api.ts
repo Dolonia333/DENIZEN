@@ -42,10 +42,21 @@ export type CrmWorkspaceState = {
 export type CrmTeamMember = { display_name: string; email: string; role: string; is_self?: boolean };
 export type CrmSessionInfo = {
   display_name: string | null;
+  username?: string | null;
+  org_slug?: string | null;
   email: string | null;
   tier: string | null;
   ceo?: boolean;
+  team_role?: string | null;
+  can_approve_skills?: boolean;
+  is_owner?: boolean;
+  work_position?: { title?: string | null } | null;
 };
+
+const LEGACY_CEO_NAME = /^dolonia$/i;
+const GUEST_LABEL = /^guest$/i;
+const DEMO_PLACEHOLDER_NAME = /^(dolonia|guest)$/i;
+const CEO_DISPLAY_NAME = "Dolonia";
 
 export type PublicQuote = {
   id: number;
@@ -160,10 +171,31 @@ function persistSession(patch: SessionStore) {
   localStorage.setItem(SESSION_KEY, JSON.stringify(next));
 }
 
+function sessionAccessMethod(session: SessionStore | null): string {
+  const raw = session || normalizeDenizenSession() || readRawStore();
+  return String(raw.access_method || raw.accessMethod || "").toLowerCase();
+}
+
+function isDemoSession(session: SessionStore | null): boolean {
+  const raw = session || normalizeDenizenSession() || readRawStore();
+  const tier = String(raw.tier || "").toLowerCase();
+  const method = sessionAccessMethod(session);
+  const orgSlug = String(raw.org_slug || raw.orgSlug || "").toLowerCase();
+  return tier === "demo" || method === "demo" || method === "demo_login" || orgSlug === "acme";
+}
+
 function isCeoSession(session: SessionStore | null): boolean {
+  if (isDemoSession(session)) return false;
   if (!session) return false;
   if (session.access_method === "ceo" || session.tier === "ceo") return true;
+  const method = sessionAccessMethod(session);
+  if (method && method !== "ceo") return false;
   return !!readCeoGrant();
+}
+
+export function isCeoPrincipalSession(): boolean {
+  absorbUrlSessionParams();
+  return isCeoSession(normalizeDenizenSession());
 }
 
 function absorbUrlSessionParams() {
@@ -178,9 +210,9 @@ function absorbUrlSessionParams() {
     persistSession({
       session_id: sid || prev.session_id || prev.sessionId,
       session_token: tok || prev.session_token || prev.sessionToken,
-      access_method: prev.access_method || prev.accessMethod || (readCeoGrant() ? "ceo" : undefined),
-      tier: prev.tier || (readCeoGrant() ? "ceo" : undefined),
-      display_name: prev.display_name || prev.displayName || (readCeoGrant() ? "Dolonia" : undefined),
+      access_method: prev.access_method || prev.accessMethod || undefined,
+      tier: prev.tier || undefined,
+      display_name: prev.display_name || prev.displayName || undefined,
     });
     params.delete("dz_sid");
     params.delete("dz_session");
@@ -212,17 +244,78 @@ function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
   });
 }
 
+function rawDemoUsername(): string | null {
+  const raw = readRawStore();
+  return String(raw.demo_username || raw.demoUsername || "").trim() || null;
+}
+
+export function resolveProfileDisplayName(
+  name: string | null | undefined,
+  opts: { tier?: string | null; username?: string | null; ceo?: boolean; org_slug?: string | null; email?: string | null } = {},
+): string | null {
+  const tier = String(opts.tier || "").toLowerCase();
+  const orgSlug = String(opts.org_slug || "").toLowerCase();
+  const username = String(opts.username || rawDemoUsername() || "").trim() || null;
+  const emailLocal = String(opts.email || "").split("@")[0]?.trim() || null;
+  const n = String(name || "").trim();
+  const demo = tier === "demo" || orgSlug === "acme";
+  const ceo = !!opts.ceo || (tier === "ceo" && !demo);
+
+  if (ceo) {
+    if (n && !GUEST_LABEL.test(n)) return n;
+    return CEO_DISPLAY_NAME;
+  }
+  if (demo) {
+    if (n && !DEMO_PLACEHOLDER_NAME.test(n)) return n;
+    return username || emailLocal || null;
+  }
+  if (GUEST_LABEL.test(n) || LEGACY_CEO_NAME.test(n)) {
+    return username || emailLocal || null;
+  }
+  return n || null;
+}
+
+async function pullVisitorProfileHints(session: SessionStore | null): Promise<{ display_name?: string | null; username?: string | null; email?: string | null }> {
+  if (!session?.session_id) return {};
+  try {
+    const res = await fetchWithTimeout(
+      `/api/visitor/settings?session_id=${encodeURIComponent(session.session_id)}`,
+      { headers: authHeaders(session) },
+    );
+    const data = await res.json().catch(() => ({}));
+    const settings = data.settings || {};
+    return {
+      display_name: settings.display_name || null,
+      username: settings.demo_username || null,
+      email: settings.email || null,
+    };
+  } catch {
+    return {};
+  }
+}
+
 function authHeaders(session: SessionStore | null): HeadersInit {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (session?.session_id) headers["X-Session-Id"] = session.session_id;
   if (session?.session_token) headers["X-Session-Token"] = session.session_token;
-  if (isCeoSession(session)) {
+  if (isDemoSession(session)) {
+    headers["X-Demo"] = "1";
+    headers["X-Access-Method"] = sessionAccessMethod(session) || "demo";
+  } else if (isCeoSession(session)) {
     headers["X-Access-Method"] = "ceo";
     const grant = readCeoGrant();
     if (grant) headers["X-Denizen-Ceo-Grant"] = grant;
+  } else if (session?.access_method) {
+    headers["X-Access-Method"] = session.access_method;
   }
   if (session?.org_slug) headers["X-Org-Slug"] = session.org_slug;
-  if (session?.display_name) headers["X-Display-Name"] = session.display_name;
+  const displayHeader = resolveProfileDisplayName(session?.display_name, {
+    tier: session?.tier,
+    org_slug: session?.org_slug,
+    username: rawDemoUsername(),
+    ceo: isCeoSession(session),
+  });
+  if (displayHeader) headers["X-Display-Name"] = displayHeader;
   return headers;
 }
 
@@ -240,29 +333,78 @@ function ceoBootstrapHeaders(session: SessionStore | null): Record<string, strin
   return headers;
 }
 
+function visitorBootstrapHeaders(session: SessionStore | null): Record<string, string> {
+  const raw = readRawStore();
+  const demo = isDemoSession(session);
+  const headers: Record<string, string> = {
+    "X-Display-Name": resolveProfileDisplayName(session?.display_name || raw.display_name || raw.displayName, {
+      tier: session?.tier,
+      org_slug: session?.org_slug || raw.org_slug || raw.orgSlug,
+      username: rawDemoUsername(),
+      ceo: isCeoSession(session),
+    })
+      || rawDemoUsername()
+      || "Demo user",
+    "X-Org-Slug": session?.org_slug || raw.org_slug || raw.orgSlug || (demo ? "acme" : DEFAULT_ORG_SLUG),
+  };
+  if (demo) {
+    headers["X-Demo"] = "1";
+    headers["X-Access-Method"] = sessionAccessMethod(session) || "demo";
+  } else if (session?.access_method) {
+    headers["X-Access-Method"] = session.access_method;
+  }
+  if (session?.session_id) headers["X-Session-Id"] = session.session_id;
+  if (session?.session_token) headers["X-Session-Token"] = session.session_token;
+  return headers;
+}
+
 async function openDenizenSession(session: SessionStore | null): Promise<SessionStore | null> {
+  const demo = isDemoSession(session);
   const res = await fetchWithTimeout("/api/visitor/session/open", {
     method: "GET",
-    headers: ceoBootstrapHeaders(session),
+    headers: isCeoSession(session) ? ceoBootstrapHeaders(session) : visitorBootstrapHeaders(session),
   });
   if (!res.ok) return session?.session_id ? session : null;
   const data = await res.json().catch(() => ({}));
   const sessionId = data.session?.id || session?.session_id || null;
   const token = data.session_token || session?.session_token || null;
   if (!sessionId) return null;
+  const serverTier = String(data.tier || data.session?.metadata?.tier || "").toLowerCase();
+  const resolvedDemo = demo || serverTier === "demo";
+  const resolvedCeo = !resolvedDemo && (!!data.ceo_grant || isCeoSession(session));
   const next: SessionStore = {
     session_id: sessionId,
     session_token: token,
-    org_slug: data.org?.slug || session?.org_slug || DEFAULT_ORG_SLUG,
-    display_name: session?.display_name || "Dolonia",
-    tier: "ceo",
-    access_method: "ceo",
+    org_slug: data.org?.slug || session?.org_slug || (resolvedDemo ? "acme" : DEFAULT_ORG_SLUG),
+    display_name: resolveProfileDisplayName(
+      session?.display_name || data.session?.display_name || data.identity?.display_name || rawDisplayName(),
+      {
+        tier: resolvedDemo ? "demo" : resolvedCeo ? "ceo" : session?.tier,
+        org_slug: data.org?.slug || session?.org_slug,
+        username: rawDemoUsername(),
+        ceo: resolvedCeo,
+      },
+    )
+      || (resolvedCeo ? CEO_DISPLAY_NAME : null)
+      || rawDemoUsername()
+      || null,
+    tier: resolvedDemo ? "demo" : resolvedCeo ? "ceo" : session?.tier || null,
+    access_method: resolvedDemo
+      ? (sessionAccessMethod(session) || "demo")
+      : resolvedCeo ? "ceo" : session?.access_method || null,
   };
   persistSession(next);
-  if (data.ceo_grant) {
+  if (resolvedDemo) {
+    try { localStorage.removeItem(CEO_GRANT_KEY); } catch { /* ignore */ }
+  } else if (data.ceo_grant) {
     try { localStorage.setItem(CEO_GRANT_KEY, data.ceo_grant); } catch { /* ignore */ }
   }
   return next;
+}
+
+function rawDisplayName(): string | null {
+  const raw = readRawStore();
+  return raw.display_name || raw.displayName || null;
 }
 
 async function loadSessionFromServerCookie(): Promise<SessionStore | null> {
@@ -270,35 +412,131 @@ async function loadSessionFromServerCookie(): Promise<SessionStore | null> {
   const data = await res.json().catch(() => ({}));
   if (!data.ok || !data.session_id) return null;
   const prev = normalizeDenizenSession() || {};
+  const demo = data.tier === "demo" || String(data.org_slug || "").toLowerCase() === "acme";
+  const prevName = demo && LEGACY_CEO_NAME.test(String(prev.display_name || prev.displayName || ""))
+    ? null
+    : (prev.display_name || prev.displayName || null);
+  const displayName = resolveProfileDisplayName(data.display_name || prevName, {
+    tier: demo ? "demo" : data.tier,
+    org_slug: data.org_slug || prev.org_slug || null,
+    username: data.username,
+    ceo: !demo && !!data.ceo,
+  })
+    || (!demo && data.ceo ? CEO_DISPLAY_NAME : null)
+    || data.display_name
+    || prevName
+    || null;
   const next: SessionStore = {
     ...prev,
     session_id: data.session_id,
+    session_token: prev.session_token || prev.sessionToken || data.session_token || null,
     org_slug: data.org_slug || prev.org_slug || null,
-    tier: data.ceo ? "ceo" : (prev.tier || data.tier || null),
-    access_method: data.ceo ? "ceo" : (prev.access_method || null),
-    display_name: data.ceo ? "Dolonia" : (prev.display_name || null),
+    tier: demo ? "demo" : data.ceo ? "ceo" : (data.tier || prev.tier || null),
+    access_method: demo ? "demo" : data.ceo ? "ceo" : (prev.access_method || null),
+    display_name: displayName,
   };
+  if (demo) {
+    try { localStorage.removeItem(CEO_GRANT_KEY); } catch { /* ignore */ }
+  }
   persistSession(next);
+  if (!next.session_token) {
+    const refreshed = await openDenizenSession(next);
+    if (refreshed?.session_token) return refreshed;
+  }
   return next;
+}
+
+function scrubLegacyCeoSessionStore() {
+  const raw = readRawStore();
+  const session = normalizeDenizenSession(raw);
+  if (isCeoSession(session) && !isDemoSession(session)) {
+    if (GUEST_LABEL.test(String(raw.display_name || raw.displayName || "")) || !raw.display_name) {
+      persistSession({
+        display_name: CEO_DISPLAY_NAME,
+        tier: "ceo",
+        access_method: "ceo",
+        org_slug: raw.org_slug || raw.orgSlug || DEFAULT_ORG_SLUG,
+      });
+    }
+    return;
+  }
+  if (!isDemoSession(session)) return;
+  try { localStorage.removeItem(CEO_GRANT_KEY); } catch { /* ignore */ }
+  const legacyName = LEGACY_CEO_NAME.test(String(raw.display_name || raw.displayName || ""));
+  const guestName = GUEST_LABEL.test(String(raw.display_name || raw.displayName || ""));
+  if (!legacyName && !guestName && raw.tier === "demo") return;
+  persistSession({
+    tier: "demo",
+    access_method: sessionAccessMethod(session) || "demo",
+    org_slug: raw.org_slug || raw.orgSlug || "acme",
+    display_name: resolveProfileDisplayName(raw.display_name || raw.displayName, {
+      tier: "demo",
+      org_slug: raw.org_slug || raw.orgSlug || "acme",
+      username: rawDemoUsername(),
+    }) || rawDemoUsername() || null,
+  });
+}
+
+async function syncSessionProfileFromServer(session: SessionStore | null): Promise<SessionStore | null> {
+  if (!session?.session_id) return session;
+  try {
+    const qs = `?session_id=${encodeURIComponent(session.session_id)}`;
+    const res = await fetchWithTimeout(`/api/crm/session${qs}`, { headers: authHeaders(session) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return session;
+    const demo = data.tier === "demo" || isDemoSession(session);
+    if (demo) {
+      try { localStorage.removeItem(CEO_GRANT_KEY); } catch { /* ignore */ }
+    }
+    const displayName = resolveProfileDisplayName(data.display_name || session.display_name, {
+      tier: demo ? "demo" : data.tier,
+      org_slug: data.org_slug || session.org_slug,
+      username: data.username,
+      ceo: !!data.ceo,
+    });
+    const next: SessionStore = {
+      ...session,
+      tier: demo ? "demo" : (data.ceo ? "ceo" : (data.tier || session.tier || null)),
+      access_method: demo ? (sessionAccessMethod(session) || "demo") : (data.ceo ? "ceo" : session.access_method),
+      org_slug: data.org_slug || session.org_slug || null,
+      display_name: displayName
+        || (data.ceo ? CEO_DISPLAY_NAME : null)
+        || (demo ? (data.username || rawDemoUsername() || null) : session.display_name || null),
+    };
+    if (demo && LEGACY_CEO_NAME.test(String(next.display_name || ""))) {
+      next.display_name = data.username || rawDemoUsername() || null;
+    }
+    persistSession(next);
+    return next;
+  } catch {
+    return session;
+  }
 }
 
 export async function ensureDenizenSession(): Promise<SessionStore | null> {
   if (bootstrapPromise) return bootstrapPromise;
   bootstrapPromise = (async () => {
     absorbUrlSessionParams();
+    scrubLegacyCeoSessionStore();
 
     let session = normalizeDenizenSession();
-    if (session?.session_id && session.session_token) return session;
+    if (session?.session_id && session.session_token) {
+      return syncSessionProfileFromServer(session);
+    }
 
     if (!session?.session_id) {
       session = await loadSessionFromServerCookie();
     }
 
-    if (!session?.session_id && readCeoGrant()) {
+    if (!session?.session_id && readCeoGrant() && !isDemoSession(session)) {
       session = await openDenizenSession(session);
     } else if (session?.session_id && !session.session_token) {
       const refreshed = await openDenizenSession(session);
       session = refreshed || session;
+    }
+
+    if (session?.session_id) {
+      session = await syncSessionProfileFromServer(session) || session;
     }
 
     return session;
@@ -705,6 +943,7 @@ export function publicIntakePageUrl(orgSlug: string): string {
 export async function inviteCrmTeamMember(payload: {
   email: string;
   displayName?: string;
+  platform?: string;
 }): Promise<{ ok: boolean; emailed?: boolean; joinUrl?: string; error?: string; message?: string }> {
   const session = await ensureDenizenSession();
   if (!session?.session_id) return { ok: false, error: 'no_session' };
@@ -729,14 +968,100 @@ export async function fetchCrmSession(): Promise<CrmSessionInfo | null> {
     const qs = `?session_id=${encodeURIComponent(session.session_id)}`;
     const res = await fetchWithTimeout(`/api/crm/session${qs}`, { headers: authHeaders(session) });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) return null;
+    if (!res.ok || !data.ok) {
+      if (isDemoSession(session)) {
+        return {
+          display_name: resolveProfileDisplayName(session.display_name, {
+            tier: "demo",
+            org_slug: session.org_slug,
+            username: rawDemoUsername(),
+          }) || rawDemoUsername() || "Demo user",
+          email: null,
+          tier: "demo",
+          ceo: false,
+        };
+      }
+      if (isCeoSession(session)) {
+        return {
+          display_name: resolveProfileDisplayName(session.display_name, { tier: "ceo", ceo: true })
+            || CEO_DISPLAY_NAME,
+          email: null,
+          tier: "ceo",
+          ceo: true,
+        };
+      }
+      return null;
+    }
+    const demo = data.tier === "demo" || String(data.org_slug || "").toLowerCase() === "acme" || isDemoSession(session);
+    const ceo = !demo && (!!data.ceo || data.tier === "ceo");
+    const hints = demo ? await pullVisitorProfileHints(session) : {};
+    const username = data.username || hints.username || rawDemoUsername() || null;
+    const resolvedName = resolveProfileDisplayName(data.display_name || session.display_name, {
+      tier: demo ? "demo" : data.tier,
+      org_slug: data.org_slug || session.org_slug,
+      username,
+      email: data.email || hints.email,
+      ceo,
+    })
+      || (ceo ? CEO_DISPLAY_NAME : null)
+      || username
+      || (hints.email ? String(hints.email).split("@")[0] : null)
+      || (demo ? "Demo user" : null);
+    if (demo) {
+      try { localStorage.removeItem(CEO_GRANT_KEY); } catch { /* ignore */ }
+      persistSession({
+        session_id: session.session_id,
+        session_token: session.session_token || undefined,
+        tier: "demo",
+        access_method: sessionAccessMethod(session) || "demo",
+        org_slug: data.org_slug || session.org_slug || "acme",
+        display_name: resolvedName,
+        demo_username: username || undefined,
+      });
+    } else if (ceo) {
+      persistSession({
+        session_id: session.session_id,
+        session_token: session.session_token || undefined,
+        tier: "ceo",
+        access_method: "ceo",
+        org_slug: data.org_slug || session.org_slug || DEFAULT_ORG_SLUG,
+        display_name: resolvedName,
+      });
+    }
     return {
-      display_name: data.display_name || null,
-      email: data.email || null,
-      tier: data.tier || null,
-      ceo: !!data.ceo,
+      display_name: resolvedName,
+      username: username || null,
+      org_slug: data.org_slug || session.org_slug || null,
+      email: data.email || hints.email || null,
+      tier: demo ? "demo" : ceo ? "ceo" : (data.tier || null),
+      ceo,
+      team_role: data.team_role || null,
+      can_approve_skills: !!data.can_approve_skills,
+      is_owner: demo ? false : !!data.is_owner,
+      work_position: data.work_position || null,
     };
   } catch {
+    if (isDemoSession(session)) {
+      return {
+        display_name: resolveProfileDisplayName(session.display_name, {
+          tier: "demo",
+          org_slug: session.org_slug,
+          username: rawDemoUsername(),
+        }) || rawDemoUsername() || "Demo user",
+        email: null,
+        tier: "demo",
+        ceo: false,
+      };
+    }
+    if (isCeoSession(session)) {
+      return {
+        display_name: resolveProfileDisplayName(session.display_name, { tier: "ceo", ceo: true })
+          || CEO_DISPLAY_NAME,
+        email: null,
+        tier: "ceo",
+        ceo: true,
+      };
+    }
     return null;
   }
 }

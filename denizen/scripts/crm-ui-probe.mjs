@@ -2,6 +2,7 @@
 // Usage: node scripts/crm-ui-probe.mjs [baseUrl]
 import { chromium } from 'playwright';
 import fs from 'node:fs';
+import { loginOwner } from './lib/probe-login.mjs';
 
 const BASE = (process.argv[2] || 'http://localhost:8081').replace(/\/$/, '');
 const CRM_URL = `${BASE}/crm/`;
@@ -33,13 +34,7 @@ const check = (name, cond, detail = '') => {
 console.log(`Probing ${BASE}`);
 await page.goto(`${BASE}/?reset=1`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 await page.waitForTimeout(1500);
-if (await page.locator('#denizen-visitor-name-modal').count()) {
-  await page.click('[data-action="path-ceo"]');
-  await page.waitForTimeout(400);
-  await page.fill('#denizen-visitor-code-input', 'Dolonia');
-  await page.click('[data-action="submit-ceo-code"]');
-  await page.waitForTimeout(10_000);
-}
+await loginOwner(page);
 const sid = await page.evaluate(() => JSON.parse(localStorage.getItem('denizen-visitor-session') || '{}').session_id);
 let crmUrl = CRM_URL;
 if (sid) crmUrl += `?dz_sid=${encodeURIComponent(sid)}`;

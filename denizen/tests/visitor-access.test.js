@@ -31,13 +31,18 @@ describe('visitor access config', () => {
 
   it('toClientConfig exposes visitorAccess without secrets', () => {
     const promptTuning = require('../src/prompt-tuning.js');
+    const { minPasswordLength, isDevPasswordRelaxed } = require('../src/denizen-team-password.js');
     const cfg = promptTuning.toClientConfig();
-    assert.deepEqual(cfg.visitorAccess, {
-      demoOrgSlug: 'acme',
-      teamOrgSlug: 'zion',
-      teamCodeRequired: true,
-      ceoAccessRequired: true,
-    });
+    assert.equal(cfg.visitorAccess.demoOrgSlug, 'acme');
+    assert.equal(cfg.visitorAccess.teamOrgSlug, 'zion');
+    assert.equal(cfg.visitorAccess.teamCodeRequired, true);
+    assert.equal(cfg.visitorAccess.ceoAccessRequired, true);
+    assert.equal(cfg.visitorAccess.minPasswordLength, minPasswordLength());
+    assert.equal(cfg.visitorAccess.devPasswordRelaxed, isDevPasswordRelaxed());
+    assert.equal(
+      cfg.visitorAccess.publicUrl,
+      String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '').replace(/\/+$/, '') || null,
+    );
     assert.equal(cfg.teamCode, undefined);
     assert.equal(cfg.ceoAccessCode, undefined);
   });
@@ -92,6 +97,8 @@ describe('visitor-access canUseRealWork', () => {
     assert.ok(DEMO_RESTRICTED_FEATURES.has('to_ceo'));
     assert.ok(DEMO_RESTRICTED_FEATURES.has('research_external'));
     assert.ok(DEMO_RESTRICTED_FEATURES.has('briefing'));
+    assert.ok(DEMO_RESTRICTED_FEATURES.has('mcp_connect'));
+    assert.ok(DEMO_RESTRICTED_FEATURES.has('slack_link'));
   });
 
   it('verifyAccessCode issues signed access_grant for ceo code', () => {

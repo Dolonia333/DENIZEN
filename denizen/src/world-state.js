@@ -122,6 +122,14 @@ class WorldState extends EventEmitter {
      *  at 200 pairs to avoid unbounded growth on long sessions. */
     this.lastContact = new Map();
 
+    /** Simple relationship notes per pair for better theory-of-mind.
+     *  Stores recent positive/negative interaction summaries to help NPCs
+     *  remember "Lucy was helpful with that research" or "Dan seemed stressed". */
+    this.relationshipNotes = new Map();
+
+    /** Recent social activity for office "vibe" — helps NPCs pick up on the general mood. */
+    this.recentSocialActivity = [];
+
     /** Per-NPC recent self-messages (de-dup window). Keyed by NPC name,
      *  value is a small ring of {text, ts}. Used by the self-repetition
      *  detector so NPCs notice "you already asked the same question 90s ago"
@@ -605,6 +613,11 @@ class WorldState extends EventEmitter {
         lines.push(`- Adjacent rooms: ${this.roomGraph[me.room].join(', ')}`);
       }
 
+      // CRM / lead gen awareness for purposeful orchestration (Grok/Lucy/Sarah/Bob priority)
+      if (npcName === 'xp_grok' || ['Lucy', 'Sarah', 'Bob', 'Marcus'].includes(npcName)) {
+        lines.push('- Lead gen & CRM: Use lead-monitor / intake-triage then crm-enrich-contact (smart-add) + crm-add-deal for fits. Reference recent research briefs and 1921/OMES focus when deciding who to enrich.');
+      }
+
       // Desk geography — your desk + the two nearest desks' owners. So
       // engineers know who's next to them physically, which matters for
       // "tap on the shoulder" interactions.
@@ -723,6 +736,26 @@ class WorldState extends EventEmitter {
       lines.push(`- Meeting in progress: ${att}`);
     }
 
+    // Surface simple relationship awareness for more human-like social behavior
+    if (me && this.relationshipNotes) {
+      const myNotes = [];
+      for (const [pair, note] of this.relationshipNotes) {
+        if (pair.includes(npcName)) {
+          const other = pair.replace(npcName, '').replace('|', '').trim();
+          if (other) myNotes.push(`${other}: ${note}`);
+        }
+      }
+      if (myNotes.length) {
+        lines.push(`- Your recent social notes: ${myNotes.slice(0, 3).join('; ')}`);
+      }
+    }
+
+    // Office social vibe from recent activity
+    if (this.recentSocialActivity && this.recentSocialActivity.length > 0) {
+      const recent = this.recentSocialActivity.slice(-3).map(s => `${s.from} talked to ${s.to}`).join(', ');
+      lines.push(`- Recent office chatter: ${recent}`);
+    }
+
     // Stuck-loop detection — check this NPC's exchange history against
     // every peer they've recently interacted with. If they've been
     // bouncing the same question back and forth, flag it so the prompt
@@ -778,6 +811,16 @@ class WorldState extends EventEmitter {
     }
 
     return lines.length ? lines.join('\n') : '';
+  }
+
+  /** Record a quick social note between two NPCs for relationship awareness */
+  recordSocialNote(from, to, note) {
+    const key = [from, to].sort().join('|');
+    this.relationshipNotes.set(key, note.slice(0, 120));
+
+    // Track recent social vibe
+    this.recentSocialActivity.push({ from, to, note: note.slice(0, 60), ts: Date.now() });
+    if (this.recentSocialActivity.length > 8) this.recentSocialActivity.shift();
   }
 
   // ---------------------------------------------------------------------
@@ -854,8 +897,80 @@ function _topicMatch(a, b) {
   return true;
 }
 
-// Singleton — every subsystem imports the same instance.
-const worldState = new WorldState();
+/**
+ * Per-org world-state buckets. Each org gets an isolated WorldState instance;
+ * change events are re-emitted on the registry with `orgId` attached.
+ */
+class WorldStateRegistry extends EventEmitter {
+  constructor() {
+    super();
+    this.setMaxListeners(64);
+    /** @type {Map<string, WorldState>} */
+    this._states = new Map();
+    this._defaultOrgId = process.env.DENIZEN_ORG_SLUG || '__default__';
+  }
+
+  getDefaultOrgId() {
+    return this._defaultOrgId;
+  }
+
+  setDefaultOrgId(orgId) {
+    const id = String(orgId || '').trim();
+    if (id) this._defaultOrgId = id;
+    return this._defaultOrgId;
+  }
+
+  forOrg(orgId) {
+    const id = String(orgId || this._defaultOrgId).trim() || this._defaultOrgId;
+    if (!this._states.has(id)) {
+      const ws = new WorldState();
+      ws.on('change', (evt) => {
+        try {
+          this.emit('change', { ...evt, orgId: id });
+        } catch (_) { /* drop */ }
+      });
+      this._states.set(id, ws);
+    }
+    return this._states.get(id);
+  }
+
+  listOrgIds() {
+    return [...this._states.keys()];
+  }
+}
+
+const registry = new WorldStateRegistry();
+
+function _activeWorldState() {
+  return registry.forOrg(registry.getDefaultOrgId());
+}
+
+// Proxy — existing imports keep using the default org bucket.
+const worldState = new Proxy(registry, {
+  get(target, prop, receiver) {
+    if (prop === 'forOrg') return target.forOrg.bind(target);
+    if (prop === 'getDefaultOrgId') return target.getDefaultOrgId.bind(target);
+    if (prop === 'setDefaultOrgId') return target.setDefaultOrgId.bind(target);
+    if (prop === 'listOrgIds') return target.listOrgIds.bind(target);
+    if (prop === 'WorldState') return WorldState;
+    if (prop === 'WorldStateRegistry') return WorldStateRegistry;
+    if (prop === '_topicFingerprint') return _topicFingerprint;
+    if (prop === 'on' || prop === 'off' || prop === 'once' || prop === 'removeListener'
+        || prop === 'removeAllListeners' || prop === 'listenerCount' || prop === 'listeners') {
+      const fn = target[prop];
+      return typeof fn === 'function' ? fn.bind(target) : fn;
+    }
+    const ws = _activeWorldState();
+    const val = ws[prop];
+    return typeof val === 'function' ? val.bind(ws) : val;
+  },
+  set(_target, prop, value) {
+    _activeWorldState()[prop] = value;
+    return true;
+  },
+});
+
 module.exports = worldState;
 module.exports.WorldState = WorldState;
+module.exports.WorldStateRegistry = WorldStateRegistry;
 module.exports._topicFingerprint = _topicFingerprint;
