@@ -1,21 +1,20 @@
-[Previous...]
+[Previous content for Stage 7...]
 
-## Stage 7 — Tailscale Mesh-Wide Task Delegation (implemented)
+## Operator's Control Deck: Real-Time Terminal Dashboard (implemented)
 
-Implemented peer health registry and delegation logic for cross-node load balancing over Tailscale.
+Added `scripts/fleet-dashboard.js` — a self-contained ANSI terminal UI (no extra deps) for live monitoring of the entire 3-node mesh.
 
-- writeHostMetrics / readFleetHealth in npc-local-metrics: each node writes data/fleet-telemetry/node-*.json with load/mem/storage.
-- In pollHostInfrastructure: auto writes on poll.
-- Delegation: in _checkAutonomyBacklog when host constrained, finds low-load peer (<50%), calls delegateTaskToPeer which writes to data/delegated-tasks/<peer>/task-*.json
-- Pickup: _checkDelegatedTasks on peers loads and auto executes via coding-agent if allowed.
-- Context injection: fleet health summary in telemetryContext for awareness.
-- When delegating, marks and peers pick up without duplicating.
+Features:
+- Fleet Health Matrix: live nodes from fleet-telemetry/*.json (load%, mem%, disk%, status ACTIVE/COOLDOWN).
+- Global Friction Tracker: top hot domains (aggregated from backlog + nas-friction).
+- Live Backlog & Mutex: pending items sorted by priority/friction, showing acquired_by locks and escalated items.
+- Mesh Cross-Talk Log: rolling events derived from current state (cooldowns, delegations, locks, NAS events).
 
-This makes business ops (self-builds, etc.) un-stoppable by shifting load to healthy nodes.
+Usage: node scripts/fleet-dashboard.js (refreshes every 1.5s).
 
-Sovereignty: peers run the same code, only payload moves via shared Tailscale-visible storage.
+This provides the diagnostic pane to watch emergent behavior (delegations, upvoting, cooldowns) and verify all the safety rails in real time.
 
-See write/readFleet, delegate/getDelegated, _checkDelegatedTasks, delegation block in _checkAutonomyBacklog.
+See scripts/fleet-dashboard.js for the renderer.
 
 ---
 
