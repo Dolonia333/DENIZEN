@@ -1,21 +1,21 @@
-[Previous content...]
+[Previous...]
 
-## Host Infrastructure Telemetry (pollHostInfrastructure + Environmental Cooldown)
+## Stage 7 — Tailscale Mesh-Wide Task Delegation (implemented)
 
-Implemented lightweight host metrics poller in npc-local-metrics.js bound to telemetry pulls.
+Implemented peer health registry and delegation logic for cross-node load balancing over Tailscale.
 
-- pollHostInfrastructure(): samples os.loadavg, totalmem/freemem, statfs for storage.
-- If load>90% or mem>90% or disk>95%: captureSystemError('system', 'host_infrastructure', {code: 'RESOURCE_EXHAUSTION' or STORAGE}).
-- Merged into friction scores as 'nas_*' / 'host_infrastructure' (decays).
-- In _checkAutonomyBacklog: if host constrained, suppress [SELF_BUILDING], call _setEnvironmentalCooldown (5min).
-- In allowAutonomousSkillRun: returns blocked with 'environmental_cooldown' reason.
-- Added to think telemetryContext for NPC awareness.
+- writeHostMetrics / readFleetHealth in npc-local-metrics: each node writes data/fleet-telemetry/node-*.json with load/mem/storage.
+- In pollHostInfrastructure: auto writes on poll.
+- Delegation: in _checkAutonomyBacklog when host constrained, finds low-load peer (<50%), calls delegateTaskToPeer which writes to data/delegated-tasks/<peer>/task-*.json
+- Pickup: _checkDelegatedTasks on peers loads and auto executes via coding-agent if allowed.
+- Context injection: fleet health summary in telemetryContext for awareness.
+- When delegating, marks and peers pick up without duplicating.
 
-This prevents agents from misattributing host load (CPU spike from model, disk I/O) to code bugs and spawning useless builds. Instead, they back off (throttle, postpone).
+This makes business ops (self-builds, etc.) un-stoppable by shifting load to healthy nodes.
 
-See pollHostInfrastructure, getFrictionScore merge, _setEnvironmentalCooldown, allow check.
+Sovereignty: peers run the same code, only payload moves via shared Tailscale-visible storage.
 
-This completes the host visibility layer.
+See write/readFleet, delegate/getDelegated, _checkDelegatedTasks, delegation block in _checkAutonomyBacklog.
 
 ---
 
