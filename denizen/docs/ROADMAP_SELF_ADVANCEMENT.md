@@ -1,66 +1,49 @@
-[Previous content up to the end of Stage 6 remains the same. Appending the new section for Multi-Agent Coordination.]
+[Keep previous content. Append this new subsection under Stage 6.5 or as 6.6.]
 
-## Stage 6.5 — Multi-Agent Coordination & Mutex Locking (just shipped)
+## Lock Settlement & Resolution Lifecycle (Orphaned Lock Safeguard - just shipped)
 
-With individual agent safety rails solid (friction decay, backlog lifecycle, attempt caps), the next frontier is **systemic contention** when multiple NPCs (Bob + Bouncer, etc.) independently decide to self-build fixes for shared resources.
+**Critical fix for the "Orphaned Lock" problem that could permanently deadlock domains.**
 
-### The Problem We Solved
-Without coordination:
-- Multiple agents detect friction in the same shared file/domain (e.g. `src/utils.js` or `research_parse`).
-- Both enter [SELF_BUILDING], both spawn coding-agent on the same target.
-- Race conditions, working tree corruption, broken builds, double escalations.
+### The Edge Case
+An `in_progress` lock acquired via `acquired_by` could be left forever if the `coding-agent`:
+- Fails silently
+- Crashes
+- Times out
+- Completes without cleanup
 
-### How the Coordination Layer Works
+Result: domain locked forever, other agents always yield, no more fixes attempted.
 
-Implemented in `src/npc-local-metrics.js` (appendBacklog + mark) and `src/npc-brains.js` (_checkAutonomyBacklog):
+### Implementation
 
-**1. Global Deduplication & Upvoting**
-- `appendBacklog(entry)` now scans existing pending/in_progress entries for matching `domain`.
-- If match found: 
-  - Add the new NPC to `impacted_npcs` array (if not already present).
-  - Bump `friction_score` to the max.
-  - Increment `priority` (capped at 10).
-  - Rewrite the file — no duplicate entry created.
-- High-impact systemic issues naturally bubble up because multiple agents "vote" by upvoting the same ticket.
+1. **Skill Completion Hook** (in `npc-brains.js` `injectSkillResult` + `npc-local-metrics.js` `settleBacklogLock`):
+   - When coding-agent result arrives for a backlog_id:
+     - **Success**: status = "resolved", clear `acquired_by`, **zero friction_score for all `impacted_npcs`** (the shared problem is fixed).
+     - **Failure**: increment `build_attempts`. If >= max (2), set "failed_escalated" and trigger high-priority `consult-mentors`. Else set "pending", clear `acquired_by` so it can be retried.
 
-**2. Multi-Agent Mutex (Build Locks)**
-- Before triggering a build, `_checkAutonomyBacklog` filters the backlog to `available` items (skips those where `status === 'in_progress' && acquired_by && acquired_by !== current_npc`).
-- When acquiring: `markBacklogInProgress(id, npcName)` sets `status: 'in_progress'` and `acquired_by: npcName` (plus updates last_triggered_ts and increments attempts).
-- Other NPCs gracefully yield (`reason: 'backlog_mutex_locked'`) and continue their normal cycle.
-- Lock is held for the duration of the build (future work: release on skill completion/failure).
+2. **Mutex Lease Timeout** (`expireOrphanedLocks`):
+   - Called on every backlog check and think telemetry pull.
+   - If `status === "in_progress"` and `now - last_triggered_ts > 15 minutes`: treat as expired.
+   - Auto: status = "pending", clear `acquired_by`, add note "[auto-expired orphan lock]".
+   - The next agent that checks will reclaim it.
 
-**Updated Backlog Schema Example (enriched on upvote/acquire)**
-```json
-{
-  "id": "...",
-  "ts": "...",
-  "npc": "Bob",
-  "domain": "shared_utils",
-  "friction_score": 42,
-  "build_prompt": "...",
-  "status": "in_progress",
-  "priority": 8,
-  "build_attempts": 1,
-  "last_triggered_ts": "...",
-  "impacted_npcs": ["Bob", "Bouncer"],
-  "acquired_by": "Bob"
-}
-```
+3. **Integrated**:
+   - `expireOrphanedLocks` called in `_checkAutonomyBacklog` before filtering.
+   - Settlement called automatically when skill result for coding-agent with backlog context arrives.
+   - Also exposed settlement functions for future explicit completion paths in coding-task-runner.
 
-### Why This Is Critical for Scaling
-- Prevents wasteful parallel work on the same problem.
-- High-severity shared friction rises in priority faster via collective upvoting.
-- Safe concurrency: only one agent mutates a resource at a time.
-- Still fully observable via the MCP backlog resource (mentors see who is impacted and who holds the lock).
-- Fits the zero-oversight goal: agents self-coordinate and self-yield without human intervention.
+### Why This Completes the Pipeline
+- No more permanent deadlocks.
+- Clean resolution on success (friction reset for everyone affected).
+- Proper retry accounting on failure with escalation.
+- Time-based lease as ultimate safety (agents can die, network can fail).
+- Keeps the "zero human oversight" promise: the mesh self-heals its coordination state.
 
-This layer was the direct next step after the lifecycle rails, as requested in the Grok-Claude mentor dialogue.
+This was the urgent priority to make the mutex "un-stuckable" before expanding domains.
 
-See also:
-- `appendBacklog` and `markBacklogInProgress` (dedup + lock acquisition)
-- `_checkAutonomyBacklog` (mutex filter + yield)
-- The active mentor session for continued refinement
+See:
+- `settleBacklogLock`, `expireOrphanedLocks` in npc-local-metrics.js
+- Settlement hook in injectSkillResult
+- Calls in _checkAutonomyBacklog
 
 ---
 
-[Continue with future stages...]
