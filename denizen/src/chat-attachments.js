@@ -46,16 +46,25 @@ const EXT_MIMES = {
 };
 
 function lmStudioBaseUrl() {
-  // Same resolution chain as lm-studio-router.js.
-  return (
-    process.env.LM_STUDIO_URL
-    || process.env.LM_STUDIO_BASE_URL
-    || 'http://localhost:1234'
-  ).replace(/\/$/, '');
+  // Prefer the router's live selected mesh node (handles LM_STUDIO_REMOTE_URLS
+  // pools where LM_STUDIO_URL is intentionally empty, e.g. the NAS container).
+  try {
+    const router = require('./lm-studio-router');
+    const active = router.activeInferenceUrl?.();
+    if (active) return String(active).replace(/\/$/, '');
+  } catch (_) { /* router optional */ }
+  const direct = (process.env.LM_STUDIO_URL || process.env.LM_STUDIO_BASE_URL || '').trim();
+  if (direct) return direct.replace(/\/$/, '');
+  const remotes = String(process.env.LM_STUDIO_REMOTE_URLS || '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
+  if (remotes.length) return remotes[0].replace(/\/$/, '');
+  return 'http://localhost:1234';
 }
 
 function visionModel() {
-  return process.env.LM_STUDIO_VISION_MODEL || 'qwen2.5-vl-32b-instruct';
+  // gemma-4-e2b is the mesh's loaded main model AND a true VLM (vision=True per
+  // /api/v0/models). The qwen2.5-vl build on the node lacks its vision projector.
+  return process.env.LM_STUDIO_VISION_MODEL || 'google/gemma-4-e2b';
 }
 
 function sanitizeName(name) {

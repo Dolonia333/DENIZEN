@@ -789,16 +789,19 @@ class PlayerChat {
       try { document.dispatchEvent(new CustomEvent('denizen-demo-engaged')); } catch (_) {}
     }
 
-    const extractSearch = window.DenizenOpenClawDispatch?.extractSearchQuery;
-    const extractJobBoard = window.DenizenOpenClawDispatch?.extractJobBoardSearchIntent;
-    const extractObserve = window.DenizenOpenClawDispatch?.extractScreenObserveIntent;
-    const extractScreenControl = window.DenizenOpenClawDispatch?.extractScreenControlIntent;
+    // With attachments, "look at this" means the FILES — suppress ambiguous
+    // intent shortcuts so the message reaches the NPC brain with the files.
+    const _suppressIntents = outgoingAttachments.length > 0;
+    const extractSearch = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractSearchQuery;
+    const extractJobBoard = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractJobBoardSearchIntent;
+    const extractObserve = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractScreenObserveIntent;
+    const extractScreenControl = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractScreenControlIntent;
     const extractBrowserStatus = window.DenizenOpenClawDispatch?.extractBrowserStatusIntent;
     const extractOpenBrowser = window.DenizenOpenClawDispatch?.extractOpenBrowserIntent;
     const extractOpenBrave = window.DenizenOpenClawDispatch?.extractOpenBraveIntent;
     const extractCloseBrowser = window.DenizenOpenClawDispatch?.extractCloseBrowserIntent;
     const extractBrowserRetry = window.DenizenOpenClawDispatch?.extractBrowserRetryIntent;
-    const extractBrowserRead = window.DenizenOpenClawDispatch?.extractBrowserReadIntent;
+    const extractBrowserRead = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractBrowserReadIntent;
     const isCancelUtterance = window.DenizenOpenClawDispatch?.isCancelUtterance;
     const extractJobBoardHelp = window.DenizenOpenClawDispatch?.extractJobBoardHelpIntent;
     const extractQueue = window.DenizenOpenClawDispatch?.extractResearchQueueIntent;
@@ -807,7 +810,7 @@ class PlayerChat {
     if (!searchQueryEarly && extractSearch) {
       searchQueryEarly = extractSearch(trimmed) || extractSearch(text.trim());
     }
-    const extractBareTopic = window.DenizenOpenClawDispatch?.extractBareSearchTopic;
+    const extractBareTopic = _suppressIntents ? null : window.DenizenOpenClawDispatch?.extractBareSearchTopic;
     if (!searchQueryEarly && extractBareTopic && (this._lucySearchContext || this._ceoConvo?.npcName === 'Lucy')) {
       searchQueryEarly = extractBareTopic(trimmed) || extractBareTopic(text.trim());
     }

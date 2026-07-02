@@ -9993,8 +9993,10 @@ agentWss.on('connection', (ws) => {
         }
 
         // Lucy web search — visible browser via web-search skill (not OpenClaw gateway).
-        let searchQuery = extractSearchQuery(playerText) || extractSearchQuery(normPlayerText)
-          || extractSearchQuery(rawPlayerText);
+        const hasChatAttachments = Array.isArray(msg.attachments) && msg.attachments.length > 0;
+        let searchQuery = hasChatAttachments ? null
+          : (extractSearchQuery(playerText) || extractSearchQuery(normPlayerText)
+          || extractSearchQuery(rawPlayerText));
         if (!searchQuery && npcName === 'Lucy') {
           const bare = extractBareSearchTopic(rawPlayerText);
           if (bare) searchQuery = bare;
@@ -10148,7 +10150,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Screen control — any NPC: click/type/fill on CEO's real screen (when asked).
-        if (!blockBrowserForCrm && extractScreenControlIntent(playerText) && !searchQuery) {
+        if (!hasChatAttachments && !blockBrowserForCrm && extractScreenControlIntent(playerText) && !searchQuery) {
           if (blockDemoTools()) return;
           if (ws.readyState === 1) ws.send(JSON.stringify({
             type: 'player_chat_response',
@@ -10182,7 +10184,7 @@ agentWss.on('connection', (ws) => {
         }
 
         // Screen observe — any NPC: screenshot, describe, web research fallback.
-        if (extractScreenObserveIntent(playerText) && !searchQuery) {
+        if (!hasChatAttachments && extractScreenObserveIntent(playerText) && !searchQuery) {
           if (blockDemoTools()) return;
           const observeInstruction = `The CEO said: "${playerText}". Describe their screen read-only — browser, URLs, typed text, forms. Search the web for anything unclear.`;
           if (ws.readyState === 1) ws.send(JSON.stringify({
