@@ -2578,28 +2578,47 @@ class PlayerChat {
     const attachBtn = panel.querySelector('#player-chat-attach');
     const fileInput = panel.querySelector('#player-chat-file');
     if (attachBtn && fileInput) {
-      attachBtn.addEventListener('click', () => fileInput.click());
+      // bindPress (pointerup-based) fires on real phones even when parent
+      // touch handlers preventDefault — a bare click listener does not.
+      const openPicker = () => fileInput.click();
+      if (window.DenizenTouchBind?.bindPress) {
+        window.DenizenTouchBind.bindPress(attachBtn, openPicker);
+      } else {
+        attachBtn.addEventListener('click', openPicker);
+      }
       fileInput.addEventListener('change', () => {
         this._addPendingFiles(fileInput.files);
         fileInput.value = '';
       });
     }
-    panel.addEventListener('dragover', (e) => {
-      if (e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes('Files')) {
-        e.preventDefault();
-        panel.classList.add('pc-drag-over');
-      }
-    });
-    panel.addEventListener('dragleave', (e) => {
-      if (!panel.contains(e.relatedTarget)) panel.classList.remove('pc-drag-over');
-    });
-    panel.addEventListener('drop', (e) => {
+    // Document-level capture so drops land anywhere over the app (including
+    // the phone frame around the chat panel) while chat is open. Capture
+    // phase beats overlays that stopPropagation.
+    const chatDropActive = () => {
+      if (!this._container) return false;
+      const style = getComputedStyle(this._container);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      const row = document.getElementById('player-chat-input-row');
+      return !!row && getComputedStyle(row).display !== 'none';
+    };
+    const hasFiles = (e) => !!(e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes('Files'));
+    document.addEventListener('dragover', (e) => {
+      if (!chatDropActive() || !hasFiles(e)) return;
+      e.preventDefault();
+      panel.classList.add('pc-drag-over');
+    }, { capture: true });
+    document.addEventListener('dragleave', (e) => {
+      if (!e.relatedTarget) panel.classList.remove('pc-drag-over');
+    }, { capture: true });
+    document.addEventListener('drop', (e) => {
       panel.classList.remove('pc-drag-over');
+      if (!chatDropActive()) return;
       if (e.dataTransfer?.files?.length) {
         e.preventDefault();
+        e.stopPropagation();
         this._addPendingFiles(e.dataTransfer.files);
       }
-    });
+    }, { capture: true });
     this._input.addEventListener('paste', (e) => {
       const files = Array.from(e.clipboardData?.files || []);
       if (files.length) {
@@ -3021,10 +3040,15 @@ class PlayerChat {
       x.className = 'pc-chip-x';
       x.textContent = '×';
       x.title = 'Remove';
-      x.onclick = () => {
+      const removeChip = () => {
         this._pendingAttachments.splice(i, 1);
         this._renderAttachChips();
       };
+      if (window.DenizenTouchBind?.bindPress) {
+        window.DenizenTouchBind.bindPress(x, removeChip);
+      } else {
+        x.onclick = removeChip;
+      }
       chip.appendChild(x);
       el.appendChild(chip);
     });
