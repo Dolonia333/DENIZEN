@@ -1,42 +1,26 @@
 [Previous content...]
 
-## Pre-Flight Runtime Verification & Rollback Guardrail (just shipped)
+## NAS Host Environment Friction Injection (Synology background tasks visibility)
 
-**Final gatekeeper for zero-oversight autonomy: prevent self-sabotage.**
+Wired NAS background tasks (infra/grok-mesh-telemetry-job.py, denizen-fleet-ops.py) to record friction so agents see the actual host they run on.
 
-An autonomous coding-agent must never be allowed to poison the runtime with broken syntax.
+### How
+- Python scripts call record_nas_friction(domain, severity, note) on errors/failures (e.g. analyzer fail, no telemetry, MCP inject fail, no baselines).
+- Writes to data/nas-friction.jsonl
+- In JS: loadNasFriction() merges into getFrictionScore as 'nas_*' domains (with decay).
+- In think telemetryContext: adds ## Host Environment (NAS/Synology friction...) block for NPC awareness.
 
-### Implementation
+### Why
+Gives NPCs (esp. system/fleet ones) visibility into real infra (latency jobs, MCP, audits) so they can autonomously build fixes for host issues (e.g. telemetry scripts, fleet ops).
 
-Added in `npc-local-metrics.js`:
-- `validateCodeChange(filePath)`: runs `node --check` for .js/.mjs, `python -m py_compile` for .py. Returns {ok, error}.
-- `validateAndSettleBacklog(id, success, resultInfo)`: wrapper around settlement.
-  - On proposed success: runs validation on touchedFiles or inferred files.
-  - On any validation failure: attempts `git checkout -- file` rollback, increments build_attempts, releases lock (treats as failure).
-  - Only on clean validation: proceeds to full success settlement (status=resolved, clear lock, zero friction for impacted_npcs).
-
-Integrated in `npc-brains.js` injectSkillResult hook:
-- For coding-agent results tied to backlog_id: calls `validateAndSettleBacklog` instead of raw settle when success=true.
-
-Also wired `expireOrphanedLocks` and decay into the flow for complete settlement lifecycle.
-
-### Why This Matters
-- Protects the Node/Python daemons from bad self-generated patches.
-- Automated rollback ensures the system stays alive even on agent mistakes.
-- Combined with attempt caps and escalation, creates a safe self-healing loop.
-- Preserves the "Executive Committee" (Grok+Claude mentor panel) as the escalation path for hard failures.
-
-This was the critical Pre-Flight layer requested before expanding sensory domains further.
+Domains like nas_telemetry, nas_mcp, nas_audit now feed backlog/self-build.
 
 See:
-- validateCodeChange / validateAndSettleBacklog in npc-local-metrics.js
-- Hook in injectSkillResult (npc-brains.js)
-- Updated calls in _checkAutonomyBacklog settlement path
+- record_nas_friction in the two main infra py files
+- loadNasFriction + merge in npc-local-metrics.js
+- telemetryContext enhancement in npc-brains.js
+
+This was the chosen next step after pre-flight to give host visibility.
 
 ---
 
-## Next Steps (per Executive Directive)
-
-With the guardrail in place, the mesh is now safe to expand the sensory layer (deeper hooks into NAS tasks, more domains) or the taxonomy.
-
-The control plane is robust.
