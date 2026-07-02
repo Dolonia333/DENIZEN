@@ -1,20 +1,17 @@
-[Previous content for Stage 7...]
+[Previous content...]
 
-## Operator's Control Deck: Real-Time Terminal Dashboard (implemented)
+## Chronos & Cognitive Context Friction Hooks (final sensory taxonomy)
 
-Added `scripts/fleet-dashboard.js` — a self-contained ANSI terminal UI (no extra deps) for live monitoring of the entire 3-node mesh.
+Added `cognitive_context` and `chronos_stagnation` domains via captureSystemError.
 
-Features:
-- Fleet Health Matrix: live nodes from fleet-telemetry/*.json (load%, mem%, disk%, status ACTIVE/COOLDOWN).
-- Global Friction Tracker: top hot domains (aggregated from backlog + nas-friction).
-- Live Backlog & Mutex: pending items sorted by priority/friction, showing acquired_by locks and escalated items.
-- Mesh Cross-Talk Log: rolling events derived from current state (cooldowns, delegations, locks, NAS events).
+- cognitive_context: in _build... and token estimation in npc-brains.js, if estimated tokens >3200 or high context, captureSystemError(npcName, 'cognitive_context', {code: 'CONTEXT_OVERFLOW'}).
+- chronos_stagnation: added _checkChronosStagnation using recent decision hashes from _lastDecisions / rt.lastDecisions. Detects 3x identical sig without 'finished' progress, triggers capture.
 
-Usage: node scripts/fleet-dashboard.js (refreshes every 1.5s).
+These feed the friction -> backlog -> self-build pipeline. High scores will now appear on dashboard and trigger autonomous fixes for memory bloat or decision loops (e.g. better pruning, strategy reset).
 
-This provides the diagnostic pane to watch emergent behavior (delegations, upvoting, cooldowns) and verify all the safety rails in real time.
+See updates in npc-brains.js (token check, _checkChronosStagnation, decision recording) and captureSystemError in npc-local-metrics.js.
 
-See scripts/fleet-dashboard.js for the renderer.
+This finalizes the full taxonomy: navigation, skills, io, host, cognitive, chronos.
 
 ---
 
