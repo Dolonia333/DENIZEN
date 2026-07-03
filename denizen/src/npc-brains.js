@@ -5116,7 +5116,14 @@ ${brain.voiceAnchor || ''}`;
     }
 
     const pushPlayerMemory = (from, text) => {
-      const sanitized = this._sanitize(text);
+      // Persist what the player actually typed (displayText), not the
+      // augmented brain text (attachment analysis blocks etc.) — history
+      // reloads were echoing raw prompt context into the chat UI.
+      let stored = text;
+      if (from === playerName && typeof opts.displayText === 'string' && opts.displayText.trim()) {
+        stored = opts.displayText;
+      }
+      const sanitized = this._sanitize(stored);
       if (isVisitor && visitorScope) {
         this._pushVisitorMemory(visitorScope, npcName, from, sanitized, opts);
         return;

@@ -367,6 +367,10 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+      #phc-nav .phc-action.phc-speak { font-size: 0; }
+      #phc-nav .phc-action.phc-speak::before { content: '🎤'; font-size: 16px; line-height: 1; }
+      #phc-nav .phc-action.phc-speak.listening::before { content: '⏹'; }
+      #phc-nav .phc-action.phc-speak.listening { background: rgba(127,29,29,.7); border-color: #fca5a5; }
       #phc-nav .phc-action {
         border: 1px solid #334155;
         background: rgba(30,41,59,.9);
@@ -706,6 +710,9 @@
     render();
   }
 
+  const setText = (el, v) => { if (el && el.textContent !== v) el.textContent = v; };
+  const setHidden = (el, v) => { if (el && el.hidden !== v) el.hidden = v; };
+
   function updateNav() {
     const title = document.getElementById('phc-nav-title');
     const back = document.getElementById('phc-back-btn');
@@ -714,26 +721,27 @@
     if (!title || !back) return;
     if (view === 'thread') {
       const t = chat()?.getActiveThread?.();
-      title.textContent = t?.title || t?.npcName || 'Chat';
-      back.hidden = false;
-      if (newGroup) newGroup.hidden = true;
+      setText(title, t?.title || t?.npcName || 'Chat');
+      setHidden(back, false);
+      setHidden(newGroup, true);
       if (speakBtn) {
         const vi = window.DenizenVoiceInput;
         const supported = !!(vi && (vi.isSupported?.() ?? vi.supported));
-        speakBtn.hidden = !supported;
+        setHidden(speakBtn, !supported);
         speakBtn.classList.toggle('listening', !!(vi?.isListening?.()));
-        speakBtn.textContent = vi?.isListening?.() ? '⏹' : '🎤';
+        // Glyph (🎤/⏹) is rendered via CSS ::before keyed on .listening —
+        // rewriting textContent here fought the CSS and churned the DOM.
       }
     } else if (view === 'group-pick') {
-      title.textContent = 'New group';
-      back.hidden = false;
-      if (newGroup) newGroup.hidden = true;
-      if (speakBtn) speakBtn.hidden = true;
+      setText(title, 'New group');
+      setHidden(back, false);
+      setHidden(newGroup, true);
+      setHidden(speakBtn, true);
     } else {
-      title.textContent = view === 'contacts' ? 'Contacts' : 'Messages';
-      back.hidden = true;
-      if (newGroup) newGroup.hidden = view !== 'contacts';
-      if (speakBtn) speakBtn.hidden = true;
+      setText(title, view === 'contacts' ? 'Contacts' : 'Messages');
+      setHidden(back, true);
+      setHidden(newGroup, view !== 'contacts');
+      setHidden(speakBtn, true);
     }
   }
 
@@ -1012,7 +1020,15 @@
     });
     const obs = new MutationObserver(() => {
       if (isPhoneChatActive() && !shellReady) activate();
-      if (!document.documentElement.classList.contains('denizen-chat-open')) deactivate();
+      // Only tear down when the PHONE itself closed. The old check keyed on
+      // denizen-chat-open, which the phone-app flow never sets — so any
+      // unrelated root class change (voice, presence, rotation) nuked the
+      // active chat shell mid-use.
+      const panel = document.getElementById('player-chat-panel');
+      if (panel?.dataset?.phoneChat === '1'
+        && !document.documentElement.classList.contains('denizen-phone-open')) {
+        deactivate();
+      }
     });
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
   }

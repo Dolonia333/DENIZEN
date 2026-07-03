@@ -105,10 +105,12 @@
         : null;
       clearPress();
       if (!hit || !root.contains(hit)) return;
-      const key = hit.id || hit.dataset?.action || hit.className || selector;
+      // Dedupe by element identity, not action name: different buttons often
+      // share data-action (both tabs are "tab", every contact is "open-dm"),
+      // and a name-based key silently dropped rapid taps on distinct buttons.
       const now = Date.now();
-      if (key === lastKey && now - lastAt < 280) return;
-      lastKey = key;
+      if (hit === lastKey && now - lastAt < 280) return;
+      lastKey = hit;
       lastAt = now;
       if (stop) {
         try { e.stopPropagation(); } catch (_) {}
