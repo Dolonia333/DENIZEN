@@ -1846,6 +1846,31 @@ class NpcBrainManager {
   }
 
   /** True when model leaked chain-of-thought instead of dialogue. */
+  /**
+   * Cheap word-overlap similarity — catches a small model repeating its own
+   * prior reply almost verbatim across different user messages (Bouncer:
+   * "Friend. I still require a specific..." three turns running). Not meant
+   * to catch paraphrase-level repetition, only near-identical restatement.
+   */
+  _isNearRepeat(a, b) {
+    const norm = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
+    const wordsOf = (s) => norm(s).split(/\s+/).filter((w) => w.length > 2);
+    const wa = wordsOf(a);
+    const wb = wordsOf(b);
+    if (wa.length < 5 || wb.length < 5) return false;
+    const setA = new Set(wa);
+    const setB = new Set(wb);
+    let shared = 0;
+    for (const w of setA) if (setB.has(w)) shared += 1;
+    const jaccard = shared / (setA.size + setB.size - shared);
+    // Calibrated against a real collapsed Bouncer exchange: near-verbatim
+    // continuations scored ~0.48; a genuinely different reply scored ~0.06.
+    // This catches literal boilerplate repetition, not just thematic
+    // repetition with different wording — a narrower net on purpose, to
+    // avoid nudging replies that only share a topic, not actual phrasing.
+    return jaccard >= 0.4;
+  }
+
   _isReasoningLeak(str) {
     const t = String(str ?? '').trim();
     if (!t || t.length < 12) return true;
@@ -2263,6 +2288,10 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         if (!this._lastErrorLog) this._lastErrorLog = {};
         this._lastErrorLog[npcName] = now;
       }
+      // Same gap as getPlayerResponse: this path (peer chat + incident
+      // reports) never reached the friction tracker either.
+      const errDomain2 = (e) => (e?.category === 'context_overflow' ? 'cognitive_context' : (context.kind || 'peer_chat'));
+      try { localMetrics?.captureSystemError?.(npcName, errDomain2(err), err); } catch (_) {}
       // Try fallback
       if (brain.fallbackConfig && brain.fallbackConfig !== brain.providerConfig) {
         try {
@@ -2279,6 +2308,7 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
           return out;
         } catch (e2) {
           log.npcError(npcName, 'fallback also failed: ' + String(e2?.message ?? e2).slice(0, 60));
+          try { localMetrics?.captureSystemError?.(npcName, errDomain2(e2), e2); } catch (_) {}
         }
       }
       // Last resort: context-aware canned response
@@ -5601,6 +5631,7 @@ ${brain.voiceAnchor || ''}`;
     const activeFallback = providerOverride?.fallback ?? brain.fallbackConfig;
 
     let responseText;
+    let wasFallback = false;
     try {
       responseText = await this._callProvider(activeProvider, finalSystemPrompt, messages, playerOpts);
     } catch (err) {
@@ -5612,22 +5643,50 @@ ${brain.voiceAnchor || ''}`;
         if (!this._lastErrorLog) this._lastErrorLog = {};
         this._lastErrorLog[npcName] = now;
       }
+      // Player-chat/incident paths never fed the friction tracker, so entire
+      // NPCs (Bouncer: 732 failed calls historically) never showed up in
+      // friction-metrics.json and never triggered a self-correction consult.
+      const errDomain = (e) => (e?.category === 'context_overflow' ? 'cognitive_context' : 'player_chat');
+      try { localMetrics?.captureSystemError?.(npcName, errDomain(err), err); } catch (_) {}
       // Try fallback provider
       if (activeFallback && activeFallback !== activeProvider) {
         try {
           responseText = await this._callProvider(activeFallback, finalSystemPrompt, messages, playerOpts);
         } catch (e2) {
+          try { localMetrics?.captureSystemError?.(npcName, errDomain(e2), e2); } catch (_) {}
           responseText = null;
         }
       }
       // If all providers failed, use smart fallback that infers actions from the message
       if (!responseText) {
         responseText = this._smartFallback(npcName, safeMessage, h);
+        wasFallback = true;
       }
     }
 
     if (typeof responseText !== 'string') {
       responseText = this._smartFallback(npcName, safeMessage, h);
+      wasFallback = true;
+    }
+
+    // Guard against response collapse: a small model that once says "I need
+    // more specifics" tends to repeat that exact framing every subsequent
+    // turn because its own prior reply is sitting in the replayed history
+    // (observed live on Bouncer — three different user messages, three
+    // near-identical "Friend. I require a specific..." replies). One bounded
+    // retry with an explicit nudge; never loops, never retries a fallback.
+    if (!wasFallback) {
+      const priorTurns = getChatMemories();
+      const lastOwnLine = [...priorTurns].reverse().find((m) => m.from === npcName)?.text;
+      if (lastOwnLine && this._isNearRepeat(responseText, lastOwnLine)) {
+        try {
+          const nudgedPrompt = `${finalSystemPrompt}\n\nIMPORTANT: You just said something almost identical to this in your last reply: "${String(lastOwnLine).slice(0, 200)}". Do not repeat that framing — actually engage with what they just said, even if it's still vague; ask something different or make a concrete suggestion.`;
+          const retryText = await this._callProvider(activeProvider, nudgedPrompt, messages, playerOpts);
+          if (typeof retryText === 'string' && retryText.trim() && !this._isNearRepeat(retryText, lastOwnLine)) {
+            responseText = retryText;
+          }
+        } catch (_) { /* keep the original reply if the retry fails */ }
+      }
     }
 
     // Parse action tags [ACTION:...]
@@ -6424,6 +6483,27 @@ ${brain.voiceAnchor || ''}`;
 
   getDirective(npcName) {
     return this._directives.get(npcName) || null;
+  }
+
+  /**
+   * Clear a completed/stale directive. There was previously no way to do
+   * this at all — directives only ever got overwritten by the next one
+   * assigned to that NPC, so a one-off or abandoned task (e.g. a test
+   * directive) sat "active" indefinitely with nothing to complete it.
+   */
+  clearDirective(npcName) {
+    const had = this._directives.has(npcName);
+    this._directives.delete(npcName);
+    if (this._officeRuntimes) {
+      for (const rt of this._officeRuntimes.values()) {
+        rt.directives?.delete?.(npcName);
+      }
+    }
+    if (had) {
+      this._savePersistedDirectives();
+      log.info('Directive', `cleared for ${npcName}`);
+    }
+    return had;
   }
 
   getAllDirectives() {

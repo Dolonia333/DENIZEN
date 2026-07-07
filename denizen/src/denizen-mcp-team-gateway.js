@@ -54,6 +54,17 @@ const TEAM_TOOL_DEFINITIONS = [
       required: ['task'],
     },
   },
+  {
+    name: 'clear_directive',
+    description: 'Clear a stale/completed directive for one NPC (directives previously only got overwritten by a new one, never completed).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        npc_key: { type: 'string', description: 'NPC folder key, e.g. molly, dan' },
+      },
+      required: ['npc_key'],
+    },
+  },
   ...mcpTeamTools.TEAM_TOOL_DEFINITIONS,
   ...mcpMeshTools.MESH_TOOL_DEFINITIONS,
   ...mcpCursorTools.CURSOR_TOOL_DEFINITIONS,
@@ -204,6 +215,17 @@ async function toolBroadcastTask(scope, args) {
   return { ok: true, task, urgent, assigned_count: assigned.length, assigned };
 }
 
+async function toolClearDirective(scope, args) {
+  const key = String(args?.npc_key || '').toLowerCase().trim();
+  if (!key) return { ok: false, error: 'npc_key required' };
+  if (!_deps.npcBrains?.clearDirective) {
+    return { ok: false, error: 'npc brains not configured' };
+  }
+  const display = displayNameForKey(key);
+  const cleared = _deps.npcBrains.clearDirective(display);
+  return { ok: true, npc_key: key, display_name: display, cleared };
+}
+
 async function readResource(scope, uri) {
   if (uri === 'team://roster') {
     const team = await mcpTeamTools.callTool(scope, 'list_team', {});
@@ -229,6 +251,7 @@ async function callToolImpl(scope, name, args) {
     case 'team_status': return toolTeamStatus(scope, args);
     case 'run_as_npc': return toolRunAsNpc(scope, args);
     case 'broadcast_task': return toolBroadcastTask(scope, args);
+    case 'clear_directive': return toolClearDirective(scope, args);
     default:
       if (mcpTeamTools.isTeamTool(name)) {
         return mcpTeamTools.callTool(scope, name, args);

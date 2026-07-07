@@ -822,10 +822,20 @@
     </div>`;
   }
 
+  /** Dossier preview/PDF links need the caller's session_id — a bare <a href>
+   *  has no other way to authenticate, so every click 401'd with a JSON body
+   *  that browsers render as plain text ("just code"). */
+  function withSession(url) {
+    const sess = globalThis.DenizenVisitorSession;
+    const sid = typeof sess?.getSessionId === 'function' ? sess.getSessionId() : null;
+    if (!sid) return url;
+    return url + (url.includes('?') ? '&' : '?') + 'session_id=' + encodeURIComponent(sid);
+  }
+
   function renderDossierPreview(p) {
     const id = p.id;
-    const htmlUrl = `/api/dossier-proposals/${encodeURIComponent(id)}/preview?format=html`;
-    const pdfUrl = `/api/dossier-proposals/${encodeURIComponent(id)}/preview?format=pdf`;
+    const htmlUrl = withSession(`/api/dossier-proposals/${encodeURIComponent(id)}/preview?format=html`);
+    const pdfUrl = withSession(`/api/dossier-proposals/${encodeURIComponent(id)}/preview?format=pdf`);
     return `<div class="prop-doc-section">
       <h3>Preview</h3>
       <iframe class="prop-preview-frame" src="${esc(htmlUrl)}" title="Dossier HTML preview"></iframe>
@@ -872,8 +882,8 @@
     const status = (p.status || '').toLowerCase();
     if (status !== 'approved' && status !== 'pending') return '';
     if (p.kind === 'dossier') {
-      const pdfUrl = `/api/dossier-proposals/${encodeURIComponent(p.id)}/preview?format=pdf`;
-      const htmlUrl = `/api/dossier-proposals/${encodeURIComponent(p.id)}/preview?format=html`;
+      const pdfUrl = withSession(`/api/dossier-proposals/${encodeURIComponent(p.id)}/preview?format=pdf`);
+      const htmlUrl = withSession(`/api/dossier-proposals/${encodeURIComponent(p.id)}/preview?format=html`);
       return `<div class="prop-post-actions">
         <a href="${esc(pdfUrl)}" target="_blank" rel="noopener">Download PDF</a>
         <a href="${esc(htmlUrl)}" target="_blank" rel="noopener">Open HTML draft</a>

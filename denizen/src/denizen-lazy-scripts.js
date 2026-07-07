@@ -102,7 +102,7 @@
       './src/visitor-skill-gap-ui.js?v=sgap1',
       './src/visitor-agent-inbox.js?v=ainbox1',
       './src/mesh-alert-toast.js?v=mtoast2',
-      './src/proposals-panel.js?v=propfix5',
+      './src/proposals-panel.js?v=propfix6',
       './src/city-debug.js',
     ];
     try {
