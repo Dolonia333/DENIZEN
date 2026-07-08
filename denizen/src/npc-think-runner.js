@@ -26,6 +26,16 @@ class NpcThinkRunner {
     const name = String(npcName || '').trim();
     if (!name || !this._deps?.npcBrains) return;
 
+    if (this._deps.npcBrains.isPlayerChatBusy?.(name) && !opts._deferredForChat) {
+      const prev = this._debounce.get(name);
+      if (prev) clearTimeout(prev);
+      this._debounce.set(name, setTimeout(() => {
+        this._debounce.delete(name);
+        this.wake(name, reason, { ...opts, _deferredForChat: true });
+      }, 45000));
+      return;
+    }
+
     const delay = Number(opts.delayMs) || 400;
     const prev = this._debounce.get(name);
     if (prev) clearTimeout(prev);

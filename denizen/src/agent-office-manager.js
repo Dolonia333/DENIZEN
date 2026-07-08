@@ -3514,7 +3514,14 @@ class AgentOfficeManager {
         const wakeKey = Object.entries(this.NPC_NAMES).find(
           ([, v]) => v.toLowerCase() === msg.npcName?.toLowerCase(),
         )?.[0];
-        if (wakeKey) this._npcThinkLoop(wakeKey);
+        if (!wakeKey) break;
+        const pc = this.scene?._playerChat;
+        const agent = this.agents?.get(wakeKey);
+        const inCeoChat = agent?.status === 'ceo_conversation'
+          || pc?._ceoConvo?.npcKey === wakeKey
+          || (pc?._waitingForResponse && pc?._lastTargetKey === wakeKey);
+        if (inCeoChat) break;
+        this._npcThinkLoop(wakeKey);
         break;
       }
 
@@ -3522,7 +3529,13 @@ class AgentOfficeManager {
         const assignKey = Object.entries(this.NPC_NAMES).find(
           ([, v]) => v.toLowerCase() === msg.npc?.toLowerCase(),
         )?.[0];
-        if (assignKey) this._npcThinkLoop(assignKey);
+        if (!assignKey) break;
+        const pcChain = this.scene?._playerChat;
+        const agentChain = this.agents?.get(assignKey);
+        const inCeoChatChain = agentChain?.status === 'ceo_conversation'
+          || pcChain?._ceoConvo?.npcKey === assignKey;
+        if (inCeoChatChain) break;
+        this._npcThinkLoop(assignKey);
         break;
       }
 

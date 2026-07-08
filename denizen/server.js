@@ -10083,6 +10083,8 @@ agentWss.on('connection', (ws) => {
         if (turnId && ws._activePlayerTurnId === turnId) {
           ws._activePlayerTurnId = null;
         }
+        const cancelNpc = typeof msg.npcName === 'string' ? msg.npcName.trim() : '';
+        if (cancelNpc) npcBrains.clearPlayerChatBusy?.(cancelNpc);
         if (ws.readyState === 1) {
           ws.send(JSON.stringify({
             type: 'player_chat_cancelled',
@@ -10966,6 +10968,7 @@ agentWss.on('connection', (ws) => {
               turn_id: turnId,
             });
             if (ws.readyState === 1) ws.send(reply);
+            npcBrains.touchPlayerChatBusy?.(npcName, 120000);
 
             const gapActions = (result?.actions || []).filter((a) => a?.action === 'skill_gap_intake');
             if (gapActions.length && msg.session_id && visitorToolGate.canUseRealWork) {
@@ -11115,6 +11118,7 @@ agentWss.on('connection', (ws) => {
           }
           return;
         }
+        npcBrains.touchPlayerChatBusy?.(npcName);
         (async () => {
           const session = await denizenVisitor.getSession(sessionId).catch(() => null);
           if (!session) {

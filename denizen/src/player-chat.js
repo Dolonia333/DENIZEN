@@ -1572,9 +1572,9 @@ class PlayerChat {
         if (this._waitingForResponse) {
           this._waitingForResponse = false;
           this._clearTyping();
-          this._addToLog('System', '(no group reply — LM Studio may be busy)');
+          this._addToLog('System', '(no group reply — model may be busy)');
         }
-      }, 60000);
+      }, this._chatResponseTimeoutMs(this._getActiveThread()?.title));
       return;
     }
 
@@ -1602,15 +1602,14 @@ class PlayerChat {
 
     this._setTyping(targetName);
 
-    // Timeout after 60s. Player chat jumps the LM Studio queue but can
-    // still wait behind 1–2 in-flight think jobs when the GPU is saturated.
+    const timeoutMs = this._chatResponseTimeoutMs(targetName);
     this._responseTimeout = setTimeout(() => {
       if (this._waitingForResponse) {
         this._waitingForResponse = false;
         this._clearTyping();
-        this._addToLog(targetName, '(no response — LM Studio may be busy; check ⋯ diag chip bottom-left)');
+        this._addToLog(targetName, this._chatTimeoutMessage(targetName));
       }
-    }, 60000);
+    }, timeoutMs);
   }
 
   /**
@@ -1988,6 +1987,19 @@ class PlayerChat {
     const dist = Math.hypot(npc.x - player.x, npc.y - player.y);
     const holdDist = this._ceoConvoWalkDist;
 
+    // While waiting on a slow provider (Grok CLI bridge), pin the NPC in
+    // place — re-walking every frame made them chase a moving player.
+    if (this._waitingForResponse && this._lastTargetKey === npcKey) {
+      npc.body.setVelocity(0, 0);
+      if (npc._pathFollower) npc._pathFollower.stop();
+      if (npc.ai.taskState !== 'reporting') npc.ai.taskState = 'reporting';
+      const dx = player.x - npc.x;
+      const dy = player.y - npc.y;
+      if (Math.abs(dx) > Math.abs(dy)) npc.ai.facing = dx < 0 ? 'left' : 'right';
+      else npc.ai.facing = dy < 0 ? 'up' : 'down';
+      return;
+    }
+
     if (npc.ai.taskState === 'reporting' && dist <= holdDist + 12) {
       const dx = player.x - npc.x;
       const dy = player.y - npc.y;
@@ -1997,13 +2009,31 @@ class PlayerChat {
       return;
     }
 
-    if (dist > holdDist + 24 && npc.ai.taskState !== 'walking' && now >= this._ceoReapproachAt) {
-      this._ceoReapproachAt = now + 1200;
+    if (dist > holdDist + 48 && npc.ai.taskState !== 'walking' && now >= this._ceoReapproachAt) {
+      this._ceoReapproachAt = now + 4000;
       this._walkNpcToPlayer(npcKey).then(() => {
         const n = this.manager?.actions?._getNpc(npcKey);
         if (n && this._ceoConvo?.npcKey === npcKey) this._stopNpcForConversation(n, npcKey, null);
       }).catch(() => {});
     }
+  }
+
+  _usesGrokCliChat(npcName) {
+    const key = String(npcName || '').toLowerCase();
+    if (key === 'grok') return true;
+    const brain = this.manager?.npcBrains?.brains?.[npcName];
+    return brain?.chatProvider === 'grok-cli';
+  }
+
+  _chatResponseTimeoutMs(npcName) {
+    return this._usesGrokCliChat(npcName) ? 180000 : 60000;
+  }
+
+  _chatTimeoutMessage(npcName) {
+    if (this._usesGrokCliChat(npcName)) {
+      return '(still thinking via Grok CLI — bridge can take 1–3 min; keep the PC bridge running)';
+    }
+    return '(no response — LM Studio may be busy; check ⋯ diag chip bottom-left)';
   }
 
   // --- UI ---
@@ -2041,6 +2071,7 @@ class PlayerChat {
         box-shadow:
           0 24px 64px rgba(0, 0, 0, 0.45),
           0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+        contain: layout style;
         -webkit-backdrop-filter: blur(24px) saturate(140%);
         backdrop-filter: blur(24px) saturate(140%);
       }
@@ -3082,7 +3113,7 @@ class PlayerChat {
     if (prev && now - prev.at < 12000) return;
 
     this._lastAckByNpc[name] = { at: now, queueLen };
-    if (this._waitingForResponse && !this._typingNpc) {
+    if (this._waitingForResponse && this._typingNpc !== name) {
       this._setTyping(name);
     }
   }
@@ -3367,9 +3398,17 @@ class PlayerChat {
     const status = document.getElementById('player-chat-header-status');
     if (!status) return;
     const name = this._currentChatTargetName;
-    status.textContent = name
-      ? (this._waitingForResponse ? 'Typing…' : 'In conversation')
-      : 'Click an NPC to start';
+    let statusText = 'Click an NPC to start';
+    if (name) {
+      if (this._waitingForResponse && this._usesGrokCliChat(name)) {
+        statusText = 'Grok CLI thinking…';
+      } else if (this._waitingForResponse) {
+        statusText = 'Typing…';
+      } else {
+        statusText = 'In conversation';
+      }
+    }
+    status.textContent = statusText;
   }
 
   _updateTargetLabel(name) {

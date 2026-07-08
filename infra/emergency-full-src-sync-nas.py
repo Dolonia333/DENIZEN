@@ -30,7 +30,8 @@ def run_ssh(client, cmd: str, timeout: int = 600) -> int:
     _, o, e = client.exec_command(cmd, timeout=timeout)
     out = (o.read() + e.read()).decode("utf-8", errors="replace")
     if out.strip():
-        print(out.rstrip()[-2000:])
+        safe = out.rstrip()[-2000:].encode("ascii", errors="replace").decode("ascii")
+        print(safe)
     return o.channel.recv_exit_status()
 
 
@@ -60,6 +61,16 @@ def build_tar(tmp: Path) -> Path:
             for path in base.rglob("*"):
                 if path.is_file() and "node_modules" not in path.parts:
                     tar.add(path, arcname=str(Path(rel) / path.relative_to(base)))
+        for data_rel in (
+            "data/openplan_walls.json",
+            "data/furniture_catalog_openplan.json",
+            "data/quests.json",
+            "data/achievements.json",
+            "data/office-level-thresholds.json",
+        ):
+            p = DENIZEN / data_rel
+            if p.is_file():
+                tar.add(p, arcname=data_rel)
         for name in ("server.js", "package.json", "package-lock.json", "office-scene.js", "index.html"):
             p = DENIZEN / name
             if p.is_file():
@@ -114,6 +125,19 @@ def main() -> int:
                 client,
                 f"test -f '{extract_dir}/{name}' && "
                 f"{DOCKER} cp '{extract_dir}/{name}' denizen-server:/app/{name} || true",
+            )
+        for data_rel in (
+            "data/openplan_walls.json",
+            "data/furniture_catalog_openplan.json",
+            "data/quests.json",
+            "data/achievements.json",
+            "data/office-level-thresholds.json",
+        ):
+            run_ssh(
+                client,
+                f"test -f '{extract_dir}/{data_rel}' && "
+                f"{DOCKER} exec denizen-server mkdir -p /app/data && "
+                f"{DOCKER} cp '{extract_dir}/{data_rel}' denizen-server:/app/{data_rel} || true",
             )
 
         run_ssh(client, f"{DOCKER} update --restart=unless-stopped denizen-server")

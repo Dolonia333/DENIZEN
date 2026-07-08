@@ -98,6 +98,17 @@ async function updateDeal(orgId, params = {}, identityId = null) {
   deals[idx] = updated;
   const next = { ...state, deals };
   await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+
+  const wasWon = /closed won/i.test(String(prev.stage || ''));
+  const isWon = /closed won/i.test(String(updated.stage || ''));
+  if (isWon && !wasWon) {
+    const officeProgress = require('./office-hq/denizen-office-progress');
+    officeProgress.awardXp('deal_won', officeProgress.XP_WEIGHTS.deal_won, {
+      dealId: updated.id,
+      title: updated.title,
+    });
+  }
+
   return {
     summary: `Updated deal "${updated.title}" → stage ${updated.stage}, value ${updated.value}.`,
     deal: updated,
@@ -237,6 +248,43 @@ async function addTicket(orgId, params = {}, identityId = null) {
   const next = { ...state, supportTickets: tickets };
   await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
   return { summary: `Created support ticket "${ticket.subject}" for ${ticket.contact}.`, ticket };
+}
+
+async function updateTicket(orgId, params = {}, identityId = null) {
+  const ticketId = params.ticketId ?? params.ticket_id ?? params.id;
+  const subject = String(params.subject || '').trim();
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const tickets = Array.isArray(state.supportTickets) ? [...state.supportTickets] : [];
+  let idx = -1;
+  if (ticketId != null) idx = tickets.findIndex((t) => String(t?.id) === String(ticketId));
+  if (idx < 0 && subject) idx = tickets.findIndex((t) => String(t?.subject || '').toLowerCase() === subject.toLowerCase());
+  if (idx < 0) throw new Error('ticket not found');
+
+  const prev = tickets[idx];
+  const updated = {
+    ...prev,
+    ...(params.status != null ? { status: String(params.status) } : {}),
+    updatedAt: new Date().toISOString(),
+  };
+  tickets[idx] = updated;
+  const next = { ...state, supportTickets: tickets };
+  await saveOrgWorkspace(orgId, next, identityId, ifUpdatedAt);
+
+  const wasClosed = String(prev.status || '').toLowerCase() === 'closed';
+  const isClosed = String(updated.status || '').toLowerCase() === 'closed';
+  if (isClosed && !wasClosed) {
+    const officeProgress = require('./office-hq/denizen-office-progress');
+    officeProgress.awardXp('ticket_closed', officeProgress.XP_WEIGHTS.ticket_closed, {
+      ticketId: updated.id,
+      subject: updated.subject,
+    });
+  }
+
+  return {
+    summary: `Updated ticket "${updated.subject}" → status ${updated.status}.`,
+    ticket: updated,
+    previousStatus: prev.status,
+  };
 }
 
 const STARTER_PACKAGES = [
@@ -406,6 +454,7 @@ module.exports = {
   applyIndustry,
   getSetupStatus,
   addTicket,
+  updateTicket,
   listTickets,
   updateUserProfile,
   seedStarterPackages,

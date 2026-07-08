@@ -12,6 +12,7 @@ services:
     volumes:
       - ./desktop:/app/desktop
       - ./data:/app/data
+      - ./layouts:/app/layouts
     environment:
       NODE_ENV: production
       PORT: "8888"

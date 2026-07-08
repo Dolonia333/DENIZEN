@@ -2,6 +2,7 @@
 .mcp-token.local.json
 .mcp-team-token.local.json
 .mcp-claude-token.local.json
+infra/grok-bridge-token.txt
 .grok/mcp.json
 
 tmpclaude-*-cwd

@@ -108,6 +108,7 @@ class NpcBrainManager {
     this._pendingBacklogSettlements = new Map(); // npcName → backlog_id for settlement hook
     this._npcMoods = new Map();            // npcName → {mood, since, cycles}
     this._directives = new Map();          // npcName → {from, task, ts, urgent}
+    this._playerChatBusyUntil = new Map(); // npcName → epoch ms — defer patrol/think while CEO chats
     this._commitments = new Map();         // npcName → [{ text, to, at, status }]  — promises the NPC made and must follow through on
     this._evidenceLog = new Map();         // npcName → { skillAt, researchAt, researchText, artifactAt } — what backs their claims
     this._pendingGrounding = new Map();    // npcName → grounding-check note to inject next think
@@ -6537,6 +6538,30 @@ ${brain.voiceAnchor || ''}`;
 
   // ── Feature: Directive Inbox ───────────────────────────────────────────────
 
+  touchPlayerChatBusy(npcName, holdMs = 300000) {
+    const name = String(npcName || '').trim();
+    if (!name) return;
+    const until = Date.now() + Math.max(30000, Number(holdMs) || 300000);
+    const prev = this._playerChatBusyUntil.get(name) || 0;
+    if (until > prev) this._playerChatBusyUntil.set(name, until);
+  }
+
+  isPlayerChatBusy(npcName) {
+    const name = String(npcName || '').trim();
+    if (!name) return false;
+    const until = this._playerChatBusyUntil.get(name) || 0;
+    if (until <= Date.now()) {
+      if (until) this._playerChatBusyUntil.delete(name);
+      return false;
+    }
+    return true;
+  }
+
+  clearPlayerChatBusy(npcName) {
+    const name = String(npcName || '').trim();
+    if (name) this._playerChatBusyUntil.delete(name);
+  }
+
   /**
    * Push a mandatory task directive from one NPC to another.
    */
@@ -6550,6 +6575,10 @@ ${brain.voiceAnchor || ''}`;
     }
     this._savePersistedDirectives();
     log.info('Directive', `${fromNpc} → ${targetNpc}: "${String(task).slice(0, 60)}"`);
+    if (this.isPlayerChatBusy(targetNpc)) {
+      log.info('Directive', `deferred think wake — ${targetNpc} in CEO chat`);
+      return;
+    }
     if (typeof this._thinkWakeFn === 'function') {
       this._thinkWakeFn(targetNpc, urgent ? 'urgent_directive' : 'directive', { urgent: true });
     }
