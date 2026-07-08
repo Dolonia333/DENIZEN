@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DENIZEN — Visual observability for AI agents</title>
-  <meta name="description" content="Stop tailing logs. Watch 16 AI agents work in a live pixel office — demo runs with zero API keys." />
+  <title>DENIZEN — The office for your AI agents</title>
+  <meta name="description" content="Your agents have a floor now. Open a live office where every agent has a desk, a role, and a trail of work — try the demo with zero API keys." />
   <meta name="theme-color" content="#1a1f2e" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -34,7 +34,6 @@
       font-family: var(--mono);
       background: var(--ink);
       color: var(--cream);
-      cursor: crosshair;
       overflow-x: hidden;
     }
     body::before {
@@ -43,52 +42,9 @@
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      background:
-        radial-gradient(ellipse 70% 50% at 50% -10%, rgba(163, 230, 53, 0.07), transparent),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(163, 230, 53, 0.015) 2px, rgba(163, 230, 53, 0.015) 4px);
+      background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(163, 230, 53, 0.05), transparent);
     }
     body > * { position: relative; z-index: 1; }
-
-    #cursor-glow {
-      position: fixed;
-      width: 480px;
-      height: 480px;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-      background: radial-gradient(circle, rgba(163, 230, 53, 0.14) 0%, transparent 68%);
-      transform: translate(-50%, -50%);
-      transition: opacity 0.3s;
-      mix-blend-mode: screen;
-    }
-    #grain {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      opacity: 0.045;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      animation: grain-shift 0.5s steps(2) infinite;
-    }
-    @keyframes grain-shift {
-      0% { transform: translate(0, 0); }
-      50% { transform: translate(-2%, 1%); }
-      100% { transform: translate(1%, -1%); }
-    }
-    .hero-grid {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(180deg, transparent 40%, rgba(26, 31, 46, 0.95) 100%),
-        repeating-linear-gradient(90deg, rgba(163, 230, 53, 0.04) 0 1px, transparent 1px 64px),
-        repeating-linear-gradient(0deg, rgba(163, 230, 53, 0.04) 0 1px, transparent 1px 64px);
-      transform: perspective(800px) rotateX(58deg) scale(1.4);
-      transform-origin: 50% 0%;
-      opacity: 0.35;
-      mask-image: linear-gradient(180deg, black 0%, transparent 75%);
-    }
 
     /* ── boot overlay ── */
     #boot {
@@ -106,28 +62,24 @@
       transition: opacity 0.6s, visibility 0.6s;
     }
     #boot.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-    #boot .line { opacity: 0; animation: boot-line 0.15s forwards; }
-    #boot .line:nth-child(1) { animation-delay: 0.1s; }
-    #boot .line:nth-child(2) { animation-delay: 0.35s; }
-    #boot .line:nth-child(3) { animation-delay: 0.6s; }
-    #boot .line:nth-child(4) { animation-delay: 0.9s; }
-    #boot .line:nth-child(5) { animation-delay: 1.2s; }
+    #boot-globe {
+      width: clamp(150px, 28vw, 210px);
+      height: clamp(150px, 28vw, 210px);
+      image-rendering: pixelated;
+      opacity: 0;
+      animation: boot-line 0.6s 0.15s forwards;
+      filter: drop-shadow(0 0 32px var(--lime-glow));
+    }
     #boot .big {
       font-family: var(--display);
       font-size: clamp(2rem, 8vw, 4rem);
       font-weight: 800;
       color: var(--cream);
       letter-spacing: -0.03em;
-      margin-top: 24px;
+      margin-top: 22px;
       opacity: 0;
-      animation: boot-line 0.4s 1.5s forwards, boot-glitch 0.15s 1.55s 3;
+      animation: boot-line 0.5s 2.55s forwards;
       text-shadow: 0 0 40px var(--lime-glow);
-    }
-    @keyframes boot-glitch {
-      0%, 100% { transform: translate(0); filter: none; }
-      20% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
-      40% { transform: translate(3px, -1px); }
-      60% { transform: translate(-2px, 0); color: var(--lime); }
     }
     #boot .skip {
       position: absolute;
@@ -136,7 +88,7 @@
       color: #475569;
       letter-spacing: 0.15em;
       opacity: 0;
-      animation: boot-line 0.3s 2s forwards;
+      animation: boot-line 0.3s 1.2s forwards;
     }
     @keyframes boot-line {
       from { opacity: 0; transform: translateY(6px); }
@@ -211,26 +163,6 @@
       transition: filter 0.2s, transform 0.15s;
     }
     .hud-enter:hover { filter: brightness(1.1); transform: scale(1.02); }
-    .kbd-hint {
-      position: fixed;
-      bottom: 16px;
-      right: 20px;
-      z-index: 90;
-      font-size: 10px;
-      color: #475569;
-      letter-spacing: 0.08em;
-      pointer-events: none;
-    }
-    .kbd-hint kbd {
-      display: inline-block;
-      padding: 2px 6px;
-      margin: 0 2px;
-      border: 1px solid #334155;
-      border-radius: 3px;
-      background: rgba(0,0,0,0.5);
-      color: var(--lime);
-      font-family: var(--mono);
-    }
 
   /* ── HERO: split reality slider ── */
     .hero {
@@ -250,34 +182,16 @@
     }
     .hero-headline h1 {
       font-family: var(--display);
-      font-size: clamp(2.2rem, 7vw, 4.5rem);
+      font-size: clamp(2.4rem, 7vw, 4.75rem);
       font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -0.03em;
-      margin: 0 0 16px;
-      text-shadow: 0 0 60px rgba(163, 230, 53, 0.12);
+      line-height: 1.04;
+      letter-spacing: -0.035em;
+      margin: 0 0 20px;
     }
-    .hero-headline h1 .hero-main {
-      display: block;
-      background: linear-gradient(135deg, var(--cream) 0%, var(--lime-bright) 45%, var(--cream) 90%);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: hero-shine 6s ease-in-out infinite;
-    }
-    @keyframes hero-shine {
-      0%, 100% { background-position: 0% center; }
-      50% { background-position: 100% center; }
-    }
-    .hero-headline h1 .strike {
-      display: block;
-      font-size: 0.45em;
-      font-weight: 600;
-      color: #64748b;
-      text-decoration: line-through;
-      text-decoration-color: var(--rose);
-      margin-bottom: 8px;
+    .hero-headline h1 .hero-main { display: block; }
+    .hero-headline h1 .hero-main em {
+      font-style: normal;
+      color: var(--lime);
     }
     .hero-headline .hero-sub {
       font-size: 1rem;
@@ -375,9 +289,6 @@
       overflow: hidden;
       user-select: none;
       touch-action: none;
-      transform-style: preserve-3d;
-      transition: transform 0.12s ease-out;
-      will-change: transform;
     }
     .split-stage::after {
       content: "";
@@ -394,20 +305,6 @@
       background: none;
       animation: none;
       inset: auto;
-    }
-    .split-scan {
-      position: absolute;
-      inset: 0;
-      z-index: 26;
-      pointer-events: none;
-      background: linear-gradient(105deg, transparent 40%, rgba(163, 230, 53, 0.08) 50%, transparent 60%);
-      animation: scan-sweep 5s ease-in-out infinite;
-    }
-    @keyframes scan-sweep {
-      0%, 100% { transform: translateX(-120%); opacity: 0; }
-      10% { opacity: 1; }
-      50% { transform: translateX(120%); opacity: 1; }
-      60% { opacity: 0; }
     }
     .split-stage::before {
       content: "";
@@ -436,15 +333,6 @@
     }
     .split-label--today { left: 12px; color: #94a3b8; }
     .split-label--denizen { right: 12px; color: var(--lime); border-color: rgba(163,230,53,0.35); }
-    .split-scanline {
-      position: absolute;
-      inset: 0;
-      z-index: 12;
-      pointer-events: none;
-      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
-      opacity: 0.5;
-    }
-
     .split-pane {
       position: absolute;
       inset: 0;
@@ -494,46 +382,78 @@
     }
     .npc-portrait--lg { --npc-scale: 2.5; }
     .npc-portrait--sm { --npc-scale: 1.75; }
-    .npc-portrait--xs { --npc-scale: 1.5; }
-    .npc-portrait--walk > img {
-      animation: npc-walk 0.55s steps(4) infinite;
-    }
-    @keyframes npc-walk {
-      from { left: 0; }
-      to { left: calc(var(--npc-fw) * -3px * var(--npc-scale)); }
-    }
 
-    /* stats strip */
-    .stats-strip {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
+    /* meet the crew */
+    .crew-section {
       max-width: 1100px;
       margin: 56px auto 0;
       padding: 0 20px;
-      background: #1e293b;
-      border: 1px solid #1e293b;
     }
-    .stat-cell {
-      background: rgba(12, 15, 20, 0.9);
-      padding: 20px 16px;
-      text-align: center;
+    .crew-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
     }
-    .stat-cell strong {
-      display: block;
+    .crew-head h2 {
       font-family: var(--display);
-      font-size: 1.4rem;
+      font-size: 1.25rem;
       font-weight: 800;
-      color: var(--lime);
-      margin-bottom: 4px;
+      margin: 0;
       letter-spacing: -0.02em;
-      font-variant-numeric: tabular-nums;
     }
-    .stat-cell strong.counting {
-      text-shadow: 0 0 20px var(--lime-glow);
+    .crew-head p {
+      margin: 0;
+      font-size: 12px;
+      color: #64748b;
     }
-
-    .stat-cell span { font-size: 10px; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; }
+    .crew-rail {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .crew-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px 16px;
+      background: rgba(12, 15, 20, 0.9);
+      border: 1px solid #1e293b;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .crew-card:hover {
+      border-color: rgba(163, 230, 53, 0.45);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+    .crew-card .npc-portrait {
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+    }
+    .crew-meta .crew-name {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--cream);
+      margin: 0 0 4px;
+    }
+    .crew-meta .crew-role {
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin: 0 0 8px;
+    }
+    .crew-meta .crew-line {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #94a3b8;
+    }
 
     .reveal {
       opacity: 0;
@@ -542,33 +462,13 @@
     }
     .reveal.visible { opacity: 1; transform: translateY(0); }
 
-    .walkers {
-      position: absolute;
-      bottom: 8%;
-      left: 0;
-      right: 0;
-      height: 64px;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .walker {
-      position: absolute;
-      bottom: 0;
-      animation: walk-across linear infinite;
-      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
-    }
-    @keyframes walk-across {
-      from { transform: translateX(-60px) scaleX(1); }
-      49% { transform: translateX(calc(100% + 60px)) scaleX(1); }
-      50% { transform: translateX(calc(100% + 60px)) scaleX(-1); }
-      to { transform: translateX(-60px) scaleX(-1); }
-    }
 
     /* log stream */
-  .log-stream {
+    .log-stream {
       position: absolute;
       inset: 0;
       padding: 16px;
+      font-family: var(--mono);
       font-size: 10px;
       line-height: 1.65;
       color: #64748b;
@@ -860,10 +760,8 @@
       .reception-npc { display: none; }
       .speech::before { display: none; }
       .hud-status { display: none; }
-      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .crew-rail { grid-template-columns: repeat(2, 1fr); }
       .benefits-grid, .steps-grid, .audience-grid { grid-template-columns: 1fr; }
-      .kbd-hint { display: none; }
-      .hero-grid { opacity: 0.15; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -876,16 +774,9 @@
   </style>
 </head>
 <body>
-  <div id="cursor-glow" aria-hidden="true"></div>
-  <div id="grain" aria-hidden="true"></div>
-
   <!-- boot sequence -->
   <div id="boot" aria-hidden="true">
-    <div class="line">&gt; connecting to denizen hq...</div>
-    <div class="line">&gt; 16 agents online</div>
-    <div class="line">&gt; souls loaded ✓</div>
-    <div class="line">&gt; visitor clearance: granted</div>
-    <div class="line">&gt; observability deck online</div>
+    <canvas id="boot-globe" width="88" height="88" aria-hidden="true"></canvas>
     <div class="big">DENIZEN</div>
     <div class="skip">CLICK TO SKIP</div>
   </div>
@@ -901,18 +792,14 @@
 
   <!-- hero: split reality -->
   <section class="hero">
-    <div class="hero-grid" aria-hidden="true"></div>
     <div class="hero-headline">
-      <div class="hero-tagline">Visual observability for AI agents</div>
+      <div class="hero-tagline">The office for your AI agents</div>
       <h1>
-        <span class="strike">tail -f agent.log</span>
-        <span class="hero-main">Watch your agents work.</span>
+        <span class="hero-main">Your agents have a <em>floor</em> now.</span>
       </h1>
-      <p class="hero-sub">Sixteen specialized agents. One office floor. See who's blocked, shipping, or escalated — without parsing JSON.</p>
-      <p>Drag the slider below: <strong>today</strong> you read about work. With Denizen, you <strong>see</strong> it. The preview is a still — the demo is live.</p>
+      <p class="hero-sub">Open a live office where every agent has a desk, a role, and a trail of work. Glance once — then jump in when something needs you.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="/office?demo=1">Open live demo</a>
-        <a class="btn btn-ghost" href="https://github.com/Dolonia333/DENIZEN" target="_blank" rel="noopener">View on GitHub</a>
       </div>
     </div>
 
@@ -923,19 +810,16 @@
     <div class="split-stage" id="split">
       <span class="split-label split-label--today">TODAY</span>
       <span class="split-label split-label--denizen">DENIZEN</span>
-      <div class="split-scan" aria-hidden="true"></div>
-      <div class="split-scanline"></div>
       <div class="split-pane split-logs">
         <div class="log-stream" id="log-stream"></div>
       </div>
       <div class="split-pane split-office" id="split-office">
         <img src="./assets/ref_Hu4Gzs.png" alt="Denizen pixel office preview" />
         <span class="office-preview-badge">Preview · live in demo</span>
-        <div class="walkers" id="walkers"></div>
       </div>
       <div class="split-handle" id="split-handle"></div>
     </div>
-    <p class="split-hint">drag to compare · <em id="split-pct">50</em>% denizen visible</p>
+    <p class="split-hint">drag to compare<span hidden id="split-pct">50</span></p>
 
     <!-- Lucy reception -->
     <div class="reception">
@@ -952,12 +836,54 @@
     </div>
   </section>
 
-  <div class="stats-strip reveal">
-    <div class="stat-cell"><strong data-count="16">0</strong><span>Specialized agents</span></div>
-    <div class="stat-cell"><strong data-count="30">0</strong><span>Seconds to try demo</span></div>
-    <div class="stat-cell"><strong>Live</strong><span>Real-time office sync</span></div>
-    <div class="stat-cell"><strong>0</strong><span>API keys required</span></div>
-  </div>
+  <section class="crew-section reveal" aria-label="Meet the crew">
+    <div class="crew-head">
+      <h2>Meet a few on the floor</h2>
+      <p>Sixteen agents live here — these four shape most of what you’ll see.</p>
+    </div>
+    <div class="crew-rail">
+      <a class="crew-card" href="/office?demo=1">
+        <div class="npc-portrait npc-portrait--sm" role="img" aria-label="Lucy">
+          <img src="./assets/Lucy.png" alt="" />
+        </div>
+        <div class="crew-meta">
+          <div class="crew-name">Lucy</div>
+          <div class="crew-role">Front desk</div>
+          <p class="crew-line">Mail, pipelines, and the first face you’ll meet when you walk in.</p>
+        </div>
+      </a>
+      <a class="crew-card" href="/office?demo=1">
+        <div class="npc-portrait npc-portrait--sm" role="img" aria-label="Marcus">
+          <img src="./assets/Conference_man.png" alt="" />
+        </div>
+        <div class="crew-meta">
+          <div class="crew-name">Marcus</div>
+          <div class="crew-role">Project lead</div>
+          <p class="crew-line">Runs standups, keeps the room honest when priorities collide.</p>
+        </div>
+      </a>
+      <a class="crew-card" href="/office?demo=1">
+        <div class="npc-portrait npc-portrait--sm" role="img" aria-label="Abby">
+          <img src="./assets/Abby.png" alt="" />
+        </div>
+        <div class="crew-meta">
+          <div class="crew-name">Abby</div>
+          <div class="crew-role">CTO</div>
+          <p class="crew-line">Arbitration, code review, and the person who unsticks blocked work.</p>
+        </div>
+      </a>
+      <a class="crew-card" href="/office?demo=1">
+        <div class="npc-portrait npc-portrait--sm" role="img" aria-label="Bouncer">
+          <img src="./assets/Bouncer.png" alt="" />
+        </div>
+        <div class="crew-meta">
+          <div class="crew-name">Bouncer</div>
+          <div class="crew-role">Security</div>
+          <p class="crew-line">Patrols the floor — when something smells wrong, you see him move.</p>
+        </div>
+      </a>
+    </div>
+  </section>
 
   <section class="benefits-grid section reveal">
     <article class="benefit-card">
@@ -1029,29 +955,111 @@
   </section>
 
   <footer>
-  <a href="https://github.com/Dolonia333/DENIZEN" target="_blank" rel="noopener">GitHub</a>
-    · <a href="/office?demo=1">Live demo</a> · <a href="/office">Full office</a> · <a href="/desktop/download.html">Desktop</a>
-    <br /><br />© Denizen — your agents have an office now
+    <a href="/office?demo=1">Live demo</a> · <a href="/office">Full office</a> · <a href="/desktop/download.html">Desktop</a>
+    <br /><br />Denizen · powered by Dolonia
   </footer>
-
-  <p class="kbd-hint" aria-hidden="true">press <kbd>D</kbd> for demo</p>
 
   <script>
   (function () {
-    // ── boot dismiss (once per browser) ──
+    // ── boot splash: spinning pixel globe + DENIZEN (every fresh visit) ──
     const boot = document.getElementById('boot');
+    let globeRaf = null;
     const skipBoot = () => {
       boot?.classList.add('hide');
-      try { localStorage.setItem('denizen_boot_seen', '1'); } catch (_) { /* private mode */ }
+      if (globeRaf) { cancelAnimationFrame(globeRaf); globeRaf = null; }
+      try { sessionStorage.setItem('denizen_boot_seen', '1'); } catch (_) { /* private mode */ }
     };
+
+    // Coarse equirectangular earth (48×24) — '#' = land. Rough on purpose;
+    // it reads as pixel art at 88px.
+    const GLOBE_MAP = [
+      '................................................',
+      '..................##............................',
+      '.....######......###.....###########............',
+      '...#########.....###....#################.......',
+      '...##########.....#.....#################.......',
+      '....#########..........###################......',
+      '....########...........##################.......',
+      '.....######...........####################......',
+      '......####............#####..####..######.......',
+      '.......###............######..###...#####.......',
+      '........##...........#######...##....##.##......',
+      '........#.............######............####....',
+      '............###.......######.............##.....',
+      '...........#####.......#####....................',
+      '...........#####........####..........####......',
+      '............####.........###.........######.....',
+      '............###...........##.........#####......',
+      '.............##............#..........##........',
+      '.............##.................................',
+      '..............#.................................',
+      '................................................',
+      '................................................',
+      '..........######################................',
+      '....############################################',
+    ];
+
+    function startGlobe() {
+      const cv = document.getElementById('boot-globe');
+      const ctx = cv?.getContext('2d');
+      if (!ctx) return;
+      const N = cv.width;                    // 88 logical pixels
+      const img = ctx.createImageData(N, N);
+      const px = img.data;
+      const rows = GLOBE_MAP.length;
+      const cols = GLOBE_MAP[0].length;
+      const R = N / 2 - 1;
+      const TURN_MS = 2400;                  // one full rotation before DENIZEN shows
+      let t0 = null;
+
+      function frame(now) {
+        if (t0 == null) t0 = now;
+        const elapsed = now - t0;
+        // One clean turn in TURN_MS, then a slow ambient drift while the
+        // wordmark fades in. Time-based, so dropped frames never stutter it.
+        const spin = elapsed <= TURN_MS
+          ? (elapsed / TURN_MS) * 2 * Math.PI
+          : 2 * Math.PI + ((elapsed - TURN_MS) / TURN_MS) * 0.6;
+        px.fill(0);
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            const nx = (x - N / 2) / R;
+            const ny = (y - N / 2) / R;
+            const d2 = nx * nx + ny * ny;
+            if (d2 > 1) continue;
+            const nz = Math.sqrt(1 - d2);
+            const lat = Math.asin(ny);                       // -π/2 … π/2
+            const lon = Math.atan2(nx, nz) + spin;           // rotate east→west
+            const row = Math.min(rows - 1, Math.max(0, Math.floor((lat / Math.PI + 0.5) * rows)));
+            const col = ((Math.floor(((lon / (2 * Math.PI)) % 1 + 1) * cols)) % cols + cols) % cols;
+            const land = GLOBE_MAP[row][col] === '#';
+            // Light from upper-left-front + limb darkening at the edge.
+            const light = Math.max(0.25, -0.35 * nx - 0.35 * ny + 0.75 * nz);
+            const i = (y * N + x) * 4;
+            if (land) {                                      // lime land
+              px[i] = 163 * light; px[i + 1] = 230 * light; px[i + 2] = 53 * light;
+            } else {                                         // deep ink ocean
+              px[i] = 20 * light + 8; px[i + 1] = 32 * light + 10; px[i + 2] = 46 * light + 16;
+            }
+            px[i + 3] = 255;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+        if (!boot?.classList.contains('hide')) globeRaf = requestAnimationFrame(frame);
+      }
+      globeRaf = requestAnimationFrame(frame);
+    }
+
     try {
-      if (localStorage.getItem('denizen_boot_seen')) skipBoot();
+      if (sessionStorage.getItem('denizen_boot_seen')) skipBoot();
       else {
-        setTimeout(skipBoot, 2400);
+        startGlobe();
+        setTimeout(skipBoot, 4000);
         boot?.addEventListener('click', skipBoot);
       }
     } catch (_) {
-      setTimeout(skipBoot, 2400);
+      startGlobe();
+      setTimeout(skipBoot, 4000);
       boot?.addEventListener('click', skipBoot);
     }
 
@@ -1121,24 +1129,6 @@
     pushLog();
     setInterval(pushLog, 900);
 
-    // ── walking NPCs ──
-    const WALKERS = [
-      { img: 'Bob.png', dur: 28, delay: 0 },
-      { img: 'Jenny.png', dur: 22, delay: -8 },
-      { img: 'Edward.png', dur: 35, delay: -15 },
-    ];
-    const walkersEl = document.getElementById('walkers');
-    WALKERS.forEach((w) => {
-      const wrap = document.createElement('div');
-      wrap.className = 'walker npc-portrait npc-portrait--xs npc-portrait--walk';
-      const img = document.createElement('img');
-      img.src = './assets/' + w.img;
-      img.alt = '';
-      wrap.appendChild(img);
-      wrap.style.animationDuration = w.dur + 's';
-      wrap.style.animationDelay = w.delay + 's';
-      walkersEl.appendChild(wrap);
-    });
 
     // ── Lucy dialogue tree ──
     const DIALOGUE = {
@@ -1212,52 +1202,6 @@
     }, { threshold: 0.12 });
     revealEls.forEach((el) => io.observe(el));
 
-    // ── cursor glow + split parallax ──
-    const glow = document.getElementById('cursor-glow');
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!reducedMotion && glow) {
-      document.addEventListener('mousemove', (e) => {
-        glow.style.left = e.clientX + 'px';
-        glow.style.top = e.clientY + 'px';
-        if (stage) {
-          const r = stage.getBoundingClientRect();
-          const x = (e.clientX - r.left) / r.width - 0.5;
-          const y = (e.clientY - r.top) / r.height - 0.5;
-          stage.style.transform = `perspective(900px) rotateY(${x * 5}deg) rotateX(${-y * 4}deg)`;
-        }
-      });
-    }
-
-    // ── stat counter animation ──
-    function animateCount(el, target, duration = 1200) {
-      if (!el || target === null) return;
-      el.classList.add('counting');
-      const start = performance.now();
-      const tick = (now) => {
-        const p = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = String(Math.round(target * eased));
-        if (p < 1) requestAnimationFrame(tick);
-        else el.classList.remove('counting');
-      };
-      requestAnimationFrame(tick);
-    }
-    const statsIo = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        if (!e.isIntersecting) return;
-        const el = e.target;
-        const n = el.dataset.count;
-        if (n !== undefined) animateCount(el, Number(n));
-        statsIo.unobserve(el);
-      });
-    }, { threshold: 0.5 });
-    document.querySelectorAll('[data-count]').forEach((el) => statsIo.observe(el));
-
-    // ── keyboard shortcut: D for demo ──
-    document.addEventListener('keydown', (e) => {
-      if (e.target.closest('input, textarea, button')) return;
-      if (e.key === 'd' || e.key === 'D') window.location.href = '/office?demo=1';
-    });
   })();
   </script>
 </body>
