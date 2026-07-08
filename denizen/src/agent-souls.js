@@ -42,10 +42,12 @@ function loadAllSoulsFromFiles() {
 
 function parseSoulMeta(soul) {
   const providerMatch = soul.match(/## Provider\r?\n([\w-]+)/);
+  const chatProviderMatch = soul.match(/## Chat Provider\r?\n([\w-]+)/);
   const roleMatch = soul.match(/## Role\r?\n(.+)/);
   const capMatch = soul.match(/## What You Can Do\r?\n([\s\S]+?)(?=\r?\n## )/);
   return {
     provider: providerMatch?.[1] || 'lmstudio',
+    chatProvider: chatProviderMatch?.[1] || null,
     role: (roleMatch?.[1] || 'Employee').trim(),
     capabilitiesSoul: capMatch ? capMatch[1].trim() : null,
   };

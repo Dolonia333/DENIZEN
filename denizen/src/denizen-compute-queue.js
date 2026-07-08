@@ -8,6 +8,7 @@ const JOB_MIN_HARDWARE_SCORE = {
   embedding_index: 24,
   npc_think_batch: 16,
   inference_rpc: 12,
+  grok_cli_chat: 0,
   sim_tick: 8,
   web_search: 0,
   grok_telemetry_check: 0,  // Python analysis + MCP, no heavy GPU needed

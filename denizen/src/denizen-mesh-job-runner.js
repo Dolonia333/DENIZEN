@@ -129,6 +129,33 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
   const safePayload = payload && typeof payload === 'object' ? payload : {};
   const onProgress = typeof ctx.onProgress === 'function' ? ctx.onProgress : null;
 
+  if (type === 'grok_cli_chat') {
+    const grokCli = require('./grok-cli-chat');
+    try {
+      const messages = Array.isArray(safePayload.messages) ? safePayload.messages : [];
+      const text = await grokCli.completePlayerChat({
+        systemPrompt: safePayload.system_prompt || safePayload.systemPrompt || '',
+        messages,
+        prefer: 'local',
+        timeoutMs: safePayload.timeout_ms || safePayload.timeoutMs,
+        priority: safePayload.priority,
+      });
+      return {
+        ok: true,
+        jobType: 'grok_cli_chat',
+        text,
+        completed_at: new Date().toISOString(),
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        jobType: 'grok_cli_chat',
+        error: err?.message || String(err),
+        completed_at: new Date().toISOString(),
+      };
+    }
+  }
+
   if (type === 'inference_rpc') {
     if (await isInferenceReachable()) {
       try {

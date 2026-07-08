@@ -74,6 +74,32 @@ claude mcp list
 
 ## Drive the office (CLI — recommended, no API keys)
 
+### In-game chat → real Grok CLI
+
+Grok's SOUL uses `## Chat Provider` / `grok-cli` so **player chat** hits your PC's `grok -p`
+(with `denizen-grok` MCP). Autonomous `think()` stays on local LM (`## Provider` / `lmstudio`).
+
+**1. Start the bridge on your PC** (keep running):
+
+```bash
+py infra/run-grok-cli-chat-bridge.py
+```
+
+Copy the printed token. Expose port `9876` to the NAS (Tailscale IP is easiest).
+
+**2. Point the NAS container at your PC** — add to `denizen/.env` or docker env:
+
+```bash
+GROK_CLI_BRIDGE_URL=http://100.x.x.x:9876
+GROK_CLI_BRIDGE_TOKEN=<token from bridge>
+```
+
+Redeploy / restart `denizen-server`, then chat with Grok in the office.
+
+**Alt:** mesh worker on PC (`py infra/run-grok-cli-mesh-worker.py`) + `GROK_CLI_MESH_NODE=<machine_id>` on NAS.
+
+## Drive the office (CLI one-shots)
+
 One-shot:
 
 ```bash
@@ -86,9 +112,12 @@ Loop on a timer (still CLI, not API):
 
 ```bash
 py infra/run-office-cli-loop.py grok --loop --interval 300
+py infra/run-office-cli-loop.py grok --loop --interval 120 --patrol   # walk + patrol
 py infra/run-office-cli-loop.py claude --loop --interval 300
 py infra/run-office-cli-loop.py both --loop --interval 600
 ```
+
+**Patrol / walking:** MCP does not teleport the sprite. Grok CLI calls `assign_task` → server think loop picks `visit` / `meeting` / `wander` → you see movement only with the office page open (`denizen.dolonia.cloud`). Use `--patrol` and a shorter `--interval` (60–180s).
 
 Mentor locals (Grok CLI + team MCP, no API):
 

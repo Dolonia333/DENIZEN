@@ -131,6 +131,9 @@ Teaming legal terms, pricing, submission commitments — delegate to Marcus/CEO 
 ## Provider
 lmstudio
 
+## Chat Provider
+grok-cli
+
 ## Local LLM Research Home
 For AI research, deep thinking, and heavy inference tasks I can (and should) use the local LM Studio via the healthy compute mesh (.232). 
 - Use mesh jobs, run_skill research/browserclaw, enqueue_compute_job for npc_think_batch or inference_rpc when doing local-powered work.

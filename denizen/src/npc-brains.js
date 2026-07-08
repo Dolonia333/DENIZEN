@@ -905,6 +905,13 @@ class NpcBrainManager {
         model: process.env.LM_STUDIO_FAST_MODEL || 'google/gemma-4-e2b',
         type: 'lmstudio',
       };
+      this.providers['grok-cli'] = {
+        type: 'grok-cli',
+        grokBin: process.env.GROK_BIN || null,
+        bridgeUrl: process.env.GROK_CLI_BRIDGE_URL || null,
+        bridgeToken: process.env.GROK_CLI_BRIDGE_TOKEN || null,
+        meshNodeId: process.env.GROK_CLI_MESH_NODE || null,
+      };
 
       console.log(`[NpcBrains] Loaded providers: ${Object.keys(this.providers).join(', ')}`);
     } catch (err) {
@@ -955,6 +962,7 @@ class NpcBrainManager {
   _registerBrain(name, folder, soul, longTermMemory) {
     const demoFolders = promptTuning?.publicDemoNpcFolders;
     const providerMatch = soul.match(/## Provider\r?\n([\w-]+)/);
+    const chatProviderMatch = soul.match(/## Chat Provider\r?\n([\w-]+)/);
     const roleMatch = soul.match(/## Role\r?\n(.+)/);
     const capMatch = soul.match(/## What You Can Do\r?\n([\s\S]+?)(?=\r?\n## )/);
     let provider = providerMatch?.[1] || 'lmstudio';
@@ -976,6 +984,7 @@ class NpcBrainManager {
 
     this.brains[name] = {
       provider,
+      chatProvider: chatProviderMatch?.[1] || null,
       role,
       personality: this._trimSoulForPrompt(soul),
       thinkIdentity: promptBudget.extractThinkIdentity(
@@ -985,7 +994,9 @@ class NpcBrainManager {
       ),
       longTermMemory,
       providerConfig,
-      fallbackConfig: null,
+      fallbackConfig: provider === 'grok-cli' && this.providers.lmstudio
+        ? { ...this.providers.lmstudio, providerKey: 'lmstudio' }
+        : null,
       voiceAnchor: this._buildVoiceAnchor(soul, name),
       capabilitiesSoul,
       _soulSource: 'file',
@@ -1006,6 +1017,7 @@ class NpcBrainManager {
     }
     const baseProviderConfig = this.providers[provider] || this.providers.lmstudio || this.providers.demo;
     brain.provider = provider;
+    brain.chatProvider = meta.chatProvider || null;
     brain.role = meta.role;
     brain.personality = this._trimSoulForPrompt(soul);
     brain.thinkIdentity = promptBudget.extractThinkIdentity(
@@ -1031,6 +1043,7 @@ class NpcBrainManager {
     const baseProviderConfig = this.providers[provider] || baseBrain.providerConfig || this.providers.lmstudio;
     return {
       provider,
+      chatProvider: meta.chatProvider || null,
       role: meta.role,
       personality: this._trimSoulForPrompt(soul),
       thinkIdentity: promptBudget.extractThinkIdentity(
@@ -3297,6 +3310,27 @@ ${actionFooter}`;
   }
 
   /**
+   * Player chat via operator PC Grok CLI (bridge, mesh, or local spawn).
+   */
+  async _callGrokCli(config, systemPrompt, messages, opts = {}) {
+    const grokCli = require('./grok-cli-chat');
+    const text = await grokCli.completePlayerChat({
+      systemPrompt,
+      messages,
+      grokBin: config.grokBin,
+      bridgeUrl: config.bridgeUrl,
+      bridgeToken: config.bridgeToken,
+      meshNodeId: config.meshNodeId,
+      timeoutMs: opts.priority === 'high'
+        ? (promptTuning?.playerChatTimeoutMs ?? 45000) * 4
+        : undefined,
+      priority: opts.priority,
+      cwd: path.join(__dirname, '..'),
+    });
+    return String(text || '').trim();
+  }
+
+  /**
    * Call an AI provider API
    */
   _callProvider(config, systemPrompt, messages, opts = {}) {
@@ -3315,6 +3349,8 @@ ${actionFooter}`;
       return this._callOpenAI(config, systemPrompt, messages, opts);
     } else if (config.type === 'lmstudio') {
       return this._callLocalRouted(config, systemPrompt, messages, opts);
+    } else if (config.type === 'grok-cli') {
+      return this._callGrokCli(config, systemPrompt, messages, opts);
     }
     return Promise.reject(new Error('Unknown provider type'));
   }
@@ -5646,8 +5682,12 @@ ${brain.voiceAnchor || ''}`;
     playerOpts.systemPromptChars = finalSystemPrompt.length;
 
     const providerOverride = this._resolveVisitorProviderOverrides(opts);
-    const activeProvider = providerOverride?.primary || brain.providerConfig;
-    const activeFallback = providerOverride?.fallback ?? brain.fallbackConfig;
+    const chatCfg = brain.chatProvider && this.providers[brain.chatProvider]
+      ? { ...this.providers[brain.chatProvider], providerKey: brain.chatProvider }
+      : null;
+    const activeProvider = providerOverride?.primary || chatCfg || brain.providerConfig;
+    const activeFallback = providerOverride?.fallback
+      ?? (chatCfg && brain.providerConfig ? brain.providerConfig : brain.fallbackConfig);
 
     let responseText;
     let wasFallback = false;

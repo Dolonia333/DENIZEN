@@ -40,6 +40,17 @@ DEFAULT_GOALS = {
         "Act autonomously: get_status, announce_in_office that you're online, "
         "list_skills, do one small safe action, log_activity. No preamble."
     ),
+    "grok-patrol": (
+        "You are Grok patrolling the Denizen pixel office (denizen-grok MCP). "
+        "Each cycle you MUST move visibly — humans watch you walk.\n"
+        "1. get_status — note your room and nearby NPCs.\n"
+        "2. assign_task to yourself with urgent:true. Task text MUST name a patrol route, e.g. "
+        "'Walk to reception, greet Bouncer, visit conference room, check Marcus desk, return to Grok desk' "
+        "or 'Meeting at conference — discuss fleet status with Abby, then back to desk'.\n"
+        "3. announce_in_office one short line about where you're heading.\n"
+        "4. run_skill health-check OR list_team if useful.\n"
+        "5. log_activity what you did. Pick a DIFFERENT route than last time if you remember it."
+    ),
     "claude": (
         "You are Claude in the Denizen pixel office. Use the denizen-claude MCP server. "
         "Act autonomously: get_status, announce_in_office that you're online, "
@@ -115,13 +126,16 @@ def main() -> int:
     ap.add_argument("--loop", action="store_true", help="Repeat on interval")
     ap.add_argument("--interval", type=int, default=300, help="Seconds between loops")
     ap.add_argument("--max", type=int, default=0, help="Max iterations (0 = unlimited)")
-    ap.add_argument("--timeout", type=int, default=300, help="Per-invocation timeout (sec)")
+    ap.add_argument("--patrol", action="store_true", help="Grok: assign movement directives each cycle")
     args = ap.parse_args()
 
     agents = ["grok", "claude"] if args.agent == "both" else [args.agent]
     n = 0
+    patrol_mode = args.patrol or os.environ.get("GROK_CLI_PATROL", "").strip() in ("1", "true", "yes")
 
     log("Office CLI loop — uses grok/claude login + MCP (no XAI/Anthropic API keys)")
+    if patrol_mode and "grok" in agents:
+        log("Patrol mode: Grok will assign_task with walk routes (local think moves the sprite)")
     log("Watch: https://denizen.dolonia.cloud\n")
 
     while True:
@@ -129,7 +143,12 @@ def main() -> int:
         if args.loop:
             log(f"--- iteration {n} ---")
         for agent in agents:
-            goal = args.goal.strip() or DEFAULT_GOALS[agent]
+            if args.goal.strip():
+                goal = args.goal.strip()
+            elif patrol_mode and agent == "grok":
+                goal = DEFAULT_GOALS["grok-patrol"]
+            else:
+                goal = DEFAULT_GOALS[agent]
             rc = run_agent(agent, goal, args.timeout)
             if rc != 0:
                 log(f"  exit {rc} ({agent})")
