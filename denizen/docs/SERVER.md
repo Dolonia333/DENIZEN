@@ -249,11 +249,11 @@ See [WORLD-STATE.md](WORLD-STATE.md), [AGENT_BUS.md](AGENT_BUS.md).
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/api/bouncer-scan` | Manual nmap/wireshark/zenmap |
-| POST | `/api/bouncer-linux` | Kali WSL investigation |
-| GET | `/security-test` | Simulate threat (`?type=&severity=&detail=`) |
+| POST | `/api/bouncer-scan` | Manual nmap/wireshark/zenmap (auth required) |
+| POST | `/api/bouncer-linux` | Kali WSL investigation (auth required) |
+| GET | `/security-test` | Simulate threat (`?type=&severity=&detail=`; guarded in prod) |
 
-See [SECURITY.md](SECURITY.md).
+See **[BOUNCER.md](BOUNCER.md)** for relay topology, investigation agent, mesh patrol, env vars, and smokes. Threat catalog: [SECURITY.md](SECURITY.md).
 
 ### MCP & NPC sync
 
@@ -498,6 +498,18 @@ Loaded from `denizen/.env` via [load-env.js](../src/load-env.js) (shell vars win
 | `MIROFISH_ENABLED`, `MIROFISH_BASE_URL` | Prediction sync |
 | `CITY_PLAN_PROVIDER` | `/api/llm-city-plan` provider override |
 | `BOUNCER_INVESTIGATION_COOLDOWN_MS` | `900000` — dedup Bouncer scans |
+| `BOUNCER_PATROL` | `container` on NAS Docker; `wsl` on Windows; `off` to disable |
+| `BOUNCER_INVESTIGATION_URL` | Remote dolonia agent e.g. `http://192.168.1.232:8890` |
+| `BOUNCER_INVESTIGATION_TOKEN` | Bearer auth for investigation agent + bouncer APIs |
+| `BOUNCER_MESH_PATROL` | `1` — enqueue `bouncer_patrol` mesh jobs |
+| `BOUNCER_DAILY_BRIEF_MS` | Daily brief interval (default 24h) |
+| `BOUNCER_FRIDAY_BRIEF` | `1` — write `reports/security/weekly_*.md` on Fridays |
+| `WSL_DISTRO` | WSL distro name (default `kali-linux`) |
+| `DENIZEN_WORLD_PUBSUB` | `redis` for spectate threat relay |
+| `DENIZEN_REDIS_URL` | Redis URL when pubsub is redis |
+| `DENIZEN_SERVER_ROLE` | `primary` \| `follower` (relay-only skips local monitor) |
+| `DENIZEN_SECURITY_TEST_PUBLIC` | Allow anonymous `/security-test` on public demo |
+| `DENIZEN_INTERNAL_API_TOKEN` | `x-internal-token` for ops smokes |
 | `DEBUG_TTS` | Log voice resolution per request |
 
 External webhook sinks (n8n, etc.) are configured via env vars read by [external-sink.js](../src/external-sink.js) — no-op when unset.

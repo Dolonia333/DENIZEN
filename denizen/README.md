@@ -1186,6 +1186,9 @@ When NPCs decide to take a break:
 
 ## Security Monitor
 
+> **Full system (relay, NAS deploy, mesh patrol, visitor gating):** [docs/BOUNCER.md](docs/BOUNCER.md)  
+> **Threat catalog + robber behaviors:** [docs/SECURITY.md](docs/SECURITY.md)
+
 The `SecurityMonitorServer` provides real-time threat detection:
 
 | Threat Category | What It Detects |

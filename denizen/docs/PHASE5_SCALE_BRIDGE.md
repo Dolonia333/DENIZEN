@@ -1,6 +1,7 @@
 # Phase 5 Scale Bridge — Gap closure master plan
 
-> Bridges every gap from the scale-hardening overview: spectator relay, follower hardening, client routing, ops, tests.
+> Bridges every gap from the scale-hardening overview: spectator relay, follower hardening, client routing, ops, tests.  
+> **Security threat relay** (robbers on spectate): [BOUNCER.md](BOUNCER.md) § Multi-node threat relay.
 
 ## Current position (~85% Tier B/C)
 

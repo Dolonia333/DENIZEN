@@ -106,7 +106,7 @@ denizen_crm_workspaces       ← org-scoped JSON workspace; mirrors to leads/cli
 denizen_office_events
 denizen_office_layout
 denizen_security_threats
-denizen_bouncer_runs
+denizen_bouncer_runs          ← investigation/patrol audit (see BOUNCER.md)
 
 ── Compute mesh & credits ──
 denizen_compute_nodes
@@ -198,6 +198,10 @@ Example order: `llm-telemetry.jsonl` → `denizen_llm_events` → stop JSONL app
 | **Cross-visitor** | assistant_messages | Lucy ↔ teammate assistant handoff |
 
 Protected NPCs (`abby`, `bouncer`, `lucy` for CEO): `denizen_npcs.protected = true` blocks claim.
+
+### `denizen_bouncer_runs` (migration `20260707000001`)
+
+Written by `denizenDb.recordBouncerRun()` after each Bouncer investigation or patrol. Columns: `threat_category`, `source`, `ok`, `report_path`, `patrol_mode`, `node_id`, `elapsed_ms`, `verdict`, `metadata` (jsonb). See [BOUNCER.md](BOUNCER.md) § Database.
 
 ---
 

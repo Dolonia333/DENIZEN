@@ -188,11 +188,19 @@ When enabled, Denizen coordinates distributed inference and fleet jobs across a 
 
 See [COMPUTE_MESH.md](COMPUTE_MESH.md) and [../../infra/README.md](../../infra/README.md).
 
+## Bouncer security (multi-node)
+
+Threat visualization, Kali investigations, Redis relay to spectate followers, and mesh patrol are documented end-to-end in **[BOUNCER.md](BOUNCER.md)**.
+
+Production shape: NAS primary (`:8888`) runs `SecurityMonitor` → Redis → followers (`:8889`/`:8890`) → browser `agent-ws` / `security-ws`. Investigations proxy to dolonia WSL via `BOUNCER_INVESTIGATION_URL`.
+
 ## Message type reference
 
 Port: `process.env.PORT` (default `8080` in code; Dolonia lab typically sets `PORT=8081` in `.env`).
 
-### NPC messages (`/ws`)
+### NPC messages (`/agent-ws`)
+
+> Live endpoint is **`/agent-ws`** (not `/ws`). See [SERVER.md](SERVER.md).
 
 | Type | Direction | Payload |
 |---|---|---|

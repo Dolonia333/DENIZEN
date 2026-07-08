@@ -189,9 +189,9 @@ multbot/
   `research-scheduler.js`, `/api/lucy-*`), `denizen_research_queue/sessions`.
 
 ### 4.8 Security
-- `security-monitor-server.js` + the "bouncer" scan agents
-  (`/api/bouncer-scan`, `denizen_security_threats`, `denizen_bouncer_runs`).
-  Realtime threat feed on the WS `security` channel. See [SECURITY.md](SECURITY.md).
+- `security-monitor-server.js` + Bouncer investigations, Redis relay to spectate
+  followers, mesh `bouncer_patrol`, `denizen_bouncer_runs`. See **[BOUNCER.md](BOUNCER.md)**
+  (system) and [SECURITY.md](SECURITY.md) (threat catalog).
 
 ### 4.9 Integrations
 - **Email**: `gmail-client.js`, `email-handler.js`, inbound `/api/email-inbound`,

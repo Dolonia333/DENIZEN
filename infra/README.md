@@ -93,6 +93,8 @@ py infra/verify-batch3-nas.py         # competency-map, publicDemo, ws cap
 
 ### Bouncer / Security deploy (post-recreate)
 
+Full architecture: **[../denizen/docs/BOUNCER.md](../denizen/docs/BOUNCER.md)** — why relay exists, env vars, when each path works, troubleshooting.
+
 Run from repo root on dolonia in this order:
 
 1. `py infra/patch-denizen-nas-env.py`

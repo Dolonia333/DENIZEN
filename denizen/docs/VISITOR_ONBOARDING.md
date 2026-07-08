@@ -139,6 +139,8 @@ These helpers power org-scoped read access across onboarding-adjacent and busine
 | Connect AI (MCP — Cursor, ChatGPT, Claude) | No | Yes |
 | Slack link / external research | No | Yes |
 | Real tool execution (`run_skill`) | Denied | Allowed (subject to org settings) |
+| Security feed / Bouncer operator tools | No (`security_feed_read`) | Yes |
+| Restricted rooms (manager office, storage) | Preview warning only | Team + Citizen badge |
 | Business table visibility | Restricted by org policy | Allowed by org policy + RLS |
 
 ---
@@ -166,5 +168,6 @@ What it verifies:
 
 - `403 DENIED` on team session creation: invalid/expired access grant or token mismatch.
 - `403 DEMO_RESTRICTED`: caller is demo tier or demo org settings are active.
+- Security feed hidden on demo: expected — see [BOUNCER.md](BOUNCER.md) § Visitor & tier gating.
 - Missing team-auth behavior: ensure migration `000011` exists and API routes are mounted.
 - Cross-org visibility issues: verify `denizen_user_can_access_org` and table policies from `000012/000013`.

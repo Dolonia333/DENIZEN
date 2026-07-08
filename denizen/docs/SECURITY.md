@@ -2,6 +2,8 @@
 
 **Goal:** turn real system and network events into character animations, so someone who can't read a log file can still *see* that something bad is happening.
 
+> **Full system (relay, investigations, mesh patrol, deploy):** see **[BOUNCER.md](BOUNCER.md)** — this doc covers threat detection, robber behaviors, and Linux feeders.
+
 When the security monitor detects a threat, a robber NPC spawns in the pixel office and performs the action corresponding to the threat type. No logs to parse, no CLI to open — just watch the office.
 
 ## How it works in one paragraph
@@ -160,6 +162,7 @@ Override by passing options into the `new SecurityMonitorServer({...})` call in 
 
 ## See also
 
+- **[BOUNCER.md](BOUNCER.md)** — multi-node relay, investigation agent, mesh patrol, env vars, smokes
 - [ARCHITECTURE.md](ARCHITECTURE.md) — whole-system topology
 - [SETUP.md](SETUP.md) — installing and enabling the Linux feeders
 - [AI-SYSTEM.md](AI-SYSTEM.md) — the NPC intelligence layer (separate from security)

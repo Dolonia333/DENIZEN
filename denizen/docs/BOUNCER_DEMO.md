@@ -1,5 +1,7 @@
 # Bouncer 60s Investor Demo
 
+> **Architecture, env vars, deploy, troubleshooting:** [BOUNCER.md](BOUNCER.md)
+
 ## Goal
 Show that Denizen can detect, investigate, and report a security issue in under one minute using real server routes.
 

@@ -40,6 +40,7 @@ Distributed compute network for Denizen: machines report live hardware metrics, 
 | Type | Description | GPU |
 |------|-------------|-----|
 | `npc_think_batch` | Batch NPC think prompts via LM Studio when reachable; mock fallback otherwise | Host preferred |
+| `bouncer_patrol` | Per-node TCP + health probes for Bouncer mesh patrol (`BOUNCER_MESH_PATROL=1`) | Any |
 | `sim_tick` | Lightweight simulation tick (smoke / test jobs) | Any |
 
 Auto-producer (`denizen-compute-producer.js`) enqueues `npc_think_batch` every 5 minutes when `DENIZEN_FLEET_IDENTITY_ID` or fleet tokens are set.
@@ -56,7 +57,9 @@ Denizen uses **two different Kali contexts**. Do not conflate them when debuggin
 | **Network** | Loopback / Windows host networking through WSL | Tailscale IP `100.71.54.109:8081` → dolonia |
 | **Machine id** | N/A (ephemeral WSL instance) | `DENIZEN_MACHINE_ID=hp81081d` |
 | **Install path** | Commands only — no persistent agent | `~/denizen-agent/` via `infra/pull-install-kali-agent.sh` |
-| **Docs** | [SECURITY.md](SECURITY.md) — threat visualization, Bouncer escalation | This doc — fleet nodes, mesh smokes |
+| **Docs** | [BOUNCER.md](BOUNCER.md) — investigations, relay, patrol | This doc — fleet nodes, mesh smokes |
+
+Mesh job type **`bouncer_patrol`** (when `BOUNCER_MESH_PATROL=1`) runs TCP/health probes from fleet nodes — see [BOUNCER.md](BOUNCER.md) § Mesh `bouncer_patrol` jobs. That is separate from WSL investigations above.
 
 **Rule of thumb:** if Bouncer is "running nmap in Kali", that is **WSL on the Windows host**. If a fleet node named `hp81081d` is claiming mesh jobs, that is the **physical laptop** running `nas-compute-agent.js` (same script as the Synology NAS agent, different `DENIZEN_URL` and machine id).
 

@@ -322,6 +322,10 @@ The system already has proposal queues for SOUL edits, capabilities, and animati
 | Bouncer Kali investigation | ✅ Done |
 | Bouncer structured reports + Dan escalation | ✅ Done |
 | Bouncer baseline patrol (port diff) | ✅ Done |
+| Bouncer Redis threat relay (spectate followers) | ✅ Done — [BOUNCER.md](BOUNCER.md) |
+| Bouncer investigation agent (NAS → dolonia WSL) | ✅ Done |
+| Bouncer mesh `bouncer_patrol` + `denizen_bouncer_runs` | ✅ Done |
+| Bouncer visitor tier gating + Citizen badge rooms | ✅ Done |
 | Live system data (DevOps/IT/Security) | ✅ Done |
 | OpenClaw skill execution (`run_skill`) | ✅ Done — Phase 1 |
 | Mood system (stress/satisfaction/focus) | ✅ Done — Phase 1 |

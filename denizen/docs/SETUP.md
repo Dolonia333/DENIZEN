@@ -103,6 +103,8 @@ If you are deploying to production/self-hosted Supabase, follow [PRODUCTION_DEPL
 
 ## 2. Enable the security visualization (local fake events)
 
+> Production multi-node relay, investigation agent, and deploy: **[BOUNCER.md](BOUNCER.md)**
+
 No Linux required for this part. The security monitor is always running in the background. Test it:
 
 ```bash

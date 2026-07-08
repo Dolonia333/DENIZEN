@@ -224,6 +224,8 @@ Warm, organized, socially sharp. The first person you see and the last you forge
 
 ### Bouncer — Security Guard
 
+> **System architecture, deploy, relay, mesh patrol:** [BOUNCER.md](BOUNCER.md)
+
 | | |
 |--|--|
 | **AI Model** | LM Studio (fast) |
