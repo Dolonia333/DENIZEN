@@ -82,6 +82,9 @@
         './src/security-feed.js?v=sec2',
       ]);
       await loadParallel([
+        './src/tabler-icons.js?v=ti1',
+        './src/office-hq/office-level-chip.js?v=lvl1',
+        './src/office-hq/office-hq-panel.js?v=hq1',
         './src/visitor-desktop-pairing.js?v=pair3',
         './src/visitor-credits-chip.js?v=node7',
         './src/visitor-handoff-ui.js?v=vis3',

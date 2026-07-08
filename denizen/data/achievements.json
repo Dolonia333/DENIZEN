@@ -1,0 +1,18 @@
+{
+  "description": "Office achievement definitions. icon = Tabler icon name (without ti- prefix). metric Γêê total_xp | level | task_shipped | deal_won | ticket_closed | max_npc_streak | weekday_ship_coverage. Evaluated by src/office-hq/denizen-achievements.js ΓÇö edit freely, no deploy needed.",
+  "achievements": [
+    { "id": "first_ship", "label": "First ship", "icon": "package", "metric": "task_shipped", "threshold": 1 },
+    { "id": "first_deal_won", "label": "First deal won", "icon": "coin", "metric": "deal_won", "threshold": 1 },
+    { "id": "first_ticket_closed", "label": "First ticket closed", "icon": "headset", "metric": "ticket_closed", "threshold": 1 },
+    { "id": "ten_shipped", "label": "10 shipped", "icon": "truck-delivery", "metric": "task_shipped", "threshold": 10 },
+    { "id": "hundred_shipped", "label": "100 shipped", "icon": "building-factory", "metric": "task_shipped", "threshold": 100 },
+    { "id": "five_deals", "label": "5 deals won", "icon": "handshake", "metric": "deal_won", "threshold": 5 },
+    { "id": "twenty_five_tickets", "label": "25 tickets closed", "icon": "lifebuoy", "metric": "ticket_closed", "threshold": 25 },
+    { "id": "level_5", "label": "Level 5 office", "icon": "star", "metric": "level", "threshold": 5 },
+    { "id": "level_10", "label": "Level 10 office", "icon": "stars", "metric": "level", "threshold": 10 },
+    { "id": "xp_1000", "label": "1,000 XP", "icon": "bolt", "metric": "total_xp", "threshold": 1000 },
+    { "id": "week_streak", "label": "7-day ship streak", "icon": "flame", "metric": "max_npc_streak", "threshold": 7 },
+    { "id": "two_week_streak", "label": "14-day ship streak", "icon": "meteor", "metric": "max_npc_streak", "threshold": 14 },
+    { "id": "perfect_week", "label": "Perfect week", "icon": "calendar", "metric": "weekday_ship_coverage", "threshold": 5 }
+  ]
+}

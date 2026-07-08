@@ -405,21 +405,30 @@
   }
 
   const CHIP_ICONS = {
-    'denizen-onboarding-replay-chip': '📖',
-    'denizen-superuser-replay-chip': '🗺️',
-    'denizen-capabilities-guide-chip': '🧭',
-    'denizen-diag-chip': '⋯',
-    'denizen-mesh-jobs-chip': '⬡',
-    'denizen-security-chip': '🛡️',
-    'denizen-llm-tel-chip': '⚙',
-    'denizen-audio-mode-chip': '🔊',
-    'denizen-presence-chip': '👤',
-    'denizen-browser-mirror-chip': '🌐',
-    'denizen-proposals-chip': '📋',
-    'denizen-content-pipeline-chip': '📰',
-    'player-chat-fab': '💬',
-    'denizen-mic-button': '🎤',
+    'denizen-onboarding-replay-chip': { tabler: 'book', label: 'City Tour' },
+    'denizen-superuser-replay-chip': { tabler: 'map', label: 'Power Tour' },
+    'denizen-capabilities-guide-chip': { tabler: 'compass', label: 'City Guide' },
+    'denizen-diag-chip': { tabler: 'stethoscope', label: 'Health' },
+    'denizen-mesh-jobs-chip': { tabler: 'hexagon', label: 'Power' },
+    'denizen-security-chip': { tabler: 'shield', label: 'Security' },
+    'denizen-llm-tel-chip': { tabler: 'settings', label: 'LM Stats' },
+    'denizen-audio-mode-chip': { tabler: 'volume', label: 'Listen-in' },
+    'denizen-presence-chip': { tabler: 'user', label: 'Walk-up' },
+    'denizen-browser-mirror-chip': { tabler: 'world-www', label: 'Browser' },
+    'denizen-proposals-chip': { tabler: 'clipboard-list', label: 'Approvals' },
+    'denizen-content-pipeline-chip': { tabler: 'news', label: 'Newsroom' },
+    'player-chat-fab': { tabler: 'messages', label: 'Chat' },
+    'denizen-mic-button': { tabler: 'microphone', label: 'Speak' },
   };
+
+  function chipMarkup(entry, compact) {
+    const T = globalThis.DenizenTablerIcons;
+    const tabler = entry?.tabler;
+    const label = entry?.label || '';
+    if (!T || !tabler) return label;
+    if (compact) return T.icon(tabler, { size: 14 });
+    return T.chip(tabler, label, { size: 13 });
+  }
 
   function compactChipLabels() {
     const compact = document.documentElement.classList.contains('denizen-touch');
@@ -429,23 +438,28 @@
       'denizen-llm-tel-chip',
       'denizen-mesh-jobs-chip',
     ]);
-    for (const [id, icon] of Object.entries(CHIP_ICONS)) {
+    for (const [id, entry] of Object.entries(CHIP_ICONS)) {
       const el = document.getElementById(id);
       if (!el) continue;
       if (dynamicLabels.has(id)) continue;
       if (id === 'player-chat-fab' && window.__DenizenPlayerChat?.isOpen) {
-        if (!el.dataset.fullLabel) el.dataset.fullLabel = window.__DenizenPlayerChat._chatFabClosedLabel?.() || '💬 Chat';
+        if (!el.dataset.fullLabel) {
+          el.dataset.fullLabel = window.__DenizenPlayerChat._chatFabClosedLabel?.() || chipMarkup(entry, false);
+        }
         window.__DenizenPlayerChat._syncFabLabel?.();
         continue;
       }
       if (compact) {
-        if (!el.dataset.fullLabel) el.dataset.fullLabel = el.textContent || icon;
-        el.textContent = icon;
-        el.title = el.dataset.fullLabel;
+        if (!el.dataset.fullLabel) el.dataset.fullLabel = chipMarkup(entry, false);
+        el.innerHTML = chipMarkup(entry, true);
+        el.title = entry.label || el.dataset.fullLabel;
         el.dataset.compact = '1';
       } else if (el.dataset.compact === '1') {
-        el.textContent = el.dataset.fullLabel || el.textContent;
+        el.innerHTML = el.dataset.fullLabel || chipMarkup(entry, false);
         delete el.dataset.compact;
+      } else if (!el.dataset.fullLabel) {
+        el.innerHTML = chipMarkup(entry, false);
+        el.dataset.fullLabel = el.textContent || entry.label;
       }
     }
   }

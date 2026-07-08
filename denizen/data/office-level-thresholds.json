@@ -1,0 +1,4 @@
+{
+  "description": "Cumulative XP required to reach each level. Level = highest index whose threshold has been met (level 1 at 0 XP). Tune freely; no deploy needed ΓÇö read live by src/office-hq/denizen-office-progress.js.",
+  "thresholds": [0, 50, 150, 300, 500, 750, 1100, 1500, 2000, 2600, 3300, 4100, 5000]
+}

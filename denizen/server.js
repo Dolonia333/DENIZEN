@@ -27,6 +27,10 @@ const emailHandler = require('./src/email-handler');
 const gmailClient = require('./src/gmail-client');
 const llmTelemetry = require('./src/llm-telemetry');
 const denizenDb = require('./src/denizen-db');
+const denizenNpcStats = require('./src/office-hq/denizen-npc-stats');
+const denizenOfficeProgress = require('./src/office-hq/denizen-office-progress');
+const denizenQuests = require('./src/office-hq/denizen-quests');
+const denizenAchievements = require('./src/office-hq/denizen-achievements');
 const orgPolicy = require('./src/denizen-org-policy');
 const denizenVisitor = require('./src/denizen-visitor');
 const visitorAccess = require('./src/visitor-access');
@@ -1688,6 +1692,7 @@ const handleCrmRoutes = mountCrmRoutes({
 });
 
 const handleN8nRoutes = mountN8nRoutes();
+const handleOfficeProgressRoutes = require('./src/office-progress-routes').createOfficeProgressRouteHandler();
 
 const handleComputeRoutes = mountComputeRoutes({
   internalToken: process.env.DENIZEN_INTERNAL_API_TOKEN || '',
@@ -3364,7 +3369,10 @@ denizenDb.attachWorldState(worldState);
 // wrong; the rest (npc state churn, task ticks, event-feed entries) absorb
 // the latency just fine.
 const WS_BROADCAST_INTERVAL_MS = 500;
-const IMMEDIATE_KINDS = new Set(['presence', 'threat', 'threat-cleared']);
+const IMMEDIATE_KINDS = new Set([
+  'presence', 'threat', 'threat-cleared',
+  'office_level_up', 'achievement_unlocked', 'quest_complete', 'quest_claimed',
+]);
 
 const worldPubsub = createWorldPubsub();
 
@@ -3551,6 +3559,18 @@ const server = http.createServer((req, res) => {
   }
 
   if (_handleVisitorAuthRoutes(req, res, urlPath)) {
+    return;
+  }
+
+  if (urlPath.startsWith('/api/office/')) {
+    (async () => {
+      await handleOfficeProgressRoutes(req, res);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
     return;
   }
 
@@ -11617,6 +11637,13 @@ _resetLucyBrowserOnStartup();
 probePlaywrightBrowsers();
 _startLucyMirrorFrameWatcher();
 
+// Quest tick — advances daily/weekly quest progress; works in zero-config demo mode too.
+const _questTickTimer = setInterval(() => {
+  try { denizenQuests.tickQuests(); } catch (_) {}
+}, 60_000);
+_questTickTimer.unref?.();
+setTimeout(() => { try { denizenQuests.tickQuests(); } catch (_) {} }, 20_000);
+
 const PREDICTION_MAINTENANCE_MS = 6 * 60 * 60 * 1000;
 let _predictionMaintenanceTimer = null;
 let _visitorIntelligenceLoop = null;
@@ -11634,6 +11661,18 @@ server.listen(PORT, () => {
     });
     npcBrains.hydrateAgentSoulsFromDb().catch((err) => {
       console.warn('[NpcBrains] agent_souls hydrate failed:', err?.message || err);
+    });
+    denizenNpcStats.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenNpcStats] hydrate failed:', err?.message || err);
+    });
+    denizenOfficeProgress.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenOfficeProgress] hydrate failed:', err?.message || err);
+    });
+    denizenAchievements.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenAchievements] hydrate failed:', err?.message || err);
+    });
+    denizenQuests.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenQuests] hydrate failed:', err?.message || err);
     });
     runPredictionMaintenance(denizenDb).catch((err) => {
       console.warn('[DenizenPredictionLoop] initial maintenance failed:', err?.message || err);

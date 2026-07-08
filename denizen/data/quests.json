@@ -1,0 +1,11 @@
+{
+  "description": "Office quest definitions. period Γêê daily | weekly. Counter metrics (tasks_shipped, deals_won, tickets_closed) increment as XP events land; snapshot metrics (max_npc_streak) are recomputed on the scheduler tick. Claimed via POST /api/office/quests/claim. Edit freely, no deploy needed.",
+  "quests": [
+    { "id": "daily_ship_3", "label": "Ship 3 tasks", "period": "daily", "metric": "tasks_shipped", "target": 3, "reward_xp": 15 },
+    { "id": "daily_ticket_2", "label": "Close 2 tickets", "period": "daily", "metric": "tickets_closed", "target": 2, "reward_xp": 10 },
+    { "id": "weekly_ship_15", "label": "Ship 15 tasks", "period": "weekly", "metric": "tasks_shipped", "target": 15, "reward_xp": 60 },
+    { "id": "weekly_tickets_5", "label": "Close 5 tickets", "period": "weekly", "metric": "tickets_closed", "target": 5, "reward_xp": 50 },
+    { "id": "weekly_deals_2", "label": "Win 2 deals", "period": "weekly", "metric": "deals_won", "target": 2, "reward_xp": 120 },
+    { "id": "weekly_streak_7", "label": "Hold a 7-day streak", "period": "weekly", "metric": "max_npc_streak", "target": 7, "reward_xp": 80 }
+  ]
+}

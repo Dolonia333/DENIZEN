@@ -4824,6 +4824,21 @@ ${brain.voiceAnchor || ''}`;
       this._npcGoals[npcName].progress = (this._npcGoals[npcName].progress || 0) + 1;
     }
 
+    if (decision.outcome && decision.outcome !== 'null' && decision.outcome !== 'none') {
+      try {
+        const denizenNpcStats = require('./office-hq/denizen-npc-stats');
+        const denizenOfficeProgress = require('./office-hq/denizen-office-progress');
+        denizenNpcStats.recordOutcome(npcName, { outcome: decision.outcome, taskPhase: decision.taskPhase });
+        if (decision.outcome === 'success' && decision.taskPhase === 'finished') {
+          denizenOfficeProgress.awardXp(
+            'task_shipped',
+            denizenOfficeProgress.XP_WEIGHTS.task_shipped,
+            { npc: npcName },
+          );
+        }
+      } catch (_) {}
+    }
+
     if (decision.action === 'meeting' || (decision.outcome === 'success' && decision.taskPhase === 'finished')) {
       const kind = decision.action === 'meeting' ? 'meeting' : 'shipped';
       const text = decision.action === 'meeting'
