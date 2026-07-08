@@ -103,13 +103,13 @@ async function runNpcThinkBatch(payload = {}) {
 
   const result = await inferenceRuntime.chatCompletion({
     tier: 'fast',
+    kind: 'idle',
     systemPrompt: 'You simulate brief NPC thoughts in a virtual office. Reply with one short sentence only.',
     messages: [{
       role: 'user',
       content: `NPCs: ${npcLabel}. One ambient thought (max 20 words).`,
     }],
     max_tokens: 48,
-    temperature: 0.75,
     timeoutMs: 60_000,
   });
 
@@ -139,6 +139,7 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
           messages: Array.isArray(safePayload.messages) ? safePayload.messages : [],
           max_tokens: safePayload.max_tokens ?? safePayload.maxTokens,
           temperature: safePayload.temperature,
+          kind: safePayload.kind || safePayload.task_kind || 'chat',
           onToken: onProgress
             ? (delta) => onProgress({ delta, partial: true })
             : null,

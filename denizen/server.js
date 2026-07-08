@@ -11855,6 +11855,30 @@ server.listen(PORT, () => {
     _bouncerDailyBriefTimer.unref?.();
     log.info('Patrol', `daily brief scheduler started (${BOUNCER_DAILY_BRIEF_MS}ms)`);
   }
+
+  // Grok mentor drainer — answer pending grok-consult-queue rows via Grok CLI
+  // and inject lessons into local NPC memory (P4 measurable mentor loop).
+  const GROK_DRAINER_MS = Math.max(60_000, Number(process.env.GROK_MENTOR_DRAINER_MS) || 10 * 60_000);
+  if (!IS_RELAY_ONLY && process.env.GROK_MENTOR_DRAINER !== '0') {
+    let grokDrainer = null;
+    try { grokDrainer = require('./src/grok-mentor-drainer'); } catch (_) {}
+    if (grokDrainer?.drainConsultQueue) {
+      const _runGrokMentorDrainer = async () => {
+        try {
+          const summary = await grokDrainer.drainConsultQueue({ run: true, limit: 3 });
+          if (summary.processed > 0) {
+            log.info('Mentor', `Grok drainer mentored ${summary.processed} NPC(s)`);
+          }
+        } catch (err) {
+          log.warn('Mentor', `Grok drainer failed: ${err?.message || String(err)}`);
+        }
+      };
+      const _grokDrainerTimer = setInterval(_runGrokMentorDrainer, GROK_DRAINER_MS);
+      _grokDrainerTimer.unref?.();
+      setTimeout(_runGrokMentorDrainer, 45_000).unref?.();
+      log.info('Mentor', `Grok mentor drainer started (${GROK_DRAINER_MS}ms, limit 3/run)`);
+    }
+  }
 });
 
 // Graceful shutdown — stop the security monitor's intervals and child

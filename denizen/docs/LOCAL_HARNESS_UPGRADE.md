@@ -125,14 +125,14 @@ Each item: **what · why · where · effort · risk**. ✅ = done this session.
   in [lm-studio-router.js:309](../src/lm-studio-router.js); soul `## Provider` lines.
 - **Effort:** low (mostly config + LM Studio load). **Risk:** low. Watch VRAM.
 
-### P1 — Add per-task sampling params 🟡 (module built + tested; NOT wired/deployed)
-- **Done this session:** `src/inference-sampling.js` (profiles + `samplingFor()` +
-  `applySampling()`) and `tests/inference-sampling.test.js` (7 tests, passing).
-- **Still TODO (next step):** call `applySampling(body, { kind })` at the two body
-  builders — [denizen-inference-runtime.js:221](../desktop/src/denizen-inference-runtime.js)
-  and [npc-brains.js `_dispatchOneFromQueue`](../src/npc-brains.js) (~line 3627,
-  also `_callLocalStream` ~3486). Then `npm test`, deploy to NAS, and confirm the
-  Bouncer repetition loop is gone via a live `player_chat`.
+### P1 — Add per-task sampling params ✅ (wired; deploy to confirm live)
+- **Done:** `src/inference-sampling.js` + `tests/inference-sampling.test.js` (7 tests).
+- **Wired (2026-07-14):** all three body builders —
+  - [npc-brains.js `_dispatchOneFromQueue` / `_callLocalStream`](../src/npc-brains.js)
+  - [desktop/src/denizen-inference-runtime.js](../desktop/src/denizen-inference-runtime.js)
+  - [src/denizen-inference-runtime.js](../src/denizen-inference-runtime.js) (mesh `inference_rpc` +
+    [denizen-mesh-job-runner.js](../src/denizen-mesh-job-runner.js) + [denizen-inference-rpc.js](../src/denizen-inference-rpc.js))
+- **Still TODO:** deploy to NAS and confirm Bouncer repetition loop is gone via live `player_chat`.
 - **Why:** Fixes repetition loops at the source; improves coherence.
 - **Effort:** low. **Risk:** low (additive fields; LM Studio ignores unknowns).
   NOTE: this changes live NPC behavior — confirm with Zion before deploying.
@@ -157,16 +157,19 @@ Each item: **what · why · where · effort · risk**. ✅ = done this session.
   [npc-brains.js:3927](../src/npc-brains.js) (already the pattern).
 - **Effort:** med. **Risk:** med (schema too strict truncates; keep `strict:false`).
 
-### P4 — Make the mentor loop measurably work
-- **What:** Close the loop with a real metric. When `consult-grok`/`consult-mentors`
-  injects advice, snapshot the NPC's avg latency+tokens; re-measure next cycle;
-  record `improved: true/false` in `consult-improvement-log.jsonl` and surface it.
-  The scaffolding (`remediation_tracking`, `audit_remediation`) exists in
-  `grok-mesh-telemetry-job.py` but rarely fires — wire it to actually run.
-- **Why:** Right now "cloud makes local smarter" is unproven. Measure it or it's theater.
-- **Where:** [grok-mesh-telemetry-job.py](../infra/grok-mesh-telemetry-job.py),
-  `denizen-fleet-ops.py process-consults`.
-- **Effort:** med. **Risk:** low.
+### P4 — Make the mentor loop measurably work 🟡 (drainer + awareness wired)
+- **Done (2026-07-14):**
+  - [src/grok-mentor-drainer.js](../src/grok-mentor-drainer.js) — reads
+    `grok-consult-queue.jsonl`, asks Grok CLI, injects via `denizen_npc_memories`,
+    logs `consult-improvement-log.jsonl`. Dry-run by default.
+  - [scripts/run-grok-mentor-drainer.cjs](../scripts/run-grok-mentor-drainer.cjs) CLI;
+    [infra/grok-cli-mentor-drainer.py](../../infra/grok-cli-mentor-drainer.py) for NAS SSH runs.
+  - Server cron: `GROK_MENTOR_DRAINER` (default on), `GROK_MENTOR_DRAINER_MS` (default 10m).
+  - [src/office-awareness.js](../src/office-awareness.js) — surfaces team snapshot +
+    mentor lessons in think() via [npc-brains.js](../src/npc-brains.js).
+  - Tests: [tests/local-harness-loop.test.js](../tests/local-harness-loop.test.js).
+- **Still TODO:** run `audit-improvements` after a few cycles; confirm locals reference
+  `[GROK MENTOR]` memories in think output.
 
 ### P5 — Speed: speculative decoding + keep-loaded
 - **What:** In LM Studio, attach a small Qwen draft model to the 27B target.
@@ -219,12 +222,12 @@ ignores params it doesn't support, so this is additive and safe.
 
 **Status at handoff:**
 - ✅ Analysis complete (this doc).
-- ✅ `src/inference-sampling.js` + tests created and passing (7/7). **Not yet
-  wired into the live body builders and not deployed.** Wiring it is the concrete
-  next code step for P1.
+- ✅ `src/inference-sampling.js` + tests — **wired into all three inference paths**
+  (npc-brains, desktop runtime, server/mesh runtime). Deploy + live verify pending.
+- ✅ `src/grok-mentor-drainer.js` + `src/office-awareness.js` + server cron + tests.
 - ⏳ P0 (route `main` tier to `qwen3.6-27b`/DeepSeek-R1 instead of the 2B
   `gemma-4-e2b`) — **highest value, do first.** Mostly LM Studio config + env.
-- ⏳ P2–P6 — see roadmap.
+- ⏳ P2–P3, P5–P6 — see roadmap.
 - ✅ Grok CLI is wired and ready (18 team-MCP tools, `grok -p` one-shot works) —
   see `docs/GROK_CLI_HANDOFF.md`.
 

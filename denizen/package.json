@@ -35,6 +35,7 @@
     "smoke:onboarding": "node scripts/smoke-onboarding.js",
     "smoke:mcp": "node scripts/smoke-mcp-gateway.js",
     "grok:autonomy": "node scripts/grok-denizen-autonomy.js",
+    "claude:autonomy": "node scripts/claude-denizen-autonomy.js",
     "grok:mcp-ping": "node scripts/grok-mcp-ping.js",
     "smoke:crm": "node scripts/smoke-crm-api.mjs",
     "smoke:phone": "node scripts/phone-ui-probe.mjs",

@@ -16,7 +16,11 @@ import load_infra_env  # noqa: F401
 
 BASE = os.environ.get("DENIZEN_MCP_BASE", f"http://{os.environ.get('SYNO_HOST', '192.168.1.237')}:8888")
 NPC_KEY = sys.argv[1] if len(sys.argv) > 1 else "grok"
-TOKEN_FILE = REPO / ".mcp-token.local.json"
+TOKEN_FILES = {
+    "grok": REPO / ".mcp-token.local.json",
+    "claude": REPO / ".mcp-claude-token.local.json",
+}
+TOKEN_FILE = TOKEN_FILES.get(NPC_KEY, REPO / ".mcp-token.local.json")
 
 
 def load_token() -> str:
@@ -27,7 +31,9 @@ def load_token() -> str:
         tok = data.get("token")
         if tok:
             return str(tok)
-    print("No token — run: py infra/mint-mcp-token-nas.py grok")
+    print(f"No token — run: py infra/mint-mcp-token-nas.py {NPC_KEY}" + (
+        " or mint-mcp-claude-token-nas.py" if NPC_KEY == "claude" else ""
+    ))
     sys.exit(1)
 
 

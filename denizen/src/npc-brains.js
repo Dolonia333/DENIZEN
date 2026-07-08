@@ -75,6 +75,11 @@ let telemetryRebalance = null;
 try { telemetryRebalance = require('./npc-telemetry-rebalance'); } catch (_) {}
 let localMetrics = null;
 try { localMetrics = require('./npc-local-metrics'); } catch (_) {}
+let inferenceSampling = null;
+try { inferenceSampling = require('./inference-sampling'); } catch (_) {}
+const _sampleFor = (opts) => (inferenceSampling
+  ? inferenceSampling.samplingFor({ kind: opts.kind, temperature: opts.temperature })
+  : { temperature: opts.temperature || 0.8 });
 let officeDirector = null;
 try { officeDirector = require('./office-director'); } catch (_) {}
 
@@ -2737,19 +2742,29 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     const companyContext = this._getCompanyContext(npcName);
 
     // Live office awareness — narrative summary so NPCs speak with real awareness
-    // instead of generic "continuing". Built from actual recent work, directives,
-    // skill results, and mesh/crm state when available.
+    // instead of generic "continuing". Built from recent work, team snapshot,
+    // mesh/crm state, and Grok mentor lessons when available.
     let liveAwareness = '';
     try {
-      const recent = (rt.recentWork || []).slice(0, 3);
-      const recentSummary = recent.length
-        ? 'Recent activity: ' + recent.map(w => `${w.npc || 'Someone'}: ${w.note || w.message || ''}`).join('; ') + '.'
-        : 'The office is relatively quiet at the moment.';
-      const meshNote = officeContext?.meshStatus ? ` Current mesh: ${officeContext.meshStatus}.` : ' Mesh status unknown — consider checking health-check.';
-      const crmNote = officeContext?.crmSummary ? ` Current CRM: ${officeContext.crmSummary}.` : '';
-      const businessNote = officeContext?.businessContext ? ` Business focus: ${officeContext.businessContext}.` : '';
-      liveAwareness = `## Current Office Awareness (use this to be specific and aware)\n${recentSummary}${meshNote}${crmNote}${businessNote}\nSpeak naturally and in full sentences about what is actually happening right now. Reference the real recent activity, current mesh/CRM/pipeline state, other NPCs' work, and company goals. Use the FULL OFFICE MAP to describe movement and locations precisely (e.g. "I'm walking from open_office through the gap at x~300 to the breakroom to chat with Lucy"). Be proactive and autonomous — move between rooms often, initiate real conversations when you see people, use tools when it makes sense. If the context shows blockers or opportunities, do something useful instead of passive or generic status.`;
-    } catch (_) {}
+      const officeAwareness = require('./office-awareness');
+      liveAwareness = officeAwareness.buildLiveAwarenessBlock({
+        npcName,
+        worldState,
+        officeContext,
+        rt,
+      });
+    } catch (_) {
+      try {
+        const recent = (rt.recentWork || []).slice(0, 3);
+        const recentSummary = recent.length
+          ? 'Recent activity: ' + recent.map(w => `${w.npc || 'Someone'}: ${w.note || w.message || ''}`).join('; ') + '.'
+          : 'The office is relatively quiet at the moment.';
+        const meshNote = officeContext?.meshStatus ? ` Current mesh: ${officeContext.meshStatus}.` : '';
+        const crmNote = officeContext?.crmSummary ? ` Current CRM: ${officeContext.crmSummary}.` : '';
+        const businessNote = officeContext?.businessContext ? ` Business focus: ${officeContext.businessContext}.` : '';
+        liveAwareness = `## Current Office Awareness (use this to be specific and aware)\n${recentSummary}${meshNote}${crmNote}${businessNote}\nSpeak naturally and in full sentences about what is actually happening right now.`;
+      } catch (_2) {}
+    }
 
     // Level 1 — Code awareness: inject a source-file snippet for code roles.
     // Skip entirely for roles that work with data/briefs rather than code.
@@ -3753,7 +3768,7 @@ ${actionFooter}`;
       const body = JSON.stringify({
         model: routed.model,
         max_tokens: maxTokens,
-        temperature: opts.temperature || 0.8,
+        ..._sampleFor(opts),
         messages: oaiMessages,
         stream: true,
         enable_thinking: false,
@@ -3908,11 +3923,14 @@ ${actionFooter}`;
       oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
     }
 
-    const temperature = opts.temperature || 0.8;
+    // Per-task sampling (temperature + top_p + min_p + repeat_penalty) from
+    // inference-sampling.js — fixes small-model repetition loops at the source.
+    // An explicit opts.temperature still wins; otherwise the profile decides.
+    const sampling = _sampleFor(opts);
     const bodyObj = {
       model: config.model,
       max_tokens: maxTokens,
-      temperature,
+      ...sampling,
       messages: oaiMessages,
       // Disable chain-of-thought thinking for NPC chats — faster responses
       // and avoids the Qwen3/reasoning model issue where content is empty

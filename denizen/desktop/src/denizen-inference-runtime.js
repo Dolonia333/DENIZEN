@@ -218,11 +218,17 @@ async function chatCompletion(opts = {}) {
 
   const base = normalizeBaseUrl(runtime.url);
   const stream = typeof opts.onToken === 'function';
+  // Per-task sampling (top_p / min_p / repeat_penalty) — shared profiles.
+  let sampling = { temperature: Number(opts.temperature ?? 0.75) };
+  try {
+    const s = require('../../src/inference-sampling');
+    sampling = s.samplingFor({ kind: opts.kind, temperature: opts.temperature });
+  } catch (_) { /* module optional */ }
   const body = {
     model,
     messages: buildChatMessages(opts.systemPrompt, opts.messages),
     max_tokens: Math.max(1, Number(opts.max_tokens ?? opts.maxTokens) || 256),
-    temperature: Number(opts.temperature ?? 0.75),
+    ...sampling,
     stream,
   };
 
