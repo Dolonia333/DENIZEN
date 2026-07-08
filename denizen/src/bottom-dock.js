@@ -430,7 +430,21 @@
     return T.chip(tabler, label, { size: 13 });
   }
 
+  /** Tabler loads lazily — drop text-only labels cached before icons were ready. */
+  function clearStaleChipCache() {
+    if (!globalThis.DenizenTablerIcons) return;
+    for (const id of Object.keys(CHIP_ICONS)) {
+      const el = document.getElementById(id);
+      if (!el?.dataset?.fullLabel) continue;
+      if (!/<i[^>]*class="[^"]*\bti\b/.test(el.dataset.fullLabel)) {
+        delete el.dataset.fullLabel;
+        delete el.dataset.compact;
+      }
+    }
+  }
+
   function compactChipLabels() {
+    clearStaleChipCache();
     const compact = document.documentElement.classList.contains('denizen-touch');
     const dynamicLabels = new Set([
       'denizen-presence-chip',
@@ -606,6 +620,11 @@
   } else {
     boot();
   }
+
+  document.addEventListener('denizen-deferred-scripts-ready', () => {
+    clearStaleChipCache();
+    adoptAll();
+  });
 
   window.DenizenBottomDock = {
     refresh: adoptAll,
