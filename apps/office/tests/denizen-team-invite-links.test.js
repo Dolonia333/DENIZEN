@@ -8,7 +8,7 @@ const links = require('../src/auth/denizen-team-invite-links.js');
 describe('denizen-team-invite-links', () => {
   it('buildJoinUrl encodes team code in query', () => {
     const url = links.buildJoinUrl('1921', 'https://denizen.example.com');
-    assert.equal(url, 'https://denizen.example.com/?join=1921');
+    assert.equal(url, 'https://denizen.example.com/office?join=1921');
   });
 
   it('buildShortJoinUrl uses invite path', () => {

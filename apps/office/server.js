@@ -3495,7 +3495,7 @@ const server = http.createServer((req, res) => {
 
   const inviteMatch = urlPath.match(/^\/(?:invite|join)\/([A-Za-z0-9_-]+)\/?$/);
   if (inviteMatch && req.method === 'GET') {
-    res.writeHead(302, { Location: `/?join=${encodeURIComponent(inviteMatch[1])}` });
+    res.writeHead(302, { Location: `/office?join=${encodeURIComponent(inviteMatch[1])}` });
     res.end();
     return;
   }
@@ -9772,19 +9772,19 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Default to the game's index.html — also accept legacy /denizen/ and
-  // /pixel-office-game/ prefixes so old bookmarks keep working.
   if (urlPath === '/desktop' || urlPath === '/desktop/') {
     res.writeHead(302, { Location: '/desktop/download.html' });
     res.end();
     return;
   }
-  // Marketing landing page (public site / welcome funnel)
-  if (urlPath === '/home' || urlPath === '/landing' || urlPath === '/welcome'
+  // Marketing landing page — root and welcome aliases
+  if (urlPath === '/' || urlPath === '/home' || urlPath === '/landing' || urlPath === '/welcome'
       || urlPath === '/home/' || urlPath === '/landing/' || urlPath === '/welcome/') {
     urlPath = '/landing.html';
   }
-  if (urlPath === '/' || urlPath === '/denizen/' || urlPath === '/denizen'
+  // Live office game — also accept legacy /denizen/ and /pixel-office-game/ prefixes
+  if (urlPath === '/office' || urlPath === '/office/' || urlPath === '/index.html'
+      || urlPath === '/denizen/' || urlPath === '/denizen'
       || urlPath === '/pixel-office-game/' || urlPath === '/pixel-office-game') {
     urlPath = '/index.html';
   }

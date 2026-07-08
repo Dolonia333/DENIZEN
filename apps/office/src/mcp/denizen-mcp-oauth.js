@@ -159,7 +159,7 @@ function consentPage({ npcKey, clientName, params }) {
   </ul>
   <div id="needauth" style="display:none">
     <p class="err" style="display:block">You're not signed in to Denizen in this browser.
-    <a href="/" target="_blank">Open Denizen</a>, sign in, then reload this page.</p>
+    <a href="/office" target="_blank">Open Denizen</a>, sign in, then reload this page.</p>
   </div>
   <div id="consent">
     <div class="row">

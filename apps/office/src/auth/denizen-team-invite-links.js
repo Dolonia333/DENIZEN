@@ -20,7 +20,7 @@ function buildJoinUrl(teamCode, baseUrl = publicBaseUrl()) {
   const code = normalizeTeamCode(teamCode);
   const base = String(baseUrl || publicBaseUrl()).replace(/\/+$/, '');
   if (!code) return `${base}/`;
-  return `${base}/?join=${encodeURIComponent(code)}`;
+  return `${base}/office?join=${encodeURIComponent(code)}`;
 }
 
 function buildShortJoinUrl(teamCode, baseUrl = publicBaseUrl()) {
@@ -32,7 +32,7 @@ function buildShortJoinUrl(teamCode, baseUrl = publicBaseUrl()) {
 
 function buildPairDesktopUrl(baseUrl = publicBaseUrl()) {
   const base = String(baseUrl || publicBaseUrl()).replace(/\/+$/, '');
-  return `${base}/?pair_desktop=1`;
+  return `${base}/office?pair_desktop=1`;
 }
 
 function desktopDownloadUrl(baseUrl = publicBaseUrl()) {

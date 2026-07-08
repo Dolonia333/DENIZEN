@@ -302,8 +302,8 @@
       <div class="sub">Sheet → catalog → place → verify — all tools in one place</div>
     </div>
     <div class="header-actions">
-      <a class="btn btn-primary" href="/" id="link-game">Open game</a>
-      <a class="btn" href="/?editor=1" id="link-editor">Open scene editor</a>
+      <a class="btn btn-primary" href="/office" id="link-game">Open game</a>
+      <a class="btn" href="/office?editor=1" id="link-editor">Open scene editor</a>
       <a class="btn btn-ghost" href="/catalog-explorer.html">Catalog data</a>
     </div>
   </header>
@@ -326,13 +326,13 @@
     <section>
       <h2>Play &amp; build <span class="badge">in-game</span></h2>
       <div class="grid">
-        <a class="card featured" href="/">
+        <a class="card featured" href="/office">
           <span class="icon">🏢</span>
           <h3>Office game</h3>
           <p>Walk the open-plan office. NPCs, interactions, live layout.</p>
           <span class="open">Open →</span>
         </a>
-        <a class="card featured" href="/?editor=1">
+        <a class="card featured" href="/office?editor=1">
           <span class="icon">✏️</span>
           <h3>Scene editor</h3>
           <p>Opens the in-game editor with catalog sidebar — drag furniture, press <strong>X</strong> to export.</p>
@@ -469,11 +469,11 @@
 
       const origin = window.location.origin;
       document.getElementById('server-url').textContent = origin;
-      document.getElementById('link-game').href = origin + '/';
-      document.getElementById('link-editor').href = origin + '/?editor=1';
+      document.getElementById('link-game').href = origin + '/office';
+      document.getElementById('link-editor').href = origin + '/office?editor=1';
 
       if (embed) {
-        document.querySelectorAll('a[href="/"], a[href="/?editor=1"]').forEach((a) => {
+        document.querySelectorAll('a[href="/office"], a[href="/office?editor=1"]').forEach((a) => {
           a.target = '_parent';
         });
         document.querySelectorAll('a[data-fullpage], a.card[href$=".html"]').forEach((a) => {
