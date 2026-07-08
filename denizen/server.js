@@ -3498,7 +3498,7 @@ const server = http.createServer((req, res) => {
 
   const inviteMatch = urlPath.match(/^\/(?:invite|join)\/([A-Za-z0-9_-]+)\/?$/);
   if (inviteMatch && req.method === 'GET') {
-    res.writeHead(302, { Location: `/?join=${encodeURIComponent(inviteMatch[1])}` });
+    res.writeHead(302, { Location: `/office?join=${encodeURIComponent(inviteMatch[1])}` });
     res.end();
     return;
   }
@@ -9782,7 +9782,14 @@ const server = http.createServer((req, res) => {
     res.end();
     return;
   }
-  if (urlPath === '/' || urlPath === '/denizen/' || urlPath === '/denizen'
+  // Marketing landing page — root and welcome aliases
+  if (urlPath === '/' || urlPath === '/home' || urlPath === '/landing' || urlPath === '/welcome'
+      || urlPath === '/home/' || urlPath === '/landing/' || urlPath === '/welcome/') {
+    urlPath = '/landing.html';
+  }
+  // Live office game — also accept legacy /denizen/ and /pixel-office-game/ prefixes
+  if (urlPath === '/office' || urlPath === '/office/' || urlPath === '/index.html'
+      || urlPath === '/denizen/' || urlPath === '/denizen'
       || urlPath === '/pixel-office-game/' || urlPath === '/pixel-office-game') {
     urlPath = '/index.html';
   }

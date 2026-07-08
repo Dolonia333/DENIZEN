@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DENIZEN — Visual observability for AI agents</title>
+  <meta name="description" content="Stop tailing logs. Watch 16 AI agents work in a live pixel office — demo runs with zero API keys." />
+  <meta name="theme-color" content="#1a1f2e" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1f2e;
+      --cream: #f4efe4;
+      --wall: #e8e0d0;
+      --floor: #b8bcc4;
+      --lime: #a3e635;
+      --lime-bright: #bef264;
+      --lime-dark: #65a30d;
+      --lime-glow: rgba(163, 230, 53, 0.5);
+      --amber: #f59e0b;
+      --rose: #fb7185;
+      --log-bg: #0c0f14;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --display: "Syne", system-ui, sans-serif;
+      --pixel: pixelated;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--mono);
+      background: var(--ink);
+      color: var(--cream);
+      cursor: crosshair;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% -10%, rgba(163, 230, 53, 0.07), transparent),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(163, 230, 53, 0.015) 2px, rgba(163, 230, 53, 0.015) 4px);
+    }
+    body > * { position: relative; z-index: 1; }
+
+    #cursor-glow {
+      position: fixed;
+      width: 480px;
+      height: 480px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      background: radial-gradient(circle, rgba(163, 230, 53, 0.14) 0%, transparent 68%);
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s;
+      mix-blend-mode: screen;
+    }
+    #grain {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.045;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      animation: grain-shift 0.5s steps(2) infinite;
+    }
+    @keyframes grain-shift {
+      0% { transform: translate(0, 0); }
+      50% { transform: translate(-2%, 1%); }
+      100% { transform: translate(1%, -1%); }
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent 40%, rgba(26, 31, 46, 0.95) 100%),
+        repeating-linear-gradient(90deg, rgba(163, 230, 53, 0.04) 0 1px, transparent 1px 64px),
+        repeating-linear-gradient(0deg, rgba(163, 230, 53, 0.04) 0 1px, transparent 1px 64px);
+      transform: perspective(800px) rotateX(58deg) scale(1.4);
+      transform-origin: 50% 0%;
+      opacity: 0.35;
+      mask-image: linear-gradient(180deg, black 0%, transparent 75%);
+    }
+
+    /* ── boot overlay ── */
+    #boot {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--lime);
+      transition: opacity 0.6s, visibility 0.6s;
+    }
+    #boot.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    #boot .line { opacity: 0; animation: boot-line 0.15s forwards; }
+    #boot .line:nth-child(1) { animation-delay: 0.1s; }
+    #boot .line:nth-child(2) { animation-delay: 0.35s; }
+    #boot .line:nth-child(3) { animation-delay: 0.6s; }
+    #boot .line:nth-child(4) { animation-delay: 0.9s; }
+    #boot .line:nth-child(5) { animation-delay: 1.2s; }
+    #boot .big {
+      font-family: var(--display);
+      font-size: clamp(2rem, 8vw, 4rem);
+      font-weight: 800;
+      color: var(--cream);
+      letter-spacing: -0.03em;
+      margin-top: 24px;
+      opacity: 0;
+      animation: boot-line 0.4s 1.5s forwards, boot-glitch 0.15s 1.55s 3;
+      text-shadow: 0 0 40px var(--lime-glow);
+    }
+    @keyframes boot-glitch {
+      0%, 100% { transform: translate(0); filter: none; }
+      20% { transform: translate(-3px, 1px); filter: hue-rotate(90deg); }
+      40% { transform: translate(3px, -1px); }
+      60% { transform: translate(-2px, 0); color: var(--lime); }
+    }
+    #boot .skip {
+      position: absolute;
+      bottom: 24px;
+      font-size: 10px;
+      color: #475569;
+      letter-spacing: 0.15em;
+      opacity: 0;
+      animation: boot-line 0.3s 2s forwards;
+    }
+    @keyframes boot-line {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── HUD chrome ── */
+    .hud-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: linear-gradient(180deg, rgba(26,31,46,0.95), transparent);
+      pointer-events: none;
+    }
+    .hud-top > * { pointer-events: auto; }
+    .hud-logo {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: var(--cream);
+      text-decoration: none;
+    }
+    .hud-logo em {
+      font-style: normal;
+      color: var(--lime);
+    }
+    .hud-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .hud-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.4);
+    }
+    .hud-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--lime);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.65); }
+      50% { box-shadow: 0 0 0 6px rgba(163, 230, 53, 0); }
+    }
+    .hud-enter {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      padding: 10px 18px;
+      background: var(--lime);
+      color: var(--ink);
+      text-decoration: none;
+      border: none;
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      transition: filter 0.2s, transform 0.15s;
+    }
+    .hud-enter:hover { filter: brightness(1.1); transform: scale(1.02); }
+    .kbd-hint {
+      position: fixed;
+      bottom: 16px;
+      right: 20px;
+      z-index: 90;
+      font-size: 10px;
+      color: #475569;
+      letter-spacing: 0.08em;
+      pointer-events: none;
+    }
+    .kbd-hint kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      margin: 0 2px;
+      border: 1px solid #334155;
+      border-radius: 3px;
+      background: rgba(0,0,0,0.5);
+      color: var(--lime);
+      font-family: var(--mono);
+    }
+
+  /* ── HERO: split reality slider ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 20px 40px;
+      overflow: hidden;
+    }
+    .hero-headline {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 32px;
+      z-index: 10;
+    }
+    .hero-headline h1 {
+      font-family: var(--display);
+      font-size: clamp(2.2rem, 7vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin: 0 0 16px;
+      text-shadow: 0 0 60px rgba(163, 230, 53, 0.12);
+    }
+    .hero-headline h1 .hero-main {
+      display: block;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--lime-bright) 45%, var(--cream) 90%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: hero-shine 6s ease-in-out infinite;
+    }
+    @keyframes hero-shine {
+      0%, 100% { background-position: 0% center; }
+      50% { background-position: 100% center; }
+    }
+    .hero-headline h1 .strike {
+      display: block;
+      font-size: 0.45em;
+      font-weight: 600;
+      color: #64748b;
+      text-decoration: line-through;
+      text-decoration-color: var(--rose);
+      margin-bottom: 8px;
+    }
+    .hero-headline .hero-sub {
+      font-size: 1rem;
+      color: #cbd5e1;
+      margin: 0 0 8px;
+      line-height: 1.6;
+    }
+    .hero-headline p {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      margin: 0 0 20px;
+      line-height: 1.7;
+    }
+    .hero-tagline {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--lime);
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      padding: 5px 10px;
+      margin-bottom: 16px;
+      background: rgba(163, 230, 53, 0.06);
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .btn {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 12px 20px;
+      transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--lime);
+      color: var(--ink);
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      box-shadow: 0 0 28px rgba(163, 230, 53, 0.3);
+    }
+    .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 0 40px rgba(163, 230, 53, 0.45); }
+    .btn-ghost {
+      color: var(--lime-bright);
+      border: 1px solid rgba(163, 230, 53, 0.4);
+      background: rgba(163, 230, 53, 0.05);
+    }
+    .btn-ghost:hover { background: rgba(163, 230, 53, 0.12); border-color: var(--lime); }
+
+    .compare-caption {
+      max-width: 1100px;
+      margin: 0 auto 20px;
+      padding: 0 20px;
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      letter-spacing: 0.06em;
+      line-height: 1.6;
+    }
+    .compare-caption strong { color: #94a3b8; font-weight: 500; }
+
+    .office-preview-badge {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      z-index: 6;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      background: rgba(0, 0, 0, 0.75);
+      border: 1px solid #334155;
+      color: #64748b;
+      pointer-events: none;
+    }
+
+    .split-stage {
+      position: relative;
+      width: min(100%, 1100px);
+      margin: 0 auto;
+      aspect-ratio: 16 / 9;
+      max-height: 62vh;
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      box-shadow:
+        0 0 0 1px #0f172a,
+        0 0 40px rgba(163, 230, 53, 0.08),
+        0 40px 100px rgba(0,0,0,0.7),
+        inset 0 0 80px rgba(163, 230, 53, 0.04);
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+      transform-style: preserve-3d;
+      transition: transform 0.12s ease-out;
+      will-change: transform;
+    }
+    .split-stage::after {
+      content: "";
+      position: absolute;
+      bottom: 8px; right: 8px;
+      width: 20px;
+      height: 20px;
+      border-color: var(--lime);
+      border-style: solid;
+      border-width: 0 2px 2px 0;
+      z-index: 25;
+      pointer-events: none;
+      opacity: 0.7;
+      background: none;
+      animation: none;
+      inset: auto;
+    }
+    .split-scan {
+      position: absolute;
+      inset: 0;
+      z-index: 26;
+      pointer-events: none;
+      background: linear-gradient(105deg, transparent 40%, rgba(163, 230, 53, 0.08) 50%, transparent 60%);
+      animation: scan-sweep 5s ease-in-out infinite;
+    }
+    @keyframes scan-sweep {
+      0%, 100% { transform: translateX(-120%); opacity: 0; }
+      10% { opacity: 1; }
+      50% { transform: translateX(120%); opacity: 1; }
+      60% { opacity: 0; }
+    }
+    .split-stage::before {
+      content: "";
+      position: absolute;
+      top: 8px; left: 8px;
+      width: 20px;
+      height: 20px;
+      border-color: var(--lime);
+      border-style: solid;
+      border-width: 2px 0 0 2px;
+      z-index: 25;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .split-label {
+      position: absolute;
+      top: 12px;
+      z-index: 15;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.65);
+      border: 1px solid #334155;
+      color: #64748b;
+      pointer-events: none;
+    }
+    .split-label--today { left: 12px; color: #94a3b8; }
+    .split-label--denizen { right: 12px; color: var(--lime); border-color: rgba(163,230,53,0.35); }
+    .split-scanline {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+      opacity: 0.5;
+    }
+
+    .split-pane {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .split-logs {
+      background: var(--log-bg);
+      z-index: 1;
+    }
+    .split-office {
+      z-index: 2;
+      clip-path: inset(0 0 0 50%);
+      overflow: hidden;
+    }
+    .split-office img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* single frame from 128×192 sheets — 4×4 grid of 32×48 (RPG Maker XP) */
+    .npc-portrait {
+      --npc-scale: 2;
+      --npc-fw: 32;
+      --npc-fh: 48;
+      --npc-cols: 4;
+      --npc-rows: 4;
+      width: calc(var(--npc-fw) * 1px * var(--npc-scale));
+      height: calc(var(--npc-fh) * 1px * var(--npc-scale));
+      overflow: hidden;
+      position: relative;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .npc-portrait > img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: calc(var(--npc-fw) * 1px * var(--npc-cols) * var(--npc-scale));
+      height: calc(var(--npc-fh) * 1px * var(--npc-rows) * var(--npc-scale));
+      max-width: none;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      pointer-events: none;
+    }
+    .npc-portrait--lg { --npc-scale: 2.5; }
+    .npc-portrait--sm { --npc-scale: 1.75; }
+    .npc-portrait--xs { --npc-scale: 1.5; }
+    .npc-portrait--walk > img {
+      animation: npc-walk 0.55s steps(4) infinite;
+    }
+    @keyframes npc-walk {
+      from { left: 0; }
+      to { left: calc(var(--npc-fw) * -3px * var(--npc-scale)); }
+    }
+
+    /* stats strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      max-width: 1100px;
+      margin: 56px auto 0;
+      padding: 0 20px;
+      background: #1e293b;
+      border: 1px solid #1e293b;
+    }
+    .stat-cell {
+      background: rgba(12, 15, 20, 0.9);
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .stat-cell strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--lime);
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-cell strong.counting {
+      text-shadow: 0 0 20px var(--lime-glow);
+    }
+
+    .stat-cell span { font-size: 10px; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .walkers {
+      position: absolute;
+      bottom: 8%;
+      left: 0;
+      right: 0;
+      height: 64px;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .walker {
+      position: absolute;
+      bottom: 0;
+      animation: walk-across linear infinite;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+    }
+    @keyframes walk-across {
+      from { transform: translateX(-60px) scaleX(1); }
+      49% { transform: translateX(calc(100% + 60px)) scaleX(1); }
+      50% { transform: translateX(calc(100% + 60px)) scaleX(-1); }
+      to { transform: translateX(-60px) scaleX(-1); }
+    }
+
+    /* log stream */
+  .log-stream {
+      position: absolute;
+      inset: 0;
+      padding: 16px;
+      font-size: 10px;
+      line-height: 1.65;
+      color: #64748b;
+      overflow: hidden;
+    }
+    .log-line { margin: 0; }
+    .log-line .ts { color: #475569; }
+    .log-line .lvl-warn { color: #fbbf24; }
+    .log-line .lvl-err { color: #f87171; }
+    .log-line .lvl-info { color: var(--lime-bright); }
+    .log-line .key { color: #a78bfa; }
+
+    .split-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      margin-left: -2px;
+      background: var(--lime);
+      z-index: 40;
+      cursor: ew-resize;
+      box-shadow: 0 0 20px var(--lime-glow);
+    }
+    .split-handle::before {
+      content: "◀ ▶";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+      letter-spacing: -2px;
+      padding: 12px 8px;
+      background: var(--lime);
+      color: var(--ink);
+      font-weight: 700;
+      white-space: nowrap;
+      clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+    }
+    .split-hint {
+      text-align: center;
+      font-size: 10px;
+      color: #475569;
+      margin-top: 14px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .split-hint em { color: var(--lime); font-style: normal; }
+
+    /* ── Lucy reception dialogue ── */
+    .reception {
+      max-width: 1100px;
+      margin: 48px auto 0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: end;
+      padding: 0 20px;
+    }
+    .reception-npc {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .reception-npc .npc-portrait {
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+      animation: npc-idle 2s ease-in-out infinite;
+    }
+    @keyframes npc-idle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .speech {
+      position: relative;
+      background: rgba(12, 15, 20, 0.92);
+      color: var(--cream);
+      padding: 20px 24px;
+      border-radius: 2px;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 72px;
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 0 30px rgba(163, 230, 53, 0.03);
+      backdrop-filter: blur(12px);
+    }
+    .speech::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      bottom: 20px;
+      border: 10px solid transparent;
+      border-right-color: rgba(12, 15, 20, 0.92);
+      border-left: 0;
+    }
+    .speech .name {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--lime);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .speech .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--lime);
+      vertical-align: text-bottom;
+      animation: blink-cursor 0.8s step-end infinite;
+    }
+    @keyframes blink-cursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .speech-choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .speech-choices button {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 8px 14px;
+      border: 1px solid rgba(163, 230, 53, 0.5);
+      background: transparent;
+      color: var(--lime-bright);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .speech-choices button:hover {
+      background: var(--lime);
+      color: var(--ink);
+      border-color: var(--lime);
+    }
+
+    /* ── benefits, steps, audience ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .section-head {
+      margin-bottom: 28px;
+      text-align: center;
+    }
+    .section-head h2 {
+      font-family: var(--display);
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 800;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .section-head p {
+      margin: 0;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      max-width: 560px;
+      margin-inline: auto;
+      line-height: 1.6;
+    }
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 72px auto;
+    }
+    .benefit-card {
+      background: rgba(12, 15, 20, 0.85);
+      border: 1px solid #1e293b;
+      padding: 28px 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .benefit-card:hover {
+      border-color: rgba(163, 230, 53, 0.4);
+      box-shadow: 0 0 32px rgba(163, 230, 53, 0.06);
+    }
+    .benefit-num {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--lime);
+      margin-bottom: 12px;
+    }
+    .benefit-card h3 {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0 0 10px;
+    }
+    .benefit-card p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.65;
+      color: #94a3b8;
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 72px auto;
+    }
+    .step-card {
+      padding: 24px;
+      border: 1px solid #1e293b;
+      background: rgba(26, 31, 46, 0.5);
+      position: relative;
+    }
+    .step-card::before {
+      content: attr(data-step);
+      font-family: var(--display);
+      font-size: 2rem;
+      font-weight: 800;
+      color: rgba(163, 230, 53, 0.15);
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      line-height: 1;
+    }
+    .step-card h3 {
+      font-family: var(--display);
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+      color: var(--lime-bright);
+    }
+    .step-card p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.65;
+      color: #94a3b8;
+    }
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 72px auto 80px;
+    }
+    .audience-card {
+      padding: 22px 20px;
+      border-left: 3px solid var(--lime);
+      background: rgba(12, 15, 20, 0.6);
+    }
+    .audience-card h3 {
+      font-family: var(--display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .audience-card p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #94a3b8;
+    }
+    .cta-final {
+      max-width: 1100px;
+      margin: 0 auto 80px;
+      padding: 48px 32px;
+      text-align: center;
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      background: rgba(12, 15, 20, 0.9);
+      box-shadow: 0 0 48px rgba(163, 230, 53, 0.06);
+    }
+    .cta-final h2 {
+      font-family: var(--display);
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-weight: 800;
+      margin: 0 0 12px;
+    }
+    .cta-final p {
+      margin: 0 0 24px;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .cta-final .hero-actions { margin-top: 0; }
+
+    footer {
+      padding: 32px 20px 48px;
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+    }
+    footer a { color: var(--lime); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .reception { grid-template-columns: 1fr; }
+      .reception-npc { display: none; }
+      .speech::before { display: none; }
+      .hud-status { display: none; }
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+      .benefits-grid, .steps-grid, .audience-grid { grid-template-columns: 1fr; }
+      .kbd-hint { display: none; }
+      .hero-grid { opacity: 0.15; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      #boot { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="cursor-glow" aria-hidden="true"></div>
+  <div id="grain" aria-hidden="true"></div>
+
+  <!-- boot sequence -->
+  <div id="boot" aria-hidden="true">
+    <div class="line">&gt; connecting to denizen hq...</div>
+    <div class="line">&gt; 16 agents online</div>
+    <div class="line">&gt; souls loaded ✓</div>
+    <div class="line">&gt; visitor clearance: granted</div>
+    <div class="line">&gt; observability deck online</div>
+    <div class="big">DENIZEN</div>
+    <div class="skip">CLICK TO SKIP</div>
+  </div>
+
+  <!-- game HUD -->
+  <header class="hud-top">
+    <a class="hud-logo" href="/">DENI<em>ZEN</em></a>
+    <div class="hud-status">
+      <span class="hud-pill"><span class="hud-dot"></span> NO API KEYS FOR DEMO</span>
+    </div>
+    <a class="hud-enter" href="/office?demo=1">OPEN LIVE DEMO →</a>
+  </header>
+
+  <!-- hero: split reality -->
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="hero-headline">
+      <div class="hero-tagline">Visual observability for AI agents</div>
+      <h1>
+        <span class="strike">tail -f agent.log</span>
+        <span class="hero-main">Watch your agents work.</span>
+      </h1>
+      <p class="hero-sub">Sixteen specialized agents. One office floor. See who's blocked, shipping, or escalated — without parsing JSON.</p>
+      <p>Drag the slider below: <strong>today</strong> you read about work. With Denizen, you <strong>see</strong> it. The preview is a still — the demo is live.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/office?demo=1">Open live demo</a>
+        <a class="btn btn-ghost" href="https://github.com/Dolonia333/DENIZEN" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+    </div>
+
+    <p class="compare-caption">
+      <strong>Same agents.</strong> Left: how you debug today. Right: Denizen — who's on the floor, what they're doing, what needs you.
+    </p>
+
+    <div class="split-stage" id="split">
+      <span class="split-label split-label--today">TODAY</span>
+      <span class="split-label split-label--denizen">DENIZEN</span>
+      <div class="split-scan" aria-hidden="true"></div>
+      <div class="split-scanline"></div>
+      <div class="split-pane split-logs">
+        <div class="log-stream" id="log-stream"></div>
+      </div>
+      <div class="split-pane split-office" id="split-office">
+        <img src="./assets/ref_Hu4Gzs.png" alt="Denizen pixel office preview" />
+        <span class="office-preview-badge">Preview · live in demo</span>
+        <div class="walkers" id="walkers"></div>
+      </div>
+      <div class="split-handle" id="split-handle"></div>
+    </div>
+    <p class="split-hint">drag to compare · <em id="split-pct">50</em>% denizen visible</p>
+
+    <!-- Lucy reception -->
+    <div class="reception">
+      <div class="reception-npc">
+        <div class="npc-portrait npc-portrait--lg" role="img" aria-label="Lucy">
+          <img src="./assets/Lucy.png" alt="" />
+        </div>
+      </div>
+      <div class="speech" id="speech">
+        <div class="name">Lucy · Front desk</div>
+        <div id="speech-text"></div>
+        <div class="speech-choices" id="speech-choices"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-strip reveal">
+    <div class="stat-cell"><strong data-count="16">0</strong><span>Specialized agents</span></div>
+    <div class="stat-cell"><strong data-count="30">0</strong><span>Seconds to try demo</span></div>
+    <div class="stat-cell"><strong>Live</strong><span>Real-time office sync</span></div>
+    <div class="stat-cell"><strong>0</strong><span>API keys required</span></div>
+  </div>
+
+  <section class="benefits-grid section reveal">
+    <article class="benefit-card">
+      <div class="benefit-num">01</div>
+      <h3>Status at a glance</h3>
+      <p>See who's working, stuck, or escalated across the floor — a two-second walkthrough beats a dashboard refresh.</p>
+    </article>
+    <article class="benefit-card">
+      <div class="benefit-num">02</div>
+      <h3>Agents with roles &amp; memory</h3>
+      <p>Each NPC has a soul, tools, and persistent context. They're coworkers you can watch, not generic chat threads.</p>
+    </article>
+    <article class="benefit-card">
+      <div class="benefit-num">03</div>
+      <h3>Real work, real outcomes</h3>
+      <p>Email, code review, security patrol, deals, research — tied to a live work feed and office progression.</p>
+    </article>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head">
+      <h2>How it works</h2>
+      <p>From landing page to understanding your agents in under a minute.</p>
+    </div>
+    <div class="steps-grid">
+      <article class="step-card" data-step="1">
+        <h3>Open the demo</h3>
+        <p>No API keys, no setup. Walk onto the floor with 16 agents already running scripted work.</p>
+      </article>
+      <article class="step-card" data-step="2">
+        <h3>Watch the floor</h3>
+        <p>NPCs move, meet, escalate, and ship. Tab the work feed to see what just happened and who did it.</p>
+      </article>
+      <article class="step-card" data-step="3">
+        <h3>Spot blockers early</h3>
+        <p>See conflict and idle time in-scene before you dig through logs, traces, or Slack.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="section-head">
+      <h2>Built for</h2>
+      <p>Whether you're running agents solo or operating a whole floor.</p>
+    </div>
+    <div class="audience-grid">
+      <article class="audience-card">
+        <h3>Solo builders</h3>
+        <p>Running multiple agents and tired of tab-hopping between logs, dashboards, and chat.</p>
+      </article>
+      <article class="audience-card">
+        <h3>Agent teams</h3>
+        <p>Shared visibility when several LLM workers hand off tasks, escalate, and ship in parallel.</p>
+      </article>
+      <article class="audience-card">
+        <h3>Ops &amp; security</h3>
+        <p>Patrol, investigation, and escalation visible on the floor — not buried in a SIEM tile.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="cta-final reveal">
+    <h2>See the office live</h2>
+    <p>Open the demo — agents walking, working, and escalating in real time. No account required.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="/office?demo=1">Open live demo</a>
+      <a class="btn btn-ghost" href="/office">Full office (sign in)</a>
+    </div>
+  </section>
+
+  <footer>
+  <a href="https://github.com/Dolonia333/DENIZEN" target="_blank" rel="noopener">GitHub</a>
+    · <a href="/office?demo=1">Live demo</a> · <a href="/office">Full office</a> · <a href="/desktop/download.html">Desktop</a>
+    <br /><br />© Denizen — your agents have an office now
+  </footer>
+
+  <p class="kbd-hint" aria-hidden="true">press <kbd>D</kbd> for demo</p>
+
+  <script>
+  (function () {
+    // ── boot dismiss (once per browser) ──
+    const boot = document.getElementById('boot');
+    const skipBoot = () => {
+      boot?.classList.add('hide');
+      try { localStorage.setItem('denizen_boot_seen', '1'); } catch (_) { /* private mode */ }
+    };
+    try {
+      if (localStorage.getItem('denizen_boot_seen')) skipBoot();
+      else {
+        setTimeout(skipBoot, 2400);
+        boot?.addEventListener('click', skipBoot);
+      }
+    } catch (_) {
+      setTimeout(skipBoot, 2400);
+      boot?.addEventListener('click', skipBoot);
+    }
+
+    // ── split slider ──
+    const stage = document.getElementById('split');
+    const office = document.getElementById('split-office');
+    const handle = document.getElementById('split-handle');
+    let pct = 50;
+    let dragging = false;
+
+    function setSplit(p) {
+      pct = Math.max(8, Math.min(92, p));
+      office.style.clipPath = `inset(0 0 0 ${pct}%)`;
+      handle.style.left = pct + '%';
+      const pctEl = document.getElementById('split-pct');
+      if (pctEl) pctEl.textContent = String(Math.round(100 - pct));
+    }
+    setSplit(50);
+
+    function pointerX(e) {
+      const r = stage.getBoundingClientRect();
+      return ((e.clientX ?? e.touches?.[0]?.clientX) - r.left) / r.width * 100;
+    }
+    handle.addEventListener('pointerdown', (e) => { dragging = true; handle.setPointerCapture(e.pointerId); });
+    handle.addEventListener('pointermove', (e) => { if (dragging) setSplit(pointerX(e)); });
+    handle.addEventListener('pointerup', () => { dragging = false; });
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.target === handle || e.target.closest('.split-handle')) return;
+      dragging = true;
+      setSplit(pointerX(e));
+    });
+    stage.addEventListener('pointermove', (e) => {
+      if (dragging) setSplit(pointerX(e));
+    });
+    stage.addEventListener('pointerup', () => { dragging = false; });
+    stage.addEventListener('pointercancel', () => { dragging = false; });
+
+    // auto-tease animation on load
+    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      let t = 0;
+      const tease = setInterval(() => {
+        t += 0.02;
+        setSplit(50 + Math.sin(t) * 22);
+        if (t > Math.PI * 2) { clearInterval(tease); setSplit(62); }
+      }, 30);
+    }
+
+    // ── fake log stream ──
+    const LOG_TEMPLATES = [
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> agent.task status=<span class="key">running</span> agent_id=???`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-warn">WARN</span> llm.latency_ms=4200 — still don't know who is blocked`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> tool.github.push — no visual context`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-err">ERR</span>  you cannot <em>see</em> any of this happening`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> pipeline step=4/7 — which agent? where?`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-warn">WARN</span> escalation fired — open 3 tabs to trace it`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-err">ERR</span>  ← drag right for the Denizen side`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> mesh.job claimed — floor status unknown`,
+    ];
+    const logEl = document.getElementById('log-stream');
+    const lines = [];
+    function pushLog() {
+      const tpl = LOG_TEMPLATES[Math.floor(Math.random() * LOG_TEMPLATES.length)];
+      lines.push(`<p class="log-line">${tpl()}</p>`);
+      if (lines.length > 18) lines.shift();
+      logEl.innerHTML = lines.join('');
+    }
+    pushLog();
+    setInterval(pushLog, 900);
+
+    // ── walking NPCs ──
+    const WALKERS = [
+      { img: 'Bob.png', dur: 28, delay: 0 },
+      { img: 'Jenny.png', dur: 22, delay: -8 },
+      { img: 'Edward.png', dur: 35, delay: -15 },
+    ];
+    const walkersEl = document.getElementById('walkers');
+    WALKERS.forEach((w) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'walker npc-portrait npc-portrait--xs npc-portrait--walk';
+      const img = document.createElement('img');
+      img.src = './assets/' + w.img;
+      img.alt = '';
+      wrap.appendChild(img);
+      wrap.style.animationDuration = w.dur + 's';
+      wrap.style.animationDelay = w.delay + 's';
+      walkersEl.appendChild(wrap);
+    });
+
+    // ── Lucy dialogue tree ──
+    const DIALOGUE = {
+      start: {
+        text: "Hi — I'm Lucy, front desk. Most visitors want to know one of three things before they walk in.",
+        choices: [
+          { label: "What problem does Denizen solve?", next: 'problem' },
+          { label: "How is this different from logs?", next: 'logs' },
+          { label: "Open the live demo →", href: '/office?demo=1' },
+        ],
+      },
+      problem: {
+        text: "Your agents do real work — but you only see it as text. Denizen puts that work on a floor you can watch: who's idle, who's shipping, who escalated.",
+        choices: [
+          { label: "Different from a dashboard?", next: 'dashboard' },
+          { label: "Open the live demo →", href: '/office?demo=1' },
+        ],
+      },
+      logs: {
+        text: "Logs tell you something happened. Denizen shows who did it, where they were standing, and what they said — before you open a single JSON blob.",
+        choices: [{ label: "Try the demo →", href: '/office?demo=1' }],
+      },
+      dashboard: {
+        text: "Dashboards aggregate metrics. Denizen is spatial — you read the room like a manager walking the floor, not a chart at 2am.",
+        choices: [{ label: "Open the live demo →", href: '/office?demo=1' }],
+      },
+    };
+
+    const speechText = document.getElementById('speech-text');
+    const speechChoices = document.getElementById('speech-choices');
+    let typingTimer;
+
+    function typeText(text, cb) {
+      clearInterval(typingTimer);
+      speechText.innerHTML = '';
+      let i = 0;
+      typingTimer = setInterval(() => {
+        speechText.textContent = text.slice(0, i);
+        i++;
+        if (i > text.length) {
+          clearInterval(typingTimer);
+          speechText.innerHTML = text + '<span class="cursor-blink"></span>';
+          cb?.();
+        }
+      }, 18);
+    }
+
+    function showNode(key) {
+      const node = DIALOGUE[key];
+      if (!node) return;
+      speechChoices.innerHTML = '';
+      typeText(node.text, () => {
+        node.choices.forEach((c) => {
+          const btn = document.createElement('button');
+          btn.textContent = c.label;
+          if (c.href) {
+            btn.onclick = () => { window.location.href = c.href; };
+          } else {
+            btn.onclick = () => showNode(c.next);
+          }
+          speechChoices.appendChild(btn);
+        });
+      });
+    }
+    showNode('start');
+
+    // ── scroll reveal ──
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    revealEls.forEach((el) => io.observe(el));
+
+    // ── cursor glow + split parallax ──
+    const glow = document.getElementById('cursor-glow');
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reducedMotion && glow) {
+      document.addEventListener('mousemove', (e) => {
+        glow.style.left = e.clientX + 'px';
+        glow.style.top = e.clientY + 'px';
+        if (stage) {
+          const r = stage.getBoundingClientRect();
+          const x = (e.clientX - r.left) / r.width - 0.5;
+          const y = (e.clientY - r.top) / r.height - 0.5;
+          stage.style.transform = `perspective(900px) rotateY(${x * 5}deg) rotateX(${-y * 4}deg)`;
+        }
+      });
+    }
+
+    // ── stat counter animation ──
+    function animateCount(el, target, duration = 1200) {
+      if (!el || target === null) return;
+      el.classList.add('counting');
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = String(Math.round(target * eased));
+        if (p < 1) requestAnimationFrame(tick);
+        else el.classList.remove('counting');
+      };
+      requestAnimationFrame(tick);
+    }
+    const statsIo = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        const n = el.dataset.count;
+        if (n !== undefined) animateCount(el, Number(n));
+        statsIo.unobserve(el);
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count]').forEach((el) => statsIo.observe(el));
+
+    // ── keyboard shortcut: D for demo ──
+    document.addEventListener('keydown', (e) => {
+      if (e.target.closest('input, textarea, button')) return;
+      if (e.key === 'd' || e.key === 'D') window.location.href = '/office?demo=1';
+    });
+  })();
+  </script>
+</body>
+</html>

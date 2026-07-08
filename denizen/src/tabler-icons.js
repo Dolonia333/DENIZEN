@@ -6,7 +6,7 @@
   'use strict';
 
   const STYLE_ID = 'denizen-tabler-icons-style';
-  const CSS_HREF = 'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css';
+  const CSS_HREF = '/vendor/tabler/tabler-icons.min.css';
 
   function ensureStyles() {
     if (document.getElementById(STYLE_ID)) return;
