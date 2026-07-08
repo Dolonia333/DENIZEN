@@ -103,8 +103,11 @@ class NpcThinkRunner {
       if (!gate.allowed) {
         console.log(`[SkillBridge] Blocked ${npcName} → ${decision.skill}: ${gate.reason}`);
       } else if (typeof this._deps.runNpcSkill === 'function') {
-        this._deps.runNpcSkill(npcName, decision.skill, decision.skillParams || {})
-          .catch((err) => console.warn('[SkillBridge]', err.message));
+        const officeCtx = decision._officeContext || {};
+        this._deps.runNpcSkill(npcName, decision.skill, decision.skillParams || {}, {
+          identityId: officeCtx.identityId || null,
+          officeContext: officeCtx,
+        }).catch((err) => console.warn('[SkillBridge]', err.message));
       }
     }
 

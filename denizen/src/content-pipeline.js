@@ -271,11 +271,44 @@ function cancelRunningPipelines(taskChain, broadcastFn, chainId = null) {
 
 function startContentPipeline(taskChain, topic, deps, opts = {}) {
   const definition = buildChainDefinition(topic, opts);
+  let chainId = null;
+  const upstreamBroadcast = typeof deps.broadcastFn === 'function' ? deps.broadcastFn : null;
+  const onBrandBlocked = typeof opts.onBrandBlocked === 'function' ? opts.onBrandBlocked : null;
+  const wrappedBroadcast = (msg) => {
+    const halted = msg && typeof msg === 'object'
+      && msg.type === 'npc_chain_halted'
+      && msg.status === 'blocked'
+      && (!chainId || msg.chainId === chainId);
+    if (halted) {
+      const verdict = String(msg.verdict || '').trim();
+      if (!verdict || /blocked/i.test(verdict)) {
+        const hookPayload = {
+          chainId: msg.chainId || chainId || null,
+          topic: definition.topic || topic || null,
+          name: definition.name || null,
+          verdict: verdict || 'BLOCKED',
+          ts: Date.now(),
+          detail: 'brand moderation blocked',
+        };
+        updatePipelineStatus(hookPayload.chainId, {
+          status: 'blocked',
+          blockedAt: new Date().toISOString(),
+          blockReason: hookPayload.detail,
+          blockVerdict: hookPayload.verdict,
+        });
+        if (onBrandBlocked) {
+          try { onBrandBlocked(hookPayload); } catch (_) { /* non-fatal */ }
+        }
+      }
+    }
+    if (upstreamBroadcast) upstreamBroadcast(msg);
+  };
   const chain = taskChain.startChain(
     definition,
     deps.assignDirectiveFn,
-    deps.broadcastFn,
+    wrappedBroadcast,
   );
+  chainId = chain.id;
   recordPipelineStart(chain, topic);
   return chain;
 }

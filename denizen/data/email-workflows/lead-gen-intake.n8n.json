@@ -1,0 +1,128 @@
+{
+  "_README": "n8n workflow: webhook lead intake → Denizen CRM + Bob research queue. Deploy with infra/deploy-n8n-lead-gen-workflow.py. Webhook URL after activate: https://n8n.dolonia.cloud/webhook/denizen-lead-intake — chain from Dolonia Web Analyzer or POST directly.",
+  "name": "Denizen — Web Lead Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "denizen-lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-e001-4000-8000-000000000001",
+      "name": "Webhook — lead intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "denizen-lead-intake-wh"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize webhook payload (Web Analyzer, manual POST, or CRM form relay).\nconst raw = $input.item.json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst company = String(body.company || body.organization || body.org || body.domain || '').trim();\nconst email = String(body.clientEmail || body.client_email || body.email || body.contact_email || '').trim();\nconst name = String(body.clientName || body.client_name || body.name || body.contact_name || body.contact || '').trim();\nconst url = String(body.url || body.website || body.page_url || body.pageUrl || '').trim();\nconst summary = String(body.summary || body.description || body.snippet || body.text || body.content || '').trim();\nconst orgSlug = String(body.org_slug || body.orgSlug || 'zion').trim().toLowerCase();\nconst source = String(body.source || body.analyzer || 'web_analyzer').trim();\n\nconst answers = {\n  source,\n  ...(url ? { url } : {}),\n  ...(summary ? { summary: summary.slice(0, 4000) } : {}),\n};\nif (body.signals && typeof body.signals === 'object') Object.assign(answers, body.signals);\nif (body.answers && typeof body.answers === 'object') Object.assign(answers, body.answers);\nif (body.metadata && typeof body.metadata === 'object') answers.metadata = body.metadata;\n\nconst displayName = name || company || (url ? url.replace(/^https?:\\/\\//, '').split('/')[0] : '') || 'Web lead';\nconst researchTopic = company || (url ? `Prospect: ${url}` : '') || summary.slice(0, 120);\nconst researchNotes = [\n  source && `Source: ${source}`,\n  url && `URL: ${url}`,\n  email && `Email: ${email}`,\n  summary && summary.slice(0, 800),\n].filter(Boolean).join('\\n');\n\nreturn [{\n  json: {\n    org_slug: orgSlug,\n    clientName: displayName,\n    clientEmail: email,\n    company,\n    answers,\n    researchTopic,\n    researchNotes,\n    skipResearch: body.skipResearch === true || !researchTopic,\n  },\n}];"
+      },
+      "id": "a1b2c3d4-e001-4000-8000-000000000002",
+      "name": "Normalize lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://REPLACE_WITH_YOUR_DENIZEN_HOST/api/crm/intake",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ org_slug: $json.org_slug, clientName: $json.clientName, clientEmail: $json.clientEmail, company: $json.company, answers: $json.answers }) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "a1b2c3d4-e001-4000-8000-000000000003",
+      "name": "POST → Denizen CRM intake",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 220]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "skip-research-check",
+              "leftValue": "={{ $('Normalize lead').item.json.skipResearch }}",
+              "rightValue": true,
+              "operator": { "type": "boolean", "operation": "notEquals" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e001-4000-8000-000000000004",
+      "name": "Queue research for Bob?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [820, 380]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://REPLACE_WITH_YOUR_DENIZEN_HOST/api/research-queue",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ topic: $('Normalize lead').item.json.researchTopic, assignedTo: 'Bob', priority: 7, notes: $('Normalize lead').item.json.researchNotes }) }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "a1b2c3d4-e001-4000-8000-000000000005",
+      "name": "POST → Bob research queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 340]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, crm: $('POST → Denizen CRM intake').item.json, research: $('POST → Bob research queue').item?.json || null, lead: $('Normalize lead').item.json }) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "a1b2c3d4-e001-4000-8000-000000000006",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1320, 300]
+    }
+  ],
+  "connections": {
+    "Webhook — lead intake": {
+      "main": [[{ "node": "Normalize lead", "type": "main", "index": 0 }]]
+    },
+    "Normalize lead": {
+      "main": [[{ "node": "POST → Denizen CRM intake", "type": "main", "index": 0 }]]
+    },
+    "POST → Denizen CRM intake": {
+      "main": [[{ "node": "Queue research for Bob?", "type": "main", "index": 0 }]]
+    },
+    "Queue research for Bob?": {
+      "main": [
+        [{ "node": "POST → Bob research queue", "type": "main", "index": 0 }],
+        [{ "node": "Respond OK", "type": "main", "index": 0 }]
+      ]
+    },
+    "POST → Bob research queue": {
+      "main": [[{ "node": "Respond OK", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false
+}

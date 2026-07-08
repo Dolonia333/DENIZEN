@@ -171,6 +171,26 @@ class DenizenDb {
     });
   }
 
+  recordBouncerRun(run = {}) {
+    if (!this.enabled) return;
+    this.enqueue(async () => {
+      const elapsed = Number(run.elapsed_ms ?? run.elapsedMs ?? run.elapsed);
+      const row = {
+        at: run.at || new Date().toISOString(),
+        threat_category: run.threat_category || run.threatCategory || 'unknown',
+        source: run.source || null,
+        ok: typeof run.ok === 'boolean' ? run.ok : true,
+        report_path: run.report_path || run.reportPath || null,
+        patrol_mode: run.patrol_mode || run.patrolMode || null,
+        node_id: run.node_id || run.nodeId || null,
+        elapsed_ms: Number.isFinite(elapsed) ? Math.max(0, Math.round(elapsed)) : null,
+        verdict: run.verdict || null,
+        metadata: run.metadata && typeof run.metadata === 'object' ? run.metadata : {},
+      };
+      await this._post('denizen_bouncer_runs', row, { prefer: 'return=minimal' });
+    });
+  }
+
   recordLlmEvent(rec) {
     if (!this.enabled || !rec) return;
     this.enqueue(async () => {
@@ -595,14 +615,15 @@ class DenizenDb {
 
     if (kind === 'threat' && payload) {
       try {
-        await this._post('denizen_security_threats', {
-          org_id: this.orgId,
-          category: payload.category || 'unknown',
-          severity: payload.severity || null,
-          source: payload.source || null,
-          detail: String(payload.detail || '').slice(0, 500),
-          metadata: payload,
-        });
+        await this._insertSecurityThreat(payload);
+      } catch (_) {
+        /* non-fatal */
+      }
+    }
+
+    if (kind === 'threat-cleared' && payload) {
+      try {
+        await this._resolveSecurityThreat(payload);
       } catch (_) {
         /* non-fatal */
       }
@@ -890,6 +911,43 @@ class DenizenDb {
     this._lastWarnAt = now;
     console.warn(`[DenizenDb] ${msg}`);
   }
+
+  async _insertSecurityThreat(payload = {}) {
+    const row = {
+      org_id: this.orgId,
+      category: payload.category || 'unknown',
+      severity: payload.severity || null,
+      source: payload.source || null,
+      detail: String(payload.detail || '').slice(0, 500),
+      metadata: payload,
+    };
+    try {
+      await this._post('denizen_security_threats', row);
+    } catch (err) {
+      // Transitional fallback for schemas where org_id has not landed yet.
+      if (!/\borg_id\b/i.test(String(err?.message || ''))) throw err;
+      const { org_id, ...legacyRow } = row;
+      await this._post('denizen_security_threats', legacyRow);
+    }
+  }
+
+  async _resolveSecurityThreat(payload = {}) {
+    const threat = payload?.threat && typeof payload.threat === 'object' ? payload.threat : {};
+    const category = payload.category || threat.category || null;
+    const source = payload.source || threat.source || null;
+    if (!category && !source) return;
+    const filters = ['resolved=eq.false'];
+    if (category) filters.push(`category=eq.${encodeURIComponent(category)}`);
+    if (source) filters.push(`source=eq.${encodeURIComponent(source)}`);
+    const patchPath = `denizen_security_threats?${filters.join('&')}&order=at.desc&limit=1`;
+    const confrontedBy = payload.confronted || threat.confronted || null;
+    const countermeasure = payload.countermeasure || threat.countermeasure || null;
+    await this._patch(patchPath, {
+      resolved: true,
+      confronted: confrontedBy ? String(confrontedBy).slice(0, 120) : null,
+      countermeasure: countermeasure ? String(countermeasure).slice(0, 240) : null,
+    }, { prefer: 'return=minimal' });
+  }
 }
 
 const denizenDb = new DenizenDb();
@@ -910,3 +968,4 @@ function isUuid(value) {
 module.exports = denizenDb;
 module.exports.DenizenDb = DenizenDb;
 module.exports.DISPLAY_TO_NPC_KEY = DISPLAY_TO_NPC_KEY;
+module.exports.recordBouncerRun = (...args) => denizenDb.recordBouncerRun(...args);

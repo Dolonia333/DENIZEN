@@ -33,7 +33,12 @@ class SkillExecutor {
       params: skillParams,
       skill,
       broadcast,
-      deps: this.deps,
+      deps: {
+        ...this.deps,
+        identityId: ctx.identityId || this.deps.identityId || null,
+        ownerIdentityId: ctx.identityId || this.deps.ownerIdentityId || null,
+        ownerProfile: ctx.ownerProfile || this.deps.ownerProfile || null,
+      },
       config: this.deps.config || {},
       ...ctx,
     };

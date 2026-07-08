@@ -180,7 +180,7 @@
 
 
 
-    <p class="note">
+    <p class="note" id="download-status-note">
 
       Windows 10+, macOS 11+, or a modern 64-bit Linux distribution. Future updates download inside Denizen and install when the app restarts. City Power is optional and can be paused at any time.
 
@@ -212,37 +212,91 @@
 
       const primaryId = os === 'mac' ? 'btn-mac' : os === 'linux' ? 'btn-linux' : 'btn-windows';
 
-
-
-      ['btn-windows', 'btn-mac', 'btn-linux'].forEach((id) => {
-
-        const el = document.getElementById(id);
-
-        if (!el) return;
-
-        el.classList.toggle('primary', id === primaryId);
-
-        el.classList.toggle('recommended', id === primaryId);
-
-      });
+      const statusNote = document.getElementById('download-status-note');
 
 
 
-      if (labels[os]) {
+      function highlightPrimary() {
 
-        detected.hidden = false;
+        ['btn-windows', 'btn-mac', 'btn-linux'].forEach((id) => {
 
-        detected.textContent = 'Detected ' + labels[os] + ' — highlighted button is the right download for this computer.';
+          const el = document.getElementById(id);
+
+          if (!el) return;
+
+          el.classList.toggle('primary', id === primaryId);
+
+          el.classList.toggle('recommended', id === primaryId);
+
+        });
+
+        if (labels[os]) {
+
+          detected.hidden = false;
+
+          detected.textContent = 'Detected ' + labels[os] + ' — highlighted button is the right download for this computer.';
+
+        }
+
+        const stepsId = os === 'mac' ? 'steps-mac' : os === 'linux' ? 'steps-linux' : 'steps-windows';
+
+        const steps = document.getElementById(stepsId);
+
+        if (steps) steps.classList.add('active');
 
       }
 
 
 
-      const stepsId = os === 'mac' ? 'steps-mac' : os === 'linux' ? 'steps-linux' : 'steps-windows';
+      function applyUrls(data) {
 
-      const steps = document.getElementById(stepsId);
+        const map = {
 
-      if (steps) steps.classList.add('active');
+          'btn-windows': data.windows,
+
+          'btn-mac': data.mac || data.macos,
+
+          'btn-linux': data.linux,
+
+        };
+
+        Object.entries(map).forEach(([id, href]) => {
+
+          const el = document.getElementById(id);
+
+          if (el && href) el.href = href;
+
+        });
+
+        if (data.local_mirror?.windows || data.local_mirror?.mac || data.local_mirror?.linux) {
+
+          statusNote.textContent = 'Downloading from your city server (fast mirror). GitHub backup links are used automatically when the mirror is unavailable.';
+
+        } else if (data.mirror_base) {
+
+          statusNote.textContent = 'Primary download uses your city server when the installer is mirrored; otherwise GitHub Releases is used.';
+
+        }
+
+        highlightPrimary();
+
+      }
+
+
+
+      fetch('/api/visitor/desktop-downloads', { credentials: 'same-origin' })
+
+        .then((res) => (res.ok ? res.json() : null))
+
+        .then((data) => {
+
+          if (data?.ok) applyUrls(data);
+
+          else highlightPrimary();
+
+        })
+
+        .catch(() => highlightPrimary());
 
     })();
 

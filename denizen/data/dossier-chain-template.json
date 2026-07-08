@@ -1,0 +1,37 @@
+{
+  "name": "partnership-dossier-rm-cyber",
+  "description": "1921 strategic partnership dossier with recipient research and honesty gate",
+  "trigger": "CEO or Sarah requests partnership PDF for a named partner",
+  "steps": [
+    {
+      "npc": "Sarah",
+      "task": "Run dossier Step 1–2: confirm type partnership-dossier, reader partner, section manifest for recipient. Write manifest to reports/dossiers/ as dossier-brief.",
+      "artifactCategory": "dossier-brief"
+    },
+    {
+      "npc": "Bob",
+      "task": "Research the named recipient (what they do, strengths, needs). Write fit angle bullets — no invented facts. Save to reports/dossiers/ as dossier-research.",
+      "artifactCategory": "dossier-research"
+    },
+    {
+      "npc": "Jenny",
+      "task": "Review draft facts binding + recipient research. Run honesty pass checklist (§5 BRANDED_DOSSIER_SYSTEM.md). Flag [UNSOURCED] before render.",
+      "artifactCategory": "dossier-review"
+    },
+    {
+      "npc": "Rob",
+      "task": "Confirm skin tokens from data/dossier-skins/ — layout only, no new claims.",
+      "artifactCategory": "dossier-skin"
+    },
+    {
+      "npc": "Grok",
+      "task": "run_skill pdf-dossier with type partnership-dossier, subject 1921, skin 1921, recipient from chain context. Wait for operator approval — do not send.",
+      "artifactCategory": "dossier-pdf"
+    },
+    {
+      "npc": "Abby",
+      "task": "Route dossier proposal to operator for approval. If Angela-named, flag for holding CEO review.",
+      "artifactCategory": "admin"
+    }
+  ]
+}

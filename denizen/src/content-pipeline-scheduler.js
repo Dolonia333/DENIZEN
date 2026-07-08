@@ -49,7 +49,10 @@ function startContentPipelineScheduler(deps = {}, opts = {}) {
     const chain = contentPipeline.startContentPipeline(taskChain, topic, {
       assignDirectiveFn: deps.assignDirectiveFn,
       broadcastFn: deps.broadcastFn,
-    }, { triggeredBy: 'Scheduler' });
+    }, {
+      triggeredBy: 'Scheduler',
+      onBrandBlocked: deps.onBrandBlocked,
+    });
 
     const topicIndex = (Number(state.scheduler?.topicIndex || 0) + 1);
     state.scheduler = {

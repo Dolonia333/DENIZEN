@@ -34,15 +34,15 @@ function readBody(req) {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (!bouncerInvestigation.validateInvestigationAuth(req)) {
-    sendJson(res, 401, { ok: false, error: 'unauthorized' });
-    return;
-  }
-
   const url = new URL(req.url || '/', `http://127.0.0.1:${PORT}`);
 
   if (req.method === 'GET' && url.pathname === '/api/health') {
     sendJson(res, 200, { ok: true, agent: 'bouncer-investigation', wsl: bouncerInvestigation.canRunLocalWsl() });
+    return;
+  }
+
+  if (!bouncerInvestigation.validateInvestigationAuth(req)) {
+    sendJson(res, 401, { ok: false, error: 'unauthorized' });
     return;
   }
 

@@ -9,6 +9,9 @@ services:
     network_mode: host
     env_file:
       - .env
+    volumes:
+      - ./desktop:/app/desktop
+      - ./data:/app/data
     environment:
       NODE_ENV: production
       PORT: "8888"

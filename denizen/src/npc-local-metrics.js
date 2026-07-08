@@ -30,6 +30,25 @@ const DEFAULT_THRESHOLDS = Object.freeze({
   consultCooldownMs: 30 * 60 * 1000,
 });
 
+/** Friction score at which autonomy backlog items are enqueued (mentor consensus). */
+const BACKLOG_FRICTION_THRESHOLD = 8;
+
+/** Domain → default coding-agent prompt when friction crosses threshold. */
+const DOMAIN_BUILD_PROMPTS = {
+  path_stuck: (npc, score) =>
+    `NPC ${npc} keeps getting path_stuck (friction ${score}). Fix pathfinder stuck detection, office-scene immobile watchdog, desk approach targets, or wander recovery so agents reach desks reliably.`,
+  mesh_navigation: (npc, score) =>
+    `NPC ${npc} has mesh_navigation friction ${score} (legacy alias for path_stuck). Apply the same pathfinding / movement fixes.`,
+  chronos_stagnation: (npc, score) =>
+    `NPC ${npc} repeats the same think decision without progress (friction ${score}). Break the loop in npc-brains evaluate/decision handling.`,
+  cognitive_context: (npc, score) =>
+    `NPC ${npc} hits context overflow (friction ${score}). Tighten prompt budget, compress recentMemory, or prune MEMORY.md.`,
+  io_storage: (npc, score) =>
+    `I/O friction ${score} for ${npc}. Harden JSON/file reads and telemetry snapshot copies.`,
+  consult_unanswered: (npc, score) =>
+    `Consult for ${npc} unanswered ${score}+ friction. Wire consult-grok / mentor escalation or shorten cooldown.`,
+};
+
 function npcKeyVariants(npcName) {
   const n = String(npcName || '').trim();
   return [n, n.toLowerCase(), n.charAt(0).toUpperCase() + n.slice(1).toLowerCase()];
@@ -89,6 +108,35 @@ function _getNpcFriction(npcName) {
   return _friction[npcName];
 }
 
+function buildRemediationPrompt(npcName, domain, score) {
+  const d = String(domain || 'general').toLowerCase();
+  if (DOMAIN_BUILD_PROMPTS[d]) return DOMAIN_BUILD_PROMPTS[d](npcName, score);
+  if (d.startsWith('skill_failure:')) {
+    const skill = d.slice('skill_failure:'.length) || 'unknown';
+    return `Skill ${skill} fails repeatedly for ${npcName} (friction ${score}). Add error handling, retries, or fix the skill runner integration.`;
+  }
+  return `Build a robust improvement or error handler for ${d} to reduce friction (score ${score}) for ${npcName}. Repeated failures in this domain — implement a minimal fix.`;
+}
+
+function maybeEnqueueAutonomyBacklog(npcName, domain) {
+  const d = String(domain || 'general').toLowerCase();
+  if (d.includes('host_infrastructure') || d.startsWith('nas_')) return null;
+  const fr = getFrictionScore(npcName, d);
+  if ((fr.score || 0) < BACKLOG_FRICTION_THRESHOLD) return null;
+  return appendBacklog({
+    id: `backlog_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    ts: new Date().toISOString(),
+    npc: npcName,
+    domain: d,
+    friction_score: fr.score,
+    build_prompt: buildRemediationPrompt(npcName, d, fr.score),
+    status: 'pending',
+    priority: Math.min(10, 5 + Math.floor(fr.score / 10)),
+    build_attempts: 0,
+    last_triggered_ts: null,
+  });
+}
+
 function recordFriction(npcName, domain, amount = 1) {
   const n = String(npcName).toLowerCase();
   const d = String(domain || 'general').toLowerCase();
@@ -109,6 +157,9 @@ function recordFriction(npcName, domain, amount = 1) {
   const all = loadFriction();
   all[n] = f;
   saveFriction(all);
+  if (amount > 0) {
+    try { maybeEnqueueAutonomyBacklog(npcName, d); } catch (_) {}
+  }
   return f[d];
 }
 
@@ -387,13 +438,17 @@ function captureSystemError(npcName, systemContext, error) {
   const errMsg = String(error?.message || error || '').toLowerCase();
   const errCode = String(error?.code || '').toUpperCase();
 
-  if (ctx.includes('navigation') || ctx.includes('path') || errCode === 'UNROUTABLE' || errMsg.includes('stuck') || errMsg.includes('path')) {
-    domain = 'mesh_navigation';
-    severity = 10; // Physically stuck is paralyzing
-  } else if (ctx.startsWith('skill_') || ctx.includes('run_skill')) {
-    const skillName = ctx.replace('skill_', '').replace('run_', '');
-    domain = `skill_${skillName || 'unknown'}`;
+  if (ctx.includes('navigation') || ctx.includes('path') || ctx === 'pathfinding' || errCode === 'UNROUTABLE'
+    || errCode === 'STUCK' || errCode === 'IMMOBILE' || errMsg.includes('stuck') || errMsg.includes('path')) {
+    domain = 'path_stuck';
+    severity = 10;
+  } else if (ctx.startsWith('skill_failure:') || ctx.startsWith('skill_') || ctx.includes('run_skill')) {
+    const skillName = ctx.replace(/^skill_(failure:)?/, '').replace(/^run_/, '');
+    domain = `skill_failure:${skillName || 'unknown'}`;
     severity = 8;
+  } else if (ctx.includes('consult') && (errMsg.includes('pending') || errMsg.includes('unanswered'))) {
+    domain = 'consult_unanswered';
+    severity = 7;
   } else if (errCode === 'EACCES' || errMsg.includes('json') || errMsg.includes('parse') || ctx.includes('io') || ctx.includes('file') || ctx.includes('storage')) {
     domain = 'io_storage';
     severity = 6;
@@ -411,6 +466,48 @@ function captureSystemError(npcName, systemContext, error) {
     recordFriction(npcName, domain, severity);
   }
   return { domain, severity };
+}
+
+/**
+ * Summarize per-NPC friction for grok-telemetry-latest.json (fleet-wide hotspot ranking).
+ */
+function buildFrictionSummary(limitPerNpc = 5) {
+  const all = loadFriction();
+  const summary = {};
+  for (const [npc, domains] of Object.entries(all)) {
+    if (!domains || typeof domains !== 'object') continue;
+    const hot = Object.entries(domains)
+      .map(([domain, v]) => ({ domain, score: v?.score || 0, count: v?.count || 0, lastAt: v?.lastAt || null }))
+      .filter((e) => e.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limitPerNpc);
+    if (hot.length) {
+      summary[npc] = {
+        overall: Math.max(...hot.map((h) => h.score)),
+        hot_domains: hot.map((h) => h.domain),
+        domains: hot,
+      };
+    }
+  }
+  return summary;
+}
+
+/**
+ * Record friction when a consult has been pending too long (called from think loop).
+ */
+function checkConsultUnansweredFriction(npcName, maxAgeMs = 2 * 60 * 60 * 1000) {
+  const now = Date.now();
+  for (const entry of readQueueTail(30).reverse()) {
+    if (String(entry.npc || '').toLowerCase() !== String(npcName).toLowerCase()) continue;
+    if (entry.status !== 'pending') continue;
+    const ts = Date.parse(entry.ts || '');
+    if (!Number.isFinite(ts) || now - ts < maxAgeMs) continue;
+    return captureSystemError(npcName, 'consult_unanswered', {
+      code: 'CONSULT_STALE',
+      message: `pending consult ${entry.topic || 'unknown'} for ${Math.round((now - ts) / 60000)}min`,
+    });
+  }
+  return null;
 }
 
 /**
@@ -657,24 +754,11 @@ function evaluate(npcName, tel, opts = {}) {
   }
   if (!reasons.length) return { triggered: false, reason: 'within_thresholds' };
 
-  // Create backlog entry for self-building when friction high (>25), but not for host-only pain
-  if (friction.overall > 25) {
+  // Enqueue autonomy backlog when friction crosses mentor threshold (>=8), skip host-only pain
+  if (friction.overall >= BACKLOG_FRICTION_THRESHOLD) {
     const domain = friction.hotDomains[0] || 'general';
     if (!domain.includes('host_infrastructure') && !domain.startsWith('nas_')) {
-      const buildPrompt = `Build a robust improvement or error handler for ${domain} to reduce friction (score ${friction.overall}). The agent has repeated failures here. Implement a fix or feature using best practices so future tasks succeed.`;
-      const backlogEntry = {
-        id: `backlog_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-        ts: new Date().toISOString(),
-        npc: npcName,
-        domain,
-        friction_score: friction.overall,
-        build_prompt: buildPrompt,
-        status: 'pending',
-        priority: 7,
-        build_attempts: 0,
-        last_triggered_ts: null,
-      };
-      appendBacklog(backlogEntry);
+      maybeEnqueueAutonomyBacklog(npcName, domain);
     }
   }
 
@@ -778,6 +862,11 @@ module.exports = {
   delegateTaskToPeer,
   getDelegatedTasks,
   markDelegatedTaskConsumed,
+  buildFrictionSummary,
+  buildRemediationPrompt,
+  maybeEnqueueAutonomyBacklog,
+  checkConsultUnansweredFriction,
+  BACKLOG_FRICTION_THRESHOLD,
 };
 
 /**

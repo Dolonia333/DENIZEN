@@ -47,9 +47,52 @@ function notifyOfficeFurnitureReady(scene) {
   scene._agentManager?.onOfficeFurnitureReady?.();
 }
 
+function getPlayfieldDeviceProfile() {
+  const dp = globalThis.DenizenDeviceProfile;
+  if (dp?.get) return dp.get();
+  const touch = !!globalThis.__DenizenIsTouch;
+  const phone = touch && globalThis.DenizenMobilePlay?.isPhoneLike?.();
+  return {
+    isPhone: phone,
+    isTablet: touch && !phone,
+    tier: phone ? 'phone' : (touch ? 'tablet' : 'desktop'),
+  };
+}
+
+function playfieldZoomForProfile(profile) {
+  const dp = globalThis.DenizenDeviceProfile;
+  if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
+  if (profile?.isPhone || profile?.tier === 'phone-compact') return 1.25;
+  if (profile?.isTablet) return 1.15;
+  return 1.5;
+}
+
 class OfficeScene extends Phaser.Scene {
   constructor() {
     super('OfficeScene');
+  }
+
+  _applyPlayfieldCamera() {
+    const cam = this.cameras?.main;
+    if (!cam) return;
+    cam.setZoom(playfieldZoomForProfile(getPlayfieldDeviceProfile()));
+  }
+
+  /** Walk sprite is 32×64 at scale 1; sit sprite is 16×32 at scale 2 — always reset on stand. */
+  _restorePlayerWalkSprite(frame = 20) {
+    const p = this.player;
+    if (!p) return;
+    if (p.texture?.key !== 'dolo') p.setTexture('dolo');
+    p.setScale(1);
+    if (frame != null) p.setFrame(frame);
+    if (this._sitOrigDepth !== undefined) {
+      p.setDepth(this._sitOrigDepth);
+      this._sitOrigDepth = undefined;
+    }
+    if (p.body) {
+      p.body.setSize(14, 10);
+      p.body.setOffset(9, 54);
+    }
   }
 
   preload() {
@@ -122,6 +165,7 @@ class OfficeScene extends Phaser.Scene {
     this.load.json('tiles_catalog', `./tiles-catalog.json?v=${catalogV}`);
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
+    this.load.json('office_blueprint', `./data/office_blueprint.json?v=${catalogV}`);
     this.load.json('room_templates', `./data/room-templates.json?v=${catalogV}`);
     this.load.json('sprite_map_modern_office', `./data/sprite-map-modern-office.json?v=${catalogV}`);
     // Modern Office Revamped — main spritesheet for ALL furniture
@@ -370,14 +414,19 @@ class OfficeScene extends Phaser.Scene {
     // LAYER 1: Floor — seamless tileSprites per zone (hand-tuned layout)
     this.add.tileSprite(width / 2, height / 2, width, height, 'floor_rb_office').setDepth(0);
 
-    const floorZones = [
-      { x: 32, y: 64, w: 816, h: 384, tex: 'floor_rb_office' },   // Open office (below top wall, left of divider)
-      { x: 880, y: 64, w: 368, h: 192, tex: 'floor_rb_wood' },    // Manager office — wood
-      { x: 880, y: 320, w: 368, h: 128, tex: 'floor_rb_dark' },   // Conference/supply — dark
-      { x: 32, y: 512, w: 256, h: 144, tex: 'floor_rb_wood' },    // Break room — wood
-      { x: 384, y: 512, w: 464, h: 144, tex: 'floor_rb_office' }, // Reception — office
-      { x: 880, y: 512, w: 368, h: 144, tex: 'floor_rb_dark' },   // Bottom-right — dark
-    ];
+    const blueprintFloors = this.cache.json.get('office_blueprint')?.floors;
+    const floorZones = Array.isArray(blueprintFloors) && blueprintFloors.length
+      ? blueprintFloors
+          .filter((z) => z.id !== 'base')
+          .map((z) => ({ x: z.x, y: z.y, w: z.w, h: z.h, tex: z.tex }))
+      : [
+          { x: 32, y: 64, w: 816, h: 384, tex: 'floor_rb_office' },
+          { x: 880, y: 64, w: 368, h: 192, tex: 'floor_rb_wood' },
+          { x: 880, y: 320, w: 368, h: 128, tex: 'floor_rb_dark' },
+          { x: 32, y: 512, w: 256, h: 144, tex: 'floor_rb_wood' },
+          { x: 384, y: 512, w: 464, h: 144, tex: 'floor_rb_office' },
+          { x: 880, y: 512, w: 368, h: 144, tex: 'floor_rb_dark' },
+        ];
     floorZones.forEach(z => {
       this.add.tileSprite(z.x + z.w / 2, z.y + z.h / 2, z.w, z.h, z.tex).setDepth(0.1);
     });
@@ -647,14 +696,13 @@ class OfficeScene extends Phaser.Scene {
         if (isReferenceTemplate) {
            const cam = this.cameras.main;
            cam.setBounds(zoneX - 32, zoneY - 32, zoneW + 64, zoneH + 64);
-           if (window.__DenizenIsTouch && window.DenizenMobilePlay?.isPhoneLike?.()) {
-             // Phones: the full-office view is unreadable on a small screen —
-             // zoom in and follow the player instead.
-             cam.setZoom(2);
+           const playProfile = getPlayfieldDeviceProfile();
+           if (playProfile.isPhone) {
+             cam.setZoom(playfieldZoomForProfile(playProfile));
              cam.startFollow(this.player, true, 0.12, 0.12);
            } else {
              // Full openplan zone 1264×700. Zoom 1.0 fits in a 1280×720 viewport.
-             cam.setZoom(1.0);
+             cam.setZoom(playProfile.isTablet ? playfieldZoomForProfile(playProfile) : 1.0);
              cam.centerOn(zoneX + zoneW / 2, zoneY + zoneH / 2);
            }
         }
@@ -1053,10 +1101,12 @@ class OfficeScene extends Phaser.Scene {
     this.player.body.setOffset(9, 54);
     const scale = 1; // used by NPCs below
 
-    // Camera: 2x zoom, follow player, clamp to world bounds
-    this.cameras.main.setZoom(2);
+    // Camera: device-tier zoom, follow player, clamp to world bounds
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
     this.cameras.main.setBounds(0, 0, 1280, 720);
+    this._applyPlayfieldCamera();
+    this._onDeviceProfileChange = () => this._applyPlayfieldCamera();
+    window.addEventListener('denizen-device-profile-change', this._onDeviceProfileChange);
 
     // --- NPCs: spawn all XP characters and make them wander/follow-chain ---
     this.npcs = [];
@@ -1157,19 +1207,6 @@ class OfficeScene extends Phaser.Scene {
     this.events.on('postupdate', this._applyRawKeyMovement, this);
     this.playerState = 'walk'; // 'walk' | 'interacting'
     this.playerLocked = false;
-
-    // Click / tap any NPC to open player chat with that agent
-    this.npcs.forEach((npc) => {
-      npc.setInteractive({ useHandCursor: true });
-      npc.on('pointerdown', (pointer, _localX, _localY, event) => {
-        const rawKey = npc.texture.key;
-        const name = this._agentManager?.NPC_NAMES?.[rawKey] || rawKey;
-        this._playerChat?.openWithNpc?.(rawKey, name);
-        window.DenizenHaptics?.tap?.();
-        if (event) event.stopPropagation();
-        if (pointer?.event) pointer.event.stopPropagation();
-      });
-    });
 
     this.dialogBox = null;
 
@@ -1579,9 +1616,18 @@ class OfficeScene extends Phaser.Scene {
           window.__DenizenPlayerChat = this._playerChat;
         }
 
-        // Enter / T toggle player chat (when not typing in another field)
+        // Enter / T — open chat with facing NPC, or toggle chat
         this.input.keyboard.on('keydown-ENTER', () => {
           if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+          const facing = this._playerChat._findFacingNpc?.();
+          if (facing) {
+            const rawKey = facing.texture?.key;
+            const name = this._agentManager?.NPC_NAMES?.[rawKey] || rawKey;
+            Promise.resolve(this._playerChat.openWithNpc(rawKey, name)).catch((err) => {
+              console.warn('[OfficeScene] openWithNpc failed:', err?.message || err);
+            });
+            return;
+          }
           this._playerChat.toggle();
         });
 
@@ -1591,6 +1637,7 @@ class OfficeScene extends Phaser.Scene {
         });
 
         console.log('[OfficeScene] Player Chat initialized (press Enter or T to talk to NPCs)');
+        this._installNpcChatHandlers();
         try { window.__DenizenChatBootstrap?.setLoadPct?.(100); } catch (_) {}
       } else {
         // Fallback: T key uses old prompt dialog
@@ -1742,6 +1789,9 @@ class OfficeScene extends Phaser.Scene {
         sc.player.setTexture('dolo');
         sc.player.setFrame(20);
       }
+      if (sc.player && (sc.player.texture?.key === 'dolo_sit' || sc.player.scaleX !== 1)) {
+        sc._restorePlayerWalkSprite?.(20);
+      }
       return true;
     };
 
@@ -1766,36 +1816,15 @@ class OfficeScene extends Phaser.Scene {
     };
 
     // --- Security Monitor + Robber Controller ---
-    if (window.SecurityMonitor && window.RobberController) {
+    if (typeof window.initBouncerSecurity === 'function') {
+      window.initBouncerSecurity(this);
+    } else if (!this._securityMonitor && window.SecurityMonitor && window.RobberController) {
+      // Minimal fallback while deferred security scripts are still loading.
       this._securityMonitor = new window.SecurityMonitor();
       this._robberCtrl = new window.RobberController(this, this._securityMonitor);
       this._robberCtrl.init();
       this._securityMonitor.connect();
-      console.log('[OfficeScene] Security Monitor + Robber Controller initialized');
-
-      // Hook into OpenClaw agent events for security checking
-      if (this._gatewayBridge) {
-        this._gatewayBridge.addEventListener('gateway-event', (evt) => {
-          const { event, payload } = evt.detail || {};
-          if (event === 'agent' && payload) {
-            // The server-side monitor checks these, but we can also
-            // do client-side detection for agent tool use
-            if (payload.stream === 'tool' && payload.data) {
-              const toolName = (payload.data.name || '').toLowerCase();
-              const dangerTools = ['bash', 'shell', 'exec', 'eval', 'rm', 'del'];
-              if (dangerTools.some(t => toolName.includes(t))) {
-                this._securityMonitor.injectThreat({
-                  category: 'shell_exec',
-                  severity: 'high',
-                  source: `agent:${payload.agentId || 'unknown'}`,
-                  target: toolName,
-                  detail: `Agent executing: ${toolName}`,
-                });
-              }
-            }
-          }
-        });
-      }
+      console.log('[OfficeScene] Security Monitor + Robber Controller initialized (fallback)');
     }
 
     // Phone animation toggle (P key) — 3 phases: open → idle → close
@@ -1901,13 +1930,7 @@ class OfficeScene extends Phaser.Scene {
           this._sitPhase = 'none';
           this._sitChair = null;
 
-          // Restore walk sprite, scale, and depth
-          this.player.setTexture('dolo');
-          this.player.setScale(1);
-          this.player.setFrame(20); // idle down
-          if (this._sitOrigDepth !== undefined) {
-            this.player.setDepth(this._sitOrigDepth);
-          }
+          this._restorePlayerWalkSprite(20);
 
           // Move player slightly away from chair so they don't re-trigger
           if (this._sitReturnPos) {
@@ -1969,6 +1992,8 @@ class OfficeScene extends Phaser.Scene {
     const set = (e, on) => {
       const dir = map[e.key];
       if (!dir) return;
+      const chatInput = document.getElementById('player-chat-input');
+      if (chatInput && document.activeElement === chatInput) return;
       window.__DenizenRawMoveKeys[dir] = on;
     };
     window.addEventListener('keydown', (e) => set(e, true), true);
@@ -2000,6 +2025,62 @@ class OfficeScene extends Phaser.Scene {
       } catch (_) {}
     };
     canvas.addEventListener('pointerdown', refocus);
+  }
+
+  /** Click / tap NPCs to open player chat (wired after PlayerChat + AgentManager exist). */
+  _installNpcChatHandlers() {
+    if (this._npcChatHandlersInstalled) return;
+    this._npcChatHandlersInstalled = true;
+
+    this._openNpcChat = (npc) => {
+      const rawKey = npc?.texture?.key;
+      if (!rawKey) return;
+      const now = Date.now();
+      if (this._lastNpcChatKey === rawKey && now - (this._lastNpcChatAt || 0) < 400) return;
+      this._lastNpcChatKey = rawKey;
+      this._lastNpcChatAt = now;
+
+      const name = this._agentManager?.NPC_NAMES?.[rawKey]
+        || globalThis.DenizenNpcRoster?.entries?.find((e) => e.textureKey === rawKey)?.display
+        || rawKey;
+      const pc = this._playerChat || window.__DenizenPlayerChat;
+      if (!pc?.openWithNpc) {
+        console.warn('[OfficeScene] PlayerChat not ready for NPC click');
+        return;
+      }
+      Promise.resolve(pc.openWithNpc(rawKey, name)).catch((err) => {
+        console.warn('[OfficeScene] openWithNpc failed:', err?.message || err);
+      });
+      window.DenizenHaptics?.tap?.();
+    };
+
+    const onNpcPointer = (npc, pointer, event) => {
+      this._openNpcChat(npc);
+      if (event) event.stopPropagation();
+      if (pointer?.event) pointer.event.stopPropagation();
+    };
+
+    const bindNpc = (npc) => {
+      if (!npc || npc._npcChatBound) return;
+      npc._npcChatBound = true;
+      if (!npc.input) {
+        npc.setInteractive({ useHandCursor: true, pixelPerfect: false });
+      }
+      // pointerdown is the GameObject event — gameobjectdown only exists on scene.input.
+      npc.on('pointerdown', (pointer, _localX, _localY, event) => {
+        onNpcPointer(npc, pointer, event);
+      });
+    };
+
+    (this.npcs || []).forEach(bindNpc);
+
+    if (!this._npcChatSceneInputBound) {
+      this._npcChatSceneInputBound = true;
+      this.input.on('gameobjectdown', (pointer, gameObject, _localX, _localY, event) => {
+        if (!gameObject || !Array.isArray(this.npcs) || !this.npcs.includes(gameObject)) return;
+        onNpcPointer(gameObject, pointer, event);
+      });
+    }
   }
 
   _installTapToMove() {
@@ -2150,6 +2231,9 @@ class OfficeScene extends Phaser.Scene {
    */
   _applyRawKeyMovement() {
     if (!this._rawMoveActive()) return;
+    const el = document.activeElement;
+    const isField = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    if (isField) return;
     if (document.documentElement.dataset.denizenModal === 'open') return;
     if (window.__DenizenEditorActive) return;
 
@@ -2174,6 +2258,7 @@ class OfficeScene extends Phaser.Scene {
       this._playerSitting = false;
       this._sitPhase = 'none';
       this._sitChair = null;
+      this._restorePlayerWalkSprite(20);
     }
     if (this.player.texture?.key === 'dolo_phone') {
       this.player.setTexture('dolo');
@@ -2311,7 +2396,14 @@ class OfficeScene extends Phaser.Scene {
     // Ignore E/Space while typing in a field so chat/login keep those keystrokes.
     const touchInteract = !!(window.__DenizenTouchState?.interact);
     const interactTyping = this._typingInField ? this._typingInField() : false;
-    const interactPressed = ((!interactTyping) && (this.interactKeys?.E?.isDown || this.interactKeys?.SPACE?.isDown)) || touchInteract;
+    const editorBlocksInteract = window.__DenizenEditorActive || (() => {
+      const host = String(window.location.hostname || '').toLowerCase();
+      const onLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+      const onDolonia = host === 'denizen.dolonia.cloud' || host.endsWith('.dolonia.cloud');
+      return onLocalhost || onDolonia
+        || new URLSearchParams(window.location.search).has('editor');
+    })();
+    const interactPressed = (!editorBlocksInteract && ((!interactTyping) && (this.interactKeys?.E?.isDown || this.interactKeys?.SPACE?.isDown))) || touchInteract;
     if (!this._interactWasDown) this._interactWasDown = false;
     const justPressed = interactPressed && !this._interactWasDown;
     this._interactWasDown = interactPressed;
@@ -2381,12 +2473,15 @@ class OfficeScene extends Phaser.Scene {
     const chatMove = this._chatMoveKeys || {};
     const touchMove = window.__DenizenTouchState || {};
     const typing = this._typingInField ? this._typingInField() : false;
+    const chatInput = document.getElementById('player-chat-input');
+    const chatFieldFocused = chatInput && document.activeElement === chatInput;
     const cursors = this.cursors;
     const rawMove = window.__DenizenRawMoveKeys || {};
-    const leftKey = (!typing && (cursors?.left?.isDown || this.wasd?.left?.isDown)) || !!chatMove.left || !!touchMove.left || !!rawMove.left;
-    const rightKey = (!typing && (cursors?.right?.isDown || this.wasd?.right?.isDown)) || !!chatMove.right || !!touchMove.right || !!rawMove.right;
-    const upKey = (!typing && (cursors?.up?.isDown || this.wasd?.up?.isDown)) || !!chatMove.up || !!touchMove.up || !!rawMove.up;
-    const downKey = (!typing && (cursors?.down?.isDown || this.wasd?.down?.isDown)) || !!chatMove.down || !!touchMove.down || !!rawMove.down;
+    const useRawMove = !chatFieldFocused && !typing;
+    const leftKey = (!typing && (cursors?.left?.isDown || this.wasd?.left?.isDown)) || !!chatMove.left || !!touchMove.left || (useRawMove && !!rawMove.left);
+    const rightKey = (!typing && (cursors?.right?.isDown || this.wasd?.right?.isDown)) || !!chatMove.right || !!touchMove.right || (useRawMove && !!rawMove.right);
+    const upKey = (!typing && (cursors?.up?.isDown || this.wasd?.up?.isDown)) || !!chatMove.up || !!touchMove.up || (useRawMove && !!rawMove.up);
+    const downKey = (!typing && (cursors?.down?.isDown || this.wasd?.down?.isDown)) || !!chatMove.down || !!touchMove.down || (useRawMove && !!rawMove.down);
 
     const anyMoveKey = leftKey || rightKey || upKey || downKey;
     if (anyMoveKey) {
@@ -2404,7 +2499,7 @@ class OfficeScene extends Phaser.Scene {
         this._playerSitting = false;
         this._sitPhase = 'none';
         this._sitChair = null;
-        if (this._sitOrigDepth !== undefined) this.player.setDepth(this._sitOrigDepth);
+        this._restorePlayerWalkSprite(20);
         if (this._sitReturnPos) {
           this.player.x = this._sitReturnPos.x;
           this.player.y = this._sitReturnPos.y;
@@ -2497,8 +2592,12 @@ class OfficeScene extends Phaser.Scene {
         const fn = this._playerAnimKey;
         return fn ? fn(`walk_${dir}`) : `player_xp:walk_${dir}`;
       };
-      // Ensure walk texture is active
-      if (this.player.texture.key !== 'dolo') this.player.setTexture('dolo');
+      // Ensure walk texture + scale (sit uses dolo_sit at 2×)
+      if (this.player.texture?.key === 'dolo_sit' || this.player.scaleX !== 1) {
+        this._restorePlayerWalkSprite(null);
+      } else if (this.player.texture.key !== 'dolo') {
+        this.player.setTexture('dolo');
+      }
       if (this.facing === 'up') {
         this.player.anims.play(baseKey('up'), true);
       } else if (this.facing === 'down') {
@@ -2510,7 +2609,11 @@ class OfficeScene extends Phaser.Scene {
       }
     } else {
       // Idle: play idle animation or hold first walk frame for that direction.
-      if (this.player.texture.key !== 'dolo') this.player.setTexture('dolo');
+      if (this.player.texture?.key === 'dolo_sit' || this.player.scaleX !== 1) {
+        this._restorePlayerWalkSprite(null);
+      } else if (this.player.texture.key !== 'dolo') {
+        this.player.setTexture('dolo');
+      }
       const idleKey = (dir) => {
         const fn = this._playerAnimKey;
         return fn ? fn(`idle_${dir}`) : `player_xp:idle_${dir}`;
@@ -2698,6 +2801,15 @@ class OfficeScene extends Phaser.Scene {
                   npc.x += (Math.random() - 0.5) * 10;
                   npc.y += (Math.random() - 0.5) * 8;
                 } else {
+                  const texKey = npc.texture?.key;
+                  const agent = texKey ? this._agentManager?.agents?.get(texKey) : null;
+                  const npcName = agent?.name || (texKey ? texKey.replace(/^xp_/, '') : null);
+                  if (npcName && typeof globalThis.DenizenReportFriction === 'function') {
+                    globalThis.DenizenReportFriction(npcName, 'pathfinding', {
+                      code: 'IMMOBILE',
+                      message: 'immobile watchdog fired after 2.2s while wanting to move',
+                    });
+                  }
                   // Hard unstick for normal wander/task
                   if (this._unstickNpc) this._unstickNpc(npc);
                   if (this._pathfinder && npc.ai) {
@@ -2974,7 +3086,7 @@ const config = {
 window.game = new Phaser.Game(config);
 
 // ========== DRAG & DROP EDITOR MODE ==========
-// Press E to toggle editor mode. Drag catalog items onto the map or click to place.
+// Editor: Ctrl+Shift+E (localhost) or plain E when ?editor=1 is in the URL.
 // Double-click a placed sprite to delete it. Press X to export the updated placements.
 (function() {
   const DOUBLE_CLICK_MS = 260;
@@ -3879,10 +3991,11 @@ window.game = new Phaser.Game(config);
           <option value="furniture">Furniture</option>
         </select>
         <button id="ed-export-btn">Export (X)</button>
+        <button id="ed-workflow-btn" title="Open workflow dashboard">Workflow</button>
         <button id="ed-snap-btn">Snap: ON</button>
         <button id="ed-clear-btn">Clear Selection</button>
         <button id="ed-collision-btn" style="background:#e74c3c;">Show Collisions</button>
-        <span class="spacer">E=toggle editor | X=export active tab</span>
+        <span class="spacer">E=editor (localhost) | Ctrl+Shift+E or ?editor+E | X=export</span>
       </div>
       <aside id="editor-wall-tools">
         <div style="font-weight:700;">Wall pieces</div>
@@ -3946,6 +4059,9 @@ window.game = new Phaser.Game(config);
     document.getElementById('ed-export-btn').addEventListener('click', () => {
       if (editorMode === 'walls') window._editorExportWalls();
       else window._editorExport();
+    });
+    document.getElementById('ed-workflow-btn')?.addEventListener('click', () => {
+      window.open('/workflow-dashboard.html', '_blank');
     });
     document.getElementById('ed-wall-layer')?.addEventListener('change', (e) => {
       setWallLayerFilter(e.target.value);
@@ -4516,17 +4632,49 @@ window.game = new Phaser.Game(config);
   }
 
   window.DenizenDisableEditor = disableEditor;
+  window.DenizenEnableEditor = enableEditor;
+
+  function editorAllowedByUrl() {
+    const host = String(window.location.hostname || '').toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    const onLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+    const onDolonia = host === 'denizen.dolonia.cloud' || host.endsWith('.dolonia.cloud');
+    return onLocalhost || onDolonia || params.has('editor');
+  }
+
+  function maybeAutoOpenEditor() {
+    if (editorActive) return true;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('editor') || !editorAllowedByUrl()) return false;
+    const scene = getScene();
+    if (!scene?.sys?.isActive?.()) return false;
+    enableEditor();
+    return editorActive;
+  }
+
+  let autoEditorAttempts = 0;
+  const autoEditorTimer = setInterval(() => {
+    autoEditorAttempts += 1;
+    if (maybeAutoOpenEditor() || autoEditorAttempts > 160) {
+      clearInterval(autoEditorTimer);
+    }
+  }, 200);
 
   document.addEventListener('keydown', (e) => {
     if (document.documentElement.dataset.denizenModal === 'open') return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
     if (e.key === 'e' || e.key === 'E') {
       const host = String(window.location.hostname || '').toLowerCase();
-      const allowEditor = host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
-        || new URLSearchParams(window.location.search).has('editor');
+      const params = new URLSearchParams(window.location.search);
+      const onLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+      const onDolonia = host === 'denizen.dolonia.cloud' || host.endsWith('.dolonia.cloud');
+      const allowEditor = onLocalhost || onDolonia || params.has('editor');
       if (!allowEditor) return;
-      if (!(e.ctrlKey && e.shiftKey)) return;
+      const plainE = !e.ctrlKey && !e.metaKey && !e.altKey;
+      const toggleChord = (e.ctrlKey && e.shiftKey) || (plainE && (onLocalhost || onDolonia || params.has('editor')));
+      if (!toggleChord) return;
       e.preventDefault();
+      e.stopPropagation();
       if (editorActive) disableEditor();
       else enableEditor();
     }

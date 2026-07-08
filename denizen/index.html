@@ -102,8 +102,8 @@
         try {
           window.__DenizenIsTouch = force !== null ? force : (
             window.matchMedia('(pointer: coarse)').matches
-            || navigator.maxTouchPoints > 0
-            || ('ontouchstart' in window)
+            || (navigator.maxTouchPoints > 0
+              && Math.min(window.innerWidth, window.innerHeight) < 520)
           );
         } catch (_) {
           window.__DenizenIsTouch = force === true;
@@ -203,7 +203,7 @@
     <script src="./src/touch-bind.js?v=dedupe1" defer></script>
     <!-- Agent Office System -->
     <script src="./src/agent-actions.js" defer></script>
-    <script src="./src/agent-office-manager.js?v=freezefix7" defer></script>
+    <script src="./src/agent-office-manager.js?v=bouncer4" defer></script>
     <!-- Audio + LM telemetry lazy-loaded via denizen-lazy-scripts.js -->
     <!-- OpenClaw → WorldState bridge (translator must load BEFORE the bridge runner) -->
     <script src="./src/openclaw-translator.js?v=mobfix2" defer></script>
@@ -232,23 +232,23 @@
     <script src="./src/visitor-npc-team-ui.js?v=npcteam14" defer></script>
     <script src="./src/visitor-market-panel.js?v=market2" defer></script>
     <!-- Player Chat (CEO talks to NPCs) -->
-    <script src="./src/player-chat.js?v=attach4" defer></script>
-    <script src="./src/denizen-phone-chat-ui.js?v=phchat7" defer></script>
+    <script src="./src/player-chat.js?v=bouncer1" defer></script>
+    <script src="./src/denizen-phone-chat-ui.js?v=phchat9" defer></script>
     <!-- Bottom toolbar — unifies chat / voice / health / LM / proposals -->
     <script src="./src/bottom-dock.js?v=mobme4" defer></script>
     <!-- Browser mirror — eager load so phone Browser app always mounts -->
     <script src="./src/browser-mirror-panel.js?v=lucymirror6" defer></script>
     <!-- Lazy loader — must run before phone UI -->
-    <script src="./src/denizen-lazy-scripts.js?v=lazy6" defer></script>
+    <script src="./src/denizen-lazy-scripts.js?v=lazy8" defer></script>
     <!-- In-game smartphone HUD -->
-    <script src="./src/denizen-phone-ui.js?v=phone23station" defer></script>
+    <script src="./src/denizen-phone-ui.js?v=phone25hosted" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=wall7" defer></script>
     <!-- Movement guard + freeze watchdog — must load before scene -->
     <script src="./src/movement-guard.js?v=freezefix7" defer></script>
     <script src="./src/freeze-watchdog.js?v=freezefix7" defer></script>
     <!-- Game scene -->
-    <script src="./office-scene.js?v=freezefix7" defer></script>
+    <script src="./office-scene.js?v=npcchat1" defer></script>
   </head>
   <body>
     <div id="game-container"></div>

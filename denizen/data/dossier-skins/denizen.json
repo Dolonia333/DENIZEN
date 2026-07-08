@@ -1,0 +1,27 @@
+{
+  "name": "denizen",
+  "label": "DENIZEN",
+  "colors": {
+    "base": "#0a0e1a",
+    "surface": "#111827",
+    "accent": "#38bdf8",
+    "accentMuted": "#0ea5e9",
+    "text": "#e2e8f0",
+    "muted": "#94a3b8",
+    "callout": "#1e293b",
+    "border": "#334155"
+  },
+  "fonts": {
+    "body": "system-ui, -apple-system, Segoe UI, sans-serif",
+    "mono": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    "serif": "Georgia, 'Times New Roman', serif"
+  },
+  "spacing": {
+    "pageMargin": "0.75in",
+    "sectionGap": "2rem",
+    "tableCellPad": "0.5rem 0.75rem"
+  },
+  "motif": "jellyfish",
+  "voice": "precise, technical, no aspirational fiction",
+  "footerTemplate": "DENIZEN · {{version}} · {{part}}"
+}

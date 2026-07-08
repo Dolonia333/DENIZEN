@@ -89,6 +89,7 @@ class PlayerChat {
       try { agentManager.connect(); } catch (_) {}
     }
     this.setWsConnected(!!(agentManager?.connected || agentManager?.ws?.readyState === WebSocket.OPEN));
+    this._refreshComposerRefs();
     this._attachVisitorUi();
     console.log('[PlayerChat] upgraded with office scene');
   }
@@ -145,6 +146,69 @@ class PlayerChat {
     if (this.scene) this.scene._chatMoveKeys = this._moveKeys;
   }
 
+  /** Phaser keyboard captures eat WASD/Space in focused chat fields — release them. */
+  _ensureKeyboardForChat() {
+    try {
+      window.__DenizenGameInputBlocked = false;
+      const game = window.game;
+      if (game?.input) game.input.enabled = true;
+      game?.input?.keyboard?.clearCaptures?.();
+    } catch (_) {}
+  }
+
+  _autoResizeChatInput() {
+    const el = this._input;
+    if (!el || el.tagName !== 'TEXTAREA') return;
+    el.style.height = 'auto';
+    const next = Math.min(el.scrollHeight, 132);
+    el.style.height = `${Math.max(next, 24)}px`;
+  }
+
+  _refreshComposerRefs() {
+    const panel = document.getElementById('player-chat-panel');
+    if (!panel) return;
+    this._upgradeComposerDom(panel);
+    this._container = panel;
+    this._input = panel.querySelector('#player-chat-input');
+    this._logEl = panel.querySelector('#player-chat-log');
+    this._targetLabel = panel.querySelector('#player-chat-target');
+    this._attachChipsEl = panel.querySelector('#player-chat-attach-chips');
+    this._autoResizeChatInput();
+  }
+
+  static _composerHtml() {
+    return `
+        <div id="player-chat-composer">
+          <div id="player-chat-attach-chips" aria-label="Pending attachments"></div>
+          <div id="player-chat-input-row" class="pc-composer-shell">
+            <div class="pc-composer-bar">
+              <button id="player-chat-attach" type="button" title="Add photos & files (or drag-drop / paste)" aria-label="Add attachment">
+                <span class="pc-attach-icon" aria-hidden="true">+</span>
+              </button>
+              <input id="player-chat-file" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.csv,.json,.log,.yaml,.yml" style="display:none" />
+              <textarea id="player-chat-input" rows="1" placeholder="Message…" autocomplete="off" enterkeyhint="send"></textarea>
+              <div class="pc-composer-actions">
+                <button id="player-chat-speak" type="button" title="Voice input">
+                  <span class="pc-speak-glyph" aria-hidden="true">🎤</span>
+                  <span class="pc-speak-label">Speak</span>
+                </button>
+                <button id="player-chat-send" type="button" aria-label="Send message">
+                  <span class="pc-send-glyph" aria-hidden="true">↑</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+  }
+
+  _upgradeComposerDom(panel) {
+    if (!panel || panel.querySelector('.pc-composer-bar')) return;
+    panel.querySelector('#player-chat-composer')?.remove();
+    panel.querySelector('#player-chat-attach-chips')?.remove();
+    panel.querySelector('#player-chat-input-row')?.remove();
+    panel.insertAdjacentHTML('beforeend', PlayerChat._composerHtml());
+  }
+
   _chatFabClosedLabel() {
     return this.manager?.connected ? '💬 Chat' : '💬 Chat (offline)';
   }
@@ -182,6 +246,7 @@ class PlayerChat {
   }
 
   setVisible(visible) {
+    this._refreshComposerRefs();
     if (!this._container) return;
     const next = !!visible;
     if (this._visible === next && (this._container.style.display === 'none') === !next) {
@@ -206,9 +271,7 @@ class PlayerChat {
   }
 
   toggle() {
-    const showing = this._container
-      && getComputedStyle(this._container).display !== 'none';
-    this.setVisible(!showing);
+    this.setVisible(!this._visible);
   }
 
   /** True only while the text box is focused — i.e. the player is actually
@@ -367,24 +430,40 @@ class PlayerChat {
     }
     this._saveCachedMessages(threadId, thread.messages);
     this._renderLog();
-    globalThis.DenizenPhoneChatUI?.onThreadOpened?.(thread);
+    if (globalThis.DenizenPhoneChatUI?.isPhoneChatActive?.()) {
+      globalThis.DenizenPhoneChatUI.onThreadOpened?.(thread);
+    }
     return thread;
   }
 
   async openWithNpc(npcKey, npcName, opts = {}) {
     const folder = this._folderForNpcKey(npcKey);
-    await this.openThread({
-      threadId: `dm:${folder}`,
-      type: 'dm',
-      npcKey: folder,
-      npcName,
-      title: npcName,
-    });
-    if (!this._visible) this.toggle();
-
+    this._refreshComposerRefs();
+    const panel = this._container;
+    if (panel && !globalThis.DenizenPhoneChatUI?.isPhoneChatActive?.()) {
+      delete panel.dataset.phoneChat;
+      delete panel.dataset.phcView;
+    }
     this._updateTargetLabel(npcName);
-    this._beginCeoConversation(npcKey, npcName, null);
     this._lastTargetKey = npcKey;
+    this.setVisible(true);
+    try {
+      if (!window.__DenizenIsTouch) this._input?.focus?.();
+    } catch (_) {}
+
+    try {
+      await this.openThread({
+        threadId: `dm:${folder}`,
+        type: 'dm',
+        npcKey: folder,
+        npcName,
+        title: npcName,
+      });
+    } catch (err) {
+      console.warn('[PlayerChat] openThread failed:', err?.message || err);
+    }
+
+    this._beginCeoConversation(npcKey, npcName, null);
     const walk = opts.walk !== false;
     const player = this.scene?.player;
     const sceneReady = !!(this.scene && player);
@@ -397,14 +476,16 @@ class PlayerChat {
       if (needsWalkToPlayer) {
         this._addToLog('System', `${npcName} is coming over...`);
         this.manager.actions.emote(npcKey, '!');
-        await this._walkNpcToPlayer(npcKey);
+        await this._walkNpcToPlayer(npcKey).catch(() => {});
       } else {
         this.manager.actions.emote(npcKey, '!');
       }
       if (targetNpc) this._stopNpcForConversation(targetNpc, npcKey, null);
     }
 
-    if (!window.__DenizenIsTouch) this._input.focus();
+    try {
+      if (!window.__DenizenIsTouch) this._input?.focus?.();
+    } catch (_) {}
   }
 
   /**
@@ -440,7 +521,7 @@ class PlayerChat {
     }
     if (npcName === 'Bouncer' && window.DenizenSecurityFeed?.isSecurityTraffic?.(body)) {
       window.DenizenSecurityFeed.ingest({ text: body, kind: 'report' });
-      return;
+      if (!this._isBouncerChatActive()) return;
     }
     const key = `${npcName}:${body.slice(0, 200)}`;
     if (!this._recentReportKeys) this._recentReportKeys = new Set();
@@ -1366,8 +1447,8 @@ class PlayerChat {
     }
 
     // Show who we're targeting
-    this._updateTargetLabel(targetName);
     this._waitingForResponse = true;
+    this._updateTargetLabel(targetName);
     this._lastTargetKey = targetKey; // remember for response handler
     this._lastUserChatTarget = targetName;
     this._lastUserChatAt = Date.now();
@@ -1590,8 +1671,10 @@ class PlayerChat {
 
     if (npcName === 'Bouncer' && window.DenizenSecurityFeed?.isSecurityTraffic?.(safeText)) {
       window.DenizenSecurityFeed.ingest({ text: safeText, kind: 'incident' });
-      if (error) this._addToLog('System', `⚠️ ${error}`);
-      return;
+      if (!this._isBouncerChatActive()) {
+        if (error) this._addToLog('System', `⚠️ ${error}`);
+        return;
+      }
     }
 
     // If the server tagged an explicit error on this response, surface
@@ -1926,151 +2009,185 @@ class PlayerChat {
   // --- UI ---
 
   _buildUI() {
+    if (!this._chatStyleInjected) {
+    this._chatStyleInjected = true;
     const style = document.createElement('style');
     style.textContent = `
       #player-chat-panel {
+        --pc-bg: #0a0f18;
+        --pc-surface: #121826;
+        --pc-elevated: #1a2233;
+        --pc-border: rgba(255, 255, 255, 0.08);
+        --pc-text: #f1f5f9;
+        --pc-muted: #94a3b8;
+        --pc-accent: #3b82f6;
+        --pc-user: #2563eb;
         position: fixed;
-        bottom: calc(var(--denizen-dock-height, 56px) + 10px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px));
         left: max(20px, env(safe-area-inset-left, 0px));
-        width: min(420px, calc(100vw - 40px));
-        height: min(320px, calc(100vh - 120px));
-        max-height: 280px;
-        background: rgba(15, 23, 42, 0.95);
-        border: 1px solid #334155;
-        border-bottom: none;
-        border-radius: 8px 8px 0 0;
+        width: min(400px, calc(100vw - 32px));
+        height: min(440px, calc(100vh - 120px));
+        max-height: min(52vh, 440px);
+        background: var(--pc-bg);
+        border: 1px solid var(--pc-border);
+        border-radius: 20px;
         display: none;
         flex-direction: column;
         z-index: 100200;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 12px;
-        box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 14px;
+        color: var(--pc-text);
+        overflow: hidden;
+        box-shadow:
+          0 24px 64px rgba(0, 0, 0, 0.45),
+          0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+        -webkit-backdrop-filter: blur(24px) saturate(140%);
+        backdrop-filter: blur(24px) saturate(140%);
       }
       #player-chat-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        gap: 8px;
-        padding: 6px 12px;
-        border-bottom: 1px solid #1e293b;
-        color: #94a3b8;
-        font-size: 11px;
+        gap: 10px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--pc-border);
+        background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
         flex-shrink: 0;
+      }
+      .pc-header-avatar {
+        flex: 0 0 36px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: #e2e8f0;
+        background: linear-gradient(145deg, #334155, #1e293b);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
       }
       #player-chat-header .chat-header-main {
         flex: 1;
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
       }
       #player-chat-close-btn {
         display: none;
         align-items: center;
         justify-content: center;
-        min-width: 40px;
-        min-height: 40px;
-        border-radius: 8px;
-        border: 1px solid #334155;
-        background: rgba(15, 23, 42, 0.9);
-        color: #e2e8f0;
-        font: 600 20px/1 system-ui, sans-serif;
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--pc-muted);
+        font: 500 18px/1 system-ui, sans-serif;
         cursor: pointer;
         touch-action: manipulation;
         flex-shrink: 0;
+        transition: background 0.15s, color 0.15s;
       }
-      #player-chat-panel .chat-mobile-hint { display: none; }
+      #player-chat-close-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--pc-text);
+      }
+      #player-chat-panel .chat-mobile-hint,
+      #player-chat-panel .chat-desktop-hint { display: none !important; }
+      #player-chat-panel:not([data-phone-chat="1"]) #player-chat-phone-shell {
+        display: none !important;
+      }
       #player-chat-header .target {
-        color: #4ade80;
-        font-weight: bold;
+        color: var(--pc-text);
+        font-weight: 600;
+        font-size: 15px;
+        letter-spacing: -0.01em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-      #player-chat-header .hint {
-        color: #475569;
-        font-size: 10px;
+      .pc-header-status {
+        color: var(--pc-muted);
+        font-size: 12px;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       #player-chat-log {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 10px;
         overflow-y: auto;
-        padding: 8px 12px;
-        min-height: 60px;
-        max-height: 160px;
-        background:
-          radial-gradient(ellipse 80% 50% at 15% 0%, rgba(10, 132, 255, 0.07), transparent 55%),
-          radial-gradient(ellipse 70% 45% at 95% 100%, rgba(99, 102, 241, 0.06), transparent 50%),
-          rgba(2, 6, 23, 0.35);
+        overflow-x: hidden;
+        padding: 14px 14px 10px;
+        min-height: 80px;
+        scroll-behavior: smooth;
+        background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent 120px);
+      }
+      #player-chat-log::-webkit-scrollbar { width: 6px; }
+      #player-chat-log::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.25);
+        border-radius: 999px;
       }
       #player-chat-log .msg {
-        max-width: 88%;
+        max-width: 85%;
         margin: 0;
-        padding: 9px 13px;
-        line-height: 1.38;
+        padding: 10px 14px;
+        line-height: 1.45;
         border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
         overflow-wrap: anywhere;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-        font-size: 15px;
-        -webkit-backdrop-filter: blur(20px) saturate(170%);
-        backdrop-filter: blur(20px) saturate(170%);
-        box-shadow:
-          0 2px 10px rgba(0, 0, 0, 0.16),
-          inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        font-size: 14px;
+        border: 1px solid transparent;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
       }
       #player-chat-log .msg.you {
         align-self: flex-end;
         border-bottom-right-radius: 6px;
-        background: linear-gradient(
-          168deg,
-          rgba(64, 156, 255, 0.92) 0%,
-          rgba(10, 132, 255, 0.88) 45%,
-          rgba(0, 106, 220, 0.84) 100%
-        );
-        border-color: rgba(147, 197, 253, 0.42);
-        box-shadow:
-          0 4px 16px rgba(10, 132, 255, 0.28),
-          inset 0 1px 0 rgba(255, 255, 255, 0.32);
+        background: var(--pc-user);
+        color: #fff;
+        border-color: rgba(255, 255, 255, 0.08);
       }
       #player-chat-log .msg.npc,
       #player-chat-log .msg.typing {
         align-self: flex-start;
         border-bottom-left-radius: 6px;
-        background: linear-gradient(
-          168deg,
-          rgba(82, 82, 86, 0.78) 0%,
-          rgba(58, 58, 60, 0.72) 100%
-        );
-        border-color: rgba(255, 255, 255, 0.09);
-        box-shadow:
-          0 2px 10px rgba(0, 0, 0, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        background: var(--pc-elevated);
+        border-color: var(--pc-border);
+        color: var(--pc-text);
       }
       #player-chat-log .msg.system {
         align-self: center;
-        max-width: 96%;
-        padding: 6px 10px;
+        max-width: 92%;
+        padding: 6px 12px;
         text-align: center;
         border-radius: 999px;
-        background: rgba(250, 204, 21, 0.12);
-        border-color: rgba(250, 204, 21, 0.2);
+        background: rgba(148, 163, 184, 0.1);
+        border-color: rgba(148, 163, 184, 0.14);
       }
       #player-chat-log .msg.system.error {
-        background: rgba(127, 29, 29, 0.35);
-        border-color: rgba(248, 113, 113, 0.35);
+        background: rgba(239, 68, 68, 0.12);
+        border-color: rgba(248, 113, 113, 0.2);
       }
       #player-chat-log .msg .sender {
         display: block;
         font-weight: 600;
         font-size: 11px;
-        margin: 0 0 3px;
+        margin: 0 0 4px;
+        color: #a5b4fc;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
       }
-      #player-chat-log .msg .sender.npc { color: #a5b4fc; }
-      #player-chat-log .msg .text { color: #f2f2f7; }
-      #player-chat-log .msg.you .text { color: #ffffff; }
-      #player-chat-log .msg.npc .text { color: #f2f2f7; }
-      #player-chat-log .msg.system .text { color: #fde68a; font-size: 11px; }
-      #player-chat-log .msg.system.error .text { color: #fecaca; }
+      #player-chat-log .msg .text { color: inherit; }
+      #player-chat-log .msg.system .text { color: var(--pc-muted); font-size: 12px; }
+      #player-chat-log .msg.system.error .text { color: #fca5a5; font-size: 12px; }
       #player-chat-log .msg.typing {
         padding: 12px 16px;
-        min-width: 52px;
+        min-width: 56px;
       }
       #player-chat-log .typing-dots {
         display: inline-flex;
@@ -2091,93 +2208,149 @@ class PlayerChat {
         0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
         30% { opacity: 1; transform: translateY(-3px); }
       }
-      #player-chat-input-row {
+      #player-chat-composer {
+        flex-shrink: 0;
+        border-top: 1px solid var(--pc-border);
+        background: var(--pc-surface);
+      }
+      .pc-composer-shell {
+        padding: 10px 12px 12px;
+      }
+      .pc-composer-bar {
         display: flex;
-        gap: 6px;
-        padding: 8px 12px;
-        border-top: 1px solid #1e293b;
+        align-items: flex-end;
+        gap: 4px;
+        padding: 6px 8px 6px 4px;
+        border-radius: 24px;
+        border: 1px solid var(--pc-border);
+        background: var(--pc-elevated);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      .pc-composer-bar:focus-within {
+        border-color: rgba(59, 130, 246, 0.45);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+      }
+      #player-chat-input-row {
+        display: block;
+        padding: 0;
+        border-top: none;
         flex-shrink: 0;
       }
       #player-chat-input {
-        flex: 1;
-        background: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 4px;
-        color: #e2e8f0;
-        padding: 6px 10px;
-        font-family: inherit;
-        font-size: 12px;
-        outline: none;
-      }
-      #player-chat-input:focus {
-        border-color: #4ade80;
-      }
-      #player-chat-input::placeholder {
-        color: #475569;
-      }
-      #player-chat-send {
-        background: #4ade80;
-        color: #0f172a;
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100%;
+        min-height: 22px;
+        max-height: 120px;
+        background: transparent;
         border: none;
-        border-radius: 4px;
-        padding: 6px 14px;
-        cursor: pointer;
+        color: var(--pc-text);
+        padding: 8px 4px;
         font-family: inherit;
-        font-weight: bold;
-        font-size: 11px;
+        font-size: 14px;
+        line-height: 1.45;
+        outline: none;
+        resize: none;
+        overflow-y: auto;
       }
-      #player-chat-send:hover {
-        background: #22c55e;
+      #player-chat-input::placeholder { color: #64748b; }
+      #player-chat-send {
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: var(--pc-accent);
+        color: #fff;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, opacity 0.15s, transform 0.1s;
       }
+      #player-chat-send .pc-send-glyph {
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1;
+        margin-top: -1px;
+      }
+      #player-chat-send:hover:not(:disabled) { background: #1d4ed8; }
+      #player-chat-send:active:not(:disabled) { transform: scale(0.96); }
       #player-chat-send:disabled {
-        opacity: 0.45;
+        opacity: 0.35;
         cursor: not-allowed;
+        background: #334155;
       }
       #player-chat-speak {
-        background: #1e3a8a;
-        color: #dbeafe;
-        border: 1px solid #3b82f6;
-        border-radius: 4px;
-        padding: 6px 10px;
+        flex: 0 0 auto;
+        min-height: 32px;
+        padding: 0 10px;
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--pc-muted);
         cursor: pointer;
         font-family: inherit;
-        font-weight: bold;
-        font-size: 11px;
-        min-width: 58px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: background 0.15s, color 0.15s;
       }
-      #player-chat-speak:hover { background: #1d4ed8; }
+      #player-chat-speak .pc-speak-glyph { font-size: 16px; line-height: 1; }
+      #player-chat-speak:hover { background: rgba(255,255,255,0.06); color: var(--pc-text); }
       #player-chat-speak.listening {
-        background: #7f1d1d;
-        color: #fecaca;
-        border-color: #fca5a5;
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
       }
       #player-chat-attach {
-        background: #1e293b;
-        color: #94a3b8;
-        border: 1px solid #334155;
-        border-radius: 4px;
-        padding: 6px 8px;
+        flex: 0 0 32px;
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        background: transparent;
+        color: var(--pc-muted);
+        border: none;
+        border-radius: 50%;
+        padding: 0;
         cursor: pointer;
-        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s, color 0.15s;
+      }
+      #player-chat-attach .pc-attach-icon {
+        font-size: 22px;
+        font-weight: 300;
         line-height: 1;
       }
-      #player-chat-attach:hover { color: #e2e8f0; border-color: #4ade80; }
+      #player-chat-attach:hover { color: var(--pc-text); background: rgba(255,255,255,0.06); }
+      .pc-composer-actions {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex-shrink: 0;
+        padding-left: 2px;
+      }
       #player-chat-attach-chips {
         display: none;
         flex-wrap: wrap;
-        gap: 6px;
-        padding: 6px 8px 0 8px;
+        gap: 8px;
+        padding: 10px 12px 0;
       }
       #player-chat-attach-chips.has-items { display: flex; }
       .pc-attach-chip {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: #1e293b;
-        border: 1px solid #334155;
-        border-radius: 6px;
-        padding: 3px 6px;
-        font-size: 10px;
+        background: var(--pc-elevated);
+        border: 1px solid var(--pc-border);
+        border-radius: 10px;
+        padding: 4px 8px;
+        font-size: 11px;
         color: #cbd5e1;
         max-width: 180px;
       }
@@ -2208,18 +2381,19 @@ class PlayerChat {
         padding: 3px 8px; font-size: 10px; color: #cbd5e1;
       }
       #player-chat-fab {
-        background: #1e293b;
-        color: #e2e8f0;
-        border: 2px solid #4ade80;
+        background: var(--pc-surface, #121826);
+        color: var(--pc-text, #f1f5f9);
+        border: 1px solid rgba(74, 222, 128, 0.45);
         border-radius: 999px;
-        padding: 10px 20px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        padding: 10px 18px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-size: 13px;
-        font-weight: bold;
+        font-weight: 600;
         cursor: pointer;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.45);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        transition: background 0.15s, border-color 0.15s;
       }
-      #player-chat-fab:hover { background: #334155; }
+      #player-chat-fab:hover { background: var(--pc-elevated, #1a2233); }
       #player-chat-fab.ws-off {
         border-color: #f87171;
         color: #fecaca;
@@ -2256,12 +2430,14 @@ class PlayerChat {
         }
         #player-chat-input {
           font-size: 16px;
-          padding: 10px 12px;
         }
-        #player-chat-send {
-          font-size: 13px;
-          padding: 10px 14px;
-          min-width: 76px;
+        html.denizen-touch #player-chat-send,
+        html.denizen-touch #player-chat-speak {
+          width: 40px;
+          min-width: 40px;
+          height: 40px;
+          min-height: 40px;
+          padding: 0;
         }
         @media (orientation: landscape) {
           #player-chat-panel {
@@ -2271,87 +2447,44 @@ class PlayerChat {
         }
       }
       html:not(.denizen-touch) #player-chat-panel {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        overflow: hidden;
-        width: min(460px, calc(100vw - 40px));
-        height: min(420px, calc(100vh - 120px));
-        max-height: min(52vh, 420px);
-        background: rgba(8, 13, 25, 0.98);
-        border: 1px solid rgba(148, 163, 184, 0.32);
-        border-bottom: 1px solid rgba(148, 163, 184, 0.32);
-        border-radius: 16px;
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.48);
+        width: min(420px, calc(100vw - 32px));
+        height: min(520px, calc(100vh - 100px));
+        max-height: min(58vh, 520px);
       }
-      html:not(.denizen-touch) #player-chat-close-btn {
-        display: flex;
-      }
-      html:not(.denizen-touch) #player-chat-header {
-        padding: 10px 12px 9px;
-        font-size: 13px;
-        background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.84));
-      }
-      html:not(.denizen-touch) #player-chat-header .target {
-        display: block;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 15px;
-      }
-      html:not(.denizen-touch) #player-chat-header .hint {
-        display: none;
-      }
-      html:not(.denizen-touch) #player-chat-input,
-      html:not(.denizen-touch) #player-chat-send,
-      html:not(.denizen-touch) #player-chat-speak,
-      html:not(.denizen-touch) #player-chat-close-btn {
-        box-sizing: border-box;
-      }
+      html:not(.denizen-touch) #player-chat-close-btn { display: flex; }
       html:not(.denizen-touch) #player-chat-log {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
         flex: 1;
-        min-height: 150px;
+        min-height: 180px;
         max-height: none;
-        line-height: 1.45;
-        padding: 12px;
+        padding: 16px;
       }
       html:not(.denizen-touch) #player-chat-log:empty::before {
         content: "No messages yet";
         align-self: center;
-        margin: auto;
+        margin: auto 0 4px;
+        color: var(--pc-muted);
+        font-size: 14px;
+        font-weight: 500;
+      }
+      html:not(.denizen-touch) #player-chat-log:empty::after {
+        content: "Click someone in the office or press Enter nearby";
+        align-self: center;
+        margin: 0 auto auto;
         color: #64748b;
-        font-size: 13px;
+        font-size: 12px;
+        text-align: center;
+        max-width: 220px;
+        line-height: 1.4;
       }
-      html:not(.denizen-touch) #player-chat-input-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
-        background: rgba(2, 6, 23, 0.92);
-      }
-      html:not(.denizen-touch) #player-chat-input {
-        min-width: 0;
-        min-height: 44px;
-        font-size: 15px;
-        border-radius: 999px;
-        padding: 10px 14px;
-        background: #0f172a;
-        border-color: rgba(148, 163, 184, 0.36);
-      }
-      html:not(.denizen-touch) #player-chat-send,
+      html:not(.denizen-touch) #player-chat-input { font-size: 15px; }
+      html:not(.denizen-touch) #player-chat-speak .pc-speak-label { display: none; }
       html:not(.denizen-touch) #player-chat-speak {
-        flex: none;
-        min-width: 58px;
-        min-height: 44px;
-        border-radius: 999px;
-        padding: 9px 14px;
-        font-size: 13px;
-        white-space: nowrap;
-      }
-      html:not(.denizen-touch) #player-chat-speak {
-        background: rgba(37, 99, 235, 0.86);
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
       }
       html.denizen-touch #player-chat-panel {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -2417,16 +2550,23 @@ class PlayerChat {
         padding: 8px 10px;
         font-size: 13px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input-row {
-        gap: 6px;
+      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-shell {
         padding: 8px 10px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input,
+      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-bar {
+        gap: 4px;
+      }
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input {
+        min-height: 40px;
+        font-size: 16px;
+      }
       html.denizen-touch.denizen-phone.denizen-landscape #player-chat-send,
       html.denizen-touch.denizen-phone.denizen-landscape #player-chat-speak {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
         min-height: 40px;
-        padding: 8px 10px;
-        font-size: 13px;
+        padding: 0;
       }
       html.denizen-touch #player-chat-log {
         display: flex;
@@ -2440,11 +2580,19 @@ class PlayerChat {
         -webkit-overflow-scrolling: touch;
       }
       html.denizen-touch #player-chat-log:empty::before {
-        content: "Say hi";
+        content: "Say hello";
         align-self: center;
-        margin: auto;
+        margin: auto 0 4px;
+        color: var(--pc-muted);
+        font-size: 14px;
+        font-weight: 500;
+      }
+      html.denizen-touch #player-chat-log:empty::after {
+        content: "Tap an NPC in the office";
+        align-self: center;
+        margin: 0 auto auto;
         color: #64748b;
-        font-size: 13px;
+        font-size: 12px;
       }
       html.denizen-touch #player-chat-log .msg.system {
         -webkit-backdrop-filter: blur(12px);
@@ -2454,38 +2602,39 @@ class PlayerChat {
       html.denizen-touch #player-chat-log .msg.system.error .text {
         color: #fecaca;
       }
-      html.denizen-touch #player-chat-input-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto auto;
-        align-items: center;
-        gap: 8px;
+      html.denizen-touch .pc-composer-shell {
         padding: 10px 12px max(10px, env(safe-area-inset-bottom, 0px));
-        background: rgba(2, 6, 23, 0.92);
+      }
+      html.denizen-touch .pc-composer-bar {
+        padding: 5px 6px 5px 2px;
       }
       html.denizen-touch #player-chat-input {
-        min-width: 0;
-        min-height: 46px;
+        min-height: 28px;
         font-size: 16px;
-        border-radius: 999px;
-        padding: 11px 14px;
-        background: #0f172a;
-        border-color: rgba(148, 163, 184, 0.36);
+        padding: 10px 6px;
       }
       html.denizen-touch #player-chat-send,
       html.denizen-touch #player-chat-speak {
         flex: none;
-        min-width: 48px;
-        min-height: 46px;
-        font-size: 15px;
-        border-radius: 999px;
-        padding: 10px 14px;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         white-space: nowrap;
       }
       html.denizen-touch #player-chat-send {
-        min-width: 66px;
+        background: var(--pc-accent);
       }
       html.denizen-touch #player-chat-speak {
-        background: rgba(37, 99, 235, 0.86);
+        background: transparent;
+      }
+      html.denizen-touch #player-chat-speak .pc-speak-label {
+        display: none;
       }
       html.denizen-touch #player-chat-header {
         padding: 10px 12px 9px;
@@ -2512,6 +2661,7 @@ class PlayerChat {
       }
     `;
     document.head.appendChild(style);
+    }
 
     let panel = document.getElementById('player-chat-panel');
     if (!panel) {
@@ -2519,24 +2669,19 @@ class PlayerChat {
       panel.id = 'player-chat-panel';
       panel.innerHTML = `
         <div id="player-chat-header">
+          <div class="pc-header-avatar" id="player-chat-avatar" aria-hidden="true">💬</div>
           <div class="chat-header-main">
-            <span class="target" id="player-chat-target">Chat</span>
-            <span class="hint chat-desktop-hint"> - Enter send · Speak (pauses OK) · Esc close</span>
-            <span class="hint chat-mobile-hint"> — face them or say their name</span>
+            <span class="target" id="player-chat-target">Messages</span>
+            <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
           </div>
-          <button type="button" id="player-chat-close-btn" aria-label="Close chat">×</button>
+          <button type="button" id="player-chat-close-btn" aria-label="Close chat">✕</button>
         </div>
         <div id="player-chat-log" role="log" aria-live="polite" aria-label="Chat messages"></div>
-        <div id="player-chat-attach-chips" aria-label="Pending attachments"></div>
-        <div id="player-chat-input-row">
-          <button id="player-chat-attach" type="button" title="Attach a file or photo (or drag-drop / paste)" aria-label="Attach file">＋</button>
-          <input id="player-chat-file" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.csv,.json,.log,.yaml,.yml" style="display:none" />
-          <input id="player-chat-input" type="text" placeholder="Message an NPC…" autocomplete="off" enterkeyhint="send" />
-          <button id="player-chat-speak" type="button" title="Tap to speak — tap again when done">🎤 Speak</button>
-          <button id="player-chat-send" type="button" aria-label="Send message">Send</button>
-        </div>
+        ${PlayerChat._composerHtml()}
       `;
       document.body.appendChild(panel);
+    } else {
+      this._upgradeComposerDom(panel);
     }
 
     const existingFab = document.getElementById('player-chat-fab');
@@ -2566,8 +2711,12 @@ class PlayerChat {
     this._input = panel.querySelector('#player-chat-input');
     this._logEl = panel.querySelector('#player-chat-log');
     this._targetLabel = panel.querySelector('#player-chat-target');
+    this._autoResizeChatInput();
 
-    // --- Attachments: 📎 picker, drag-drop onto the panel, paste into the input ---
+    if (this._composerListenersWired) return;
+    this._composerListenersWired = true;
+
+    // --- Attachments: + picker, drag-drop onto the panel, paste into the input ---
     this._pendingAttachments = this._pendingAttachments || [];
     this._attachChipsEl = panel.querySelector('#player-chat-attach-chips');
     const attachBtn = panel.querySelector('#player-chat-attach');
@@ -2594,7 +2743,8 @@ class PlayerChat {
       const style = getComputedStyle(this._container);
       if (style.display === 'none' || style.visibility === 'hidden') return false;
       const row = document.getElementById('player-chat-input-row');
-      return !!row && getComputedStyle(row).display !== 'none';
+      const bar = this._container.querySelector('.pc-composer-bar');
+      return !!(row && bar && getComputedStyle(row).display !== 'none');
     };
     const hasFiles = (e) => !!(e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes('Files'));
     const hasLinkOrText = (e) => {
@@ -2653,10 +2803,13 @@ class PlayerChat {
         return;
       }
       e.stopPropagation();
-      if (e.key === 'Enter') {
+      this._ensureKeyboardForChat();
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         if (this._input.value.trim() || this._pendingAttachments?.length) {
           this.sendMessage(this._input.value);
           this._input.value = '';
+          this._autoResizeChatInput();
           syncSendButton();
         }
       } else if (e.key === 'Escape') {
@@ -2674,8 +2827,26 @@ class PlayerChat {
       }
       e.stopPropagation();
     });
+    this._input.addEventListener('focus', () => {
+      const r = window.__DenizenRawMoveKeys;
+      if (r) Object.keys(r).forEach((k) => { r[k] = false; });
+      this._clearChatMoveKeys();
+      this._ensureKeyboardForChat();
+    });
+    this._input.addEventListener('input', () => {
+      this._autoResizeChatInput();
+      syncSendButton();
+    });
     this._input.addEventListener('blur', () => this._clearChatMoveKeys());
     window.addEventListener('blur', () => this._clearChatMoveKeys());
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement !== this._input) return;
+      this._ensureKeyboardForChat();
+    }, true);
+    if (this._chatCaptureTimer) clearInterval(this._chatCaptureTimer);
+    this._chatCaptureTimer = setInterval(() => {
+      if (document.activeElement === this._input && this._visible) this._ensureKeyboardForChat();
+    }, 900);
     this._input.addEventListener('keypress', (e) => e.stopPropagation());
     const focusMobileInput = (e) => {
       if (!window.__DenizenIsTouch || !this._input) return;
@@ -2713,10 +2884,15 @@ class PlayerChat {
         && document.documentElement.classList.contains('denizen-phone')
         && document.documentElement.classList.contains('denizen-landscape');
       speakBtn.classList.toggle('listening', on);
-      speakBtn.textContent = on
-        ? (phoneLandscape ? '⏹' : (touch ? '⏹ Stop' : 'Stop'))
-        : (phoneLandscape ? '🎤' : (touch ? '🎤 Speak' : 'Speak'));
+      const glyph = speakBtn.querySelector('.pc-speak-glyph');
+      const label = speakBtn.querySelector('.pc-speak-label');
+      if (glyph) glyph.textContent = on ? '⏹' : '🎤';
+      if (label) {
+        label.textContent = on ? 'Stop' : 'Speak';
+        label.style.display = document.documentElement.classList.contains('denizen-touch') ? '' : 'none';
+      }
       speakBtn.setAttribute('aria-label', on ? 'Stop voice input' : 'Start voice input');
+      speakBtn.title = on ? 'Stop voice input' : 'Voice input';
       const supported = !!(vi && (vi.isSupported?.() ?? vi.supported));
       speakBtn.disabled = !supported;
       const touchUi = !!window.__DenizenIsTouch
@@ -2755,7 +2931,6 @@ class PlayerChat {
         && !(this._pendingAttachments && this._pendingAttachments.length);
     };
     this._syncSendButton = syncSendButton;
-    this._input.addEventListener('input', syncSendButton);
     const onSend = (e) => {
       if (e?.preventDefault) e.preventDefault();
       if (e?.stopPropagation) e.stopPropagation();
@@ -2763,6 +2938,7 @@ class PlayerChat {
       if (!text && !this._pendingAttachments?.length) return;
       this.sendMessage(text);
       this._input.value = '';
+      this._autoResizeChatInput();
       syncSendButton();
       try {
         this._input.focus({ preventScroll: false });
@@ -2783,6 +2959,7 @@ class PlayerChat {
     if (gameEl) {
       gameEl.addEventListener('pointerdown', () => {
         if (!this._visible || document.activeElement !== this._input) return;
+        if (!window.__DenizenIsTouch) return;
         this._clearChatMoveKeys();
         this._input.blur();
       });
@@ -2953,6 +3130,16 @@ class PlayerChat {
     if (entry?.display) return entry.display;
     const first = raw.split(/\s+/)[0];
     return first || raw;
+  }
+
+  /** True when the player is actively in a Bouncer DM (chat should show security lines too). */
+  _isBouncerChatActive() {
+    const thread = this._getActiveThread?.();
+    if (thread?.type === 'dm' && thread.npcName === 'Bouncer') return true;
+    if (this._ceoConvo?.npcName === 'Bouncer') return true;
+    if (this._lastUserChatTarget === 'Bouncer'
+      && Date.now() - (this._lastUserChatAt || 0) < 45000) return true;
+    return false;
   }
 
   /**
@@ -3173,11 +3360,28 @@ class PlayerChat {
     } else {
       log.scrollTop = prevScroll;
     }
+    this._refreshHeaderStatus();
+  }
+
+  _refreshHeaderStatus() {
+    const status = document.getElementById('player-chat-header-status');
+    if (!status) return;
+    const name = this._currentChatTargetName;
+    status.textContent = name
+      ? (this._waitingForResponse ? 'Typing…' : 'In conversation')
+      : 'Click an NPC to start';
   }
 
   _updateTargetLabel(name) {
-    if (this._targetLabel) {
-      this._targetLabel.textContent = name ? this._displayNpcName(name) : 'Messages';
+    this._currentChatTargetName = name || '';
+    const display = name ? this._displayNpcName(name) : 'Messages';
+    if (this._targetLabel) this._targetLabel.textContent = display;
+    this._refreshHeaderStatus();
+    const avatar = document.getElementById('player-chat-avatar');
+    if (avatar) {
+      avatar.textContent = name
+        ? String(this._displayNpcName(name)).trim().charAt(0).toUpperCase() || '•'
+        : '💬';
     }
   }
 }

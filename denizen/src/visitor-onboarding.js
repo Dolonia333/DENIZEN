@@ -19,6 +19,7 @@
   let stepIndex = 0;
   let stepUnbinds = [];
   let activeSteps = [];
+  let badgeIssueInFlight = false;
 
   function isTouchUi() {
     return document.documentElement.classList.contains('denizen-touch');
@@ -44,6 +45,69 @@
 
   function tourTier() {
     return isTeamVisitor() ? 'team' : 'demo';
+  }
+
+  function isCitizenTierVisitor() {
+    const sess = globalThis.DenizenVisitorSession;
+    const rawTier = String(sess?.getTier?.() || '').toLowerCase();
+    return rawTier === 'team' || rawTier === 'ceo' || isTeamVisitor();
+  }
+
+  function hasCitizenBadge() {
+    const sess = globalThis.DenizenVisitorSession;
+    const profile = sess?.getProfile?.() || {};
+    return (
+      globalThis.denizenBadgeIssued === true
+      || sess?.hasCitizenBadge?.() === true
+      || profile.badgeIssued === true
+      || profile.badge_issued === true
+      || profile.metadata?.badgeIssued === true
+      || profile.metadata?.badge_issued === true
+    );
+  }
+
+  async function issueCitizenBadgeIfNeeded() {
+    if (!isCitizenTierVisitor()) return;
+    if (hasCitizenBadge() || badgeIssueInFlight) return;
+    badgeIssueInFlight = true;
+    const sess = globalThis.DenizenVisitorSession;
+    let issued = false;
+    try {
+      if (typeof sess?.markBadgeIssued === 'function') {
+        await sess.markBadgeIssued({ badgeIssued: true });
+        issued = true;
+      } else if (typeof sess?.setSessionFlag === 'function') {
+        await sess.setSessionFlag('badgeIssued', true);
+        issued = true;
+      } else if (typeof sess?.setFlag === 'function') {
+        await sess.setFlag('badgeIssued', true);
+        issued = true;
+      } else if (sess?.getSessionId?.() && typeof fetch === 'function') {
+        const body = {
+          session_id: sess.getSessionId(),
+          display_name: sess.getDisplayName?.() || 'Citizen',
+          metadata: { badgeIssued: true, badge_issued: true },
+        };
+        const res = await fetch('/api/visitor/session', {
+          method: 'POST',
+          headers: sess.authHeaders?.({ 'Content-Type': 'application/json' }) || { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res?.ok) throw new Error('badge sync failed');
+        issued = true;
+      }
+    } catch (_) {
+      issued = false;
+    }
+    if (!issued) {
+      // Fallback for clients without a badge session API.
+      globalThis.denizenBadgeIssued = true;
+      return;
+    }
+    globalThis.denizenBadgeIssued = true;
+    try {
+      document.dispatchEvent(new CustomEvent('denizen-citizen-badge-issued'));
+    } catch (_) {}
   }
 
   function storageScope() {
@@ -852,6 +916,7 @@
   }
 
   function onSessionReady() {
+    issueCitizenBadgeIfNeeded();
     mountReplayChip();
     if (shouldShow()) {
       if (scene?.player && document.getElementById('game-container')) {
@@ -864,6 +929,12 @@
 
   function onLoggedOut() {
     dismiss({ keepOverlayState: true });
+    badgeIssueInFlight = false;
+    delete globalThis.denizenBadgeIssued;
+  }
+
+  function onProfileUpdated() {
+    issueCitizenBadgeIfNeeded();
   }
 
   const DenizenVisitorOnboarding = {
@@ -873,6 +944,7 @@
 
       document.addEventListener('denizen-visitor-session-ready', onSessionReady);
       document.addEventListener('denizen-visitor-logged-out', onLoggedOut);
+      document.addEventListener('denizen-visitor-profile-updated', onProfileUpdated);
 
       const afterSession = () => onSessionReady();
 
@@ -884,6 +956,7 @@
     detach() {
       document.removeEventListener('denizen-visitor-session-ready', onSessionReady);
       document.removeEventListener('denizen-visitor-logged-out', onLoggedOut);
+      document.removeEventListener('denizen-visitor-profile-updated', onProfileUpdated);
       if (overlayEl?._cleanup) overlayEl._cleanup();
       dismiss();
       document.getElementById(TOUR_CHIP_ID)?.remove();

@@ -1,0 +1,27 @@
+{
+  "name": "1921",
+  "label": "1921 Holding Co.",
+  "colors": {
+    "base": "#0f1b2d",
+    "surface": "#152238",
+    "accent": "#d4af37",
+    "accentMuted": "#f5e6c8",
+    "text": "#f8fafc",
+    "muted": "#cbd5e1",
+    "callout": "#1a2740",
+    "border": "#334155"
+  },
+  "fonts": {
+    "body": "system-ui, -apple-system, Segoe UI, sans-serif",
+    "mono": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    "serif": "Georgia, 'Times New Roman', serif"
+  },
+  "spacing": {
+    "pageMargin": "0.75in",
+    "sectionGap": "2rem",
+    "tableCellPad": "0.5rem 0.75rem"
+  },
+  "motif": "constellation",
+  "voice": "founder-warm, disciplined, readiness first",
+  "footerTemplate": "1921 · CONFIDENTIAL{{#recipient}} — PREPARED FOR {{recipient}}{{/recipient}}"
+}

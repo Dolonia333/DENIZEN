@@ -1,0 +1,27 @@
+{
+  "name": "white",
+  "label": "Plain",
+  "colors": {
+    "base": "#ffffff",
+    "surface": "#f8fafc",
+    "accent": "#1e293b",
+    "accentMuted": "#475569",
+    "text": "#0f172a",
+    "muted": "#64748b",
+    "callout": "#f1f5f9",
+    "border": "#e2e8f0"
+  },
+  "fonts": {
+    "body": "system-ui, -apple-system, Segoe UI, sans-serif",
+    "mono": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    "serif": "Georgia, 'Times New Roman', serif"
+  },
+  "spacing": {
+    "pageMargin": "0.75in",
+    "sectionGap": "2rem",
+    "tableCellPad": "0.5rem 0.75rem"
+  },
+  "motif": "none",
+  "voice": "clear, neutral, professional",
+  "footerTemplate": "{{#recipient}}Prepared for {{recipient}}{{/recipient}}"
+}

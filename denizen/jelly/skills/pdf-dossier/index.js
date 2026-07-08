@@ -29,6 +29,8 @@ module.exports = {
         runResearch: deps.runResearch || deps.runWebSearch,
         runCitedResearch: deps.runCitedResearch
           || ((q, o) => citedResearch.runCitedResearch(q, o)),
+        ownerIdentityId: deps.ownerIdentityId || deps.identityId || null,
+        ownerProfile: deps.ownerProfile || null,
       },
       broadcast,
     });

@@ -106,7 +106,9 @@
       "catalogOnlyAfter": 0
     }
   },
+  "blueprintFile": "data/office_blueprint.json",
   "commands": {
+    "buildBlueprint": "npm run blueprint:build",
     "snapPlacements": "npm run catalog:snap",
     "validate": "npm run validate:catalog",
     "rebuildObjects": "npm run catalog:rebuild && npm run catalog:merge"

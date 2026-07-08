@@ -3,6 +3,7 @@
 const inferenceRuntime = require('./denizen-inference-runtime');
 const { runEmbeddingIndex } = require('./denizen-embedding-worker');
 const { runSimTick } = require('./denizen-sim-tick');
+const { runNodePatrol } = require('./denizen-bouncer-mesh-patrol');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 
@@ -201,6 +202,27 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
       return {
         ok: false,
         jobType: 'web_search',
+        error: err?.message || String(err),
+        completed_at: new Date().toISOString(),
+      };
+    }
+  }
+
+  if (type === 'bouncer_patrol') {
+    try {
+      const nodeInfo = safePayload.node && typeof safePayload.node === 'object'
+        ? { ...safePayload.node, ...safePayload }
+        : safePayload;
+      const patrol = await runNodePatrol(nodeInfo);
+      return {
+        ...patrol,
+        jobType: 'bouncer_patrol',
+        completed_at: new Date().toISOString(),
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        jobType: 'bouncer_patrol',
         error: err?.message || String(err),
         completed_at: new Date().toISOString(),
       };

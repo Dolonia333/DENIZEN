@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Denizen — Office Workflow</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --panel: #12182b;
+      --panel-hover: #1a2238;
+      --line: #243049;
+      --text: #e8ecf4;
+      --muted: #8b9bb8;
+      --accent: #e94560;
+      --accent-soft: rgba(233, 69, 96, 0.15);
+      --gold: #fde047;
+      --green: #4ade80;
+      --blue: #60a5fa;
+      --purple: #c084fc;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.45;
+      min-height: 100vh;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10, 14, 26, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 20px;
+    }
+    header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.02em;
+    }
+    header .sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .header-actions {
+      margin-left: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+    .btn:hover {
+      background: var(--panel-hover);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #ff6b81;
+      border-color: #ff6b81;
+    }
+    .btn-ghost {
+      background: transparent;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 48px;
+    }
+
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+      padding: 14px 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pipeline span.step {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pipeline .num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pipeline .arrow { opacity: 0.35; }
+
+    section {
+      margin-bottom: 32px;
+    }
+    section h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    section h2 .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 600;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+      min-height: 120px;
+    }
+    .card:hover {
+      background: var(--panel-hover);
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    .card .icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+    .card h3 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .card p {
+      font-size: 12px;
+      color: var(--muted);
+      flex: 1;
+    }
+    .card .open {
+      margin-top: auto;
+      align-self: flex-start;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(233, 69, 96, 0.35);
+    }
+    .card:hover .open {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .card.featured {
+      border-color: rgba(253, 224, 71, 0.45);
+      background: linear-gradient(135deg, rgba(253, 224, 71, 0.08), var(--panel));
+    }
+    .card.featured h3 { color: var(--gold); }
+
+    .cmd-box {
+      margin-top: 8px;
+      padding: 12px 14px;
+      background: #060a14;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 12px;
+      color: var(--green);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .cmd-box code { flex: 1; min-width: 200px; }
+    .cmd-box button {
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .cmd-box button:hover { border-color: var(--accent); }
+
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 20px;
+      border-top: 1px solid var(--line);
+    }
+    footer a { color: var(--blue); text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .header-actions { margin-left: 0; width: 100%; }
+    }
+
+    /* Phone app embed (?embed=1) */
+    body.embed {
+      min-height: 100%;
+    }
+    body.embed header {
+      padding: 10px 12px;
+      position: relative;
+    }
+    body.embed header .sub,
+    body.embed footer {
+      display: none;
+    }
+    body.embed header h1 { font-size: 15px; }
+    body.embed .header-actions {
+      margin-left: 0;
+      width: 100%;
+      justify-content: stretch;
+    }
+    body.embed .header-actions .btn {
+      flex: 1;
+      justify-content: center;
+      font-size: 12px;
+      padding: 8px 10px;
+    }
+    body.embed .header-actions .btn-ghost { display: none; }
+    body.embed main {
+      max-width: none;
+      padding: 12px 12px 20px;
+    }
+    body.embed .pipeline {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 11px;
+    }
+    body.embed .pipeline .arrow { display: none; }
+    body.embed .grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    body.embed .card {
+      min-height: 0;
+      padding: 14px;
+    }
+    body.embed section { margin-bottom: 22px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Office Workflow</h1>
+      <div class="sub">Sheet → catalog → place → verify — all tools in one place</div>
+    </div>
+    <div class="header-actions">
+      <a class="btn btn-primary" href="/" id="link-game">Open game</a>
+      <a class="btn" href="/?editor=1" id="link-editor">Open scene editor</a>
+      <a class="btn btn-ghost" href="/catalog-explorer.html">Catalog data</a>
+    </div>
+  </header>
+
+  <main>
+    <div class="pipeline" id="pipeline-steps">
+      <span class="step"><span class="num">1</span> Find asset</span>
+      <span class="arrow">→</span>
+      <span class="step"><span class="num">2</span> Cut sprite</span>
+      <span class="arrow">→</span>
+      <span class="step"><span class="num">3</span> Paste catalog</span>
+      <span class="arrow">→</span>
+      <span class="step"><span class="num">4</span> Verify</span>
+      <span class="arrow">→</span>
+      <span class="step"><span class="num">5</span> Place in room</span>
+      <span class="arrow">→</span>
+      <span class="step"><span class="num">6</span> Export &amp; rebuild</span>
+    </div>
+
+    <section>
+      <h2>Play &amp; build <span class="badge">in-game</span></h2>
+      <div class="grid">
+        <a class="card featured" href="/">
+          <span class="icon">🏢</span>
+          <h3>Office game</h3>
+          <p>Walk the open-plan office. NPCs, interactions, live layout.</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card featured" href="/?editor=1">
+          <span class="icon">✏️</span>
+          <h3>Scene editor</h3>
+          <p>Opens the in-game editor with catalog sidebar — drag furniture, press <strong>X</strong> to export.</p>
+          <span class="open">Open editor →</span>
+        </a>
+        <a class="card" href="/tools/room-preview.html" data-fullpage="1">
+          <span class="icon">🗺️</span>
+          <h3>Room preview</h3>
+          <p>Preview room types and layouts without loading the full game.</p>
+          <span class="open">Open →</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Step 1 — Find assets</h2>
+      <div class="grid">
+        <a class="card" href="/asset-browser.html">
+          <span class="icon">🖼️</span>
+          <h3>Asset browser</h3>
+          <p>Thumbnail grid of every LimeZu pack. Find a PNG before you cut it.</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card" href="/singles-viewer.html">
+          <span class="icon">🔢</span>
+          <h3>Singles viewer</h3>
+          <p>Browse pre-extracted single sprites by ID (1–339).</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card" href="/tools/limezu-single-preview.html">
+          <span class="icon">👁️</span>
+          <h3>Single preview</h3>
+          <p>Inspect one extracted LimeZu PNG at full size.</p>
+          <span class="open">Open →</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Step 2 — Cut &amp; label sprites</h2>
+      <div class="grid">
+        <a class="card featured" href="/sprite-cutter.html">
+          <span class="icon">✂️</span>
+          <h3>Sprite cutter</h3>
+          <p>Main tool: draw boxes on a sheet, name sprites, export catalog JSON. 32px snap + grid.</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card" href="/sprite-labeler.html">
+          <span class="icon">🏷️</span>
+          <h3>Sprite labeler</h3>
+          <p>Modern Office sheet (<code>mo_black_shadow_32</code>) — assign IDs section by section.</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card" href="/tools/limezu-sprite-browser.html">
+          <span class="icon">📦</span>
+          <h3>LimeZu sprite browser</h3>
+          <p>Label Modern Interiors singles — footprint, depth, display name.</p>
+          <span class="open">Open →</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Floors &amp; walls</h2>
+      <div class="grid">
+        <a class="card" href="/tile-labeler.html">
+          <span class="icon">🧱</span>
+          <h3>Tile labeler</h3>
+          <p>RPG Maker MV floor/wall tilesets — click cells, export tile labels.</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card" href="/tools/tile-inspector.html">
+          <span class="icon">🔲</span>
+          <h3>Tile inspector</h3>
+          <p>Fix magenta/wrong floor &amp; wall tiles — frame index lookup.</p>
+          <span class="open">Open →</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Step 4 — Validate catalog</h2>
+      <div class="grid">
+        <a class="card featured" href="/verify-sprites.html">
+          <span class="icon">✅</span>
+          <h3>Verify sprites</h3>
+          <p>Render every catalog crop live. Red border = broken coords or missing sheet.</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card" href="/catalog-explorer.html">
+          <span class="icon">📋</span>
+          <h3>Catalog explorer</h3>
+          <p>Search all objects, schemas, pipeline diagram, auto-detected issues.</p>
+          <span class="open">Open →</span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Step 6 — After export</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">
+        Merge <code>sprite_cuts.json</code> into <code>data/furniture_catalog_openplan.json</code>,
+        then placements from editor <strong>X</strong> into the same file. Regenerate the blueprint:
+      </p>
+      <div class="cmd-box">
+        <code id="cmd-blueprint">cd denizen && npm run blueprint:build</code>
+        <button type="button" id="copy-blueprint">Copy</button>
+      </div>
+      <div class="cmd-box" style="margin-top:8px;">
+        <code id="cmd-wire-editor">cd denizen && npm run catalog:wire-editor</code>
+        <button type="button" id="copy-wire-editor">Copy</button>
+      </div>
+      <div class="cmd-box" style="margin-top:8px;">
+        <code id="cmd-validate">cd denizen && npm run validate:catalog</code>
+        <button type="button" id="copy-validate">Copy</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:10px;">
+        <strong>Master catalog warning?</strong> The 49k singles are a reference index — not meant to be placed.
+        <code>catalog:wire-editor</code> adds curated defs to the editor without touching your 89 placements.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    Server: <strong id="server-url">—</strong> ·
+    Full reference: <code>TOOLS_GUIDE.md</code> in the denizen folder
+  </footer>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const embed = params.has('embed');
+      if (embed) document.body.classList.add('embed');
+
+      const origin = window.location.origin;
+      document.getElementById('server-url').textContent = origin;
+      document.getElementById('link-game').href = origin + '/';
+      document.getElementById('link-editor').href = origin + '/?editor=1';
+
+      if (embed) {
+        document.querySelectorAll('a[href="/"], a[href="/?editor=1"]').forEach((a) => {
+          a.target = '_parent';
+        });
+        document.querySelectorAll('a[data-fullpage], a.card[href$=".html"]').forEach((a) => {
+          if (a.href.includes('workflow-dashboard')) return;
+          a.target = '_parent';
+        });
+      }
+
+      function copyText(id, btn) {
+        const text = document.getElementById(id).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          const prev = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = prev; }, 1500);
+        }).catch(() => {
+          prompt('Copy:', text);
+        });
+      }
+      document.getElementById('copy-blueprint').addEventListener('click', function () {
+        copyText('cmd-blueprint', this);
+      });
+      document.getElementById('copy-validate').addEventListener('click', function () {
+        copyText('cmd-validate', this);
+      });
+      document.getElementById('copy-wire-editor')?.addEventListener('click', function () {
+        copyText('cmd-wire-editor', this);
+      });
+    })();
+  </script>
+</body>
+</html>

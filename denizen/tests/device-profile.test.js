@@ -81,4 +81,35 @@ describe('device-profile', () => {
     assert.equal(profile.isTablet, true);
     assert.equal(root.classList.contains('denizen-tablet'), true);
   });
+
+  it('treats touch laptop with fine pointer as desktop', () => {
+    const listeners = {};
+    const root = {
+      classList: {
+        _c: new Set(),
+        toggle(name, on) { if (on) this._c.add(name); else this._c.delete(name); },
+        contains(name) { return this._c.has(name); },
+      },
+      dataset: {},
+      style: { setProperty() {} },
+    };
+    const window = {
+      innerWidth: 1440,
+      innerHeight: 900,
+      addEventListener(name, fn) { listeners[name] = fn; },
+      setTimeout(fn) { fn(); },
+      dispatchEvent() {},
+      matchMedia() { return { matches: false }; },
+      DenizenDeviceProfile: null,
+      __DenizenDeviceProfile: null,
+      navigator: { maxTouchPoints: 10 },
+      ontouchstart: true,
+    };
+    window.document = { documentElement: root };
+    vm.runInNewContext(SOURCE, { window, document: window.document });
+    const profile = window.DenizenDeviceProfile.get();
+    assert.equal(profile.tier, 'desktop');
+    assert.equal(profile.isDesktop, true);
+    assert.equal(root.classList.contains('denizen-desktop'), true);
+  });
 });

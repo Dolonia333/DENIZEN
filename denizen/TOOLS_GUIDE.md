@@ -6,6 +6,8 @@ A reference for every browser tool in this repo — what it does, how to open it
 
 ## How to Run Any Tool
 
+**Workflow dashboard (start here):** [http://localhost:8080/workflow-dashboard.html](http://localhost:8080/workflow-dashboard.html) — buttons for every tool in pipeline order.
+
 All tools are plain HTML files served by the game server. Start the server, then open the tool in your browser:
 
 ```bash

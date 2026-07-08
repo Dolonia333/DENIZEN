@@ -168,6 +168,29 @@ function recordWorkOutput(threat, result, reportPath, denizenDb) {
   } catch (_) { /* non-fatal */ }
 }
 
+function recordBouncerRun(threat, result, reportPath, denizenDb) {
+  if (!denizenDb?.recordBouncerRun) return;
+  try {
+    denizenDb.recordBouncerRun({
+      at: new Date().toISOString(),
+      threat_category: threat.category || result.category || 'unknown',
+      source: threat.source || result.ip || null,
+      ok: !!result.ok,
+      report_path: reportPath || null,
+      patrol_mode: result.patrol_mode || result.patrolMode || null,
+      node_id: result.node_id || result.nodeId || null,
+      elapsed_ms: Number.isFinite(Number(result.elapsed)) ? Number(result.elapsed) : null,
+      verdict: result.verdict || (result.ok ? 'ok' : 'blocked'),
+      metadata: {
+        severity: threat.severity || null,
+        detail: threat.detail || null,
+        summary: result.summary || null,
+        error: result.error || null,
+      },
+    });
+  } catch (_) { /* non-fatal */ }
+}
+
 function escalateIfSerious(threat, result, reportPath, ctx = {}) {
   if (!result?.ok || typeof ctx.investigationIsSerious !== 'function') return;
   if (!ctx.investigationIsSerious(result)) return;
@@ -217,6 +240,7 @@ async function announceCeoReport(threat, result, reportPath, ctx = {}) {
  */
 async function completeInvestigation(threat, result, ctx = {}) {
   const reportPath = writeReport(threat, result, ctx.npcTools);
+  recordBouncerRun(threat, result, reportPath, ctx.denizenDb);
   recordWorkOutput(threat, result, reportPath, ctx.denizenDb);
   escalateIfSerious(threat, result, reportPath, ctx);
   await announceCeoReport(threat, result, reportPath, ctx);

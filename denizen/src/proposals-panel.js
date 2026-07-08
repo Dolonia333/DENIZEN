@@ -21,7 +21,7 @@
   let panelOpen = false;
   let lastFeed = { proposals: [], total: 0 };
   let filterStatus = 'pending';
-  let filterKinds = new Set(['animation', 'soul', 'capability', 'skill', 'code', 'dossier']);
+  let filterKinds = defaultFilterKinds();
   let selectedId = null;
   let showTechnical = false;
   let soulApplyAvailable = null;
@@ -147,6 +147,18 @@
         grid-template-columns: 200px 1fr;
         overflow: hidden;
         position: relative;
+      }
+      html.denizen-phone-mode #${PANEL_ID} .prop-body {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+      html.denizen-phone-mode #${PANEL_ID} .prop-index {
+        max-height: 132px;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      }
+      html.denizen-phone-mode #${PANEL_ID} .prop-reader {
+        min-height: 0;
       }
       #${PANEL_ID} .prop-index {
         overflow-y: auto;
@@ -826,8 +838,7 @@
    *  has no other way to authenticate, so every click 401'd with a JSON body
    *  that browsers render as plain text ("just code"). */
   function withSession(url) {
-    const sess = globalThis.DenizenVisitorSession;
-    const sid = typeof sess?.getSessionId === 'function' ? sess.getSessionId() : null;
+    const sid = resolveSessionId();
     if (!sid) return url;
     return url + (url.includes('?') ? '&' : '?') + 'session_id=' + encodeURIComponent(sid);
   }
@@ -1119,14 +1130,25 @@
     return items.find((p) => p.kind === kind && p.id === id) || null;
   }
 
-  function canReviewProposals() {
+  function isSystemOperator() {
     const caps = globalThis.DenizenVisitorCapabilities;
-    if (caps?.isCeo?.()) return true;
-    if (caps?.canApproveSkills?.()) return true;
+    if (caps?.isCeo?.() || caps?.canApproveSkills?.()) return true;
     const sess = globalThis.DenizenVisitorSession;
-    if (sess?.isCeoPrincipal?.()) return true;
-    if (sess?.getProfile?.()?.canApproveSkills) return true;
-    return false;
+    return !!(sess?.isCeoPrincipal?.() || sess?.getProfile?.()?.canApproveSkills);
+  }
+
+  function defaultFilterKinds() {
+    if (isSystemOperator()) {
+      return new Set(['animation', 'soul', 'capability', 'skill', 'code', 'dossier']);
+    }
+    return new Set(['dossier']);
+  }
+
+  function canReviewProposals() {
+    const sess = globalThis.DenizenVisitorSession;
+    if (!sess?.getSessionId?.()) return false;
+    if (isSystemOperator()) return true;
+    return !!sess.getIdentityId?.();
   }
 
   function buildUI() {
@@ -1147,7 +1169,9 @@
       padding: '4px 10px', font: '11px monospace',
       cursor: 'pointer', maxWidth: '300px',
     });
-    chipEl.title = 'Review NPC proposals — animations, SOUL, code, PDF dossiers';
+    chipEl.title = isSystemOperator()
+      ? 'Review NPC proposals — animations, SOUL, code, PDF dossiers'
+      : 'Review your PDF dossier proposals';
     chipEl.textContent = '📋 approvals';
     chipEl.setAttribute('aria-controls', PANEL_ID);
     chipEl.setAttribute('aria-expanded', 'false');
@@ -1206,13 +1230,59 @@
     }
   }
 
+  function authHeaders() {
+    const sess = globalThis.DenizenVisitorSession;
+    return typeof sess?.authHeaders === 'function' ? sess.authHeaders() : {};
+  }
+
+  function resolveSessionId() {
+    const sess = globalThis.DenizenVisitorSession;
+    if (typeof sess?.getSessionId === 'function') {
+      const sid = sess.getSessionId();
+      if (sid) return sid;
+    }
+    try {
+      const raw = localStorage.getItem('denizen-visitor-session');
+      const store = raw ? JSON.parse(raw) : {};
+      return store.session_id || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sessionQuery(extra = {}) {
+    const sessionId = resolveSessionId();
+    const params = new URLSearchParams(extra);
+    if (sessionId) params.set('session_id', sessionId);
+    const qs = params.toString();
+    return qs ? `?${qs}` : '';
+  }
+
+  function fetchOpts(headers = {}) {
+    return { cache: 'no-store', credentials: 'include', headers };
+  }
+
   async function fetchFeed(status) {
+    const auth = authHeaders();
     const docKinds = [...filterKinds].filter((k) => k !== 'skill');
     const proposals = [];
     if (docKinds.length) {
-      const url = `${PROPOSALS_URL}?status=${encodeURIComponent(status)}&kind=${encodeURIComponent(docKinds.join(','))}`;
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const url = `${PROPOSALS_URL}${sessionQuery({
+        status,
+        kind: docKinds.join(','),
+      })}`;
+      const res = await fetch(url, fetchOpts(auth));
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const errJson = await res.json();
+          detail = errJson.error || errJson.message || detail;
+        } catch (_) {}
+        if (res.status === 401 && !resolveSessionId()) {
+          detail = 'Session not ready — reload the page or sign in again';
+        }
+        throw new Error(detail);
+      }
       const json = await res.json();
       if (Array.isArray(json.proposals)) proposals.push(...json.proposals);
     }
@@ -1221,8 +1291,8 @@
         ? [null]
         : (status === 'pending' ? ['pending', 'needs_review'] : [status]);
       for (const st of skillStatuses) {
-        const skillUrl = st ? `${SKILL_PROPOSALS_URL}?status=${encodeURIComponent(st)}` : SKILL_PROPOSALS_URL;
-        const sres = await fetch(skillUrl, { cache: 'no-store' });
+        const skillUrl = `${SKILL_PROPOSALS_URL}${sessionQuery(st ? { status: st } : {})}`;
+        const sres = await fetch(skillUrl, fetchOpts(auth));
         if (!sres.ok) continue;
         const sjson = await sres.json();
         const skills = Array.isArray(sjson.proposals) ? sjson.proposals : [];
@@ -1247,6 +1317,7 @@
     }
     busy = true;
     try {
+      const auth = authHeaders();
       let pendingCount;
       if (filterStatus === 'pending') {
         await fetchFeed(filterStatus);
@@ -1254,7 +1325,7 @@
       } else {
         const [, count] = await Promise.all([
           fetchFeed(filterStatus),
-          fetch(`${PROPOSALS_URL}?status=pending`, { cache: 'no-store' })
+          fetch(`${PROPOSALS_URL}${sessionQuery({ status: 'pending' })}`, fetchOpts(auth))
             .then((r) => (r.ok ? r.json() : { proposals: [] }))
             .then((j) => (Array.isArray(j.proposals) ? j.proposals.length : 0))
             .catch(() => 0),
@@ -1579,9 +1650,8 @@
 
   async function decide(kind, id, decision, note) {
     try {
-      const sess = globalThis.DenizenVisitorSession;
-      const sessionId = typeof sess?.getSessionId === 'function' ? sess.getSessionId() : null;
-      const auth = typeof sess?.authHeaders === 'function' ? sess.authHeaders() : {};
+      const sessionId = resolveSessionId();
+      const auth = authHeaders();
       let url;
       let body;
       let headers = { 'Content-Type': 'application/json' };
@@ -1601,6 +1671,7 @@
       }
       const res = await fetch(url, {
         method: 'POST',
+        credentials: 'include',
         headers: { ...headers, ...auth },
         body,
       });
@@ -1656,6 +1727,10 @@
   }
 
   async function ensureReady() {
+    const sess = globalThis.DenizenVisitorSession;
+    if (typeof sess?.init === 'function') {
+      try { await sess.init(); } catch (_) {}
+    }
     if (!canReviewProposals()) {
       teardownUI();
       return false;
@@ -1690,11 +1765,27 @@
     });
 
     document.addEventListener('denizen-visitor-session-ready', () => {
+      filterKinds = defaultFilterKinds();
       if (!canReviewProposals()) {
         teardownUI();
         return;
       }
       ensureReady().catch((err) => console.warn('[Proposals] ready sync failed:', err));
+    });
+
+    document.addEventListener('denizen-visitor-profile-updated', () => {
+      filterKinds = defaultFilterKinds();
+      if (!canReviewProposals()) {
+        teardownUI();
+        return;
+      }
+      ensureReady().catch((err) => console.warn('[Proposals] profile sync failed:', err));
+    });
+
+    document.addEventListener('denizen-phone-app-open', (e) => {
+      if (e.detail?.appId !== 'approvals') return;
+      if (!panelOpen) return;
+      refresh().catch((err) => console.warn('[Proposals] phone open refresh failed:', err));
     });
 
     document.addEventListener('denizen-proposals-changed', () => {
@@ -1734,16 +1825,26 @@
     });
 
     window.DenizenProposals = {
-      show() {
-        ensureReady().then((ok) => {
+      async show() {
+        try {
+          const ok = await ensureReady();
           if (ok) setPanelOpen(true);
-        }).catch((err) => console.warn('[Proposals] show failed:', err));
+          return ok;
+        } catch (err) {
+          console.warn('[Proposals] show failed:', err);
+          return false;
+        }
       },
       hide() { setPanelOpen(false); },
-      toggle() {
-        ensureReady().then((ok) => {
+      async toggle() {
+        try {
+          const ok = await ensureReady();
           if (ok) togglePanel();
-        }).catch((err) => console.warn('[Proposals] toggle failed:', err));
+          return ok;
+        } catch (err) {
+          console.warn('[Proposals] toggle failed:', err);
+          return false;
+        }
       },
       refresh,
       setFilter(s) {

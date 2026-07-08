@@ -1,0 +1,243 @@
+{
+  "_README": "Dolonia Web Analyzer wired to Denizen lead intake. Deploy: py infra/wire-web-analyzer-to-denizen.py",
+  "name": "Dolonia Web Analyzer",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "scrape",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bb51838d-9025-4ef7-b9b1-8441ce142206",
+      "webhookId": "44c54e13-b64c-4091-aee7-4f3dde56d3fd"
+    },
+    {
+      "parameters": {
+        "url": "https://puppeteer.dolonia.cloud/scrape",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Start Puppeteer Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        304,
+        0
+      ],
+      "id": "92338695-3309-4691-8762-566bda02a235"
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "name": "Wait 1 Minute",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        608,
+        0
+      ],
+      "id": "9a03f16c-ccb7-4296-9037-837f0a393e83",
+      "webhookId": "e5ea7c7a-c9c3-4754-959f-b925b0177c54"
+    },
+    {
+      "parameters": {
+        "url": "https://puppeteer.dolonia.cloud/jobs/{{$json[\"jobId\"]}}",
+        "options": {}
+      },
+      "name": "Check Job Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        912,
+        0
+      ],
+      "id": "5ee3b4e1-f90e-456c-aed2-97818fbdae37"
+    },
+    {
+      "parameters": {
+        "url": "https://puppeteer.dolonia.cloud/jobs/{{$json[\"jobId\"]}}/result",
+        "options": {}
+      },
+      "name": "Download Page Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "527a0d79-768f-43ea-a832-19fd40324fc1"
+    },
+    {
+      "parameters": {
+        "url": "http://192.168.1.232:1234/v1/chat/completions",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Send to LM Studio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        0
+      ],
+      "id": "d1189c39-1961-4815-a77a-6bd291e800c5"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Map Web Analyzer scrape + LM output \u2192 Denizen lead intake payload.\nconst trigger = $('Webhook Trigger').first()?.json || {};\nconst body = trigger.body && typeof trigger.body === 'object' ? trigger.body : trigger;\nconst page = $('Download Page Data').first()?.json || {};\nconst lm = $input.item.json || {};\n\nlet summary = '';\nif (lm.choices?.[0]?.message?.content) summary = String(lm.choices[0].message.content);\nelse if (typeof lm.content === 'string') summary = lm.content;\nelse if (typeof lm.summary === 'string') summary = lm.summary;\nelse summary = JSON.stringify(lm).slice(0, 4000);\n\nconst url = String(body.url || trigger.url || page.url || page.pageUrl || page.finalUrl || '').trim();\nconst company = String(body.company || trigger.company || page.title || page.company || page.siteName || '').trim();\nconst email = String(body.email || body.contact_email || page.email || page.contactEmail || '').trim();\nconst name = String(body.name || body.contact_name || page.contact || page.contactName || '').trim();\nconst jobId = page.jobId || $('Start Puppeteer Job').first()?.json?.jobId || null;\n\nreturn [{\n  json: {\n    company,\n    url,\n    contact_email: email,\n    contact_name: name,\n    summary,\n    source: 'dolonia_web_analyzer',\n    org_slug: 'zion',\n    signals: {\n      analyzer: 'Dolonia Web Analyzer',\n      jobId,\n      scrapedAt: new Date().toISOString(),\n    },\n  },\n}];\n"
+      },
+      "id": "f1a2b3c4-d001-4000-8000-analyzer0001",
+      "name": "Prepare Denizen lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5679/webhook/denizen-lead-intake",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 45000
+        }
+      },
+      "id": "f1a2b3c4-d001-4000-8000-analyzer0002",
+      "name": "POST \u2192 Denizen lead intake",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const leadPayload = $('Prepare Denizen lead').first()?.json || {};\nconst denizen = $('POST \u2192 Denizen lead intake').first()?.json || {};\nconst lm = $('Send to LM Studio').first()?.json || {};\nreturn [{\n  json: {\n    ok: true,\n    analyzer: 'Dolonia Web Analyzer',\n    denizen,\n    lead: leadPayload,\n    lmStudio: lm,\n  },\n}];\n"
+      },
+      "id": "f1a2b3c4-d001-4000-8000-analyzer0003",
+      "name": "Format analyzer response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Start Puppeteer Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Puppeteer Job": {
+      "main": [
+        [
+          {
+            "node": "Wait 1 Minute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 1 Minute": {
+      "main": [
+        [
+          {
+            "node": "Check Job Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Job Status": {
+      "main": [
+        [
+          {
+            "node": "Download Page Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Page Data": {
+      "main": [
+        [
+          {
+            "node": "Send to LM Studio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to LM Studio": {
+      "main": [
+        [
+          {
+            "node": "Prepare Denizen lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Denizen lead": {
+      "main": [
+        [
+          {
+            "node": "POST \u2192 Denizen lead intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST \u2192 Denizen lead intake": {
+      "main": [
+        [
+          {
+            "node": "Format analyzer response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

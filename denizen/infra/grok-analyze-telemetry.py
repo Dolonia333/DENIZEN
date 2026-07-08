@@ -34,6 +34,37 @@ def record_nas_friction(domain, severity=5, note=""):
     except Exception as e:
         print(f"[NAS FRICTION] {e}")
 
+def load_friction_summary():
+    """Per-NPC friction hotspots from data/friction-metrics.json for fleet ranking."""
+    friction_path = Path(__file__).parent.parent / "data" / "friction-metrics.json"
+    if not friction_path.exists():
+        return {}
+    try:
+        with open(friction_path, encoding="utf-8") as f:
+            raw = json.load(f)
+    except Exception:
+        return {}
+    summary = {}
+    for npc, domains in (raw or {}).items():
+        if not isinstance(domains, dict):
+            continue
+        hot = sorted(
+            (
+                {"domain": d, "score": v.get("score", 0), "count": v.get("count", 0), "lastAt": v.get("lastAt")}
+                for d, v in domains.items()
+                if (v or {}).get("score", 0) > 0
+            ),
+            key=lambda x: x["score"],
+            reverse=True,
+        )[:5]
+        if hot:
+            summary[npc] = {
+                "overall": max(h["score"] for h in hot),
+                "hot_domains": [h["domain"] for h in hot],
+                "domains": hot,
+            }
+    return summary
+
 TELEMETRY_FILE = Path(__file__).parent.parent / "data" / "llm-telemetry.jsonl"
 
 def load_recent(hours=24):
@@ -175,6 +206,7 @@ def main():
         "facts": report.get("facts", []),
         "npcs": report.get("npcs", {}),
         "issues": report.get("issues", {}),
+        "friction_summary": load_friction_summary(),
         "agent_mode": is_agent,
         "recommendations": [
             f"Inject these [FACT:*] via MCP update_memory for {len(report.get('facts',[]))} optimizations.",

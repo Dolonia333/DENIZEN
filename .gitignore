@@ -19,6 +19,7 @@ denizen/data/assistant-profile.json
 denizen/data/email-drafts.json
 denizen/data/email-log.json
 denizen/data/gmail-oauth.json
+denizen/data/google-api-keys.json
 denizen/data/llm-telemetry.jsonl
 # Robinhood — token and runtime data (never commit)
 denizen/data/robinhood-oauth.json
@@ -65,6 +66,7 @@ denizen/desktop/dist/
 denizen/desktop/dist-build/
 denizen/desktop/dist-build-v011/
 denizen/desktop/dist-build-v012/
+denizen/desktop/releases/
 denizen/desktop/updates/*.exe
 denizen/desktop/updates/*.blockmap
 infra/kali-agent-bundle.b64
@@ -95,8 +97,8 @@ denizen/data/.grok-telemetry-cooldown
 denizen/data/.grok-telemetry-facts-hash
 denizen/data/consult-improvement-log.jsonl
 
+# Probe screenshots and one-off smoke artifacts (regenerated locally)
+denizen/reports/
+
 # runtime chat uploads + telemetry state
 denizen/data/uploads/
-denizen/data/.grok-telemetry-cooldown
-denizen/data/.grok-telemetry-facts-hash
-denizen/data/consult-improvement-log.jsonl

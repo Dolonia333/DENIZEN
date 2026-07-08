@@ -1,0 +1,14 @@
+# One-shot or cron telemetry analyzer — shares denizen-server /app/data volume.
+# Run: docker compose -f docker-compose.telemetry-sidecar.yml run --rm telemetry-job
+services:
+  telemetry-job:
+    image: denizen-telemetry-sidecar:latest
+    container_name: denizen-telemetry-job
+    network_mode: host
+    environment:
+      GROK_AGENT: "1"
+      DENIZEN_MCP_URL: ${DENIZEN_MCP_URL:-https://denizen.dolonia.cloud/mcp/npc/grok}
+    volumes_from:
+      - container:denizen-server
+    profiles:
+      - job

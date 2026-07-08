@@ -72,6 +72,7 @@ class AgentOfficeManager {
     this._bouncerLinuxChatAt = new Map();
     this._incidentReportAt = new Map();
     this._bouncerStatusDedupAt = new Map();
+    this._demoLoiterWarned = false;
 
     // Mood state per NPC
     this._moods = new Map();
@@ -1195,7 +1196,7 @@ class AgentOfficeManager {
     });
   }
 
-  /** Security-only lines — never flood CEO/Lucy chat. */
+  /** Security-only lines — mirror to chat when CEO is talking to Bouncer. */
   _bouncerSecurityStatus(text, kind = 'status') {
     const body = String(text || '').trim();
     if (!body) return;
@@ -1205,8 +1206,15 @@ class AgentOfficeManager {
     this._bouncerStatusDedupAt.set(body, now);
     if (window.DenizenSecurityFeed?.ingest) {
       window.DenizenSecurityFeed.ingest({ text: body, kind });
-    } else if (this.scene?._playerChat) {
-      this.scene._playerChat._addToLog('Bouncer', body);
+    }
+    const pc = this.scene?._playerChat;
+    const inBouncerDm = pc?._isBouncerChatActive?.()
+      || pc?._ceoConvo?.npcName === 'Bouncer'
+      || pc?._lastUserChatTarget === 'Bouncer';
+    if (inBouncerDm && pc) {
+      pc._addToLog('Bouncer', body);
+    } else if (!window.DenizenSecurityFeed?.ingest && pc) {
+      pc._addToLog('Bouncer', body);
     }
   }
 
@@ -1504,11 +1512,45 @@ class AgentOfficeManager {
    * Cooldown is 5 minutes so the Bouncer doesn't pester. Matches the
    * SOUL.md voice: firm-but-warm, dry humor, never rude.
    */
+  _resolveLoiterTierContext() {
+    const caps = globalThis.DenizenVisitorCapabilities;
+    const sess = globalThis.DenizenVisitorSession;
+    const profile = sess?.getProfile?.() || {};
+    const tier = String(sess?.getTier?.() || profile.tier || '').toLowerCase();
+    const isCeo = !!window.__DenizenCeoMode || !!sess?.isCeoPrincipal?.() || tier === 'ceo';
+    const isDemoPreview = tier === 'demo' || !!caps?.isDemo?.();
+    const isTeam = tier === 'team' || !!caps?.isTeam?.();
+    const hasBadge = (
+      globalThis.denizenBadgeIssued === true
+      || profile.badgeIssued === true
+      || profile.badge_issued === true
+      || profile.metadata?.badgeIssued === true
+      || profile.metadata?.badge_issued === true
+      || sess?.hasCitizenBadge?.() === true
+    );
+    const hasRestrictedRoomPass = !!caps?.canAccessRestrictedRooms?.() || (isTeam && hasBadge);
+    return { isCeo, isDemoPreview, hasRestrictedRoomPass };
+  }
+
   _challengePlayerLoiter(secKey, agent, room) {
+    const tierCtx = this._resolveLoiterTierContext();
+    if (tierCtx.isCeo) return;
+    if (tierCtx.hasRestrictedRoomPass) return;
+
     const player = this.scene.player;
     if (!player) return;
     const secSprite = this.actions._getNpc(secKey);
     if (!secSprite) return;
+
+    if (tierCtx.isDemoPreview) {
+      if (this._demoLoiterWarned) return;
+      this._demoLoiterWarned = true;
+      this.actions.emote(secKey, '?');
+      this.scene.time.delayedCall(250, () => {
+        this.actions.speak(secKey, 'Heads up: this area is staff-only in preview mode.');
+      });
+      return;
+    }
 
     console.log(`[Security] Bouncer challenging player loitering in ${room}`);
     agent.status = 'engaging';
@@ -2488,6 +2530,11 @@ class AgentOfficeManager {
       this._loadOfficeConfig();
       this._sendClientProfile();
       this._sendOfficeState();
+
+      globalThis.DenizenAgentManager = this;
+      globalThis.DenizenReportFriction = (npcName, context, error) => {
+        this._reportClientFriction(npcName, context, error);
+      };
     };
 
     this.ws.onmessage = (evt) => {
@@ -2530,6 +2577,29 @@ class AgentOfficeManager {
       this._reconnectTimer = null;
       this.connect();
     }, delay);
+  }
+
+  /**
+   * Client → server friction reports (pathfinding stuck, immobile watchdog).
+   * Throttled 30s per npc+context+code to avoid WS spam.
+   */
+  _reportClientFriction(npcName, context, error) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    const throttleKey = `${String(npcName).toLowerCase()}:${String(context || '').toLowerCase()}:${error?.code || 'x'}`;
+    const now = Date.now();
+    this._frictionThrottle = this._frictionThrottle || new Map();
+    const last = this._frictionThrottle.get(throttleKey) || 0;
+    if (now - last < 30000) return;
+    this._frictionThrottle.set(throttleKey, now);
+    this._send({
+      type: 'npc_friction',
+      npcName,
+      context: context || 'path_stuck',
+      error: {
+        code: error?.code || 'CLIENT',
+        message: String(error?.message || error || '').slice(0, 240),
+      },
+    });
   }
 
   /**
@@ -2715,8 +2785,12 @@ class AgentOfficeManager {
         const line = String(msg.text || '').trim();
         if (line) {
           window.DenizenSecurityFeed?.ingest?.({ text: line, kind: 'incident' });
-          try { this.actions.speak(bKey, line.slice(0, 120)); } catch (_) {}
-          window.DenizenSecurityFeed?.show?.();
+          if (this.scene._playerChat?._isBouncerChatActive?.()) {
+            this.scene._playerChat.handleNpcResponse(msg.npcName, line, null, msg.error);
+          } else {
+            try { this.actions.speak(bKey, line.slice(0, 120)); } catch (_) {}
+            window.DenizenSecurityFeed?.show?.();
+          }
         }
         break;
       }
@@ -3016,6 +3090,67 @@ class AgentOfficeManager {
         }
         break;
       }
+      case 'threat': {
+        const mon = this.scene?._securityMonitor;
+        if (mon?.injectThreat && msg.category) {
+          const tid = msg.threatId || `threat-relay-${msg.category}-${msg.source || 'unknown'}-${Date.now()}`;
+          if (!mon.activeThreats?.has?.(tid)) {
+            mon.injectThreat({
+              threatId: tid,
+              category: msg.category,
+              severity: msg.severity || 'medium',
+              source: msg.source || 'unknown',
+              target: msg.target || '',
+              detail: msg.detail || '',
+            });
+          }
+        }
+        break;
+      }
+      case 'threat-resolved': {
+        const mon = this.scene?._securityMonitor;
+        if (mon?.clearThreat && msg.threatId) mon.clearThreat(msg.threatId);
+        break;
+      }
+      case 'world_state': {
+        const change = msg.change || {};
+        const k = change.kind || msg.kind;
+        const p = change.payload || msg.payload;
+        if (k === 'threat' && p) {
+          if (typeof window !== 'undefined') {
+            const mirror = window.DenizenWorldState = window.DenizenWorldState || {
+              npcs: {}, threats: [], environment: {}, events: [], at: 0,
+            };
+            mirror.at = msg.ts || Date.now();
+            mirror.threats.unshift(p);
+            if (mirror.threats.length > 16) mirror.threats.length = 16;
+          }
+          const mon = this.scene?._securityMonitor;
+          if (mon?.injectThreat) {
+            const tid = `threat-ws-${p.category || 'unknown'}-${p.source || 'unknown'}-${p.ts || Date.now()}`;
+            if (!mon.activeThreats?.has?.(tid)) {
+              mon.injectThreat({
+                threatId: tid,
+                category: p.category,
+                severity: p.severity || 'medium',
+                source: p.source || 'unknown',
+                target: p.target || '',
+                detail: p.detail || '',
+              });
+            }
+          }
+        } else if (k === 'threat-cleared' && p) {
+          const mon = this.scene?._securityMonitor;
+          if (mon?.clearThreat && p.category && p.source) {
+            for (const [id, t] of mon.activeThreats || []) {
+              if (t.category === p.category && t.source === p.source) {
+                mon.clearThreat(id);
+              }
+            }
+          }
+        }
+        break;
+      }
       case 'world_state_batch': {
         // Batched worldState mutations from the server (~200ms cadence).
         // Mirror into window.DenizenWorldState so other browser modules
@@ -3037,6 +3172,29 @@ class AgentOfficeManager {
               } else if (k === 'threat' && p) {
                 mirror.threats.unshift(p);
                 if (mirror.threats.length > 16) mirror.threats.length = 16;
+                const mon = this.scene?._securityMonitor;
+                if (mon?.injectThreat) {
+                  const tid = `threat-ws-${p.category || 'unknown'}-${p.source || 'unknown'}-${p.ts || Date.now()}`;
+                  if (!mon.activeThreats?.has?.(tid)) {
+                    mon.injectThreat({
+                      threatId: tid,
+                      category: p.category,
+                      severity: p.severity || 'medium',
+                      source: p.source || 'unknown',
+                      target: p.target || '',
+                      detail: p.detail || '',
+                    });
+                  }
+                }
+              } else if (k === 'threat-cleared' && p) {
+                const mon = this.scene?._securityMonitor;
+                if (mon?.clearThreat && p.category && p.source) {
+                  for (const [id, t] of mon.activeThreats || []) {
+                    if (t.category === p.category && t.source === p.source) {
+                      mon.clearThreat(id);
+                    }
+                  }
+                }
               } else if (k === 'environment' && p) {
                 mirror.environment = { ...mirror.environment, ...p };
               } else if (k === 'event' && p) {

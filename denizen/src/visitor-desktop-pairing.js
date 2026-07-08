@@ -299,12 +299,12 @@
     modalEl.id = MODAL_ID;
     modalEl.innerHTML = `
       <div class="pair-card">
-        <h2>Claim this Denizen station</h2>
-        <p>Open Denizen Desktop to connect your Citizen ID, choose how this station may help, and optionally add City Power.</p>
-        <p class="pair-expiry">This pairing link expires in 5 minutes.</p>
+        <h2>Link browser to Denizen Desktop</h2>
+        <p>Keep <strong>Denizen Desktop</strong> open on this computer. Click below — the app should open and ask you to approve this link.</p>
+        <p class="pair-expiry">Link expires in 5 minutes. If nothing opens, copy the link and paste it into Denizen Desktop.</p>
         <p class="pair-error" id="denizen-pair-error" hidden></p>
         <div class="pair-actions">
-          <button type="button" class="pair-btn open" id="denizen-pair-open">Open my station</button>
+          <button type="button" class="pair-btn open" id="denizen-pair-open">Open Denizen Desktop</button>
           <button type="button" class="pair-btn copy" id="denizen-pair-copy">Copy pairing link</button>
           <p class="pair-copied" id="denizen-pair-copied" aria-live="polite"></p>
           <button type="button" class="pair-btn close" id="denizen-pair-close">Close</button>

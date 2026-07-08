@@ -204,6 +204,7 @@
         min-height: auto;
       }
       #player-chat-panel[data-phone-chat="1"] #player-chat-input-row {
+        display: block;
         flex: 0 0 auto !important;
         position: relative;
         z-index: 12;
@@ -229,15 +230,19 @@
         pointer-events: none !important;
       }
       /* ChatGPT-style composer bar in the phone thread view */
-      #player-chat-panel[data-phone-chat="1"] #player-chat-input-row {
+      #player-chat-panel[data-phone-chat="1"] .pc-composer-shell {
+        margin: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
+        padding: 0;
+      }
+      #player-chat-panel[data-phone-chat="1"] .pc-composer-bar {
         display: flex;
         align-items: center;
         gap: 6px;
-        margin: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px));
         padding: 5px 6px;
         background: #1e293b;
         border: 1px solid #334155;
         border-radius: 26px;
+        box-shadow: none;
       }
       #player-chat-panel[data-phone-chat="1"] #player-chat-attach {
         width: 38px;
@@ -1038,6 +1043,7 @@
     activate,
     deactivate,
     refreshThreads,
+    isPhoneChatActive,
     onThreadOpened() {
       setView('thread');
     },

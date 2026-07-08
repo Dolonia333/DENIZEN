@@ -32,9 +32,14 @@
   function initDeferredSceneFeatures() {
     const scene = globalThis.__DenizenScene || globalThis.game?.scene?.scenes?.[0];
     if (!scene) return;
-    if (!scene._securityMonitor && globalThis.SecurityMonitor && globalThis.RobberController) {
+    if (typeof globalThis.initBouncerSecurity === 'function') {
+      globalThis.initBouncerSecurity(scene);
+    } else if (!scene._securityMonitor && globalThis.SecurityMonitor && globalThis.RobberController) {
       scene._securityMonitor = new globalThis.SecurityMonitor();
       scene._robberCtrl = new globalThis.RobberController(scene, scene._securityMonitor);
+      scene._robberCtrl.init();
+      scene._securityMonitor.connect();
+      console.log('[LazyScripts] Security Monitor + Robber Controller initialized (deferred)');
     }
     if (!scene._workFeed && globalThis.WorkFeedPanel) {
       scene._workFeed = new globalThis.WorkFeedPanel(scene);
@@ -74,7 +79,7 @@
         './src/mesh-jobs-panel.js?v=mesh2',
         './src/browser-mirror-panel.js?v=lucymirror6',
         './src/diag.js?v=diag2',
-        './src/security-feed.js?v=sec1',
+        './src/security-feed.js?v=sec2',
       ]);
       await loadParallel([
         './src/visitor-desktop-pairing.js?v=pair3',
@@ -82,8 +87,9 @@
         './src/visitor-handoff-ui.js?v=vis3',
         './src/visitor-projects-ui.js?v=vis2',
         './src/visitor-assistant-labels.js?v=vis2',
-        './src/security-monitor.js',
-        './src/robber-controller.js',
+        './src/bouncer-client-init.js?v=sec3',
+        './src/security-monitor.js?v=sec3',
+        './src/robber-controller.js?v=sec3',
         './src/work-feed.js?v=feed2',
         './src/content-pipeline-panel.js?v=cp2',
       ]);
@@ -102,7 +108,7 @@
       './src/visitor-skill-gap-ui.js?v=sgap1',
       './src/visitor-agent-inbox.js?v=ainbox1',
       './src/mesh-alert-toast.js?v=mtoast2',
-      './src/proposals-panel.js?v=propfix6',
+      './src/proposals-panel.js?v=propfix9',
       './src/city-debug.js',
     ];
     try {

@@ -31,6 +31,7 @@ const orgPolicy = require('./src/denizen-org-policy');
 const denizenVisitor = require('./src/denizen-visitor');
 const visitorAccess = require('./src/visitor-access');
 const sessionAuth = require('./src/visitor-session-auth');
+const sessionCookie = require('./src/visitor-session-cookie');
 const teamAuth = require('./src/denizen-team-auth');
 const userIdentity = require('./src/denizen-user-identity');
 const userPosition = require('./src/denizen-user-position.js');
@@ -140,11 +141,14 @@ const desktopPermissionBridge = require('./src/desktop-permission-bridge');
 const stationRouter = require('./src/denizen-station-router');
 const linuxAgent = require('./src/linux-agent');
 const bouncerInvestigation = require('./src/bouncer-investigation');
+const bouncerPatrolAggregate = require('./src/denizen-bouncer-patrol-aggregate');
+const securityIp = require('./src/security-ip');
 const linuxAgentBridge = bouncerInvestigation.createLinuxAgentBridge();
 const npcTools         = require('./src/npc-tools');
 const log              = require('./src/logger');
 const codingTaskRunner = require('./src/coding-task-runner');
 const dossierSystem    = require('./src/dossier-system');
+const approvalsScope   = require('./src/denizen-approvals-scope');
 const taskChain        = require('./src/task-chain');
 const contentPipeline  = require('./src/content-pipeline');
 const { startContentPipelineScheduler } = require('./src/content-pipeline-scheduler');
@@ -162,6 +166,7 @@ const platformBridge   = require('./src/platform-bridge');
 const denizenCredits   = require('./src/denizen-credits');
 const { mountComputeRoutes } = require('./src/denizen-compute-routes');
 const { mountCrmRoutes } = require('./src/denizen-crm-routes');
+const { mountN8nRoutes } = require('./src/n8n-routes');
 const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
 const hostCompute      = require('./src/denizen-host-compute');
 const hardwareMonitor  = require('./src/denizen-hardware-monitor');
@@ -171,6 +176,7 @@ const inferenceMetrics = require('./src/denizen-inference-metrics');
 const denizenFederation = require('./src/denizen-federation');
 const { createWorldPubsub } = require('./src/denizen-world-pubsub');
 const agentWsRelay = require('./src/denizen-agent-ws-relay');
+const securityRelay = require('./src/denizen-security-relay');
 const IS_RELAY_ONLY = agentWsRelay.isRelayOnlyRole();
 const contributionTracker = require('./src/denizen-contribution-tracker');
 const computeSettlement = require('./src/denizen-compute-settlement');
@@ -181,6 +187,7 @@ const skillBuilder     = require('./src/skill-builder');
 const computeQueue     = require('./src/denizen-compute-queue');
 const playerChatSkills = require('./src/player-chat-skill-bridge');
 const chatAttachments = require('./src/chat-attachments');
+const localMetrics = require('./src/npc-local-metrics');
 const officeStatusBrief = require('./src/office-status-brief');
 const crmNpcPersonas = require('./src/denizen-crm-npc-personas');
 const taskResourceAdvisor = require('./src/task-resource-advisor');
@@ -188,6 +195,7 @@ const skillGapOrchestrator = require('./src/skill-gap-orchestrator');
 const skillDiscovery = require('./src/skill-discovery');
 const healthRunbook = require('./src/health-runbook');
 const meshWatchdog = require('./src/mesh-worker-watchdog');
+const meshTelemetryWorker = require('./src/denizen-mesh-telemetry-worker');
 const resourcePressure = require('./src/resource-pressure');
 const meshScaleAdvisor = require('./src/mesh-scale-advisor');
 const webResearch      = require('./src/web-research');
@@ -846,7 +854,23 @@ const securityMonitor = new SecurityMonitorServer({
 if (typeof securityMonitor.setWorldState === 'function') {
   securityMonitor.setWorldState(worldState);
 }
-securityMonitor.start();
+if (IS_RELAY_ONLY) {
+  console.log('[SecurityMonitor] Relay-only node — local threat polling disabled (pubsub relay only)');
+} else {
+  securityMonitor.start();
+}
+
+function _onContentBrandBlocked(meta = {}) {
+  if (typeof securityMonitor._emitThreat !== 'function') return;
+  securityMonitor._emitThreat({
+    category: 'api_abuse',
+    severity: 'medium',
+    source: 'content-pipeline',
+    target: meta.topic || meta.chainId || 'content',
+    detail: String(meta.detail || 'brand moderation blocked').slice(0, 240),
+    force: true,
+  });
+}
 
 // --- Cofounder Agent (CTO AI brain) ---
 const npcBrains = new NpcBrainManager();
@@ -1077,6 +1101,90 @@ function _visitorSessionBodyFromHeaders(req) {
     demo: /^(1|true|yes)$/i.test(header('x-demo') || ''),
     metadata: Object.keys(metadata).length ? metadata : undefined,
   };
+}
+
+function _sessionIdFromRequest(req, body = {}, url = null) {
+  const parsed = url || new URL(req?.url || '/', 'http://x');
+  return String(
+    body.session_id
+    || body.sessionId
+    || parsed.searchParams.get('session_id')
+    || parsed.searchParams.get('sessionId')
+    || _visitorSessionBodyFromHeaders(req).session_id
+    || sessionCookie.sessionIdFromCookies(req)
+    || '',
+  ).trim() || null;
+}
+
+function _mergeSessionAuthBody(req, body = {}) {
+  const headerSession = _visitorSessionBodyFromHeaders(req);
+  const merged = { ...headerSession, ...body };
+  if (!merged.session_token) {
+    const fromCookie = sessionCookie.sessionTokenFromCookies(req);
+    if (fromCookie) merged.session_token = fromCookie;
+  }
+  return merged;
+}
+
+async function _resolveApprovalsAccess(req, body = {}) {
+  const headerSession = _visitorSessionBodyFromHeaders(req);
+  const url = new URL(req.url || '/', 'http://x');
+  const sessionId = _sessionIdFromRequest(req, { ...headerSession, ...body }, url);
+  const ceoRequest = hostCompute.isCeoPrincipalRequest(req)
+    || hostCompute.isLocalOperatorRequest(req);
+  if (!sessionId) {
+    if (ceoRequest) {
+      const operator = approvalsScope.isSystemOperatorReviewer({
+        isCeo: true,
+        canApproveSkills: true,
+      });
+      return {
+        sessionId: null,
+        identityId: null,
+        operator,
+        profile: {
+          display_name: headerSession.display_name || body.display_name || 'Dolonia',
+          email: headerSession.email || body.email || null,
+        },
+        session: null,
+      };
+    }
+    const err = new Error('session_id required');
+    err.status = 401;
+    throw err;
+  }
+  await _verifyVisitorSession(req, sessionId, _mergeSessionAuthBody(req, body));
+  const session = await denizenVisitor.getSession(sessionId);
+  const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+    isCeoPrincipal: ceoRequest,
+  });
+  const operator = approvalsScope.isSystemOperatorReviewer({
+    isCeo: ceoRequest || approval.role === 'ceo',
+    canApproveSkills: approval.allowed,
+  });
+  const identityId = session?.identity_id || null;
+  if (!identityId && !operator) {
+    const err = new Error('Citizen identity required for approvals');
+    err.status = 403;
+    throw err;
+  }
+  let profile = {
+    display_name: session?.display_name || headerSession.display_name || null,
+    email: headerSession.email || body.email || null,
+  };
+  if (userIdentity?.getIdentityById && identityId) {
+    const idRow = await userIdentity.getIdentityById(identityId).catch(() => null);
+    if (idRow) {
+      profile = {
+        ...profile,
+        ...idRow,
+        display_name: profile.display_name || idRow.display_name || null,
+      };
+    }
+  }
+  const account = await teamAuth.getTeamAccountForSession(sessionId).catch(() => null);
+  if (account?.email) profile.email = account.email;
+  return { sessionId, identityId, operator, profile, session };
 }
 
 function _teamAuthBodyFromHeaders(req) {
@@ -1464,7 +1572,6 @@ async function _createVisitorSession(req, res, body) {
   // stored one never expires under an active CEO.
   if (ceoVerified) payload.ceo_grant = sessionAuth.createCeoGrant();
   try {
-    const sessionCookie = require('./src/visitor-session-cookie');
     sessionCookie.setSessionCookies(res, {
       sessionId: session?.id || existingId || null,
       sessionToken: sessionToken || existingToken || null,
@@ -1580,6 +1687,8 @@ const handleCrmRoutes = mountCrmRoutes({
   broadcastToOffice: _broadcastToOffice,
 });
 
+const handleN8nRoutes = mountN8nRoutes();
+
 const handleComputeRoutes = mountComputeRoutes({
   internalToken: process.env.DENIZEN_INTERNAL_API_TOKEN || '',
   fleetAgentToken: process.env.DENIZEN_FLEET_AGENT_TOKEN || '',
@@ -1588,6 +1697,22 @@ const handleComputeRoutes = mountComputeRoutes({
   verifyVisitorSession: _verifyVisitorSession,
   get npcBrains() {
     return npcBrains;
+  },
+  onBouncerPatrolComplete({ nodeId, patrol } = {}) {
+    const agg = bouncerPatrolAggregate.applyMeshPatrolResult(worldState, nodeId, patrol);
+    if (!agg) return;
+    const msg = JSON.stringify({
+      type: 'bouncer_patrol_result',
+      summary: agg.summary,
+      openPorts: agg.openPorts || [],
+      mesh: true,
+      totalNodes: agg.totalNodes,
+      healthyNodes: agg.healthyNodes,
+      ts: agg.ts,
+    });
+    (agentWss ? agentWss.clients : new Set()).forEach((c) => {
+      if (c.readyState === 1) c.send(msg);
+    });
   },
 });
 
@@ -1636,6 +1761,7 @@ if (!IS_RELAY_ONLY) {
   computeProducer.startMeshJobProducer({
     getNpcBrains: () => npcBrains,
   });
+  meshTelemetryWorker.startServerTelemetryWorker({ computeQueue, log });
 } else {
   console.log('[compute-producer] skipped — relay-only node');
 }
@@ -2032,7 +2158,14 @@ async function _executePlayerChatSkillFollowup({
       skillParams.inviterName = visitorCtx.displayName || npcName;
     }
 
-    const result = await runNpcSkill(npcName, plan.skill, skillParams, { sessionId });
+    const result = await runNpcSkill(npcName, plan.skill, skillParams, {
+      sessionId,
+      identityId: visitorCtx?.identityId || null,
+      ownerProfile: visitorCtx ? {
+        display_name: visitorCtx.displayName || null,
+        email: visitorCtx.email || null,
+      } : null,
+    });
     const data = result?.data && typeof result.data === 'object' ? result.data : null;
     const chatActions = require('./src/denizen-crm-chat-actions');
     const autoOpen = chatActions.shouldAutoOpenCrm(message)
@@ -2877,7 +3010,24 @@ async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
     return { ok: !!routed.ok, output: summary, routed: !!routed.routed };
   }
   log.info(JELLY.logTag, `${npcName} → ${skill} ${JSON.stringify(skillParams)}`);
-  return jelly.runSkill(npcName, skill, skillParams, { broadcast });
+  let identityId = opts.identityId || skillParams.identityId || null;
+  let ownerProfile = opts.ownerProfile || null;
+  if (sessionId && (!identityId || !ownerProfile?.email)) {
+    try {
+      const session = await denizenVisitor.getSession(sessionId);
+      identityId = identityId || session?.identity_id || null;
+      if (!ownerProfile && session) {
+        ownerProfile = { display_name: session.display_name || null };
+      } else if (ownerProfile && session?.display_name && !ownerProfile.display_name) {
+        ownerProfile.display_name = session.display_name;
+      }
+      const account = await teamAuth.getTeamAccountForSession(sessionId).catch(() => null);
+      if (account?.email) {
+        ownerProfile = { ...(ownerProfile || {}), email: account.email };
+      }
+    } catch (_) {}
+  }
+  return jelly.runSkill(npcName, skill, skillParams, { broadcast, identityId, ownerProfile });
 }
 
 npcMcpGateway.configure({
@@ -3099,9 +3249,37 @@ function _buildTerminalShowCmd(threat) {
  * Uses Windows Terminal (wt.exe) if available, falls back to cmd.exe.
  * Never types into the focused window — spawns its own process.
  */
+function _fleetBearerFromReq(req) {
+  const auth = String(req?.headers?.authorization || '').trim();
+  return auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
+}
+
+function _hasBouncerApiAuth(req) {
+  if (bouncerInvestigation.validateInvestigationAuth(req)) return true;
+  const fleet = String(process.env.DENIZEN_FLEET_AGENT_TOKEN || '').trim();
+  if (!fleet) return false;
+  const bearer = _fleetBearerFromReq(req);
+  const fleetHeader = String(req?.headers?.['x-fleet-agent-token'] || '').trim();
+  return bearer === fleet || fleetHeader === fleet;
+}
+
+async function _securityTestHasCeoAccess(req, urlObj) {
+  if (hostCompute.isCeoPrincipalRequest(req) || hostCompute.isLocalOperatorRequest(req)) return true;
+  const merged = _mergeSessionAuthBody(req, {});
+  const sessionId = _sessionIdFromRequest(req, merged, urlObj);
+  if (!sessionId) return false;
+  try {
+    const access = await _verifyVisitorSession(req, sessionId, merged);
+    return _canManageOrgNpcTeam(access?.session || null) || access?.tier === 'ceo';
+  } catch (_) {
+    return false;
+  }
+}
+
 function _openBouncerTerminal(showCmd) {
   const { spawn } = require('node:child_process');
-  const wslArgs = ['-d', 'kali-linux', '--', 'bash', '-c', `${showCmd}; echo; echo '--- Bouncer scan complete. Press any key to close ---'; read -n1`];
+  const wslDistro = String(process.env.WSL_DISTRO || 'kali-linux').trim() || 'kali-linux';
+  const wslArgs = ['-d', wslDistro, '--', 'bash', '-c', `${showCmd}; echo; echo '--- Bouncer scan complete. Press any key to close ---'; read -n1`];
 
   // Try Windows Terminal first (wt.exe)
   const wtPaths = [
@@ -3128,6 +3306,13 @@ function _openBouncerTerminal(showCmd) {
  * to Dan (IT Support). Returns true if there are strong indicators of a real threat.
  */
 function investigationIsSerious(investigation) {
+  const verdict = String(investigation?.verdict || '').trim().toLowerCase();
+  if (verdict) {
+    if (verdict.includes('threat confirmed') || verdict.includes('confirmed') || verdict.includes('blocked')) return true;
+    if (verdict.includes('likely false positive') || verdict.includes('false positive') || verdict.includes('inconclusive') || verdict === 'clear' || verdict === 'ok') {
+      return false;
+    }
+  }
   const summary = (investigation.summary || '').toLowerCase();
   return (
     (summary.includes('established') && summary.includes('failed')) ||
@@ -3372,6 +3557,18 @@ const server = http.createServer((req, res) => {
   if (urlPath.startsWith('/api/crm/')) {
     (async () => {
       await handleCrmRoutes(req, res);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  if (urlPath.startsWith('/api/n8n/')) {
+    (async () => {
+      await handleN8nRoutes(req, res, urlPath);
     })().catch((err) => {
       if (!res.writableEnded) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -4369,134 +4566,152 @@ const server = http.createServer((req, res) => {
   //
   // Hard cap of 100 entries; newest first.
   if (urlPath === '/api/proposals' && req.method === 'GET') {
-    const url = new URL(req.url, 'http://x');
-    const statusFilter = (url.searchParams.get('status') || 'pending').toLowerCase();
-    const kindParam = url.searchParams.get('kind') || '';
-    const kindFilter = new Set(
-      kindParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
-    );
-    const HARD_CAP = 100;
+    (async () => {
+      const url = new URL(req.url, 'http://x');
+      const statusFilter = (url.searchParams.get('status') || 'pending').toLowerCase();
+      const kindParam = url.searchParams.get('kind') || '';
+      const kindFilter = new Set(
+        kindParam.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+      );
+      const HARD_CAP = 100;
 
-    function maybe(kind) {
-      return kindFilter.size === 0 || kindFilter.has(kind);
-    }
-
-    const merged = [];
-
-    // Animation proposals — { id, by, animName, description, proposedAt, status, review? }
-    if (maybe('animation')) {
-      let store = { proposals: [] };
+      let access;
       try {
-        const raw = fs.readFileSync(animationProposalsFile, 'utf8');
-        store = JSON.parse(raw);
-        if (!Array.isArray(store.proposals)) store.proposals = [];
-      } catch (_) { /* missing file → empty */ }
-      for (const p of store.proposals) {
-        if (!p || typeof p !== 'object') continue;
-        merged.push({
-          kind: 'animation',
-          id: p.id,
-          by: p.by,
-          status: p.status || 'pending',
-          summary: `${p.animName || '?'} — ${p.description || ''}`.slice(0, 240),
-          ts: Number(p.proposedAt) || 0,
-          raw: p,
-        });
+        access = await _resolveApprovalsAccess(req, {});
+      } catch (err) {
+        if (err instanceof visitorAccess.VisitorAccessError) {
+          return _writeVisitorAccessError(res, err);
+        }
+        const status = err.status || 500;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
+        return;
       }
-    }
+      const { identityId, operator } = access;
 
-    // SOUL proposals — { id, npcName, createdAt, status, proposal:{summary,...}, review? }
-    if (maybe('soul')) {
-      const file = _readSoulProposalsFile();
-      for (const p of file.proposals) {
-        if (!p || typeof p !== 'object') continue;
-        const tsMs = p.createdAt ? Date.parse(p.createdAt) : 0;
-        merged.push({
-          kind: 'soul',
-          id: p.id,
-          by: p.npcName,
-          status: p.status || 'pending',
-          summary: (p.proposal && p.proposal.summary) ? String(p.proposal.summary).slice(0, 240) : '(no summary)',
-          ts: Number.isFinite(tsMs) ? tsMs : 0,
-          raw: p,
-        });
+      function maybe(kind) {
+        return kindFilter.size === 0 || kindFilter.has(kind);
       }
-    }
 
-    // Capability proposals — may not exist on master (Stage 4 is in
-    // flight in a parallel branch). Treat missing/unparseable file as
-    // empty. Shape (best-effort): { id, by, verbName, description, proposedAt, status }.
-    if (maybe('capability')) {
-      const capabilityProposalsFile = path.join(ROOT, 'data', 'capability-proposals.json');
-      try {
-        const raw = fs.readFileSync(capabilityProposalsFile, 'utf8');
-        const store = JSON.parse(raw);
-        const arr = Array.isArray(store?.proposals) ? store.proposals : [];
-        for (const p of arr) {
+      const merged = [];
+
+      if (operator && maybe('animation')) {
+        let store = { proposals: [] };
+        try {
+          const raw = fs.readFileSync(animationProposalsFile, 'utf8');
+          store = JSON.parse(raw);
+          if (!Array.isArray(store.proposals)) store.proposals = [];
+        } catch (_) { /* missing file → empty */ }
+        for (const p of store.proposals) {
           if (!p || typeof p !== 'object') continue;
-          const tsMs = Number(p.proposedAt) || (p.createdAt ? Date.parse(p.createdAt) : 0) || 0;
-          const label = p.verbName || p.capability || p.animName || p.name || '?';
-          const desc = p.description || p.summary || '';
           merged.push({
-            kind: 'capability',
+            kind: 'animation',
             id: p.id,
-            by: p.by || p.npcName,
+            by: p.by,
             status: p.status || 'pending',
-            summary: `${label} — ${desc}`.slice(0, 240),
+            summary: `${p.animName || '?'} — ${p.description || ''}`.slice(0, 240),
+            ts: Number(p.proposedAt) || 0,
+            raw: p,
+          });
+        }
+      }
+
+      if (operator && maybe('soul')) {
+        const file = _readSoulProposalsFile();
+        for (const p of file.proposals) {
+          if (!p || typeof p !== 'object') continue;
+          const tsMs = p.createdAt ? Date.parse(p.createdAt) : 0;
+          merged.push({
+            kind: 'soul',
+            id: p.id,
+            by: p.npcName,
+            status: p.status || 'pending',
+            summary: (p.proposal && p.proposal.summary) ? String(p.proposal.summary).slice(0, 240) : '(no summary)',
             ts: Number.isFinite(tsMs) ? tsMs : 0,
             raw: p,
           });
         }
-      } catch (_) { /* file may not exist yet — fine */ }
-    }
-
-    // NPC code proposals (in-memory + reports/code-reviews/)
-    if (maybe('code')) {
-      for (const p of codingTaskRunner.getProposals()) {
-        if (!p || typeof p !== 'object') continue;
-        const st = p.status === 'pending_review' ? 'pending' : (p.status || 'pending');
-        merged.push({
-          kind: 'code',
-          id: p.id,
-          by: p.npc,
-          status: st,
-          summary: `${p.task || 'code change'} · ${(p.changedFiles || []).join(', ') || 'files TBD'}`.slice(0, 240),
-          ts: Number(p.ts) || 0,
-          raw: p,
-        });
       }
-    }
 
-    // Branded PDF dossier proposals (persisted data/dossier-proposals.json)
-    if (maybe('dossier')) {
-      for (const p of dossierSystem.getProposals()) {
-        if (!p || typeof p !== 'object') continue;
-        const st = p.status === 'pending_review' ? 'pending' : p.status;
-        merged.push({
-          kind: 'dossier',
-          id: p.id,
-          by: p.npc,
-          status: st || 'pending',
-          summary: `${p.type || 'dossier'}${p.recipient ? ` for ${p.recipient}` : ''} · ${p.subject || ''}`.slice(0, 240),
-          ts: Number(p.ts) || 0,
-          raw: p,
-        });
+      if (operator && maybe('capability')) {
+        const capabilityProposalsFile = path.join(ROOT, 'data', 'capability-proposals.json');
+        try {
+          const raw = fs.readFileSync(capabilityProposalsFile, 'utf8');
+          const store = JSON.parse(raw);
+          const arr = Array.isArray(store?.proposals) ? store.proposals : [];
+          for (const p of arr) {
+            if (!p || typeof p !== 'object') continue;
+            const tsMs = Number(p.proposedAt) || (p.createdAt ? Date.parse(p.createdAt) : 0) || 0;
+            const label = p.verbName || p.capability || p.animName || p.name || '?';
+            const desc = p.description || p.summary || '';
+            merged.push({
+              kind: 'capability',
+              id: p.id,
+              by: p.by || p.npcName,
+              status: p.status || 'pending',
+              summary: `${label} — ${desc}`.slice(0, 240),
+              ts: Number.isFinite(tsMs) ? tsMs : 0,
+              raw: p,
+            });
+          }
+        } catch (_) { /* file may not exist yet — fine */ }
       }
-    }
 
-    // Status filter — 'all' bypasses.
-    const filtered = statusFilter === 'all'
-      ? merged
-      : merged.filter(e => String(e.status || '').toLowerCase() === statusFilter);
+      if (operator && maybe('code')) {
+        for (const p of codingTaskRunner.getProposals()) {
+          if (!p || typeof p !== 'object') continue;
+          const st = p.status === 'pending_review' ? 'pending' : (p.status || 'pending');
+          merged.push({
+            kind: 'code',
+            id: p.id,
+            by: p.npc,
+            status: st,
+            summary: `${p.task || 'code change'} · ${(p.changedFiles || []).join(', ') || 'files TBD'}`.slice(0, 240),
+            ts: Number(p.ts) || 0,
+            raw: p,
+          });
+        }
+      }
 
-    // Newest first.
-    filtered.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      if (maybe('dossier')) {
+        const dossierList = dossierSystem.getProposals({ identityId, operator });
+        for (const p of dossierList) {
+          if (!p || typeof p !== 'object') continue;
+          const st = p.status === 'pending_review' ? 'pending' : p.status;
+          merged.push({
+            kind: 'dossier',
+            id: p.id,
+            by: p.npc,
+            status: st || 'pending',
+            summary: `${p.type || 'dossier'}${p.recipient ? ` for ${p.recipient}` : ''} · ${p.subject || ''}`.slice(0, 240),
+            ts: Number(p.ts) || 0,
+            raw: p,
+          });
+        }
+      }
 
-    const total = filtered.length;
-    const proposals = filtered.slice(0, HARD_CAP);
+      const statusFiltered = statusFilter === 'all'
+        ? merged
+        : merged.filter(e => String(e.status || '').toLowerCase() === statusFilter);
 
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ proposals, total, cap: HARD_CAP, truncated: total > HARD_CAP }));
+      const scoped = approvalsScope.filterMergedProposals(statusFiltered, { identityId, operator });
+      scoped.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+      const total = scoped.length;
+      const proposals = scoped.slice(0, HARD_CAP);
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        proposals,
+        total,
+        cap: HARD_CAP,
+        truncated: total > HARD_CAP,
+        scope: operator ? 'system' : 'individual',
+      }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
     return;
   }
 
@@ -4835,7 +5050,7 @@ const server = http.createServer((req, res) => {
       const chain = contentPipeline.startContentPipeline(taskChain, topic, {
         assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
         broadcastFn,
-      }, payload || {});
+      }, { ...(payload || {}), onBrandBlocked: _onContentBrandBlocked });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         ok: true,
@@ -4962,6 +5177,11 @@ const server = http.createServer((req, res) => {
   // 'zenmap' and 'nmap' both run nmap via Kali WSL (Zenmap is just a GUI wrapper — nmap is the real tool).
   // 'wireshark' runs tcpdump on loopback via Kali WSL (tshark if installed).
   if (urlPath === '/api/bouncer-scan' && req.method === 'POST') {
+    if (!_hasBouncerApiAuth(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+      return;
+    }
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', async () => {
@@ -5447,6 +5667,11 @@ const server = http.createServer((req, res) => {
   // POST /api/bouncer-linux { category?, source?, detail?, openTerminal?: bool }
   // Runs real security commands in Kali WSL and streams results via WS.
   if (urlPath === '/api/bouncer-linux' && req.method === 'POST') {
+    if (!_hasBouncerApiAuth(req)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'unauthorized' }));
+      return;
+    }
     let body = '';
     req.on('data', c => { body += c; });
     req.on('end', async () => {
@@ -6688,14 +6913,7 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/visitor/desktop-downloads' && req.method === 'GET') {
     const desktopDownloads = require('./src/denizen-desktop-downloads.js');
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      ok: true,
-      windows: desktopDownloads.WINDOWS_DESKTOP_URL,
-      mac: desktopDownloads.MACOS_DESKTOP_URL,
-      macos: desktopDownloads.MACOS_DESKTOP_URL,
-      linux: desktopDownloads.LINUX_DESKTOP_URL,
-      download_page: '/desktop/download.html',
-    }));
+    res.end(JSON.stringify(desktopDownloads.getDesktopDownloadsPayload()));
     return;
   }
 
@@ -8680,49 +8898,109 @@ const server = http.createServer((req, res) => {
 
   // --- GET /api/dossier-proposals — branded PDF dossier proposals ---
   if (urlPath === '/api/dossier-proposals' && req.method === 'GET') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ proposals: dossierSystem.getProposals() }));
+    (async () => {
+      try {
+        const access = await _resolveApprovalsAccess(req, {});
+        const proposals = dossierSystem.getProposals({
+          identityId: access.identityId,
+          operator: access.operator,
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ proposals, scope: access.operator ? 'system' : 'individual' }));
+      } catch (err) {
+        if (err instanceof visitorAccess.VisitorAccessError) {
+          return _writeVisitorAccessError(res, err);
+        }
+        const status = err.status || 500;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
+      }
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
     return;
   }
 
   const dossierPreviewMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/preview$/);
   if (dossierPreviewMatch && req.method === 'GET') {
-    const proposalId = dossierPreviewMatch[1];
-    const proposal = dossierSystem.getProposalById(proposalId);
-    if (!proposal) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'proposal not found' }));
-      return;
-    }
-    const u = new URL(req.url, 'http://x');
-    const format = (u.searchParams.get('format') || 'html').toLowerCase();
-    const filePath = dossierSystem.resolveProposalArtifact(proposal, format);
-    if (!filePath) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        error: 'preview file not found',
-        hint: 'Regenerate the dossier on this server or redeploy with reports/dossiers included',
-        outDirRel: proposal.outDirRel || null,
-      }));
-      return;
-    }
-    const ctype = format === 'pdf' ? 'application/pdf' : 'text/html; charset=utf-8';
-    res.writeHead(200, { 'Content-Type': ctype });
-    fs.createReadStream(filePath).pipe(res);
+    (async () => {
+      try {
+        const access = await _resolveApprovalsAccess(req, {});
+        const proposalId = dossierPreviewMatch[1];
+        const proposal = dossierSystem.getProposalById(proposalId);
+        if (!proposal) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'proposal not found' }));
+          return;
+        }
+        if (!approvalsScope.canDecideDossierProposal(proposal, access)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Not your dossier proposal' }));
+          return;
+        }
+        const u = new URL(req.url, 'http://x');
+        const format = (u.searchParams.get('format') || 'html').toLowerCase();
+        const filePath = dossierSystem.resolveProposalArtifact(proposal, format);
+        if (!filePath) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            error: 'preview file not found',
+            hint: 'Regenerate the dossier on this server or redeploy with reports/dossiers included',
+            outDirRel: proposal.outDirRel || null,
+          }));
+          return;
+        }
+        const ctype = format === 'pdf' ? 'application/pdf' : 'text/html; charset=utf-8';
+        res.writeHead(200, { 'Content-Type': ctype });
+        fs.createReadStream(filePath).pipe(res);
+      } catch (err) {
+        if (err instanceof visitorAccess.VisitorAccessError) {
+          return _writeVisitorAccessError(res, err);
+        }
+        const status = err.status || 500;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
+      }
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
     return;
   }
 
   const dossierApproveMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/approve$/);
   if (dossierApproveMatch && req.method === 'POST') {
-    const proposalId = dossierApproveMatch[1];
-    _readJsonBody(req, 16 * 1024).then((body) => {
-      const note = body?.note ? String(body.note).slice(0, 400) : null;
-      const result = dossierSystem.approveProposal(proposalId, { note });
-      if (result.ok) {
-        _broadcastProposalQueueChanged('dossier', 'approved', proposalId);
+    _readJsonBody(req, 16 * 1024).then(async (body) => {
+      try {
+        const access = await _resolveApprovalsAccess(req, body || {});
+        const proposalId = dossierApproveMatch[1];
+        const proposal = dossierSystem.getProposalById(proposalId);
+        if (!proposal) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'proposal not found' }));
+          return;
+        }
+        if (!approvalsScope.canDecideDossierProposal(proposal, access)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Not your dossier proposal' }));
+          return;
+        }
+        const note = body?.note ? String(body.note).slice(0, 400) : null;
+        const result = dossierSystem.approveProposal(proposalId, { note });
+        if (result.ok) {
+          _broadcastProposalQueueChanged('dossier', 'approved', proposalId);
+        }
+        res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        if (err instanceof visitorAccess.VisitorAccessError) {
+          return _writeVisitorAccessError(res, err);
+        }
+        const status = err.status || 500;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
       }
-      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(result));
     }).catch((err) => {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
@@ -8732,15 +9010,36 @@ const server = http.createServer((req, res) => {
 
   const dossierRejectMatch = urlPath.match(/^\/api\/dossier-proposals\/([^/]+)\/reject$/);
   if (dossierRejectMatch && req.method === 'POST') {
-    const proposalId = dossierRejectMatch[1];
-    _readJsonBody(req, 16 * 1024).then((body) => {
-      const note = body?.note ? String(body.note).slice(0, 400) : null;
-      const result = dossierSystem.rejectProposal(proposalId, { note });
-      if (result.ok) {
-        _broadcastProposalQueueChanged('dossier', 'rejected', proposalId);
+    _readJsonBody(req, 16 * 1024).then(async (body) => {
+      try {
+        const access = await _resolveApprovalsAccess(req, body || {});
+        const proposalId = dossierRejectMatch[1];
+        const proposal = dossierSystem.getProposalById(proposalId);
+        if (!proposal) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'proposal not found' }));
+          return;
+        }
+        if (!approvalsScope.canDecideDossierProposal(proposal, access)) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'Not your dossier proposal' }));
+          return;
+        }
+        const note = body?.note ? String(body.note).slice(0, 400) : null;
+        const result = dossierSystem.rejectProposal(proposalId, { note });
+        if (result.ok) {
+          _broadcastProposalQueueChanged('dossier', 'rejected', proposalId);
+        }
+        res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        if (err instanceof visitorAccess.VisitorAccessError) {
+          return _writeVisitorAccessError(res, err);
+        }
+        const status = err.status || 500;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
       }
-      res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(result));
     }).catch((err) => {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
@@ -8931,6 +9230,16 @@ const server = http.createServer((req, res) => {
                 'briefing', 'commitments', 'deep_memory', 'proactive_triggers', 'recurring_tasks',
                 'slack_channel', 'cited_research', 'voice_walkup', 'mcp_connector',
               ],
+            },
+            bouncer: {
+              patrolEnabled: linuxAgentBridge.isBouncerPatrolEnabled?.() ?? false,
+              patrolMode: String(process.env.BOUNCER_PATROL || '').trim() || (process.platform === 'win32' ? 'wsl' : 'off'),
+              investigationUrl: String(process.env.BOUNCER_INVESTIGATION_URL || '').trim() || null,
+              investigationConfigured: !!String(process.env.BOUNCER_INVESTIGATION_URL || '').trim(),
+              wslLocal: process.platform === 'win32',
+              relayOnly: IS_RELAY_ONLY,
+              securityRelay: _securityRelayStatus || null,
+              lastPatrol: worldState?.bouncerPatrol || null,
             },
           };
           cache.body = body;
@@ -9310,24 +9619,85 @@ const server = http.createServer((req, res) => {
 
   // --- Security test endpoint: simulate threats for testing ---
   if (urlPath === '/security-test') {
+    if (IS_RELAY_ONLY) {
+      const primary = agentWsRelay.resolvePrimaryBaseUrl();
+      const relayUrl = `${primary}${req.url}`;
+      (async () => {
+        try {
+          const headers = {};
+          const internalHdr = req.headers['x-internal-token'];
+          if (internalHdr) headers['x-internal-token'] = internalHdr;
+          const upstream = await fetch(relayUrl, {
+            signal: AbortSignal.timeout(12000),
+            headers,
+          });
+          const body = await upstream.text();
+          res.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') || 'application/json' });
+          res.end(body);
+        } catch (err) {
+          res.writeHead(502, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: err?.message || 'primary security-test proxy failed' }));
+        }
+      })();
+      return;
+    }
+
     const url = new URL(req.url, `http://localhost:${PORT}`);
-    const category = url.searchParams.get('type') || 'network_scan';
-    const severity = url.searchParams.get('severity') || 'medium';
-    const detail = url.searchParams.get('detail') || `Test ${category} threat`;
-    const source = url.searchParams.get('source') || (url.searchParams.get('force') === '1' ? '203.0.113.50' : 'test');
-    const force = url.searchParams.get('force') === '1';
+    (async () => {
+      const category = url.searchParams.get('type') || 'network_scan';
+      const severity = url.searchParams.get('severity') || 'medium';
+      const detail = url.searchParams.get('detail') || `Test ${category} threat`;
+      const source = url.searchParams.get('source') || (url.searchParams.get('force') === '1' ? '203.0.113.50' : 'test');
+      const force = url.searchParams.get('force') === '1';
+      const loopback = securityIp.isLocalOrLoopback(req.socket?.remoteAddress || '');
+      const ceoAllowed = await _securityTestHasCeoAccess(req, url);
+      const internalToken = String(process.env.DENIZEN_INTERNAL_API_TOKEN || '').trim();
+      const suppliedInternal = String(
+        req.headers['x-internal-token']
+        || url.searchParams.get('internal_token')
+        || '',
+      ).trim();
+      const internalAllowed = internalToken && suppliedInternal === internalToken;
+      const isProd = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+      const isPublicDemo = String(process.env.DENIZEN_PUBLIC_DEMO || '').toLowerCase() === 'true';
+      const allowPublic = /^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_SECURITY_TEST_PUBLIC || ''));
+      const forceExternal = force && source !== 'test';
 
-    securityMonitor._emitThreat({
-      category,
-      severity,
-      source,
-      target: 'test-target',
-      detail,
-      force,
+      if (isPublicDemo && !allowPublic && !loopback && !ceoAllowed && !internalAllowed && !forceExternal) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: false,
+          error: 'security-test disabled on public demo',
+          code: 'SECURITY_TEST_DISABLED',
+        }));
+        return;
+      }
+
+      if (isProd && !loopback && !ceoAllowed && !internalAllowed && !forceExternal) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: false,
+          error: 'security-test restricted to loopback or CEO session in production',
+          code: 'SECURITY_TEST_FORBIDDEN',
+        }));
+        return;
+      }
+
+      securityMonitor._emitThreat({
+        category,
+        severity,
+        source,
+        target: 'test-target',
+        detail,
+        force,
+      });
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, message: `Simulated ${category} threat`, source, force }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
-
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, message: `Simulated ${category} threat`, source, force }));
     return;
   }
 
@@ -9387,6 +9757,11 @@ const server = http.createServer((req, res) => {
 
   // Default to the game's index.html — also accept legacy /denizen/ and
   // /pixel-office-game/ prefixes so old bookmarks keep working.
+  if (urlPath === '/desktop' || urlPath === '/desktop/') {
+    res.writeHead(302, { Location: '/desktop/download.html' });
+    res.end();
+    return;
+  }
   if (urlPath === '/' || urlPath === '/denizen/' || urlPath === '/denizen'
       || urlPath === '/pixel-office-game/' || urlPath === '/pixel-office-game') {
     urlPath = '/index.html';
@@ -9418,7 +9793,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  fs.readFile(filePath, (err, data) => {
+    fs.readFile(filePath, (err, data) => {
     if (err) {
       res.writeHead(404);
       res.end('Not found');
@@ -9429,6 +9804,9 @@ const server = http.createServer((req, res) => {
     if (['.html', '.js', '.css', '.json', '.map'].includes(ext)) {
       headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
       headers.Pragma = 'no-cache';
+    } else if (['.exe', '.dmg', '.AppImage', '.blockmap'].includes(ext)) {
+      headers['Cache-Control'] = 'public, max-age=3600';
+      headers['Content-Disposition'] = `attachment; filename="${path.basename(filePath)}"`;
     }
     res.writeHead(200, headers);
     res.end(data);
@@ -9450,6 +9828,17 @@ securityWss.on('connection', (ws) => {
     securityMonitor.clients?.delete(ws);
   });
 });
+
+// Security threats: primary → Redis → follower /security-ws clients
+const _securityRelayStatus = securityRelay.wireSecurityRelay({
+  securityMonitor,
+  worldPubsub,
+  securityWss,
+  isRelayOnly: IS_RELAY_ONLY,
+});
+if (_securityRelayStatus.wired && _securityRelayStatus.pubsubEnabled) {
+  console.log(`[security-relay] active role=${_securityRelayStatus.role} relayOnly=${_securityRelayStatus.relayOnly}`);
+}
 
 // Agent Office WebSocket
 function sendToVisitorClients(sessionId, payload) {
@@ -10438,6 +10827,11 @@ agentWss.on('connection', (ws) => {
             }
           }
           const textForBrain = msg._attachmentBlock ? `${msg.text}${msg._attachmentBlock}` : msg.text;
+          if (msg._attachmentBlock) {
+            // Chat history shows the typed text + a file note, not the raw analysis block.
+            const names = (msg._attachmentInfo || []).map((a) => a.name).join(', ');
+            chatOpts.displayText = names ? `${msg.text} [📎 ${names}]` : msg.text;
+          }
           return npcBrains.getPlayerResponse(npcName, textForBrain, chatOpts).then((result) => {
             if (msg.voice_mode && chatOpts._voiceSentenceFlush) {
               if (!isTurnActive()) return result;
@@ -10866,6 +11260,15 @@ agentWss.on('connection', (ws) => {
             lastAddressed: { by: msg.from || 'someone', text: msg.text || '', at: msg.ts || Date.now() },
           });
         }
+      } else if (msg.type === 'npc_friction') {
+        const npcName = msg.npcName || msg.npc_key;
+        if (npcName && localMetrics.captureSystemError) {
+          localMetrics.captureSystemError(
+            npcName,
+            msg.context || 'path_stuck',
+            msg.error || { message: 'client friction report' },
+          );
+        }
       } else if (msg.type === 'player_idle') {
         // Receptionist tour: the client tells us "the player has been
         // idle for N ms". Mirror into worldState so Lucy's brain (or a
@@ -11202,6 +11605,7 @@ startContentPipelineScheduler({
   taskChain,
   assignDirectiveFn: (to, from, task, urgent) => npcBrains.assignDirective(to, from, task, !!urgent),
   broadcastFn: _contentPipelineBroadcast,
+  onBrandBlocked: _onContentBrandBlocked,
 });
 
 startCrmScheduler({
@@ -11216,6 +11620,8 @@ _startLucyMirrorFrameWatcher();
 const PREDICTION_MAINTENANCE_MS = 6 * 60 * 60 * 1000;
 let _predictionMaintenanceTimer = null;
 let _visitorIntelligenceLoop = null;
+let _bouncerDailyBriefTimer = null;
+let _patrolTimer = null;
 
 server.listen(PORT, () => {
   denizenDb.init().then((result) => {
@@ -11310,7 +11716,6 @@ server.listen(PORT, () => {
   // the latest patrol result from worldState.bouncerPatrol.
   // First patrol fires after 60s so startup settles first.
   const PATROL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-  let _patrolTimer = null;
 
   async function runBouncerPatrol() {
     // PC activity: every 5-min patrol runs real WSL commands. Background
@@ -11384,6 +11789,72 @@ server.listen(PORT, () => {
   } else if (!IS_RELAY_ONLY) {
     log.info('Patrol', 'disabled (BOUNCER_PATROL=0 or non-Windows host)');
   }
+
+  const BOUNCER_DAILY_BRIEF_MS = Number(process.env.BOUNCER_DAILY_BRIEF_MS) || (24 * 60 * 60 * 1000);
+  const BOUNCER_FRIDAY_BRIEF = /^(1|true|yes|on)$/i.test(String(process.env.BOUNCER_FRIDAY_BRIEF || ''));
+  const _runBouncerDailyBrief = () => {
+    try {
+      const threats = Array.isArray(worldState.activeThreats) ? worldState.activeThreats.slice(0, 8) : [];
+      const patrol = worldState.bouncerPatrol || null;
+      const summary = {
+        ts: Date.now(),
+        generatedAt: new Date().toISOString(),
+        threatCount: threats.length,
+        activeThreats: threats.map((t) => ({
+          category: t.category || 'unknown',
+          severity: t.severity || 'unknown',
+          source: t.source || null,
+          detail: String(t.detail || '').slice(0, 160) || null,
+          at: t.ts || null,
+        })),
+        lastPatrol: patrol
+          ? {
+              ts: patrol.ts || null,
+              elapsed: patrol.elapsed || 0,
+              summary: String(patrol.summary || '').slice(0, 320),
+              openPorts: Array.isArray(patrol.openPorts) ? patrol.openPorts.slice(0, 12) : [],
+            }
+          : null,
+      };
+
+      worldState.bouncerDailyBrief = summary;
+      worldState.pushEvent(
+        'security',
+        `Bouncer daily brief: ${summary.threatCount} active threat(s); patrol ${summary.lastPatrol ? 'available' : 'missing'}.`,
+      );
+      const payload = JSON.stringify({ type: 'bouncer_daily_brief', summary });
+      (agentWss ? agentWss.clients : new Set()).forEach((c) => { if (c.readyState === 1) c.send(payload); });
+
+      if (BOUNCER_FRIDAY_BRIEF && new Date().getDay() === 5) {
+        const weeklyName = `weekly_${new Date().toISOString().slice(0, 10).replace(/-/g, '_')}_${Date.now()}`;
+        const weeklyMd = [
+          '# Weekly security brief',
+          '',
+          `Generated: ${summary.generatedAt}`,
+          '',
+          `- Active threats: ${summary.threatCount}`,
+          `- Last patrol: ${summary.lastPatrol ? summary.lastPatrol.summary : 'No patrol data yet'}`,
+          '',
+          '## Threat list',
+          ...(summary.activeThreats.length
+            ? summary.activeThreats.map((t) => `- ${t.category} (${t.severity}) from ${t.source || 'unknown'}: ${t.detail || 'n/a'}`)
+            : ['- No active threats recorded.']),
+        ].join('\n');
+        const weeklyPath = npcTools.writeArtifact('Bouncer', 'security', weeklyName, weeklyMd);
+        if (weeklyPath) {
+          worldState.pushEvent('security', `Bouncer weekly brief filed: ${weeklyPath}`);
+        }
+      }
+    } catch (err) {
+      log.warn('Patrol', `daily brief failed: ${err?.message || String(err)}`);
+    }
+  };
+
+  if (!IS_RELAY_ONLY) {
+    _bouncerDailyBriefTimer = setInterval(_runBouncerDailyBrief, BOUNCER_DAILY_BRIEF_MS);
+    _bouncerDailyBriefTimer.unref?.();
+    log.info('Patrol', `daily brief scheduler started (${BOUNCER_DAILY_BRIEF_MS}ms)`);
+  }
 });
 
 // Graceful shutdown — stop the security monitor's intervals and child
@@ -11408,6 +11879,7 @@ function gracefulShutdown(signal) {
     });
   } catch (_) {}
   try { if (_patrolTimer) { clearTimeout(_patrolTimer); _patrolTimer = null; } } catch (_) {}
+  try { if (_bouncerDailyBriefTimer) { clearInterval(_bouncerDailyBriefTimer); _bouncerDailyBriefTimer = null; } } catch (_) {}
   try { if (_predictionMaintenanceTimer) { clearInterval(_predictionMaintenanceTimer); _predictionMaintenanceTimer = null; } } catch (_) {}
   try { if (_visitorIntelligenceLoop) { _visitorIntelligenceLoop.stop(); _visitorIntelligenceLoop = null; } } catch (_) {}
   try {

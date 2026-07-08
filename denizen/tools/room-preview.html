@@ -2,28 +2,132 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Room Shell Preview — Denizen</title>
 <style>
-  body { margin:0; background:#0f172a; color:#e2e8f0; font:13px 'Segoe UI',sans-serif; }
-  header { padding:10px 16px; background:#1e293b; border-bottom:1px solid #334155; display:flex; gap:14px; align-items:center; }
-  header h1 { font-size:15px; margin:0; color:#4a9eff; }
-  #game { padding:16px; }
-  .hint { color:#64748b; font-size:12px; }
-  a { color:#4a9eff; }
+  :root {
+    --header-h: 52px;
+    --bg: #0b1220;
+    --panel: #1e293b;
+    --line: #334155;
+    --text: #e2e8f0;
+    --accent: #4a9eff;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font: 13px 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    flex: 0 0 auto;
+    min-height: var(--header-h);
+    padding: 10px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+    align-items: center;
+    z-index: 10;
+  }
+  header h1 {
+    font-size: 15px;
+    margin: 0;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .hint {
+    color: var(--muted);
+    font-size: 12px;
+    flex: 1;
+    min-width: 200px;
+  }
+  .hint code { color: #94a3b8; }
+  header .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  header a.btn {
+    color: var(--text);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #0f172a;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  header a.btn:hover { border-color: var(--accent); color: #dbeafe; }
+  header a.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  #viewport {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(74, 158, 255, 0.08), transparent 55%),
+      var(--bg);
+  }
+  #game {
+    min-width: 100%;
+    min-height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  #game canvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  a { color: var(--accent); }
+  body.embed header .actions .back-phone { display: none; }
 </style>
 </head>
 <body>
 <header>
   <h1>🏠 Room Shell Preview</h1>
-  <span class="hint">Every roomType from <code>data/room-builder-tiles.json</code>. Magenta tiles = wrong/missing index → fix via <a href="/tools/tile-inspector.html" target="_blank">tile-inspector</a>, reload here.</span>
+  <span class="hint">Every <code>roomType</code> from <code>data/room-builder-tiles.json</code>. Magenta = wrong tile index → <a href="/tools/tile-inspector.html">tile-inspector</a></span>
+  <div class="actions">
+    <a class="btn back-phone" href="/workflow-dashboard.html">← Workflow</a>
+    <a class="btn" href="/" id="link-game">Office game</a>
+    <a class="btn btn-primary" href="?" id="link-reload">Reload</a>
+  </div>
 </header>
-<div id="game"></div>
+<div id="viewport">
+  <div id="game"></div>
+</div>
 
+<script>
+  if (new URLSearchParams(location.search).has('embed')) {
+    document.body.classList.add('embed');
+  }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script>
 <script type="module">
 import { RoomTileRenderer } from '../src/room-tile-renderer.js';
 
-let catalog = null;
+const ZOOM = 3;
+const COLS = 12;
+const ROWS = 8;
+const GAP_X = 40;
+const GAP_Y = 60;
+const PAD = 20;
 
 class PreviewScene extends Phaser.Scene {
   preload() {
@@ -32,48 +136,51 @@ class PreviewScene extends Phaser.Scene {
   }
 
   create() {
-    catalog = this.cache.json.get('rb_catalog');
-    const renderer = new RoomTileRenderer(this, catalog);
+    const catalog = this.cache.json.get('rb_catalog');
     const types = Object.keys(catalog.roomTypes || {});
-
-    const COLS = 12, ROWS = 8;          // each sample room: 12×8 tiles
-    const cellW = COLS * 16 * 3 + 40;    // *3 zoom + gap
-    const cellH = ROWS * 16 * 3 + 60;
-    const perRow = 4;
+    const cellW = COLS * 16 + GAP_X;
+    const cellH = ROWS * 16 + GAP_Y;
+    const perRow = Math.max(1, Math.floor((window.innerWidth - PAD * 2) / (cellW * ZOOM)));
 
     types.forEach((rt, i) => {
-      const gx = (i % perRow) * cellW + 20;
-      const gy = Math.floor(i / perRow) * cellH + 30;
+      const gx = (i % perRow) * cellW * ZOOM + PAD;
+      const gy = Math.floor(i / perRow) * cellH * ZOOM + PAD + 24;
 
-      // Container scaled 3× for visibility.
-      const cont = this.add.container(gx, gy).setScale(3);
+      const cont = this.add.container(gx, gy).setScale(ZOOM);
       const r = new RoomTileRenderer(this, catalog);
       const out = r.renderRoom({
         x: 0, y: 0, cols: COLS, rows: ROWS, roomType: rt,
         doors: [{ side: 'south', offset: 5, span: 2 }],
         depthBase: 0,
       });
-      [...out.floor, ...out.walls].forEach(o => cont.add(o));
+      [...out.floor, ...out.walls].forEach((o) => cont.add(o));
 
-      // Label above each room.
-      this.add.text(gx, gy - 18, `${rt}  ·  ${catalog.roomTypes[rt].floor} / ${catalog.roomTypes[rt].wall}`,
-        { font: '12px monospace', color: '#94a3b8' });
+      this.add.text(gx, gy - 8, `${rt} · ${catalog.roomTypes[rt].floor} / ${catalog.roomTypes[rt].wall}`, {
+        fontFamily: 'ui-monospace, Consolas, monospace',
+        fontSize: '11px',
+        color: '#94a3b8',
+      });
     });
 
-    // Size the canvas to fit.
     const rowsUsed = Math.ceil(types.length / perRow);
-    this.scale.resize(perRow * cellW + 40, rowsUsed * cellH + 40);
+    const worldW = perRow * cellW * ZOOM + PAD * 2;
+    const worldH = rowsUsed * cellH * ZOOM + PAD * 2 + 24;
+    this.scale.resize(worldW, worldH);
   }
 }
 
-new Phaser.Game({
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: '#0b1220',
   pixelArt: true,
-  width: 1400, height: 800,
+  width: window.innerWidth,
+  height: Math.max(400, window.innerHeight - 52),
   scene: PreviewScene,
 });
+
+document.getElementById('link-game').href = location.origin + '/';
+document.getElementById('link-reload').href = location.pathname + '?fresh=' + Date.now();
 </script>
 </body>
 </html>

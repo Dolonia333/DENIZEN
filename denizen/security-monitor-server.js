@@ -60,6 +60,12 @@ class SecurityMonitorServer {
     this._connectionTracker = new Map(); // IP → [timestamps]
     this._requestTracker = new Map();    // IP → [timestamps]
     this._threatIdCounter = 0;
+    this._onBroadcast = null;
+  }
+
+  /** Optional hook — e.g. world-pubsub fan-out on primary. */
+  setOnBroadcast(fn) {
+    this._onBroadcast = typeof fn === 'function' ? fn : null;
   }
 
   /** Register a WebSocket client to receive threat events */
@@ -778,6 +784,9 @@ class SecurityMonitorServer {
   }
 
   _broadcast(msg) {
+    if (this._onBroadcast) {
+      try { this._onBroadcast(msg); } catch (_) { /* non-fatal */ }
+    }
     const data = JSON.stringify(msg);
     this.clients.forEach(ws => {
       try {

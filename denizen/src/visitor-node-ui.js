@@ -34,6 +34,7 @@
     isHostNode: false,
     contributorState: 'browser_only',
     needsDesktopDownload: false,
+    needsDesktopPairing: false,
     desktopLinked: false,
     canContribute: false,
     downloadUrl: '/desktop/download.html',
@@ -289,18 +290,38 @@
         display: block;
         width: 100%;
         margin-top: 8px;
-        padding: 8px 10px;
+        padding: 10px 12px;
         border-radius: 8px;
         border: 1px solid #4ade80;
         background: rgba(74, 222, 128, 0.12);
         color: #4ade80;
         font: inherit;
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         cursor: pointer;
         text-align: center;
         touch-action: manipulation;
       }
+      #${ROOT_ID} .node-pair-btn-prominent {
+        background: #4ade80;
+        color: #0f172a;
+        border-color: #4ade80;
+        font-size: 13px;
+        padding: 12px 14px;
+      }
+      #${ROOT_ID} .node-pair-btn-prominent:hover { background: #22c55e; }
+      #${ROOT_ID} .node-connect-steps {
+        margin: 0 0 8px;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 10px;
+        color: #94a3b8;
+        line-height: 1.4;
+      }
+      #${ROOT_ID} .node-connect-steps strong { color: #e2e8f0; }
       #${ROOT_ID} .node-pair-btn:hover { background: rgba(74, 222, 128, 0.22); }
       #${ROOT_ID} .node-pair-btn:disabled {
         opacity: 0.55;
@@ -309,7 +330,11 @@
       #${ROOT_ID}[data-needs-desktop="1"] .node-optin-row {
         display: none;
       }
-      #${ROOT_ID}[data-needs-desktop="1"] .node-download {
+      #${ROOT_ID}[data-needs-pairing="1"] .node-optin-row {
+        display: none;
+      }
+      #${ROOT_ID}[data-needs-desktop="1"] .node-download,
+      #${ROOT_ID}[data-needs-pairing="1"] .node-download {
         display: block;
       }
       #${ROOT_ID}[data-error="1"] .node-meta {
@@ -473,6 +498,54 @@
 
   function getSessionApi() {
     return globalThis.DenizenVisitorSession || null;
+  }
+
+  async function ensurePairingModule() {
+    if (typeof globalThis.DenizenDesktopPairing?.createPairingLink === 'function') return true;
+    const lazy = globalThis.DenizenLazyScripts;
+    if (lazy?.load) {
+      await lazy.load(['./src/visitor-desktop-pairing.js?v=pair4']);
+    }
+    return typeof globalThis.DenizenDesktopPairing?.createPairingLink === 'function';
+  }
+
+  function pairingButtonLabel() {
+    if (busyPairing) return 'Opening link…';
+    if (state.contributorState === 'desktop_setup_pending' || state.contributorState === 'needs_desktop_setup') {
+      return 'Finish linking Desktop app';
+    }
+    return 'Connect Desktop app';
+  }
+
+  function renderConnectBlock(downloadEl) {
+    const pairDisabled = busyPairing || !getSessionId();
+    const pairLabel = pairingButtonLabel();
+    const pairBtn = `<button type="button" class="node-pair-btn node-pair-btn-prominent" id="denizen-node-pair-btn"${pairDisabled ? ' disabled' : ''}>${pairLabel}</button>`;
+    if (state.needsDesktopDownload) {
+      const platform = globalThis.DenizenClientPlatform?.detect?.() || 'windows';
+      const href = globalThis.DenizenClientPlatform?.directDownloadUrl?.(platform)
+        || state.downloadUrl
+        || '/desktop/download.html';
+      const platformLabel = globalThis.DenizenClientPlatform?.label?.(platform) || 'Desktop';
+      downloadEl.innerHTML = `
+        <ol class="node-connect-steps">
+          <li><strong>1.</strong> Install <a href="${href}" target="_blank" rel="noopener">Denizen Desktop (${platformLabel})</a> on this computer</li>
+          <li><strong>2.</strong> Click below — we open the app and link your Citizen ID</li>
+          <li><strong>3.</strong> In the app, approve pairing and turn on City Power</li>
+        </ol>
+        ${pairBtn}
+      `;
+    } else {
+      downloadEl.innerHTML = `
+        <ol class="node-connect-steps">
+          <li><strong>1.</strong> Keep Denizen Desktop open on this computer</li>
+          <li><strong>2.</strong> Click below — your browser sends a pairing link to the app</li>
+          <li><strong>3.</strong> Approve in the app, then enable <strong>Power the city</strong></li>
+        </ol>
+        ${pairBtn}
+      `;
+    }
+    downloadEl.hidden = false;
   }
 
   function getSessionId() {
@@ -759,6 +832,11 @@
       hostOperator,
       contributorState: String(contributorState),
       needsDesktopDownload: needsDesktop && contributorState === 'browser_only',
+      needsDesktopPairing: !desktopLinked && !hostVal && (
+        contributorState === 'browser_only'
+        || contributorState === 'desktop_setup_pending'
+        || contributorState === 'needs_desktop_setup'
+      ),
       desktopLinked,
       canContribute,
       downloadUrl: String(downloadUrl),
@@ -826,7 +904,8 @@
         to make this computer your office station. You choose when it helps and what permissions it has.
       </div>
       <div class="node-browser-hint" id="denizen-node-browser-hint">
-        <span id="denizen-node-browser-hint-text">You are connected to the office in browser mode. Pair Desktop when you want this computer to contribute City Power or help with approved computer tasks.</span>
+        <span id="denizen-node-browser-hint-text">Browser mode — link Denizen Desktop on this computer to contribute City Power.</span>
+        <button type="button" class="node-pair-btn node-pair-btn-prominent" id="denizen-node-pair-hint-btn" hidden>Connect Desktop app</button>
         <button type="button" class="node-upgrade-btn" id="denizen-node-guide-btn">Learn about City Power</button>
       </div>
       <div class="node-contrib-toggle" id="denizen-node-contrib-toggle" role="button" tabindex="0" aria-expanded="false">
@@ -891,31 +970,32 @@
         console.warn('[DenizenNodeUI] opt-in update failed:', err?.message || err);
       });
     });
-    const onPairDesktop = () => {
+    const onPairDesktop = async () => {
       if (busyPairing || !state.sessionReady || !getSessionId()) return;
-      const pairing = globalThis.DenizenDesktopPairing;
-      if (typeof pairing?.createPairingLink !== 'function') {
-        console.warn('[DenizenNodeUI] DenizenDesktopPairing unavailable');
-        return;
-      }
       busyPairing = true;
       state.lastError = null;
       render();
-      pairing.createPairingLink()
-        .catch((err) => {
-          const msg = err?.message || 'Desktop pairing failed';
-          console.warn('[DenizenNodeUI] desktop pairing failed:', msg);
-          state.lastError = msg;
-        })
-        .finally(() => {
-          busyPairing = false;
-          render();
-        });
+      try {
+        const ready = await ensurePairingModule();
+        if (!ready) {
+          state.lastError = 'Pairing UI still loading — try again in a moment';
+          return;
+        }
+        const pairing = globalThis.DenizenDesktopPairing;
+        await pairing.createPairingLink();
+      } catch (err) {
+        const msg = err?.message || 'Desktop pairing failed';
+        console.warn('[DenizenNodeUI] desktop pairing failed:', msg);
+        state.lastError = msg;
+      } finally {
+        busyPairing = false;
+        render();
+      }
     };
     rootEl.addEventListener('click', (e) => {
-      if (!e.target?.closest?.('#denizen-node-pair-btn')) return;
+      if (!e.target?.closest?.('#denizen-node-pair-btn, #denizen-node-pair-hint-btn')) return;
       e.preventDefault();
-      onPairDesktop();
+      onPairDesktop().catch(() => null);
     });
     const onContribToggle = () => {
       contribExpanded = !contribExpanded;
@@ -1098,8 +1178,21 @@
     rootEl.dataset.browserCompact = (browserOnly && !fullPanel) ? '1' : '0';
     rootEl.dataset.clientMode = caps?.clientModeLabel?.() || 'browser';
     const hint = rootEl.querySelector('#denizen-node-browser-hint-text');
+    const hintPairBtn = rootEl.querySelector('#denizen-node-pair-hint-btn');
     if (hint && browserOnly && !fullPanel) {
-      hint.textContent = 'You are connected to the office in browser mode. Pair Denizen Desktop when you want this computer to contribute City Power or help with approved computer tasks.';
+      if (state.needsDesktopPairing) {
+        hint.textContent = state.needsDesktopDownload
+          ? 'Install Denizen Desktop on this computer, then connect it to your Citizen ID.'
+          : 'Denizen Desktop is on this computer — connect it to link City Power.';
+      } else {
+        hint.textContent = 'You are connected to the office in browser mode. Pair Desktop when you want this computer to contribute City Power or help with approved computer tasks.';
+      }
+    }
+    if (hintPairBtn) {
+      const showHintPair = browserOnly && !fullPanel && state.sessionReady && state.needsDesktopPairing;
+      hintPairBtn.hidden = !showHintPair;
+      hintPairBtn.disabled = busyPairing || !getSessionId();
+      hintPairBtn.textContent = pairingButtonLabel();
     }
     const guideBtn = rootEl.querySelector('#denizen-node-guide-btn');
     if (guideBtn && !guideBtn.dataset.wired) {
@@ -1125,7 +1218,7 @@
     }
     const showToggle = state.canContribute || state.isHostNode || state.desktopLinked;
     const optinRow = rootEl.querySelector('.node-optin-row');
-    if (optinRow) optinRow.hidden = !showToggle && state.needsDesktopDownload;
+    if (optinRow) optinRow.hidden = !showToggle && state.needsDesktopPairing;
     if (toggleEl) {
       suppressToggleEvent = true;
       toggleEl.checked = !!(state.contributing || state.optedIn);
@@ -1139,16 +1232,11 @@
     }
     const downloadEl = rootEl.querySelector('#denizen-node-download');
     if (downloadEl) {
-      if (state.sessionReady && state.needsDesktopDownload) {
-        const platform = globalThis.DenizenClientPlatform?.detect?.() || 'windows';
-        const href = globalThis.DenizenClientPlatform?.directDownloadUrl?.(platform)
-          || state.downloadUrl
-          || '/desktop/download.html';
-        const platformLabel = globalThis.DenizenClientPlatform?.label?.(platform) || 'Desktop';
-        const pairDisabled = busyPairing || !getSessionId();
-        const pairLabel = busyPairing ? 'Creating link…' : 'Claim station';
-        downloadEl.innerHTML = `Connect <a href="${href}" target="_blank" rel="noopener">Denizen Desktop (${platformLabel})</a> to make this computer your office station. You choose when it helps and what permissions it has. <button type="button" class="node-pair-btn" id="denizen-node-pair-btn"${pairDisabled ? ' disabled' : ''}>${pairLabel}</button>`;
-        downloadEl.hidden = false;
+      if (state.sessionReady && state.needsDesktopPairing) {
+        const renderConnect = () => renderConnectBlock(downloadEl);
+        const loader = globalThis.DenizenClientPlatform?.loadDownloads?.();
+        if (loader && typeof loader.then === 'function') loader.then(renderConnect).catch(renderConnect);
+        else renderConnect();
       } else {
         downloadEl.hidden = true;
       }
@@ -1157,6 +1245,7 @@
     rootEl.dataset.host = state.isHostNode ? '1' : '0';
     rootEl.dataset.operatorFleet = canSeeOperatorFleet() ? '1' : '0';
     rootEl.dataset.needsDesktop = (state.sessionReady && state.needsDesktopDownload) ? '1' : '0';
+    rootEl.dataset.needsPairing = (state.sessionReady && state.needsDesktopPairing) ? '1' : '0';
     rootEl.dataset.contribExpanded = contribExpanded ? '1' : '0';
 
     const jobsEl = rootEl.querySelector('#denizen-node-jobs');

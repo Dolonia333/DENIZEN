@@ -14,6 +14,8 @@
     const set = (e, on) => {
       const dir = map[e.key];
       if (!dir) return;
+      const chatInput = document.getElementById('player-chat-input');
+      if (chatInput && document.activeElement === chatInput) return;
       window.__DenizenRawMoveKeys[dir] = on;
     };
     window.addEventListener('keydown', (e) => set(e, true), true);
@@ -66,9 +68,12 @@
       dy *= 0.707106781;
     }
     if (!dx && !dy) return;
+    const chatInput = document.getElementById('player-chat-input');
+    if (chatInput && document.activeElement === chatInput) return;
     sc.playerLocked = false;
     sc._playerOnPhone = false;
     sc._playerSitting = false;
+    if (sc._restorePlayerWalkSprite) sc._restorePlayerWalkSprite(20);
     sc.player.x += dx;
     sc.player.y += dy;
     if (sc.player.body) {
@@ -107,7 +112,13 @@
     if (wantsMove()) {
       const el = document.activeElement;
       const isField = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
-      if (isField && !loginModalOpen && !document.documentElement.classList.contains('denizen-phone-open')) {
+      const chatOpen = document.documentElement.classList.contains('denizen-chat-open');
+      const chatInput = document.getElementById('player-chat-input');
+      const chatFieldFocused = chatInput && el === chatInput;
+      if (isField && !loginModalOpen
+        && !document.documentElement.classList.contains('denizen-phone-open')
+        && !chatOpen
+        && !chatFieldFocused) {
         try { el.blur(); } catch (_) {}
         try {
           game.input?.keyboard?.enableGlobalCapture?.();
@@ -121,6 +132,7 @@
         sc._playerSitting = false;
         sc._phonePhase = 'none';
         sc._sitPhase = 'none';
+        if (sc._restorePlayerWalkSprite) sc._restorePlayerWalkSprite(20);
         try { sc._applyRawKeyMovement?.(); } catch (_) {}
       } else if (sc.player?.body) {
         try { sc._applyRawKeyMovement?.(); } catch (_) {}

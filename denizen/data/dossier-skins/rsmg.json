@@ -1,0 +1,27 @@
+{
+  "name": "rsmg",
+  "label": "RSMG",
+  "colors": {
+    "base": "#141414",
+    "surface": "#1c1c1c",
+    "accent": "#ff6b4a",
+    "accentMuted": "#ffb4a2",
+    "text": "#fafafa",
+    "muted": "#a3a3a3",
+    "callout": "#262626",
+    "border": "#404040"
+  },
+  "fonts": {
+    "body": "system-ui, -apple-system, Segoe UI, sans-serif",
+    "mono": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    "serif": "Georgia, 'Times New Roman', serif"
+  },
+  "spacing": {
+    "pageMargin": "0.75in",
+    "sectionGap": "2rem",
+    "tableCellPad": "0.5rem 0.75rem"
+  },
+  "motif": "broadcast",
+  "voice": "media/brand, client-facing",
+  "footerTemplate": "RSMG · {{title}}"
+}

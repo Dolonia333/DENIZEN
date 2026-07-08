@@ -91,6 +91,20 @@ py infra/probe-denizen-nas.py         # LAN + public health
 py infra/verify-batch3-nas.py         # competency-map, publicDemo, ws cap
 ```
 
+### Bouncer / Security deploy (post-recreate)
+
+Run from repo root on dolonia in this order:
+
+1. `py infra/patch-denizen-nas-env.py`
+2. Source sync:
+   - hotfix path: `py infra/hotfix-sync-denizen-nas.py`
+   - rebuild recovery path: `py infra/recover-denizen-nas-src.py`
+3. `py infra/enable-world-pubsub-nas.py`
+4. `powershell -ExecutionPolicy Bypass -File infra/setup-bouncer-scheduled-task.ps1`
+5. Smoke commands:
+   - `node denizen/scripts/smoke-bouncer-e2e.js`
+   - `FOLLOWER_URL=https://spectate.dolonia.cloud node denizen/scripts/smoke-bouncer-e2e.js`
+
 Then point Cloudflare tunnel `denizen.dolonia.cloud` → `http://<NAS-IP>:8888`.
 
 | Variable | Default |

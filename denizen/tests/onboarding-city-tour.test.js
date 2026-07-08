@@ -56,6 +56,7 @@ describe('Denizen office onboarding', () => {
 
     assert.match(source, /label: 'Citizen ID'/);
     assert.match(source, /label: 'City Power'/);
+    assert.match(source, /label: 'Link Station'/);
     assert.match(source, /label: 'Office Tour'/);
     assert.match(source, /label: 'Power Tour'/);
     assert.match(source, /label: 'Office Guide'/);
@@ -76,7 +77,8 @@ describe('Denizen office onboarding', () => {
 
     assert.match(nodeUi, />Power the city</);
     assert.match(nodeUi, />POWER STATION</);
-    assert.match(nodeUi, /make this computer your office station/);
+    assert.match(nodeUi, /Connect Desktop app/);
+    assert.match(nodeUi, /make this computer your office station|Link browser to Denizen Desktop/);
     assert.match(sidebar, />Citizen ID</);
     assert.match(sidebar, />City Power</);
     assert.match(sidebar, /Your place in Denizen/);

@@ -134,13 +134,12 @@
 </head>
 <body>
   <h1>Sprite Labeler</h1>
-  <p class="sub">Label sprites from Modern Office sheets. Pick a sheet, then set a <strong>Catalog ID</strong> (e.g. desk_pod, chair_office, water_cooler, printer) and <strong>Type</strong> for each. Leave ID blank to omit from catalog. Then click <strong>Save catalog</strong> to download the corrected JSON.</p>
+  <p class="sub">Label sprites on <code>mo_black_shadow_32</code> (199 auto-extracted regions) or browse 16×16 singles. Set <strong>Catalog ID</strong> + <strong>Type</strong>, then <strong>Save catalog</strong>.</p>
 
   <div class="toolbar">
     <select id="sheetSelect" title="Select sheet">
-      <option value="modern_office_black_shadow_32">Sheet: Black Shadow 32×32</option>
-      <option value="modern_office_16">Sheet: Modern Office 16×16</option>
-      <option value="modern_office_singles_16">Sheet: Modern Office Singles 16×16</option>
+      <option value="modern_office_black_shadow_32">Sheet: Black Shadow 32×32 (main office)</option>
+      <option value="modern_office_singles_16">Singles: Modern Office 16×16 PNGs</option>
     </select>
     <input type="search" id="search" placeholder="Filter by ID or rect..." />
     <select id="filterType">
@@ -201,28 +200,20 @@
   </dialog>
 
   <script type="module">
-    const sheetBase = '../pixel%20game%20stuff/pixel%20game%20assets%20and%20stuff';
     const SHEETS = {
       modern_office_black_shadow_32: {
         label: 'Black Shadow 32×32',
         sheetId: 'mo_black_shadow_32',
-        sheetUrl: sheetBase + '/Modern_Office_Revamped_v1.2/2_Modern_Office_Black_Shadow/Modern_Office_Black_Shadow_32x32.png',
-        extractUrl: 'out/sheet_extract/modern_office_black_shadow_32.objects.json',
-        defaultCatalogUrl: 'data/furniture_catalog_openplan.json',
-        v2CatalogUrl: 'data/furniture_catalog_openplan_v2.objects.json'
-      },
-      modern_office_16: {
-        label: 'Modern Office 16×16',
-        sheetId: 'modern_office_16',
-        sheetUrl: sheetBase + '/Modern_Office_Revamped_v1.2/Modern_Office_16x16.png',
-        extractUrl: 'out/sheet_extract/modern_office_16.objects.json',
-        defaultCatalogUrl: null
+        sheetUrl: '/assets/Modern_Office_Black_Shadow_32x32.png',
+        extractUrl: '/data/sheet_extract/modern_office_black_shadow_32.objects.json',
+        defaultCatalogUrl: '/data/furniture_catalog_openplan.json',
+        v2CatalogUrl: '/data/furniture_catalog_openplan_v2.objects.json'
       },
       modern_office_singles_16: {
         label: 'Modern Office Singles 16×16',
         sheetId: 'modern_office_singles_16',
         mode: 'singles',
-        manifestUrl: 'out/singles/modern_office_singles_16.manifest.json',
+        manifestUrl: '/data/singles/modern_office_singles_16.manifest.json',
         defaultCatalogUrl: null
       }
     };
@@ -757,7 +748,7 @@
             rect: { x: 0, y: 0, w: ent.w, h: ent.h },
             origin: 'bottom',
             pivot_y: ent.h,
-            singleUrl: ent.url
+            singleUrl: ent.url.startsWith('/') ? ent.url : '/' + ent.url
           }))
         };
       } else {

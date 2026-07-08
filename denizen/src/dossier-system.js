@@ -12,6 +12,7 @@ const { exec } = require('node:child_process');
 const { promisify } = require('node:util');
 
 const execAsync = promisify(exec);
+const approvalsScope = require('./denizen-approvals-scope');
 
 const projectRoot = path.resolve(__dirname, '..');
 const DOSSIER_DIR = path.join(projectRoot, 'reports', 'dossiers');
@@ -780,7 +781,12 @@ async function runDossierTask({ npc, params = {}, deps = {}, broadcast }) {
     const preset = DOCUMENT_TYPES[type];
     const reader = String(params.reader || preset.defaultReader);
     const subject = String(params.subject || preset.defaultSubject);
-    const skinName = String(params.skin || preset.defaultSkin);
+    const ownerProfile = deps.ownerProfile || {};
+    const ownerIdentityId = deps.ownerIdentityId || deps.identityId || null;
+    const skinName = approvalsScope.resolveDossierSkinForOwner(ownerProfile, {
+      requestedSkin: params.skin,
+      defaultSkin: preset.defaultSkin,
+    });
     const recipient = params.recipient ? String(params.recipient).trim() : '';
     const skin = loadSkin(skinName);
     let facts = loadFactsForSubject(subject);
@@ -895,6 +901,9 @@ async function runDossierTask({ npc, params = {}, deps = {}, broadcast }) {
       repo_pin: facts.repo_pin || null,
       status: 'pending_review',
       requiresAngelaReview,
+      owner_identity_id: ownerIdentityId,
+      owner_email: ownerProfile.email ? String(ownerProfile.email).trim().toLowerCase() : null,
+      owner_display_name: ownerProfile.display_name || ownerProfile.displayName || null,
       ts: Date.now(),
       spec: 'docs/BRANDED_DOSSIER_SYSTEM.md',
     };
@@ -939,8 +948,13 @@ async function runDossierTask({ npc, params = {}, deps = {}, broadcast }) {
   }
 }
 
-function getProposals() {
-  return Array.from(_proposals.values());
+function getProposals(opts = {}) {
+  const all = Array.from(_proposals.values());
+  if (opts.operator) return all;
+  if (opts.identityId) {
+    return all.filter((p) => p.owner_identity_id === opts.identityId);
+  }
+  return all;
 }
 
 function getProposalById(id) {

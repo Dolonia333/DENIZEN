@@ -99,6 +99,9 @@
           padding: 6px 10px;
           cursor: pointer;
         }
+        #denizen-node-ui-chip .node-browser-hint .node-pair-btn-prominent {
+          margin-top: 10px;
+        }
         html.denizen-desktop-identity #denizen-acct-stats .acct-stat-row.acct-browser-hide {
           display: none;
         }

@@ -6,6 +6,34 @@
 let _localMetrics = null;
 try { _localMetrics = require('./npc-local-metrics'); } catch (_) {}
 
+function _resolveNpcName(npc) {
+  if (!npc) return null;
+  if (npc.name) return npc.name;
+  if (npc.npcName) return npc.npcName;
+  const texKey = npc.texture?.key;
+  if (texKey && typeof globalThis !== 'undefined') {
+    const am = globalThis.DenizenAgentManager;
+    const agent = am?.agents?.get(texKey);
+    if (agent?.name) return agent.name;
+    const short = texKey.replace(/^xp_/, '');
+    return short.charAt(0).toUpperCase() + short.slice(1);
+  }
+  return null;
+}
+
+function _reportPathFriction(npc, code, message) {
+  const npcName = _resolveNpcName(npc);
+  if (!npcName) return;
+  const err = { code, message };
+  try {
+    if (typeof globalThis.DenizenReportFriction === 'function') {
+      globalThis.DenizenReportFriction(npcName, 'pathfinding', err);
+    } else if (_localMetrics?.captureSystemError) {
+      _localMetrics.captureSystemError(npcName, 'pathfinding', err);
+    }
+  } catch (_) {}
+}
+
 class OfficePathfinder {
   /**
    * @param {number} worldW - World width in pixels
@@ -694,10 +722,7 @@ class NpcPathFollower {
           this._stuckCount = 0;
           this._totalStuckTime = 0;
           try {
-            if (_localMetrics && _localMetrics.captureSystemError && this.npc && (this.npc.name || this.npc.npcName)) {
-              const n = this.npc.name || this.npc.npcName;
-              _localMetrics.captureSystemError(n, 'mesh_navigation', { code: 'STUCK', message: 'path stuck 8s+' });
-            }
+            _reportPathFriction(this.npc, 'STUCK', 'path stuck 8s+');
           } catch (_) {}
           return null;
         }
@@ -713,10 +738,7 @@ class NpcPathFollower {
             this._rerouteCount = 0;
             this._totalStuckTime = 0;
             try {
-              if (_localMetrics && _localMetrics.captureSystemError && this.npc && (this.npc.name || this.npc.npcName)) {
-                const n = this.npc.name || this.npc.npcName;
-                _localMetrics.captureSystemError(n, 'mesh_navigation', { code: 'UNROUTABLE', message: 'too many reroutes' });
-              }
+              _reportPathFriction(this.npc, 'UNROUTABLE', 'too many reroutes');
             } catch (_) {}
             return null;
           }
@@ -749,10 +771,7 @@ class NpcPathFollower {
             this.waypoints = null;
             this._totalStuckTime = 0;
             try {
-              if (_localMetrics && _localMetrics.captureSystemError && this.npc && (this.npc.name || this.npc.npcName)) {
-                const n = this.npc.name || this.npc.npcName;
-                _localMetrics.captureSystemError(n, 'mesh_navigation', { code: 'UNROUTABLE', message: 'no path after reroute' });
-              }
+              _reportPathFriction(this.npc, 'UNROUTABLE', 'no path after reroute');
             } catch (_) {}
             return null;
           }

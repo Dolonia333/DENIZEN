@@ -18,6 +18,7 @@ const computeCredits = require('./denizen-compute-credits');
 const contributionTracker = require('./denizen-contribution-tracker');
 const nodeProfiler = require('./denizen-node-profiler');
 const fleetAgentBundle = require('./denizen-fleet-agent-bundle');
+const stationTokens = require('./denizen-station-tokens.js');
 const lmStudioRouter = require('./lm-studio-router');
 const inferenceRpc = require('./denizen-inference-rpc');
 const inferenceProgress = require('./denizen-inference-progress');
@@ -290,6 +291,25 @@ function assertInternalRequest(req, body = {}, url = null, serverContext = {}) {
 }
 
 function assertFleetAgentRequest(req, body = {}, url = null, serverContext = {}) {
+  const stationCandidates = [
+    req.headers['x-station-token'],
+    req.headers['x-fleet-agent-token'],
+    body.station_token,
+    body.stationToken,
+    body.fleet_agent_token,
+    body.fleetAgentToken,
+    url && url.searchParams.get('station_token'),
+    url && url.searchParams.get('fleet_agent_token'),
+  ].map((v) => String(v || '').trim()).filter(Boolean);
+
+  for (const stationRaw of stationCandidates) {
+    const verified = stationTokens.decodeToken(stationRaw);
+    if (verified) {
+      req._stationAuth = verified;
+      return;
+    }
+  }
+
   const fleetToken =
     serverContext.fleetAgentToken || process.env.DENIZEN_FLEET_AGENT_TOKEN || '';
   if (fleetToken) {
@@ -572,6 +592,16 @@ function mountComputeRoutes(serverContext = {}) {
           body,
         }).catch(() => null);
 
+        if (completed.job_type === 'bouncer_patrol' && typeof serverContext.onBouncerPatrolComplete === 'function') {
+          try {
+            serverContext.onBouncerPatrolComplete({
+              nodeId: node.id || node.machine_id || body.nodeId,
+              patrol: body.result || {},
+              job: completed,
+            });
+          } catch (_) { /* non-fatal */ }
+        }
+
         sendJson(res, 200, { ok: true, job: completed, credits_award: credits || null });
         return true;
       }
@@ -636,28 +666,36 @@ function mountComputeRoutes(serverContext = {}) {
         }
         const machineId = url.searchParams.get('machine_id')
           || url.searchParams.get('machineId')
+          || req._stationAuth?.machineId
           || 'hp81081d';
         const label = url.searchParams.get('label')
+          || req._stationAuth?.label
           || (machineId === 'hp81081d' ? 'Kali · hp81081d' : machineId);
         const agentRoot = url.searchParams.get('agent_root') || '~/denizen-agent';
         const denizenUrl = (
           url.searchParams.get('denizen_url')
           || url.searchParams.get('pull_url')
           || process.env.DENIZEN_TAILSCALE_URL
+          || serverContext.denizenPublicUrl
           || serverContext.denizenLanUrl
           || process.env.DENIZEN_LAN_URL
           || process.env.DENIZEN_URL
         );
+        const stationToken = req._stationAuth
+          ? (url.searchParams.get('station_token')
+            || req.headers['x-station-token']
+            || '')
+          : '';
         const body = fleetAgentBundle.createAgentBundleBuffer({
           machineId,
           label,
           agentRoot,
           denizenUrl,
           publicUrl: serverContext.denizenPublicUrl || process.env.DENIZEN_PUBLIC_URL,
-          identityId: process.env.DENIZEN_FLEET_IDENTITY_ID,
+          identityId: req._stationAuth?.identityId || process.env.DENIZEN_FLEET_IDENTITY_ID,
           sessionId: process.env.DENIZEN_FLEET_SESSION_ID,
           sessionToken: process.env.DENIZEN_FLEET_SESSION_TOKEN,
-          fleetToken: serverContext.fleetAgentToken || process.env.DENIZEN_FLEET_AGENT_TOKEN,
+          fleetToken: stationToken || serverContext.fleetAgentToken || process.env.DENIZEN_FLEET_AGENT_TOKEN,
         });
         res.writeHead(200, {
           'Content-Type': 'application/gzip',
@@ -683,7 +721,12 @@ function mountComputeRoutes(serverContext = {}) {
           return true;
         }
 
-        const identityId = String(body.identity_id || body.identityId || '').trim();
+        const identityId = String(
+          req._stationAuth?.identityId
+          || body.identity_id
+          || body.identityId
+          || '',
+        ).trim();
         const live = extractLiveMetrics(body) || body.snapshot || null;
         if (!identityId) {
           sendJson(res, 400, { ok: false, error: 'identity_id required' });
@@ -694,12 +737,19 @@ function mountComputeRoutes(serverContext = {}) {
           return true;
         }
 
+        if (req._stationAuth && body.identity_id && String(body.identity_id) !== req._stationAuth.identityId) {
+          sendJson(res, 403, { ok: false, error: 'identity_id does not match station token' });
+          return true;
+        }
+
         const machineId = body.machine_id
           || body.machineId
+          || req._stationAuth?.machineId
           || live.machine_id
           || `nas-${live.hostname || 'remote'}`;
-        const role = String(body.role || live.role || 'nas').trim() || 'nas';
-        const label = body.label || live.label || live.hostname || machineId;
+        const role = String(body.role || live.role || (req._stationAuth ? 'station' : 'nas')).trim()
+          || (req._stationAuth ? 'station' : 'nas');
+        const label = body.label || req._stationAuth?.label || live.label || live.hostname || machineId;
         const smoke = !!body.smoke
           || /^1|true|yes$/i.test(String(headerValue(req, 'x-fleet-smoke') || ''))
           || String(machineId).startsWith('nas-smoke-');
@@ -1078,7 +1128,7 @@ function mountComputeRoutes(serverContext = {}) {
             error: 'Install Denizen Desktop on this machine to add City Power. Run on 192.168.1.232, pair, then enable in Compute > City Power tab (set level + toggle Power the city). See COMPUTE_MESH.md for full steps.',
             needs_desktop_download: true,
             contributor_state: 'browser_only',
-            download_url: '/desktop/',
+            download_url: '/desktop/download.html',
             activation_hint: 'On .232: install/run Desktop app -> pair to server -> phone UI Compute/City Power -> opt-in.',
           });
           return true;
@@ -1113,6 +1163,47 @@ function mountComputeRoutes(serverContext = {}) {
           sessionTier: access?.tier || access?.session?.metadata?.tier || null,
         });
         sendJson(res, 200, statusPayload || computePlatform.buildStatusPayload(freshIdentity || identity, profile));
+        return true;
+      }
+
+      if (
+        path === '/api/compute/station/provision'
+        && (method === 'POST' || method === 'GET')
+      ) {
+        const body = await readBodyOrHeaders(req, url, 16 * 1024);
+        const sessionId = extractSessionId(req, body, url);
+        if (!sessionId) {
+          sendJson(res, 400, { ok: false, error: 'session_id required — log in first' });
+          return true;
+        }
+        const { identity } = await resolveIdentityForSession(serverContext, req, sessionId, body);
+        if (!identity?.id) {
+          sendJson(res, 404, { ok: false, error: 'Identity not found for session' });
+          return true;
+        }
+        const label = String(body.label || body.machine_label || url.searchParams.get('label') || '').trim()
+          || 'My station';
+        const machineId = String(body.machine_id || body.machineId || url.searchParams.get('machine_id') || '').trim();
+        const minted = stationTokens.createStationToken({
+          identityId: identity.id,
+          label,
+          machineId: machineId || undefined,
+        });
+        const publicUrl = serverContext.denizenPublicUrl
+          || process.env.DENIZEN_PUBLIC_URL
+          || resolvePublicServerUrl(req)
+          || `http://127.0.0.1:${process.env.PORT || 8080}`;
+        sendJson(res, 200, {
+          ...stationTokens.buildProvisionPayload({
+            identityId: identity.id,
+            label: minted.label,
+            machine_id: minted.machine_id,
+            publicUrl,
+            stationToken: minted.station_token,
+          }),
+          expires_at: minted.expires_at,
+          help: 'Run install_linux on the other machine (NAS, Linux PC, old laptop). Desktop computers should use Link Station instead.',
+        });
         return true;
       }
 

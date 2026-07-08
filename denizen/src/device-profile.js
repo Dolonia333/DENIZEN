@@ -27,15 +27,28 @@
     return Math.min(compact ? 400 : 440, Math.round(sw * 0.94));
   }
 
-  function detectTouch() {
+  function isCoarsePointer() {
     if (typeof window.__DenizenForceTouch === 'boolean') return window.__DenizenForceTouch;
     try {
-      return window.matchMedia('(pointer: coarse)').matches
-        || navigator.maxTouchPoints > 0
-        || ('ontouchstart' in window);
+      return window.matchMedia('(pointer: coarse)').matches;
     } catch (_) {
       return false;
     }
+  }
+
+  function hasTouchHardware() {
+    try {
+      return navigator.maxTouchPoints > 0 || ('ontouchstart' in window);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function detectTouch() {
+    if (typeof window.__DenizenForceTouch === 'boolean') return window.__DenizenForceTouch;
+    // Coarse pointer = phone/tablet. Touch laptops keep fine pointer → desktop layout.
+    return isCoarsePointer()
+      || (hasTouchHardware() && shortEdge() < PHONE_SHORT_EDGE);
   }
 
   function shortEdge() {
@@ -47,14 +60,15 @@
   }
 
   function computeProfile() {
+    const coarse = isCoarsePointer();
     const touch = detectTouch();
     const sw = shortEdge();
     const lw = longEdge();
     const landscape = window.innerWidth > window.innerHeight;
     const phone = touch && sw < PHONE_SHORT_EDGE;
-    const tablet = touch && !phone;
+    const tablet = coarse && !phone;
     const compact = phone && sw < COMPACT_SHORT_EDGE;
-    const desktop = !touch;
+    const desktop = !phone && !tablet;
 
     let tier = 'desktop';
     if (compact) tier = 'phone-compact';
@@ -197,6 +211,14 @@
   window.addEventListener('resize', sync);
   window.addEventListener('orientationchange', () => { window.setTimeout(sync, 100); });
 
+  /** Camera zoom for Phaser playfield — synced with device tier. */
+  function playfieldZoomFor(p) {
+    const prof = p || profile;
+    if (prof.isPhone || prof.tier === 'phone-compact') return 1.25;
+    if (prof.isTablet) return 1.15;
+    return 1.5;
+  }
+
   window.DenizenDeviceProfile = {
     get: () => ({ ...profile }),
     sync,
@@ -207,6 +229,8 @@
     isTouch: () => profile.isTouch,
     isCompactPhone: () => profile.isCompactPhone,
     panelMaxWidth: () => profile.panelMaxWidth,
+    playfieldZoom: () => playfieldZoomFor(profile),
+    playfieldZoomFor,
     resetPhonePanelLayout,
   };
 })();

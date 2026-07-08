@@ -43,6 +43,8 @@ async function runWatchdogTick({ computeQueue, fleetRegistry, broadcast, log, re
     expire = await computeQueue.expireOldQueuedJobs().catch(() => expire);
   }
   let trim = { trimmed: 0 };
+  const alerts = [];
+
   if (pending.length >= 8 && computeQueue?.trimExcessQueuedJobs) {
     trim = await computeQueue.trimExcessQueuedJobs().catch(() => trim);
     if (trim.trimmed > 0) {
@@ -60,7 +62,6 @@ async function runWatchdogTick({ computeQueue, fleetRegistry, broadcast, log, re
     || [];
   const { stale, offline } = classifyFleet(fleet);
 
-  const alerts = [];
   if (pending.length >= 8) {
     alerts.push({
       severity: 'warn',

@@ -12,12 +12,13 @@ const ALLOWED_JOB_TYPES = new Set([
   'sim_tick',
   'cursor_bridge',
   'web_search',
+  'bouncer_patrol',
 ]);
 
 const MESH_TOOL_DEFINITIONS = [
   {
     name: 'enqueue_compute_job',
-    description: 'Enqueue a City Power mesh job (embedding_index, inference_rpc, sim_tick, npc_think_batch). Returns job id for polling.',
+    description: 'Enqueue a City Power mesh job (embedding_index, inference_rpc, sim_tick, npc_think_batch, web_search, bouncer_patrol). Returns job id for polling.',
     inputSchema: {
       type: 'object',
       properties: {

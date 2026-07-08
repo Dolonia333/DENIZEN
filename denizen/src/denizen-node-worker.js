@@ -332,6 +332,115 @@ async function processJobLocally(jobType, payload = {}) {
   };
 }
 
+const BUILTIN_SERVER_NODE_ID = 'f0000000-0000-4000-8000-000000000001';
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+}
+
+async function resolveServerIdentityId(explicit = null) {
+  const direct = String(explicit || process.env.DENIZEN_FLEET_IDENTITY_ID || '').trim();
+  if (isUuid(direct)) return direct;
+
+  if (!isEnabled()) return direct || 'server-builtin';
+
+  const ceoEmail = String(process.env.DENIZEN_CEO_IDENTITY_EMAIL || '').trim();
+  if (ceoEmail) {
+    const byEmail = await denizenDb._get(
+      `denizen_user_identities?select=id&email=eq.${encodeURIComponent(ceoEmail)}&limit=1`,
+    ).catch(() => []);
+    if (byEmail?.[0]?.id) return byEmail[0].id;
+  }
+
+  const onlineNodes = await denizenDb._get(
+    `${NODE_TABLE}?select=identity_id&status=eq.online&order=last_heartbeat.desc&limit=1`,
+  ).catch(() => []);
+  if (onlineNodes?.[0]?.identity_id) return onlineNodes[0].identity_id;
+
+  const anyIdentity = await denizenDb._get(
+    'denizen_user_identities?select=id&order=created_at.desc&limit=1',
+  ).catch(() => []);
+  if (anyIdentity?.[0]?.id) return anyIdentity[0].id;
+
+  throw new Error('no valid identity for server compute node');
+}
+
+/**
+ * Ensure a fixed compute-node row exists for server-side job claiming (telemetry, etc.).
+ * assigned_node_id on denizen_compute_jobs is a UUID FK — string labels like
+ * "server-telemetry-primary" will fail PATCH with HTTP 400.
+ */
+async function ensureBuiltinServerNode({
+  nodeId = BUILTIN_SERVER_NODE_ID,
+  identityId = null,
+} = {}) {
+  const id = isUuid(nodeId) ? String(nodeId).trim() : BUILTIN_SERVER_NODE_ID;
+  const now = new Date().toISOString();
+
+  if (!isEnabled()) {
+    const memIdentity = identityId || 'server-builtin';
+    if (!getMemoryNode(id)) {
+      saveMemoryNode({
+        id,
+        identity_id: memIdentity,
+        node_profile_id: memoryProfileId(memIdentity),
+        endpoint_token_hash: hashToken(`denizen-builtin-node:${id}`),
+        status: 'online',
+        last_heartbeat: now,
+        jobs_completed: 0,
+        reputation_score: 0,
+      });
+    }
+    return id;
+  }
+
+  const existing = await denizenDb._get(
+    `${NODE_TABLE}?select=id&limit=1&id=eq.${encodeURIComponent(id)}`,
+  ).catch(() => []);
+  if (existing?.[0]?.id) {
+    await denizenDb._patch(
+      `${NODE_TABLE}?id=eq.${encodeURIComponent(id)}`,
+      { status: 'online', last_heartbeat: now },
+      { prefer: 'return=minimal' },
+    ).catch(() => {});
+    return id;
+  }
+
+  const resolvedIdentity = await resolveServerIdentityId(identityId);
+  if (!isUuid(resolvedIdentity)) {
+    throw new Error('no valid identity for server compute node');
+  }
+
+  const profileId = await ensureNodeProfile(resolvedIdentity);
+  let resolvedProfileId = profileId;
+  if (!resolvedProfileId || String(resolvedProfileId).startsWith('mem-profile-')) {
+    const sibling = await denizenDb._get(
+      `${NODE_TABLE}?select=node_profile_id&identity_id=eq.${encodeURIComponent(resolvedIdentity)}&limit=1`,
+    ).catch(() => []);
+    resolvedProfileId = sibling?.[0]?.node_profile_id || null;
+  }
+  if (!resolvedProfileId || String(resolvedProfileId).startsWith('mem-profile-')) {
+    throw new Error('node profile unavailable for server compute node');
+  }
+
+  const created = await denizenDb._post(
+    NODE_TABLE,
+    {
+      id,
+      identity_id: resolvedIdentity,
+      node_profile_id: resolvedProfileId,
+      endpoint_token_hash: hashToken(`denizen-builtin-node:${id}`),
+      status: 'online',
+      last_heartbeat: now,
+      jobs_completed: 0,
+      reputation_score: 0,
+    },
+    { prefer: 'return=representation' },
+  );
+  if (!created?.[0]?.id) throw new Error('server compute node insert returned empty');
+  return created[0].id;
+}
+
 module.exports = {
   registerNode,
   heartbeat,
@@ -342,5 +451,9 @@ module.exports = {
   verifyNodeTokenByIdentity,
   resolveNodeAuth,
   getNodeForIdentity,
+  ensureBuiltinServerNode,
+  resolveServerIdentityId,
+  BUILTIN_SERVER_NODE_ID,
+  isUuid,
   NODE_TABLE,
 };

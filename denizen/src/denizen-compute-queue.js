@@ -108,13 +108,25 @@ function jobMatchesNode(job, nodeId, nodeProfile = null, opts = {}) {
 }
 
 async function claimJob(nodeId, nodeProfile = null, opts = {}) {
+  return claimJobByTypes(nodeId, null, nodeProfile, opts);
+}
+
+/**
+ * Claim the next queued job, optionally filtered by job_type list.
+ * Server telemetry worker passes jobTypes=['grok_telemetry_check'].
+ */
+async function claimJobByTypes(nodeId, jobTypes = null, nodeProfile = null, opts = {}) {
   if (!isEnabled() || !nodeId) return null;
   const node = String(nodeId).trim();
   if (!node) return null;
 
+  const typeSet = jobTypes == null
+    ? null
+    : new Set((Array.isArray(jobTypes) ? jobTypes : [jobTypes]).map((t) => String(t).trim()));
+
   let candidates = [];
   try {
-    candidates = await denizenDb._getSoft(
+    candidates = await denizenDb._get(
       `${JOB_TABLE}?select=id,job_type,payload,priority,created_at&status=eq.queued&order=priority.desc,created_at.asc&limit=25`,
     ) || [];
   } catch (_) {
@@ -122,8 +134,9 @@ async function claimJob(nodeId, nodeProfile = null, opts = {}) {
   }
 
   for (const job of candidates) {
-    if (!jobMatchesNode(job, node, nodeProfile, opts)) continue;
-    if (nodeProfile && !nodeCanRunJob(nodeProfile, job)) continue;
+    if (typeSet && !typeSet.has(String(job.job_type || '').trim())) continue;
+    if (!opts.serverWorker && !jobMatchesNode(job, node, nodeProfile, opts)) continue;
+    if (!opts.serverWorker && nodeProfile && !nodeCanRunJob(nodeProfile, job)) continue;
     const now = new Date().toISOString();
     let rows = null;
     try {
@@ -134,7 +147,7 @@ async function claimJob(nodeId, nodeProfile = null, opts = {}) {
           assigned_node_id: node,
           started_at: now,
         },
-        { prefer: 'return=representation' },
+        { prefer: 'return=representation', timeoutMs: 8000 },
       );
     } catch (_) {
       continue;
@@ -347,6 +360,13 @@ async function trimExcessQueuedJobs({
     if (await failQueuedJob(job, 'trimmed: excess mesh_producer batch')) trimmed += 1;
   }
 
+  const telemetryChecks = pending
+    .filter((j) => j.job_type === 'grok_telemetry_check')
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  for (const job of telemetryChecks.slice(1)) {
+    if (await failQueuedJob(job, 'trimmed: duplicate grok_telemetry_check')) trimmed += 1;
+  }
+
   const simTicks = pending
     .filter((j) => j.job_type === 'sim_tick')
     .sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
@@ -372,6 +392,7 @@ module.exports = {
   buildEffectiveNodeProfile,
   enqueueJob,
   claimJob,
+  claimJobByTypes,
   completeJob,
   failJob,
   getJobById,

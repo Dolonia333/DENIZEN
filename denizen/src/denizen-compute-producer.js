@@ -14,6 +14,7 @@ let producerTimer = null;
 let initialTimer = null;
 let lastEnqueuedAt = 0;
 let lastJobId = null;
+let lastPatrolEnqueuedAt = 0;
 
 function envTriBool(name) {
   const v = process.env[name];
@@ -37,6 +38,10 @@ function isProducerEnabled() {
   const explicit = envTriBool('DENIZEN_MESH_JOBS');
   if (explicit !== null) return explicit;
   return isMeshConfigured();
+}
+
+function isBouncerPatrolEnabled() {
+  return envTriBool('BOUNCER_MESH_PATROL') === true;
 }
 
 function collectNpcIds(getNpcBrains) {
@@ -93,6 +98,14 @@ async function enqueueThinkBatch(getNpcBrains) {
 
 async function enqueueGrokTelemetryCheck() {
   if (!isProducerEnabled() || !denizenDb?.enabled) return null;
+
+  const pending = await computeQueue.listPendingJobs(50).catch(() => []);
+  const alreadyQueued = pending.some((j) => j.job_type === 'grok_telemetry_check');
+  if (alreadyQueued) return null;
+
+  const now = Date.now();
+  if (now - lastEnqueuedAt < MIN_GAP_MS) return null;
+
   try {
     const job = await computeQueue.enqueueJob({
       jobType: 'grok_telemetry_check',
@@ -112,6 +125,72 @@ async function enqueueGrokTelemetryCheck() {
   }
 }
 
+function normalizeNodeHost(node = {}) {
+  const fromHost = String(node.host || '').trim();
+  if (fromHost) return fromHost;
+  const fromUrl = String(node.url || '').trim();
+  if (!fromUrl) return '';
+  try {
+    return new URL(fromUrl).hostname || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+async function enqueueBouncerPatrol() {
+  if (!isProducerEnabled() || !denizenDb?.enabled || !isBouncerPatrolEnabled()) return null;
+
+  const now = Date.now();
+  if (now - lastPatrolEnqueuedAt < MIN_GAP_MS) return null;
+
+  const pending = await computeQueue.listPendingJobs(100).catch(() => []);
+  const queuedNodeIds = new Set(
+    pending
+      .filter((job) => job.job_type === 'bouncer_patrol')
+      .map((job) => String(job.payload?.node_id || '').trim())
+      .filter(Boolean),
+  );
+  const nodes = lmStudioRouter?.listNodes?.() || [];
+  const candidates = nodes
+    .map((node) => {
+      const nodeId = String(node.node_id || node.id || node.machine_id || node.url || '').trim();
+      const host = normalizeNodeHost(node);
+      if (!nodeId || !host) return null;
+      return {
+        node_id: nodeId,
+        url: node.url || null,
+        host,
+        health_url: node.health_url || null,
+      };
+    })
+    .filter(Boolean)
+    .filter((node) => !queuedNodeIds.has(node.node_id));
+
+  if (!candidates.length) return null;
+
+  const jobs = [];
+  for (const node of candidates) {
+    try {
+      const job = await computeQueue.enqueueJob({
+        jobType: 'bouncer_patrol',
+        payload: {
+          ...node,
+          source: 'mesh_producer',
+        },
+        priority: 45,
+      });
+      if (job?.id) jobs.push(job);
+    } catch (err) {
+      console.warn('[compute-producer] bouncer patrol enqueue failed:', err?.message || err);
+    }
+  }
+
+  if (jobs.length) {
+    lastPatrolEnqueuedAt = now;
+  }
+  return jobs;
+}
+
 function startMeshJobProducer(ctx = {}) {
   if (!isProducerEnabled()) {
     return { ok: false, reason: 'disabled' };
@@ -127,6 +206,7 @@ function startMeshJobProducer(ctx = {}) {
   const getNpcBrains = ctx.getNpcBrains;
   const tick = () => {
     enqueueThinkBatch(getNpcBrains).catch(() => {});
+    enqueueBouncerPatrol().catch(() => {});
     // Occasionally enqueue telemetry check (every ~3 ticks)
     if (Math.random() < 0.33) {
       enqueueGrokTelemetryCheck().catch(() => {});
@@ -175,7 +255,9 @@ function getStatus() {
 module.exports = {
   isProducerEnabled,
   isMeshConfigured,
+  isBouncerPatrolEnabled,
   enqueueThinkBatch,
+  enqueueBouncerPatrol,
   startMeshJobProducer,
   stopMeshJobProducer,
   getStatus,

@@ -334,17 +334,18 @@ class NpcBrainManager {
       return { allowed: false, reason: 'environmental_cooldown (host_infrastructure high — back off, throttle tasks)' };
     }
 
-    if (this._directives.has(npcName) || rt?.directives?.has(npcName)) {
-      return { allowed: true };
-    }
-
     const skillKey = skill ? String(skill).toLowerCase() : '';
+    // Demo visitors must not run heavy skills even when stale directives exist on disk.
     if (officeContext?.visitorScoped && officeContext.canUseRealWork === false
       && skillKey && REAL_WORK_SKILLS.has(skillKey)) {
       return {
         allowed: false,
         reason: 'visitor session is demo — autonomous real tools need team access',
       };
+    }
+
+    if (this._directives.has(npcName) || rt?.directives?.has(npcName)) {
+      return { allowed: true };
     }
 
     const cd = promptTuning?.runSkillCooldownMs ?? 900000;

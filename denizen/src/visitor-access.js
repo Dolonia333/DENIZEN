@@ -18,6 +18,9 @@ const DEMO_RESTRICTED_FEATURES = new Set([
   'bridge_skill',
   'briefing',
   'mcp_connect',
+  'security_feed_read',
+  'bouncer_chat_full',
+  'restricted_room_pass',
 ]);
 
 class VisitorAccessError extends Error {

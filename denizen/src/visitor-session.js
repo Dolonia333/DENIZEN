@@ -261,10 +261,28 @@
     }
   }
 
+  function resolvedSessionId() {
+    if (!sessionId) {
+      const stored = readStore().session_id;
+      if (stored) sessionId = stored;
+    }
+    return sessionId || null;
+  }
+
+  function resolvedSessionToken() {
+    if (!sessionToken) {
+      const stored = readStore().session_token;
+      if (stored) sessionToken = stored;
+    }
+    return sessionToken || null;
+  }
+
   function authHeaders(extra = {}) {
     const headers = { 'Content-Type': 'application/json', ...extra };
-    if (sessionId) headers['X-Session-Id'] = sessionId;
-    if (sessionToken) headers['X-Session-Token'] = sessionToken;
+    const sid = resolvedSessionId();
+    const stok = resolvedSessionToken();
+    if (sid) headers['X-Session-Id'] = sid;
+    if (stok) headers['X-Session-Token'] = stok;
     if (userEmail) headers['X-Email'] = userEmail;
     if (displayName) headers['X-Display-Name'] = displayName;
     if (isCeoPrincipalNow()) {
@@ -1531,8 +1549,9 @@
   }
 
   function requireSessionId() {
-    if (!sessionId) throw new Error('Session not ready');
-    return sessionId;
+    const sid = resolvedSessionId();
+    if (!sid) throw new Error('Session not ready');
+    return sid;
   }
 
   async function touchSession(name, opts = {}) {
@@ -1680,11 +1699,11 @@
     npcKeyToTextureKey,
 
     getSessionId() {
-      return sessionId;
+      return resolvedSessionId();
     },
 
     getSessionToken() {
-      return sessionToken || null;
+      return resolvedSessionToken();
     },
 
     getDisplayName() {

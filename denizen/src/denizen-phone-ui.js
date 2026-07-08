@@ -49,6 +49,20 @@
   const isTouch = () => document.documentElement.classList.contains('denizen-touch');
   const isDesktop = () => !isTouch();
 
+  /** Office Build + scene editor tools — dev, Dolonia host, CEO, or ?editor=1 */
+  function isOfficeBuilderAllowed() {
+    try {
+      const host = String(window.location.hostname || '').toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('editor')) return true;
+      if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]') return true;
+      if (host === 'denizen.dolonia.cloud' || host.endsWith('.dolonia.cloud')) return true;
+      const sess = globalThis.DenizenVisitorSession;
+      if (sess?.isCeoPrincipal?.()) return true;
+    } catch (_) {}
+    return false;
+  }
+
   // ---- App registry --------------------------------------------------------
   // type 'panel'    : opens an existing floating panel, constrained to the screen
   // type 'action'   : proxies a toggle chip; stays on the grid with live state
@@ -85,11 +99,14 @@
     { id: 'mesh', icon: '⬡', label: 'Power Grid', type: 'panel', trigger: '#denizen-mesh-jobs-chip', panel: '#denizen-mesh-jobs-panel',
       c: ['#818cf8', '#3730a3'], badgeFrom: '#denizen-mesh-jobs-chip' },
     { id: 'approvals', icon: '📋', label: 'Approvals', type: 'panel', trigger: '#denizen-proposals-chip', panel: '#denizen-proposals-panel',
-      c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip', available: () => {
-        const caps = globalThis.DenizenVisitorCapabilities;
-        if (caps?.isCeo?.() || caps?.canApproveSkills?.()) return true;
+      c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip',
+      open: () => window.DenizenProposals?.show?.(),
+      close: () => window.DenizenProposals?.hide?.(),
+      available: () => {
         const sess = globalThis.DenizenVisitorSession;
-        return !!(sess?.isCeoPrincipal?.() || sess?.getProfile?.()?.canApproveSkills);
+        if (!sess?.getSessionId?.()) return false;
+        if (sess.isCeoPrincipal?.() || sess.getProfile?.()?.canApproveSkills) return true;
+        return !!sess.getIdentityId?.();
       } },
     { id: 'newsroom', icon: '📰', label: 'Newsroom', type: 'panel', trigger: '#denizen-content-pipeline-chip', panel: '#denizen-content-pipeline-panel',
       c: ['#f97316', '#c2410c'], badgeFrom: '#denizen-content-pipeline-chip', available: () => true },
@@ -97,6 +114,8 @@
       c: ['#f472b6', '#9d174d'],
       open: () => window.DenizenVisitorNpcTeamUI?.show?.(), close: () => window.DenizenVisitorNpcTeamUI?.hide?.(),
       available: () => true },
+    { id: 'workflow', icon: '🛠️', label: 'Office Build', type: 'internal', c: ['#e94560', '#9f1239'],
+      available: () => isOfficeBuilderAllowed() },
     { id: 'browser', icon: '🌐', label: 'Browser', type: 'panel', trigger: '#denizen-browser-mirror-chip', panel: '#denizen-browser-mirror-panel',
       c: ['#38bdf8', '#0369a1'],
       available: () => true,
@@ -105,6 +124,21 @@
     { id: 'security', icon: '🛡️', label: 'Security', type: 'panel', trigger: '#denizen-security-chip', panel: '#denizen-security-feed',
       c: ['#f87171', '#7f1d1d'] },
     { id: 'profile', icon: '🪪', label: 'Citizen ID', type: 'special-profile', c: ['#2dd4bf', '#0f766e'] },
+    { id: 'station', icon: '🖥️', label: 'Link Station', type: 'internal', c: ['#4ade80', '#15803d'],
+      stateDot: () => {
+        const st = globalThis.DenizenNodeUI?.getState?.();
+        if (!st?.sessionReady) return null;
+        if (st.desktopLinked) return true;
+        if (st.needsDesktopPairing || st.needsDesktopDownload) return false;
+        return null;
+      },
+      stateText: () => {
+        const st = globalThis.DenizenNodeUI?.getState?.();
+        if (!st?.sessionReady) return '';
+        if (st.desktopLinked) return 'linked';
+        if (st.needsDesktopPairing || st.needsDesktopDownload) return 'not linked';
+        return '';
+      } },
     { id: 'compute', icon: '💠', label: 'City Power', type: 'special-compute', c: ['#c084fc', '#7e22ce'] },
     { id: 'tour', icon: '📖', label: 'Office Tour', type: 'launch', trigger: '#denizen-onboarding-replay-chip',
       c: ['#67e8f9', '#155e75'], gated: true },
@@ -140,7 +174,7 @@
   const LAYOUT_STORAGE_KEY = 'denizen-phone-layout';
   const OFFICE_GUIDE_STORAGE_KEY = 'denizen-office-guide-progress-v1';
   const MAX_DOCK_APPS = 4;
-  const DEFAULT_DOCK_IDS = ['chat', 'voice', 'profile', 'npcteam'];
+  const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workflow', 'profile'];
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {
@@ -171,9 +205,9 @@
       id: 'station',
       tag: 'STATION',
       title: 'Claim this machine',
-      body: 'Pair Denizen Desktop when you want this device to become your office station. You choose its permissions and when it helps.',
-      action: 'Open City Power',
-      act: 'compute',
+      body: 'Open Link Station on your phone to connect Denizen Desktop. You choose its permissions and when it helps.',
+      action: 'Open Link Station',
+      act: 'station',
     },
     {
       id: 'city',
@@ -366,10 +400,10 @@
   }
 
   function canUseApprovals() {
-    const caps = globalThis.DenizenVisitorCapabilities;
-    if (caps?.isCeo?.() || caps?.canApproveSkills?.()) return true;
     const sess = globalThis.DenizenVisitorSession;
-    return !!(sess?.isCeoPrincipal?.() || sess?.getProfile?.()?.canApproveSkills);
+    if (!sess?.getSessionId?.()) return false;
+    if (sess.isCeoPrincipal?.() || sess.getProfile?.()?.canApproveSkills) return true;
+    return !!sess.getIdentityId?.();
   }
 
   const BROWSER_MIRROR_SRC = './src/browser-mirror-panel.js?v=lucymirror6';
@@ -1292,6 +1326,19 @@
           radial-gradient(80% 34% at 18% 0%, rgba(45, 212, 191, 0.16), transparent 62%),
           linear-gradient(168deg, #07141f, #050a14 68%);
       }
+      #${FRAME_ID} .dzp-settings.dzp-workflow {
+        padding: 0;
+        gap: 0;
+        overflow: hidden;
+        background: #0a0e1a;
+      }
+      #${FRAME_ID} .dzp-workflow-frame {
+        flex: 1;
+        width: 100%;
+        min-height: 0;
+        border: 0;
+        background: #0a0e1a;
+      }
       #${FRAME_ID} .dzp-office-guide .og-hero {
         border: 1px solid rgba(45, 212, 191, 0.22);
         border-radius: 16px;
@@ -1548,7 +1595,8 @@
         pointer-events: none !important;
       }
       ${M} #player-chat-fab,
-      ${M} #denizen-bottom-dock #player-chat-fab {
+      ${M} #denizen-bottom-dock #player-chat-fab,
+      ${M} #denizen-proposals-chip {
         display: none !important;
       }
 
@@ -1723,6 +1771,7 @@
         flex: 0 0 auto !important;
       }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel.open,
+      ${M}[${APP_ATTR}="approvals"] #denizen-proposals-panel.open,
       ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
       ${M}[${APP_ATTR}="browser"] #denizen-browser-mirror-panel.open,
       ${M}[${APP_ATTR}="newsroom"] #denizen-content-pipeline-panel.open {
@@ -1743,6 +1792,7 @@
         max-height: none;
       }
       ${M}[${APP_ATTR}="npcteam"] #denizen-npc-team-panel .nt-body,
+      ${M}[${APP_ATTR}="approvals"] #denizen-proposals-panel.open,
       ${M}[${APP_ATTR}="market"] #denizen-market-panel.open,
       ${M}[${APP_ATTR}="newsroom"] #denizen-content-pipeline-panel {
         -webkit-overflow-scrolling: touch;
@@ -2608,8 +2658,9 @@
     shellEl?.querySelector(`#${FRAME_ID}`)?.classList.remove('dzp-app-open');
     const ph = shellEl?.querySelector('.dzp-placeholder');
     if (ph) { ph.classList.remove('show', 'err'); }
-    settingsEl?.classList.remove('show', 'dzp-office-guide');
+    settingsEl?.classList.remove('show', 'dzp-office-guide', 'dzp-station-connect', 'dzp-workflow');
     if (settingsEl) settingsEl.onclick = null;
+    globalThis.DenizenPhoneStationConnect?.unmount?.();
     loadingToken += 1;
     if (appWatchTimer) { clearInterval(appWatchTimer); appWatchTimer = null; }
     refreshAppStatuses();
@@ -2653,7 +2704,35 @@
     setAppOpenUi(app);
 
     if (app.id === 'approvals' && !canUseApprovals()) {
-      showPlaceholder('Approvals require an owner/admin account. Members can still create work, but a team approver reviews new tools.', true);
+      showPlaceholder('Approvals need a Citizen ID — open Citizen ID, sign in, then try again.', true);
+      return;
+    }
+
+    if (app.id === 'approvals') {
+      showPlaceholder(`Loading ${app.label}…`);
+      kickLazyLoad();
+      const ready = await waitFor(() => window.DenizenProposals, 12_000);
+      if (token !== loadingToken || currentApp?.id !== app.id) return;
+      if (!ready) {
+        showPlaceholder(`${app.label} couldn't load — hard-refresh (Ctrl+Shift+R) and try again.`, true);
+        setTimeout(() => { if (currentApp?.id === app.id) goHome(false); }, 3200);
+        return;
+      }
+      hidePlaceholder();
+      scheduleSyncScreenVars();
+      try { await window.DenizenProposals?.show?.(); } catch (_) {}
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      scheduleSyncScreenVars();
+      await waitFor(() => panelVisible(app.panel), 8_000);
+      if (token !== loadingToken || currentApp?.id !== app.id) return;
+      if (!panelVisible(app.panel)) {
+        showPlaceholder(`${app.label} didn't open — sign in with Citizen ID first.`, true);
+        setTimeout(() => { if (currentApp?.id === app.id) goHome(false); }, 3200);
+        return;
+      }
+      armPanelWatch(app);
+      scheduleSyncScreenVars();
+      document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
       return;
     }
 
@@ -2830,6 +2909,36 @@
     window.location.assign(href);
   }
 
+  async function renderStationConnect(app) {
+    setAppOpenUi(app);
+    settingsEl.classList.remove('dzp-office-guide');
+    settingsEl.classList.add('show', 'dzp-station-connect');
+    settingsEl.innerHTML = '<div id="dzp-station-host"></div>';
+    const host = settingsEl.querySelector('#dzp-station-host');
+    if (!globalThis.DenizenPhoneStationConnect?.render) {
+      showPlaceholder('Loading Link Station…');
+      const lazy = globalThis.DenizenLazyScripts;
+      if (lazy?.load) {
+        await lazy.load(['./src/visitor-phone-station-connect.js?v=st2']);
+      }
+      hidePlaceholder();
+    }
+    if (!globalThis.DenizenPhoneStationConnect?.render) {
+      showPlaceholder('Link Station could not load — hard-refresh and try again.', true);
+      return;
+    }
+    await globalThis.DenizenPhoneStationConnect.render(host);
+    document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
+  }
+
+  function renderWorkflowApp(app) {
+    setAppOpenUi(app);
+    settingsEl.classList.remove('dzp-office-guide', 'dzp-station-connect');
+    settingsEl.classList.add('show', 'dzp-workflow');
+    settingsEl.innerHTML = '<iframe class="dzp-workflow-frame" src="/workflow-dashboard.html?embed=1" title="Office workflow tools"></iframe>';
+    document.dispatchEvent(new CustomEvent('denizen-phone-app-open', { detail: { appId: app.id } }));
+  }
+
   function renderSettings(app) {
     setAppOpenUi(app);
     const sess = globalThis.DenizenVisitorSession;
@@ -2919,6 +3028,8 @@
     if (app.type === 'navigate') { runNavigateApp(app); return; }
     if (app.type === 'internal') {
       if (app.id === 'guide') renderOfficeGuide(app);
+      else if (app.id === 'station') { void renderStationConnect(app); }
+      else if (app.id === 'workflow') renderWorkflowApp(app);
       else renderSettings(app);
       return;
     }

@@ -23,10 +23,18 @@ REMOTE_DIR = os.environ.get("SYNO_DENIZEN_DIR", "/volume1/docker/denizen-server"
 PORT = os.environ.get("SYNO_DENIZEN_PORT", "8888")
 CHUNK = 1024 * 512
 
-# Freeze fix + related client/server paths
+# Hotfix paths — add workflow / office-build tooling when deploying UI changes
 SYNC_PATHS = [
     "index.html",
     "office-scene.js",
+    "workflow-dashboard.html",
+    "singles-viewer.html",
+    "sprite-labeler.html",
+    "tools/room-preview.html",
+    "src/denizen-phone-ui.js",
+    "data/furniture_catalog_openplan.json",
+    "data/sheet_extract/modern_office_black_shadow_32.objects.json",
+    "data/singles/modern_office_singles_16.manifest.json",
     "server.js",
     "package.json",
     "src/npc-brains.js",
@@ -45,8 +53,32 @@ SYNC_PATHS = [
     "src/denizen-hardware-monitor.js",
     "src/visitor-node-ui.js",
     "src/prompt-tuning.js",
+    "src/player-chat.js",
+    "src/denizen-phone-chat-ui.js",
     "src/proposals-panel.js",
     "src/denizen-lazy-scripts.js",
+    "src/denizen-security-relay.js",
+    "src/bouncer-investigation.js",
+    "src/linux-agent.js",
+    "src/security-ip.js",
+    "src/denizen-world-pubsub.js",
+    "src/denizen-agent-ws-relay.js",
+    "src/world-state.js",
+    "security-monitor-server.js",
+    "src/bouncer-client-init.js",
+    "src/denizen-bouncer-mesh-patrol.js",
+    "src/denizen-bouncer-patrol-aggregate.js",
+    "src/denizen-compute-producer.js",
+    "src/denizen-compute-routes.js",
+    "src/denizen-mesh-job-runner.js",
+    "src/denizen-mcp-mesh-tools.js",
+    "src/denizen-db.js",
+    "src/content-pipeline.js",
+    "src/content-pipeline-scheduler.js",
+    "src/visitor-access.js",
+    "src/visitor-capabilities.js",
+    "scripts/smoke-bouncer-e2e.js",
+    "scripts/bouncer-investigation-agent.js",
     "src/touch-bind.js",
     "src/route-registry.js",
     "src/demo-roster.js",
@@ -144,6 +176,9 @@ def main() -> int:
             local = DENIZEN / rel
             if not local.is_file():
                 continue
+            remote_parent = "/app/" + rel.replace("\\", "/").rsplit("/", 1)[0]
+            if "/" in rel.replace("\\", "/"):
+                run_ssh(client, f"{DOCKER} exec denizen-server mkdir -p '{remote_parent}'")
             if rel.startswith("tests/"):
                 run_ssh(client, f"{DOCKER} exec denizen-server mkdir -p /app/tests")
             run_ssh(

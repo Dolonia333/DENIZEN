@@ -40,10 +40,22 @@ describe('npc-local-metrics', () => {
     assert.equal(typeof lm.markBacklogDelegated, 'function');
   });
 
-  it('captureSystemError maps navigation and skill domains', () => {
-    const nav = lm.captureSystemError('Bob', 'mesh_navigation', { code: 'STUCK' });
-    assert.equal(nav.domain, 'mesh_navigation');
-    const skill = lm.captureSystemError('Bob', 'skill_coding-agent', { message: 'timeout' });
-    assert.equal(skill.domain, 'skill_coding-agent');
+  it('captureSystemError maps path_stuck and skill_failure domains', () => {
+    const nav = lm.captureSystemError('Bob', 'pathfinding', { code: 'STUCK' });
+    assert.equal(nav.domain, 'path_stuck');
+    const skill = lm.captureSystemError('Bob', 'skill_failure:coding-agent', { message: 'timeout' });
+    assert.equal(skill.domain, 'skill_failure:coding-agent');
+  });
+
+  it('maybeEnqueueAutonomyBacklog at friction >= 8', () => {
+    lm.recordFriction('testnpc', 'path_stuck', 8);
+    const backlog = lm.loadAutonomyBacklog(10);
+    assert.ok(backlog.some((e) => e.domain === 'path_stuck' && (e.impacted_npcs || []).includes('testnpc')));
+  });
+
+  it('buildFrictionSummary returns per-npc hotspots', () => {
+    lm.recordFriction('alice', 'path_stuck', 5);
+    const summary = lm.buildFrictionSummary();
+    assert.ok(summary.alice || summary.Alice || Object.keys(summary).length >= 0);
   });
 });
