@@ -3,9 +3,9 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const stationCapabilities = require('../src/denizen-station-capabilities');
-const stationTaskQueue = require('../src/denizen-station-task-queue');
-const stationRouter = require('../src/denizen-station-router');
+const stationCapabilities = require('../src/station/denizen-station-capabilities');
+const stationTaskQueue = require('../src/station/denizen-station-task-queue');
+const stationRouter = require('../src/station/denizen-station-router');
 
 describe('denizen-station-capabilities', () => {
   it('maps skills to capability keys', () => {

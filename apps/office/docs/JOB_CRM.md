@@ -11,10 +11,10 @@ Primary runtime store:
 
 Dual-write behavior:
 
-- `src/job-crm.js`
+- `src/pipelines/job-crm.js`
   - `upsertApplication()` writes local JSON and calls `denizenDb.syncJobApplication(app)`
   - `syncAllApplicationsToDb()` batch-pushes all local apps via `syncAllJobApplications()`
-- `src/denizen-db.js`
+- `src/intelligence/denizen-db.js`
   - `syncJobApplication()` upserts `denizen_job_applications`
   - `syncAllJobApplications()` iterates and queues writes
 
@@ -31,7 +31,7 @@ Application rows are written with:
 
 Default Roki attribution comes from:
 
-- `syncJobApplication(... npc_key || "roki")` in `src/denizen-db.js`
+- `syncJobApplication(... npc_key || "roki")` in `src/intelligence/denizen-db.js`
 
 ## Fact and Outcome Triggers
 

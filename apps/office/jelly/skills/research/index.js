@@ -1,6 +1,6 @@
 'use strict';
 
-const researchRouter = require('../../../src/research-router');
+const researchRouter = require('../../../src/intelligence/research-router');
 
 module.exports = {
   meta: {

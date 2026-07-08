@@ -2,8 +2,8 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { mergeFields, buildMergeContext, sendCrmEmail } = require('../src/denizen-crm-email');
-const { enrollContact, daysBetween } = require('../src/denizen-crm-sequences');
+const { mergeFields, buildMergeContext, sendCrmEmail } = require('../src/crm/denizen-crm-email');
+const { enrollContact, daysBetween } = require('../src/crm/denizen-crm-sequences');
 
 describe('denizen-crm-email', () => {
   it('merges template fields', () => {

@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { summarizeWorkspace, crmAssist } = require('../src/denizen-crm-assist');
+const { summarizeWorkspace, crmAssist } = require('../src/crm/denizen-crm-assist');
 
 describe('denizen-crm-assist', () => {
   it('summarizeWorkspace counts pipeline metrics', () => {

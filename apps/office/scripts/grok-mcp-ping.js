@@ -86,7 +86,7 @@ async function main() {
   const help = args.includes('--help') || args.includes('-h');
 
   if (help) {
-    console.log('grok-mcp-ping.js\n  Usage: node denizen/scripts/grok-mcp-ping.js [--summary]\n  Calls get_status + list_skills and prints results.\n  --summary : human readable output');
+    console.log('grok-mcp-ping.js\n  Usage: node apps/office/scripts/grok-mcp-ping.js [--summary]\n  Calls get_status + list_skills and prints results.\n  --summary : human readable output');
     process.exit(0);
   }
 

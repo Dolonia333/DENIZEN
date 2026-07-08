@@ -37,7 +37,7 @@ module.exports = {
       });
       return { ok, output, skill: 'browserclaw' };
     } catch (err) {
-      const output = `BrowserClaw unavailable (${bcUrl}): ${err.message}. Start: node denizen/jelly/services/browserclaw/server.mjs`;
+      const output = `BrowserClaw unavailable (${bcUrl}): ${err.message}. Start: node apps/office/jelly/services/browserclaw/server.mjs`;
       pcActivity.record({
         id: activity.id, npc: npcName, kind: 'browserclaw', task: activity.task,
         mode: activity.mode, status: 'failed',

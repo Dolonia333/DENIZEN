@@ -7,7 +7,7 @@ const {
   buildAnthropicSystem,
   compactThinkUserPrompt,
   compactChatHistory,
-} = require('../src/denizen-prompt-budget');
+} = require('../src/compute/denizen-prompt-budget');
 
 describe('denizen-prompt-budget', () => {
   it('extractThinkIdentity keeps core sections only', () => {

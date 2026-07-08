@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const officeStatus = require('../src/office-status-brief');
+const officeStatus = require('../src/compute/office-status-brief');
 
 describe('office-status-brief', () => {
   it('detects office-wide status questions', () => {

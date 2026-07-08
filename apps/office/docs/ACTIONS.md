@@ -6,10 +6,10 @@
 
 Two files, tightly coupled:
 
-- **`src/agent-actions.js`** (1183 lines) — concrete action
+- **`src/npc/agent-actions.js`** (1183 lines) — concrete action
   implementations: walk to a chair, sit down, type at a desk, show a
   speech bubble, call out to a peer.
-- **`src/agent-office-manager.js`** (1626 lines) — coordinator. Owns
+- **`src/npc/agent-office-manager.js`** (1626 lines) — coordinator. Owns
   the WebSocket to the server, dispatches cofounder commands to the
   right NPC, brokers meetings, manages the per-NPC turn queue.
 
@@ -155,9 +155,9 @@ timing without random LLM decisions interfering.
 2. **Add the dispatch case** in `agent-office-manager.js` —
    `_handleNpcDecision` (around line 1284) is the main switch.
 3. **Add the action name to the cofounder's prompt** in
-   `src/cofounder-agent.js` (`_getSystemPrompt`, around line 107) so
+   `src/compute/cofounder-agent.js` (`_getSystemPrompt`, around line 107) so
    the CTO knows it can be invoked.
-4. **Add a JSON-schema description** in `src/npc-brains.js` (the
+4. **Add a JSON-schema description** in `src/npc/npc-brains.js` (the
    `think()` system prompt, in the `### Actions you can take`
    section).
 5. Optional: if the action mutates worldState, call the appropriate

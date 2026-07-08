@@ -21,7 +21,7 @@ describe('Jelly meta', () => {
 });
 
 describe('Jelly config-loader', () => {
-  it('loads denizen/config/jelly.json when present', () => {
+  it('loads config/jelly.json when present', () => {
     const cfg = loadConfig(path.join(__dirname, '..'));
     assert.ok(cfg);
     assert.equal(cfg.supabase?.url, 'http://127.0.0.1:54321');
@@ -80,7 +80,7 @@ describe('Jelly skill execution', () => {
     const injected = [];
     const runtime = createJelly({
       denizenRoot: path.join(__dirname, '..'),
-      openclawRoot: path.join(__dirname, '..', '..', 'openclaw'),
+      openclawRoot: path.join(__dirname, '..', '..', '..', 'openclaw'),
       deps: {
         npcBrains: { injectSkillResult: (n, s, t) => injected.push({ n, s, t }) },
         robinhoodMcp: {

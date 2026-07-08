@@ -3,7 +3,7 @@
 const path = require('node:path');
 
 let vmSandbox = null;
-try { vmSandbox = require('../../../src/vm-sandbox'); } catch (_) {}
+try { vmSandbox = require('../../../src/compute/vm-sandbox'); } catch (_) {}
 
 module.exports = {
   meta: {

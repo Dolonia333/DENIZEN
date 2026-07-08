@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const worldState = require('../src/world-state');
-const officeRegistry = require('../src/visitor-office-registry');
+const officeRegistry = require('../src/visitors/visitor-office-registry');
 
 describe('world-state org isolation', () => {
   it('forOrg returns isolated buckets', () => {

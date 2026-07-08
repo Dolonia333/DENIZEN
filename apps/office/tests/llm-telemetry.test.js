@@ -11,7 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const { LlmTelemetry, classifyError } = require('../src/llm-telemetry');
+const { LlmTelemetry, classifyError } = require('../src/intelligence/llm-telemetry');
 
 function mk(opts = {}) {
   const tmp = path.join(os.tmpdir(), `denizen-tel-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jsonl`);

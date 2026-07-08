@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { scanBrandRisks } = require('../../../src/content-gate');
+const { scanBrandRisks } = require('../../../src/pipelines/content-gate');
 
 module.exports = {
   meta: {

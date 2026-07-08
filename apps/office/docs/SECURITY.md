@@ -8,7 +8,7 @@ When the security monitor detects a threat, a robber NPC spawns in the pixel off
 
 ## How it works in one paragraph
 
-The server runs [`security-monitor-server.js`](../security-monitor-server.js) on startup. It polls three always-on sources (system events, network connections, file watches) and — on Linux only, opt-in — two live feeders that plug into Wireshark (`tshark`) and the firewall logs (`ufw`/`iptables`/`journalctl`). When any of these sources emits a threat, the server broadcasts it on `/security-ws`. The browser client's [`RobberController`](../src/robber-controller.js) picks a robber archetype from the threat's `category` field, spawns a sprite, and makes it perform a contextual animation with a speech bubble summarizing the detail.
+The server runs [`security-monitor-server.js`](../security-monitor-server.js) on startup. It polls three always-on sources (system events, network connections, file watches) and — on Linux only, opt-in — two live feeders that plug into Wireshark (`tshark`) and the firewall logs (`ufw`/`iptables`/`journalctl`). When any of these sources emits a threat, the server broadcasts it on `/security-ws`. The browser client's [`RobberController`](../src/security/robber-controller.js) picks a robber archetype from the threat's `category` field, spawns a sprite, and makes it perform a contextual animation with a speech bubble summarizing the detail.
 
 ## Threat catalog
 

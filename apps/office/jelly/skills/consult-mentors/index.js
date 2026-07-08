@@ -5,7 +5,7 @@
  * Creates a shared dialogue session; peers reply via MCP; synthesis injects into memory.
  */
 
-const mentorDialogue = require('../../../src/denizen-mentor-dialogue.js');
+const mentorDialogue = require('../../../src/intelligence/denizen-mentor-dialogue.js');
 
 module.exports = {
   meta: {

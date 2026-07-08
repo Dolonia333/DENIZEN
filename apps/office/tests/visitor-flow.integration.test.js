@@ -12,8 +12,8 @@ const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'denizen-visitor-flow-'));
 process.env.HOME = tmpHome;
 process.env.USERPROFILE = tmpHome;
 
-const denizenDb = require('../src/denizen-db.js');
-const NpcBrainManager = require('../src/npc-brains.js');
+const denizenDb = require('../src/intelligence/denizen-db.js');
+const NpcBrainManager = require('../src/npc/npc-brains.js');
 const {
   createOrUpdateSession,
   claimAssistant,
@@ -24,7 +24,7 @@ const {
   resolveHandoffTarget,
   listTeammates,
   listProjects,
-} = require('../src/denizen-visitor.js');
+} = require('../src/visitors/denizen-visitor.js');
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111';
 const SESSION_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';

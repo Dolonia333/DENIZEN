@@ -91,4 +91,4 @@ Real-time visual observability layer for AI agents — 16 LLM teammates, Meridia
 | Company brief | `data/company-brief.json` |
 | Souls (source of truth until DB seed) | `npcs/*/SOUL.md` |
 | DB souls | `agent_souls` table after seed |
-| Business context module | `src/denizen-business-context.js` |
+| Business context module | `src/compute/denizen-business-context.js` |

@@ -17,7 +17,7 @@ You built the Hu4Gzs open-plan office by hand (furniture editor + wall JSON + fl
 Regenerate the blueprint after editing placements or walls:
 
 ```bash
-cd denizen
+cd apps/office
 node scripts/build-office-blueprint.mjs
 ```
 

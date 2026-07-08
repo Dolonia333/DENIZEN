@@ -22,7 +22,7 @@
 
 | Piece | Location |
 |-------|----------|
-| `llamacpp` backend probe | `src/denizen-inference-runtime.js` (synced to desktop via `copy-denizen-src.js`) |
+| `llamacpp` backend probe | `src/compute/denizen-inference-runtime.js` (synced to desktop via `copy-denizen-src.js`) |
 | Fetch at build | `desktop/scripts/fetch-llama-server.js` |
 | Spawn helper | `desktop/llama-server-manager.js` |
 | GGUF download | `desktop/llama-brain-pull.js` + wizard `pull-brain-model` |
@@ -32,7 +32,7 @@
 ### Build
 
 ```powershell
-cd denizen/desktop
+cd apps/office/desktop
 # Windows installer — downloads ~20MB llama-server CPU binary from GitHub releases
 npm run prebuild:win
 npm run build:win
@@ -99,7 +99,7 @@ DENIZEN_MAX_WS_CLIENTS=100          # per instance cap
 Install Redis client when enabling:
 
 ```bash
-cd denizen && npm install redis
+cd apps/office && npm install redis
 ```
 
 ### Not in v1 scaffold (next)

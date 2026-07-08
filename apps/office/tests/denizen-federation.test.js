@@ -3,8 +3,8 @@
 const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const federation = require('../src/denizen-federation');
-const router = require('../src/lm-studio-router');
+const federation = require('../src/integrations/denizen-federation');
+const router = require('../src/integrations/lm-studio-router');
 
 describe('denizen-federation', () => {
   beforeEach(() => {

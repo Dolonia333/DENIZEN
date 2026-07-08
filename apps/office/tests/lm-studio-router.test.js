@@ -3,7 +3,7 @@
 const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const router = require('../src/lm-studio-router');
+const router = require('../src/integrations/lm-studio-router');
 
 describe('lm-studio-router', () => {
   beforeEach(() => {

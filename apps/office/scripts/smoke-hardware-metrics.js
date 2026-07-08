@@ -1,7 +1,7 @@
 'use strict';
 
-const hardwareMonitor = require('../src/denizen-hardware-monitor');
-const fleetRegistry = require('../src/denizen-fleet-registry');
+const hardwareMonitor = require('../src/compute/denizen-hardware-monitor');
+const fleetRegistry = require('../src/integrations/denizen-fleet-registry');
 
 const base = process.env.DENIZEN_URL || 'http://127.0.0.1:8081';
 

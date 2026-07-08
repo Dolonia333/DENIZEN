@@ -4,7 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 
-const { mountCrmRoutes } = require('../src/denizen-crm-routes');
+const { mountCrmRoutes } = require('../src/crm/denizen-crm-routes');
 
 function mockReadJsonBody(body) {
   return async () => body;
@@ -49,7 +49,7 @@ describe('denizen-crm-routes', () => {
   });
 
   it('GET /api/crm/session returns team_role and approval flags', async () => {
-    const teamAuth = require('../src/denizen-team-auth');
+    const teamAuth = require('../src/auth/denizen-team-auth');
     const origCan = teamAuth.canApproveSkillsForSession;
     const origUpgrade = teamAuth.maybeUpgradeSessionCeoPrincipal;
     const origResolve = teamAuth.resolveCeoPrincipalForSession;
@@ -89,7 +89,7 @@ describe('denizen-crm-routes', () => {
   });
 
   it('POST /api/crm/team/invite rejects non-approvers', async () => {
-    const teamAuth = require('../src/denizen-team-auth');
+    const teamAuth = require('../src/auth/denizen-team-auth');
     const origCan = teamAuth.canApproveSkillsForSession;
     const origResolve = teamAuth.resolveCeoPrincipalForSession;
     teamAuth.canApproveSkillsForSession = async () => ({ allowed: false, role: 'member' });

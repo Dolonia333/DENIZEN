@@ -104,8 +104,8 @@ Run from repo root on dolonia in this order:
 3. `py infra/enable-world-pubsub-nas.py`
 4. `powershell -ExecutionPolicy Bypass -File infra/setup-bouncer-scheduled-task.ps1`
 5. Smoke commands:
-   - `node denizen/scripts/smoke-bouncer-e2e.js`
-   - `FOLLOWER_URL=https://spectate.dolonia.cloud node denizen/scripts/smoke-bouncer-e2e.js`
+   - `node apps/office/scripts/smoke-bouncer-e2e.js`
+   - `FOLLOWER_URL=https://spectate.dolonia.cloud node apps/office/scripts/smoke-bouncer-e2e.js`
 
 Then point Cloudflare tunnel `denizen.dolonia.cloud` → `http://<NAS-IP>:8888`.
 
@@ -142,7 +142,7 @@ py infra/apply-service-role-to-denizen.py    # writes SUPABASE_SERVICE_ROLE_KEY 
 
 `ONLY_MIGRATIONS=20260608000003 py infra/apply-migrations-nas.py` — apply a single migration.
 
-**Skipped on NAS** (`apply-migrations-nas.py` `SKIP_VERSIONS`): `000005`, `000006`, `000012`, `000013` — require Dolonia platform CMS tables. See `denizen/docs/NAS_PLATFORM_BRIDGE.md`. Runtime: `GET /api/platform-bridge/status`.
+**Skipped on NAS** (`apply-migrations-nas.py` `SKIP_VERSIONS`): `000005`, `000006`, `000012`, `000013` — require Dolonia platform CMS tables. See `apps/office/docs/NAS_PLATFORM_BRIDGE.md`. Runtime: `GET /api/platform-bridge/status`.
 
 **Failover probe** (primary down → repoint tunnel to NAS):
 
@@ -222,7 +222,7 @@ No systemd unit shipped yet. Add to crontab:
 | `fetch failed` / `127.0.0.1:8081` | Fix `.env` URLs to Tailscale IP |
 | Agent exits immediately | `tail -20 ~/denizen-agent/agent.log` |
 
-See [denizen/docs/COMPUTE_MESH.md](../denizen/docs/COMPUTE_MESH.md) for full troubleshooting.
+See [apps/office/docs/COMPUTE_MESH.md](../denizen/docs/COMPUTE_MESH.md) for full troubleshooting.
 
 ## Tailscale
 
@@ -248,16 +248,16 @@ On Kali after install: `sudo tailscale up`
 denizen-agent/
   nas-compute-agent.js
   nas-metrics-agent.js
-  src/denizen-hardware-monitor.js
-  src/denizen-node-client.js
-  src/denizen-mesh-job-runner.js
+  src/compute/denizen-hardware-monitor.js
+  src/integrations/denizen-node-client.js
+  src/compute/denizen-mesh-job-runner.js
   .env
   start.sh
 ```
 
 Query `denizen_url` embeds the reachable server URL in `.env` (required for Kali).
 
-Built by `denizen/scripts/build-fleet-agent-bundle.py` (Python `tarfile`).
+Built by `apps/office/scripts/build-fleet-agent-bundle.py` (Python `tarfile`).
 
 ## Script reference
 
@@ -275,7 +275,7 @@ Built by `denizen/scripts/build-fleet-agent-bundle.py` (Python `tarfile`).
 | `deploy-kali-agent.py` | SSH deploy to Kali |
 | `pull-install-kali-agent.sh` | Pull install on Kali (no SSH from dolonia) |
 | `install-denizen-agent-on-kali.sh` | Local bundle install on Kali |
-| `apply-migrations-nas.py` | Apply `denizen/supabase/migrations/*.sql` |
+| `apply-migrations-nas.py` | Apply `apps/office/supabase/migrations/*.sql` |
 | `apply-service-role-to-denizen.py` | Copy service role key from NAS → `denizen/.env` |
 | `fetch-nas-supabase-keys.py` | Read masked Supabase keys from NAS |
 | `probe-nas-agent.py` | Verify NAS agent + fleet metrics |
@@ -343,6 +343,6 @@ Do not commit `.env` files from these directories.
 
 ## Related docs
 
-- [denizen/docs/COMPUTE_MESH.md](../denizen/docs/COMPUTE_MESH.md) — architecture, APIs, UI, smokes
-- [denizen/docs/PRODUCTION_DEPLOY.md](../denizen/docs/PRODUCTION_DEPLOY.md) — cloud production
+- [apps/office/docs/COMPUTE_MESH.md](../denizen/docs/COMPUTE_MESH.md) — architecture, APIs, UI, smokes
+- [apps/office/docs/PRODUCTION_DEPLOY.md](../denizen/docs/PRODUCTION_DEPLOY.md) — cloud production
 - [infra/supabase-project/SYNOLOGY.md](supabase-project/SYNOLOGY.md) — Supabase on Synology

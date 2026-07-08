@@ -96,7 +96,7 @@ async function main() {
   ]);
 
   const installId = wizard.profile?.desktop_install_id || `smoke-install-${tag}`;
-  const stationTaskQueue = require('../src/denizen-station-task-queue');
+  const stationTaskQueue = require('../src/station/denizen-station-task-queue');
   const enqueued = await stationTaskQueue.enqueueTask({
     sessionId,
     installId,

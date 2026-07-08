@@ -12,11 +12,11 @@ A single ~7,700-line `http.createServer` handler that boots every subsystem (sec
 |---|---|
 | File | [server.js](../server.js) |
 | Line count | ~7,714 (as of 2026-06-08) |
-| Entry | `node server.js` from `denizen/` |
+| Entry | `node server.js` from `apps/office/` |
 | Default port | `8080` (`PORT` env) |
-| Static root | `denizen/` (`__dirname`) |
+| Static root | `apps/office/` (`__dirname`) |
 
-`server.js` is intentionally monolithic: one `http.createServer` callback contains ~150 inline route matchers, the full `/agent-ws` message dispatcher (player chat, think loop, Bouncer tools, visitor handoffs), world-state broadcast throttling, and graceful shutdown. Extraction is incremental — compute/desktop routes already live in [denizen-compute-routes.js](../src/denizen-compute-routes.js); market/intelligence duplicates exist in [route-registry.js](../src/route-registry.js) but are **not wired** (see below).
+`server.js` is intentionally monolithic: one `http.createServer` callback contains ~150 inline route matchers, the full `/agent-ws` message dispatcher (player chat, think loop, Bouncer tools, visitor handoffs), world-state broadcast throttling, and graceful shutdown. Extraction is incremental — compute/desktop routes already live in [denizen-compute-routes.js](../src/compute/denizen-compute-routes.js); market/intelligence duplicates exist in [route-registry.js](../src/route-registry.js) but are **not wired** (see below).
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -120,7 +120,7 @@ See [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md).
 
 ### Compute & desktop
 
-Delegated to `handleComputeRoutes` from [denizen-compute-routes.js](../src/denizen-compute-routes.js) when `urlPath.startsWith('/api/compute/')` or `/api/desktop/`.
+Delegated to `handleComputeRoutes` from [denizen-compute-routes.js](../src/compute/denizen-compute-routes.js) when `urlPath.startsWith('/api/compute/')` or `/api/desktop/`.
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -320,7 +320,7 @@ See [VOICE.md](VOICE.md), [VOICE_INPUT.md](VOICE_INPUT.md).
 | POST | `/api/llm-city-plan` | LLM/heuristic city zones |
 | GET | `/api/generate-city` | Full city chunk JSON |
 | GET | `/`, `/index.html` | Phaser client (also `/denizen/`, `/pixel-office-game/` aliases) |
-| GET | `/*` | Static files under `denizen/` with traversal guard |
+| GET | `/*` | Static files under `apps/office/` with traversal guard |
 
 Optional proxy when `JELLY_ENABLE_OPENCLAW_GATEWAY=true`: `/openclaw/*` → `127.0.0.1:18792`. See [OPENCLAW_INTEGRATION.md](OPENCLAW_INTEGRATION.md).
 
@@ -415,7 +415,7 @@ Full catalog: [SECURITY.md](SECURITY.md).
 
 **Current wiring:** `routeRegistry.registerDenizenRoutes` is **commented out** in `server.js` (~line 1931) to avoid broad churn. The same routes (except `POST /api/market/trade`) are implemented **inline** in `server.js` today. Intelligence mirofish routes exist in both places — inline handlers run first and match before any registry would.
 
-[denizen-compute-routes.js](../src/denizen-compute-routes.js) is the opposite pattern: **actively mounted** via `mountComputeRoutes()` and called early for `/api/compute/*` and `/api/desktop/*`.
+[denizen-compute-routes.js](../src/compute/denizen-compute-routes.js) is the opposite pattern: **actively mounted** via `mountComputeRoutes()` and called early for `/api/compute/*` and `/api/desktop/*`.
 
 ### Desktop station bridge (`/api/desktop/station/*`)
 
@@ -435,7 +435,7 @@ Paired Denizen Desktop apps claim and complete **station tasks** enqueued when N
 
 **Headers:** desktop clients send `X-Denizen-Client: desktop`, `X-Session-Id`, and `X-Desktop-Install-Id` on station routes.
 
-**Server routing:** [denizen-station-router.js](../src/denizen-station-router.js) checks linked profile + capability flags, optionally waits for permission approval, enqueues via [denizen-station-task-queue.js](../src/denizen-station-task-queue.js), and blocks until complete or timeout.
+**Server routing:** [denizen-station-router.js](../src/station/denizen-station-router.js) checks linked profile + capability flags, optionally waits for permission approval, enqueues via [denizen-station-task-queue.js](../src/station/denizen-station-task-queue.js), and blocks until complete or timeout.
 
 **Desktop loop:** [desktop/station-task-runner.js](../desktop/station-task-runner.js) claims tasks; [desktop/station-agent.js](../desktop/station-agent.js) executes locally with capability enforcement. Post-wizard settings: **Station settings** (`agent-settings.html`) → `POST /api/desktop/capabilities/sync`.
 
@@ -512,7 +512,7 @@ Loaded from `denizen/.env` via [load-env.js](../src/load-env.js) (shell vars win
 | `DENIZEN_INTERNAL_API_TOKEN` | `x-internal-token` for ops smokes |
 | `DEBUG_TTS` | Log voice resolution per request |
 
-External webhook sinks (n8n, etc.) are configured via env vars read by [external-sink.js](../src/external-sink.js) — no-op when unset.
+External webhook sinks (n8n, etc.) are configured via env vars read by [external-sink.js](../src/intelligence/external-sink.js) — no-op when unset.
 
 ## Graceful shutdown
 

@@ -16,7 +16,7 @@
 | **`GET /api/capability-proposals[?status=pending\|approved\|rejected]`** | Operator review UI (future) | Returns `{ proposals: [...] }`. Optional `status` filter. |
 | **`POST /api/capability-proposal/approve`** | Operator decision | Body `{ id, decision: 'approved'\|'rejected', note? }`. Flips `status` + sets `review` in place. **Does NOT implement the verb.** |
 | **`worldState.pushEvent('proposed-capability', ...)`** | Each successful POST | Surfaces the proposal in the diag panel's event feed. |
-| **`src/capability-proposal.js`** | `require()` from server + tests | `validateProposal({verbName, description})` + `serializeProposal({by, verbName, description})`. Pure logic, no IO. |
+| **`src/pipelines/capability-proposal.js`** | `require()` from server + tests | `validateProposal({verbName, description})` + `serializeProposal({by, verbName, description})`. Pure logic, no IO. |
 
 ## The request flow
 
@@ -40,7 +40,7 @@ server.js → capabilityProposal.validateProposal → budget check
     ▼   status flips, review block recorded.
     ▼
 (operator, by hand, writes the verb's implementation in
- src/agent-actions.js and restarts the server)
+ src/npc/agent-actions.js and restarts the server)
 ```
 
 ## Validation rules
@@ -50,7 +50,7 @@ server.js → capabilityProposal.validateProposal → budget check
 | `verbName` | `/^[a-z][a-zA-Z0-9]{0,30}$/` — camelCase, starts with a lowercase letter, 1-31 chars, no separators. Tight because the name becomes a JavaScript method identifier and an `[ACTION:verbName:...]` token in the NPC prompt. |
 | `description` | Between **10** and **400** chars. The lower bound is deliberate: a verb proposal without a real description is worthless to an operator. |
 
-Both rules live in `src/capability-proposal.js` as `VERB_NAME_RE`,
+Both rules live in `src/pipelines/capability-proposal.js` as `VERB_NAME_RE`,
 `MIN_DESCRIPTION_LEN`, and `MAX_DESCRIPTION_LEN`, exported so the
 endpoint and tests stay in lockstep.
 
@@ -64,7 +64,7 @@ Rationale:
 - An animation proposal can be served by image-gen or simple
   composition: cheap in operator time.
 - A capability proposal, if approved, implies a **real code change**
-  in `src/agent-actions.js`, plus a server restart. The minimum unit
+  in `src/npc/agent-actions.js`, plus a server restart. The minimum unit
   of work is much higher.
 - We want NPCs to be picky. A 1/day cap forces them to save the slot
   for proposals they actually believe in, rather than burning the
@@ -80,16 +80,16 @@ Implemented in `server.js` via `_checkCapabilityBudget` /
 
 ## Files touched
 
-- `src/capability-proposal.js` — new module. Pure logic:
+- `src/pipelines/capability-proposal.js` — new module. Pure logic:
   `validateProposal`, `serializeProposal`, plus the regex + length
   constants.
 - `server.js` — three new endpoints: `/api/request-capability` (POST),
   `/api/capability-proposals` (GET), `/api/capability-proposal/approve`
   (POST). New `_checkCapabilityBudget` / `_consumeCapabilityBudget`
   helpers. `capabilityProposal` required at the top of the file.
-- `src/agent-office-manager.js` — new `case 'requestCapability'` in
+- `src/npc/agent-office-manager.js` — new `case 'requestCapability'` in
   the NPC-action switch. POSTs to the endpoint, emotes on success.
-- `src/npc-brains.js` — added `requestCapability` bullet to the
+- `src/npc/npc-brains.js` — added `requestCapability` bullet to the
   per-role action vocabulary, with the example and 1/day cap noted.
 - `tests/capability-proposal.test.js` — pure-logic tests (validator,
   serializer, exports).
@@ -108,7 +108,7 @@ Implemented in `server.js` via `_checkCapabilityBudget` /
 - **Not auto-implementation.** The endpoint persists a *proposal*.
   Approving the proposal flips `status` to `approved` and records a
   review note — it does NOT generate code, register a verb, or
-  attempt to extend `src/agent-actions.js`. An operator still has to
+  attempt to extend `src/npc/agent-actions.js`. An operator still has to
   open the file, write the action, restart the server.
 - **Not LLM-assisted code generation.** Stage 4 step 4 hypothesises a
   pipeline that feeds an approved spec to a code-gen model and runs

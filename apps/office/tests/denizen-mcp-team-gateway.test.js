@@ -3,8 +3,8 @@
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 
-const teamGateway = require('../src/denizen-mcp-team-gateway.js');
-const npcGateway = require('../src/denizen-npc-mcp-gateway.js');
+const teamGateway = require('../src/mcp/denizen-mcp-team-gateway.js');
+const npcGateway = require('../src/core/denizen-npc-mcp-gateway.js');
 
 const TEAM_SCOPE = {
   ok: true,

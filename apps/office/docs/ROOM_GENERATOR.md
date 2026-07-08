@@ -6,7 +6,7 @@
 > uses, while the world/city generators are the in-progress next layer.
 
 Source: [`src/RoomGenerator.js`](../src/RoomGenerator.js).
-Companion renderer: [`src/RoomAssembly.js`](../src/RoomAssembly.js)
+Companion renderer: [`src/RoomAssembly.js`](../src/city/RoomAssembly.js)
 (class that turns generator output into Phaser sprites — see
 [CITY_GENERATOR.md](CITY_GENERATOR.md) for the assembly path).
 

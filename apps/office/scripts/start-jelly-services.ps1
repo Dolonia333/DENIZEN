@@ -30,4 +30,4 @@ if (Test-Path $bcServer) {
   Write-Host "  ✗ BrowserClaw server not found at $bcServer" -ForegroundColor Yellow
 }
 
-Write-Host "[Jelly 🪼] Sidecars launched. Start Denizen: cd denizen && npm start" -ForegroundColor Cyan
+Write-Host "[Jelly 🪼] Sidecars launched. Start Denizen: cd apps/office && npm start" -ForegroundColor Cyan

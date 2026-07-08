@@ -1,7 +1,7 @@
 'use strict';
 
-const computeCredits = require('../src/denizen-compute-credits');
-const contributionTracker = require('../src/denizen-contribution-tracker');
+const computeCredits = require('../src/compute/denizen-compute-credits');
+const contributionTracker = require('../src/compute/denizen-contribution-tracker');
 
 const base = process.env.DENIZEN_URL || 'http://127.0.0.1:8081';
 

@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const mutations = require('../src/denizen-crm-mutations');
+const mutations = require('../src/crm/denizen-crm-mutations');
 
 describe('denizen-crm-mutations', () => {
   it('addContact requires name or email', async () => {

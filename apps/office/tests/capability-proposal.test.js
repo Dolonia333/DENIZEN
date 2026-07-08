@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Pure-logic tests for src/capability-proposal.js. No HTTP, no filesystem.
+ * Pure-logic tests for src/pipelines/capability-proposal.js. No HTTP, no filesystem.
  * Covers:
  *   - validateProposal accepts valid input
  *   - validateProposal rejects malformed verbName (uppercase first letter,
@@ -14,7 +14,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const cap = require('../src/capability-proposal');
+const cap = require('../src/pipelines/capability-proposal');
 
 describe('capability-proposal.validateProposal', () => {
   it('accepts a valid camelCase verb + description', () => {

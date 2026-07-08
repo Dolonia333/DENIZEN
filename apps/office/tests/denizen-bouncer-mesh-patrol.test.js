@@ -4,7 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 
-const { runNodePatrol } = require('../src/denizen-bouncer-mesh-patrol');
+const { runNodePatrol } = require('../src/compute/denizen-bouncer-mesh-patrol');
 
 describe('denizen-bouncer-mesh-patrol', () => {
   it('probes mock node tcp and health endpoints', async () => {

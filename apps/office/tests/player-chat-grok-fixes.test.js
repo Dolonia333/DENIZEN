@@ -7,7 +7,7 @@ global.window = global;
 global.document = { dispatchEvent: () => {} };
 global.localStorage = { getItem: () => null, setItem: () => {} };
 
-require('../src/player-chat.js');
+require('../src/hud/player-chat.js');
 
 const PlayerChat = global.PlayerChat;
 PlayerChat.prototype._buildUI = function () {};

@@ -4,9 +4,9 @@
  * Usage: node scripts/seed-zion-owner.cjs
  */
 require('../src/load-env');
-const denizenDb = require('../src/denizen-db');
-const { hashPassword, minPasswordLength, assertPasswordMinLength } = require('../src/denizen-team-password');
-const teamAuth = require('../src/denizen-team-auth');
+const denizenDb = require('../src/intelligence/denizen-db');
+const { hashPassword, minPasswordLength, assertPasswordMinLength } = require('../src/auth/denizen-team-password');
+const teamAuth = require('../src/auth/denizen-team-auth');
 
 const EMAIL = 'zionvanzandt@gmail.com';
 const USERNAME = 'Dolonia';

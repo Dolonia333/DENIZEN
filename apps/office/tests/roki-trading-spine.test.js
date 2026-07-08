@@ -11,8 +11,8 @@ describe('roki trading spine — denizen-db methods', () => {
 
   beforeEach(() => {
     calls = [];
-    delete require.cache[require.resolve('../src/denizen-db.js')];
-    denizenDb = require('../src/denizen-db.js');
+    delete require.cache[require.resolve('../src/intelligence/denizen-db.js')];
+    denizenDb = require('../src/intelligence/denizen-db.js');
     denizenDb.enabled = true;
     denizenDb.orgId = 'be6080e8-638a-495a-b05d-2d90cd1b838f';
     denizenDb.url = 'http://127.0.0.1:54321';
@@ -107,8 +107,8 @@ describe('roki trading spine — denizen-db methods', () => {
 });
 
 describe('roki trading spine — robinhood dual write', () => {
-  const mcpPath = require.resolve('../src/robinhood-mcp.js');
-  const dbPath = require.resolve('../src/denizen-db.js');
+  const mcpPath = require.resolve('../src/integrations/robinhood-mcp.js');
+  const dbPath = require.resolve('../src/intelligence/denizen-db.js');
 
   let originalRead;
   let originalWrite;
@@ -141,7 +141,7 @@ describe('roki trading spine — robinhood dual write', () => {
 
     delete require.cache[mcpPath];
     delete require.cache[dbPath];
-    const db = require('../src/denizen-db.js');
+    const db = require('../src/intelligence/denizen-db.js');
     db.upsertTradeSuggestion = (payload) => mockDbCalls.push({ type: 'suggestion', payload });
     db.syncWatchlistSymbol = (symbol, opts) => mockDbCalls.push({ type: 'watchlist', symbol, opts });
   });
@@ -154,7 +154,7 @@ describe('roki trading spine — robinhood dual write', () => {
   });
 
   it('createSuggestion writes JSON and denizen-db suggestion row', () => {
-    const robinhoodMcp = require('../src/robinhood-mcp.js');
+    const robinhoodMcp = require('../src/integrations/robinhood-mcp.js');
     const suggestion = robinhoodMcp.createSuggestion({
       npc: 'Roki',
       symbol: 'msft',
@@ -173,7 +173,7 @@ describe('roki trading spine — robinhood dual write', () => {
   });
 
   it('add/remove watchlist syncs denizen-db while keeping JSON writes', () => {
-    const robinhoodMcp = require('../src/robinhood-mcp.js');
+    const robinhoodMcp = require('../src/integrations/robinhood-mcp.js');
     robinhoodMcp.addToWatchlist('shop');
     robinhoodMcp.removeFromWatchlist('shop');
 
@@ -184,8 +184,8 @@ describe('roki trading spine — robinhood dual write', () => {
   });
 
   it('exports auth connect URL helper and seeds default watchlist when DB is empty', async () => {
-    const robinhoodMcp = require('../src/robinhood-mcp.js');
-    const db = require('../src/denizen-db.js');
+    const robinhoodMcp = require('../src/integrations/robinhood-mcp.js');
+    const db = require('../src/intelligence/denizen-db.js');
 
     const synced = [];
     db.enabled = true;
@@ -207,8 +207,8 @@ describe('roki trading spine — robinhood dual write', () => {
   });
 
   it('does not seed default watchlist when DB already has symbols', async () => {
-    const robinhoodMcp = require('../src/robinhood-mcp.js');
-    const db = require('../src/denizen-db.js');
+    const robinhoodMcp = require('../src/integrations/robinhood-mcp.js');
+    const db = require('../src/intelligence/denizen-db.js');
 
     let syncCalls = 0;
     db.enabled = true;

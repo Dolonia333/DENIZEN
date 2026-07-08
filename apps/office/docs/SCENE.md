@@ -84,7 +84,7 @@ The work happens in roughly this order:
 5. **World clock + HUD** updater (line 1418) is a `setInterval` that
    advances the in-game clock and updates the on-screen time.
 6. **AgentOfficeManager** (line 1470) is the bridge between the scene
-   and `src/agent-office-manager.js`. After this, the cofounder + NPC
+   and `src/npc/agent-office-manager.js`. After this, the cofounder + NPC
    brains can drive the world.
 7. **Demo dispatcher** (line 1511) reads `?demo=…` from the URL and
    triggers `DemoScene.start()` (`?demo=investor`) or
@@ -116,7 +116,7 @@ Runs every frame. The order matters:
   doesn't make decisions; it executes the actions chosen by the brain.
 - **Actions** — see [ACTIONS.md](ACTIONS.md). The `actions.speak()`,
   `actions.walkTo()`, etc. that the scene calls are defined in
-  `src/agent-actions.js`.
+  `src/npc/agent-actions.js`.
 - **Pathfinding** — see [PATHFINDING.md](PATHFINDING.md). The
   `NpcPathFollower` instances the scene wires up at line 1530 are the
   per-NPC route engines.
@@ -137,9 +137,9 @@ Runs every frame. The order matters:
   you need new tile placement logic, it goes in the layout block around
   line 828.
 - ✅ **Add a new HUD element** — line 1408 area.
-- ❌ **Change NPC behaviour** — go to `src/npc-brains.js` instead. This
+- ❌ **Change NPC behaviour** — go to `src/npc/npc-brains.js` instead. This
   scene only renders.
-- ❌ **Change action semantics** — `src/agent-actions.js`.
+- ❌ **Change action semantics** — `src/npc/agent-actions.js`.
 - ❌ **Change pathfinding** — `src/pathfinding.js`.
 
 The scene is intentionally large because Phaser scenes own a lot of

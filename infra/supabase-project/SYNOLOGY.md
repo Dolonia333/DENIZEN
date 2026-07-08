@@ -110,7 +110,7 @@ Invoke-WebRequest "https://supabase.dolonia.cloud/rest/v1/" -UseBasicParsing
 Invoke-WebRequest "https://denizen.dolonia.cloud/api/health" -UseBasicParsing
 
 # Team onboarding smoke
-cd denizen
+cd apps/office
 node scripts/smoke-onboarding.js
 ```
 

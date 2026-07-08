@@ -3,9 +3,9 @@
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 
-const crmStore = require('../src/denizen-crm-store');
-const crmSpine = require('../src/denizen-crm-spine');
-const denizenDb = require('../src/denizen-db');
+const crmStore = require('../src/crm/denizen-crm-store');
+const crmSpine = require('../src/crm/denizen-crm-spine');
+const denizenDb = require('../src/intelligence/denizen-db');
 
 describe('denizen-crm-integration', { skip: !process.env.SUPABASE_URL ? 'SUPABASE_URL not set' : false }, () => {
   let orgId;

@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const bouncerInvestigation = require('../src/bouncer-investigation');
+const bouncerInvestigation = require('../src/security/bouncer-investigation');
 
 describe('bouncer-investigation', () => {
   it('takeInvestigationSlot blocks internal sources', () => {

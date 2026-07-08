@@ -8,7 +8,7 @@ const {
   canNpcRunSkill,
   skillOwner,
   deferSkillPlan,
-} = require('../src/denizen-crm-npc-personas');
+} = require('../src/crm/denizen-crm-npc-personas');
 
 describe('denizen-crm-npc-personas extended skills', () => {
   it('infers qualify submission', () => {

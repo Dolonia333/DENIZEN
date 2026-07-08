@@ -4,7 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const roster = require('../src/npc-roster');
+const roster = require('../src/npc/npc-roster');
 
 describe('NPC SOUL individuality', () => {
   for (const entry of roster.entries) {

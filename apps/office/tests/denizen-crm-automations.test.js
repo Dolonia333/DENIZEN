@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { applyServerAutomations, evaluateConditions } = require('../src/denizen-crm-automations');
+const { applyServerAutomations, evaluateConditions } = require('../src/crm/denizen-crm-automations');
 
 describe('denizen-crm-automations', () => {
   it('deal_created creates task and logs run', async () => {

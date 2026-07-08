@@ -8,7 +8,7 @@ const {
   resolveOfficeFromSession,
   shouldDeliverToSocket,
   attachOfficeId,
-} = require('../src/visitor-office-registry.js');
+} = require('../src/visitors/visitor-office-registry.js');
 
 describe('visitor-office-registry', () => {
   it('ceo ws without session maps to ceo-operator office', () => {

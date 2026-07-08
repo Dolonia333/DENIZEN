@@ -5,9 +5,9 @@
  * sharing a single office simulation.
  */
 
-const denizenVisitor = require('./denizen-visitor');
-const userIdentity = require('./denizen-user-identity');
-const visitorConnections = require('./visitor-connections');
+const denizenVisitor = require('./visitors/denizen-visitor');
+const userIdentity = require('./auth/denizen-user-identity');
+const visitorConnections = require('./visitors/visitor-connections');
 
 const INTENTS = new Set(['status', 'ask_help', 'delegate', 'reply', 'sync']);
 

@@ -1,8 +1,8 @@
 'use strict';
 
 const path = require('node:path');
-const dossierSystem = require('../../../src/dossier-system');
-const citedResearch = require('../../../src/visitor-cited-research');
+const dossierSystem = require('../../../src/pipelines/dossier-system');
+const citedResearch = require('../../../src/visitors/visitor-cited-research');
 
 module.exports = {
   meta: {

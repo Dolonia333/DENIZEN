@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const pubsub = require('../src/denizen-world-pubsub');
+const pubsub = require('../src/integrations/denizen-world-pubsub');
 
 describe('denizen-world-pubsub', () => {
   it('defaults to memory driver', () => {

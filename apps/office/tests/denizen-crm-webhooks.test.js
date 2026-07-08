@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { emitCrmWebhooks, postWebhook } = require('../src/denizen-crm-webhooks');
+const { emitCrmWebhooks, postWebhook } = require('../src/crm/denizen-crm-webhooks');
 
 describe('denizen-crm-webhooks', () => {
   it('postWebhook skips invalid URLs', async () => {

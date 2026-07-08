@@ -312,10 +312,10 @@ denizen-harness/
 
 ### How Denizen would use it
 
-The current `denizen/server.js` becomes a thin wrapper:
+The current `apps/office/server.js` becomes a thin wrapper:
 
 ```js
-const harness = require('@denizen/harness');
+const harness = require('@apps/office/harness');
 const npcs = await harness.loadNpcs('./npcs');   // reads SOUL.md files
 const gateway = harness.startGateway({ port: 8080, npcs });
 gateway.on('player_chat', async (msg) => {
@@ -333,13 +333,13 @@ Everything below that is the harness's responsibility.
 
 | Phase | Scope | Effort |
 |-------|-------|--------|
-| **Phase A** — Extract core into a package | Pull `npc-brains.js`, `task-chain.js`, `conflict-detector.js`, `coding-task-runner.js`, etc. out of `denizen/src/` into a separate `harness/` package with clean exports. No new functionality. | **~1 week** |
+| **Phase A** — Extract core into a package | Pull `npc-brains.js`, `task-chain.js`, `conflict-detector.js`, `coding-task-runner.js`, etc. out of `apps/office/src/` into a separate `harness/` package with clean exports. No new functionality. | **~1 week** |
 | **Phase B** — In-process skill registry | Build `skill-registry.js` + convert 5–10 critical skills (github, browserclaw, coding-agent, supabase, lm-studio) from subprocess to in-process JS modules. | **~1 week** |
 | **Phase C** — Gateway abstraction | Move the WS/REST surface into the harness as a clean API. Denizen becomes a consumer. | **~1 week** |
 | **Phase D** — Phase 5 loop integration | Wire outcome scoring + competency map + training task generator into the harness as first-class concepts (instead of bolt-ons). | **~1 week** |
 | **Total to "Denizen-native harness 1.0"** | | **~4 weeks** |
 
-After that, you could open-source `@denizen/harness` and other people could use it to build their own NPC-driven AI workflows. That's the real strategic value.
+After that, you could open-source `@apps/office/harness` and other people could use it to build their own NPC-driven AI workflows. That's the real strategic value.
 
 ---
 
@@ -379,7 +379,7 @@ Specifically:
 
 You end up with:
 - Denizen as a product (the pixel office)
-- `@denizen/harness` as a library (the runtime)
+- `@apps/office/harness` as a library (the runtime)
 - OpenClaw skills as a *compatible artifact format* (use what's good; replace what's slow)
 
 That's the cleanest separation of concerns and the lowest-risk path.

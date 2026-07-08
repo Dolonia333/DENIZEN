@@ -133,7 +133,7 @@ class SecurityMonitorServer {
 
   /** Check an HTTP request for suspicious patterns (call from server.js) */
   checkHttpRequest(req) {
-    const { isLocalOrLoopback } = require('./src/security-ip');
+    const { isLocalOrLoopback } = require('./src/security/security-ip');
     const ip = req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
     const url = req.url || '';
     const method = req.method || 'GET';
@@ -729,7 +729,7 @@ class SecurityMonitorServer {
   // --- Threat emission ---
 
   _emitThreat(threat) {
-    const { isLocalOrLoopback, isInternalThreatSource } = require('./src/security-ip');
+    const { isLocalOrLoopback, isInternalThreatSource } = require('./src/security/security-ip');
     if (isLocalOrLoopback(threat.source) || isInternalThreatSource(threat.source)) {
       return;
     }

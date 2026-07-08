@@ -9,8 +9,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const roster = require('../src/npc-roster');
-const voiceResolve = require('../src/voice-resolve');
+const roster = require('../src/npc/npc-roster');
+const voiceResolve = require('../src/voice/voice-resolve');
 
 const mapPath = path.join(__dirname, '..', 'data', 'voice-map.json');
 const write = process.argv.includes('--write');

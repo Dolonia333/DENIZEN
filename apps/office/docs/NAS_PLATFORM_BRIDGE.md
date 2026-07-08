@@ -18,7 +18,7 @@ Denizen-local CRM (`job_applications`, intake, contacts) still works. Platform p
 
 ## Runtime gate
 
-`GET /api/platform-bridge/status` returns `platformBridgeStatus()` from `src/platform-bridge.js`.
+`GET /api/platform-bridge/status` returns `platformBridgeStatus()` from `src/integrations/platform-bridge.js`.
 
 - **NAS default:** `enabled: false`, `mode: nas`
 - **Cloud:** set `DENIZEN_PLATFORM_BRIDGE=true` or `PLATFORM_CMS_TABLE` / `PLATFORM_CLIENTS_TABLE`

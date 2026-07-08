@@ -4,7 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
 const officeDirector = require('../src/office-director');
-const telemetryInsights = require('../src/telemetry-insights');
+const telemetryInsights = require('../src/intelligence/telemetry-insights');
 
 describe('office-director', () => {
   it('needsLlm when escalation or directive pending', () => {

@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const {
   isAvailable,
   runEntityForecast,
-} = require('../src/mirofish-prediction.js');
+} = require('../src/intelligence/mirofish-prediction.js');
 
 describe('mirofish-prediction', () => {
   afterEach(() => {

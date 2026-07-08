@@ -23,10 +23,10 @@
  */
 
 const EventEmitter = require('node:events');
-const { classify: classifyMood } = require('./sentiment.js');
+const { classify: classifyMood } = require('./pipelines/sentiment');
 
 let promptTuning = null;
-try { promptTuning = require('./prompt-tuning'); } catch (_) {}
+try { promptTuning = require('./intelligence/prompt-tuning'); } catch (_) {}
 
 /**
  * @typedef {Object} NpcLiveState
@@ -144,6 +144,34 @@ class WorldState extends EventEmitter {
      *  them to break the cycle. */
     this.recentExchanges = new Map();
 
+    /** @type {Map<string, {dailyCounts: Object<string,{shipped:number,ok:number,stuck:number,blocked:number}>, streakDays:number, lastShipDate:string|null}>}
+     *  Per-NPC productivity stats keyed by display name. The counting and
+     *  streak math live in denizen-npc-stats.js — this is just the
+     *  container, same division of labor as `npcs` above. */
+    this.npcStats = new Map();
+
+    /** Office-wide XP/level, driven by real outcomes (tasks shipped, CRM
+     *  deals won, tickets closed). Threshold/weight math lives in
+     *  denizen-office-progress.js. `eventsThisWeek` is a small ring used
+     *  by the weekly recap email to say what actually happened. `counts`
+     *  is the all-time tally per real outcome type — achievements need
+     *  totals beyond npcStats' 35-day retention window. */
+    this.officeProgress = {
+      totalXp: 0,
+      level: 1,
+      eventsThisWeek: [],
+      counts: { task_shipped: 0, deal_won: 0, ticket_closed: 0 },
+    };
+
+    /** @type {Map<string, {unlockedAt:number}>} unlocked achievement ids.
+     *  Unlock logic lives in denizen-achievements.js. */
+    this.officeAchievements = new Map();
+
+    /** Quest progress for the current daily/weekly periods. Rollover and
+     *  claim logic live in denizen-quests.js — this is just the container.
+     *  progress[questId] = { count, claimed, completedAt } */
+    this.quests = { periodKeys: {}, progress: {} };
+
     /** Caps so a chatty subsystem can't OOM us. */
     this._caps = {
       activeThreats: 8,
@@ -154,6 +182,7 @@ class WorldState extends EventEmitter {
       selfMessagesPerNpc: 5,
       exchangesPerPair: 6,
       exchangePairs: 100,
+      eventsThisWeek: 50,
     };
   }
 
@@ -474,7 +503,7 @@ class WorldState extends EventEmitter {
   pushThreat(threat) {
     if (!threat || typeof threat !== 'object') return;
     try {
-      const { isLocalOrLoopback, isInternalThreatSource } = require('./security-ip');
+      const { isLocalOrLoopback, isInternalThreatSource } = require('./security/security-ip');
       if (isLocalOrLoopback(threat.source) || isInternalThreatSource(threat.source)) return;
     } catch (_) {}
     const t = { ts: Date.now(), ...threat };
@@ -544,6 +573,99 @@ class WorldState extends EventEmitter {
   }
 
   // ---------------------------------------------------------------------
+  // NPC productivity stats (leaderboard/streaks) — counting/streak math
+  // lives in denizen-npc-stats.js; these are the mutate+notify primitives.
+  // ---------------------------------------------------------------------
+
+  getNpcStatRecord(npcName) {
+    const rec = this.npcStats.get(npcName);
+    return rec ? { ...rec, dailyCounts: { ...rec.dailyCounts } } : null;
+  }
+
+  getAllNpcStats() {
+    const out = {};
+    for (const [name, rec] of this.npcStats) {
+      out[name] = { ...rec, dailyCounts: { ...rec.dailyCounts } };
+    }
+    return out;
+  }
+
+  setNpcStatRecord(npcName, record) {
+    if (!npcName || !record) return;
+    this.npcStats.set(npcName, record);
+    this._emit('npc_stats', { npcName, record: this.getNpcStatRecord(npcName) });
+  }
+
+  // ---------------------------------------------------------------------
+  // Office progress (XP / level) — threshold/weight math lives in
+  // denizen-office-progress.js; these are the mutate+notify primitives.
+  // ---------------------------------------------------------------------
+
+  setOfficeProgress(patch) {
+    this.officeProgress = { ...this.officeProgress, ...patch };
+    this._emit('office_progress', { ...this.officeProgress, eventsThisWeek: this.officeProgress.eventsThisWeek.slice() });
+  }
+
+  pushProgressEvent(entry) {
+    if (!entry) return;
+    this.officeProgress.eventsThisWeek.unshift({ ...entry, at: Date.now() });
+    if (this.officeProgress.eventsThisWeek.length > this._caps.eventsThisWeek) {
+      this.officeProgress.eventsThisWeek.length = this._caps.eventsThisWeek;
+    }
+  }
+
+  announceLevelUp(payload) {
+    this._emit('office_level_up', payload);
+  }
+
+  // ---------------------------------------------------------------------
+  // Achievements — unlock logic lives in denizen-achievements.js; these
+  // are the mutate+notify primitives.
+  // ---------------------------------------------------------------------
+
+  setAchievementUnlocked(id, record = {}) {
+    if (!id) return;
+    this.officeAchievements.set(id, { unlockedAt: Date.now(), ...record });
+  }
+
+  getAllAchievements() {
+    const out = {};
+    for (const [id, rec] of this.officeAchievements) out[id] = { ...rec };
+    return out;
+  }
+
+  announceAchievement(payload) {
+    this._emit('achievement_unlocked', payload);
+  }
+
+  // ---------------------------------------------------------------------
+  // Quests — rollover/claim logic lives in denizen-quests.js; these are
+  // the mutate+notify primitives.
+  // ---------------------------------------------------------------------
+
+  setQuestProgress(questId, progress) {
+    if (!questId || !progress) return;
+    this.quests.progress[questId] = { ...progress };
+    this._emit('quests', this.getQuestsState());
+  }
+
+  resetQuestPeriod(period, periodKey, questIds = []) {
+    this.quests.periodKeys[period] = periodKey;
+    for (const id of questIds) delete this.quests.progress[id];
+    this._emit('quests', this.getQuestsState());
+  }
+
+  getQuestsState() {
+    const progress = {};
+    for (const [id, rec] of Object.entries(this.quests.progress)) progress[id] = { ...rec };
+    return { periodKeys: { ...this.quests.periodKeys }, progress };
+  }
+
+  announceQuestComplete(payload) {
+    this._emit('quest_complete', payload);
+  }
+
+  // ---------------------------------------------------------------------
   // Environment
   // ---------------------------------------------------------------------
 
@@ -568,6 +690,14 @@ class WorldState extends EventEmitter {
       foregroundTasks: this.foregroundTasks.slice(),
       recentEvents: this.recentEvents.slice(),
       environment: { ...this.environment },
+      npcStats: this.getAllNpcStats(),
+      officeProgress: {
+        ...this.officeProgress,
+        eventsThisWeek: this.officeProgress.eventsThisWeek.slice(),
+        counts: { ...this.officeProgress.counts },
+      },
+      officeAchievements: this.getAllAchievements(),
+      quests: this.getQuestsState(),
     };
   }
 

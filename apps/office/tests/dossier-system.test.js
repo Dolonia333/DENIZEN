@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const dossier = require('../src/dossier-system');
+const dossier = require('../src/pipelines/dossier-system');
 
 const CITED_RESEARCH = dossier.normalizeRecipientResearch({
   query: 'RM Cyber',

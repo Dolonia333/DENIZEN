@@ -3,7 +3,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const securityIp = require('../src/security-ip');
+const securityIp = require('../src/security/security-ip');
 
 describe('security-ip', () => {
   let prevHost;

@@ -1,0 +1,15 @@
+{
+  "applications": [
+    {
+      "id": "test-1",
+      "company": "NovaTech",
+      "role": "AI Engineer",
+      "status": "applied",
+      "score": 8.5,
+      "updatedAt": "2026-07-08T03:31:16.179Z",
+      "createdAt": "2026-07-08T02:57:16.781Z"
+    }
+  ],
+  "referrals": [],
+  "lastStandupAt": "2026-07-08T03:38:10.488Z"
+}

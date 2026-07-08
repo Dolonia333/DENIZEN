@@ -284,7 +284,7 @@ Content-Type: application/json
 
 ## Debug overlay (browser)
 
-`src/city-debug.js` is a small in-game HUD that fetches a fresh city from
+`src/city/city-debug.js` is a small in-game HUD that fetches a fresh city from
 `/api/generate-city` and renders it into a hidden canvas overlay. Two
 ways to open it:
 

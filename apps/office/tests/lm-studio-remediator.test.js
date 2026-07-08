@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const lmStudioRemediator = require('../src/lm-studio-remediator');
+const lmStudioRemediator = require('../src/integrations/lm-studio-remediator');
 
 describe('lm-studio-remediator', () => {
   it('pollUntilHealthy succeeds when probe reports reachable', async () => {

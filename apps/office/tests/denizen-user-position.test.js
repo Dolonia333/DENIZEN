@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const position = require('../src/denizen-user-position.js');
+const position = require('../src/auth/denizen-user-position.js');
 
 describe('denizen-user-position', () => {
   it('normalizes and trims titles', () => {

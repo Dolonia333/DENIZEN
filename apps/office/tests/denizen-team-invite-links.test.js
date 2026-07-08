@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const links = require('../src/denizen-team-invite-links.js');
+const links = require('../src/auth/denizen-team-invite-links.js');
 
 describe('denizen-team-invite-links', () => {
   it('buildJoinUrl encodes team code in query', () => {

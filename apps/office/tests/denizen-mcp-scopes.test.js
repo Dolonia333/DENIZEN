@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const mcpScopes = require('../src/denizen-mcp-scopes.js');
+const mcpScopes = require('../src/mcp/denizen-mcp-scopes.js');
 
 describe('denizen-mcp-scopes', () => {
   it('defaults to full scopes when unset', () => {

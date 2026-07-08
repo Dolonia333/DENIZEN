@@ -3,7 +3,7 @@
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 
-const ambientDialogue = require('../src/ambient-dialogue');
+const ambientDialogue = require('../src/pipelines/ambient-dialogue');
 
 const mockBrains = {
   memories: {

@@ -2,7 +2,7 @@
 // visitor as the host (is_host_operator: true on their identity metadata).
 // Clears the flag from every identity except the real CEO/host one, and
 // stamps is_ceo_principal on the CEO identity.
-// Usage (from denizen/): node --env-file=.env scripts/scrub-host-flags.mjs
+// Usage (from apps/office/): node --env-file=.env scripts/scrub-host-flags.mjs
 const url = String(process.env.SUPABASE_URL || '').replace(/\/$/, '');
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 if (!url || !key) { console.error('SUPABASE_URL / key missing in .env'); process.exit(1); }

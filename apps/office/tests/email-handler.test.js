@@ -13,7 +13,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const handler = require('../src/email-handler');
+const handler = require('../src/pipelines/email-handler');
 
 const LUCY_SOUL = `# Lucy — Product Manager
 
@@ -192,7 +192,7 @@ describe('processInboundEmail — end-to-end with stubbed brain', () => {
     process.env._DENIZEN_EMAIL_LOG_OVERRIDE = tmpLogFile;
     // Re-require gmail-client fresh so its _DRAFT_FILE constant is rebound
     // — we monkey-patch the module exports below.
-    delete require.cache[require.resolve('../src/gmail-client.js')];
+    delete require.cache[require.resolve('../src/pipelines/gmail-client.js')];
   });
 
   afterEach(() => {

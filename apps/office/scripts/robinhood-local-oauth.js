@@ -27,7 +27,7 @@ delete process.env.DENIZEN_URL;
 delete process.env.ROBINHOOD_REDIRECT_URI;
 process.env.PORT = String(PORT);
 
-const robinhoodMcp = require('../src/robinhood-mcp');
+const robinhoodMcp = require('../src/integrations/robinhood-mcp');
 
 function page(title, body) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>

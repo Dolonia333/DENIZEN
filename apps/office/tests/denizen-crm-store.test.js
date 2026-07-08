@@ -3,7 +3,7 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
-const crmStore = require('../src/denizen-crm-store');
+const crmStore = require('../src/crm/denizen-crm-store');
 
 describe('denizen-crm-store', () => {
   it('sanitizeState keeps known CRM keys only', () => {

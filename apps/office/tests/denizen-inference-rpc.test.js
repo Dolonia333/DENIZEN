@@ -3,8 +3,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const computeQueue = require('../src/denizen-compute-queue');
-const router = require('../src/lm-studio-router');
+const computeQueue = require('../src/compute/denizen-compute-queue');
+const router = require('../src/integrations/lm-studio-router');
 
 describe('denizen-inference-rpc helpers', () => {
   it('jobMatchesNode respects target_machine_id', () => {

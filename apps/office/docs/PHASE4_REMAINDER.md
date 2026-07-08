@@ -168,7 +168,7 @@
 
 ```powershell
 
-cd denizen/desktop
+cd apps/office/desktop
 
 npm run prebuild:win
 
@@ -176,7 +176,7 @@ npm start
 
 
 
-cd denizen
+cd apps/office
 
 node scripts/smoke-inference-rpc.js
 

@@ -3,13 +3,13 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const denizenDb = require('../src/denizen-db.js');
+const denizenDb = require('../src/intelligence/denizen-db.js');
 const {
   requestConnection,
   respondConnection,
   listConnections,
   canMessage,
-} = require('../src/visitor-connections.js');
+} = require('../src/visitors/visitor-connections.js');
 
 const ORG_A = '11111111-1111-1111-1111-111111111111';
 const ORG_B = '22222222-2222-2222-2222-222222222222';

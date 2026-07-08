@@ -81,12 +81,22 @@ function getIntelligenceRouteHandler(deps) {
   return null;
 }
 
+function getOfficeProgressRouteHandler(deps) {
+  const officeProgressRoutes = safeRequire('./routes/office-progress-routes');
+  if (!officeProgressRoutes) return null;
+  if (typeof officeProgressRoutes.createOfficeProgressRouteHandler === 'function') {
+    return officeProgressRoutes.createOfficeProgressRouteHandler(deps);
+  }
+  return null;
+}
+
 function createDenizenRouteHandler(deps = {}) {
   const robinhoodMcp = deps.robinhoodMcp || safeRequire('./robinhood-mcp');
   const jobCrm = deps.jobCrm || safeRequire('./job-crm');
   const getPredictionSummary = getPredictionHandler(deps);
   const getFederalPipelineSummary = getFederalSummaryProvider(deps);
   const intelligenceRouteHandler = getIntelligenceRouteHandler(deps);
+  const officeProgressRouteHandler = getOfficeProgressRouteHandler(deps);
 
   return async function handleDenizenRoutes(req, res) {
     const reqUrl = req.url || '/';
@@ -96,6 +106,11 @@ function createDenizenRouteHandler(deps = {}) {
 
     if (intelligenceRouteHandler) {
       const handled = await intelligenceRouteHandler(req, res, { req, res, url, deps });
+      if (handled) return true;
+    }
+
+    if (officeProgressRouteHandler) {
+      const handled = await officeProgressRouteHandler(req, res, { req, res, url, deps });
       if (handled) return true;
     }
 

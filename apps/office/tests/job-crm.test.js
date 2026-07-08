@@ -25,8 +25,8 @@ before(() => {
   fs.writeFileSync(tmpOutcomes, JSON.stringify({ stats: {}, events: [] }), 'utf8');
   fs.copyFileSync(tmpCrm, CRM_FILE);
   fs.copyFileSync(tmpOutcomes, OUTCOMES_FILE);
-  delete require.cache[require.resolve('../src/job-crm.js')];
-  jobCrm = require('../src/job-crm.js');
+  delete require.cache[require.resolve('../src/pipelines/job-crm.js')];
+  jobCrm = require('../src/pipelines/job-crm.js');
 });
 
 after(() => {

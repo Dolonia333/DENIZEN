@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Pure logic tests for src/soul-reflection.js (Roadmap Stage 3 step 1).
+ * Pure logic tests for src/pipelines/soul-reflection.js (Roadmap Stage 3 step 1).
  * No server boot, no fs writes — just unit-level assertions on the
  * prompt builder, validator, and serializer.
  */
@@ -16,7 +16,7 @@ const {
   serializeHistoryEntry,
   SUMMARY_MAX_LEN,
   FIELD_MAX_LEN,
-} = require('../src/soul-reflection');
+} = require('../src/pipelines/soul-reflection');
 
 describe('soul-reflection.buildReflectionPrompt', () => {
   it('includes the NPC name and memory excerpts', () => {

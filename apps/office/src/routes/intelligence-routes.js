@@ -2,8 +2,8 @@
 
 const { URL } = require('node:url');
 
-const mirofish = require('../mirofish-prediction');
-const predictionLoop = require('../denizen-prediction-loop');
+const mirofish = require('../intelligence/mirofish-prediction');
+const predictionLoop = require('../intelligence/denizen-prediction-loop');
 
 function sendJson(res, status, payload) {
   if (res.writableEnded) return;

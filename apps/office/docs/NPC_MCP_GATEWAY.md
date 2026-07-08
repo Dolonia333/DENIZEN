@@ -185,16 +185,16 @@ py infra/run-grok-autonomy.py --loop --interval 300 --max 10
 
 | File | Role |
 |------|------|
-| `src/denizen-npc-mcp-gateway.js` | JSON-RPC transport + tool handlers |
-| `src/denizen-db.js` | `insertNpcMemory`, `listNpcMemories` |
-| `src/npc-brains.js` | Dual-write `saveMemory`, `refreshDbMemories` |
-| `src/visitor-mcp-connect-ui.js` | In-office connect flow |
+| `src/core/denizen-npc-mcp-gateway.js` | JSON-RPC transport + tool handlers |
+| `src/intelligence/denizen-db.js` | `insertNpcMemory`, `listNpcMemories` |
+| `src/npc/npc-brains.js` | Dual-write `saveMemory`, `refreshDbMemories` |
+| `src/visitors/visitor-mcp-connect-ui.js` | In-office connect flow |
 | `tests/npc-mcp-gateway.test.js` | Unit tests |
 
 ## Apply migration
 
 ```powershell
-cd denizen
+cd apps/office
 .\scripts\apply-all-migrations.ps1
 ```
 

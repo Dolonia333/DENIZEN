@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { getRfpPipelineSummary, getRfpDetail } = require('../src/federal-pipeline.js');
+const { getRfpPipelineSummary, getRfpDetail } = require('../src/intelligence/federal-pipeline.js');
 
 function createMockDenizenDb() {
   return {

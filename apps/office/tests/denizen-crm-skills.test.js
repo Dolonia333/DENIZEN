@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { findSubmission, findContact } = require('../src/denizen-crm-skills');
+const { findSubmission, findContact } = require('../src/crm/denizen-crm-skills');
 
 describe('denizen-crm-skills helpers', () => {
   it('findSubmission picks by company', () => {

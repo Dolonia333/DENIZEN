@@ -7,7 +7,7 @@ const {
   resolveRouterLmUrl,
   enrichLmStudioBlock,
   preferServerProbeUrl,
-} = require('../src/lm-studio-advertise.js');
+} = require('../src/integrations/lm-studio-advertise.js');
 
 describe('lm-studio-advertise', () => {
   it('detects loopback URLs', () => {
@@ -31,7 +31,7 @@ describe('lm-studio-advertise', () => {
     const prev = process.env.LM_STUDIO_REMOTE_URLS;
     process.env.LM_STUDIO_REMOTE_URLS = 'http://192.168.1.232:1234';
     try {
-      const { preferServerProbeUrl } = require('../src/lm-studio-advertise.js');
+      const { preferServerProbeUrl } = require('../src/integrations/lm-studio-advertise.js');
       const url = preferServerProbeUrl('http://100.71.54.109:1234', { role: 'desktop' });
       assert.equal(url, 'http://192.168.1.232:1234');
     } finally {

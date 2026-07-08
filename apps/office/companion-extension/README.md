@@ -7,11 +7,11 @@ Sync clipboard, text selections, and quick notes to your Denizen NPC without con
 1. Open Chrome → `chrome://extensions`
 2. Enable **Developer mode**
 3. Click **Load unpacked**
-4. Select this folder (`denizen/companion-extension`)
+4. Select this folder (`apps/office/companion-extension`)
 
 ## Connect
 
-1. Run Denizen (`npm start` in `denizen/`)
+1. Run Denizen (`npm start` in `apps/office/`)
 2. Enter with a **team** session and **claim an NPC**
 3. Click **Connect AI** — the **Companion** tab syncs your token automatically
 4. Open the extension popup — you should see your NPC name

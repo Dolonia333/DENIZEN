@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const mcpResources = require('../src/denizen-mcp-resources.js');
+const mcpResources = require('../src/mcp/denizen-mcp-resources.js');
 
 describe('denizen-mcp-resources', () => {
   it('filters facts for bouncer npcId', () => {

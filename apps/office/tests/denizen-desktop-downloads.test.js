@@ -3,8 +3,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const downloads = require('../src/denizen-desktop-downloads.js');
-const links = require('../src/denizen-team-invite-links.js');
+const downloads = require('../src/desktop/denizen-desktop-downloads.js');
+const links = require('../src/auth/denizen-team-invite-links.js');
 
 describe('denizen-desktop-downloads', () => {
   it('exposes macOS dmg URL', () => {

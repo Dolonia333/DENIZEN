@@ -6,41 +6,45 @@ const path = require('path');
 const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 const SecurityMonitorServer = require('./security-monitor-server');
-const CofounderAgent = require('./src/cofounder-agent');
-const NpcBrainManager = require('./src/npc-brains');
-const ambientDialogue = require('./src/ambient-dialogue');
-const npcPeerWorkStatus = require('./src/npc-peer-work-status');
-const promptTuning = require('./src/prompt-tuning');
+const CofounderAgent = require('./src/compute/cofounder-agent');
+const NpcBrainManager = require('./src/npc/npc-brains');
+const ambientDialogue = require('./src/pipelines/ambient-dialogue');
+const npcPeerWorkStatus = require('./src/npc/npc-peer-work-status');
+const promptTuning = require('./src/intelligence/prompt-tuning');
 const worldState = require('./src/world-state');
 const agentBus = require('./src/agent-bus');
-const ExternalSink = require('./src/external-sink');
-const elevenLabs = require('./src/elevenlabs-tts');
-const voiceBridge = require('./src/denizen-voice-bridge.js');
-const { createSentenceStream } = require('./src/voice-sentence.js');
-const animationForge = require('./src/animation-forge');
-const soulReflection = require('./src/soul-reflection');
-const npcRoster = require('./src/npc-roster');
-const npcCapabilities = require('./src/npc-capabilities');
-const voiceResolve = require('./src/voice-resolve');
-const capabilityProposal = require('./src/capability-proposal');
-const emailHandler = require('./src/email-handler');
-const gmailClient = require('./src/gmail-client');
-const llmTelemetry = require('./src/llm-telemetry');
-const denizenDb = require('./src/denizen-db');
-const orgPolicy = require('./src/denizen-org-policy');
-const denizenVisitor = require('./src/denizen-visitor');
-const visitorAccess = require('./src/visitor-access');
-const sessionAuth = require('./src/visitor-session-auth');
-const sessionCookie = require('./src/visitor-session-cookie');
-const teamAuth = require('./src/denizen-team-auth');
-const userIdentity = require('./src/denizen-user-identity');
-const userPosition = require('./src/denizen-user-position.js');
-const invitePlatform = require('./src/denizen-invite-platform.js');
-const visitorOfficeContext = require('./src/visitor-office-context');
-const officeRegistry = require('./src/visitor-office-registry');
-const officeLayout = require('./src/visitor-office-layout');
+const ExternalSink = require('./src/intelligence/external-sink');
+const elevenLabs = require('./src/voice/elevenlabs-tts');
+const voiceBridge = require('./src/voice/denizen-voice-bridge.js');
+const { createSentenceStream } = require('./src/voice/voice-sentence.js');
+const animationForge = require('./src/pipelines/animation-forge');
+const soulReflection = require('./src/pipelines/soul-reflection');
+const npcRoster = require('./src/npc/npc-roster');
+const npcCapabilities = require('./src/npc/npc-capabilities');
+const voiceResolve = require('./src/voice/voice-resolve');
+const capabilityProposal = require('./src/pipelines/capability-proposal');
+const emailHandler = require('./src/pipelines/email-handler');
+const gmailClient = require('./src/pipelines/gmail-client');
+const llmTelemetry = require('./src/intelligence/llm-telemetry');
+const denizenDb = require('./src/intelligence/denizen-db');
+const denizenNpcStats = require('./src/office-hq/denizen-npc-stats');
+const denizenOfficeProgress = require('./src/office-hq/denizen-office-progress');
+const denizenQuests = require('./src/office-hq/denizen-quests');
+const denizenAchievements = require('./src/office-hq/denizen-achievements');
+const orgPolicy = require('./src/auth/denizen-org-policy');
+const denizenVisitor = require('./src/visitors/denizen-visitor');
+const visitorAccess = require('./src/visitors/visitor-access');
+const sessionAuth = require('./src/visitors/visitor-session-auth');
+const sessionCookie = require('./src/visitors/visitor-session-cookie');
+const teamAuth = require('./src/auth/denizen-team-auth');
+const userIdentity = require('./src/auth/denizen-user-identity');
+const userPosition = require('./src/auth/denizen-user-position.js');
+const invitePlatform = require('./src/integrations/denizen-invite-platform.js');
+const visitorOfficeContext = require('./src/visitors/visitor-office-context');
+const officeRegistry = require('./src/visitors/visitor-office-registry');
+const officeLayout = require('./src/visitors/visitor-office-layout');
 const officeBus = require('./src/office-bus');
-const visitorConnections = require('./src/visitor-connections');
+const visitorConnections = require('./src/visitors/visitor-connections');
 
 function npcFolderToDisplay(folder) {
   const key = String(folder || '').toLowerCase();
@@ -124,84 +128,84 @@ function pickGroupResponders(text, memberKeys, assistant) {
   if (/\b(everyone|team|all|y'all|you all)\b/i.test(text)) return keys.slice(0, 3);
   return keys.slice(0, 2);
 }
-const visitorNotify = require('./src/visitor-notify');
-const visitorIntel = require('./src/denizen-visitor-intelligence');
-const { startVisitorIntelligenceLoop } = require('./src/visitor-briefing-loop');
-const slackChannel = require('./src/denizen-slack-channel');
-const mcpConnector = require('./src/denizen-mcp-connector');
-const citedResearch = require('./src/visitor-cited-research');
-const { runPredictionMaintenance, getPredictionSummary, runMiroFishMaintenance } = require('./src/denizen-prediction-loop');
-const { getRfpPipelineSummary } = require('./src/federal-pipeline');
-const mirofishPrediction = require('./src/mirofish-prediction');
-const pcActivity = require('./src/pc-activity-tracker');
-const jobApplication = require('./src/job-application');
-const jobCrm         = require('./src/job-crm');
-const desktopAgent = require('./src/desktop-agent');
-const desktopPermissionBridge = require('./src/desktop-permission-bridge');
-const stationRouter = require('./src/denizen-station-router');
-const linuxAgent = require('./src/linux-agent');
-const bouncerInvestigation = require('./src/bouncer-investigation');
-const bouncerPatrolAggregate = require('./src/denizen-bouncer-patrol-aggregate');
-const securityIp = require('./src/security-ip');
+const visitorNotify = require('./src/visitors/visitor-notify');
+const visitorIntel = require('./src/visitors/denizen-visitor-intelligence');
+const { startVisitorIntelligenceLoop } = require('./src/visitors/visitor-briefing-loop');
+const slackChannel = require('./src/integrations/denizen-slack-channel');
+const mcpConnector = require('./src/mcp/denizen-mcp-connector');
+const citedResearch = require('./src/visitors/visitor-cited-research');
+const { runPredictionMaintenance, getPredictionSummary, runMiroFishMaintenance } = require('./src/intelligence/denizen-prediction-loop');
+const { getRfpPipelineSummary } = require('./src/intelligence/federal-pipeline');
+const mirofishPrediction = require('./src/intelligence/mirofish-prediction');
+const pcActivity = require('./src/security/pc-activity-tracker');
+const jobApplication = require('./src/pipelines/job-application');
+const jobCrm         = require('./src/pipelines/job-crm');
+const desktopAgent = require('./src/compute/desktop-agent');
+const desktopPermissionBridge = require('./src/compute/desktop-permission-bridge');
+const stationRouter = require('./src/station/denizen-station-router');
+const linuxAgent = require('./src/security/linux-agent');
+const bouncerInvestigation = require('./src/security/bouncer-investigation');
+const bouncerPatrolAggregate = require('./src/compute/denizen-bouncer-patrol-aggregate');
+const securityIp = require('./src/security/security-ip');
 const linuxAgentBridge = bouncerInvestigation.createLinuxAgentBridge();
-const npcTools         = require('./src/npc-tools');
+const npcTools         = require('./src/npc/npc-tools');
 const log              = require('./src/logger');
-const codingTaskRunner = require('./src/coding-task-runner');
-const dossierSystem    = require('./src/dossier-system');
-const approvalsScope   = require('./src/denizen-approvals-scope');
-const taskChain        = require('./src/task-chain');
-const contentPipeline  = require('./src/content-pipeline');
-const { startContentPipelineScheduler } = require('./src/content-pipeline-scheduler');
-const npcThinkRunner   = require('./src/npc-think-runner');
+const codingTaskRunner = require('./src/pipelines/coding-task-runner');
+const dossierSystem    = require('./src/pipelines/dossier-system');
+const approvalsScope   = require('./src/compute/denizen-approvals-scope');
+const taskChain        = require('./src/pipelines/task-chain');
+const contentPipeline  = require('./src/pipelines/content-pipeline');
+const { startContentPipelineScheduler } = require('./src/pipelines/content-pipeline-scheduler');
+const npcThinkRunner   = require('./src/npc/npc-think-runner');
 const { ensureBrowserclawRunning } = require('./jelly/services/browserclaw/ensure.cjs');
-const robinhoodMcp     = require('./src/robinhood-mcp');
-const marketScheduler  = require('./src/denizen-market-scheduler');
-const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
-const teamMcpGateway   = require('./src/denizen-mcp-team-gateway');
-const mcpScopes        = require('./src/denizen-mcp-scopes');
-const mcpOauth         = require('./src/denizen-mcp-oauth');
+const robinhoodMcp     = require('./src/integrations/robinhood-mcp');
+const marketScheduler  = require('./src/integrations/denizen-market-scheduler');
+const npcMcpGateway    = require('./src/core/denizen-npc-mcp-gateway');
+const teamMcpGateway   = require('./src/mcp/denizen-mcp-team-gateway');
+const mcpScopes        = require('./src/mcp/denizen-mcp-scopes');
+const mcpOauth         = require('./src/mcp/denizen-mcp-oauth');
 const routeRegistry    = require('./src/route-registry');
-const competencyMap    = require('./src/competency-map');
-const platformBridge   = require('./src/platform-bridge');
-const denizenCredits   = require('./src/denizen-credits');
-const { mountComputeRoutes } = require('./src/denizen-compute-routes');
-const { mountCrmRoutes } = require('./src/denizen-crm-routes');
-const { mountN8nRoutes } = require('./src/n8n-routes');
-const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
-const hostCompute      = require('./src/denizen-host-compute');
-const hardwareMonitor  = require('./src/denizen-hardware-monitor');
-const fleetRegistry    = require('./src/denizen-fleet-registry');
-const lmStudioRouter   = require('./src/lm-studio-router');
-const inferenceMetrics = require('./src/denizen-inference-metrics');
-const denizenFederation = require('./src/denizen-federation');
-const { createWorldPubsub } = require('./src/denizen-world-pubsub');
-const agentWsRelay = require('./src/denizen-agent-ws-relay');
-const securityRelay = require('./src/denizen-security-relay');
+const competencyMap    = require('./src/npc/competency-map');
+const platformBridge   = require('./src/integrations/platform-bridge');
+const denizenCredits   = require('./src/compute/denizen-credits');
+const { mountComputeRoutes } = require('./src/compute/denizen-compute-routes');
+const { mountCrmRoutes } = require('./src/crm/denizen-crm-routes');
+const { mountN8nRoutes } = require('./src/integrations/n8n-routes');
+const { startCrmScheduler } = require('./src/crm/denizen-crm-scheduler');
+const hostCompute      = require('./src/compute/denizen-host-compute');
+const hardwareMonitor  = require('./src/compute/denizen-hardware-monitor');
+const fleetRegistry    = require('./src/integrations/denizen-fleet-registry');
+const lmStudioRouter   = require('./src/integrations/lm-studio-router');
+const inferenceMetrics = require('./src/compute/denizen-inference-metrics');
+const denizenFederation = require('./src/integrations/denizen-federation');
+const { createWorldPubsub } = require('./src/integrations/denizen-world-pubsub');
+const agentWsRelay = require('./src/integrations/denizen-agent-ws-relay');
+const securityRelay = require('./src/integrations/denizen-security-relay');
 const IS_RELAY_ONLY = agentWsRelay.isRelayOnlyRole();
-const contributionTracker = require('./src/denizen-contribution-tracker');
-const computeSettlement = require('./src/denizen-compute-settlement');
-const computeProducer = require('./src/denizen-compute-producer');
-const nodeProfiler     = require('./src/denizen-node-profiler');
-const costProjector    = require('./src/cost-projector');
-const skillBuilder     = require('./src/skill-builder');
-const computeQueue     = require('./src/denizen-compute-queue');
-const playerChatSkills = require('./src/player-chat-skill-bridge');
-const chatAttachments = require('./src/chat-attachments');
-const localMetrics = require('./src/npc-local-metrics');
-const officeStatusBrief = require('./src/office-status-brief');
-const crmNpcPersonas = require('./src/denizen-crm-npc-personas');
-const taskResourceAdvisor = require('./src/task-resource-advisor');
-const skillGapOrchestrator = require('./src/skill-gap-orchestrator');
-const skillDiscovery = require('./src/skill-discovery');
-const healthRunbook = require('./src/health-runbook');
-const meshWatchdog = require('./src/mesh-worker-watchdog');
-const meshTelemetryWorker = require('./src/denizen-mesh-telemetry-worker');
-const resourcePressure = require('./src/resource-pressure');
-const meshScaleAdvisor = require('./src/mesh-scale-advisor');
-const webResearch      = require('./src/web-research');
-const screenObserve    = require('./src/screen-observe');
-const meetingRunner    = require('./src/meeting-runner');
-const conflictDetector = require('./src/conflict-detector');
+const contributionTracker = require('./src/compute/denizen-contribution-tracker');
+const computeSettlement = require('./src/compute/denizen-compute-settlement');
+const computeProducer = require('./src/compute/denizen-compute-producer');
+const nodeProfiler     = require('./src/integrations/denizen-node-profiler');
+const costProjector    = require('./src/compute/cost-projector');
+const skillBuilder     = require('./src/pipelines/skill-builder');
+const computeQueue     = require('./src/compute/denizen-compute-queue');
+const playerChatSkills = require('./src/hud/player-chat-skill-bridge');
+const chatAttachments = require('./src/hud/chat-attachments');
+const localMetrics = require('./src/npc/npc-local-metrics');
+const officeStatusBrief = require('./src/compute/office-status-brief');
+const crmNpcPersonas = require('./src/crm/denizen-crm-npc-personas');
+const taskResourceAdvisor = require('./src/pipelines/task-resource-advisor');
+const skillGapOrchestrator = require('./src/pipelines/skill-gap-orchestrator');
+const skillDiscovery = require('./src/pipelines/skill-discovery');
+const healthRunbook = require('./src/compute/health-runbook');
+const meshWatchdog = require('./src/compute/mesh-worker-watchdog');
+const meshTelemetryWorker = require('./src/compute/denizen-mesh-telemetry-worker');
+const resourcePressure = require('./src/compute/resource-pressure');
+const meshScaleAdvisor = require('./src/compute/mesh-scale-advisor');
+const webResearch      = require('./src/intelligence/web-research');
+const screenObserve    = require('./src/security/screen-observe');
+const meetingRunner    = require('./src/pipelines/meeting-runner');
+const conflictDetector = require('./src/pipelines/conflict-detector');
 const {
   extractSearchQuery,
   extractBareSearchTopic,
@@ -223,9 +227,9 @@ const {
   isTunnelHost,
   resolveStaffIntentNpc,
 } = require('./src/openclaw-dispatch');
-const { buildLucySearchBrief, isJunkSearchQuery } = require('./src/lucy-search-brief');
+const { buildLucySearchBrief, isJunkSearchQuery } = require('./src/compute/lucy-search-brief');
 const jellyPaths = require('./jelly/paths');
-const { normalizeNpcKey, getNpcBrowserPaths } = require('./src/npc-browser-paths');
+const { normalizeNpcKey, getNpcBrowserPaths } = require('./src/npc/npc-browser-paths');
 
 global._activeBrowserNpc = global._activeBrowserNpc || 'lucy';
 
@@ -236,7 +240,7 @@ const SEARCH_CMD_FLAG = path.join(jellyPaths.browserDir(), 'search-command.flag'
 const INPUT_CMD_FILE = path.join(jellyPaths.browserDir(), 'input-command.json');
 const INPUT_CMD_FLAG = path.join(jellyPaths.browserDir(), 'input-command.flag');
 const LUCY_LIVE_HEARTBEAT_FILE = path.join(jellyPaths.browserDir(), 'live-heartbeat.json');
-const lucyBrowserStream = require('./src/lucy-browser-stream');
+const lucyBrowserStream = require('./src/compute/lucy-browser-stream');
 const LUCY_MIRROR_STATE_FILE = path.join(jellyPaths.browserDir(), 'mirror-state.json');
 const LUCY_MIRROR_FRAME_FILE = path.join(jellyPaths.canvasDir(), 'lucy-mirror-live.png');
 const LUCY_MIRROR_STREAM_FILE = path.join(jellyPaths.canvasDir(), 'lucy-mirror-live.jpg');
@@ -664,11 +668,11 @@ function _resetLucyBrowserOnStartup() {
   _markLucyMirrorClosed();
   console.log('[Lucy] Browser state reset on startup');
 }
-const researchQueue    = require('./src/research-queue');
-const researchSessions = require('./src/research-sessions');
-const researchBrief    = require('./src/research-brief');
-const awayNotify       = require('./src/away-notify');
-const { startAll: startResearchScheduler } = require('./src/research-scheduler');
+const researchQueue    = require('./src/intelligence/research-queue');
+const researchSessions = require('./src/intelligence/research-sessions');
+const researchBrief    = require('./src/intelligence/research-brief');
+const awayNotify       = require('./src/intelligence/away-notify');
+const { startAll: startResearchScheduler } = require('./src/intelligence/research-scheduler');
 
 function findLatestResearchBrief() {
   try {
@@ -1225,7 +1229,7 @@ function _handleVisitorAuthRoutes(req, res, urlPath) {
       const body = await _readJsonBody(req, 32 * 1024);
       const sessionId = body.session_id || body.sessionId;
       const sessionToken = sessionAuth.extractSessionAuth(req, body);
-      const demoAuth = require('./src/denizen-demo-auth.js');
+      const demoAuth = require('./src/auth/denizen-demo-auth.js');
       const result = await demoAuth.registerDemoAccount({
         sessionId,
         sessionToken,
@@ -1235,7 +1239,7 @@ function _handleVisitorAuthRoutes(req, res, urlPath) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, ...result }));
     })().catch((err) => {
-      const demoAuth = require('./src/denizen-demo-auth.js');
+      const demoAuth = require('./src/auth/denizen-demo-auth.js');
       const status = demoAuth.demoAuthErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
@@ -1246,7 +1250,7 @@ function _handleVisitorAuthRoutes(req, res, urlPath) {
   if (urlPath === '/api/visitor/auth/login-demo' && (req.method === 'POST' || req.method === 'GET')) {
     (async () => {
       const body = await _readTeamAuthBody(req, 32 * 1024);
-      const demoAuth = require('./src/denizen-demo-auth.js');
+      const demoAuth = require('./src/auth/denizen-demo-auth.js');
       const result = await demoAuth.loginDemoAccount({
         username: body.username,
         password: body.password,
@@ -1254,7 +1258,7 @@ function _handleVisitorAuthRoutes(req, res, urlPath) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, ...result }));
     })().catch((err) => {
-      const demoAuth = require('./src/denizen-demo-auth.js');
+      const demoAuth = require('./src/auth/denizen-demo-auth.js');
       const status = demoAuth.demoAuthErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
@@ -1630,7 +1634,7 @@ async function _batchAddNpcTeamMembers(session, body = {}) {
   if (!session?.identity_id) {
     return { status: 409, payload: { ok: false, error: 'This session is not linked to a user profile yet' } };
   }
-  const npcRoster = require('./src/npc-roster');
+  const npcRoster = require('./src/npc/npc-roster');
   const rosterLabel = (key) => {
     const entry = (npcRoster.entries || []).find((e) => e.folder === key);
     return entry?.display || key;
@@ -1688,6 +1692,7 @@ const handleCrmRoutes = mountCrmRoutes({
 });
 
 const handleN8nRoutes = mountN8nRoutes();
+const handleOfficeProgressRoutes = require('./src/routes/office-progress-routes').createOfficeProgressRouteHandler();
 
 const handleComputeRoutes = mountComputeRoutes({
   internalToken: process.env.DENIZEN_INTERNAL_API_TOKEN || '',
@@ -2167,7 +2172,7 @@ async function _executePlayerChatSkillFollowup({
       } : null,
     });
     const data = result?.data && typeof result.data === 'object' ? result.data : null;
-    const chatActions = require('./src/denizen-crm-chat-actions');
+    const chatActions = require('./src/crm/denizen-crm-chat-actions');
     const autoOpen = chatActions.shouldAutoOpenCrm(message)
       && !crmNpcPersonas?.isWriteSkill?.(plan.skill);
     const crmActions = Array.isArray(data?.crm_actions)
@@ -2922,7 +2927,7 @@ const jelly = createJelly({
     githubRepo: GITHUB_REPO,
     runWebSearch: runNpcWebSearch,
     runResearch: runNpcWebSearch,
-    runCitedResearch: (q, o) => require('./src/visitor-cited-research').runCitedResearch(q, o),
+    runCitedResearch: (q, o) => require('./src/visitors/visitor-cited-research').runCitedResearch(q, o),
     healthRunbook,
     computeQueue,
     fleetRegistry,
@@ -2945,7 +2950,7 @@ async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
   });
   const sessionId = opts.sessionId || opts.session_id || null;
   const normalized = String(skill || '').trim().toLowerCase();
-  const stationBridge = require('./src/denizen-station-skill-bridge');
+  const stationBridge = require('./src/station/denizen-station-skill-bridge');
   const stationRoute = sessionId
     ? stationBridge.resolveStationRoute(normalized, skillParams, {
       fallbackMessage: skillParams.task || skillParams.message || '',
@@ -2974,7 +2979,7 @@ async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
           return { ok: !!result?.ok, summary, result, routed: false };
         }
         if (kind === 'web_search') {
-          const researchRouter = require('./src/research-router');
+          const researchRouter = require('./src/intelligence/research-router');
           const query = String(payload?.query || instruction || '').trim();
           const mesh = await researchRouter.runMeshWebSearch({
             computeQueue,
@@ -3090,7 +3095,7 @@ npcThinkRunner.configure({
 
 // --- Furniture-placement whitelist + per-NPC daily budget ---
 // The whitelist is shared between /api/place-furniture and the prompt
-// hint in src/npc-brains.js. Edit both together if you ever expand it.
+// hint in src/npc/npc-brains.js. Edit both together if you ever expand it.
 // Daily budget keeps a chatty NPC from spamming the office with couches.
 const ALLOWED_PREFABS = new Set([
   'desk_small', 'desk_2x2', 'office_chair', 'monitor',
@@ -3145,7 +3150,7 @@ function _consumeAnimationBudget(by) {
 
 // --- Per-NPC daily capability-request budget (Roadmap Stage 4, step 1) ---
 // Tighter than the animation cap because each capability proposal — if
-// approved — implies a code change in src/agent-actions.js + a server
+// approved — implies a code change in src/npc/agent-actions.js + a server
 // restart. NPCs should be picky: 1 proposal per NPC per UTC-local day.
 // `system` / `operator` exempt for scripted seeds and manual fixtures.
 const CAPABILITY_BUDGET_PER_DAY = 1;
@@ -3364,7 +3369,7 @@ denizenDb.attachWorldState(worldState);
 // wrong; the rest (npc state churn, task ticks, event-feed entries) absorb
 // the latency just fine.
 const WS_BROADCAST_INTERVAL_MS = 500;
-const IMMEDIATE_KINDS = new Set(['presence', 'threat', 'threat-cleared']);
+const IMMEDIATE_KINDS = new Set(['presence', 'threat', 'threat-cleared', 'office_level_up', 'achievement_unlocked', 'quest_complete', 'quest_claimed']);
 
 const worldPubsub = createWorldPubsub();
 
@@ -3546,6 +3551,18 @@ const server = http.createServer((req, res) => {
       const status = denizenVisitor.visitorErrorStatus(err);
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  if (urlPath.startsWith('/api/office/')) {
+    (async () => {
+      await handleOfficeProgressRoutes(req, res);
+    })().catch((err) => {
+      if (!res.writableEnded) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
     });
     return;
   }
@@ -3977,7 +3994,7 @@ const server = http.createServer((req, res) => {
   // --- Capability-request proposal queue (Roadmap Stage 4, step 1) ---
   // NPCs propose new actions (verbs) that don't exist yet. The proposal
   // goes to a pending queue and an operator decides whether to actually
-  // implement the verb in src/agent-actions.js. This endpoint does NOT
+  // implement the verb in src/npc/agent-actions.js. This endpoint does NOT
   // implement anything — that's step 3 of the roadmap and explicitly
   // future work. See docs/CAPABILITY_PROPOSALS.md.
   //
@@ -4893,7 +4910,7 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      const permissionRegistry = require('./src/permission-registry');
+      const permissionRegistry = require('./src/security/permission-registry');
       const isNew = permissionRegistry.grantPermission(npcName, permission, 'CEO', scope);
 
       // Also write the grant into the NPC's MEMORY.md so it persists across server restarts.
@@ -6121,7 +6138,7 @@ const server = http.createServer((req, res) => {
   }
   if (urlPath === '/api/telemetry/insights' && req.method === 'GET') {
     try {
-      const telemetryInsights = require('./src/telemetry-insights');
+      const telemetryInsights = require('./src/intelligence/telemetry-insights');
       const url = new URL(req.url, 'http://x');
       const force = url.searchParams.get('force') === '1';
       const insights = telemetryInsights.getInsights({ force });
@@ -6340,7 +6357,7 @@ const server = http.createServer((req, res) => {
   //     unbacked (no evidence behind "I fixed it" / "research shows X"). ---
   if (urlPath === '/api/telemetry/grounding' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(require('./src/hallucination-guard').getStats()));
+    res.end(JSON.stringify(require('./src/intelligence/hallucination-guard').getStats()));
     return;
   }
 
@@ -6768,7 +6785,7 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ ok: false, error: `Organization "${orgSlug}" not found` }));
         return;
       }
-      const agentSouls = require('./src/agent-souls');
+      const agentSouls = require('./src/npc/agent-souls');
       const result = await agentSouls.cloneTemplatePackToOrg(denizenDb, org.id, templatePack);
       if (npcBrains?.hydrateAgentSoulsFromDb) {
         await npcBrains.hydrateAgentSoulsFromDb(org.id).catch(() => null);
@@ -6911,7 +6928,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (urlPath === '/api/visitor/desktop-downloads' && req.method === 'GET') {
-    const desktopDownloads = require('./src/denizen-desktop-downloads.js');
+    const desktopDownloads = require('./src/desktop/denizen-desktop-downloads.js');
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(desktopDownloads.getDesktopDownloadsPayload()));
     return;
@@ -6919,7 +6936,7 @@ const server = http.createServer((req, res) => {
 
   if (urlPath === '/api/visitor/team/invite-link' && req.method === 'GET') {
     (async () => {
-      const teamInviteLinks = require('./src/denizen-team-invite-links.js');
+      const teamInviteLinks = require('./src/auth/denizen-team-invite-links.js');
       const u = new URL(req.url, 'http://localhost');
       const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
       if (!sessionId) {
@@ -6957,7 +6974,7 @@ const server = http.createServer((req, res) => {
 
   if (urlPath === '/api/visitor/team/invite' && req.method === 'POST') {
     (async () => {
-      const { inviteTeamMember } = require('./src/denizen-crm-team-invite.js');
+      const { inviteTeamMember } = require('./src/crm/denizen-crm-team-invite.js');
       const body = await _readJsonBody(req, 32 * 1024);
       const sessionId = body.session_id || body.sessionId;
       if (!sessionId) {
@@ -9762,6 +9779,11 @@ const server = http.createServer((req, res) => {
     res.end();
     return;
   }
+  // Marketing landing page (public site / welcome funnel)
+  if (urlPath === '/home' || urlPath === '/landing' || urlPath === '/welcome'
+      || urlPath === '/home/' || urlPath === '/landing/' || urlPath === '/welcome/') {
+    urlPath = '/landing.html';
+  }
   if (urlPath === '/' || urlPath === '/denizen/' || urlPath === '/denizen'
       || urlPath === '/pixel-office-game/' || urlPath === '/pixel-office-game') {
     urlPath = '/index.html';
@@ -11613,6 +11635,15 @@ startCrmScheduler({
   log,
 });
 
+// Quest period rollover + snapshot-metric refresh. Own timer (not the CRM
+// scheduler) because that tick gates on denizenDb.enabled and quests must
+// work in zero-config demo mode too.
+const _questTickTimer = setInterval(() => {
+  try { denizenQuests.tickQuests(); } catch (_) {}
+}, 60_000);
+_questTickTimer.unref?.();
+setTimeout(() => { try { denizenQuests.tickQuests(); } catch (_) {} }, 20_000);
+
 _resetLucyBrowserOnStartup();
 probePlaywrightBrowsers();
 _startLucyMirrorFrameWatcher();
@@ -11634,6 +11665,18 @@ server.listen(PORT, () => {
     });
     npcBrains.hydrateAgentSoulsFromDb().catch((err) => {
       console.warn('[NpcBrains] agent_souls hydrate failed:', err?.message || err);
+    });
+    denizenNpcStats.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenNpcStats] hydrate failed:', err?.message || err);
+    });
+    denizenOfficeProgress.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenOfficeProgress] hydrate failed:', err?.message || err);
+    });
+    denizenAchievements.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenAchievements] hydrate failed:', err?.message || err);
+    });
+    denizenQuests.hydrateFromDb().catch((err) => {
+      console.warn('[DenizenQuests] hydrate failed:', err?.message || err);
     });
     runPredictionMaintenance(denizenDb).catch((err) => {
       console.warn('[DenizenPredictionLoop] initial maintenance failed:', err?.message || err);

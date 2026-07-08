@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { formatProviderError } = require('../src/format-provider-error');
+const { formatProviderError } = require('../src/core/format-provider-error');
 
 describe('formatProviderError', () => {
   it('unwraps AggregateError nested connection failures', () => {

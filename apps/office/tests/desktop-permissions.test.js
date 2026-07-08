@@ -3,10 +3,10 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const desktopPermissions = require('../src/denizen-desktop-permissions.js');
+const desktopPermissions = require('../src/desktop/denizen-desktop-permissions.js');
 const {
   requestDesktopApprovalIfNeeded,
-} = require('../src/desktop-permission-bridge.js');
+} = require('../src/compute/desktop-permission-bridge.js');
 
 describe('desktop permission bridge', () => {
   it('auto-approves trusted and off without enqueue', () => {

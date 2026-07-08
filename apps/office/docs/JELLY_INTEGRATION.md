@@ -52,7 +52,7 @@ v1.2 business/intelligence data actions are mediated by Jelly bridge modules:
 
 Config roots:
 
-- `denizen/config/jelly.json` (primary)
+- `apps/office/config/jelly.json` (primary)
 - legacy fallback paths are still supported for migration safety
 
 Sidecar launcher:
@@ -82,7 +82,7 @@ This file acts as the aggregation layer between server request handling and inte
 
 ### Generic MCP Connector
 
-`src/denizen-mcp-connector.js` provides a generic MCP JSON-RPC client surface:
+`src/mcp/denizen-mcp-connector.js` provides a generic MCP JSON-RPC client surface:
 
 - server discovery from `data/mcp-servers.json`
 - `initializeServer()`, `listTools()`, `callTool()`

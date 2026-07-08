@@ -26,8 +26,8 @@ For full in-phone testing, build and run Denizen (`npm start`), then open **http
 
 ### NAS / production deploy
 
-1. Copy the full CRM backend to the server: all `denizen/src/denizen-crm-*.js` files and the updated `denizen/server.js`.
-2. Run `npm run build:crm` on the server (or build locally and copy `denizen/crm/dist/`).
+1. Copy the full CRM backend to the server: all `apps/office/src/denizen-crm-*.js` files and the updated `apps/office/server.js`.
+2. Run `npm run build:crm` on the server (or build locally and copy `apps/office/crm/dist/`).
 3. Apply migrations: `py -3 infra/apply-migrations-psycopg.py` (from repo root).
 4. **Restart Denizen** (`npm start`) — a stale process causes `CRM route not found` on the AI tab.
 5. Verify: `GET https://YOUR_HOST/api/crm/health` should list `POST /api/crm/assist`.

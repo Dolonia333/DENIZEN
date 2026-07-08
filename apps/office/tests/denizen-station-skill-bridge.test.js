@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const bridge = require('../src/denizen-station-skill-bridge');
+const bridge = require('../src/station/denizen-station-skill-bridge');
 
 describe('denizen-station-skill-bridge', () => {
   it('routes browserclaw to desktop_agent on the station', () => {

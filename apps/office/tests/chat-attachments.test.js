@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const chatAttachments = require('../src/chat-attachments');
+const chatAttachments = require('../src/hud/chat-attachments');
 const { validateAttachments, buildContextBlock, processChatAttachments, _internals } = chatAttachments;
 
 // 1x1 red PNG

@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const resourcePressure = require('../src/resource-pressure');
+const resourcePressure = require('../src/compute/resource-pressure');
 
 describe('resource-pressure', () => {
   it('gatherSignals flags saturation', () => {

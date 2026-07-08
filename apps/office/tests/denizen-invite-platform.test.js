@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const invitePlatform = require('../src/denizen-invite-platform.js');
+const invitePlatform = require('../src/integrations/denizen-invite-platform.js');
 
 describe('denizen-invite-platform', () => {
   it('normalizes mac platform aliases', () => {

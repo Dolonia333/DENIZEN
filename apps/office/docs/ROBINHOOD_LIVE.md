@@ -10,7 +10,7 @@ Denizen never executes trades through Robinhood.
 - Trade intent is stored as suggestion data only.
 - User executes any real trade manually in Robinhood.
 
-Implementation source: `src/robinhood-mcp.js`.
+Implementation source: `src/integrations/robinhood-mcp.js`.
 
 ## Roki Integration
 
@@ -28,7 +28,7 @@ The flow is:
 
 ## Schema Surfaces
 
-Robinhood integration writes to these SQL tables via `src/denizen-db.js`:
+Robinhood integration writes to these SQL tables via `src/intelligence/denizen-db.js`:
 
 - `denizen_watchlist_symbols`
   - source of persisted watchlist symbols (`org_id`, `npc_key`, `symbol`, `added_at`)
@@ -74,7 +74,7 @@ When to retire JSON dual-write:
 
 ## OAuth Preconditions
 
-- `src/robinhood-mcp.js` configured for OAuth PKCE.
+- `src/integrations/robinhood-mcp.js` configured for OAuth PKCE.
 - `data/robinhood-oauth.json` has a `client_id` (token may be empty before first auth).
 - Denizen server is running and reachable.
 - This flow grants market-read access for Denizen's market observer.
@@ -85,7 +85,7 @@ When to retire JSON dual-write:
 2. Open `http://localhost:8080/api/market/auth/connect`.
 3. Login to Robinhood and approve OAuth.
 4. Confirm with `GET http://localhost:8080/api/market/auth-status` and verify `"authenticated": true`.
-5. Optional smoke: `node denizen/scripts/robinhood-live-smoke.js`.
+5. Optional smoke: `node apps/office/scripts/robinhood-live-smoke.js`.
 
 ## One-Time OAuth (Cloud)
 
@@ -94,7 +94,7 @@ When to retire JSON dual-write:
 3. Validate: `https://denizen.dolonia.cloud/api/market/auth-status`.
 4. Optional smoke from shell:
    - `$env:DENIZEN_URL='https://denizen.dolonia.cloud'`
-   - `node denizen/scripts/robinhood-live-smoke.js`
+   - `node apps/office/scripts/robinhood-live-smoke.js`
 
 ## Notes
 

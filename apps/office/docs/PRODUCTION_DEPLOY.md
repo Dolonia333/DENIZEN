@@ -12,14 +12,14 @@ Production runbook for Denizen v1.2 on self-hosted Supabase (`supabase.dolonia.c
 
 ## Docker (optional)
 
-Container build and compose files live in `denizen/`:
+Container build and compose files live in `apps/office/`:
 
 | File | Purpose |
 |------|---------|
-| `denizen/Dockerfile` | Node 20 Alpine image; `npm ci --production`, exposes `8080` |
-| `denizen/docker-compose.yml` | Single `game` service with API key env passthrough |
+| `apps/office/Dockerfile` | Node 20 Alpine image; `npm ci --production`, exposes `8080` |
+| `apps/office/docker-compose.yml` | Single `game` service with API key env passthrough |
 
-From `denizen/`:
+From `apps/office/`:
 
 ```powershell
 # Build and run (maps host 8080 → container 8080)
@@ -50,7 +50,7 @@ Also available:
 
 ## 2) Run the production deploy script
 
-From `denizen/`:
+From `apps/office/`:
 
 ```powershell
 .\scripts\deploy-production.ps1
@@ -173,7 +173,7 @@ Home lab orchestrator (from repo root):
 py infra/finish-all-mesh.py
 ```
 
-Mesh smokes (from `denizen/`):
+Mesh smokes (from `apps/office/`):
 
 ```powershell
 node scripts/smoke-mesh-complete.js

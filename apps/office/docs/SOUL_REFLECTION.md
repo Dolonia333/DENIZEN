@@ -12,17 +12,17 @@
 
 | Piece | Where | What it does |
 |---|---|---|
-| `buildReflectionPrompt({...})` | [`src/soul-reflection.js`](../src/soul-reflection.js) | Builds the reflection prompt: NPC's SOUL.md + last ~50 memories + JSON schema ask. |
-| `validateProposal(obj)` | [`src/soul-reflection.js`](../src/soul-reflection.js) | Pure validator. Rejects no-ops, bad confidence, missing/oversized summary, wrong-typed fields. |
-| `serializeProposal({...})` | [`src/soul-reflection.js`](../src/soul-reflection.js) | Wraps the LLM output as `{ id, npcName, createdAt, status:'pending', proposal, reflectionPreview, review:null }`. |
+| `buildReflectionPrompt({...})` | [`src/pipelines/soul-reflection.js`](../src/pipelines/soul-reflection.js) | Builds the reflection prompt: NPC's SOUL.md + last ~50 memories + JSON schema ask. |
+| `validateProposal(obj)` | [`src/pipelines/soul-reflection.js`](../src/pipelines/soul-reflection.js) | Pure validator. Rejects no-ops, bad confidence, missing/oversized summary, wrong-typed fields. |
+| `serializeProposal({...})` | [`src/pipelines/soul-reflection.js`](../src/pipelines/soul-reflection.js) | Wraps the LLM output as `{ id, npcName, createdAt, status:'pending', proposal, reflectionPreview, review:null }`. |
 | `POST /api/soul-proposal` | `server.js` | Validates + persists to `data/soul-proposals.json`. Emits `pushEvent('proposed-soul-edit', ...)`. 1/NPC/day cap (429 when exceeded). 50-total cap (oldest dropped). |
 | `GET /api/soul-proposals[?npc=Name]` | `server.js` | Returns the persisted queue. Lazy-creates the file. |
 | `POST /api/soul-proposal/approve` | `server.js` | Marks a proposal `approved` or `rejected` in place. **Does NOT touch SOUL.md.** |
-| `applyProposalToSoul({...})` | [`src/soul-reflection.js`](../src/soul-reflection.js) | Pure. Takes current SOUL.md text + a proposal record. Returns `{ next, warnings }`. No file IO. |
-| `serializeHistoryEntry({...})` | [`src/soul-reflection.js`](../src/soul-reflection.js) | Pure. Produces the markdown entry appended to `SOUL.history.md`. |
+| `applyProposalToSoul({...})` | [`src/pipelines/soul-reflection.js`](../src/pipelines/soul-reflection.js) | Pure. Takes current SOUL.md text + a proposal record. Returns `{ next, warnings }`. No file IO. |
+| `serializeHistoryEntry({...})` | [`src/pipelines/soul-reflection.js`](../src/pipelines/soul-reflection.js) | Pure. Produces the markdown entry appended to `SOUL.history.md`. |
 | `POST /api/soul-proposal/apply` | `server.js` | Writes an *approved* proposal to `npcs/<name>/SOUL.md`, appends to `SOUL.history.md`, flips `status` to `applied`, emits `applied-soul-edit`, refreshes the soul cache via `npcBrains.reloadSoul`. Idempotent. |
-| `npcBrains.reflectOnDay(npcName, opts?)` | [`src/npc-brains.js`](../src/npc-brains.js) | End-to-end: builds the prompt, calls the NPC's provider, parses + validates, POSTs to the local server. **Not on any timer.** Call from the diag panel, an admin endpoint, or a future cron. |
-| `npcBrains.reloadSoul(npcName)` | [`src/npc-brains.js`](../src/npc-brains.js) | Re-reads `npcs/<folder>/SOUL.md` and refreshes the cached personality so the next `think()` cycle sees the new text without a server restart. |
+| `npcBrains.reflectOnDay(npcName, opts?)` | [`src/npc/npc-brains.js`](../src/npc/npc-brains.js) | End-to-end: builds the prompt, calls the NPC's provider, parses + validates, POSTs to the local server. **Not on any timer.** Call from the diag panel, an admin endpoint, or a future cron. |
+| `npcBrains.reloadSoul(npcName)` | [`src/npc/npc-brains.js`](../src/npc/npc-brains.js) | Re-reads `npcs/<folder>/SOUL.md` and refreshes the cached personality so the next `think()` cycle sees the new text without a server restart. |
 
 ## Identity drift risk (why the approval gate is non-negotiable)
 
@@ -179,9 +179,9 @@ Options:
 
 ## Files touched
 
-- `src/soul-reflection.js` — pure logic: prompt builder, validator,
+- `src/pipelines/soul-reflection.js` — pure logic: prompt builder, validator,
   serializer, `applyProposalToSoul`, `serializeHistoryEntry`. No fs, no http.
-- `src/npc-brains.js` — `reflectOnDay(npcName, opts?)` runs the full
+- `src/npc/npc-brains.js` — `reflectOnDay(npcName, opts?)` runs the full
   reflection pipeline through the NPC's existing provider; `reloadSoul
   (npcName)` re-reads SOUL.md and refreshes the cached personality after
   an apply.

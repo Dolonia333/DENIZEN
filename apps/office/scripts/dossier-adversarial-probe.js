@@ -2,13 +2,13 @@
 
 /**
  * Local adversarial probe — dossier honesty gate (no NAS, no send).
- * Run: node denizen/scripts/dossier-adversarial-probe.js
+ * Run: node apps/office/scripts/dossier-adversarial-probe.js
  *
  * Tag: DENIZEN / dossier-system / honesty-gate-researcher-laundering
  */
 
 const assert = require('node:assert/strict');
-const dossier = require('../src/dossier-system');
+const dossier = require('../src/pipelines/dossier-system');
 
 const RM_KNOWN = {
   partner: 'RM Cyber',

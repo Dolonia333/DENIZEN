@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { hashPassword, verifyPassword } = require('../src/denizen-team-password.js');
+const { hashPassword, verifyPassword } = require('../src/auth/denizen-team-password.js');
 
 describe('denizen-team-password', () => {
   it('hashes and verifies passwords', () => {

@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const chatActions = require('../src/denizen-crm-chat-actions');
+const chatActions = require('../src/crm/denizen-crm-chat-actions');
 
 describe('denizen-crm-chat-actions', () => {
   it('shouldAutoOpenCrm detects open intent', () => {

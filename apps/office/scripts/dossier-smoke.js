@@ -2,10 +2,10 @@
 
 /**
  * End-to-end dossier smoke (local, no NAS). Mock Bob research + optional PDF render.
- * Run: node denizen/scripts/dossier-smoke.js
+ * Run: node apps/office/scripts/dossier-smoke.js
  */
 
-const dossier = require('../src/dossier-system');
+const dossier = require('../src/pipelines/dossier-system');
 
 const MOCK_BOB = dossier.normalizeRecipientResearch({
   query: 'RM Cyber partnership research',

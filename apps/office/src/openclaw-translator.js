@@ -12,7 +12,7 @@
  * browser loads it as a classic script — the whole body is wrapped in
  * an IIFE so internal const declarations (TOOL_CLASSIFIER, TOOL_LABELS,
  * classifyTool) don't collide with the same-named symbols in
- * `src/npc-agent-controller.js`, which runs in the same global scope.
+ * `src/npc/npc-agent-controller.js`, which runs in the same global scope.
  * Only the `_api` object escapes the IIFE, exposed via `module.exports`
  * and `window.OpenClawTranslator`.
  */

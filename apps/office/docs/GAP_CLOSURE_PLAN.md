@@ -299,7 +299,7 @@ Add **Ollama + mesh RPC** path (no port 1234 required):
 | C2.2 | “Download brain” deep link → opens Desktop wizard |
 | C2.3 | Copy: “No firewall setup needed” when RPC active |
 
-**File:** `src/visitor-node-ui.js`
+**File:** `src/visitors/visitor-node-ui.js`
 
 **Effort:** ~1 day
 
@@ -486,11 +486,11 @@ py infra/probe-denizen-nas.py
 py infra/deploy-denizen-to-nas.py
 
 # Tests
-cd denizen
+cd apps/office
 node --test tests/denizen-inference-*.test.js tests/lm-studio-router.test.js
 
 # Desktop build (after A1)
-cd denizen/desktop
+cd apps/office/desktop
 npm run build:win
 ```
 

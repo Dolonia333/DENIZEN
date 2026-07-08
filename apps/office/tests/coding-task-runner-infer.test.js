@@ -8,7 +8,7 @@ const path = require('node:path');
 const {
   inferTargetFilesFromTask,
   inferSkillFilesFromTask,
-} = require('../src/coding-task-runner');
+} = require('../src/pipelines/coding-task-runner');
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -21,7 +21,7 @@ describe('coding-task-runner inferTargetFilesFromTask', () => {
 
   it('infers explicit jelly path from task', () => {
     const files = inferTargetFilesFromTask(
-      'Patch denizen/jelly/lib/bridge-client.js for Supabase errors',
+      'Patch apps/office/jelly/lib/bridge-client.js for Supabase errors',
       [],
     );
     assert.ok(files.includes('jelly/lib/bridge-client.js'));

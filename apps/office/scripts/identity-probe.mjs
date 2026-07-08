@@ -3,7 +3,7 @@
 //    types name + work email → must link to their OWN identity, and must NOT
 //    be marked host operator.
 // 2. Spoofed CEO/local headers + metadata must grant nothing.
-// Usage (from denizen/): node --env-file=.env scripts/identity-probe.mjs [baseUrl]
+// Usage (from apps/office/): node --env-file=.env scripts/identity-probe.mjs [baseUrl]
 import { chromium } from 'playwright';
 import { joinTeamProbe } from './lib/probe-login.mjs';
 

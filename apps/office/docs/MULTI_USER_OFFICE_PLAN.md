@@ -12,7 +12,7 @@
 | [GAP_CLOSURE_PLAN.md](GAP_CLOSURE_PLAN.md) | Production hardening + scale (WS shard, shared pub/sub) |
 | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) | Existing `org_id` / RLS patterns |
 | [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md) | Auth, org resolution, team accounts |
-| [visitor-office-registry.js](../src/visitor-office-registry.js) | Per-identity virtual offices (partial) |
+| [visitor-office-registry.js](../src/visitors/visitor-office-registry.js) | Per-identity virtual offices (partial) |
 
 ---
 
@@ -48,9 +48,9 @@ This plan closes that gap in dependency order.
 
 ### Key files
 
-- `denizen/supabase/migrations/YYYYMMDD_agent_souls.sql`
-- `denizen/src/npc-brains.js` — `_loadSoul`, `_loadMemory`, `reloadSoul`
-- `denizen/src/denizen-db.js` — CRUD helpers
+- `apps/office/supabase/migrations/YYYYMMDD_agent_souls.sql`
+- `apps/office/src/npc/npc-brains.js` — `_loadSoul`, `_loadMemory`, `reloadSoul`
+- `apps/office/src/intelligence/denizen-db.js` — CRUD helpers
 - `infra/seed-agent-souls-nas.py` — one-time seed from `npcs/`
 
 ### Acceptance
@@ -79,10 +79,10 @@ This plan closes that gap in dependency order.
 
 ### Key files
 
-- `denizen/src/world-state.js`
-- `denizen/src/npc-brains.js`
-- `denizen/src/cofounder-agent.js`
-- `denizen/src/agent-office-manager.js` / `office-scene.js`
+- `apps/office/src/world-state.js`
+- `apps/office/src/npc/npc-brains.js`
+- `apps/office/src/compute/cofounder-agent.js`
+- `apps/office/src/npc/agent-office-manager.js` / `office-scene.js`
 
 ### Acceptance
 
@@ -109,9 +109,9 @@ This plan closes that gap in dependency order.
 
 ### Key files
 
-- `denizen/server.js` — WS upgrade, `player_chat`, broadcast helpers
-- `denizen/src/denizen-visitor.js`
-- `denizen/src/denizen-npc-mcp-gateway.js`
+- `apps/office/server.js` — WS upgrade, `player_chat`, broadcast helpers
+- `apps/office/src/visitors/denizen-visitor.js`
+- `apps/office/src/core/denizen-npc-mcp-gateway.js`
 
 ### Acceptance
 
@@ -136,9 +136,9 @@ This plan closes that gap in dependency order.
 
 ### Key files
 
-- `denizen/src/npc-brains.js` — inference queue
-- `denizen/src/lm-studio-router.js`
-- `denizen/src/denizen-compute-routes.js`
+- `apps/office/src/npc/npc-brains.js` — inference queue
+- `apps/office/src/integrations/lm-studio-router.js`
+- `apps/office/src/compute/denizen-compute-routes.js`
 
 ### Acceptance
 
@@ -164,9 +164,9 @@ This plan closes that gap in dependency order.
 
 ### Key files
 
-- `denizen/data/templates/agent-souls/` (or DB seeds)
-- `denizen/src/visitor-onboarding.js` / city tour
-- `denizen/docs/VISITOR_ONBOARDING.md`
+- `apps/office/data/templates/agent-souls/` (or DB seeds)
+- `apps/office/src/visitors/visitor-onboarding.js` / city tour
+- `apps/office/docs/VISITOR_ONBOARDING.md`
 
 ### Acceptance
 

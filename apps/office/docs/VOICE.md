@@ -13,7 +13,7 @@
             │           presence is TRUE
             ▼           ───────────────►
    ┌────────────────┐                    ┌────────────────────────┐
-   │ player-chat.js │  DenizenSpeak()    │ src/voice-gate.js       │
+   │ player-chat.js │  DenizenSpeak()    │ src/voice/voice-gate.js       │
    │ (or any        │  ───────────────►  │  - gate on zionPresent  │
    │  speak path)   │                    │  - call DenizenVoice…   │
    └────────────────┘                    └───────────┬────────────┘
@@ -31,7 +31,7 @@
                                                 │ server.js              │
                                                 │  POST /api/tts         │
                                                 │   ↓ proxies to         │
-                                                │ src/elevenlabs-tts.js  │
+                                                │ src/voice/elevenlabs-tts.js  │
                                                 │   xi-api-key header    │
                                                 └───────────┬────────────┘
                                                             ▼
@@ -110,7 +110,7 @@ Writes `out/test-tts.mp3` and prints the file size + elapsed ms. If it fails, th
 
 ## Per-NPC voices (gender-aware)
 
-Each NPC has a `gender` field in `src/npc-roster.js` (`male` / `female`). On server boot, `src/voice-resolve.js` merges that into `data/voice-map.json` and assigns a **distinct ElevenLabs voice from the matching gender pool** when `voiceId` is missing (`autoAssignByGender: true`).
+Each NPC has a `gender` field in `src/npc/npc-roster.js` (`male` / `female`). On server boot, `src/voice/voice-resolve.js` merges that into `data/voice-map.json` and assigns a **distinct ElevenLabs voice from the matching gender pool** when `voiceId` is missing (`autoAssignByGender: true`).
 
 ```jsonc
 {

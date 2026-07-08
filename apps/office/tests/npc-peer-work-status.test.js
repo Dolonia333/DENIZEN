@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const peerStatus = require('../src/npc-peer-work-status');
+const peerStatus = require('../src/npc/npc-peer-work-status');
 
 describe('npc-peer-work-status', () => {
   it('detects work-status queries', () => {

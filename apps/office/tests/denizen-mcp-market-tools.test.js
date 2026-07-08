@@ -3,7 +3,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const marketTools = require('../src/denizen-mcp-market-tools.js');
+const marketTools = require('../src/mcp/denizen-mcp-market-tools.js');
 
 describe('denizen-mcp-market-tools', () => {
   it('exposes market tools only for roki', () => {

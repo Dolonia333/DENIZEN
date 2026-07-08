@@ -132,7 +132,7 @@ Post-wizard **Station settings** (tray or `openAgentSettings`) toggles `read_fil
 
 ### denizen-src.js — dev vs packaged
 
-`scripts/copy-denizen-src.js` runs on `prestart` / `prebuild` and copies shared modules from `denizen/src/` into `desktop/src/`:
+`scripts/copy-denizen-src.js` runs on `prestart` / `prebuild` and copies shared modules from `apps/office/src/` into `desktop/src/`:
 
 - `denizen-hardware-monitor.js`
 - `denizen-node-client.js`
@@ -143,7 +143,7 @@ Post-wizard **Station settings** (tray or `openAgentSettings`) toggles `read_fil
 | **Dev** (`npm start`) | Prestart copies fresh files; `compute-worker.js` requires `./src/denizen-*`. |
 | **Packaged** (`electron-builder`) | Prebuild copies into the asar; same `./src/` paths inside the bundle. |
 
-If you see `Cannot find module '../src/denizen-hardware-monitor'`, rebuild the installer — the copy step did not run or the asar is stale.
+If you see `Cannot find module '../src/compute/denizen-hardware-monitor'`, rebuild the installer — the copy step did not run or the asar is stale.
 
 ### Persistent state — `%APPDATA%/Denizen/denizen-desktop-setup.json`
 
@@ -190,7 +190,7 @@ desktop/dist-build/
 
 ### Desktop smoke tests
 
-Run from `denizen/` with the server up (`DENIZEN_URL`, default `http://127.0.0.1:8081`):
+Run from `apps/office/` with the server up (`DENIZEN_URL`, default `http://127.0.0.1:8081`):
 
 ```powershell
 node scripts/smoke-desktop-onboarding.js   # pairing, wizard, permission ask/trusted, capabilities sync
@@ -266,7 +266,7 @@ After the setup wizard and compute opt-in, the desktop app runs `compute-worker.
 
 Packaged builds bundle `denizen-src` modules (`denizen-hardware-monitor`, `denizen-node-client`, `denizen-mesh-job-runner`) via `scripts/copy-denizen-src.js` prebuild hook.
 
-**Server URL:** the wizard discovers the Denizen port dynamically (default `8081` in the Dolonia lab). Reinstall from latest `Denizen-Setup.exe` if you see `Cannot find module '../src/denizen-hardware-monitor'`.
+**Server URL:** the wizard discovers the Denizen port dynamically (default `8081` in the Dolonia lab). Reinstall from latest `Denizen-Setup.exe` if you see `Cannot find module '../src/compute/denizen-hardware-monitor'`.
 
 See [docs/COMPUTE_MESH.md](../docs/COMPUTE_MESH.md).
 

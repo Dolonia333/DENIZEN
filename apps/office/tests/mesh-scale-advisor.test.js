@@ -3,7 +3,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const meshScaleAdvisor = require('../src/mesh-scale-advisor');
+const meshScaleAdvisor = require('../src/compute/mesh-scale-advisor');
 
 describe('mesh-scale-advisor', () => {
   let origAutoHeal;

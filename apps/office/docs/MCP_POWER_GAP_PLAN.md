@@ -93,12 +93,12 @@ Phase 1–2 ship on **per-NPC tokens** (already carry `org_id`, `session_id`, `m
 
 | File | Role |
 |------|------|
-| `src/denizen-mcp-scopes.js` | Scope presets + tool gating |
-| `src/denizen-mcp-team-tools.js` | Team roster, handoffs, status enrichment |
-| `src/denizen-mcp-crm-tools.js` | First-class CRM tools |
-| `src/denizen-mcp-mesh-tools.js` | Mesh / City Power MCP tools |
-| `src/denizen-mcp-cursor-tools.js` | Denizen ↔ Cursor self-improvement queue |
-| `src/denizen-npc-mcp-gateway.js` | Wire tools + v1.8.0 |
-| `src/denizen-mcp-actions.js` | `run_skill` wait default |
-| `src/npc-brains.js` | `getDirective()` |
+| `src/mcp/denizen-mcp-scopes.js` | Scope presets + tool gating |
+| `src/mcp/denizen-mcp-team-tools.js` | Team roster, handoffs, status enrichment |
+| `src/mcp/denizen-mcp-crm-tools.js` | First-class CRM tools |
+| `src/mcp/denizen-mcp-mesh-tools.js` | Mesh / City Power MCP tools |
+| `src/mcp/denizen-mcp-cursor-tools.js` | Denizen ↔ Cursor self-improvement queue |
+| `src/core/denizen-npc-mcp-gateway.js` | Wire tools + v1.8.0 |
+| `src/mcp/denizen-mcp-actions.js` | `run_skill` wait default |
+| `src/npc/npc-brains.js` | `getDirective()` |
 | `server.js` | Configure deps + CEO handoff notify |

@@ -6,7 +6,7 @@
  * NAS / Docker production: direct PostgREST when SUPABASE_SERVICE_ROLE_KEY is set.
  */
 
-const orgPolicy = require('../../src/denizen-org-policy');
+const orgPolicy = require('../../src/auth/denizen-org-policy');
 
 const FILTER_OPS = new Set(['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'like', 'ilike', 'is', 'in']);
 
@@ -142,7 +142,7 @@ async function directUpdate(cfg, orgSlug, { table, filters, data }) {
 
 async function bridgeRequest(config, path, { method = 'GET', body } = {}) {
   const { url, token, orgSlug } = bridgeConfig(config);
-  if (!token) throw new Error('AGENT_TOKEN not set — configure denizen/jelly/services/supabase-bridge/.env.secure');
+  if (!token) throw new Error('AGENT_TOKEN not set — configure apps/office/jelly/services/supabase-bridge/.env.secure');
 
   if (body?.table) assertTableAllowed(orgSlug, body.table);
 

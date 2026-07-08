@@ -26,8 +26,8 @@ Lucy's routing requires `### email_style` in `npcs/lucy/SOUL.md` (or legacy `## 
 | Audit log | `data/email-log.json` (lazy-created, gitignored if you add it) |
 | Drafts mirror | `data/email-drafts.json` (lazy-created) |
 | Lucy's email config | `npcs/lucy/SOUL.md` → `### email_style` block |
-| Server module | [`src/email-handler.js`](../src/email-handler.js) |
-| Gmail wrapper | [`src/gmail-client.js`](../src/gmail-client.js) |
+| Server module | [`src/pipelines/email-handler.js`](../src/pipelines/email-handler.js) |
+| Gmail wrapper | [`src/pipelines/gmail-client.js`](../src/pipelines/gmail-client.js) |
 | In-game animation | `agent-office-manager._handleServerMessage` → `case 'npc_email_arrived'` |
 
 ## Setup (10 minutes)
@@ -43,7 +43,7 @@ office sprite walks to her desk, the audit log fills — everything
 **Real-Gmail mode** (when you want one-click drafts in Gmail):
 
 ```bash
-cd denizen
+cd apps/office
 npm install googleapis             # adds the official Google client lib
 ```
 
@@ -63,7 +63,7 @@ Place an OAuth2 token JSON at `data/gmail-oauth.json` (or set
 }
 ```
 
-`src/gmail-client.js` auto-detects this on each call — if the file is
+`src/pipelines/gmail-client.js` auto-detects this on each call — if the file is
 present and `googleapis` is installed, it routes drafts through the
 real API; otherwise it keeps using local-drafts. No code change needed
 to flip modes.

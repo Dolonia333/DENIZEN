@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 /** Smoke: zion vs acme soul isolation on NAS. */
-const denizenDb = require('../src/denizen-db');
-const agentSouls = require('../src/agent-souls');
+const denizenDb = require('../src/intelligence/denizen-db');
+const agentSouls = require('../src/npc/agent-souls');
 
 (async () => {
   const init = await denizenDb.init();

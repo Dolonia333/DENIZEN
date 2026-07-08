@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const scope = require('../src/denizen-approvals-scope');
+const scope = require('../src/compute/denizen-approvals-scope');
 
 describe('denizen-approvals-scope', () => {
   it('detects Angela Van Zandt by email and display name', () => {

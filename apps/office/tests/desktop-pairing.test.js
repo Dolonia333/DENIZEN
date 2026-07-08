@@ -7,7 +7,7 @@ const {
   createPairingToken,
   claimPairingToken,
   buildPairingResponse,
-} = require('../src/denizen-desktop-pairing.js');
+} = require('../src/desktop/denizen-desktop-pairing.js');
 
 describe('denizen-desktop-pairing', () => {
   it('creates and claims a pairing token once', () => {

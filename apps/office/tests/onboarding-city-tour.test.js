@@ -23,7 +23,7 @@ function countStepIds(block) {
 
 describe('Denizen office onboarding', () => {
   it('keeps the first-run office tour short and non-technical', () => {
-    const source = read('src/visitor-onboarding.js');
+    const source = read('src/visitors/visitor-onboarding.js');
     const steps = arrayBlock(source, 'STEP_DEFS');
 
     assert.equal(countStepIds(steps), 6);
@@ -41,7 +41,7 @@ describe('Denizen office onboarding', () => {
   });
 
   it('keeps the optional power tour focused on user choices', () => {
-    const source = read('src/visitor-superuser-onboarding.js');
+    const source = read('src/visitors/visitor-superuser-onboarding.js');
     const steps = arrayBlock(source, 'STEPS');
 
     assert.equal(countStepIds(steps), 5);
@@ -52,7 +52,7 @@ describe('Denizen office onboarding', () => {
   });
 
   it('uses office-first language on the phone home screen', () => {
-    const source = read('src/denizen-phone-ui.js');
+    const source = read('src/hud/denizen-phone-ui.js');
 
     assert.match(source, /label: 'Citizen ID'/);
     assert.match(source, /label: 'City Power'/);
@@ -64,7 +64,7 @@ describe('Denizen office onboarding', () => {
   });
 
   it('attaches visitor onboarding during normal office startup', () => {
-    const source = read('src/player-chat.js');
+    const source = read('src/hud/player-chat.js');
 
     assert.match(source, /if \(scene\) this\._attachVisitorUi\(\)/);
     assert.match(source, /DenizenVisitorOnboarding\.attach\(this\.scene, this\)/);
@@ -72,8 +72,8 @@ describe('Denizen office onboarding', () => {
   });
 
   it('keeps City Power framed as office station to city power', () => {
-    const nodeUi = read('src/visitor-node-ui.js');
-    const sidebar = read('src/mobile-sidebar.js');
+    const nodeUi = read('src/visitors/visitor-node-ui.js');
+    const sidebar = read('src/hud/mobile-sidebar.js');
 
     assert.match(nodeUi, />Power the city</);
     assert.match(nodeUi, />POWER STATION</);

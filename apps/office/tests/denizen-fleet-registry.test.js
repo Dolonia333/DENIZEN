@@ -8,8 +8,8 @@ describe('denizen-fleet-registry', () => {
 
   beforeEach(() => {
     // Fresh module state per test
-    delete require.cache[require.resolve('../src/denizen-fleet-registry')];
-    fleetRegistry = require('../src/denizen-fleet-registry');
+    delete require.cache[require.resolve('../src/integrations/denizen-fleet-registry')];
+    fleetRegistry = require('../src/integrations/denizen-fleet-registry');
   });
 
   it('buildFleetSummary(null) aggregates machines across identities', () => {

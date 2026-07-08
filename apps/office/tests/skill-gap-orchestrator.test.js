@@ -2,8 +2,8 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const discovery = require('../src/skill-discovery');
-const orchestrator = require('../src/skill-gap-orchestrator');
+const discovery = require('../src/pipelines/skill-discovery');
+const orchestrator = require('../src/pipelines/skill-gap-orchestrator');
 
 describe('skill-discovery', () => {
   it('scores local skill overlap', () => {

@@ -49,7 +49,7 @@ function homeDir() {
 }
 
 /**
- * Load Jelly config. Prefers denizen/config/jelly.json,
+ * Load Jelly config. Prefers apps/office/config/jelly.json,
  * falls back to legacy harness.json and ~/.openclaw/openclaw.json during migration.
  */
 function loadConfig(denizenRoot) {

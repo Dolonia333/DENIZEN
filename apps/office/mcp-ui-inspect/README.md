@@ -12,7 +12,7 @@ Stdio MCP server for Cursor and other agents to **see, click, and capture** Deni
 
 ```bash
 
-cd denizen/mcp-ui-inspect
+cd apps/office/mcp-ui-inspect
 
 npm install
 
@@ -98,7 +98,7 @@ All capture tools return **JSON metrics + inline PNG** in the MCP response.
 
 ```bash
 
-cd denizen
+cd apps/office
 
 $env:PROBE_OWNER_PASS="your-password"
 

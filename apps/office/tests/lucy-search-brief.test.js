@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildRuleBasedBrief, isJunkSearchQuery, firstSentences } = require('../src/lucy-search-brief');
+const { buildRuleBasedBrief, isJunkSearchQuery, firstSentences } = require('../src/compute/lucy-search-brief');
 
 describe('lucy-search-brief', () => {
   it('flags junk queries', () => {

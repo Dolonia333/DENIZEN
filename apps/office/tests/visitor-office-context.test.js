@@ -9,7 +9,7 @@ const {
   buildPurposeOverlay,
   displayToNpcKey,
   clearTeamCache,
-} = require('../src/visitor-office-context.js');
+} = require('../src/visitors/visitor-office-context.js');
 
 describe('visitor-office-context', () => {
   it('displayToNpcKey maps roster display names', () => {

@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const runtime = require('../src/denizen-inference-runtime');
+const runtime = require('../src/compute/denizen-inference-runtime');
 
 describe('denizen-inference-runtime', () => {
   it('buildChatMessages adds system prompt and default user turn', () => {

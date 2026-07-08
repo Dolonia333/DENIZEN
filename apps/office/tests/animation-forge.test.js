@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Pure-logic tests for src/animation-forge.js. No HTTP, no filesystem.
+ * Pure-logic tests for src/pipelines/animation-forge.js. No HTTP, no filesystem.
  * Covers:
  *   - validateProposal accepts valid input
  *   - validateProposal rejects malformed animName (uppercase, leading digit,
@@ -13,7 +13,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const forge = require('../src/animation-forge');
+const forge = require('../src/pipelines/animation-forge');
 
 describe('animation-forge.validateProposal', () => {
   it('accepts a valid name + description', () => {

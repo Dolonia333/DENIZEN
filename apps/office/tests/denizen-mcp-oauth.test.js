@@ -4,7 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const { EventEmitter } = require('node:events');
-const oauth = require('../src/denizen-mcp-oauth');
+const oauth = require('../src/mcp/denizen-mcp-oauth');
 
 const BASE = 'https://office.example.com';
 

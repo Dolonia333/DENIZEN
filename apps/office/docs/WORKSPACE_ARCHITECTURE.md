@@ -49,18 +49,18 @@ flowchart TB
 | `src/logger.js` | Structured runtime logger | Widely used by server-side modules |
 | `src/world-state.js` | In-memory shared state (NPCs, tasks, presence, threats) | `server.js`, office runtime modules |
 | `src/agent-bus.js` | Internal message bus between runtime components | `server.js`, AI/system modules |
-| `src/agent-office-manager.js` | Client-side orchestration of NPC actions from decisions/events | `office-scene.js` |
-| `src/agent-actions.js` | Primitive NPC actions (move, talk, meet, report, work) | `agent-office-manager.js` |
-| `src/npc-agent-controller.js` | Think-loop driver and NPC control integration | `office-scene.js` |
+| `src/npc/agent-office-manager.js` | Client-side orchestration of NPC actions from decisions/events | `office-scene.js` |
+| `src/npc/agent-actions.js` | Primitive NPC actions (move, talk, meet, report, work) | `agent-office-manager.js` |
+| `src/npc/npc-agent-controller.js` | Think-loop driver and NPC control integration | `office-scene.js` |
 | `src/pathfinding.js` | A* grid movement pathing | NPC movement/action modules |
 | `src/openclaw-worldstate-bridge.js` | Bridge between external agent events and world state | runtime integration paths |
 | `src/openclaw-chat.js` | Embedded OpenClaw chat panel integration | browser UI, `office-scene.js` |
 | `src/chat-bootstrap.js` | Chat UI initialization/bootstrap glue | browser startup path |
-| `src/bottom-dock.js` | Bottom dock UI controls/composition | browser UI |
-| `src/diag.js` | Diagnostics UI toggle/panel hooks | browser scene/UI |
+| `src/hud/bottom-dock.js` | Bottom dock UI controls/composition | browser UI |
+| `src/hud/diag.js` | Diagnostics UI toggle/panel hooks | browser scene/UI |
 | `src/denizen-lazy-scripts.js` | Lazy script loader for optional modules | `office-scene.js` |
-| `src/mobile-controls.js` | Touch/mobile movement controls | browser scene |
-| `src/mobile-haptics.js` | Vibration/haptic behavior for mobile | mobile control flow |
+| `src/hud/mobile-controls.js` | Touch/mobile movement controls | browser scene |
+| `src/hud/mobile-haptics.js` | Vibration/haptic behavior for mobile | mobile control flow |
 | `src/touch-bind.js` | Touch input binding helper | mobile/touch setup |
 | `src/room-tile-renderer.js` | Tile rendering helper for room/city paths | room/world rendering modules |
 
@@ -68,124 +68,124 @@ flowchart TB
 
 | File | Purpose | Loads/called by |
 |---|---|---|
-| `src/npc-brains.js` | Core `NpcBrainManager`; think/respond loops and memory integration | `server.js` |
-| `src/npc-roster.js` | Canonical NPC roster and folder/sprite mapping | `server.js`, scene startup |
-| `src/npc-tools.js` | Safe tool helpers for NPC workflows | `server.js`, skill/runtime calls |
-| `src/npc-capabilities.js` | Capability registry and checks | `server.js`, proposal/runtime flows |
-| `src/soul-reflection.js` | SOUL proposal generation/apply flow | `server.js`, proposal endpoints |
-| `src/capability-proposal.js` | Capability proposal queue validation/management | `server.js` |
-| `src/animation-forge.js` | Animation proposal/validation pathway | `server.js`, proposal APIs |
-| `src/ambient-dialogue.js` | Ambient chatter scheduling and injection | `server.js`, office loop |
-| `src/sentiment.js` | Lightweight sentiment/mood tagging | NPC conversation/runtime paths |
-| `src/escalation-engine.js` | Escalation logic for elevated tasks/events | orchestration modules |
-| `src/meeting-runner.js` | Coordinated meeting execution path | `server.js`, NPC action orchestration |
-| `src/conflict-detector.js` | Artifact conflict detection for arbitration | `server.js`, artifact pipeline |
-| `src/work-feed.js` | HUD feed for ongoing NPC outputs | `office-scene.js`, event handlers |
-| `src/player-chat.js` | Player-to-NPC chat handling | browser chat flow + server responses |
-| `src/assistant-mode.js` | Assistant interaction mode controls | browser/system UI |
+| `src/npc/npc-brains.js` | Core `NpcBrainManager`; think/respond loops and memory integration | `server.js` |
+| `src/npc/npc-roster.js` | Canonical NPC roster and folder/sprite mapping | `server.js`, scene startup |
+| `src/npc/npc-tools.js` | Safe tool helpers for NPC workflows | `server.js`, skill/runtime calls |
+| `src/npc/npc-capabilities.js` | Capability registry and checks | `server.js`, proposal/runtime flows |
+| `src/pipelines/soul-reflection.js` | SOUL proposal generation/apply flow | `server.js`, proposal endpoints |
+| `src/pipelines/capability-proposal.js` | Capability proposal queue validation/management | `server.js` |
+| `src/pipelines/animation-forge.js` | Animation proposal/validation pathway | `server.js`, proposal APIs |
+| `src/pipelines/ambient-dialogue.js` | Ambient chatter scheduling and injection | `server.js`, office loop |
+| `src/pipelines/sentiment.js` | Lightweight sentiment/mood tagging | NPC conversation/runtime paths |
+| `src/pipelines/escalation-engine.js` | Escalation logic for elevated tasks/events | orchestration modules |
+| `src/pipelines/meeting-runner.js` | Coordinated meeting execution path | `server.js`, NPC action orchestration |
+| `src/pipelines/conflict-detector.js` | Artifact conflict detection for arbitration | `server.js`, artifact pipeline |
+| `src/hud/work-feed.js` | HUD feed for ongoing NPC outputs | `office-scene.js`, event handlers |
+| `src/hud/player-chat.js` | Player-to-NPC chat handling | browser chat flow + server responses |
+| `src/hud/assistant-mode.js` | Assistant interaction mode controls | browser/system UI |
 
 #### C) Visitor + access + onboarding domain
 
 | File | Purpose | Loads/called by |
 |---|---|---|
-| `src/denizen-visitor.js` | Visitor lifecycle APIs and orchestration | `server.js` routes |
-| `src/visitor-access.js` | Access-code and entitlement checks | `server.js`, visitor APIs |
-| `src/visitor-session.js` | Session lifecycle/state | visitor/auth routes |
-| `src/visitor-session-auth.js` | Session token auth guardrails | `server.js` auth middleware |
-| `src/denizen-team-auth.js` | Team account/session auth support | `server.js` |
-| `src/visitor-onboarding.js` | Onboarding flow state/logic | visitor UI + onboarding endpoints |
-| `src/visitor-assistant-labels.js` | Labeling helpers for assistant assignment | visitor UX flows |
-| `src/visitor-capabilities.js` | Visitor capability matrix and checks | visitor APIs and UI |
-| `src/visitor-claim-ui.js` | UI path for claiming assistant/session | browser visitor UI |
-| `src/visitor-projects-ui.js` | Visitor project view UI | browser visitor UI |
-| `src/visitor-handoff-ui.js` | Handoff status/transfer UI | visitor workflow UI |
-| `src/visitor-briefing-ui.js` | Visitor briefing display UI | browser + briefing endpoints |
-| `src/visitor-voice-walkup.js` | Walk-up voice interaction glue for visitor mode | voice + visitor flow |
+| `src/visitors/denizen-visitor.js` | Visitor lifecycle APIs and orchestration | `server.js` routes |
+| `src/visitors/visitor-access.js` | Access-code and entitlement checks | `server.js`, visitor APIs |
+| `src/visitors/visitor-session.js` | Session lifecycle/state | visitor/auth routes |
+| `src/visitors/visitor-session-auth.js` | Session token auth guardrails | `server.js` auth middleware |
+| `src/auth/denizen-team-auth.js` | Team account/session auth support | `server.js` |
+| `src/visitors/visitor-onboarding.js` | Onboarding flow state/logic | visitor UI + onboarding endpoints |
+| `src/visitors/visitor-assistant-labels.js` | Labeling helpers for assistant assignment | visitor UX flows |
+| `src/visitors/visitor-capabilities.js` | Visitor capability matrix and checks | visitor APIs and UI |
+| `src/visitors/visitor-claim-ui.js` | UI path for claiming assistant/session | browser visitor UI |
+| `src/visitors/visitor-projects-ui.js` | Visitor project view UI | browser visitor UI |
+| `src/visitors/visitor-handoff-ui.js` | Handoff status/transfer UI | visitor workflow UI |
+| `src/visitors/visitor-briefing-ui.js` | Visitor briefing display UI | browser + briefing endpoints |
+| `src/visitors/visitor-voice-walkup.js` | Walk-up voice interaction glue for visitor mode | voice + visitor flow |
 
 #### D) Intelligence spine + telemetry domain
 
 | File | Purpose | Loads/called by |
 |---|---|---|
-| `src/denizen-db.js` | DB gateway for intelligence, outcomes, and facts | `server.js`, intelligence modules |
-| `src/denizen-org-policy.js` | Org-level policy checks for data/actions | `server.js`, data actions |
-| `src/denizen-visitor-intelligence.js` | Visitor-facing intelligence summaries/briefings | `server.js`, visitor routes |
-| `src/visitor-briefing-loop.js` | Background briefing/intel loop starter | `server.js` startup |
-| `src/mirofish-prediction.js` | Prediction helpers and forecasts | `server.js`, intelligence routes |
-| `src/denizen-prediction-loop.js` | Prediction maintenance loop + summary APIs | `server.js` |
-| `src/federal-pipeline.js` | Federal/RFP pipeline summarization logic | `server.js`, route registry |
-| `src/llm-telemetry.js` | LLM call telemetry collection/persistence | `server.js`, AI call sites |
-| `src/llm-telemetry-panel.js` | UI panel for telemetry insights | browser diagnostics |
-| `src/telemetry-insights.js` | Aggregation/insight endpoints for telemetry | `server.js` API endpoints |
-| `src/external-sink.js` | Forward telemetry/events to external sink endpoints | `server.js`, telemetry flow |
-| `src/hallucination-guard.js` | Runtime guardrail metrics/checks | `server.js` status endpoints |
-| `src/prompt-tuning.js` | Prompt tuning helpers/config normalization | `server.js`, brain orchestration |
-| `src/away-notify.js` | Presence/away signaling in intelligence loops | `server.js`, scheduler flows |
+| `src/intelligence/denizen-db.js` | DB gateway for intelligence, outcomes, and facts | `server.js`, intelligence modules |
+| `src/auth/denizen-org-policy.js` | Org-level policy checks for data/actions | `server.js`, data actions |
+| `src/visitors/denizen-visitor-intelligence.js` | Visitor-facing intelligence summaries/briefings | `server.js`, visitor routes |
+| `src/visitors/visitor-briefing-loop.js` | Background briefing/intel loop starter | `server.js` startup |
+| `src/intelligence/mirofish-prediction.js` | Prediction helpers and forecasts | `server.js`, intelligence routes |
+| `src/intelligence/denizen-prediction-loop.js` | Prediction maintenance loop + summary APIs | `server.js` |
+| `src/intelligence/federal-pipeline.js` | Federal/RFP pipeline summarization logic | `server.js`, route registry |
+| `src/intelligence/llm-telemetry.js` | LLM call telemetry collection/persistence | `server.js`, AI call sites |
+| `src/hud/panels/llm-telemetry-panel.js` | UI panel for telemetry insights | browser diagnostics |
+| `src/intelligence/telemetry-insights.js` | Aggregation/insight endpoints for telemetry | `server.js` API endpoints |
+| `src/intelligence/external-sink.js` | Forward telemetry/events to external sink endpoints | `server.js`, telemetry flow |
+| `src/intelligence/hallucination-guard.js` | Runtime guardrail metrics/checks | `server.js` status endpoints |
+| `src/intelligence/prompt-tuning.js` | Prompt tuning helpers/config normalization | `server.js`, brain orchestration |
+| `src/intelligence/away-notify.js` | Presence/away signaling in intelligence loops | `server.js`, scheduler flows |
 
 #### E) Security + monitoring domain
 
 | File | Purpose | Loads/called by |
 |---|---|---|
-| `src/security-feed.js` | Security feed UI/event surface | browser security dashboard |
-| `src/security-monitor.js` | Client security WS/event handling | `office-scene.js` |
-| `src/security-ip.js` | IP classification helpers (local/internal threat checks) | `server.js` security paths |
-| `src/robber-controller.js` | Visual threat actor controller in scene | `office-scene.js`, security events |
-| `src/linux-agent.js` | WSL/Kali security command runner | `server.js` security endpoints |
-| `src/pc-activity-tracker.js` | Local PC activity tracking signals | `server.js` security/context |
-| `src/permission-registry.js` | Permission policy and operation guardrails | runtime-protected endpoints |
-| `src/screen-watch.js` | Screen watch hooks for monitoring | observation/desktop workflows |
-| `src/screen-observe.js` | Screen observation and capture path | `server.js`, desktop/agent flows |
-| `src/browser-mirror-panel.js` | Browser mirror UI panel for observation | browser UI tools |
+| `src/security/security-feed.js` | Security feed UI/event surface | browser security dashboard |
+| `src/security/security-monitor.js` | Client security WS/event handling | `office-scene.js` |
+| `src/security/security-ip.js` | IP classification helpers (local/internal threat checks) | `server.js` security paths |
+| `src/security/robber-controller.js` | Visual threat actor controller in scene | `office-scene.js`, security events |
+| `src/security/linux-agent.js` | WSL/Kali security command runner | `server.js` security endpoints |
+| `src/security/pc-activity-tracker.js` | Local PC activity tracking signals | `server.js` security/context |
+| `src/security/permission-registry.js` | Permission policy and operation guardrails | runtime-protected endpoints |
+| `src/security/screen-watch.js` | Screen watch hooks for monitoring | observation/desktop workflows |
+| `src/security/screen-observe.js` | Screen observation and capture path | `server.js`, desktop/agent flows |
+| `src/hud/panels/browser-mirror-panel.js` | Browser mirror UI panel for observation | browser UI tools |
 
 #### F) Voice + audio domain
 
 | File | Purpose | Loads/called by |
 |---|---|---|
-| `src/voice-gate.js` | Presence-gated speaking policy | browser voice runtime |
-| `src/voice-input.js` | Speech input capture flow | browser voice UX |
-| `src/voice-resolve.js` | Voice selection/resolution per NPC/context | `server.js`, TTS path |
-| `src/elevenlabs-provider.js` | Browser-side TTS provider wrapper | voice playback flow |
-| `src/elevenlabs-tts.js` | Server-side ElevenLabs API proxy | `server.js` `/api/tts*` |
-| `src/proximity-audio.js` | Distance-based volume attenuation | scene audio runtime |
-| `src/sfx.js` | SFX playback manager | browser scene events |
+| `src/voice/voice-gate.js` | Presence-gated speaking policy | browser voice runtime |
+| `src/voice/voice-input.js` | Speech input capture flow | browser voice UX |
+| `src/voice/voice-resolve.js` | Voice selection/resolution per NPC/context | `server.js`, TTS path |
+| `src/voice/elevenlabs-provider.js` | Browser-side TTS provider wrapper | voice playback flow |
+| `src/voice/elevenlabs-tts.js` | Server-side ElevenLabs API proxy | `server.js` `/api/tts*` |
+| `src/voice/proximity-audio.js` | Distance-based volume attenuation | scene audio runtime |
+| `src/voice/sfx.js` | SFX playback manager | browser scene events |
 
 #### G) Research + discovery domain
 
 | File | Purpose | Loads/called by |
 |---|---|---|
-| `src/research-queue.js` | Queue for pending research jobs | `server.js`, research routes |
-| `src/research-sessions.js` | Sessionized research tracking | `server.js`, research APIs |
-| `src/research-brief.js` | Brief generation from research artifacts | `server.js`, briefing paths |
-| `src/research-scheduler.js` | Scheduler for research loops/jobs | `server.js` startup (`startAll`) |
-| `src/web-research.js` | Web research helper abstraction | `server.js`, skills/routes |
-| `src/visitor-cited-research.js` | Citation-backed research for visitor surfaces | `server.js` visitor routes |
-| `src/lucy-search-brief.js` | Search-result brief synthesis for Lucy workflows | `server.js`, Lucy routes |
+| `src/intelligence/research-queue.js` | Queue for pending research jobs | `server.js`, research routes |
+| `src/intelligence/research-sessions.js` | Sessionized research tracking | `server.js`, research APIs |
+| `src/intelligence/research-brief.js` | Brief generation from research artifacts | `server.js`, briefing paths |
+| `src/intelligence/research-scheduler.js` | Scheduler for research loops/jobs | `server.js` startup (`startAll`) |
+| `src/intelligence/web-research.js` | Web research helper abstraction | `server.js`, skills/routes |
+| `src/visitors/visitor-cited-research.js` | Citation-backed research for visitor surfaces | `server.js` visitor routes |
+| `src/compute/lucy-search-brief.js` | Search-result brief synthesis for Lucy workflows | `server.js`, Lucy routes |
 
 #### H) Job/email pipeline domain
 
 | File | Purpose | Loads/called by |
 |---|---|---|
-| `src/email-handler.js` | Inbound email intake, compose, escalation gating | `server.js` email endpoints |
-| `src/gmail-client.js` | Gmail send/draft integration adapter | `email-handler.js`, routes |
-| `src/job-application.js` | Lucy job pipeline orchestration | `server.js` job APIs |
-| `src/job-crm.js` | Job CRM maintenance/summary logic | `server.js`, route registry |
-| `src/denizen-slack-channel.js` | Slack notification/channel bridge | `server.js`, event paths |
+| `src/pipelines/email-handler.js` | Inbound email intake, compose, escalation gating | `server.js` email endpoints |
+| `src/pipelines/gmail-client.js` | Gmail send/draft integration adapter | `email-handler.js`, routes |
+| `src/pipelines/job-application.js` | Lucy job pipeline orchestration | `server.js` job APIs |
+| `src/pipelines/job-crm.js` | Job CRM maintenance/summary logic | `server.js`, route registry |
+| `src/integrations/denizen-slack-channel.js` | Slack notification/channel bridge | `server.js`, event paths |
 
 #### I) Skill/MCP + coding pipeline domain
 
 | File | Purpose | Loads/called by |
 |---|---|---|
 | `src/openclaw-dispatch.js` | Dispatch helpers for skill/action-style calls | `server.js` |
-| `src/denizen-mcp-connector.js` | Generic MCP client wrapper and tool calls | `server.js`, integration routes |
-| `src/npc-browser-paths.js` | Browser profile/path resolution per NPC | `server.js`, browser skill paths |
-| `src/skill-builder.js` | Build/new-skill orchestration module | `server.js`, skill workflows |
-| `src/coding-task-runner.js` | Isolated coding worktree proposal runner | `server.js` proposal APIs |
-| `src/task-chain.js` | Multi-step NPC chain orchestration | `server.js`, chain APIs |
-| `src/desktop-agent.js` | Desktop automation agent integration | `server.js`, agent APIs |
-| `src/computer-use-agent.js` | Computer-use integration surface | runtime agent flows |
-| `src/file-agent.js` | File-operation agent orchestration | server-side agent/tooling paths |
+| `src/mcp/denizen-mcp-connector.js` | Generic MCP client wrapper and tool calls | `server.js`, integration routes |
+| `src/npc/npc-browser-paths.js` | Browser profile/path resolution per NPC | `server.js`, browser skill paths |
+| `src/pipelines/skill-builder.js` | Build/new-skill orchestration module | `server.js`, skill workflows |
+| `src/pipelines/coding-task-runner.js` | Isolated coding worktree proposal runner | `server.js` proposal APIs |
+| `src/pipelines/task-chain.js` | Multi-step NPC chain orchestration | `server.js`, chain APIs |
+| `src/compute/desktop-agent.js` | Desktop automation agent integration | `server.js`, agent APIs |
+| `src/compute/computer-use-agent.js` | Computer-use integration surface | runtime agent flows |
+| `src/compute/file-agent.js` | File-operation agent orchestration | server-side agent/tooling paths |
 | `src/openclaw-translator.js` | Event/message translation between systems | integration pathways |
 | `src/gateway-bridge.js` | Gateway bridging compatibility module | browser/server integration |
-| `src/nas-connect.js` | NAS connectivity helper | runtime utility paths |
+| `src/integrations/nas-connect.js` | NAS connectivity helper | runtime utility paths |
 
 #### J) City/world generation domain
 
@@ -219,11 +219,11 @@ flowchart TB
 | `src/route-registry.js` | Central route registration for integration APIs | `server.js` |
 | `src/routes/intelligence-routes.js` | Intelligence route handlers | `route-registry.js`, `server.js` |
 | `src/office-director.js` | Office director coordination logic | server orchestration and tests |
-| `src/cost-projector.js` | Cost projection and budget calculation path | `server.js`, APIs |
-| `src/market-data.js` | Market data retrieval/formatting | route registry and trading modules |
-| `src/robinhood-mcp.js` | Robinhood MCP/trading integration module | `server.js`, trading routes |
+| `src/compute/cost-projector.js` | Cost projection and budget calculation path | `server.js`, APIs |
+| `src/integrations/market-data.js` | Market data retrieval/formatting | route registry and trading modules |
+| `src/integrations/robinhood-mcp.js` | Robinhood MCP/trading integration module | `server.js`, trading routes |
 | `src/demo-scene.js` | Demo/tour scene overlays/automation | lazy-loaded by `office-scene.js` |
-| `src/city-debug.js` | City debug visualization control | optional debug path |
+| `src/city/city-debug.js` | City debug visualization control | optional debug path |
 | `src/world-state.js` | Shared state object (listed once above; central to routes too) | APIs, WS broadcasts, brains |
 
 ---

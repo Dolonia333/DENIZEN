@@ -10,9 +10,9 @@ describe('platform identity bridge — job CRM DB sync', () => {
 
   beforeEach(() => {
     calls = [];
-    delete require.cache[require.resolve('../src/denizen-db.js')];
-    delete require.cache[require.resolve('../src/job-crm.js')];
-    denizenDb = require('../src/denizen-db.js');
+    delete require.cache[require.resolve('../src/intelligence/denizen-db.js')];
+    delete require.cache[require.resolve('../src/pipelines/job-crm.js')];
+    denizenDb = require('../src/intelligence/denizen-db.js');
     denizenDb.enabled = true;
     denizenDb.orgId = '11111111-1111-1111-1111-111111111111';
     denizenDb.url = 'http://127.0.0.1:54321';
@@ -29,7 +29,7 @@ describe('platform identity bridge — job CRM DB sync', () => {
       };
     };
 
-    jobCrm = require('../src/job-crm.js');
+    jobCrm = require('../src/pipelines/job-crm.js');
   });
 
   afterEach(() => {

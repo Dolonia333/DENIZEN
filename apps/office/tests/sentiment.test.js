@@ -10,7 +10,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { classify } = require('../src/sentiment.js');
+const { classify } = require('../src/pipelines/sentiment.js');
 const { WorldState } = require('../src/world-state.js');
 
 describe('sentiment.classify', () => {

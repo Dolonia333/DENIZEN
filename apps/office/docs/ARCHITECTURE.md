@@ -4,7 +4,7 @@ Denizen is a real-time visual observability layer for AI agents. This document d
 
 > **2026-06-08 update:** [server.js](../server.js) is a ~7,700-line monolith — see [SERVER.md](SERVER.md) for route/module map. Skill dispatch goes through **Jelly** (`jelly/`), not `gateway-bridge.js`. Listen port is `process.env.PORT` (code default `8080`; Dolonia lab uses `8081`). Optional **compute mesh** — shared job queue across dolonia/NAS/Kali/Desktop — see [COMPUTE_MESH.md](COMPUTE_MESH.md).
 >
-> **2026-06-05 update:** Skill dispatch now goes through **Jelly** (`denizen/jelly/`) instead of the OpenClaw gateway. See [SESSION_2026-06-05.md](SESSION_2026-06-05.md).
+> **2026-06-05 update:** Skill dispatch now goes through **Jelly** (`apps/office/jelly/`) instead of the OpenClaw gateway. See [SESSION_2026-06-05.md](SESSION_2026-06-05.md).
 
 ## One-sentence summary
 
@@ -60,30 +60,30 @@ A Phaser pixel-art office where 16 NPCs represent AI agents. Each NPC has its ow
 | File | Responsibility |
 |---|---|
 | [office-scene.js](../office-scene.js) | Main Phaser scene. Owns the 16 NPC sprites, physics colliders, camera, and the per-frame update loop. Calls `_applySeparation` to keep NPCs from piling up. |
-| [src/agent-office-manager.js](../src/agent-office-manager.js) | Translates `npc_decision` messages from the server into actual NPC behavior (walk here, speak that, read bookshelf, visit coworker, …). Also owns the chat reply-back loop (turn cap = 4). |
-| [src/agent-actions.js](../src/agent-actions.js) | Low-level NPC action primitives: `speakTo`, `visit`, `goToCoffee`, `useComputer`. Handles stuck-detection, target-snap via pathfinding, and the speaker-slot cap. |
+| [src/npc/agent-office-manager.js](../src/npc/agent-office-manager.js) | Translates `npc_decision` messages from the server into actual NPC behavior (walk here, speak that, read bookshelf, visit coworker, …). Also owns the chat reply-back loop (turn cap = 4). |
+| [src/npc/agent-actions.js](../src/npc/agent-actions.js) | Low-level NPC action primitives: `speakTo`, `visit`, `goToCoffee`, `useComputer`. Handles stuck-detection, target-snap via pathfinding, and the speaker-slot cap. |
 | [src/pathfinding.js](../src/pathfinding.js) | A* grid pathfinder with soft-cost halo around obstacles. `NpcPathFollower` applies arrival slowdown near the final waypoint. |
-| [src/npc-agent-controller.js](../src/npc-agent-controller.js) | Drives the think loop — periodically asks the server "what should this NPC do?" and dispatches the reply. |
-| [src/cofounder-agent.js](../src/cofounder-agent.js) (client side receiver) | Receives global `agent_commands` broadcasts from the CTO director. |
-| [src/security-monitor.js](../src/security-monitor.js) | Client-side WebSocket hub for `/security-ws`. Translates server threat events into DOM events consumed by `RobberController`. |
-| [src/robber-controller.js](../src/robber-controller.js) | Spawns, animates, and despawns robber NPCs based on threat category. Max 5 simultaneous. |
-| [src/proposals-panel.js](../src/proposals-panel.js) | Bottom-right operator chip + card panel. Hits `/api/proposals`, shows pending animation / SOUL / capability proposals, sends approve/reject/apply POSTs. |
+| [src/npc/npc-agent-controller.js](../src/npc/npc-agent-controller.js) | Drives the think loop — periodically asks the server "what should this NPC do?" and dispatches the reply. |
+| [src/compute/cofounder-agent.js](../src/compute/cofounder-agent.js) (client side receiver) | Receives global `agent_commands` broadcasts from the CTO director. |
+| [src/security/security-monitor.js](../src/security/security-monitor.js) | Client-side WebSocket hub for `/security-ws`. Translates server threat events into DOM events consumed by `RobberController`. |
+| [src/security/robber-controller.js](../src/security/robber-controller.js) | Spawns, animates, and despawns robber NPCs based on threat category. Max 5 simultaneous. |
+| [src/hud/panels/proposals-panel.js](../src/hud/panels/proposals-panel.js) | Bottom-right operator chip + card panel. Hits `/api/proposals`, shows pending animation / SOUL / capability proposals, sends approve/reject/apply POSTs. |
 
 ### Server (Node.js)
 
 | File | Responsibility |
 |---|---|
 | [server.js](../server.js) | ~7,700-line HTTP + WebSocket monolith (`PORT` env, default `8080`). Serves the static game, routes `npc_*` messages to `NpcBrainManager`, exposes `/security-ws`, `/security-test`, visitor APIs, compute mesh routes, and more. See [SERVER.md](SERVER.md). |
-| [src/npc-brains.js](../src/npc-brains.js) | The brain manager. Loads each NPC's `SOUL.md`/`MEMORY.md`, queues LM Studio requests sequentially, runs `think()` and `getResponse()`. Implements the intelligence layer: goals, daily plans, theory of mind, outcome tagging, event feed, shared task board. |
-| [src/cofounder-agent.js](../src/cofounder-agent.js) (server side) | "Director" agent. Every 15-30s observes office state, picks the most interesting thing to make happen, and broadcasts commands to the game client. State-reactive: flags stuck agents as priority, pulls from the event feed. Mirrors office-state into `worldState` and feeds fatigue tracking off status transitions. |
+| [src/npc/npc-brains.js](../src/npc/npc-brains.js) | The brain manager. Loads each NPC's `SOUL.md`/`MEMORY.md`, queues LM Studio requests sequentially, runs `think()` and `getResponse()`. Implements the intelligence layer: goals, daily plans, theory of mind, outcome tagging, event feed, shared task board. |
+| [src/compute/cofounder-agent.js](../src/compute/cofounder-agent.js) (server side) | "Director" agent. Every 15-30s observes office state, picks the most interesting thing to make happen, and broadcasts commands to the game client. State-reactive: flags stuck agents as priority, pulls from the event feed. Mirrors office-state into `worldState` and feeds fatigue tracking off status transitions. |
 | [security-monitor-server.js](../security-monitor-server.js) | Security monitor. Polls system/network/files for threats, and on Linux, runs tshark + scan-detector feeders. Broadcasts threat events to all connected `/security-ws` clients. |
 | [jelly/](../jelly/) | Skill runtime — `createJelly()` registers and executes native + vendor skills (`jelly/skills/`, `jelly/vendor/skills/`). Replaces legacy `gateway-bridge.js` dispatch. See [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md). |
 | [src/gateway-bridge.js](../src/gateway-bridge.js) | Legacy optional bridge to OpenClaw gateway (port 18789). Off by default since Jelly migration. |
 | [src/world-state.js](../src/world-state.js) | Single in-memory source of truth — NPC positions/state, velocities, fatigue timers, last-addressed, exchange history, sentiment, stuck-loops, threats, tasks, environment. Pub/sub for broadcasts. |
-| [src/sentiment.js](../src/sentiment.js) | Cheap keyword-regex mood classifier (`happy`/`frustrated`/`tired`/`excited`/`anxious`). Called from `recordSelfMessage`; surfaces as peer tags in `Nearby:`. |
-| [src/animation-forge.js](../src/animation-forge.js) | Validates `requestAnimation` proposals; future home of the composition / AI-gen / local-SD renderers (currently API-surface-only stubs). |
-| [src/soul-reflection.js](../src/soul-reflection.js) | Builds the SOUL-revision prompt + applies approved proposals to `npcs/<n>/SOUL.md` and appends an audit entry to `SOUL.history.md`. |
-| [src/capability-proposal.js](../src/capability-proposal.js) | Validates `requestCapability` proposals (new action verbs); operator must still implement them by hand in `src/agent-actions.js`. |
+| [src/pipelines/sentiment.js](../src/pipelines/sentiment.js) | Cheap keyword-regex mood classifier (`happy`/`frustrated`/`tired`/`excited`/`anxious`). Called from `recordSelfMessage`; surfaces as peer tags in `Nearby:`. |
+| [src/pipelines/animation-forge.js](../src/pipelines/animation-forge.js) | Validates `requestAnimation` proposals; future home of the composition / AI-gen / local-SD renderers (currently API-surface-only stubs). |
+| [src/pipelines/soul-reflection.js](../src/pipelines/soul-reflection.js) | Builds the SOUL-revision prompt + applies approved proposals to `npcs/<n>/SOUL.md` and appends an audit entry to `SOUL.history.md`. |
+| [src/pipelines/capability-proposal.js](../src/pipelines/capability-proposal.js) | Validates `requestCapability` proposals (new action verbs); operator must still implement them by hand in `src/npc/agent-actions.js`. |
 
 ### Data on disk
 
@@ -106,14 +106,14 @@ Denizen has two independent decision loops. Understanding them is the key to und
 
 Each NPC runs its own slow cycle:
 
-1. Client: [`npc-agent-controller.js`](../src/npc-agent-controller.js) schedules a think for NPC *X* every 45-75 seconds.
+1. Client: [`npc-agent-controller.js`](../src/npc/npc-agent-controller.js) schedules a think for NPC *X* every 45-75 seconds.
 2. Client → Server: `{type: 'npc_think', npcName: 'Alex'}`
-3. Server: [`NpcBrainManager.think()`](../src/npc-brains.js) assembles the full context for Alex (SOUL.md, last 1200 chars of MEMORY.md, 10 recent conversations, goals, daily plan, theory of mind of 4 nearby NPCs, recent office events, shared task board, coworker hierarchy, fatigue hint, room affinity, nearby furniture).
+3. Server: [`NpcBrainManager.think()`](../src/npc/npc-brains.js) assembles the full context for Alex (SOUL.md, last 1200 chars of MEMORY.md, 10 recent conversations, goals, daily plan, theory of mind of 4 nearby NPCs, recent office events, shared task board, coworker hierarchy, fatigue hint, room affinity, nearby furniture).
 4. Server → LM Studio: one `chat/completions` call with `max_tokens=400, temperature=0.95`.
 5. Server ← LM Studio: JSON with `{reasoning, plan, thought, action, target, location, message, taskPhase, save, outcome}`.
 6. Server: save memory with `[OUTCOME:*]` / `[TOPIC:*]` / `[SKILL:*]` tags. Update goal progress. Record relationship. Broadcast office event if the decision was a meeting/ship/blocker.
 7. Server → Client: `{type: 'npc_decision', npcName: 'Alex', decision: {...}}`
-8. Client: [`agent-office-manager._executeNpcDecision`](../src/agent-office-manager.js) reads `action` and calls the matching primitive in [agent-actions.js](../src/agent-actions.js).
+8. Client: [`agent-office-manager._executeNpcDecision`](../src/npc/agent-office-manager.js) reads `action` and calls the matching primitive in [agent-actions.js](../src/npc/agent-actions.js).
 
 All 16 LM Studio calls are serialized through one queue so the GPU only runs one inference at a time. Typical cadence: ~1 think every 3-4 seconds across the whole office.
 
@@ -121,7 +121,7 @@ All 16 LM Studio calls are serialized through one queue so the GPU only runs one
 
 Every 15-30s the "CTO" picks a global move:
 
-1. [`CofounderAgent._think()`](../src/cofounder-agent.js) builds a state-reactive prompt from `officeState` (who's idle, who's working, who just shipped, who's stuck) + the shared event feed.
+1. [`CofounderAgent._think()`](../src/compute/cofounder-agent.js) builds a state-reactive prompt from `officeState` (who's idle, who's working, who just shipped, who's stuck) + the shared event feed.
 2. One LM Studio call (`max_tokens=1024`). Asked to reply with a JSON array of 2-4 commands.
 3. Each command is broadcast to every connected browser as `agent_command`. The client's agent-office-manager dispatches it.
 
@@ -134,8 +134,8 @@ Runs independently of the AI loops. Goal: turn log lines into character animatio
 1. [`security-monitor-server.js`](../security-monitor-server.js) polls system/network/files, and on Linux tails `tshark` + firewall logs.
 2. On a suspicious event → `_emitThreat({category, severity, source, target, detail})` with dedup (5s window per category+source).
 3. Server broadcasts to all `/security-ws` clients: `{type: 'threat', threatId, category, severity, source, target, detail, timestamp}`.
-4. Client [`SecurityMonitor`](../src/security-monitor.js) fires a `threat` DOM event.
-5. [`RobberController`](../src/robber-controller.js) picks an archetype from `THREAT_TARGETS`, spawns a robber at an appropriate spawn point, walks to a target, plays an action animation, and shows a speech bubble with the detail.
+4. Client [`SecurityMonitor`](../src/security/security-monitor.js) fires a `threat` DOM event.
+5. [`RobberController`](../src/security/robber-controller.js) picks an archetype from `THREAT_TARGETS`, spawns a robber at an appropriate spawn point, walks to a target, plays an action animation, and shows a speech bubble with the detail.
 6. After 30 seconds the threat auto-resolves → robber walks off the left edge of the map.
 
 Max 5 robbers at once. If more threats are active, new ones queue and replace the oldest on resolution.
@@ -161,7 +161,7 @@ The runtime intelligence stack now connects visitor activity, NPC output, and bu
 ```mermaid
 flowchart LR
   V[Visitor UI + onboarding] --> S[/api/visitor/* and /api/intelligence/*]
-  S --> DB[src/denizen-db.js]
+  S --> DB[src/intelligence/denizen-db.js]
   DB --> F[denizen_facts]
   DB --> O[denizen_outcomes]
   DB --> P[denizen_predictions]
@@ -176,11 +176,11 @@ flowchart LR
 
 | Stage | Module/table | Responsibility |
 |---|---|---|
-| Visitor/session intake | `src/visitor-session.js`, `src/denizen-visitor.js`, `src/visitor-access.js` | Establish session tier/org, enforce token + feature gating |
-| Runtime writes | `src/denizen-db.js` | Append facts from NPC work, LLM telemetry, office state, and visitor handoffs |
+| Visitor/session intake | `src/visitors/visitor-session.js`, `src/visitors/denizen-visitor.js`, `src/visitors/visitor-access.js` | Establish session tier/org, enforce token + feature gating |
+| Runtime writes | `src/intelligence/denizen-db.js` | Append facts from NPC work, LLM telemetry, office state, and visitor handoffs |
 | Business trigger writes | `supabase/migrations/20260606000006*`, `000012*`, `000014*` | Emit facts/outcomes from intake, leads, RFPs, appointments, jobs, and trade suggestions |
-| Forecast layer | `src/denizen-prediction-loop.js`, `src/mirofish-prediction.js` | Maintain/validate forecasts and expose summarized metrics |
-| Visitor intelligence surfaces | `src/denizen-visitor-intelligence.js` | Build morning briefings and proactive updates using predictions + pipeline context |
+| Forecast layer | `src/intelligence/denizen-prediction-loop.js`, `src/intelligence/mirofish-prediction.js` | Maintain/validate forecasts and expose summarized metrics |
+| Visitor intelligence surfaces | `src/visitors/denizen-visitor-intelligence.js` | Build morning briefings and proactive updates using predictions + pipeline context |
 
 ## Compute mesh (optional)
 

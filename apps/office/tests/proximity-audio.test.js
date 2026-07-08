@@ -19,8 +19,8 @@ function loadModule() {
   if (typeof globalThis.window === 'undefined') {
     globalThis.window = globalThis;
   }
-  delete require.cache[require.resolve('../src/proximity-audio.js')];
-  return require('../src/proximity-audio.js');
+  delete require.cache[require.resolve('../src/voice/proximity-audio.js')];
+  return require('../src/voice/proximity-audio.js');
 }
 
 function setupScene({ playerXY, npcs, facingVx, facingVy }) {
@@ -340,7 +340,7 @@ describe('audio modes (listen-in / focus / mute-all)', () => {
 
 describe('proximity-audio file shape', () => {
   it('has the right module surface and graceful fallbacks', () => {
-    const file = fs.readFileSync(path.join(__dirname, '..', 'src', 'proximity-audio.js'), 'utf8');
+    const file = fs.readFileSync(path.join(__dirname, '..', 'src', 'voice', 'proximity-audio.js'), 'utf8');
     assert.match(file, /computeVolumeForNpc/);
     assert.match(file, /setActiveConvoNpc/);
     assert.match(file, /getActiveConvoNpc/);

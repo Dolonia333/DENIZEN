@@ -161,7 +161,7 @@ perimeterPatrol()
 
 | Item | Value |
 |------|-------|
-| Script | `denizen/scripts/bouncer-investigation-agent.js` |
+| Script | `apps/office/scripts/bouncer-investigation-agent.js` |
 | Default port | `8890` (`BOUNCER_INVESTIGATION_PORT`) |
 | NAS env | `BOUNCER_INVESTIGATION_URL=http://192.168.1.232:8890` |
 | Auth | Optional `BOUNCER_INVESTIGATION_TOKEN` → `Authorization: Bearer` |
@@ -404,7 +404,7 @@ powershell -File infra/setup-bouncer-scheduled-task.ps1
 $env:DENIZEN_URL = 'https://denizen.dolonia.cloud'
 $env:FOLLOWER_URL = 'https://spectate.dolonia.cloud'
 $env:BOUNCER_INVESTIGATION_URL = 'http://192.168.1.232:8890'
-node denizen/scripts/smoke-bouncer-e2e.js
+node apps/office/scripts/smoke-bouncer-e2e.js
 ```
 
 | Script | Purpose |
@@ -416,7 +416,7 @@ node denizen/scripts/smoke-bouncer-e2e.js
 ### Unit tests
 
 ```bash
-cd denizen
+cd apps/office
 node --test tests/denizen-security-relay.test.js \
   tests/bouncer-runs.test.js \
   tests/denizen-bouncer-mesh-patrol.test.js \
@@ -430,19 +430,19 @@ node --test tests/denizen-security-relay.test.js \
 | File | Responsibility |
 |------|----------------|
 | `security-monitor-server.js` | Server-side threat detection + broadcast |
-| `src/security-monitor.js` | Browser WS client |
-| `src/robber-controller.js` | Threat → sprite animation |
-| `src/bouncer-client-init.js` | `initBouncerSecurity(scene)` — single init path |
-| `src/denizen-security-relay.js` | Redis threat fan-out |
-| `src/denizen-world-pubsub.js` | Redis/memory pubsub driver |
-| `src/denizen-agent-ws-relay.js` | Follower agent-ws relay + `IS_RELAY_ONLY` |
-| `src/bouncer-investigation.js` | Investigate/patrol routing + DB + escalation |
-| `src/linux-agent.js` | WSL/Kali commands, container patrol, reports |
+| `src/security/security-monitor.js` | Browser WS client |
+| `src/security/robber-controller.js` | Threat → sprite animation |
+| `src/security/bouncer-client-init.js` | `initBouncerSecurity(scene)` — single init path |
+| `src/integrations/denizen-security-relay.js` | Redis threat fan-out |
+| `src/integrations/denizen-world-pubsub.js` | Redis/memory pubsub driver |
+| `src/integrations/denizen-agent-ws-relay.js` | Follower agent-ws relay + `IS_RELAY_ONLY` |
+| `src/security/bouncer-investigation.js` | Investigate/patrol routing + DB + escalation |
+| `src/security/linux-agent.js` | WSL/Kali commands, container patrol, reports |
 | `scripts/bouncer-investigation-agent.js` | Standalone dolonia HTTP agent |
-| `src/denizen-bouncer-mesh-patrol.js` | Per-node TCP/health probes |
-| `src/denizen-bouncer-patrol-aggregate.js` | Mesh results → `worldState.bouncerPatrol` |
-| `src/agent-office-manager.js` | Bouncer NPC behavior, WS threat inject, loiter |
-| `src/denizen-db.js` | `recordBouncerRun()` |
+| `src/compute/denizen-bouncer-mesh-patrol.js` | Per-node TCP/health probes |
+| `src/compute/denizen-bouncer-patrol-aggregate.js` | Mesh results → `worldState.bouncerPatrol` |
+| `src/npc/agent-office-manager.js` | Bouncer NPC behavior, WS threat inject, loiter |
+| `src/intelligence/denizen-db.js` | `recordBouncerRun()` |
 | `server.js` | Routes, timers, auth, brand-block → threat |
 
 ---

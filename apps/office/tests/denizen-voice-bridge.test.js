@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const voiceBridge = require('../src/denizen-voice-bridge.js');
+const voiceBridge = require('../src/voice/denizen-voice-bridge.js');
 
 describe('denizen-voice-bridge', () => {
   it('emitVoiceInstant sends sentence and done events', () => {

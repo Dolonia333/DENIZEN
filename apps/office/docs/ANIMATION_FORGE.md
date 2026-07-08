@@ -14,7 +14,7 @@
 | **`POST /api/request-animation`** | NPC dispatch (or curl) | Body `{ by, animName, description }`. Validates `animName` against `/^[a-z][a-z0-9_]{0,30}$/`, caps `description` at 200 chars. Per-NPC daily budget of **2** requests (`system` / `operator` exempt). Returns `{ ok, proposal }`. |
 | **`GET /api/animation-proposals`** | Operator review UI (future) | Returns the contents of `data/animation-proposals.json` (`{ proposals: [...] }`). |
 | **`worldState.pushEvent('proposed-animation', ...)`** | Each successful POST | Surfaces the proposal in the diag panel's event feed. |
-| **`src/animation-forge.js`** | `require()` from server / generators | `validateProposal({animName, description})` + `composeFromExistingFrames({baseEmote, tint, label})`. Pure logic, no IO. |
+| **`src/pipelines/animation-forge.js`** | `require()` from server / generators | `validateProposal({animName, description})` + `composeFromExistingFrames({baseEmote, tint, label})`. Pure logic, no IO. |
 
 ## The request flow
 
@@ -36,7 +36,7 @@ server.js → animationForge.validateProposal → budget check
 
 ## Three generator variants (only one stubbed)
 
-Documented in the JSDoc at the top of `src/animation-forge.js`. Quick
+Documented in the JSDoc at the top of `src/pipelines/animation-forge.js`. Quick
 recap:
 
 1. **Composition** — `composeFromExistingFrames(...)` returns a spec
@@ -73,20 +73,20 @@ modelled on the placement-budget pattern.
 | `animName` | `/^[a-z][a-z0-9_]{0,30}$/` — lowercase snake_case, starts with a letter, ≤ 31 chars. Tight because it becomes a file path and Phaser anim key. |
 | `description` | Non-empty, ≤ 200 chars. |
 
-Both rules live in `src/animation-forge.js` as `ANIM_NAME_RE` and
+Both rules live in `src/pipelines/animation-forge.js` as `ANIM_NAME_RE` and
 `MAX_DESCRIPTION_LEN`, exported so the endpoint and tests stay in lockstep.
 
 ## Files touched
 
-- `src/animation-forge.js` — new module. Pure logic: `validateProposal`,
+- `src/pipelines/animation-forge.js` — new module. Pure logic: `validateProposal`,
   `composeFromExistingFrames`, plus the validation constants.
 - `server.js` — new endpoints `/api/request-animation` (POST) and
   `/api/animation-proposals` (GET). New `_checkAnimationBudget` /
   `_consumeAnimationBudget` helpers. `animationForge` required at the
   top of the file.
-- `src/agent-office-manager.js` — new `case 'requestAnimation'` in the
+- `src/npc/agent-office-manager.js` — new `case 'requestAnimation'` in the
   NPC-action switch. POSTs to the endpoint, emotes on success.
-- `src/npc-brains.js` — added `requestAnimation` bullet to the CEO-chat
+- `src/npc/npc-brains.js` — added `requestAnimation` bullet to the CEO-chat
   action vocabulary, with example + 2/day cap mentioned.
 - `tests/animation-forge.test.js` — pure-logic tests (validator,
   composition spec, exports).
@@ -106,7 +106,7 @@ Both rules live in `src/animation-forge.js` as `ANIM_NAME_RE` and
   shows up in the office." That's deliberate — the whole point of the
   approval gate is to prevent visual drift.
 - **Not AI image generation.** The hosted / local SD variants are
-  documented in `src/animation-forge.js` JSDoc but not wired. No API
+  documented in `src/pipelines/animation-forge.js` JSDoc but not wired. No API
   keys, no `assets/generated/` directory, no Replicate/ComfyUI calls.
 - **Not an operator review UI.** `GET /api/animation-proposals` is the
   contract. A future task will build the actual review panel against

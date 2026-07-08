@@ -42,7 +42,7 @@ Two layers run in parallel against the same gateway events:
                   ┌───────────────────┼────────────────────┐
                   ▼                                        ▼
    ┌──────────────────────────────┐      ┌──────────────────────────────────┐
-   │ src/npc-agent-controller.js  │      │ src/openclaw-worldstate-bridge.js │
+   │ src/npc/npc-agent-controller.js  │      │ src/openclaw-worldstate-bridge.js │
    │  (existing, sprite + bubble) │      │  (NEW, voice + worldState + bus) │
    │                              │      │           │                       │
    │  → walkTo, _showBubble       │      │           ▼                       │

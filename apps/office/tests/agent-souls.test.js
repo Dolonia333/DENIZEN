@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const agentSouls = require('../src/agent-souls');
+const agentSouls = require('../src/npc/agent-souls');
 
 describe('agent-souls', () => {
   it('loads Abby soul from files', () => {

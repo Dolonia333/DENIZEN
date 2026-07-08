@@ -11,7 +11,7 @@ Related docs:
 
 ## Entry paths in the welcome modal
 
-`src/visitor-session.js` renders a welcome modal with three primary entry modes:
+`src/visitors/visitor-session.js` renders a welcome modal with three primary entry modes:
 
 | Path | UX copy | Result |
 |---|---|---|
@@ -28,14 +28,14 @@ Optional:
 
 ### Team code and CEO code
 
-`src/prompt-tuning.js` defines defaults:
+`src/intelligence/prompt-tuning.js` defines defaults:
 - `DENIZEN_TEAM_CODE` -> default `1921`
 - `DENIZEN_CEO_ACCESS_CODE` -> empty by default (disabled unless set)
 
 Verification endpoint:
 - `POST /api/visitor/access/verify`
 
-Behavior (`src/visitor-access.js`):
+Behavior (`src/visitors/visitor-access.js`):
 - Valid team code -> `ok: true`, tier `team`, org slug, signed `access_grant`
 - Valid CEO code -> `ok: true`, signed `ceo_grant`
 - Invalid code -> access denied
@@ -74,7 +74,7 @@ This blocks session spoofing (session ID alone is not sufficient for privileged 
 
 ## Team email register/login
 
-`src/denizen-team-auth.js` supports:
+`src/auth/denizen-team-auth.js` supports:
 
 | Endpoint family | Action | Notes |
 |---|---|---|
@@ -94,20 +94,20 @@ After auth, server returns signed `access_grant` and team-org context.
 
 ### Session metadata and org assignment
 
-When a session is created/updated (`src/denizen-visitor.js`):
+When a session is created/updated (`src/visitors/denizen-visitor.js`):
 - Access grant metadata populates tier/org/access method.
 - Session gets `org_id`.
 - `ensureOrgMembership(...)` inserts/maintains `denizen_org_members` bridge row.
 
 ### Browser capability gating
 
-`src/visitor-capabilities.js` gates front-end features:
+`src/visitors/visitor-capabilities.js` gates front-end features:
 - Demo: no operator panels, CEO handoff, or real tools.
 - Team/CEO: operator panels, handoff, real tools, briefing panel enabled.
 
 ### Server-side feature enforcement
 
-`src/visitor-access.js` enforces tier restrictions:
+`src/visitors/visitor-access.js` enforces tier restrictions:
 - Demo-restricted features include `to_ceo`, `bridge_skill`, `briefing`, and others.
 - `canUseRealWork(...)` denies real-tool actions for demo org/tier even if globally enabled.
 

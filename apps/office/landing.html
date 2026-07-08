@@ -1,0 +1,1299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DENIZEN — Your agents have an office now</title>
+  <meta name="description" content="Stop reading JSON. Walk into a pixel office where 16 AI agents work in plain sight." />
+  <meta name="theme-color" content="#1a1f2e" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1f2e;
+      --cream: #f4efe4;
+      --wall: #e8e0d0;
+      --floor: #b8bcc4;
+      --lime: #a3e635;
+      --lime-bright: #bef264;
+      --lime-dark: #65a30d;
+      --lime-glow: rgba(163, 230, 53, 0.5);
+      --amber: #f59e0b;
+      --rose: #fb7185;
+      --log-bg: #0c0f14;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --display: "Syne", system-ui, sans-serif;
+      --pixel: pixelated;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--mono);
+      background: var(--ink);
+      color: var(--cream);
+      cursor: crosshair;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% -10%, rgba(163, 230, 53, 0.07), transparent),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(163, 230, 53, 0.015) 2px, rgba(163, 230, 53, 0.015) 4px);
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ── boot overlay ── */
+    #boot {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--lime);
+      transition: opacity 0.6s, visibility 0.6s;
+    }
+    #boot.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+    #boot .line { opacity: 0; animation: boot-line 0.15s forwards; }
+    #boot .line:nth-child(1) { animation-delay: 0.1s; }
+    #boot .line:nth-child(2) { animation-delay: 0.35s; }
+    #boot .line:nth-child(3) { animation-delay: 0.6s; }
+    #boot .line:nth-child(4) { animation-delay: 0.9s; }
+    #boot .line:nth-child(5) { animation-delay: 1.2s; }
+    #boot .big {
+      font-family: var(--display);
+      font-size: clamp(2rem, 8vw, 4rem);
+      font-weight: 800;
+      color: var(--cream);
+      letter-spacing: -0.03em;
+      margin-top: 24px;
+      opacity: 0;
+      animation: boot-line 0.4s 1.5s forwards;
+    }
+    #boot .skip {
+      position: absolute;
+      bottom: 24px;
+      font-size: 10px;
+      color: #475569;
+      letter-spacing: 0.15em;
+      opacity: 0;
+      animation: boot-line 0.3s 2s forwards;
+    }
+    @keyframes boot-line {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── HUD chrome ── */
+    .hud-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: linear-gradient(180deg, rgba(26,31,46,0.95), transparent);
+      pointer-events: none;
+    }
+    .hud-top > * { pointer-events: auto; }
+    .hud-logo {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      color: var(--cream);
+      text-decoration: none;
+    }
+    .hud-logo em {
+      font-style: normal;
+      color: var(--lime);
+    }
+    .hud-status {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .hud-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.4);
+    }
+    .hud-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--lime);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.65); }
+      50% { box-shadow: 0 0 0 6px rgba(163, 230, 53, 0); }
+    }
+    .hud-enter {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      padding: 10px 18px;
+      background: var(--lime);
+      color: var(--ink);
+      text-decoration: none;
+      border: none;
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      transition: filter 0.2s, transform 0.15s;
+    }
+    .hud-enter:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+  /* ── HERO: split reality slider ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 80px 20px 40px;
+    }
+    .hero-headline {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 32px;
+      z-index: 10;
+    }
+    .hero-headline h1 {
+      font-family: var(--display);
+      font-size: clamp(2.2rem, 7vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin: 0 0 16px;
+      text-shadow: 0 0 60px rgba(163, 230, 53, 0.12);
+    }
+    .hero-headline h1 .strike {
+      display: block;
+      font-size: 0.45em;
+      font-weight: 600;
+      color: #64748b;
+      text-decoration: line-through;
+      text-decoration-color: var(--rose);
+      margin-bottom: 8px;
+    }
+    .hero-headline p {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      margin: 0 0 20px;
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .btn {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 12px 20px;
+      transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+      background: var(--lime);
+      color: var(--ink);
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      box-shadow: 0 0 28px rgba(163, 230, 53, 0.3);
+    }
+    .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 0 40px rgba(163, 230, 53, 0.45); }
+    .btn-ghost {
+      color: var(--lime-bright);
+      border: 1px solid rgba(163, 230, 53, 0.4);
+      background: rgba(163, 230, 53, 0.05);
+    }
+    .btn-ghost:hover { background: rgba(163, 230, 53, 0.12); border-color: var(--lime); }
+
+    /* live office ticker */
+    .ticker-wrap {
+      max-width: 1100px;
+      margin: 0 auto 28px;
+      overflow: hidden;
+      border: 1px solid #1e293b;
+      background: rgba(0,0,0,0.35);
+      mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+    }
+    .ticker {
+      display: flex;
+      gap: 48px;
+      padding: 10px 0;
+      width: max-content;
+      animation: ticker-scroll 40s linear infinite;
+      font-size: 10px;
+      color: #64748b;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .ticker span { white-space: nowrap; }
+    .ticker .live { color: var(--lime); }
+    @keyframes ticker-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .split-stage {
+      position: relative;
+      width: min(100%, 1100px);
+      margin: 0 auto;
+      aspect-ratio: 16 / 9;
+      max-height: 62vh;
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      box-shadow:
+        0 0 0 1px #0f172a,
+        0 0 40px rgba(163, 230, 53, 0.08),
+        0 40px 100px rgba(0,0,0,0.7),
+        inset 0 0 80px rgba(163, 230, 53, 0.04);
+      overflow: hidden;
+      user-select: none;
+      touch-action: none;
+    }
+    .split-stage::before,
+    .split-stage::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-color: var(--lime);
+      border-style: solid;
+      z-index: 25;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .split-stage::before {
+      top: 8px; left: 8px;
+      border-width: 2px 0 0 2px;
+    }
+    .split-stage::after {
+      bottom: 8px; right: 8px;
+      border-width: 0 2px 2px 0;
+    }
+    .split-label {
+      position: absolute;
+      top: 12px;
+      z-index: 15;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.65);
+      border: 1px solid #334155;
+      color: #64748b;
+      pointer-events: none;
+    }
+    .split-label--logs { left: 12px; }
+    .split-label--office { right: 12px; color: var(--lime); border-color: rgba(163,230,53,0.35); }
+    .split-scanline {
+      position: absolute;
+      inset: 0;
+      z-index: 12;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
+      opacity: 0.5;
+    }
+
+    .split-pane {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .split-logs {
+      background: var(--log-bg);
+      z-index: 1;
+    }
+    .split-office {
+      z-index: 2;
+      clip-path: inset(0 0 0 50%);
+    }
+    .split-office img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* animated hotspots on office side */
+    .hotspots {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .hotspot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 12px var(--lime-glow);
+      animation: hotspot-pulse 2s ease-in-out infinite;
+    }
+    .hotspot::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 50%;
+      bottom: 100%;
+      transform: translateX(-50%);
+      margin-bottom: 6px;
+      white-space: nowrap;
+      font-size: 9px;
+      padding: 3px 8px;
+      background: rgba(26,31,46,0.9);
+      border: 1px solid var(--lime);
+      color: var(--lime);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .split-stage:hover .hotspot::after { opacity: 1; }
+    @keyframes hotspot-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    /* single frame from 128×192 sheets — 4×4 grid of 32×48 (RPG Maker XP) */
+    .npc-portrait {
+      --npc-scale: 2;
+      --npc-fw: 32;
+      --npc-fh: 48;
+      --npc-cols: 4;
+      --npc-rows: 4;
+      width: calc(var(--npc-fw) * 1px * var(--npc-scale));
+      height: calc(var(--npc-fh) * 1px * var(--npc-scale));
+      overflow: hidden;
+      position: relative;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .npc-portrait > img {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: calc(var(--npc-fw) * 1px * var(--npc-cols) * var(--npc-scale));
+      height: calc(var(--npc-fh) * 1px * var(--npc-rows) * var(--npc-scale));
+      max-width: none;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      pointer-events: none;
+    }
+    .npc-portrait--lg { --npc-scale: 2.5; }
+    .npc-portrait--sm { --npc-scale: 1.75; }
+    .npc-portrait--xs { --npc-scale: 1.5; }
+    .npc-portrait--walk > img {
+      animation: npc-walk 0.55s steps(4) infinite;
+    }
+    @keyframes npc-walk {
+      from { left: 0; }
+      to { left: calc(var(--npc-fw) * -3px * var(--npc-scale)); }
+    }
+
+    /* stats strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      max-width: 1100px;
+      margin: 56px auto 0;
+      padding: 0 20px;
+      background: #1e293b;
+      border: 1px solid #1e293b;
+    }
+    .stat-cell {
+      background: rgba(12, 15, 20, 0.9);
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .stat-cell strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--lime);
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+    .stat-cell span { font-size: 10px; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* work feed mock */
+    .feed-section {
+      max-width: 1100px;
+      margin: 64px auto;
+      padding: 0 20px;
+    }
+    .feed-panel {
+      border: 1px solid rgba(163, 230, 53, 0.25);
+      background: rgba(12, 15, 20, 0.8);
+      overflow: hidden;
+    }
+    .feed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #1e293b;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--lime);
+    }
+    .feed-header span:last-child { color: #64748b; }
+    .feed-lines {
+      padding: 12px 16px;
+      max-height: 140px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .feed-line {
+      font-size: 11px;
+      color: #94a3b8;
+      padding-left: 12px;
+      border-left: 2px solid #334155;
+      animation: feed-in 0.4s ease;
+    }
+    .feed-line em { color: var(--lime-bright); font-style: normal; }
+    .feed-line time { color: #475569; margin-right: 8px; }
+    @keyframes feed-in {
+      from { opacity: 0; transform: translateX(-8px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    .walkers {
+      position: absolute;
+      bottom: 8%;
+      left: 0;
+      right: 0;
+      height: 64px;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .walker {
+      position: absolute;
+      bottom: 0;
+      animation: walk-across linear infinite;
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+    }
+    @keyframes walk-across {
+      from { transform: translateX(-60px) scaleX(1); }
+      49% { transform: translateX(calc(100% + 60px)) scaleX(1); }
+      50% { transform: translateX(calc(100% + 60px)) scaleX(-1); }
+      to { transform: translateX(-60px) scaleX(-1); }
+    }
+
+    /* log stream */
+  .log-stream {
+      position: absolute;
+      inset: 0;
+      padding: 16px;
+      font-size: 10px;
+      line-height: 1.65;
+      color: #64748b;
+      overflow: hidden;
+    }
+    .log-line { margin: 0; }
+    .log-line .ts { color: #475569; }
+    .log-line .lvl-warn { color: #fbbf24; }
+    .log-line .lvl-err { color: #f87171; }
+    .log-line .lvl-info { color: var(--lime-bright); }
+    .log-line .key { color: #a78bfa; }
+
+    .split-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      margin-left: -2px;
+      background: var(--lime);
+      z-index: 20;
+      cursor: ew-resize;
+      box-shadow: 0 0 20px var(--lime-glow);
+    }
+    .split-handle::before {
+      content: "◀ ▶";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+      letter-spacing: -2px;
+      padding: 12px 8px;
+      background: var(--lime);
+      color: var(--ink);
+      font-weight: 700;
+      white-space: nowrap;
+      clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+    }
+    .split-hint {
+      text-align: center;
+      font-size: 10px;
+      color: #475569;
+      margin-top: 14px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .split-hint em { color: var(--lime); font-style: normal; }
+
+    /* ── Lucy reception dialogue ── */
+    .reception {
+      max-width: 1100px;
+      margin: 48px auto 0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 20px;
+      align-items: end;
+      padding: 0 20px;
+    }
+    .reception-npc {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .reception-npc .npc-portrait {
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+      animation: npc-idle 2s ease-in-out infinite;
+    }
+    @keyframes npc-idle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .speech {
+      position: relative;
+      background: rgba(12, 15, 20, 0.92);
+      color: var(--cream);
+      padding: 20px 24px;
+      border-radius: 2px;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 72px;
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 0 30px rgba(163, 230, 53, 0.03);
+      backdrop-filter: blur(12px);
+    }
+    .speech::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      bottom: 20px;
+      border: 10px solid transparent;
+      border-right-color: rgba(12, 15, 20, 0.92);
+      border-left: 0;
+    }
+    .speech .name {
+      font-family: var(--display);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--lime);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .speech .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--lime);
+      vertical-align: text-bottom;
+      animation: blink-cursor 0.8s step-end infinite;
+    }
+    @keyframes blink-cursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .speech-choices {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .speech-choices button {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 8px 14px;
+      border: 1px solid rgba(163, 230, 53, 0.5);
+      background: transparent;
+      color: var(--lime-bright);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .speech-choices button:hover {
+      background: var(--lime);
+      color: var(--ink);
+      border-color: var(--lime);
+    }
+
+    /* ── horizontal office floor scroll ── */
+    .floor-section {
+      margin: 80px 0;
+      overflow: hidden;
+    }
+    .floor-label {
+      padding: 0 20px;
+      max-width: 1100px;
+      margin: 0 auto 24px;
+    }
+    .floor-label h2 {
+      font-family: var(--display);
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 800;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .floor-label p { margin: 0; color: #94a3b8; font-size: 0.9rem; }
+
+    .floor-scroll {
+      display: flex;
+      gap: 16px;
+      padding: 20px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: var(--lime) #1e293b;
+    }
+    .floor-scroll::-webkit-scrollbar { height: 6px; }
+    .floor-scroll::-webkit-scrollbar-thumb { background: var(--lime); }
+
+    .room-card {
+      flex: 0 0 min(300px, 85vw);
+      scroll-snap-align: center;
+      background: var(--wall);
+      color: var(--ink);
+      border: 3px solid #a8a090;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .room-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--lime);
+      box-shadow: 0 0 32px rgba(163, 230, 53, 0.12);
+    }
+    .room-card .room-top {
+      height: 120px;
+      background: var(--floor);
+      position: relative;
+      border-bottom: 3px solid #a8a090;
+      image-rendering: pixelated;
+    }
+    .room-card .room-top::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+    .room-card .room-npc {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .room-card .room-body {
+      padding: 20px;
+    }
+    .room-card .room-tag {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      color: var(--lime);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .room-card h3 {
+      font-family: var(--display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .room-card p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #475569;
+    }
+
+    /* ── quest panel CTA ── */
+    .quest-board {
+      max-width: 1100px;
+      margin: 0 auto 80px;
+      padding: 0 20px;
+    }
+    .board-frame {
+      position: relative;
+      border: 1px solid rgba(163, 230, 53, 0.4);
+      background: rgba(12, 15, 20, 0.85);
+      box-shadow:
+        0 0 48px rgba(163, 230, 53, 0.06),
+        0 24px 64px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+    }
+    .board-frame::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--lime), transparent);
+    }
+    .board-inner {
+      color: var(--cream);
+      padding: 36px 32px 32px;
+    }
+    .board-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .board-header h2 {
+      font-family: var(--display);
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .board-meta {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--lime);
+      opacity: 0.8;
+    }
+    .quests {
+      display: grid;
+      gap: 2px;
+      margin-bottom: 28px;
+      border: 1px solid #1e293b;
+    }
+    .quest-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: rgba(26, 31, 46, 0.6);
+      border-left: 3px solid transparent;
+      font-size: 12px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .quest-row:hover {
+      background: rgba(26, 31, 46, 0.9);
+      border-left-color: var(--lime);
+    }
+    .quest-row.done {
+      opacity: 0.45;
+    }
+    .quest-row.done .quest-title {
+      text-decoration: line-through;
+      color: #64748b;
+    }
+    .quest-row .checkbox {
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--lime);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--lime);
+    }
+    .quest-row.done .checkbox { background: rgba(163, 230, 53, 0.15); }
+    .quest-row.done .checkbox::after { content: "×"; font-weight: 700; }
+    .quest-title { flex: 1; }
+    .quest-xp {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--lime);
+      font-weight: 600;
+    }
+    .board-cta {
+      display: block;
+      text-align: center;
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 0.9rem;
+      letter-spacing: 0.12em;
+      padding: 18px 32px;
+      background: var(--lime);
+      color: var(--ink);
+      text-decoration: none;
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      transition: filter 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 32px rgba(163, 230, 53, 0.25);
+    }
+    .board-cta:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 0 48px rgba(163, 230, 53, 0.4);
+    }
+
+    footer {
+      padding: 32px 20px 48px;
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+      border-top: 1px solid #1e293b;
+    }
+    footer a { color: var(--lime); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .reception { grid-template-columns: 1fr; }
+      .reception-npc { display: none; }
+      .speech::before { display: none; }
+      .hud-status { display: none; }
+      .stats-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+      #boot { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- boot sequence -->
+  <div id="boot" aria-hidden="true">
+    <div class="line">&gt; connecting to denizen hq...</div>
+    <div class="line">&gt; 16 agents online</div>
+    <div class="line">&gt; souls loaded ✓</div>
+    <div class="line">&gt; visitor clearance: granted</div>
+    <div class="line">&gt; floor 7 — observability deck</div>
+    <div class="big">DENIZEN</div>
+    <div class="skip">CLICK TO SKIP</div>
+  </div>
+
+  <!-- game HUD -->
+  <header class="hud-top">
+    <a class="hud-logo" href="/home">DENI<em>ZEN</em></a>
+    <div class="hud-status">
+      <span class="hud-pill"><span class="hud-dot"></span> 16 NPCs LIVE</span>
+      <span class="hud-pill">OFFICE HQ</span>
+    </div>
+    <a class="hud-enter" href="/">ENTER OFFICE →</a>
+  </header>
+
+  <!-- hero: split reality -->
+  <section class="hero">
+    <div class="hero-headline">
+      <h1>
+        <span class="strike">tail -f agent.log</span>
+        Walk into the work.
+      </h1>
+      <p>Drag the divider. Same agents — one side is how you debug today, the other is <strong style="color:var(--lime-bright);font-weight:500">Denizen</strong>.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/">Enter live office</a>
+        <a class="btn btn-ghost" href="/?demo=1">Demo mode</a>
+      </div>
+    </div>
+
+    <div class="ticker-wrap" aria-hidden="true">
+      <div class="ticker" id="ticker">
+        <span><span class="live">●</span> Marcus started standup</span>
+        <span>Lucy sent pipeline email</span>
+        <span>Bouncer patrol sector B2</span>
+        <span>office.xp +15 daily_ship_3</span>
+        <span>Grok claimed mesh job 8f2a</span>
+        <span>Roki closed deal +120 xp</span>
+        <span>Abby reviewing PR #847</span>
+        <span>visitor claimed assistant Lucy</span>
+        <span><span class="live">●</span> Marcus started standup</span>
+        <span>Lucy sent pipeline email</span>
+        <span>Bouncer patrol sector B2</span>
+        <span>office.xp +15 daily_ship_3</span>
+        <span>Grok claimed mesh job 8f2a</span>
+        <span>Roki closed deal +120 xp</span>
+        <span>Abby reviewing PR #847</span>
+        <span>visitor claimed assistant Lucy</span>
+      </div>
+    </div>
+
+    <div class="split-stage" id="split">
+      <span class="split-label split-label--logs">LOGS</span>
+      <span class="split-label split-label--office">OFFICE</span>
+      <div class="split-scanline"></div>
+      <div class="split-pane split-logs">
+        <div class="log-stream" id="log-stream"></div>
+      </div>
+      <div class="split-pane split-office" id="split-office">
+        <img src="./assets/ref_Hu4Gzs.png" alt="Denizen pixel office" />
+        <div class="hotspots">
+          <span class="hotspot" style="left:18%;top:22%" data-label="Marcus · standup"></span>
+          <span class="hotspot" style="left:52%;top:35%" data-label="Lucy · email pipeline"></span>
+          <span class="hotspot" style="left:72%;top:28%" data-label="Bouncer · patrol"></span>
+          <span class="hotspot" style="left:35%;top:58%" data-label="Abby · code review"></span>
+          <span class="hotspot" style="left:85%;top:65%" data-label="Roki · deal desk"></span>
+        </div>
+        <div class="walkers" id="walkers"></div>
+      </div>
+      <div class="split-handle" id="split-handle"></div>
+    </div>
+    <p class="split-hint">drag to reveal · <em id="split-pct">50</em>% office visible</p>
+
+    <!-- Lucy reception -->
+    <div class="reception">
+      <div class="reception-npc">
+        <div class="npc-portrait npc-portrait--lg" role="img" aria-label="Lucy">
+          <img src="./assets/Lucy.png" alt="" />
+        </div>
+      </div>
+      <div class="speech" id="speech">
+        <div class="name">Lucy · Front desk</div>
+        <div id="speech-text"></div>
+        <div class="speech-choices" id="speech-choices"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-strip reveal">
+    <div class="stat-cell"><strong>16</strong><span>AI agents</span></div>
+    <div class="stat-cell"><strong>0</strong><span>API keys to demo</span></div>
+    <div class="stat-cell"><strong>Live</strong><span>WebSocket sync</span></div>
+    <div class="stat-cell"><strong>HQ</strong><span>Quests &amp; achievements</span></div>
+  </div>
+
+  <!-- horizontal floor plan -->
+  <section class="floor-section reveal">
+    <div class="floor-label">
+      <h2>Every room does something real</h2>
+      <p>Scroll the floor plan — each desk is a live system, not a dashboard widget.</p>
+    </div>
+    <div class="floor-scroll">
+      <article class="room-card">
+        <div class="room-top"><div class="room-npc npc-portrait npc-portrait--sm"><img src="./assets/Conference_man.png" alt="" /></div></div>
+        <div class="room-body">
+          <div class="room-tag">ROOM 701</div>
+          <h3>Standup corner</h3>
+          <p>Marcus runs meetings. NPCs disagree. Abby arbitrates. You watch it happen.</p>
+        </div>
+      </article>
+      <article class="room-card">
+        <div class="room-top"><div class="room-npc npc-portrait npc-portrait--sm"><img src="./assets/Lucy.png" alt="" /></div></div>
+        <div class="room-body">
+          <div class="room-tag">ROOM 702</div>
+          <h3>Email &amp; pipeline</h3>
+          <p>Lucy sends mail, runs 7-step job pipelines, streams browser work to your feed.</p>
+        </div>
+      </article>
+      <article class="room-card">
+        <div class="room-top"><div class="room-npc npc-portrait npc-portrait--sm"><img src="./assets/Bouncer.png" alt="" /></div></div>
+        <div class="room-body">
+          <div class="room-tag">ROOM 703</div>
+          <h3>Security wing</h3>
+          <p>Bouncer patrols. Robbers spawn in-scene. Kali investigations escalate to Dan.</p>
+        </div>
+      </article>
+      <article class="room-card">
+        <div class="room-top"><div class="room-npc npc-portrait npc-portrait--sm"><img src="./assets/Grok.png" alt="" /></div></div>
+        <div class="room-body">
+          <div class="room-tag">ROOM 704</div>
+          <h3>Compute mesh</h3>
+          <p>Home-lab fleet runs mesh jobs. Desktop nodes contribute. Credits fuel the queue.</p>
+        </div>
+      </article>
+      <article class="room-card">
+        <div class="room-top"><div class="room-npc npc-portrait npc-portrait--sm"><img src="./assets/Roki.png" alt="" /></div></div>
+        <div class="room-body">
+          <div class="room-tag">ROOM 705</div>
+          <h3>Deal desk</h3>
+          <p>CRM spine, federal pipeline, Robinhood live — outcomes level up your office.</p>
+        </div>
+      </article>
+      <article class="room-card">
+        <div class="room-top"><div class="room-npc npc-portrait npc-portrait--sm"><img src="./assets/Abby.png" alt="" /></div></div>
+        <div class="room-body">
+          <div class="room-tag">ROOM 706</div>
+          <h3>Office HQ</h3>
+          <p>Daily quests, achievements, NPC leaderboard. Gamification tied to real metrics.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="feed-section reveal">
+    <div class="feed-panel">
+      <div class="feed-header">
+        <span>WORK FEED</span>
+        <span>TAB TO TOGGLE IN-OFFICE</span>
+      </div>
+      <div class="feed-lines" id="feed-lines"></div>
+    </div>
+  </section>
+
+  <!-- quest board CTA -->
+  <section class="quest-board reveal">
+    <div class="board-frame">
+      <div class="board-inner">
+        <div class="board-header">
+          <h2>Daily Objectives</h2>
+          <span class="board-meta">OFFICE_HQ · RESET 00:00 UTC</span>
+        </div>
+        <div class="quests">
+          <div class="quest-row done">
+            <span class="checkbox"></span>
+            <span class="quest-title">Ship 3 tasks</span>
+            <span class="quest-xp">+15 XP</span>
+          </div>
+          <div class="quest-row">
+            <span class="checkbox"></span>
+            <span class="quest-title">Close 2 tickets</span>
+            <span class="quest-xp">+10 XP</span>
+          </div>
+          <div class="quest-row">
+            <span class="checkbox"></span>
+            <span class="quest-title">Hold a 7-day streak</span>
+            <span class="quest-xp">+80 XP</span>
+          </div>
+        </div>
+        <a class="board-cta" href="/">ENTER LIVE OFFICE</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+  <a href="https://github.com/Dolonia333/DENIZEN" target="_blank" rel="noopener">GitHub</a>
+    · <a href="/">Live office</a> · <a href="/?demo=1">Demo mode</a> · <a href="/desktop/download.html">Desktop</a>
+    <br /><br />© Denizen — your agents have an office now
+  </footer>
+
+  <script>
+  (function () {
+    // ── boot dismiss ──
+    const boot = document.getElementById('boot');
+    const skipBoot = () => boot?.classList.add('hide');
+    setTimeout(skipBoot, 2400);
+    boot?.addEventListener('click', skipBoot);
+
+    // ── split slider ──
+    const stage = document.getElementById('split');
+    const office = document.getElementById('split-office');
+    const handle = document.getElementById('split-handle');
+    let pct = 50;
+    let dragging = false;
+
+    function setSplit(p) {
+      pct = Math.max(8, Math.min(92, p));
+      office.style.clipPath = `inset(0 0 0 ${pct}%)`;
+      handle.style.left = pct + '%';
+      const pctEl = document.getElementById('split-pct');
+      if (pctEl) pctEl.textContent = String(Math.round(100 - pct));
+    }
+    setSplit(50);
+
+    function pointerX(e) {
+      const r = stage.getBoundingClientRect();
+      return ((e.clientX ?? e.touches?.[0]?.clientX) - r.left) / r.width * 100;
+    }
+    handle.addEventListener('pointerdown', (e) => { dragging = true; handle.setPointerCapture(e.pointerId); });
+    handle.addEventListener('pointermove', (e) => { if (dragging) setSplit(pointerX(e)); });
+    handle.addEventListener('pointerup', () => { dragging = false; });
+    stage.addEventListener('pointerdown', (e) => {
+      if (e.target === handle || e.target.closest('.split-handle')) return;
+      dragging = true;
+      setSplit(pointerX(e));
+    });
+    stage.addEventListener('pointermove', (e) => {
+      if (dragging) setSplit(pointerX(e));
+    });
+    stage.addEventListener('pointerup', () => { dragging = false; });
+    stage.addEventListener('pointercancel', () => { dragging = false; });
+
+    // auto-tease animation on load
+    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      let t = 0;
+      const tease = setInterval(() => {
+        t += 0.02;
+        setSplit(50 + Math.sin(t) * 22);
+        if (t > Math.PI * 2) { clearInterval(tease); setSplit(62); }
+      }, 30);
+    }
+
+    // ── fake log stream ──
+    const LOG_TEMPLATES = [
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> agent.marcus task=standup status=<span class="key">running</span>`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-warn">WARN</span> llm.latency_ms=4200 model=lmstudio`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> tool.github.push branch=feature/denizen-hq`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-err">ERR</span>  you still cannot <em>see</em> any of this happening`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> npc.lucy pipeline=email step=4/7`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> mesh.job id=8f2a worker=kali status=claimed`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-warn">WARN</span> bouncer.patrol threat=robber_spawn sector=B2`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> office.xp +15 quest=daily_ship_3`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-info">INFO</span> visitor.session claimed_assistant=Lucy`,
+      () => `<span class="ts">${new Date().toISOString().slice(11,19)}</span> <span class="lvl-err">ERR</span>  ← drag the divider already`,
+    ];
+    const logEl = document.getElementById('log-stream');
+    const lines = [];
+    function pushLog() {
+      const tpl = LOG_TEMPLATES[Math.floor(Math.random() * LOG_TEMPLATES.length)];
+      lines.push(`<p class="log-line">${tpl()}</p>`);
+      if (lines.length > 18) lines.shift();
+      logEl.innerHTML = lines.join('');
+    }
+    pushLog();
+    setInterval(pushLog, 900);
+
+    // ── walking NPCs ──
+    const WALKERS = [
+      { img: 'Bob.png', dur: 28, delay: 0 },
+      { img: 'Jenny.png', dur: 22, delay: -8 },
+      { img: 'Edward.png', dur: 35, delay: -15 },
+    ];
+    const walkersEl = document.getElementById('walkers');
+    WALKERS.forEach((w) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'walker npc-portrait npc-portrait--xs npc-portrait--walk';
+      const img = document.createElement('img');
+      img.src = './assets/' + w.img;
+      img.alt = '';
+      wrap.appendChild(img);
+      wrap.style.animationDuration = w.dur + 's';
+      wrap.style.animationDelay = w.delay + 's';
+      walkersEl.appendChild(wrap);
+    });
+
+    // ── Lucy dialogue tree ──
+    const DIALOGUE = {
+      start: {
+        text: "Welcome to Denizen HQ! I'm Lucy — I run email, pipelines, and front-desk chaos. What brings you in?",
+        choices: [
+          { label: "What is Denizen?", next: 'what' },
+          { label: "Show me the agents", next: 'agents' },
+          { label: "I'm ready — let me in", href: '/' },
+        ],
+      },
+      what: {
+        text: "It's observability you can actually watch. Sixteen AI agents with souls and memory, walking around a pixel office doing real work. No API keys needed for the demo.",
+        choices: [
+          { label: "How is this different from logs?", next: 'logs' },
+          { label: "Enter the office →", href: '/' },
+        ],
+      },
+      agents: {
+        text: "Marcus runs standups. Bouncer patrols security. Grok lives on the mesh. Roki closes deals. Abby reviews code. They're not chatbots — they're coworkers you can see.",
+        choices: [
+          { label: "Can I talk to them?", next: 'talk' },
+          { label: "Enter the office →", href: '/' },
+        ],
+      },
+      logs: {
+        text: "Drag the slider above! Logs tell you something happened. Denizen shows you who did it, where they were standing, and what they said about it.",
+        choices: [{ label: "Enter the office →", href: '/' }],
+      },
+      talk: {
+        text: "Walk up to any NPC in the office. Proximity audio, voice sessions, player chat — you're a visitor on the floor, not a user in a dashboard.",
+        choices: [{ label: "Clock in →", href: '/' }],
+      },
+    };
+
+    const speechText = document.getElementById('speech-text');
+    const speechChoices = document.getElementById('speech-choices');
+    let typingTimer;
+
+    function typeText(text, cb) {
+      clearInterval(typingTimer);
+      speechText.innerHTML = '';
+      let i = 0;
+      typingTimer = setInterval(() => {
+        speechText.textContent = text.slice(0, i);
+        i++;
+        if (i > text.length) {
+          clearInterval(typingTimer);
+          speechText.innerHTML = text + '<span class="cursor-blink"></span>';
+          cb?.();
+        }
+      }, 18);
+    }
+
+    function showNode(key) {
+      const node = DIALOGUE[key];
+      if (!node) return;
+      speechChoices.innerHTML = '';
+      typeText(node.text, () => {
+        node.choices.forEach((c) => {
+          const btn = document.createElement('button');
+          btn.textContent = c.label;
+          if (c.href) {
+            btn.onclick = () => { window.location.href = c.href; };
+          } else {
+            btn.onclick = () => showNode(c.next);
+          }
+          speechChoices.appendChild(btn);
+        });
+      });
+    }
+    showNode('start');
+
+    // ── work feed mock ──
+    const FEED_EVENTS = [
+      ['Marcus', 'called standup — 4 NPCs en route'],
+      ['Lucy', 'shipped email pipeline step 5/7'],
+      ['Bouncer', 'flagged robber spawn in sector B2'],
+      ['Abby', 'approved animation proposal #12'],
+      ['Roki', 'won deal — office +120 XP'],
+      ['Grok', 'completed mesh telemetry job'],
+      ['Jenny', 'pushed to feature/denizen-hq'],
+      ['Bob', 'filed research brief to work feed'],
+    ];
+    const feedEl = document.getElementById('feed-lines');
+    const feedLines = [];
+    function pushFeed() {
+      const [who, what] = FEED_EVENTS[Math.floor(Math.random() * FEED_EVENTS.length)];
+      const t = new Date().toTimeString().slice(0, 8);
+      const el = document.createElement('div');
+      el.className = 'feed-line';
+      el.innerHTML = `<time>${t}</time><em>${who}</em> ${what}`;
+      feedLines.unshift(el);
+      if (feedLines.length > 5) feedLines.pop();
+      feedEl.innerHTML = '';
+      feedLines.forEach((l) => feedEl.appendChild(l));
+    }
+    pushFeed();
+    setInterval(pushFeed, 2200);
+
+    // ── scroll reveal ──
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    revealEls.forEach((el) => io.observe(el));
+  })();
+  </script>
+</body>
+</html>

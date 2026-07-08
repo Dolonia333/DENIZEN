@@ -2,9 +2,9 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { intakeQualifiedHandoff, findOverdueTasks } = require('../src/denizen-crm-handoffs');
-const { applyServerAutomations } = require('../src/denizen-crm-automations');
-const { proposeActions, mergeWorkspaceStates } = require('../src/denizen-crm-assist');
+const { intakeQualifiedHandoff, findOverdueTasks } = require('../src/crm/denizen-crm-handoffs');
+const { applyServerAutomations } = require('../src/crm/denizen-crm-automations');
+const { proposeActions, mergeWorkspaceStates } = require('../src/crm/denizen-crm-assist');
 
 describe('denizen-crm-handoffs', () => {
   it('creates contact and deal on qualified intake', () => {

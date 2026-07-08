@@ -10,12 +10,12 @@
 |---|---|
 | [`src/world-state.js`](../src/world-state.js) | Single in-memory object every subsystem reads from / writes to |
 | [`src/agent-bus.js`](../src/agent-bus.js) | Pub/sub for direct NPC↔NPC messages — no CTO brokering |
-| [`src/voice-gate.js`](../src/voice-gate.js) | Browser-side presence flag + pluggable TTS (default: SpeechSynthesis) |
-| [`src/sentiment.js`](../src/sentiment.js) | Cheap keyword-regex mood classifier; `worldState.recordSelfMessage` calls it and stamps `lastMood` on the NPC |
-| [`src/animation-forge.js`](../src/animation-forge.js) | Validates animation proposals; future home of the composition / AI-gen / local-SD renderers |
-| [`src/soul-reflection.js`](../src/soul-reflection.js) | Builds the SOUL-revision reflection prompt + applies approved proposals to disk |
-| [`src/capability-proposal.js`](../src/capability-proposal.js) | Validates capability proposals (new action verbs NPCs want) |
-| [`src/proposals-panel.js`](../src/proposals-panel.js) | Browser-side operator review UI (bottom-right chip + cards) |
+| [`src/voice/voice-gate.js`](../src/voice/voice-gate.js) | Browser-side presence flag + pluggable TTS (default: SpeechSynthesis) |
+| [`src/pipelines/sentiment.js`](../src/pipelines/sentiment.js) | Cheap keyword-regex mood classifier; `worldState.recordSelfMessage` calls it and stamps `lastMood` on the NPC |
+| [`src/pipelines/animation-forge.js`](../src/pipelines/animation-forge.js) | Validates animation proposals; future home of the composition / AI-gen / local-SD renderers |
+| [`src/pipelines/soul-reflection.js`](../src/pipelines/soul-reflection.js) | Builds the SOUL-revision reflection prompt + applies approved proposals to disk |
+| [`src/pipelines/capability-proposal.js`](../src/pipelines/capability-proposal.js) | Validates capability proposals (new action verbs NPCs want) |
+| [`src/hud/panels/proposals-panel.js`](../src/hud/panels/proposals-panel.js) | Browser-side operator review UI (bottom-right chip + cards) |
 | Core HTTP — `/api/world-state`, `/api/presence`, `/api/task-update`, `/api/agent-bus` | Existing entry points |
 | Furniture (Stage 1) — `/api/place-furniture`, `/api/remove-furniture` | NPC live mutation; broadcasts `furniture_placed` / `furniture_removed` on `/agent-ws` |
 | Animation (Stage 2 p1) — `/api/request-animation`, `/api/animation-proposals`, `/api/animation-proposal/approve` | Operator-gated proposal queue |
@@ -150,7 +150,7 @@ agentBus.subscribe('*', (msg) => /* mirror to UI */);
 
 ## Voice Gate
 
-`src/voice-gate.js` runs in the browser. It owns three things:
+`src/voice/voice-gate.js` runs in the browser. It owns three things:
 
 1. **`window.DenizenPresence`** — `{ zionPresent: bool }`, mirrored from server.
 2. **`window.DenizenSpeak(npcName, text)`** — fire-and-forget audio. No-op
@@ -162,7 +162,7 @@ agentBus.subscribe('*', (msg) => /* mirror to UI */);
 ### Plugging in ElevenLabs (or any other TTS)
 
 **ElevenLabs is built in.** Set `ELEVENLABS_API_KEY` in your env (or in
-`~/.openclaw/.env`) and `src/elevenlabs-provider.js` auto-installs on
+`~/.openclaw/.env`) and `src/voice/elevenlabs-provider.js` auto-installs on
 boot — no code changes. See **[VOICE.md](VOICE.md)** for the full setup,
 the per-NPC voice map, the smoke CLI, and the `/api/tts` endpoint shape.
 
@@ -250,7 +250,7 @@ immediately because the UI needs them instant:
 
 Immediate frames use the unbatched `{ "type": "world_state", "kind", "payload" }` shape.
 
-`src/agent-office-manager.js` attaches the WebSocket to
+`src/npc/agent-office-manager.js` attaches the WebSocket to
 `window.__DenizenAgentWs`, so any module — `voice-gate.js`,
 `openclaw-chat.js`, your own — can listen on the same connection without
 opening a second one.
@@ -260,7 +260,7 @@ opening a second one.
 ## External sinks (Supabase / n8n outbound)
 
 The opposite direction of `/api/task-update`. When the world changes,
-`src/external-sink.js` POSTs the same payload to your Supabase Edge
+`src/intelligence/external-sink.js` POSTs the same payload to your Supabase Edge
 Function or n8n webhook so dashboards, logs, and downstream automations
 can react in real time.
 

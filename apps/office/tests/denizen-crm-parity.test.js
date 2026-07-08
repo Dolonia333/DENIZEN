@@ -6,9 +6,9 @@ const {
   inferCrmAction,
   canNpcRunSkill,
   skillOwner,
-} = require('../src/denizen-crm-npc-personas');
-const { ALL_CRM_SKILLS, formatRunSkillLine } = require('../src/denizen-crm-operator');
-const { parseContactImportRows } = require('../src/denizen-crm-skills');
+} = require('../src/crm/denizen-crm-npc-personas');
+const { ALL_CRM_SKILLS, formatRunSkillLine } = require('../src/crm/denizen-crm-operator');
+const { parseContactImportRows } = require('../src/crm/denizen-crm-skills');
 
 describe('denizen-crm-operator', () => {
   it('lists all CRM skills', () => {

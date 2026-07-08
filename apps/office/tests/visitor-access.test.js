@@ -14,7 +14,7 @@ describe('visitor access config', () => {
     process.env.DENIZEN_CEO_ACCESS_CODE = 'ceo-secret';
     process.env.DENIZEN_DEMO_ORG_SLUG = 'acme';
     process.env.DENIZEN_TEAM_ORG_SLUG = 'zion';
-    delete require.cache[require.resolve('../src/prompt-tuning.js')];
+    delete require.cache[require.resolve('../src/intelligence/prompt-tuning.js')];
   });
 
   afterEach(() => {
@@ -26,12 +26,12 @@ describe('visitor access config', () => {
     else process.env.DENIZEN_DEMO_ORG_SLUG = origDemo;
     if (origTeamOrg == null) delete process.env.DENIZEN_TEAM_ORG_SLUG;
     else process.env.DENIZEN_TEAM_ORG_SLUG = origTeamOrg;
-    delete require.cache[require.resolve('../src/prompt-tuning.js')];
+    delete require.cache[require.resolve('../src/intelligence/prompt-tuning.js')];
   });
 
   it('toClientConfig exposes visitorAccess without secrets', () => {
-    const promptTuning = require('../src/prompt-tuning.js');
-    const { minPasswordLength, isDevPasswordRelaxed } = require('../src/denizen-team-password.js');
+    const promptTuning = require('../src/intelligence/prompt-tuning.js');
+    const { minPasswordLength, isDevPasswordRelaxed } = require('../src/auth/denizen-team-password.js');
     const cfg = promptTuning.toClientConfig();
     assert.equal(cfg.visitorAccess.demoOrgSlug, 'acme');
     assert.equal(cfg.visitorAccess.teamOrgSlug, 'zion');
@@ -48,7 +48,7 @@ describe('visitor access config', () => {
   });
 
   it('verifyVisitorAccessCode validates team and ceo codes', () => {
-    const promptTuning = require('../src/prompt-tuning.js');
+    const promptTuning = require('../src/intelligence/prompt-tuning.js');
     const team = promptTuning.verifyVisitorAccessCode('1921', 'team');
     assert.equal(team.ok, true);
     assert.equal(team.org_slug, 'zion');
@@ -64,7 +64,7 @@ describe('visitor access config', () => {
 
 describe('visitor-access canUseRealWork', () => {
   const { canUseRealWork, assertTeamFeature, VisitorAccessError, DEMO_RESTRICTED_FEATURES } =
-    require('../src/visitor-access.js');
+    require('../src/visitors/visitor-access.js');
 
   it('demo tier never gets real work', () => {
     assert.equal(canUseRealWork({ tier: 'demo' }, { allow_real_work: true }), false);
@@ -103,11 +103,11 @@ describe('visitor-access canUseRealWork', () => {
 
   it('verifyAccessCode issues signed access_grant for ceo code', () => {
     process.env.DENIZEN_CEO_ACCESS_CODE = 'ceo-secret';
-    delete require.cache[require.resolve('../src/prompt-tuning.js')];
-    delete require.cache[require.resolve('../src/visitor-session-auth.js')];
-    delete require.cache[require.resolve('../src/visitor-access.js')];
-    const { verifyAccessCode } = require('../src/visitor-access.js');
-    const sessionAuth = require('../src/visitor-session-auth.js');
+    delete require.cache[require.resolve('../src/intelligence/prompt-tuning.js')];
+    delete require.cache[require.resolve('../src/visitors/visitor-session-auth.js')];
+    delete require.cache[require.resolve('../src/visitors/visitor-access.js')];
+    const { verifyAccessCode } = require('../src/visitors/visitor-access.js');
+    const sessionAuth = require('../src/visitors/visitor-session-auth.js');
     const result = verifyAccessCode('ceo-secret', 'ceo');
     assert.equal(result.ok, true);
     assert.ok(result.ceo_grant);
@@ -120,11 +120,11 @@ describe('visitor-access canUseRealWork', () => {
 
   it('verifyAccessCode issues signed access_grant for team code', () => {
     process.env.DENIZEN_TEAM_CODE = '1921';
-    delete require.cache[require.resolve('../src/prompt-tuning.js')];
-    delete require.cache[require.resolve('../src/visitor-session-auth.js')];
-    delete require.cache[require.resolve('../src/visitor-access.js')];
-    const { verifyAccessCode } = require('../src/visitor-access.js');
-    const sessionAuth = require('../src/visitor-session-auth.js');
+    delete require.cache[require.resolve('../src/intelligence/prompt-tuning.js')];
+    delete require.cache[require.resolve('../src/visitors/visitor-session-auth.js')];
+    delete require.cache[require.resolve('../src/visitors/visitor-access.js')];
+    const { verifyAccessCode } = require('../src/visitors/visitor-access.js');
+    const sessionAuth = require('../src/visitors/visitor-session-auth.js');
     const result = verifyAccessCode('1921', 'team');
     assert.equal(result.ok, true);
     assert.ok(result.access_grant);
@@ -145,12 +145,12 @@ describe('visitor-access module', () => {
     calls = [];
     process.env.DENIZEN_DEMO_ORG_SLUG = 'acme';
     process.env.DENIZEN_TEAM_ORG_SLUG = 'zion';
-    delete require.cache[require.resolve('../src/prompt-tuning.js')];
-    delete require.cache[require.resolve('../src/denizen-db.js')];
-    delete require.cache[require.resolve('../src/denizen-visitor.js')];
-    delete require.cache[require.resolve('../src/visitor-access.js')];
+    delete require.cache[require.resolve('../src/intelligence/prompt-tuning.js')];
+    delete require.cache[require.resolve('../src/intelligence/denizen-db.js')];
+    delete require.cache[require.resolve('../src/visitors/denizen-visitor.js')];
+    delete require.cache[require.resolve('../src/visitors/visitor-access.js')];
 
-    const denizenDb = require('../src/denizen-db.js');
+    const denizenDb = require('../src/intelligence/denizen-db.js');
     denizenDb.enabled = true;
     denizenDb.orgSlug = 'zion';
 
@@ -204,7 +204,7 @@ describe('visitor-access module', () => {
       assertTeamFeature,
       VisitorAccessError,
       visitorAccessErrorStatus,
-    } = require('../src/visitor-access.js');
+    } = require('../src/visitors/visitor-access.js');
 
     const access = await resolveSessionAccess(SESSION_ID);
     assert.equal(access.tier, 'demo');

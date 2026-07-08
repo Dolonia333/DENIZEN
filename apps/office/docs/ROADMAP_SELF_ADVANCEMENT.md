@@ -43,7 +43,7 @@ its own and can ship independently.
   returns the queue. The actual sprite generation backends are still
   future work. See [ANIMATION_FORGE.md](ANIMATION_FORGE.md).
 - **SOUL.md reflection + proposal queue (Stage 3 steps 1-2)** —
-  `src/soul-reflection.js` builds the reflection prompt and validates
+  `src/pipelines/soul-reflection.js` builds the reflection prompt and validates
   proposals. `npcBrains.reflectOnDay(name)` runs the prompt through the
   NPC's existing LLM and POSTs the validated `{ addToSoul,
   dropFromSoul, summary, confidence }` to `/api/soul-proposal`. Cap:
@@ -72,7 +72,7 @@ its own and can ship independently.
   `GET /api/capability-proposals[?status=...]` lists the queue.
   `POST /api/capability-proposal/approve` flips `status` and records a
   review block — it does **not** implement the verb. Manual
-  implementation in `src/agent-actions.js` and the speculative
+  implementation in `src/npc/agent-actions.js` and the speculative
   LLM-assisted code-gen variant remain explicit future work (steps
   2-4 below). See [CAPABILITY_PROPOSALS.md](CAPABILITY_PROPOSALS.md).
 
@@ -87,7 +87,7 @@ Concrete steps:
 1. **`[ACTION:requestAnimation:animName:description]`** — NPC asks
    for a new animation. The request goes to a queue. **(Shipped — see
    [ANIMATION_FORGE.md](ANIMATION_FORGE.md).)**
-2. **Server-side generator** — `src/animation-forge.js` builds a sprite
+2. **Server-side generator** — `src/pipelines/animation-forge.js` builds a sprite
    sheet from the description. Three increasingly powerful options:
    - **Composition** (today, cheap): pick existing frames and layer/
      tint them. E.g. "Roki reading at desk" = existing sit-down frame
@@ -120,7 +120,7 @@ doing well or struggling with.
 
 Concrete steps:
 
-1. **Daily reflection pass — SHIPPED** — `src/soul-reflection.js`
+1. **Daily reflection pass — SHIPPED** — `src/pipelines/soul-reflection.js`
    builds the reflection prompt, `npcBrains.reflectOnDay(npcName)` runs
    it through the NPC's existing LLM provider, parses + validates the
    `{ addToSoul, dropFromSoul, summary, confidence }` JSON. Not on a
@@ -180,7 +180,7 @@ Concrete steps:
    The approve endpoint exists, but a dedicated review UI does not.
    Today the operator tails the JSON file.
 3. **Manual implementation — FUTURE.** Once approved, you implement
-   the action in `src/agent-actions.js` and the verb becomes available
+   the action in `src/npc/agent-actions.js` and the verb becomes available
    in every NPC's prompt the next restart. This step is intentionally
    *not* automated — approval is a label, not a deployment.
 4. **Eventually: LLM-assisted implementation — FUTURE.** Feed the

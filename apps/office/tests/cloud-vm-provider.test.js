@@ -6,7 +6,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 
-const cloudVm = require('../src/cloud-vm-provider');
+const cloudVm = require('../src/compute/cloud-vm-provider');
 
 describe('cloud-vm-provider', () => {
   it('canProvision allows DevOps NPCs and approved skills', () => {

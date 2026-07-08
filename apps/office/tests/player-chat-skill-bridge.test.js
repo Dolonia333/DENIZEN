@@ -2,9 +2,9 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const bridge = require('../src/player-chat-skill-bridge');
-const advisor = require('../src/task-resource-advisor');
-const { roleCanApproveSkills } = require('../src/denizen-team-auth');
+const bridge = require('../src/hud/player-chat-skill-bridge');
+const advisor = require('../src/pipelines/task-resource-advisor');
+const { roleCanApproveSkills } = require('../src/auth/denizen-team-auth');
 
 describe('player-chat-skill-bridge', () => {
   it('parses RUN_SKILL tags with JSON params', () => {
@@ -111,7 +111,7 @@ describe('task-resource-advisor', () => {
 });
 
 describe('team-auth skill approval roles', () => {
-  const teamAuth = require('../src/denizen-team-auth');
+  const teamAuth = require('../src/auth/denizen-team-auth');
 
   it('allows owner and admin only', () => {
     assert.equal(roleCanApproveSkills('owner'), true);

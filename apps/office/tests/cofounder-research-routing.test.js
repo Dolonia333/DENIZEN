@@ -3,9 +3,9 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const CofounderAgent = require('../src/cofounder-agent');
-const researchRouter = require('../src/research-router');
-const stationBridge = require('../src/denizen-station-skill-bridge');
+const CofounderAgent = require('../src/compute/cofounder-agent');
+const researchRouter = require('../src/intelligence/research-router');
+const stationBridge = require('../src/station/denizen-station-skill-bridge');
 
 describe('cofounder-agent prompt', () => {
   it('_getSystemPrompt does not throw with normal office state', () => {

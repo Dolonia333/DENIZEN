@@ -5,9 +5,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { evaluateGate, scanBrandRisks } = require('../src/content-gate');
-const contentPipeline = require('../src/content-pipeline');
-const taskChain = require('../src/task-chain');
+const { evaluateGate, scanBrandRisks } = require('../src/pipelines/content-gate');
+const contentPipeline = require('../src/pipelines/content-pipeline');
+const taskChain = require('../src/pipelines/task-chain');
 const { TaskChainRunner } = taskChain;
 
 describe('content-gate', () => {

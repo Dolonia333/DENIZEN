@@ -2,8 +2,8 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const computeCredits = require('./src/denizen-compute-credits.js');
-const contributionTracker = require('./src/denizen-contribution-tracker.js');
+const computeCredits = require('./src/compute/denizen-compute-credits.js');
+const contributionTracker = require('./src/compute/denizen-contribution-tracker.js');
 
 describe('denizen-compute-credits', () => {
   it('scales job credits by hardware score and contribution level', () => {

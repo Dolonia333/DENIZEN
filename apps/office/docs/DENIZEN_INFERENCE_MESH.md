@@ -51,12 +51,12 @@ flowchart TB
 
 | File | Purpose |
 |------|---------|
-| `src/denizen-inference-runtime.js` | Probe + chat for **Ollama** and **LM Studio** |
-| `src/denizen-inference-rpc.js` | Enqueue/wait `inference_rpc` jobs on city server |
-| `src/denizen-mesh-job-runner.js` | Runs `inference_rpc` + `npc_think_batch` via runtime |
-| `src/denizen-hardware-monitor.js` | Reports `inference` block in heartbeats |
-| `src/lm-studio-router.js` | `rpc_capable`, `inference_mode`, scoring for RPC nodes |
-| `src/npc-brains.js` | Auto-fallback to mesh RPC when direct fails |
+| `src/compute/denizen-inference-runtime.js` | Probe + chat for **Ollama** and **LM Studio** |
+| `src/compute/denizen-inference-rpc.js` | Enqueue/wait `inference_rpc` jobs on city server |
+| `src/compute/denizen-mesh-job-runner.js` | Runs `inference_rpc` + `npc_think_batch` via runtime |
+| `src/compute/denizen-hardware-monitor.js` | Reports `inference` block in heartbeats |
+| `src/integrations/lm-studio-router.js` | `rpc_capable`, `inference_mode`, scoring for RPC nodes |
+| `src/npc/npc-brains.js` | Auto-fallback to mesh RPC when direct fails |
 | `POST /api/compute/inference/run` | Debug / API inference with auto routing |
 
 **Env vars**
@@ -190,7 +190,7 @@ Only the matching worker (same `machine_id` on claim) executes the job.
 ## Smoke checks
 
 ```powershell
-cd denizen
+cd apps/office
 node --test tests/denizen-inference-runtime.test.js
 node --test tests/denizen-inference-rpc.test.js
 node --test tests/lm-studio-router.test.js

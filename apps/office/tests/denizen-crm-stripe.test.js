@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const crmStripe = require('../src/denizen-crm-stripe');
+const crmStripe = require('../src/crm/denizen-crm-stripe');
 
 describe('denizen-crm-stripe', () => {
   it('quoteAmountCents enforces minimum 50 cents', () => {

@@ -4,9 +4,9 @@
 const path = require('path');
 try { require('dotenv').config({ path: path.join(__dirname, '..', '.env') }); } catch (_) {}
 
-const denizenDb = require('../src/denizen-db');
-const businessContext = require('../src/denizen-business-context');
-const genericSoulPack = require('../src/generic-soul-pack');
+const denizenDb = require('../src/intelligence/denizen-db');
+const businessContext = require('../src/compute/denizen-business-context');
+const genericSoulPack = require('../src/npc/generic-soul-pack');
 
 async function main() {
   const orgSlug = process.argv[2] || process.env.DENIZEN_ORG_SLUG || 'zion';

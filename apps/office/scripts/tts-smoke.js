@@ -72,8 +72,8 @@ async function main() {
   let modelId = args.modelId;
   if (args.npc) {
     try {
-      const roster = require('../src/npc-roster');
-      const voiceResolve = require('../src/voice-resolve');
+      const roster = require('../src/npc/npc-roster');
+      const voiceResolve = require('../src/voice/voice-resolve');
       const map = voiceResolve.applyRosterToVoiceMap(
         JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'voice-map.json'), 'utf8')),
         roster,

@@ -12,7 +12,7 @@ const {
   submitFeedback,
   listRecentFeedback,
   parseJsonlLines,
-} = require('../src/denizen-desktop-feedback');
+} = require('../src/desktop/denizen-desktop-feedback');
 
 function mkTmpLog() {
   return path.join(

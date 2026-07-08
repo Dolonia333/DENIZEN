@@ -3,12 +3,12 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { DenizenDb } = require('../src/denizen-db.js');
+const { DenizenDb } = require('../src/intelligence/denizen-db.js');
 const {
   runPredictionMaintenance,
   getPredictionSummary,
   recordPrediction,
-} = require('../src/denizen-prediction-loop.js');
+} = require('../src/intelligence/denizen-prediction-loop.js');
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111';
 const PRED_ID = '22222222-2222-2222-2222-222222222222';

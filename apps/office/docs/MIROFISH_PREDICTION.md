@@ -13,7 +13,7 @@ This integration is optional and non-blocking: when MiroFish is unavailable, Den
   - Base URL for MiroFish.
   - Defaults to `http://localhost:5001`.
 
-Config parsing lives in `src/mirofish-prediction.js` via `getConfig()`.
+Config parsing lives in `src/intelligence/mirofish-prediction.js` via `getConfig()`.
 
 ## API Endpoints
 
@@ -47,7 +47,7 @@ Heuristics vary by entity type:
 
 ## Prediction Persistence
 
-Forecasts are normalized and written to `denizen_predictions` through `recordPrediction()` in `src/denizen-prediction-loop.js`.
+Forecasts are normalized and written to `denizen_predictions` through `recordPrediction()` in `src/intelligence/denizen-prediction-loop.js`.
 
 MiroFish-backed records use:
 

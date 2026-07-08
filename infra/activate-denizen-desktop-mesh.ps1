@@ -1,8 +1,8 @@
 # Activate Denizen Desktop as a City Power mesh node on dolonia (.232).
-# Run on the GPU PC after building: denizen/desktop/dist-build/Denizen-Setup.exe
+# Run on the GPU PC after building: apps/office/desktop/dist-build/Denizen-Setup.exe
 
 param(
-  [string]$Installer = "$PSScriptRoot\..\denizen\desktop\dist-build\Denizen-Setup.exe",
+  [string]$Installer = "$PSScriptRoot\..\apps\office\desktop\dist-build\Denizen-Setup.exe",
   [string]$ServerUrl = "http://192.168.1.237:8888",
   [string]$DenizenExe = "$env:LOCALAPPDATA\Programs\Denizen\Denizen.exe",
   [string]$SetupFile = "$env:APPDATA\Denizen\denizen-desktop-setup.json"
@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 function Write-Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
 
 if (-not (Test-Path $Installer)) {
-  throw "Installer not found: $Installer`nRun: cd denizen/desktop && npm run build:win"
+  throw "Installer not found: $Installer`nRun: cd apps/office/desktop && npm run build:win"
 }
 
 Write-Step "Silent install"

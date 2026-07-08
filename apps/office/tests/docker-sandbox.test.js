@@ -6,7 +6,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 
-const vmSandbox = require('../src/vm-sandbox');
+const vmSandbox = require('../src/compute/vm-sandbox');
 
 describe('vm-sandbox', () => {
   it('canCreateSandbox allows DevOps NPCs', () => {

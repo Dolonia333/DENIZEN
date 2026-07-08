@@ -1,5 +1,5 @@
 /**
- * Browser-side sync client (mirrors denizen/src/denizen-companion-api.js).
+ * Browser-side sync client (mirrors apps/office/src/compute/denizen-companion-api.js).
  */
 (function (root) {
   'use strict';

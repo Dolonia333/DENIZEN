@@ -22,7 +22,7 @@ The extension uses the same REST shim as ChatGPT Custom GPT Actions (v1.4).
 ## Install
 
 1. Chrome → `chrome://extensions` → **Developer mode** → **Load unpacked**
-2. Select folder: `denizen/companion-extension`
+2. Select folder: `apps/office/companion-extension`
 3. Open Denizen → claim NPC (team session) → **Connect AI**
 4. Credentials sync automatically to the extension
 
@@ -41,9 +41,9 @@ The extension uses the same REST shim as ChatGPT Custom GPT Actions (v1.4).
 | Path | Role |
 |------|------|
 | `companion-extension/` | Chrome MV3 extension |
-| `src/denizen-companion-api.js` | REST client (tested in Node) |
-| `src/visitor-companion-bridge.js` | Office → extension credential bridge |
-| `src/visitor-mcp-connect-ui.js` | Connect AI (Companion tab first) |
+| `src/compute/denizen-companion-api.js` | REST client (tested in Node) |
+| `src/visitors/visitor-companion-bridge.js` | Office → extension credential bridge |
+| `src/visitors/visitor-mcp-connect-ui.js` | Connect AI (Companion tab first) |
 
 ## Security
 

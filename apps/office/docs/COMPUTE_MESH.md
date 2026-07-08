@@ -78,15 +78,15 @@ Remote agents must **not** use `127.0.0.1` or LAN-only URLs unless they are on t
 
 | File | Purpose |
 |------|---------|
-| `src/denizen-compute-queue.js` | Supabase-backed job queue |
-| `src/denizen-compute-routes.js` | REST API — register, claim, complete, fleet report, bundle download |
-| `src/denizen-compute-producer.js` | Auto mesh job producer |
-| `src/denizen-mesh-job-runner.js` | Shared job execution (inference runtime + mock) |
-| `src/denizen-inference-runtime.js` | Ollama + LM Studio probe and chat |
-| `src/denizen-inference-rpc.js` | Denizen-to-Denizen `inference_rpc` orchestration |
-| `src/denizen-fleet-registry.js` | In-memory fleet metrics aggregation |
-| `src/denizen-fleet-agent-bundle.js` | Agent tarball builder (delegates to Python tarfile) |
-| `src/mesh-jobs-panel.js` | Browser UI panel |
+| `src/compute/denizen-compute-queue.js` | Supabase-backed job queue |
+| `src/compute/denizen-compute-routes.js` | REST API — register, claim, complete, fleet report, bundle download |
+| `src/compute/denizen-compute-producer.js` | Auto mesh job producer |
+| `src/compute/denizen-mesh-job-runner.js` | Shared job execution (inference runtime + mock) |
+| `src/compute/denizen-inference-runtime.js` | Ollama + LM Studio probe and chat |
+| `src/compute/denizen-inference-rpc.js` | Denizen-to-Denizen `inference_rpc` orchestration |
+| `src/integrations/denizen-fleet-registry.js` | In-memory fleet metrics aggregation |
+| `src/integrations/denizen-fleet-agent-bundle.js` | Agent tarball builder (delegates to Python tarfile) |
+| `src/hud/panels/mesh-jobs-panel.js` | Browser UI panel |
 | `scripts/nas-compute-agent.js` | Headless NAS/Kali agent (metrics + worker) |
 | `scripts/build-fleet-agent-bundle.py` | Builds `agent-bundle.tar.gz` for pull installs |
 | `desktop/compute-worker.js` | Desktop compute loop |
@@ -100,15 +100,15 @@ Contribution credits reward mesh participants for completed jobs, uptime windows
 
 | Module | Responsibility |
 |--------|----------------|
-| `src/denizen-compute-credits.js` | Pure credit formulas — job payout, uptime, host stipend, fleet bonus; daily caps; spend catalog (`priority_boost`, `queue_skip`); hardware/effort/GPU multipliers |
-| `src/denizen-credits.js` | Supabase ledger API — `awardCredits`, `spendCredits`, optimistic balance updates on `denizen_user_identities`, append-only `denizen_credits_ledger` rows |
-| `src/denizen-compute-settlement.js` | Periodic settlement loop (default 15 min) — converts contribution windows into uptime/host-stipend grants; awards fleet bonus when multiple machines contribute |
-| `src/denizen-contribution-tracker.js` | In-memory sampling — tracks active jobs, hardware windows per machine, daily cap state; `grantWithCap()` before any award lands in the ledger |
-| `src/denizen-compute-platform.js` | Visitor/Desktop contribution UI backend — upserts `denizen_node_profiles`, scores hardware, resolves opt-in/contribution level, builds contribution summary for `/api/compute/*` |
-| `src/denizen-host-compute.js` | Host-operator detection — loopback/CEO principal flags, LM Studio liveness probe, resolves effective contribution state for the primary GPU host |
-| `src/denizen-node-worker.js` | Node registry — register/issue endpoint tokens, heartbeat, list nodes; memory fallback when compute tables are not migrated |
-| `src/denizen-node-client.js` | Headless worker HTTP client — claim/complete poll loop used by NAS/Kali agents and bundled into fleet agent tarballs |
-| `src/denizen-local-agent.js` | Loopback desktop agent — permission gate (`data/local-agent-permissions.json`), background run approvals for trusted local callers |
+| `src/compute/denizen-compute-credits.js` | Pure credit formulas — job payout, uptime, host stipend, fleet bonus; daily caps; spend catalog (`priority_boost`, `queue_skip`); hardware/effort/GPU multipliers |
+| `src/compute/denizen-credits.js` | Supabase ledger API — `awardCredits`, `spendCredits`, optimistic balance updates on `denizen_user_identities`, append-only `denizen_credits_ledger` rows |
+| `src/compute/denizen-compute-settlement.js` | Periodic settlement loop (default 15 min) — converts contribution windows into uptime/host-stipend grants; awards fleet bonus when multiple machines contribute |
+| `src/compute/denizen-contribution-tracker.js` | In-memory sampling — tracks active jobs, hardware windows per machine, daily cap state; `grantWithCap()` before any award lands in the ledger |
+| `src/compute/denizen-compute-platform.js` | Visitor/Desktop contribution UI backend — upserts `denizen_node_profiles`, scores hardware, resolves opt-in/contribution level, builds contribution summary for `/api/compute/*` |
+| `src/compute/denizen-host-compute.js` | Host-operator detection — loopback/CEO principal flags, LM Studio liveness probe, resolves effective contribution state for the primary GPU host |
+| `src/integrations/denizen-node-worker.js` | Node registry — register/issue endpoint tokens, heartbeat, list nodes; memory fallback when compute tables are not migrated |
+| `src/integrations/denizen-node-client.js` | Headless worker HTTP client — claim/complete poll loop used by NAS/Kali agents and bundled into fleet agent tarballs |
+| `src/integrations/denizen-local-agent.js` | Loopback desktop agent — permission gate (`data/local-agent-permissions.json`), background run approvals for trusted local callers |
 
 ### Credit flow
 
@@ -227,7 +227,7 @@ The missing piece for 0 fleet nodes is running the full Denizen Desktop app on t
 
 **Exact steps:**
 1. On the .232 machine (the one with LM Studio):
-   - Ensure Denizen Desktop is installed (or build: `cd denizen/desktop && npm run build:win` then install the exe).
+   - Ensure Denizen Desktop is installed (or build: `cd apps/office/desktop && npm run build:win` then install the exe).
    - Run the app and complete the initial setup wizard (pair to your Denizen server at 192.168.1.237:8888 or the public URL).
 2. Open the in-app phone (or desktop compute panel):
    - Go to **Compute** tab (or "City Power").
@@ -289,7 +289,7 @@ Mesh `npc_think_batch` jobs still execute on whichever node **claims** the job (
 
 ## Smoke tests
 
-From `denizen/` with server running on `DENIZEN_URL` (default `http://127.0.0.1:8081`):
+From `apps/office/` with server running on `DENIZEN_URL` (default `http://127.0.0.1:8081`):
 
 ```powershell
 node scripts/smoke-mesh-complete.js      # 13 checks — register, claim, complete
@@ -302,10 +302,10 @@ node test-compute-integration.js         # 33 unit + HTTP integration checks
 
 ### Agent exits: `MODULE_NOT_FOUND` for `denizen-hardware-monitor`
 
-The agent script lives **in** `~/denizen-agent/`, not `denizen/scripts/`. Ensure:
+The agent script lives **in** `~/denizen-agent/`, not `apps/office/scripts/`. Ensure:
 
 ```bash
-ls ~/denizen-agent/src/denizen-hardware-monitor.js
+ls ~/denizen-agent/src/compute/denizen-hardware-monitor.js
 export DENIZEN_AGENT_ROOT=$HOME/denizen-agent
 ```
 
@@ -334,7 +334,7 @@ cd ~/denizen-agent && nohup node nas-compute-agent.js >> agent.log 2>&1 &
 
 Stale claims from restarted workers. Check `/api/compute/node/status`; restart workers or fail jobs via DB if needed.
 
-### Desktop crash: `Cannot find module '../src/denizen-hardware-monitor'`
+### Desktop crash: `Cannot find module '../src/compute/denizen-hardware-monitor'`
 
 Reinstall from latest `Denizen-Setup.exe` (prebuild copies `denizen-src` into the asar).
 

@@ -3,8 +3,8 @@
 This is the canonical map of Denizen documentation across committed GitHub docs and current local/new docs.
 
 **Status key**
-- `on GitHub` = present in `git ls-files denizen/docs/`
-- `new/local` = not currently tracked in `git ls-files denizen/docs/` (local-only or in-progress)
+- `on GitHub` = present in `git ls-files apps/office/docs/`
+- `new/local` = not currently tracked in `git ls-files apps/office/docs/` (local-only or in-progress)
 
 ## Master Documentation Table
 

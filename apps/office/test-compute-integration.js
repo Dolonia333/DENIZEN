@@ -33,12 +33,12 @@ function section(title) {
 
 section('Module exports');
 
-const computeQueue = require('./src/denizen-compute-queue');
-const nodeWorker = require('./src/denizen-node-worker');
-const computePlatform = require('./src/denizen-compute-platform');
-const { mountComputeRoutes } = require('./src/denizen-compute-routes');
-const denizenDb = require('./src/denizen-db');
-const denizenCredits = require('./src/denizen-credits');
+const computeQueue = require('./src/compute/denizen-compute-queue');
+const nodeWorker = require('./src/integrations/denizen-node-worker');
+const computePlatform = require('./src/compute/denizen-compute-platform');
+const { mountComputeRoutes } = require('./src/compute/denizen-compute-routes');
+const denizenDb = require('./src/intelligence/denizen-db');
+const denizenCredits = require('./src/compute/denizen-credits');
 
 const fnExports = [
   [computeQueue, ['enqueueJob', 'claimJob', 'completeJob', 'failJob', 'listPendingJobs']],

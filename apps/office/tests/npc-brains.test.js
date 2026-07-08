@@ -21,7 +21,7 @@ const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'denizen-test-'));
 process.env.HOME = tmpHome;
 process.env.USERPROFILE = tmpHome;
 
-const NpcBrainManager = require('../src/npc-brains.js');
+const NpcBrainManager = require('../src/npc/npc-brains.js');
 
 // ---------------------------------------------------------------------------
 // Test fixture: shared manager instance (expensive to construct due to file I/O)
@@ -273,7 +273,7 @@ describe('allowAutonomousSkillRun visitor tier', () => {
       mgr._resolveAutonomousRealWork('Alex', { visitorScoped: true, canUseRealWork: true }),
       true,
     );
-    const promptTuning = require('../src/prompt-tuning.js');
+    const promptTuning = require('../src/intelligence/prompt-tuning.js');
     assert.equal(
       mgr._resolveAutonomousRealWork('Alex', { visitorScoped: false }),
       promptTuning?.realWorkMode !== false,
@@ -309,7 +309,7 @@ describe('_hierarchy', () => {
 
 describe('_resolveBrainForOrg', () => {
   it('overlays generic soul for non-operator org', async () => {
-    const denizenDb = require('../src/denizen-db');
+    const denizenDb = require('../src/intelligence/denizen-db');
     const origOrgId = denizenDb.orgId;
     const origEnabled = denizenDb.enabled;
     const origGet = denizenDb.getAgentSoul;

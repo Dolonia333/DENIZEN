@@ -366,32 +366,32 @@ Browser (Phaser 3)                    Server (Node.js :8080)              Extern
 |------|---------|
 | `server.js` | HTTP server, WebSocket routing, OpenClaw proxy, security monitoring, Bouncer API endpoints |
 | `office-scene.js` | Main Phaser 3 scene — rendering, NPCs, player, furniture, walls |
-| `src/cofounder-agent.js` | CTO AI brain — autonomous thinking loop, command generation |
-| `src/npc-brains.js` | Multi-provider NPC brains — loads soul files, manages memory |
+| `src/compute/cofounder-agent.js` | CTO AI brain — autonomous thinking loop, command generation |
+| `src/npc/npc-brains.js` | Multi-provider NPC brains — loads soul files, manages memory |
 | `npcs/*/SOUL.md` | NPC identity files — personality, values, provider, role |
 | `npcs/*/MEMORY.md` | NPC persistent memory — conversations saved across sessions |
-| `src/agent-office-manager.js` | Coordinates AI agents, manages office workflow |
-| `src/agent-actions.js` | Command executor for agent tasks |
-| `src/npc-agent-controller.js` | Maps agent events to NPC behaviors (walk, sit, speak) |
+| `src/npc/agent-office-manager.js` | Coordinates AI agents, manages office workflow |
+| `src/npc/agent-actions.js` | Command executor for agent tasks |
+| `src/npc/npc-agent-controller.js` | Maps agent events to NPC behaviors (walk, sit, speak) |
 | `src/gateway-bridge.js` | WebSocket client connecting to OpenClaw gateway (protocol v3) |
 | `src/openclaw-chat.js` | Embedded OpenClaw UI panel (iframe, session management) |
-| `src/security-monitor.js` | Client-side security dashboard (receives threats from server) |
+| `src/security/security-monitor.js` | Client-side security dashboard (receives threats from server) |
 | `security-monitor-server.js` | Server-side threat detection (file, network, API, system) |
-| `src/player-chat.js` | CEO-to-NPC chat system (targeting, walk-over, delegation) |
+| `src/hud/player-chat.js` | CEO-to-NPC chat system (targeting, walk-over, delegation) |
 | `src/logger.js` | Centralized structured logger — timestamps, log levels, per-module prefixes |
-| `src/linux-agent.js` | Bouncer's Kali WSL command runner — `ss`, `nmap`, `netstat`, `ps`, `journalctl`, `whois`, `tcpdump`; threat-specific command sets; `perimeterPatrol()` for scheduled scans |
-| `src/npc-tools.js` | Safe read-only system tools for NPCs — disk usage, memory, CPU load, uptime, process list |
-| `src/desktop-agent.js` | Vision-based desktop automation via nut-js — screenshot → LM decision → mouse/keyboard; includes abort flag to kill in-flight tasks |
-| `src/computer-use-agent.js` | Computer-use integration for NPC desktop interactions |
-| `src/job-application.js` | Lucy's job pipeline — 7-step scrape→filter→resume→cover→apply→log chain |
-| `src/work-feed.js` | Work output feed HUD — `WorkFeedPanel` class, Tab toggle, per-NPC color coding, 100-entry history |
-| `src/email-handler.js` | Inbound email processor — escalation detection, auto-send gating, email queue |
-| `src/coding-task-runner.js` | NPC coding-agent runner — git worktree isolation, `npx @anthropic-ai/claude-code --print` execution, diff capture, proposal storage, approve/reject lifecycle |
-| `src/task-chain.js` | `TaskChainRunner` — multi-step NPC directive chains, auto-advances on `taskPhase: finished`, artifact handoff between steps |
-| `src/conflict-detector.js` | `ConflictDetector` — rolling artifact log, similarity heuristic, queues conflicts for Abby arbitration |
+| `src/security/linux-agent.js` | Bouncer's Kali WSL command runner — `ss`, `nmap`, `netstat`, `ps`, `journalctl`, `whois`, `tcpdump`; threat-specific command sets; `perimeterPatrol()` for scheduled scans |
+| `src/npc/npc-tools.js` | Safe read-only system tools for NPCs — disk usage, memory, CPU load, uptime, process list |
+| `src/compute/desktop-agent.js` | Vision-based desktop automation via nut-js — screenshot → LM decision → mouse/keyboard; includes abort flag to kill in-flight tasks |
+| `src/compute/computer-use-agent.js` | Computer-use integration for NPC desktop interactions |
+| `src/pipelines/job-application.js` | Lucy's job pipeline — 7-step scrape→filter→resume→cover→apply→log chain |
+| `src/hud/work-feed.js` | Work output feed HUD — `WorkFeedPanel` class, Tab toggle, per-NPC color coding, 100-entry history |
+| `src/pipelines/email-handler.js` | Inbound email processor — escalation detection, auto-send gating, email queue |
+| `src/pipelines/coding-task-runner.js` | NPC coding-agent runner — git worktree isolation, `npx @anthropic-ai/claude-code --print` execution, diff capture, proposal storage, approve/reject lifecycle |
+| `src/pipelines/task-chain.js` | `TaskChainRunner` — multi-step NPC directive chains, auto-advances on `taskPhase: finished`, artifact handoff between steps |
+| `src/pipelines/conflict-detector.js` | `ConflictDetector` — rolling artifact log, similarity heuristic, queues conflicts for Abby arbitration |
 | `src/demo-scene.js` | Investor demo cutscene (20-second scripted sequence) |
 | `src/pathfinding.js` | A* pathfinding for NPC movement |
-| `src/robber-controller.js` | Optional robber NPC visualization |
+| `src/security/robber-controller.js` | Optional robber NPC visualization |
 | `src/RoomAssembly.js` | Phaser integration for room layouts — catalog lookup, texture cropping, Y-sort |
 | `src/RoomGenerator.js` | Procedural room generator — 6 archetypes, collision grid, decor pass |
 | `src/RoomBuilder.js` | Low-level sprite rendering with modular group validation |
@@ -484,7 +484,7 @@ npcs/
 
 **How it works:**
 
-1. `NpcBrainManager` (in `src/npc-brains.js`) reads each NPC's `SOUL.md` at startup
+1. `NpcBrainManager` (in `src/npc/npc-brains.js`) reads each NPC's `SOUL.md` at startup
 2. The full markdown content becomes the NPC's system prompt — the AI reads the soul and embodies it
 3. `## Provider` and `## Role` sections are parsed to determine which AI backend powers the NPC
 4. `MEMORY.md` is appended to the system prompt so the NPC remembers past conversations
@@ -542,11 +542,11 @@ from the NPC about themselves. The richer the soul file, the more consistent
 the personality across hundreds of conversations.
 
 To add a new NPC: create `npcs/<name_lower>/SOUL.md`, add the display name +
-folder mapping to `src/npc-roster.js`, restart. No code changes.
+folder mapping to `src/npc/npc-roster.js`, restart. No code changes.
 
 ### NPC Brains (Runtime)
 
-Each NPC has an individual AI brain managed by `src/npc-brains.js`:
+Each NPC has an individual AI brain managed by `src/npc/npc-brains.js`:
 
 - **Soul-driven prompts** — personality loaded from `SOUL.md`, not hardcoded
 - **Persistent memory** — conversations saved to `MEMORY.md`, survives restarts
@@ -698,10 +698,10 @@ Adding an NPC is three steps. No code changes if you're using an existing sprite
 **1. Create the NPC folder and SOUL.md**
 
 ```bash
-mkdir -p denizen/npcs/dave
+mkdir -p apps/office/npcs/dave
 ```
 
-`denizen/npcs/dave/SOUL.md`:
+`apps/office/npcs/dave/SOUL.md`:
 
 ```markdown
 # Dave — Sales Lead
@@ -724,7 +724,7 @@ Sales Lead
 
 The runtime parses `## Provider` (one of `claude`, `lmstudio`, `lmstudio-fast`, `grok`, `gemini`, `kimi`) and `## Role` (free-form string used in logs and prompts). Everything else in the file becomes part of the NPC's system prompt.
 
-**2. Register Dave in `src/npc-roster.js`**
+**2. Register Dave in `src/npc/npc-roster.js`**
 
 Add an entry mapping the display name to the folder and sprite:
 
@@ -872,7 +872,7 @@ curl -X POST http://localhost:8080/api/code-proposals/<id>/approve
 curl -X POST http://localhost:8080/api/code-proposals/<id>/reject
 ```
 
-**Implementation:** `src/coding-task-runner.js` (`runCodingTask`, `getProposals`, `approveProposal`, `rejectProposal`).
+**Implementation:** `src/pipelines/coding-task-runner.js` (`runCodingTask`, `getProposals`, `approveProposal`, `rejectProposal`).
 
 ---
 
@@ -926,7 +926,7 @@ GET  /api/task-chains          → { chains: [...] }
 GET  /api/task-chains/:id      → { chain: {...} }
 ```
 
-**Implementation:** `src/task-chain.js` (`TaskChainRunner` singleton: `startChain`, `onStepComplete`, `getChainStatus`, `getActiveChains`).
+**Implementation:** `src/pipelines/task-chain.js` (`TaskChainRunner` singleton: `startChain`, `onStepComplete`, `getChainStatus`, `getActiveChains`).
 
 ---
 
@@ -957,7 +957,7 @@ Make a call. Assign directives to both with your decision.
 
 The conflict is consumed once (cleared after Abby reads it). Abby's response — usually `action: delegate` to both NPCs — is the resolution.
 
-**Implementation:** `src/conflict-detector.js` (`ConflictDetector` singleton: `recordArtifact`, `getConflictForNpc`).
+**Implementation:** `src/pipelines/conflict-detector.js` (`ConflictDetector` singleton: `recordArtifact`, `getConflictForNpc`).
 
 ---
 
@@ -970,13 +970,13 @@ Denizen has a full voice loop: NPCs can speak (ElevenLabs TTS), you can speak ba
 **Architecture:**
 
 ```
-NPC speaks  →  src/voice-gate.js (presence check)  →  DenizenVoice
+NPC speaks  →  src/voice/voice-gate.js (presence check)  →  DenizenVoice
                                                           ↓
                                             elevenlabs-provider (browser)
                                                           ↓
                                             fetch /api/tts {npc, text}
                                                           ↓
-                                          src/elevenlabs-tts.js (server)
+                                          src/voice/elevenlabs-tts.js (server)
                                           adds xi-api-key header
                                                           ↓
                                           api.elevenlabs.io → audio/mpeg
@@ -1001,7 +1001,7 @@ If no voice is mapped for an NPC, the default `ELEVENLABS_VOICE_ID` is used. If 
 
 ### Presence Gate
 
-The presence gate (`src/voice-gate.js`) keeps TTS silent unless `worldState.zionPresent === true`. The presence flag flips on when you:
+The presence gate (`src/voice/voice-gate.js`) keeps TTS silent unless `worldState.zionPresent === true`. The presence flag flips on when you:
 - Move (WASD/arrow keys)
 - Open the chat panel (Enter)
 - Click anywhere on the canvas
@@ -1018,17 +1018,17 @@ Push-to-talk is built in. Hold **`\`** (backslash) or click the 🎤 button → 
 
 ### Proximity Audio
 
-`src/proximity-audio.js` adjusts TTS volume based on the distance between the player and the speaking NPC. NPCs across the office sound farther away; NPCs at your shoulder sound close. Disabled when the panel is in mute mode.
+`src/voice/proximity-audio.js` adjusts TTS volume based on the distance between the player and the speaking NPC. NPCs across the office sound farther away; NPCs at your shoulder sound close. Disabled when the panel is in mute mode.
 
 ### SFX
 
-`src/sfx.js` plays event-driven sound effects (door open, meeting bell, status change). All SFX go through the same presence gate — silent when you're away. Missing audio files are tolerated; no crash, just no sound.
+`src/voice/sfx.js` plays event-driven sound effects (door open, meeting bell, status change). All SFX go through the same presence gate — silent when you're away. Missing audio files are tolerated; no crash, just no sound.
 
 ---
 
 ## LLM Telemetry
 
-Every call to every LLM in Denizen is logged. The `src/llm-telemetry.js` module records a structured event per call, persists to a JSONL file, and exposes a panel in the diag UI.
+Every call to every LLM in Denizen is logged. The `src/intelligence/llm-telemetry.js` module records a structured event per call, persists to a JSONL file, and exposes a panel in the diag UI.
 
 **What gets recorded:**
 
@@ -1058,7 +1058,7 @@ Every call to every LLM in Denizen is logged. The `src/llm-telemetry.js` module 
 
 **Error classifier:** the runtime turns raw errors into `{ category, hint }` so the diag panel shows actionable fixes instead of stack traces. Categories include `context_overflow`, `rate_limit`, `auth_failed`, `model_not_found`, `network`. Each one has a one-line hint with the actual fix.
 
-**External sink** (`src/external-sink.js`): telemetry events can be forwarded to Supabase or n8n in real time. Configure via:
+**External sink** (`src/intelligence/external-sink.js`): telemetry events can be forwarded to Supabase or n8n in real time. Configure via:
 
 ```env
 EXTERNAL_SINK_URL=https://your-supabase-url/rest/v1/llm_telemetry
@@ -1068,7 +1068,7 @@ EXTERNAL_SINK_KINDS=think,error    # comma-separated filter, or "*" for all
 
 The sink auto-disables after 5 consecutive failures to prevent log flooding.
 
-**Diag panel:** the telemetry panel UI lives in `src/llm-telemetry-panel.js` and shows per-NPC call rates, recent errors, and a calls-per-minute graph. Toggled from the diag chip in the bottom-right of the canvas.
+**Diag panel:** the telemetry panel UI lives in `src/hud/panels/llm-telemetry-panel.js` and shows per-NPC call rates, recent errors, and a calls-per-minute graph. Toggled from the diag chip in the bottom-right of the canvas.
 
 ---
 
@@ -1131,7 +1131,7 @@ Press **`Tab`** to toggle a terminal-style HUD panel in the bottom-left of the s
 - 100-entry in-memory history — last 20 shown when panel opens
 - Slide-in animation, Tab to toggle, empty state message when no activity yet
 
-**Implementation:** `src/work-feed.js` exports `WorkFeedPanel` as a global. `office-scene.js` instantiates it after `AgentOfficeManager.init()`. The `npc_work_output` WS handler in `agent-office-manager.js` calls `scene._workFeed.addEntry(data)` alongside the existing Phaser canvas feed.
+**Implementation:** `src/hud/work-feed.js` exports `WorkFeedPanel` as a global. `office-scene.js` instantiates it after `AgentOfficeManager.init()`. The `npc_work_output` WS handler in `agent-office-manager.js` calls `scene._workFeed.addEntry(data)` alongside the existing Phaser canvas feed.
 
 ---
 
@@ -1205,7 +1205,7 @@ Test it: `http://localhost:8080/security-test?type=file_access&severity=high&det
 
 ## Bouncer — Kali Linux Security Agent
 
-Bouncer is more than an NPC — he's a real security investigator. When the security monitor detects a threat, Bouncer uses **`src/linux-agent.js`** to run live investigation commands inside Kali Linux (via WSL).
+Bouncer is more than an NPC — he's a real security investigator. When the security monitor detects a threat, Bouncer uses **`src/security/linux-agent.js`** to run live investigation commands inside Kali Linux (via WSL).
 
 ### How Bouncer Investigates Threats
 
@@ -1633,7 +1633,7 @@ LM_STUDIO_PARALLEL=2          # default 1; raise to 2 if you have ≥16GB VRAM
 # 2. Shrink the prompt — the cheapest win
 NPC_HISTORY_DEPTH=10          # default 20; cuts ~30-40% off prompt size for active NPCs
 
-# 3. Cap how often NPCs think (in src/npc-brains.js _scheduleNextThink)
+# 3. Cap how often NPCs think (in src/npc/npc-brains.js _scheduleNextThink)
 # default range: 45–75 seconds. Push to 90–120 if you don't need fast reactions.
 
 # 4. Move chatty NPCs to cloud providers

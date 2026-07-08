@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const reb = require('../src/npc-telemetry-rebalance.js');
+const reb = require('../src/npc/npc-telemetry-rebalance.js');
 
 describe('npc-telemetry-rebalance', () => {
   it('applies Claude standing thresholds', () => {

@@ -15,7 +15,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install and build Windows desktop
-        working-directory: denizen/desktop
+        working-directory: apps/office/desktop
         run: |
           npm ci
           npm run build:win -- --publish never
@@ -23,9 +23,9 @@ jobs:
         with:
           name: denizen-desktop-win
           path: |
-            denizen/desktop/dist-build/*.exe
-            denizen/desktop/dist-build/*.blockmap
-            denizen/desktop/dist-build/latest*.yml
+            apps/office/desktop/dist-build/*.exe
+            apps/office/desktop/dist-build/*.blockmap
+            apps/office/desktop/dist-build/latest*.yml
 
   build-linux:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install and build Linux desktop
-        working-directory: denizen/desktop
+        working-directory: apps/office/desktop
         run: |
           npm ci
           npm run build:linux -- --publish never
@@ -43,9 +43,9 @@ jobs:
         with:
           name: denizen-desktop-linux
           path: |
-            denizen/desktop/dist-build/*.AppImage
-            denizen/desktop/dist-build/*.blockmap
-            denizen/desktop/dist-build/latest*.yml
+            apps/office/desktop/dist-build/*.AppImage
+            apps/office/desktop/dist-build/*.blockmap
+            apps/office/desktop/dist-build/latest*.yml
 
   build-mac:
     runs-on: macos-latest
@@ -55,7 +55,7 @@ jobs:
         with:
           node-version: '22'
       - name: Install and build macOS desktop
-        working-directory: denizen/desktop
+        working-directory: apps/office/desktop
         run: |
           npm ci
           npm run build:mac -- --publish never
@@ -63,10 +63,10 @@ jobs:
         with:
           name: denizen-desktop-mac
           path: |
-            denizen/desktop/dist-build/*.dmg
-            denizen/desktop/dist-build/*.zip
-            denizen/desktop/dist-build/*.blockmap
-            denizen/desktop/dist-build/latest*.yml
+            apps/office/desktop/dist-build/*.dmg
+            apps/office/desktop/dist-build/*.zip
+            apps/office/desktop/dist-build/*.blockmap
+            apps/office/desktop/dist-build/latest*.yml
 
   release:
     if: startsWith(github.ref, 'refs/tags/v0.')

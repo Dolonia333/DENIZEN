@@ -52,7 +52,7 @@ What are you placing?
 After extract:
 
 ```powershell
-cd denizen
+cd apps/office
 node scripts/extract-limezu.js japanese
 node scripts/build-limezu-singles-catalog.js
 ```

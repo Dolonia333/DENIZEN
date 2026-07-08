@@ -2,8 +2,8 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const genericSoulPack = require('../src/generic-soul-pack');
-const agentSouls = require('../src/agent-souls');
+const genericSoulPack = require('../src/npc/generic-soul-pack');
+const agentSouls = require('../src/npc/agent-souls');
 
 describe('generic soul pack', () => {
   it('loads 18 generic souls without 1921 pursuit terms', () => {

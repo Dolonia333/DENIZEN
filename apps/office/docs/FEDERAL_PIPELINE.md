@@ -18,7 +18,7 @@ Supporting enrichment:
 
 ## Pipeline Summary Engine
 
-`src/federal-pipeline.js` exposes `getRfpPipelineSummary(db)`:
+`src/intelligence/federal-pipeline.js` exposes `getRfpPipelineSummary(db)`:
 
 - Counts total RFPs
 - Groups by status (`counts_by_status`)
@@ -50,7 +50,7 @@ Jelly `denizen-data` actions in `jelly/lib/denizen-data-actions.js` expose feder
 
 Business pipeline actions are org-policy gated.
 
-- `src/denizen-org-policy.js` marks `acme` as demo (business data disabled).
+- `src/auth/denizen-org-policy.js` marks `acme` as demo (business data disabled).
 - `assertBusinessActionAllowed(orgSlug, action)` blocks business actions, including:
   - `rfp-status`
   - `rfp-requirement-review`

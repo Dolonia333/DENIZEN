@@ -3,7 +3,7 @@
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 
-const businessContext = require('../src/denizen-business-context');
+const businessContext = require('../src/compute/denizen-business-context');
 
 describe('denizen-business-context', () => {
   before(() => {

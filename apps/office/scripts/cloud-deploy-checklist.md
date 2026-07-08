@@ -22,14 +22,14 @@ py -3 infra/apply-migrations-psycopg.py
 ## 3. CRM build
 
 ```bash
-cd denizen
+cd apps/office
 npm run build:crm
 ```
 
 ## 4. Owner role heal (one-time)
 
 ```bash
-cd denizen
+cd apps/office
 node scripts/promote-team-owner.js
 ```
 
@@ -40,7 +40,7 @@ Restart the Node process on port 8081 (systemd, pm2, or NAS task).
 ## 6. Verify
 
 ```bash
-cd denizen
+cd apps/office
 DENIZEN_URL=https://denizen.dolonia.cloud npm run smoke:phone
 DENIZEN_URL=https://denizen.dolonia.cloud npm run smoke:crm
 ```

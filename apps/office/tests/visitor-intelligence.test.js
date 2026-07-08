@@ -3,9 +3,9 @@
 const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const denizenDb = require('../src/denizen-db.js');
-const citedResearch = require('../src/visitor-cited-research.js');
-const mcpConnector = require('../src/denizen-mcp-connector.js');
+const denizenDb = require('../src/intelligence/denizen-db.js');
+const citedResearch = require('../src/visitors/visitor-cited-research.js');
+const mcpConnector = require('../src/mcp/denizen-mcp-connector.js');
 const {
   extractCommitmentsFromText,
   extractPreferencesFromText,
@@ -18,7 +18,7 @@ const {
   intelligenceErrorStatus,
   buildBriefingBroadcast,
   buildProactiveBroadcast,
-} = require('../src/denizen-visitor-intelligence.js');
+} = require('../src/visitors/denizen-visitor-intelligence.js');
 
 const SESSION_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 const ORG_ID = '11111111-1111-1111-1111-111111111111';

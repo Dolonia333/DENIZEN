@@ -80,7 +80,7 @@ py infra/enable-world-pubsub-nas.py     # primary + 2 followers
 ## Commands
 
 ```powershell
-cd denizen
+cd apps/office
 node --test tests/denizen-agent-ws-relay.test.js
 node scripts/smoke-spectate-relay.js
 node scripts/ws-load-soak.js

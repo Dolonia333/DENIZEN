@@ -17,7 +17,7 @@ LimeZu ships **finished examples** under `6_Home_Designs/`:
 - `examples/studio_preview.png` — news studio ref
 - `examples/japanese_layer1.png` / `layer2.png` — exact stacking order
 
-Denizen renders Layer 1 via [`src/room-tile-renderer.js`](../src/room-tile-renderer.js) and Layer 2 via [`src/RoomAssembly.js`](../src/RoomAssembly.js) or manual sprite placement from `singles/`.
+Denizen renders Layer 1 via [`src/room-tile-renderer.js`](../src/room-tile-renderer.js) and Layer 2 via [`src/RoomAssembly.js`](../src/city/RoomAssembly.js) or manual sprite placement from `singles/`.
 
 ## Your reference images → asset packs
 
@@ -33,9 +33,9 @@ Denizen renders Layer 1 via [`src/room-tile-renderer.js`](../src/room-tile-rende
 
 Manifest already points at your zips:
 
-`denizen/data/limezu-manifest.json` → `sources.interiors` / `exteriors` / `farm` / `ui`
+`apps/office/data/limezu-manifest.json` → `sources.interiors` / `exteriors` / `farm` / `ui`
 
-From `denizen/`:
+From `apps/office/`:
 
 ```powershell
 # New themes only (faster)
@@ -54,7 +54,7 @@ node scripts/extract-limezu.js
 
 On Windows, the script uses PowerShell + .NET `ZipFile` when `unzip` is missing.
 
-Output lands in `denizen/assets/limezu/` (~1600+ PNGs). Phaser scans `assets/limezu/index.json`.
+Output lands in `apps/office/assets/limezu/` (~1600+ PNGs). Phaser scans `assets/limezu/index.json`.
 
 ## Step 2 — Preview room shells
 

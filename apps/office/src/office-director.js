@@ -9,8 +9,8 @@
 
 let promptTuning = null;
 let ambientDialogue = null;
-try { promptTuning = require('./prompt-tuning'); } catch (_) {}
-try { ambientDialogue = require('./ambient-dialogue'); } catch (_) {}
+try { promptTuning = require('./intelligence/prompt-tuning'); } catch (_) {}
+try { ambientDialogue = require('./pipelines/ambient-dialogue'); } catch (_) {}
 
 const ROOM_BY_ACTION = {
   work: 'desk',

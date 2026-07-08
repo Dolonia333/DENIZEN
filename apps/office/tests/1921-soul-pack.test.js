@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 
-const roster = require('../src/npc-roster.js');
+const roster = require('../src/npc/npc-roster.js');
 
 const NPCS_DIR = path.join(__dirname, '..', 'npcs');
 const MARKER = /1921|DDT|OMES|YMP7Z9T1WVX5/i;

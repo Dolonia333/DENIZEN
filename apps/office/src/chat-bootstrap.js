@@ -12,6 +12,13 @@
 
   'use strict';
 
+  function tiChip(name, text, opts) {
+    return globalThis.DenizenTablerIcons?.chip(name, text, opts) || String(text || '');
+  }
+  function ti(name, opts) {
+    return globalThis.DenizenTablerIcons?.icon(name, opts) || '';
+  }
+
 
 
   const STYLES = `
@@ -114,7 +121,7 @@
 
     fab.className = 'ws-off';
 
-    fab.textContent = '💬 Chat';
+    fab.innerHTML = tiChip('messages', 'Chat', { size: 13 });
 
     fab.title = 'Talk to NPCs';
 
@@ -134,7 +141,7 @@
 
       loadBanner.id = 'denizen-load-banner';
 
-      loadBanner.innerHTML = '<strong>Denizen</strong> loading office… <span id="denizen-load-pct">0%</span> — 💬 Chat works now';
+      loadBanner.innerHTML = `<strong>Denizen</strong> loading office… <span id="denizen-load-pct">0%</span> — ${tiChip('messages', 'Chat', { size: 12 })} works now`;
 
       document.body.appendChild(loadBanner);
 
@@ -267,7 +274,7 @@
             } else if (msg.type === 'station_task_enqueued' && playerChat) {
               playerChat._addToLog?.('System', `⚙ Station task queued${msg.kind ? `: ${msg.kind}` : ''}`);
             } else if (msg.type === 'npc_skill_start' && playerChat && msg.skill === 'web-search') {
-              playerChat._addToLog('System', 'Lucy\'s browser is launching — watch the 🌐 browser panel.');
+              playerChat._addToLog('System', 'Lucy\'s browser is launching — watch the Browser panel.');
               window.DenizenBrowserMirror?.ingest?.({
                 searching: true,
                 open: true,
@@ -390,7 +397,7 @@
             pc.logPlayerChatAck(msg.npcName, msg.queueLen);
 
           } else if (msg.type === 'npc_skill_start' && msg.skill === 'web-search') {
-            pc._addToLog('System', 'Lucy\'s browser is launching — watch the 🌐 browser panel.');
+            pc._addToLog('System', 'Lucy\'s browser is launching — watch the Browser panel.');
             window.DenizenBrowserMirror?.ingest?.({
               searching: true,
               open: true,
@@ -524,7 +531,7 @@
 
     setTimeout(() => clearInterval(poll), 120000);
 
-    console.log('[ChatBootstrap] instant 💬 button ready');
+    console.log('[ChatBootstrap] instant Chat button ready');
 
   }
 

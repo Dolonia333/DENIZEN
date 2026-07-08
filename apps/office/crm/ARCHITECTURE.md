@@ -202,6 +202,6 @@ create table denizen_crm_portal_tokens (
 | `crm/vendor/src/lib/crm-data-management.ts` | Import/merge/health/restore |
 | `crm/vendor/src/lib/crm-csv.ts` | RFC4180 CSV parsers |
 | `crm/vendor/src/hooks/use-crm-cloud-sync.ts` | Cloud sync |
-| `denizen/src/denizen-crm-routes.js` | HTTP API |
-| `denizen/src/denizen-crm-store.js` | Supabase workspace persistence |
-| `denizen/src/denizen-crm-spine.js` | Leads/clients/deals mirror |
+| `apps/office/src/crm/denizen-crm-routes.js` | HTTP API |
+| `apps/office/src/crm/denizen-crm-store.js` | Supabase workspace persistence |
+| `apps/office/src/crm/denizen-crm-spine.js` | Leads/clients/deals mirror |

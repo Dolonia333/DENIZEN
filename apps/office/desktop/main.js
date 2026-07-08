@@ -1009,7 +1009,7 @@ function setupIpc() {
 
   ipcMain.handle("get-inference-status", async () => {
     try {
-      const { probeInferenceRuntime } = require("../src/denizen-inference-runtime");
+      const { probeInferenceRuntime } = require("../src/compute/denizen-inference-runtime");
       return await probeInferenceRuntime({ timeoutMs: 4000 });
     } catch (err) {
       return { reachable: false, error: err?.message || String(err) };

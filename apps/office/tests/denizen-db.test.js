@@ -3,8 +3,8 @@
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { DenizenDb, DISPLAY_TO_NPC_KEY } = require('../src/denizen-db.js');
-const llmTelemetry = require('../src/llm-telemetry.js');
+const { DenizenDb, DISPLAY_TO_NPC_KEY } = require('../src/intelligence/denizen-db.js');
+const llmTelemetry = require('../src/intelligence/llm-telemetry.js');
 
 describe('denizen-db', () => {
   it('maps display names to npc_key folders', () => {

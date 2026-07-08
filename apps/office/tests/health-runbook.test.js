@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const healthRunbook = require('../src/health-runbook');
+const healthRunbook = require('../src/compute/health-runbook');
 
 describe('health-runbook', () => {
   it('canRemediate allows DevOps NPCs', () => {

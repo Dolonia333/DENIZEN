@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const userIdentity = require('../src/denizen-user-identity.js');
+const userIdentity = require('../src/auth/denizen-user-identity.js');
 
 describe('denizen-user-identity', () => {
   it('normalizeEmail lowercases and trims', () => {

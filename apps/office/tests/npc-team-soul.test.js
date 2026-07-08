@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const npcTeamSoul = require('../src/npc-team-soul');
+const npcTeamSoul = require('../src/npc/npc-team-soul');
 
 describe('npc-team-soul', () => {
   it('mergeMemberSettings tracks user baseline evolution', () => {

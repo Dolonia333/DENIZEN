@@ -2,7 +2,7 @@
 /**
  * Smoke-test Google API keys for Denizen (Gemini + Gmail expectations).
  * Usage: node scripts/test-google-api-keys.mjs [key1] [key2]
- * Without args, reads denizen/data/google-api-keys.json
+ * Without args, reads apps/office/data/google-api-keys.json
  */
 import fs from 'node:fs';
 import path from 'node:path';

@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { buildWeeklyDigest } = require('../src/denizen-crm-digest');
+const { buildWeeklyDigest } = require('../src/crm/denizen-crm-digest');
 
 describe('denizen-crm-digest', () => {
   it('buildWeeklyDigest summarizes workspace', () => {

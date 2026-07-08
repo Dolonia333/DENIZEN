@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const relay = require('../src/denizen-security-relay');
+const relay = require('../src/integrations/denizen-security-relay');
 
 describe('denizen-security-relay', () => {
   it('isSecurityRelayFrame matches threat types', () => {

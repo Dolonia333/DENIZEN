@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const portal = require('../src/denizen-crm-portal');
+const portal = require('../src/crm/denizen-crm-portal');
 
 describe('denizen-crm-portal', () => {
   it('isTokenExpired respects grace period after validUntil', () => {

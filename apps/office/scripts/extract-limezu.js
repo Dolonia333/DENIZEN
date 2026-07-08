@@ -2,7 +2,7 @@
 /**
  * extract-limezu.js
  *
- * Selectively unzips LimeZu asset packs into denizen/assets/limezu/
+ * Selectively unzips LimeZu asset packs into apps/office/assets/limezu/
  * based on data/limezu-manifest.json.
  *
  * Usage:

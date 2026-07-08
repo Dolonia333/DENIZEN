@@ -3,8 +3,8 @@
 const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const denizenDb = require('../src/denizen-db');
-const orgPolicy = require('../src/denizen-org-policy');
+const denizenDb = require('../src/intelligence/denizen-db');
+const orgPolicy = require('../src/auth/denizen-org-policy');
 
 describe('denizen-org-policy', () => {
   let origGet;

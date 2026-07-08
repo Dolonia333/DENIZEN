@@ -205,20 +205,20 @@ Each `setAudioMode` call fires a `denizen:audiomode` CustomEvent on
   helpers: `recordBreak`, `recordDeskStart`, `minutesSinceBreak`,
   `minutesAtDesk`, `recordExchange`, `stuckLoop`. Independent of
   `zionPresent` (which is voice).
-- `src/agent-actions.js` — `speakTo` `finish('arrived')` pins target
+- `src/npc/agent-actions.js` — `speakTo` `finish('arrived')` pins target
   with `_addressedUntil` and sends `npc_addressed` WS message.
-- `src/agent-office-manager.js`:
+- `src/npc/agent-office-manager.js`:
   - `_executeNpcDecision` rewrites move-y actions while addressed.
   - `_sendOfficeState` sends `player_idle` with position + room.
   - `_maybeOfferTour` + `_runLucyTour` — tour scheduler + runner.
   - `case 'thinkAloud'` — action dispatch.
-- `src/cofounder-agent.js` — `office_state` mirror now also calls
+- `src/compute/cofounder-agent.js` — `office_state` mirror now also calls
   `recordDeskStart` / clears `deskSittingSince` based on status, so
   fatigue is derived automatically from existing ticks.
-- `src/npc-brains.js` — `## Office Manners` block + `thinkAloud`
+- `src/npc/npc-brains.js` — `## Office Manners` block + `thinkAloud`
   action listed in the per-role action vocabulary. `recordExchange`
   called alongside `recordContact` for stuck-loop detection.
-- `src/player-chat.js` — `_stopNpcForConversation` now pins the NPC
+- `src/hud/player-chat.js` — `_stopNpcForConversation` now pins the NPC
   via `_addressedUntil` and broadcasts `npc_addressed` so the player
   gets the same focus treatment as a peer.
 - `server.js` — `npc_addressed`, `player_idle`, `npc_introduce`

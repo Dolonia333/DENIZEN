@@ -98,8 +98,8 @@ The pattern is consistent. Three changes:
 
 1. **Capture or compute the data.** Either:
    - Add a field to the `office_state` message in
-     `src/agent-office-manager.js:_sendOfficeState()`, then mirror it
-     into `worldState.updateNpc()` in `src/cofounder-agent.js`, OR
+     `src/npc/agent-office-manager.js:_sendOfficeState()`, then mirror it
+     into `worldState.updateNpc()` in `src/compute/cofounder-agent.js`, OR
    - Compute it on the fly inside `renderContextBlock` from existing
      world-state fields.
 2. **Surface in `renderContextBlock`.** Add one line; keep it short

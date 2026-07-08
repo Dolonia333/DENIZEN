@@ -2,10 +2,10 @@
 
 const bridge = require('./bridge-client');
 const { fmtRows } = bridge;
-const orgPolicy = require('../../src/denizen-org-policy');
-const federalPipeline = require('../../src/federal-pipeline');
-const crmMutations = require('../../src/denizen-crm-mutations');
-const crmSkills = require('../../src/denizen-crm-skills');
+const orgPolicy = require('../../src/auth/denizen-org-policy');
+const federalPipeline = require('../../src/intelligence/federal-pipeline');
+const crmMutations = require('../../src/crm/denizen-crm-mutations');
+const crmSkills = require('../../src/crm/denizen-crm-skills');
 
 let _cachedOrgId = null;
 
@@ -50,6 +50,7 @@ const ACTIONS = new Set([
   'crm-list-tasks',
   'crm-at-risk',
   'crm-add-ticket',
+  'crm-close-ticket',
   'crm-list-tickets',
   'crm-setup-wizard',
   'crm-add-deal',
@@ -171,6 +172,8 @@ async function runAction(action, { npcName, params, config }) {
       return crmAtRisk(config, params);
     case 'crm-add-ticket':
       return crmAddTicket(config, params, npcName);
+    case 'crm-close-ticket':
+      return crmCloseTicket(config, params, npcName);
     case 'crm-list-tickets':
       return crmListTickets(config, params);
     case 'crm-update-contact':
@@ -822,8 +825,8 @@ async function crmUpdateDeal(config, params) {
 async function crmSetupStatus(config, params) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
-  const wizard = require('../../src/denizen-crm-setup-wizard');
-  const chatActions = require('../../src/denizen-crm-chat-actions');
+  const wizard = require('../../src/crm/denizen-crm-setup-wizard');
+  const chatActions = require('../../src/crm/denizen-crm-chat-actions');
   const result = await crmMutations.getSetupStatus(orgId, params);
   const lines = [result.summary];
   if (params.demoCoach) {
@@ -845,8 +848,8 @@ async function crmSetupStatus(config, params) {
 async function crmSetupWizard(config, params) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
-  const wizard = require('../../src/denizen-crm-setup-wizard');
-  const industryBridge = require('../../src/denizen-crm-industry-bridge');
+  const wizard = require('../../src/crm/denizen-crm-setup-wizard');
+  const industryBridge = require('../../src/crm/denizen-crm-industry-bridge');
   let industryId = params.industryId || params.templateId || params.industry;
   if (!industryId && params.task) {
     industryId = wizard.inferIndustryId(params);
@@ -878,7 +881,7 @@ async function crmSetupWizard(config, params) {
     inviteName: params.inviteName || null,
     platform: params.platform || null,
   });
-  const chatActions = require('../../src/denizen-crm-chat-actions');
+  const chatActions = require('../../src/crm/denizen-crm-chat-actions');
   return {
     ...out,
     crm_actions: chatActions.normalizeCrmActions(out.crm_actions || []),
@@ -889,7 +892,7 @@ async function crmAddDeal(config, params) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
   const result = await crmMutations.addDeal(orgId, params);
-  const wizard = require('../../src/denizen-crm-setup-wizard');
+  const wizard = require('../../src/crm/denizen-crm-setup-wizard');
   return {
     ...result,
     crm_actions: [wizard.navAction('sales', 'Open pipeline', { subTab: 'pipeline' })],
@@ -903,8 +906,8 @@ async function crmUpdateProfile(config, params) {
 }
 
 async function crmGetIntakeLink(config, params) {
-  const wizard = require('../../src/denizen-crm-setup-wizard');
-  const chatActions = require('../../src/denizen-crm-chat-actions');
+  const wizard = require('../../src/crm/denizen-crm-setup-wizard');
+  const chatActions = require('../../src/crm/denizen-crm-chat-actions');
   const orgSlug = params.orgSlug || config?.orgSlug || process.env.DENIZEN_ORG_SLUG || '';
   const intakeUrl = wizard.buildIntakeUrl(orgSlug);
   return {
@@ -918,7 +921,7 @@ async function crmGetIntakeLink(config, params) {
 }
 
 async function crmListIndustries(config, params) {
-  const industryBridge = require('../../src/denizen-crm-industry-bridge');
+  const industryBridge = require('../../src/crm/denizen-crm-industry-bridge');
   const q = String(params.query || params.task || '').trim();
   const rows = industryBridge.listIndustries(q);
   const limit = Math.min(20, Math.max(1, Number(params.limit) || 12));
@@ -958,6 +961,12 @@ async function crmAddTicket(config, params, npcName) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
   return crmMutations.addTicket(orgId, { ...params, npcName }, null);
+}
+
+async function crmCloseTicket(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  return crmMutations.closeTicket(orgId, { ...params, npcName }, null);
 }
 
 async function crmListTickets(config, params) {
@@ -1013,7 +1022,7 @@ async function crmPipelineBrief(config, params) {
 }
 
 async function businessContextBriefAction(config, params) {
-  const businessContext = require('../../src/denizen-business-context');
+  const businessContext = require('../../src/compute/denizen-business-context');
   const orgId = await defaultOrgId(config);
   return businessContext.businessContextBrief(orgId, params);
 }
@@ -1097,7 +1106,7 @@ async function crmListContacts(config, params) {
     return crmSkills.listContacts(orgId, params);
   }
   // Fallback: load workspace and return contacts (enables full visibility)
-  const { state } = await require('../../src/denizen-crm-mutations').loadOrgWorkspace(orgId);
+  const { state } = await require('../../src/crm/denizen-crm-mutations').loadOrgWorkspace(orgId);
   const contacts = Array.isArray(state?.contacts) ? state.contacts : [];
   return {
     contacts: contacts.slice(0, params?.limit || 50),

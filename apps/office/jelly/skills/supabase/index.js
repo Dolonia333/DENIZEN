@@ -80,7 +80,7 @@ module.exports = {
     } catch (err) {
       const hint = useDirectSupabase()
         ? 'Direct PostgREST mode is active — check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.'
-        : 'Start bridge: python denizen/jelly/services/supabase-bridge/secure-bridge.py';
+        : 'Start bridge: python apps/office/jelly/services/supabase-bridge/secure-bridge.py';
       const output = `Supabase bridge unavailable: ${err.message}. ${hint}`;
       pcActivity.record({
         id: activity.id, npc: npcName, kind: 'supabase-bridge', task: activity.task,

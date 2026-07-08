@@ -51,7 +51,7 @@ module.exports = {
       const output = `Denizen data skill failed (${tag}): ${err.message}. ${
         useDirectSupabase()
           ? 'Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on this host.'
-          : 'Start bridge: python denizen/jelly/services/supabase-bridge/secure-bridge.py'
+          : 'Start bridge: python apps/office/jelly/services/supabase-bridge/secure-bridge.py'
       }`;
       pcActivity.record({
         id: activity.id,

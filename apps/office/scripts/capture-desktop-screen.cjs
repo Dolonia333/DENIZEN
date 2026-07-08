@@ -6,7 +6,7 @@
 require('../src/load-env');
 const fs = require('node:fs');
 const path = require('node:path');
-const desktopAgent = require('../src/desktop-agent');
+const desktopAgent = require('../src/compute/desktop-agent');
 
 async function main() {
   const outDir = path.join(__dirname, '..', 'reports', 'desktop');

@@ -216,7 +216,7 @@ class OfficeScene extends Phaser.Scene {
 
     const roster = globalThis.DenizenNpcRoster;
     if (!roster) {
-      console.error('[OfficeScene] DenizenNpcRoster missing — load src/npc-roster.js before office-scene.js');
+      console.error('[OfficeScene] DenizenNpcRoster missing — load src/npc/npc-roster.js before office-scene.js');
     }
     const xpNames = roster ? roster.assetNames : [];
 
@@ -495,7 +495,7 @@ class OfficeScene extends Phaser.Scene {
     // --- Room Assembly system mode: render perfect rooms without broken sprites ---
     if (modeParam === 'assembly') {
       Promise.all([
-        import('./src/RoomAssembly.js'),
+        import('./src/city/RoomAssembly.js'),
         import('./src/RoomGenerator.js')
       ]).then(([assemblyModule, generatorModule]) => {
         const RoomAssembly = assemblyModule.RoomAssembly || assemblyModule.default;
@@ -2673,7 +2673,10 @@ class OfficeScene extends Phaser.Scene {
       if (this._talkPrompt) {
         if (talkNpc) {
           this._talkPrompt.setVisible(true);
-          this._talkPrompt.setPosition(talkNpc.x, talkNpc.y - 56);
+          this._talkPrompt.setPosition(
+            talkNpc.x,
+            talkNpc.y - (talkNpc.displayHeight || 64) - 4,
+          );
         } else {
           this._talkPrompt.setVisible(false);
         }
@@ -2682,10 +2685,8 @@ class OfficeScene extends Phaser.Scene {
       this._talkPrompt.setVisible(false);
     }
 
-    // --- NPC AI ---
-    const lightOffice = window.__DenizenLightOffice !== false
-      && this._agentManager?._officeConfig?.lightOffice !== false;
-    if (Array.isArray(this.npcs) && !lightOffice) {
+    // --- NPC AI (walk / follow / wander) — always runs; light-office only disables LM think bursts ---
+    if (Array.isArray(this.npcs)) {
       const now = this.time.now;
       const followDistance = 44;
       const followSpeed = 140;
@@ -4696,7 +4697,7 @@ window.game = new Phaser.Game(config);
   });
 
   // Public bridge for NPC-driven live furniture mutations. Exposed so
-  // src/agent-office-manager.js can spawn / remove sprites in response
+  // src/npc/agent-office-manager.js can spawn / remove sprites in response
   // to `furniture_placed` / `furniture_removed` WS broadcasts without
   // requiring a page reload. We deliberately go through the same
   // makePlacementSprite/removeEntry pipeline the editor uses so the

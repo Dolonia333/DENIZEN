@@ -4,7 +4,7 @@
  */
 
 let _localMetrics = null;
-try { _localMetrics = require('./npc-local-metrics'); } catch (_) {}
+try { _localMetrics = require('./npc/npc-local-metrics'); } catch (_) {}
 
 function _resolveNpcName(npc) {
   if (!npc) return null;

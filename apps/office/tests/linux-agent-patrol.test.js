@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const {
   isBouncerPatrolEnabled,
   getPatrolProbeTargets,
-} = require('../src/linux-agent');
+} = require('../src/security/linux-agent');
 
 test('isBouncerPatrolEnabled respects explicit env', () => {
   const prev = process.env.BOUNCER_PATROL;

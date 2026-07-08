@@ -63,35 +63,38 @@
 
     deferredDone = (async () => {
       await loadParallel([
-        './src/visitor-capabilities.js?v=vis4',
-        './src/visitor-dashboard-gate.js?v=dgate1',
-        './src/proximity-audio.js?v=audio2',
-        './src/voice-gate.js?v=audio2',
+        './src/visitors/visitor-capabilities.js?v=vis4',
+        './src/visitors/visitor-dashboard-gate.js?v=dgate1',
+        './src/voice/proximity-audio.js?v=audio3',
+        './src/voice/voice-gate.js?v=audio3',
       ]);
       await loadParallel([
-        './src/denizen-voice-playback.js?v=vc1',
-        './src/denizen-voice-session.js?v=vc1',
-        './src/denizen-voice-call-ui.js?v=vc1',
-        './src/elevenlabs-provider.js',
-        './src/sfx.js',
-        './src/voice-input.js?v=voicevc1',
-        './src/llm-telemetry-panel.js?v=lmfix8',
-        './src/mesh-jobs-panel.js?v=mesh2',
-        './src/browser-mirror-panel.js?v=lucymirror6',
-        './src/diag.js?v=diag2',
-        './src/security-feed.js?v=sec2',
+        './src/voice/denizen-voice-playback.js?v=vc1',
+        './src/voice/denizen-voice-session.js?v=vc1',
+        './src/voice/denizen-voice-call-ui.js?v=vc1',
+        './src/voice/elevenlabs-provider.js',
+        './src/voice/sfx.js',
+        './src/voice/voice-input.js?v=voiceicon2',
+        './src/hud/panels/llm-telemetry-panel.js?v=lmfix9',
+        './src/hud/panels/mesh-jobs-panel.js?v=mesh3',
+        './src/hud/panels/browser-mirror-panel.js?v=lucymirror6',
+        './src/hud/diag.js?v=diag3',
+        './src/security/security-feed.js?v=sec2',
       ]);
       await loadParallel([
-        './src/visitor-desktop-pairing.js?v=pair3',
-        './src/visitor-credits-chip.js?v=node7',
-        './src/visitor-handoff-ui.js?v=vis3',
-        './src/visitor-projects-ui.js?v=vis2',
-        './src/visitor-assistant-labels.js?v=vis2',
-        './src/bouncer-client-init.js?v=sec3',
-        './src/security-monitor.js?v=sec3',
-        './src/robber-controller.js?v=sec3',
-        './src/work-feed.js?v=feed2',
-        './src/content-pipeline-panel.js?v=cp2',
+        './src/visitors/visitor-desktop-pairing.js?v=pair3',
+        './src/visitors/visitor-credits-chip.js?v=node7',
+        './src/tabler-icons.js?v=ti3',
+        './src/office-hq/office-level-chip.js?v=lvl3',
+        './src/office-hq/office-hq-panel.js?v=hq3',
+        './src/visitors/visitor-handoff-ui.js?v=vis4',
+        './src/visitors/visitor-projects-ui.js?v=vis3',
+        './src/visitors/visitor-assistant-labels.js?v=vis3',
+        './src/security/bouncer-client-init.js?v=sec3',
+        './src/security/security-monitor.js?v=sec3',
+        './src/security/robber-controller.js?v=sec3',
+        './src/hud/work-feed.js?v=feed2',
+        './src/hud/panels/content-pipeline-panel.js?v=cp3',
       ]);
       finishDeferred();
     })();
@@ -101,15 +104,15 @@
 
   function afterOffice() {
     const urls = [
-      './src/visitor-companion-bridge.js?v=comp1',
-      './src/visitor-mcp-connect-ui.js?v=mcp8bridge',
-      './src/visitor-briefing-ui.js?v=vis3',
-      './src/visitor-voice-walkup.js?v=vis3',
-      './src/visitor-skill-gap-ui.js?v=sgap1',
-      './src/visitor-agent-inbox.js?v=ainbox1',
-      './src/mesh-alert-toast.js?v=mtoast2',
-      './src/proposals-panel.js?v=propfix9',
-      './src/city-debug.js',
+      './src/visitors/visitor-companion-bridge.js?v=comp1',
+      './src/visitors/visitor-mcp-connect-ui.js?v=mcp8bridge',
+      './src/visitors/visitor-briefing-ui.js?v=vis3',
+      './src/visitors/visitor-voice-walkup.js?v=vis3',
+      './src/visitors/visitor-skill-gap-ui.js?v=sgap1',
+      './src/visitors/visitor-agent-inbox.js?v=ainbox1',
+      './src/hud/mesh-alert-toast.js?v=mtoast2',
+      './src/hud/panels/proposals-panel.js?v=propfix9',
+      './src/city/city-debug.js',
     ];
     try {
       if (new URL(window.location.href).searchParams.get('demo')) {

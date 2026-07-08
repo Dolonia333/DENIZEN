@@ -27,7 +27,7 @@ Sheet PNG
 ### 1. Extract (once per sheet change)
 
 ```powershell
-cd denizen
+cd apps/office
 py -3 scripts/extract_sheet_objects.py `
   "..\pixel game stuff\pixel game assets and stuff\Modern_Office_Revamped_v1.2\2_Modern_Office_Black_Shadow\Modern_Office_Black_Shadow_32x32.png" `
   --grid 32 --snap `
@@ -46,7 +46,7 @@ Output: `out/sheet_extract/modern_office_black_shadow_32.objects.json` — one r
 ### 3. Validate
 
 ```powershell
-cd denizen
+cd apps/office
 npm run validate:catalog
 ```
 

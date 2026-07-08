@@ -130,7 +130,7 @@ denizen_capability_proposals
 ### 1. One migration per change (never edit old SQL)
 
 ```
-denizen/supabase/migrations/
+apps/office/supabase/migrations/
   20260606000000_denizen_foundation.sql      -- extensions + migration table
   20260606000001_denizen_visitor_assistants.sql
   20260606000002_denizen_npc_core.sql
@@ -296,15 +296,15 @@ Each new org gets its own office session stream, facts, and predictions — **ag
 
 1. Supabase running (`54321` API, `54323` Studio)
 2. Cursor MCP: `.cursor/mcp.json` → `http://127.0.0.1:54321/mcp?features=database,...`
-3. Apply migrations in order under `denizen/supabase/migrations/`
-4. Start bridge: `python denizen/jelly/services/supabase-bridge/secure-bridge.py`
+3. Apply migrations in order under `apps/office/supabase/migrations/`
+4. Start bridge: `python apps/office/jelly/services/supabase-bridge/secure-bridge.py`
 5. Add new table names to bridge `ALLOWED_TABLES`
 
 ---
 
 ## TypeScript types
 
-After schema stabilizes a domain, run MCP `generate_typescript_types` → `denizen/src/types/database.ts` for server/bridge type safety.
+After schema stabilizes a domain, run MCP `generate_typescript_types` → `apps/office/src/types/database.ts` for server/bridge type safety.
 
 ---
 

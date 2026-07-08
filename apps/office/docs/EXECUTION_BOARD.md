@@ -134,7 +134,7 @@ py infra/patch-agent-token-nas.py
 
 # Grok MCP health
 
-node denizen/scripts/grok-mcp-ping.js
+node apps/office/scripts/grok-mcp-ping.js
 
 py infra/verify-mcp-preflight.py grok
 
@@ -142,7 +142,7 @@ py infra/verify-mcp-preflight.py grok
 
 # Clone template to new org
 
-node denizen/scripts/clone-template-pack.js <org_slug> 1921-govcon
+node apps/office/scripts/clone-template-pack.js <org_slug> 1921-govcon
 
 ```
 

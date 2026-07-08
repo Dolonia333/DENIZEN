@@ -9,8 +9,8 @@
  */
 
 require('../src/load-env');
-const denizenDb = require('../src/denizen-db');
-const promptTuning = require('../src/prompt-tuning');
+const denizenDb = require('../src/intelligence/denizen-db');
+const promptTuning = require('../src/intelligence/prompt-tuning');
 
 async function main() {
   const email = String(process.argv[2] || process.env.DENIZEN_TEAM_OWNER_EMAIL || '').trim().toLowerCase();

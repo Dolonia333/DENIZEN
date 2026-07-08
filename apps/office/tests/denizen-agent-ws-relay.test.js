@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const relay = require('../src/denizen-agent-ws-relay');
+const relay = require('../src/integrations/denizen-agent-ws-relay');
 
 describe('denizen-agent-ws-relay', () => {
   it('isMutatingClientMessage detects player_chat', () => {

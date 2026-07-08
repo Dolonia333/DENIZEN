@@ -3,7 +3,7 @@
 const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const denizenDb = require('../src/denizen-db.js');
+const denizenDb = require('../src/intelligence/denizen-db.js');
 const {
   createOrUpdateSession,
   claimAssistant,
@@ -19,7 +19,7 @@ const {
   listOrganizations,
   resolveOrgBySlug,
   VisitorError,
-} = require('../src/denizen-visitor.js');
+} = require('../src/visitors/denizen-visitor.js');
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111';
 const ACME_ORG_ID = '22222222-2222-2222-2222-222222222222';

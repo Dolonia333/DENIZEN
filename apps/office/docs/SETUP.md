@@ -2,7 +2,7 @@
 
 Step-by-step setup for running Denizen, including the optional Linux security sidecar that makes real Wireshark + Nmap events spawn robbers in the game.
 
-> **2026-06-05 update:** NPC skills now run through **Jelly** 🪼 (`denizen/jelly/`). See [SESSION_2026-06-05.md](SESSION_2026-06-05.md) for the full changelog, dual-model setup, and sidecar startup.
+> **2026-06-05 update:** NPC skills now run through **Jelly** 🪼 (`apps/office/jelly/`). See [SESSION_2026-06-05.md](SESSION_2026-06-05.md) for the full changelog, dual-model setup, and sidecar startup.
 
 ## 1. Minimum baseline (any platform)
 
@@ -282,13 +282,13 @@ See [TESTING.md](TESTING.md) for test pyramid and deployment run order.
 
 Jelly runtime source is vendored in:
 
-- `denizen/jelly/`
+- `apps/office/jelly/`
 
 Common Jelly-related paths:
 
-- Runtime entry: `denizen/jelly/index.js`
-- Metadata/branding: `denizen/jelly/meta.js`
-- Supabase sidecar: `denizen/jelly/services/supabase-bridge/`
+- Runtime entry: `apps/office/jelly/index.js`
+- Metadata/branding: `apps/office/jelly/meta.js`
+- Supabase sidecar: `apps/office/jelly/services/supabase-bridge/`
 
 ## 5. Troubleshooting
 
@@ -346,8 +346,8 @@ Once the basics work:
 
 - Edit `npcs/*/SOUL.md` to customize an NPC's personality
 - Watch `npcs/*/MEMORY.md` grow over time — you can tail them live
-- Raise `MAX_CHAT_TURNS` in [agent-office-manager.js](../src/agent-office-manager.js) if you want longer conversations
-- Add custom threat types by adding a new entry in `THREAT_TARGETS` in [robber-controller.js](../src/robber-controller.js) and emitting events from your own code via the `/security-test` endpoint or by calling `securityMonitor._emitThreat(...)` from server code
+- Raise `MAX_CHAT_TURNS` in [agent-office-manager.js](../src/npc/agent-office-manager.js) if you want longer conversations
+- Add custom threat types by adding a new entry in `THREAT_TARGETS` in [robber-controller.js](../src/security/robber-controller.js) and emitting events from your own code via the `/security-test` endpoint or by calling `securityMonitor._emitThreat(...)` from server code
 - Wire a Grafana / Prometheus / SIEM feed into `_emitThreat` to replace or supplement the built-in detectors
 
 ## See also

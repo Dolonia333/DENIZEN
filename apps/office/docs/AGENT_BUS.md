@@ -5,7 +5,7 @@
 > chatter no longer needs to round-trip through Abby.
 
 Source: [`src/agent-bus.js`](../src/agent-bus.js). Wired into
-[`NpcBrainManager`](../src/npc-brains.js) on init so every loaded NPC has
+[`NpcBrainManager`](../src/npc/npc-brains.js) on init so every loaded NPC has
 an inbox.
 
 ## When to use it vs. CofounderAgent
@@ -95,7 +95,7 @@ context (goals, plan, theory of mind, world state) and decides what to
 do next. If it chooses to reply by `talk`-ing to a peer, that reply also
 goes back onto the bus, completing the loop.
 
-Source: `_drainInbox()` in [`src/npc-brains.js`](../src/npc-brains.js).
+Source: `_drainInbox()` in [`src/npc/npc-brains.js`](../src/npc/npc-brains.js).
 
 ## Message envelope
 

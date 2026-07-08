@@ -3,7 +3,7 @@
 const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
 
-const teamTools = require('../src/denizen-mcp-team-tools.js');
+const teamTools = require('../src/mcp/denizen-mcp-team-tools.js');
 
 const SCOPE = {
   ok: true,

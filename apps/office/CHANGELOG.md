@@ -130,10 +130,10 @@ Denizen visualizes AI agent workflows in real-time. The NPCs represent AI agents
 ### Files Changed
 | File | What Changed |
 |------|-------------|
-| `src/npc-brains.js` | Request queue, token limits, contextual prompts, skill extraction, memory-aware responses |
-| `src/cofounder-agent.js` | State-reactive prompt, shared queue routing, error threshold |
-| `src/agent-office-manager.js` | Status indicators, desk assignment for all, meeting/break movement, task labels |
-| `src/agent-actions.js` | `teleportToDesk()`, collision body shrink during walks |
+| `src/npc/npc-brains.js` | Request queue, token limits, contextual prompts, skill extraction, memory-aware responses |
+| `src/compute/cofounder-agent.js` | State-reactive prompt, shared queue routing, error threshold |
+| `src/npc/agent-office-manager.js` | Status indicators, desk assignment for all, meeting/break movement, task labels |
+| `src/npc/agent-actions.js` | `teleportToDesk()`, collision body shrink during walks |
 | `src/pathfinding.js` | Increased reroute limit (5) and stuck threshold (8s) |
 | `office-scene.js` | Fallback position fix, pathfinding failure detection, _lastTarget reset |
 | `npcs/*/MEMORY.md` | Accumulated NPC memories with topic tags and skill entries |

@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { DenizenDb } = require('../src/denizen-db');
+const { DenizenDb } = require('../src/intelligence/denizen-db');
 
 describe('bouncer runs db writes', () => {
   it('recordBouncerRun posts normalized run shape', async () => {

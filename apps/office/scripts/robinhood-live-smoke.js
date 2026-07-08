@@ -1,7 +1,7 @@
 'use strict';
 
-const robinhoodMcp = require('../src/robinhood-mcp');
-const denizenDb = require('../src/denizen-db');
+const robinhoodMcp = require('../src/integrations/robinhood-mcp');
+const denizenDb = require('../src/intelligence/denizen-db');
 
 const baseUrl = String(process.env.DENIZEN_URL || 'http://127.0.0.1:8080').replace(/\/$/, '');
 const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS || 10000);

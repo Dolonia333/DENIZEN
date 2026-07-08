@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const stationTokens = require('../src/denizen-station-tokens.js');
+const stationTokens = require('../src/station/denizen-station-tokens.js');
 
 describe('denizen-station-tokens', () => {
   it('creates and verifies a station token', () => {

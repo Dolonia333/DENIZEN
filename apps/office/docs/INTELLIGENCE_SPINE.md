@@ -57,7 +57,7 @@ flowchart LR
 | Appointments | `client_appointments` trigger (`denizen_trg_client_appointments`) | `appointment.booked`, `appointment.status_changed` |
 | Job applications | `denizen_job_applications` trigger + app service | `job_application.created`, `job_application.status_changed`, `job.*` outcomes |
 | Trade suggestions | `denizen_trade_suggestions` trigger (`denizen_trg_trade_suggestions`) | `trade_suggestion.created` |
-| NPC/runtime telemetry | `src/denizen-db.js` (`recordWorkOutput`, `recordLlmEvent`, world state hook) | `npc.work.*`, `llm.completed`, `llm.failed`, `office.*`, `visitor.*` |
+| NPC/runtime telemetry | `src/intelligence/denizen-db.js` (`recordWorkOutput`, `recordLlmEvent`, world state hook) | `npc.work.*`, `llm.completed`, `llm.failed`, `office.*`, `visitor.*` |
 
 ---
 
@@ -128,7 +128,7 @@ RLS usage examples:
 
 ## Morning briefing and forecast cards
 
-`src/denizen-visitor-intelligence.js` composes daily briefings from:
+`src/visitors/denizen-visitor-intelligence.js` composes daily briefings from:
 - assistant + project state
 - pending handoffs
 - open commitments

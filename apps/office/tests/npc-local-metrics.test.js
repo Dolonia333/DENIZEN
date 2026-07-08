@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const lm = require('../src/npc-local-metrics.js');
+const lm = require('../src/npc/npc-local-metrics.js');
 
 describe('npc-local-metrics', () => {
   const tel = {

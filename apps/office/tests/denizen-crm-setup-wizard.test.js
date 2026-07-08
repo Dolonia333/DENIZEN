@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const wizard = require('../src/denizen-crm-setup-wizard');
+const wizard = require('../src/crm/denizen-crm-setup-wizard');
 const { proposeSetupActions, buildCrmUrl, navAction } = wizard;
 
 describe('denizen-crm-setup-wizard', () => {

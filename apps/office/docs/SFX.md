@@ -4,7 +4,7 @@
 > flag as voice. Browser-only. Missing audio files silently skipped so
 > the system ships before any audio lands.
 
-Source: [`src/sfx.js`](../src/sfx.js).
+Source: [`src/voice/sfx.js`](../src/voice/sfx.js).
 Map: [`data/sfx-map.json`](../data/sfx-map.json).
 Audio drop folder: [`assets/audio/`](../assets/audio/).
 
@@ -99,7 +99,7 @@ events of severity `high` in 200 ms will only fire `threat_high.ogg`
 once. Different severities don't share the cooldown — `threat:high`
 and `threat:critical` are independent keys.
 
-Throttle window is set in `THROTTLE_MS` at the top of `src/sfx.js`.
+Throttle window is set in `THROTTLE_MS` at the top of `src/voice/sfx.js`.
 
 ## Browser autoplay caveats
 

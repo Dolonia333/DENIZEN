@@ -13,8 +13,8 @@ before(() => {
   tmpFile = path.join(os.tmpdir(), `research-queue-test-${Date.now()}.json`);
   process.env.RESEARCH_QUEUE_FILE = tmpFile;
   fs.writeFileSync(tmpFile, JSON.stringify({ topics: [] }), 'utf8');
-  delete require.cache[require.resolve('../src/research-queue.js')];
-  queue = require('../src/research-queue.js');
+  delete require.cache[require.resolve('../src/intelligence/research-queue.js')];
+  queue = require('../src/intelligence/research-queue.js');
 });
 
 after(() => {

@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { buildDailySnapshot, appendDailySnapshot, summarizeDeals } = require('../src/denizen-crm-metrics');
+const { buildDailySnapshot, appendDailySnapshot, summarizeDeals } = require('../src/crm/denizen-crm-metrics');
 
 describe('denizen-crm-metrics', () => {
   it('summarizeDeals splits open/won/lost', () => {

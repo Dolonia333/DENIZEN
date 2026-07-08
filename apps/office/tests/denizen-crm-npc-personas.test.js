@@ -8,10 +8,10 @@ const {
   CRM_NPC_PERSONAS,
   isCrmRelatedMessage,
   isWriteSkill,
-} = require('../src/denizen-crm-npc-personas');
-const { inferSkillFromMessage } = require('../src/player-chat-skill-bridge');
-const { computeOnboardingProgress, notificationNpcForKind, shouldNotify } = require('../src/denizen-crm-setup');
-const industryBridge = require('../src/denizen-crm-industry-bridge');
+} = require('../src/crm/denizen-crm-npc-personas');
+const { inferSkillFromMessage } = require('../src/hud/player-chat-skill-bridge');
+const { computeOnboardingProgress, notificationNpcForKind, shouldNotify } = require('../src/crm/denizen-crm-setup');
+const industryBridge = require('../src/crm/denizen-crm-industry-bridge');
 
 describe('denizen-crm-npc-personas', () => {
   it('lists 16 office NPCs', () => {
@@ -94,7 +94,7 @@ describe('player-chat-skill-bridge CRM routing', () => {
   });
 
   it('classifies CRM data entry intent', () => {
-    const { isCrmDataEntryIntent, inferCrmWriteAction } = require('../src/denizen-crm-npc-personas');
+    const { isCrmDataEntryIntent, inferCrmWriteAction } = require('../src/crm/denizen-crm-npc-personas');
     assert.equal(isCrmDataEntryIntent('enter Jane Doe into the CRM'), true);
     assert.equal(inferCrmWriteAction('enter Jane Doe into the CRM')?.skill, 'crm-add-contact');
     assert.equal(isCrmDataEntryIntent('search remote jobs'), false);

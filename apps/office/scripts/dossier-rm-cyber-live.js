@@ -2,10 +2,10 @@
 
 /**
  * Live RM Cyber cited research + operator checklist (no PDF unless --render).
- * Run: node denizen/scripts/dossier-rm-cyber-live.js [--render]
+ * Run: node apps/office/scripts/dossier-rm-cyber-live.js [--render]
  */
 
-const dossier = require('../src/dossier-system');
+const dossier = require('../src/pipelines/dossier-system');
 
 const KNOWN = [
   'Cybersecurity and infrastructure depth for government modernization',
@@ -33,7 +33,7 @@ async function main() {
 
   let research;
   try {
-    const cited = require('../src/visitor-cited-research');
+    const cited = require('../src/visitors/visitor-cited-research');
     console.log('Running live cited research (Brave key required)…');
     research = dossier.normalizeRecipientResearch(await cited.runCitedResearch(query, { count: 5, read: 0 }));
     if (research.error && !research.citations.length) {

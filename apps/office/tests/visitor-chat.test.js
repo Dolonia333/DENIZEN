@@ -12,7 +12,7 @@ const tmpHome = fs.mkdtempSync(path.join(os.tmpdir(), 'denizen-visitor-test-'));
 process.env.HOME = tmpHome;
 process.env.USERPROFILE = tmpHome;
 
-const NpcBrainManager = require('../src/npc-brains.js');
+const NpcBrainManager = require('../src/npc/npc-brains.js');
 
 let mgr;
 

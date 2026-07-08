@@ -4,7 +4,7 @@ const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const npcRoster = require('../src/npc-roster');
+const npcRoster = require('../src/npc/npc-roster');
 
 const NPCS_DIR = path.join(__dirname, '..', 'npcs');
 

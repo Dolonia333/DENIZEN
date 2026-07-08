@@ -70,7 +70,7 @@ async function main() {
     console.log(JSON.stringify({
       ok: false,
       error: String(err.message || err),
-      hint: 'Start BrowserClaw: cd denizen/jelly/services/browserclaw && node server.mjs',
+      hint: 'Start BrowserClaw: cd apps/office/jelly/services/browserclaw && node server.mjs',
     }));
     process.exit(1);
   }

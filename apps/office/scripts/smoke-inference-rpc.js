@@ -65,7 +65,7 @@ async function main() {
     { inference_enabled: queue.inference?.enabled },
   ]);
 
-  const runtime = require('../src/denizen-inference-runtime');
+  const runtime = require('../src/compute/denizen-inference-runtime');
   const block = runtime.buildInferenceBlockFromProbe({
     backend: 'ollama',
     url: 'http://127.0.0.1:11434',
@@ -80,7 +80,7 @@ async function main() {
     block,
   ]);
 
-  const queueMod = require('../src/denizen-compute-queue');
+  const queueMod = require('../src/compute/denizen-compute-queue');
   results.push([
     'targeted_job_match',
     queueMod.jobMatchesNode(

@@ -6,8 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const mesh = require('../src/denizen-mcp-mesh-tools.js');
-const cursor = require('../src/denizen-mcp-cursor-tools.js');
+const mesh = require('../src/mcp/denizen-mcp-mesh-tools.js');
+const cursor = require('../src/mcp/denizen-mcp-cursor-tools.js');
 
 const SCOPE = {
   org_id: '11111111-1111-1111-1111-111111111111',
@@ -66,7 +66,7 @@ describe('denizen-mcp-cursor-tools', () => {
     const enq = await cursor.callTool(SCOPE, 'enqueue_cursor_work', {
       title: 'Fix AggregateError in cofounder',
       description: 'Unwrap Node AggregateError for LM telemetry',
-      files: ['denizen/src/cofounder-agent.js'],
+      files: ['apps/office/src/compute/cofounder-agent.js'],
       priority: 'high',
     });
     assert.equal(enq.ok, true);
@@ -82,7 +82,7 @@ describe('denizen-mcp-cursor-tools', () => {
     const done = await cursor.callTool(SCOPE, 'complete_cursor_work', {
       work_id: enq.work_id,
       summary: 'Added formatProviderError helper',
-      files_changed: ['denizen/src/format-provider-error.js'],
+      files_changed: ['apps/office/src/core/format-provider-error.js'],
     });
     assert.equal(done.status, 'done');
     assert.equal(done.work.result.ok, true);

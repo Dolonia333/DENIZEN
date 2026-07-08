@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const watchdog = require('../src/mesh-worker-watchdog');
+const watchdog = require('../src/compute/mesh-worker-watchdog');
 
 describe('mesh-worker-watchdog', () => {
   it('classifyFleet detects stale and offline nodes', () => {
@@ -37,7 +37,7 @@ describe('mesh-worker-watchdog', () => {
   });
 
   it('runWatchdogTick attaches scale plan when resourcePressure provided', async () => {
-    const resourcePressure = require('../src/resource-pressure');
+    const resourcePressure = require('../src/compute/resource-pressure');
     const snap = await watchdog.runWatchdogTick({
       computeQueue: {
         listPendingJobs: async () => new Array(10).fill({ id: 'j' }),

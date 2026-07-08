@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { applyMeshPatrolResult } = require('../src/denizen-bouncer-patrol-aggregate');
+const { applyMeshPatrolResult } = require('../src/compute/denizen-bouncer-patrol-aggregate');
 
 describe('denizen-bouncer-patrol-aggregate', () => {
   it('merges node patrol into worldState.bouncerPatrol', () => {

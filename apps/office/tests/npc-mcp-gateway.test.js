@@ -4,9 +4,9 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 
-const gateway = require('../src/denizen-npc-mcp-gateway.js');
-const mcpActions = require('../src/denizen-mcp-actions.js');
-const denizenDb = require('../src/denizen-db.js');
+const gateway = require('../src/core/denizen-npc-mcp-gateway.js');
+const mcpActions = require('../src/mcp/denizen-mcp-actions.js');
+const denizenDb = require('../src/intelligence/denizen-db.js');
 
 const SCOPE = {
   ok: true,

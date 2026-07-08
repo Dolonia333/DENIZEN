@@ -3,7 +3,7 @@
 const path = require('node:path');
 
 let cloudVm = null;
-try { cloudVm = require('../../../src/cloud-vm-provider'); } catch (_) {}
+try { cloudVm = require('../../../src/compute/cloud-vm-provider'); } catch (_) {}
 
 module.exports = {
   meta: {

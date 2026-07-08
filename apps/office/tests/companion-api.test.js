@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const api = require('../src/denizen-companion-api.js');
+const api = require('../src/compute/denizen-companion-api.js');
 
 describe('denizen-companion-api', () => {
   it('buildSyncUrls returns REST endpoints', () => {

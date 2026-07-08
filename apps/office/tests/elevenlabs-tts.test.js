@@ -31,7 +31,7 @@ process.env.USERPROFILE = tmpHome;
 delete process.env.ELEVENLABS_API_KEY;
 delete process.env.XI_API_KEY;
 
-const elevenLabs = require('../src/elevenlabs-tts.js');
+const elevenLabs = require('../src/voice/elevenlabs-tts.js');
 
 // ---------------------------------------------------------------------
 // Mock ElevenLabs upstream — a local http.Server we'll redirect to via

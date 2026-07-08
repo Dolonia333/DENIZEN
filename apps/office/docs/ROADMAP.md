@@ -40,13 +40,13 @@ Everything the NPCs can do, everything they will be able to do, in order of what
 - ✅ **Browserclaw + tools for Dan** — browserclaw, lm-studio, supabase-bridge all injected; SOUL.md documents Bouncer escalation flow (Dan is the decision-maker for network-level responses)
 - ✅ **Pier Supabase pipeline** — supabase-bridge skill injected; SOUL.md sprint tasks: design `npc_work_output` + `npc_artifacts` tables, wire WS event → insert
 - ✅ **Bouncer investigation upgrade** — `buildReport()` structured markdown reports with verdicts (THREAT CONFIRMED / LIKELY FALSE POSITIVE / INCONCLUSIVE); `perimeterPatrol()` baseline diff (`data/bouncer-baseline.json`); tshark integration for packet anomalies; `investigationIsSerious()` → Dan directive escalation
-- ✅ **Work output feed UI** — `src/work-feed.js` (`WorkFeedPanel`); Tab key toggle; per-NPC color coding; 100-entry history; slide-in animation; wired to `npc_work_output` WS event in `agent-office-manager.js`
+- ✅ **Work output feed UI** — `src/hud/work-feed.js` (`WorkFeedPanel`); Tab key toggle; per-NPC color coding; 100-entry history; slide-in animation; wired to `npc_work_output` WS event in `agent-office-manager.js`
 
 ### Phase 3 — Deep Integration (`66bc3a2`, `b569fad`, `04e747a`)
 
-- ✅ **NPCs run Claude Code on real files** — `src/coding-task-runner.js`: isolated git worktree per NPC per task, `npx @anthropic-ai/claude-code --print` execution, diff capture, proposal written to `reports/code-reviews/`; forbidden files guard (soul/memory/settings); `GET/POST /api/code-proposals` with approve/reject
-- ✅ **Cross-NPC task chains** — `src/task-chain.js` (`TaskChainRunner` singleton): multi-step directive sequences, each step gets previous artifacts as context, auto-advances on `taskPhase: finished`; `POST /api/task-chains`, `GET /api/task-chains/:id`; broadcasts `npc_chain_started` / `npc_chain_step_done` / `npc_chain_complete`
-- ✅ **NPC disagreement + Abby arbitration** — `src/conflict-detector.js` (`ConflictDetector` singleton): rolling 50-entry artifact log, similarity heuristic (3+ overlapping words), outcome diff check, both positions injected into Abby's next think prompt for arbitration
+- ✅ **NPCs run Claude Code on real files** — `src/pipelines/coding-task-runner.js`: isolated git worktree per NPC per task, `npx @anthropic-ai/claude-code --print` execution, diff capture, proposal written to `reports/code-reviews/`; forbidden files guard (soul/memory/settings); `GET/POST /api/code-proposals` with approve/reject
+- ✅ **Cross-NPC task chains** — `src/pipelines/task-chain.js` (`TaskChainRunner` singleton): multi-step directive sequences, each step gets previous artifacts as context, auto-advances on `taskPhase: finished`; `POST /api/task-chains`, `GET /api/task-chains/:id`; broadcasts `npc_chain_started` / `npc_chain_step_done` / `npc_chain_complete`
+- ✅ **NPC disagreement + Abby arbitration** — `src/pipelines/conflict-detector.js` (`ConflictDetector` singleton): rolling 50-entry artifact log, similarity heuristic (3+ overlapping words), outcome diff check, both positions injected into Abby's next think prompt for arbitration
 
 ---
 
@@ -144,14 +144,14 @@ NPCs do work → outcome scored → score propagates to NPC (skill +N, mood +N)
 ### 5.1 — Outcome Scoring + Team Competency Map
 
 **Status:** 🔴 Not built  
-**Files:** `src/outcome-scorer.js` (new), `src/competency-map.js` (new), `src/npc-brains.js`, `server.js`  
+**Files:** `src/intelligence/outcome-scorer.js` (new), `src/npc/competency-map.js` (new), `src/npc/npc-brains.js`, `server.js`  
 **Depends on:** Directive inbox ✅, Task chains ✅, Code proposals ✅
 
 Today every artifact is marked `taskPhase: finished` but nothing distinguishes "done well" from "done badly." Without scoring, NPCs can't actually learn. This sub-phase builds the scoring layer plus the team-wide view of who's strong at what.
 
 **What it builds:**
 
-1. **`src/outcome-scorer.js`** — module that scores every completed unit of work on a 0–5 scale:
+1. **`src/intelligence/outcome-scorer.js`** — module that scores every completed unit of work on a 0–5 scale:
    - `5` — chain step completed AND artifact was actually used by next step / code proposal approved / bug confirmed real
    - `4` — completed cleanly, no rework
    - `3` — completed but required clarification / partial result
@@ -161,7 +161,7 @@ Today every artifact is marked `taskPhase: finished` but nothing distinguishes "
 
    Score is computed from existing signals: `decision.outcome`, code proposal status, chain advancement, conflict detector hits.
 
-2. **`src/competency-map.js`** — aggregates per-NPC skill scores into a normalized profile:
+2. **`src/npc/competency-map.js`** — aggregates per-NPC skill scores into a normalized profile:
    ```js
    {
      "Edward": {
@@ -175,7 +175,7 @@ Today every artifact is marked `taskPhase: finished` but nothing distinguishes "
    ```
    Skills come from existing `[SKILL:name:+N]` tags in MEMORY.md, but now they're scaled by outcome scores (a `+1` skill tag on a 5-outcome task = +1.0; on a 2-outcome task = +0.4).
 
-3. **`src/npc-brains.js`** — after `taskPhase: finished`, call `outcomeScorer.score(decision)` → apply mood adjustment (satisfaction +N on high scores, stress +N on low) → update competency map.
+3. **`src/npc/npc-brains.js`** — after `taskPhase: finished`, call `outcomeScorer.score(decision)` → apply mood adjustment (satisfaction +N on high scores, stress +N on low) → update competency map.
 
 4. **`server.js`** endpoints:
    ```
@@ -193,7 +193,7 @@ Today every artifact is marked `taskPhase: finished` but nothing distinguishes "
 ### 5.2 — Abby Gap-Aware + Training Task Generator
 
 **Status:** 🔴 Not built  
-**Files:** `src/cofounder-agent.js`, `src/training-task-generator.js` (new), `src/npc-brains.js`  
+**Files:** `src/compute/cofounder-agent.js`, `src/training-task-generator.js` (new), `src/npc/npc-brains.js`  
 **Depends on:** 5.1 (competency map)
 
 Abby today acts on current office state — who's idle, what just happened. She doesn't see capability gaps. This sub-phase makes her gap-aware and gives her the ability to craft novel training tasks targeted at specific NPCs.
@@ -236,7 +236,7 @@ Abby today acts on current office state — who's idle, what just happened. She 
 ### 5.3 — Autonomous Capability Proposals + Trial-Mode SOUL Edits
 
 **Status:** 🔴 Not built  
-**Files:** `src/cofounder-agent.js`, `src/npc-brains.js`, `src/soul-reflection.js`, `server.js`  
+**Files:** `src/compute/cofounder-agent.js`, `src/npc/npc-brains.js`, `src/pipelines/soul-reflection.js`, `server.js`  
 **Depends on:** 5.1 (competency map), existing proposal queues ✅
 
 The system already has proposal queues for SOUL edits, capabilities, and animations — but they require explicit operator approval for every change, and only the NPC themselves can propose. This sub-phase lets Abby propose capabilities the team is missing, and lets trustworthy NPCs auto-apply small SOUL edits.
@@ -284,8 +284,8 @@ The system already has proposal queues for SOUL edits, capabilities, and animati
 
 ```
 5.1  Outcome scoring + competency map   (~2 days)
-       → src/outcome-scorer.js (new)
-       → src/competency-map.js (new)
+       → src/intelligence/outcome-scorer.js (new)
+       → src/npc/competency-map.js (new)
        → npc-brains.js: score on finish, update map
        → 3 new REST endpoints
        → BLOCKS 5.2 + 5.3
@@ -383,7 +383,7 @@ Total to Phase 4 complete: **~2 days**
 
 ```
 5.1  Outcome scoring + competency map   (~2 days) — BLOCKS 5.2 + 5.3
-       → src/outcome-scorer.js, src/competency-map.js (new)
+       → src/intelligence/outcome-scorer.js, src/npc/competency-map.js (new)
        → GET /api/competency-map[/:npc|/gaps]
 
 5.2  Abby gap-aware + training tasks    (~1.5 days)

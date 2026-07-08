@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const crmMutations = require('../src/denizen-crm-mutations');
+const crmMutations = require('../src/crm/denizen-crm-mutations');
 
 describe('CRM ticket mutations', () => {
   it('addTicket requires subject', async () => {
@@ -10,10 +10,10 @@ describe('CRM ticket mutations', () => {
       state: { contacts: [], supportTickets: [] },
       updated_at: null,
     };
-    const origGet = require('../src/denizen-crm-store').getWorkspace;
-    const origUpsert = require('../src/denizen-crm-store').upsertWorkspace;
-    require('../src/denizen-crm-store').getWorkspace = async () => store;
-    require('../src/denizen-crm-store').upsertWorkspace = async (_org, state) => {
+    const origGet = require('../src/crm/denizen-crm-store').getWorkspace;
+    const origUpsert = require('../src/crm/denizen-crm-store').upsertWorkspace;
+    require('../src/crm/denizen-crm-store').getWorkspace = async () => store;
+    require('../src/crm/denizen-crm-store').upsertWorkspace = async (_org, state) => {
       store.state = state;
       return { ok: true };
     };
@@ -24,14 +24,14 @@ describe('CRM ticket mutations', () => {
       assert.equal(store.state.supportTickets.length, 1);
       assert.equal(store.state.supportTickets[0].status, 'open');
     } finally {
-      require('../src/denizen-crm-store').getWorkspace = origGet;
-      require('../src/denizen-crm-store').upsertWorkspace = origUpsert;
+      require('../src/crm/denizen-crm-store').getWorkspace = origGet;
+      require('../src/crm/denizen-crm-store').upsertWorkspace = origUpsert;
     }
   });
 
   it('listTickets reports open count', async () => {
-    const origGet = require('../src/denizen-crm-store').getWorkspace;
-    require('../src/denizen-crm-store').getWorkspace = async () => ({
+    const origGet = require('../src/crm/denizen-crm-store').getWorkspace;
+    require('../src/crm/denizen-crm-store').getWorkspace = async () => ({
       state: {
         supportTickets: [
           { id: 1, subject: 'A', status: 'open', slaDue: '2099-01-01' },
@@ -44,7 +44,7 @@ describe('CRM ticket mutations', () => {
       assert.equal(result.openCount, 1);
       assert.equal(result.tickets.length, 1);
     } finally {
-      require('../src/denizen-crm-store').getWorkspace = origGet;
+      require('../src/crm/denizen-crm-store').getWorkspace = origGet;
     }
   });
 });

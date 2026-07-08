@@ -1,0 +1,60 @@
+{
+  "topics": [
+    {
+      "id": "rq_1783482251283_hdl9it",
+      "topic": "WOSB/SDB contractors in Oklahoma or federal IT looking for capture tools",
+      "priority": 7,
+      "assignedTo": "Bob",
+      "notes": "lead-gen seed",
+      "status": "pending",
+      "createdAt": "2026-07-08T03:44:11.283Z",
+      "updatedAt": "2026-07-08T03:44:11.283Z",
+      "startedAt": null,
+      "completedAt": null,
+      "cancelledAt": null,
+      "resultPath": null
+    },
+    {
+      "id": "rq_1783482251282_a0pggu",
+      "topic": "OMES teaming partners and similar GovCon modernization needs 2026",
+      "priority": 8,
+      "assignedTo": "Bob",
+      "notes": "lead-gen seed",
+      "status": "in_progress",
+      "createdAt": "2026-07-08T03:44:11.282Z",
+      "updatedAt": "2026-07-08T03:55:12.982Z",
+      "startedAt": "2026-07-08T03:55:12.982Z",
+      "completedAt": null,
+      "cancelledAt": null,
+      "resultPath": null
+    },
+    {
+      "id": "rq_1783481898490_rpobva",
+      "topic": "WOSB/SDB contractors in Oklahoma or federal IT looking for capture tools",
+      "priority": 7,
+      "assignedTo": "Bob",
+      "notes": "lead-gen seed",
+      "status": "in_progress",
+      "createdAt": "2026-07-08T03:38:18.490Z",
+      "updatedAt": "2026-07-08T03:55:30.654Z",
+      "startedAt": "2026-07-08T03:55:30.654Z",
+      "completedAt": null,
+      "cancelledAt": null,
+      "resultPath": null
+    },
+    {
+      "id": "rq_1783481898490_x9aj52",
+      "topic": "OMES teaming partners and similar GovCon modernization needs 2026",
+      "priority": 8,
+      "assignedTo": "Bob",
+      "notes": "lead-gen seed",
+      "status": "in_progress",
+      "createdAt": "2026-07-08T03:38:18.490Z",
+      "updatedAt": "2026-07-08T03:44:03.525Z",
+      "startedAt": "2026-07-08T03:44:03.525Z",
+      "completedAt": null,
+      "cancelledAt": null,
+      "resultPath": null
+    }
+  ]
+}

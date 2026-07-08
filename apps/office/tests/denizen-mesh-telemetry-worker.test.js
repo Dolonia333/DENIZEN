@@ -3,7 +3,7 @@
 const { describe, it, mock } = require('node:test');
 const assert = require('node:assert/strict');
 
-const worker = require('../src/denizen-mesh-telemetry-worker');
+const worker = require('../src/compute/denizen-mesh-telemetry-worker');
 
 describe('denizen-mesh-telemetry-worker', () => {
   it('processOneTelemetryJob completes on successful script run', async () => {

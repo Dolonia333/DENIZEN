@@ -2,8 +2,8 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { scoreDecision } = require('../src/outcome-scorer.js');
-const competencyMap = require('../src/competency-map.js');
+const { scoreDecision } = require('../src/intelligence/outcome-scorer.js');
+const competencyMap = require('../src/npc/competency-map.js');
 
 describe('outcome-scorer', () => {
   it('scores skill errors as 0', () => {

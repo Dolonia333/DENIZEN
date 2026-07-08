@@ -3,8 +3,8 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const roster = require('../src/npc-roster.js');
-const caps = require('../src/npc-capabilities.js');
+const roster = require('../src/npc/npc-roster.js');
+const caps = require('../src/npc/npc-capabilities.js');
 
 describe('npc-capabilities', () => {
   it('covers every roster NPC', () => {

@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { createSentenceStream, pickFiller, trimSentence } = require('../src/voice-sentence.js');
+const { createSentenceStream, pickFiller, trimSentence } = require('../src/voice/voice-sentence.js');
 
 describe('voice-sentence', () => {
   it('emits complete sentences from streaming buffer', () => {

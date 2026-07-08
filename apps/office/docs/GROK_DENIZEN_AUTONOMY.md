@@ -114,10 +114,10 @@ Good for chat demos; **Grok Build + MCP** is better for coding + office in one t
 
 | File | Role |
 |------|------|
-| `denizen/scripts/grok-denizen-autonomy.js` | Autonomy runner |
+| `apps/office/scripts/grok-denizen-autonomy.js` | Autonomy runner |
 | `infra/run-grok-autonomy.py` | Env loader + entrypoint |
 | `infra/mint-mcp-token-nas.py` | Mint bearer token on NAS |
 | `infra/verify-mcp-preflight.py` | initialize + tools/list gate |
-| `src/denizen-npc-mcp-gateway.js` | MCP server implementation |
+| `src/core/denizen-npc-mcp-gateway.js` | MCP server implementation |
 
 See also [NPC_MCP_GATEWAY.md](NPC_MCP_GATEWAY.md).

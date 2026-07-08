@@ -4,8 +4,8 @@ const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
-const dbPath = path.resolve(__dirname, '../src/denizen-db.js');
-const queuePath = path.resolve(__dirname, '../src/denizen-station-task-queue.js');
+const dbPath = path.resolve(__dirname, '../src/intelligence/denizen-db.js');
+const queuePath = path.resolve(__dirname, '../src/station/denizen-station-task-queue.js');
 
 function loadQueueWithMockDb(mockDb) {
   delete require.cache[queuePath];

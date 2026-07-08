@@ -3,7 +3,7 @@
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const hardwareMonitor = require('../src/denizen-hardware-monitor');
+const hardwareMonitor = require('../src/compute/denizen-hardware-monitor');
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;

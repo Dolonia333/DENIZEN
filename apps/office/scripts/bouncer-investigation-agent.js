@@ -10,8 +10,8 @@
  */
 
 const http = require('node:http');
-const linuxAgent = require('../src/linux-agent');
-const bouncerInvestigation = require('../src/bouncer-investigation');
+const linuxAgent = require('../src/security/linux-agent');
+const bouncerInvestigation = require('../src/security/bouncer-investigation');
 
 const PORT = parseInt(process.env.BOUNCER_INVESTIGATION_PORT, 10) || 8890;
 

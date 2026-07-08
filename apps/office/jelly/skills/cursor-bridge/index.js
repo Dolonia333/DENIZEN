@@ -1,6 +1,6 @@
 'use strict';
 
-const mcpCursor = require('../../../src/denizen-mcp-cursor-tools');
+const mcpCursor = require('../../../src/mcp/denizen-mcp-cursor-tools');
 
 module.exports = {
   meta: {

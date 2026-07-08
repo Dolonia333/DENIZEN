@@ -31,7 +31,7 @@ Three things ship together:
 
 ```
 multbot/
-├── denizen/                 # the platform (this doc's subject)
+├── apps/office/                 # the platform (this doc's subject)
 │   ├── server.js            # monolithic Node HTTP + WebSocket server (~7k LOC)
 │   ├── index.html           # Phaser game shell (the Office)
 │   ├── office-scene.js      # main Phaser scene

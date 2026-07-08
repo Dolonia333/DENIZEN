@@ -9,7 +9,7 @@ Two new modules + one extension to an existing one:
 
 | File | Purpose |
 |---|---|
-| [`src/voice-input.js`](../src/voice-input.js) | Push-to-talk STT. Hold `\` (backslash) or click the mic button. Drops the transcript into the player-chat pipeline. |
+| [`src/voice/voice-input.js`](../src/voice/voice-input.js) | Push-to-talk STT. Hold `\` (backslash) or click the mic button. Drops the transcript into the player-chat pipeline. |
 | [`src/openclaw-dispatch.js`](../src/openclaw-dispatch.js) | Pure classifier + browser dispatcher. Decides if your message is an *action request* and routes it to OpenClaw via the gateway. |
 | [`src/gateway-bridge.js`](../src/gateway-bridge.js) | New `sendChat(text, opts)` helper on the existing OpenClaw bridge. |
 
@@ -21,13 +21,13 @@ Two new modules + one extension to an existing one:
        ▼                                        ▼
    ┌────────────────────────────┐
    │ webkitSpeechRecognition     │ → final transcript
-   │ src/voice-input.js          │
+   │ src/voice/voice-input.js          │
    └─────────────┬──────────────┘
                  │
                  ▼
    ┌────────────────────────────┐
    │ window.__DenizenPlayerChat  │ — adds to chat log + classifies
-   │ src/player-chat.js          │
+   │ src/hud/player-chat.js          │
    └─────────────┬──────────────┘
                  │
        ┌─────────┴──────────────┐

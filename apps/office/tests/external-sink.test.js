@@ -9,7 +9,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 
-const ExternalSink = require('../src/external-sink.js');
+const ExternalSink = require('../src/intelligence/external-sink.js');
 const { WorldState } = require('../src/world-state.js');
 
 let mockServer;

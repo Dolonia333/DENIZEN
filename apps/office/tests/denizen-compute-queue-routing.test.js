@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const computeQueue = require('../src/denizen-compute-queue.js');
+const computeQueue = require('../src/compute/denizen-compute-queue.js');
 
 describe('denizen-compute-queue capability routing', () => {
   it('nodeCanRunJob rejects weak hardware for embedding jobs', () => {

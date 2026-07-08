@@ -8,7 +8,7 @@
 require('../src/load-env');
 const fs = require('node:fs');
 const path = require('node:path');
-const desktopAgent = require('../src/desktop-agent');
+const desktopAgent = require('../src/compute/desktop-agent');
 
 const action = process.argv[2] || 'click';
 let payload = {};

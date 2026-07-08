@@ -4,7 +4,7 @@ const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 
-const n8nClient = require('../src/n8n-client.js');
+const n8nClient = require('../src/integrations/n8n-client.js');
 
 let mockServer;
 let mockBase;

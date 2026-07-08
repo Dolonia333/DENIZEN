@@ -3,11 +3,11 @@
 const { describe, it, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 
-const denizenDb = require('../src/denizen-db.js');
+const denizenDb = require('../src/intelligence/denizen-db.js');
 const {
   getPendingHandoffs,
   buildLucyHandoffAlertBroadcast,
-} = require('../src/denizen-visitor.js');
+} = require('../src/visitors/denizen-visitor.js');
 
 const ORG_ID = '11111111-1111-1111-1111-111111111111';
 const SESSION_ID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';

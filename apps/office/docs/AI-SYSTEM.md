@@ -1,6 +1,6 @@
 # Denizen — NPC Intelligence System
 
-The AI layer that makes 16 NPCs feel like autonomous agents instead of scripted sprites. This document covers the server-side brain in [`src/npc-brains.js`](../src/npc-brains.js) and the director in [`src/cofounder-agent.js`](../src/cofounder-agent.js).
+The AI layer that makes 16 NPCs feel like autonomous agents instead of scripted sprites. This document covers the server-side brain in [`src/npc/npc-brains.js`](../src/npc/npc-brains.js) and the director in [`src/compute/cofounder-agent.js`](../src/compute/cofounder-agent.js).
 
 ## The mental model
 
@@ -44,7 +44,7 @@ this._sharedTasks = [{task, postedBy, at, claimedBy}];
 
 ## `think()` — the main decision loop
 
-Location: [`src/npc-brains.js`](../src/npc-brains.js) — `think(npcName, officeContext)`.
+Location: [`src/npc/npc-brains.js`](../src/npc/npc-brains.js) — `think(npcName, officeContext)`.
 
 Called by the server when it receives an `npc_think` message. Returns a decision JSON.
 
@@ -133,7 +133,7 @@ Same provider, same memory, different prompt. Used when another NPC speaks to th
 
 ### Reply-back loop
 
-Client-side ([`agent-office-manager.js`](../src/agent-office-manager.js), case `npc_response`):
+Client-side ([`agent-office-manager.js`](../src/npc/agent-office-manager.js), case `npc_response`):
 
 1. Responder arrives at speaker, bubble shown.
 2. If `turn < MAX_CHAT_TURNS (4)`, after 1800ms the responder walks back to the original speaker with their just-generated line — and the original speaker is now asked to reply.
@@ -143,7 +143,7 @@ Cap raised from 2 → 4 in the latest upgrade. Conversations now actually develo
 
 ## `CofounderAgent` — the director
 
-Location: [`src/cofounder-agent.js`](../src/cofounder-agent.js).
+Location: [`src/compute/cofounder-agent.js`](../src/compute/cofounder-agent.js).
 
 A separate agent running every 15-30s. Think of it as the CTO puppeteer — it doesn't *belong* to any NPC, it choreographs the whole office. Its decisions emit `agent_command` broadcasts that the game client enacts.
 

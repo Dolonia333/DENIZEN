@@ -5,11 +5,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const liveInfra = require('../src/live-infra-brief');
+const liveInfra = require('../src/compute/live-infra-brief');
 const {
   setupDirectWorktree,
   collectDirectDiff,
-} = require('../src/coding-task-runner');
+} = require('../src/pipelines/coding-task-runner');
 
 describe('live-infra-brief', () => {
   it('formatSnapshot includes LM and bridge lines', () => {

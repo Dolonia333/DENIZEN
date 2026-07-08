@@ -3,7 +3,7 @@
 **Canon spec.** How NPCs produce branded PDF dossiers (DENIZEN technical, 1921 partnership,
 client capability briefs) and tailor each one correctly to its reader, recipient, and project.
 
-Written to live in `denizen/docs/` as canon and to be read by the agents that run the generation
+Written to live in `apps/office/docs/` as canon and to be read by the agents that run the generation
 chain. Same pattern as a SOUL.md: change this file, change the output — no code change.
 
 Derived directly from two reference artifacts: the **DENIZEN Technical Dossier v1.6.0** and the

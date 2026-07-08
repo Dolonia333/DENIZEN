@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const roster = require('../src/npc-roster.js');
+const roster = require('../src/npc/npc-roster.js');
 
 describe('npc-roster', () => {
   it('has 18 NPCs including Grok and Claude', () => {

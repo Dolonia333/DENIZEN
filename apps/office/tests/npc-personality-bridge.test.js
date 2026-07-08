@@ -3,7 +3,7 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
 
-const bridge = require('../src/npc-personality-bridge');
+const bridge = require('../src/npc/npc-personality-bridge');
 
 describe('npc-personality-bridge', () => {
   it('mergeMemberProfiles prefers identity overrides over org defaults', () => {

@@ -69,7 +69,7 @@ Requires **`compute`** scope on token (included in **Full access** preset).
 enqueue_cursor_work({
   "title": "Fix LM Studio AggregateError on NAS",
   "description": "Telemetry shows instant AggregateError, 0 tokens. Router may hit localhost inside Docker.",
-  "files": ["denizen/src/lm-studio-router.js", "denizen/src/cofounder-agent.js"],
+  "files": ["apps/office/src/integrations/lm-studio-router.js", "apps/office/src/compute/cofounder-agent.js"],
   "priority": "urgent",
   "kind": "bugfix"
 })
@@ -81,7 +81,7 @@ enqueue_cursor_work({
 complete_cursor_work({
   "work_id": "cwr_…",
   "summary": "Excluded loopback nodes in remote-only mode; unwrapped AggregateError in telemetry",
-  "files_changed": ["denizen/src/format-provider-error.js", "denizen/src/llm-telemetry.js"]
+  "files_changed": ["apps/office/src/core/format-provider-error.js", "apps/office/src/intelligence/llm-telemetry.js"]
 })
 ```
 
@@ -95,7 +95,7 @@ complete_cursor_work({
 
 | Path | Role |
 |------|------|
-| `src/denizen-mcp-cursor-tools.js` | Queue + 4 MCP tools |
-| `src/denizen-mcp-mesh-tools.js` | Mesh MCP tools |
+| `src/mcp/denizen-mcp-cursor-tools.js` | Queue + 4 MCP tools |
+| `src/mcp/denizen-mcp-mesh-tools.js` | Mesh MCP tools |
 | `data/cursor-bridge-queue.jsonl` | Persistent queue (NAS volume) |
 | `.cursor/rules/denizen-bridge.mdc` | Cursor-side polling hint |
