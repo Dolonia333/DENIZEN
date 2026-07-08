@@ -80,7 +80,8 @@
       cursor: 'pointer', maxWidth: '300px',
     });
     chip.title = 'Click to expand office diagnostics';
-    chip.textContent = '⋯ diag';
+    globalThis.DenizenBottomDock?.renderChip?.('denizen-diag-chip', 'diag');
+    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = '⋯ diag';
     const bind = window.DenizenTouchBind?.bindPress;
     if (bind) bind(chip, togglePanel);
     else chip.addEventListener('click', togglePanel);
@@ -133,10 +134,12 @@
     const s = styles[state] || styles.gray;
     chip.style.background = s.bg;
     chip.style.borderColor = s.border;
-    // Touch dock is icon-only — show just the status emoji, full text in the tooltip
-    if (document.documentElement.classList.contains('denizen-touch')) {
-      const emoji = label.match(/^\S+/)?.[0] || '⋯';
-      chip.textContent = emoji;
+    const touch = document.documentElement.classList.contains('denizen-touch');
+    const paint = globalThis.DenizenTablerIcons?.paintChip;
+    if (paint) {
+      paint(chip, 'stethoscope', touch ? '' : label, { iconOnly: touch, title: label });
+    } else if (touch) {
+      chip.textContent = label.match(/^\S+/)?.[0] || '⋯';
       chip.title = label;
     } else {
       chip.textContent = label;

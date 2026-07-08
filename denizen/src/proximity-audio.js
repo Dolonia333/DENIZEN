@@ -366,16 +366,22 @@
     const touch = !!window.__DenizenIsTouch
       || document.documentElement.classList.contains('denizen-touch');
     const voiceOn = !!window.DenizenPresence?.zionPresent;
-    const label = _audioMode === 'focus'    ? (touch ? '🎯' : '🎯 Focus')
-                : _audioMode === 'mute-all' ? (touch ? '🔕' : '🔕 NPC mute')
-                :                             (touch ? '🔊' : '🔊 Listen-in');
-    el.textContent = label;
-    const voiceNote = voiceOn ? '' : ' — voice is OFF (tap 👤 chip)';
-    el.title = _audioMode === 'focus'
+    const iconName = _audioMode === 'focus' ? 'focus-2'
+      : _audioMode === 'mute-all' ? 'bell-off'
+        : 'volume';
+    const label = _audioMode === 'focus' ? 'Focus'
+      : _audioMode === 'mute-all' ? 'NPC mute'
+        : 'Listen-in';
+    const voiceNote = voiceOn ? '' : ' — voice is OFF (tap walk-up chip)';
+    const title = _audioMode === 'focus'
       ? `Focus: only your conversation partner (or nearest NPC) speaks${voiceNote}. Tap to cycle.`
       : _audioMode === 'mute-all'
         ? `NPC audio muted (bubbles still show). Tap to cycle.`
         : `Listen-in: distance + facing volume${voiceNote}. Tap to cycle.`;
+    const paint = globalThis.DenizenTablerIcons?.paintChip;
+    if (paint) paint(el, iconName, touch ? '' : label, { iconOnly: touch, title });
+    else el.textContent = touch ? '🔊' : `🔊 ${label}`;
+    el.title = title;
     el.dataset.mode = _audioMode;
     el.style.opacity = (_audioMode === 'mute-all' || !voiceOn) ? '0.82' : '1';
   }

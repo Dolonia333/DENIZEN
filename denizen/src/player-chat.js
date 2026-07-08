@@ -210,22 +210,30 @@ class PlayerChat {
   }
 
   _chatFabClosedLabel() {
-    return this.manager?.connected ? '💬 Chat' : '💬 Chat (offline)';
+    return this.manager?.connected ? 'Chat' : 'Chat (offline)';
   }
 
   _syncFabLabel() {
     if (!this._fab) return;
     const compact = document.documentElement.classList.contains('denizen-touch')
       && this._fab.closest('#denizen-bottom-dock');
+    const paint = globalThis.DenizenTablerIcons?.paintChip;
     if (this._visible) {
-      this._fab.textContent = compact ? '✕' : '✕ Close';
+      if (paint) paint(this._fab, 'x', compact ? '' : 'Close', { iconOnly: compact, title: 'Close chat' });
+      else this._fab.textContent = compact ? '✕' : '✕ Close';
       this._fab.setAttribute('aria-pressed', 'true');
       this._fab.title = 'Close chat';
     } else {
       const label = this._chatFabClosedLabel();
-      this._fab.textContent = compact ? '💬' : label;
+      if (globalThis.DenizenBottomDock?.renderChip) {
+        globalThis.DenizenBottomDock.renderChip('player-chat-fab', label, { iconOnly: compact });
+      } else if (paint) {
+        paint(this._fab, 'messages', label, { iconOnly: compact, title: label });
+      } else {
+        this._fab.textContent = compact ? '💬' : label;
+      }
       this._fab.setAttribute('aria-pressed', 'false');
-      this._fab.title = compact ? (this._fab.dataset.fullLabel || label) : 'Talk to NPCs (Enter or T also works)';
+      if (!compact) this._fab.title = 'Talk to NPCs (Enter or T also works)';
     }
   }
 
@@ -2724,6 +2732,7 @@ class PlayerChat {
       fab.type = 'button';
       fab.className = 'ws-off';
       fab.textContent = '💬 Chat';
+      globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
       fab.title = 'Talk to NPCs (Enter or T also works)';
       document.body.appendChild(fab);
       this._fab = fab;

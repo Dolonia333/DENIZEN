@@ -315,10 +315,14 @@
     if (!presenceChip) return;
     const on = !!window.DenizenPresence?.zionPresent;
     const touch = isTouchUi();
-    presenceChip.textContent = touch ? '👤' : (on ? '👤 voice ON' : '👤 voice OFF');
-    presenceChip.title = on
+    const title = on
       ? 'Voice ON — tap to mute NPC speech'
       : 'Voice OFF — tap to hear NPCs';
+    globalThis.DenizenBottomDock?.renderChip?.('denizen-presence-chip', touch ? '' : (on ? 'voice ON' : 'voice OFF'), { iconOnly: touch, title });
+    if (!globalThis.DenizenBottomDock?.renderChip) {
+      presenceChip.textContent = touch ? '👤' : (on ? '👤 voice ON' : '👤 voice OFF');
+    }
+    presenceChip.title = title;
     presenceChip.style.background = on ? '#064e3b' : '#0f172a';
     presenceChip.style.borderColor = on ? '#34d399' : '#355';
     presenceChip.style.display = 'block';
@@ -437,7 +441,8 @@
     micButton.id = 'denizen-mic-button';
     micButton.type = 'button';
     micButton.title = `Tap to speak — tap again when done. Or hold ${hotkey} on desktop.`;
-    micButton.textContent = '🎤';
+    globalThis.DenizenBottomDock?.renderChip?.('denizen-mic-button', 'Speak');
+    if (!globalThis.DenizenBottomDock?.renderChip) micButton.textContent = '🎤';
     Object.assign(micButton.style, {
       position: 'fixed', bottom: '14px', right: '14px', zIndex: 100002,
       width: '52px', height: '52px', borderRadius: '50%',

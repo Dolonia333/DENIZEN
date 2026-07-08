@@ -460,7 +460,8 @@
     chip.id = 'denizen-llm-tel-chip';
     chip.type = 'button';
     chip.title = 'LM Studio + provider telemetry (click for details)';
-    chip.textContent = '⚙';
+    globalThis.DenizenBottomDock?.renderChip?.('denizen-llm-tel-chip', 'LM Stats');
+    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = '⚙';
     wireLmChip(chip);
     document.body.appendChild(chip);
     return chip;
@@ -503,17 +504,20 @@
     const chip = ensureChip();
     const s = state.stats;
     const touch = isTouchUi();
+    const paint = (label, title) => {
+      globalThis.DenizenBottomDock?.renderChip?.('denizen-llm-tel-chip', label, { iconOnly: touch, title });
+      if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = touch ? '⚙' : label;
+      if (title) chip.title = title;
+    };
     if (!s) {
-      chip.textContent = touch ? '⚙' : '⚙ LM …';
+      paint(touch ? '' : 'LM …', chip.title);
       return;
     }
     const p95 = s.p95LatencyMs != null ? (s.p95LatencyMs / 1000).toFixed(1) + 's' : '—';
     const e = s.errors || 0;
     const winLabel = WINDOWS.find(w => w.ms === state.windowMs)?.label || '?';
-    chip.textContent = touch
-      ? '⚙'
-      : `⚙ LM p95 ${p95} • ${s.calls}c/${winLabel} • ${e}e`;
-    chip.title = `LM telemetry — p95 ${p95}, ${s.calls} calls/${winLabel}, ${e} errors`;
+    const title = `LM telemetry — p95 ${p95}, ${s.calls} calls/${winLabel}, ${e} errors`;
+    paint(touch ? '' : `LM p95 ${p95} • ${s.calls}c/${winLabel} • ${e}e`, title);
     chip.dataset.state = e > 0 ? 'err' : (s.calls > 0 ? 'busy' : '');
   }
 

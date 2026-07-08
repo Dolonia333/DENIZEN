@@ -71,5 +71,22 @@
     else el.textContent = text == null ? '' : String(text);
   }
 
-  globalThis.DenizenTablerIcons = { icon, chip, withIcon, x, setEl, ensureStyles };
+  /** Paint a dock chip — icon-only on touch, icon+label on desktop. */
+  function paintChip(el, iconName, label, opts = {}) {
+    if (!el) return;
+    ensureStyles();
+    const touch = document.documentElement.classList.contains('denizen-touch');
+    const iconOnly = opts.iconOnly ?? (opts.compact ?? touch);
+    const name = String(iconName || 'circle').replace(/[^a-z0-9-]/gi, '');
+    const text = label == null ? '' : String(label);
+    if (iconOnly) {
+      el.innerHTML = icon(name, { size: opts.size || 14 });
+      el.title = opts.title != null ? String(opts.title) : text;
+    } else {
+      el.innerHTML = text ? chip(name, text, { size: opts.size || 13 }) : icon(name, { size: opts.size || 14 });
+      if (opts.title != null) el.title = String(opts.title);
+    }
+  }
+
+  globalThis.DenizenTablerIcons = { icon, chip, withIcon, x, setEl, paintChip, ensureStyles };
 })();

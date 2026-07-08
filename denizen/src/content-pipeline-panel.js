@@ -238,7 +238,9 @@
       const chip = document.getElementById(CHIP_ID);
       if (chip) {
         const n = Number(summary.active || 0);
-        chip.textContent = n > 0 ? `📰 ${n}` : '📰';
+        const touch = document.documentElement.classList.contains('denizen-touch');
+        globalThis.DenizenBottomDock?.renderChip?.(CHIP_ID, n > 0 ? String(n) : 'Newsroom', { iconOnly: touch && n === 0 });
+        if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = n > 0 ? `📰 ${n}` : '📰';
         chip.dataset.badge = n > 0 ? String(n) : '';
       }
     } catch (_) {
@@ -269,7 +271,8 @@
     chip.id = CHIP_ID;
     chip.type = 'button';
     chip.title = 'Newsroom content pipeline';
-    chip.textContent = '📰';
+    globalThis.DenizenBottomDock?.renderChip?.(CHIP_ID, 'Newsroom');
+    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = '📰';
     chip.classList.add('denizen-dock-chip');
     chip.addEventListener('click', toggle);
     document.body.appendChild(chip);

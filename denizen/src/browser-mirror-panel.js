@@ -428,22 +428,28 @@
 
   function setChipState() {
     if (!chipEl) return;
+    const touch = document.documentElement.classList.contains('denizen-touch');
+    let label = 'browser';
     if (frameLive && shouldRunLivePoll()) {
       chipEl.style.background = '#14532d';
       chipEl.style.borderColor = '#4ade80';
-      chipEl.textContent = '🌐 live';
+      label = touch ? '' : 'live';
     } else if (state.streaming) {
       chipEl.style.background = '#713f12';
       chipEl.style.borderColor = '#facc15';
-      chipEl.textContent = '🌐 connecting…';
+      label = touch ? '' : 'connecting…';
     } else if (state.searching || state.status === 'searching') {
       chipEl.style.background = '#713f12';
       chipEl.style.borderColor = '#facc15';
-      chipEl.textContent = '🌐 starting…';
+      label = touch ? '' : 'starting…';
     } else {
       chipEl.style.background = '#0f172a';
       chipEl.style.borderColor = '#355';
-      chipEl.textContent = '🌐 browser';
+      label = touch ? '' : 'browser';
+    }
+    globalThis.DenizenBottomDock?.renderChip?.('denizen-browser-mirror-chip', label, { iconOnly: touch });
+    if (!globalThis.DenizenBottomDock?.renderChip) {
+      chipEl.textContent = touch ? '🌐' : `🌐 ${label}`;
     }
   }
 
@@ -460,7 +466,8 @@
       chipEl.style.background = '#1e293b';
       chipEl.style.borderColor = '#475569';
       chipEl.style.color = '#64748b';
-      chipEl.textContent = '🌐 browser';
+      globalThis.DenizenBottomDock?.renderChip?.('denizen-browser-mirror-chip', 'browser', { iconOnly: true });
+      if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '🌐 browser';
       return;
     }
     boundNpcKey = resolveBoundNpcKey();
@@ -538,7 +545,8 @@
       cursor: 'pointer',
     });
     boundNpcKey = resolveBoundNpcKey();
-    chipEl.textContent = '🌐 browser';
+    globalThis.DenizenBottomDock?.renderChip?.(CHIP_ID, 'browser');
+    if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '🌐 browser';
     document.body.appendChild(chipEl);
     rewireTouch();
 

@@ -433,7 +433,8 @@
       chip = document.createElement('button');
       chip.id = CHIP_ID;
       chip.type = 'button';
-      chip.textContent = 'Power tour';
+      globalThis.DenizenBottomDock?.renderChip?.('denizen-superuser-replay-chip', touch ? '' : 'Power tour', { iconOnly: touch });
+      if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = 'Power tour';
       chip.title = 'City Power tour — connect, contribute, stay in control';
       document.body.appendChild(chip);
     }

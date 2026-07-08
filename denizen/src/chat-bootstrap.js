@@ -115,6 +115,7 @@
     fab.className = 'ws-off';
 
     fab.textContent = '💬 Chat';
+    globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
 
     fab.title = 'Talk to NPCs';
 

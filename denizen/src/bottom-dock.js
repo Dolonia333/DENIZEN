@@ -430,6 +430,25 @@
     return T.chip(tabler, label, { size: 13 });
   }
 
+  /** Panels call this instead of textContent so Tabler icons stick. */
+  function renderChip(id, labelText, opts = {}) {
+    const entry = CHIP_ICONS[id];
+    const el = document.getElementById(id);
+    if (!el || !entry) return;
+    const T = globalThis.DenizenTablerIcons;
+    const iconName = opts.iconOverride || entry.tabler;
+    const label = labelText != null ? String(labelText) : entry.label;
+    if (T?.paintChip) {
+      T.paintChip(el, iconName, label, {
+        iconOnly: opts.iconOnly,
+        title: opts.title ?? (opts.iconOnly ? label : undefined),
+      });
+      el.dataset.fullLabel = el.innerHTML;
+      return;
+    }
+    el.textContent = label;
+  }
+
   /** Tabler loads lazily — drop text-only labels cached before icons were ready. */
   function clearStaleChipCache() {
     if (!globalThis.DenizenTablerIcons) return;
@@ -628,6 +647,7 @@
 
   window.DenizenBottomDock = {
     refresh: adoptAll,
+    renderChip,
     height: () => parseInt(getComputedStyle(document.documentElement).getPropertyValue('--denizen-dock-height'), 10) || 56,
   };
 })();

@@ -1084,11 +1084,13 @@
     if (pendingCount > 0) {
       chipEl.style.background = '#713f12';
       chipEl.style.borderColor = '#facc15';
-      chipEl.textContent = `📋 ${pendingCount} pending`;
+      globalThis.DenizenBottomDock?.renderChip?.('denizen-proposals-chip', `${pendingCount} pending`);
+      if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = `📋 ${pendingCount} pending`;
     } else {
       chipEl.style.background = '#0f172a';
       chipEl.style.borderColor = '#355';
-      chipEl.textContent = '📋 approvals';
+      globalThis.DenizenBottomDock?.renderChip?.('denizen-proposals-chip', 'approvals');
+      if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '📋 approvals';
     }
   }
 
@@ -1172,7 +1174,8 @@
     chipEl.title = isSystemOperator()
       ? 'Review NPC proposals — animations, SOUL, code, PDF dossiers'
       : 'Review your PDF dossier proposals';
-    chipEl.textContent = '📋 approvals';
+    globalThis.DenizenBottomDock?.renderChip?.('denizen-proposals-chip', 'approvals');
+    if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '📋 approvals';
     chipEl.setAttribute('aria-controls', PANEL_ID);
     chipEl.setAttribute('aria-expanded', 'false');
     const openPanel = () => {

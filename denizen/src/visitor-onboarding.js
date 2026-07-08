@@ -561,7 +561,8 @@
     if (!chip) return;
     // Touch dock is icon-only — full label lives in the tooltip
     const touch = document.documentElement.classList.contains('denizen-touch');
-    chip.textContent = touch ? '📖' : replayChipLabel();
+    globalThis.DenizenBottomDock?.renderChip?.(TOUR_CHIP_ID, touch ? '' : replayChipLabel(), { iconOnly: touch, title: 'Replay the Denizen office tour' });
+    if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = touch ? '📖' : replayChipLabel();
     chip.title = 'Replay the Denizen office tour';
     const clone = chip.cloneNode(true);
     chip.replaceWith(clone);

@@ -522,7 +522,8 @@
       chip = document.createElement('button');
       chip.id = CHIP_ID;
       chip.type = 'button';
-      chip.textContent = 'Guide';
+      globalThis.DenizenBottomDock?.renderChip?.('denizen-capabilities-guide-chip', touch ? '' : 'Guide', { iconOnly: touch });
+      if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = 'Guide';
       chip.title = 'Office guide - agents, models, City Power, desktop';
       document.body.appendChild(chip);
     }

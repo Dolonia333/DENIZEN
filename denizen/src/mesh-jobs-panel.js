@@ -187,7 +187,8 @@
     chipEl.id = CHIP_ID;
     chipEl.type = 'button';
     chipEl.title = 'City Power and connected stations';
-    chipEl.textContent = '⬡ power';
+    globalThis.DenizenBottomDock?.renderChip?.('denizen-mesh-jobs-chip', 'power');
+    if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = '⬡ power';
     const openPanel = () => setPanelOpen(!panelOpen);
     const bind = globalThis.DenizenTouchBind?.bindPress;
     if (bind) bind(chipEl, openPanel);
@@ -226,34 +227,35 @@
     const { pendingCount, runningCount, dbEnabled, error, watchdogAlerts, resourcePressure } = snapshot;
     const touch = isTouchUi();
     const pressureHigh = resourcePressure?.severity === 'critical' || resourcePressure?.severity === 'high';
+    const paint = (label, title) => {
+      globalThis.DenizenBottomDock?.renderChip?.('denizen-mesh-jobs-chip', label, { iconOnly: touch, title });
+      if (!globalThis.DenizenBottomDock?.renderChip) chipEl.textContent = touch ? '⬡' : label;
+      if (title) chipEl.title = title;
+    };
     if (watchdogAlerts?.length || pressureHigh) {
       chipEl.dataset.state = 'busy';
-      chipEl.textContent = touch ? '⬡' : '⬡ power ⚠';
-      chipEl.title = watchdogAlerts?.[0]?.message || 'City Power alert';
+      paint(touch ? '' : 'power ⚠', watchdogAlerts?.[0]?.message || 'City Power alert');
       return;
     }
     if (error) {
       chipEl.dataset.state = 'busy';
-      chipEl.textContent = touch ? '⬡' : '⬡ power !';
-      chipEl.title = `City Power error: ${error}`;
+      paint(touch ? '' : 'power !', `City Power error: ${error}`);
       return;
     }
     if (!dbEnabled) {
       chipEl.dataset.state = '';
-      chipEl.textContent = touch ? '⬡' : '⬡ power off';
-      chipEl.title = 'City Power is offline';
+      paint(touch ? '' : 'power off', 'City Power is offline');
       return;
     }
     const active = pendingCount + runningCount;
     chipEl.dataset.state = active > 0 ? 'busy' : 'idle';
     if (touch) {
-      chipEl.textContent = '⬡';
-      chipEl.title = active > 0
+      paint('', active > 0
         ? `City Power - ${active} active (${pendingCount} waiting, ${runningCount} running)`
-        : 'City Power - ready';
+        : 'City Power - ready');
     } else {
-      chipEl.textContent = active > 0 ? `⬡ power ${active}` : '⬡ power';
-      chipEl.title = 'City Power and connected stations';
+      const title = 'City Power and connected stations';
+      paint(active > 0 ? `power ${active}` : 'power', title);
     }
   }
 
