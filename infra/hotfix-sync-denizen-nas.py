@@ -25,6 +25,7 @@ CHUNK = 1024 * 512
 
 # Hotfix paths — add workflow / office-build tooling when deploying UI changes
 SYNC_PATHS = [
+    "index.html",
     "landing.html",
     "vendor/tabler/tabler-icons.min.css",
     "vendor/tabler/fonts/tabler-icons.woff2",
