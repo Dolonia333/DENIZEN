@@ -769,7 +769,15 @@
         animation-duration: 0.01ms !important;
         transition-duration: 0.01ms !important;
       }
-      #boot { display: none; }
+      /* Still show the earth splash — just skip motion (Windows often has
+         “Animation effects” off, which used to hide the whole boot). */
+      #boot-globe,
+      #boot .big,
+      #boot .skip {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+      }
     }
   </style>
 </head>
@@ -961,13 +969,19 @@
 
   <script>
   (function () {
-    // ── boot splash: spinning pixel globe + DENIZEN (every fresh visit) ──
+    // ── boot splash: spinning pixel globe + DENIZEN (every landing load) ──
     const boot = document.getElementById('boot');
     let globeRaf = null;
+    const reduceMotion = (() => {
+      try {
+        return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      } catch (_) {
+        return false;
+      }
+    })();
     const skipBoot = () => {
       boot?.classList.add('hide');
       if (globeRaf) { cancelAnimationFrame(globeRaf); globeRaf = null; }
-      try { sessionStorage.setItem('denizen_boot_seen', '1'); } catch (_) { /* private mode */ }
     };
 
     // Coarse equirectangular earth (48×24) — '#' = land. Rough on purpose;
@@ -999,7 +1013,7 @@
       '....############################################',
     ];
 
-    function startGlobe() {
+    function startGlobe(opts = {}) {
       const cv = document.getElementById('boot-globe');
       const ctx = cv?.getContext('2d');
       if (!ctx) return;
@@ -1010,16 +1024,10 @@
       const cols = GLOBE_MAP[0].length;
       const R = N / 2 - 1;
       const TURN_MS = 2400;                  // one full rotation before DENIZEN shows
+      const animate = opts.animate !== false;
       let t0 = null;
 
-      function frame(now) {
-        if (t0 == null) t0 = now;
-        const elapsed = now - t0;
-        // One clean turn in TURN_MS, then a slow ambient drift while the
-        // wordmark fades in. Time-based, so dropped frames never stutter it.
-        const spin = elapsed <= TURN_MS
-          ? (elapsed / TURN_MS) * 2 * Math.PI
-          : 2 * Math.PI + ((elapsed - TURN_MS) / TURN_MS) * 0.6;
+      function paint(spin) {
         px.fill(0);
         for (let y = 0; y < N; y++) {
           for (let x = 0; x < N; x++) {
@@ -1028,40 +1036,46 @@
             const d2 = nx * nx + ny * ny;
             if (d2 > 1) continue;
             const nz = Math.sqrt(1 - d2);
-            const lat = Math.asin(ny);                       // -π/2 … π/2
-            const lon = Math.atan2(nx, nz) + spin;           // rotate east→west
+            const lat = Math.asin(ny);
+            const lon = Math.atan2(nx, nz) + spin;
             const row = Math.min(rows - 1, Math.max(0, Math.floor((lat / Math.PI + 0.5) * rows)));
             const col = ((Math.floor(((lon / (2 * Math.PI)) % 1 + 1) * cols)) % cols + cols) % cols;
             const land = GLOBE_MAP[row][col] === '#';
-            // Light from upper-left-front + limb darkening at the edge.
             const light = Math.max(0.25, -0.35 * nx - 0.35 * ny + 0.75 * nz);
             const i = (y * N + x) * 4;
-            if (land) {                                      // lime land
+            if (land) {
               px[i] = 163 * light; px[i + 1] = 230 * light; px[i + 2] = 53 * light;
-            } else {                                         // deep ink ocean
+            } else {
               px[i] = 20 * light + 8; px[i + 1] = 32 * light + 10; px[i + 2] = 46 * light + 16;
             }
             px[i + 3] = 255;
           }
         }
         ctx.putImageData(img, 0, 0);
+      }
+
+      if (!animate) {
+        paint(0.85);
+        return;
+      }
+
+      function frame(now) {
+        if (t0 == null) t0 = now;
+        const elapsed = now - t0;
+        const spin = elapsed <= TURN_MS
+          ? (elapsed / TURN_MS) * 2 * Math.PI
+          : 2 * Math.PI + ((elapsed - TURN_MS) / TURN_MS) * 0.6;
+        paint(spin);
         if (!boot?.classList.contains('hide')) globeRaf = requestAnimationFrame(frame);
       }
       globeRaf = requestAnimationFrame(frame);
     }
 
-    try {
-      if (sessionStorage.getItem('denizen_boot_seen')) skipBoot();
-      else {
-        startGlobe();
-        setTimeout(skipBoot, 4000);
-        boot?.addEventListener('click', skipBoot);
-      }
-    } catch (_) {
-      startGlobe();
-      setTimeout(skipBoot, 4000);
-      boot?.addEventListener('click', skipBoot);
-    }
+    // Always play on each landing load (sessionStorage used to skip it after
+    // the first view in a tab, which made it feel “broken”).
+    startGlobe({ animate: !reduceMotion });
+    setTimeout(skipBoot, reduceMotion ? 1600 : 4000);
+    boot?.addEventListener('click', skipBoot);
 
     // ── split slider ──
     const stage = document.getElementById('split');
