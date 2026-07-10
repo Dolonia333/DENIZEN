@@ -2026,19 +2026,29 @@ class PlayerChat {
     }
   }
 
-  _usesGrokCliChat(npcName) {
+  _usesSubscriptionCliChat(npcName) {
     const key = String(npcName || '').toLowerCase();
-    if (key === 'grok') return true;
+    if (key === 'grok' || key === 'claude') return true;
     const brain = this.manager?.npcBrains?.brains?.[npcName];
-    return brain?.chatProvider === 'grok-cli';
+    const chat = brain?.chatProvider;
+    return chat === 'grok-cli' || chat === 'claude-cli';
+  }
+
+  /** @deprecated use _usesSubscriptionCliChat */
+  _usesGrokCliChat(npcName) {
+    return this._usesSubscriptionCliChat(npcName);
   }
 
   _chatResponseTimeoutMs(npcName) {
-    return this._usesGrokCliChat(npcName) ? 180000 : 60000;
+    return this._usesSubscriptionCliChat(npcName) ? 180000 : 60000;
   }
 
   _chatTimeoutMessage(npcName) {
-    if (this._usesGrokCliChat(npcName)) {
+    const key = String(npcName || '').toLowerCase();
+    if (key === 'claude' || this.manager?.npcBrains?.brains?.[npcName]?.chatProvider === 'claude-cli') {
+      return '(still thinking via Claude CLI — bridge can take 1–3 min; keep the PC bridge running)';
+    }
+    if (this._usesSubscriptionCliChat(npcName)) {
       return '(still thinking via Grok CLI — bridge can take 1–3 min; keep the PC bridge running)';
     }
     return '(no response — LM Studio may be busy; check ⋯ diag chip bottom-left)';

@@ -156,6 +156,33 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
     }
   }
 
+  if (type === 'claude_cli_chat') {
+    const claudeCli = require('./claude-cli-chat');
+    try {
+      const messages = Array.isArray(safePayload.messages) ? safePayload.messages : [];
+      const text = await claudeCli.completePlayerChat({
+        systemPrompt: safePayload.system_prompt || safePayload.systemPrompt || '',
+        messages,
+        prefer: 'local',
+        timeoutMs: safePayload.timeout_ms || safePayload.timeoutMs,
+        priority: safePayload.priority,
+      });
+      return {
+        ok: true,
+        jobType: 'claude_cli_chat',
+        text,
+        completed_at: new Date().toISOString(),
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        jobType: 'claude_cli_chat',
+        error: err?.message || String(err),
+        completed_at: new Date().toISOString(),
+      };
+    }
+  }
+
   if (type === 'inference_rpc') {
     if (await isInferenceReachable()) {
       try {

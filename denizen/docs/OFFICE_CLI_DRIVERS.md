@@ -74,29 +74,40 @@ claude mcp list
 
 ## Drive the office (CLI — recommended, no API keys)
 
-### In-game chat → real Grok CLI
+### In-game chat → real Grok / Claude CLI (subscription, no API keys)
 
-Grok's SOUL uses `## Chat Provider` / `grok-cli` so **player chat** hits your PC's `grok -p`
-(with `denizen-grok` MCP). Autonomous `think()` stays on local LM (`## Provider` / `lmstudio`).
+Regular NPCs keep `## Provider` / `lmstudio`. Grok and Claude use a separate
+`## Chat Provider` so **player chat** hits your PC CLI while autonomous `think()`
+stays on LM Studio.
 
-**1. Start the bridge on your PC** (keep running):
+| NPC | Provider (think) | Chat Provider (in-room talk) | Bridge |
+|-----|------------------|------------------------------|--------|
+| Everyone else | `lmstudio` / `lmstudio-fast` | (none) | — |
+| Grok | `lmstudio` | `grok-cli` | `py infra/run-grok-cli-chat-bridge.py` (port 9876) |
+| Claude | `lmstudio` | `claude-cli` | `py infra/run-claude-cli-chat-bridge.py` (port 9877) |
+
+**1. Start bridges on your PC** (keep running):
 
 ```bash
-py infra/run-grok-cli-chat-bridge.py
+py infra/run-grok-cli-chat-bridge.py --port 9876
+py infra/run-claude-cli-chat-bridge.py --port 9877
 ```
 
-Copy the printed token. Expose port `9876` to the NAS (Tailscale IP is easiest).
+Copy each printed token. Expose ports to the NAS (Tailscale IP is easiest).
 
-**2. Point the NAS container at your PC** — add to `denizen/.env` or docker env:
+**2. Point the NAS container at your PC** — add to docker `.env`:
 
 ```bash
 GROK_CLI_BRIDGE_URL=http://100.x.x.x:9876
-GROK_CLI_BRIDGE_TOKEN=<token from bridge>
+GROK_CLI_BRIDGE_TOKEN=<token from grok bridge>
+CLAUDE_CLI_BRIDGE_URL=http://100.x.x.x:9877
+CLAUDE_CLI_BRIDGE_TOKEN=<token from claude bridge>
 ```
 
-Redeploy / restart `denizen-server`, then chat with Grok in the office.
+Redeploy / restart `denizen-server`, then chat with Grok or Claude in the office.
 
 **Alt:** mesh worker on PC (`py infra/run-grok-cli-mesh-worker.py`) + `GROK_CLI_MESH_NODE=<machine_id>` on NAS.
+(Claude mesh: `CLAUDE_CLI_MESH_NODE`.)
 
 ## Drive the office (CLI one-shots)
 

@@ -913,6 +913,13 @@ class NpcBrainManager {
         bridgeToken: process.env.GROK_CLI_BRIDGE_TOKEN || null,
         meshNodeId: process.env.GROK_CLI_MESH_NODE || null,
       };
+      this.providers['claude-cli'] = {
+        type: 'claude-cli',
+        claudeBin: process.env.CLAUDE_BIN || null,
+        bridgeUrl: process.env.CLAUDE_CLI_BRIDGE_URL || null,
+        bridgeToken: process.env.CLAUDE_CLI_BRIDGE_TOKEN || null,
+        meshNodeId: process.env.CLAUDE_CLI_MESH_NODE || null,
+      };
 
       console.log(`[NpcBrains] Loaded providers: ${Object.keys(this.providers).join(', ')}`);
     } catch (err) {
@@ -995,7 +1002,7 @@ class NpcBrainManager {
       ),
       longTermMemory,
       providerConfig,
-      fallbackConfig: provider === 'grok-cli' && this.providers.lmstudio
+      fallbackConfig: (provider === 'grok-cli' || provider === 'claude-cli') && this.providers.lmstudio
         ? { ...this.providers.lmstudio, providerKey: 'lmstudio' }
         : null,
       voiceAnchor: this._buildVoiceAnchor(soul, name),
@@ -3332,6 +3339,27 @@ ${actionFooter}`;
   }
 
   /**
+   * Player chat via operator PC Claude Code CLI (bridge, mesh, or local spawn).
+   */
+  async _callClaudeCli(config, systemPrompt, messages, opts = {}) {
+    const claudeCli = require('./claude-cli-chat');
+    const text = await claudeCli.completePlayerChat({
+      systemPrompt,
+      messages,
+      claudeBin: config.claudeBin,
+      bridgeUrl: config.bridgeUrl,
+      bridgeToken: config.bridgeToken,
+      meshNodeId: config.meshNodeId,
+      timeoutMs: opts.priority === 'high'
+        ? (promptTuning?.playerChatTimeoutMs ?? 45000) * 4
+        : undefined,
+      priority: opts.priority,
+      cwd: path.join(__dirname, '..'),
+    });
+    return String(text || '').trim();
+  }
+
+  /**
    * Call an AI provider API
    */
   _callProvider(config, systemPrompt, messages, opts = {}) {
@@ -3352,6 +3380,8 @@ ${actionFooter}`;
       return this._callLocalRouted(config, systemPrompt, messages, opts);
     } else if (config.type === 'grok-cli') {
       return this._callGrokCli(config, systemPrompt, messages, opts);
+    } else if (config.type === 'claude-cli') {
+      return this._callClaudeCli(config, systemPrompt, messages, opts);
     }
     return Promise.reject(new Error('Unknown provider type'));
   }
