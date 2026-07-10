@@ -22,6 +22,7 @@
   } catch (_) {}
 
   let pendingJoinCode = null;
+  let forceLoginModal = false;
   try {
     const inviteParams = new URLSearchParams(window.location.search);
     const join = inviteParams.get('join') || inviteParams.get('team') || inviteParams.get('code');
@@ -31,6 +32,34 @@
       inviteParams.delete('team');
       inviteParams.delete('code');
       const qs = inviteParams.toString();
+      window.history.replaceState({}, '', `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`);
+    }
+  } catch (_) {}
+
+  // Full-office / sign-in entry: clear a leftover demo session so the welcome
+  // modal actually appears (demo visits otherwise skip login forever).
+  try {
+    const loginParams = new URLSearchParams(window.location.search);
+    const wantsLogin = loginParams.get('login') === '1'
+      || loginParams.get('signin') === '1'
+      || loginParams.get('full') === '1';
+    const publicDemo = loginParams.get('demo') === '1' || loginParams.get('mode') === 'demo';
+    if (wantsLogin && !publicDemo) {
+      forceLoginModal = true;
+      try {
+        const stored = JSON.parse(localStorage.getItem('denizen-visitor-session') || 'null');
+        const tier = String(stored?.tier || '').toLowerCase();
+        const method = String(stored?.access_method || '').toLowerCase();
+        if (!stored || tier === 'demo' || method === 'demo' || method === 'demo_login') {
+          localStorage.removeItem('denizen-visitor-session');
+        }
+      } catch (_) {
+        localStorage.removeItem('denizen-visitor-session');
+      }
+      loginParams.delete('login');
+      loginParams.delete('signin');
+      loginParams.delete('full');
+      const qs = loginParams.toString();
       window.history.replaceState({}, '', `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`);
     }
   } catch (_) {}
@@ -2516,6 +2545,16 @@
           resetStoredSessionForSwitch();
           pendingJoinCode = inviteCode;
           const welcome = await showWelcomeModal();
+          return applyWelcomeSession(welcome);
+        }
+
+        if (forceLoginModal) {
+          forceLoginModal = false;
+          resetStoredSessionForSwitch();
+          const welcome = await showWelcomeModal();
+          if (!welcome) {
+            return { sessionId: null, displayName: null, assistant: null };
+          }
           return applyWelcomeSession(welcome);
         }
 

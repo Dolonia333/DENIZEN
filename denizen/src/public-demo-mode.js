@@ -47,12 +47,13 @@
   document.addEventListener('DOMContentLoaded', () => {
     const banner = document.createElement('div');
     banner.id = 'denizen-public-demo-banner';
-    banner.textContent = globalThis.DenizenPublicDemo.label;
     banner.style.cssText = [
       'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:100800',
       'padding:6px 12px', 'text-align:center', 'font:11px ui-monospace,monospace',
       'background:rgba(30,58,138,0.92)', 'color:#bfdbfe', 'border-bottom:1px solid #3b82f6',
     ].join(';');
+    banner.innerHTML = `${globalThis.DenizenPublicDemo.label} `
+      + `<a href="/office?login=1" style="color:#fff;margin-left:10px;font-weight:700;text-decoration:underline;">Sign in for full office →</a>`;
     document.body.prepend(banner);
   });
 })();
