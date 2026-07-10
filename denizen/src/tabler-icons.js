@@ -88,5 +88,10 @@
     }
   }
 
-  globalThis.DenizenTablerIcons = { icon, chip, withIcon, x, setEl, paintChip, ensureStyles };
+  /** Paint mic / stop for voice controls. */
+  function speakGlyph(listening, opts = {}) {
+    return icon(listening ? 'player-stop' : 'microphone', opts);
+  }
+
+  globalThis.DenizenTablerIcons = { icon, chip, withIcon, x, setEl, paintChip, ensureStyles, speakGlyph };
 })();

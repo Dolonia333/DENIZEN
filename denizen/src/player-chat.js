@@ -189,7 +189,7 @@ class PlayerChat {
               <textarea id="player-chat-input" rows="1" placeholder="Message…" autocomplete="off" enterkeyhint="send"></textarea>
               <div class="pc-composer-actions">
                 <button id="player-chat-speak" type="button" title="Voice input">
-                  <span class="pc-speak-glyph" aria-hidden="true">🎤</span>
+                  <span class="pc-speak-glyph" aria-hidden="true"></span>
                   <span class="pc-speak-label">Speak</span>
                 </button>
                 <button id="player-chat-send" type="button" aria-label="Send message">
@@ -225,10 +225,10 @@ class PlayerChat {
       this._fab.title = 'Close chat';
     } else {
       const label = this._chatFabClosedLabel();
-      if (globalThis.DenizenBottomDock?.renderChip) {
-        globalThis.DenizenBottomDock.renderChip('player-chat-fab', label, { iconOnly: compact });
-      } else if (paint) {
+      if (paint) {
         paint(this._fab, 'messages', label, { iconOnly: compact, title: label });
+      } else if (globalThis.DenizenBottomDock?.renderChip) {
+        globalThis.DenizenBottomDock.renderChip('player-chat-fab', label, { iconOnly: compact });
       } else {
         this._fab.textContent = compact ? '💬' : label;
       }
@@ -2708,7 +2708,7 @@ class PlayerChat {
       panel.id = 'player-chat-panel';
       panel.innerHTML = `
         <div id="player-chat-header">
-          <div class="pc-header-avatar" id="player-chat-avatar" aria-hidden="true">💬</div>
+          <div class="pc-header-avatar" id="player-chat-avatar" aria-hidden="true"></div>
           <div class="chat-header-main">
             <span class="target" id="player-chat-target">Messages</span>
             <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
@@ -2731,8 +2731,9 @@ class PlayerChat {
       fab.id = 'player-chat-fab';
       fab.type = 'button';
       fab.className = 'ws-off';
-      fab.textContent = '💬 Chat';
-      globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
+      globalThis.DenizenTablerIcons?.paintChip?.(fab, 'messages', 'Chat', { title: 'Talk to NPCs (Enter or T also works)' })
+        || globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
+      if (!fab.innerHTML) fab.textContent = '💬 Chat';
       fab.title = 'Talk to NPCs (Enter or T also works)';
       document.body.appendChild(fab);
       this._fab = fab;
@@ -2926,7 +2927,12 @@ class PlayerChat {
       speakBtn.classList.toggle('listening', on);
       const glyph = speakBtn.querySelector('.pc-speak-glyph');
       const label = speakBtn.querySelector('.pc-speak-label');
-      if (glyph) glyph.textContent = on ? '⏹' : '🎤';
+      if (glyph) {
+        const T = globalThis.DenizenTablerIcons;
+        glyph.innerHTML = T?.speakGlyph
+          ? T.speakGlyph(on, { size: 18, className: 'pc-ti' })
+          : (on ? '⏹' : '🎤');
+      }
       if (label) {
         label.textContent = on ? 'Stop' : 'Speak';
         label.style.display = document.documentElement.classList.contains('denizen-touch') ? '' : 'none';
@@ -3427,9 +3433,12 @@ class PlayerChat {
     this._refreshHeaderStatus();
     const avatar = document.getElementById('player-chat-avatar');
     if (avatar) {
-      avatar.textContent = name
-        ? String(this._displayNpcName(name)).trim().charAt(0).toUpperCase() || '•'
-        : '💬';
+      if (name) {
+        avatar.textContent = String(this._displayNpcName(name)).trim().charAt(0).toUpperCase() || '•';
+      } else {
+        const T = globalThis.DenizenTablerIcons;
+        avatar.innerHTML = T?.icon ? T.icon('messages', { size: 16, className: 'pc-ti' }) : '💬';
+      }
     }
   }
 }

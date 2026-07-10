@@ -71,17 +71,17 @@
   // type 'navigate' : leave the phone and open a full Denizen page (CRM at /crm/)
   // c: [light, dark] icon tile gradient; dock placement comes from saved home layout
   const APPS = [
-    { id: 'chat', icon: '💬', label: 'Chat', type: 'panel', trigger: '#player-chat-fab', panel: '#player-chat-panel',
+    { id: 'chat', tabler: 'messages', icon: '💬', label: 'Chat', type: 'panel', trigger: '#player-chat-fab', panel: '#player-chat-panel',
       c: ['#60a5fa', '#1d4ed8'],
       open: () => window.__DenizenPlayerChat?.open?.(), close: () => window.__DenizenPlayerChat?.close?.() },
-    { id: 'voice', icon: '🎤', label: 'Voice', type: 'action', trigger: '#denizen-mic-button',
+    { id: 'voice', tabler: 'microphone', icon: '🎤', label: 'Voice', type: 'action', trigger: '#denizen-mic-button',
       c: ['#f87171', '#b91c1c'],
       toastOn: 'Microphone toggled', stateDot: () => null },
-    { id: 'presence', icon: '👤', label: 'Walk-up', type: 'action', trigger: '#denizen-presence-chip',
+    { id: 'presence', tabler: 'user', icon: '👤', label: 'Walk-up', type: 'action', trigger: '#denizen-presence-chip',
       c: ['#fbbf24', '#b45309'],
       stateDot: () => !!window.DenizenPresence?.zionPresent,
       stateText: () => (window.DenizenPresence?.zionPresent ? 'voice on' : 'voice off') },
-    { id: 'listen', icon: '🔊', label: 'Listen-in', type: 'action', trigger: '#denizen-audio-mode-chip',
+    { id: 'listen', tabler: 'volume', icon: '🔊', label: 'Listen-in', type: 'action', trigger: '#denizen-audio-mode-chip',
       c: ['#a78bfa', '#6d28d9'],
       stateText: () => {
         const m = document.getElementById('denizen-audio-mode-chip')?.dataset?.mode;
@@ -91,14 +91,14 @@
         const m = document.getElementById('denizen-audio-mode-chip')?.dataset?.mode;
         return m ? m !== 'mute-all' : null;
       } },
-    { id: 'health', icon: '🩺', label: 'Health', type: 'panel', trigger: '#denizen-diag-chip', panel: '#denizen-diag-panel',
+    { id: 'health', tabler: 'stethoscope', icon: '🩺', label: 'Health', type: 'panel', trigger: '#denizen-diag-chip', panel: '#denizen-diag-panel',
       c: ['#34d399', '#047857'],
       open: () => window.DenizenDiag?.show?.(), close: () => window.DenizenDiag?.hide?.() },
-    { id: 'lm', icon: '📊', label: 'LM Stats', type: 'panel', trigger: '#denizen-llm-tel-chip', panel: '#denizen-llm-tel-panel',
+    { id: 'lm', tabler: 'chart-dots', icon: '📊', label: 'LM Stats', type: 'panel', trigger: '#denizen-llm-tel-chip', panel: '#denizen-llm-tel-panel',
       c: ['#22d3ee', '#0e7490'] },
-    { id: 'mesh', icon: '⬡', label: 'Power Grid', type: 'panel', trigger: '#denizen-mesh-jobs-chip', panel: '#denizen-mesh-jobs-panel',
+    { id: 'mesh', tabler: 'hexagon', icon: '⬡', label: 'Power Grid', type: 'panel', trigger: '#denizen-mesh-jobs-chip', panel: '#denizen-mesh-jobs-panel',
       c: ['#818cf8', '#3730a3'], badgeFrom: '#denizen-mesh-jobs-chip' },
-    { id: 'approvals', icon: '📋', label: 'Approvals', type: 'panel', trigger: '#denizen-proposals-chip', panel: '#denizen-proposals-panel',
+    { id: 'approvals', tabler: 'clipboard-list', icon: '📋', label: 'Approvals', type: 'panel', trigger: '#denizen-proposals-chip', panel: '#denizen-proposals-panel',
       c: ['#fb923c', '#c2410c'], badgeFrom: '#denizen-proposals-chip',
       open: () => window.DenizenProposals?.show?.(),
       close: () => window.DenizenProposals?.hide?.(),
@@ -108,23 +108,23 @@
         if (sess.isCeoPrincipal?.() || sess.getProfile?.()?.canApproveSkills) return true;
         return !!sess.getIdentityId?.();
       } },
-    { id: 'newsroom', icon: '📰', label: 'Newsroom', type: 'panel', trigger: '#denizen-content-pipeline-chip', panel: '#denizen-content-pipeline-panel',
+    { id: 'newsroom', tabler: 'news', icon: '📰', label: 'Newsroom', type: 'panel', trigger: '#denizen-content-pipeline-chip', panel: '#denizen-content-pipeline-panel',
       c: ['#f97316', '#c2410c'], badgeFrom: '#denizen-content-pipeline-chip', available: () => true },
-    { id: 'npcteam', icon: '🏢', label: 'Office Team', type: 'panel', panel: '#denizen-npc-team-panel',
+    { id: 'npcteam', tabler: 'building', icon: '🏢', label: 'Office Team', type: 'panel', panel: '#denizen-npc-team-panel',
       c: ['#f472b6', '#9d174d'],
       open: () => window.DenizenVisitorNpcTeamUI?.show?.(), close: () => window.DenizenVisitorNpcTeamUI?.hide?.(),
       available: () => true },
-    { id: 'workflow', icon: '🛠️', label: 'Office Build', type: 'internal', c: ['#e94560', '#9f1239'],
+    { id: 'workflow', tabler: 'tools', icon: '🛠️', label: 'Office Build', type: 'internal', c: ['#e94560', '#9f1239'],
       available: () => isOfficeBuilderAllowed() },
-    { id: 'browser', icon: '🌐', label: 'Browser', type: 'panel', trigger: '#denizen-browser-mirror-chip', panel: '#denizen-browser-mirror-panel',
+    { id: 'browser', tabler: 'world-www', icon: '🌐', label: 'Browser', type: 'panel', trigger: '#denizen-browser-mirror-chip', panel: '#denizen-browser-mirror-panel',
       c: ['#38bdf8', '#0369a1'],
       available: () => true,
       open: () => { ensureBrowserMirrorReady().catch(() => {}); },
       close: () => window.DenizenBrowserMirror?.hide?.() },
-    { id: 'security', icon: '🛡️', label: 'Security', type: 'panel', trigger: '#denizen-security-chip', panel: '#denizen-security-feed',
+    { id: 'security', tabler: 'shield', icon: '🛡️', label: 'Security', type: 'panel', trigger: '#denizen-security-chip', panel: '#denizen-security-feed',
       c: ['#f87171', '#7f1d1d'] },
-    { id: 'profile', icon: '🪪', label: 'Citizen ID', type: 'special-profile', c: ['#2dd4bf', '#0f766e'] },
-    { id: 'station', icon: '🖥️', label: 'Link Station', type: 'internal', c: ['#4ade80', '#15803d'],
+    { id: 'profile', tabler: 'id-badge-2', icon: '🪪', label: 'Citizen ID', type: 'special-profile', c: ['#2dd4bf', '#0f766e'] },
+    { id: 'station', tabler: 'device-desktop', icon: '🖥️', label: 'Link Station', type: 'internal', c: ['#4ade80', '#15803d'],
       stateDot: () => {
         const st = globalThis.DenizenNodeUI?.getState?.();
         if (!st?.sessionReady) return null;
@@ -139,21 +139,62 @@
         if (st.needsDesktopPairing || st.needsDesktopDownload) return 'not linked';
         return '';
       } },
-    { id: 'compute', icon: '💠', label: 'City Power', type: 'special-compute', c: ['#c084fc', '#7e22ce'] },
-    { id: 'tour', icon: '📖', label: 'Office Tour', type: 'launch', trigger: '#denizen-onboarding-replay-chip',
+    { id: 'compute', tabler: 'bolt', icon: '💠', label: 'City Power', type: 'special-compute', c: ['#c084fc', '#7e22ce'] },
+    { id: 'tour', tabler: 'book', icon: '📖', label: 'Office Tour', type: 'launch', trigger: '#denizen-onboarding-replay-chip',
       c: ['#67e8f9', '#155e75'], gated: true },
-    { id: 'meshtour', icon: '🗺️', label: 'Power Tour', type: 'launch', trigger: '#denizen-superuser-replay-chip',
+    { id: 'meshtour', tabler: 'map', icon: '🗺️', label: 'Power Tour', type: 'launch', trigger: '#denizen-superuser-replay-chip',
       c: ['#a3e635', '#3f6212'], gated: true },
-    { id: 'guide', icon: '🧭', label: 'Office Guide', type: 'internal',
+    { id: 'guide', tabler: 'compass', icon: '🧭', label: 'Office Guide', type: 'internal',
       c: ['#facc15', '#854d0e'], gated: true },
-    { id: 'crm', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
+    { id: 'crm', tabler: 'address-book', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
       available: () => true },
-    { id: 'market', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
+    { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
       c: ['#34d399', '#047857'],
       open: () => window.DenizenMarketPanel?.show?.(), close: () => window.DenizenMarketPanel?.hide?.(),
       available: () => true },
-    { id: 'settings', icon: '⚙️', label: 'Settings', type: 'internal', c: ['#94a3b8', '#334155'] },
+    { id: 'settings', tabler: 'settings', icon: '⚙️', label: 'Settings', type: 'internal', c: ['#94a3b8', '#334155'] },
   ];
+
+  function appIconMarkup(app, size = 26) {
+    const T = globalThis.DenizenTablerIcons;
+    const name = app?.tabler;
+    if (T?.icon && name) {
+      T.ensureStyles?.();
+      return T.icon(name, { size: Math.round(size * 0.78), className: 'dzp-ti' });
+    }
+    return app?.icon || '';
+  }
+
+  function paintPhoneFab() {
+    if (!fabEl) return;
+    const badge = fabEl.querySelector('.dzp-fab-badge');
+    const badgeHtml = badge ? badge.outerHTML : '<span class="dzp-fab-badge"></span>';
+    const T = globalThis.DenizenTablerIcons;
+    const glyph = T?.icon
+      ? T.icon('device-mobile', { size: 24, className: 'dzp-fab-ti' })
+      : '📱';
+    fabEl.innerHTML = `${glyph}${badgeHtml}`;
+  }
+
+  function repaintAppIcons() {
+    if (!shellEl) return;
+    shellEl.querySelectorAll('.dzp-app[data-app]').forEach((btn) => {
+      const app = appById[btn.dataset.app];
+      const el = btn.querySelector('.dzp-app-icon');
+      if (app && el) el.innerHTML = appIconMarkup(app);
+    });
+    shellEl.querySelectorAll('.dzp-folder[data-folder]').forEach((btn) => {
+      const folder = phoneLayout.folders[btn.dataset.folder];
+      if (!folder) return;
+      const previews = folder.apps.map((id) => appById[id]).filter(Boolean).slice(0, 4);
+      const wrap = btn.querySelector('.dzp-folder-icons');
+      if (!wrap) return;
+      wrap.innerHTML = previews.map((a) =>
+        `<span style="--tile-a:${a.c[0]};--tile-b:${a.c[1]}">${appIconMarkup(a, 18)}</span>`,
+      ).join('');
+    });
+    paintPhoneFab();
+  }
 
   // Panel ids that get geometry overrides (per app id)
   const PANEL_FOR_APP = {
@@ -560,6 +601,7 @@
     buildShell();
     setAppOpenUi({
       id: 'me',
+      tabler: tab === 'compute' ? 'bolt' : 'id-badge-2',
       icon: tab === 'compute' ? '💠' : '🪪',
       label: tab === 'compute' ? 'City Power' : 'Citizen ID',
       type: 'special-me',
@@ -643,6 +685,10 @@
         -webkit-tap-highlight-color: transparent;
         user-select: none;
         transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.2s ease;
+      }
+      #${FAB_ID} .dzp-fab-ti {
+        color: #7dd3fc;
+        filter: drop-shadow(0 1px 3px rgba(2, 6, 23, 0.55));
       }
       #${FAB_ID}::after {
         content: '';
@@ -1143,6 +1189,19 @@
         pointer-events: none;
       }
       #${FRAME_ID} .dzp-app.dzp-hidden { display: none; }
+      #${FRAME_ID} .dzp-app-icon .dzp-ti,
+      #${FRAME_ID} .dzp-folder-icons .dzp-ti {
+        color: rgba(255, 255, 255, 0.96);
+        filter: drop-shadow(0 1px 2px rgba(2, 6, 23, 0.45));
+      }
+      #${FRAME_ID} .dzp-folder-icons .dzp-ti {
+        font-size: 14px !important;
+      }
+      #${FRAME_ID} .dzp-appbar-title .dzp-ti {
+        margin-right: 4px;
+        vertical-align: -0.2em;
+        color: #e2e8f0;
+      }
       #${FRAME_ID} .dzp-app .dzp-app-icon {
         position: relative;
         width: 56px;
@@ -2126,7 +2185,7 @@
     btn.setAttribute('role', 'menuitem');
     btn.setAttribute('aria-label', app.label);
     btn.innerHTML = `
-      <span class="dzp-app-icon" style="--tile-a:${app.c[0]};--tile-b:${app.c[1]}">${app.icon}</span>
+      <span class="dzp-app-icon" style="--tile-a:${app.c[0]};--tile-b:${app.c[1]}">${appIconMarkup(app)}</span>
       <span class="dzp-app-label">${app.label}</span>
       <span class="dzp-app-status"></span>
       <span class="dzp-badge"></span>
@@ -2155,7 +2214,7 @@
     btn.setAttribute('aria-label', folder.name || 'Folder');
     const previews = folder.apps.map((id) => appById[id]).filter(Boolean).slice(0, 4);
     const mini = previews.map((a) =>
-      `<span style="--tile-a:${a.c[0]};--tile-b:${a.c[1]}">${a.icon}</span>`,
+      `<span style="--tile-a:${a.c[0]};--tile-b:${a.c[1]}">${appIconMarkup(a, 18)}</span>`,
     ).join('');
     btn.innerHTML = `
       <span class="dzp-folder-icons">${mini}</span>
@@ -2643,7 +2702,9 @@
     currentApp = app;
     document.documentElement.setAttribute(APP_ATTR, app.id);
     shellEl.querySelector(`#${FRAME_ID}`).classList.add('dzp-app-open');
-    if (appbarTitleEl) appbarTitleEl.textContent = `${app.icon} ${app.label}`;
+    if (appbarTitleEl) {
+      appbarTitleEl.innerHTML = `${appIconMarkup(app, 16)} <span>${app.label}</span>`;
+    }
     scheduleSyncScreenVars();
   }
 
@@ -3176,7 +3237,8 @@
     fabEl = document.createElement('button');
     fabEl.id = FAB_ID;
     fabEl.type = 'button';
-    fabEl.innerHTML = '📱<span class="dzp-fab-badge"></span>';
+    fabEl.innerHTML = '<span class="dzp-fab-badge"></span>';
+    paintPhoneFab();
     fabEl.title = 'Open your office key — chat, Citizen ID, City Power, and tools';
     fabEl.setAttribute('aria-label', 'Open phone');
     const bind = window.DenizenTouchBind?.bindPress;
@@ -3216,7 +3278,10 @@
     // The hidden dock no longer takes vertical space — reclaim it for the game.
     document.documentElement.style.setProperty('--denizen-dock-height', '0px');
 
-    document.addEventListener('denizen-deferred-scripts-ready', markScriptsSettled);
+    document.addEventListener('denizen-deferred-scripts-ready', () => {
+      markScriptsSettled();
+      repaintAppIcons();
+    });
     document.addEventListener('denizen-browser-mirror-ready', () => setTimeout(refreshAppStatuses, 50));
     loadBrowserMirrorScript().catch(() => {});
     document.addEventListener('denizen-visitor-session-ready', () => setTimeout(refreshAppStatuses, 500));

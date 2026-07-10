@@ -4830,7 +4830,22 @@ ${brain.voiceAnchor || ''}`;
         const denizenNpcStats = require('./office-hq/denizen-npc-stats');
         const denizenOfficeProgress = require('./office-hq/denizen-office-progress');
         denizenNpcStats.recordOutcome(npcName, { outcome: decision.outcome, taskPhase: decision.taskPhase });
-        if (decision.outcome === 'success' && decision.taskPhase === 'finished') {
+        // Ship XP when a think cycle finishes work. Require finished phase;
+        // treat missing/neutral outcome as shipped unless stuck/blocked.
+        const finished = decision.taskPhase === 'finished';
+        const blocked = decision.outcome === 'stuck' || decision.outcome === 'blocked';
+        const shipped =
+          finished
+          && !blocked
+          && (
+            decision.outcome === 'success'
+            || decision.outcome === 'null'
+            || decision.outcome === 'none'
+            || !decision.outcome
+            || !!decision._artifactPath
+            || decision.action === 'report'
+          );
+        if (shipped) {
           denizenOfficeProgress.awardXp(
             'task_shipped',
             denizenOfficeProgress.XP_WEIGHTS.task_shipped,

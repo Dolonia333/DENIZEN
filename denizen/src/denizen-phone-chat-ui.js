@@ -283,7 +283,7 @@
         background: transparent;
         border: none;
         color: #94a3b8;
-        font-size: 0; /* hide whatever label the voice module writes */
+        font-size: 0;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -291,13 +291,16 @@
         overflow: hidden;
         flex-shrink: 0;
       }
-      #player-chat-panel[data-phone-chat="1"] #player-chat-speak::before {
-        content: '🎤';
+      #player-chat-panel[data-phone-chat="1"] #player-chat-speak .pc-speak-glyph {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 18px;
         line-height: 1;
+        color: #94a3b8;
       }
-      #player-chat-panel[data-phone-chat="1"] #player-chat-speak.listening::before {
-        content: '⏹';
+      #player-chat-panel[data-phone-chat="1"] #player-chat-speak.listening .pc-speak-glyph {
+        color: #fca5a5;
       }
       #player-chat-panel[data-phone-chat="1"] #player-chat-send {
         width: 38px;
@@ -372,9 +375,16 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      #phc-nav .phc-action.phc-speak { font-size: 0; }
-      #phc-nav .phc-action.phc-speak::before { content: '🎤'; font-size: 16px; line-height: 1; }
-      #phc-nav .phc-action.phc-speak.listening::before { content: '⏹'; }
+      #phc-nav .phc-action.phc-speak { font-size: 0; display: inline-flex; align-items: center; justify-content: center; }
+      #phc-nav .phc-action.phc-speak .phc-speak-glyph {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        line-height: 1;
+        color: #bae6fd;
+      }
+      #phc-nav .phc-action.phc-speak.listening .phc-speak-glyph { color: #fecaca; }
       #phc-nav .phc-action.phc-speak.listening { background: rgba(127,29,29,.7); border-color: #fca5a5; }
       #phc-nav .phc-action {
         border: 1px solid #334155;
@@ -638,7 +648,7 @@
       <nav id="phc-nav">
         <button type="button" class="phc-back" id="phc-back-btn" data-action="back" aria-label="Back">‹</button>
         <div class="phc-title" id="phc-nav-title">Messages</div>
-        <button type="button" class="phc-action phc-speak" id="phc-speak-btn" data-action="speak" hidden aria-label="Speak">🎤</button>
+        <button type="button" class="phc-action phc-speak" id="phc-speak-btn" data-action="speak" hidden aria-label="Speak"><span class="phc-speak-glyph" aria-hidden="true"></span></button>
         <button type="button" class="phc-action phc-new-group" id="phc-new-group-btn" data-action="new-group" hidden>+ Group</button>
       </nav>
       <div id="phc-list-wrap"></div>
@@ -718,6 +728,14 @@
   const setText = (el, v) => { if (el && el.textContent !== v) el.textContent = v; };
   const setHidden = (el, v) => { if (el && el.hidden !== v) el.hidden = v; };
 
+  function paintSpeakGlyph(el, listening) {
+    if (!el) return;
+    const T = globalThis.DenizenTablerIcons;
+    el.innerHTML = T?.speakGlyph
+      ? T.speakGlyph(!!listening, { size: 16, className: 'phc-ti' })
+      : (listening ? '⏹' : '🎤');
+  }
+
   function updateNav() {
     const title = document.getElementById('phc-nav-title');
     const back = document.getElementById('phc-back-btn');
@@ -734,8 +752,7 @@
         const supported = !!(vi && (vi.isSupported?.() ?? vi.supported));
         setHidden(speakBtn, !supported);
         speakBtn.classList.toggle('listening', !!(vi?.isListening?.()));
-        // Glyph (🎤/⏹) is rendered via CSS ::before keyed on .listening —
-        // rewriting textContent here fought the CSS and churned the DOM.
+        paintSpeakGlyph(speakBtn.querySelector('.phc-speak-glyph'), !!(vi?.isListening?.()));
       }
     } else if (view === 'group-pick') {
       setText(title, 'New group');
@@ -980,9 +997,15 @@
     }
     if (speak) {
       if (phone) {
-        if (!speak._deskLabel) speak._deskLabel = speak.textContent;
-        speak.textContent = '🎤';
-      } else if (speak._deskLabel) speak.textContent = speak._deskLabel;
+        const glyph = speak.querySelector('.pc-speak-glyph') || speak;
+        const vi = window.DenizenVoiceInput;
+        const on = !!(vi?.isListening?.());
+        const T = globalThis.DenizenTablerIcons;
+        glyph.innerHTML = T?.speakGlyph
+          ? T.speakGlyph(on, { size: 18, className: 'pc-ti' })
+          : (on ? '⏹' : '🎤');
+        speak.classList.toggle('listening', on);
+      }
     }
   }
 

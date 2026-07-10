@@ -30,4 +30,18 @@ describe('bouncer-investigation', () => {
     assert.equal(typeof bridge.perimeterPatrol, 'function');
     assert.equal(typeof bridge.buildReport, 'function');
   });
+
+  it('perimeterPatrol uses container mode when BOUNCER_PATROL=container', async () => {
+    const prev = process.env.BOUNCER_PATROL;
+    process.env.BOUNCER_PATROL = 'container';
+    try {
+      const patrol = await bouncerInvestigation.perimeterPatrol();
+      assert.equal(patrol.ok, true);
+      assert.match(String(patrol.summary || ''), /Container patrol/i);
+      assert.notEqual(String(patrol.summary || '').toLowerCase(), 'unauthorized');
+    } finally {
+      if (prev == null) delete process.env.BOUNCER_PATROL;
+      else process.env.BOUNCER_PATROL = prev;
+    }
+  });
 });

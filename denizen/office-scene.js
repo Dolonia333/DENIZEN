@@ -62,9 +62,11 @@ function getPlayfieldDeviceProfile() {
 function playfieldZoomForProfile(profile) {
   const dp = globalThis.DenizenDeviceProfile;
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
-  if (profile?.isPhone || profile?.tier === 'phone-compact') return 1.25;
-  if (profile?.isTablet) return 1.15;
-  return 1.5;
+  if (profile?.isPhone || profile?.tier === 'phone-compact') {
+    return profile?.isCompactPhone ? 2.05 : 1.95;
+  }
+  if (profile?.isTablet) return 1.85;
+  return 2.35;
 }
 
 class OfficeScene extends Phaser.Scene {
@@ -219,11 +221,12 @@ class OfficeScene extends Phaser.Scene {
       console.error('[OfficeScene] DenizenNpcRoster missing — load src/npc-roster.js before office-scene.js');
     }
     const xpNames = roster ? roster.assetNames : [];
+    const npcAssetV = 'roster2';
 
     xpNames.forEach((name) => {
       this.load.spritesheet(
         `xp_${name.toLowerCase()}`,
-        `assets/${name}.png`,
+        `assets/${name}.png?v=${npcAssetV}`,
         { frameWidth: 32, frameHeight: 48 }
       );
     });

@@ -20,6 +20,7 @@ PATCH = {
     "DENIZEN_REAL_WORK_MODE": "true",
     "DENIZEN_AUTO_CLAIM_SPRINT": "true",
     "DENIZEN_REAL_WORK_CYCLES": "2",
+    "DENIZEN_LIGHT_OFFICE": "false",
     "DENIZEN_PUBLIC_URL": "https://denizen.dolonia.cloud",
     "DENIZEN_PUBLIC_DEMO": "true",
     "DENIZEN_PUBLIC_DEMO_TRIM_BRAINS": "false",

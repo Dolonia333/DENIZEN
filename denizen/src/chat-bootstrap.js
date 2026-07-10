@@ -114,12 +114,17 @@
 
     fab.className = 'ws-off';
 
-    fab.textContent = '💬 Chat';
-    globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
-
     fab.title = 'Talk to NPCs';
 
     document.body.appendChild(fab);
+
+    const paintFab = () => {
+      globalThis.DenizenTablerIcons?.paintChip?.(fab, 'messages', 'Chat', { title: fab.title })
+        || globalThis.DenizenBottomDock?.renderChip?.('player-chat-fab', 'Chat');
+      if (!fab.innerHTML) fab.textContent = '💬 Chat';
+    };
+    paintFab();
+    document.addEventListener('denizen-deferred-scripts-ready', paintFab, { once: true });
 
     return fab;
 

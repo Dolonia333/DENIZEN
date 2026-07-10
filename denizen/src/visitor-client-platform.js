@@ -2,9 +2,9 @@
   'use strict';
 
   const FALLBACK = {
-    windows: 'https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen-Setup.exe',
-    mac: 'https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.dmg',
-    linux: 'https://github.com/Dolonia333/DENIZEN/releases/latest/download/Denizen.AppImage',
+    windows: '/desktop/releases/Denizen-Setup.exe',
+    mac: '/desktop/releases/Denizen.dmg',
+    linux: '/desktop/releases/Denizen.AppImage',
   };
 
   let cached = null;

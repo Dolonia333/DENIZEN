@@ -116,21 +116,36 @@ async function investigate(threat, opts = {}) {
   };
 }
 
+function patrolMode() {
+  return String(process.env.BOUNCER_PATROL || '').trim().toLowerCase();
+}
+
 async function perimeterPatrol() {
+  // NAS / Docker: prefer local TCP probes when BOUNCER_PATROL=container.
+  // Do not treat a remote proxy 401 ("unauthorized") as the patrol summary.
+  if (patrolMode() === 'container' && typeof linuxAgent.perimeterPatrolContainer === 'function') {
+    return linuxAgent.perimeterPatrolContainer();
+  }
   if (canRunLocalWsl()) {
     return linuxAgent.perimeterPatrol();
   }
   const remote = remoteInvestigationUrl();
   if (remote) {
-    const token = remoteInvestigationToken();
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const { status, data } = await postJson(`${remote}/api/bouncer-patrol`, {}, headers);
-    if (data?.patrol) return data.patrol;
-    if (status >= 400) {
-      return { ok: false, summary: data?.error || `patrol proxy HTTP ${status}`, elapsed: 0, openPorts: [] };
+    try {
+      const token = remoteInvestigationToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const { status, data } = await postJson(`${remote}/api/bouncer-patrol`, {}, headers);
+      if (data?.patrol && typeof data.patrol === 'object') return data.patrol;
+      if (status >= 400) {
+        console.warn(
+          `[BouncerInvestigation] patrol proxy HTTP ${status}: ${data?.error || 'error'} — falling back to container probes`,
+        );
+      }
+    } catch (err) {
+      console.warn(`[BouncerInvestigation] patrol proxy failed: ${err?.message || err} — falling back to container probes`);
     }
   }
-  if (linuxAgent.perimeterPatrolContainer) {
+  if (typeof linuxAgent.perimeterPatrolContainer === 'function') {
     return linuxAgent.perimeterPatrolContainer();
   }
   return { ok: false, summary: 'Patrol unavailable (no WSL, proxy, or container mode)', elapsed: 0, openPorts: [] };

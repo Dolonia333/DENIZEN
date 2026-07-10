@@ -37,6 +37,7 @@
 
   const STORAGE_KEY = 'denizen-visitor-session';
   const ROLE_STORAGE_KEY = 'denizen-role';
+  const LANDING_PATH = '/';
   const PROTECTED_NPC_KEYS = new Set(['lucy', 'abby', 'bouncer']);
 
   function readRole() {
@@ -162,6 +163,26 @@
       localStorage.removeItem('denizen-ceo-grant');
     } catch (_) {}
     clearCeoUiMode();
+  }
+
+  function isLandingPath(pathname) {
+    const path = String(pathname || '/');
+    return path === '/'
+      || path === '/landing.html'
+      || path === '/home'
+      || path === '/welcome'
+      || path === '/landing'
+      || path === '/home/'
+      || path === '/welcome/'
+      || path === '/landing/';
+  }
+
+  function redirectToLandingAfterLogout() {
+    if (isLandingPath(window.location.pathname)) {
+      window.location.reload();
+      return;
+    }
+    window.location.replace(LANDING_PATH);
   }
 
   async function applyWelcomeSession(welcome) {
@@ -2253,8 +2274,8 @@
         document.dispatchEvent(new CustomEvent('denizen-visitor-logged-out'));
       } catch (_) {}
 
-      const welcome = await showWelcomeModal();
-      return applyWelcomeSession(welcome);
+      redirectToLandingAfterLogout();
+      return { sessionId: null, displayName: null, assistant: null };
     },
 
     async beginTeamJoinFlow(teamCode) {

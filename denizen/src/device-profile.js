@@ -214,9 +214,9 @@
   /** Camera zoom for Phaser playfield — synced with device tier. */
   function playfieldZoomFor(p) {
     const prof = p || profile;
-    if (prof.isPhone || prof.tier === 'phone-compact') return 1.25;
-    if (prof.isTablet) return 1.15;
-    return 1.5;
+    if (prof.isPhone || prof.tier === 'phone-compact') return prof.isCompactPhone ? 2.05 : 1.95;
+    if (prof.isTablet) return 1.85;
+    return 2.35;
   }
 
   window.DenizenDeviceProfile = {

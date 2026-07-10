@@ -406,6 +406,30 @@
     document.head.appendChild(s);
   }
 
+  function speakFabMarkup(on) {
+    const T = globalThis.DenizenTablerIcons;
+    const glyph = T?.speakGlyph
+      ? T.speakGlyph(on, { size: 20, className: 'dzs-ti' })
+      : (on ? '⏹' : '🎤');
+    return `${glyph}<span class="dzs-label">${on ? 'Stop' : 'Speak'}</span>`;
+  }
+
+  function refreshMicIcon() {
+    if (!micButton) return;
+    const on = sessionActive || listening;
+    const compact = document.documentElement.classList.contains('denizen-touch')
+      && micButton.closest('#denizen-bottom-dock');
+    const T = globalThis.DenizenTablerIcons;
+    if (T?.paintChip) {
+      T.paintChip(micButton, on ? 'player-stop' : 'microphone', on ? 'Stop' : 'Speak', {
+        iconOnly: compact,
+        title: on ? 'Stop speaking' : 'Speak to NPCs',
+      });
+    } else if (!globalThis.DenizenBottomDock?.renderChip) {
+      micButton.textContent = on ? '⏹' : '🎤';
+    }
+  }
+
   function refreshSpeakFab() {
     if (!speakFab) return;
     const chatOpen = document.documentElement.classList.contains('denizen-chat-open')
@@ -413,9 +437,7 @@
     const on = sessionActive || listening;
     const supported = isSupported();
     speakFab.classList.toggle('listening', on);
-    speakFab.innerHTML = on
-      ? '⏹<span class="dzs-label">Stop</span>'
-      : '🎤<span class="dzs-label">Speak</span>';
+    speakFab.innerHTML = speakFabMarkup(on);
     speakFab.setAttribute('aria-label', on ? 'Stop speaking' : 'Speak to NPCs');
     speakFab.disabled = !supported;
     if (chatOpen) {
@@ -442,7 +464,8 @@
     micButton.type = 'button';
     micButton.title = `Tap to speak — tap again when done. Or hold ${hotkey} on desktop.`;
     globalThis.DenizenBottomDock?.renderChip?.('denizen-mic-button', 'Speak');
-    if (!globalThis.DenizenBottomDock?.renderChip) micButton.textContent = '🎤';
+    refreshMicIcon();
+    if (!micButton.innerHTML && !globalThis.DenizenBottomDock?.renderChip) micButton.textContent = '🎤';
     Object.assign(micButton.style, {
       position: 'fixed', bottom: '14px', right: '14px', zIndex: 100002,
       width: '52px', height: '52px', borderRadius: '50%',
@@ -458,7 +481,7 @@
     speakFab = document.createElement('button');
     speakFab.id = 'denizen-speak-fab';
     speakFab.type = 'button';
-    speakFab.innerHTML = '🎤<span class="dzs-label">Speak</span>';
+    speakFab.innerHTML = speakFabMarkup(false);
     wirePress(speakFab, onMicPress);
     document.body.appendChild(speakFab);
     refreshSpeakFab();
@@ -539,6 +562,7 @@
         micButton.style.borderColor = '#355';
       }
     }
+    refreshMicIcon();
     refreshSpeakFab();
     _errorSticky = (state === 'error') && opts.sticky;
     if (statusBadge) {
