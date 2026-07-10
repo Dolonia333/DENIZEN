@@ -91,6 +91,7 @@ SYNC_PATHS = [
     "src/visitor-node-ui.js",
     "src/prompt-tuning.js",
     "src/player-chat.js",
+    "src/chat-attachments.js",
     "src/denizen-phone-chat-ui.js",
     "src/proposals-panel.js",
     "src/diag.js",
