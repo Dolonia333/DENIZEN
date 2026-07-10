@@ -1,0 +1,2423 @@
+{
+  "1": {
+    "name": "desk_wood_narrow",
+    "displayName": "Wood desk narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "2": {
+    "name": "desk_wood_square",
+    "displayName": "Wood desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "3": {
+    "name": "desk_wood_edge_right",
+    "displayName": "Wood desk right edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "4": {
+    "name": "desk_wood_drawers",
+    "displayName": "Wood desk with drawers",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "5": {
+    "name": "desk_wood_narrow_2",
+    "displayName": "Wood desk narrow 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "6": {
+    "name": "desk_wood_square_2",
+    "displayName": "Wood desk square 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "7": {
+    "name": "desk_wood_drawer_left",
+    "displayName": "Wood desk drawer left",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "8": {
+    "name": "desk_wood_front_edge",
+    "displayName": "Wood desk front edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "9": {
+    "name": "desk_wood_drawers_2",
+    "displayName": "Wood desk drawers 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "10": {
+    "name": "desk_wood_square_3",
+    "displayName": "Wood desk square 3",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "11": {
+    "name": "desk_wood_narrow_3",
+    "displayName": "Wood desk narrow 3",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "12": {
+    "name": "desk_wood_narrow_4",
+    "displayName": "Wood desk narrow 4",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "13": {
+    "name": "desk_wood_square_4",
+    "displayName": "Wood desk square 4",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "14": {
+    "name": "desk_wood_narrow_edge",
+    "displayName": "Wood desk narrow edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "15": {
+    "name": "desk_wood_square_5",
+    "displayName": "Wood desk square 5",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "16": {
+    "name": "desk_wood_edge_right_2",
+    "displayName": "Wood desk right edge 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "17": {
+    "name": "desk_wood_drawers_3",
+    "displayName": "Wood desk drawers 3",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "18": {
+    "name": "desk_beige_narrow",
+    "displayName": "Beige desk narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "19": {
+    "name": "desk_beige_square",
+    "displayName": "Beige desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "20": {
+    "name": "desk_beige_edge_left",
+    "displayName": "Beige desk left edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "21": {
+    "name": "desk_beige_drawers",
+    "displayName": "Beige desk drawers",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "22": {
+    "name": "desk_beige_narrow_2",
+    "displayName": "Beige desk narrow 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "23": {
+    "name": "desk_beige_square_2",
+    "displayName": "Beige desk square 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "24": {
+    "name": "desk_beige_drawer",
+    "displayName": "Beige desk drawer",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "25": {
+    "name": "desk_wood_square_6",
+    "displayName": "Wood desk square 6",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "26": {
+    "name": "desk_wood_drawers_4",
+    "displayName": "Wood desk drawers 4",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "27": {
+    "name": "desk_wood_square_7",
+    "displayName": "Wood desk square 7",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "28": {
+    "name": "desk_wood_half",
+    "displayName": "Wood desk half",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "29": {
+    "name": "desk_wood_half_2",
+    "displayName": "Wood desk half 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "30": {
+    "name": "desk_wood_square_8",
+    "displayName": "Wood desk square 8",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "31": {
+    "name": "desk_wood_half_edge",
+    "displayName": "Wood desk half edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "32": {
+    "name": "desk_wood_shadow_right",
+    "displayName": "Wood desk shadow right",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "33": {
+    "name": "desk_wood_notch_left",
+    "displayName": "Wood desk notch left",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "34": {
+    "name": "desk_wood_drawers_5",
+    "displayName": "Wood desk drawers 5",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "35": {
+    "name": "desk_grey_half",
+    "displayName": "Grey desk half",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "36": {
+    "name": "desk_grey_square",
+    "displayName": "Grey desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "37": {
+    "name": "desk_grey_edge_right",
+    "displayName": "Grey desk right edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "38": {
+    "name": "desk_grey_drawers",
+    "displayName": "Grey desk drawers",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "39": {
+    "name": "desk_grey_half_2",
+    "displayName": "Grey desk half 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "40": {
+    "name": "desk_grey_square_2",
+    "displayName": "Grey desk square 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "41": {
+    "name": "desk_grey_drawer_left",
+    "displayName": "Grey desk drawer left",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "42": {
+    "name": "desk_grey_drawers_2",
+    "displayName": "Grey desk drawers 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "43": {
+    "name": "desk_grey_drawer_right",
+    "displayName": "Grey desk drawer right",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "44": {
+    "name": "desk_grey_square_3",
+    "displayName": "Grey desk square 3",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "45": {
+    "name": "desk_grey_half_edge",
+    "displayName": "Grey desk half edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "46": {
+    "name": "desk_grey_half_3",
+    "displayName": "Grey desk half 3",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "47": {
+    "name": "desk_grey_square_4",
+    "displayName": "Grey desk square 4",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "48": {
+    "name": "desk_grey_half_4",
+    "displayName": "Grey desk half 4",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "49": {
+    "name": "desk_grey_square_5",
+    "displayName": "Grey desk square 5",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "50": {
+    "name": "desk_grey_edge_left",
+    "displayName": "Grey desk left edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "51": {
+    "name": "cabinet_pedestal_wood",
+    "displayName": "Wood pedestal cabinet",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "52": {
+    "name": "desk_wood_trim",
+    "displayName": "Wood desk trim",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "53": {
+    "name": "desk_wood_light_square",
+    "displayName": "Light wood desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "54": {
+    "name": "desk_wood_light_edge",
+    "displayName": "Light wood desk edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "55": {
+    "name": "cabinet_pedestal_wood_2",
+    "displayName": "Wood pedestal cabinet 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "56": {
+    "name": "desk_wood_trim_2",
+    "displayName": "Wood desk trim 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "57": {
+    "name": "desk_wood_light_square_2",
+    "displayName": "Light wood desk square 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "58": {
+    "name": "desk_wood_drawer_corner_left",
+    "displayName": "Wood desk drawer corner left",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "59": {
+    "name": "desk_wood_front_band",
+    "displayName": "Wood desk front band",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "60": {
+    "name": "desk_wood_drawer_corner_right",
+    "displayName": "Wood desk drawer corner right",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "61": {
+    "name": "desk_wood_light_square_3",
+    "displayName": "Light wood desk square 3",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "62": {
+    "name": "desk_wood_trim_thin",
+    "displayName": "Wood desk trim thin",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "63": {
+    "name": "desk_wood_trim_thin_2",
+    "displayName": "Wood desk trim thin 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "64": {
+    "name": "desk_wood_light_square_4",
+    "displayName": "Light wood desk square 4",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "65": {
+    "name": "desk_wood_trim_3",
+    "displayName": "Wood desk trim 3",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "66": {
+    "name": "desk_wood_light_square_5",
+    "displayName": "Light wood desk square 5",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "67": {
+    "name": "desk_wood_light_edge_2",
+    "displayName": "Light wood desk edge 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "68": {
+    "name": "cabinet_pedestal_wood_3",
+    "displayName": "Wood pedestal cabinet 3",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "69": {
+    "name": "desk_white_trim",
+    "displayName": "White desk trim",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "70": {
+    "name": "desk_white_square",
+    "displayName": "White desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "71": {
+    "name": "desk_white_edge_right",
+    "displayName": "White desk right edge",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "72": {
+    "name": "cabinet_pedestal_white",
+    "displayName": "White pedestal cabinet",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "73": {
+    "name": "wall_ac_white",
+    "displayName": "Wall AC white",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "74": {
+    "name": "whiteboard_large",
+    "displayName": "Whiteboard large",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "75": {
+    "name": "whiteboard_markers",
+    "displayName": "Whiteboard with markers",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "76": {
+    "name": "whiteboard_markers_2",
+    "displayName": "Whiteboard with markers 2",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "77": {
+    "name": "whiteboard_shelf",
+    "displayName": "Whiteboard with shelf",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "78": {
+    "name": "whiteboard_medium",
+    "displayName": "Whiteboard medium",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "79": {
+    "name": "whiteboard_small",
+    "displayName": "Whiteboard small",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "80": {
+    "name": "whiteboard_wide",
+    "displayName": "Whiteboard wide",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "81": {
+    "name": "whiteboard_medium_2",
+    "displayName": "Whiteboard medium 2",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "82": {
+    "name": "wall_vent_strip",
+    "displayName": "Wall vent strip",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "83": {
+    "name": "whiteboard_square",
+    "displayName": "Whiteboard square",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "84": {
+    "name": "whiteboard_smudge",
+    "displayName": "Whiteboard smudge",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "85": {
+    "name": "whiteboard_small_markers",
+    "displayName": "Whiteboard small markers",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "86": {
+    "name": "corkboard_tan",
+    "displayName": "Corkboard tan",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "87": {
+    "name": "corkboard_brown",
+    "displayName": "Corkboard brown",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "88": {
+    "name": "corkboard_gray",
+    "displayName": "Corkboard gray",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "89": {
+    "name": "corkboard_tan_large",
+    "displayName": "Corkboard tan large",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "90": {
+    "name": "corkboard_brown_large",
+    "displayName": "Corkboard brown large",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "91": {
+    "name": "corkboard_gray_large",
+    "displayName": "Corkboard gray large",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "92": {
+    "name": "wall_panel_gray",
+    "displayName": "Wall panel gray",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "93": {
+    "name": "wall_panel_smudge",
+    "displayName": "Wall panel smudge",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "94": {
+    "name": "wall_panel_smudge_2",
+    "displayName": "Wall panel smudge 2",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "95": {
+    "name": "wall_panel_smudge_3",
+    "displayName": "Wall panel smudge 3",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "96": {
+    "name": "bulletin_board_sticky",
+    "displayName": "Bulletin board sticky notes",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "97": {
+    "name": "corkboard_notes",
+    "displayName": "Corkboard with notes",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "98": {
+    "name": "plant_floor_leafy",
+    "displayName": "Floor plant leafy",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "plants"
+  },
+  "99": {
+    "name": "plant_floor_bushy",
+    "displayName": "Floor plant bushy",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "plants"
+  },
+  "100": {
+    "name": "plant_floor_spiky",
+    "displayName": "Floor plant spiky",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "plants"
+  },
+  "101": {
+    "name": "chair_grey_back",
+    "displayName": "Grey office chair back",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "102": {
+    "name": "chair_grey_front",
+    "displayName": "Grey office chair front",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "103": {
+    "name": "chair_grey_left",
+    "displayName": "Grey office chair left",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "104": {
+    "name": "chair_grey_right",
+    "displayName": "Grey office chair right",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "105": {
+    "name": "chair_grey_front_2",
+    "displayName": "Grey office chair front 2",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "106": {
+    "name": "chair_grey_back_2",
+    "displayName": "Grey office chair back 2",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "107": {
+    "name": "chair_orange_back",
+    "displayName": "Orange office chair back",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "108": {
+    "name": "chair_orange_front",
+    "displayName": "Orange office chair front",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "109": {
+    "name": "chair_orange_left",
+    "displayName": "Orange office chair left",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "110": {
+    "name": "chair_orange_right",
+    "displayName": "Orange office chair right",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "111": {
+    "name": "chair_orange_front_2",
+    "displayName": "Orange office chair front 2",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "112": {
+    "name": "chair_orange_back_2",
+    "displayName": "Orange office chair back 2",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "113": {
+    "name": "frame_diploma_blue",
+    "displayName": "Diploma frame blue",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "114": {
+    "name": "frame_diploma_green",
+    "displayName": "Diploma frame green",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "115": {
+    "name": "frame_diploma_red",
+    "displayName": "Diploma frame red",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "116": {
+    "name": "frame_wall_wide",
+    "displayName": "Wide wall frame",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "117": {
+    "name": "wall_switch_dark",
+    "displayName": "Wall switch dark",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "118": {
+    "name": "wall_switch_light",
+    "displayName": "Wall switch light",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "119": {
+    "name": "phone_desk",
+    "displayName": "Desk phone",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "120": {
+    "name": "power_strip_desk",
+    "displayName": "Desk power strip",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "121": {
+    "name": "monitor_dark_left",
+    "displayName": "Dark monitor left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "122": {
+    "name": "monitor_dark_front",
+    "displayName": "Dark monitor front",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "123": {
+    "name": "monitor_dark_right_kb",
+    "displayName": "Monitor dark right + keyboard",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "124": {
+    "name": "keyboard_mouse_dark",
+    "displayName": "Keyboard mouse dark",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "125": {
+    "name": "monitor_light_left",
+    "displayName": "Light monitor left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "126": {
+    "name": "monitor_light_front",
+    "displayName": "Light monitor front",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "127": {
+    "name": "monitor_light_right_kb",
+    "displayName": "Monitor light right + keyboard",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "128": {
+    "name": "keyboard_mouse_light",
+    "displayName": "Keyboard mouse light",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "129": {
+    "name": "monitor_dark_on_left",
+    "displayName": "Dark monitor on left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "130": {
+    "name": "monitor_dark_on_front",
+    "displayName": "Dark monitor on front",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "131": {
+    "name": "monitor_dark_on_right",
+    "displayName": "Dark monitor on right",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "132": {
+    "name": "monitor_light_on_left",
+    "displayName": "Light monitor on left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "133": {
+    "name": "monitor_light_on_front",
+    "displayName": "Light monitor on front",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "134": {
+    "name": "monitor_light_on_right",
+    "displayName": "Light monitor on right",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "135": {
+    "name": "laptop_light_right",
+    "displayName": "Laptop light right",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "136": {
+    "name": "laptop_light_front",
+    "displayName": "Laptop light front",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "137": {
+    "name": "laptop_light_left",
+    "displayName": "Laptop light left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "138": {
+    "name": "laptop_dark_right",
+    "displayName": "Laptop dark right",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "139": {
+    "name": "laptop_dark_front",
+    "displayName": "Laptop dark front",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "140": {
+    "name": "laptop_dark_left",
+    "displayName": "Laptop dark left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "141": {
+    "name": "lamp_desk_dark_left",
+    "displayName": "Dark desk lamp left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "142": {
+    "name": "lamp_desk_dark_right",
+    "displayName": "Dark desk lamp right",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "143": {
+    "name": "lamp_desk_light_left",
+    "displayName": "Light desk lamp left",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "144": {
+    "name": "lamp_desk_light_right",
+    "displayName": "Light desk lamp right",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "145": {
+    "name": "lamp_desk_blue",
+    "displayName": "Blue desk lamp",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "146": {
+    "name": "lamp_desk_grey",
+    "displayName": "Grey desk lamp",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "147": {
+    "name": "printer_black",
+    "displayName": "Black printer",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "148": {
+    "name": "printer_white",
+    "displayName": "White printer",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "149": {
+    "name": "printer_grey",
+    "displayName": "Grey printer",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "150": {
+    "name": "printer_dark",
+    "displayName": "Dark printer",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "151": {
+    "name": "printer_white_2",
+    "displayName": "White printer 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "152": {
+    "name": "printer_grey_paper",
+    "displayName": "Grey printer with paper",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "153": {
+    "name": "papers_stack_small",
+    "displayName": "Paper stack small",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "154": {
+    "name": "papers_stack_medium",
+    "displayName": "Paper stack medium",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "155": {
+    "name": "papers_stack_tall",
+    "displayName": "Paper stack tall",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "156": {
+    "name": "papers_tray",
+    "displayName": "Paper tray",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "157": {
+    "name": "photo_frame_orange_hair",
+    "displayName": "Photo frame orange hair",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "158": {
+    "name": "photo_frame_blonde",
+    "displayName": "Photo frame blonde",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "159": {
+    "name": "photo_frame_brown",
+    "displayName": "Photo frame brown hair",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "160": {
+    "name": "photo_frame_blonde_2",
+    "displayName": "Photo frame blonde 2",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "161": {
+    "name": "frame_wall_portrait",
+    "displayName": "Wall portrait frame",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "162": {
+    "name": "frame_wall_portrait_2",
+    "displayName": "Wall portrait frame 2",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "163": {
+    "name": "frame_wall_grid",
+    "displayName": "Wall frame color grid",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "164": {
+    "name": "frame_wall_popart",
+    "displayName": "Wall frame pop art",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "165": {
+    "name": "wall_ac_white_2",
+    "displayName": "Wall AC white 2",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "166": {
+    "name": "wall_ac_grey",
+    "displayName": "Wall AC grey",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "167": {
+    "name": "water_cooler_top",
+    "displayName": "Water cooler top",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "168": {
+    "name": "water_cooler_tall",
+    "displayName": "Water cooler tall",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "169": {
+    "name": "computer_tower",
+    "displayName": "Computer tower",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "170": {
+    "name": "whiteboard_markers_tray",
+    "displayName": "Whiteboard markers tray",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "171": {
+    "name": "whiteboard_line_chart",
+    "displayName": "Whiteboard line chart",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "172": {
+    "name": "whiteboard_pie_chart",
+    "displayName": "Whiteboard pie chart",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "173": {
+    "name": "water_cooler",
+    "displayName": "Water cooler",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "174": {
+    "name": "mini_fridge",
+    "displayName": "Mini fridge",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "175": {
+    "name": "vending_machine",
+    "displayName": "Vending machine",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "176": {
+    "name": "vending_machine_dark",
+    "displayName": "Vending machine dark",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "177": {
+    "name": "printer_copier",
+    "displayName": "Office copier",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "178": {
+    "name": "printer_copier_2",
+    "displayName": "Office copier 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "179": {
+    "name": "partition_wood_narrow",
+    "displayName": "Wood partition narrow",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "180": {
+    "name": "partition_wood_square",
+    "displayName": "Wood partition square",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "181": {
+    "name": "partition_wood_edge",
+    "displayName": "Wood partition edge",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "182": {
+    "name": "partition_wood_edge_2",
+    "displayName": "Wood partition edge 2",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "183": {
+    "name": "partition_wood_square_2",
+    "displayName": "Wood partition square 2",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "184": {
+    "name": "partition_wood_square_3",
+    "displayName": "Wood partition square 3",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "185": {
+    "name": "partition_dark_narrow",
+    "displayName": "Dark partition narrow",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "186": {
+    "name": "partition_dark_square",
+    "displayName": "Dark partition square",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "187": {
+    "name": "partition_dark_edge",
+    "displayName": "Dark partition edge",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "188": {
+    "name": "floor_tile_beige",
+    "displayName": "Beige floor tile",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "unknown"
+  },
+  "189": {
+    "name": "floor_tile_beige_2",
+    "displayName": "Beige floor tile 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "unknown"
+  },
+  "190": {
+    "name": "cabinet_filing_low",
+    "displayName": "Low filing cabinet",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "191": {
+    "name": "shelf_wood_dark",
+    "displayName": "Dark wood shelf",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "192": {
+    "name": "surface_wood_dark",
+    "displayName": "Dark wood surface",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "193": {
+    "name": "table_coffee_dark",
+    "displayName": "Dark coffee table",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "tables"
+  },
+  "194": {
+    "name": "table_wood_square",
+    "displayName": "Wood square table",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "tables"
+  },
+  "195": {
+    "name": "table_wood_long",
+    "displayName": "Wood long table",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "tables"
+  },
+  "196": {
+    "name": "chair_blue",
+    "displayName": "Blue office chair",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "197": {
+    "name": "chair_grey_round",
+    "displayName": "Grey round chair",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "198": {
+    "name": "chair_lavender",
+    "displayName": "Lavender office chair",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "199": {
+    "name": "chair_mustard",
+    "displayName": "Mustard office chair",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "200": {
+    "name": "sofa_grey_two_seat",
+    "displayName": "Grey two-seat sofa",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "sofas"
+  },
+  "201": {
+    "name": "sofa_grey_corner_left",
+    "displayName": "Grey sofa corner left",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "sofas"
+  },
+  "202": {
+    "name": "sofa_grey_corner_right",
+    "displayName": "Grey sofa corner right",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "sofas"
+  },
+  "203": {
+    "name": "sofa_grey_corner_2",
+    "displayName": "Grey sofa corner 2",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "sofas"
+  },
+  "204": {
+    "name": "sofa_grey_armchair",
+    "displayName": "Grey sofa armchair",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "sofas"
+  },
+  "205": {
+    "name": "sofa_grey_wide",
+    "displayName": "Grey sofa wide",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "sofas"
+  },
+  "206": {
+    "name": "sofa_grey_middle",
+    "displayName": "Grey sofa middle",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "sofas"
+  },
+  "207": {
+    "name": "partition_glass_thin",
+    "displayName": "Thin glass partition",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "208": {
+    "name": "partition_grey_block",
+    "displayName": "Grey partition block",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "209": {
+    "name": "partition_grey_corner",
+    "displayName": "Grey partition corner",
+    "type": "partition",
+    "stack_on": "none",
+    "category": "partitions"
+  },
+  "210": {
+    "name": "cabinet_tan_small",
+    "displayName": "Tan cabinet small",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "211": {
+    "name": "cabinet_tan_medium",
+    "displayName": "Tan cabinet medium",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "212": {
+    "name": "cabinet_tan_narrow",
+    "displayName": "Tan cabinet narrow",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "213": {
+    "name": "cabinet_grey_small",
+    "displayName": "Grey cabinet small",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "214": {
+    "name": "cabinet_grey_medium",
+    "displayName": "Grey cabinet medium",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "215": {
+    "name": "cabinet_grey_narrow",
+    "displayName": "Grey cabinet narrow",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "216": {
+    "name": "cabinet_light_small",
+    "displayName": "Light cabinet small",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "217": {
+    "name": "window_blinds_white_front",
+    "displayName": "Window blinds white front",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "218": {
+    "name": "window_blinds_white_side",
+    "displayName": "Window blinds white side",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "219": {
+    "name": "window_blinds_tan_front",
+    "displayName": "Window blinds tan front",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "220": {
+    "name": "window_blinds_tan_side",
+    "displayName": "Window blinds tan side",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "221": {
+    "name": "window_blinds_tan_narrow",
+    "displayName": "Window blinds tan narrow",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "222": {
+    "name": "window_blinds_tan_medium",
+    "displayName": "Window blinds tan medium",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "223": {
+    "name": "window_blinds_tan_wide",
+    "displayName": "Window blinds tan wide",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "224": {
+    "name": "window_blinds_tan_side_2",
+    "displayName": "Window blinds tan side 2",
+    "type": "decor",
+    "stack_on": "none",
+    "category": "wall_items",
+    "wall_mount": true
+  },
+  "225": {
+    "name": "desk_setup_laptop_lamp",
+    "displayName": "Laptop + lamp setup",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "226": {
+    "name": "lamp_over_papers",
+    "displayName": "Lamp over papers",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "227": {
+    "name": "monitor_dual_kb",
+    "displayName": "Dual monitors + keyboard",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "228": {
+    "name": "monitor_side_profile",
+    "displayName": "Monitor side profile",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "229": {
+    "name": "desk_setup_laptop",
+    "displayName": "Laptop desk setup",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "230": {
+    "name": "lamp_over_papers_2",
+    "displayName": "Lamp over papers 2",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "231": {
+    "name": "monitor_dual_kb_2",
+    "displayName": "Dual monitors + keyboard 2",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "232": {
+    "name": "pc_tower_small",
+    "displayName": "Small PC tower",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "233": {
+    "name": "workstation_printer_dual",
+    "displayName": "Printer + dual monitors",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "234": {
+    "name": "monitor_side_red",
+    "displayName": "Monitor side red screen",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "235": {
+    "name": "workstation_printer_dual_2",
+    "displayName": "Printer + dual monitors 2",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "236": {
+    "name": "monitor_side_red_2",
+    "displayName": "Monitor side red screen 2",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "237": {
+    "name": "lamp_desk_silver",
+    "displayName": "Desk lamp silver",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "238": {
+    "name": "lamp_desk_silver_2",
+    "displayName": "Desk lamp silver 2",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "239": {
+    "name": "lamp_desk_silver_3",
+    "displayName": "Desk lamp silver 3",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "240": {
+    "name": "laptop_with_papers",
+    "displayName": "Laptop with papers",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "241": {
+    "name": "monitor_small_dock",
+    "displayName": "Small monitor on dock",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "242": {
+    "name": "coffee_machine_desk",
+    "displayName": "Coffee machine",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "243": {
+    "name": "monitor_flat_front",
+    "displayName": "Flat monitor front",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "244": {
+    "name": "file_holder_vertical",
+    "displayName": "Vertical file holder",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "245": {
+    "name": "desk_tan_narrow",
+    "displayName": "Tan desk narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "246": {
+    "name": "desk_tan_square",
+    "displayName": "Tan desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "247": {
+    "name": "desk_tan_drawers",
+    "displayName": "Tan desk drawers",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "248": {
+    "name": "desk_tan_wide",
+    "displayName": "Tan desk wide",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "249": {
+    "name": "desk_tan_l_shape",
+    "displayName": "Tan L-desk",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "250": {
+    "name": "desk_tan_textured_narrow",
+    "displayName": "Tan textured desk narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "251": {
+    "name": "desk_tan_textured_square",
+    "displayName": "Tan textured desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "252": {
+    "name": "desk_tan_textured_drawers",
+    "displayName": "Tan textured desk drawers",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "253": {
+    "name": "desk_tan_textured_wide",
+    "displayName": "Tan textured desk wide",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "254": {
+    "name": "desk_tan_textured_l_shape",
+    "displayName": "Tan textured L-desk",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "255": {
+    "name": "desk_wood_grain_narrow",
+    "displayName": "Wood grain desk narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "256": {
+    "name": "desk_wood_grain_square",
+    "displayName": "Wood grain desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "257": {
+    "name": "desk_wood_grain_drawers",
+    "displayName": "Wood grain desk drawers",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "258": {
+    "name": "desk_wood_grain_wide",
+    "displayName": "Wood grain desk wide",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "259": {
+    "name": "desk_wood_grain_l_shape",
+    "displayName": "Wood grain L-desk",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "260": {
+    "name": "desk_white_narrow_2",
+    "displayName": "White desk narrow 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "261": {
+    "name": "desk_white_square_2",
+    "displayName": "White desk square 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "262": {
+    "name": "desk_white_drawers",
+    "displayName": "White desk drawers",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "263": {
+    "name": "desk_white_wide",
+    "displayName": "White desk wide",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "264": {
+    "name": "desk_white_l_shape",
+    "displayName": "White L-desk",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "265": {
+    "name": "desk_grey_side_narrow",
+    "displayName": "Grey desk side narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "266": {
+    "name": "desk_grey_side_square",
+    "displayName": "Grey desk side square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "267": {
+    "name": "desk_grey_with_base",
+    "displayName": "Grey desk with base",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "268": {
+    "name": "desk_grey_l_corner",
+    "displayName": "Grey L-desk corner",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "269": {
+    "name": "desk_grey_l_corner_2",
+    "displayName": "Grey L-desk corner 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "270": {
+    "name": "chair_black_side",
+    "displayName": "Black office chair side",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "271": {
+    "name": "chair_orange_side",
+    "displayName": "Orange office chair side",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "272": {
+    "name": "pc_tower_floor",
+    "displayName": "PC tower floor",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "273": {
+    "name": "phone_desk_grey",
+    "displayName": "Grey desk phone",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "274": {
+    "name": "label_printer_desk",
+    "displayName": "Desk label printer",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "275": {
+    "name": "monitor_triple_back_dark",
+    "displayName": "Triple monitor back dark",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "276": {
+    "name": "monitor_triple_back_light",
+    "displayName": "Triple monitor back light",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "277": {
+    "name": "monitor_white_on",
+    "displayName": "White monitor on",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "278": {
+    "name": "monitor_black_on",
+    "displayName": "Black monitor on",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "279": {
+    "name": "printer_side_white",
+    "displayName": "White printer side",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "280": {
+    "name": "printer_side_black",
+    "displayName": "Black printer side",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "281": {
+    "name": "desk_wood_side_narrow",
+    "displayName": "Wood desk side narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "282": {
+    "name": "desk_wood_side_square",
+    "displayName": "Wood desk side square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "283": {
+    "name": "desk_wood_with_base",
+    "displayName": "Wood desk with base",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "284": {
+    "name": "desk_wood_l_corner",
+    "displayName": "Wood L-desk corner",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "285": {
+    "name": "desk_wood_l_corner_2",
+    "displayName": "Wood L-desk corner 2",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "286": {
+    "name": "desk_beige_side_narrow",
+    "displayName": "Beige desk side narrow",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "287": {
+    "name": "desk_beige_side_square",
+    "displayName": "Beige desk side square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "288": {
+    "name": "desk_beige_with_base",
+    "displayName": "Beige desk with base",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "289": {
+    "name": "desk_tan_l_corner",
+    "displayName": "Tan L-desk corner",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "290": {
+    "name": "desk_tan_l_extension",
+    "displayName": "Tan L-desk extension",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "291": {
+    "name": "desk_tan_square_small",
+    "displayName": "Tan desk square small",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "292": {
+    "name": "desk_tan_rect",
+    "displayName": "Tan desk rectangle",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "293": {
+    "name": "desk_tan_with_legs",
+    "displayName": "Tan desk with legs",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "294": {
+    "name": "desk_white_l_corner",
+    "displayName": "White L-desk corner",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "295": {
+    "name": "desk_white_l_extension",
+    "displayName": "White L-desk extension",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "296": {
+    "name": "desk_white_square_small",
+    "displayName": "White desk square small",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "297": {
+    "name": "desk_white_rect",
+    "displayName": "White desk rectangle",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "298": {
+    "name": "desk_white_with_legs",
+    "displayName": "White desk with legs",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "299": {
+    "name": "desk_birch_l_corner",
+    "displayName": "Birch L-desk corner",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "300": {
+    "name": "desk_birch_l_extension",
+    "displayName": "Birch L-desk extension",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "301": {
+    "name": "desk_birch_square",
+    "displayName": "Birch desk square",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "302": {
+    "name": "desk_birch_rect",
+    "displayName": "Birch desk rectangle",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "303": {
+    "name": "desk_birch_with_legs",
+    "displayName": "Birch desk with legs",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "304": {
+    "name": "desk_dark_l_corner",
+    "displayName": "Dark L-desk corner",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "305": {
+    "name": "desk_dark_l_extension",
+    "displayName": "Dark L-desk extension",
+    "type": "surface",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "306": {
+    "name": "chair_orange_side_2",
+    "displayName": "Orange office chair side 2",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "307": {
+    "name": "chair_black_side_2",
+    "displayName": "Black office chair side 2",
+    "type": "seat",
+    "stack_on": "none",
+    "category": "chairs"
+  },
+  "308": {
+    "name": "printer_small_side",
+    "displayName": "Small printer side",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "electronics"
+  },
+  "309": {
+    "name": "phone_or_calculator",
+    "displayName": "Desk phone or calculator",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "310": {
+    "name": "cabinet_side_narrow",
+    "displayName": "Narrow cabinet side",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "cabinets"
+  },
+  "311": {
+    "name": "monitor_triple_dark",
+    "displayName": "Triple monitors dark",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "312": {
+    "name": "monitor_triple_light",
+    "displayName": "Triple monitors light",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "313": {
+    "name": "monitor_black_ui",
+    "displayName": "Black monitor UI",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "314": {
+    "name": "monitor_white_ui",
+    "displayName": "White monitor UI",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "315": {
+    "name": "scanner_side_light",
+    "displayName": "Scanner side light",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "316": {
+    "name": "scanner_side_dark",
+    "displayName": "Scanner side dark",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "317": {
+    "name": "coffee_station",
+    "displayName": "Coffee station",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "318": {
+    "name": "coffee_station_2",
+    "displayName": "Coffee station 2",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "319": {
+    "name": "coffee_station_spill",
+    "displayName": "Coffee station spill",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "320": {
+    "name": "desk_wood_coffee_station",
+    "displayName": "Wood desk coffee station",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "321": {
+    "name": "desk_wood_dark_coffee",
+    "displayName": "Dark wood desk coffee",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "322": {
+    "name": "desk_wood_orange_coffee",
+    "displayName": "Orange wood desk coffee",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "323": {
+    "name": "desk_white_printer_papers",
+    "displayName": "White desk printer papers",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "324": {
+    "name": "desk_white_printer_papers_2",
+    "displayName": "White desk printer papers 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "325": {
+    "name": "desk_grey_printer_papers",
+    "displayName": "Grey desk printer papers",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "326": {
+    "name": "desk_grey_printer_papers_2",
+    "displayName": "Grey desk printer papers 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "327": {
+    "name": "desk_tan_printer_papers",
+    "displayName": "Tan desk printer papers",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "328": {
+    "name": "desk_tan_printer_papers_2",
+    "displayName": "Tan desk printer papers 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "desks"
+  },
+  "329": {
+    "name": "suitcase_blue",
+    "displayName": "Blue suitcase",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "330": {
+    "name": "suitcase_blue_2",
+    "displayName": "Blue suitcase 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "331": {
+    "name": "suitcase_red",
+    "displayName": "Red suitcase",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "332": {
+    "name": "suitcase_red_2",
+    "displayName": "Red suitcase 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "333": {
+    "name": "suitcase_grey",
+    "displayName": "Grey suitcase",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "334": {
+    "name": "suitcase_grey_2",
+    "displayName": "Grey suitcase 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "335": {
+    "name": "suitcase_tan",
+    "displayName": "Tan suitcase",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "336": {
+    "name": "suitcase_tan_2",
+    "displayName": "Tan suitcase 2",
+    "type": "furniture",
+    "stack_on": "none",
+    "category": "furniture"
+  },
+  "337": {
+    "name": "cash_stack_small",
+    "displayName": "Small cash stack",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "338": {
+    "name": "cash_pile_medium",
+    "displayName": "Medium cash pile",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  },
+  "339": {
+    "name": "cash_pile_large",
+    "displayName": "Large cash pile",
+    "type": "decor",
+    "stack_on": "surface",
+    "category": "desk_items"
+  }
+}

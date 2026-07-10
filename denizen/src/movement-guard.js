@@ -33,6 +33,7 @@
   }
 
   function unlock() {
+    if (window.__DenizenEditorActive) return;
     window.__DenizenGameInputBlocked = false;
     if (typeof window.DenizenUnlockMovement === 'function') {
       window.DenizenUnlockMovement();
@@ -127,6 +128,8 @@
       }
 
       if (blocked) {
+        // Map editor locks the player on purpose — don't fight it.
+        if (window.__DenizenEditorActive) return;
         sc.playerLocked = false;
         sc._playerOnPhone = false;
         sc._playerSitting = false;

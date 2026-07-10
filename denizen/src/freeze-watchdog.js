@@ -36,6 +36,7 @@
   }
 
   function recover(reason) {
+    if (window.__DenizenEditorActive) return;
     const now = Date.now();
     if (now - lastRecoverAt < 400) return;
     lastRecoverAt = now;

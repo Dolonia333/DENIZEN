@@ -33,8 +33,14 @@
       #${CHIP_ID} {
         position: fixed;
         z-index: 100510;
+        /* Bottom-right only — never set top/height or the pill stretches full viewport. */
+        top: auto !important;
+        left: auto !important;
         right: max(12px, env(safe-area-inset-right, 0px));
         bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px));
+        width: max-content;
+        height: auto !important;
+        max-height: none;
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -113,7 +119,7 @@
       ? `${progress.xpIntoLevel}/${progress.xpForNextLevel} XP`
       : 'max level';
     el.innerHTML =
-      `<span class="label">Level ${progress.level} ┬╖ ${nextLabel}</span>` +
+      `<span class="label">Level ${progress.level} · ${nextLabel}</span>` +
       `<div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div>`;
   }
 

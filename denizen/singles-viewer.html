@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Singles Viewer – Modern Office 32×32 (IDs 1–339)</title>
+  <title>Singles Viewer – Modern Office (named + labeled)</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -26,7 +26,8 @@
     }
     header { margin-bottom: 14px; }
     h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
-    .sub { color: var(--muted); font-size: 13px; }
+    .sub { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .sub a { color: var(--accent); }
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -39,7 +40,8 @@
       border-radius: 8px;
     }
     .toolbar input[type="search"],
-    .toolbar input[type="number"] {
+    .toolbar input[type="number"],
+    .toolbar select {
       padding: 6px 10px;
       background: var(--input-bg);
       border: 1px solid var(--border);
@@ -70,7 +72,7 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 10px;
     }
     .card {
@@ -85,12 +87,14 @@
     }
     .card:hover { border-color: #444c56; }
     .card.labeled { border-color: #1a7642; }
+    .card.desk-item { box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.35); }
     .card.skip { opacity: 0.45; }
     .card-header {
       width: 100%;
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      gap: 6px;
     }
     .id-badge {
       font-size: 11px;
@@ -100,11 +104,9 @@
       border: 1px solid rgba(88,166,255,0.25);
       border-radius: 4px;
       padding: 1px 6px;
+      white-space: nowrap;
     }
-    .size-badge {
-      font-size: 10px;
-      color: var(--muted);
-    }
+    .size-badge { font-size: 10px; color: var(--muted); }
     .img-wrap {
       background: #000;
       border: 1px solid var(--border);
@@ -137,7 +139,14 @@
       color: var(--muted);
       opacity: 0.7;
     }
-    .label-input {
+    .meta-line {
+      width: 100%;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+      min-height: 14px;
+    }
+    .label-input, .select-mini {
       width: 100%;
       padding: 5px 7px;
       font-size: 12px;
@@ -146,8 +155,13 @@
       border-radius: 4px;
       color: var(--text);
     }
-    .label-input::placeholder { color: var(--muted); }
-    .label-input:focus { outline: none; border-color: var(--accent); }
+    .label-input:focus, .select-mini:focus { outline: none; border-color: var(--accent); }
+    .row2 {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
     .skip-row {
       width: 100%;
       display: flex;
@@ -156,16 +170,14 @@
       font-size: 11px;
       color: var(--muted);
     }
-    .skip-row input[type="checkbox"] { cursor: pointer; }
 
-    /* zoom dialog */
     dialog {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 0;
       color: var(--text);
-      width: min(700px, calc(100vw - 32px));
+      width: min(720px, calc(100vw - 32px));
     }
     dialog::backdrop { background: rgba(0,0,0,.7); }
     .dlg-header {
@@ -203,14 +215,14 @@
       border-radius: 999px;
       padding: 3px 9px;
     }
-    .dlg-label-row {
-      display: flex;
-      gap: 8px;
+    .dlg-form {
       width: 100%;
-      align-items: center;
+      display: grid;
+      gap: 8px;
     }
-    .dlg-label-row input {
-      flex: 1;
+    .dlg-form label { font-size: 12px; color: var(--muted); }
+    .dlg-form input, .dlg-form select {
+      width: 100%;
       padding: 7px 10px;
       background: var(--input-bg);
       border: 1px solid var(--border);
@@ -218,12 +230,8 @@
       color: var(--text);
       font-size: 13px;
     }
-    .dlg-nav {
-      display: flex;
-      gap: 8px;
-    }
+    .dlg-nav { display: flex; gap: 8px; }
 
-    /* export panel */
     #exportPanel {
       display: none;
       margin-top: 14px;
@@ -240,55 +248,80 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       color: #adbac7;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-family: ui-monospace, monospace;
       font-size: 12px;
       padding: 10px;
       resize: vertical;
     }
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .hint code { color: var(--accent); }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>Singles Viewer — Modern Office 32×32 (IDs 1–339)</h1>
-  <p class="sub">Each sprite is a separate PNG from <code>assets/modern_office/singles/</code> (IDs 1–339). Add a label, then <strong>Export labels</strong>.</p>
+  <h1>Singles Viewer — Modern Office Revamped</h1>
+  <p class="sub">
+    Trimmed named sprites from <code>assets/modern_office/named/</code> (fallback: numbered singles).
+    Labels load from <code>data/mo_singles_ai_labels.json</code>.
+    Fix a wrong name here → Export AI JSON → run import.
+    <a href="/workflow-dashboard.html">← Workflow</a>
+    · <a href="/out/mo-singles-sheets/sheet_00.png">Contact sheets</a>
+  </p>
 </header>
 
 <div class="toolbar">
-  <input type="search" id="searchInput" placeholder="Search label…" />
-  <label>ID range:</label>
-  <input type="number" id="rangeFrom" value="1" min="1" max="339" title="From ID" />
+  <input type="search" id="searchInput" placeholder="Search name / display…" />
+  <label>Category</label>
+  <select id="categoryFilter">
+    <option value="">All categories</option>
+  </select>
+  <label>ID</label>
+  <input type="number" id="rangeFrom" value="1" min="1" max="339" />
   <span style="color:var(--muted); font-size:13px;">–</span>
-  <input type="number" id="rangeTo" value="339" min="1" max="339" title="To ID" />
-  <button class="btn" id="btnAll">All (1–339)</button>
+  <input type="number" id="rangeTo" value="339" min="1" max="339" />
+  <button class="btn" id="btnAll">All</button>
+  <label style="display:flex;align-items:center;gap:6px;">
+    <input type="checkbox" id="onlyDeskItems" />
+    On desk only
+  </label>
   <label style="display:flex;align-items:center;gap:6px;">
     <input type="checkbox" id="onlyUnlabeled" />
-    Unlabeled only
-  </label>
-  <label style="display:flex;align-items:center;gap:6px;">
-    <input type="checkbox" id="onlyLabeled" />
-    Labeled only
+    Unlabeled
   </label>
   <div class="sep"></div>
-  <span class="stats" id="stats"></span>
-  <button class="btn" id="btnClearAll" title="Clear all labels">Clear all</button>
-  <button class="btn" id="btnPrefillKnown" title="Fill labels from current openplan catalog singles">Prefill known</button>
+  <span class="stats" id="stats">Loading…</span>
+  <button class="btn" id="btnReloadServer">Reload from disk</button>
   <button class="btn btn-blue" id="btnImport">Import JSON</button>
-  <button class="btn btn-green" id="btnExport">Export labels</button>
+  <button class="btn btn-green" id="btnExport">Export AI labels</button>
 </div>
 
 <div id="grid" class="grid"></div>
 
+<div class="hint">
+  After exporting, save as <code>data/mo_singles_ai_labels.json</code> (or paste over it), then:
+  <code>python3 scripts/rename-trim-mo-singles.py && node scripts/import-mo-revamped-singles.mjs</code>
+  That renames/trims PNGs and merges into the editor catalog.
+</div>
+
 <div id="exportPanel">
-  <h2>Labels JSON — paste into chat or copy to a file</h2>
+  <h2>AI labels JSON — save as <code>data/mo_singles_ai_labels.json</code></h2>
   <textarea id="exportOut" readonly></textarea>
   <div style="display:flex;gap:8px;margin-top:8px;">
-    <button class="btn btn-green" id="btnCopyExport">Copy to clipboard</button>
+    <button class="btn btn-green" id="btnCopyExport">Copy</button>
+    <button class="btn" id="btnDownloadExport">Download file</button>
     <button class="btn" id="btnCloseExport">Close</button>
   </div>
 </div>
 
-<!-- Zoom dialog -->
 <dialog id="zoomDialog">
   <div class="dlg-header">
     <div class="dlg-title" id="zoomTitle"></div>
@@ -297,9 +330,61 @@
   <div class="dlg-body">
     <img id="zoomImg" src="" alt="sprite" />
     <div class="dlg-meta" id="zoomMeta"></div>
-    <div class="dlg-label-row">
-      <input type="text" id="zoomLabelInput" placeholder="Add a label (e.g. chair_blue_forward)…" />
-      <button class="btn btn-green" id="zoomSaveLabel">Save</button>
+    <div class="dlg-form">
+      <div>
+        <label>Catalog id (snake_case)</label>
+        <input type="text" id="zoomName" placeholder="monitor_dark_front" />
+      </div>
+      <div>
+        <label>Display name</label>
+        <input type="text" id="zoomDisplay" placeholder="Monitor dark front" />
+      </div>
+      <div class="row2">
+        <div>
+          <label>Type</label>
+          <select id="zoomType">
+            <option value="decor">decor</option>
+            <option value="surface">surface</option>
+            <option value="seat">seat</option>
+            <option value="furniture">furniture</option>
+            <option value="partition">partition</option>
+          </select>
+        </div>
+        <div>
+          <label>Stack on</label>
+          <select id="zoomStack">
+            <option value="none">none (floor)</option>
+            <option value="surface">surface (on desk)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>Category</label>
+          <select id="zoomCategory">
+            <option value="desk_items">desk_items</option>
+            <option value="desks">desks</option>
+            <option value="chairs">chairs</option>
+            <option value="furniture">furniture</option>
+            <option value="electronics">electronics</option>
+            <option value="cabinets">cabinets</option>
+            <option value="partitions">partitions</option>
+            <option value="sofas">sofas</option>
+            <option value="plants">plants</option>
+            <option value="tables">tables</option>
+            <option value="wall_items">wall_items</option>
+            <option value="unknown">unknown</option>
+          </select>
+        </div>
+        <div>
+          <label>Wall mount</label>
+          <select id="zoomWall">
+            <option value="false">no</option>
+            <option value="true">yes</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-green" id="zoomSaveLabel">Save label</button>
     </div>
     <div class="dlg-nav">
       <button class="btn" id="zoomPrev">← Prev</button>
@@ -308,15 +393,16 @@
   </div>
 </dialog>
 
-<!-- Import dialog -->
 <dialog id="importDialog">
   <div class="dlg-header">
     <div class="dlg-title">Import labels JSON</div>
     <button class="btn" id="importClose">✕</button>
   </div>
   <div class="dlg-body">
-    <p style="font-size:13px;color:var(--muted);width:100%;">Paste a JSON object like <code>{"1":"chair_blue","5":"desk_l_shaped"}</code> or a full labels export.</p>
-    <textarea id="importInput" style="width:100%;height:200px;background:#010409;border:1px solid var(--border);border-radius:6px;color:#adbac7;font-family:monospace;font-size:12px;padding:10px;resize:vertical;" placeholder='{"1": "chair_forward", "5": "desk_pod"}'></textarea>
+    <p style="font-size:13px;color:var(--muted);width:100%;">
+      Paste AI format <code>{"121":{"name":"monitor_dark_left",...}}</code> or simple <code>{"121":"monitor_dark_left"}</code>.
+    </p>
+    <textarea id="importInput" style="width:100%;height:200px;background:#010409;border:1px solid var(--border);border-radius:6px;color:#adbac7;font-family:monospace;font-size:12px;padding:10px;resize:vertical;"></textarea>
     <div style="display:flex;gap:8px;">
       <button class="btn btn-green" id="importConfirm">Import</button>
       <button class="btn" id="importCancel">Cancel</button>
@@ -325,98 +411,157 @@
 </dialog>
 
 <script>
-const SINGLES_BASE = '/assets/modern_office/singles/Modern_Office_Singles_32x32_';
 const TOTAL = 339;
-const LS_KEY = 'singles32x32_labels';
-const KNOWN_FROM_CATALOG = {
-  98: 'plant_tall',
-  99: 'plant_prickly',
-  100: 'plant_pretty',
-  101: 'chair_forward',
-  103: 'chair_left',
-  107: 'chair_orange_forward',
-  110: 'chair_orange_right',
-  129: 'monitor_tilted',
-  130: 'monitor_front',
-  133: 'monitor_white',
-  136: 'laptop',
-  141: 'desk_lamp',
-  170: 'whiteboard_blank',
-  171: 'whiteboard_charts',
-  173: 'water_cooler',
-  175: 'vending_machine',
-  177: 'printer',
-  190: 'table',
-  200: 'couch',
-  231: 'desk_setup_alt',
-  306: 'chair_orange_left',
-  315: 'fax_machine',
-  317: 'coffee_machine'
-};
+const LS_KEY = 'singles32x32_labels_v2';
+const AI_URL = '/data/mo_singles_ai_labels.json?v=' + Date.now();
+const MANIFEST_URL = '/data/mo_named_manifest.json?v=' + Date.now();
 
-// --- State ---
-let labels = {}; // id (number) -> string label
-let skipped = {}; // id (number) -> bool
+/** @type {Record<string, object>} */
+let records = {};
+/** @type {Record<number, {file?: string, name?: string}>} */
+let namedByNum = {};
+let skipped = {};
+let dirty = false;
+let currentIds = [];
+let zoomId = null;
 
-function loadState() {
+function emptyRecord(id) {
+  return {
+    name: '',
+    displayName: '',
+    type: 'furniture',
+    stack_on: 'none',
+    category: 'unknown',
+    wall_mount: false,
+  };
+}
+
+function normalizeRecord(raw, id) {
+  if (raw == null) return emptyRecord(id);
+  if (typeof raw === 'string') {
+    const name = raw.trim();
+    return {
+      ...emptyRecord(id),
+      name,
+      displayName: name.replace(/_/g, ' '),
+    };
+  }
+  const r = { ...emptyRecord(id), ...raw };
+  r.name = String(r.name || '').trim();
+  r.displayName = String(r.displayName || r.name || '').trim();
+  r.type = r.type || 'furniture';
+  r.stack_on = r.stack_on || 'none';
+  r.category = r.category || 'unknown';
+  r.wall_mount = !!r.wall_mount;
+  return r;
+}
+
+function getRec(id) {
+  return records[String(id)] || emptyRecord(id);
+}
+
+function setRec(id, patch) {
+  const next = { ...getRec(id), ...patch };
+  if (!next.name) {
+    delete records[String(id)];
+  } else {
+    if (!next.displayName) next.displayName = next.name.replace(/_/g, ' ');
+    records[String(id)] = next;
+  }
+  dirty = true;
+  saveLocal();
+}
+
+function saveLocal() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({ records, skipped, dirty }));
+  } catch (_) {}
+}
+
+function loadLocal() {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      labels = parsed.labels || {};
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (parsed.records) {
+      records = parsed.records;
       skipped = parsed.skipped || {};
+      dirty = !!parsed.dirty;
+      return true;
     }
-  } catch (e) {}
-}
-
-function saveState() {
-  try {
-    localStorage.setItem(LS_KEY, JSON.stringify({ labels, skipped }));
-  } catch (e) {}
-}
-
-function getLabel(id) { return labels[id] || ''; }
-function setLabel(id, val) {
-  if (val) labels[id] = val; else delete labels[id];
-  saveState();
-}
-function isSkipped(id) { return !!skipped[id]; }
-function setSkipped(id, val) {
-  if (val) skipped[id] = true; else delete skipped[id];
-  saveState();
+  } catch (_) {}
+  return false;
 }
 
 function spriteUrl(id) {
-  return SINGLES_BASE + id + '.png';
+  const named = namedByNum[id];
+  if (named?.file) return `/assets/modern_office/named/${named.file}?v=1`;
+  return `/assets/modern_office/singles/Modern_Office_Singles_32x32_${id}.png`;
 }
 
-function applyKnownPrefill(force) {
-  let count = 0;
-  for (const [k, v] of Object.entries(KNOWN_FROM_CATALOG)) {
-    const id = Number(k);
-    if (id < 1 || id > TOTAL) continue;
-    if (!force && getLabel(id)) continue;
-    setLabel(id, v);
-    count++;
+function titleCaseFromSlug(s) {
+  return String(s || '')
+    .split('_')
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+async function loadFromServer() {
+  const [aiRes, manRes] = await Promise.all([
+    fetch(AI_URL).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
+    fetch(MANIFEST_URL).then((r) => (r.ok ? r.json() : { items: [] })).catch(() => ({ items: [] })),
+  ]);
+  namedByNum = {};
+  (manRes.items || []).forEach((it) => {
+    namedByNum[it.num] = { file: it.file, name: it.name };
+  });
+  const next = {};
+  for (let id = 1; id <= TOTAL; id++) {
+    const raw = aiRes[String(id)] ?? aiRes[id];
+    if (raw) next[String(id)] = normalizeRecord(raw, id);
   }
-  return count;
+  records = next;
+  dirty = false;
+  saveLocal();
+  fillCategoryOptions();
+  renderGrid();
 }
 
-// --- Render ---
+function fillCategoryOptions() {
+  const sel = document.getElementById('categoryFilter');
+  const cur = sel.value;
+  const cats = new Set();
+  Object.values(records).forEach((r) => {
+    if (r.category) cats.add(r.category);
+  });
+  sel.innerHTML = '<option value="">All categories</option>';
+  [...cats].sort().forEach((c) => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+  sel.value = cur;
+}
+
 function getFilteredIds() {
-  const from = parseInt(document.getElementById('rangeFrom').value) || 1;
-  const to = parseInt(document.getElementById('rangeTo').value) || TOTAL;
+  const from = parseInt(document.getElementById('rangeFrom').value, 10) || 1;
+  const to = parseInt(document.getElementById('rangeTo').value, 10) || TOTAL;
   const search = (document.getElementById('searchInput').value || '').toLowerCase().trim();
   const onlyUnlabeled = document.getElementById('onlyUnlabeled').checked;
-  const onlyLabeled = document.getElementById('onlyLabeled').checked;
+  const onlyDesk = document.getElementById('onlyDeskItems').checked;
+  const cat = document.getElementById('categoryFilter').value;
 
   const ids = [];
   for (let id = Math.max(1, from); id <= Math.min(TOTAL, to); id++) {
-    if (onlyUnlabeled && getLabel(id)) continue;
-    if (onlyLabeled && !getLabel(id)) continue;
+    const r = getRec(id);
+    if (onlyUnlabeled && r.name) continue;
+    if (onlyDesk && r.stack_on !== 'surface' && r.category !== 'desk_items') continue;
+    if (cat && r.category !== cat) continue;
     if (search) {
-      const lbl = getLabel(id).toLowerCase();
-      if (!lbl.includes(search) && !String(id).includes(search)) continue;
+      const hay = `${r.name} ${r.displayName} ${r.category} ${id}`.toLowerCase();
+      if (!hay.includes(search)) continue;
     }
     ids.push(id);
   }
@@ -424,35 +569,33 @@ function getFilteredIds() {
 }
 
 function updateStats() {
-  const labeled = Object.keys(labels).filter(k => labels[k]).length;
-  const skippedCount = Object.keys(skipped).filter(k => skipped[k]).length;
-  document.getElementById('stats').textContent = `${labeled} labeled · ${skippedCount} skipped · ${TOTAL} total`;
+  const labeled = Object.values(records).filter((r) => r.name).length;
+  const desk = Object.values(records).filter((r) => r.stack_on === 'surface').length;
+  const flag = dirty ? ' · local edits unsaved to disk' : '';
+  document.getElementById('stats').textContent =
+    `${labeled}/${TOTAL} labeled · ${desk} on-desk · showing ${currentIds.length}${flag}`;
 }
-
-let currentIds = [];
 
 function renderGrid() {
   currentIds = getFilteredIds();
   const grid = document.getElementById('grid');
   grid.innerHTML = '';
-
   const frag = document.createDocumentFragment();
-  for (const id of currentIds) {
-    const card = makeCard(id);
-    frag.appendChild(card);
-  }
+  currentIds.forEach((id) => frag.appendChild(makeCard(id)));
   grid.appendChild(frag);
   updateStats();
 }
 
 function makeCard(id) {
-  const lbl = getLabel(id);
-  const skip = isSkipped(id);
+  const r = getRec(id);
+  const skip = !!skipped[id];
   const card = document.createElement('div');
-  card.className = 'card' + (lbl ? ' labeled' : '') + (skip ? ' skip' : '');
+  card.className = 'card'
+    + (r.name ? ' labeled' : '')
+    + (r.stack_on === 'surface' ? ' desk-item' : '')
+    + (skip ? ' skip' : '');
   card.dataset.id = id;
 
-  // header
   const header = document.createElement('div');
   header.className = 'card-header';
   const badge = document.createElement('div');
@@ -460,110 +603,150 @@ function makeCard(id) {
   badge.textContent = '#' + id;
   const sizeBadge = document.createElement('div');
   sizeBadge.className = 'size-badge';
-  sizeBadge.textContent = '32×32';
-  header.appendChild(badge);
-  header.appendChild(sizeBadge);
+  sizeBadge.textContent = '…';
+  header.append(badge, sizeBadge);
   card.appendChild(header);
 
-  // image
   const wrap = document.createElement('div');
   wrap.className = 'img-wrap';
   const img = document.createElement('img');
-  img.alt = 'single_' + id;
-  // load and auto-scale
+  img.alt = r.name || ('single_' + id);
   img.onload = () => {
     const natW = img.naturalWidth;
     const natH = img.naturalHeight;
-    // scale so that image fills wrap (140px) nicely, using integer scale
-    const scale = Math.max(1, Math.floor(128 / Math.max(natW, natH)));
+    const scale = Math.max(1, Math.floor(128 / Math.max(natW, natH, 1)));
     img.style.width = (natW * scale) + 'px';
     img.style.height = (natH * scale) + 'px';
     const s = document.createElement('div');
     s.className = 'scale-hint';
     s.textContent = natW + '×' + natH + (scale > 1 ? ' ×' + scale : '');
     wrap.appendChild(s);
-    // update size badge
     sizeBadge.textContent = natW + '×' + natH;
   };
   img.onerror = () => {
     wrap.classList.add('err');
     img.style.display = 'none';
-    card.classList.add('skip'); // treat missing as skipped
   };
   img.src = spriteUrl(id);
   wrap.appendChild(img);
   wrap.addEventListener('click', () => openZoom(id));
   card.appendChild(wrap);
 
-  // label input
+  const meta = document.createElement('div');
+  meta.className = 'meta-line';
+  meta.textContent = r.displayName || r.name || '—';
+  card.appendChild(meta);
+
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'label-input';
-  input.placeholder = 'label…';
-  input.value = lbl;
-  input.addEventListener('input', () => {
-    setLabel(id, input.value.trim());
-    card.classList.toggle('labeled', !!input.value.trim());
+  input.placeholder = 'catalog id…';
+  input.value = r.name;
+  input.title = 'Catalog id (snake_case)';
+  input.addEventListener('change', () => {
+    const name = input.value.trim();
+    setRec(id, {
+      name,
+      displayName: getRec(id).displayName || titleCaseFromSlug(name),
+    });
+    meta.textContent = getRec(id).displayName || name || '—';
+    card.classList.toggle('labeled', !!name);
     updateStats();
   });
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      // focus next card's input
-      const idx = currentIds.indexOf(id);
-      if (idx >= 0 && idx + 1 < currentIds.length) {
-        const next = document.querySelector(`.card[data-id="${currentIds[idx + 1]}"] .label-input`);
-        if (next) { next.focus(); next.select(); }
-      }
+    if (e.key !== 'Enter') return;
+    const idx = currentIds.indexOf(id);
+    if (idx >= 0 && idx + 1 < currentIds.length) {
+      const next = document.querySelector(`.card[data-id="${currentIds[idx + 1]}"] .label-input`);
+      if (next) { next.focus(); next.select(); }
     }
   });
   card.appendChild(input);
 
-  // skip checkbox
+  const row = document.createElement('div');
+  row.className = 'row2';
+  const typeSel = document.createElement('select');
+  typeSel.className = 'select-mini';
+  ['decor', 'surface', 'seat', 'furniture', 'partition'].forEach((t) => {
+    const o = document.createElement('option');
+    o.value = t;
+    o.textContent = t;
+    if (t === r.type) o.selected = true;
+    typeSel.appendChild(o);
+  });
+  typeSel.addEventListener('change', () => {
+    setRec(id, { type: typeSel.value });
+  });
+  const stackSel = document.createElement('select');
+  stackSel.className = 'select-mini';
+  ;[
+    ['none', 'floor'],
+    ['surface', 'on desk'],
+  ].forEach(([v, label]) => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = label;
+    if (v === r.stack_on) o.selected = true;
+    stackSel.appendChild(o);
+  });
+  stackSel.addEventListener('change', () => {
+    const stack_on = stackSel.value;
+    const patch = { stack_on };
+    if (stack_on === 'surface') {
+      patch.category = 'desk_items';
+      if (typeSel.value === 'furniture' || typeSel.value === 'surface') patch.type = 'decor';
+    }
+    setRec(id, patch);
+    card.classList.toggle('desk-item', stack_on === 'surface');
+    updateStats();
+  });
+  row.append(typeSel, stackSel);
+  card.appendChild(row);
+
   const skipRow = document.createElement('div');
   skipRow.className = 'skip-row';
   const cb = document.createElement('input');
   cb.type = 'checkbox';
   cb.checked = skip;
   cb.addEventListener('change', () => {
-    setSkipped(id, cb.checked);
+    if (cb.checked) skipped[id] = true;
+    else delete skipped[id];
+    saveLocal();
     card.classList.toggle('skip', cb.checked);
-    updateStats();
   });
-  const cbl = document.createElement('label');
-  cbl.textContent = 'Skip / partial';
-  cbl.style.cursor = 'pointer';
-  cbl.addEventListener('click', () => { cb.click(); });
-  skipRow.appendChild(cb);
-  skipRow.appendChild(cbl);
+  const cbl = document.createElement('span');
+  cbl.textContent = r.category || '—';
+  skipRow.append(cb, cbl);
   card.appendChild(skipRow);
 
   return card;
 }
 
-// --- Zoom dialog ---
-let zoomId = null;
-
 function openZoom(id) {
   zoomId = id;
+  const r = getRec(id);
   const img = document.getElementById('zoomImg');
   img.src = spriteUrl(id);
-  img.style.width = '';
-  img.style.height = '';
   img.onload = () => {
     const w = img.naturalWidth;
     const h = img.naturalHeight;
-    const scale = Math.max(4, Math.floor(Math.min(16, 512 / Math.max(w, h))));
+    const scale = Math.max(4, Math.floor(Math.min(16, 512 / Math.max(w, h, 1))));
     img.style.width = (w * scale) + 'px';
     img.style.height = (h * scale) + 'px';
     document.getElementById('zoomMeta').innerHTML = `
-      <span class="pill">id: ${id}</span>
-      <span class="pill">size: ${w}×${h}</span>
-      <span class="pill">×${scale} zoom</span>
+      <span class="pill">#${id}</span>
+      <span class="pill">${w}×${h}</span>
+      <span class="pill">×${scale}</span>
+      <span class="pill">${namedByNum[id]?.file || 'numbered single'}</span>
     `;
   };
-  document.getElementById('zoomTitle').textContent = '#' + id + (getLabel(id) ? ' — ' + getLabel(id) : '');
-  const labelInput = document.getElementById('zoomLabelInput');
-  labelInput.value = getLabel(id);
+  document.getElementById('zoomTitle').textContent = '#' + id + (r.name ? ' — ' + r.name : '');
+  document.getElementById('zoomName').value = r.name;
+  document.getElementById('zoomDisplay').value = r.displayName;
+  document.getElementById('zoomType').value = r.type || 'furniture';
+  document.getElementById('zoomStack').value = r.stack_on || 'none';
+  document.getElementById('zoomCategory').value = r.category || 'unknown';
+  document.getElementById('zoomWall').value = r.wall_mount ? 'true' : 'false';
   const dlg = document.getElementById('zoomDialog');
   if (!dlg.open) dlg.showModal();
 }
@@ -572,20 +755,16 @@ document.getElementById('zoomClose').addEventListener('click', () => {
   document.getElementById('zoomDialog').close();
 });
 document.getElementById('zoomSaveLabel').addEventListener('click', () => {
-  const val = document.getElementById('zoomLabelInput').value.trim();
-  setLabel(zoomId, val);
-  document.getElementById('zoomTitle').textContent = '#' + zoomId + (val ? ' — ' + val : '');
-  // update card
-  const card = document.querySelector(`.card[data-id="${zoomId}"]`);
-  if (card) {
-    const inp = card.querySelector('.label-input');
-    if (inp) inp.value = val;
-    card.classList.toggle('labeled', !!val);
-  }
-  updateStats();
-});
-document.getElementById('zoomLabelInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') document.getElementById('zoomSaveLabel').click();
+  const name = document.getElementById('zoomName').value.trim();
+  const displayName = document.getElementById('zoomDisplay').value.trim() || titleCaseFromSlug(name);
+  const type = document.getElementById('zoomType').value;
+  const stack_on = document.getElementById('zoomStack').value;
+  const category = document.getElementById('zoomCategory').value;
+  const wall_mount = document.getElementById('zoomWall').value === 'true';
+  setRec(zoomId, { name, displayName, type, stack_on, category, wall_mount });
+  document.getElementById('zoomTitle').textContent = '#' + zoomId + (name ? ' — ' + name : '');
+  fillCategoryOptions();
+  renderGrid();
 });
 document.getElementById('zoomPrev').addEventListener('click', () => {
   const idx = currentIds.indexOf(zoomId);
@@ -598,17 +777,27 @@ document.getElementById('zoomNext').addEventListener('click', () => {
 document.getElementById('zoomDialog').addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft') document.getElementById('zoomPrev').click();
   if (e.key === 'ArrowRight') document.getElementById('zoomNext').click();
-  if (e.key === 'Escape') document.getElementById('zoomDialog').close();
 });
 
-// --- Export ---
-document.getElementById('btnExport').addEventListener('click', () => {
+function buildExportObject() {
   const out = {};
   for (let id = 1; id <= TOTAL; id++) {
-    const lbl = getLabel(id);
-    if (lbl) out[id] = lbl;
+    const r = getRec(id);
+    if (!r.name) continue;
+    out[String(id)] = {
+      name: r.name,
+      displayName: r.displayName || titleCaseFromSlug(r.name),
+      type: r.type || 'furniture',
+      stack_on: r.stack_on || 'none',
+      category: r.category || 'unknown',
+    };
+    if (r.wall_mount) out[String(id)].wall_mount = true;
   }
-  const json = JSON.stringify(out, null, 2);
+  return out;
+}
+
+document.getElementById('btnExport').addEventListener('click', () => {
+  const json = JSON.stringify(buildExportObject(), null, 2);
   document.getElementById('exportOut').value = json;
   const panel = document.getElementById('exportPanel');
   panel.style.display = 'block';
@@ -616,77 +805,80 @@ document.getElementById('btnExport').addEventListener('click', () => {
 });
 document.getElementById('btnCopyExport').addEventListener('click', () => {
   const ta = document.getElementById('exportOut');
-  ta.select();
-  navigator.clipboard.writeText(ta.value).catch(() => document.execCommand('copy'));
+  navigator.clipboard.writeText(ta.value).catch(() => {
+    ta.select();
+    document.execCommand('copy');
+  });
+});
+document.getElementById('btnDownloadExport').addEventListener('click', () => {
+  const blob = new Blob([document.getElementById('exportOut').value], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mo_singles_ai_labels.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
 });
 document.getElementById('btnCloseExport').addEventListener('click', () => {
   document.getElementById('exportPanel').style.display = 'none';
 });
 
-// --- Import ---
 document.getElementById('btnImport').addEventListener('click', () => {
   document.getElementById('importInput').value = '';
-  const dlg = document.getElementById('importDialog');
-  if (!dlg.open) dlg.showModal();
+  document.getElementById('importDialog').showModal();
 });
-document.getElementById('importClose').addEventListener('click', () => {
-  document.getElementById('importDialog').close();
-});
-document.getElementById('importCancel').addEventListener('click', () => {
-  document.getElementById('importDialog').close();
-});
+document.getElementById('importClose').addEventListener('click', () => document.getElementById('importDialog').close());
+document.getElementById('importCancel').addEventListener('click', () => document.getElementById('importDialog').close());
 document.getElementById('importConfirm').addEventListener('click', () => {
   try {
-    const raw = document.getElementById('importInput').value.trim();
-    let parsed = JSON.parse(raw);
-    // If it's the full export format with a "labels" key, unwrap it
+    let parsed = JSON.parse(document.getElementById('importInput').value.trim());
     if (parsed.labels) parsed = parsed.labels;
     let count = 0;
     for (const [k, v] of Object.entries(parsed)) {
-      const id = parseInt(k);
-      if (id >= 1 && id <= TOTAL && typeof v === 'string') {
-        setLabel(id, v);
-        count++;
-      }
+      const id = parseInt(k, 10);
+      if (id < 1 || id > TOTAL) continue;
+      setRec(id, normalizeRecord(v, id));
+      count += 1;
     }
     document.getElementById('importDialog').close();
+    fillCategoryOptions();
     renderGrid();
-    alert(`Imported ${count} labels.`);
+    alert(`Imported ${count} labels (local until you export to disk).`);
   } catch (e) {
     alert('Invalid JSON: ' + e.message);
   }
 });
 
-// --- Controls ---
 document.getElementById('btnAll').addEventListener('click', () => {
   document.getElementById('rangeFrom').value = 1;
   document.getElementById('rangeTo').value = TOTAL;
   renderGrid();
 });
-document.getElementById('btnClearAll').addEventListener('click', () => {
-  if (!confirm('Clear all labels and skip flags?')) return;
-  labels = {};
-  skipped = {};
-  saveState();
-  renderGrid();
+document.getElementById('btnReloadServer').addEventListener('click', () => {
+  if (dirty && !confirm('Discard local edits and reload labels from disk?')) return;
+  loadFromServer();
 });
-document.getElementById('btnPrefillKnown').addEventListener('click', () => {
-  const count = applyKnownPrefill(false);
-  renderGrid();
-  alert(`Prefilled ${count} known labels from current catalog singles.`);
+['searchInput', 'categoryFilter', 'rangeFrom', 'rangeTo', 'onlyUnlabeled', 'onlyDeskItems'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', renderGrid);
+  document.getElementById(id).addEventListener('change', renderGrid);
 });
-document.getElementById('searchInput').addEventListener('input', () => renderGrid());
-document.getElementById('rangeFrom').addEventListener('change', () => renderGrid());
-document.getElementById('rangeTo').addEventListener('change', () => renderGrid());
-document.getElementById('onlyUnlabeled').addEventListener('change', () => renderGrid());
-document.getElementById('onlyLabeled').addEventListener('change', () => renderGrid());
 
-// --- Init ---
-loadState();
-if (Object.keys(labels).length === 0) {
-  applyKnownPrefill(false);
-}
-renderGrid();
+(async function init() {
+  const hadLocal = loadLocal();
+  if (hadLocal && Object.keys(records).length) {
+    // Still refresh named manifest; keep local label edits
+    try {
+      const man = await fetch(MANIFEST_URL).then((r) => r.json());
+      (man.items || []).forEach((it) => {
+        namedByNum[it.num] = { file: it.file, name: it.name };
+      });
+    } catch (_) {}
+    fillCategoryOptions();
+    renderGrid();
+  } else {
+    await loadFromServer();
+  }
+})();
 </script>
+  <script src="/src/phone-embed-back.js" defer></script>
 </body>
 </html>

@@ -174,8 +174,23 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     }
     .card .icon {
-      font-size: 22px;
+      display: inline-flex;
+      align-self: flex-start;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       line-height: 1;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: rgba(96, 165, 250, 0.12);
+      color: var(--blue);
+      border: 1px solid rgba(96, 165, 250, 0.28);
+    }
+    .card.featured .icon {
+      background: rgba(253, 224, 71, 0.12);
+      color: var(--gold);
+      border-color: rgba(253, 224, 71, 0.35);
     }
     .card h3 {
       font-size: 15px;
@@ -312,9 +327,9 @@
     <div class="pipeline" id="pipeline-steps">
       <span class="step"><span class="num">1</span> Find asset</span>
       <span class="arrow">→</span>
-      <span class="step"><span class="num">2</span> Cut sprite</span>
+      <span class="step"><span class="num">2</span> Label / cut</span>
       <span class="arrow">→</span>
-      <span class="step"><span class="num">3</span> Paste catalog</span>
+      <span class="step"><span class="num">3</span> Import catalog</span>
       <span class="arrow">→</span>
       <span class="step"><span class="num">4</span> Verify</span>
       <span class="arrow">→</span>
@@ -323,23 +338,59 @@
       <span class="step"><span class="num">6</span> Export &amp; rebuild</span>
     </div>
 
+    <div class="cmd-box" id="editor-shortcut-box" style="margin-bottom:20px;color:var(--text);">
+      <code style="color:var(--gold);">Scene editor toggle: Ctrl+Shift+E &nbsp;·&nbsp; Mac: ⌘⇧E</code>
+    </div>
+
+    <section>
+      <h2>Preferred path <span class="badge">Revamped singles</span></h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">
+        Modern Office Revamped already ships <strong>339 pre-cut singles</strong>. Prefer naming those
+        (not re-cutting the big sheet) — wrong sheet crops are why monitors/lamps looked mislabeled.
+      </p>
+      <div class="grid">
+        <a class="card featured" href="/singles-viewer.html">
+          <span class="icon">Label</span>
+          <h3>Singles labeler</h3>
+          <p>See every sprite with its real name, type, and “on desk” flag. Fix wrong names → export → import.</p>
+          <span class="open">Open →</span>
+        </a>
+        <a class="card" href="/out/mo-singles-sheets/sheet_05.png">
+          <span class="icon">Sheets</span>
+          <h3>Contact sheets</h3>
+          <p>Grid overview (sheet_00…14). Monitors/lamps are on sheet_05. Use while labeling.</p>
+          <span class="open">Open sheet_05 →</span>
+        </a>
+        <a class="card" href="/?editor=1&amp;demo=1">
+          <span class="icon">Edit</span>
+          <h3>Place named items</h3>
+          <p>Editor catalog shows display names. Filter <strong>On desk</strong> for monitors &amp; lamps. Toggle editor: <strong>Ctrl+Shift+E</strong> / <strong>⌘⇧E</strong>.</p>
+          <span class="open">Open editor →</span>
+        </a>
+      </div>
+      <div class="cmd-box" style="margin-top:12px;">
+        <code id="cmd-mo-import">cd denizen && python3 scripts/rename-trim-mo-singles.py && node scripts/import-mo-revamped-singles.mjs</code>
+        <button type="button" id="copy-mo-import">Copy</button>
+      </div>
+    </section>
+
     <section>
       <h2>Play &amp; build <span class="badge">in-game</span></h2>
       <div class="grid">
         <a class="card featured" href="/">
-          <span class="icon">🏢</span>
+          <span class="icon">Play</span>
           <h3>Office game</h3>
           <p>Walk the open-plan office. NPCs, interactions, live layout.</p>
           <span class="open">Open →</span>
         </a>
         <a class="card featured" href="/?editor=1">
-          <span class="icon">✏️</span>
+          <span class="icon">Edit</span>
           <h3>Scene editor</h3>
-          <p>Opens the in-game editor with catalog sidebar — drag furniture, press <strong>X</strong> to export.</p>
+          <p>In-game catalog sidebar — drag furniture, press <strong>X</strong> to export. Toggle with <strong>Ctrl+Shift+E</strong> (Mac: <strong>⌘⇧E</strong>).</p>
           <span class="open">Open editor →</span>
         </a>
         <a class="card" href="/tools/room-preview.html" data-fullpage="1">
-          <span class="icon">🗺️</span>
+          <span class="icon">Rooms</span>
           <h3>Room preview</h3>
           <p>Preview room types and layouts without loading the full game.</p>
           <span class="open">Open →</span>
@@ -351,19 +402,19 @@
       <h2>Step 1 — Find assets</h2>
       <div class="grid">
         <a class="card" href="/asset-browser.html">
-          <span class="icon">🖼️</span>
+          <span class="icon">Sheets</span>
           <h3>Asset browser</h3>
           <p>Thumbnail grid of every LimeZu pack. Find a PNG before you cut it.</p>
           <span class="open">Open →</span>
         </a>
-        <a class="card" href="/singles-viewer.html">
-          <span class="icon">🔢</span>
+        <a class="card featured" href="/singles-viewer.html">
+          <span class="icon">Singles</span>
           <h3>Singles viewer</h3>
-          <p>Browse pre-extracted single sprites by ID (1–339).</p>
+          <p>Browse &amp; rename all 339 Revamped singles (trimmed named PNGs + AI labels).</p>
           <span class="open">Open →</span>
         </a>
         <a class="card" href="/tools/limezu-single-preview.html">
-          <span class="icon">👁️</span>
+          <span class="icon">Preview</span>
           <h3>Single preview</h3>
           <p>Inspect one extracted LimeZu PNG at full size.</p>
           <span class="open">Open →</span>
@@ -374,20 +425,20 @@
     <section>
       <h2>Step 2 — Cut &amp; label sprites</h2>
       <div class="grid">
-        <a class="card featured" href="/sprite-cutter.html">
-          <span class="icon">✂️</span>
+        <a class="card" href="/sprite-cutter.html">
+          <span class="icon">Cut</span>
           <h3>Sprite cutter</h3>
-          <p>Main tool: draw boxes on a sheet, name sprites, export catalog JSON. 32px snap + grid.</p>
+          <p>Only when you need a custom crop from a sheet. Prefer Singles viewer for Modern Office.</p>
           <span class="open">Open →</span>
         </a>
         <a class="card" href="/sprite-labeler.html">
-          <span class="icon">🏷️</span>
+          <span class="icon">Label</span>
           <h3>Sprite labeler</h3>
           <p>Modern Office sheet (<code>mo_black_shadow_32</code>) — assign IDs section by section.</p>
           <span class="open">Open →</span>
         </a>
         <a class="card" href="/tools/limezu-sprite-browser.html">
-          <span class="icon">📦</span>
+          <span class="icon">LimeZu</span>
           <h3>LimeZu sprite browser</h3>
           <p>Label Modern Interiors singles — footprint, depth, display name.</p>
           <span class="open">Open →</span>
@@ -399,13 +450,13 @@
       <h2>Floors &amp; walls</h2>
       <div class="grid">
         <a class="card" href="/tile-labeler.html">
-          <span class="icon">🧱</span>
+          <span class="icon">Tiles</span>
           <h3>Tile labeler</h3>
           <p>RPG Maker MV floor/wall tilesets — click cells, export tile labels.</p>
           <span class="open">Open →</span>
         </a>
         <a class="card" href="/tools/tile-inspector.html">
-          <span class="icon">🔲</span>
+          <span class="icon">Inspect</span>
           <h3>Tile inspector</h3>
           <p>Fix magenta/wrong floor &amp; wall tiles — frame index lookup.</p>
           <span class="open">Open →</span>
@@ -417,13 +468,13 @@
       <h2>Step 4 — Validate catalog</h2>
       <div class="grid">
         <a class="card featured" href="/verify-sprites.html">
-          <span class="icon">✅</span>
+          <span class="icon">Verify</span>
           <h3>Verify sprites</h3>
           <p>Render every catalog crop live. Red border = broken coords or missing sheet.</p>
           <span class="open">Open →</span>
         </a>
         <a class="card" href="/catalog-explorer.html">
-          <span class="icon">📋</span>
+          <span class="icon">Catalog</span>
           <h3>Catalog explorer</h3>
           <p>Search all objects, schemas, pipeline diagram, auto-detected issues.</p>
           <span class="open">Open →</span>
@@ -473,12 +524,24 @@
       document.getElementById('link-editor').href = origin + '/?editor=1';
 
       if (embed) {
-        document.querySelectorAll('a[href="/"], a[href="/?editor=1"]').forEach((a) => {
+        // Game / scene editor leave the phone and open in the parent window.
+        document.querySelectorAll('a[href="/"], a[href^="/?editor"]').forEach((a) => {
           a.target = '_parent';
         });
-        document.querySelectorAll('a[data-fullpage], a.card[href$=".html"]').forEach((a) => {
-          if (a.href.includes('workflow-dashboard')) return;
-          a.target = '_parent';
+        // Tool pages stay inside the phone iframe and get a Back bar via embed=1.
+        document.querySelectorAll('a.card[href$=".html"], a.card[href*=".html?"], a[data-tool]').forEach((a) => {
+          try {
+            const u = new URL(a.getAttribute('href'), origin);
+            if (u.pathname.includes('workflow-dashboard')) return;
+            if (!/\.html$/i.test(u.pathname)) return;
+            u.searchParams.set('embed', '1');
+            a.setAttribute('href', u.pathname + u.search + u.hash);
+            a.removeAttribute('target');
+          } catch (_) {}
+        });
+        // Contact-sheet PNGs: open in same iframe; browser back returns here.
+        document.querySelectorAll('a.card[href$=".png"]').forEach((a) => {
+          a.removeAttribute('target');
         });
       }
 
@@ -501,7 +564,11 @@
       document.getElementById('copy-wire-editor')?.addEventListener('click', function () {
         copyText('cmd-wire-editor', this);
       });
+      document.getElementById('copy-mo-import')?.addEventListener('click', function () {
+        copyText('cmd-mo-import', this);
+      });
     })();
   </script>
+  <script src="/src/phone-embed-back.js" defer></script>
 </body>
 </html>

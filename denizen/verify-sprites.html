@@ -14,6 +14,8 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
     .card { background: #16213e; border-radius: 8px; padding: 8px; text-align: center; border: 1px solid transparent; }
     .card.overlap { border-color: #f85149; }
+    .card.desk { border-color: #58a6ff; }
+    .card.hidden-def { opacity: 0.4; }
     .card canvas { display: block; margin: 0 auto 6px; image-rendering: pixelated; image-rendering: crisp-edges; max-width: 128px; max-height: 128px; }
     .card .id { font-size: 11px; word-break: break-all; color: #a0a0a0; }
     .card .rect { font-size: 10px; color: #808080; }
@@ -28,16 +30,22 @@
 </head>
 <body>
   <h1>Confirm sprites – open and verify</h1>
-  <p>Each card is one sprite from the catalog. Sheet is cropped at the stored (x,y,w,h). Use this to confirm everything matches your sheets. <strong>Wrong labels?</strong> Use <a href="sprite-labeler.html" style="color:#58a6ff">Sprite Labeler</a> to fix object IDs, or <a href="tile-labeler.html" style="color:#58a6ff">Tile Labeler</a> to label floors/walls tilesets. Workflow: <a href="docs/CATALOG_WORKFLOW.md" style="color:#58a6ff">CATALOG_WORKFLOW.md</a></p>
+  <p>Each card is one sprite from the catalog. <strong>Named singles</strong> are preferred for Modern Office. Wrong names? Fix in <a href="singles-viewer.html" style="color:#58a6ff">Singles viewer</a>. Workflow: <a href="workflow-dashboard.html" style="color:#58a6ff">PLAY &amp; BUILD</a>.</p>
   <div id="statusBar" class="statusBar">Loading catalog status…</div>
   <div class="tabs">
-    <button data-panel="openplan" class="active" id="btn-openplan">Openplan (v1)</button>
+    <button data-panel="named" class="active" id="btn-named">Named singles</button>
+    <button data-panel="openplan" id="btn-openplan">Openplan sheet crops</button>
     <button data-panel="openplan-v2" id="btn-openplan-v2">Openplan (v2)</button>
     <button data-panel="interiors" id="btn-interiors">Interiors prefabs</button>
   </div>
 
-  <div id="panel-openplan" class="panel active">
-    <p><strong>These crops use the (x,y,w,h) in the catalog.</strong> If the image doesn’t match the label (e.g. “bookshelf” shows a couch, “water_cooler” wrong), the catalog rects are wrong for this sheet. Use <a href="sprite-labeler.html" style="color:#58a6ff">Sprite Labeler</a> to pick the correct sprite for each ID. Source: <code>furniture_catalog_openplan.json</code> → sheet <code>mo_black_shadow_32</code>.</p>
+  <div id="panel-named" class="panel active">
+    <p><strong>Preferred:</strong> trimmed files under <code>assets/modern_office/named/</code>. Blue border = on-desk item.</p>
+    <div id="grid-named" class="grid"></div>
+  </div>
+
+  <div id="panel-openplan" class="panel">
+    <p><strong>Sheet crops</strong> from <code>mo_black_shadow_32</code>. Red = overlapping rects (often wrong labels). Prefer named singles when these look wrong.</p>
     <div id="grid-openplan" class="grid"></div>
   </div>
 
@@ -52,8 +60,8 @@
   </div>
 
   <script type="module">
+    const moBlack32 = './assets/Modern_Office_Black_Shadow_32x32.png';
     const sheetBase = '../pixel%20game%20stuff/pixel%20game%20assets%20and%20stuff';
-    const moBlack32 = sheetBase + '/Modern_Office_Revamped_v1.2/2_Modern_Office_Black_Shadow/Modern_Office_Black_Shadow_32x32.png';
     const xpGeneric = sheetBase + '/Modern_Interiors_RPG_Maker_Version/Modern_Interiors_RPG_Maker_Version/RPG_MAKER_XP/1_Generic.png';
     const xpLiving = sheetBase + '/Modern_Interiors_RPG_Maker_Version/Modern_Interiors_RPG_Maker_Version/RPG_MAKER_XP/2_LivingRoom.png';
 
@@ -102,11 +110,15 @@
 
     function addCard(parent, id, rectLabel, canvas, opts = {}) {
       const card = document.createElement('div');
-      card.className = 'card' + (opts.overlap ? ' overlap' : '');
+      card.className = 'card'
+        + (opts.overlap ? ' overlap' : '')
+        + (opts.desk ? ' desk' : '')
+        + (opts.hidden ? ' hidden-def' : '');
       if (canvas) card.appendChild(canvas);
       const idEl = document.createElement('div');
       idEl.className = 'id';
-      idEl.textContent = id;
+      idEl.textContent = opts.displayName ? `${opts.displayName}\n${id}` : id;
+      idEl.style.whiteSpace = 'pre-wrap';
       card.appendChild(idEl);
       const rectEl = document.createElement('div');
       rectEl.className = 'rect';
@@ -131,6 +143,50 @@
       });
     }
 
+    async function renderNamedSingles() {
+      const grid = document.getElementById('grid-named');
+      grid.innerHTML = '';
+      let catalog;
+      try {
+        const r = await fetch('./data/furniture_catalog_openplan.json?v=' + Date.now());
+        catalog = await r.json();
+      } catch (e) {
+        grid.innerHTML = '<span class="loadErr">Could not load catalog: ' + e.message + '</span>';
+        return null;
+      }
+      const entries = Object.entries(catalog.objects || {})
+        .filter(([, def]) => def.source_type === 'single_file' && def.theme === 'modern_office')
+        .sort((a, b) => (a[1]._num || 0) - (b[1]._num || 0));
+      let ok = 0;
+      let fail = 0;
+      let desk = 0;
+      for (const [id, def] of entries) {
+        const url = './' + String(def.url_path || '').replace(/^\.\//, '');
+        try {
+          const img = await loadImage(url);
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth;
+          c.height = img.naturalHeight;
+          const ctx = c.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(img, 0, 0);
+          const isDesk = def.stack_on === 'surface' || def.category === 'desk_items';
+          if (isDesk) desk += 1;
+          addCard(grid, id, `${def.w}×${def.h} · #${def._num || '?'}`, c, {
+            desk: isDesk,
+            displayName: def.displayName || id,
+          });
+          ok += 1;
+        } catch (_) {
+          addCard(grid, id, 'MISSING ' + url, null);
+          fail += 1;
+        }
+      }
+      document.getElementById('btn-named').textContent =
+        `Named singles (${ok}` + (fail ? `, ${fail} missing` : '') + ')';
+      return { objectCount: ok, failCount: fail, deskCount: desk };
+    }
+
     async function renderOpenplanGrid(gridId, btnId, catalogUrl, label) {
       const grid = document.getElementById(gridId);
       grid.innerHTML = '';
@@ -148,10 +204,12 @@
       try {
         img = await loadImage(moBlack32);
       } catch (e) {
-        grid.innerHTML = '<span class="loadErr">Could not load sheet. Serve from repo root (e.g. python -m http.server 8000 from Denizen). ' + e.message + '</span>';
+        grid.innerHTML = '<span class="loadErr">Could not load sheet ' + moBlack32 + '. ' + e.message + '</span>';
         return null;
       }
-      const objects = catalog.objects || {};
+      const objects = Object.fromEntries(
+        Object.entries(catalog.objects || {}).filter(([, def]) => def.source_type !== 'single_file' && def.sheet)
+      );
       const { overlapIds, partners } = findOverlaps(objects);
       const ids = Object.keys(objects);
       document.getElementById(btnId).textContent = label + ' (' + ids.length + (overlapIds.size ? ', ' + overlapIds.size + ' overlap' : '') + ')';
@@ -160,7 +218,9 @@
         const canvas = drawCrop(img, r.x, r.y, r.w, r.h);
         addCard(grid, id, `(${r.x},${r.y}) ${r.w}×${r.h}`, canvas, {
           overlap: overlapIds.has(id),
-          withIds: overlapIds.has(id) ? [...(partners.get(id) || [])] : []
+          withIds: overlapIds.has(id) ? [...(partners.get(id) || [])] : [],
+          hidden: !!def.editor_hidden,
+          displayName: def.displayName,
         });
       }
       return { objectCount: ids.length, overlapCount: overlapIds.size };
@@ -174,7 +234,7 @@
       return renderOpenplanGrid('grid-openplan-v2', 'btn-openplan-v2', './data/furniture_catalog_openplan_v2.objects.json', 'Openplan v2');
     }
 
-    async function updateStatusBar(v1Stats, v2Stats) {
+    async function updateStatusBar(v1Stats, v2Stats, namedStats) {
       const bar = document.getElementById('statusBar');
       let migration = null;
       try {
@@ -199,8 +259,13 @@
 
       const lines = [];
       if (v1Stats) {
-        lines.push(`<strong>V1</strong>: ${v1Stats.objectCount} objects` +
+        lines.push(`<strong>Sheet crops</strong>: ${v1Stats.objectCount} objects` +
           (v1Stats.overlapCount ? ` · <span class="bad">${v1Stats.overlapCount} overlapping rects</span>` : ' · <span class="ok">no overlaps</span>'));
+      }
+      if (namedStats) {
+        lines.push(`<strong>Named singles</strong>: ${namedStats.objectCount} ok` +
+          (namedStats.failCount ? ` · <span class="bad">${namedStats.failCount} missing</span>` : ' · <span class="ok">all load</span>') +
+          ` · ${namedStats.deskCount} on-desk`);
       }
       if (v2Stats) {
         lines.push(`<strong>V2</strong>: ${v2Stats.objectCount} objects` +
@@ -266,10 +331,12 @@
       });
     });
 
+    const namedStats = await renderNamedSingles();
     const v1Stats = await runOpenplan();
     const v2Stats = await runOpenplanV2();
-    await updateStatusBar(v1Stats, v2Stats);
+    await updateStatusBar(v1Stats, v2Stats, namedStats);
     runInteriors();
   </script>
+  <script src="/src/phone-embed-back.js" defer></script>
 </body>
 </html>
