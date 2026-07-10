@@ -113,6 +113,7 @@
   let workPosition = null;
   let initPromise = null;
   let modalEl = null;
+  let welcomeModalResolve = null;
   let officeConfig = null;
 
   async function fetchOfficeConfig() {
@@ -185,7 +186,9 @@
     identityId = null;
     userEmail = null;
     workPosition = null;
-    initPromise = null;
+    // Do NOT clear initPromise here — wiping it mid-init lets a second
+    // init() start, remove the welcome modal, and leave the first waiter hung
+    // forever (office looks stuck on “loading”).
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(ROLE_STORAGE_KEY);
@@ -831,7 +834,16 @@
   function showWelcomeModal() {
     injectModalStyles();
     return new Promise((resolve) => {
-      if (modalEl) modalEl.remove();
+      // If a previous modal is still open, settle its waiter so init() cannot hang.
+      if (typeof welcomeModalResolve === 'function') {
+        try { welcomeModalResolve(null); } catch (_) {}
+        welcomeModalResolve = null;
+      }
+      if (modalEl) {
+        try { modalEl.remove(); } catch (_) {}
+        modalEl = null;
+      }
+      welcomeModalResolve = resolve;
       modalEl = document.createElement('div');
       modalEl.id = 'denizen-visitor-name-modal';
       document.body.appendChild(modalEl);
@@ -873,12 +885,16 @@
         }
         stepUnbinds.forEach((fn) => fn());
         stepUnbinds = [];
-        modalEl.remove();
-        modalEl = null;
+        if (modalEl) {
+          try { modalEl.remove(); } catch (_) {}
+          modalEl = null;
+        }
+        const settle = welcomeModalResolve;
+        welcomeModalResolve = null;
         if (result) {
           globalThis.DenizenMobilePlay?.syncLayout?.();
         }
-        resolve(result);
+        if (typeof settle === 'function') settle(result || null);
       }
 
       setGameInputBlocked(true);
@@ -2298,6 +2314,7 @@
     async logout() {
       announceProfileSwitching({ displayName: 'Signing out', tier: null });
       resetStoredSessionForSwitch();
+      initPromise = null;
 
       try {
         document.dispatchEvent(new CustomEvent('denizen-visitor-logged-out'));
@@ -2309,6 +2326,7 @@
 
     async beginTeamJoinFlow(teamCode) {
       resetStoredSessionForSwitch();
+      initPromise = null;
       pendingJoinCode = teamCode ? String(teamCode).trim() : null;
       try {
         document.dispatchEvent(new CustomEvent('denizen-visitor-logged-out'));

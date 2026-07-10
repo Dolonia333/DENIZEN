@@ -273,7 +273,9 @@ class OfficeScene extends Phaser.Scene {
   }
 
   create() {
-    // Remove loading screen UI
+    // Drop HTML + Phaser load chrome as soon as the scene starts — don't wait
+    // for AgentOfficeManager / PlayerChat or a hung login waiter.
+    try { window.__DenizenChatBootstrap?.setLoadPct?.(100); } catch (_) {}
     if (this._loadingUI) {
       this._loadingUI.forEach(obj => obj.destroy());
       this._loadingUI = null;
@@ -944,6 +946,7 @@ class OfficeScene extends Phaser.Scene {
     // Registers walk + idle anims for any texture key. Safe to call multiple times.
     const registerXpAnims = (texKey) => {
       const makeKey = (k) => `${texKey}:${k}`;
+      if (!this.textures.exists(texKey)) return makeKey;
       const defs = {
         walk_down:  { frames: [0, 1, 2, 3],   fps: 10, loop: true },
         walk_left:  { frames: [4, 5, 6, 7],   fps: 10, loop: true },
@@ -1149,6 +1152,7 @@ class OfficeScene extends Phaser.Scene {
     ];
     const npcCount = layoutParam === 'reference_office' ? 2 : Math.min(20, npcKeys.length);
     npcKeys.slice(0, npcCount).forEach((texKey, i) => {
+      if (!this.textures.exists(texKey)) return;
       const spawn = i < deskSpawns.length ? deskSpawns[i] : otherSpawns[i - deskSpawns.length] || { x: Phaser.Math.Between(120, 1100), y: Phaser.Math.Between(120, 600) };
       const x = spawn.x + Phaser.Math.Between(-10, 10);
       const y = spawn.y + Phaser.Math.Between(-10, 10);
@@ -3077,7 +3081,9 @@ const config = {
   roundPixels: true,
   loader: {
     maxParallelDownloads: 12,
-    maxRetries: 2
+    maxRetries: 2,
+    // Abort hung asset requests so preload cannot sit on DOLONIA forever.
+    timeout: 20000,
   },
   physics: {
     default: 'arcade',

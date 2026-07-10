@@ -530,6 +530,13 @@
 
     setTimeout(() => clearInterval(poll), 120000);
 
+    // Failsafe: never leave the top “loading office…” banner forever if Phaser
+    // preload hangs or create() throws before setLoadPct(100).
+    setTimeout(() => {
+      try { setLoadPct(100); } catch (_) {}
+      if (loadBanner) loadBanner.style.display = 'none';
+    }, 25000);
+
     console.log('[ChatBootstrap] instant 💬 button ready');
 
   }
