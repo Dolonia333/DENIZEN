@@ -408,10 +408,12 @@
 
   function speakFabMarkup(on) {
     const T = globalThis.DenizenTablerIcons;
-    const glyph = T?.speakGlyph
-      ? T.speakGlyph(on, { size: 20, className: 'dzs-ti' })
-      : (on ? '⏹' : '🎤');
-    return `${glyph}<span class="dzs-label">${on ? 'Stop' : 'Speak'}</span>`;
+    if (T?.speakGlyph) {
+      T.ensureStyles?.();
+      const glyph = T.speakGlyph(on, { size: 20, className: 'dzs-ti' });
+      return `${glyph}<span class="dzs-label">${on ? 'Stop' : 'Speak'}</span>`;
+    }
+    return `${on ? '⏹' : '🎤'}<span class="dzs-label">${on ? 'Stop' : 'Speak'}</span>`;
   }
 
   function refreshMicIcon() {
@@ -442,10 +444,12 @@
     speakFab.disabled = !supported;
     if (chatOpen) {
       speakFab.style.display = 'none';
-      speakFab.style.opacity = '';
+      speakFab.style.removeProperty('opacity');
     } else {
       speakFab.style.display = '';
-      speakFab.style.opacity = supported ? '1' : '0.55';
+      // Do not set inline opacity — corner-hud-autohide owns visibility on desktop.
+      speakFab.style.removeProperty('opacity');
+      if (!supported) speakFab.style.opacity = '0.55';
     }
     speakFab.title = supported
       ? 'Tap to speak — tap again when done'

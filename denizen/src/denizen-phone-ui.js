@@ -170,10 +170,25 @@
     const badge = fabEl.querySelector('.dzp-fab-badge');
     const badgeHtml = badge ? badge.outerHTML : '<span class="dzp-fab-badge"></span>';
     const T = globalThis.DenizenTablerIcons;
-    const glyph = T?.icon
-      ? T.icon('device-mobile', { size: 24, className: 'dzp-fab-ti' })
-      : '📱';
-    fabEl.innerHTML = `${glyph}${badgeHtml}`;
+    if (T?.icon) {
+      T.ensureStyles?.();
+      fabEl.innerHTML = `${T.icon('device-mobile', { size: 24, className: 'dzp-fab-ti' })}${badgeHtml}`;
+      fabEl.dataset.icon = 'tabler';
+      return;
+    }
+    fabEl.innerHTML = `📱${badgeHtml}`;
+    fabEl.dataset.icon = 'emoji';
+  }
+
+  function ensurePhoneFabIcon() {
+    paintPhoneFab();
+    if (fabEl?.dataset.icon === 'tabler') return;
+    let tries = 0;
+    const t = setInterval(() => {
+      paintPhoneFab();
+      tries += 1;
+      if (fabEl?.dataset.icon === 'tabler' || tries >= 40) clearInterval(t);
+    }, 250);
   }
 
   function repaintAppIcons() {
@@ -3238,7 +3253,7 @@
     fabEl.id = FAB_ID;
     fabEl.type = 'button';
     fabEl.innerHTML = '<span class="dzp-fab-badge"></span>';
-    paintPhoneFab();
+    ensurePhoneFabIcon();
     fabEl.title = 'Open your office key — chat, Citizen ID, City Power, and tools';
     fabEl.setAttribute('aria-label', 'Open phone');
     const bind = window.DenizenTouchBind?.bindPress;
@@ -3281,6 +3296,7 @@
     document.addEventListener('denizen-deferred-scripts-ready', () => {
       markScriptsSettled();
       repaintAppIcons();
+      ensurePhoneFabIcon();
     });
     document.addEventListener('denizen-browser-mirror-ready', () => setTimeout(refreshAppStatuses, 50));
     loadBrowserMirrorScript().catch(() => {});
