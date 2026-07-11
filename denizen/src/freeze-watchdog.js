@@ -49,7 +49,10 @@
       sc.playerLocked = false;
       sc.playerState = 'walk';
       try { sc._applyRawKeyMovement?.(); } catch (_) {}
-      try { window.DenizenMovementGuard?.directNudge?.(sc); } catch (_) {}
+      // Never teleport through walls — only nudge if physics is dead and not collision-stopped
+      if (!window.DenizenMovementGuard?.isCollisionStopped?.(sc)) {
+        try { window.DenizenMovementGuard?.directNudge?.(sc); } catch (_) {}
+      }
     }
     try {
       if (window.game?.input) window.game.input.enabled = true;

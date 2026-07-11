@@ -317,8 +317,8 @@
       <div class="sub">Sheet → catalog → place → verify — all tools in one place</div>
     </div>
     <div class="header-actions">
-      <a class="btn btn-primary" href="/" id="link-game">Open game</a>
-      <a class="btn" href="/?editor=1" id="link-editor">Open scene editor</a>
+      <a class="btn btn-primary" href="/office" id="link-game">Open game</a>
+      <a class="btn" href="/office?editor=1" id="link-editor">Open scene editor</a>
       <a class="btn btn-ghost" href="/catalog-explorer.html">Catalog data</a>
     </div>
   </header>
@@ -361,7 +361,7 @@
           <p>Grid overview (sheet_00…14). Monitors/lamps are on sheet_05. Use while labeling.</p>
           <span class="open">Open sheet_05 →</span>
         </a>
-        <a class="card" href="/?editor=1&amp;demo=1">
+        <a class="card" href="/office?editor=1&amp;demo=1">
           <span class="icon">Edit</span>
           <h3>Place named items</h3>
           <p>Editor catalog shows display names. Filter <strong>On desk</strong> for monitors &amp; lamps. Toggle editor: <strong>Ctrl+Shift+E</strong> / <strong>⌘⇧E</strong>.</p>
@@ -377,13 +377,13 @@
     <section>
       <h2>Play &amp; build <span class="badge">in-game</span></h2>
       <div class="grid">
-        <a class="card featured" href="/">
+        <a class="card featured" href="/office">
           <span class="icon">Play</span>
           <h3>Office game</h3>
           <p>Walk the open-plan office. NPCs, interactions, live layout.</p>
           <span class="open">Open →</span>
         </a>
-        <a class="card featured" href="/?editor=1">
+        <a class="card featured" href="/office?editor=1">
           <span class="icon">Edit</span>
           <h3>Scene editor</h3>
           <p>In-game catalog sidebar — drag furniture, press <strong>X</strong> to export. Toggle with <strong>Ctrl+Shift+E</strong> (Mac: <strong>⌘⇧E</strong>).</p>
@@ -520,16 +520,18 @@
 
       const origin = window.location.origin;
       document.getElementById('server-url').textContent = origin;
-      document.getElementById('link-game').href = origin + '/';
-      document.getElementById('link-editor').href = origin + '/?editor=1';
+      document.getElementById('link-game').href = origin + '/office';
+      document.getElementById('link-editor').href = origin + '/office?editor=1';
 
       if (embed) {
         // Game / scene editor leave the phone and open in the parent window.
-        document.querySelectorAll('a[href="/"], a[href^="/?editor"]').forEach((a) => {
+        document.querySelectorAll('a[href="/office"], a[href^="/office?"], a[href="/"], a[href^="/?editor"]').forEach((a) => {
           a.target = '_parent';
         });
-        // Tool pages stay inside the phone iframe and get a Back bar via embed=1.
-        document.querySelectorAll('a.card[href$=".html"], a.card[href*=".html?"], a[data-tool]').forEach((a) => {
+        // Tool pages (cards + header Catalog) stay in the iframe with Back bar.
+        document.querySelectorAll(
+          'a.card[href$=".html"], a.card[href*=".html?"], a.btn[href$=".html"], a.btn[href*=".html?"], a[data-tool]'
+        ).forEach((a) => {
           try {
             const u = new URL(a.getAttribute('href'), origin);
             if (u.pathname.includes('workflow-dashboard')) return;

@@ -22,48 +22,37 @@
   const WALL_TRIM_DEPTH = 1.2;
   const WALL_TRIM_HI_DEPTH = 1.25;
   const WALL_CORNER_TRIM_DEPTH = 1.3;
-  const WALL_TJUNC_DEPTH = 1.35;
 
   /** Horizontal back trim — runs along the top of wall bands (viewed from above). */
-  function drawTopTrim(scene, cx, topY, width) {
+  function drawTopTrim(scene, cx, topY, width, face) {
     const objs = [];
-    objs.push(scene.add.rectangle(cx, topY + TRIM_H / 2, width, TRIM_H, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(cx, topY + TRIM_H - 1, width, 2, TRIM_HI, 1).setDepth(WALL_TRIM_HI_DEPTH));
+    const brick = face === 'brick' || face === 'wall_face_brick';
+    if (brick) {
+      // GIF brick walls: light top band + dark outline
+      objs.push(scene.add.rectangle(cx, topY + TRIM_H / 2, width, TRIM_H, 0xe4e4ec, 1).setDepth(WALL_TRIM_DEPTH));
+      objs.push(scene.add.rectangle(cx, topY + 1, width, 2, 0x2a2a38, 1).setDepth(WALL_TRIM_HI_DEPTH));
+    } else {
+      objs.push(scene.add.rectangle(cx, topY + TRIM_H / 2, width, TRIM_H, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
+      objs.push(scene.add.rectangle(cx, topY + TRIM_H - 1, width, 2, TRIM_HI, 1).setDepth(WALL_TRIM_HI_DEPTH));
+    }
     return objs;
   }
 
-  /** Vertical back trim — runs the full height on the wall's back edge (viewed from above). */
-  function drawBackTrimV(scene, x, y0, height, backSide) {
-    const objs = [];
-    const cy = y0 + height / 2;
-    const trimX = backSide === 'left' ? x + TRIM_W / 2 : x + T - TRIM_W / 2;
-    const hiX = backSide === 'left' ? x + TRIM_W + 1 : x + T - TRIM_W - 1;
-    objs.push(scene.add.rectangle(trimX, cy, TRIM_W, height, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(hiX, cy, 2, height, TRIM_HI, 0.7).setDepth(WALL_TRIM_HI_DEPTH));
-    return objs;
+  /** GIF entryway cut — dark vertical edge where an H-wall ends at a doorway. */
+  function drawEntryCutH(scene, x, y) {
+    return [
+      scene.add.rectangle(x, y + BAND_H / 2, 2, BAND_H, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH),
+    ];
   }
 
-  function vBackSide(shadowSide) {
-    return shadowSide === 'left' ? 'right' : 'left';
+  function resolveFaceKeys(face) {
+    if (face === 'brick' || face === 'wall_face_brick') {
+      return { h: 'wall_face_brick', v: 'wall_face_brick' };
+    }
+    return { h: 'wall_face', v: 'wall_face_v' };
   }
 
-  function drawDoorOpening(scene, x0, x1, y) {
-    const w = x1 - x0;
-    if (w < T) return [];
-    const objs = [];
-    // Lintel across the opening (matches horizontal wall trim)
-    objs.push(...drawTopTrim(scene, x0 + w / 2, y, w));
-    // Side jambs (visual only — no physics; NPCs walk through the opening)
-    const jambH = BAND_H;
-    const faceH = BAND_H - TRIM_H;
-    objs.push(scene.add.rectangle(x0 + TRIM_W / 2, y + jambH / 2, TRIM_W, jambH, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(x1 - TRIM_W / 2, y + jambH / 2, TRIM_W, jambH, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.tileSprite(x0 + T / 2, y + TRIM_H + faceH / 2, T, faceH, 'wall_face_v').setDepth(WALL_FACE_DEPTH));
-    objs.push(scene.add.tileSprite(x1 - T / 2, y + TRIM_H + faceH / 2, T, faceH, 'wall_face_v').setDepth(WALL_FACE_DEPTH));
-    return objs;
-  }
-
-  function drawHWallWithGaps(scene, startX, y, endX, doorGaps, obstacles) {
+  function drawHWallWithGaps(scene, startX, y, endX, doorGaps, obstacles, face) {
     const gaps = (doorGaps || [])
       .map((g) => [Math.max(startX, g[0]), Math.min(endX, g[1])])
       .filter(([a, b]) => b - a >= T)
@@ -71,33 +60,22 @@
     let cursor = startX;
     const all = [];
     for (const [gx0, gx1] of gaps) {
-      if (gx0 > cursor) all.push(...drawHWall(scene, cursor, y, gx0, obstacles));
-      all.push(...drawDoorOpening(scene, gx0, gx1, y));
+      // Wall segment ending at doorway — GIF cut on the right edge; floor shows through gap
+      if (gx0 > cursor) {
+        all.push(...drawHWall(scene, cursor, y, gx0, obstacles, face, {
+          leftCut: cursor > startX,
+          rightCut: true,
+        }));
+      }
       cursor = gx1;
     }
-    if (endX > cursor) all.push(...drawHWall(scene, cursor, y, endX, obstacles));
+    if (endX > cursor) {
+      all.push(...drawHWall(scene, cursor, y, endX, obstacles, face, {
+        leftCut: cursor > startX,
+        rightCut: false,
+      }));
+    }
     return all;
-  }
-
-  function drawDoorOpeningV(scene, y0, y1, x, shadowSide) {
-    const h = y1 - y0;
-    if (h < T) return [];
-    const objs = [];
-    const back = vBackSide(shadowSide || 'right');
-    const faceW = T - TRIM_W;
-    const faceX = back === 'left' ? x + TRIM_W + faceW / 2 : x + faceW / 2;
-
-    // Top/bottom jambs — same trim language as horizontal door side posts
-    objs.push(scene.add.rectangle(faceX, y0 + TRIM_H / 2, faceW, TRIM_H, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(faceX, y1 - TRIM_H / 2, faceW, TRIM_H, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(...drawBackTrimV(scene, x, y0, TRIM_H, back));
-    objs.push(...drawBackTrimV(scene, x, y1 - TRIM_H, TRIM_H, back));
-
-    const openH = Math.max(T, h - TRIM_H * 2);
-    const midY = y0 + TRIM_H + openH / 2;
-    objs.push(scene.add.tileSprite(x + TRIM_W / 2, midY, TRIM_W, openH, 'wall_face_v').setDepth(WALL_FACE_DEPTH));
-    objs.push(scene.add.tileSprite(x + T - TRIM_W / 2, midY, TRIM_W, openH, 'wall_face_v').setDepth(WALL_FACE_DEPTH));
-    return objs;
   }
 
   function drawVWallWithGaps(scene, x, startY, endY, doorGaps, shadowSide, obstacles) {
@@ -110,21 +88,34 @@
     let cursor = y0;
     const all = [];
     for (const [gy0, gy1] of gaps) {
-      if (gy0 > cursor) all.push(...drawVWall(scene, x, cursor, gy0, shadowSide, obstacles));
-      all.push(...drawDoorOpeningV(scene, gy0, gy1, x, shadowSide));
+      if (gy0 > cursor) {
+        all.push(...drawVWall(scene, x, cursor, gy0, shadowSide, obstacles, {
+          topCut: cursor > y0,
+          bottomCut: true,
+        }));
+      }
       cursor = gy1;
     }
-    if (y1 > cursor) all.push(...drawVWall(scene, x, cursor, y1, shadowSide, obstacles));
+    if (y1 > cursor) {
+      all.push(...drawVWall(scene, x, cursor, y1, shadowSide, obstacles, {
+        topCut: cursor > y0,
+        bottomCut: false,
+      }));
+    }
     return all;
   }
 
-  function drawHWall(scene, startX, y, endX, obstacles) {
+  function drawHWall(scene, startX, y, endX, obstacles, face, cuts) {
     const w = endX - startX;
     if (w <= 0) return [];
-    const objs = drawTopTrim(scene, startX + w / 2, y, w);
+    const fk = resolveFaceKeys(face);
+    const objs = drawTopTrim(scene, startX + w / 2, y, w, face);
     const faceH = BAND_H - TRIM_H;
-    objs.push(scene.add.tileSprite(startX + w / 2, y + TRIM_H + faceH / 2, w, faceH, 'wall_face').setDepth(WALL_FACE_DEPTH));
+    objs.push(scene.add.tileSprite(startX + w / 2, y + TRIM_H + faceH / 2, w, faceH, fk.h).setDepth(WALL_FACE_DEPTH));
     objs.push(scene.add.rectangle(startX + w / 2, y + BAND_H - 1, w, 2, SHADOW, 0.5).setDepth(WALL_SHADOW_DEPTH));
+    // GIF entryway cuts — dark vertical edge where wall stops at a doorway
+    if (cuts?.leftCut) objs.push(...drawEntryCutH(scene, startX + 1, y));
+    if (cuts?.rightCut) objs.push(...drawEntryCutH(scene, endX - 1, y));
     const obs = scene.add.rectangle(startX + w / 2, y + T, w, BAND_H, 0x000000, 0);
     scene.physics.add.existing(obs, true);
     obstacles.push(obs);
@@ -132,18 +123,27 @@
     return objs;
   }
 
-  function drawVWall(scene, x, startY, endY, shadowSide, obstacles) {
+  function drawVWall(scene, x, startY, endY, shadowSide, obstacles, cuts) {
     const y0 = Math.min(startY, endY);
     const y1 = Math.max(startY, endY);
     const h = y1 - y0;
     if (h <= 0) return [];
-    const back = vBackSide(shadowSide || 'right');
-    const objs = drawBackTrimV(scene, x, y0, h, back);
-    const faceW = T - TRIM_W;
-    const faceX = back === 'left' ? x + TRIM_W + faceW / 2 : x + faceW / 2;
-    objs.push(scene.add.tileSprite(faceX, y0 + h / 2, faceW, h, 'wall_face_v').setDepth(WALL_FACE_DEPTH));
-    const shadowX = shadowSide === 'left' ? x + 1 : x + T - 1;
-    objs.push(scene.add.rectangle(shadowX, y0 + h / 2, 2, h, SHADOW, 0.35).setDepth(WALL_SHADOW_DEPTH));
+    const objs = [];
+    // Symmetrical edges — equal navy trim on both sides, face centered
+    const edgeW = 3;
+    const faceW = T - edgeW * 2;
+    objs.push(scene.add.rectangle(x + edgeW / 2, y0 + h / 2, edgeW, h, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
+    objs.push(scene.add.rectangle(x + T - edgeW / 2, y0 + h / 2, edgeW, h, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
+    objs.push(scene.add.tileSprite(x + T / 2, y0 + h / 2, faceW, h, 'wall_face_v').setDepth(WALL_FACE_DEPTH));
+    const shadowX = (shadowSide || 'right') === 'left' ? x + 1 : x + T - 1;
+    objs.push(scene.add.rectangle(shadowX, y0 + h / 2, 1, h, SHADOW, 0.25).setDepth(WALL_SHADOW_DEPTH));
+    // Doorway end caps — thin dark line across thickness (matches H entry cuts)
+    if (cuts?.topCut) {
+      objs.push(scene.add.rectangle(x + T / 2, y0 + 1, T, 2, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
+    }
+    if (cuts?.bottomCut) {
+      objs.push(scene.add.rectangle(x + T / 2, y1 - 1, T, 2, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
+    }
     const obs = scene.add.rectangle(x + T / 2, y0 + h / 2, T, h, 0x000000, 0);
     scene.physics.add.existing(obs, true);
     obstacles.push(obs);
@@ -174,10 +174,22 @@
     return objs;
   }
 
-  function drawTJunction(scene, x, y, side) {
-    const key = side === 'left' ? 'wall_tjunc_l' : 'wall_tjunc_r';
-    if (!scene.textures.exists(key)) return [];
-    return [scene.add.image(x, y, key).setOrigin(0, 0).setDepth(WALL_TJUNC_DEPTH)];
+  function drawTJunction(scene, x, y, obstacles) {
+    // Procedural join — never use RB white outline sprites (look like random L-blocks)
+    const objs = [];
+    const edgeW = 3;
+    const faceW = T - edgeW * 2;
+    objs.push(...drawTopTrim(scene, x + T / 2, y, T));
+    objs.push(scene.add.rectangle(x + edgeW / 2, y + BAND_H / 2, edgeW, BAND_H, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
+    objs.push(scene.add.rectangle(x + T - edgeW / 2, y + BAND_H / 2, edgeW, BAND_H, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
+    const faceH = BAND_H - TRIM_H;
+    objs.push(scene.add.tileSprite(x + T / 2, y + TRIM_H + faceH / 2, faceW, faceH, 'wall_face').setDepth(WALL_FACE_DEPTH));
+    const obs = scene.add.rectangle(x + T / 2, y + T, T, BAND_H, 0x000000, 0);
+    scene.physics.add.existing(obs, true);
+    if (obstacles?.push) obstacles.push(obs);
+    else if (obstacles?.add) obstacles.add(obs);
+    objs.push(obs);
+    return objs;
   }
 
   function segmentBounds(seg) {
@@ -199,12 +211,13 @@
 
   function renderSegment(scene, seg, obstacles) {
     const data = { ...seg };
+    const face = data.face || null;
     let visuals = [];
     if (data.type === 'h') {
       if (Array.isArray(data.doorGaps) && data.doorGaps.length) {
-        visuals = drawHWallWithGaps(scene, data.startX, data.y, data.endX, data.doorGaps, obstacles);
+        visuals = drawHWallWithGaps(scene, data.startX, data.y, data.endX, data.doorGaps, obstacles, face);
       } else {
-        visuals = drawHWall(scene, data.startX, data.y, data.endX, obstacles);
+        visuals = drawHWall(scene, data.startX, data.y, data.endX, obstacles, face);
       }
     } else if (data.type === 'v') {
       if (Array.isArray(data.doorGaps) && data.doorGaps.length) {
@@ -215,7 +228,7 @@
     } else if (data.type === 'corner') {
       visuals = drawBoxCorner(scene, data.x, data.y, data.role || 'tr', obstacles);
     } else if (data.type === 'tjunction') {
-      visuals = drawTJunction(scene, data.x, data.y, data.side || 'right');
+      visuals = drawTJunction(scene, data.x, data.y, obstacles);
     }
     const bounds = segmentBounds(data);
     const hit = scene.add.rectangle(bounds.cx, bounds.cy, Math.max(bounds.w, 8), Math.max(bounds.h, 8), 0x4ade80, 0);
@@ -236,10 +249,14 @@
     entry.handles = [];
     if (entry.hit) entry.hit.destroy();
     entry.visuals.forEach((v) => {
-      if (entry.obstacle && v === entry.obstacle && scene._obstacles) {
-        scene._obstacles = scene._obstacles.filter((o) => o !== v);
+      if (v?.body?.immovable) {
+        if (Array.isArray(scene._obstacles)) {
+          const idx = scene._obstacles.indexOf(v);
+          if (idx >= 0) scene._obstacles.splice(idx, 1);
+        }
+        try { scene.obstacles?.remove?.(v, true, true); } catch (_) {}
       }
-      v.destroy();
+      try { v.destroy(); } catch (_) {}
     });
     entry.visuals = [];
     entry.obstacle = null;
@@ -422,24 +439,23 @@
       const y1 = Math.max(seg.startY, seg.endY);
       const h = y1 - y0;
       if (h <= 0) return objs;
-      const back = vBackSide(seg.shadowSide || 'right');
-      const trimX = back === 'left' ? seg.x + TRIM_W / 2 : seg.x + T - TRIM_W / 2;
-      const faceW = T - TRIM_W;
-      const faceX = back === 'left' ? seg.x + TRIM_W + faceW / 2 : seg.x + faceW / 2;
-      objs.push(scene.add.rectangle(trimX, y0 + h / 2, TRIM_W, h, TRIM, alpha).setDepth(70));
-      objs.push(scene.add.rectangle(faceX, y0 + h / 2, faceW, h, 0xc3d0e6, alpha).setDepth(70));
-    } else if (seg.type === 'corner') {
-      const trimLeft = seg.role === 'tl' || seg.role === 'bl';
-      const trimRight = seg.role === 'tr' || seg.role === 'br';
+      const edgeW = 3;
+      const faceW = T - edgeW * 2;
+      objs.push(scene.add.rectangle(seg.x + edgeW / 2, y0 + h / 2, edgeW, h, TRIM, alpha).setDepth(70));
+      objs.push(scene.add.rectangle(seg.x + T - edgeW / 2, y0 + h / 2, edgeW, h, TRIM, alpha).setDepth(70));
+      objs.push(scene.add.rectangle(seg.x + T / 2, y0 + h / 2, faceW, h, 0xc3d0e6, alpha).setDepth(70));
+    } else if (seg.type === 'corner' || seg.type === 'tjunction') {
+      const trimLeft = seg.type === 'tjunction' || seg.role === 'tl' || seg.role === 'bl';
+      const trimRight = seg.type === 'tjunction' || seg.role === 'tr' || seg.role === 'br';
       objs.push(scene.add.rectangle(seg.x + T / 2, seg.y + TRIM_H / 2, T, TRIM_H, TRIM, alpha).setDepth(70));
       if (trimLeft) {
-        objs.push(scene.add.rectangle(seg.x + TRIM_W / 2, seg.y + BAND_H / 2, TRIM_W, BAND_H, TRIM, alpha).setDepth(70));
+        objs.push(scene.add.rectangle(seg.x + 1.5, seg.y + BAND_H / 2, 3, BAND_H, TRIM, alpha).setDepth(70));
       }
       if (trimRight) {
-        objs.push(scene.add.rectangle(seg.x + T - TRIM_W / 2, seg.y + BAND_H / 2, TRIM_W, BAND_H, TRIM, alpha).setDepth(70));
+        objs.push(scene.add.rectangle(seg.x + T - 1.5, seg.y + BAND_H / 2, 3, BAND_H, TRIM, alpha).setDepth(70));
       }
       const faceH = BAND_H - TRIM_H;
-      objs.push(scene.add.rectangle(seg.x + T / 2, seg.y + TRIM_H + faceH / 2, T, faceH, 0xc3d0e6, alpha).setDepth(70));
+      objs.push(scene.add.rectangle(seg.x + T / 2, seg.y + TRIM_H + faceH / 2, T - 6, faceH, 0xc3d0e6, alpha).setDepth(70));
     }
     return objs;
   }
