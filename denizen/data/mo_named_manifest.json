@@ -1,0 +1,4460 @@
+{
+  "count": 339,
+  "items": [
+    {
+      "num": 1,
+      "name": "desk_wood_narrow",
+      "file": "desk_wood_narrow.png",
+      "src": "Modern_Office_Singles_32x32_1.png",
+      "label": {
+        "name": "desk_wood_narrow",
+        "displayName": "Wood desk narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 2,
+      "name": "desk_wood_square",
+      "file": "desk_wood_square.png",
+      "src": "Modern_Office_Singles_32x32_2.png",
+      "label": {
+        "name": "desk_wood_square",
+        "displayName": "Wood desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 3,
+      "name": "desk_wood_edge_right",
+      "file": "desk_wood_edge_right.png",
+      "src": "Modern_Office_Singles_32x32_3.png",
+      "label": {
+        "name": "desk_wood_edge_right",
+        "displayName": "Wood desk right edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 4,
+      "name": "desk_wood_drawers",
+      "file": "desk_wood_drawers.png",
+      "src": "Modern_Office_Singles_32x32_4.png",
+      "label": {
+        "name": "desk_wood_drawers",
+        "displayName": "Wood desk with drawers",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 5,
+      "name": "desk_wood_narrow_2",
+      "file": "desk_wood_narrow_2.png",
+      "src": "Modern_Office_Singles_32x32_5.png",
+      "label": {
+        "name": "desk_wood_narrow_2",
+        "displayName": "Wood desk narrow 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 6,
+      "name": "desk_wood_square_2",
+      "file": "desk_wood_square_2.png",
+      "src": "Modern_Office_Singles_32x32_6.png",
+      "label": {
+        "name": "desk_wood_square_2",
+        "displayName": "Wood desk square 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 7,
+      "name": "desk_wood_drawer_left",
+      "file": "desk_wood_drawer_left.png",
+      "src": "Modern_Office_Singles_32x32_7.png",
+      "label": {
+        "name": "desk_wood_drawer_left",
+        "displayName": "Wood desk drawer left",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 8,
+      "name": "desk_wood_front_edge",
+      "file": "desk_wood_front_edge.png",
+      "src": "Modern_Office_Singles_32x32_8.png",
+      "label": {
+        "name": "desk_wood_front_edge",
+        "displayName": "Wood desk front edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 9,
+      "name": "desk_wood_drawers_2",
+      "file": "desk_wood_drawers_2.png",
+      "src": "Modern_Office_Singles_32x32_9.png",
+      "label": {
+        "name": "desk_wood_drawers_2",
+        "displayName": "Wood desk drawers 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 10,
+      "name": "desk_wood_square_3",
+      "file": "desk_wood_square_3.png",
+      "src": "Modern_Office_Singles_32x32_10.png",
+      "label": {
+        "name": "desk_wood_square_3",
+        "displayName": "Wood desk square 3",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 11,
+      "name": "desk_wood_narrow_3",
+      "file": "desk_wood_narrow_3.png",
+      "src": "Modern_Office_Singles_32x32_11.png",
+      "label": {
+        "name": "desk_wood_narrow_3",
+        "displayName": "Wood desk narrow 3",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 12,
+      "name": "desk_wood_narrow_4",
+      "file": "desk_wood_narrow_4.png",
+      "src": "Modern_Office_Singles_32x32_12.png",
+      "label": {
+        "name": "desk_wood_narrow_4",
+        "displayName": "Wood desk narrow 4",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 13,
+      "name": "desk_wood_square_4",
+      "file": "desk_wood_square_4.png",
+      "src": "Modern_Office_Singles_32x32_13.png",
+      "label": {
+        "name": "desk_wood_square_4",
+        "displayName": "Wood desk square 4",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 14,
+      "name": "desk_wood_narrow_edge",
+      "file": "desk_wood_narrow_edge.png",
+      "src": "Modern_Office_Singles_32x32_14.png",
+      "label": {
+        "name": "desk_wood_narrow_edge",
+        "displayName": "Wood desk narrow edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 15,
+      "name": "desk_wood_square_5",
+      "file": "desk_wood_square_5.png",
+      "src": "Modern_Office_Singles_32x32_15.png",
+      "label": {
+        "name": "desk_wood_square_5",
+        "displayName": "Wood desk square 5",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 16,
+      "name": "desk_wood_edge_right_2",
+      "file": "desk_wood_edge_right_2.png",
+      "src": "Modern_Office_Singles_32x32_16.png",
+      "label": {
+        "name": "desk_wood_edge_right_2",
+        "displayName": "Wood desk right edge 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 17,
+      "name": "desk_wood_drawers_3",
+      "file": "desk_wood_drawers_3.png",
+      "src": "Modern_Office_Singles_32x32_17.png",
+      "label": {
+        "name": "desk_wood_drawers_3",
+        "displayName": "Wood desk drawers 3",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 18,
+      "name": "desk_beige_narrow",
+      "file": "desk_beige_narrow.png",
+      "src": "Modern_Office_Singles_32x32_18.png",
+      "label": {
+        "name": "desk_beige_narrow",
+        "displayName": "Beige desk narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 19,
+      "name": "desk_beige_square",
+      "file": "desk_beige_square.png",
+      "src": "Modern_Office_Singles_32x32_19.png",
+      "label": {
+        "name": "desk_beige_square",
+        "displayName": "Beige desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 20,
+      "name": "desk_beige_edge_left",
+      "file": "desk_beige_edge_left.png",
+      "src": "Modern_Office_Singles_32x32_20.png",
+      "label": {
+        "name": "desk_beige_edge_left",
+        "displayName": "Beige desk left edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 21,
+      "name": "desk_beige_drawers",
+      "file": "desk_beige_drawers.png",
+      "src": "Modern_Office_Singles_32x32_21.png",
+      "label": {
+        "name": "desk_beige_drawers",
+        "displayName": "Beige desk drawers",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 22,
+      "name": "desk_beige_narrow_2",
+      "file": "desk_beige_narrow_2.png",
+      "src": "Modern_Office_Singles_32x32_22.png",
+      "label": {
+        "name": "desk_beige_narrow_2",
+        "displayName": "Beige desk narrow 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 23,
+      "name": "desk_beige_square_2",
+      "file": "desk_beige_square_2.png",
+      "src": "Modern_Office_Singles_32x32_23.png",
+      "label": {
+        "name": "desk_beige_square_2",
+        "displayName": "Beige desk square 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 24,
+      "name": "desk_beige_drawer",
+      "file": "desk_beige_drawer.png",
+      "src": "Modern_Office_Singles_32x32_24.png",
+      "label": {
+        "name": "desk_beige_drawer",
+        "displayName": "Beige desk drawer",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 25,
+      "name": "desk_wood_square_6",
+      "file": "desk_wood_square_6.png",
+      "src": "Modern_Office_Singles_32x32_25.png",
+      "label": {
+        "name": "desk_wood_square_6",
+        "displayName": "Wood desk square 6",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 26,
+      "name": "desk_wood_drawers_4",
+      "file": "desk_wood_drawers_4.png",
+      "src": "Modern_Office_Singles_32x32_26.png",
+      "label": {
+        "name": "desk_wood_drawers_4",
+        "displayName": "Wood desk drawers 4",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 27,
+      "name": "desk_wood_square_7",
+      "file": "desk_wood_square_7.png",
+      "src": "Modern_Office_Singles_32x32_27.png",
+      "label": {
+        "name": "desk_wood_square_7",
+        "displayName": "Wood desk square 7",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 28,
+      "name": "desk_wood_half",
+      "file": "desk_wood_half.png",
+      "src": "Modern_Office_Singles_32x32_28.png",
+      "label": {
+        "name": "desk_wood_half",
+        "displayName": "Wood desk half",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 29,
+      "name": "desk_wood_half_2",
+      "file": "desk_wood_half_2.png",
+      "src": "Modern_Office_Singles_32x32_29.png",
+      "label": {
+        "name": "desk_wood_half_2",
+        "displayName": "Wood desk half 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 30,
+      "name": "desk_wood_square_8",
+      "file": "desk_wood_square_8.png",
+      "src": "Modern_Office_Singles_32x32_30.png",
+      "label": {
+        "name": "desk_wood_square_8",
+        "displayName": "Wood desk square 8",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 31,
+      "name": "desk_wood_half_edge",
+      "file": "desk_wood_half_edge.png",
+      "src": "Modern_Office_Singles_32x32_31.png",
+      "label": {
+        "name": "desk_wood_half_edge",
+        "displayName": "Wood desk half edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 32,
+      "name": "desk_wood_shadow_right",
+      "file": "desk_wood_shadow_right.png",
+      "src": "Modern_Office_Singles_32x32_32.png",
+      "label": {
+        "name": "desk_wood_shadow_right",
+        "displayName": "Wood desk shadow right",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 33,
+      "name": "desk_wood_notch_left",
+      "file": "desk_wood_notch_left.png",
+      "src": "Modern_Office_Singles_32x32_33.png",
+      "label": {
+        "name": "desk_wood_notch_left",
+        "displayName": "Wood desk notch left",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 34,
+      "name": "desk_wood_drawers_5",
+      "file": "desk_wood_drawers_5.png",
+      "src": "Modern_Office_Singles_32x32_34.png",
+      "label": {
+        "name": "desk_wood_drawers_5",
+        "displayName": "Wood desk drawers 5",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 35,
+      "name": "desk_grey_half",
+      "file": "desk_grey_half.png",
+      "src": "Modern_Office_Singles_32x32_35.png",
+      "label": {
+        "name": "desk_grey_half",
+        "displayName": "Grey desk half",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 36,
+      "name": "desk_grey_square",
+      "file": "desk_grey_square.png",
+      "src": "Modern_Office_Singles_32x32_36.png",
+      "label": {
+        "name": "desk_grey_square",
+        "displayName": "Grey desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 37,
+      "name": "desk_grey_edge_right",
+      "file": "desk_grey_edge_right.png",
+      "src": "Modern_Office_Singles_32x32_37.png",
+      "label": {
+        "name": "desk_grey_edge_right",
+        "displayName": "Grey desk right edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 38,
+      "name": "desk_grey_drawers",
+      "file": "desk_grey_drawers.png",
+      "src": "Modern_Office_Singles_32x32_38.png",
+      "label": {
+        "name": "desk_grey_drawers",
+        "displayName": "Grey desk drawers",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 39,
+      "name": "desk_grey_half_2",
+      "file": "desk_grey_half_2.png",
+      "src": "Modern_Office_Singles_32x32_39.png",
+      "label": {
+        "name": "desk_grey_half_2",
+        "displayName": "Grey desk half 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 40,
+      "name": "desk_grey_square_2",
+      "file": "desk_grey_square_2.png",
+      "src": "Modern_Office_Singles_32x32_40.png",
+      "label": {
+        "name": "desk_grey_square_2",
+        "displayName": "Grey desk square 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 41,
+      "name": "desk_grey_drawer_left",
+      "file": "desk_grey_drawer_left.png",
+      "src": "Modern_Office_Singles_32x32_41.png",
+      "label": {
+        "name": "desk_grey_drawer_left",
+        "displayName": "Grey desk drawer left",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 42,
+      "name": "desk_grey_drawers_2",
+      "file": "desk_grey_drawers_2.png",
+      "src": "Modern_Office_Singles_32x32_42.png",
+      "label": {
+        "name": "desk_grey_drawers_2",
+        "displayName": "Grey desk drawers 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 43,
+      "name": "desk_grey_drawer_right",
+      "file": "desk_grey_drawer_right.png",
+      "src": "Modern_Office_Singles_32x32_43.png",
+      "label": {
+        "name": "desk_grey_drawer_right",
+        "displayName": "Grey desk drawer right",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 44,
+      "name": "desk_grey_square_3",
+      "file": "desk_grey_square_3.png",
+      "src": "Modern_Office_Singles_32x32_44.png",
+      "label": {
+        "name": "desk_grey_square_3",
+        "displayName": "Grey desk square 3",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 45,
+      "name": "desk_grey_half_edge",
+      "file": "desk_grey_half_edge.png",
+      "src": "Modern_Office_Singles_32x32_45.png",
+      "label": {
+        "name": "desk_grey_half_edge",
+        "displayName": "Grey desk half edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 46,
+      "name": "desk_grey_half_3",
+      "file": "desk_grey_half_3.png",
+      "src": "Modern_Office_Singles_32x32_46.png",
+      "label": {
+        "name": "desk_grey_half_3",
+        "displayName": "Grey desk half 3",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 47,
+      "name": "desk_grey_square_4",
+      "file": "desk_grey_square_4.png",
+      "src": "Modern_Office_Singles_32x32_47.png",
+      "label": {
+        "name": "desk_grey_square_4",
+        "displayName": "Grey desk square 4",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 48,
+      "name": "desk_grey_half_4",
+      "file": "desk_grey_half_4.png",
+      "src": "Modern_Office_Singles_32x32_48.png",
+      "label": {
+        "name": "desk_grey_half_4",
+        "displayName": "Grey desk half 4",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 49,
+      "name": "desk_grey_square_5",
+      "file": "desk_grey_square_5.png",
+      "src": "Modern_Office_Singles_32x32_49.png",
+      "label": {
+        "name": "desk_grey_square_5",
+        "displayName": "Grey desk square 5",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 50,
+      "name": "desk_grey_edge_left",
+      "file": "desk_grey_edge_left.png",
+      "src": "Modern_Office_Singles_32x32_50.png",
+      "label": {
+        "name": "desk_grey_edge_left",
+        "displayName": "Grey desk left edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 51,
+      "name": "cabinet_pedestal_wood",
+      "file": "cabinet_pedestal_wood.png",
+      "src": "Modern_Office_Singles_32x32_51.png",
+      "label": {
+        "name": "cabinet_pedestal_wood",
+        "displayName": "Wood pedestal cabinet",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 52,
+      "name": "desk_wood_trim",
+      "file": "desk_wood_trim.png",
+      "src": "Modern_Office_Singles_32x32_52.png",
+      "label": {
+        "name": "desk_wood_trim",
+        "displayName": "Wood desk trim",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 53,
+      "name": "desk_wood_light_square",
+      "file": "desk_wood_light_square.png",
+      "src": "Modern_Office_Singles_32x32_53.png",
+      "label": {
+        "name": "desk_wood_light_square",
+        "displayName": "Light wood desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 54,
+      "name": "desk_wood_light_edge",
+      "file": "desk_wood_light_edge.png",
+      "src": "Modern_Office_Singles_32x32_54.png",
+      "label": {
+        "name": "desk_wood_light_edge",
+        "displayName": "Light wood desk edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 55,
+      "name": "cabinet_pedestal_wood_2",
+      "file": "cabinet_pedestal_wood_2.png",
+      "src": "Modern_Office_Singles_32x32_55.png",
+      "label": {
+        "name": "cabinet_pedestal_wood_2",
+        "displayName": "Wood pedestal cabinet 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 56,
+      "name": "desk_wood_trim_2",
+      "file": "desk_wood_trim_2.png",
+      "src": "Modern_Office_Singles_32x32_56.png",
+      "label": {
+        "name": "desk_wood_trim_2",
+        "displayName": "Wood desk trim 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 57,
+      "name": "desk_wood_light_square_2",
+      "file": "desk_wood_light_square_2.png",
+      "src": "Modern_Office_Singles_32x32_57.png",
+      "label": {
+        "name": "desk_wood_light_square_2",
+        "displayName": "Light wood desk square 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 58,
+      "name": "desk_wood_drawer_corner_left",
+      "file": "desk_wood_drawer_corner_left.png",
+      "src": "Modern_Office_Singles_32x32_58.png",
+      "label": {
+        "name": "desk_wood_drawer_corner_left",
+        "displayName": "Wood desk drawer corner left",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 59,
+      "name": "desk_wood_front_band",
+      "file": "desk_wood_front_band.png",
+      "src": "Modern_Office_Singles_32x32_59.png",
+      "label": {
+        "name": "desk_wood_front_band",
+        "displayName": "Wood desk front band",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 60,
+      "name": "desk_wood_drawer_corner_right",
+      "file": "desk_wood_drawer_corner_right.png",
+      "src": "Modern_Office_Singles_32x32_60.png",
+      "label": {
+        "name": "desk_wood_drawer_corner_right",
+        "displayName": "Wood desk drawer corner right",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 61,
+      "name": "desk_wood_light_square_3",
+      "file": "desk_wood_light_square_3.png",
+      "src": "Modern_Office_Singles_32x32_61.png",
+      "label": {
+        "name": "desk_wood_light_square_3",
+        "displayName": "Light wood desk square 3",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 62,
+      "name": "desk_wood_trim_thin",
+      "file": "desk_wood_trim_thin.png",
+      "src": "Modern_Office_Singles_32x32_62.png",
+      "label": {
+        "name": "desk_wood_trim_thin",
+        "displayName": "Wood desk trim thin",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 63,
+      "name": "desk_wood_trim_thin_2",
+      "file": "desk_wood_trim_thin_2.png",
+      "src": "Modern_Office_Singles_32x32_63.png",
+      "label": {
+        "name": "desk_wood_trim_thin_2",
+        "displayName": "Wood desk trim thin 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 64,
+      "name": "desk_wood_light_square_4",
+      "file": "desk_wood_light_square_4.png",
+      "src": "Modern_Office_Singles_32x32_64.png",
+      "label": {
+        "name": "desk_wood_light_square_4",
+        "displayName": "Light wood desk square 4",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 65,
+      "name": "desk_wood_trim_3",
+      "file": "desk_wood_trim_3.png",
+      "src": "Modern_Office_Singles_32x32_65.png",
+      "label": {
+        "name": "desk_wood_trim_3",
+        "displayName": "Wood desk trim 3",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 66,
+      "name": "desk_wood_light_square_5",
+      "file": "desk_wood_light_square_5.png",
+      "src": "Modern_Office_Singles_32x32_66.png",
+      "label": {
+        "name": "desk_wood_light_square_5",
+        "displayName": "Light wood desk square 5",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 67,
+      "name": "desk_wood_light_edge_2",
+      "file": "desk_wood_light_edge_2.png",
+      "src": "Modern_Office_Singles_32x32_67.png",
+      "label": {
+        "name": "desk_wood_light_edge_2",
+        "displayName": "Light wood desk edge 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 68,
+      "name": "cabinet_pedestal_wood_3",
+      "file": "cabinet_pedestal_wood_3.png",
+      "src": "Modern_Office_Singles_32x32_68.png",
+      "label": {
+        "name": "cabinet_pedestal_wood_3",
+        "displayName": "Wood pedestal cabinet 3",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 69,
+      "name": "desk_white_trim",
+      "file": "desk_white_trim.png",
+      "src": "Modern_Office_Singles_32x32_69.png",
+      "label": {
+        "name": "desk_white_trim",
+        "displayName": "White desk trim",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 70,
+      "name": "desk_white_square",
+      "file": "desk_white_square.png",
+      "src": "Modern_Office_Singles_32x32_70.png",
+      "label": {
+        "name": "desk_white_square",
+        "displayName": "White desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 71,
+      "name": "desk_white_edge_right",
+      "file": "desk_white_edge_right.png",
+      "src": "Modern_Office_Singles_32x32_71.png",
+      "label": {
+        "name": "desk_white_edge_right",
+        "displayName": "White desk right edge",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 72,
+      "name": "cabinet_pedestal_white",
+      "file": "cabinet_pedestal_white.png",
+      "src": "Modern_Office_Singles_32x32_72.png",
+      "label": {
+        "name": "cabinet_pedestal_white",
+        "displayName": "White pedestal cabinet",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 73,
+      "name": "wall_ac_white",
+      "file": "wall_ac_white.png",
+      "src": "Modern_Office_Singles_32x32_73.png",
+      "label": {
+        "name": "wall_ac_white",
+        "displayName": "Wall AC white",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 74,
+      "name": "whiteboard_large",
+      "file": "whiteboard_large.png",
+      "src": "Modern_Office_Singles_32x32_74.png",
+      "label": {
+        "name": "whiteboard_large",
+        "displayName": "Whiteboard large",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 75,
+      "name": "whiteboard_markers",
+      "file": "whiteboard_markers.png",
+      "src": "Modern_Office_Singles_32x32_75.png",
+      "label": {
+        "name": "whiteboard_markers",
+        "displayName": "Whiteboard with markers",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 76,
+      "name": "whiteboard_markers_2",
+      "file": "whiteboard_markers_2.png",
+      "src": "Modern_Office_Singles_32x32_76.png",
+      "label": {
+        "name": "whiteboard_markers_2",
+        "displayName": "Whiteboard with markers 2",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 77,
+      "name": "whiteboard_shelf",
+      "file": "whiteboard_shelf.png",
+      "src": "Modern_Office_Singles_32x32_77.png",
+      "label": {
+        "name": "whiteboard_shelf",
+        "displayName": "Whiteboard with shelf",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 78,
+      "name": "whiteboard_medium",
+      "file": "whiteboard_medium.png",
+      "src": "Modern_Office_Singles_32x32_78.png",
+      "label": {
+        "name": "whiteboard_medium",
+        "displayName": "Whiteboard medium",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 79,
+      "name": "whiteboard_small",
+      "file": "whiteboard_small.png",
+      "src": "Modern_Office_Singles_32x32_79.png",
+      "label": {
+        "name": "whiteboard_small",
+        "displayName": "Whiteboard small",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 80,
+      "name": "whiteboard_wide",
+      "file": "whiteboard_wide.png",
+      "src": "Modern_Office_Singles_32x32_80.png",
+      "label": {
+        "name": "whiteboard_wide",
+        "displayName": "Whiteboard wide",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 81,
+      "name": "whiteboard_medium_2",
+      "file": "whiteboard_medium_2.png",
+      "src": "Modern_Office_Singles_32x32_81.png",
+      "label": {
+        "name": "whiteboard_medium_2",
+        "displayName": "Whiteboard medium 2",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 82,
+      "name": "wall_vent_strip",
+      "file": "wall_vent_strip.png",
+      "src": "Modern_Office_Singles_32x32_82.png",
+      "label": {
+        "name": "wall_vent_strip",
+        "displayName": "Wall vent strip",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 83,
+      "name": "whiteboard_square",
+      "file": "whiteboard_square.png",
+      "src": "Modern_Office_Singles_32x32_83.png",
+      "label": {
+        "name": "whiteboard_square",
+        "displayName": "Whiteboard square",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 84,
+      "name": "whiteboard_smudge",
+      "file": "whiteboard_smudge.png",
+      "src": "Modern_Office_Singles_32x32_84.png",
+      "label": {
+        "name": "whiteboard_smudge",
+        "displayName": "Whiteboard smudge",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 85,
+      "name": "whiteboard_small_markers",
+      "file": "whiteboard_small_markers.png",
+      "src": "Modern_Office_Singles_32x32_85.png",
+      "label": {
+        "name": "whiteboard_small_markers",
+        "displayName": "Whiteboard small markers",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 86,
+      "name": "corkboard_tan",
+      "file": "corkboard_tan.png",
+      "src": "Modern_Office_Singles_32x32_86.png",
+      "label": {
+        "name": "corkboard_tan",
+        "displayName": "Corkboard tan",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 87,
+      "name": "corkboard_brown",
+      "file": "corkboard_brown.png",
+      "src": "Modern_Office_Singles_32x32_87.png",
+      "label": {
+        "name": "corkboard_brown",
+        "displayName": "Corkboard brown",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 88,
+      "name": "corkboard_gray",
+      "file": "corkboard_gray.png",
+      "src": "Modern_Office_Singles_32x32_88.png",
+      "label": {
+        "name": "corkboard_gray",
+        "displayName": "Corkboard gray",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 89,
+      "name": "corkboard_tan_large",
+      "file": "corkboard_tan_large.png",
+      "src": "Modern_Office_Singles_32x32_89.png",
+      "label": {
+        "name": "corkboard_tan_large",
+        "displayName": "Corkboard tan large",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 90,
+      "name": "corkboard_brown_large",
+      "file": "corkboard_brown_large.png",
+      "src": "Modern_Office_Singles_32x32_90.png",
+      "label": {
+        "name": "corkboard_brown_large",
+        "displayName": "Corkboard brown large",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 91,
+      "name": "corkboard_gray_large",
+      "file": "corkboard_gray_large.png",
+      "src": "Modern_Office_Singles_32x32_91.png",
+      "label": {
+        "name": "corkboard_gray_large",
+        "displayName": "Corkboard gray large",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 92,
+      "name": "wall_panel_gray",
+      "file": "wall_panel_gray.png",
+      "src": "Modern_Office_Singles_32x32_92.png",
+      "label": {
+        "name": "wall_panel_gray",
+        "displayName": "Wall panel gray",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 93,
+      "name": "wall_panel_smudge",
+      "file": "wall_panel_smudge.png",
+      "src": "Modern_Office_Singles_32x32_93.png",
+      "label": {
+        "name": "wall_panel_smudge",
+        "displayName": "Wall panel smudge",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 94,
+      "name": "wall_panel_smudge_2",
+      "file": "wall_panel_smudge_2.png",
+      "src": "Modern_Office_Singles_32x32_94.png",
+      "label": {
+        "name": "wall_panel_smudge_2",
+        "displayName": "Wall panel smudge 2",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 95,
+      "name": "wall_panel_smudge_3",
+      "file": "wall_panel_smudge_3.png",
+      "src": "Modern_Office_Singles_32x32_95.png",
+      "label": {
+        "name": "wall_panel_smudge_3",
+        "displayName": "Wall panel smudge 3",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 96,
+      "name": "bulletin_board_sticky",
+      "file": "bulletin_board_sticky.png",
+      "src": "Modern_Office_Singles_32x32_96.png",
+      "label": {
+        "name": "bulletin_board_sticky",
+        "displayName": "Bulletin board sticky notes",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 97,
+      "name": "corkboard_notes",
+      "file": "corkboard_notes.png",
+      "src": "Modern_Office_Singles_32x32_97.png",
+      "label": {
+        "name": "corkboard_notes",
+        "displayName": "Corkboard with notes",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 98,
+      "name": "plant_floor_leafy",
+      "file": "plant_floor_leafy.png",
+      "src": "Modern_Office_Singles_32x32_98.png",
+      "label": {
+        "name": "plant_floor_leafy",
+        "displayName": "Floor plant leafy",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "plants"
+      }
+    },
+    {
+      "num": 99,
+      "name": "plant_floor_bushy",
+      "file": "plant_floor_bushy.png",
+      "src": "Modern_Office_Singles_32x32_99.png",
+      "label": {
+        "name": "plant_floor_bushy",
+        "displayName": "Floor plant bushy",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "plants"
+      }
+    },
+    {
+      "num": 100,
+      "name": "plant_floor_spiky",
+      "file": "plant_floor_spiky.png",
+      "src": "Modern_Office_Singles_32x32_100.png",
+      "label": {
+        "name": "plant_floor_spiky",
+        "displayName": "Floor plant spiky",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "plants"
+      }
+    },
+    {
+      "num": 101,
+      "name": "chair_grey_back",
+      "file": "chair_grey_back.png",
+      "src": "Modern_Office_Singles_32x32_101.png",
+      "label": {
+        "name": "chair_grey_back",
+        "displayName": "Grey office chair back",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 102,
+      "name": "chair_grey_front",
+      "file": "chair_grey_front.png",
+      "src": "Modern_Office_Singles_32x32_102.png",
+      "label": {
+        "name": "chair_grey_front",
+        "displayName": "Grey office chair front",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 103,
+      "name": "chair_grey_left",
+      "file": "chair_grey_left.png",
+      "src": "Modern_Office_Singles_32x32_103.png",
+      "label": {
+        "name": "chair_grey_left",
+        "displayName": "Grey office chair left",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 104,
+      "name": "chair_grey_right",
+      "file": "chair_grey_right.png",
+      "src": "Modern_Office_Singles_32x32_104.png",
+      "label": {
+        "name": "chair_grey_right",
+        "displayName": "Grey office chair right",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 105,
+      "name": "chair_grey_front_2",
+      "file": "chair_grey_front_2.png",
+      "src": "Modern_Office_Singles_32x32_105.png",
+      "label": {
+        "name": "chair_grey_front_2",
+        "displayName": "Grey office chair front 2",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 106,
+      "name": "chair_grey_back_2",
+      "file": "chair_grey_back_2.png",
+      "src": "Modern_Office_Singles_32x32_106.png",
+      "label": {
+        "name": "chair_grey_back_2",
+        "displayName": "Grey office chair back 2",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 107,
+      "name": "chair_orange_back",
+      "file": "chair_orange_back.png",
+      "src": "Modern_Office_Singles_32x32_107.png",
+      "label": {
+        "name": "chair_orange_back",
+        "displayName": "Orange office chair back",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 108,
+      "name": "chair_orange_front",
+      "file": "chair_orange_front.png",
+      "src": "Modern_Office_Singles_32x32_108.png",
+      "label": {
+        "name": "chair_orange_front",
+        "displayName": "Orange office chair front",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 109,
+      "name": "chair_orange_left",
+      "file": "chair_orange_left.png",
+      "src": "Modern_Office_Singles_32x32_109.png",
+      "label": {
+        "name": "chair_orange_left",
+        "displayName": "Orange office chair left",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 110,
+      "name": "chair_orange_right",
+      "file": "chair_orange_right.png",
+      "src": "Modern_Office_Singles_32x32_110.png",
+      "label": {
+        "name": "chair_orange_right",
+        "displayName": "Orange office chair right",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 111,
+      "name": "chair_orange_front_2",
+      "file": "chair_orange_front_2.png",
+      "src": "Modern_Office_Singles_32x32_111.png",
+      "label": {
+        "name": "chair_orange_front_2",
+        "displayName": "Orange office chair front 2",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 112,
+      "name": "chair_orange_back_2",
+      "file": "chair_orange_back_2.png",
+      "src": "Modern_Office_Singles_32x32_112.png",
+      "label": {
+        "name": "chair_orange_back_2",
+        "displayName": "Orange office chair back 2",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 113,
+      "name": "frame_diploma_blue",
+      "file": "frame_diploma_blue.png",
+      "src": "Modern_Office_Singles_32x32_113.png",
+      "label": {
+        "name": "frame_diploma_blue",
+        "displayName": "Diploma frame blue",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 114,
+      "name": "frame_diploma_green",
+      "file": "frame_diploma_green.png",
+      "src": "Modern_Office_Singles_32x32_114.png",
+      "label": {
+        "name": "frame_diploma_green",
+        "displayName": "Diploma frame green",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 115,
+      "name": "frame_diploma_red",
+      "file": "frame_diploma_red.png",
+      "src": "Modern_Office_Singles_32x32_115.png",
+      "label": {
+        "name": "frame_diploma_red",
+        "displayName": "Diploma frame red",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 116,
+      "name": "frame_wall_wide",
+      "file": "frame_wall_wide.png",
+      "src": "Modern_Office_Singles_32x32_116.png",
+      "label": {
+        "name": "frame_wall_wide",
+        "displayName": "Wide wall frame",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 117,
+      "name": "wall_switch_dark",
+      "file": "wall_switch_dark.png",
+      "src": "Modern_Office_Singles_32x32_117.png",
+      "label": {
+        "name": "wall_switch_dark",
+        "displayName": "Wall switch dark",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 118,
+      "name": "wall_switch_light",
+      "file": "wall_switch_light.png",
+      "src": "Modern_Office_Singles_32x32_118.png",
+      "label": {
+        "name": "wall_switch_light",
+        "displayName": "Wall switch light",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 119,
+      "name": "phone_desk",
+      "file": "phone_desk.png",
+      "src": "Modern_Office_Singles_32x32_119.png",
+      "label": {
+        "name": "phone_desk",
+        "displayName": "Desk phone",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 120,
+      "name": "power_strip_desk",
+      "file": "power_strip_desk.png",
+      "src": "Modern_Office_Singles_32x32_120.png",
+      "label": {
+        "name": "power_strip_desk",
+        "displayName": "Desk power strip",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 121,
+      "name": "monitor_dark_left",
+      "file": "monitor_dark_left.png",
+      "src": "Modern_Office_Singles_32x32_121.png",
+      "label": {
+        "name": "monitor_dark_left",
+        "displayName": "Dark monitor left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 122,
+      "name": "monitor_dark_front",
+      "file": "monitor_dark_front.png",
+      "src": "Modern_Office_Singles_32x32_122.png",
+      "label": {
+        "name": "monitor_dark_front",
+        "displayName": "Dark monitor front",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 123,
+      "name": "monitor_dark_right_kb",
+      "file": "monitor_dark_right_kb.png",
+      "src": "Modern_Office_Singles_32x32_123.png",
+      "label": {
+        "name": "monitor_dark_right_kb",
+        "displayName": "Monitor dark right + keyboard",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 124,
+      "name": "keyboard_mouse_dark",
+      "file": "keyboard_mouse_dark.png",
+      "src": "Modern_Office_Singles_32x32_124.png",
+      "label": {
+        "name": "keyboard_mouse_dark",
+        "displayName": "Keyboard mouse dark",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 125,
+      "name": "monitor_light_left",
+      "file": "monitor_light_left.png",
+      "src": "Modern_Office_Singles_32x32_125.png",
+      "label": {
+        "name": "monitor_light_left",
+        "displayName": "Light monitor left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 126,
+      "name": "monitor_light_front",
+      "file": "monitor_light_front.png",
+      "src": "Modern_Office_Singles_32x32_126.png",
+      "label": {
+        "name": "monitor_light_front",
+        "displayName": "Light monitor front",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 127,
+      "name": "monitor_light_right_kb",
+      "file": "monitor_light_right_kb.png",
+      "src": "Modern_Office_Singles_32x32_127.png",
+      "label": {
+        "name": "monitor_light_right_kb",
+        "displayName": "Monitor light right + keyboard",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 128,
+      "name": "keyboard_mouse_light",
+      "file": "keyboard_mouse_light.png",
+      "src": "Modern_Office_Singles_32x32_128.png",
+      "label": {
+        "name": "keyboard_mouse_light",
+        "displayName": "Keyboard mouse light",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 129,
+      "name": "monitor_dark_on_left",
+      "file": "monitor_dark_on_left.png",
+      "src": "Modern_Office_Singles_32x32_129.png",
+      "label": {
+        "name": "monitor_dark_on_left",
+        "displayName": "Dark monitor on left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 130,
+      "name": "monitor_dark_on_front",
+      "file": "monitor_dark_on_front.png",
+      "src": "Modern_Office_Singles_32x32_130.png",
+      "label": {
+        "name": "monitor_dark_on_front",
+        "displayName": "Dark monitor on front",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 131,
+      "name": "monitor_dark_on_right",
+      "file": "monitor_dark_on_right.png",
+      "src": "Modern_Office_Singles_32x32_131.png",
+      "label": {
+        "name": "monitor_dark_on_right",
+        "displayName": "Dark monitor on right",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 132,
+      "name": "monitor_light_on_left",
+      "file": "monitor_light_on_left.png",
+      "src": "Modern_Office_Singles_32x32_132.png",
+      "label": {
+        "name": "monitor_light_on_left",
+        "displayName": "Light monitor on left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 133,
+      "name": "monitor_light_on_front",
+      "file": "monitor_light_on_front.png",
+      "src": "Modern_Office_Singles_32x32_133.png",
+      "label": {
+        "name": "monitor_light_on_front",
+        "displayName": "Light monitor on front",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 134,
+      "name": "monitor_light_on_right",
+      "file": "monitor_light_on_right.png",
+      "src": "Modern_Office_Singles_32x32_134.png",
+      "label": {
+        "name": "monitor_light_on_right",
+        "displayName": "Light monitor on right",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 135,
+      "name": "laptop_light_right",
+      "file": "laptop_light_right.png",
+      "src": "Modern_Office_Singles_32x32_135.png",
+      "label": {
+        "name": "laptop_light_right",
+        "displayName": "Laptop light right",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 136,
+      "name": "laptop_light_front",
+      "file": "laptop_light_front.png",
+      "src": "Modern_Office_Singles_32x32_136.png",
+      "label": {
+        "name": "laptop_light_front",
+        "displayName": "Laptop light front",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 137,
+      "name": "laptop_light_left",
+      "file": "laptop_light_left.png",
+      "src": "Modern_Office_Singles_32x32_137.png",
+      "label": {
+        "name": "laptop_light_left",
+        "displayName": "Laptop light left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 138,
+      "name": "laptop_dark_right",
+      "file": "laptop_dark_right.png",
+      "src": "Modern_Office_Singles_32x32_138.png",
+      "label": {
+        "name": "laptop_dark_right",
+        "displayName": "Laptop dark right",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 139,
+      "name": "laptop_dark_front",
+      "file": "laptop_dark_front.png",
+      "src": "Modern_Office_Singles_32x32_139.png",
+      "label": {
+        "name": "laptop_dark_front",
+        "displayName": "Laptop dark front",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 140,
+      "name": "laptop_dark_left",
+      "file": "laptop_dark_left.png",
+      "src": "Modern_Office_Singles_32x32_140.png",
+      "label": {
+        "name": "laptop_dark_left",
+        "displayName": "Laptop dark left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 141,
+      "name": "lamp_desk_dark_left",
+      "file": "lamp_desk_dark_left.png",
+      "src": "Modern_Office_Singles_32x32_141.png",
+      "label": {
+        "name": "lamp_desk_dark_left",
+        "displayName": "Dark desk lamp left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 142,
+      "name": "lamp_desk_dark_right",
+      "file": "lamp_desk_dark_right.png",
+      "src": "Modern_Office_Singles_32x32_142.png",
+      "label": {
+        "name": "lamp_desk_dark_right",
+        "displayName": "Dark desk lamp right",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 143,
+      "name": "lamp_desk_light_left",
+      "file": "lamp_desk_light_left.png",
+      "src": "Modern_Office_Singles_32x32_143.png",
+      "label": {
+        "name": "lamp_desk_light_left",
+        "displayName": "Light desk lamp left",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 144,
+      "name": "lamp_desk_light_right",
+      "file": "lamp_desk_light_right.png",
+      "src": "Modern_Office_Singles_32x32_144.png",
+      "label": {
+        "name": "lamp_desk_light_right",
+        "displayName": "Light desk lamp right",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 145,
+      "name": "lamp_desk_blue",
+      "file": "lamp_desk_blue.png",
+      "src": "Modern_Office_Singles_32x32_145.png",
+      "label": {
+        "name": "lamp_desk_blue",
+        "displayName": "Blue desk lamp",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 146,
+      "name": "lamp_desk_grey",
+      "file": "lamp_desk_grey.png",
+      "src": "Modern_Office_Singles_32x32_146.png",
+      "label": {
+        "name": "lamp_desk_grey",
+        "displayName": "Grey desk lamp",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 147,
+      "name": "printer_black",
+      "file": "printer_black.png",
+      "src": "Modern_Office_Singles_32x32_147.png",
+      "label": {
+        "name": "printer_black",
+        "displayName": "Black printer",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 148,
+      "name": "printer_white",
+      "file": "printer_white.png",
+      "src": "Modern_Office_Singles_32x32_148.png",
+      "label": {
+        "name": "printer_white",
+        "displayName": "White printer",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 149,
+      "name": "printer_grey",
+      "file": "printer_grey.png",
+      "src": "Modern_Office_Singles_32x32_149.png",
+      "label": {
+        "name": "printer_grey",
+        "displayName": "Grey printer",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 150,
+      "name": "printer_dark",
+      "file": "printer_dark.png",
+      "src": "Modern_Office_Singles_32x32_150.png",
+      "label": {
+        "name": "printer_dark",
+        "displayName": "Dark printer",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 151,
+      "name": "printer_white_2",
+      "file": "printer_white_2.png",
+      "src": "Modern_Office_Singles_32x32_151.png",
+      "label": {
+        "name": "printer_white_2",
+        "displayName": "White printer 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 152,
+      "name": "printer_grey_paper",
+      "file": "printer_grey_paper.png",
+      "src": "Modern_Office_Singles_32x32_152.png",
+      "label": {
+        "name": "printer_grey_paper",
+        "displayName": "Grey printer with paper",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 153,
+      "name": "papers_stack_small",
+      "file": "papers_stack_small.png",
+      "src": "Modern_Office_Singles_32x32_153.png",
+      "label": {
+        "name": "papers_stack_small",
+        "displayName": "Paper stack small",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 154,
+      "name": "papers_stack_medium",
+      "file": "papers_stack_medium.png",
+      "src": "Modern_Office_Singles_32x32_154.png",
+      "label": {
+        "name": "papers_stack_medium",
+        "displayName": "Paper stack medium",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 155,
+      "name": "papers_stack_tall",
+      "file": "papers_stack_tall.png",
+      "src": "Modern_Office_Singles_32x32_155.png",
+      "label": {
+        "name": "papers_stack_tall",
+        "displayName": "Paper stack tall",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 156,
+      "name": "papers_tray",
+      "file": "papers_tray.png",
+      "src": "Modern_Office_Singles_32x32_156.png",
+      "label": {
+        "name": "papers_tray",
+        "displayName": "Paper tray",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 157,
+      "name": "photo_frame_orange_hair",
+      "file": "photo_frame_orange_hair.png",
+      "src": "Modern_Office_Singles_32x32_157.png",
+      "label": {
+        "name": "photo_frame_orange_hair",
+        "displayName": "Photo frame orange hair",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 158,
+      "name": "photo_frame_blonde",
+      "file": "photo_frame_blonde.png",
+      "src": "Modern_Office_Singles_32x32_158.png",
+      "label": {
+        "name": "photo_frame_blonde",
+        "displayName": "Photo frame blonde",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 159,
+      "name": "photo_frame_brown",
+      "file": "photo_frame_brown.png",
+      "src": "Modern_Office_Singles_32x32_159.png",
+      "label": {
+        "name": "photo_frame_brown",
+        "displayName": "Photo frame brown hair",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 160,
+      "name": "photo_frame_blonde_2",
+      "file": "photo_frame_blonde_2.png",
+      "src": "Modern_Office_Singles_32x32_160.png",
+      "label": {
+        "name": "photo_frame_blonde_2",
+        "displayName": "Photo frame blonde 2",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 161,
+      "name": "frame_wall_portrait",
+      "file": "frame_wall_portrait.png",
+      "src": "Modern_Office_Singles_32x32_161.png",
+      "label": {
+        "name": "frame_wall_portrait",
+        "displayName": "Wall portrait frame",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 162,
+      "name": "frame_wall_portrait_2",
+      "file": "frame_wall_portrait_2.png",
+      "src": "Modern_Office_Singles_32x32_162.png",
+      "label": {
+        "name": "frame_wall_portrait_2",
+        "displayName": "Wall portrait frame 2",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 163,
+      "name": "frame_wall_grid",
+      "file": "frame_wall_grid.png",
+      "src": "Modern_Office_Singles_32x32_163.png",
+      "label": {
+        "name": "frame_wall_grid",
+        "displayName": "Wall frame color grid",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 164,
+      "name": "frame_wall_popart",
+      "file": "frame_wall_popart.png",
+      "src": "Modern_Office_Singles_32x32_164.png",
+      "label": {
+        "name": "frame_wall_popart",
+        "displayName": "Wall frame pop art",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 165,
+      "name": "wall_ac_white_2",
+      "file": "wall_ac_white_2.png",
+      "src": "Modern_Office_Singles_32x32_165.png",
+      "label": {
+        "name": "wall_ac_white_2",
+        "displayName": "Wall AC white 2",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 166,
+      "name": "wall_ac_grey",
+      "file": "wall_ac_grey.png",
+      "src": "Modern_Office_Singles_32x32_166.png",
+      "label": {
+        "name": "wall_ac_grey",
+        "displayName": "Wall AC grey",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 167,
+      "name": "water_cooler_top",
+      "file": "water_cooler_top.png",
+      "src": "Modern_Office_Singles_32x32_167.png",
+      "label": {
+        "name": "water_cooler_top",
+        "displayName": "Water cooler top",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 168,
+      "name": "water_cooler_tall",
+      "file": "water_cooler_tall.png",
+      "src": "Modern_Office_Singles_32x32_168.png",
+      "label": {
+        "name": "water_cooler_tall",
+        "displayName": "Water cooler tall",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 169,
+      "name": "computer_tower",
+      "file": "computer_tower.png",
+      "src": "Modern_Office_Singles_32x32_169.png",
+      "label": {
+        "name": "computer_tower",
+        "displayName": "Computer tower",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 170,
+      "name": "whiteboard_markers_tray",
+      "file": "whiteboard_markers_tray.png",
+      "src": "Modern_Office_Singles_32x32_170.png",
+      "label": {
+        "name": "whiteboard_markers_tray",
+        "displayName": "Whiteboard markers tray",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 171,
+      "name": "whiteboard_line_chart",
+      "file": "whiteboard_line_chart.png",
+      "src": "Modern_Office_Singles_32x32_171.png",
+      "label": {
+        "name": "whiteboard_line_chart",
+        "displayName": "Whiteboard line chart",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 172,
+      "name": "whiteboard_pie_chart",
+      "file": "whiteboard_pie_chart.png",
+      "src": "Modern_Office_Singles_32x32_172.png",
+      "label": {
+        "name": "whiteboard_pie_chart",
+        "displayName": "Whiteboard pie chart",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 173,
+      "name": "water_cooler",
+      "file": "water_cooler.png",
+      "src": "Modern_Office_Singles_32x32_173.png",
+      "label": {
+        "name": "water_cooler",
+        "displayName": "Water cooler",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 174,
+      "name": "mini_fridge",
+      "file": "mini_fridge.png",
+      "src": "Modern_Office_Singles_32x32_174.png",
+      "label": {
+        "name": "mini_fridge",
+        "displayName": "Mini fridge",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 175,
+      "name": "vending_machine",
+      "file": "vending_machine.png",
+      "src": "Modern_Office_Singles_32x32_175.png",
+      "label": {
+        "name": "vending_machine",
+        "displayName": "Vending machine",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 176,
+      "name": "vending_machine_dark",
+      "file": "vending_machine_dark.png",
+      "src": "Modern_Office_Singles_32x32_176.png",
+      "label": {
+        "name": "vending_machine_dark",
+        "displayName": "Vending machine dark",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 177,
+      "name": "printer_copier",
+      "file": "printer_copier.png",
+      "src": "Modern_Office_Singles_32x32_177.png",
+      "label": {
+        "name": "printer_copier",
+        "displayName": "Office copier",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 178,
+      "name": "printer_copier_2",
+      "file": "printer_copier_2.png",
+      "src": "Modern_Office_Singles_32x32_178.png",
+      "label": {
+        "name": "printer_copier_2",
+        "displayName": "Office copier 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 179,
+      "name": "partition_wood_narrow",
+      "file": "partition_wood_narrow.png",
+      "src": "Modern_Office_Singles_32x32_179.png",
+      "label": {
+        "name": "partition_wood_narrow",
+        "displayName": "Wood partition narrow",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 180,
+      "name": "partition_wood_square",
+      "file": "partition_wood_square.png",
+      "src": "Modern_Office_Singles_32x32_180.png",
+      "label": {
+        "name": "partition_wood_square",
+        "displayName": "Wood partition square",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 181,
+      "name": "partition_wood_edge",
+      "file": "partition_wood_edge.png",
+      "src": "Modern_Office_Singles_32x32_181.png",
+      "label": {
+        "name": "partition_wood_edge",
+        "displayName": "Wood partition edge",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 182,
+      "name": "partition_wood_edge_2",
+      "file": "partition_wood_edge_2.png",
+      "src": "Modern_Office_Singles_32x32_182.png",
+      "label": {
+        "name": "partition_wood_edge_2",
+        "displayName": "Wood partition edge 2",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 183,
+      "name": "partition_wood_square_2",
+      "file": "partition_wood_square_2.png",
+      "src": "Modern_Office_Singles_32x32_183.png",
+      "label": {
+        "name": "partition_wood_square_2",
+        "displayName": "Wood partition square 2",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 184,
+      "name": "partition_wood_square_3",
+      "file": "partition_wood_square_3.png",
+      "src": "Modern_Office_Singles_32x32_184.png",
+      "label": {
+        "name": "partition_wood_square_3",
+        "displayName": "Wood partition square 3",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 185,
+      "name": "partition_dark_narrow",
+      "file": "partition_dark_narrow.png",
+      "src": "Modern_Office_Singles_32x32_185.png",
+      "label": {
+        "name": "partition_dark_narrow",
+        "displayName": "Dark partition narrow",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 186,
+      "name": "partition_dark_square",
+      "file": "partition_dark_square.png",
+      "src": "Modern_Office_Singles_32x32_186.png",
+      "label": {
+        "name": "partition_dark_square",
+        "displayName": "Dark partition square",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 187,
+      "name": "partition_dark_edge",
+      "file": "partition_dark_edge.png",
+      "src": "Modern_Office_Singles_32x32_187.png",
+      "label": {
+        "name": "partition_dark_edge",
+        "displayName": "Dark partition edge",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 188,
+      "name": "floor_tile_beige",
+      "file": "floor_tile_beige.png",
+      "src": "Modern_Office_Singles_32x32_188.png",
+      "label": {
+        "name": "floor_tile_beige",
+        "displayName": "Beige floor tile",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "unknown"
+      }
+    },
+    {
+      "num": 189,
+      "name": "floor_tile_beige_2",
+      "file": "floor_tile_beige_2.png",
+      "src": "Modern_Office_Singles_32x32_189.png",
+      "label": {
+        "name": "floor_tile_beige_2",
+        "displayName": "Beige floor tile 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "unknown"
+      }
+    },
+    {
+      "num": 190,
+      "name": "cabinet_filing_low",
+      "file": "cabinet_filing_low.png",
+      "src": "Modern_Office_Singles_32x32_190.png",
+      "label": {
+        "name": "cabinet_filing_low",
+        "displayName": "Low filing cabinet",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 191,
+      "name": "shelf_wood_dark",
+      "file": "shelf_wood_dark.png",
+      "src": "Modern_Office_Singles_32x32_191.png",
+      "label": {
+        "name": "shelf_wood_dark",
+        "displayName": "Dark wood shelf",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 192,
+      "name": "surface_wood_dark",
+      "file": "surface_wood_dark.png",
+      "src": "Modern_Office_Singles_32x32_192.png",
+      "label": {
+        "name": "surface_wood_dark",
+        "displayName": "Dark wood surface",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 193,
+      "name": "table_coffee_dark",
+      "file": "table_coffee_dark.png",
+      "src": "Modern_Office_Singles_32x32_193.png",
+      "label": {
+        "name": "table_coffee_dark",
+        "displayName": "Dark coffee table",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "tables"
+      }
+    },
+    {
+      "num": 194,
+      "name": "table_wood_square",
+      "file": "table_wood_square.png",
+      "src": "Modern_Office_Singles_32x32_194.png",
+      "label": {
+        "name": "table_wood_square",
+        "displayName": "Wood square table",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "tables"
+      }
+    },
+    {
+      "num": 195,
+      "name": "table_wood_long",
+      "file": "table_wood_long.png",
+      "src": "Modern_Office_Singles_32x32_195.png",
+      "label": {
+        "name": "table_wood_long",
+        "displayName": "Wood long table",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "tables"
+      }
+    },
+    {
+      "num": 196,
+      "name": "chair_blue",
+      "file": "chair_blue.png",
+      "src": "Modern_Office_Singles_32x32_196.png",
+      "label": {
+        "name": "chair_blue",
+        "displayName": "Blue office chair",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 197,
+      "name": "chair_grey_round",
+      "file": "chair_grey_round.png",
+      "src": "Modern_Office_Singles_32x32_197.png",
+      "label": {
+        "name": "chair_grey_round",
+        "displayName": "Grey round chair",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 198,
+      "name": "chair_lavender",
+      "file": "chair_lavender.png",
+      "src": "Modern_Office_Singles_32x32_198.png",
+      "label": {
+        "name": "chair_lavender",
+        "displayName": "Lavender office chair",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 199,
+      "name": "chair_mustard",
+      "file": "chair_mustard.png",
+      "src": "Modern_Office_Singles_32x32_199.png",
+      "label": {
+        "name": "chair_mustard",
+        "displayName": "Mustard office chair",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 200,
+      "name": "sofa_grey_two_seat",
+      "file": "sofa_grey_two_seat.png",
+      "src": "Modern_Office_Singles_32x32_200.png",
+      "label": {
+        "name": "sofa_grey_two_seat",
+        "displayName": "Grey two-seat sofa",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "sofas"
+      }
+    },
+    {
+      "num": 201,
+      "name": "sofa_grey_corner_left",
+      "file": "sofa_grey_corner_left.png",
+      "src": "Modern_Office_Singles_32x32_201.png",
+      "label": {
+        "name": "sofa_grey_corner_left",
+        "displayName": "Grey sofa corner left",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "sofas"
+      }
+    },
+    {
+      "num": 202,
+      "name": "sofa_grey_corner_right",
+      "file": "sofa_grey_corner_right.png",
+      "src": "Modern_Office_Singles_32x32_202.png",
+      "label": {
+        "name": "sofa_grey_corner_right",
+        "displayName": "Grey sofa corner right",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "sofas"
+      }
+    },
+    {
+      "num": 203,
+      "name": "sofa_grey_corner_2",
+      "file": "sofa_grey_corner_2.png",
+      "src": "Modern_Office_Singles_32x32_203.png",
+      "label": {
+        "name": "sofa_grey_corner_2",
+        "displayName": "Grey sofa corner 2",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "sofas"
+      }
+    },
+    {
+      "num": 204,
+      "name": "sofa_grey_armchair",
+      "file": "sofa_grey_armchair.png",
+      "src": "Modern_Office_Singles_32x32_204.png",
+      "label": {
+        "name": "sofa_grey_armchair",
+        "displayName": "Grey sofa armchair",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "sofas"
+      }
+    },
+    {
+      "num": 205,
+      "name": "sofa_grey_wide",
+      "file": "sofa_grey_wide.png",
+      "src": "Modern_Office_Singles_32x32_205.png",
+      "label": {
+        "name": "sofa_grey_wide",
+        "displayName": "Grey sofa wide",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "sofas"
+      }
+    },
+    {
+      "num": 206,
+      "name": "sofa_grey_middle",
+      "file": "sofa_grey_middle.png",
+      "src": "Modern_Office_Singles_32x32_206.png",
+      "label": {
+        "name": "sofa_grey_middle",
+        "displayName": "Grey sofa middle",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "sofas"
+      }
+    },
+    {
+      "num": 207,
+      "name": "partition_glass_thin",
+      "file": "partition_glass_thin.png",
+      "src": "Modern_Office_Singles_32x32_207.png",
+      "label": {
+        "name": "partition_glass_thin",
+        "displayName": "Thin glass partition",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 208,
+      "name": "partition_grey_block",
+      "file": "partition_grey_block.png",
+      "src": "Modern_Office_Singles_32x32_208.png",
+      "label": {
+        "name": "partition_grey_block",
+        "displayName": "Grey partition block",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 209,
+      "name": "partition_grey_corner",
+      "file": "partition_grey_corner.png",
+      "src": "Modern_Office_Singles_32x32_209.png",
+      "label": {
+        "name": "partition_grey_corner",
+        "displayName": "Grey partition corner",
+        "type": "partition",
+        "stack_on": "none",
+        "category": "partitions"
+      }
+    },
+    {
+      "num": 210,
+      "name": "cabinet_tan_small",
+      "file": "cabinet_tan_small.png",
+      "src": "Modern_Office_Singles_32x32_210.png",
+      "label": {
+        "name": "cabinet_tan_small",
+        "displayName": "Tan cabinet small",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 211,
+      "name": "cabinet_tan_medium",
+      "file": "cabinet_tan_medium.png",
+      "src": "Modern_Office_Singles_32x32_211.png",
+      "label": {
+        "name": "cabinet_tan_medium",
+        "displayName": "Tan cabinet medium",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 212,
+      "name": "cabinet_tan_narrow",
+      "file": "cabinet_tan_narrow.png",
+      "src": "Modern_Office_Singles_32x32_212.png",
+      "label": {
+        "name": "cabinet_tan_narrow",
+        "displayName": "Tan cabinet narrow",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 213,
+      "name": "cabinet_grey_small",
+      "file": "cabinet_grey_small.png",
+      "src": "Modern_Office_Singles_32x32_213.png",
+      "label": {
+        "name": "cabinet_grey_small",
+        "displayName": "Grey cabinet small",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 214,
+      "name": "cabinet_grey_medium",
+      "file": "cabinet_grey_medium.png",
+      "src": "Modern_Office_Singles_32x32_214.png",
+      "label": {
+        "name": "cabinet_grey_medium",
+        "displayName": "Grey cabinet medium",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 215,
+      "name": "cabinet_grey_narrow",
+      "file": "cabinet_grey_narrow.png",
+      "src": "Modern_Office_Singles_32x32_215.png",
+      "label": {
+        "name": "cabinet_grey_narrow",
+        "displayName": "Grey cabinet narrow",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 216,
+      "name": "cabinet_light_small",
+      "file": "cabinet_light_small.png",
+      "src": "Modern_Office_Singles_32x32_216.png",
+      "label": {
+        "name": "cabinet_light_small",
+        "displayName": "Light cabinet small",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 217,
+      "name": "window_blinds_white_front",
+      "file": "window_blinds_white_front.png",
+      "src": "Modern_Office_Singles_32x32_217.png",
+      "label": {
+        "name": "window_blinds_white_front",
+        "displayName": "Window blinds white front",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 218,
+      "name": "window_blinds_white_side",
+      "file": "window_blinds_white_side.png",
+      "src": "Modern_Office_Singles_32x32_218.png",
+      "label": {
+        "name": "window_blinds_white_side",
+        "displayName": "Window blinds white side",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 219,
+      "name": "window_blinds_tan_front",
+      "file": "window_blinds_tan_front.png",
+      "src": "Modern_Office_Singles_32x32_219.png",
+      "label": {
+        "name": "window_blinds_tan_front",
+        "displayName": "Window blinds tan front",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 220,
+      "name": "window_blinds_tan_side",
+      "file": "window_blinds_tan_side.png",
+      "src": "Modern_Office_Singles_32x32_220.png",
+      "label": {
+        "name": "window_blinds_tan_side",
+        "displayName": "Window blinds tan side",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 221,
+      "name": "window_blinds_tan_narrow",
+      "file": "window_blinds_tan_narrow.png",
+      "src": "Modern_Office_Singles_32x32_221.png",
+      "label": {
+        "name": "window_blinds_tan_narrow",
+        "displayName": "Window blinds tan narrow",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 222,
+      "name": "window_blinds_tan_medium",
+      "file": "window_blinds_tan_medium.png",
+      "src": "Modern_Office_Singles_32x32_222.png",
+      "label": {
+        "name": "window_blinds_tan_medium",
+        "displayName": "Window blinds tan medium",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 223,
+      "name": "window_blinds_tan_wide",
+      "file": "window_blinds_tan_wide.png",
+      "src": "Modern_Office_Singles_32x32_223.png",
+      "label": {
+        "name": "window_blinds_tan_wide",
+        "displayName": "Window blinds tan wide",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 224,
+      "name": "window_blinds_tan_side_2",
+      "file": "window_blinds_tan_side_2.png",
+      "src": "Modern_Office_Singles_32x32_224.png",
+      "label": {
+        "name": "window_blinds_tan_side_2",
+        "displayName": "Window blinds tan side 2",
+        "type": "decor",
+        "stack_on": "none",
+        "category": "wall_items",
+        "wall_mount": true
+      }
+    },
+    {
+      "num": 225,
+      "name": "desk_setup_laptop_lamp",
+      "file": "desk_setup_laptop_lamp.png",
+      "src": "Modern_Office_Singles_32x32_225.png",
+      "label": {
+        "name": "desk_setup_laptop_lamp",
+        "displayName": "Laptop + lamp setup",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 226,
+      "name": "lamp_over_papers",
+      "file": "lamp_over_papers.png",
+      "src": "Modern_Office_Singles_32x32_226.png",
+      "label": {
+        "name": "lamp_over_papers",
+        "displayName": "Lamp over papers",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 227,
+      "name": "monitor_dual_kb",
+      "file": "monitor_dual_kb.png",
+      "src": "Modern_Office_Singles_32x32_227.png",
+      "label": {
+        "name": "monitor_dual_kb",
+        "displayName": "Dual monitors + keyboard",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 228,
+      "name": "monitor_side_profile",
+      "file": "monitor_side_profile.png",
+      "src": "Modern_Office_Singles_32x32_228.png",
+      "label": {
+        "name": "monitor_side_profile",
+        "displayName": "Monitor side profile",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 229,
+      "name": "desk_setup_laptop",
+      "file": "desk_setup_laptop.png",
+      "src": "Modern_Office_Singles_32x32_229.png",
+      "label": {
+        "name": "desk_setup_laptop",
+        "displayName": "Laptop desk setup",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 230,
+      "name": "lamp_over_papers_2",
+      "file": "lamp_over_papers_2.png",
+      "src": "Modern_Office_Singles_32x32_230.png",
+      "label": {
+        "name": "lamp_over_papers_2",
+        "displayName": "Lamp over papers 2",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 231,
+      "name": "monitor_dual_kb_2",
+      "file": "monitor_dual_kb_2.png",
+      "src": "Modern_Office_Singles_32x32_231.png",
+      "label": {
+        "name": "monitor_dual_kb_2",
+        "displayName": "Dual monitors + keyboard 2",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 232,
+      "name": "pc_tower_small",
+      "file": "pc_tower_small.png",
+      "src": "Modern_Office_Singles_32x32_232.png",
+      "label": {
+        "name": "pc_tower_small",
+        "displayName": "Small PC tower",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 233,
+      "name": "workstation_printer_dual",
+      "file": "workstation_printer_dual.png",
+      "src": "Modern_Office_Singles_32x32_233.png",
+      "label": {
+        "name": "workstation_printer_dual",
+        "displayName": "Printer + dual monitors",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 234,
+      "name": "monitor_side_red",
+      "file": "monitor_side_red.png",
+      "src": "Modern_Office_Singles_32x32_234.png",
+      "label": {
+        "name": "monitor_side_red",
+        "displayName": "Monitor side red screen",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 235,
+      "name": "workstation_printer_dual_2",
+      "file": "workstation_printer_dual_2.png",
+      "src": "Modern_Office_Singles_32x32_235.png",
+      "label": {
+        "name": "workstation_printer_dual_2",
+        "displayName": "Printer + dual monitors 2",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 236,
+      "name": "monitor_side_red_2",
+      "file": "monitor_side_red_2.png",
+      "src": "Modern_Office_Singles_32x32_236.png",
+      "label": {
+        "name": "monitor_side_red_2",
+        "displayName": "Monitor side red screen 2",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 237,
+      "name": "lamp_desk_silver",
+      "file": "lamp_desk_silver.png",
+      "src": "Modern_Office_Singles_32x32_237.png",
+      "label": {
+        "name": "lamp_desk_silver",
+        "displayName": "Desk lamp silver",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 238,
+      "name": "lamp_desk_silver_2",
+      "file": "lamp_desk_silver_2.png",
+      "src": "Modern_Office_Singles_32x32_238.png",
+      "label": {
+        "name": "lamp_desk_silver_2",
+        "displayName": "Desk lamp silver 2",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 239,
+      "name": "lamp_desk_silver_3",
+      "file": "lamp_desk_silver_3.png",
+      "src": "Modern_Office_Singles_32x32_239.png",
+      "label": {
+        "name": "lamp_desk_silver_3",
+        "displayName": "Desk lamp silver 3",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 240,
+      "name": "laptop_with_papers",
+      "file": "laptop_with_papers.png",
+      "src": "Modern_Office_Singles_32x32_240.png",
+      "label": {
+        "name": "laptop_with_papers",
+        "displayName": "Laptop with papers",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 241,
+      "name": "monitor_small_dock",
+      "file": "monitor_small_dock.png",
+      "src": "Modern_Office_Singles_32x32_241.png",
+      "label": {
+        "name": "monitor_small_dock",
+        "displayName": "Small monitor on dock",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 242,
+      "name": "coffee_machine_desk",
+      "file": "coffee_machine_desk.png",
+      "src": "Modern_Office_Singles_32x32_242.png",
+      "label": {
+        "name": "coffee_machine_desk",
+        "displayName": "Coffee machine",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 243,
+      "name": "monitor_flat_front",
+      "file": "monitor_flat_front.png",
+      "src": "Modern_Office_Singles_32x32_243.png",
+      "label": {
+        "name": "monitor_flat_front",
+        "displayName": "Flat monitor front",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 244,
+      "name": "file_holder_vertical",
+      "file": "file_holder_vertical.png",
+      "src": "Modern_Office_Singles_32x32_244.png",
+      "label": {
+        "name": "file_holder_vertical",
+        "displayName": "Vertical file holder",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 245,
+      "name": "desk_tan_narrow",
+      "file": "desk_tan_narrow.png",
+      "src": "Modern_Office_Singles_32x32_245.png",
+      "label": {
+        "name": "desk_tan_narrow",
+        "displayName": "Tan desk narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 246,
+      "name": "desk_tan_square",
+      "file": "desk_tan_square.png",
+      "src": "Modern_Office_Singles_32x32_246.png",
+      "label": {
+        "name": "desk_tan_square",
+        "displayName": "Tan desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 247,
+      "name": "desk_tan_drawers",
+      "file": "desk_tan_drawers.png",
+      "src": "Modern_Office_Singles_32x32_247.png",
+      "label": {
+        "name": "desk_tan_drawers",
+        "displayName": "Tan desk drawers",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 248,
+      "name": "desk_tan_wide",
+      "file": "desk_tan_wide.png",
+      "src": "Modern_Office_Singles_32x32_248.png",
+      "label": {
+        "name": "desk_tan_wide",
+        "displayName": "Tan desk wide",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 249,
+      "name": "desk_tan_l_shape",
+      "file": "desk_tan_l_shape.png",
+      "src": "Modern_Office_Singles_32x32_249.png",
+      "label": {
+        "name": "desk_tan_l_shape",
+        "displayName": "Tan L-desk",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 250,
+      "name": "desk_tan_textured_narrow",
+      "file": "desk_tan_textured_narrow.png",
+      "src": "Modern_Office_Singles_32x32_250.png",
+      "label": {
+        "name": "desk_tan_textured_narrow",
+        "displayName": "Tan textured desk narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 251,
+      "name": "desk_tan_textured_square",
+      "file": "desk_tan_textured_square.png",
+      "src": "Modern_Office_Singles_32x32_251.png",
+      "label": {
+        "name": "desk_tan_textured_square",
+        "displayName": "Tan textured desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 252,
+      "name": "desk_tan_textured_drawers",
+      "file": "desk_tan_textured_drawers.png",
+      "src": "Modern_Office_Singles_32x32_252.png",
+      "label": {
+        "name": "desk_tan_textured_drawers",
+        "displayName": "Tan textured desk drawers",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 253,
+      "name": "desk_tan_textured_wide",
+      "file": "desk_tan_textured_wide.png",
+      "src": "Modern_Office_Singles_32x32_253.png",
+      "label": {
+        "name": "desk_tan_textured_wide",
+        "displayName": "Tan textured desk wide",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 254,
+      "name": "desk_tan_textured_l_shape",
+      "file": "desk_tan_textured_l_shape.png",
+      "src": "Modern_Office_Singles_32x32_254.png",
+      "label": {
+        "name": "desk_tan_textured_l_shape",
+        "displayName": "Tan textured L-desk",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 255,
+      "name": "desk_wood_grain_narrow",
+      "file": "desk_wood_grain_narrow.png",
+      "src": "Modern_Office_Singles_32x32_255.png",
+      "label": {
+        "name": "desk_wood_grain_narrow",
+        "displayName": "Wood grain desk narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 256,
+      "name": "desk_wood_grain_square",
+      "file": "desk_wood_grain_square.png",
+      "src": "Modern_Office_Singles_32x32_256.png",
+      "label": {
+        "name": "desk_wood_grain_square",
+        "displayName": "Wood grain desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 257,
+      "name": "desk_wood_grain_drawers",
+      "file": "desk_wood_grain_drawers.png",
+      "src": "Modern_Office_Singles_32x32_257.png",
+      "label": {
+        "name": "desk_wood_grain_drawers",
+        "displayName": "Wood grain desk drawers",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 258,
+      "name": "desk_wood_grain_wide",
+      "file": "desk_wood_grain_wide.png",
+      "src": "Modern_Office_Singles_32x32_258.png",
+      "label": {
+        "name": "desk_wood_grain_wide",
+        "displayName": "Wood grain desk wide",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 259,
+      "name": "desk_wood_grain_l_shape",
+      "file": "desk_wood_grain_l_shape.png",
+      "src": "Modern_Office_Singles_32x32_259.png",
+      "label": {
+        "name": "desk_wood_grain_l_shape",
+        "displayName": "Wood grain L-desk",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 260,
+      "name": "desk_white_narrow_2",
+      "file": "desk_white_narrow_2.png",
+      "src": "Modern_Office_Singles_32x32_260.png",
+      "label": {
+        "name": "desk_white_narrow_2",
+        "displayName": "White desk narrow 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 261,
+      "name": "desk_white_square_2",
+      "file": "desk_white_square_2.png",
+      "src": "Modern_Office_Singles_32x32_261.png",
+      "label": {
+        "name": "desk_white_square_2",
+        "displayName": "White desk square 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 262,
+      "name": "desk_white_drawers",
+      "file": "desk_white_drawers.png",
+      "src": "Modern_Office_Singles_32x32_262.png",
+      "label": {
+        "name": "desk_white_drawers",
+        "displayName": "White desk drawers",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 263,
+      "name": "desk_white_wide",
+      "file": "desk_white_wide.png",
+      "src": "Modern_Office_Singles_32x32_263.png",
+      "label": {
+        "name": "desk_white_wide",
+        "displayName": "White desk wide",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 264,
+      "name": "desk_white_l_shape",
+      "file": "desk_white_l_shape.png",
+      "src": "Modern_Office_Singles_32x32_264.png",
+      "label": {
+        "name": "desk_white_l_shape",
+        "displayName": "White L-desk",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 265,
+      "name": "desk_grey_side_narrow",
+      "file": "desk_grey_side_narrow.png",
+      "src": "Modern_Office_Singles_32x32_265.png",
+      "label": {
+        "name": "desk_grey_side_narrow",
+        "displayName": "Grey desk side narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 266,
+      "name": "desk_grey_side_square",
+      "file": "desk_grey_side_square.png",
+      "src": "Modern_Office_Singles_32x32_266.png",
+      "label": {
+        "name": "desk_grey_side_square",
+        "displayName": "Grey desk side square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 267,
+      "name": "desk_grey_with_base",
+      "file": "desk_grey_with_base.png",
+      "src": "Modern_Office_Singles_32x32_267.png",
+      "label": {
+        "name": "desk_grey_with_base",
+        "displayName": "Grey desk with base",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 268,
+      "name": "desk_grey_l_corner",
+      "file": "desk_grey_l_corner.png",
+      "src": "Modern_Office_Singles_32x32_268.png",
+      "label": {
+        "name": "desk_grey_l_corner",
+        "displayName": "Grey L-desk corner",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 269,
+      "name": "desk_grey_l_corner_2",
+      "file": "desk_grey_l_corner_2.png",
+      "src": "Modern_Office_Singles_32x32_269.png",
+      "label": {
+        "name": "desk_grey_l_corner_2",
+        "displayName": "Grey L-desk corner 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 270,
+      "name": "chair_black_side",
+      "file": "chair_black_side.png",
+      "src": "Modern_Office_Singles_32x32_270.png",
+      "label": {
+        "name": "chair_black_side",
+        "displayName": "Black office chair side",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 271,
+      "name": "chair_orange_side",
+      "file": "chair_orange_side.png",
+      "src": "Modern_Office_Singles_32x32_271.png",
+      "label": {
+        "name": "chair_orange_side",
+        "displayName": "Orange office chair side",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 272,
+      "name": "pc_tower_floor",
+      "file": "pc_tower_floor.png",
+      "src": "Modern_Office_Singles_32x32_272.png",
+      "label": {
+        "name": "pc_tower_floor",
+        "displayName": "PC tower floor",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 273,
+      "name": "phone_desk_grey",
+      "file": "phone_desk_grey.png",
+      "src": "Modern_Office_Singles_32x32_273.png",
+      "label": {
+        "name": "phone_desk_grey",
+        "displayName": "Grey desk phone",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 274,
+      "name": "label_printer_desk",
+      "file": "label_printer_desk.png",
+      "src": "Modern_Office_Singles_32x32_274.png",
+      "label": {
+        "name": "label_printer_desk",
+        "displayName": "Desk label printer",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 275,
+      "name": "monitor_triple_back_dark",
+      "file": "monitor_triple_back_dark.png",
+      "src": "Modern_Office_Singles_32x32_275.png",
+      "label": {
+        "name": "monitor_triple_back_dark",
+        "displayName": "Triple monitor back dark",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 276,
+      "name": "monitor_triple_back_light",
+      "file": "monitor_triple_back_light.png",
+      "src": "Modern_Office_Singles_32x32_276.png",
+      "label": {
+        "name": "monitor_triple_back_light",
+        "displayName": "Triple monitor back light",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 277,
+      "name": "monitor_white_on",
+      "file": "monitor_white_on.png",
+      "src": "Modern_Office_Singles_32x32_277.png",
+      "label": {
+        "name": "monitor_white_on",
+        "displayName": "White monitor on",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 278,
+      "name": "monitor_black_on",
+      "file": "monitor_black_on.png",
+      "src": "Modern_Office_Singles_32x32_278.png",
+      "label": {
+        "name": "monitor_black_on",
+        "displayName": "Black monitor on",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 279,
+      "name": "printer_side_white",
+      "file": "printer_side_white.png",
+      "src": "Modern_Office_Singles_32x32_279.png",
+      "label": {
+        "name": "printer_side_white",
+        "displayName": "White printer side",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 280,
+      "name": "printer_side_black",
+      "file": "printer_side_black.png",
+      "src": "Modern_Office_Singles_32x32_280.png",
+      "label": {
+        "name": "printer_side_black",
+        "displayName": "Black printer side",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 281,
+      "name": "desk_wood_side_narrow",
+      "file": "desk_wood_side_narrow.png",
+      "src": "Modern_Office_Singles_32x32_281.png",
+      "label": {
+        "name": "desk_wood_side_narrow",
+        "displayName": "Wood desk side narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 282,
+      "name": "desk_wood_side_square",
+      "file": "desk_wood_side_square.png",
+      "src": "Modern_Office_Singles_32x32_282.png",
+      "label": {
+        "name": "desk_wood_side_square",
+        "displayName": "Wood desk side square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 283,
+      "name": "desk_wood_with_base",
+      "file": "desk_wood_with_base.png",
+      "src": "Modern_Office_Singles_32x32_283.png",
+      "label": {
+        "name": "desk_wood_with_base",
+        "displayName": "Wood desk with base",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 284,
+      "name": "desk_wood_l_corner",
+      "file": "desk_wood_l_corner.png",
+      "src": "Modern_Office_Singles_32x32_284.png",
+      "label": {
+        "name": "desk_wood_l_corner",
+        "displayName": "Wood L-desk corner",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 285,
+      "name": "desk_wood_l_corner_2",
+      "file": "desk_wood_l_corner_2.png",
+      "src": "Modern_Office_Singles_32x32_285.png",
+      "label": {
+        "name": "desk_wood_l_corner_2",
+        "displayName": "Wood L-desk corner 2",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 286,
+      "name": "desk_beige_side_narrow",
+      "file": "desk_beige_side_narrow.png",
+      "src": "Modern_Office_Singles_32x32_286.png",
+      "label": {
+        "name": "desk_beige_side_narrow",
+        "displayName": "Beige desk side narrow",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 287,
+      "name": "desk_beige_side_square",
+      "file": "desk_beige_side_square.png",
+      "src": "Modern_Office_Singles_32x32_287.png",
+      "label": {
+        "name": "desk_beige_side_square",
+        "displayName": "Beige desk side square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 288,
+      "name": "desk_beige_with_base",
+      "file": "desk_beige_with_base.png",
+      "src": "Modern_Office_Singles_32x32_288.png",
+      "label": {
+        "name": "desk_beige_with_base",
+        "displayName": "Beige desk with base",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 289,
+      "name": "desk_tan_l_corner",
+      "file": "desk_tan_l_corner.png",
+      "src": "Modern_Office_Singles_32x32_289.png",
+      "label": {
+        "name": "desk_tan_l_corner",
+        "displayName": "Tan L-desk corner",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 290,
+      "name": "desk_tan_l_extension",
+      "file": "desk_tan_l_extension.png",
+      "src": "Modern_Office_Singles_32x32_290.png",
+      "label": {
+        "name": "desk_tan_l_extension",
+        "displayName": "Tan L-desk extension",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 291,
+      "name": "desk_tan_square_small",
+      "file": "desk_tan_square_small.png",
+      "src": "Modern_Office_Singles_32x32_291.png",
+      "label": {
+        "name": "desk_tan_square_small",
+        "displayName": "Tan desk square small",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 292,
+      "name": "desk_tan_rect",
+      "file": "desk_tan_rect.png",
+      "src": "Modern_Office_Singles_32x32_292.png",
+      "label": {
+        "name": "desk_tan_rect",
+        "displayName": "Tan desk rectangle",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 293,
+      "name": "desk_tan_with_legs",
+      "file": "desk_tan_with_legs.png",
+      "src": "Modern_Office_Singles_32x32_293.png",
+      "label": {
+        "name": "desk_tan_with_legs",
+        "displayName": "Tan desk with legs",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 294,
+      "name": "desk_white_l_corner",
+      "file": "desk_white_l_corner.png",
+      "src": "Modern_Office_Singles_32x32_294.png",
+      "label": {
+        "name": "desk_white_l_corner",
+        "displayName": "White L-desk corner",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 295,
+      "name": "desk_white_l_extension",
+      "file": "desk_white_l_extension.png",
+      "src": "Modern_Office_Singles_32x32_295.png",
+      "label": {
+        "name": "desk_white_l_extension",
+        "displayName": "White L-desk extension",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 296,
+      "name": "desk_white_square_small",
+      "file": "desk_white_square_small.png",
+      "src": "Modern_Office_Singles_32x32_296.png",
+      "label": {
+        "name": "desk_white_square_small",
+        "displayName": "White desk square small",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 297,
+      "name": "desk_white_rect",
+      "file": "desk_white_rect.png",
+      "src": "Modern_Office_Singles_32x32_297.png",
+      "label": {
+        "name": "desk_white_rect",
+        "displayName": "White desk rectangle",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 298,
+      "name": "desk_white_with_legs",
+      "file": "desk_white_with_legs.png",
+      "src": "Modern_Office_Singles_32x32_298.png",
+      "label": {
+        "name": "desk_white_with_legs",
+        "displayName": "White desk with legs",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 299,
+      "name": "desk_birch_l_corner",
+      "file": "desk_birch_l_corner.png",
+      "src": "Modern_Office_Singles_32x32_299.png",
+      "label": {
+        "name": "desk_birch_l_corner",
+        "displayName": "Birch L-desk corner",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 300,
+      "name": "desk_birch_l_extension",
+      "file": "desk_birch_l_extension.png",
+      "src": "Modern_Office_Singles_32x32_300.png",
+      "label": {
+        "name": "desk_birch_l_extension",
+        "displayName": "Birch L-desk extension",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 301,
+      "name": "desk_birch_square",
+      "file": "desk_birch_square.png",
+      "src": "Modern_Office_Singles_32x32_301.png",
+      "label": {
+        "name": "desk_birch_square",
+        "displayName": "Birch desk square",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 302,
+      "name": "desk_birch_rect",
+      "file": "desk_birch_rect.png",
+      "src": "Modern_Office_Singles_32x32_302.png",
+      "label": {
+        "name": "desk_birch_rect",
+        "displayName": "Birch desk rectangle",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 303,
+      "name": "desk_birch_with_legs",
+      "file": "desk_birch_with_legs.png",
+      "src": "Modern_Office_Singles_32x32_303.png",
+      "label": {
+        "name": "desk_birch_with_legs",
+        "displayName": "Birch desk with legs",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 304,
+      "name": "desk_dark_l_corner",
+      "file": "desk_dark_l_corner.png",
+      "src": "Modern_Office_Singles_32x32_304.png",
+      "label": {
+        "name": "desk_dark_l_corner",
+        "displayName": "Dark L-desk corner",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 305,
+      "name": "desk_dark_l_extension",
+      "file": "desk_dark_l_extension.png",
+      "src": "Modern_Office_Singles_32x32_305.png",
+      "label": {
+        "name": "desk_dark_l_extension",
+        "displayName": "Dark L-desk extension",
+        "type": "surface",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 306,
+      "name": "chair_orange_side_2",
+      "file": "chair_orange_side_2.png",
+      "src": "Modern_Office_Singles_32x32_306.png",
+      "label": {
+        "name": "chair_orange_side_2",
+        "displayName": "Orange office chair side 2",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 307,
+      "name": "chair_black_side_2",
+      "file": "chair_black_side_2.png",
+      "src": "Modern_Office_Singles_32x32_307.png",
+      "label": {
+        "name": "chair_black_side_2",
+        "displayName": "Black office chair side 2",
+        "type": "seat",
+        "stack_on": "none",
+        "category": "chairs"
+      }
+    },
+    {
+      "num": 308,
+      "name": "printer_small_side",
+      "file": "printer_small_side.png",
+      "src": "Modern_Office_Singles_32x32_308.png",
+      "label": {
+        "name": "printer_small_side",
+        "displayName": "Small printer side",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "electronics"
+      }
+    },
+    {
+      "num": 309,
+      "name": "phone_or_calculator",
+      "file": "phone_or_calculator.png",
+      "src": "Modern_Office_Singles_32x32_309.png",
+      "label": {
+        "name": "phone_or_calculator",
+        "displayName": "Desk phone or calculator",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 310,
+      "name": "cabinet_side_narrow",
+      "file": "cabinet_side_narrow.png",
+      "src": "Modern_Office_Singles_32x32_310.png",
+      "label": {
+        "name": "cabinet_side_narrow",
+        "displayName": "Narrow cabinet side",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "cabinets"
+      }
+    },
+    {
+      "num": 311,
+      "name": "monitor_triple_dark",
+      "file": "monitor_triple_dark.png",
+      "src": "Modern_Office_Singles_32x32_311.png",
+      "label": {
+        "name": "monitor_triple_dark",
+        "displayName": "Triple monitors dark",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 312,
+      "name": "monitor_triple_light",
+      "file": "monitor_triple_light.png",
+      "src": "Modern_Office_Singles_32x32_312.png",
+      "label": {
+        "name": "monitor_triple_light",
+        "displayName": "Triple monitors light",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 313,
+      "name": "monitor_black_ui",
+      "file": "monitor_black_ui.png",
+      "src": "Modern_Office_Singles_32x32_313.png",
+      "label": {
+        "name": "monitor_black_ui",
+        "displayName": "Black monitor UI",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 314,
+      "name": "monitor_white_ui",
+      "file": "monitor_white_ui.png",
+      "src": "Modern_Office_Singles_32x32_314.png",
+      "label": {
+        "name": "monitor_white_ui",
+        "displayName": "White monitor UI",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 315,
+      "name": "scanner_side_light",
+      "file": "scanner_side_light.png",
+      "src": "Modern_Office_Singles_32x32_315.png",
+      "label": {
+        "name": "scanner_side_light",
+        "displayName": "Scanner side light",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 316,
+      "name": "scanner_side_dark",
+      "file": "scanner_side_dark.png",
+      "src": "Modern_Office_Singles_32x32_316.png",
+      "label": {
+        "name": "scanner_side_dark",
+        "displayName": "Scanner side dark",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 317,
+      "name": "coffee_station",
+      "file": "coffee_station.png",
+      "src": "Modern_Office_Singles_32x32_317.png",
+      "label": {
+        "name": "coffee_station",
+        "displayName": "Coffee station",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 318,
+      "name": "coffee_station_2",
+      "file": "coffee_station_2.png",
+      "src": "Modern_Office_Singles_32x32_318.png",
+      "label": {
+        "name": "coffee_station_2",
+        "displayName": "Coffee station 2",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 319,
+      "name": "coffee_station_spill",
+      "file": "coffee_station_spill.png",
+      "src": "Modern_Office_Singles_32x32_319.png",
+      "label": {
+        "name": "coffee_station_spill",
+        "displayName": "Coffee station spill",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 320,
+      "name": "desk_wood_coffee_station",
+      "file": "desk_wood_coffee_station.png",
+      "src": "Modern_Office_Singles_32x32_320.png",
+      "label": {
+        "name": "desk_wood_coffee_station",
+        "displayName": "Wood desk coffee station",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 321,
+      "name": "desk_wood_dark_coffee",
+      "file": "desk_wood_dark_coffee.png",
+      "src": "Modern_Office_Singles_32x32_321.png",
+      "label": {
+        "name": "desk_wood_dark_coffee",
+        "displayName": "Dark wood desk coffee",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 322,
+      "name": "desk_wood_orange_coffee",
+      "file": "desk_wood_orange_coffee.png",
+      "src": "Modern_Office_Singles_32x32_322.png",
+      "label": {
+        "name": "desk_wood_orange_coffee",
+        "displayName": "Orange wood desk coffee",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 323,
+      "name": "desk_white_printer_papers",
+      "file": "desk_white_printer_papers.png",
+      "src": "Modern_Office_Singles_32x32_323.png",
+      "label": {
+        "name": "desk_white_printer_papers",
+        "displayName": "White desk printer papers",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 324,
+      "name": "desk_white_printer_papers_2",
+      "file": "desk_white_printer_papers_2.png",
+      "src": "Modern_Office_Singles_32x32_324.png",
+      "label": {
+        "name": "desk_white_printer_papers_2",
+        "displayName": "White desk printer papers 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 325,
+      "name": "desk_grey_printer_papers",
+      "file": "desk_grey_printer_papers.png",
+      "src": "Modern_Office_Singles_32x32_325.png",
+      "label": {
+        "name": "desk_grey_printer_papers",
+        "displayName": "Grey desk printer papers",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 326,
+      "name": "desk_grey_printer_papers_2",
+      "file": "desk_grey_printer_papers_2.png",
+      "src": "Modern_Office_Singles_32x32_326.png",
+      "label": {
+        "name": "desk_grey_printer_papers_2",
+        "displayName": "Grey desk printer papers 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 327,
+      "name": "desk_tan_printer_papers",
+      "file": "desk_tan_printer_papers.png",
+      "src": "Modern_Office_Singles_32x32_327.png",
+      "label": {
+        "name": "desk_tan_printer_papers",
+        "displayName": "Tan desk printer papers",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 328,
+      "name": "desk_tan_printer_papers_2",
+      "file": "desk_tan_printer_papers_2.png",
+      "src": "Modern_Office_Singles_32x32_328.png",
+      "label": {
+        "name": "desk_tan_printer_papers_2",
+        "displayName": "Tan desk printer papers 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "desks"
+      }
+    },
+    {
+      "num": 329,
+      "name": "suitcase_blue",
+      "file": "suitcase_blue.png",
+      "src": "Modern_Office_Singles_32x32_329.png",
+      "label": {
+        "name": "suitcase_blue",
+        "displayName": "Blue suitcase",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 330,
+      "name": "suitcase_blue_2",
+      "file": "suitcase_blue_2.png",
+      "src": "Modern_Office_Singles_32x32_330.png",
+      "label": {
+        "name": "suitcase_blue_2",
+        "displayName": "Blue suitcase 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 331,
+      "name": "suitcase_red",
+      "file": "suitcase_red.png",
+      "src": "Modern_Office_Singles_32x32_331.png",
+      "label": {
+        "name": "suitcase_red",
+        "displayName": "Red suitcase",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 332,
+      "name": "suitcase_red_2",
+      "file": "suitcase_red_2.png",
+      "src": "Modern_Office_Singles_32x32_332.png",
+      "label": {
+        "name": "suitcase_red_2",
+        "displayName": "Red suitcase 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 333,
+      "name": "suitcase_grey",
+      "file": "suitcase_grey.png",
+      "src": "Modern_Office_Singles_32x32_333.png",
+      "label": {
+        "name": "suitcase_grey",
+        "displayName": "Grey suitcase",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 334,
+      "name": "suitcase_grey_2",
+      "file": "suitcase_grey_2.png",
+      "src": "Modern_Office_Singles_32x32_334.png",
+      "label": {
+        "name": "suitcase_grey_2",
+        "displayName": "Grey suitcase 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 335,
+      "name": "suitcase_tan",
+      "file": "suitcase_tan.png",
+      "src": "Modern_Office_Singles_32x32_335.png",
+      "label": {
+        "name": "suitcase_tan",
+        "displayName": "Tan suitcase",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 336,
+      "name": "suitcase_tan_2",
+      "file": "suitcase_tan_2.png",
+      "src": "Modern_Office_Singles_32x32_336.png",
+      "label": {
+        "name": "suitcase_tan_2",
+        "displayName": "Tan suitcase 2",
+        "type": "furniture",
+        "stack_on": "none",
+        "category": "furniture"
+      }
+    },
+    {
+      "num": 337,
+      "name": "cash_stack_small",
+      "file": "cash_stack_small.png",
+      "src": "Modern_Office_Singles_32x32_337.png",
+      "label": {
+        "name": "cash_stack_small",
+        "displayName": "Small cash stack",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 338,
+      "name": "cash_pile_medium",
+      "file": "cash_pile_medium.png",
+      "src": "Modern_Office_Singles_32x32_338.png",
+      "label": {
+        "name": "cash_pile_medium",
+        "displayName": "Medium cash pile",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    },
+    {
+      "num": 339,
+      "name": "cash_pile_large",
+      "file": "cash_pile_large.png",
+      "src": "Modern_Office_Singles_32x32_339.png",
+      "label": {
+        "name": "cash_pile_large",
+        "displayName": "Large cash pile",
+        "type": "decor",
+        "stack_on": "surface",
+        "category": "desk_items"
+      }
+    }
+  ]
+}

@@ -92,7 +92,7 @@
     const panel = document.createElement('div');
     panel.id = PANEL_ID;
     panel.innerHTML = `
-      <div class="lb-header">leaderboard ┬╖ this week</div>
+      <div class="lb-header">leaderboard · this week</div>
       <div class="lb-list"></div>
     `;
     document.body.appendChild(panel);

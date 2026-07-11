@@ -1064,6 +1064,45 @@
       }
       #${FRAME_ID} .dzp-dock .dzp-app-label { display: none; }
       #${FRAME_ID} .dzp-dock .dzp-app-status { display: none; }
+      /* Hover / focus name chip — dock icons alone are not enough */
+      #${FRAME_ID} .dzp-dock .dzp-app,
+      #${FRAME_ID} .dzp-dock .dzp-folder {
+        position: relative;
+      }
+      #${FRAME_ID} .dzp-dock .dzp-app::after,
+      #${FRAME_ID} .dzp-dock .dzp-folder::after {
+        content: attr(data-label);
+        position: absolute;
+        left: 50%;
+        bottom: calc(100% + 6px);
+        transform: translateX(-50%) translateY(4px);
+        padding: 5px 9px;
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.96);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        color: #f8fafc;
+        font: 650 11px/1.2 system-ui, sans-serif;
+        white-space: nowrap;
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 40;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        transition: opacity 0.12s ease, transform 0.12s ease;
+      }
+      #${FRAME_ID} .dzp-dock .dzp-app:hover::after,
+      #${FRAME_ID} .dzp-dock .dzp-app:focus-visible::after,
+      #${FRAME_ID} .dzp-dock .dzp-folder:hover::after,
+      #${FRAME_ID} .dzp-dock .dzp-folder:focus-visible::after {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+      #${FRAME_ID}.dzp-editing .dzp-dock .dzp-app::after,
+      #${FRAME_ID}.dzp-editing .dzp-dock .dzp-folder::after {
+        display: none;
+      }
       #${FRAME_ID} .dzp-dock .dzp-slot-empty {
         min-height: 56px;
         border-radius: 17px;
@@ -2046,12 +2085,16 @@
     const bind = window.DenizenTouchBind?.bindPress;
     pressFn = (el, fn) => { if (bind) bind(el, fn); else el.addEventListener('click', fn); };
     pressFn(shellEl.querySelector('.dzp-home'), () => goHome(true));
-    pressFn(shellEl.querySelector('.dzp-back'), () => goHome(true));
+    pressFn(shellEl.querySelector('.dzp-back'), () => {
+      if (tryWorkflowToolBack()) return;
+      goHome(true);
+    });
     pressFn(meShellEl?.querySelector('.dzp-me-close'), () => goHome(true));
     meShellEl?.querySelectorAll('.dzp-me-tab').forEach((tabBtn) => {
       pressFn(tabBtn, () => setMeTab(tabBtn.dataset.tab));
     });
     pressFn(shellEl.querySelector('.dzp-nav-back'), () => {
+      if (tryWorkflowToolBack()) return;
       if (currentApp) goHome(true);
       else closePhoneFromUi();
     });
@@ -2199,6 +2242,8 @@
     if (opts.index != null) btn.dataset.index = String(opts.index);
     btn.setAttribute('role', 'menuitem');
     btn.setAttribute('aria-label', app.label);
+    btn.setAttribute('title', app.label);
+    btn.dataset.label = app.label;
     btn.innerHTML = `
       <span class="dzp-app-icon" style="--tile-a:${app.c[0]};--tile-b:${app.c[1]}">${appIconMarkup(app)}</span>
       <span class="dzp-app-label">${app.label}</span>
@@ -2227,6 +2272,8 @@
     if (opts.index != null) btn.dataset.index = String(opts.index);
     btn.setAttribute('role', 'menuitem');
     btn.setAttribute('aria-label', folder.name || 'Folder');
+    btn.setAttribute('title', folder.name || 'Folder');
+    btn.dataset.label = folder.name || 'Folder';
     const previews = folder.apps.map((id) => appById[id]).filter(Boolean).slice(0, 4);
     const mini = previews.map((a) =>
       `<span style="--tile-a:${a.c[0]};--tile-b:${a.c[1]}">${appIconMarkup(a, 18)}</span>`,
@@ -3140,6 +3187,27 @@
       }
     }
     clearAppUi();
+  }
+
+  function tryWorkflowToolBack() {
+    if (currentApp?.id !== 'workflow') return false;
+    const frame = settingsEl?.querySelector?.('.dzp-workflow-frame');
+    if (!frame?.contentWindow) return false;
+    try {
+      const loc = frame.contentWindow.location;
+      const path = String(loc.pathname || '');
+      if (/workflow-dashboard\.html$/i.test(path)) return false;
+      frame.contentWindow.history.back();
+      return true;
+    } catch (_) {
+      // Cross-origin or empty — reload Office Build home inside the iframe.
+      try {
+        frame.src = '/workflow-dashboard.html?embed=1';
+        return true;
+      } catch (__) {
+        return false;
+      }
+    }
   }
 
   function goHome(alsoClosePanel = true) {

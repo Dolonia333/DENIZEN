@@ -142,7 +142,7 @@
     } else if (q.complete) {
       footer = `<button class="qp-claim" data-quest="${_esc(q.id)}">claim +${q.reward_xp} XP</button>`;
     } else {
-      footer = `<div class="qp-meta">${q.count} / ${q.target} ┬╖ ${_esc(q.period)}</div>`;
+      footer = `<div class="qp-meta">${q.count} / ${q.target} · ${_esc(q.period)}</div>`;
     }
     return `<div class="qp-quest">
       <div class="qp-row"><span class="qp-label">${_esc(q.label)}</span><span class="qp-xp">+${q.reward_xp} XP</span></div>

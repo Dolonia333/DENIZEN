@@ -30,6 +30,7 @@ function applySavedPlacementsToScene(scene, savedPlacements) {
     if (!pl) return;
     entry.sprite.x = pl.x;
     entry.sprite.y = pl.y;
+    applyPlacementTransform(entry.sprite, pl, entry.def);
     if (entry.obstacle) {
       entry.obstacle.x = pl.x;
       entry.obstacle.y = pl.y;
@@ -38,7 +39,12 @@ function applySavedPlacementsToScene(scene, savedPlacements) {
     if (entry.def?._placement) {
       entry.def._placement.x = pl.x;
       entry.def._placement.y = pl.y;
+      entry.def._placement.rotation = pl.rotation;
+      entry.def._placement.scale = pl.scale;
+      entry.def._placement.flipX = pl.flipX;
+      entry.def._placement.flipY = pl.flipY;
     }
+    refreshFurnitureDepth(entry);
   });
   savedPlacements.forEach((pl) => {
     if (!pl.parentInstanceId) return;
@@ -50,19 +56,130 @@ function applySavedPlacementsToScene(scene, savedPlacements) {
       : (entry.def?.parent_offset_y !== undefined ? entry.def.parent_offset_y : -8);
     entry.sprite.x = parent.sprite.x;
     entry.sprite.y = parent.sprite.y + offsetY;
+    applyPlacementTransform(entry.sprite, pl, entry.def);
     if (entry.obstacle) {
       entry.obstacle.x = entry.sprite.x;
       entry.obstacle.y = entry.sprite.y;
       if (entry.obstacle.body) entry.obstacle.body.updateFromGameObject();
     }
+    refreshFurnitureDepth(entry);
   });
   if (scene.pathfinder?.rebuildFromScene) scene.pathfinder.rebuildFromScene(scene);
+  scene._depthDirty = true;
+}
+
+/** Apply rotation / scale / flip from a placement record onto a Phaser image. */
+function applyPlacementTransform(sprite, placement, def) {
+  if (!sprite) return;
+  const rot = Number(placement?.rotation) || 0;
+  const scale = Number(placement?.scale);
+  const s = Number.isFinite(scale) && scale > 0 ? scale : 1;
+  sprite.setAngle(rot);
+  sprite.setFlipX(!!placement?.flipX);
+  sprite.setFlipY(!!placement?.flipY);
+  if (def?.source_type === 'single_file') {
+    const dw = (def.display_w || 32) * s;
+    const dh = (def.display_h || 48) * s;
+    sprite.setDisplaySize(dw, dh);
+  } else {
+    sprite.setScale(s);
+  }
+}
+
+/**
+ * Furniture draws above openplan wall visuals (~1.0–1.35).
+ * Slight Y bias keeps overlapping pieces sorted until full Y-sort runs.
+ * Stacked desk items are rebased after Y-sort via restackDeskChildren().
+ */
+function furnitureRenderDepth(y, def, placement) {
+  const id = String(placement?.id || '');
+  const wallMount = !!(
+    placement?.wallMount
+    || def?.wall_mount
+    || /whiteboard|cork|ac_unit|cert_|pop_art|painting|poster|wall_screen/i.test(id)
+  );
+  const base = typeof def?.depth === 'number' ? def.depth : 1.5;
+  const floor = wallMount ? 1.5 : 2.0;
+  let depth = Math.max(base, floor) + (Number(y) || 0) / 10000;
+  // Bias stackables slightly so they win ties before parent rebasing runs.
+  if (placement?.parentInstanceId || def?.stack_on === 'surface' || def?.stack_on === 'desk') {
+    depth += 0.35;
+  }
+  return depth;
+}
+
+function refreshFurnitureDepth(entry) {
+  if (!entry?.sprite) return;
+  const placement = entry.def?._placement || entry;
+  const parentId = entry.parentInstanceId || placement?.parentInstanceId;
+  if (parentId && entry.sprite.scene) {
+    const parent = entry.sprite.scene._interactables?.find((it) => it.instanceId === parentId);
+    if (parent?.sprite) {
+      entry.sprite.setDepth((parent.sprite.depth || 10) + 8);
+      return;
+    }
+  }
+  const depth = furnitureRenderDepth(entry.sprite.y, entry.def, placement);
+  entry.sprite.setDepth(depth);
+}
+
+/** Keep monitors/lamps/etc. above the desk they sit on (Y-sort alone puts them behind). */
+function restackDeskChildren(scene) {
+  if (!scene?._interactables?.length) return;
+  const byParent = new Map();
+  scene._interactables.forEach((entry) => {
+    if (!entry?.parentInstanceId || !entry.sprite) return;
+    if (!byParent.has(entry.parentInstanceId)) byParent.set(entry.parentInstanceId, []);
+    byParent.get(entry.parentInstanceId).push(entry);
+  });
+  byParent.forEach((children, parentId) => {
+    const parent = scene._interactables.find((it) => it.instanceId === parentId);
+    if (!parent?.sprite) return;
+    // Large gap above parent so later Y-sorts / other furniture can't bury desk items.
+    const base = (parent.sprite.depth || 10) + 8;
+    children.sort((a, b) => (a.sprite.y - b.sprite.y) || String(a.instanceId).localeCompare(String(b.instanceId)));
+    children.forEach((child, i) => {
+      child.sprite.setDepth(base + i * 0.05);
+    });
+  });
+  // Lift un-parented stackables that are visually sitting on a desk.
+  const desks = scene._interactables.filter((e) => (
+    e?.sprite
+    && !e.parentInstanceId
+    && (
+      e.def?.type === 'surface'
+      || e.def?.category === 'desks'
+      || e.def?.category === 'tables'
+      || /^(desk_|table_|cubicle_desk)/i.test(String(e.id || ''))
+    )
+  ));
+  scene._interactables.forEach((entry) => {
+    if (!entry?.sprite || entry.parentInstanceId) return;
+    const stack = entry.def?.stack_on;
+    const looksStackable = stack === 'surface' || stack === 'desk'
+      || entry.def?.category === 'desk_items'
+      || /monitor|laptop|lamp|keyboard|phone|papers|mug/i.test(String(entry.id || ''));
+    if (!looksStackable) return;
+    let best = null;
+    desks.forEach((desk) => {
+      const dx = Math.abs(entry.sprite.x - desk.sprite.x);
+      const dy = entry.sprite.y - desk.sprite.y;
+      const reachX = Math.max(48, (desk.sprite.displayWidth || 32) * 0.75);
+      if (dx <= reachX && dy >= -120 && dy <= 40) {
+        if (!best || desk.sprite.depth > best.sprite.depth) best = desk;
+      }
+    });
+    if (best) {
+      entry.sprite.setDepth((best.sprite.depth || 10) + 8);
+    }
+  });
 }
 
 function notifyOfficeFurnitureReady(scene) {
   if (!scene || scene._furnitureReadyNotified) return;
   if (!scene._interactables?.length) return;
   scene._furnitureReadyNotified = true;
+  scene._depthDirty = true;
   if (scene._pathfinder) {
     scene._pathfinder.buildFromScene(scene);
     scene._pathfinder.carveDoorwayGaps?.();
@@ -187,7 +304,7 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const catalogV = 'cat3';
+    const catalogV = 'cat6';
     this.load.json('tiles_catalog', `./tiles-catalog.json?v=${catalogV}`);
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
@@ -1346,14 +1463,15 @@ class OfficeScene extends Phaser.Scene {
           if (def && def.source_type === 'single_file') texKey = `single_${pl.id}`;
 
           if (!def || !this.textures.exists(texKey)) return;
-          const depth = typeof def.depth === 'number' ? def.depth : 1.5;
           const originY = def.origin === 'center' ? 0.5 : 1;
+          const depth = furnitureRenderDepth(pl.y, def, pl);
           const s = this.add.image(pl.x, pl.y, texKey).setOrigin(0.5, originY).setDepth(depth);
           if (def.source_type === 'single_file') {
             const dw = def.display_w || 32;
             const dh = def.display_h || 48;
             s.setDisplaySize(dw, dh);
           }
+          applyPlacementTransform(s, pl, def);
           this.furnitureDecorSprites.push({ sprite: s, depth });
           const instanceId = pl.instanceId || pl.id;
           this._placedCatalogSprites[instanceId] = s;
@@ -1388,14 +1506,16 @@ class OfficeScene extends Phaser.Scene {
 
           if (!def || !parentSprite || !this.textures.exists(texKey)) return;
           const offsetY = pl.parent_offset_y !== undefined ? pl.parent_offset_y : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
-          const depth = typeof def.depth === 'number' ? def.depth : 2;
+          const py = parentSprite.y + offsetY;
+          const depth = furnitureRenderDepth(py, def, pl);
           const originY = def.origin === 'center' ? 0.5 : 1;
-          const s = this.add.image(parentSprite.x, parentSprite.y + offsetY, texKey).setOrigin(0.5, originY).setDepth(depth);
+          const s = this.add.image(parentSprite.x, py, texKey).setOrigin(0.5, originY).setDepth(depth);
           if (def.source_type === 'single_file') {
             const dw = def.display_w || 32;
             const dh = def.display_h || 48;
             s.setDisplaySize(dw, dh);
           }
+          applyPlacementTransform(s, pl, def);
           this.furnitureDecorSprites.push({ sprite: s, depth });
           const instanceId = pl.instanceId || pl.id;
           this._interactables.push({ id: pl.id, instanceId, sprite: s, def: { ...def, _placement: pl }, obstacle: null, parentInstanceId: pl.parentInstanceId || null });
@@ -1415,7 +1535,7 @@ class OfficeScene extends Phaser.Scene {
             // Decor is above the surface (up to 100px) and horizontally overlapping
             if (Math.abs(dx - sx) < sw && dy < sy && dy > sy - 100) {
               if (decor.sprite.depth <= surf.sprite.depth) {
-                decor.sprite.setDepth(surf.sprite.depth + 0.5);
+                decor.sprite.setDepth(surf.sprite.depth + 8);
               }
             }
           });
@@ -1431,8 +1551,6 @@ class OfficeScene extends Phaser.Scene {
           const instanceId = pl.instanceId || pl.id;
           if (this._placedCatalogSprites[instanceId]) return;
 
-          const depth = typeof def.depth === 'number' ? def.depth : 1.5;
-          const originY = def.origin === 'center' ? 0.5 : 1;
           let x = pl.x;
           let y = pl.y;
           if (pl.parentInstanceId) {
@@ -1442,8 +1560,11 @@ class OfficeScene extends Phaser.Scene {
             x = parentSprite.x;
             y = parentSprite.y + offsetY;
           }
+          const depth = furnitureRenderDepth(y, def, pl);
+          const originY = def.origin === 'center' ? 0.5 : 1;
           const s = this.add.image(x, y, texKey).setOrigin(0.5, originY).setDepth(depth);
           s.setDisplaySize(def.display_w || 32, def.display_h || 48);
+          applyPlacementTransform(s, pl, def);
           this.furnitureDecorSprites.push({ sprite: s, depth });
           this._placedCatalogSprites[instanceId] = s;
           this._interactables.push({
@@ -1801,6 +1922,8 @@ class OfficeScene extends Phaser.Scene {
     window.DenizenUnlockMovement = () => {
       const sc = window.game?.scene?.scenes?.[0];
       if (!sc) return false;
+      // Never tear down the map editor — canvas clicks use this unlock path for focus recovery.
+      if (window.__DenizenEditorActive) return false;
       sc.playerLocked = false;
       sc.playerState = 'walk';
       sc._playerOnPhone = false;
@@ -1818,7 +1941,6 @@ class OfficeScene extends Phaser.Scene {
         if (sc.input) sc.input.enabled = true;
         window.game?.loop?.resume?.();
       } catch (_) {}
-      if (typeof window.DenizenDisableEditor === 'function') window.DenizenDisableEditor();
       const r = window.__DenizenRawMoveKeys || {};
       const keysHeld = !!(r.up || r.down || r.left || r.right);
       if (sc.player?.body && !keysHeld) sc.player.body.setVelocity(0, 0);
@@ -2047,6 +2169,7 @@ class OfficeScene extends Phaser.Scene {
     const canvas = this.game?.canvas;
     if (!canvas) return;
     const refocus = () => {
+      if (window.__DenizenEditorActive) return;
       try {
         window.DenizenMovementGuard?.unlock?.();
       } catch (_) {}
@@ -2408,15 +2531,24 @@ class OfficeScene extends Phaser.Scene {
         const baseY = s.y + (s.displayHeight * (1 - s.originY));
         return isCharacter(s) ? baseY + 1 : baseY;
       };
+      // Only Y-sort root furniture — desk children are rebased above their parent after.
+      const childSprites = new Set();
+      (this._interactables || []).forEach((e) => {
+        if (e?.parentInstanceId && e.sprite) childSprites.add(e.sprite);
+      });
       const sortable = [];
       if (this.player) sortable.push(this.player);
       if (Array.isArray(this.npcs)) sortable.push(...this.npcs);
-      if (Array.isArray(this.furnitureDecorSprites)) sortable.push(...this.furnitureDecorSprites.map((e) => e.sprite).filter(Boolean));
+      (this._interactables || []).forEach((e) => {
+        if (!e?.sprite || childSprites.has(e.sprite)) return;
+        sortable.push(e.sprite);
+      });
       sortable.sort((a, b) => sortY(a) - sortY(b));
       sortable.forEach((s, i) => {
         if (isSittingNpc(s)) return;
         s.setDepth(10 + i);
       });
+      restackDeskChildren(this);
       sittingNpcSet.forEach((sitData, npcKey) => {
         const npc = this.npcs?.find(n => n.texture?.key === npcKey);
         if (!npc || !sitData.chairSprite) return;
@@ -3230,8 +3362,8 @@ function startOfficeWhenPhaserReady() {
 startOfficeWhenPhaserReady();
 
 // ========== DRAG & DROP EDITOR MODE ==========
-// Editor: Ctrl+Shift+E (localhost) or plain E when ?editor=1 is in the URL.
-// Double-click a placed sprite to delete it. Press X to export the updated placements.
+// Editor: Ctrl+Shift+E (or Cmd+Shift+E on Mac). Never plain E — that letter is
+// needed for chat / forms / spelling. ?editor=1 still auto-opens the editor.
 (function() {
   if (typeof Phaser === 'undefined' || !window.game) return;
   const DOUBLE_CLICK_MS = 260;
@@ -3246,6 +3378,20 @@ startOfficeWhenPhaserReady();
   let editorActive = false;
   let editorMode = 'furniture';
   let selectedSprite = null;
+  /** Multi-select: all currently-selected root sprites. selectedSprite mirrors the last one for compat. */
+  let selectedSprites = [];
+  let selectionGfx = null;
+  let selectionRotateHandle = null;
+  let editorGridGfx = null;
+  let editorPrefs = (window.DenizenMapEditorPro?.loadPrefs?.()) || { favorites: [], recent: [], onboardingDismissed: false, showGrid: true };
+  let catalogCategory = 'surface';
+  let catalogSearchTimer = null;
+  const CATALOG_LIST_LIMIT = 64;
+  let savedCameraState = null;
+  let spacePanning = false;
+  let panPointerActive = false;
+  let panPointerStart = null;
+  let panCameraStart = null;
   let selectedWallEntry = null;
   let wallCutMode = false;
   let wallPendingType = null;
@@ -3259,6 +3405,16 @@ startOfficeWhenPhaserReady();
   let layerFilter = 'all';
   let lastPointerTarget = null;
   let lastPointerAt = 0;
+  /** Sims-style translucent preview while a catalog item is pending placement. */
+  let placeGhost = null;
+  let pendingPlaceRotation = 0;
+  const MAX_EDITOR_UNDO = 40;
+  let editorUndoStack = [];
+  let editorRedoStack = [];
+  let dragUndoSnapshot = null;
+  let dragOrigin = null;
+  let restoringEditorHistory = false;
+  let editorChromeCollapsed = !!(editorPrefs.chromeCollapsed);
 
   function getScene() {
     return window.game?.scene?.scenes?.[0];
@@ -3272,12 +3428,210 @@ startOfficeWhenPhaserReady();
     return JSON.parse(JSON.stringify(Array.isArray(placements) ? placements : []));
   }
 
+  function captureEditorSnapshot(label = 'edit', { includeWalls = true, includeFurniture = true } = {}) {
+    const scene = getScene();
+    if (!scene) return null;
+    const state = initEditorState(scene);
+    const OW = getOpenplanWalls();
+    return {
+      label,
+      kind: includeWalls && !includeFurniture
+        ? 'walls'
+        : includeFurniture && !includeWalls
+          ? 'furniture'
+          : 'both',
+      placements: includeFurniture ? clonePlacements(state.placements) : null,
+      nextId: state.nextId,
+      walls: includeWalls && OW ? OW.layoutFromScene(scene, scene._wallLayoutInfo || {}) : null,
+    };
+  }
+
+  function updateUndoButtons() {
+    const undoBtn = document.getElementById('ed-undo-btn');
+    const redoBtn = document.getElementById('ed-redo-btn');
+    const undoLabel = editorUndoStack.length
+      ? editorUndoStack[editorUndoStack.length - 1].label
+      : '';
+    const redoLabel = editorRedoStack.length
+      ? editorRedoStack[editorRedoStack.length - 1].label
+      : '';
+    if (undoBtn) {
+      undoBtn.disabled = editorUndoStack.length === 0;
+      undoBtn.title = undoLabel ? `Undo ${undoLabel} (Ctrl/⌘Z)` : 'Nothing to undo';
+      undoBtn.setAttribute('aria-disabled', undoBtn.disabled ? 'true' : 'false');
+    }
+    if (redoBtn) {
+      redoBtn.disabled = editorRedoStack.length === 0;
+      redoBtn.title = redoLabel ? `Redo ${redoLabel} (Ctrl/⌘⇧Z)` : 'Nothing to redo';
+      redoBtn.setAttribute('aria-disabled', redoBtn.disabled ? 'true' : 'false');
+    }
+  }
+
+  function pushEditorUndo(label, opts) {
+    if (restoringEditorHistory) return;
+    // Default: furniture-only snapshots. Wall tools use pushWallUndo().
+    const options = opts || { includeWalls: false, includeFurniture: true };
+    const snap = captureEditorSnapshot(label, options);
+    if (!snap) return;
+    editorUndoStack.push(snap);
+    if (editorUndoStack.length > MAX_EDITOR_UNDO) editorUndoStack.shift();
+    editorRedoStack = [];
+    updateUndoButtons();
+  }
+
+  function pushWallUndo(label) {
+    pushEditorUndo(label, { includeWalls: true, includeFurniture: false });
+  }
+
+  function clearAllFurnitureEntries(scene) {
+    if (!scene?._interactables) return;
+    // Destroy without recursive syncInfo spam / pathfinder thrash.
+    const all = [...(scene._interactables || [])];
+    all.forEach((entry) => {
+      try {
+        removeObstacle(scene, entry.obstacle);
+        if (entry.sprite) entry.sprite.destroy();
+        delete scene._placedCatalogSprites?.[entry.instanceId];
+      } catch (_) {}
+    });
+    scene._interactables = [];
+    scene.furnitureDecorSprites = [];
+    scene._placedCatalogSprites = {};
+    const state = initEditorState(scene);
+    state.placements = [];
+  }
+
+  function restoreWallsFromSnapshot(scene, walls) {
+    const OW = getOpenplanWalls();
+    if (!OW || !walls) return;
+    // renderLayout already clears existing segments — don't removeSegment first
+    // (that left orphaned physics bodies and broke the map).
+    OW.renderLayout(scene, walls, scene._obstacles);
+    selectedWallEntry = null;
+    if (editorMode === 'walls') refreshWallEditorInteraction(scene);
+    renderWallSegmentList();
+  }
+
+  function restoreEditorSnapshot(snapshot) {
+    const scene = getScene();
+    if (!scene || !snapshot) return;
+    restoringEditorHistory = true;
+    try {
+      clearFurnitureSelection();
+      const state = initEditorState(scene);
+      state.pendingCatalogId = null;
+      destroyPlaceGhost();
+
+      const restoreFurniture = snapshot.placements != null
+        && (snapshot.kind === 'furniture' || snapshot.kind === 'both' || snapshot.kind == null);
+      const restoreWalls = snapshot.walls != null
+        && (snapshot.kind === 'walls' || snapshot.kind === 'both');
+
+      if (restoreFurniture) {
+        clearAllFurnitureEntries(scene);
+        state.placements = clonePlacements(snapshot.placements);
+        state.nextId = snapshot.nextId || 1;
+        const catalog = getCatalog(scene);
+        const parents = state.placements.filter((p) => !p.parentInstanceId && !p._comment);
+        const children = state.placements.filter((p) => p.parentInstanceId);
+        const placeAll = () => {
+          parents.forEach((placement) => makePlacementSprite(scene, placement));
+          children.forEach((placement) => makePlacementSprite(scene, placement));
+          scene._depthDirty = true;
+        };
+        // Preload any missing single-file textures before placing.
+        const missing = [];
+        state.placements.forEach((pl) => {
+          if (pl._comment) return;
+          const def = catalog?.objects?.[pl.id];
+          if (def?.source_type !== 'single_file') return;
+          const key = `single_${pl.id}`;
+          if (scene.textures.exists(key)) return;
+          const url = String(def.url_path || '').replace(/\\/g, '/');
+          if (!url) return;
+          missing.push({ key, url });
+        });
+        if (missing.length) {
+          missing.forEach(({ key, url }) => scene.load.image(key, url));
+          scene.load.once('complete', () => {
+            placeAll();
+            scene._agentManager?.refreshDeskAnchorsAfterLayoutChange?.();
+          });
+          if (!scene.load.isLoading()) scene.load.start();
+        } else {
+          placeAll();
+        }
+      }
+      if (restoreWalls) {
+        restoreWallsFromSnapshot(scene, snapshot.walls);
+      }
+
+      scene._depthDirty = true;
+      scene._agentManager?.refreshDeskAnchorsAfterLayoutChange?.();
+      // Quiet save — avoid flashing "Saving…" mid-undo.
+      scheduleLayoutSave(scene);
+      const selected = document.getElementById('ed-selected');
+      if (selected) selected.textContent = 'Nothing selected';
+      refreshEditorStatusChrome();
+    } finally {
+      restoringEditorHistory = false;
+      updateUndoButtons();
+    }
+  }
+
+  function undoEditorChange() {
+    if (!editorActive || !editorUndoStack.length) {
+      syncInfo('Nothing to undo');
+      return;
+    }
+    const scene = getScene();
+    if (!scene) return;
+    const snap = editorUndoStack.pop();
+    // Capture current state matching what the undo snapshot contains.
+    const current = captureEditorSnapshot('redo', {
+      includeFurniture: snap.placements != null,
+      includeWalls: snap.walls != null && snap.kind !== 'furniture',
+    });
+    if (current) {
+      current.kind = snap.kind || current.kind;
+      editorRedoStack.push(current);
+    }
+    restoreEditorSnapshot(snap);
+    syncInfo(`Undid ${snap.label}`);
+  }
+
+  function redoEditorChange() {
+    if (!editorActive || !editorRedoStack.length) {
+      syncInfo('Nothing to redo');
+      return;
+    }
+    const scene = getScene();
+    if (!scene) return;
+    const snap = editorRedoStack.pop();
+    const current = captureEditorSnapshot('undo', {
+      includeFurniture: snap.placements != null,
+      includeWalls: snap.walls != null && snap.kind !== 'furniture',
+    });
+    if (current) {
+      current.kind = snap.kind || current.kind;
+      editorUndoStack.push(current);
+    }
+    restoreEditorSnapshot(snap);
+    syncInfo(`Redid ${snap.label}`);
+  }
+
   function initEditorState(scene) {
     if (scene._editorState) return scene._editorState;
     const catalog = getCatalog(scene);
+    const placements = clonePlacements(catalog?.placements);
+    let nextId = 1;
+    for (const p of placements) {
+      const m = String(p.instanceId || '').match(/_(\d+)$/);
+      if (m) nextId = Math.max(nextId, Number(m[1]) + 1);
+    }
     scene._editorState = {
-      placements: clonePlacements(catalog?.placements),
-      nextId: 1,
+      placements,
+      nextId,
       pendingCatalogId: null
     };
     return scene._editorState;
@@ -3286,6 +3640,29 @@ startOfficeWhenPhaserReady();
   function syncInfo(text) {
     const info = document.getElementById('ed-info');
     if (info) info.textContent = text;
+    refreshEditorStatusChrome();
+  }
+
+  function refreshEditorStatusChrome() {
+    const scene = getScene();
+    const modeEl = document.getElementById('ed-status-mode');
+    const panel = document.getElementById('ed-status-panel');
+    if (!modeEl || !panel) return;
+    const pending = scene?._editorState?.pendingCatalogId;
+    let mode = 'idle';
+    let label = 'Ready';
+    if (editorMode === 'walls') {
+      mode = 'walls';
+      label = 'Walls';
+    } else if (pending) {
+      mode = 'placing';
+      label = 'Placing';
+    } else if (selectedSprite) {
+      mode = 'selected';
+      label = 'Selected';
+    }
+    modeEl.textContent = label;
+    panel.dataset.mode = mode;
   }
 
   function getOpenplanWalls() {
@@ -3357,6 +3734,7 @@ startOfficeWhenPhaserReady();
       resetWallClickStreak();
       const id = entry.instanceId;
       const label = OW.segmentLabel(entry.data);
+      pushWallUndo(`delete ${label}`);
       if (selectedWallEntry === entry) selectedWallEntry = null;
       OW.removeSegment(scene, id, scene._obstacles);
       syncWallCorners(scene);
@@ -3426,6 +3804,7 @@ startOfficeWhenPhaserReady();
       row.querySelector('.wall-list-del').addEventListener('click', (e) => {
         e.stopPropagation();
         const id = entry.instanceId;
+        pushWallUndo(`delete ${OW.segmentLabel(d)}`);
         if (selectedWallEntry === entry) selectedWallEntry = null;
         OW.removeSegment(scene, id, scene._obstacles);
         syncWallCorners(scene);
@@ -3439,6 +3818,7 @@ startOfficeWhenPhaserReady();
     const scene = getScene();
     const OW = getOpenplanWalls();
     if (!scene || !OW) return;
+    pushWallUndo('rebuild perimeter');
     const removeIds = (scene._wallSegments || [])
       .filter((e) => (
         e.data.instanceId?.startsWith('wall_perim_')
@@ -3494,6 +3874,7 @@ startOfficeWhenPhaserReady();
         entry._wallDragged = true;
         resetWallClickStreak();
         selectWallEntry(entry);
+        pushWallUndo(`move ${OW.segmentLabel(entry.data)}`);
         entry._dragStart = { ...entry.data };
       });
       entry.hit.on('drag', (_p, dragX, dragY) => {
@@ -3565,6 +3946,7 @@ startOfficeWhenPhaserReady();
   function placeWallSegmentData(scene, seg) {
     const OW = getOpenplanWalls();
     if (!OW || !scene || !seg) return null;
+    pushWallUndo(`place ${OW.segmentLabel(seg)}`);
     const entry = OW.renderSegment(scene, seg, scene._obstacles);
     scene._wallSegments.push(entry);
     OW.syncAutoCorners(scene, scene._obstacles);
@@ -3578,6 +3960,7 @@ startOfficeWhenPhaserReady();
   function placeWallSegmentsData(scene, segs) {
     const OW = getOpenplanWalls();
     if (!OW || !scene || !segs?.length) return null;
+    pushWallUndo(segs.length > 1 ? 'place L-wall' : `place ${OW.segmentLabel(segs[0])}`);
     let last = null;
     segs.forEach((seg) => {
       const entry = OW.renderSegment(scene, seg, scene._obstacles);
@@ -3625,6 +4008,7 @@ startOfficeWhenPhaserReady();
     const scene = getScene();
     const OW = getOpenplanWalls();
     if (!scene || !OW || !selectedWallEntry) return;
+    pushWallUndo(`duplicate ${OW.segmentLabel(selectedWallEntry.data)}`);
     const copy = OW.duplicateSegment(selectedWallEntry.data, 32);
     const entry = OW.renderSegment(scene, copy, scene._obstacles);
     scene._wallSegments.push(entry);
@@ -3639,6 +4023,7 @@ startOfficeWhenPhaserReady();
     if (!scene || !OW || !selectedWallEntry) return;
     const id = selectedWallEntry.instanceId;
     const label = OW.segmentLabel(selectedWallEntry.data);
+    pushWallUndo(`delete ${label}`);
     OW.removeSegment(scene, id, scene._obstacles);
     selectedWallEntry = null;
     syncWallCorners(scene);
@@ -3654,6 +4039,7 @@ startOfficeWhenPhaserReady();
       syncInfo('Cut failed — click closer to middle of segment (min 32px each side)');
       return;
     }
+    pushWallUndo(`cut ${OW.segmentLabel(selectedWallEntry.data)}`);
     OW.removeSegment(scene, selectedWallEntry.instanceId, scene._obstacles);
     parts.forEach((p) => scene._wallSegments.push(OW.renderSegment(scene, p, scene._obstacles)));
     selectedWallEntry = scene._wallSegments[scene._wallSegments.length - 1];
@@ -3687,13 +4073,23 @@ startOfficeWhenPhaserReady();
     const wallPanel = document.getElementById('editor-wall-tools');
     const tabF = document.getElementById('ed-tab-furniture');
     const tabW = document.getElementById('ed-tab-walls');
+    const furnitureTools = document.getElementById('ed-furniture-tools');
     if (catPanel) catPanel.style.display = editorMode === 'furniture' ? 'flex' : 'none';
     if (wallPanel) wallPanel.style.display = editorMode === 'walls' ? 'flex' : 'none';
-    if (tabF) tabF.classList.toggle('active', editorMode === 'furniture');
-    if (tabW) tabW.classList.toggle('active', editorMode === 'walls');
+    if (furnitureTools) furnitureTools.style.display = editorMode === 'furniture' ? 'flex' : 'none';
+    if (tabF) {
+      tabF.classList.toggle('active', editorMode === 'furniture');
+      tabF.setAttribute('aria-selected', editorMode === 'furniture' ? 'true' : 'false');
+    }
+    if (tabW) {
+      tabW.classList.toggle('active', editorMode === 'walls');
+      tabW.setAttribute('aria-selected', editorMode === 'walls' ? 'true' : 'false');
+    }
     wallCutMode = false;
     clearWallDrawPreview();
     if (editorMode === 'walls') {
+      destroyPlaceGhost();
+      destroySelectionOverlay();
       setWallTool('draw');
       if (scene?._interactables) {
         scene._interactables.forEach((entry) => {
@@ -3715,8 +4111,142 @@ startOfficeWhenPhaserReady();
       if (scene?._interactables) {
         scene._interactables.forEach((entry) => prepareSpriteForEditing(scene, entry));
       }
-      syncInfo('Drag a catalog sprite into the room or click to place.');
+      syncPlaceGhost(scene);
+      updateSelectionOverlay();
+      syncInfo('Pick a catalog item — ghost follows your cursor. Click the map to place.');
     }
+    refreshEditorStatusChrome();
+  }
+
+  function destroyPlaceGhost() {
+    if (placeGhost?.sprite) {
+      try { placeGhost.sprite.destroy(); } catch (_) {}
+    }
+    placeGhost = null;
+  }
+
+  function applyGhostTransform() {
+    if (!placeGhost?.sprite) return;
+    applyPlacementTransform(placeGhost.sprite, {
+      rotation: placeGhost.rotation,
+      scale: placeGhost.scale || 1,
+      flipX: !!placeGhost.flipX,
+      flipY: !!placeGhost.flipY,
+    }, placeGhost.def);
+  }
+
+  function ensureSingleTexture(scene, catalogId, def, onReady) {
+    const singleKey = `single_${catalogId}`;
+    if (scene.textures.exists(singleKey)) {
+      onReady?.(singleKey);
+      return singleKey;
+    }
+    const url = String(def.url_path || '').replace(/\\/g, '/');
+    if (!url) return null;
+    scene.load.image(singleKey, url);
+    scene.load.once('complete', () => {
+      if (scene.textures.exists(singleKey)) onReady?.(singleKey);
+    });
+    if (!scene.load.isLoading()) scene.load.start();
+    return null;
+  }
+
+  function syncPlaceGhost(scene) {
+    if (!scene || !editorActive || editorMode !== 'furniture') {
+      destroyPlaceGhost();
+      return;
+    }
+    const state = initEditorState(scene);
+    const catalogId = state.pendingCatalogId;
+    if (!catalogId) {
+      destroyPlaceGhost();
+      return;
+    }
+    const def = getCatalog(scene)?.objects?.[catalogId];
+    if (!def) {
+      destroyPlaceGhost();
+      return;
+    }
+
+    const buildGhost = (texKey) => {
+      if (!texKey || !scene.textures.exists(texKey)) return;
+      if (placeGhost?.catalogId === catalogId && placeGhost.sprite?.texture?.key === texKey) {
+        applyGhostTransform();
+        return;
+      }
+      const prevX = placeGhost?.sprite?.x;
+      const prevY = placeGhost?.sprite?.y;
+      destroyPlaceGhost();
+      const originY = def.origin === 'center' ? 0.5 : 1;
+      const sprite = scene.add.image(prevX || 0, prevY || 0, texKey)
+        .setOrigin(0.5, originY)
+        .setDepth(12000)
+        .setAlpha(0.55);
+      if (def.source_type === 'single_file') {
+        sprite.setDisplaySize(def.display_w || 32, def.display_h || 48);
+      }
+      placeGhost = {
+        sprite,
+        catalogId,
+        def,
+        rotation: pendingPlaceRotation,
+        scale: 1,
+        flipX: false,
+        flipY: false,
+      };
+      applyGhostTransform();
+    };
+
+    if (def.source_type === 'single_file') {
+      ensureSingleTexture(scene, catalogId, def, (key) => {
+        const st = initEditorState(scene);
+        if (st.pendingCatalogId === catalogId) buildGhost(key);
+      });
+      const existing = `single_${catalogId}`;
+      if (scene.textures.exists(existing)) buildGhost(existing);
+      return;
+    }
+
+    buildGhost(ensureCatalogTexture(scene, catalogId, def));
+  }
+
+  function updatePlaceGhostAt(worldX, worldY) {
+    if (!placeGhost?.sprite) return;
+    const scene = getScene();
+    const def = placeGhost.def;
+    const desk = scene && isStackableDecor(placeGhost.catalogId, def)
+      ? findDeskUnderPoint(scene, worldX, worldY, { maxDist: 64 })
+      : null;
+    if (desk) {
+      const oy = def?.parent_offset_y !== undefined ? def.parent_offset_y : -18;
+      placeGhost.sprite.x = snapCoord(worldX);
+      placeGhost.sprite.y = snapCoord(desk.sprite.y + oy);
+      placeGhost.sprite.clearTint();
+      placeGhost.sprite.setTint(0x7dd3fc);
+      syncInfo(`On desk: ${desk.id} — click to place lamp/decor on top`);
+      return;
+    }
+    placeGhost.sprite.x = snapCoord(worldX);
+    placeGhost.sprite.y = snapCoord(worldY);
+    const MEP = window.DenizenMapEditorPro;
+    if (!scene || !MEP) return;
+    const bounds = MEP.spriteWorldBounds(placeGhost.sprite);
+    const colliding = MEP.placementCollides(scene, bounds, [placeGhost.sprite]);
+    if (colliding) {
+      placeGhost.sprite.setTint(0xff6666);
+      syncInfo(`Overlaps — still placeable · ${placeGhost.catalogId} · ${Math.round(placeGhost.rotation)}°`);
+    } else {
+      placeGhost.sprite.clearTint();
+    }
+  }
+
+  function rotatePlaceGhost(deltaDeg) {
+    if (!placeGhost) return false;
+    placeGhost.rotation = (((placeGhost.rotation + deltaDeg) % 360) + 360) % 360;
+    pendingPlaceRotation = placeGhost.rotation;
+    applyGhostTransform();
+    syncInfo(`Ghost ${placeGhost.catalogId} · ${Math.round(placeGhost.rotation)}° — click map to place · scroll/,/. rotate`);
+    return true;
   }
 
   function setPendingCatalog(id) {
@@ -3724,23 +4254,37 @@ startOfficeWhenPhaserReady();
     if (!scene) return;
     const state = initEditorState(scene);
     state.pendingCatalogId = id || null;
+    if (id && selectedSprites.length) {
+      clearFurnitureSelection();
+    }
+    if (!id) pendingPlaceRotation = 0;
     const selected = document.getElementById('ed-selected');
     if (selected) {
       selected.textContent = state.pendingCatalogId
-        ? `Selected: ${state.pendingCatalogId} (${getCatalog(scene)?.objects?.[state.pendingCatalogId]?.type || 'unknown'})`
-        : 'Selected: none';
+        ? `Armed: ${state.pendingCatalogId} · ${Math.round(pendingPlaceRotation)}° — click map to drop`
+        : (selectedSprite ? selected.textContent : 'Nothing selected');
     }
     document.querySelectorAll('#ed-catalog-list .cat-item').forEach((el) => {
       el.classList.toggle('active', el.dataset.catalogId === state.pendingCatalogId);
     });
+    syncPlaceGhost(scene);
+    if (state.pendingCatalogId) {
+      syncInfo(`Placing ${state.pendingCatalogId} — move mouse, scroll to rotate, click to drop`);
+    } else {
+      refreshEditorStatusChrome();
+    }
   }
 
   function getCanvasWorldPoint(scene, clientX, clientY) {
     const canvas = scene?.game?.canvas;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
-    const screenX = clientX - rect.left;
-    const screenY = clientY - rect.top;
+    if (!rect.width || !rect.height) return null;
+    // Canvas is CSS-scaled (e.g. 1080×607.5 display vs 1280×720 buffer).
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const screenX = (clientX - rect.left) * scaleX;
+    const screenY = (clientY - rect.top) * scaleY;
     return scene.cameras.main.getWorldPoint(screenX, screenY);
   }
 
@@ -3752,7 +4296,9 @@ startOfficeWhenPhaserReady();
     if (!scene || !def) return null;
     if (def.source_type === 'single_file') {
       const singleKey = `single_${catalogId}`;
-      return scene.textures.exists(singleKey) ? singleKey : null;
+      if (scene.textures.exists(singleKey)) return singleKey;
+      // Texture not loaded yet — caller should queue a load; don't silently fail forever.
+      return null;
     }
 
     const texKey = `cat_${catalogId}`;
@@ -3780,38 +4326,307 @@ startOfficeWhenPhaserReady();
     return texKey;
   }
 
-  function buildCatalogPreview(scene, catalogId, def) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 48;
-    canvas.height = 48;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, 48, 48);
+  function loadSingleThenPlace(scene, catalogId, def, worldX, worldY) {
+    const url = String(def.url_path || '').replace(/\\/g, '/');
+    if (!url) {
+      syncInfo(`Missing url_path for ${catalogId}`);
+      return null;
+    }
+    const singleKey = `single_${catalogId}`;
+    syncInfo(`Loading ${catalogId}…`);
+    scene.load.image(singleKey, url);
+    scene.load.once('complete', () => {
+      addCatalogPlacement(scene, catalogId, worldX, worldY);
+    });
+    if (!scene.load.isLoading()) scene.load.start();
+    return null;
+  }
 
-    if (def.source_type === 'single_file') {
-      const singleKey = `single_${catalogId}`;
-      if (scene.textures.exists(singleKey)) {
-        const img = scene.textures.get(singleKey).getSourceImage();
-        const scale = Math.min(40 / img.width, 40 / img.height, 1);
-        const dw = Math.max(1, Math.round(img.width * scale));
-        const dh = Math.max(1, Math.round(img.height * scale));
-        ctx.drawImage(img, Math.round((48 - dw) / 2), Math.round((48 - dh) / 2), dw, dh);
+  function buildCatalogPreview(scene, catalogId, def, size = 64) {
+    // Named singles: use the PNG URL directly so thumbs work without Phaser preload.
+    if (def?.source_type === 'single_file') {
+      const url = String(def.url_path || '').replace(/\\/g, '/');
+      if (url) {
+        const img = document.createElement('img');
+        img.src = url.startsWith('/') || url.startsWith('http') ? url : `./${url}`;
+        img.alt = def.displayName || catalogId;
+        img.width = size;
+        img.height = size;
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.style.cssText = [
+          `width:${size}px`,
+          `height:${size}px`,
+          'object-fit:contain',
+          'image-rendering:pixelated',
+          'image-rendering:crisp-edges',
+          'background:rgba(255,255,255,0.04)',
+          'border-radius:6px',
+        ].join(';');
+        img.onerror = () => {
+          img.style.opacity = '0.25';
+          img.title = `Missing: ${url}`;
+        };
+        return img;
       }
-      return canvas;
     }
 
-    const sheetKey = def.sheet;
-    if (!sheetKey || !scene.textures.exists(sheetKey)) return canvas;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, size, size);
+    const pad = size - 8;
+
+    const sheetKey = def?.sheet;
+    if (!sheetKey || !scene?.textures?.exists(sheetKey)) return canvas;
     const img = scene.textures.get(sheetKey).getSourceImage();
     const sx = def.rect ? def.rect.x : (def.x || 0);
     const sy = def.rect ? def.rect.y : (def.y || 0);
     const sw = Math.max(1, def.rect ? def.rect.w : (def.w || 16));
     const sh = Math.max(1, def.rect ? def.rect.h : (def.h || 16));
-    const scale = Math.min(40 / sw, 40 / sh, 1);
+    const scale = Math.min(pad / sw, pad / sh, 1);
     const dw = Math.max(1, Math.round(sw * scale));
     const dh = Math.max(1, Math.round(sh * scale));
-    ctx.drawImage(img, sx, sy, sw, sh, Math.round((48 - dw) / 2), Math.round((48 - dh) / 2), dw, dh);
+    try {
+      ctx.drawImage(img, sx, sy, sw, sh, Math.round((size - dw) / 2), Math.round((size - dh) / 2), dw, dh);
+    } catch (_) { /* bad crop */ }
     return canvas;
+  }
+
+  function renderCategoryChips() {
+    const row = document.getElementById('ed-cat-chips');
+    const MEP = window.DenizenMapEditorPro;
+    if (!row || !MEP) return;
+    row.innerHTML = '';
+    MEP.CATEGORIES.forEach((cat) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'ed-cat-chip';
+      chip.textContent = cat.label;
+      chip.dataset.catId = cat.id;
+      chip.classList.toggle('active', catalogCategory === cat.id);
+      chip.addEventListener('click', () => {
+        catalogCategory = cat.id;
+        renderCategoryChips();
+        renderCatalogList();
+      });
+      row.appendChild(chip);
+    });
+  }
+
+  function renderRoomTemplates() {
+    const row = document.getElementById('ed-template-row');
+    const MEP = window.DenizenMapEditorPro;
+    if (!row || !MEP) return;
+    row.innerHTML = '';
+    MEP.getRoomTemplates().forEach((tpl) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ed-template-btn';
+      btn.textContent = tpl.label;
+      btn.title = tpl.hint || tpl.label;
+      btn.addEventListener('click', () => placeRoomTemplate(tpl));
+      row.appendChild(btn);
+    });
+  }
+
+  /** Places a template item without arming the ghost/pending-place UI (used for batch template drops). */
+  function placeTemplateItem(scene, catalogId, worldX, worldY) {
+    const catalog = getCatalog(scene);
+    const def = catalog?.objects?.[catalogId];
+    if (!def || (def.source_type === 'single_file' && !scene.textures.exists(`single_${catalogId}`))) return null;
+    const state = initEditorState(scene);
+    const placement = {
+      id: catalogId,
+      instanceId: `editor_${catalogId}_${state.nextId++}`,
+      x: snapCoord(worldX),
+      y: snapCoord(worldY),
+      rotation: 0,
+      scale: 1,
+      flipX: false,
+      flipY: false,
+    };
+    state.placements.push(placement);
+    return makePlacementSprite(scene, placement);
+  }
+
+  function placeRoomTemplate(tpl) {
+    const scene = getScene();
+    if (!scene || !tpl?.placements?.length) return;
+    const catalog = getCatalog(scene);
+    const cam = scene.cameras.main;
+    const cx = cam ? cam.scrollX + cam.width / 2 : 640;
+    const cy = cam ? cam.scrollY + cam.height / 2 : 360;
+    const valid = tpl.placements.filter((p) => catalog?.objects?.[p.id]);
+    if (!valid.length) {
+      syncInfo(`Template "${tpl.label}" — no matching catalog items found`);
+      return;
+    }
+    pushEditorUndo(`place template ${tpl.label}`);
+    const placed = [];
+    valid.forEach((p) => {
+      const entry = placeTemplateItem(scene, p.id, cx + (p.x || 0), cy + (p.y || 0));
+      if (entry) placed.push(entry);
+    });
+    if (!placed.length) {
+      syncInfo(`Template "${tpl.label}" — failed to place any items`);
+      return;
+    }
+    selectedSprites.forEach((sprite) => {
+      if (sprite && typeof sprite.clearTint === 'function') sprite.clearTint();
+    });
+    selectedSprites = placed.map((entry) => entry.sprite);
+    selectedSprite = selectedSprites[selectedSprites.length - 1];
+    placed.forEach((entry) => {
+      if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x66ff99);
+    });
+    updateSelectionOverlay();
+    scene._depthDirty = true;
+    scheduleLayoutSave(scene);
+    syncInfo(`Placed template "${tpl.label}" (${placed.length}/${tpl.placements.length} items)`);
+  }
+
+  function createEditorGrid(scene) {
+    destroyEditorGrid();
+    if (!scene || !editorPrefs.showGrid) return;
+    const MEP = window.DenizenMapEditorPro;
+    if (!MEP) return;
+    editorGridGfx = scene.add.graphics();
+    MEP.drawEditorGrid(editorGridGfx, scene.scale?.width || 1280, scene.scale?.height || 720);
+  }
+
+  function destroyEditorGrid() {
+    if (editorGridGfx) {
+      try { editorGridGfx.destroy(); } catch (_) {}
+    }
+    editorGridGfx = null;
+  }
+
+  function toggleEditorGrid() {
+    editorPrefs = { ...editorPrefs, showGrid: !editorPrefs.showGrid };
+    window.DenizenMapEditorPro?.savePrefs?.(editorPrefs);
+    createEditorGrid(getScene());
+    const btn = document.getElementById('ed-grid-btn');
+    if (btn) {
+      btn.textContent = 'Grid';
+      btn.classList.toggle('ed-btn-primary', editorPrefs.showGrid);
+    }
+  }
+
+  function zoomEditorCamera(deltaZoom) {
+    const scene = getScene();
+    if (!scene) return;
+    const cam = scene.cameras.main;
+    const z = Math.min(2, Math.max(0.5, Math.round((cam.zoom + deltaZoom) * 100) / 100));
+    cam.setZoom(z);
+    syncInfo(`Zoom ${Math.round(z * 100)}%`);
+  }
+
+  function resetEditorCamera() {
+    const scene = getScene();
+    if (!scene) return;
+    scene.cameras.main.setZoom(1);
+    if (savedCameraState) {
+      scene.cameras.main.scrollX = savedCameraState.scrollX;
+      scene.cameras.main.scrollY = savedCameraState.scrollY;
+    }
+    syncInfo('View reset');
+  }
+
+  function endCameraPan() {
+    panPointerActive = false;
+    panPointerStart = null;
+    panCameraStart = null;
+    spacePanning = false;
+  }
+
+  function updateOnboardingStrip() {
+    const strip = document.getElementById('ed-onboard');
+    if (!strip) return;
+    strip.style.display = editorPrefs.onboardingDismissed ? 'none' : 'flex';
+  }
+
+  function dismissOnboardingStrip() {
+    editorPrefs = { ...editorPrefs, onboardingDismissed: true };
+    window.DenizenMapEditorPro?.savePrefs?.(editorPrefs);
+    updateOnboardingStrip();
+  }
+
+  function applyEditorChromeCollapsed() {
+    if (!editorUI) return;
+    editorUI.classList.toggle('ed-chrome-collapsed', !!editorChromeCollapsed);
+    const btn = document.getElementById('ed-collapse-btn');
+    if (btn) btn.textContent = editorChromeCollapsed ? 'Show UI' : 'Hide UI';
+  }
+
+  function toggleEditorChrome() {
+    editorChromeCollapsed = !editorChromeCollapsed;
+    editorPrefs = { ...editorPrefs, chromeCollapsed: editorChromeCollapsed };
+    window.DenizenMapEditorPro?.savePrefs?.(editorPrefs);
+    applyEditorChromeCollapsed();
+    if (!editorChromeCollapsed) setEditorMode(editorMode);
+    syncInfo(editorChromeCollapsed
+      ? 'UI hidden — press Tab or Show UI to bring panels back'
+      : 'UI restored');
+  }
+
+  function setSaveStatus(text, tone = 'idle') {
+    const el = document.getElementById('ed-save-status');
+    if (!el) return;
+    el.textContent = text;
+    el.dataset.tone = tone;
+  }
+
+  function selectAllFurniture() {
+    const scene = getScene();
+    if (!scene?._interactables) return;
+    const roots = scene._interactables.filter((entry) => !entry.parentInstanceId && entry.sprite);
+    if (!roots.length) return;
+    selectedSprites.forEach((sprite) => {
+      if (sprite && typeof sprite.clearTint === 'function') sprite.clearTint();
+    });
+    selectedSprites = roots.map((entry) => entry.sprite);
+    selectedSprite = selectedSprites[selectedSprites.length - 1];
+    roots.forEach((entry) => {
+      if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x66ff99);
+    });
+    setPendingCatalog(null);
+    syncSelectedReadout(roots[roots.length - 1]);
+    updateSelectionOverlay();
+    syncInfo(`Selected all ${roots.length} furniture item(s)`);
+  }
+
+  function nudgeSelectedFurniture(key) {
+    const scene = getScene();
+    if (!scene) return;
+    const entries = getSelectedFurnitureEntries(scene);
+    if (!entries.length) return;
+    const step = 4;
+    let dx = 0;
+    let dy = 0;
+    if (key === 'ArrowUp') dy = -step;
+    else if (key === 'ArrowDown') dy = step;
+    else if (key === 'ArrowLeft') dx = -step;
+    else if (key === 'ArrowRight') dx = step;
+    if (!dx && !dy) return;
+    pushEditorUndo(entries.length > 1 ? `nudge ${entries.length} items` : `nudge ${entries[0].id}`);
+    entries.forEach((entry) => {
+      entry.sprite.x += dx;
+      entry.sprite.y += dy;
+      refreshFurnitureDepth(entry);
+      if (entry.obstacle) {
+        entry.obstacle.x = entry.sprite.x;
+        entry.obstacle.y = entry.sprite.y;
+        if (entry.obstacle.body) entry.obstacle.body.updateFromGameObject();
+      }
+      writeTransformToPlacement(entry);
+    });
+    syncSelectedReadout(entries[0]);
+    updateSelectionOverlay();
+    scene._depthDirty = true;
+    scheduleLayoutSave(scene);
   }
 
   function renderCatalogList() {
@@ -3820,26 +4635,81 @@ startOfficeWhenPhaserReady();
     if (!scene || !list) return;
     const catalog = getCatalog(scene);
     const state = initEditorState(scene);
+    const MEP = window.DenizenMapEditorPro;
     const query = (document.getElementById('ed-search')?.value || '').trim().toLowerCase();
-    const entries = Object.entries(catalog?.objects || {})
-      .filter(([id, def]) => {
-        if (!query) return true;
-        return id.toLowerCase().includes(query) || (def.type || '').toLowerCase().includes(query);
-      })
-      .sort((a, b) => a[0].localeCompare(b[0]));
+    const allEntries = Object.entries(catalog?.objects || {});
+    let entries = MEP
+      ? MEP.filterCatalogEntries(allEntries, { query, category: catalogCategory, prefs: editorPrefs })
+      : allEntries
+        .filter(([id, def]) => !query || id.toLowerCase().includes(query) || String(def.type || '').toLowerCase().includes(query))
+        .sort((a, b) => a[0].localeCompare(b[0]));
 
+    const totalMatched = entries.length;
+    if (entries.length > CATALOG_LIST_LIMIT) {
+      entries = entries.slice(0, CATALOG_LIST_LIMIT);
+    }
+
+    const countEl = document.getElementById('ed-catalog-count');
+    if (countEl) {
+      if (!query && catalogCategory === 'all' && totalMatched > CATALOG_LIST_LIMIT) {
+        countEl.textContent = `Showing ${entries.length} of ${totalMatched} — pick a category or search`;
+      } else if (totalMatched > entries.length) {
+        countEl.textContent = `Showing ${entries.length} of ${totalMatched} matches`;
+      } else {
+        countEl.textContent = `${totalMatched} item${totalMatched === 1 ? '' : 's'}`;
+      }
+    }
+
+    const frag = document.createDocumentFragment();
     list.innerHTML = '';
+    if (!entries.length) {
+      const empty = document.createElement('div');
+      empty.className = 'cat-empty';
+      empty.textContent = catalogCategory === 'favorites'
+        ? 'No favorites yet — click ☆ on an item.'
+        : catalogCategory === 'recent'
+        ? 'Nothing placed yet this session.'
+        : 'No matches.';
+      list.appendChild(empty);
+      return;
+    }
     entries.forEach(([id, def]) => {
       const item = document.createElement('div');
       item.className = 'cat-item';
       item.dataset.catalogId = id;
       item.draggable = true;
       if (state.pendingCatalogId === id) item.classList.add('active');
-      item.appendChild(buildCatalogPreview(scene, id, def));
+
+      const thumbWrap = document.createElement('div');
+      thumbWrap.className = 'cat-thumb-wrap';
+      thumbWrap.appendChild(buildCatalogPreview(scene, id, def, 48));
+      if (MEP?.isWallMount?.(id, def)) {
+        const badge = document.createElement('span');
+        badge.className = 'cat-badge';
+        badge.textContent = 'wall';
+        thumbWrap.appendChild(badge);
+      }
+      const starBtn = document.createElement('button');
+      starBtn.type = 'button';
+      starBtn.className = 'cat-star';
+      const isFav = (editorPrefs.favorites || []).includes(id);
+      starBtn.textContent = isFav ? '★' : '☆';
+      starBtn.classList.toggle('active', isFav);
+      starBtn.title = isFav ? 'Remove favorite' : 'Add to favorites';
+      starBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        editorPrefs = MEP ? MEP.toggleFavorite(editorPrefs, id) : editorPrefs;
+        renderCatalogList();
+      });
+      thumbWrap.appendChild(starBtn);
+      item.appendChild(thumbWrap);
 
       const meta = document.createElement('div');
       meta.className = 'cat-meta';
-      meta.innerHTML = `<div class="cat-name">${id}</div><div class="cat-type">${def.type || 'unknown'}</div>`;
+      const label = def.displayName || id;
+      const typeBits = [def.type || 'unknown'];
+      if (def.stack_on === 'surface' || def.stack_on === 'desk') typeBits.push('on desk');
+      meta.innerHTML = `<div class="cat-name" title="${id}">${label}</div><div class="cat-type">${typeBits.join(' · ')}</div>`;
       item.appendChild(meta);
 
       item.addEventListener('click', () => setPendingCatalog(id));
@@ -3848,8 +4718,17 @@ startOfficeWhenPhaserReady();
         event.dataTransfer.effectAllowed = 'copy';
         event.dataTransfer.setData('text/plain', id);
       });
-      list.appendChild(item);
+      frag.appendChild(item);
     });
+    list.appendChild(frag);
+  }
+
+  function scheduleCatalogListRender() {
+    if (catalogSearchTimer) clearTimeout(catalogSearchTimer);
+    catalogSearchTimer = setTimeout(() => {
+      catalogSearchTimer = null;
+      renderCatalogList();
+    }, 140);
   }
 
   function createEditorUI() {
@@ -3862,80 +4741,279 @@ startOfficeWhenPhaserReady();
           position: fixed;
           inset: 0;
           pointer-events: none;
-          z-index: 9999;
-          font-family: 'Segoe UI', system-ui, sans-serif;
-          color: #fff;
+          z-index: 200000;
+          font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+          color: #f8fafc;
         }
         #editor-toolbar {
           pointer-events: auto;
           position: fixed;
           top: 0;
           left: 0;
-          right: 320px;
-          height: 38px;
-          background: rgba(233, 69, 96, 0.96);
+          right: 340px;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 10px 14px 12px;
+          overflow: hidden;
+          background:
+            linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.96) 100%);
+          border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+          box-shadow: 0 10px 28px rgba(2, 6, 23, 0.35);
+        }
+        #editor-toolbar .ed-row {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 0 12px;
-          font-size: 12px;
+          min-width: 0;
         }
-        #editor-toolbar .title { font-weight: 700; font-size: 14px; }
-        #editor-toolbar .info,
-        #editor-toolbar .selected {
-          background: rgba(0, 0, 0, 0.28);
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        #editor-toolbar .ed-row-top { gap: 12px; }
+        #editor-toolbar .ed-row-tools {
+          flex-wrap: wrap;
+          padding-top: 2px;
+        }
+        #editor-toolbar .ed-brand {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+        #editor-toolbar .ed-brand-mark {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: #38bdf8;
+          box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.18);
+        }
+        #editor-toolbar .title {
+          font-weight: 700;
+          font-size: 13px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #e2e8f0;
+        }
+        #editor-mode-tabs {
+          display: inline-flex;
+          gap: 4px;
+          padding: 3px;
+          border-radius: 10px;
+          background: rgba(15, 23, 42, 0.75);
+          border: 1px solid rgba(148, 163, 184, 0.22);
+          flex-shrink: 0;
+        }
+        #editor-mode-tabs button {
+          min-height: 34px;
+          min-width: 96px;
+          padding: 0 14px;
+          border: 0;
+          border-radius: 8px;
+          background: transparent;
+          color: #cbd5e1;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        #editor-mode-tabs button:hover {
+          background: rgba(148, 163, 184, 0.12);
+          color: #fff;
+        }
+        #editor-mode-tabs button.active {
+          background: #38bdf8;
+          color: #0f172a;
+        }
+        #ed-status-panel {
+          flex: 1;
+          min-width: 220px;
+          display: grid;
+          grid-template-columns: auto 1fr;
+          gap: 4px 10px;
+          align-items: center;
+          padding: 8px 12px;
+          border-radius: 10px;
+          background: rgba(15, 23, 42, 0.72);
+          border: 1px solid rgba(148, 163, 184, 0.22);
+        }
+        #ed-status-panel[data-mode="placing"] {
+          border-color: rgba(56, 189, 248, 0.55);
+          background: rgba(14, 116, 144, 0.28);
+        }
+        #ed-status-panel[data-mode="selected"] {
+          border-color: rgba(74, 222, 128, 0.5);
+          background: rgba(21, 128, 61, 0.22);
+        }
+        #ed-status-panel[data-mode="walls"] {
+          border-color: rgba(251, 191, 36, 0.45);
+          background: rgba(146, 64, 14, 0.22);
+        }
+        #ed-status-mode {
+          grid-row: 1 / span 2;
+          align-self: stretch;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 72px;
+          padding: 0 10px;
+          border-radius: 8px;
+          background: rgba(248, 250, 252, 0.08);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #f8fafc;
+        }
+        #ed-status-panel[data-mode="placing"] #ed-status-mode { background: #38bdf8; color: #0f172a; }
+        #ed-status-panel[data-mode="selected"] #ed-status-mode { background: #4ade80; color: #052e16; }
+        #ed-status-panel[data-mode="walls"] #ed-status-mode { background: #fbbf24; color: #422006; }
+        #ed-info {
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 1.25;
+          color: #f8fafc;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        #ed-selected {
+          font-size: 12px;
+          line-height: 1.25;
+          color: #cbd5e1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        #editor-toolbar .ed-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+          margin-left: auto;
+        }
+        #editor-toolbar .ed-group {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px;
+          border-radius: 10px;
+          background: rgba(15, 23, 42, 0.55);
+          border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        #editor-toolbar .ed-group-label {
+          padding: 0 6px 0 8px;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #94a3b8;
+          flex-shrink: 0;
         }
         #editor-toolbar button,
-        #editor-toolbar select,
-        #editor-toolbar input {
-          background: rgba(0, 0, 0, 0.32);
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          border-radius: 4px;
-          padding: 4px 8px;
-          font-size: 11px;
+        #editor-toolbar select {
+          min-height: 36px;
+          padding: 0 12px;
+          border-radius: 8px;
+          border: 1px solid rgba(148, 163, 184, 0.28);
+          background: rgba(51, 65, 85, 0.9);
+          color: #f8fafc;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.12s ease, border-color 0.12s ease, transform 0.08s ease;
         }
-        #editor-toolbar button { cursor: pointer; }
-        #editor-toolbar .spacer { margin-left: auto; opacity: 0.72; }
-        #editor-mode-tabs { display: flex; gap: 4px; }
-        #editor-mode-tabs button.active {
-          background: rgba(253, 224, 71, 0.35);
-          border-color: rgba(253, 224, 71, 0.9);
+        #editor-toolbar button:hover,
+        #editor-toolbar select:hover {
+          background: rgba(71, 85, 105, 0.95);
+          border-color: rgba(226, 232, 240, 0.35);
+        }
+        #editor-toolbar button:active {
+          transform: translateY(1px);
+        }
+        #editor-toolbar button:focus-visible,
+        #editor-toolbar select:focus-visible {
+          outline: 2px solid #38bdf8;
+          outline-offset: 2px;
+        }
+        #editor-toolbar button:disabled,
+        #editor-toolbar button[aria-disabled="true"] {
+          opacity: 0.38;
+          cursor: not-allowed;
+          transform: none;
+        }
+        #editor-toolbar .ed-btn-primary {
+          background: #0ea5e9;
+          border-color: #38bdf8;
+          color: #0f172a;
+        }
+        #editor-toolbar .ed-btn-primary:hover {
+          background: #38bdf8;
+        }
+        #editor-toolbar .ed-btn-danger {
+          background: #b91c1c;
+          border-color: #f87171;
+        }
+        #editor-toolbar .ed-btn-danger:hover {
+          background: #dc2626;
+        }
+        #editor-toolbar .ed-btn-warn {
+          background: #c2410c;
+          border-color: #fb923c;
+        }
+        #editor-toolbar .ed-btn-ghost {
+          background: transparent;
+        }
+        #editor-toolbar .ed-kbd {
+          display: inline-block;
+          margin-left: 6px;
+          padding: 1px 5px;
+          border-radius: 4px;
+          background: rgba(15, 23, 42, 0.45);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          font-size: 10px;
+          font-weight: 700;
+          color: #e2e8f0;
+          vertical-align: 1px;
+        }
+        #editor-toolbar #ed-layer {
+          min-width: 120px;
+        }
+        #editor-toolbar .ed-hint {
+          margin-left: auto;
+          font-size: 11px;
+          color: #94a3b8;
+          white-space: nowrap;
         }
         #editor-wall-tools {
           pointer-events: auto;
           position: fixed;
           top: 0;
           right: 0;
-          width: 320px;
+          width: 340px;
           height: 100vh;
-          background: rgba(15, 23, 42, 0.96);
-          border-left: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(15, 23, 42, 0.97);
+          border-left: 1px solid rgba(148, 163, 184, 0.2);
           display: none;
           flex-direction: column;
-          padding: 12px;
+          padding: 14px;
           gap: 10px;
         }
         #editor-wall-tools button {
-          background: rgba(0, 0, 0, 0.32);
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.28);
-          border-radius: 6px;
+          background: rgba(51, 65, 85, 0.85);
+          color: #f8fafc;
+          border: 1px solid rgba(148, 163, 184, 0.28);
+          border-radius: 8px;
           padding: 10px 12px;
-          font-size: 12px;
+          font-size: 13px;
+          font-weight: 600;
           cursor: pointer;
           text-align: left;
         }
         #editor-wall-tools button.active-tool {
-          border-color: rgba(253, 224, 71, 0.9);
-          background: rgba(253, 224, 71, 0.14);
+          border-color: rgba(56, 189, 248, 0.9);
+          background: rgba(14, 165, 233, 0.2);
         }
         #editor-wall-tools .wall-help {
-          font-size: 11px;
-          opacity: 0.75;
+          font-size: 12px;
+          color: #cbd5e1;
           line-height: 1.45;
         }
         .wall-piece-btn {
@@ -3980,8 +5058,8 @@ startOfficeWhenPhaserReady();
         .wall-swatch-draw {
           background: repeating-linear-gradient(
             135deg,
-            rgba(253,224,71,0.25),
-            rgba(253,224,71,0.25) 6px,
+            rgba(56,189,248,0.28),
+            rgba(56,189,248,0.28) 6px,
             rgba(255,255,255,0.06) 6px,
             rgba(255,255,255,0.06) 12px
           );
@@ -4009,8 +5087,8 @@ startOfficeWhenPhaserReady();
           cursor: pointer;
         }
         .wall-list-item.active {
-          border-color: rgba(253,224,71,0.85);
-          background: rgba(253,224,71,0.12);
+          border-color: rgba(56,189,248,0.85);
+          background: rgba(14,165,233,0.14);
         }
         .wall-list-item.dimmed {
           opacity: 0.38;
@@ -4018,16 +5096,16 @@ startOfficeWhenPhaserReady();
         #ed-wall-layer {
           width: 100%;
           margin-top: 6px;
-          padding: 6px 8px;
-          border-radius: 6px;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(0,0,0,0.25);
+          padding: 8px 10px;
+          border-radius: 8px;
+          border: 1px solid rgba(148,163,184,0.25);
+          background: rgba(15,23,42,0.7);
           color: #e2e8f0;
-          font-size: 12px;
+          font-size: 13px;
         }
         .wall-click-help {
-          font-size: 10px;
-          opacity: 0.72;
+          font-size: 11px;
+          color: #94a3b8;
           margin: 6px 0 0;
           line-height: 1.45;
         }
@@ -4048,9 +5126,9 @@ startOfficeWhenPhaserReady();
           background: rgba(239,68,68,0.35);
           border: none;
           color: #fff;
-          width: 26px;
-          height: 26px;
-          border-radius: 4px;
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
           cursor: pointer;
           font-size: 16px;
           line-height: 1;
@@ -4065,82 +5143,325 @@ startOfficeWhenPhaserReady();
           position: fixed;
           top: 0;
           right: 0;
-          width: 320px;
+          width: 340px;
           height: 100vh;
-          background: rgba(15, 23, 42, 0.96);
-          border-left: 1px solid rgba(255, 255, 255, 0.1);
+          z-index: 3;
+          background: rgba(15, 23, 42, 0.97);
+          border-left: 1px solid rgba(148, 163, 184, 0.2);
           display: flex;
           flex-direction: column;
         }
         #editor-catalog-head {
-          padding: 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 12px 14px;
+          border-bottom: 1px solid rgba(148, 163, 184, 0.18);
           display: grid;
           gap: 8px;
         }
+        #editor-catalog-head .ed-side-title-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+        #editor-catalog-head .ed-side-title {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #94a3b8;
+        }
+        #ed-workflow-btn {
+          min-height: 28px;
+          padding: 0 10px;
+          border-radius: 7px;
+          border: 1px solid rgba(148, 163, 184, 0.28);
+          background: rgba(15, 23, 42, 0.65);
+          color: #cbd5e1;
+          font-size: 11px;
+          font-weight: 650;
+          cursor: pointer;
+        }
+        #ed-workflow-btn:hover {
+          border-color: rgba(56, 189, 248, 0.55);
+          color: #e0f2fe;
+        }
+        #ed-catalog-count {
+          font-size: 10px;
+          color: #64748b;
+        }
+        #ed-search {
+          min-height: 38px;
+          padding: 0 12px;
+          border-radius: 8px;
+          border: 1px solid rgba(148, 163, 184, 0.28);
+          background: rgba(15, 23, 42, 0.8);
+          color: #f8fafc;
+          font-size: 13px;
+        }
+        #ed-search::placeholder { color: #64748b; }
         #ed-catalog-list {
           overflow: auto;
-          padding: 10px;
+          padding: 12px;
           display: grid;
           gap: 8px;
           grid-template-columns: 1fr;
         }
         .cat-item {
           display: grid;
-          grid-template-columns: 52px 1fr;
+          grid-template-columns: 48px 1fr;
           gap: 10px;
           align-items: center;
-          padding: 8px;
+          padding: 8px 10px;
           background: rgba(255, 255, 255, 0.04);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 8px;
+          border: 1px solid rgba(148, 163, 184, 0.16);
+          border-radius: 10px;
           cursor: grab;
           user-select: none;
         }
-        .cat-item.active {
-          border-color: rgba(253, 224, 71, 0.9);
-          background: rgba(253, 224, 71, 0.14);
+        .cat-item:hover {
+          border-color: rgba(148, 163, 184, 0.4);
+          background: rgba(255, 255, 255, 0.07);
         }
-        .cat-item canvas {
+        .cat-item.active {
+          border-color: rgba(56, 189, 248, 0.9);
+          background: rgba(14, 165, 233, 0.16);
+          box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.25);
+        }
+        .cat-thumb-wrap {
+          position: relative;
           width: 48px;
           height: 48px;
+          flex-shrink: 0;
+        }
+        .cat-item canvas,
+        .cat-item img {
+          width: 48px;
+          height: 48px;
+          object-fit: contain;
           image-rendering: pixelated;
+          image-rendering: crisp-edges;
           background: rgba(255, 255, 255, 0.04);
           border-radius: 6px;
         }
+        .cat-badge {
+          position: absolute;
+          left: 2px;
+          bottom: 2px;
+          font-size: 8px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 1px 5px;
+          border-radius: 4px;
+          background: rgba(56, 189, 248, 0.85);
+          color: #0f172a;
+        }
+        .cat-star {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          width: 22px;
+          height: 22px;
+          border-radius: 999px;
+          border: 1px solid rgba(148, 163, 184, 0.4);
+          background: rgba(15, 23, 42, 0.85);
+          color: #94a3b8;
+          font-size: 13px;
+          line-height: 1;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+        .cat-star.active {
+          color: #fde047;
+          border-color: rgba(253, 224, 71, 0.6);
+        }
         .cat-name {
-          font-size: 12px;
+          font-size: 13px;
           font-weight: 600;
           word-break: break-word;
+          color: #f8fafc;
         }
         .cat-type {
           font-size: 11px;
-          opacity: 0.7;
+          color: #94a3b8;
           margin-top: 2px;
+        }
+        .cat-empty {
+          padding: 24px 8px;
+          font-size: 12px;
+          color: #94a3b8;
+          text-align: center;
+        }
+        #ed-cat-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .ed-cat-chip {
+          padding: 4px 10px;
+          border-radius: 999px;
+          border: 1px solid rgba(148, 163, 184, 0.28);
+          background: rgba(51, 65, 85, 0.7);
+          color: #cbd5e1;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .ed-cat-chip:hover {
+          background: rgba(71, 85, 105, 0.9);
+        }
+        .ed-cat-chip.active {
+          background: #38bdf8;
+          border-color: #38bdf8;
+          color: #0f172a;
+        }
+        #ed-template-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .ed-template-btn {
+          padding: 6px 10px;
+          border-radius: 8px;
+          border: 1px solid rgba(148, 163, 184, 0.28);
+          background: rgba(51, 65, 85, 0.7);
+          color: #f8fafc;
+          font-size: 11px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .ed-template-btn:hover {
+          background: rgba(71, 85, 105, 0.9);
+        }
+        #ed-onboard {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          padding: 6px 12px;
+          margin: 0 -14px -12px;
+          background: rgba(14, 116, 144, 0.28);
+          border-top: 1px solid rgba(56, 189, 248, 0.35);
+          font-size: 12px;
+          color: #e0f2fe;
+        }
+        #ed-onboard button {
+          min-height: 26px;
+          padding: 0 10px;
+          font-size: 11px;
+        }
+        #editor-ui.ed-chrome-collapsed #ed-furniture-tools,
+        #editor-ui.ed-chrome-collapsed #ed-onboard,
+        #editor-ui.ed-chrome-collapsed #editor-catalog,
+        #editor-ui.ed-chrome-collapsed #editor-wall-tools {
+          display: none !important;
+        }
+        #editor-ui.ed-chrome-collapsed #editor-toolbar {
+          right: 0;
+          padding: 6px 12px;
+          gap: 6px;
+        }
+        #editor-ui.ed-chrome-collapsed #ed-status-panel {
+          min-width: 160px;
+        }
+        #ed-collapse-btn {
+          min-width: 40px;
+        }
+        #ed-save-status {
+          font-size: 11px;
+          font-weight: 700;
+          padding: 4px 8px;
+          border-radius: 6px;
+          color: #94a3b8;
+          background: rgba(15, 23, 42, 0.5);
+        }
+        #ed-save-status[data-tone="saving"] { color: #fbbf24; }
+        #ed-save-status[data-tone="saved"] { color: #4ade80; }
+        #ed-save-status[data-tone="error"] { color: #f87171; }
+        html.denizen-editor-open #denizen-work-feed-toggle,
+        html.denizen-editor-open #denizen-office-hq-toggle,
+        html.denizen-editor-open #denizen-work-feed,
+        html.denizen-editor-open #denizen-office-hq-overlay,
+        html.denizen-editor-open #denizen-office-level-chip {
+          display: none !important;
         }
       </style>
       <div id="editor-toolbar">
-        <span class="title">EDITOR</span>
-        <div id="editor-mode-tabs">
-          <button type="button" id="ed-tab-furniture" class="active">Furniture</button>
-          <button type="button" id="ed-tab-walls">Walls</button>
+        <div class="ed-row ed-row-top">
+          <div class="ed-brand">
+            <span class="ed-brand-mark" aria-hidden="true"></span>
+            <span class="title">Map editor</span>
+          </div>
+          <div id="editor-mode-tabs" role="tablist" aria-label="Editor mode">
+            <button type="button" id="ed-tab-furniture" class="active" role="tab" aria-selected="true">Furniture</button>
+            <button type="button" id="ed-tab-walls" role="tab" aria-selected="false">Walls</button>
+          </div>
+          <div id="ed-status-panel" data-mode="idle" aria-live="polite">
+            <span id="ed-status-mode">Ready</span>
+            <span id="ed-info">Pick an item from the catalog, then click the map to place it.</span>
+            <span id="ed-selected">Nothing selected</span>
+          </div>
+          <div class="ed-actions">
+            <span id="ed-save-status" data-tone="idle">Saved</span>
+            <button type="button" id="ed-collapse-btn" title="Collapse / expand editor panels (Tab)">Hide UI</button>
+            <button type="button" id="ed-undo-btn" disabled title="Nothing to undo">Undo<span class="ed-kbd">⌘Z</span></button>
+            <button type="button" id="ed-redo-btn" disabled title="Nothing to redo">Redo<span class="ed-kbd">⇧⌘Z</span></button>
+            <button type="button" id="ed-snap-btn" class="ed-btn-primary" title="Snap placements to grid">Snap on</button>
+            <button type="button" id="ed-export-btn" class="ed-btn-primary" title="Export layout (X)">Save / export<span class="ed-kbd">X</span></button>
+            <button type="button" id="ed-exit-btn" class="ed-btn-ghost" title="Exit editor without exporting (⌘⇧E)">Exit<span class="ed-kbd">⌘⇧E</span></button>
+          </div>
         </div>
-        <span class="info" id="ed-info">Drag a catalog sprite into the room or click to place.</span>
-        <span class="selected" id="ed-selected">Selected: none</span>
-        <select id="ed-layer">
-          <option value="all">All Layers</option>
-          <option value="surface">Desks</option>
-          <option value="seat">Chairs</option>
-          <option value="partition">Dividers</option>
-          <option value="decor">Decor/Monitors</option>
-          <option value="furniture">Furniture</option>
-        </select>
-        <button id="ed-export-btn">Export (X)</button>
-        <button id="ed-workflow-btn" title="Open workflow dashboard">Workflow</button>
-        <button id="ed-snap-btn">Snap: ON</button>
-        <button id="ed-clear-btn">Clear Selection</button>
-        <button id="ed-collision-btn" style="background:#e74c3c;">Show Collisions</button>
-        <span class="spacer">E=editor (localhost) | Ctrl+Shift+E or ?editor+E | X=export</span>
+        <div class="ed-row ed-row-tools" id="ed-furniture-tools">
+          <div class="ed-group" aria-label="Transform tools">
+            <span class="ed-group-label">Transform</span>
+            <button type="button" id="ed-rotate-btn" title="Rotate 90° (scroll or , / .) — Shift+click for 15°">Rotate 90°<span class="ed-kbd">,</span></button>
+            <button type="button" id="ed-scale-down-btn" title="Shrink ([)">−</button>
+            <button type="button" id="ed-scale-up-btn" title="Grow (])">+</button>
+            <button type="button" id="ed-flip-btn" title="Flip horizontal (F)">Flip</button>
+          </div>
+          <div class="ed-group" aria-label="Selection tools">
+            <span class="ed-group-label">Item</span>
+            <button type="button" id="ed-clear-btn" title="Clear selection / cancel place (Esc)">Deselect</button>
+            <button type="button" id="ed-delete-btn" class="ed-btn-danger" title="Delete selected (Del)">Delete</button>
+            <button type="button" id="ed-duplicate-btn" title="Duplicate selection (Ctrl/⌘D)">Duplicate</button>
+            <button type="button" id="ed-stack-desk-btn" title="Snap selected lamp/monitor onto nearby desk">Put on desk</button>
+          </div>
+          <div class="ed-group" aria-label="Align tools">
+            <span class="ed-group-label">Align</span>
+            <button type="button" id="ed-align-left-btn" title="Align left (2+)">L</button>
+            <button type="button" id="ed-align-center-btn" title="Align center (2+)">C</button>
+            <button type="button" id="ed-align-right-btn" title="Align right (2+)">R</button>
+            <button type="button" id="ed-align-top-btn" title="Align top (2+)">T</button>
+            <button type="button" id="ed-align-bottom-btn" title="Align bottom (2+)">B</button>
+            <button type="button" id="ed-dist-h-btn" title="Distribute horizontally (3+)">H</button>
+            <button type="button" id="ed-dist-v-btn" title="Distribute vertically (3+)">V</button>
+          </div>
+          <div class="ed-group" aria-label="View filters">
+            <span class="ed-group-label">View</span>
+            <select id="ed-layer" title="Filter furniture layers" aria-label="Layer filter">
+              <option value="all">All layers</option>
+              <option value="floor">Floor items</option>
+              <option value="wall_decor">Wall decor</option>
+              <option value="surface">Desks</option>
+              <option value="seat">Chairs</option>
+              <option value="partition">Dividers</option>
+              <option value="decor">Decor / monitors</option>
+              <option value="furniture">Furniture</option>
+            </select>
+            <button type="button" id="ed-collision-btn" class="ed-btn-warn" title="Toggle collision overlays">Collisions</button>
+            <button type="button" id="ed-grid-btn" title="Toggle grid overlay">Grid</button>
+            <button type="button" id="ed-zoom-out-btn" title="Zoom out (Ctrl+scroll)">−</button>
+            <button type="button" id="ed-zoom-in-btn" title="Zoom in (Ctrl+scroll)">+</button>
+            <button type="button" id="ed-zoom-reset-btn" title="Reset zoom/pan">Reset</button>
+          </div>
+        </div>
+        <div id="ed-onboard">
+          <span><strong>1</strong> Pick catalog → <strong>2</strong> Place on map → <strong>3</strong> Drag to adjust</span>
+          <button type="button" id="ed-onboard-dismiss">Dismiss</button>
+        </div>
       </div>
       <aside id="editor-wall-tools">
         <div style="font-weight:700;">Wall pieces</div>
@@ -4186,8 +5507,15 @@ startOfficeWhenPhaserReady();
       </aside>
       <aside id="editor-catalog">
         <div id="editor-catalog-head">
-          <div style="font-weight:700;">Catalog</div>
-          <input id="ed-search" type="text" placeholder="Search by id or type" />
+          <div class="ed-side-title-row">
+            <div class="ed-side-title">Catalog</div>
+            <button type="button" id="ed-workflow-btn" title="Open Office Build tools (sprite labeling, verify)">Tools</button>
+          </div>
+          <input id="ed-search" type="search" placeholder="Search furniture…" autocomplete="off" spellcheck="false" />
+          <div id="ed-catalog-count"></div>
+          <div id="ed-cat-chips"></div>
+          <div class="ed-side-title">Room templates</div>
+          <div id="ed-template-row"></div>
         </div>
         <div id="ed-catalog-list"></div>
       </aside>
@@ -4198,16 +5526,22 @@ startOfficeWhenPhaserReady();
       layerFilter = event.target.value;
       updateLayerVisibility();
     });
-    document.getElementById('ed-search').addEventListener('input', renderCatalogList);
+    document.getElementById('ed-search').addEventListener('input', scheduleCatalogListRender);
     document.getElementById('ed-tab-furniture').addEventListener('click', () => setEditorMode('furniture'));
     document.getElementById('ed-tab-walls').addEventListener('click', () => setEditorMode('walls'));
     document.getElementById('ed-export-btn').addEventListener('click', () => {
       if (editorMode === 'walls') window._editorExportWalls();
       else window._editorExport();
     });
+    document.getElementById('ed-exit-btn')?.addEventListener('click', () => {
+      disableEditor();
+    });
+    document.getElementById('ed-undo-btn')?.addEventListener('click', () => undoEditorChange());
+    document.getElementById('ed-redo-btn')?.addEventListener('click', () => redoEditorChange());
     document.getElementById('ed-workflow-btn')?.addEventListener('click', () => {
       window.open('/workflow-dashboard.html', '_blank');
     });
+    updateUndoButtons();
     document.getElementById('ed-wall-layer')?.addEventListener('change', (e) => {
       setWallLayerFilter(e.target.value);
     });
@@ -4235,9 +5569,45 @@ startOfficeWhenPhaserReady();
     });
     document.getElementById('ed-snap-btn').addEventListener('click', (event) => {
       window._editorSnap = !window._editorSnap;
-      event.currentTarget.textContent = `Snap: ${window._editorSnap ? 'ON' : 'OFF'}`;
+      event.currentTarget.textContent = window._editorSnap ? 'Snap on' : 'Snap off';
+      event.currentTarget.classList.toggle('ed-btn-primary', !!window._editorSnap);
     });
-    document.getElementById('ed-clear-btn').addEventListener('click', () => setPendingCatalog(null));
+    document.getElementById('ed-rotate-btn')?.addEventListener('click', (event) => {
+      transformSelected({ rotationDelta: event.shiftKey ? 15 : 90 });
+    });
+    document.getElementById('ed-scale-down-btn')?.addEventListener('click', () => transformSelected({ scaleFactor: 0.9 }));
+    document.getElementById('ed-scale-up-btn')?.addEventListener('click', () => transformSelected({ scaleFactor: 1.1 }));
+    document.getElementById('ed-flip-btn')?.addEventListener('click', () => transformSelected({ flipX: true }));
+    document.getElementById('ed-delete-btn')?.addEventListener('click', () => deleteSelectedFurniture());
+    document.getElementById('ed-clear-btn').addEventListener('click', () => {
+      clearFurnitureSelection();
+      setPendingCatalog(null);
+    });
+    document.getElementById('ed-duplicate-btn')?.addEventListener('click', () => duplicateSelectedFurniture());
+    document.getElementById('ed-stack-desk-btn')?.addEventListener('click', () => snapSelectedOntoDesk());
+    document.getElementById('ed-align-left-btn')?.addEventListener('click', () => alignSelectedFurniture('left'));
+    document.getElementById('ed-align-center-btn')?.addEventListener('click', () => alignSelectedFurniture('center'));
+    document.getElementById('ed-align-right-btn')?.addEventListener('click', () => alignSelectedFurniture('right'));
+    document.getElementById('ed-align-top-btn')?.addEventListener('click', () => alignSelectedFurniture('top'));
+    document.getElementById('ed-align-bottom-btn')?.addEventListener('click', () => alignSelectedFurniture('bottom'));
+    document.getElementById('ed-dist-h-btn')?.addEventListener('click', () => alignSelectedFurniture('distributeH'));
+    document.getElementById('ed-dist-v-btn')?.addEventListener('click', () => alignSelectedFurniture('distributeV'));
+    document.getElementById('ed-collapse-btn')?.addEventListener('click', () => toggleEditorChrome());
+    applyEditorChromeCollapsed();
+    const gridBtn = document.getElementById('ed-grid-btn');
+    if (gridBtn) {
+      gridBtn.textContent = 'Grid';
+      gridBtn.classList.toggle('ed-btn-primary', editorPrefs.showGrid);
+      gridBtn.addEventListener('click', () => toggleEditorGrid());
+    }
+    document.getElementById('ed-zoom-in-btn')?.addEventListener('click', () => zoomEditorCamera(0.1));
+    document.getElementById('ed-zoom-out-btn')?.addEventListener('click', () => zoomEditorCamera(-0.1));
+    document.getElementById('ed-zoom-reset-btn')?.addEventListener('click', () => resetEditorCamera());
+    document.getElementById('ed-onboard-dismiss')?.addEventListener('click', () => dismissOnboardingStrip());
+    renderCategoryChips();
+    renderRoomTemplates();
+    updateOnboardingStrip();
+    setSaveStatus('Saved', 'saved');
 
     // Collision box visualization toggle
     let collisionVisible = false;
@@ -4246,8 +5616,9 @@ startOfficeWhenPhaserReady();
       const scene = getScene();
       if (!scene) return;
       collisionVisible = !collisionVisible;
-      event.currentTarget.textContent = collisionVisible ? 'Hide Collisions' : 'Show Collisions';
-      event.currentTarget.style.background = collisionVisible ? '#27ae60' : '#e74c3c';
+      event.currentTarget.textContent = collisionVisible ? 'Hide collisions' : 'Collisions';
+      event.currentTarget.classList.toggle('ed-btn-warn', !collisionVisible);
+      event.currentTarget.classList.toggle('ed-btn-primary', collisionVisible);
 
       if (collisionVisible) {
         // Draw collision boxes as red rectangles
@@ -4298,22 +5669,559 @@ startOfficeWhenPhaserReady();
     if (editorUI) { editorUI.remove(); editorUI = null; }
   }
 
+  /** "Floor items" groups surface/furniture/seat; "Wall decor" picks up wall-mounted decor via isWallMount. */
+  function matchesLayerFilter(entry) {
+    if (layerFilter === 'all') return true;
+    const MEP = window.DenizenMapEditorPro;
+    const isWall = !!MEP?.isWallMount?.(entry.id, entry.def);
+    if (layerFilter === 'floor') return !isWall;
+    if (layerFilter === 'wall_decor') return isWall;
+    return entry.def?.type === layerFilter;
+  }
+
   function updateLayerVisibility() {
     const scene = getScene();
     if (!scene || !scene._interactables) return;
-    scene._interactables.forEach(it => {
+    scene._interactables.forEach((it) => {
       if (!it.sprite || !it.def) return;
-      if (layerFilter === 'all') {
-        it.sprite.setAlpha(1);
-      } else if (it.def.type === layerFilter) {
-        it.sprite.setAlpha(1);
-      } else {
-        it.sprite.setAlpha(0.2);
-      }
+      it.sprite.setAlpha(matchesLayerFilter(it) ? 1 : 0.2);
     });
   }
 
   window._editorSnap = true;
+
+  function getSelectedFurnitureEntry(scene) {
+    if (!selectedSprite || !scene?._interactables) return null;
+    return scene._interactables.find((item) => item.sprite === selectedSprite) || null;
+  }
+
+  /** All currently-selected interactable entries (optionally include desk-top children). */
+  function getSelectedFurnitureEntries(scene, { includeChildren = false } = {}) {
+    if (!scene?._interactables || !selectedSprites.length) return [];
+    const sprites = new Set(selectedSprites);
+    return scene._interactables.filter((item) => (
+      sprites.has(item.sprite)
+      && (includeChildren || !item.parentInstanceId)
+    ));
+  }
+
+  function localSpriteBounds(sprite) {
+    if (!sprite) return null;
+    const MEP = window.DenizenMapEditorPro;
+    if (MEP?.spriteWorldBounds) return MEP.spriteWorldBounds(sprite);
+    const w = sprite.displayWidth || 32;
+    const h = sprite.displayHeight || 32;
+    const ox = sprite.originX ?? 0.5;
+    const oy = sprite.originY ?? 1;
+    return {
+      left: sprite.x - w * ox,
+      right: sprite.x + w * (1 - ox),
+      top: sprite.y - h * oy,
+      bottom: sprite.y + h * (1 - oy),
+      cx: sprite.x,
+      cy: sprite.y,
+      w,
+      h,
+    };
+  }
+
+  function isStackableDecor(id, def) {
+    if (!def) return false;
+    if (def.stack_on === 'surface' || def.stack_on === 'desk') return true;
+    if (def.stack_on === 'none' || def.wall_mount) return false;
+    const MEP = window.DenizenMapEditorPro;
+    if (MEP?.isWallMount?.(id, def)) return false;
+    // Explicit non-stackables
+    if (def.type === 'surface' || def.type === 'seat' || def.type === 'partition') return false;
+    if (/chair|sofa|couch|partition|divider|bookshelf|cabinet|cooler|printer|trash|plant_tall|plant_bush|water/i.test(String(id || ''))) {
+      return false;
+    }
+    // Decor + common desk-top names (even if mis-typed as furniture)
+    if (def.type === 'decor') return true;
+    return /lamp|monitor|laptop|keyboard|mouse|phone|mug|book|paper|folder|desk_setup|pc_|computer|screen|notepad|pen|stapler|photo|frame_small|desk_item/i.test(String(id || ''));
+  }
+
+  function isDeskLike(entry) {
+    if (!entry?.def) return false;
+    // Never treat desk-top items as desks (even if name contains workstation/desk_setup).
+    if (entry.def.stack_on === 'surface' || entry.def.stack_on === 'desk') return false;
+    if (entry.def.category === 'desk_items') return false;
+    if (entry.def.type === 'surface') return true;
+    if (entry.def.category === 'desks' || entry.def.category === 'tables') return true;
+    const id = String(entry.id || '');
+    if (/monitor|lamp|laptop|keyboard|phone|printer_dual|papers|mug|mouse/i.test(id)) return false;
+    return /^(desk_|table_|counter_|reception_)/i.test(id)
+      || /cubicle_desk|(^|_)desk($|_)/i.test(id);
+  }
+
+  function findDeskUnderPoint(scene, x, y, { maxDist = 72 } = {}) {
+    const desks = (scene._interactables || []).filter((e) => isDeskLike(e) && e.sprite && !e.parentInstanceId);
+    let best = null;
+    let bestScore = Infinity;
+    desks.forEach((desk) => {
+      const b = localSpriteBounds(desk.sprite);
+      if (!b) return;
+      // Prefer horizontal overlap with desk top half (where items sit).
+      const padX = Math.max(20, b.w * 0.35);
+      const padY = Math.max(24, b.h * 0.55);
+      const inside = x >= b.left - padX && x <= b.right + padX && y >= b.top - padY && y <= b.bottom + padY;
+      const dx = x - b.cx;
+      const dy = y - (b.top + b.h * 0.35);
+      const dist = Math.hypot(dx, dy);
+      const score = inside ? dist * 0.25 : dist;
+      if ((inside || dist <= maxDist) && score < bestScore) {
+        bestScore = score;
+        best = desk;
+      }
+    });
+    return best;
+  }
+
+  function attachEntryToDesk(scene, entry, desk, { offsetX = 0, offsetY = null } = {}) {
+    if (!entry?.sprite || !desk?.sprite) return false;
+    const state = initEditorState(scene);
+    const placement = state.placements.find((p) => (p.instanceId || p.id) === entry.instanceId);
+    if (!placement) return false;
+    const def = entry.def || {};
+    const oy = offsetY != null
+      ? offsetY
+      : (placement.parent_offset_y !== undefined
+        ? placement.parent_offset_y
+        : (def.parent_offset_y !== undefined ? def.parent_offset_y : -18));
+    placement.parentInstanceId = desk.instanceId;
+    placement.parent_offset_y = oy;
+    placement.x = Math.round(desk.sprite.x + offsetX);
+    placement.y = Math.round(desk.sprite.y + oy);
+    entry.parentInstanceId = desk.instanceId;
+    entry.sprite.x = placement.x;
+    entry.sprite.y = placement.y;
+    entry.sprite.setDepth((desk.sprite.depth || 10) + 8);
+    if (entry.def) entry.def._placement = { ...entry.def._placement, ...placement };
+    if (entry.obstacle) {
+      removeObstacle(scene, entry.obstacle);
+      entry.obstacle = null;
+    }
+    // Child items shouldn't be independently draggable away from desk without detach —
+    // keep interactive for select, but parent drag still moves them via existing child sync.
+    prepareSpriteForEditing(scene, entry);
+    scene._depthDirty = true;
+    return true;
+  }
+
+  function detachEntryFromDesk(scene, entry) {
+    if (!entry?.parentInstanceId) return false;
+    const state = initEditorState(scene);
+    const placement = state.placements.find((p) => (p.instanceId || p.id) === entry.instanceId);
+    if (placement) {
+      delete placement.parentInstanceId;
+      delete placement.parent_offset_y;
+      placement.x = Math.round(entry.sprite.x);
+      placement.y = Math.round(entry.sprite.y);
+    }
+    entry.parentInstanceId = null;
+    if (entry.def?._placement) {
+      delete entry.def._placement.parentInstanceId;
+      delete entry.def._placement.parent_offset_y;
+    }
+    refreshFurnitureDepth(entry);
+    if (!entry.obstacle) entry.obstacle = addObstacle(scene, entry.sprite, entry.def);
+    prepareSpriteForEditing(scene, entry);
+    return true;
+  }
+
+  function snapSelectedOntoDesk() {
+    const scene = getScene();
+    if (!scene || editorMode !== 'furniture') return;
+    const selected = getSelectedFurnitureEntries(scene, { includeChildren: true })
+      .filter((e) => e?.sprite && !isDeskLike(e));
+    if (!selected.length) {
+      syncInfo('Select a monitor/lamp/item (not the desk), stand it over a desk, then Put on desk');
+      return;
+    }
+    pushEditorUndo('put on desk');
+    let attached = 0;
+    selected.forEach((entry) => {
+      // Always allow attach for selected non-desk items — labels are often wrong.
+      const desk = findDeskUnderPoint(scene, entry.sprite.x, entry.sprite.y, { maxDist: 140 });
+      if (!desk) return;
+      if (attachEntryToDesk(scene, entry, desk)) attached += 1;
+    });
+    updateSelectionOverlay();
+    scheduleLayoutSave(scene);
+    syncInfo(attached
+      ? `Snapped ${attached} item(s) onto desk — they move with the desk now`
+      : 'No desk found nearby — drag the item onto a desk first, then click Put on desk');
+  }
+
+  function destroySelectionOverlay() {
+    if (selectionGfx) {
+      try { selectionGfx.destroy(); } catch (_) {}
+    }
+    selectionGfx = null;
+    if (selectionRotateHandle) {
+      try { selectionRotateHandle.destroy(); } catch (_) {}
+    }
+    selectionRotateHandle = null;
+  }
+
+  /** Green outline per selected sprite + a rotate handle above the combined bounds. */
+  function updateSelectionOverlay() {
+    const scene = getScene();
+    destroySelectionOverlay();
+    if (!scene || !editorActive || editorMode !== 'furniture' || !selectedSprites.length) return;
+    const MEP = window.DenizenMapEditorPro;
+    if (!MEP) return;
+    const gfx = scene.add.graphics().setDepth(20000);
+    selectedSprites.forEach((sprite) => {
+      const b = MEP.spriteWorldBounds(sprite);
+      if (!b) return;
+      gfx.lineStyle(2, 0x4ade80, 0.95);
+      gfx.strokeRect(b.left, b.top, b.w, b.h);
+    });
+    selectionGfx = gfx;
+    const entries = getSelectedFurnitureEntries(scene);
+    const bounds = MEP.selectionBounds(entries.length ? entries : selectedSprites.map((sprite) => ({ sprite })));
+    if (!bounds) return;
+    const handleX = bounds.cx;
+    const handleY = bounds.top - 18;
+    gfx.lineStyle(2, 0xfde047, 0.9);
+    gfx.lineBetween(bounds.cx, bounds.top, handleX, handleY);
+    const handle = scene.add.circle(handleX, handleY, 7, 0xfde047, 0.95)
+      .setDepth(20001)
+      .setStrokeStyle(2, 0x0f172a);
+    handle.setInteractive({ useHandCursor: true });
+    handle.on('pointerdown', (pointer) => {
+      try { pointer.event?.stopPropagation?.(); } catch (_) {}
+      transformSelected({ rotationDelta: 90 });
+    });
+    selectionRotateHandle = handle;
+  }
+
+  function clearFurnitureSelection() {
+    selectedSprites.forEach((sprite) => {
+      if (sprite && typeof sprite.clearTint === 'function') sprite.clearTint();
+    });
+    selectedSprites = [];
+    selectedSprite = null;
+    destroySelectionOverlay();
+    const selected = document.getElementById('ed-selected');
+    if (selected) selected.textContent = 'Nothing selected';
+    refreshEditorStatusChrome();
+  }
+
+  function selectFurnitureEntry(entry, { keepPending = false, additive = false } = {}) {
+    if (!entry?.sprite) return;
+    if (additive) {
+      const idx = selectedSprites.indexOf(entry.sprite);
+      if (idx >= 0) {
+        if (typeof entry.sprite.clearTint === 'function') entry.sprite.clearTint();
+        selectedSprites.splice(idx, 1);
+        selectedSprite = selectedSprites[selectedSprites.length - 1] || null;
+      } else {
+        selectedSprites.push(entry.sprite);
+        selectedSprite = entry.sprite;
+        if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x66ff99);
+      }
+    } else {
+      selectedSprites.forEach((sprite) => {
+        if (sprite !== entry.sprite && typeof sprite.clearTint === 'function') sprite.clearTint();
+      });
+      selectedSprites = [entry.sprite];
+      selectedSprite = entry.sprite;
+      if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x66ff99);
+    }
+    if (!keepPending) setPendingCatalog(null);
+    syncSelectedReadout(entry);
+    updateSelectionOverlay();
+  }
+
+  function syncSelectedReadout(entry) {
+    const selected = document.getElementById('ed-selected');
+    if (!selected) return;
+    if (selectedSprites.length > 1) {
+      selected.textContent = `${selectedSprites.length} items selected`;
+      syncInfo(`${selectedSprites.length} items selected — Align/Distribute, Duplicate, or Delete`);
+      return;
+    }
+    if (!entry?.sprite) return;
+    const pl = entry.def?._placement || {};
+    const rot = Math.round(Number(pl.rotation) || entry.sprite.angle || 0);
+    const scale = Number(pl.scale);
+    const s = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    selected.textContent = `${entry.id} · x:${Math.round(entry.sprite.x)} y:${Math.round(entry.sprite.y)} · ${rot}° · ×${s.toFixed(2)}${pl.flipX ? ' · flipped' : ''}`;
+    syncInfo(`Editing ${entry.id} — drag to move, scroll to rotate, use Transform tools`);
+  }
+
+  function writeTransformToPlacement(entry) {
+    if (!entry?.sprite) return;
+    const scene = getScene();
+    const state = initEditorState(scene);
+    const placement = state.placements.find((item) => (item.instanceId || item.id) === entry.instanceId);
+    if (!placement) return;
+    placement.x = Math.round(entry.sprite.x);
+    placement.y = Math.round(entry.sprite.y);
+    placement.rotation = Math.round(((entry.sprite.angle % 360) + 360) % 360);
+    const scale = Number(placement.scale);
+    placement.scale = Number.isFinite(scale) && scale > 0 ? scale : 1;
+    placement.flipX = !!entry.sprite.flipX;
+    placement.flipY = !!entry.sprite.flipY;
+    if (entry.def) entry.def._placement = { ...entry.def._placement, ...placement };
+  }
+
+  function transformSelected({ rotationDelta = 0, scaleFactor = 1, flipX = false, flipY = false } = {}) {
+    const scene = getScene();
+    if (!scene || editorMode !== 'furniture') return;
+
+    // Sims catalog ghost: rotate/scale the preview before placing.
+    if (placeGhost && initEditorState(scene).pendingCatalogId) {
+      if (rotationDelta) rotatePlaceGhost(rotationDelta);
+      if (scaleFactor !== 1) {
+        placeGhost.scale = Math.min(4, Math.max(0.25, (placeGhost.scale || 1) * scaleFactor));
+        applyGhostTransform();
+      }
+      if (flipX) placeGhost.flipX = !placeGhost.flipX;
+      if (flipY) placeGhost.flipY = !placeGhost.flipY;
+      if (flipX || flipY) applyGhostTransform();
+      return;
+    }
+
+    const entries = getSelectedFurnitureEntries(scene);
+    if (!entries.length) {
+      syncInfo('Select a placed sprite first (click it on the map)');
+      return;
+    }
+    pushEditorUndo(entries.length > 1 ? `transform ${entries.length} items` : `transform ${entries[0].id}`);
+    const state = initEditorState(scene);
+    entries.forEach((entry) => {
+      if (!entry?.sprite) return;
+      const placement = state.placements.find((item) => (item.instanceId || item.id) === entry.instanceId)
+        || { id: entry.id, instanceId: entry.instanceId, x: entry.sprite.x, y: entry.sprite.y };
+      if (!state.placements.includes(placement)) state.placements.push(placement);
+
+      let rot = Number(placement.rotation) || 0;
+      let scale = Number(placement.scale);
+      if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+      rot = (((rot + rotationDelta) % 360) + 360) % 360;
+      scale = Math.min(4, Math.max(0.25, scale * scaleFactor));
+      if (flipX) placement.flipX = !placement.flipX;
+      if (flipY) placement.flipY = !placement.flipY;
+      placement.rotation = Math.round(rot);
+      placement.scale = Math.round(scale * 100) / 100;
+
+      applyPlacementTransform(entry.sprite, placement, entry.def);
+      refreshFurnitureDepth(entry);
+      if (entry.obstacle) {
+        entry.obstacle.x = entry.sprite.x;
+        entry.obstacle.y = entry.sprite.y;
+        // Keep collision roughly matching visual width after scale.
+        if (entry.obstacle.body && typeof entry.obstacle.setSize === 'function') {
+          const collW = Math.min(Math.max(entry.sprite.displayWidth, 16), 128);
+          entry.obstacle.setSize(collW, 16);
+          entry.obstacle.body.updateFromGameObject();
+        } else if (entry.obstacle.body) {
+          entry.obstacle.body.updateFromGameObject();
+        }
+      }
+      if (entry.def) entry.def._placement = { ...entry.def._placement, ...placement };
+      if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x66ff99);
+    });
+    syncSelectedReadout(entries[0]);
+    updateSelectionOverlay();
+    scene._depthDirty = true;
+    scheduleLayoutSave(scene);
+  }
+
+  function deleteSelectedFurniture() {
+    const scene = getScene();
+    if (!scene || editorMode !== 'furniture') return;
+    const entries = getSelectedFurnitureEntries(scene);
+    if (!entries.length) {
+      syncInfo('Select a sprite to delete (click it, or double-click to delete)');
+      return;
+    }
+    if (entries.length >= 2 && !confirm(`Delete ${entries.length} item(s)? Undo can restore.`)) {
+      return;
+    }
+    pushEditorUndo(entries.length > 1 ? `delete ${entries.length} items` : `delete ${entries[0].id}`);
+    entries.forEach((entry) => removeEntry(scene, entry));
+    clearFurnitureSelection();
+    scheduleLayoutSave(scene);
+  }
+
+  /** Clone each selected root entry with a +24,+24 offset and select the copies. */
+  function duplicateSelectedFurniture() {
+    const scene = getScene();
+    if (!scene || editorMode !== 'furniture') return;
+    const entries = getSelectedFurnitureEntries(scene);
+    if (!entries.length) {
+      syncInfo('Select item(s) to duplicate first');
+      return;
+    }
+    pushEditorUndo(entries.length > 1 ? `duplicate ${entries.length} items` : `duplicate ${entries[0].id}`);
+    const state = initEditorState(scene);
+    const created = [];
+    entries.forEach((entry) => {
+      const source = state.placements.find((item) => (item.instanceId || item.id) === entry.instanceId);
+      const base = source ? { ...source } : {
+        id: entry.id,
+        x: entry.sprite.x,
+        y: entry.sprite.y,
+        rotation: entry.sprite.angle,
+      };
+      delete base._comment;
+      const placement = {
+        ...base,
+        instanceId: `editor_${entry.id}_${state.nextId++}`,
+        x: Math.round((base.x ?? entry.sprite.x) + 24),
+        y: Math.round((base.y ?? entry.sprite.y) + 24),
+      };
+      state.placements.push(placement);
+      const newEntry = makePlacementSprite(scene, placement);
+      if (newEntry) created.push(newEntry);
+    });
+    if (created.length) {
+      selectedSprites.forEach((sprite) => {
+        if (sprite && typeof sprite.clearTint === 'function') sprite.clearTint();
+      });
+      selectedSprites = created.map((entry) => entry.sprite);
+      selectedSprite = selectedSprites[selectedSprites.length - 1];
+      created.forEach((entry) => {
+        if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x66ff99);
+      });
+      syncSelectedReadout(created[created.length - 1]);
+      updateSelectionOverlay();
+      scene._depthDirty = true;
+      scheduleLayoutSave(scene);
+      syncInfo(`Duplicated ${created.length} item(s) — offset +24,+24`);
+    }
+  }
+
+  /**
+   * Align/distribute selected items.
+   * Align L/C/R/T/B line items up to the first selected item's edge/center.
+   * Dist H/V evenly spaces 3+ items between the outer items.
+   */
+  function alignSelectedFurniture(mode) {
+    const scene = getScene();
+    if (!scene || editorMode !== 'furniture') return;
+    const entries = getSelectedFurnitureEntries(scene, { includeChildren: true })
+      .filter((entry) => entry?.sprite);
+    if (entries.length < 2) {
+      syncInfo('Align needs 2+ selected — Shift-click items, then Align L/C/R');
+      return;
+    }
+    if ((mode === 'distributeH' || mode === 'distributeV') && entries.length < 3) {
+      syncInfo('Distribute needs 3+ selected items');
+      return;
+    }
+
+    pushEditorUndo(`align ${mode}`);
+    const withBounds = entries.map((entry) => ({
+      entry,
+      bounds: localSpriteBounds(entry.sprite),
+      order: selectedSprites.indexOf(entry.sprite),
+    })).filter((e) => e.bounds);
+    withBounds.sort((a, b) => a.order - b.order);
+    if (withBounds.length < 2) {
+      syncInfo('Could not read item bounds — try selecting again');
+      return;
+    }
+
+    const applyMove = (entry, x, y) => {
+      if (entry.parentInstanceId) {
+        const parent = scene._interactables.find((it) => it.instanceId === entry.parentInstanceId);
+        if (parent?.sprite) {
+          entry.sprite.x = Math.round(x);
+          entry.sprite.y = Math.round(y);
+          const state = initEditorState(scene);
+          const placement = state.placements.find((p) => (p.instanceId || p.id) === entry.instanceId);
+          if (placement) {
+            placement.x = Math.round(x);
+            placement.y = Math.round(y);
+            placement.parent_offset_y = Math.round(y - parent.sprite.y);
+          }
+          entry.sprite.setDepth((parent.sprite.depth || 10) + 8);
+          if (entry.def) entry.def._placement = { ...entry.def._placement, ...placement };
+          return;
+        }
+      }
+      entry.sprite.x = Math.round(x);
+      entry.sprite.y = Math.round(y);
+      refreshFurnitureDepth(entry);
+      if (entry.obstacle) {
+        entry.obstacle.x = entry.sprite.x;
+        entry.obstacle.y = entry.sprite.y;
+        if (entry.obstacle.body) entry.obstacle.body.updateFromGameObject();
+      }
+      writeTransformToPlacement(entry);
+      const state = initEditorState(scene);
+      state.placements.forEach((placementItem) => {
+        if (placementItem.parentInstanceId !== entry.instanceId) return;
+        const child = scene._interactables.find((it) => it.instanceId === (placementItem.instanceId || placementItem.id));
+        if (!child?.sprite) return;
+        const oy = placementItem.parent_offset_y !== undefined
+          ? placementItem.parent_offset_y
+          : (child.def?.parent_offset_y !== undefined ? child.def.parent_offset_y : -18);
+        child.sprite.x = entry.sprite.x;
+        child.sprite.y = entry.sprite.y + oy;
+        child.sprite.setDepth((entry.sprite.depth || 10) + 8);
+      });
+    };
+
+    const anchor = withBounds[0];
+    if (mode === 'left') {
+      withBounds.forEach(({ entry, bounds }) => {
+        applyMove(entry, entry.sprite.x + (anchor.bounds.left - bounds.left), entry.sprite.y);
+      });
+    } else if (mode === 'right') {
+      withBounds.forEach(({ entry, bounds }) => {
+        applyMove(entry, entry.sprite.x + (anchor.bounds.right - bounds.right), entry.sprite.y);
+      });
+    } else if (mode === 'center') {
+      withBounds.forEach(({ entry, bounds }) => {
+        applyMove(entry, entry.sprite.x + (anchor.bounds.cx - bounds.cx), entry.sprite.y);
+      });
+    } else if (mode === 'top') {
+      withBounds.forEach(({ entry, bounds }) => {
+        applyMove(entry, entry.sprite.x, entry.sprite.y + (anchor.bounds.top - bounds.top));
+      });
+    } else if (mode === 'bottom') {
+      withBounds.forEach(({ entry, bounds }) => {
+        applyMove(entry, entry.sprite.x, entry.sprite.y + (anchor.bounds.bottom - bounds.bottom));
+      });
+    } else if (mode === 'distributeH') {
+      const sorted = [...withBounds].sort((a, b) => a.bounds.cx - b.bounds.cx);
+      const first = sorted[0].bounds.cx;
+      const last = sorted[sorted.length - 1].bounds.cx;
+      const step = (last - first) / (sorted.length - 1);
+      sorted.forEach((e, i) => {
+        applyMove(e.entry, e.entry.sprite.x + (first + step * i - e.bounds.cx), e.entry.sprite.y);
+      });
+    } else if (mode === 'distributeV') {
+      const sorted = [...withBounds].sort((a, b) => a.bounds.cy - b.bounds.cy);
+      const first = sorted[0].bounds.cy;
+      const last = sorted[sorted.length - 1].bounds.cy;
+      const step = (last - first) / (sorted.length - 1);
+      sorted.forEach((e, i) => {
+        applyMove(e.entry, e.entry.sprite.x, e.entry.sprite.y + (first + step * i - e.bounds.cy));
+      });
+    }
+
+    scene._depthDirty = true;
+    scene._agentManager?.refreshDeskAnchorsAfterLayoutChange?.();
+    updateSelectionOverlay();
+    scheduleLayoutSave(scene);
+    const labels = {
+      left: 'left edges → first selected',
+      right: 'right edges → first selected',
+      center: 'centers → first selected',
+      top: 'tops → first selected',
+      bottom: 'bottoms → first selected',
+      distributeH: 'even horizontal spacing',
+      distributeV: 'even vertical spacing',
+    };
+    syncInfo(`Aligned ${entries.length} items — ${labels[mode] || mode}`);
+  }
 
   function addObstacle(scene, sprite, def) {
     if (def.type === 'decor' || def.type === 'seat' || sprite.displayWidth < 48) return null;
@@ -4347,18 +6255,28 @@ startOfficeWhenPhaserReady();
       if (!parentSprite) return null;
       const offsetY = placement.parent_offset_y !== undefined
         ? placement.parent_offset_y
-        : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
-      x = parentSprite.x;
+        : (def.parent_offset_y !== undefined ? def.parent_offset_y : -18);
+      // Keep horizontal offset from placement; only lock Y to desk surface.
+      x = placement.x != null ? placement.x : parentSprite.x;
       y = parentSprite.y + offsetY;
+      placement.y = y;
+      placement.parent_offset_y = offsetY;
     }
 
-    const depth = typeof def.depth === 'number' ? def.depth : (isChild ? 2 : 1.5);
+    const depth = furnitureRenderDepth(y, def, placement);
     const originY = def.origin === 'center' ? 0.5 : 1;
     const sprite = scene.add.image(x, y, texKey).setOrigin(0.5, originY).setDepth(depth);
     if (def.source_type === 'single_file') {
-      sprite.setDisplaySize(def.display_w || 32, def.display_h || 48);
+      const dw = def.display_w || def.w || 32;
+      const dh = def.display_h || def.h || 48;
+      sprite.setDisplaySize(dw, dh);
     }
-    scene.furnitureDecorSprites.push({ sprite, depth });
+    applyPlacementTransform(sprite, placement, def);
+    if (isChild) {
+      const parentEntry = scene._interactables.find((it) => it.instanceId === placement.parentInstanceId);
+      if (parentEntry?.sprite) sprite.setDepth((parentEntry.sprite.depth || 10) + 8);
+    }
+    scene.furnitureDecorSprites.push({ sprite, depth: sprite.depth });
 
     const instanceId = placement.instanceId || placement.id;
     const obstacle = isChild ? null : addObstacle(scene, sprite, def);
@@ -4395,32 +6313,117 @@ startOfficeWhenPhaserReady();
   function addCatalogPlacement(scene, catalogId, worldX, worldY) {
     const catalog = getCatalog(scene);
     const def = catalog?.objects?.[catalogId];
-    if (!def) return null;
+    if (!def) {
+      syncInfo(`Unknown catalog id: ${catalogId}`);
+      return null;
+    }
 
+    if (def.source_type === 'single_file' && !scene.textures.exists(`single_${catalogId}`)) {
+      return loadSingleThenPlace(scene, catalogId, def, worldX, worldY);
+    }
+
+    pushEditorUndo(`place ${catalogId}`);
     const state = initEditorState(scene);
+    const desk = isStackableDecor(catalogId, def)
+      ? findDeskUnderPoint(scene, worldX, worldY, { maxDist: 64 })
+      : null;
+    const parentOffsetY = desk
+      ? (def.parent_offset_y !== undefined ? def.parent_offset_y : -18)
+      : null;
     const placement = {
       id: catalogId,
       instanceId: `editor_${catalogId}_${state.nextId++}`,
-      x: snapCoord(worldX),
-      y: snapCoord(worldY)
+      x: snapCoord(desk ? desk.sprite.x + (worldX - desk.sprite.x) * 0.35 : worldX),
+      y: snapCoord(desk ? desk.sprite.y + parentOffsetY : worldY),
+      rotation: Math.round(
+        (placeGhost?.catalogId === catalogId ? placeGhost.rotation : pendingPlaceRotation) || 0
+      ),
+      scale: placeGhost?.catalogId === catalogId && placeGhost.scale
+        ? Math.round(placeGhost.scale * 100) / 100
+        : 1,
+      flipX: !!(placeGhost?.catalogId === catalogId && placeGhost.flipX),
+      flipY: !!(placeGhost?.catalogId === catalogId && placeGhost.flipY),
     };
+    if (desk) {
+      placement.parentInstanceId = desk.instanceId;
+      placement.parent_offset_y = parentOffsetY;
+      placement.x = snapCoord(worldX);
+      placement.y = snapCoord(desk.sprite.y + parentOffsetY);
+    }
     state.placements.push(placement);
     const entry = makePlacementSprite(scene, placement);
     if (entry) {
-      selectedSprite = entry.sprite;
-      syncInfo(`Placed ${catalogId} at x:${placement.x} y:${placement.y}`);
+      if (desk) {
+        entry.parentInstanceId = desk.instanceId;
+        entry.sprite.setDepth((desk.sprite.depth || 10) + 8);
+        if (entry.obstacle) {
+          removeObstacle(scene, entry.obstacle);
+          entry.obstacle = null;
+        }
+      }
+      editorPrefs = window.DenizenMapEditorPro?.pushRecent?.(editorPrefs, catalogId) || editorPrefs;
+      selectFurnitureEntry(entry, { keepPending: true });
+      state.pendingCatalogId = catalogId;
+      syncPlaceGhost(scene);
+      if (placeGhost?.sprite) {
+        placeGhost.sprite.x = placement.x;
+        placeGhost.sprite.y = placement.y;
+      }
+      const selected = document.getElementById('ed-selected');
+      if (selected) {
+        selected.textContent = desk
+          ? `On desk: ${catalogId} → ${desk.id}`
+          : `Armed: ${catalogId} · ${placement.rotation}° — click to place another`;
+      }
+      scene._depthDirty = true;
+      syncInfo(desk
+        ? `Placed ${catalogId} on ${desk.id} — moves with the desk`
+        : `Placed ${catalogId} at x:${placement.x} y:${placement.y} · ${placement.rotation}°`);
+      scheduleLayoutSave(scene);
+    } else {
+      syncInfo(`Failed to place ${catalogId} (texture missing)`);
     }
     return entry;
   }
 
   function prepareSpriteForEditing(scene, entry) {
-    if (!entry?.sprite) return;
+    if (!entry?.sprite || !scene?.input) return;
     entry.sprite.removeInteractive();
     if (entry.parentInstanceId) {
       entry.sprite.setInteractive({ useHandCursor: true });
       return;
     }
     entry.sprite.setInteractive({ draggable: true, useHandCursor: true });
+    // Phaser 3: setInteractive({draggable:true}) is not always enough — register explicitly.
+    scene.input.setDraggable(entry.sprite, true);
+  }
+
+  /** Login / visitor modals sit above the canvas and steal all pointer events. */
+  function suppressEditorBlockers() {
+    const modal = document.getElementById('denizen-visitor-name-modal');
+    if (modal && modal.style.display !== 'none') {
+      modal.dataset.editorSuppressed = '1';
+      modal.style.display = 'none';
+    }
+    if (document.documentElement.dataset.denizenModal === 'open') {
+      document.documentElement.dataset.editorClearedModal = '1';
+      delete document.documentElement.dataset.denizenModal;
+    }
+    globalThis.DenizenPublicDemo?.setBannerVisible?.(false);
+  }
+
+  function restoreEditorBlockers() {
+    const modal = document.getElementById('denizen-visitor-name-modal');
+    if (modal?.dataset.editorSuppressed === '1') {
+      modal.style.display = '';
+      delete modal.dataset.editorSuppressed;
+    }
+    if (document.documentElement.dataset.editorClearedModal === '1') {
+      document.documentElement.dataset.denizenModal = 'open';
+      delete document.documentElement.dataset.editorClearedModal;
+    }
+    // Do not re-show the demo banner after editor exit — that used to leave
+    // denizen-public-demo-banner-open stuck and stretch the level chip.
   }
 
   let saveLayoutTimer = null;
@@ -4438,6 +6441,13 @@ startOfficeWhenPhaserReady();
         ...placement,
         x: Math.round(entry.sprite.x),
         y: Math.round(entry.sprite.y),
+        rotation: Math.round(((Number(placement.rotation) || entry.sprite.angle || 0) % 360 + 360) % 360),
+        scale: (() => {
+          const s = Number(placement.scale);
+          return Number.isFinite(s) && s > 0 ? Math.round(s * 100) / 100 : 1;
+        })(),
+        flipX: !!entry.sprite.flipX,
+        flipY: !!entry.sprite.flipY,
       };
     });
     return { catalog, placements: updated };
@@ -4450,6 +6460,7 @@ startOfficeWhenPhaserReady();
       catalogId: 'furniture_catalog_openplan',
       placements: snap.placements,
     });
+    setSaveStatus('Saving…', 'saving');
     return fetch('/api/layout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -4457,18 +6468,22 @@ startOfficeWhenPhaserReady();
     }).then((r) => {
       if (r.ok) {
         if (!quiet) syncInfo('Layout saved to server');
+        setSaveStatus('Saved', 'saved');
         return true;
       }
       if (!quiet) syncInfo('Failed to save layout to server');
+      setSaveStatus('Save failed', 'error');
       return false;
     }).catch(() => {
       if (!quiet) syncInfo('Failed to save layout to server');
+      setSaveStatus('Save failed', 'error');
       return false;
     });
   }
 
   function scheduleLayoutSave(scene) {
     clearTimeout(saveLayoutTimer);
+    setSaveStatus('Saving…', 'saving');
     saveLayoutTimer = setTimeout(() => persistLayoutPlacements(scene, { quiet: true }), 600);
   }
 
@@ -4506,15 +6521,38 @@ startOfficeWhenPhaserReady();
   function enableEditor() {
     const scene = getScene();
     if (!scene) return;
+    if (editorActive) return;
     if (!Array.isArray(scene._interactables)) scene._interactables = [];
     editorActive = true;
     window.__DenizenEditorActive = true;
+    document.documentElement.classList.add('denizen-editor-open');
+    editorUndoStack = [];
+    editorRedoStack = [];
+    dragUndoSnapshot = null;
+    dragOrigin = null;
+    suppressEditorBlockers();
     initEditorState(scene);
     createEditorUI();
     renderCatalogList();
+    updateUndoButtons();
+    savedCameraState = {
+      zoom: scene.cameras.main.zoom,
+      scrollX: scene.cameras.main.scrollX,
+      scrollY: scene.cameras.main.scrollY,
+    };
+    createEditorGrid(scene);
+    updateOnboardingStrip();
 
     scene._editorWasLocked = scene.playerLocked;
     scene.playerLocked = true;
+
+    // NPCs/player steal pointer hits — disable their input while editing.
+    if (scene.player?.disableInteractive) scene.player.disableInteractive();
+    else if (scene.player?.removeInteractive) scene.player.removeInteractive();
+    (scene.npcs || []).forEach((npc) => {
+      if (npc?.disableInteractive) npc.disableInteractive();
+      else if (npc?.removeInteractive) npc.removeInteractive();
+    });
 
     scene._interactables.forEach((entry) => prepareSpriteForEditing(scene, entry));
 
@@ -4523,71 +6561,137 @@ startOfficeWhenPhaserReady();
       && scene._interactables?.some((item) => item.sprite === gameObject)
     );
 
+    const syncEntryChildrenAndPlacement = (entry, gameObject) => {
+      refreshFurnitureDepth(entry);
+      if (entry.obstacle) {
+        entry.obstacle.x = gameObject.x;
+        entry.obstacle.y = gameObject.y;
+        if (entry.obstacle.body) entry.obstacle.body.updateFromGameObject();
+      }
+      const state = initEditorState(scene);
+      const placement = state.placements.find((item) => (item.instanceId || item.id) === entry.instanceId);
+      if (placement) {
+        placement.x = Math.round(gameObject.x);
+        placement.y = Math.round(gameObject.y);
+      }
+      state.placements.forEach((placementItem) => {
+        if (placementItem.parentInstanceId !== entry.instanceId) return;
+        const childEntry = scene._interactables.find((item) => item.instanceId === (placementItem.instanceId || placementItem.id));
+        if (!childEntry?.sprite) return;
+        const def = childEntry.def || {};
+        const offsetY = placementItem.parent_offset_y !== undefined
+          ? placementItem.parent_offset_y
+          : (def.parent_offset_y !== undefined ? def.parent_offset_y : -18);
+        childEntry.sprite.x = gameObject.x;
+        childEntry.sprite.y = gameObject.y + offsetY;
+        refreshFurnitureDepth(childEntry);
+        if (childEntry.obstacle) {
+          childEntry.obstacle.x = childEntry.sprite.x;
+          childEntry.obstacle.y = childEntry.sprite.y;
+          if (childEntry.obstacle.body) childEntry.obstacle.body.updateFromGameObject();
+        }
+      });
+    };
+
     const onDragStart = (pointer, gameObject) => {
       if (!isFurnitureSprite(gameObject)) return;
-      selectedSprite = gameObject;
-      if (typeof gameObject.setTint === 'function') gameObject.setTint(0x00ff00);
       const entry = scene._interactables.find((item) => item.sprite === gameObject);
-      if (entry) {
-        syncInfo(`${entry.id} [${entry.instanceId}] x:${Math.round(gameObject.x)} y:${Math.round(gameObject.y)}`);
+      // Keep multi-select when dragging an already-selected item.
+      if (entry && !selectedSprites.includes(gameObject)) {
+        selectFurnitureEntry(entry, { additive: !!pointer?.event?.shiftKey });
+      } else if (entry) {
+        selectedSprite = entry.sprite;
+        if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x00ff00);
+      }
+      if (typeof gameObject.setTint === 'function') gameObject.setTint(0x00ff00);
+      dragUndoSnapshot = captureEditorSnapshot(
+        selectedSprites.length > 1 ? `move ${selectedSprites.length} items` : `move ${entry?.id || 'item'}`
+      );
+      dragOrigin = { x: gameObject.x, y: gameObject.y };
+      // Snapshot starting positions for group drag.
+      scene._editorGroupDrag = getSelectedFurnitureEntries(scene)
+        .filter((item) => !item.parentInstanceId)
+        .map((item) => ({ entry: item, x: item.sprite.x, y: item.sprite.y }));
+      if (!scene._editorGroupDrag.some((item) => item.entry.sprite === gameObject) && entry) {
+        scene._editorGroupDrag.push({ entry, x: gameObject.x, y: gameObject.y });
       }
     };
 
     const onDrag = (pointer, gameObject, dragX, dragY) => {
       if (!isFurnitureSprite(gameObject)) return;
-      if (window._editorSnap) {
-        gameObject.x = snapCoord(dragX);
-        gameObject.y = snapCoord(dragY);
-      } else {
-        gameObject.x = dragX;
-        gameObject.y = dragY;
-      }
-      const entry = scene._interactables.find((item) => item.sprite === gameObject);
-      if (entry) {
-        syncInfo(`${entry.id} [${entry.instanceId}] x:${Math.round(gameObject.x)} y:${Math.round(gameObject.y)}`);
-        if (entry.obstacle) {
-          entry.obstacle.x = gameObject.x;
-          entry.obstacle.y = gameObject.y;
-          if (entry.obstacle.body) entry.obstacle.body.updateFromGameObject();
-        }
-
-        const state = initEditorState(scene);
-        const placement = state.placements.find((item) => (item.instanceId || item.id) === entry.instanceId);
-        if (placement) {
-          placement.x = Math.round(gameObject.x);
-          placement.y = Math.round(gameObject.y);
-        }
-
-        initEditorState(scene).placements.forEach((placementItem) => {
-          if (placementItem.parentInstanceId === entry.instanceId) {
-            const childEntry = scene._interactables.find((item) => item.instanceId === (placementItem.instanceId || placementItem.id));
-            if (childEntry && childEntry.sprite) {
-              const def = childEntry.def || {};
-              const offsetY = placementItem.parent_offset_y !== undefined
-                ? placementItem.parent_offset_y
-                : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
-              childEntry.sprite.x = gameObject.x;
-              childEntry.sprite.y = gameObject.y + offsetY;
-              if (childEntry.obstacle) {
-                childEntry.obstacle.x = childEntry.sprite.x;
-                childEntry.obstacle.y = childEntry.sprite.y;
-                if (childEntry.obstacle.body) childEntry.obstacle.body.updateFromGameObject();
-              }
-            }
-          }
+      const nextX = window._editorSnap ? snapCoord(dragX) : dragX;
+      const nextY = window._editorSnap ? snapCoord(dragY) : dragY;
+      const dx = nextX - (dragOrigin?.x ?? gameObject.x);
+      const dy = nextY - (dragOrigin?.y ?? gameObject.y);
+      const group = scene._editorGroupDrag;
+      if (group && group.length > 1) {
+        group.forEach(({ entry, x, y }) => {
+          if (!entry?.sprite) return;
+          entry.sprite.x = window._editorSnap ? snapCoord(x + dx) : x + dx;
+          entry.sprite.y = window._editorSnap ? snapCoord(y + dy) : y + dy;
+          if (typeof entry.sprite.setTint === 'function') entry.sprite.setTint(0x00ff00);
+          syncEntryChildrenAndPlacement(entry, entry.sprite);
         });
+        syncInfo(`Moving ${group.length} items`);
+      } else {
+        gameObject.x = nextX;
+        gameObject.y = nextY;
+        const entry = scene._interactables.find((item) => item.sprite === gameObject);
+        if (entry) {
+          syncEntryChildrenAndPlacement(entry, gameObject);
+          syncInfo(`${entry.id} [${entry.instanceId}] x:${Math.round(gameObject.x)} y:${Math.round(gameObject.y)}`);
+        }
       }
+      updateSelectionOverlay();
     };
 
     const onDragEnd = (pointer, gameObject) => {
       if (!isFurnitureSprite(gameObject)) return;
-      if (typeof gameObject.clearTint === 'function') gameObject.clearTint();
+      const entry = scene._interactables.find((item) => item.sprite === gameObject);
+      const moved = dragOrigin
+        && (Math.abs(gameObject.x - dragOrigin.x) > 0.5 || Math.abs(gameObject.y - dragOrigin.y) > 0.5);
+      if (moved && dragUndoSnapshot && !restoringEditorHistory) {
+        editorUndoStack.push(dragUndoSnapshot);
+        if (editorUndoStack.length > MAX_EDITOR_UNDO) editorUndoStack.shift();
+        editorRedoStack = [];
+        updateUndoButtons();
+      }
+      dragUndoSnapshot = null;
+      dragOrigin = null;
+      const group = scene._editorGroupDrag || [];
+      scene._editorGroupDrag = null;
+      if (group.length > 1) {
+        group.forEach(({ entry: item }) => {
+          if (!item) return;
+          writeTransformToPlacement(item);
+          refreshFurnitureDepth(item);
+          if (typeof item.sprite?.setTint === 'function') item.sprite.setTint(0x66ff99);
+        });
+        syncSelectedReadout(entry || group[0]?.entry);
+      } else if (entry) {
+        writeTransformToPlacement(entry);
+        refreshFurnitureDepth(entry);
+        if (typeof gameObject.setTint === 'function') gameObject.setTint(0x66ff99);
+        syncSelectedReadout(entry);
+      } else if (typeof gameObject.clearTint === 'function') {
+        gameObject.clearTint();
+      }
+      updateSelectionOverlay();
+      scene._depthDirty = true;
       scene._agentManager?.refreshDeskAnchorsAfterLayoutChange?.();
       scheduleLayoutSave(scene);
     };
 
     const onWallPointerMove = (pointer) => {
-      if (!editorActive || editorMode !== 'walls' || !wallDrawStart) return;
+      if (!editorActive) return;
+      if (editorMode === 'furniture') {
+        if (initEditorState(scene).pendingCatalogId) {
+          if (!placeGhost) syncPlaceGhost(scene);
+          updatePlaceGhostAt(pointer.worldX, pointer.worldY);
+        }
+        return;
+      }
+      if (editorMode !== 'walls' || !wallDrawStart) return;
       const OW = getOpenplanWalls();
       if (!OW) return;
       OW.destroyPreview(wallDrawPreview);
@@ -4597,6 +6701,25 @@ startOfficeWhenPhaserReady();
         window._editorSnap
       );
       wallDrawPreview = OW.drawPreviewBand(scene, segs, 0.5);
+    };
+
+    const onWheel = (pointer, currentlyOver, deltaX, deltaY) => {
+      if (!editorActive) return;
+      if (!deltaY) return;
+      const zoomChord = !!(pointer.event?.ctrlKey || pointer.event?.metaKey);
+      if (zoomChord) {
+        try { pointer.event?.preventDefault?.(); } catch (_) {}
+        zoomEditorCamera(deltaY > 0 ? -0.1 : 0.1);
+        return;
+      }
+      if (editorMode !== 'furniture') return;
+      try { pointer.event?.preventDefault?.(); } catch (_) {}
+      const delta = deltaY > 0 ? 90 : -90;
+      if (placeGhost && initEditorState(scene).pendingCatalogId) {
+        rotatePlaceGhost(delta);
+        return;
+      }
+      transformSelected({ rotationDelta: delta });
     };
 
     const onWallPointerUp = (pointer) => {
@@ -4683,18 +6806,53 @@ startOfficeWhenPhaserReady();
       if (!entry) return;
       const now = performance.now();
       if (lastPointerTarget === gameObject && now - lastPointerAt <= DOUBLE_CLICK_MS) {
+        const count = getSelectedFurnitureEntries(scene).length;
+        if (count >= 2 && !confirm(`Delete ${count} item(s)? Undo can restore.`)) {
+          lastPointerTarget = null;
+          lastPointerAt = 0;
+          return;
+        }
+        pushEditorUndo(`delete ${entry.id}`);
+        selectedSprites = selectedSprites.filter((s) => s !== gameObject);
+        if (selectedSprite === gameObject) selectedSprite = selectedSprites[selectedSprites.length - 1] || null;
         removeEntry(scene, entry);
+        scheduleLayoutSave(scene);
         lastPointerTarget = null;
         lastPointerAt = 0;
+        const selected = document.getElementById('ed-selected');
+        if (selected) selected.textContent = selectedSprites.length ? selected.textContent : 'Nothing selected';
+        updateSelectionOverlay();
+        refreshEditorStatusChrome();
         return;
       }
       lastPointerTarget = gameObject;
       lastPointerAt = now;
-      selectedSprite = gameObject;
-      syncInfo(`${entry.id} [${entry.instanceId}] x:${Math.round(gameObject.x)} y:${Math.round(gameObject.y)}`);
+      const additive = !!(pointer.event?.shiftKey);
+      selectFurnitureEntry(entry, { additive });
+    };
+
+    const onPanPointerDown = (pointer) => {
+      if (!editorActive) return;
+      const isMiddle = pointer.button === 1;
+      if (!isMiddle && !spacePanning) return;
+      panPointerActive = true;
+      panPointerStart = { x: pointer.x, y: pointer.y };
+      panCameraStart = { x: scene.cameras.main.scrollX, y: scene.cameras.main.scrollY };
+    };
+    const onPanPointerMove = (pointer) => {
+      if (!panPointerActive || !panPointerStart || !panCameraStart) return;
+      const cam = scene.cameras.main;
+      cam.scrollX = panCameraStart.x - (pointer.x - panPointerStart.x) / cam.zoom;
+      cam.scrollY = panCameraStart.y - (pointer.y - panPointerStart.y) / cam.zoom;
+    };
+    const onPanPointerUp = () => {
+      panPointerActive = false;
+      panPointerStart = null;
+      panCameraStart = null;
     };
 
     const canvas = scene.game?.canvas;
+    const dropTarget = document.getElementById('game-container') || canvas;
     const onCanvasDragOver = (event) => {
       if (!editorActive) return;
       event.preventDefault();
@@ -4703,6 +6861,7 @@ startOfficeWhenPhaserReady();
     const onCanvasDrop = (event) => {
       if (!editorActive) return;
       event.preventDefault();
+      event.stopPropagation();
       const catalogId = event.dataTransfer.getData('text/plain');
       if (!catalogId) return;
       const point = getCanvasWorldPoint(scene, event.clientX, event.clientY);
@@ -4712,28 +6871,62 @@ startOfficeWhenPhaserReady();
 
     scene._editorHandlers = {
       onDragStart, onDrag, onDragEnd, onPointerDown, onGameObjectDown,
-      onCanvasDragOver, onCanvasDrop, onWallPointerMove, onWallPointerUp,
+      onCanvasDragOver, onCanvasDrop, onWallPointerMove, onWallPointerUp, onWheel,
+      onPanPointerDown, onPanPointerMove, onPanPointerUp,
+      dropTarget,
     };
     scene.input.on('dragstart', onDragStart);
     scene.input.on('drag', onDrag);
     scene.input.on('dragend', onDragEnd);
     scene.input.on('pointerdown', onPointerDown);
+    scene.input.on('pointerdown', onPanPointerDown);
     scene.input.on('pointermove', onWallPointerMove);
+    scene.input.on('pointermove', onPanPointerMove);
     scene.input.on('pointerup', onWallPointerUp);
+    scene.input.on('pointerup', onPanPointerUp);
+    scene.input.on('wheel', onWheel);
     scene.input.on('gameobjectdown', onGameObjectDown);
-    if (canvas) {
-      canvas.addEventListener('dragover', onCanvasDragOver);
-      canvas.addEventListener('drop', onCanvasDrop);
+    if (dropTarget) {
+      dropTarget.addEventListener('dragover', onCanvasDragOver);
+      dropTarget.addEventListener('drop', onCanvasDrop);
     }
     setEditorMode('furniture');
+    scene._depthDirty = true;
+    refreshEditorStatusChrome();
+    syncInfo('Pick a catalog item — ghost follows your cursor. Click the map to place.');
   }
 
   function disableEditor() {
     const scene = getScene();
-    if (!scene) return;
     editorActive = false;
     window.__DenizenEditorActive = false;
+    document.documentElement.classList.remove('denizen-editor-open');
+    document.documentElement.classList.remove('denizen-public-demo-banner-open');
+    const chip = document.getElementById('denizen-office-level-chip');
+    if (chip) {
+      chip.style.top = '';
+      chip.style.height = '';
+      chip.style.display = '';
+    }
+    editorUndoStack = [];
+    editorRedoStack = [];
+    dragUndoSnapshot = null;
+    dragOrigin = null;
+    destroyPlaceGhost();
+    pendingPlaceRotation = 0;
+    clearFurnitureSelection();
+    destroyEditorGrid();
+    endCameraPan();
+    if (scene && savedCameraState) {
+      scene.cameras.main.setZoom(savedCameraState.zoom);
+      scene.cameras.main.scrollX = savedCameraState.scrollX;
+      scene.cameras.main.scrollY = savedCameraState.scrollY;
+    }
+    savedCameraState = null;
+    restoreEditorBlockers();
     removeEditorUI();
+
+    if (!scene) return;
 
     scene.playerLocked = scene._editorWasLocked ?? false;
     const handlers = scene._editorHandlers;
@@ -4742,12 +6935,16 @@ startOfficeWhenPhaserReady();
       scene.input.off('drag', handlers.onDrag);
       scene.input.off('dragend', handlers.onDragEnd);
       scene.input.off('pointerdown', handlers.onPointerDown);
+      scene.input.off('pointerdown', handlers.onPanPointerDown);
       scene.input.off('pointermove', handlers.onWallPointerMove);
+      scene.input.off('pointermove', handlers.onPanPointerMove);
       scene.input.off('pointerup', handlers.onWallPointerUp);
+      scene.input.off('pointerup', handlers.onPanPointerUp);
+      scene.input.off('wheel', handlers.onWheel);
       scene.input.off('gameobjectdown', handlers.onGameObjectDown);
-      if (scene.game?.canvas) {
-        scene.game.canvas.removeEventListener('dragover', handlers.onCanvasDragOver);
-        scene.game.canvas.removeEventListener('drop', handlers.onCanvasDrop);
+      if (handlers.dropTarget) {
+        handlers.dropTarget.removeEventListener('dragover', handlers.onCanvasDragOver);
+        handlers.dropTarget.removeEventListener('drop', handlers.onCanvasDrop);
       }
       scene._editorHandlers = null;
     }
@@ -4805,30 +7002,123 @@ startOfficeWhenPhaserReady();
     }
   }, 200);
 
+  function isTypingInFormField(target) {
+    const el = target || document.activeElement;
+    if (!el || el === document.body || el === document.documentElement) return false;
+    if (el.isContentEditable || el.getAttribute?.('contenteditable') === 'true') return true;
+    const tag = String(el.tagName || '').toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    // Chat / phone / modals sometimes focus a wrapper; walk up a few levels.
+    return !!el.closest?.('input, textarea, select, [contenteditable="true"], [contenteditable=""], .dzp-chat, .player-chat, [role="textbox"]');
+  }
+
   document.addEventListener('keydown', (e) => {
-    if (document.documentElement.dataset.denizenModal === 'open') return;
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-    if (e.key === 'e' || e.key === 'E') {
-      const host = String(window.location.hostname || '').toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-      const onLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
-      const onDolonia = host === 'denizen.dolonia.cloud' || host.endsWith('.dolonia.cloud');
-      const allowEditor = onLocalhost || onDolonia || params.has('editor');
-      if (!allowEditor) return;
-      const plainE = !e.ctrlKey && !e.metaKey && !e.altKey;
-      const toggleChord = (e.ctrlKey && e.shiftKey) || (plainE && (onLocalhost || onDolonia || params.has('editor')));
-      if (!toggleChord) return;
+    if (isTypingInFormField(e.target) || isTypingInFormField(document.activeElement)) return;
+    // Editor toggle: Ctrl+Shift+E / Cmd+Shift+E only — never plain E.
+    if ((e.key === 'e' || e.key === 'E') && e.shiftKey && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      if (document.documentElement.dataset.denizenModal === 'open' && editorActive) return;
+      if (!editorAllowedByUrl()) return;
       e.preventDefault();
       e.stopPropagation();
       if (editorActive) disableEditor();
       else enableEditor();
+      return;
     }
+    if (!editorActive) return;
+
+    if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      toggleEditorChrome();
+      return;
+    }
+
+    if (e.code === 'Space' && !e.repeat) {
+      spacePanning = true;
+      e.preventDefault();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'z' || e.key === 'Z')) {
+      e.preventDefault();
+      if (e.shiftKey) redoEditorChange();
+      else undoEditorChange();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'y' || e.key === 'Y')) {
+      e.preventDefault();
+      redoEditorChange();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey || e.altKey) && (e.key === 'd' || e.key === 'D')) {
+      e.preventDefault();
+      if (editorMode === 'walls') duplicateSelectedWall();
+      else duplicateSelectedFurniture();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A') && editorMode === 'furniture') {
+      e.preventDefault();
+      selectAllFurniture();
+      return;
+    }
+
     if (e.key === 'x' || e.key === 'X') {
-      if (!editorActive) return;
       if (editorMode === 'walls') window._editorExportWalls();
       else window._editorExport();
+      return;
     }
-    if (!editorActive || editorMode !== 'walls') return;
+
+    if (editorMode === 'furniture') {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setPendingCatalog(null);
+        clearFurnitureSelection();
+        syncInfo('Placement cancelled');
+        return;
+      }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        nudgeSelectedFurniture(e.key);
+        return;
+      }
+      if (e.key === ',' || e.key === '<') {
+        e.preventDefault();
+        transformSelected({ rotationDelta: -90 });
+        return;
+      }
+      if (e.key === '.' || e.key === '>') {
+        e.preventDefault();
+        transformSelected({ rotationDelta: 90 });
+        return;
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        transformSelected({ rotationDelta: e.shiftKey ? -15 : 15 });
+        return;
+      }
+      if (e.key === ']' || e.key === '=' || e.key === '+') {
+        e.preventDefault();
+        transformSelected({ scaleFactor: 1.1 });
+        return;
+      }
+      if (e.key === '[' || e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        transformSelected({ scaleFactor: 0.9 });
+        return;
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        transformSelected({ flipX: true });
+        return;
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        deleteSelectedFurniture();
+        return;
+      }
+      return;
+    }
+
+    if (editorMode !== 'walls') return;
     if (e.key === 'd' || e.key === 'D') {
       duplicateSelectedWall();
     }
@@ -4838,6 +7128,10 @@ startOfficeWhenPhaserReady();
     if (e.key === 'k' || e.key === 'K') {
       document.getElementById('ed-wall-cut-btn')?.click();
     }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') spacePanning = false;
   });
 
   // Public bridge for NPC-driven live furniture mutations. Exposed so

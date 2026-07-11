@@ -303,7 +303,7 @@
     }).join('');
     return `<div class="hq-heatmap-wrap${heatmapExpanded ? '' : ' collapsed'}">
       <div class="hq-heatmap">${cells}</div>
-      <div class="hq-heat-legend"><span>less</span><span>shipped work ┬╖ ${heatmap.days || 35}d</span><span>more</span></div>
+      <div class="hq-heat-legend"><span>less</span><span>shipped work · ${heatmap.days || 35}d</span><span>more</span></div>
     </div>`;
   }
 
@@ -366,7 +366,7 @@
       ? `${p.xpIntoLevel}/${p.xpForNextLevel} XP`
       : 'max level';
     const streakLine = data.maxStreak > 0
-      ? `<span class="hq-streak">${ti('flame', { size: 13, tone: 'gold' })} ${data.maxStreak}-day streak${data.topStreakNpc ? ` ┬╖ ${_esc(data.topStreakNpc)}` : ''}</span>`
+      ? `<span class="hq-streak">${ti('flame', { size: 13, tone: 'gold' })} ${data.maxStreak}-day streak${data.topStreakNpc ? ` · ${_esc(data.topStreakNpc)}` : ''}</span>`
       : '<span class="hq-streak">no active streak</span>';
     const todayShipped = data.today?.shipped || 0;
 
@@ -402,13 +402,13 @@
           <span class="hq-xp-label">${xpLabel}</span>
         </div>
         <div class="hq-bar"><div class="hq-bar-fill" style="width:${pct}%"></div></div>
-        <div class="hq-stats-line">${streakLine} ┬╖ <span class="hq-shipped">${todayShipped} shipped today</span></div>
+        <div class="hq-stats-line">${streakLine} · <span class="hq-shipped">${todayShipped} shipped today</span></div>
       </div>
       <div class="hq-section">while you were away</div>
       ${awayHtml}
       <div class="hq-section collapsible" data-collapse="heatmap">shipped-work heatmap <span>${ti(heatmapExpanded ? 'chevron-down' : 'chevron-right', { size: 12, tone: 'muted' })}</span></div>
       ${renderHeatmap(data.heatmap)}
-      <div class="hq-section">leaderboard ┬╖ this week</div>
+      <div class="hq-section">leaderboard · this week</div>
       ${lbHtml}
       <div class="hq-section">weekly quests</div>
       ${weekly.map(renderQuest).join('') || '<div class="hq-away-quiet">none configured</div>'}
