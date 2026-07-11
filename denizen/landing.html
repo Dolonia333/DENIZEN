@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>DENIZEN — The office for your AI agents</title>
-  <meta name="description" content="Your agents have a floor now. Open a live office where every agent has a desk, a role, and a trail of work — try the demo with zero API keys." />
+  <meta name="description" content="An office you can actually see. Every agent gets a desk, a role, and a trail of work — open the live demo." />
   <meta name="theme-color" content="#1a1f2e" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -120,7 +120,7 @@
     }
     .hud-logo em {
       font-style: normal;
-      color: var(--lime);
+      color: #7dd3fc;
     }
     .hud-status {
       display: flex;
@@ -155,72 +155,122 @@
       font-size: 0.75rem;
       letter-spacing: 0.06em;
       padding: 10px 18px;
-      background: var(--lime);
-      color: var(--ink);
+      background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+      color: #0b1220;
       text-decoration: none;
-      border: none;
-      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      border: 2px solid #020617;
+      box-shadow: 2px 2px 0 #020617;
+      clip-path: none;
       transition: filter 0.2s, transform 0.15s;
     }
-    .hud-enter:hover { filter: brightness(1.1); transform: scale(1.02); }
+    .hud-enter:hover { filter: brightness(1.06); transform: translateY(-1px); }
 
-  /* ── HERO: split reality slider ── */
+  /* ── HERO: brand + Buzz ── */
     .hero {
       position: relative;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 80px 20px 40px;
+      padding: 96px 24px 110px;
       overflow: hidden;
     }
-    .hero-headline {
-      text-align: center;
-      max-width: 720px;
-      margin: 0 auto 32px;
-      z-index: 10;
+    .hero-city {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: min(42vh, 380px);
+      z-index: 0;
+      pointer-events: none;
+      background:
+        url("./assets/night-city-skyline.svg") center bottom / min(1600px, 140%) auto no-repeat,
+        linear-gradient(180deg, transparent 0%, rgba(2, 6, 23, 0.35) 55%, rgba(2, 6, 23, 0.85) 100%);
+      opacity: 0.55;
+      mask-image: linear-gradient(180deg, transparent, #000 35%);
+      -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%);
     }
-    .hero-headline h1 {
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 45% at 22% 40%, rgba(56, 189, 248, 0.14), transparent 62%),
+        radial-gradient(ellipse 40% 35% at 78% 48%, rgba(245, 158, 11, 0.1), transparent 55%);
+    }
+    .hero-stage {
+      position: relative;
+      z-index: 2;
+      width: min(1080px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(220px, 0.85fr);
+      align-items: center;
+      gap: clamp(28px, 5vw, 56px);
+    }
+    .hero-copy {
+      text-align: left;
+      max-width: 560px;
+    }
+    .hero-brand {
+      margin: 0 0 18px;
       font-family: var(--display);
-      font-size: clamp(2.4rem, 7vw, 4.75rem);
+      font-size: clamp(2.6rem, 7vw, 4.25rem);
       font-weight: 800;
-      line-height: 1.04;
-      letter-spacing: -0.035em;
-      margin: 0 0 20px;
+      letter-spacing: 0.14em;
+      line-height: 0.95;
+      text-transform: uppercase;
+      color: var(--cream);
+      animation: landing-rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
     }
-    .hero-headline h1 .hero-main { display: block; }
-    .hero-headline h1 .hero-main em {
+    .hero-brand em {
       font-style: normal;
-      color: var(--lime);
-    }
-    .hero-headline .hero-sub {
-      font-size: 1rem;
-      color: #cbd5e1;
-      margin: 0 0 8px;
-      line-height: 1.6;
-    }
-    .hero-headline p {
-      font-size: 0.9rem;
-      color: #94a3b8;
-      margin: 0 0 20px;
-      line-height: 1.7;
+      color: #7dd3fc;
     }
     .hero-tagline {
       display: inline-block;
       font-size: 10px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--lime);
-      border: 1px solid rgba(163, 230, 53, 0.35);
+      color: #fde68a;
+      border: 2px solid #020617;
       padding: 5px 10px;
-      margin-bottom: 16px;
-      background: rgba(163, 230, 53, 0.06);
+      margin: 0 0 16px;
+      background: rgba(245, 158, 11, 0.12);
+      box-shadow: 2px 2px 0 #020617;
+      animation: landing-rise 700ms 80ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero-copy h1 {
+      font-family: var(--display);
+      font-size: clamp(1.85rem, 4.2vw, 2.85rem);
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin: 0 0 14px;
+      color: var(--cream);
+      animation: landing-rise 700ms 120ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .hero-copy h1 em {
+      font-style: normal;
+      color: #7dd3fc;
+    }
+    .hero-sub {
+      font-size: 1rem;
+      color: #cbd5e1;
+      margin: 0 0 22px;
+      line-height: 1.55;
+      max-width: 38ch;
+      animation: landing-rise 700ms 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
     }
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      justify-content: center;
+      justify-content: flex-start;
+      animation: landing-rise 700ms 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
     }
     .btn {
       font-family: var(--display);
@@ -234,31 +284,63 @@
     }
     .btn:active { transform: scale(0.98); }
     .btn-primary {
-      background: var(--lime);
-      color: var(--ink);
-      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-      box-shadow: 0 0 28px rgba(163, 230, 53, 0.3);
+      background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+      color: #0b1220;
+      border: 2px solid #020617;
+      box-shadow: 3px 4px 0 #020617;
+      clip-path: none;
     }
-    .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 0 40px rgba(163, 230, 53, 0.45); }
+    .btn-primary:hover { filter: brightness(1.05); }
     .btn-ghost {
-      color: var(--lime-bright);
-      border: 1px solid rgba(163, 230, 53, 0.4);
-      background: rgba(163, 230, 53, 0.05);
+      color: #7dd3fc;
+      border: 2px solid #020617;
+      background: rgba(2, 6, 23, 0.55);
+      box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.35), 2px 2px 0 #020617;
     }
-    .btn-ghost:hover { background: rgba(163, 230, 53, 0.12); border-color: var(--lime); }
+    .btn-ghost:hover { background: rgba(125, 211, 252, 0.1); }
 
-    /* ── Buzz mascot (lobby phone) ── */
+    @keyframes landing-rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     @keyframes landing-buzz-bob {
       0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
+      50% { transform: translateY(-6px); }
     }
     @keyframes landing-buzz-blink {
       0%, 46%, 54%, 100% { transform: scaleY(1); }
       50% { transform: scaleY(0.12); }
     }
     @keyframes landing-buzz-in {
-      from { opacity: 0; transform: translateX(-28px) rotate(-12deg); }
-      to { opacity: 1; transform: translateX(0) rotate(-5deg); }
+      from { opacity: 0; transform: translate(28px, 16px) rotate(10deg) scale(0.9); }
+      to { opacity: 1; transform: translate(0, 0) rotate(4deg) scale(1); }
+    }
+    @keyframes landing-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(125, 211, 252, 0); }
+      40% { box-shadow: 0 0 0 10px rgba(125, 211, 252, 0); }
+      50% { box-shadow: 0 0 18px 2px rgba(125, 211, 252, 0.35); }
+    }
+    @keyframes landing-antenna {
+      0%, 100% { background: #f87171; transform: scale(1); }
+      50% { background: #fca5a5; transform: scale(1.15); }
+    }
+
+    .hero-buzz {
+      justify-self: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+      transform: rotate(4deg);
+      animation: landing-buzz-in 620ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+      filter: drop-shadow(4px 6px 0 rgba(0, 0, 0, 0.45));
+    }
+    .hero-buzz:hover .landing-buzz-phone { filter: brightness(1.08); }
+    .hero-buzz:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 8px;
     }
     .landing-buzz {
       display: inline-flex;
@@ -271,28 +353,32 @@
       animation: landing-buzz-in 520ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
       filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.45));
     }
-    .landing-buzz:hover .landing-buzz-phone {
-      filter: brightness(1.08);
-    }
+    .landing-buzz:hover .landing-buzz-phone { filter: brightness(1.08); }
     .landing-buzz:focus-visible {
       outline: 2px solid var(--amber);
       outline-offset: 6px;
     }
     .landing-buzz-bubble {
       position: relative;
-      max-width: 168px;
-      padding: 8px 11px;
+      max-width: 200px;
+      padding: 10px 12px;
       border-radius: 10px 10px 10px 3px;
       background: #fef3c7;
       color: #422006;
       font-family: var(--display);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.01em;
       line-height: 1.3;
       border: 2px solid #020617;
       box-shadow: 2px 3px 0 #020617;
       text-align: left;
+    }
+    .hero-buzz .landing-buzz-bubble {
+      max-width: 230px;
+      font-size: 14px;
+      border-radius: 12px 12px 3px 12px;
+      text-align: right;
     }
     .landing-buzz-bubble::after {
       content: "";
@@ -313,6 +399,8 @@
       border-bottom: 0;
       z-index: 1;
     }
+    .hero-buzz .landing-buzz-bubble::after { left: auto; right: 22px; }
+    .hero-buzz .landing-buzz-bubble::before { left: auto; right: 24px; }
     .landing-buzz-phone {
       position: relative;
       width: 68px;
@@ -331,6 +419,17 @@
       gap: 7px;
       animation: landing-buzz-bob 2.2s ease-in-out infinite;
     }
+    .hero-buzz .landing-buzz-phone {
+      width: 110px;
+      height: 136px;
+      border-radius: 18px 18px 24px 24px;
+      padding-top: 16px;
+      gap: 12px;
+      border-width: 4px;
+      animation:
+        landing-buzz-bob 2.2s ease-in-out infinite,
+        landing-ring 2.8s ease-in-out infinite;
+    }
     .landing-buzz-antenna {
       position: absolute;
       top: -10px;
@@ -339,6 +438,12 @@
       height: 12px;
       background: #94a3b8;
       border-radius: 2px;
+    }
+    .hero-buzz .landing-buzz-antenna {
+      top: -14px;
+      right: 22px;
+      width: 4px;
+      height: 16px;
     }
     .landing-buzz-antenna::after {
       content: "";
@@ -351,6 +456,13 @@
       background: #f87171;
       border: 2px solid #020617;
     }
+    .hero-buzz .landing-buzz-antenna::after {
+      top: -5px;
+      left: -4px;
+      width: 12px;
+      height: 12px;
+      animation: landing-antenna 1.4s ease-in-out infinite;
+    }
     .landing-buzz-screen {
       width: 42px;
       height: 30px;
@@ -362,6 +474,13 @@
       justify-content: center;
       gap: 7px;
     }
+    .hero-buzz .landing-buzz-screen {
+      width: 68px;
+      height: 48px;
+      border-radius: 8px;
+      gap: 10px;
+      border-width: 3px;
+    }
     .landing-buzz-eye {
       width: 6px;
       height: 8px;
@@ -370,11 +489,20 @@
       transform-origin: center;
       animation: landing-buzz-blink 3.6s ease-in-out infinite;
     }
+    .hero-buzz .landing-buzz-eye {
+      width: 10px;
+      height: 14px;
+      border-radius: 3px;
+    }
     .landing-buzz-eye:nth-child(2) { animation-delay: 0.12s; }
     .landing-buzz-pad {
       display: grid;
       grid-template-columns: repeat(3, 7px);
       gap: 3px;
+    }
+    .hero-buzz .landing-buzz-pad {
+      grid-template-columns: repeat(3, 11px);
+      gap: 5px;
     }
     .landing-buzz-pad span {
       width: 7px;
@@ -382,6 +510,10 @@
       border-radius: 1px;
       background: #475569;
       border: 1px solid #020617;
+    }
+    .hero-buzz .landing-buzz-pad span {
+      width: 11px;
+      height: 11px;
     }
     .landing-buzz-tag {
       font-family: var(--display);
@@ -396,34 +528,169 @@
       padding: 2px 7px;
       box-shadow: 2px 2px 0 #020617;
     }
-    .hero-buzz-row {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 18px;
-      flex-wrap: wrap;
-      margin-top: 8px;
+    .hero-buzz .landing-buzz-tag {
+      font-size: 12px;
+      padding: 3px 10px;
     }
-    .hero-buzz-row .hero-actions {
-      margin: 0;
-    }
-    .cta-final .landing-buzz {
+    .hero-scroll {
       position: absolute;
-      left: max(12px, calc(50% - 280px));
-      bottom: 28px;
-      transform: rotate(-8deg);
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: min(420px, calc(100% - 32px));
+      text-decoration: none;
+      color: #64748b;
+    }
+    .hero-scroll:hover .hero-scroll-label { color: #7dd3fc; }
+    .hero-scroll-label {
+      font-family: var(--display);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #64748b;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .hero-scroll-label:hover { color: #7dd3fc; }
+    .hero-ticker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 380px;
+      margin: 0 auto;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: 0.01em;
+      line-height: 1.3;
+      text-align: center;
+      pointer-events: none;
+    }
+    .hero-ticker-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #38bdf8;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+      animation: pulse-dot 2s infinite;
+    }
+    .hero-ticker-text {
+      min-width: 0;
+      transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+    .hero-ticker-text.is-swap {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    .hero-buzz.is-ringing .landing-buzz-phone {
+      animation: landing-buzz-shake 0.45s ease-in-out;
+    }
+    .hero-buzz.is-ringing .landing-buzz-bubble {
+      animation: landing-bubble-pop 0.45s ease;
+    }
+    @keyframes landing-buzz-shake {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      20% { transform: translateY(-4px) rotate(-4deg); }
+      40% { transform: translateY(2px) rotate(4deg); }
+      60% { transform: translateY(-3px) rotate(-3deg); }
+      80% { transform: translateY(1px) rotate(2deg); }
+    }
+    @keyframes landing-bubble-pop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    .compare-section { padding: 28px 20px 64px; }
+
+    @media (max-width: 860px) {
+      .hero {
+        min-height: auto;
+        padding: calc(72px + env(safe-area-inset-top, 0px)) 18px 36px;
+        justify-content: flex-start;
+      }
+      .hero-city { opacity: 0.35; height: 28vh; }
+      .hero-stage {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+        gap: 24px;
+      }
+      .hero-copy {
+        text-align: center;
+        max-width: 520px;
+        margin-inline: auto;
+      }
+      .hero-sub { margin-inline: auto; }
+      .hero-actions { justify-content: center; }
+      .hero-buzz {
+        order: -1;
+        transform: rotate(-3deg);
+      }
+      .hero-buzz .landing-buzz-bubble {
+        text-align: left;
+        border-radius: 10px 10px 10px 3px;
+      }
+      .hero-buzz .landing-buzz-bubble::after { left: 18px; right: auto; }
+      .hero-buzz .landing-buzz-bubble::before { left: 20px; right: auto; }
+      .hero-buzz .landing-buzz-phone {
+        width: 92px;
+        height: 114px;
+      }
+      .hero-scroll {
+        position: static;
+        transform: none;
+        margin: 28px auto 0;
+        width: min(380px, 100%);
+      }
+      .hero-ticker {
+        max-width: 100%;
+      }
     }
     @media (max-width: 720px) {
-      .hero-buzz-row {
+      .hud-status { display: none; }
+      .hud-enter { padding: 9px 12px; font-size: 0.68rem; }
+      .hero-brand { display: none; }
+      .hero-actions {
         flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+      }
+      .hero-actions .btn {
+        width: 100%;
+        min-height: 48px;
+        display: inline-flex;
         align-items: center;
-        gap: 14px;
+        justify-content: center;
+        box-sizing: border-box;
+      }
+      .cta-final .hero-actions {
+        width: min(320px, 100%);
+        margin-left: auto;
+        margin-right: auto;
       }
       .landing-buzz {
         flex-direction: row;
         align-items: flex-end;
         gap: 10px;
         transform: rotate(-3deg);
+        position: relative;
       }
       .landing-buzz-bubble {
         max-width: min(180px, 52vw);
@@ -437,19 +704,17 @@
         bottom: -2px;
         font-size: 9px;
       }
-      .landing-buzz { position: relative; }
-      .cta-final .landing-buzz {
-        position: relative;
-        left: auto;
-        bottom: auto;
-        margin: 0 auto 18px;
-        display: flex;
+      .compare-section { padding: 16px 14px 48px; }
+      .split-stage {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        max-height: none;
       }
     }
     @media (prefers-reduced-motion: reduce) {
-      .landing-buzz,
-      .landing-buzz-phone,
-      .landing-buzz-eye {
+      .hero-brand, .hero-tagline, .hero-copy h1, .hero-sub, .hero-actions, .hero-ticker,
+      .hero-buzz, .landing-buzz, .landing-buzz-phone, .landing-buzz-eye,
+      .hero-buzz .landing-buzz-antenna::after {
         animation: none !important;
       }
     }
@@ -932,27 +1197,62 @@
     }
     .cta-final {
       position: relative;
-      max-width: 1100px;
+      max-width: 720px;
       margin: 0 auto 80px;
-      padding: 48px 32px;
+      padding: 56px 28px;
       text-align: center;
-      border: 1px solid rgba(163, 230, 53, 0.35);
-      background: rgba(12, 15, 20, 0.9);
-      box-shadow: 0 0 48px rgba(163, 230, 53, 0.06);
+      border: none;
+      background: transparent;
+      box-shadow: none;
     }
     .cta-final h2 {
       font-family: var(--display);
-      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-size: clamp(1.6rem, 4vw, 2.35rem);
       font-weight: 800;
-      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+      margin: 0 0 14px;
+      color: var(--cream);
     }
     .cta-final p {
-      margin: 0 0 24px;
+      margin: 0 auto 28px;
+      max-width: 34ch;
       color: #94a3b8;
-      font-size: 0.9rem;
-      line-height: 1.6;
+      font-family: var(--display);
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.5;
+      letter-spacing: 0.01em;
     }
-    .cta-final .hero-actions { margin-top: 0; }
+    .cta-final .hero-actions {
+      margin-top: 0;
+      justify-content: center;
+      align-items: center;
+    }
+    .cta-final .btn {
+      letter-spacing: 0.04em;
+      text-transform: none;
+      font-size: 0.85rem;
+      padding: 14px 22px;
+      border-radius: 999px;
+      border-width: 1px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    }
+    .cta-final .btn-primary {
+      background: #7dd3fc;
+      color: #0b1220;
+      border: 1px solid rgba(125, 211, 252, 0.9);
+      box-shadow: 0 10px 28px rgba(56, 189, 248, 0.22);
+    }
+    .cta-final .btn-ghost {
+      background: rgba(148, 163, 184, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      box-shadow: none;
+    }
+    .cta-final .btn-ghost:hover {
+      background: rgba(148, 163, 184, 0.14);
+      border-color: rgba(148, 163, 184, 0.4);
+    }
 
     footer {
       padding: 32px 20px 48px;
@@ -992,42 +1292,49 @@
   <!-- game HUD -->
   <header class="hud-top">
     <a class="hud-logo" href="/">DENI<em>ZEN</em></a>
-    <div class="hud-status">
-      <span class="hud-pill"><span class="hud-dot"></span> NO API KEYS FOR DEMO</span>
-    </div>
     <a class="hud-enter" href="/office?demo=1">OPEN LIVE DEMO →</a>
   </header>
 
-  <!-- hero: split reality -->
+  <!-- hero: brand + Buzz -->
   <section class="hero">
-    <div class="hero-headline">
-      <div class="hero-tagline">The office for your AI agents</div>
-      <h1>
-        <span class="hero-main">Your agents have a <em>floor</em> now.</span>
-      </h1>
-      <p class="hero-sub">Open a live office where every agent has a desk, a role, and a trail of work. Glance once — then jump in when something needs you.</p>
-      <div class="hero-buzz-row">
-        <a class="landing-buzz" href="/office" aria-label="Buzz the lobby phone — enter HQ">
-          <div class="landing-buzz-bubble">Buzz buzz — never too buzzy</div>
-          <div class="landing-buzz-phone" aria-hidden="true">
-            <span class="landing-buzz-antenna"></span>
-            <div class="landing-buzz-screen">
-              <span class="landing-buzz-eye"></span>
-              <span class="landing-buzz-eye"></span>
-            </div>
-            <div class="landing-buzz-pad">
-              <span></span><span></span><span></span>
-              <span></span><span></span><span></span>
-            </div>
-          </div>
-          <span class="landing-buzz-tag">Buzz</span>
-        </a>
+    <div class="hero-city" aria-hidden="true"></div>
+    <div class="hero-stage">
+      <div class="hero-copy">
+        <p class="hero-brand">DENI<em>ZEN</em></p>
+        <div class="hero-tagline">The office for your AI agents</div>
+        <h1>An office you can actually <em>see</em>.</h1>
+        <p class="hero-sub">Every agent gets a desk, a role, and a trail of work you can see — then jump in when something needs you.</p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="/office?demo=1">Open live demo</a>
+          <a class="btn btn-ghost" href="/office">Sign in to HQ</a>
         </div>
       </div>
+      <a class="hero-buzz" href="/office" id="hero-buzz" aria-label="Buzz the lobby phone — enter HQ">
+        <div class="landing-buzz-bubble" id="hero-buzz-bubble">Ready to buzz you in</div>
+        <div class="landing-buzz-phone" aria-hidden="true">
+          <span class="landing-buzz-antenna"></span>
+          <div class="landing-buzz-screen">
+            <span class="landing-buzz-eye"></span>
+            <span class="landing-buzz-eye"></span>
+          </div>
+          <div class="landing-buzz-pad">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <span class="landing-buzz-tag">Buzz</span>
+      </a>
     </div>
+    <div class="hero-scroll">
+      <div class="hero-ticker" aria-live="polite">
+        <span class="hero-ticker-dot" aria-hidden="true"></span>
+        <span class="hero-ticker-text" id="hero-ticker-text">Lucy is greeting visitors</span>
+      </div>
+      <a class="hero-scroll-label" href="#compare">See the floor</a>
+    </div>
+  </section>
 
+  <section class="compare-section" id="compare">
     <p class="compare-caption">
       <strong>Same agents.</strong> Left: how you debug today. Right: Denizen — who's on the floor, what they're doing, what needs you.
     </p>
@@ -1171,26 +1478,11 @@
   </section>
 
   <section class="cta-final reveal">
-    <a class="landing-buzz" href="/office" aria-label="Buzz — sign in to HQ">
-      <div class="landing-buzz-bubble">Buzz buzz — never too buzzy</div>
-      <div class="landing-buzz-phone" aria-hidden="true">
-        <span class="landing-buzz-antenna"></span>
-        <div class="landing-buzz-screen">
-          <span class="landing-buzz-eye"></span>
-          <span class="landing-buzz-eye"></span>
-        </div>
-        <div class="landing-buzz-pad">
-          <span></span><span></span><span></span>
-          <span></span><span></span><span></span>
-        </div>
-      </div>
-      <span class="landing-buzz-tag">Buzz</span>
-    </a>
     <h2>See the office live</h2>
-    <p>Open the demo — agents walking, working, and escalating in real time. No account required.</p>
+    <p>Watch agents walk, work, and escalate in real time — no account needed.</p>
     <div class="hero-actions">
       <a class="btn btn-primary" href="/office?demo=1">Open live demo</a>
-      <a class="btn btn-ghost" href="/office">Full office (sign in)</a>
+      <a class="btn btn-ghost" href="/office">Sign in to HQ</a>
     </div>
   </section>
 
@@ -1434,6 +1726,59 @@
       });
     }
     showNode('start');
+
+    // ── live floor ticker ──
+    const TICKER_LINES = [
+      'Lucy is greeting visitors',
+      'Marcus just started standup',
+      'Abby is deep in a review',
+      'Security is walking the floor',
+      'A new job claimed a desk',
+      'Two agents just synced up',
+    ];
+    const tickerEl = document.getElementById('hero-ticker-text');
+    let tickerIdx = 0;
+    if (tickerEl && window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+      setInterval(() => {
+        tickerIdx = (tickerIdx + 1) % TICKER_LINES.length;
+        tickerEl.classList.add('is-swap');
+        setTimeout(() => {
+          tickerEl.textContent = TICKER_LINES[tickerIdx];
+          tickerEl.classList.remove('is-swap');
+        }, 220);
+      }, 2800);
+    }
+
+    // ── Buzz ring, then enter HQ ──
+    const buzz = document.getElementById('hero-buzz');
+    const buzzBubble = document.getElementById('hero-buzz-bubble');
+    let buzzing = false;
+    function ringBuzz(thenGo) {
+      if (!buzz || buzzing) return;
+      buzzing = true;
+      const prev = buzzBubble?.textContent;
+      buzz.classList.add('is-ringing');
+      if (buzzBubble) buzzBubble.textContent = 'Buzz buzz — coming through';
+      try { navigator.vibrate?.(40); } catch (_) {}
+      setTimeout(() => {
+        buzz.classList.remove('is-ringing');
+        if (buzzBubble && prev) buzzBubble.textContent = prev;
+        buzzing = false;
+        if (thenGo) window.location.href = buzz.href || '/office';
+      }, 520);
+    }
+    if (buzz) {
+      buzz.addEventListener('click', (e) => {
+        e.preventDefault();
+        ringBuzz(true);
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'b' && e.key !== 'B') return;
+      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      e.preventDefault();
+      ringBuzz(true);
+    });
 
     // ── scroll reveal ──
     const revealEls = document.querySelectorAll('.reveal');
