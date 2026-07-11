@@ -339,57 +339,431 @@
 
   function injectModalStyles() {
     if (document.getElementById('denizen-visitor-session-style')) return;
+    if (!document.getElementById('denizen-visitor-session-fonts')) {
+      const fontLink = document.createElement('link');
+      fontLink.id = 'denizen-visitor-session-fonts';
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap';
+      document.head.appendChild(fontLink);
+    }
     const s = document.createElement('style');
     s.id = 'denizen-visitor-session-style';
     s.textContent = `
+      @keyframes denizen-vis-backdrop-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes denizen-vis-card-in {
+        from { opacity: 0; transform: translateY(14px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes denizen-vis-mascot-in {
+        from { opacity: 0; transform: translateX(-36px) rotate(-14deg); }
+        to { opacity: 1; transform: translateX(0) rotate(-6deg); }
+      }
+      @keyframes denizen-vis-bob {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+      }
+      @keyframes denizen-vis-bubble-pop {
+        0%, 100% { transform: scale(1) rotate(-2deg); }
+        50% { transform: scale(1.05) rotate(1deg); }
+      }
+      @keyframes denizen-vis-blink {
+        0%, 46%, 54%, 100% { transform: scaleY(1); }
+        50% { transform: scaleY(0.12); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #denizen-visitor-name-modal,
+        #denizen-visitor-name-modal .vis-card,
+        #denizen-demo-account-modal,
+        #denizen-demo-account-modal .vis-card,
+        #denizen-visitor-name-modal .vis-mascot {
+          animation: none !important;
+        }
+        #denizen-visitor-name-modal .vis-lobby-phone,
+        #denizen-visitor-name-modal .vis-lobby-bubble,
+        #denizen-visitor-name-modal .vis-lobby-eye {
+          animation: none !important;
+        }
+      }
       #denizen-visitor-name-modal,
       #denizen-demo-account-modal {
+        --vis-accent: #7dd3fc;
+        --vis-accent-soft: rgba(125, 211, 252, 0.45);
+        --vis-navy: rgba(8, 16, 32, 0.78);
+        --vis-navy-solid: #0b1220;
+        --vis-ink: #e2e8f0;
+        --vis-muted: #94a3b8;
+        --vis-display: "Syne", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+        --vis-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
         position: fixed;
         inset: 0;
         z-index: 100900;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(2, 6, 23, 0.92);
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background:
+          radial-gradient(ellipse 70% 55% at 50% 42%, rgba(56, 189, 248, 0.14), transparent 62%),
+          rgba(2, 6, 23, 0.55);
+        font-family: var(--vis-mono);
         pointer-events: auto;
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
+        animation: denizen-vis-backdrop-in 280ms ease-out;
       }
       #denizen-demo-account-modal { z-index: 2147483645; }
-      #denizen-visitor-name-modal .vis-card {
-        background: #020617;
-        border: 1px solid #1f2937;
-        border-radius: 10px;
-        padding: 24px 28px;
-        width: min(360px, calc(100vw - 32px));
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      #denizen-visitor-name-modal .vis-panel,
+      #denizen-demo-account-modal .vis-panel {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 0;
+        width: min(520px, calc(100vw - 20px));
+        position: relative;
+        pointer-events: none;
+      }
+      #denizen-visitor-name-modal .vis-panel > *,
+      #denizen-demo-account-modal .vis-panel > * {
+        pointer-events: auto;
+      }
+      #denizen-visitor-name-modal .vis-mascot,
+      #denizen-demo-account-modal .vis-mascot {
+        position: relative;
+        z-index: 3;
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        margin: 0 -6px 18px 0;
+        transform: rotate(-6deg);
+        animation: denizen-vis-mascot-in 480ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+        filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.45));
+      }
+      #denizen-visitor-name-modal .vis-mascot--quiet,
+      #denizen-demo-account-modal .vis-mascot--quiet {
+        margin-bottom: 8px;
+        transform: rotate(-10deg) scale(0.86);
+        animation-name: denizen-vis-mascot-in;
+      }
+      #denizen-visitor-name-modal .vis-mascot--quiet .vis-lobby-bubble,
+      #denizen-demo-account-modal .vis-mascot--quiet .vis-lobby-bubble {
+        display: none;
+      }
+      #denizen-visitor-name-modal .vis-mascot-tag,
+      #denizen-demo-account-modal .vis-mascot-tag {
+        font-family: var(--vis-display);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #fde68a;
+        background: #0b1220;
+        border: 2px solid #f59e0b;
+        border-radius: 4px;
+        padding: 2px 7px;
+        box-shadow: 2px 2px 0 #020617;
+      }
+      #denizen-visitor-name-modal .vis-card,
+      #denizen-demo-account-modal .vis-card {
+        background:
+          repeating-linear-gradient(
+            -12deg,
+            transparent,
+            transparent 11px,
+            rgba(148, 163, 184, 0.03) 11px,
+            rgba(148, 163, 184, 0.03) 12px
+          ),
+          #111827;
+        border: 3px solid #020617;
+        border-radius: 4px;
+        padding: 26px 24px 22px;
+        width: min(400px, calc(100vw - 32px));
+        flex: 1 1 auto;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 2px #f59e0b,
+          5px 7px 0 #020617;
         pointer-events: auto;
         position: relative;
         z-index: 1;
         max-height: calc(100dvh - 32px);
         overflow-y: auto;
         overscroll-behavior: contain;
+        animation: denizen-vis-card-in 280ms ease-out;
       }
-      #denizen-visitor-name-modal h2 {
-        margin: 0 0 8px;
-        font-size: 15px;
+      #denizen-visitor-name-modal .vis-card::before,
+      #denizen-demo-account-modal .vis-card::before {
+        content: "HQ PASS";
+        position: absolute;
+        top: -12px;
+        left: 14px;
+        padding: 2px 8px;
+        font-family: var(--vis-display);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        color: #0b1220;
+        background: #f59e0b;
+        border: 2px solid #020617;
+        border-radius: 3px;
+        box-shadow: 2px 2px 0 #020617;
+        z-index: 2;
+      }
+      #denizen-visitor-name-modal .vis-brand,
+      #denizen-demo-account-modal .vis-brand {
+        margin: 4px 0 6px;
+        font-family: var(--vis-display);
+        font-size: clamp(28px, 7vw, 36px);
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        line-height: 1;
+        text-transform: uppercase;
+        color: #f8fafc;
+      }
+      #denizen-visitor-name-modal .vis-tagline,
+      #denizen-demo-account-modal .vis-tagline {
+        margin: 0 0 20px;
+        font-family: var(--vis-mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: var(--vis-muted);
+      }
+      #denizen-visitor-name-modal .vis-card.vis-lobby {
+        text-align: left;
+        padding-top: 28px;
+      }
+      #denizen-visitor-name-modal .vis-lobby-bubble,
+      #denizen-demo-account-modal .vis-lobby-bubble {
+        position: relative;
+        max-width: 132px;
+        padding: 7px 10px;
+        border-radius: 10px 10px 10px 3px;
+        background: #fef3c7;
+        color: #422006;
+        font-family: var(--vis-display);
+        font-size: 12px;
         font-weight: 700;
-        color: #e2e8f0;
+        letter-spacing: 0.01em;
+        line-height: 1.25;
+        border: 2px solid #020617;
+        box-shadow: 2px 3px 0 #020617;
+        animation: denizen-vis-bubble-pop 2.8s ease-in-out infinite;
       }
-      #denizen-visitor-name-modal p {
+      #denizen-visitor-name-modal .vis-lobby-bubble::after,
+      #denizen-demo-account-modal .vis-lobby-bubble::after {
+        content: "";
+        position: absolute;
+        left: 16px;
+        bottom: -8px;
+        border: 6px solid transparent;
+        border-top-color: #020617;
+        border-bottom: 0;
+      }
+      #denizen-visitor-name-modal .vis-lobby-bubble::before,
+      #denizen-demo-account-modal .vis-lobby-bubble::before {
+        content: "";
+        position: absolute;
+        left: 18px;
+        bottom: -5px;
+        border: 5px solid transparent;
+        border-top-color: #fef3c7;
+        border-bottom: 0;
+        z-index: 1;
+      }
+      #denizen-visitor-name-modal .vis-lobby-phone,
+      #denizen-demo-account-modal .vis-lobby-phone {
+        position: relative;
+        width: 68px;
+        height: 84px;
+        border-radius: 12px 12px 16px 16px;
+        background: #1e293b;
+        border: 3px solid #020617;
+        box-shadow:
+          inset 0 2px 0 rgba(255, 255, 255, 0.1),
+          3px 4px 0 #020617;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding-top: 10px;
+        gap: 7px;
+        animation: denizen-vis-bob 2.2s ease-in-out infinite;
+      }
+      #denizen-visitor-name-modal .vis-lobby-antenna,
+      #denizen-demo-account-modal .vis-lobby-antenna {
+        position: absolute;
+        top: -10px;
+        right: 14px;
+        width: 3px;
+        height: 12px;
+        background: #94a3b8;
+        border-radius: 2px;
+      }
+      #denizen-visitor-name-modal .vis-lobby-antenna::after,
+      #denizen-demo-account-modal .vis-lobby-antenna::after {
+        content: "";
+        position: absolute;
+        top: -4px;
+        left: -3px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #f87171;
+        border: 2px solid #020617;
+      }
+      #denizen-visitor-name-modal .vis-lobby-screen,
+      #denizen-demo-account-modal .vis-lobby-screen {
+        width: 42px;
+        height: 30px;
+        border-radius: 5px;
+        background: #38bdf8;
+        border: 2px solid #020617;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+      }
+      #denizen-visitor-name-modal .vis-lobby-eye,
+      #denizen-demo-account-modal .vis-lobby-eye {
+        width: 6px;
+        height: 8px;
+        border-radius: 2px;
+        background: #0b1220;
+        transform-origin: center;
+        animation: denizen-vis-blink 3.6s ease-in-out infinite;
+      }
+      #denizen-visitor-name-modal .vis-lobby-eye:nth-child(2),
+      #denizen-demo-account-modal .vis-lobby-eye:nth-child(2) {
+        animation-delay: 0.12s;
+      }
+      #denizen-visitor-name-modal .vis-lobby-pad,
+      #denizen-demo-account-modal .vis-lobby-pad {
+        display: grid;
+        grid-template-columns: repeat(3, 7px);
+        gap: 3px;
+      }
+      #denizen-visitor-name-modal .vis-lobby-pad span,
+      #denizen-demo-account-modal .vis-lobby-pad span {
+        width: 7px;
+        height: 7px;
+        border-radius: 1px;
+        background: #475569;
+        border: 1px solid #020617;
+      }
+      #denizen-visitor-name-modal .vis-card.vis-lobby .vis-brand {
+        margin: 0 0 4px;
+        font-size: clamp(24px, 6vw, 32px);
+      }
+      #denizen-visitor-name-modal .vis-card.vis-lobby .vis-tagline {
         margin: 0 0 16px;
+        text-transform: none;
+        letter-spacing: 0.02em;
         font-size: 12px;
         color: #94a3b8;
       }
+      #denizen-visitor-name-modal .vis-card.vis-lobby .vis-paths {
+        gap: 8px;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-choice {
+        display: grid;
+        grid-template-columns: 36px 1fr;
+        grid-template-rows: auto auto;
+        column-gap: 12px;
+        align-items: center;
+        text-align: left;
+        min-height: 58px;
+        border-radius: 8px;
+        padding: 10px 12px;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-choice .vis-path-ico {
+        grid-row: 1 / span 2;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(2, 6, 23, 0.45);
+        border: 2px solid #020617;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-choice .vis-path-ico svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-choice .vis-path-title {
+        font-family: var(--vis-display);
+        font-size: 15px;
+        font-weight: 800;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-staff {
+        background: #0c4a6e;
+        border: 3px solid #020617;
+        box-shadow: 0 0 0 2px #38bdf8, 3px 4px 0 #020617;
+        color: #e0f2fe;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-staff .vis-path-title {
+        color: #f0f9ff;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-staff .vis-path-sub {
+        color: #bae6fd;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-staff .vis-path-ico {
+        background: #0369a1;
+        border-color: #020617;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-staff:hover,
+      #denizen-visitor-name-modal .vis-path-btn.lobby-staff:active {
+        background: #075985;
+        box-shadow: 0 0 0 2px #7dd3fc, 4px 5px 0 #020617;
+        transform: translateY(-1px);
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-guest {
+        background: #1e293b;
+        border: 3px solid #020617;
+        box-shadow: 0 0 0 2px #64748b, 3px 4px 0 #020617;
+        color: #cbd5e1;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-guest .vis-path-title {
+        color: #e2e8f0;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.lobby-guest:hover,
+      #denizen-visitor-name-modal .vis-path-btn.lobby-guest:active {
+        border-color: #020617;
+        background: #334155;
+        box-shadow: 0 0 0 2px #94a3b8, 4px 5px 0 #020617;
+        transform: translateY(-1px);
+      }
+      #denizen-visitor-name-modal h2,
+      #denizen-demo-account-modal h2 {
+        margin: 0 0 8px;
+        font-family: var(--vis-display);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--vis-ink);
+      }
+      #denizen-visitor-name-modal p,
+      #denizen-demo-account-modal p {
+        margin: 0 0 16px;
+        font-size: 12px;
+        color: var(--vis-muted);
+      }
       #denizen-visitor-name-modal .vis-input,
-      #denizen-visitor-name-input {
+      #denizen-visitor-name-input,
+      #denizen-demo-account-modal .vis-input {
         width: 100%;
         box-sizing: border-box;
-        background: #1e293b;
-        border: 1px solid #1f2937;
+        background: rgba(2, 6, 23, 0.72);
+        border: 1px solid #1e293b;
         border-radius: 6px;
-        color: #e2e8f0;
+        color: var(--vis-ink);
         padding: 12px 14px;
         font: inherit;
         font-size: 16px;
@@ -397,40 +771,56 @@
         margin-bottom: 14px;
         min-height: 44px;
         touch-action: manipulation;
+        box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.06);
+        transition: border-color 160ms ease, box-shadow 160ms ease;
       }
       #denizen-visitor-name-modal .vis-input:focus,
-      #denizen-visitor-name-input:focus {
-        border-color: #4ade80;
+      #denizen-visitor-name-input:focus,
+      #denizen-demo-account-modal .vis-input:focus {
+        border-color: var(--vis-accent);
+        box-shadow:
+          inset 0 1px 0 rgba(148, 163, 184, 0.06),
+          0 0 0 3px rgba(125, 211, 252, 0.18);
       }
       #denizen-visitor-name-continue {
         width: 100%;
-        background: #4ade80;
-        color: #0f172a;
-        border: none;
+        background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 100%);
+        color: #0b1220;
+        border: 1px solid color-mix(in srgb, var(--vis-accent) 70%, #fff);
         border-radius: 8px;
         padding: 12px 16px;
         font: inherit;
-        font-weight: bold;
+        font-weight: 700;
         font-size: 14px;
+        letter-spacing: 0.02em;
         cursor: pointer;
         min-height: 48px;
         touch-action: manipulation;
+        box-shadow: 0 8px 22px rgba(56, 189, 248, 0.22);
+        transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease;
       }
-      #denizen-visitor-name-continue:hover { background: #22c55e; }
+      #denizen-visitor-name-continue:hover {
+        filter: brightness(1.05);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(56, 189, 248, 0.3);
+      }
       #denizen-visitor-name-continue:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
+        filter: none;
+        box-shadow: none;
       }
       #denizen-visitor-name-modal .vis-paths {
         display: flex;
         flex-direction: column;
         gap: 10px;
-        margin-bottom: 14px;
+        margin-bottom: 4px;
       }
       #denizen-visitor-name-modal .vis-path-btn {
         width: 100%;
-        background: #1e293b;
-        color: #e2e8f0;
+        background: rgba(15, 23, 42, 0.72);
+        color: var(--vis-ink);
         border: 1px solid #334155;
         border-radius: 8px;
         padding: 12px 16px;
@@ -438,17 +828,32 @@
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        text-align: center;
+        text-align: left;
         min-height: 48px;
         touch-action: manipulation;
+        transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.primary {
+        background: rgba(14, 40, 58, 0.85);
+        border-color: color-mix(in srgb, var(--vis-accent) 55%, #334155);
+        box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.08), 0 0 24px rgba(56, 189, 248, 0.1);
+      }
+      #denizen-visitor-name-modal .vis-path-btn.primary .vis-path-title {
+        color: #e0f2fe;
+      }
+      #denizen-visitor-name-modal .vis-path-btn.secondary {
+        background: rgba(15, 23, 42, 0.55);
+        border-color: #334155;
+        color: #cbd5e1;
       }
       #denizen-visitor-name-modal .vis-path-title {
         display: block;
       }
       #denizen-visitor-name-modal .vis-path-btn:hover,
       #denizen-visitor-name-modal .vis-path-btn:active {
-        border-color: #4ade80;
-        background: #0f172a;
+        border-color: var(--vis-accent);
+        background: rgba(8, 20, 36, 0.9);
+        box-shadow: 0 0 0 1px rgba(125, 211, 252, 0.16), 0 0 22px rgba(56, 189, 248, 0.16);
       }
       #denizen-visitor-name-modal .vis-path-btn.ceo {
         border-color: #475569;
@@ -459,12 +864,13 @@
         margin-top: 3px;
         font-size: 11px;
         font-weight: 400;
-        color: #94a3b8;
+        color: var(--vis-muted);
       }
       #denizen-visitor-name-modal .vis-path-btn.ceo .vis-path-sub {
         color: #a8a29e;
       }
-      #denizen-visitor-name-modal .vis-back {
+      #denizen-visitor-name-modal .vis-back,
+      #denizen-demo-account-modal .vis-back {
         background: transparent;
         border: none;
         color: #64748b;
@@ -475,22 +881,26 @@
         padding: 0;
         margin-bottom: 12px;
       }
-      #denizen-visitor-name-modal .vis-back:hover { color: #94a3b8; }
-      #denizen-visitor-name-modal .vis-error {
+      #denizen-visitor-name-modal .vis-back:hover,
+      #denizen-demo-account-modal .vis-back:hover { color: #94a3b8; }
+      #denizen-visitor-name-modal .vis-error,
+      #denizen-demo-account-modal .vis-error {
         margin: 0 0 12px;
         font-size: 11px;
         color: #f87171;
       }
-      #denizen-visitor-name-modal .vis-link-row {
+      #denizen-visitor-name-modal .vis-link-row,
+      #denizen-demo-account-modal .vis-link-row {
         margin-top: 10px;
         font-size: 11px;
         color: #64748b;
         text-align: center;
       }
-      #denizen-visitor-name-modal .vis-link {
+      #denizen-visitor-name-modal .vis-link,
+      #denizen-demo-account-modal .vis-link {
         background: none;
         border: none;
-        color: #7dd3fc;
+        color: var(--vis-accent);
         font: inherit;
         font-size: 11px;
         cursor: pointer;
@@ -512,9 +922,11 @@
         margin: 12px 0 16px;
         padding: 14px 16px;
         border-radius: 10px;
-        border: 1px solid #4ade80;
-        background: rgba(20, 83, 45, 0.35);
+        border: 1px solid color-mix(in srgb, var(--vis-accent) 50%, #fbbf24);
+        background:
+          linear-gradient(160deg, rgba(14, 40, 58, 0.65), rgba(30, 24, 12, 0.45));
         text-align: center;
+        box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.08);
       }
       #denizen-visitor-name-modal .vis-team-code-box .code {
         display: block;
@@ -522,7 +934,8 @@
         font-size: 28px;
         font-weight: 800;
         letter-spacing: 0.12em;
-        color: #bbf7d0;
+        color: #fde68a;
+        text-shadow: 0 0 18px rgba(125, 211, 252, 0.25);
       }
       html[data-denizen-modal="open"] #game-container,
       html[data-denizen-modal="open"] #game-container canvas,
@@ -556,25 +969,58 @@
           max(12px, env(safe-area-inset-bottom, 0px))
           max(12px, env(safe-area-inset-left, 0px));
         box-sizing: border-box;
-        background: rgba(2, 6, 23, 0.76);
+        background:
+          radial-gradient(ellipse 90% 50% at 50% 100%, rgba(56, 189, 248, 0.16), transparent 55%),
+          rgba(2, 6, 23, 0.58);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
-      html.denizen-touch #denizen-visitor-name-modal .vis-card {
+      html.denizen-touch #denizen-visitor-name-modal .vis-panel {
+        position: relative;
         width: min(100%, var(--denizen-panel-max-width, 440px));
+        flex-direction: column;
+        align-items: stretch;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot {
+        position: absolute;
+        left: 8px;
+        top: -18px;
+        margin: 0;
+        z-index: 4;
+        transform: rotate(-8deg) scale(0.78);
+        transform-origin: bottom left;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet {
+        top: -12px;
+        transform: rotate(-10deg) scale(0.68);
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-card {
+        width: 100%;
         max-height: min(72dvh, calc(100dvh - 28px));
-        padding: 18px;
-        border-color: #334155;
-        border-radius: 16px;
-        box-shadow: 0 -14px 42px rgba(0, 0, 0, 0.62);
+        padding: 28px 18px 18px;
+        border-radius: 4px;
+        border-color: #020617;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 2px #f59e0b,
+          0 -10px 28px rgba(0, 0, 0, 0.45),
+          4px 6px 0 #020617;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-brand {
+        font-size: 30px;
       }
       html.denizen-touch #denizen-visitor-name-modal h2 {
         font-size: 22px;
         letter-spacing: 0;
       }
-      html.denizen-touch #denizen-visitor-name-modal p {
+      html.denizen-touch #denizen-visitor-name-modal p,
+      html.denizen-touch #denizen-visitor-name-modal .vis-tagline {
         margin-bottom: 14px;
         font-size: 14px;
         line-height: 1.35;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-tagline {
+        letter-spacing: 0.02em;
+        font-size: 12px;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-paths {
         gap: 8px;
@@ -584,7 +1030,7 @@
         min-height: 58px;
         padding: 10px 12px;
         text-align: left;
-        border-radius: 10px;
+        border-radius: 8px;
         font-size: 15px;
         line-height: 1.2;
       }
@@ -593,9 +1039,15 @@
         font-size: 12px;
         line-height: 1.25;
       }
-      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn:first-child {
-        background: #14532d;
-        border-color: #4ade80;
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.primary {
+        background: rgba(14, 40, 58, 0.92);
+        border-color: #020617;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-staff {
+        background: #0c4a6e;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-choice {
+        text-align: left;
       }
       @media (max-height: 430px) {
         html.denizen-touch #denizen-visitor-name-modal {
@@ -606,10 +1058,14 @@
           max-height: calc(100dvh - 16px);
           padding: 12px;
         }
+        html.denizen-touch #denizen-visitor-name-modal .vis-brand {
+          font-size: 24px;
+        }
         html.denizen-touch #denizen-visitor-name-modal h2 {
           font-size: 18px;
         }
-        html.denizen-touch #denizen-visitor-name-modal p {
+        html.denizen-touch #denizen-visitor-name-modal p,
+        html.denizen-touch #denizen-visitor-name-modal .vis-tagline {
           margin-bottom: 8px;
           font-size: 12px;
         }
@@ -1340,12 +1796,24 @@
 
         if (step === 'choose') {
           modalEl.innerHTML = `
-            <div class="vis-card">
-              <h2>Welcome to Denizen</h2>
-              <p>Sign in to your team workspace, or try the demo.</p>
+            <div class="vis-card vis-lobby">
+              <div class="vis-brand">DENIZEN</div>
+              <p class="vis-tagline">Lobby phone is ringing — pick how you come in</p>
               <div class="vis-paths">
-                <button type="button" class="vis-path-btn" data-action="path-login"><span class="vis-path-title">Login</span><span class="vis-path-sub">Username, password, and team code or email</span></button>
-                <button type="button" class="vis-path-btn" data-action="path-demo"><span class="vis-path-title">Demo</span><span class="vis-path-sub">Explore with your email — no team required</span></button>
+                <button type="button" class="vis-path-btn lobby-choice lobby-staff" data-action="path-login">
+                  <span class="vis-path-ico" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2.2"/><path d="M14 10h5M14 14h4"/></svg>
+                  </span>
+                  <span class="vis-path-title">I work here</span>
+                  <span class="vis-path-sub">Flash your badge · log in</span>
+                </button>
+                <button type="button" class="vis-path-btn lobby-choice lobby-guest" data-action="path-demo">
+                  <span class="vis-path-ico" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 8h13a3 3 0 0 1 0 6H4"/><path d="M4 8v8M17 8v8"/><circle cx="8.5" cy="12" r="1"/><circle cx="12.5" cy="12" r="1"/></svg>
+                  </span>
+                  <span class="vis-path-title">Just visiting</span>
+                  <span class="vis-path-sub">Grab a guest pass · try the demo</span>
+                </button>
               </div>
             </div>
           `;
@@ -1456,6 +1924,10 @@
           focusAfter = true;
         }
 
+        ensurePanelWithMascot(modalEl, {
+          quiet: step !== 'choose',
+          bubble: step === 'choose' ? "Hey! Who's at the door?" : '',
+        });
         wireStepControls();
         applyPrefills();
         if (focusAfter) focusFirstInput();
@@ -1464,6 +1936,58 @@
       render();
       fetchOfficeConfig().then(() => render());
     });
+  }
+
+  function buzzMascotHtml({ quiet = false, bubble = '' } = {}) {
+    const bubbleHtml = bubble
+      ? `<div class="vis-lobby-bubble">${bubble}</div>`
+      : '<div class="vis-lobby-bubble" hidden></div>';
+    return `
+      <aside class="vis-mascot${quiet ? ' vis-mascot--quiet' : ''}" aria-hidden="true">
+        ${bubbleHtml}
+        <div class="vis-lobby-phone">
+          <span class="vis-lobby-antenna"></span>
+          <div class="vis-lobby-screen">
+            <span class="vis-lobby-eye"></span>
+            <span class="vis-lobby-eye"></span>
+          </div>
+          <div class="vis-lobby-pad">
+            <span></span><span></span><span></span>
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <span class="vis-mascot-tag">Buzz</span>
+      </aside>
+    `;
+  }
+
+  function ensurePanelWithMascot(root, opts = {}) {
+    if (!root) return;
+    const card = root.querySelector('.vis-card');
+    if (!card) return;
+    let panel = root.querySelector('.vis-panel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.className = 'vis-panel';
+      card.replaceWith(panel);
+      panel.appendChild(card);
+    }
+    let mascot = panel.querySelector('.vis-mascot');
+    if (!mascot) {
+      panel.insertAdjacentHTML('afterbegin', buzzMascotHtml(opts));
+      mascot = panel.querySelector('.vis-mascot');
+    } else {
+      mascot.classList.toggle('vis-mascot--quiet', !!opts.quiet);
+      const bubble = mascot.querySelector('.vis-lobby-bubble');
+      if (bubble) {
+        if (opts.bubble) {
+          bubble.hidden = false;
+          bubble.textContent = opts.bubble;
+        } else {
+          bubble.hidden = true;
+        }
+      }
+    }
   }
 
   function showDemoAccountModal() {
@@ -1483,6 +2007,7 @@
           <div class="vis-link-row"><button type="button" class="vis-link" data-demo-skip>Not now</button></div>
         </div>
       `;
+      ensurePanelWithMascot(overlay, { quiet: true });
       document.body.appendChild(overlay);
       document.documentElement.dataset.denizenModal = 'open';
 
