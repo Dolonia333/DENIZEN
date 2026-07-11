@@ -275,7 +275,10 @@ class WorkFeedPanel {
       document.head.appendChild(style);
     }
 
-    // Main panel
+    // Main panel — remove any earlier instance first (office-scene and
+    // lazy-scripts can both construct WorkFeedPanel; duplicate ids stack
+    // dead elements on top of live ones and swallow taps).
+    document.getElementById('denizen-work-feed')?.remove();
     const panel = document.createElement('div');
     panel.id = 'denizen-work-feed';
 
@@ -297,6 +300,7 @@ class WorkFeedPanel {
   }
 
   _createToggleButton() {
+    document.getElementById('denizen-work-feed-toggle')?.remove();
     const btn = document.createElement('button');
     btn.id = 'denizen-work-feed-toggle';
     btn.type = 'button';

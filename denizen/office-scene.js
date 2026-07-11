@@ -1823,7 +1823,9 @@ class OfficeScene extends Phaser.Scene {
       console.log('[OfficeScene] Agent Office Manager initialized');
 
       // --- Work Output Feed (live NPC activity HUD, Tab to toggle) ---
-      if (window.WorkFeedPanel) {
+      // denizen-lazy-scripts.js also constructs this if it loads first — never
+      // build a second one or the duplicate toggle button swallows all taps.
+      if (window.WorkFeedPanel && !this._workFeed) {
         this._workFeed = new window.WorkFeedPanel(this);
         console.log('[OfficeScene] Work Feed initialized (press Tab to toggle)');
       }
