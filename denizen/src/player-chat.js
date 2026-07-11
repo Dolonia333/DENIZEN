@@ -2057,72 +2057,120 @@ class PlayerChat {
   // --- UI ---
 
   _buildUI() {
-    if (!this._chatStyleInjected) {
-    this._chatStyleInjected = true;
-    const style = document.createElement('style');
+    let style = document.getElementById('denizen-player-chat-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'denizen-player-chat-style';
+      document.head.appendChild(style);
+    }
+    if (!document.getElementById('denizen-visitor-session-fonts')
+      && !document.getElementById('denizen-onboarding-fonts')
+      && !document.getElementById('denizen-player-chat-fonts')) {
+      const fontLink = document.createElement('link');
+      fontLink.id = 'denizen-player-chat-fonts';
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap';
+      document.head.appendChild(fontLink);
+    }
     style.textContent = `
       #player-chat-panel {
-        --pc-bg: #0a0f18;
-        --pc-surface: #121826;
-        --pc-elevated: #1a2233;
-        --pc-border: rgba(255, 255, 255, 0.08);
-        --pc-text: #f1f5f9;
+        --pc-bg: #111827;
+        --pc-surface: #0b1220;
+        --pc-elevated: #1e293b;
+        --pc-border: #020617;
+        --pc-line: #334155;
+        --pc-text: #e2e8f0;
         --pc-muted: #94a3b8;
-        --pc-accent: #3b82f6;
-        --pc-user: #2563eb;
+        --pc-accent: #7dd3fc;
+        --pc-user: #0ea5e9;
+        --pc-amber: #f59e0b;
+        --pc-display: "Syne", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+        --pc-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
         position: fixed;
         bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px));
         left: max(20px, env(safe-area-inset-left, 0px));
         width: min(400px, calc(100vw - 32px));
         height: min(440px, calc(100vh - 120px));
         max-height: min(52vh, 440px);
-        background: var(--pc-bg);
-        border: 1px solid var(--pc-border);
-        border-radius: 20px;
+        background:
+          repeating-linear-gradient(
+            -12deg,
+            transparent,
+            transparent 11px,
+            rgba(148, 163, 184, 0.03) 11px,
+            rgba(148, 163, 184, 0.03) 12px
+          ),
+          var(--pc-bg);
+        border: 3px solid var(--pc-border);
+        border-radius: 4px;
         display: none;
         flex-direction: column;
         z-index: 100200;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        font-size: 14px;
+        font-family: var(--pc-mono);
+        font-size: 13px;
         color: var(--pc-text);
-        overflow: hidden;
+        overflow: visible;
         box-shadow:
-          0 24px 64px rgba(0, 0, 0, 0.45),
-          0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+          inset 0 0 0 2px var(--pc-line),
+          0 0 0 2px var(--pc-amber),
+          5px 7px 0 #020617;
         contain: layout style;
-        -webkit-backdrop-filter: blur(24px) saturate(140%);
-        backdrop-filter: blur(24px) saturate(140%);
+      }
+      #player-chat-panel::before {
+        content: "FLOOR LINE";
+        position: absolute;
+        top: -12px;
+        left: 14px;
+        z-index: 3;
+        padding: 3px 8px;
+        font-family: var(--pc-display);
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        line-height: 1.2;
+        color: #0b1220;
+        background: var(--pc-amber);
+        border: 2px solid #020617;
+        border-radius: 3px;
+        box-shadow: 2px 2px 0 #020617;
+        white-space: nowrap;
+        pointer-events: none;
       }
       #player-chat-header {
+        position: relative;
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 12px 14px;
-        border-bottom: 1px solid var(--pc-border);
-        background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+        padding: 18px 12px 12px;
+        border-bottom: 2px solid var(--pc-border);
+        background:
+          linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
+          rgba(2, 6, 23, 0.55);
         flex-shrink: 0;
+        box-shadow: inset 0 -1px 0 var(--pc-line);
       }
       .pc-header-avatar {
-        flex: 0 0 36px;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 15px;
-        font-weight: 600;
-        color: #e2e8f0;
-        background: linear-gradient(145deg, #334155, #1e293b);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        font-family: var(--pc-display);
+        font-size: 16px;
+        font-weight: 800;
+        color: #0b1220;
+        background: linear-gradient(180deg, #bae6fd, var(--pc-accent));
+        border: 2px solid #020617;
+        box-shadow: 2px 2px 0 #020617, inset 0 1px 0 rgba(255,255,255,0.35);
       }
       #player-chat-header .chat-header-main {
         flex: 1;
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 1px;
+        gap: 2px;
       }
       #player-chat-close-btn {
         display: none;
@@ -2130,19 +2178,21 @@ class PlayerChat {
         justify-content: center;
         width: 32px;
         height: 32px;
-        border-radius: 10px;
-        border: none;
-        background: transparent;
+        border-radius: 4px;
+        border: 2px solid #020617;
+        background: rgba(2, 6, 23, 0.65);
         color: var(--pc-muted);
-        font: 500 18px/1 system-ui, sans-serif;
+        font: 700 14px/1 var(--pc-mono);
         cursor: pointer;
         touch-action: manipulation;
         flex-shrink: 0;
-        transition: background 0.15s, color 0.15s;
+        box-shadow: 1px 1px 0 #020617;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
       }
       #player-chat-close-btn:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--pc-text);
+        background: rgba(245, 158, 11, 0.15);
+        color: #fde68a;
+        border-color: var(--pc-amber);
       }
       #player-chat-panel .chat-mobile-hint,
       #player-chat-panel .chat-desktop-hint { display: none !important; }
@@ -2150,21 +2200,35 @@ class PlayerChat {
         display: none !important;
       }
       #player-chat-header .target {
-        color: var(--pc-text);
-        font-weight: 600;
-        font-size: 15px;
-        letter-spacing: -0.01em;
+        color: #f8fafc;
+        font-family: var(--pc-display);
+        font-weight: 800;
+        font-size: 16px;
+        letter-spacing: 0.02em;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .pc-header-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         color: var(--pc-muted);
-        font-size: 12px;
+        font-size: 11px;
         line-height: 1.3;
+        letter-spacing: 0.04em;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      .pc-header-status::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--pc-accent);
+        box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.25);
+        flex-shrink: 0;
       }
       #player-chat-log {
         flex: 1;
@@ -2173,64 +2237,71 @@ class PlayerChat {
         gap: 10px;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: 14px 14px 10px;
+        padding: 16px 14px 12px;
         min-height: 80px;
         scroll-behavior: smooth;
-        background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent 120px);
+        background:
+          radial-gradient(ellipse 80% 40% at 50% 0%, rgba(56, 189, 248, 0.06), transparent 60%),
+          rgba(2, 6, 23, 0.35);
       }
       #player-chat-log::-webkit-scrollbar { width: 6px; }
       #player-chat-log::-webkit-scrollbar-thumb {
-        background: rgba(148, 163, 184, 0.25);
+        background: rgba(125, 211, 252, 0.28);
         border-radius: 999px;
       }
       #player-chat-log .msg {
-        max-width: 85%;
+        max-width: 84%;
         margin: 0;
-        padding: 10px 14px;
+        padding: 10px 12px;
         line-height: 1.45;
-        border-radius: 18px;
+        border-radius: 6px;
         overflow-wrap: anywhere;
-        font-size: 14px;
-        border: 1px solid transparent;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+        font-size: 13px;
+        border: 2px solid #020617;
+        box-shadow: 2px 2px 0 #020617;
       }
       #player-chat-log .msg.you {
         align-self: flex-end;
-        border-bottom-right-radius: 6px;
-        background: var(--pc-user);
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.08);
+        border-bottom-right-radius: 2px;
+        background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+        color: #0b1220;
+        border-color: #020617;
+        font-weight: 500;
       }
       #player-chat-log .msg.npc,
       #player-chat-log .msg.typing {
         align-self: flex-start;
-        border-bottom-left-radius: 6px;
-        background: var(--pc-elevated);
-        border-color: var(--pc-border);
+        border-bottom-left-radius: 2px;
+        background: rgba(30, 41, 59, 0.95);
+        border-color: #020617;
         color: var(--pc-text);
+        box-shadow: inset 0 0 0 1px var(--pc-line), 2px 2px 0 #020617;
       }
       #player-chat-log .msg.system {
         align-self: center;
         max-width: 92%;
         padding: 6px 12px;
         text-align: center;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.1);
-        border-color: rgba(148, 163, 184, 0.14);
+        border-radius: 4px;
+        background: rgba(148, 163, 184, 0.08);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        box-shadow: none;
       }
       #player-chat-log .msg.system.error {
         background: rgba(239, 68, 68, 0.12);
-        border-color: rgba(248, 113, 113, 0.2);
+        border-color: rgba(248, 113, 113, 0.35);
       }
       #player-chat-log .msg .sender {
         display: block;
-        font-weight: 600;
-        font-size: 11px;
+        font-family: var(--pc-display);
+        font-weight: 700;
+        font-size: 10px;
         margin: 0 0 4px;
-        color: #a5b4fc;
-        letter-spacing: 0.02em;
+        color: var(--pc-accent);
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
+      #player-chat-log .msg.you .sender { color: #075985; }
       #player-chat-log .msg .text { color: inherit; }
       #player-chat-log .msg.system .text { color: var(--pc-muted); font-size: 12px; }
       #player-chat-log .msg.system.error .text { color: #fca5a5; font-size: 12px; }
@@ -2248,7 +2319,7 @@ class PlayerChat {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.62);
+        background: var(--pc-accent);
         animation: player-chat-typing 1.2s ease-in-out infinite;
       }
       #player-chat-log .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
@@ -2259,26 +2330,28 @@ class PlayerChat {
       }
       #player-chat-composer {
         flex-shrink: 0;
-        border-top: 1px solid var(--pc-border);
-        background: var(--pc-surface);
+        border-top: 2px solid var(--pc-border);
+        background: rgba(2, 6, 23, 0.72);
+        box-shadow: inset 0 1px 0 var(--pc-line);
       }
-      .pc-composer-shell {
-        padding: 10px 12px 12px;
-      }
+      .pc-composer-shell { padding: 10px 12px 12px; }
       .pc-composer-bar {
         display: flex;
         align-items: flex-end;
         gap: 4px;
         padding: 6px 8px 6px 4px;
-        border-radius: 24px;
-        border: 1px solid var(--pc-border);
-        background: var(--pc-elevated);
-        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+        border-radius: 6px;
+        border: 2px solid #020617;
+        background: rgba(17, 24, 39, 0.95);
+        box-shadow: inset 0 0 0 1px var(--pc-line), 2px 2px 0 #020617;
         transition: border-color 0.15s, box-shadow 0.15s;
       }
       .pc-composer-bar:focus-within {
-        border-color: rgba(59, 130, 246, 0.45);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        border-color: var(--pc-accent);
+        box-shadow:
+          inset 0 0 0 1px rgba(125, 211, 252, 0.35),
+          0 0 0 2px rgba(125, 211, 252, 0.18),
+          2px 2px 0 #020617;
       }
       #player-chat-input-row {
         display: block;
@@ -2305,40 +2378,42 @@ class PlayerChat {
       }
       #player-chat-input::placeholder { color: #64748b; }
       #player-chat-send {
-        flex: 0 0 32px;
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
         padding: 0;
-        border: none;
-        border-radius: 50%;
-        background: var(--pc-accent);
-        color: #fff;
+        border: 2px solid #020617;
+        border-radius: 6px;
+        background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+        color: #0b1220;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.15s, opacity 0.15s, transform 0.1s;
+        box-shadow: 2px 2px 0 #020617;
+        transition: filter 0.15s, opacity 0.15s, transform 0.1s;
       }
       #player-chat-send .pc-send-glyph {
         font-size: 17px;
-        font-weight: 700;
+        font-weight: 800;
         line-height: 1;
         margin-top: -1px;
       }
-      #player-chat-send:hover:not(:disabled) { background: #1d4ed8; }
-      #player-chat-send:active:not(:disabled) { transform: scale(0.96); }
+      #player-chat-send:hover:not(:disabled) { filter: brightness(1.06); }
+      #player-chat-send:active:not(:disabled) { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #020617; }
       #player-chat-send:disabled {
-        opacity: 0.35;
+        opacity: 0.4;
         cursor: not-allowed;
         background: #334155;
+        color: #94a3b8;
       }
       #player-chat-speak {
         flex: 0 0 auto;
         min-height: 32px;
         padding: 0 10px;
         border: none;
-        border-radius: 999px;
+        border-radius: 6px;
         background: transparent;
         color: var(--pc-muted);
         cursor: pointer;
@@ -2350,7 +2425,7 @@ class PlayerChat {
         transition: background 0.15s, color 0.15s;
       }
       #player-chat-speak .pc-speak-glyph { font-size: 16px; line-height: 1; }
-      #player-chat-speak:hover { background: rgba(255,255,255,0.06); color: var(--pc-text); }
+      #player-chat-speak:hover { background: rgba(125, 211, 252, 0.1); color: var(--pc-accent); }
       #player-chat-speak.listening {
         background: rgba(239, 68, 68, 0.15);
         color: #fca5a5;
@@ -2363,7 +2438,7 @@ class PlayerChat {
         background: transparent;
         color: var(--pc-muted);
         border: none;
-        border-radius: 50%;
+        border-radius: 6px;
         padding: 0;
         cursor: pointer;
         display: inline-flex;
@@ -2376,7 +2451,7 @@ class PlayerChat {
         font-weight: 300;
         line-height: 1;
       }
-      #player-chat-attach:hover { color: var(--pc-text); background: rgba(255,255,255,0.06); }
+      #player-chat-attach:hover { color: var(--pc-accent); background: rgba(125, 211, 252, 0.1); }
       .pc-composer-actions {
         display: flex;
         align-items: center;
@@ -2395,13 +2470,14 @@ class PlayerChat {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: var(--pc-elevated);
-        border: 1px solid var(--pc-border);
-        border-radius: 10px;
+        background: rgba(30, 41, 59, 0.95);
+        border: 2px solid #020617;
+        border-radius: 4px;
         padding: 4px 8px;
         font-size: 11px;
         color: #cbd5e1;
         max-width: 180px;
+        box-shadow: 1px 1px 0 #020617;
       }
       .pc-attach-chip img {
         width: 28px; height: 28px;
@@ -2416,39 +2492,42 @@ class PlayerChat {
         cursor: pointer; color: #f87171; font-weight: bold; padding: 0 2px;
       }
       #player-chat-panel.pc-drag-over {
-        outline: 2px dashed #4ade80;
+        outline: 2px dashed var(--pc-accent);
         outline-offset: -4px;
       }
       .msg .pc-msg-attachments { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 6px; }
       .msg .pc-msg-attachments img {
         max-width: 180px; max-height: 130px;
-        border-radius: 6px; border: 1px solid #334155; display: block;
+        border-radius: 4px; border: 2px solid #020617; display: block;
       }
       .msg .pc-msg-file-chip {
         display: inline-flex; align-items: center; gap: 4px;
-        background: #1e293b; border: 1px solid #334155; border-radius: 6px;
+        background: #1e293b; border: 2px solid #020617; border-radius: 4px;
         padding: 3px 8px; font-size: 10px; color: #cbd5e1;
       }
       #player-chat-fab {
-        background: var(--pc-surface, #121826);
-        color: var(--pc-text, #f1f5f9);
-        border: 1px solid rgba(74, 222, 128, 0.45);
-        border-radius: 999px;
-        padding: 10px 18px;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        font-size: 13px;
-        font-weight: 600;
+        background: rgba(11, 18, 32, 0.96);
+        color: var(--pc-accent, #7dd3fc);
+        border: 2px solid #020617;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-family: var(--pc-mono, ui-monospace, monospace);
+        font-size: 12px;
+        font-weight: 700;
         cursor: pointer;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-        transition: background 0.15s, border-color 0.15s;
+        box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45), 3px 4px 0 #020617;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
       }
-      #player-chat-fab:hover { background: var(--pc-elevated, #1a2233); }
+      #player-chat-fab:hover { color: #e0f2fe; border-color: var(--pc-accent, #7dd3fc); }
       #player-chat-fab.ws-off {
         border-color: #f87171;
         color: #fecaca;
+        box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.35), 3px 4px 0 #020617;
       }
       #player-chat-fab.ws-on {
-        border-color: #4ade80;
+        border-color: #020617;
+        color: #86efac;
+        box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.4), 3px 4px 0 #020617;
       }
       #denizen-ws-banner {
         position: fixed;
@@ -2471,15 +2550,13 @@ class PlayerChat {
           );
           height: min(48dvh, 340px);
           max-height: min(48dvh, 340px);
-          border-radius: 10px;
+          border-radius: 4px;
         }
         #player-chat-header {
           font-size: 12px;
-          padding: 9px 12px;
+          padding: 16px 12px 10px;
         }
-        #player-chat-input {
-          font-size: 16px;
-        }
+        #player-chat-input { font-size: 16px; }
         html.denizen-touch #player-chat-send,
         html.denizen-touch #player-chat-speak {
           width: 40px;
@@ -2510,20 +2587,23 @@ class PlayerChat {
       html:not(.denizen-touch) #player-chat-log:empty::before {
         content: "No messages yet";
         align-self: center;
-        margin: auto 0 4px;
-        color: var(--pc-muted);
-        font-size: 14px;
-        font-weight: 500;
+        margin: auto 0 6px;
+        color: #cbd5e1;
+        font-family: var(--pc-display);
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
       }
       html:not(.denizen-touch) #player-chat-log:empty::after {
-        content: "Click someone in the office or press Enter nearby";
+        content: "Walk up to someone on the floor, or press Enter nearby";
         align-self: center;
         margin: 0 auto auto;
         color: #64748b;
-        font-size: 12px;
+        font-size: 11px;
         text-align: center;
-        max-width: 220px;
-        line-height: 1.4;
+        max-width: 240px;
+        line-height: 1.45;
+        letter-spacing: 0.02em;
       }
       html:not(.denizen-touch) #player-chat-input { font-size: 15px; }
       html:not(.denizen-touch) #player-chat-speak .pc-speak-label { display: none; }
@@ -2532,16 +2612,27 @@ class PlayerChat {
         min-width: 32px;
         height: 32px;
         padding: 0;
-        border-radius: 50%;
+        border-radius: 6px;
         justify-content: center;
       }
       html.denizen-touch #player-chat-panel {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        overflow: hidden;
-        background: rgba(8, 13, 25, 0.98);
-        border: 1px solid rgba(148, 163, 184, 0.32);
-        border-radius: 16px;
-        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.55);
+        font-family: var(--pc-mono);
+        overflow: visible;
+        background:
+          repeating-linear-gradient(
+            -12deg,
+            transparent,
+            transparent 11px,
+            rgba(148, 163, 184, 0.03) 11px,
+            rgba(148, 163, 184, 0.03) 12px
+          ),
+          var(--pc-bg);
+        border: 3px solid #020617;
+        border-radius: 4px;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 2px var(--pc-amber),
+          5px 7px 0 #020617;
       }
       html.denizen-touch #player-chat-panel .chat-desktop-hint { display: none; }
       html.denizen-touch #player-chat-panel .chat-mobile-hint { display: none; }
@@ -2562,7 +2653,6 @@ class PlayerChat {
         max-height: none !important;
         z-index: 2147483630 !important;
       }
-      /* Portrait phones: keep the office visible — chat fills the space below it */
       html.denizen-touch.denizen-chat-open.denizen-portrait.denizen-tap-move:not(.denizen-phone-mode) #player-chat-panel {
         top: calc(var(--denizen-play-top, 0px) + var(--denizen-phone-portrait-game-height, calc(100dvw * 9 / 16)) + 10px) !important;
       }
@@ -2589,22 +2679,16 @@ class PlayerChat {
         transform: none !important;
       }
       html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header {
-        padding: 8px 10px;
+        padding: 14px 10px 8px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header .hint {
-        display: none;
-      }
+      html.denizen-touch.denizen-phone.denizen-landscape #player-chat-header .hint { display: none; }
       html.denizen-touch.denizen-phone.denizen-landscape #player-chat-log {
         min-height: 0;
         padding: 8px 10px;
         font-size: 13px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-shell {
-        padding: 8px 10px;
-      }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-bar {
-        gap: 4px;
-      }
+      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-shell { padding: 8px 10px; }
+      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-bar { gap: 4px; }
       html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input {
         min-height: 40px;
         font-size: 16px;
@@ -2631,32 +2715,27 @@ class PlayerChat {
       html.denizen-touch #player-chat-log:empty::before {
         content: "Say hello";
         align-self: center;
-        margin: auto 0 4px;
-        color: var(--pc-muted);
-        font-size: 14px;
-        font-weight: 500;
+        margin: auto 0 6px;
+        color: #cbd5e1;
+        font-family: var(--pc-display);
+        font-size: 15px;
+        font-weight: 700;
       }
       html.denizen-touch #player-chat-log:empty::after {
-        content: "Tap an NPC in the office";
+        content: "Tap someone on the floor";
         align-self: center;
         margin: 0 auto auto;
         color: #64748b;
-        font-size: 12px;
+        font-size: 11px;
       }
       html.denizen-touch #player-chat-log .msg.system {
-        -webkit-backdrop-filter: blur(12px);
-        backdrop-filter: blur(12px);
         box-shadow: none;
       }
-      html.denizen-touch #player-chat-log .msg.system.error .text {
-        color: #fecaca;
-      }
+      html.denizen-touch #player-chat-log .msg.system.error .text { color: #fecaca; }
       html.denizen-touch .pc-composer-shell {
         padding: 10px 12px max(10px, env(safe-area-inset-bottom, 0px));
       }
-      html.denizen-touch .pc-composer-bar {
-        padding: 5px 6px 5px 2px;
-      }
+      html.denizen-touch .pc-composer-bar { padding: 5px 6px 5px 2px; }
       html.denizen-touch #player-chat-input {
         min-height: 28px;
         font-size: 16px;
@@ -2670,25 +2749,24 @@ class PlayerChat {
         height: 40px;
         min-height: 40px;
         padding: 0;
-        border-radius: 50%;
+        border-radius: 6px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         white-space: nowrap;
       }
       html.denizen-touch #player-chat-send {
-        background: var(--pc-accent);
+        background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+        color: #0b1220;
       }
-      html.denizen-touch #player-chat-speak {
-        background: transparent;
-      }
-      html.denizen-touch #player-chat-speak .pc-speak-label {
-        display: none;
-      }
+      html.denizen-touch #player-chat-speak { background: transparent; }
+      html.denizen-touch #player-chat-speak .pc-speak-label { display: none; }
       html.denizen-touch #player-chat-header {
-        padding: 10px 12px 9px;
+        padding: 16px 12px 10px;
         font-size: 13px;
-        background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.84));
+        background:
+          linear-gradient(180deg, rgba(125, 211, 252, 0.06), transparent 70%),
+          rgba(2, 6, 23, 0.55);
       }
       html.denizen-touch #player-chat-header .target {
         display: block;
@@ -2701,7 +2779,6 @@ class PlayerChat {
       html.denizen-touch.denizen-chat-open #game-container canvas {
         pointer-events: none !important;
       }
-      /* Chat has its own mic — hide global speak + phone FABs until chat closes */
       html.denizen-chat-open #denizen-speak-fab,
       html.denizen-chat-open #denizen-phone-fab {
         display: none !important;
@@ -2709,8 +2786,7 @@ class PlayerChat {
         pointer-events: none !important;
       }
     `;
-    document.head.appendChild(style);
-    }
+    this._chatStyleInjected = true;
 
     let panel = document.getElementById('player-chat-panel');
     if (!panel) {

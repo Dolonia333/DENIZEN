@@ -103,6 +103,8 @@
     if (!root.classList.contains('denizen-desktop')) return;
     if (root.classList.contains('denizen-phone-open')) return;
     if (root.classList.contains('denizen-chat-open')) return;
+    // Tour owns phone highlighting; left/right corner peeks fight the guide.
+    if (root.dataset.denizenOnboarding === 'open') return;
     root.classList.add('denizen-corner-hud-open');
     if (revealTimer) clearTimeout(revealTimer);
     revealTimer = setTimeout(() => {

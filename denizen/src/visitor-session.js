@@ -425,6 +425,8 @@
         width: min(520px, calc(100vw - 20px));
         position: relative;
         pointer-events: none;
+        padding-top: 18px;
+        overflow: visible;
       }
       #denizen-visitor-name-modal .vis-panel > *,
       #denizen-demo-account-modal .vis-panel > * {
@@ -481,7 +483,7 @@
           #111827;
         border: 3px solid #020617;
         border-radius: 4px;
-        padding: 26px 24px 22px;
+        padding: 28px 24px 22px;
         width: min(400px, calc(100vw - 32px));
         flex: 1 1 auto;
         box-shadow:
@@ -491,28 +493,29 @@
         pointer-events: auto;
         position: relative;
         z-index: 1;
-        max-height: calc(100dvh - 32px);
-        overflow-y: auto;
-        overscroll-behavior: contain;
+        max-height: none;
+        overflow: visible;
         animation: denizen-vis-card-in 280ms ease-out;
       }
       #denizen-visitor-name-modal .vis-card::before,
       #denizen-demo-account-modal .vis-card::before {
         content: "HQ PASS";
         position: absolute;
-        top: -12px;
+        top: -14px;
         left: 14px;
-        padding: 2px 8px;
+        padding: 3px 8px;
         font-family: var(--vis-display);
         font-size: 9px;
         font-weight: 800;
         letter-spacing: 0.14em;
+        line-height: 1.2;
         color: #0b1220;
         background: #f59e0b;
         border: 2px solid #020617;
         border-radius: 3px;
         box-shadow: 2px 2px 0 #020617;
-        z-index: 2;
+        z-index: 5;
+        white-space: nowrap;
       }
       #denizen-visitor-name-modal .vis-brand,
       #denizen-demo-account-modal .vis-brand {
@@ -984,8 +987,12 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0;
+        padding-top: 18px;
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-        overflow: visible;
+        overflow-x: visible;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
       /* Choose: Buzz stays in-flow above the pass so he can't get clipped off-screen */
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
@@ -1067,7 +1074,7 @@
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card {
         width: 100%;
-        max-height: min(70dvh, calc(100dvh - 120px - env(safe-area-inset-bottom, 0px)));
+        max-height: none;
         padding: 22px 16px 16px;
         border-radius: 4px;
         border-color: #020617;
@@ -1075,7 +1082,7 @@
           inset 0 0 0 2px #334155,
           0 0 0 2px #f59e0b,
           4px 6px 0 #020617;
-        -webkit-overflow-scrolling: touch;
+        overflow: visible;
         flex: 0 1 auto;
         min-height: 0;
       }
@@ -1084,9 +1091,10 @@
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card::before {
         left: 12px;
-        top: -11px;
+        top: -14px;
         font-size: 8px;
-        padding: 2px 7px;
+        padding: 3px 7px;
+        line-height: 1.2;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-brand {
         font-size: clamp(22px, 7.5vw, 28px);
@@ -1194,7 +1202,12 @@
         width: min(100%, var(--denizen-panel-max-width, 440px));
         flex-direction: column;
         position: relative;
+        padding-top: 18px;
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overflow-x: visible;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-mascot {
         position: relative;
@@ -1213,8 +1226,9 @@
       }
       html.denizen-touch #denizen-demo-account-modal .vis-card {
         width: 100%;
-        max-height: min(70dvh, calc(100dvh - 120px - env(safe-area-inset-bottom, 0px)));
+        max-height: none;
         padding: 22px 16px 16px;
+        overflow: visible;
         flex: 0 1 auto;
         min-height: 0;
       }
@@ -1247,7 +1261,7 @@
           transform: rotate(-4deg) scale(0.62);
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-card {
-          max-height: calc(100dvh - 88px);
+          max-height: none;
           padding: 14px 12px 12px;
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-brand {
@@ -1274,9 +1288,9 @@
         }
       }
       @media (max-height: 560px) {
-        html.denizen-touch #denizen-visitor-name-modal .vis-card:not(.vis-lobby),
-        html.denizen-touch #denizen-demo-account-modal .vis-card {
-          max-height: min(88dvh, calc(100dvh - 12px));
+        html.denizen-touch #denizen-visitor-name-modal .vis-panel,
+        html.denizen-touch #denizen-demo-account-modal .vis-panel {
+          max-height: calc(100dvh - 12px);
         }
       }
     `;
@@ -2124,7 +2138,7 @@
 
         ensurePanelWithMascot(modalEl, {
           quiet: step !== 'choose',
-          bubble: step === 'choose' ? "Hey! Who's at the door?" : '',
+          bubble: step === 'choose' ? 'Buzz buzz — never too buzzy' : '',
         });
         wireStepControls();
         applyPrefills();
