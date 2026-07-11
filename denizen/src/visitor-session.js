@@ -965,7 +965,7 @@
         z-index: 2147483645;
       }
       html.denizen-touch #denizen-visitor-name-modal {
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
         padding: max(12px, env(safe-area-inset-top, 0px))
           max(12px, env(safe-area-inset-right, 0px))
@@ -973,9 +973,10 @@
           max(12px, env(safe-area-inset-left, 0px));
         box-sizing: border-box;
         background:
-          radial-gradient(ellipse 90% 50% at 50% 100%, rgba(56, 189, 248, 0.16), transparent 55%),
+          radial-gradient(ellipse 90% 50% at 50% 42%, rgba(56, 189, 248, 0.14), transparent 58%),
           rgba(2, 6, 23, 0.58);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow: auto;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-panel {
         position: relative;
@@ -983,13 +984,16 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0;
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overflow: visible;
       }
-      /* Choose: Buzz in his own strip above the pass — no overlap with HQ PASS / brand */
+      /* Choose: Buzz stays in-flow above the pass so he can't get clipped off-screen */
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
         position: relative;
         left: auto;
         top: auto;
-        margin: 0 0 10px;
+        right: auto;
+        margin: 0 0 12px;
         align-self: flex-start;
         flex-direction: row;
         align-items: flex-end;
@@ -999,6 +1003,7 @@
         z-index: 4;
         max-width: calc(100% - 8px);
         animation: denizen-vis-mascot-in 420ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+        flex-shrink: 0;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-bubble {
         order: 2;
@@ -1006,6 +1011,7 @@
         margin-bottom: 18px;
         font-size: 13px;
         padding: 8px 11px;
+        display: block;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-phone {
         order: 1;
@@ -1013,6 +1019,7 @@
         height: 70px;
         padding-top: 8px;
         gap: 5px;
+        flex-shrink: 0;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-screen {
         width: 34px;
@@ -1034,33 +1041,43 @@
         font-size: 9px;
         padding: 1px 5px;
       }
-      /* Form steps: tiny corner peek — keep inputs clear */
+      /* Form steps: compact Buzz still in-flow (absolute peeks were clipped off-screen) */
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet {
-        position: absolute;
+        position: relative;
         left: auto;
-        right: 10px;
-        top: -14px;
-        margin: 0;
+        right: auto;
+        top: auto;
+        margin: 0 0 10px;
+        align-self: flex-start;
         z-index: 4;
-        transform: rotate(8deg) scale(0.55);
-        transform-origin: top right;
+        transform: rotate(-6deg) scale(0.78);
+        transform-origin: bottom left;
         pointer-events: none;
+        flex-shrink: 0;
+        display: flex;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet .vis-mascot-tag {
         display: none;
       }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet .vis-lobby-phone {
+        width: 48px;
+        height: 60px;
+        padding-top: 7px;
+        gap: 4px;
+      }
       html.denizen-touch #denizen-visitor-name-modal .vis-card {
         width: 100%;
-        max-height: min(78dvh, calc(100dvh - 24px - env(safe-area-inset-bottom, 0px)));
+        max-height: min(70dvh, calc(100dvh - 120px - env(safe-area-inset-bottom, 0px)));
         padding: 22px 16px 16px;
         border-radius: 4px;
         border-color: #020617;
         box-shadow:
           inset 0 0 0 2px #334155,
           0 0 0 2px #f59e0b,
-          0 -10px 28px rgba(0, 0, 0, 0.45),
           4px 6px 0 #020617;
         -webkit-overflow-scrolling: touch;
+        flex: 0 1 auto;
+        min-height: 0;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card.vis-lobby {
         padding-top: 24px;
@@ -1165,34 +1182,41 @@
         align-items: center;
       }
       html.denizen-touch #denizen-demo-account-modal {
-        align-items: flex-end;
+        align-items: center;
+        justify-content: center;
         padding: max(12px, env(safe-area-inset-top, 0px))
           max(12px, env(safe-area-inset-right, 0px))
           max(12px, env(safe-area-inset-bottom, 0px))
           max(12px, env(safe-area-inset-left, 0px));
+        overflow: auto;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-panel {
         width: min(100%, var(--denizen-panel-max-width, 440px));
         flex-direction: column;
         position: relative;
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
       }
       html.denizen-touch #denizen-demo-account-modal .vis-mascot {
-        position: absolute;
-        right: 10px;
-        top: -14px;
+        position: relative;
         left: auto;
-        margin: 0;
-        transform: rotate(8deg) scale(0.55);
-        transform-origin: top right;
+        right: auto;
+        top: auto;
+        margin: 0 0 10px;
+        align-self: flex-start;
+        transform: rotate(-6deg) scale(0.78);
+        transform-origin: bottom left;
         pointer-events: none;
+        flex-shrink: 0;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-mascot .vis-mascot-tag {
         display: none;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-card {
         width: 100%;
-        max-height: min(78dvh, calc(100dvh - 24px - env(safe-area-inset-bottom, 0px)));
+        max-height: min(70dvh, calc(100dvh - 120px - env(safe-area-inset-bottom, 0px)));
         padding: 22px 16px 16px;
+        flex: 0 1 auto;
+        min-height: 0;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-input {
         font-size: 16px;
@@ -1219,10 +1243,11 @@
           margin-bottom: 10px;
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet {
-          display: none;
+          margin-bottom: 6px;
+          transform: rotate(-4deg) scale(0.62);
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-card {
-          max-height: calc(100dvh - 16px);
+          max-height: calc(100dvh - 88px);
           padding: 14px 12px 12px;
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-brand {
