@@ -127,8 +127,8 @@ class OfficePathfinder {
     const gaps = [
       { x0: 278, x1: 398, y0: 412, y1: 478, label: 'breakroom_north' },
       { x0: 550, x1: 666, y0: 412, y1: 478, label: 'reception_north' },
-      { x0: 832, x1: 864, y0: 150, y1: 266, label: 'manager_west' },
-      { x0: 832, x1: 864, y0: 318, y1: 434, label: 'conference_west' },
+      { x0: 832, x1: 864, y0: 150, y1: 250, label: 'manager_west' },
+      { x0: 832, x1: 864, y0: 342, y1: 458, label: 'conference_west' },
       { x0: 988, x1: 1118, y0: 232, y1: 292, label: 'ceo_to_meeting' },
     ];
     let carved = 0;
@@ -166,8 +166,8 @@ class OfficePathfinder {
     return [
       { x: 336, y: 462, zones: ['breakroom', 'open_office'] },
       { x: 608, y: 462, zones: ['reception', 'open_office'] },
-      { x: 864, y: 208, zones: ['manager_office', 'open_office'] },
-      { x: 864, y: 376, zones: ['conference', 'open_office'] },
+      { x: 864, y: 200, zones: ['manager_office', 'open_office'] },
+      { x: 864, y: 400, zones: ['conference', 'open_office'] },
       { x: 1048, y: 268, zones: ['manager_office', 'conference'] },
     ];
   }

@@ -1,6 +1,6 @@
 /**
  * Movement guard — keeps player movement alive when Phaser input/physics stall.
- * Uses velocity first, then direct position nudge if the player still won't move.
+ * Uses velocity first; only position-nudges when physics is actually dead (not when blocked by walls).
  */
 (function () {
   'use strict';
@@ -32,6 +32,23 @@
     return !!(r.up || r.down || r.left || r.right);
   }
 
+  /** True when Arcade is stopping the player against a wall/desk. */
+  function isCollisionStopped(sc) {
+    const body = sc?.player?.body;
+    if (!body || !body.enable) return false;
+    const b = body.blocked || {};
+    const t = body.touching || {};
+    return !!(b.left || b.right || b.up || b.down || t.left || t.right || t.up || t.down);
+  }
+
+  /** Physics looks dead (not merely blocked by a collider). */
+  function physicsLooksDead(sc) {
+    if (!sc?.player?.body) return true;
+    if (!sc.player.body.enable) return true;
+    if (sc.physics?.world?.isPaused) return true;
+    return false;
+  }
+
   function unlock() {
     if (window.__DenizenEditorActive) return;
     window.__DenizenGameInputBlocked = false;
@@ -53,9 +70,15 @@
     } catch (_) {}
   }
 
-  /** Last resort — move the sprite directly when physics/input are dead. */
+  /** Last resort — move the sprite directly when physics/input are dead. Never use to clip through walls. */
   function directNudge(sc, dt = 0.016) {
     if (!sc?.player || document.documentElement.dataset.denizenModal === 'open') return;
+    if (isCollisionStopped(sc)) return;
+    if (!physicsLooksDead(sc) && sc.player.body) {
+      // Prefer velocity; only teleport if body truly can't move
+      try { sc._applyRawKeyMovement?.(); } catch (_) {}
+      return;
+    }
     const r = window.__DenizenRawMoveKeys || {};
     const speed = 220;
     let dx = 0;
@@ -145,7 +168,8 @@
       const now = performance.now();
       if (p && lastProbe.t) {
         const moved = Math.hypot(p.x - lastProbe.x, p.y - lastProbe.y);
-        if (moved < 1.5 && (now - lastProbe.t) > 100) {
+        // Stuck against a wall/desk is expected — do NOT teleport through it.
+        if (moved < 1.5 && (now - lastProbe.t) > 100 && !isCollisionStopped(sc) && physicsLooksDead(sc)) {
           directNudge(sc);
         }
       }
@@ -160,7 +184,9 @@
       if (e.target?.tagName === 'INPUT' || e.target?.tagName === 'TEXTAREA') return;
       unlock();
       const sc = window.game?.scene?.scenes?.[0];
-      if (sc && wantsMove()) directNudge(sc);
+      if (sc && wantsMove()) {
+        try { sc._applyRawKeyMovement?.(); } catch (_) {}
+      }
     }
   });
 
@@ -175,7 +201,7 @@
   }
   requestAnimationFrame(rafDrive);
 
-  window.DenizenMovementGuard = { tick, unlock, wantsMove, directNudge };
+  window.DenizenMovementGuard = { tick, unlock, wantsMove, directNudge, isCollisionStopped };
   window.DenizenSetLightOffice = (on) => {
     const enabled = on !== false;
     window.__DenizenLightOffice = enabled;

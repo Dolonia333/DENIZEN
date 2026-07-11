@@ -252,6 +252,9 @@ class WorkFeedPanel {
           top: max(8px, env(safe-area-inset-top, 0px));
           left: max(8px, env(safe-area-inset-left, 0px));
           z-index: 9999;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
           background: rgba(2, 6, 23, 0.75);
           color: #94a3b8;
           border: 1px solid #334155;
@@ -297,7 +300,10 @@ class WorkFeedPanel {
     const btn = document.createElement('button');
     btn.id = 'denizen-work-feed-toggle';
     btn.type = 'button';
-    btn.textContent = '📋 Feed';
+    const ti = globalThis.DenizenTablerIcons?.icon;
+    btn.innerHTML = ti
+      ? `${ti('clipboard-list', { size: 14 })} Feed`
+      : 'Feed';
     btn.dataset.active = 'false';
     btn.title = 'Work output feed — what your agents produced (Tab)';
     btn.addEventListener('click', () => this.toggle());

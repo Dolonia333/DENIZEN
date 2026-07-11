@@ -1,6 +1,6 @@
 {
   "info": {
-    "purpose": "Open office \u2014 hand-placed layout (89 items, sub-pixel tuned coords).",
+    "purpose": "Open office — hand-placed layout (89 items, sub-pixel tuned coords).",
     "origin": "bottom-center anchor.",
     "slice_margin_px": 2,
     "object_count": 227,
@@ -12,7 +12,8 @@
     "editor_objects_merged_at": "2026-07-05T21:11:56.621Z",
     "editor_note": "objects merged by wire-editor-catalog.mjs; placements unchanged",
     "mo_singles_merged_at": "2026-07-10T18:10:33.245Z",
-    "mo_singles_merged_count": 339
+    "mo_singles_merged_count": 339,
+    "notes": "Includes Room Builder brick wall + floor tiles for GIF-style painting."
   },
   "objects": {
     "ac_unit_small": {
@@ -26,7 +27,7 @@
       "display_w": 64,
       "display_h": 32,
       "type": "decor",
-      "_note": "User cut \u2014 small AC unit"
+      "_note": "User cut — small AC unit"
     },
     "books_stack": {
       "sheet": "mo_black_shadow_32",
@@ -39,7 +40,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 stack of books",
+      "_note": "User cut — stack of books",
       "stack_on": "surface"
     },
     "backpack_blue": {
@@ -55,7 +56,7 @@
       "display_w": 24,
       "display_h": 24,
       "type": "decor",
-      "_note": "candidate \u2014 verify in verify-sprites.html; pale-blue floor bag from singles #153 (lobby prop)",
+      "_note": "candidate — verify in verify-sprites.html; pale-blue floor bag from singles #153 (lobby prop)",
       "stack_on": "surface"
     },
     "bookshelf_short": {
@@ -69,7 +70,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u2014 bookshelf (64\u00d796)"
+      "_note": "User cut — bookshelf (64×96)"
     },
     "box_desk": {
       "sheet": "mo_black_shadow_32",
@@ -82,7 +83,7 @@
       "display_w": 96,
       "display_h": 96,
       "type": "surface",
-      "_note": "User cut \u2014 square/box desk",
+      "_note": "User cut — square/box desk",
       "action": "use_computer"
     },
     "cert_1": {
@@ -96,7 +97,7 @@
       "display_w": 32,
       "display_h": 36,
       "type": "decor",
-      "_note": "User cut \u2014 certificate 1"
+      "_note": "User cut — certificate 1"
     },
     "cert_2": {
       "sheet": "mo_black_shadow_32",
@@ -109,7 +110,7 @@
       "display_w": 52,
       "display_h": 30,
       "type": "decor",
-      "_note": "User cut \u2014 certificate 2"
+      "_note": "User cut — certificate 2"
     },
     "cert_4": {
       "sheet": "mo_black_shadow_32",
@@ -122,7 +123,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 certificate 4"
+      "_note": "User cut — certificate 4"
     },
     "chair_black_back": {
       "sheet": "mo_black_shadow_32",
@@ -205,7 +206,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 black back-facing chair with breathing holes",
+      "_note": "User cut — black back-facing chair with breathing holes",
       "action": "seat"
     },
     "chair_black_back_no_holes": {
@@ -219,7 +220,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 black back-facing chair no holes",
+      "_note": "User cut — black back-facing chair no holes",
       "action": "seat"
     },
     "chair_black_front": {
@@ -233,7 +234,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 black front-facing desk chair",
+      "_note": "User cut — black front-facing desk chair",
       "action": "seat"
     },
     "chair_black_front_holes": {
@@ -247,7 +248,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 black front-facing chair with breathing holes",
+      "_note": "User cut — black front-facing chair with breathing holes",
       "action": "seat"
     },
     "chair_black_side_left": {
@@ -261,7 +262,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 black side left-facing chair",
+      "_note": "User cut — black side left-facing chair",
       "action": "seat"
     },
     "chair_black_side_left_2": {
@@ -289,7 +290,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 black side right-facing chair",
+      "_note": "User cut — black side right-facing chair",
       "action": "seat"
     },
     "chair_black_side_right_2": {
@@ -334,7 +335,7 @@
       "display_h": 34,
       "type": "seat",
       "action": "seat",
-      "_note": "Lobby round grey pod chair \u2014 singles #122 (matches reference lobby_side_chairs_grey)"
+      "_note": "Lobby round grey pod chair — singles #122 (matches reference lobby_side_chairs_grey)"
     },
     "chair_boss_g11_10_2x1": {
       "sheet": "mo_black_shadow_32",
@@ -473,7 +474,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 orange back-facing chair no holes",
+      "_note": "User cut — orange back-facing chair no holes",
       "action": "seat"
     },
     "chair_orange_front_holes": {
@@ -487,7 +488,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 orange front-facing chair with breathing holes",
+      "_note": "User cut — orange front-facing chair with breathing holes",
       "action": "seat"
     },
     "coffee_machine": {
@@ -501,7 +502,7 @@
       "display_w": 56,
       "display_h": 72,
       "type": "furniture",
-      "_note": "User cut \u2014 coffee machine for break room"
+      "_note": "User cut — coffee machine for break room"
     },
     "cork_board_sheet": {
       "sheet": "mo_black_shadow_32",
@@ -527,7 +528,7 @@
       "display_w": 96,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u2014 corner sofa"
+      "_note": "User cut — corner sofa"
     },
     "cubicle_desk": {
       "sheet": "mo_black_shadow_32",
@@ -540,7 +541,7 @@
       "display_w": 96,
       "display_h": 64,
       "type": "surface",
-      "_note": "User cut \u2014 office desk for cubicle",
+      "_note": "User cut — office desk for cubicle",
       "action": "use_computer"
     },
     "cubicle_desk_back": {
@@ -554,7 +555,7 @@
       "display_w": 96,
       "display_h": 32,
       "type": "surface",
-      "_note": "User cut \u2014 desk for back view of cubicle",
+      "_note": "User cut — desk for back view of cubicle",
       "action": "use_computer"
     },
     "cubicle_desk_front": {
@@ -568,7 +569,7 @@
       "display_w": 96,
       "display_h": 32,
       "type": "surface",
-      "_note": "User cut \u2014 desk for front view of cubicle",
+      "_note": "User cut — desk for front view of cubicle",
       "action": "use_computer"
     },
     "cubicle_divider_full": {
@@ -582,7 +583,7 @@
       "display_w": 224,
       "display_h": 96,
       "type": "partition",
-      "_note": "User cut \u2014 full cubicle divider set with end caps"
+      "_note": "User cut — full cubicle divider set with end caps"
     },
     "cubicle_g10_28_3x3": {
       "sheet": "mo_black_shadow_32",
@@ -1084,7 +1085,7 @@
       "display_w": 96,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 phone + laptop + paper + book + light setup",
+      "_note": "User cut — phone + laptop + paper + book + light setup",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1100,7 +1101,7 @@
       "display_w": 96,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 double monitors + phone + keyboard + mouse + photo",
+      "_note": "User cut — double monitors + phone + keyboard + mouse + photo",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1116,7 +1117,7 @@
       "display_w": 96,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 desk setup double monitors variant",
+      "_note": "User cut — desk setup double monitors variant",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1312,7 +1313,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 laptop front-facing",
+      "_note": "User cut — laptop front-facing",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1328,7 +1329,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 laptop front left-facing",
+      "_note": "User cut — laptop front left-facing",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1344,7 +1345,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 laptop front right-facing",
+      "_note": "User cut — laptop front right-facing",
       "action": "use_computer",
       "parent_offset_y": 0,
       "stack_on": "surface"
@@ -1378,7 +1379,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 large pile of money",
+      "_note": "User cut — large pile of money",
       "stack_on": "surface"
     },
     "money_medium": {
@@ -1392,7 +1393,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 pile of money",
+      "_note": "User cut — pile of money",
       "stack_on": "surface"
     },
     "money_small": {
@@ -1406,7 +1407,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 small pile of money",
+      "_note": "User cut — small pile of money",
       "stack_on": "surface"
     },
     "monitor_dual_sheet": {
@@ -2320,7 +2321,7 @@
       "display_w": 64,
       "display_h": 32,
       "type": "decor",
-      "_note": "User cut \u2014 small stack of paper",
+      "_note": "User cut — small stack of paper",
       "parent_offset_y": 0,
       "stack_on": "surface"
     },
@@ -2397,7 +2398,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 office phone",
+      "_note": "User cut — office phone",
       "parent_offset_y": 0,
       "stack_on": "surface"
     },
@@ -2426,7 +2427,7 @@
       "display_w": 31,
       "display_h": 44,
       "type": "decor",
-      "_note": "User cut \u2014 potted plant",
+      "_note": "User cut — potted plant",
       "stack_on": "surface"
     },
     "plant_potted_2": {
@@ -2524,7 +2525,7 @@
       "display_w": 27,
       "display_h": 57,
       "type": "decor",
-      "_note": "User cut \u2014 potted plant spikey",
+      "_note": "User cut — potted plant spikey",
       "stack_on": "surface"
     },
     "plant_tall": {
@@ -2594,7 +2595,7 @@
       "display_w": 64,
       "display_h": 128,
       "type": "decor",
-      "_note": "Auto-extract obj_49 \u2014 composite prop cluster (mislabeled as plant); see shelf_metal_empty single #91",
+      "_note": "Auto-extract obj_49 — composite prop cluster (mislabeled as plant); see shelf_metal_empty single #91",
       "stack_on": "surface"
     },
     "shelf_metal_empty": {
@@ -2610,7 +2611,7 @@
       "display_w": 32,
       "display_h": 48,
       "type": "furniture",
-      "_note": "Empty metal shelving unit \u2014 singles #91 (also appears in sheet obj_49 cluster)"
+      "_note": "Empty metal shelving unit — singles #91 (also appears in sheet obj_49 cluster)"
     },
     "plant_tall_6": {
       "sheet": "mo_black_shadow_32",
@@ -2679,7 +2680,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 potted plant tree",
+      "_note": "User cut — potted plant tree",
       "stack_on": "surface"
     },
     "pop_art_sheet": {
@@ -2733,7 +2734,7 @@
       "display_w": 85,
       "display_h": 83,
       "type": "furniture",
-      "_note": "User cut \u2014 right corner sofa"
+      "_note": "User cut — right corner sofa"
     },
     "small_table_sheet": {
       "sheet": "mo_black_shadow_32",
@@ -2759,7 +2760,7 @@
       "display_w": 61,
       "display_h": 55,
       "type": "furniture",
-      "_note": "User cut \u2014 2 person sofa"
+      "_note": "User cut — 2 person sofa"
     },
     "sofa_corner": {
       "sheet": "mo_black_shadow_32",
@@ -3035,7 +3036,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u2014 stairs"
+      "_note": "User cut — stairs"
     },
     "trash_can": {
       "sheet": "mo_black_shadow_32",
@@ -3048,7 +3049,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "furniture",
-      "_note": "User cut \u2014 desk trash can"
+      "_note": "User cut — desk trash can"
     },
     "vending_2x3": {
       "sheet": "mo_black_shadow_32",
@@ -3075,7 +3076,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u2014 empty vending machine"
+      "_note": "User cut — empty vending machine"
     },
     "vending_full": {
       "sheet": "mo_black_shadow_32",
@@ -3088,7 +3089,7 @@
       "display_w": 64,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u2014 full vending machine"
+      "_note": "User cut — full vending machine"
     },
     "waiting_row_4": {
       "sheet": "mo_black_shadow_32",
@@ -3101,7 +3102,7 @@
       "display_w": 128,
       "display_h": 64,
       "type": "seat",
-      "_note": "User cut \u2014 4-chair waiting room row (blue, black, white, orange)",
+      "_note": "User cut — 4-chair waiting room row (blue, black, white, orange)",
       "action": "seat"
     },
     "waiting_row_5": {
@@ -3143,7 +3144,7 @@
       "display_w": 32,
       "display_h": 96,
       "type": "furniture",
-      "_note": "User cut \u2014 water dispenser"
+      "_note": "User cut — water dispenser"
     },
     "whiteboard_1x2": {
       "sheet": "mo_black_shadow_32",
@@ -3264,7 +3265,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 blank whiteboard"
+      "_note": "User cut — blank whiteboard"
     },
     "whiteboard_charts": {
       "sheet": "mo_black_shadow_32",
@@ -3277,7 +3278,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 whiteboard with graphs and charts"
+      "_note": "User cut — whiteboard with graphs and charts"
     },
     "whiteboard_graph_sheet": {
       "sheet": "mo_black_shadow_32",
@@ -3303,7 +3304,7 @@
       "display_w": 64,
       "display_h": 64,
       "type": "decor",
-      "_note": "User cut \u2014 whiteboard with graphs"
+      "_note": "User cut — whiteboard with graphs"
     },
     "wall_screen_ui": {
       "sheet": "mo_black_shadow_32",
@@ -3316,7 +3317,7 @@
       "display_w": 32,
       "display_h": 64,
       "type": "decor",
-      "_note": "Auto-extract obj_54 \u2014 wall-mounted UI screen (4-quadrant charts); ref wall_screen_large / wall_screen_ui",
+      "_note": "Auto-extract obj_54 — wall-mounted UI screen (4-quadrant charts); ref wall_screen_large / wall_screen_ui",
       "stack_on": "surface"
     },
     "mo_single_001": {
@@ -4415,7 +4416,7 @@
         "w": 1,
         "h": 2
       },
-      "notes": "Empty metal shelving unit \u2014 catalog shelf_metal_empty"
+      "notes": "Empty metal shelving unit — catalog shelf_metal_empty"
     },
     "mo_single_092": {
       "source_type": "single_file",
@@ -4793,7 +4794,7 @@
         "w": 1,
         "h": 1
       },
-      "notes": "Round grey waiting-area pod chair \u2014 catalog chair_pod_grey"
+      "notes": "Round grey waiting-area pod chair — catalog chair_pod_grey"
     },
     "mo_single_123": {
       "source_type": "single_file",
@@ -5166,12 +5167,12 @@
       "type": "furniture",
       "theme": "modern_office",
       "_file": "Modern_Office_Singles_32x32_153.png",
-      "displayName": "Backpack (blue) \u2014 candidate",
+      "displayName": "Backpack (blue) — candidate",
       "footprint": {
         "w": 1,
         "h": 1
       },
-      "notes": "Floor bag prop \u2014 verify in verify-sprites.html; catalog backpack_blue"
+      "notes": "Floor bag prop — verify in verify-sprites.html; catalog backpack_blue"
     },
     "mo_single_154": {
       "source_type": "single_file",
@@ -10833,14 +10834,15 @@
       "display_w": 44,
       "display_h": 28,
       "origin": "bottom",
-      "depth": 1.7,
-      "type": "furniture",
+      "depth": 0.5,
+      "type": "floor",
       "theme": "modern_office",
       "_file": "floor_tile_beige.png",
       "_num": 188,
       "_src_single": "Modern_Office_Singles_32x32_188.png",
       "displayName": "Beige floor tile",
-      "category": "unknown"
+      "category": "floors",
+      "stack_on": "none"
     },
     "floor_tile_beige_2": {
       "source_type": "single_file",
@@ -10851,14 +10853,15 @@
       "display_w": 44,
       "display_h": 32,
       "origin": "bottom",
-      "depth": 1.7,
-      "type": "furniture",
+      "depth": 0.5,
+      "type": "floor",
       "theme": "modern_office",
       "_file": "floor_tile_beige_2.png",
       "_num": 189,
       "_src_single": "Modern_Office_Singles_32x32_189.png",
       "displayName": "Beige floor tile 2",
-      "category": "unknown"
+      "category": "floors",
+      "stack_on": "none"
     },
     "cabinet_filing_low": {
       "source_type": "single_file",
@@ -14219,6 +14222,191 @@
       "displayName": "Triple monitor back light",
       "stack_on": "surface",
       "category": "desk_items"
+    },
+    "wall_brick_purple": {
+      "source_type": "single_file",
+      "single_id": "wall_brick_purple",
+      "url_path": "assets/room_builder_tiles/wall_brick_purple.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 1.55,
+      "type": "decor",
+      "theme": "room_builder",
+      "displayName": "Purple brick wall",
+      "wall_mount": true,
+      "category": "wall_items",
+      "tile": true,
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 0,
+      "_row": 5
+    },
+    "wall_brick_grey": {
+      "source_type": "single_file",
+      "single_id": "wall_brick_grey",
+      "url_path": "assets/room_builder_tiles/wall_brick_grey.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 1.55,
+      "type": "decor",
+      "theme": "room_builder",
+      "displayName": "Grey brick wall",
+      "wall_mount": true,
+      "category": "wall_items",
+      "tile": true,
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 0,
+      "_row": 7
+    },
+    "wall_brick_tan": {
+      "source_type": "single_file",
+      "single_id": "wall_brick_tan",
+      "url_path": "assets/room_builder_tiles/wall_brick_tan.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 1.55,
+      "type": "decor",
+      "theme": "room_builder",
+      "displayName": "Tan brick wall",
+      "wall_mount": true,
+      "category": "wall_items",
+      "tile": true,
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 0,
+      "_row": 9
+    },
+    "wall_panel_white": {
+      "source_type": "single_file",
+      "single_id": "wall_panel_white",
+      "url_path": "assets/room_builder_tiles/wall_panel_white.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 1.55,
+      "type": "decor",
+      "theme": "room_builder",
+      "displayName": "White panel wall",
+      "wall_mount": true,
+      "category": "wall_items",
+      "tile": true,
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 0,
+      "_row": 11
+    },
+    "floor_tile_grey": {
+      "source_type": "single_file",
+      "single_id": "floor_tile_grey",
+      "url_path": "assets/room_builder_tiles/floor_tile_grey.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 0.5,
+      "type": "floor",
+      "theme": "room_builder",
+      "displayName": "Grey floor tiles",
+      "wall_mount": false,
+      "category": "floors",
+      "tile": true,
+      "stack_on": "none",
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 10,
+      "_row": 5
+    },
+    "floor_tile_dark": {
+      "source_type": "single_file",
+      "single_id": "floor_tile_dark",
+      "url_path": "assets/room_builder_tiles/floor_tile_dark.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 0.5,
+      "type": "floor",
+      "theme": "room_builder",
+      "displayName": "Dark floor tiles",
+      "wall_mount": false,
+      "category": "floors",
+      "tile": true,
+      "stack_on": "none",
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 10,
+      "_row": 7
+    },
+    "floor_wood_plank": {
+      "source_type": "single_file",
+      "single_id": "floor_wood_plank",
+      "url_path": "assets/room_builder_tiles/floor_wood_plank.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 0.5,
+      "type": "floor",
+      "theme": "room_builder",
+      "displayName": "Wood plank floor",
+      "wall_mount": false,
+      "category": "floors",
+      "tile": true,
+      "stack_on": "none",
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 14,
+      "_row": 5
+    },
+    "floor_wood_dark": {
+      "source_type": "single_file",
+      "single_id": "floor_wood_dark",
+      "url_path": "assets/room_builder_tiles/floor_wood_dark.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 0.5,
+      "type": "floor",
+      "theme": "room_builder",
+      "displayName": "Dark wood floor",
+      "wall_mount": false,
+      "category": "floors",
+      "tile": true,
+      "stack_on": "none",
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 13,
+      "_row": 7
+    },
+    "floor_tile_red": {
+      "source_type": "single_file",
+      "single_id": "floor_tile_red",
+      "url_path": "assets/room_builder_tiles/floor_tile_red.png",
+      "w": 32,
+      "h": 32,
+      "display_w": 32,
+      "display_h": 32,
+      "origin": "bottom",
+      "depth": 0.5,
+      "type": "floor",
+      "theme": "room_builder",
+      "displayName": "Red clay floor tiles",
+      "wall_mount": false,
+      "category": "floors",
+      "tile": true,
+      "stack_on": "none",
+      "_sheet": "Room_Builder_Office_32x32.png",
+      "_col": 10,
+      "_row": 11
     }
   },
   "placements": [
@@ -14755,6 +14943,74 @@
       "instanceId": "editor_chair_black_back_holes_4",
       "x": 1188,
       "y": 560
+    },
+    {
+      "id": "shelf_wood_dark",
+      "instanceId": "north_shelf_1",
+      "x": 200,
+      "y": 72,
+      "wallMount": true
+    },
+    {
+      "id": "whiteboard_line_chart",
+      "instanceId": "north_wb_line_1",
+      "x": 248,
+      "y": 88,
+      "wallMount": true
+    },
+    {
+      "id": "frame_diploma_blue",
+      "instanceId": "north_diploma_1",
+      "x": 340,
+      "y": 72,
+      "wallMount": true
+    },
+    {
+      "id": "whiteboard_pie_chart",
+      "instanceId": "north_wb_pie_1",
+      "x": 468,
+      "y": 88,
+      "wallMount": true
+    },
+    {
+      "id": "whiteboard_markers",
+      "instanceId": "north_wb_markers_1",
+      "x": 540,
+      "y": 84,
+      "wallMount": true
+    },
+    {
+      "id": "cert_1",
+      "instanceId": "north_cert_1",
+      "x": 600,
+      "y": 76,
+      "wallMount": true
+    },
+    {
+      "id": "gold_cert_sheet",
+      "instanceId": "north_gold_cert_1",
+      "x": 656,
+      "y": 80,
+      "wallMount": true
+    },
+    {
+      "id": "cork_board_sheet",
+      "instanceId": "north_cork_1",
+      "x": 720,
+      "y": 88,
+      "wallMount": true
+    },
+    {
+      "id": "printer_large_sheet",
+      "instanceId": "north_printer_1",
+      "x": 700,
+      "y": 140
+    },
+    {
+      "id": "plant_floor_bushy",
+      "instanceId": "north_plant_1",
+      "x": 760,
+      "y": 132
     }
   ]
 }

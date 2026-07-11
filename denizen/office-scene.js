@@ -96,11 +96,19 @@ function furnitureRenderDepth(y, def, placement) {
   const wallMount = !!(
     placement?.wallMount
     || def?.wall_mount
-    || /whiteboard|cork|ac_unit|cert_|pop_art|painting|poster|wall_screen/i.test(id)
+    || /whiteboard|cork|ac_unit|cert_|pop_art|painting|poster|wall_screen|clock|wall_ac|wall_brick|wall_panel/i.test(id)
   );
+  // Floor paint tiles sit just above zone tileSprites (0 / 0.1), under furniture.
+  if (def?.type === 'floor' || def?.category === 'floors') {
+    return 0.5 + (Number(y) || 0) / 100000;
+  }
+  // Wall-hung props sit just above OpenplanWalls (~1.0–1.35). Ignore catalog
+  // depth:2.2 so they don't Y-sort like tall floor furniture.
+  if (wallMount) {
+    return 1.55 + (Number(y) || 0) / 10000;
+  }
   const base = typeof def?.depth === 'number' ? def.depth : 1.5;
-  const floor = wallMount ? 1.5 : 2.0;
-  let depth = Math.max(base, floor) + (Number(y) || 0) / 10000;
+  let depth = Math.max(base, 2.0) + (Number(y) || 0) / 10000;
   // Bias stackables slightly so they win ties before parent rebasing runs.
   if (placement?.parentInstanceId || def?.stack_on === 'surface' || def?.stack_on === 'desk') {
     depth += 0.35;
@@ -304,8 +312,7 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const catalogV = 'cat6';
-    this.load.json('tiles_catalog', `./tiles-catalog.json?v=${catalogV}`);
+    const catalogV = 'cat26north';
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
     this.load.json('office_blueprint', `./data/office_blueprint.json?v=${catalogV}`);
@@ -467,9 +474,6 @@ class OfficeScene extends Phaser.Scene {
     const height = 720;
     const tileSize = 32;
 
-    const tileCatalog = this.cache.json.get('tiles_catalog') || { tiles: [] };
-    const tiles = Array.isArray(tileCatalog.tiles) ? tileCatalog.tiles : [];
-
     // ========================================================
     // Room Builder tile system — floors, wall faces, wall outlines, shadows
     // Based on Room_Builder_Office_32x32.png (512×448, 16×14 tiles)
@@ -499,10 +503,10 @@ class OfficeScene extends Phaser.Scene {
     cutRBTile('wall_face_grey',  0,   224);  // Grey/concrete — standard office wall
     cutRBTile('wall_face_purple', 0,  160);  // Purple/patterned — decorative/feature walls
     cutRBTile('wall_shadow',     96,  160);  // Shadow strip — right side of vertical walls for 3D
+    cutRBTile('wall_panel_white', 0, 352);   // Catalog white panel (editor tile)
 
     // --- Procedural wall trim + face textures matching the reference ---
     // Reference colors sampled: trim=#3a3a50, face=#c3dee6 (lavender-blue)
-    // We create simple colored canvas textures for consistent appearance.
     const makeWallTex = (key, w, h, fillFn) => {
       if (this.textures.exists(key)) this.textures.remove(key);
       const t = this.textures.createCanvas(key, w, h);
@@ -544,6 +548,22 @@ class OfficeScene extends Phaser.Scene {
       }
     });
 
+    // Zoomed tan brick for lower-room back walls (skip huge white band in RB tile)
+    const makeGifBrickFace = (key) => {
+      if (this.textures.exists(key)) this.textures.remove(key);
+      const t = this.textures.createCanvas(key, 32, 32);
+      const ctx = t.context;
+      ctx.imageSmoothingEnabled = false;
+      if (rbImg) {
+        ctx.drawImage(rbImg, 2, 300, 28, 20, 0, 0, 32, 32);
+      } else {
+        ctx.fillStyle = '#988878';
+        ctx.fillRect(0, 0, 32, 32);
+      }
+      t.refresh();
+    };
+    makeGifBrickFace('wall_face_brick');
+
     // --- Floor tiles from Room Builder ---
     cutRBTile('floor_rb_office', 320, 160);  // Grey grid/tile — standard office
     cutRBTile('floor_rb_dark',   320, 224);  // Dark grey/concrete — hallways, storage
@@ -569,10 +589,10 @@ class OfficeScene extends Phaser.Scene {
       : [
           { x: 32, y: 64, w: 816, h: 384, tex: 'floor_rb_office' },
           { x: 880, y: 64, w: 368, h: 192, tex: 'floor_rb_wood' },
-          { x: 880, y: 320, w: 368, h: 128, tex: 'floor_rb_dark' },
+          { x: 880, y: 320, w: 368, h: 128, tex: 'floor_rb_office' },
           { x: 32, y: 512, w: 256, h: 144, tex: 'floor_rb_wood' },
-          { x: 384, y: 512, w: 464, h: 144, tex: 'floor_rb_office' },
-          { x: 880, y: 512, w: 368, h: 144, tex: 'floor_rb_dark' },
+          { x: 384, y: 512, w: 464, h: 144, tex: 'floor_rb_wood' },
+          { x: 880, y: 512, w: 368, h: 144, tex: 'floor_rb_wood' },
         ];
     floorZones.forEach(z => {
       this.add.tileSprite(z.x + z.w / 2, z.y + z.h / 2, z.w, z.h, z.tex).setDepth(0.1);
@@ -981,6 +1001,23 @@ class OfficeScene extends Phaser.Scene {
     // Collect all static collision obstacles (walls + furniture bases).
     // Must exist before wall creation (drawWallRectTiles pushes into it).
     this._obstacles = [];
+    this.obstacles = this.physics.add.staticGroup();
+    // Any push onto _obstacles also joins the Arcade staticGroup the player collides with.
+    const _obsList = this._obstacles;
+    const _obsGroup = this.obstacles;
+    const _origPush = _obsList.push.bind(_obsList);
+    _obsList.push = (...items) => {
+      for (const o of items) {
+        if (!o) continue;
+        _origPush(o);
+        try { _obsGroup.add(o); } catch (_) {}
+      }
+      return _obsList.length;
+    };
+    this._obstacleSink = {
+      push: (o) => { if (o) _obsList.push(o); },
+      add: (o) => { if (o) _obsList.push(o); },
+    };
 
     // Shared layout measurements (used for spawn points, etc.)
     const corridorY = 260;
@@ -994,7 +1031,8 @@ class OfficeScene extends Phaser.Scene {
       const wallLayout = this.cache.json.get('openplan_walls');
       if (window.OpenplanWalls && wallLayout) {
         this._wallLayoutInfo = wallLayout.info || {};
-        window.OpenplanWalls.renderLayout(this, wallLayout, this._obstacles);
+        this._wallLayoutSegments = wallLayout.segments || [];
+        window.OpenplanWalls.renderLayout(this, wallLayout, this._obstacleSink);
       } else {
         console.warn('[OfficeScene] openplan_walls.json or OpenplanWalls missing — no walls drawn');
       }
@@ -1477,17 +1515,22 @@ class OfficeScene extends Phaser.Scene {
           this._placedCatalogSprites[instanceId] = s;
           const interactable = { id: pl.id, instanceId, sprite: s, def: { ...def, _placement: pl }, obstacle: null, parentInstanceId: null };
 
-          // Auto-collision box: only large furniture blocks movement (not chairs/seats/small items).
-          // Cap collision width at 64px to prevent wide desk groups from creating invisible walls.
-          // Also allow walking around couches/sofas in break/reception areas.
-          const idLower = String(pl.id || '').toLowerCase();
-          const isSofaLike = /couch|sofa|bench/i.test(idLower);
-          if (!isSofaLike && def.type !== 'decor' && def.type !== 'seat' && s.displayWidth >= 48) {
-            const collW = Math.min(s.displayWidth, 64);
-            const obstacle = this.add.rectangle(pl.x, pl.y, collW, 16, 0x000000, 0);
-            obstacle.setOrigin(0.5, 1);
+          // Footprint collision: base hitbox only (Y-sort handles walk-behind).
+          // On-desk / stackables / wall-mount decor skip bodies via shouldCollide.
+          const engine = window.DenizenMapEngine;
+          const wantsCollision = engine
+            ? engine.shouldCollide(def, pl)
+            : (!/couch|sofa|bench/i.test(String(pl.id || '')) && def.type !== 'decor' && def.type !== 'seat' && s.displayWidth >= 48);
+          if (wantsCollision) {
+            const b = engine
+              ? engine.resolveCollisionBounds(def, s.displayWidth, s.displayHeight)
+              : { width: Math.min(s.displayWidth, 64), height: 16, offsetX: 0, offsetY: 0 };
+            const foot = engine?.footprintWorldRect
+              ? engine.footprintWorldRect(s.x, s.y, b)
+              : { x: pl.x, y: pl.y - 8, width: b.width, height: b.height };
+            const obstacle = this.add.rectangle(foot.x, foot.y, foot.width, foot.height, 0x000000, 0);
             this.physics.add.existing(obstacle, true);
-            this._obstacles.push(obstacle);
+            this._obstacleSink.push(obstacle);
             interactable.obstacle = obstacle;
           }
           this._interactables.push(interactable);
@@ -1506,10 +1549,12 @@ class OfficeScene extends Phaser.Scene {
 
           if (!def || !parentSprite || !this.textures.exists(texKey)) return;
           const offsetY = pl.parent_offset_y !== undefined ? pl.parent_offset_y : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
+          const offsetX = pl.parent_offset_x !== undefined ? pl.parent_offset_x : (def.parent_offset_x !== undefined ? def.parent_offset_x : 0);
+          const px = parentSprite.x + offsetX;
           const py = parentSprite.y + offsetY;
           const depth = furnitureRenderDepth(py, def, pl);
           const originY = def.origin === 'center' ? 0.5 : 1;
-          const s = this.add.image(parentSprite.x, py, texKey).setOrigin(0.5, originY).setDepth(depth);
+          const s = this.add.image(px, py, texKey).setOrigin(0.5, originY).setDepth(depth);
           if (def.source_type === 'single_file') {
             const dw = def.display_w || 32;
             const dh = def.display_h || 48;
@@ -1523,10 +1568,15 @@ class OfficeScene extends Phaser.Scene {
 
         // Fix decor depth: ensure decor items (laptops, monitors, etc.) render above
         // any surface (desk) they visually sit on. Checks if decor is above and near a surface.
+        // Skip wall-hung props — they must stay in the wall band (~1.55), not desk stack depth.
         const surfaces = this._interactables.filter(it => it.def?.type === 'surface');
         const decors = this._interactables.filter(it => it.def?.type === 'decor');
         decors.forEach(decor => {
           if (!decor.sprite) return;
+          const pl = decor.def?._placement || decor;
+          if (pl?.wallMount || decor.def?.wall_mount || window.DenizenMapEngine?.isWallMount?.(decor.id, decor.def, pl)) {
+            return;
+          }
           const dx = decor.sprite.x, dy = decor.sprite.y;
           surfaces.forEach(surf => {
             if (!surf.sprite) return;
@@ -1539,6 +1589,14 @@ class OfficeScene extends Phaser.Scene {
               }
             }
           });
+        });
+        // Re-assert wall-mount depths after any Y-sort / desk rebases.
+        this._interactables.forEach((it) => {
+          const pl = it.def?._placement || it;
+          if (!it.sprite) return;
+          if (pl?.wallMount || it.def?.wall_mount || window.DenizenMapEngine?.isWallMount?.(it.id, it.def, pl)) {
+            it.sprite.setDepth(furnitureRenderDepth(it.sprite.y, it.def, pl));
+          }
         });
       };
       
@@ -1557,7 +1615,8 @@ class OfficeScene extends Phaser.Scene {
             const parentSprite = this._placedCatalogSprites[pl.parentInstanceId];
             if (!parentSprite) return;
             const offsetY = pl.parent_offset_y !== undefined ? pl.parent_offset_y : (def.parent_offset_y !== undefined ? def.parent_offset_y : -8);
-            x = parentSprite.x;
+            const offsetX = pl.parent_offset_x !== undefined ? pl.parent_offset_x : (def.parent_offset_x !== undefined ? def.parent_offset_x : 0);
+            x = parentSprite.x + offsetX;
             y = parentSprite.y + offsetY;
           }
           const depth = furnitureRenderDepth(y, def, pl);
@@ -1567,14 +1626,24 @@ class OfficeScene extends Phaser.Scene {
           applyPlacementTransform(s, pl, def);
           this.furnitureDecorSprites.push({ sprite: s, depth });
           this._placedCatalogSprites[instanceId] = s;
-          this._interactables.push({
+          const interactable = {
             id: pl.id,
             instanceId,
             sprite: s,
             def: { ...def, _placement: pl },
             obstacle: null,
             parentInstanceId: pl.parentInstanceId || null
-          });
+          };
+          const engine = window.DenizenMapEngine;
+          if (!pl.parentInstanceId && engine?.shouldCollide?.(def, pl)) {
+            const b = engine.resolveCollisionBounds(def, s.displayWidth, s.displayHeight);
+            const foot = engine.footprintWorldRect(s.x, s.y, b);
+            const obstacle = this.add.rectangle(foot.x, foot.y, foot.width, foot.height, 0x000000, 0);
+            this.physics.add.existing(obstacle, true);
+            this._obstacleSink.push(obstacle);
+            interactable.obstacle = obstacle;
+          }
+          this._interactables.push(interactable);
         });
       };
 
@@ -1605,6 +1674,12 @@ class OfficeScene extends Phaser.Scene {
         .then((saved) => {
           const savedPlacements = Array.isArray(saved?.placements) ? saved.placements : null;
           const use = savedPlacements?.length ? savedPlacements : defaultPlacements;
+          // Prefer walls saved with the live layout (editor edits) over catalog JSON
+          if (saved?.walls?.segments?.length && window.OpenplanWalls) {
+            this._wallLayoutInfo = saved.walls.info || this._wallLayoutInfo || {};
+            window.OpenplanWalls.renderLayout(this, saved.walls, this._obstacleSink || this._obstacles);
+            console.log('[OfficeScene] Loaded saved walls (' + saved.walls.segments.length + ' segments)');
+          }
           beginCatalogPlacements(use);
           if (savedPlacements?.length) {
             if (this._editorState) {
@@ -1668,13 +1743,19 @@ class OfficeScene extends Phaser.Scene {
       }
     }
 
-    // Hook up collisions: player + NPCs vs furniture obstacles. Decor stays non-blocking.
-    if (Array.isArray(this._obstacles) && this._obstacles.length > 0) {
-      this._obstacles.forEach((o) => {
-        this.physics.add.collider(this.player, o);
-        if (Array.isArray(this.npcs)) this.npcs.forEach((npc) => this.physics.add.collider(npc, o));
-      });
-    }
+    // Hook up collisions: player + NPCs vs furniture/wall obstacles (staticGroup).
+    // Re-assert after furniture finishes loading too (async catalog placements).
+    const wireObstacleColliders = () => {
+      if (!this.obstacles || !this.player) return;
+      if (this._obstacleCollidersWired) return;
+      this._obstacleCollidersWired = true;
+      this.physics.add.collider(this.player, this.obstacles);
+      if (Array.isArray(this.npcs)) {
+        this.npcs.forEach((npc) => this.physics.add.collider(npc, this.obstacles));
+      }
+    };
+    wireObstacleColliders();
+    this._wireObstacleColliders = wireObstacleColliders;
 
     try { console.log('[BootTiming] after furniture loader / before world clock', performance.now()); } catch (_) {}
     // --- World clock + HUD ---
@@ -1705,12 +1786,15 @@ class OfficeScene extends Phaser.Scene {
       }
       isLate() { return this.hour >= 22; }
     }
-    this.worldClock = new WorldClock({ startHour: 9, startMinute: 0, tickMs: 2000 });
+    // Fast demo clock: ~10 game-min/sec so night→morning is obvious (~50s of night)
+    this.worldClock = new WorldClock({ startHour: 17, startMinute: 0, tickMs: 800, minuteStep: 10 });
+    try { window.DenizenCityTod?.apply?.(this.worldClock.hour, this.worldClock.minute); } catch (_) {}
+    // DOM HUD (#denizen-tod-hud) is the visible clock — keep a hidden Phaser mirror for dialogs
     this.timeText = this.add.text(16, 44, `Time: ${this.worldClock.toString()}`, {
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif',
       fontSize: '14px',
       color: '#e5e7eb'
-    }).setDepth(1000).setScrollFactor(0);
+    }).setDepth(1000).setScrollFactor(0).setAlpha(0);
 
     // Find a bed to highlight at night
     this._bedInteractable = this._interactables.find((it) => it?.def?.action === 'sleep') || null;
@@ -2490,11 +2574,21 @@ class OfficeScene extends Phaser.Scene {
     const body = this.player?.body;
     const hasPlayer = !!body;
 
-    // World clock tick + late-night hint
-    if (this.worldClock && this.worldClock.update(this.game.loop.delta)) {
+    // World clock tick + late-night hint + city day/night CSS (24h loop → morning again)
+    const clockDelta = (typeof delta === 'number' && delta > 0)
+      ? delta
+      : (this.game?.loop?.delta || 16);
+    if (this.worldClock && this.worldClock.update(clockDelta)) {
       if (this.timeText) this.timeText.setText(`Time: ${this.worldClock.toString()}`);
+      try {
+        window.DenizenCityTod?.apply?.(this.worldClock.hour, this.worldClock.minute);
+      } catch (_) {}
+      // Reset late-night one-shots each new day so the loop can repeat
+      if (this.worldClock.hour >= 5 && this.worldClock.hour < 21) {
+        this._didYawn = false;
+        if (this._bedInteractable?.sprite?.clearTint) this._bedInteractable.sprite.clearTint();
+      }
       if (this.worldClock.isLate() && this._bedInteractable?.sprite) {
-        // highlight bed (simple pulse tint)
         const t = (this.time.now % 600) / 600;
         const on = t < 0.5;
         this._bedInteractable.sprite.setTint(on ? 0xfff3b0 : 0xffffff);
@@ -2532,21 +2626,34 @@ class OfficeScene extends Phaser.Scene {
         return isCharacter(s) ? baseY + 1 : baseY;
       };
       // Only Y-sort root furniture — desk children are rebased above their parent after.
+      // Wall-hung props stay in the wall band (~1.55); floor paint tiles stay under furniture.
       const childSprites = new Set();
+      const fixedDepthSprites = new Set();
       (this._interactables || []).forEach((e) => {
-        if (e?.parentInstanceId && e.sprite) childSprites.add(e.sprite);
+        if (!e?.sprite) return;
+        if (e.parentInstanceId) childSprites.add(e.sprite);
+        const pl = e.def?._placement || e;
+        const isWall = !!(pl?.wallMount || e.def?.wall_mount || window.DenizenMapEngine?.isWallMount?.(e.id, e.def, pl));
+        const isFloor = e.def?.type === 'floor' || e.def?.category === 'floors';
+        if (isWall || isFloor) fixedDepthSprites.add(e.sprite);
       });
       const sortable = [];
       if (this.player) sortable.push(this.player);
       if (Array.isArray(this.npcs)) sortable.push(...this.npcs);
       (this._interactables || []).forEach((e) => {
-        if (!e?.sprite || childSprites.has(e.sprite)) return;
+        if (!e?.sprite || childSprites.has(e.sprite) || fixedDepthSprites.has(e.sprite)) return;
         sortable.push(e.sprite);
       });
       sortable.sort((a, b) => sortY(a) - sortY(b));
       sortable.forEach((s, i) => {
         if (isSittingNpc(s)) return;
         s.setDepth(10 + i);
+      });
+      // Keep wall mounts / floor tiles at their band depths.
+      (this._interactables || []).forEach((e) => {
+        if (!e?.sprite || !fixedDepthSprites.has(e.sprite)) return;
+        const pl = e.def?._placement || e;
+        e.sprite.setDepth(furnitureRenderDepth(e.sprite.y, e.def, pl));
       });
       restackDeskChildren(this);
       sittingNpcSet.forEach((sitData, npcKey) => {
@@ -3481,6 +3588,8 @@ startOfficeWhenPhaserReady();
 
   function pushWallUndo(label) {
     pushEditorUndo(label, { includeWalls: true, includeFurniture: false });
+    const scene = getScene();
+    if (scene) scheduleLayoutSave(scene);
   }
 
   function clearAllFurnitureEntries(scene) {
@@ -4053,6 +4162,8 @@ startOfficeWhenPhaserReady();
     if (!scene || !OW) return;
     const layout = OW.layoutFromScene(scene, scene._wallLayoutInfo || {});
     const output = JSON.stringify(layout, null, 2);
+    // Persist walls into the live layout so reload keeps edits
+    flushLayoutSave(scene);
     if (navigator.clipboard?.writeText) {
       navigator.clipboard.writeText(output).catch(() => {});
     }
@@ -4063,7 +4174,7 @@ startOfficeWhenPhaserReady();
     a.download = 'openplan_walls_edited.json';
     a.click();
     URL.revokeObjectURL(url);
-    syncInfo('Exported openplan_walls.json — paste into data/openplan_walls.json');
+    syncInfo('Walls saved to server + downloaded JSON');
   };
 
   function setEditorMode(mode) {
@@ -4087,6 +4198,7 @@ startOfficeWhenPhaserReady();
     }
     wallCutMode = false;
     clearWallDrawPreview();
+    syncEditorChromeLayout();
     if (editorMode === 'walls') {
       destroyPlaceGhost();
       destroySelectionOverlay();
@@ -4214,7 +4326,10 @@ startOfficeWhenPhaserReady();
     if (!placeGhost?.sprite) return;
     const scene = getScene();
     const def = placeGhost.def;
-    const desk = scene && isStackableDecor(placeGhost.catalogId, def)
+    const MEP = window.DenizenMapEditorPro;
+    const engine = window.DenizenMapEngine;
+    const isWall = !!(MEP?.isWallMount?.(placeGhost.catalogId, def) || engine?.isWallMount?.(placeGhost.catalogId, def));
+    const desk = scene && !isWall && isStackableDecor(placeGhost.catalogId, def)
       ? findDeskUnderPoint(scene, worldX, worldY, { maxDist: 64 })
       : null;
     if (desk) {
@@ -4226,9 +4341,23 @@ startOfficeWhenPhaserReady();
       syncInfo(`On desk: ${desk.id} — click to place lamp/decor on top`);
       return;
     }
+    if (isWall && scene) {
+      const segments = scene._wallLayoutSegments
+        || scene.cache?.json?.get('openplan_walls')?.segments
+        || [];
+      const snapped = engine?.snapWallMount?.(worldX, worldY, segments)
+        || { x: snapCoord(worldX), y: snapCoord(worldY), wallMount: false };
+      placeGhost.sprite.x = snapped.x;
+      placeGhost.sprite.y = snapped.y;
+      placeGhost.sprite.clearTint();
+      if (snapped.wallMount) {
+        placeGhost.sprite.setTint(0xa7f3d0);
+        syncInfo(`On wall — click to hang ${placeGhost.catalogId}`);
+      }
+      return;
+    }
     placeGhost.sprite.x = snapCoord(worldX);
     placeGhost.sprite.y = snapCoord(worldY);
-    const MEP = window.DenizenMapEditorPro;
     if (!scene || !MEP) return;
     const bounds = MEP.spriteWorldBounds(placeGhost.sprite);
     const colliding = MEP.placementCollides(scene, bounds, [placeGhost.sprite]);
@@ -4559,6 +4688,20 @@ startOfficeWhenPhaserReady();
     editorUI.classList.toggle('ed-chrome-collapsed', !!editorChromeCollapsed);
     const btn = document.getElementById('ed-collapse-btn');
     if (btn) btn.textContent = editorChromeCollapsed ? 'Show UI' : 'Hide UI';
+    syncEditorChromeLayout();
+  }
+
+  /** Keep catalog/wall sidebar below the measured toolbar height (no overlap). */
+  function syncEditorChromeLayout() {
+    if (!editorUI) return;
+    const tb = document.getElementById('editor-toolbar');
+    if (!tb) return;
+    // Wait a frame so flex wrap / collapsed chrome settle before measuring.
+    requestAnimationFrame(() => {
+      if (!editorUI || !tb.isConnected) return;
+      const h = Math.ceil(tb.getBoundingClientRect().height);
+      if (h > 0) editorUI.style.setProperty('--ed-toolbar-h', `${h}px`);
+    });
   }
 
   function toggleEditorChrome() {
@@ -4744,14 +4887,16 @@ startOfficeWhenPhaserReady();
           z-index: 200000;
           font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
           color: #f8fafc;
+          --ed-toolbar-h: 132px;
+          --ed-sidebar-w: 340px;
         }
         #editor-toolbar {
           pointer-events: auto;
           position: fixed;
           top: 0;
           left: 0;
-          right: 340px;
-          z-index: 2;
+          right: 0;
+          z-index: 4;
           display: flex;
           flex-direction: column;
           gap: 8px;
@@ -4985,16 +5130,18 @@ startOfficeWhenPhaserReady();
         #editor-wall-tools {
           pointer-events: auto;
           position: fixed;
-          top: 0;
+          top: var(--ed-toolbar-h);
           right: 0;
-          width: 340px;
-          height: 100vh;
+          width: var(--ed-sidebar-w);
+          height: calc(100vh - var(--ed-toolbar-h));
+          z-index: 3;
           background: rgba(15, 23, 42, 0.97);
           border-left: 1px solid rgba(148, 163, 184, 0.2);
           display: none;
           flex-direction: column;
           padding: 14px;
           gap: 10px;
+          box-sizing: border-box;
         }
         #editor-wall-tools button {
           background: rgba(51, 65, 85, 0.85);
@@ -5141,15 +5288,16 @@ startOfficeWhenPhaserReady();
         #editor-catalog {
           pointer-events: auto;
           position: fixed;
-          top: 0;
+          top: var(--ed-toolbar-h);
           right: 0;
-          width: 340px;
-          height: 100vh;
+          width: var(--ed-sidebar-w);
+          height: calc(100vh - var(--ed-toolbar-h));
           z-index: 3;
           background: rgba(15, 23, 42, 0.97);
           border-left: 1px solid rgba(148, 163, 184, 0.2);
           display: flex;
           flex-direction: column;
+          box-sizing: border-box;
         }
         #editor-catalog-head {
           padding: 12px 14px;
@@ -5410,8 +5558,8 @@ startOfficeWhenPhaserReady();
             <button type="button" id="ed-undo-btn" disabled title="Nothing to undo">Undo<span class="ed-kbd">⌘Z</span></button>
             <button type="button" id="ed-redo-btn" disabled title="Nothing to redo">Redo<span class="ed-kbd">⇧⌘Z</span></button>
             <button type="button" id="ed-snap-btn" class="ed-btn-primary" title="Snap placements to grid">Snap on</button>
-            <button type="button" id="ed-export-btn" class="ed-btn-primary" title="Export layout (X)">Save / export<span class="ed-kbd">X</span></button>
-            <button type="button" id="ed-exit-btn" class="ed-btn-ghost" title="Exit editor without exporting (⌘⇧E)">Exit<span class="ed-kbd">⌘⇧E</span></button>
+            <button type="button" id="ed-export-btn" class="ed-btn-primary" title="Save layout to server (X)">Save<span class="ed-kbd">X</span></button>
+            <button type="button" id="ed-exit-btn" class="ed-btn-ghost" title="Save & exit editor (⌘⇧E)">Exit<span class="ed-kbd">⌘⇧E</span></button>
           </div>
         </div>
         <div class="ed-row ed-row-tools" id="ed-furniture-tools">
@@ -5503,7 +5651,7 @@ startOfficeWhenPhaserReady();
         <button type="button" id="ed-wall-dup-btn">Duplicate selected (D)</button>
         <button type="button" id="ed-wall-cut-btn">Cut Tool: OFF</button>
         <button type="button" id="ed-wall-del-btn">Delete selected (Del)</button>
-        <button type="button" id="ed-wall-export-btn">Export walls JSON (X)</button>
+        <button type="button" id="ed-wall-export-btn">Save walls</button>
       </aside>
       <aside id="editor-catalog">
         <div id="editor-catalog-head">
@@ -5608,6 +5756,11 @@ startOfficeWhenPhaserReady();
     renderRoomTemplates();
     updateOnboardingStrip();
     setSaveStatus('Saved', 'saved');
+    syncEditorChromeLayout();
+    if (!editorUI._edLayoutResizeBound) {
+      editorUI._edLayoutResizeBound = true;
+      window.addEventListener('resize', syncEditorChromeLayout);
+    }
 
     // Collision box visualization toggle
     let collisionVisible = false;
@@ -5729,6 +5882,7 @@ startOfficeWhenPhaserReady();
     if (!def) return false;
     if (def.stack_on === 'surface' || def.stack_on === 'desk') return true;
     if (def.stack_on === 'none' || def.wall_mount) return false;
+    if (def.type === 'floor' || def.category === 'floors') return false;
     const MEP = window.DenizenMapEditorPro;
     if (MEP?.isWallMount?.(id, def)) return false;
     // Explicit non-stackables
@@ -6223,21 +6377,35 @@ startOfficeWhenPhaserReady();
     syncInfo(`Aligned ${entries.length} items — ${labels[mode] || mode}`);
   }
 
-  function addObstacle(scene, sprite, def) {
-    if (def.type === 'decor' || def.type === 'seat' || sprite.displayWidth < 48) return null;
-    const obstacle = scene.add.rectangle(sprite.x, sprite.y, sprite.displayWidth, 16, 0x000000, 0);
-    obstacle.setOrigin(0.5, 1);
+  function addObstacle(scene, sprite, def, placement) {
+    const engine = window.DenizenMapEngine;
+    const pl = placement || def?._placement || {};
+    if (engine?.shouldCollide) {
+      if (!engine.shouldCollide(def, pl)) return null;
+    } else if (def.type === 'decor' || def.type === 'seat' || sprite.displayWidth < 48) {
+      return null;
+    }
+    const b = engine?.resolveCollisionBounds
+      ? engine.resolveCollisionBounds(def, sprite.displayWidth, sprite.displayHeight)
+      : { width: Math.min(sprite.displayWidth, 64), height: 16 };
+    const foot = engine?.footprintWorldRect
+      ? engine.footprintWorldRect(sprite.x, sprite.y, b)
+      : { x: sprite.x, y: sprite.y - b.height / 2, width: b.width, height: b.height };
+    const obstacle = scene.add.rectangle(foot.x, foot.y, foot.width, foot.height, 0x000000, 0);
     scene.physics.add.existing(obstacle, true);
-    scene._obstacles.push(obstacle);
+    if (scene._obstacleSink) scene._obstacleSink.push(obstacle);
+    else scene._obstacles.push(obstacle);
     return obstacle;
   }
 
   function removeObstacle(scene, obstacle) {
     if (!obstacle) return;
     if (Array.isArray(scene._obstacles)) {
-      scene._obstacles = scene._obstacles.filter((item) => item !== obstacle);
+      const idx = scene._obstacles.indexOf(obstacle);
+      if (idx >= 0) scene._obstacles.splice(idx, 1);
     }
-    obstacle.destroy();
+    try { scene.obstacles?.remove?.(obstacle, true, true); } catch (_) {}
+    try { obstacle.destroy(); } catch (_) {}
   }
 
   function makePlacementSprite(scene, placement) {
@@ -6279,7 +6447,7 @@ startOfficeWhenPhaserReady();
     scene.furnitureDecorSprites.push({ sprite, depth: sprite.depth });
 
     const instanceId = placement.instanceId || placement.id;
-    const obstacle = isChild ? null : addObstacle(scene, sprite, def);
+    const obstacle = isChild ? null : addObstacle(scene, sprite, def, placement);
     const entry = {
       id: placement.id,
       instanceId,
@@ -6324,17 +6492,33 @@ startOfficeWhenPhaserReady();
 
     pushEditorUndo(`place ${catalogId}`);
     const state = initEditorState(scene);
-    const desk = isStackableDecor(catalogId, def)
+    const MEP = window.DenizenMapEditorPro;
+    const engine = window.DenizenMapEngine;
+    const isWall = !!(MEP?.isWallMount?.(catalogId, def) || engine?.isWallMount?.(catalogId, def));
+    const desk = !isWall && isStackableDecor(catalogId, def)
       ? findDeskUnderPoint(scene, worldX, worldY, { maxDist: 64 })
       : null;
     const parentOffsetY = desk
       ? (def.parent_offset_y !== undefined ? def.parent_offset_y : -18)
       : null;
+    let placeX = desk ? desk.sprite.x + (worldX - desk.sprite.x) * 0.35 : worldX;
+    let placeY = desk ? desk.sprite.y + parentOffsetY : worldY;
+    let wallMount = false;
+    if (isWall && !desk) {
+      const segments = scene._wallLayoutSegments
+        || scene.cache?.json?.get('openplan_walls')?.segments
+        || [];
+      const snapped = engine?.snapWallMount?.(worldX, worldY, segments)
+        || { x: snapCoord(worldX), y: snapCoord(worldY), wallMount: false };
+      placeX = snapped.x;
+      placeY = snapped.y;
+      wallMount = !!snapped.wallMount;
+    }
     const placement = {
       id: catalogId,
       instanceId: `editor_${catalogId}_${state.nextId++}`,
-      x: snapCoord(desk ? desk.sprite.x + (worldX - desk.sprite.x) * 0.35 : worldX),
-      y: snapCoord(desk ? desk.sprite.y + parentOffsetY : worldY),
+      x: snapCoord(placeX),
+      y: snapCoord(placeY),
       rotation: Math.round(
         (placeGhost?.catalogId === catalogId ? placeGhost.rotation : pendingPlaceRotation) || 0
       ),
@@ -6344,6 +6528,7 @@ startOfficeWhenPhaserReady();
       flipX: !!(placeGhost?.catalogId === catalogId && placeGhost.flipX),
       flipY: !!(placeGhost?.catalogId === catalogId && placeGhost.flipY),
     };
+    if (wallMount) placement.wallMount = true;
     if (desk) {
       placement.parentInstanceId = desk.instanceId;
       placement.parent_offset_y = parentOffsetY;
@@ -6427,6 +6612,8 @@ startOfficeWhenPhaserReady();
   }
 
   let saveLayoutTimer = null;
+  let layoutSaveDirty = false;
+  let layoutSaveInFlight = null;
 
   function buildPlacementSnapshot(scene) {
     const catalog = getCatalog(scene);
@@ -6450,7 +6637,9 @@ startOfficeWhenPhaserReady();
         flipY: !!entry.sprite.flipY,
       };
     });
-    return { catalog, placements: updated };
+    const OW = getOpenplanWalls();
+    const walls = OW ? OW.layoutFromScene(scene, scene._wallLayoutInfo || {}) : null;
+    return { catalog, placements: updated, walls };
   }
 
   function persistLayoutPlacements(scene, { quiet = false } = {}) {
@@ -6459,14 +6648,16 @@ startOfficeWhenPhaserReady();
     const body = JSON.stringify({
       catalogId: 'furniture_catalog_openplan',
       placements: snap.placements,
+      walls: snap.walls || undefined,
     });
     setSaveStatus('Saving…', 'saving');
-    return fetch('/api/layout', {
+    layoutSaveInFlight = fetch('/api/layout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
     }).then((r) => {
       if (r.ok) {
+        layoutSaveDirty = false;
         if (!quiet) syncInfo('Layout saved to server');
         setSaveStatus('Saved', 'saved');
         return true;
@@ -6478,19 +6669,37 @@ startOfficeWhenPhaserReady();
       if (!quiet) syncInfo('Failed to save layout to server');
       setSaveStatus('Save failed', 'error');
       return false;
+    }).finally(() => {
+      layoutSaveInFlight = null;
     });
+    return layoutSaveInFlight;
   }
 
   function scheduleLayoutSave(scene) {
+    if (!scene) return;
+    layoutSaveDirty = true;
     clearTimeout(saveLayoutTimer);
     setSaveStatus('Saving…', 'saving');
     saveLayoutTimer = setTimeout(() => persistLayoutPlacements(scene, { quiet: true }), 600);
   }
 
+  /** Flush pending autosave immediately (editor exit / page unload). */
+  function flushLayoutSave(scene, { quiet = false } = {}) {
+    clearTimeout(saveLayoutTimer);
+    saveLayoutTimer = null;
+    if (!scene) return Promise.resolve(false);
+    if (!layoutSaveDirty && !layoutSaveInFlight) {
+      // Still persist once on exit so walls/furniture match what you see.
+      return persistLayoutPlacements(scene, { quiet });
+    }
+    if (layoutSaveInFlight) return layoutSaveInFlight;
+    return persistLayoutPlacements(scene, { quiet });
+  }
+
   window.DenizenSaveLayout = function(options = {}) {
     const scene = getScene();
     if (!scene) return Promise.resolve(false);
-    return persistLayoutPlacements(scene, { quiet: !!options.quiet });
+    return flushLayoutSave(scene, { quiet: !!options.quiet });
   };
 
   window._editorExport = function() {
@@ -6500,7 +6709,7 @@ startOfficeWhenPhaserReady();
     if (!snap) return;
     const output = JSON.stringify({ ...snap.catalog, placements: snap.placements }, null, 2);
 
-    persistLayoutPlacements(scene);
+    flushLayoutSave(scene);
 
     // Also keep existing clipboard + download behavior
     if (navigator.clipboard?.writeText) {
@@ -6898,6 +7107,10 @@ startOfficeWhenPhaserReady();
 
   function disableEditor() {
     const scene = getScene();
+    // Flush furniture + wall edits before tearing down editor handlers
+    if (scene) {
+      flushLayoutSave(scene, { quiet: false });
+    }
     editorActive = false;
     window.__DenizenEditorActive = false;
     document.documentElement.classList.remove('denizen-editor-open');
@@ -6975,6 +7188,31 @@ startOfficeWhenPhaserReady();
 
   window.DenizenDisableEditor = disableEditor;
   window.DenizenEnableEditor = enableEditor;
+
+  // Don't lose edits if the tab closes mid-debounce
+  window.addEventListener('beforeunload', () => {
+    if (!layoutSaveDirty) return;
+    const scene = getScene();
+    if (!scene) return;
+    const snap = buildPlacementSnapshot(scene);
+    if (!snap) return;
+    try {
+      navigator.sendBeacon?.(
+        '/api/layout',
+        new Blob([JSON.stringify({
+          catalogId: 'furniture_catalog_openplan',
+          placements: snap.placements,
+          walls: snap.walls || undefined,
+        })], { type: 'application/json' })
+      );
+    } catch (_) {}
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'hidden') return;
+    if (!layoutSaveDirty) return;
+    const scene = getScene();
+    if (scene) flushLayoutSave(scene, { quiet: true });
+  });
 
   function editorAllowedByUrl() {
     const host = String(window.location.hostname || '').toLowerCase();

@@ -59,7 +59,7 @@
       "w": 1280,
       "h": 720,
       "tex": "floor_rb_office",
-      "note": "Full-room underlay"
+      "note": "Light grey underlay — GIF main floor"
     },
     {
       "id": "open_office",
@@ -67,23 +67,26 @@
       "y": 64,
       "w": 816,
       "h": 384,
-      "tex": "floor_rb_office"
+      "tex": "floor_rb_office",
+      "note": "Main bullpen — light grey grid (ends at center divider x=848)"
     },
     {
       "id": "manager_office",
-      "x": 880,
+      "x": 848,
       "y": 64,
-      "w": 368,
+      "w": 400,
       "h": 192,
-      "tex": "floor_rb_wood"
+      "tex": "floor_rb_wood",
+      "note": "Right wing above CEO wall — wood, flush to center divider"
     },
     {
       "id": "conference_supply",
-      "x": 880,
+      "x": 848,
       "y": 320,
-      "w": 368,
-      "h": 128,
-      "tex": "floor_rb_dark"
+      "w": 400,
+      "h": 192,
+      "tex": "floor_rb_wood",
+      "note": "Right wing below CEO wall — same wood (no grey seam)"
     },
     {
       "id": "break_room",
@@ -91,7 +94,8 @@
       "y": 512,
       "w": 256,
       "h": 144,
-      "tex": "floor_rb_wood"
+      "tex": "floor_rb_wood",
+      "note": "Lower suite — wood planks like GIF"
     },
     {
       "id": "reception",
@@ -99,15 +103,16 @@
       "y": 512,
       "w": 464,
       "h": 144,
-      "tex": "floor_rb_office"
+      "tex": "floor_rb_wood",
+      "note": "Lower suite — wood planks like GIF"
     },
     {
       "id": "south_east",
-      "x": 880,
+      "x": 848,
       "y": 512,
-      "w": 368,
+      "w": 400,
       "h": 144,
-      "tex": "floor_rb_dark"
+      "tex": "floor_rb_wood"
     }
   ],
   "walls": {
@@ -148,22 +153,6 @@
         "shadowSide": "left"
       },
       {
-        "instanceId": "wall_tj_div_top",
-        "type": "tjunction",
-        "label": "Divider ∩ top",
-        "x": 848,
-        "y": 0,
-        "side": "right"
-      },
-      {
-        "instanceId": "wall_tj_div_bot",
-        "type": "tjunction",
-        "label": "Divider ∩ bottom",
-        "x": 848,
-        "y": 656,
-        "side": "right"
-      },
-      {
         "instanceId": "wall_div_v_center",
         "type": "v",
         "label": "Center divider (manager + conference doors)",
@@ -172,46 +161,32 @@
         "endY": 656,
         "shadowSide": "right",
         "doorGaps": [
-          [
-            160,
-            256
-          ],
-          [
-            328,
-            424
-          ]
+          [160, 240],
+          [352, 448]
         ]
       },
       {
         "instanceId": "wall_div_h_south",
         "type": "h",
-        "label": "South divider (breakroom + reception doors)",
+        "label": "Lower-room back wall (brick)",
         "startX": 0,
         "y": 448,
         "endX": 848,
         "doorGaps": [
-          [
-            288,
-            384
-          ],
-          [
-            560,
-            656
-          ]
-        ]
+          [288, 384],
+          [560, 656]
+        ],
+        "face": "brick"
       },
       {
         "instanceId": "wall_div_h_right",
         "type": "h",
         "label": "CEO office ↔ meeting room",
-        "startX": 848,
+        "startX": 880,
         "y": 256,
-        "endX": 1280,
+        "endX": 1248,
         "doorGaps": [
-          [
-            1000,
-            1096
-          ]
+          [1000, 1096]
         ]
       }
     ],

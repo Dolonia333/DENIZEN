@@ -35,7 +35,7 @@
       }
       body {
         margin: 0;
-        background: #020617;
+        background: #040a14;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -43,18 +43,299 @@
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         overflow: hidden;
         padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+        position: relative;
       }
+      /* Night city letterbox — CSS day/night driven by WorldClock vars */
+      #denizen-night-city {
+        --sky-top: #071525;
+        --sky-mid: #050e1a;
+        --sky-bot: #020617;
+        --horizon-glow: rgba(56, 120, 180, 0.14);
+        --sun-x: 78%;
+        --sun-y: 62%;
+        --sun-size: 14vmin;
+        --sun-color: #fde68a;
+        --sun-glow: rgba(253, 230, 138, 0.35);
+        --sun-opacity: 0;
+        --star-opacity: 0.55;
+        --window-opacity: 0.95;
+        --haze-color: rgba(2, 8, 18, 0.55);
+        --haze-opacity: 0.85;
+        --building-tint: brightness(1);
+        --frame-glow: rgba(56, 189, 248, 0.12);
+        --frame-accent: rgba(125, 211, 252, 0.55);
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 90% 55% at 50% -10%, var(--horizon-glow), transparent 55%),
+          linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-bot) 100%);
+        transition:
+          --sky-top 0.55s linear,
+          --sky-mid 0.55s linear,
+          --sky-bot 0.55s linear,
+          --horizon-glow 0.55s linear,
+          --sun-opacity 0.55s linear,
+          --star-opacity 0.55s linear,
+          --window-opacity 0.55s linear,
+          --haze-opacity 0.55s linear,
+          --frame-glow 0.55s linear;
+      }
+      @property --sky-top { syntax: "<color>"; inherits: true; initial-value: #071525; }
+      @property --sky-mid { syntax: "<color>"; inherits: true; initial-value: #050e1a; }
+      @property --sky-bot { syntax: "<color>"; inherits: true; initial-value: #020617; }
+      @property --sun-opacity { syntax: "<number>"; inherits: true; initial-value: 0; }
+      @property --star-opacity { syntax: "<number>"; inherits: true; initial-value: 0.55; }
+      @property --window-opacity { syntax: "<number>"; inherits: true; initial-value: 0.95; }
+      @property --haze-opacity { syntax: "<number>"; inherits: true; initial-value: 0.85; }
+      #denizen-night-city .dz-sun {
+        position: absolute;
+        left: var(--sun-x);
+        top: var(--sun-y);
+        width: var(--sun-size);
+        height: var(--sun-size);
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        opacity: var(--sun-opacity);
+        background:
+          radial-gradient(circle at 35% 35%, #fff7ed 0%, var(--sun-color) 42%, transparent 68%);
+        box-shadow:
+          0 0 calc(var(--sun-size) * 0.9) var(--sun-glow),
+          0 0 calc(var(--sun-size) * 1.8) color-mix(in srgb, var(--sun-glow) 50%, transparent);
+        transition: left 0.55s linear, top 0.55s linear, opacity 0.55s linear, background 0.55s linear, box-shadow 0.55s linear;
+        z-index: 1;
+      }
+      #denizen-night-city .dz-stars {
+        position: absolute;
+        inset: 0;
+        opacity: var(--star-opacity);
+        transition: opacity 0.55s linear;
+        z-index: 1;
+        background-image:
+          radial-gradient(1px 1px at 8% 12%, rgba(226, 232, 240, 0.7), transparent),
+          radial-gradient(1px 1px at 18% 28%, rgba(226, 232, 240, 0.45), transparent),
+          radial-gradient(1.5px 1.5px at 27% 8%, rgba(186, 230, 253, 0.55), transparent),
+          radial-gradient(1px 1px at 41% 18%, rgba(226, 232, 240, 0.4), transparent),
+          radial-gradient(1px 1px at 55% 6%, rgba(226, 232, 240, 0.65), transparent),
+          radial-gradient(1px 1px at 68% 22%, rgba(186, 230, 253, 0.4), transparent),
+          radial-gradient(1.5px 1.5px at 79% 11%, rgba(226, 232, 240, 0.5), transparent),
+          radial-gradient(1px 1px at 88% 30%, rgba(226, 232, 240, 0.35), transparent),
+          radial-gradient(1px 1px at 93% 7%, rgba(186, 230, 253, 0.55), transparent),
+          radial-gradient(1px 1px at 12% 40%, rgba(226, 232, 240, 0.3), transparent),
+          radial-gradient(1px 1px at 72% 38%, rgba(226, 232, 240, 0.25), transparent);
+      }
+      #denizen-night-city .dz-skyline,
+      #denizen-night-city .dz-windows {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: min(68vh, 620px);
+        background-repeat: repeat-x;
+        background-position: left bottom;
+        background-size: 920px 100%;
+        image-rendering: pixelated;
+        z-index: 2;
+      }
+      #denizen-night-city .dz-skyline {
+        background-image: url("./assets/night-city-buildings.svg?v=align4");
+        opacity: 0.98;
+        filter: var(--building-tint) drop-shadow(0 -8px 24px rgba(2, 6, 23, 0.45));
+        transition: filter 0.55s linear;
+      }
+      /* Fallback until city-tod inlines tiled SVGs (same 920×100% as buildings) */
+      #denizen-night-city .dz-windows {
+        background-image: url("./assets/night-city-windows.svg?v=align4");
+        opacity: var(--window-opacity);
+        transition: opacity 0.55s linear;
+        overflow: hidden;
+      }
+      /* Inlined tiles — identical geometry to background-size: 920px 100% */
+      #denizen-night-city .dz-windows.dz-windows-tiled {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: stretch;
+        background-image: none;
+      }
+      #denizen-night-city .dz-windows .dz-win-tile {
+        flex: 0 0 920px;
+        width: 920px;
+        height: 100%;
+        pointer-events: none;
+      }
+      #denizen-night-city .dz-windows .dz-win-tile svg {
+        display: block;
+        width: 920px;
+        height: 100%;
+        pointer-events: none;
+      }
+      #denizen-night-city[data-tod="day"] .dz-windows,
+      #denizen-night-city[data-tod="sunrise"] .dz-windows {
+        /* keep a faint residual glow only — no sparkle in daylight */
+      }
+      #denizen-night-city[data-tod="day"] .dz-windows svg .w-a,
+      #denizen-night-city[data-tod="day"] .dz-windows svg .w-b,
+      #denizen-night-city[data-tod="day"] .dz-windows svg .w-c,
+      #denizen-night-city[data-tod="day"] .dz-windows svg .w-cool,
+      #denizen-night-city[data-tod="sunrise"] .dz-windows svg .w-a,
+      #denizen-night-city[data-tod="sunrise"] .dz-windows svg .w-b,
+      #denizen-night-city[data-tod="sunrise"] .dz-windows svg .w-c,
+      #denizen-night-city[data-tod="sunrise"] .dz-windows svg .w-cool {
+        animation: none !important;
+        opacity: 0.15 !important;
+      }
+      #denizen-night-city .dz-haze {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 22%;
+        opacity: var(--haze-opacity);
+        background: linear-gradient(180deg, transparent, var(--haze-color) 45%, rgba(2, 6, 23, 0.8));
+        transition: opacity 0.55s linear, background 0.55s linear;
+        z-index: 3;
+      }
+      /* Floating window frame — office as a lit pane over the city */
+      #game-frame {
+        position: relative;
+        z-index: 1;
+        flex-shrink: 0;
+        padding: 12px;
+        border-radius: 6px;
+        background:
+          linear-gradient(160deg, rgba(51, 65, 85, 0.95) 0%, rgba(15, 23, 42, 0.98) 38%, rgba(2, 6, 23, 0.98) 100%);
+        box-shadow:
+          0 0 0 1px rgba(148, 163, 184, 0.22),
+          0 0 0 3px rgba(2, 6, 23, 0.85),
+          0 0 60px var(--frame-glow, rgba(56, 189, 248, 0.12)),
+          0 28px 64px rgba(0, 0, 0, 0.7);
+        transition: box-shadow 1.2s linear;
+      }
+      #game-frame::before,
+      #game-frame::after {
+        content: "";
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        pointer-events: none;
+        border: 2px solid var(--frame-accent, rgba(125, 211, 252, 0.55));
+        z-index: 2;
+        transition: border-color 1.2s linear;
+      }
+      #game-frame::before {
+        top: 6px;
+        left: 6px;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      #game-frame::after {
+        top: 6px;
+        right: 6px;
+        border-left: 0;
+        border-bottom: 0;
+      }
+      #game-frame .dz-frame-corners {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 2;
+      }
+      #game-frame .dz-frame-corners::before,
+      #game-frame .dz-frame-corners::after {
+        content: "";
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        border: 2px solid var(--frame-accent, rgba(125, 211, 252, 0.55));
+      }
+      #game-frame .dz-frame-corners::before {
+        bottom: 6px;
+        left: 6px;
+        border-right: 0;
+        border-top: 0;
+      }
+      #game-frame .dz-frame-corners::after {
+        bottom: 6px;
+        right: 6px;
+        border-left: 0;
+        border-top: 0;
+      }
+      #game-frame .dz-frame-label {
+        position: absolute;
+        top: -11px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 2px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--frame-accent, #7dd3fc);
+        background: #0b1220;
+        border: 1px solid color-mix(in srgb, var(--frame-accent, #7dd3fc) 45%, transparent);
+        border-radius: 999px;
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 3;
+        transition: color 0.55s linear, border-color 0.55s linear;
+      }
+      /* Visible world-clock — outside the Phaser canvas so it can't get lost */
+      #denizen-tod-hud {
+        position: absolute;
+        top: 18px;
+        left: 22px;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-family: "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: #e2e8f0;
+        background: rgba(2, 6, 23, 0.78);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        pointer-events: none;
+        backdrop-filter: blur(6px);
+      }
+      #denizen-tod-hud .tod-time {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: #f8fafc;
+      }
+      #denizen-tod-hud .tod-phase {
+        text-transform: uppercase;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--frame-accent, #7dd3fc);
+      }
+      #denizen-tod-hud[data-phase="sunrise"] .tod-phase { color: #fdba74; }
+      #denizen-tod-hud[data-phase="sunset"] .tod-phase { color: #fb923c; }
+      #denizen-tod-hud[data-phase="night"] .tod-phase { color: #a5b4fc; }
+      #denizen-tod-hud[data-phase="day"] .tod-phase { color: #38bdf8; }
       #game-container {
-        width: min(100vw, 100dvw, calc(100dvh * 16 / 9));
-        height: min(100dvh, calc(100vw * 9 / 16));
-        max-width: 1280px;
-        max-height: 720px;
+        width: min(84vw, 84dvw, calc(78dvh * 16 / 9));
+        height: min(78dvh, calc(84vw * 9 / 16));
+        max-width: 1100px;
+        max-height: 620px;
         aspect-ratio: 16 / 9;
-        border: 1px solid #1f2937;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(15, 23, 42, 0.95);
+        outline: 1px solid rgba(56, 189, 248, 0.22);
+        box-shadow:
+          inset 0 0 0 1px rgba(148, 163, 184, 0.12),
+          inset 0 0 28px rgba(2, 6, 23, 0.35);
         background: #020617;
         position: relative;
         touch-action: none;
+        border-radius: 2px;
+        overflow: hidden;
       }
       #game-container canvas {
         image-rendering: pixelated;
@@ -67,23 +348,61 @@
         body {
           align-items: flex-start;
           justify-content: center;
-          background: radial-gradient(circle at 20% 10%, #0b1220, #020617 55%);
+          padding-top: max(var(--safe-top), 16px);
+        }
+        #denizen-night-city .dz-skyline,
+        #denizen-night-city .dz-windows {
+          height: min(55vh, 420px);
+        }
+        #game-frame {
+          padding: 8px;
+          margin: 8px;
+        }
+        #game-frame .dz-frame-label {
+          font-size: 9px;
+          top: -10px;
         }
         #game-container {
-          width: min(100dvw - 8px, calc((100dvh - 8px) * 16 / 9));
-          height: min(100dvh - 8px, calc((100dvw - 8px) * 9 / 16));
-          border-width: 1px;
-          box-shadow: 0 8px 18px rgba(0, 0, 0, 0.55);
+          width: min(92dvw - 24px, calc((88dvh - 40px) * 16 / 9));
+          height: min(88dvh - 40px, calc((92dvw - 24px) * 9 / 16));
+          max-width: none;
+          max-height: none;
         }
       }
-      /* mobile-controls.js owns touch layout — avoid double margins */
+      /* mobile-controls.js owns touch layout — keep city quiet behind full-bleed playfield */
       html.denizen-touch body {
         align-items: center;
-        background: #020617;
+      }
+      html.denizen-touch #denizen-night-city {
+        opacity: 0.55;
+      }
+      html.denizen-touch #game-frame {
+        padding: 0;
+        margin: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        width: 100%;
+        max-width: none;
+      }
+      html.denizen-touch #game-frame::before,
+      html.denizen-touch #game-frame::after,
+      html.denizen-touch #game-frame .dz-frame-corners,
+      html.denizen-touch #game-frame .dz-frame-label {
+        display: none;
+      }
+      html.denizen-touch #denizen-tod-hud {
+        top: max(10px, env(safe-area-inset-top, 0px));
+        left: max(10px, env(safe-area-inset-left, 0px));
       }
       html.denizen-touch #game-container {
         max-width: none;
         max-height: none;
+        width: min(100vw, 100dvw);
+        height: min(100dvh, calc(100vw * 9 / 16));
+        outline: none;
+        border: 0;
+        border-radius: 0;
       }
     </style>
     <script>
@@ -295,7 +614,7 @@
     <script src="./src/npc-agent-controller.js" defer></script>
     <script src="./src/openclaw-chat.js" defer></script>
     <!-- Pathfinding -->
-    <script src="./src/pathfinding.js" defer></script>
+    <script src="./src/pathfinding.js?v=doors2" defer></script>
     <script src="./src/npc-roster.js" defer></script>
     <script src="./src/public-demo-mode.js?v=banner4" defer></script>
     <script src="./src/spectate-routing.js?v=spectate2" defer></script>
@@ -342,22 +661,36 @@
     <!-- Browser mirror — eager load so phone Browser app always mounts -->
     <script src="./src/browser-mirror-panel.js?v=lucymirror6" defer></script>
     <!-- Lazy loader — must run before phone UI -->
-    <script src="./src/denizen-lazy-scripts.js?v=lazy8" defer></script>
+    <script src="./src/denizen-lazy-scripts.js?v=lazy9" defer></script>
     <!-- In-game smartphone HUD -->
     <script src="./src/denizen-phone-ui.js?v=phone29tabler" defer></script>
     <script src="./src/corner-hud-autohide.js?v=corner5" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
-    <script src="./src/openplan-walls.js?v=wall8" defer></script>
+    <script src="./src/openplan-walls.js?v=wall25collide" defer></script>
+    <!-- Map engine — placement + footprint collisions (before scene) -->
+    <script src="./src/map-engine.js?v=me2tiles" defer></script>
     <!-- Movement guard + freeze watchdog — must load before scene -->
-    <script src="./src/movement-guard.js?v=merge1" defer></script>
-    <script src="./src/freeze-watchdog.js?v=merge1" defer></script>
-    <!-- Map editor pro helpers (categories, prefs, templates, collision, grid) — must load before scene -->
-    <script src="./src/map-editor-pro.js?v=pro5" defer></script>
+    <script src="./src/movement-guard.js?v=collide1" defer></script>
+    <script src="./src/freeze-watchdog.js?v=collide1" defer></script>
+    <!-- Night-city time-of-day + map editor pro helpers — must load before scene -->
+    <script src="./src/city-tod.js?v=tod4align" defer></script>
+    <script src="./src/map-editor-pro.js?v=pro6tiles" defer></script>
     <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
-    <script src="./office-scene.js?v=loadfix8" defer></script>
+    <script src="./office-scene.js?v=loadfix9" defer></script>
   </head>
   <body>
-    <div id="game-container"></div>
+    <div id="denizen-night-city" aria-hidden="true" data-tod="day">
+      <div class="dz-sun"></div>
+      <div class="dz-stars"></div>
+      <div class="dz-skyline"></div>
+      <div class="dz-windows"></div>
+      <div class="dz-haze"></div>
+    </div>
+    <div id="game-frame">
+      <span class="dz-frame-label">Denizen HQ</span>
+      <div class="dz-frame-corners" aria-hidden="true"></div>
+      <div id="game-container"></div>
+    </div>
     <!-- Inline boot HUD (not in an external JS file — survives Brave cache of old bundles) -->
     <div id="denizen-boot-hud" style="position:fixed;left:8px;bottom:8px;z-index:2147483647;max-width:min(520px,92vw);padding:10px 12px;border-radius:8px;background:rgba(0,0,0,0.88);color:#e2e8f0;font:12px/1.4 ui-monospace,Consolas,monospace;border:1px solid #334155;pointer-events:none;">
       <div style="color:#4ade80;font-weight:700;">Denizen boot v7</div>

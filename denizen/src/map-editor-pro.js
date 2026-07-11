@@ -17,9 +17,10 @@
     { id: 'partition', label: 'Dividers' },
     { id: 'decor', label: 'Decor' },
     { id: 'wall', label: 'Wall art' },
+    { id: 'floor', label: 'Floors' },
   ];
 
-  const WALL_MOUNT_RE = /whiteboard|cork|ac_unit|cert_|pop_art|painting|poster|wall_screen|clock/i;
+  const WALL_MOUNT_RE = /whiteboard|cork|ac_unit|cert_|pop_art|painting|poster|wall_screen|clock|wall_ac|wall_brick|wall_panel|wall_tile/i;
 
   function defaultPrefs() {
     return {
@@ -69,6 +70,9 @@
 
   function categoryFor(id, def) {
     if (isWallMount(id, def)) return 'wall';
+    if (def?.type === 'floor' || def?.category === 'floors' || /^floor_/i.test(String(id || ''))) {
+      return 'floor';
+    }
     if (def?.stack_on === 'surface' || def?.stack_on === 'desk') return 'desk_items';
     if (def?.category === 'desk_items') return 'desk_items';
     return def?.type || 'furniture';

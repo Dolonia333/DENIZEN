@@ -1,6 +1,6 @@
 {
   "info": {
-    "purpose": "Hand-editable openplan wall layout. Perimeter = full-width top/bottom bands (continuous trim). Side segments = plain face only.",
+    "purpose": "Openplan walls. Lavender main walls; tan brick on lower-room back wall. No RB T-junction sprites.",
     "tileSize": 32,
     "worldSize": { "w": 1280, "h": 720 }
   },
@@ -9,10 +9,8 @@
     { "instanceId": "wall_perim_bottom", "type": "h", "label": "Perimeter bottom", "startX": 0, "y": 656, "endX": 1280 },
     { "instanceId": "wall_perim_left", "type": "v", "label": "Perimeter left", "x": 0, "startY": 64, "endY": 656, "shadowSide": "right" },
     { "instanceId": "wall_perim_right", "type": "v", "label": "Perimeter right", "x": 1248, "startY": 64, "endY": 656, "shadowSide": "left" },
-    { "instanceId": "wall_tj_div_top", "type": "tjunction", "label": "Divider ∩ top", "x": 848, "y": 0, "side": "right" },
-    { "instanceId": "wall_tj_div_bot", "type": "tjunction", "label": "Divider ∩ bottom", "x": 848, "y": 656, "side": "right" },
-    { "instanceId": "wall_div_v_center", "type": "v", "label": "Center divider (manager + conference doors)", "x": 848, "startY": 64, "endY": 656, "shadowSide": "right", "doorGaps": [[160, 256], [328, 424]] },
-    { "instanceId": "wall_div_h_south", "type": "h", "label": "South divider (breakroom + reception doors)", "startX": 0, "y": 448, "endX": 848, "doorGaps": [[288, 384], [560, 656]] },
-    { "instanceId": "wall_div_h_right", "type": "h", "label": "CEO office ↔ meeting room", "startX": 848, "y": 256, "endX": 1280, "doorGaps": [[1000, 1096]] }
+    { "instanceId": "wall_div_v_center", "type": "v", "label": "Center divider", "x": 848, "startY": 64, "endY": 656, "shadowSide": "right", "doorGaps": [[160, 240], [352, 448]] },
+    { "instanceId": "wall_div_h_south", "type": "h", "label": "Lower-room back wall (brick)", "startX": 0, "y": 448, "endX": 848, "doorGaps": [[288, 384], [560, 656]], "face": "brick" },
+    { "instanceId": "wall_div_h_right", "type": "h", "label": "CEO office ↔ meeting room", "startX": 880, "y": 256, "endX": 1248, "doorGaps": [[1000, 1096]] }
   ]
 }
