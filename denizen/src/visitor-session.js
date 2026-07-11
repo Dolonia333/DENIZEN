@@ -483,6 +483,11 @@
       #denizen-demo-account-modal .vis-mascot--quiet .vis-lobby-bubble {
         display: none;
       }
+      /* Phones: the mascot sits ON the card and hides the headings — desktop/tablet only */
+      html.denizen-phone #denizen-visitor-name-modal .vis-mascot,
+      html.denizen-phone #denizen-demo-account-modal .vis-mascot {
+        display: none;
+      }
       #denizen-visitor-name-modal .vis-mascot-tag,
       #denizen-demo-account-modal .vis-mascot-tag {
         font-family: var(--vis-display);
@@ -511,6 +516,7 @@
         border: 3px solid #020617;
         border-radius: 4px;
         padding: 26px 24px 22px;
+        box-sizing: border-box;
         width: min(400px, calc(100vw - 32px));
         flex: 1 1 auto;
         box-shadow:

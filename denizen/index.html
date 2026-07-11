@@ -384,6 +384,11 @@
         box-shadow: none;
         width: 100%;
         max-width: none;
+        /* Portrait crop-zoom makes #game-container wider than the screen —
+           center it so the office crops evenly instead of hanging off the right */
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
       html.denizen-touch #game-frame::before,
       html.denizen-touch #game-frame::after,
@@ -392,7 +397,8 @@
         display: none;
       }
       html.denizen-touch #denizen-tod-hud {
-        top: max(10px, env(safe-area-inset-top, 0px));
+        /* Below the Feed/HQ chips, which own the top-left corner on phones */
+        top: calc(max(10px, env(safe-area-inset-top, 0px)) + 42px);
         left: max(10px, env(safe-area-inset-left, 0px));
       }
       html.denizen-touch #game-container {
@@ -639,7 +645,7 @@
     <script src="./src/mobile-controls.js?v=mobperf6" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
-    <script src="./src/visitor-session.js?v=fulllogin2" defer></script>
+    <script src="./src/visitor-session.js?v=fulllogin3mobile" defer></script>
     <script src="./src/visitor-demo-account-prompt.js?v=demoacct1" defer></script>
     <script src="./src/visitor-client-platform.js?v=plat1" defer></script>
     <script src="./src/visitor-profile-ui.js?v=prof2" defer></script>
@@ -676,7 +682,7 @@
     <script src="./src/city-tod.js?v=tod4align" defer></script>
     <script src="./src/map-editor-pro.js?v=pro6tiles" defer></script>
     <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
-    <script src="./office-scene.js?v=loadfix9" defer></script>
+    <script src="./office-scene.js?v=loadfix10" defer></script>
   </head>
   <body>
     <div id="denizen-night-city" aria-hidden="true" data-tod="day">

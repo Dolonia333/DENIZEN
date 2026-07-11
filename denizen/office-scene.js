@@ -1,25 +1,6 @@
-(function ensurePhaserGlobal() {
-  if (typeof Phaser !== 'undefined') return;
-  try {
-    if (typeof module !== 'undefined' && module && module.exports) {
-      globalThis.Phaser = module.exports.Phaser || module.exports;
-    }
-  } catch (_) {}
-  if (typeof Phaser === 'undefined') {
-    console.error('[OfficeScene] Phaser is not defined — cannot start office');
-    try {
-      const paint = () => {
-        const el = document.getElementById('denizen-load-banner') || document.createElement('div');
-        el.id = 'denizen-load-banner';
-        el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(127,29,29,0.95);color:#fecaca;text-align:center;padding:12px;font:13px ui-monospace,monospace';
-        el.innerHTML = '<strong>Office engine missing</strong> — Phaser did not load. Soften Brave Shields for denizen.dolonia.cloud, then Ctrl+Shift+R. <span>(boot v4)</span>';
-        if (!el.parentNode) (document.body || document.documentElement).appendChild(el);
-      };
-      if (document.body) paint();
-      else document.addEventListener('DOMContentLoaded', paint);
-    } catch (_) {}
-  }
-})();
+// Phaser loads asynchronously (local-first loader in index.html) — office-scene
+// parses before it's ready. startOfficeWhenPhaserReady() at the bottom of this
+// file waits for the loader's verdict; nothing here may touch Phaser eagerly.
 
 function applySavedPlacementsToScene(scene, savedPlacements) {
   if (!scene || !Array.isArray(savedPlacements) || !savedPlacements.length) return;
