@@ -140,7 +140,7 @@
 
       loadBanner.id = 'denizen-load-banner';
 
-      loadBanner.innerHTML = '<strong>Denizen</strong> loading office… <span id="denizen-load-pct">0%</span> — 💬 Chat works now';
+      loadBanner.innerHTML = '<strong>Denizen</strong> loading office… <span id="denizen-load-pct">0%</span> <span id="denizen-boot-tag">(boot v7)</span> — 💬 Chat works now';
 
       document.body.appendChild(loadBanner);
 
@@ -530,12 +530,28 @@
 
     setTimeout(() => clearInterval(poll), 120000);
 
-    // Failsafe: never leave the top “loading office…” banner forever if Phaser
-    // preload hangs or create() throws before setLoadPct(100).
-    setTimeout(() => {
-      try { setLoadPct(100); } catch (_) {}
-      if (loadBanner) loadBanner.style.display = 'none';
-    }, 25000);
+    // Failsafe: surface a real reason instead of sitting on 0% forever.
+    const failsafe = () => {
+      const tag = document.getElementById('denizen-boot-tag');
+      if (window.game && document.querySelector('#game-container canvas')) {
+        try { setLoadPct(100); } catch (_) {}
+        if (loadBanner) loadBanner.style.display = 'none';
+        return;
+      }
+      if (!loadBanner) return;
+      loadBanner.style.display = '';
+      loadBanner.style.background = 'rgba(127, 29, 29, 0.95)';
+      loadBanner.style.color = '#fecaca';
+      const reason = typeof Phaser === 'undefined'
+        ? 'Phaser engine missing (blocked script). Click Brave lion → Shields Down for this site, then Ctrl+Shift+R.'
+        : (!window.game
+          ? 'Phaser loaded but the office scene never started — check DevTools Console (F12) for red errors.'
+          : 'Office scene started but no canvas — WebGL/canvas may be blocked.');
+      loadBanner.innerHTML = `<strong>Office stuck</strong> — ${reason} <span id="denizen-boot-tag">(boot v7)</span>`;
+      if (tag) tag.textContent = '(boot v7)';
+    };
+    setTimeout(failsafe, 5000);
+    setTimeout(failsafe, 12000);
 
     console.log('[ChatBootstrap] instant 💬 button ready');
 

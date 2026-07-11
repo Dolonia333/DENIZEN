@@ -19,15 +19,20 @@
       s.id = STYLE_ID;
       document.head.appendChild(s);
     }
-    // Always rewrite so we win over phone/voice FAB styles injected later.
-    s.textContent = `
+    // Rewrite so we win over phone/voice FAB styles injected later — but only
+    // when the content actually differs. scan() runs from a MutationObserver
+    // that watches the whole document; unconditionally setting textContent is
+    // itself a mutation, which re-triggers the observer in an infinite
+    // microtask loop that freezes the page and OOMs the tab.
+    const css = `
       #${HIT_PHONE_ID},
       #${HIT_SPEAK_ID} {
         display: none;
         position: fixed;
-        z-index: 2147483600;
-        width: 100px;
-        height: 110px;
+        /* Below FABs so once revealed, clicks hit the real buttons */
+        z-index: 2147483000;
+        width: 120px;
+        height: 130px;
         bottom: 0;
         background: transparent;
         pointer-events: auto;
@@ -45,6 +50,12 @@
       html.denizen-chat-open #${HIT_PHONE_ID},
       html.denizen-chat-open #${HIT_SPEAK_ID} {
         display: none !important;
+      }
+
+      /* While FABs are visible, hit zones must not steal clicks */
+      html.denizen-corner-hud-open #${HIT_PHONE_ID},
+      html.denizen-corner-hud-open #${HIT_SPEAK_ID} {
+        pointer-events: none !important;
       }
 
       html:not(.denizen-phone).denizen-phone-mode #denizen-phone-fab,
@@ -77,6 +88,7 @@
         opacity: 1 !important;
         pointer-events: auto !important;
         visibility: visible !important;
+        z-index: 2147483646 !important;
       }
       html:not(.denizen-phone) #denizen-phone-fab:hover {
         transform: translateX(0) scale(1.06) !important;
@@ -86,6 +98,7 @@
         transform: translateX(0) scale(0.94) !important;
       }
     `;
+    if (s.textContent !== css) s.textContent = css;
   }
 
   function ensureHitZones() {

@@ -1,3 +1,26 @@
+(function ensurePhaserGlobal() {
+  if (typeof Phaser !== 'undefined') return;
+  try {
+    if (typeof module !== 'undefined' && module && module.exports) {
+      globalThis.Phaser = module.exports.Phaser || module.exports;
+    }
+  } catch (_) {}
+  if (typeof Phaser === 'undefined') {
+    console.error('[OfficeScene] Phaser is not defined — cannot start office');
+    try {
+      const paint = () => {
+        const el = document.getElementById('denizen-load-banner') || document.createElement('div');
+        el.id = 'denizen-load-banner';
+        el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(127,29,29,0.95);color:#fecaca;text-align:center;padding:12px;font:13px ui-monospace,monospace';
+        el.innerHTML = '<strong>Office engine missing</strong> — Phaser did not load. Soften Brave Shields for denizen.dolonia.cloud, then Ctrl+Shift+R. <span>(boot v4)</span>';
+        if (!el.parentNode) (document.body || document.documentElement).appendChild(el);
+      };
+      if (document.body) paint();
+      else document.addEventListener('DOMContentLoaded', paint);
+    } catch (_) {}
+  }
+})();
+
 function applySavedPlacementsToScene(scene, savedPlacements) {
   if (!scene || !Array.isArray(savedPlacements) || !savedPlacements.length) return;
   const byId = new Map(savedPlacements.map((p) => [p.instanceId || p.id, p]));
@@ -69,6 +92,7 @@ function playfieldZoomForProfile(profile) {
   return 2.35;
 }
 
+function createOfficeSceneClass() {
 class OfficeScene extends Phaser.Scene {
   constructor() {
     super('OfficeScene');
@@ -273,6 +297,7 @@ class OfficeScene extends Phaser.Scene {
   }
 
   create() {
+    try { console.log('[BootTiming] create() start', performance.now()); } catch (_) {}
     // Drop HTML + Phaser load chrome as soon as the scene starts — don't wait
     // for AgentOfficeManager / PlayerChat or a hung login waiter.
     try { window.__DenizenChatBootstrap?.setLoadPct?.(100); } catch (_) {}
@@ -859,6 +884,7 @@ class OfficeScene extends Phaser.Scene {
 
       // Continue with character setup + furniture placement.
     } else {
+    try { console.log('[BootTiming] before office layout / world-gen', performance.now()); } catch (_) {}
     // --- Office layout (tile-based): rooms + corridor like the reference screenshot ---
     // We render walls using a solid wall tile from `wall_tiles`, and keep collisions via static rectangles.
     // Wall tile: Room Builder Office — white office wall panel at pixel (0, 0) in the Room Builder sheet
@@ -1221,6 +1247,7 @@ class OfficeScene extends Phaser.Scene {
     // Possible values: 'down', 'up', 'left', 'right'
     this.facing = 'right';
 
+    try { console.log('[BootTiming] before furniture loader', performance.now()); } catch (_) {}
     // --- Universal Object Loader (furniture_catalog = pixel-perfect slicing, bottom anchor, decor stacking) ---
     this.furnitureDecorSprites = [];
     this._placedCatalogSprites = {}; // instanceId -> sprite for decor parent lookup
@@ -1528,6 +1555,7 @@ class OfficeScene extends Phaser.Scene {
       });
     }
 
+    try { console.log('[BootTiming] after furniture loader / before world clock', performance.now()); } catch (_) {}
     // --- World clock + HUD ---
     class WorldClock {
       constructor({ startHour = 9, startMinute = 0, minuteStep = 1, tickMs = 2000 } = {}) {
@@ -1595,6 +1623,7 @@ class OfficeScene extends Phaser.Scene {
       }
     }
 
+    try { console.log('[BootTiming] before agent office manager', performance.now()); } catch (_) {}
     // --- Agent Office Manager (AI agent coordination system) ---
     if (window.AgentActions && window.AgentOfficeManager) {
       this._agentActions = new window.AgentActions(this);
@@ -1690,6 +1719,7 @@ class OfficeScene extends Phaser.Scene {
       window.DenizenLazyScripts.afterOffice();
     }
 
+    try { console.log('[BootTiming] before pathfinding registration', performance.now()); } catch (_) {}
     // --- Pathfinding System ---
     if (window.OfficePathfinder && window.NpcPathFollower) {
       // cellSize omitted — defaults to 8 in pathfinding.js (finer paths).
@@ -1822,6 +1852,7 @@ class OfficeScene extends Phaser.Scene {
       };
     };
 
+    try { console.log('[BootTiming] before security monitor', performance.now()); } catch (_) {}
     // --- Security Monitor + Robber Controller ---
     if (typeof window.initBouncerSecurity === 'function') {
       window.initBouncerSecurity(this);
@@ -3059,45 +3090,150 @@ class OfficeScene extends Phaser.Scene {
   }
 }
 
+  return OfficeScene;
+}
+
 if (window.DenizenLazyScripts?.loadDeferred) {
   window.DenizenLazyScripts.loadDeferred();
 }
 
-const config = {
-  type: Phaser.AUTO,
-  width: 1280,
-  height: 720,
-  parent: 'game-container',
-  backgroundColor: '#020617',
-  pixelArt: true,
-  scale: {
-    pauseOnBlur: false,
-  },
-  // Snap every draw to whole pixels. Without this, NPCs at fractional
-  // coordinates (e.g. x=156.7) render their name labels at sub-pixel
-  // offsets, and nearest-neighbor sampling (from pixelArt:true) smears
-  // each tiny 6-7px glyph across two display pixels → blurry text that
-  // shifts as the NPC walks. roundPixels:true fixes it for free.
-  roundPixels: true,
-  loader: {
-    maxParallelDownloads: 12,
-    maxRetries: 2,
-    // Abort hung asset requests so preload cannot sit on DOLONIA forever.
-    timeout: 20000,
-  },
-  physics: {
-    default: 'arcade',
-    arcade: { debug: false }
-  },
-  scene: [OfficeScene]
-};
+function preferCanvasRenderer() {
+  try {
+    const q = new URLSearchParams(window.location.search);
+    // WebGL texture uploads during office create() have been hanging/OOMing
+    // browsers in the wild (Brave, low-RAM machines, and others we couldn't
+    // pin down). Canvas2D is plenty for a 2D pixel-art office, so it's the
+    // default now — pass ?webgl=1 to opt back into WebGL.
+    if (q.get('webgl') === '1') return false;
+  } catch (_) {}
+  return true;
+}
 
-window.game = new Phaser.Game(config);
+function bootOfficeGame() {
+  if (window.game || window.__DenizenOfficeBooting) return;
+  window.__DenizenOfficeBooting = true;
+
+  const OfficeScene = createOfficeSceneClass();
+  const useCanvas = preferCanvasRenderer();
+  const config = {
+    type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
+    width: 1280,
+    height: 720,
+    parent: document.getElementById('game-container') || 'game-container',
+    backgroundColor: '#020617',
+    pixelArt: true,
+    scale: {
+      pauseOnBlur: false,
+    },
+    // Snap every draw to whole pixels. Without this, NPCs at fractional
+    // coordinates (e.g. x=156.7) render their name labels at sub-pixel
+    // offsets, and nearest-neighbor sampling (from pixelArt:true) smears
+    // each tiny 6-7px glyph across two display pixels → blurry text that
+    // shifts as the NPC walks. roundPixels:true fixes it for free.
+    roundPixels: true,
+    loader: {
+      // Keep Brave from opening too many asset sockets at once (OOM / hang).
+      maxParallelDownloads: 4,
+      maxRetries: 2,
+      // Abort hung asset requests so preload cannot sit on DOLONIA forever.
+      timeout: 20000,
+    },
+    physics: {
+      default: 'arcade',
+      arcade: { debug: false }
+    },
+    scene: [OfficeScene]
+  };
+
+  const banner = document.getElementById('denizen-load-banner');
+  const showBootError = (msg) => {
+    window.__DenizenOfficeBooting = false;
+    console.error('[OfficeScene]', msg);
+    if (!banner) return;
+    banner.style.display = '';
+    banner.style.background = 'rgba(127, 29, 29, 0.95)';
+    banner.style.color = '#fecaca';
+    banner.innerHTML = `<strong>Office failed</strong> — ${msg} <span id="denizen-boot-tag">(boot v7)</span>`;
+  };
+
+  if (typeof Phaser === 'undefined') {
+    showBootError('Phaser is undefined after script load. Soften Brave Shields, then hard-refresh.');
+    return;
+  }
+  if (!document.getElementById('game-container')) {
+    showBootError('Missing #game-container in the page.');
+    return;
+  }
+
+  try {
+    window.game = new Phaser.Game(config);
+    console.log('[OfficeScene] Phaser.Game created', Phaser.VERSION, useCanvas ? 'CANVAS' : 'AUTO');
+    try { window.__DenizenChatBootstrap?.setLoadPct?.(1); } catch (_) {}
+  } catch (err) {
+    // WebGL can throw on some locked-down GPUs — retry pure Canvas.
+    try {
+      config.type = Phaser.CANVAS;
+      window.game = new Phaser.Game(config);
+      console.warn('[OfficeScene] WebGL failed; fell back to Canvas', err?.message || err);
+    } catch (err2) {
+      showBootError(`Phaser.Game crashed: ${err2?.message || err2}`);
+    }
+  }
+}
+
+function showPhaserBlockedBanner() {
+  console.error('[OfficeScene] Phaser failed to load — blocked script or missing /vendor/phaser/phaser.min.js');
+  try {
+    const el = document.getElementById('denizen-load-banner') || document.createElement('div');
+    el.id = 'denizen-load-banner';
+    el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:100001;background:rgba(127,29,29,0.95);color:#fecaca;text-align:center;padding:10px;font:12px ui-monospace,monospace';
+    el.innerHTML = '<strong>Office engine blocked</strong> — Phaser did not load. In Brave: click the lion icon → Shields Down for this site, then Ctrl+Shift+R.';
+    if (!el.parentNode) document.body.appendChild(el);
+    window.__DenizenChatBootstrap?.setLoadPct?.(100);
+  } catch (_) {}
+}
+
+function startOfficeWhenPhaserReady() {
+  if (typeof Phaser !== 'undefined') {
+    bootOfficeGame();
+    return;
+  }
+  // Dynamic loader in index.html may still be fetching (local → CDN fallback).
+  if (window.__DenizenPhaserLoadDone) {
+    showPhaserBlockedBanner();
+    return;
+  }
+  const onReady = (ok) => {
+    if (ok && typeof Phaser !== 'undefined') bootOfficeGame();
+    else showPhaserBlockedBanner();
+  };
+  const prev = window.__onDenizenPhaserReady;
+  window.__onDenizenPhaserReady = (ok) => {
+    try { if (typeof prev === 'function') prev(ok); } catch (_) {}
+    onReady(ok);
+  };
+  let tries = 0;
+  const poll = setInterval(() => {
+    tries += 1;
+    if (typeof Phaser !== 'undefined') {
+      clearInterval(poll);
+      bootOfficeGame();
+      return;
+    }
+    if (window.__DenizenPhaserLoadDone || tries >= 80) {
+      clearInterval(poll);
+      showPhaserBlockedBanner();
+    }
+  }, 100);
+}
+
+startOfficeWhenPhaserReady();
 
 // ========== DRAG & DROP EDITOR MODE ==========
 // Editor: Ctrl+Shift+E (localhost) or plain E when ?editor=1 is in the URL.
 // Double-click a placed sprite to delete it. Press X to export the updated placements.
 (function() {
+  if (typeof Phaser === 'undefined' || !window.game) return;
   const DOUBLE_CLICK_MS = 260;
   const WALL_MULTI_CLICK_MS = 420;
   const WALL_LAYER_ORDER = ['all', 'bands', 'sides', 'joints'];

@@ -187,8 +187,109 @@
     <script type="module" src="./src/world/generator.js"></script>
     <script type="module" src="./src/world/renderer.js"></script>
     <script type="module" src="./src/world/debug.js"></script>
-    <!-- Phaser 3 from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script>
+    <!-- Phaser 3 — Brave/extensions often define module/exports/define and steal the UMD global -->
+    <script>
+      (function () {
+        var urls = [
+          '/vendor/phaser/phaser.min.js?v=380c',
+          'https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js'
+        ];
+        var idx = 0;
+        window.__DenizenPhaserReady = false;
+        window.__DenizenPhaserLoadDone = false;
+
+        function stashGlobals() {
+          try {
+            window.__dzModule = window.module;
+            window.__dzExports = window.exports;
+            window.__dzDefine = window.define;
+            window.module = undefined;
+            window.exports = undefined;
+            // AMD `define` also steals UMD — common with Brave extensions
+            if (typeof window.define === 'function') window.define = undefined;
+          } catch (_) {}
+        }
+
+        function restoreGlobals() {
+          try {
+            if (window.__dzModule !== undefined) window.module = window.__dzModule;
+            else try { delete window.module; } catch (_) { window.module = undefined; }
+            if (window.__dzExports !== undefined) window.exports = window.__dzExports;
+            else try { delete window.exports; } catch (_) { window.exports = undefined; }
+            if (window.__dzDefine !== undefined) window.define = window.__dzDefine;
+            else try { delete window.define; } catch (_) { window.define = undefined; }
+          } catch (_) {}
+        }
+
+        function claimPhaser() {
+          if (typeof window.Phaser !== 'undefined') return true;
+          try {
+            var ex = window.__dzExports;
+            if (ex && (ex.Phaser || ex.Game)) window.Phaser = ex.Phaser || ex;
+          } catch (_) {}
+          try {
+            if (typeof window.Phaser === 'undefined' && window.module && window.module.exports) {
+              window.Phaser = window.module.exports.Phaser || window.module.exports;
+            }
+          } catch (_) {}
+          return typeof window.Phaser !== 'undefined';
+        }
+
+        function paintHud(msg) {
+          try {
+            var line = document.getElementById('denizen-boot-hud-line');
+            if (line) line.textContent = msg;
+          } catch (_) {}
+        }
+
+        function finish(ok, src) {
+          restoreGlobals();
+          claimPhaser();
+          ok = typeof window.Phaser !== 'undefined';
+          window.__DenizenPhaserReady = ok;
+          window.__DenizenPhaserLoadDone = true;
+          console.log('[DenizenBoot] Phaser=', typeof window.Phaser,
+            window.Phaser && window.Phaser.VERSION, 'src=', src || '(none)');
+          paintHud(ok
+            ? ('Phaser ' + (window.Phaser.VERSION || 'ok') + ' ready')
+            : 'Phaser MISSING — click Brave lion → Shields Down for this site, then Ctrl+Shift+R');
+          try {
+            if (typeof window.__onDenizenPhaserReady === 'function') {
+              window.__onDenizenPhaserReady(ok);
+            }
+          } catch (_) {}
+        }
+
+        function tryNext() {
+          if (idx >= urls.length) {
+            finish(false, null);
+            return;
+          }
+          var url = urls[idx++];
+          paintHud('loading Phaser… ' + (idx === 1 ? 'local' : 'cdn fallback'));
+          stashGlobals();
+          var s = document.createElement('script');
+          s.src = url;
+          s.async = false;
+          s.onload = function () {
+            if (claimPhaser()) finish(true, url);
+            else {
+              console.warn('[DenizenBoot] script loaded but Phaser global missing:', url);
+              restoreGlobals();
+              tryNext();
+            }
+          };
+          s.onerror = function () {
+            console.warn('[DenizenBoot] Phaser failed to load:', url);
+            restoreGlobals();
+            tryNext();
+          };
+          document.head.appendChild(s);
+        }
+
+        tryNext();
+      })();
+    </script>
     <!-- OpenClaw Gateway Bridge -->
     <script src="./src/gateway-bridge.js" defer></script>
     <script src="./src/npc-agent-controller.js" defer></script>
@@ -244,20 +345,55 @@
     <script src="./src/denizen-lazy-scripts.js?v=lazy8" defer></script>
     <!-- In-game smartphone HUD -->
     <script src="./src/denizen-phone-ui.js?v=phone29tabler" defer></script>
-    <script src="./src/corner-hud-autohide.js?v=corner3" defer></script>
+    <script src="./src/corner-hud-autohide.js?v=corner5" defer></script>
     <!-- Openplan wall layout renderer (before scene) -->
     <script src="./src/openplan-walls.js?v=wall7" defer></script>
     <!-- Movement guard + freeze watchdog — must load before scene -->
     <script src="./src/movement-guard.js?v=freezefix7" defer></script>
     <script src="./src/freeze-watchdog.js?v=freezefix7" defer></script>
-    <!-- Game scene -->
-    <script src="./office-scene.js?v=loadfix1" defer></script>
+    <!-- Game scene LAST among deferred scripts (needs roster/pathfinding/etc.) -->
+    <script src="./office-scene.js?v=loadfix7" defer></script>
   </head>
   <body>
     <div id="game-container"></div>
+    <!-- Inline boot HUD (not in an external JS file — survives Brave cache of old bundles) -->
+    <div id="denizen-boot-hud" style="position:fixed;left:8px;bottom:8px;z-index:2147483647;max-width:min(520px,92vw);padding:10px 12px;border-radius:8px;background:rgba(0,0,0,0.88);color:#e2e8f0;font:12px/1.4 ui-monospace,Consolas,monospace;border:1px solid #334155;pointer-events:none;">
+      <div style="color:#4ade80;font-weight:700;">Denizen boot v7</div>
+      <div id="denizen-boot-hud-line">checking Phaser…</div>
+    </div>
+    <script>
+      (function () {
+        var line = document.getElementById('denizen-boot-hud-line');
+        var hud = document.getElementById('denizen-boot-hud');
+        var n = 0;
+        var t = setInterval(function () {
+          n += 1;
+          var phaser = typeof window.Phaser;
+          var game = !!window.game;
+          var canvas = !!document.querySelector('#game-container canvas');
+          var msg = 'Phaser=' + phaser
+            + (window.Phaser && window.Phaser.VERSION ? ' ' + window.Phaser.VERSION : '')
+            + ' | game=' + game
+            + ' | canvas=' + canvas
+            + ' | t=' + n + 's';
+          if (line) line.textContent = msg;
+          if (hud) {
+            hud.style.borderColor = (game && canvas) ? '#4ade80' : (phaser === 'undefined' ? '#ef4444' : '#f59e0b');
+          }
+          if ((game && canvas) || n >= 20) {
+            clearInterval(t);
+            if (game && canvas && hud) {
+              setTimeout(function () { hud.style.display = 'none'; }, 2500);
+            } else if (hud && line) {
+              line.textContent = msg + ' — STUCK. Click Brave lion → Shields Down, then Ctrl+Shift+R. Screenshot this box.';
+            }
+          }
+        }, 1000);
+      })();
+    </script>
     <!-- Chat button appears immediately — does not wait for Phaser -->
     <script src="./src/visitor-crm-bridge.js?v=crmbridge2"></script>
-    <script src="./src/chat-bootstrap.js?v=loadfix1"></script>
+    <script src="./src/chat-bootstrap.js?v=loadfix7"></script>
   </body>
 </html>
 
