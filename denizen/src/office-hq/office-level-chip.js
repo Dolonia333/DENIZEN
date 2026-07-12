@@ -26,18 +26,21 @@
   }
 
   function injectStyles() {
-    if (document.getElementById(STYLE_ID)) return;
-    const s = document.createElement('style');
-    s.id = STYLE_ID;
+    let s = document.getElementById(STYLE_ID);
+    if (!s) {
+      s = document.createElement('style');
+      s.id = STYLE_ID;
+      document.head.appendChild(s);
+    }
     s.textContent = `
       #${CHIP_ID} {
         position: fixed;
         z-index: 100510;
-        /* Bottom-right only — never set top/height or the pill stretches full viewport. */
-        top: auto !important;
+        /* Top-right — clear of phone FAB (bottom-right) and world clock (top-left). */
+        top: max(14px, env(safe-area-inset-top, 0px));
+        right: max(14px, env(safe-area-inset-right, 0px));
+        bottom: auto !important;
         left: auto !important;
-        right: max(12px, env(safe-area-inset-right, 0px));
-        bottom: calc(var(--denizen-dock-height, 56px) + 12px + env(safe-area-inset-bottom, 0px));
         width: max-content;
         height: auto !important;
         max-height: none;
@@ -66,14 +69,20 @@
         height: 100%;
         background: #4ade80;
       }
+      html.denizen-phone-open #${CHIP_ID},
+      html.denizen-chat-open #${CHIP_ID} {
+        opacity: 0.35;
+        pointer-events: none;
+      }
       #${TOAST_ID} {
         position: fixed;
-        left: max(12px, env(safe-area-inset-left));
-        right: max(12px, env(safe-area-inset-right));
-        bottom: calc(var(--denizen-dock-height, 56px) + 72px + env(safe-area-inset-bottom));
+        top: calc(max(14px, env(safe-area-inset-top, 0px)) + 48px);
+        right: max(14px, env(safe-area-inset-right, 0px));
+        left: auto;
+        bottom: auto;
         z-index: 100520;
-        max-width: 420px;
-        margin: 0 auto;
+        max-width: min(360px, calc(100vw - 28px));
+        margin: 0;
         display: none;
         background: rgba(5, 46, 22, 0.96);
         border: 1px solid #4ade80;
@@ -83,10 +92,16 @@
         color: #bbf7d0;
         box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
         pointer-events: none;
-        text-align: center;
+        text-align: left;
       }
+      html.denizen-touch #${CHIP_ID} {
+        top: max(10px, env(safe-area-inset-top, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+        padding: 6px 9px;
+        font-size: 10px;
+      }
+      html.denizen-touch #${CHIP_ID} .bar { width: 48px; }
     `;
-    document.head.appendChild(s);
   }
 
   function ensureChip() {

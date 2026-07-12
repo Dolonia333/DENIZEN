@@ -370,7 +370,6 @@
   }
 
   function injectModalStyles() {
-    if (document.getElementById('denizen-visitor-session-style')) return;
     if (!document.getElementById('denizen-visitor-session-fonts')) {
       const fontLink = document.createElement('link');
       fontLink.id = 'denizen-visitor-session-fonts';
@@ -378,8 +377,12 @@
       fontLink.href = 'https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap';
       document.head.appendChild(fontLink);
     }
-    const s = document.createElement('style');
-    s.id = 'denizen-visitor-session-style';
+    let s = document.getElementById('denizen-visitor-session-style');
+    if (!s) {
+      s = document.createElement('style');
+      s.id = 'denizen-visitor-session-style';
+      document.head.appendChild(s);
+    }
     s.textContent = `
       @keyframes denizen-vis-backdrop-in {
         from { opacity: 0; }
@@ -454,6 +457,8 @@
         width: min(520px, calc(100vw - 20px));
         position: relative;
         pointer-events: none;
+        padding-top: 18px;
+        overflow: visible;
       }
       #denizen-visitor-name-modal .vis-panel > *,
       #denizen-demo-account-modal .vis-panel > * {
@@ -515,7 +520,7 @@
           #111827;
         border: 3px solid #020617;
         border-radius: 4px;
-        padding: 26px 24px 22px;
+        padding: 28px 24px 22px;
         box-sizing: border-box;
         width: min(400px, calc(100vw - 32px));
         flex: 1 1 auto;
@@ -526,28 +531,29 @@
         pointer-events: auto;
         position: relative;
         z-index: 1;
-        max-height: calc(100dvh - 32px);
-        overflow-y: auto;
-        overscroll-behavior: contain;
+        max-height: none;
+        overflow: visible;
         animation: denizen-vis-card-in 280ms ease-out;
       }
       #denizen-visitor-name-modal .vis-card::before,
       #denizen-demo-account-modal .vis-card::before {
         content: "HQ PASS";
         position: absolute;
-        top: -12px;
+        top: -14px;
         left: 14px;
-        padding: 2px 8px;
+        padding: 3px 8px;
         font-family: var(--vis-display);
         font-size: 9px;
         font-weight: 800;
         letter-spacing: 0.14em;
+        line-height: 1.2;
         color: #0b1220;
         background: #f59e0b;
         border: 2px solid #020617;
         border-radius: 3px;
         box-shadow: 2px 2px 0 #020617;
-        z-index: 2;
+        z-index: 5;
+        white-space: nowrap;
       }
       #denizen-visitor-name-modal .vis-brand,
       #denizen-demo-account-modal .vis-brand {
@@ -1000,7 +1006,7 @@
         z-index: 2147483645;
       }
       html.denizen-touch #denizen-visitor-name-modal {
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
         padding: max(12px, env(safe-area-inset-top, 0px))
           max(12px, env(safe-area-inset-right, 0px))
@@ -1008,74 +1014,179 @@
           max(12px, env(safe-area-inset-left, 0px));
         box-sizing: border-box;
         background:
-          radial-gradient(ellipse 90% 50% at 50% 100%, rgba(56, 189, 248, 0.16), transparent 55%),
+          radial-gradient(ellipse 90% 50% at 50% 42%, rgba(56, 189, 248, 0.14), transparent 58%),
           rgba(2, 6, 23, 0.58);
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow: auto;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-panel {
         position: relative;
         width: min(100%, var(--denizen-panel-max-width, 440px));
         flex-direction: column;
         align-items: stretch;
+        gap: 0;
+        padding-top: 18px;
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overflow-x: visible;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
       }
-      html.denizen-touch #denizen-visitor-name-modal .vis-mascot {
-        position: absolute;
-        left: 8px;
-        top: -18px;
-        margin: 0;
-        z-index: 4;
-        transform: rotate(-8deg) scale(0.78);
+      /* Choose: Buzz stays in-flow above the pass so he can't get clipped off-screen */
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
+        position: relative;
+        left: auto;
+        top: auto;
+        right: auto;
+        margin: 0 0 12px;
+        align-self: flex-start;
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 10px;
+        transform: rotate(-4deg);
         transform-origin: bottom left;
+        z-index: 4;
+        max-width: calc(100% - 8px);
+        animation: denizen-vis-mascot-in 420ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+        flex-shrink: 0;
       }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-bubble {
+        order: 2;
+        max-width: min(180px, 52vw);
+        margin-bottom: 18px;
+        font-size: 13px;
+        padding: 8px 11px;
+        display: block;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-phone {
+        order: 1;
+        width: 56px;
+        height: 70px;
+        padding-top: 8px;
+        gap: 5px;
+        flex-shrink: 0;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-screen {
+        width: 34px;
+        height: 24px;
+        gap: 5px;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-pad {
+        grid-template-columns: repeat(3, 6px);
+        gap: 2px;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-pad span {
+        width: 6px;
+        height: 6px;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-mascot-tag {
+        position: absolute;
+        left: 44px;
+        bottom: -2px;
+        font-size: 9px;
+        padding: 1px 5px;
+      }
+      /* Form steps: compact Buzz still in-flow (absolute peeks were clipped off-screen) */
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet {
-        top: -12px;
-        transform: rotate(-10deg) scale(0.68);
+        position: relative;
+        left: auto;
+        right: auto;
+        top: auto;
+        margin: 0 0 10px;
+        align-self: flex-start;
+        z-index: 4;
+        transform: rotate(-6deg) scale(0.78);
+        transform-origin: bottom left;
+        pointer-events: none;
+        flex-shrink: 0;
+        display: flex;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet .vis-mascot-tag {
+        display: none;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet .vis-lobby-phone {
+        width: 48px;
+        height: 60px;
+        padding-top: 7px;
+        gap: 4px;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card {
         width: 100%;
-        max-height: min(72dvh, calc(100dvh - 28px));
-        padding: 28px 18px 18px;
+        max-height: none;
+        padding: 22px 16px 16px;
         border-radius: 4px;
         border-color: #020617;
         box-shadow:
           inset 0 0 0 2px #334155,
           0 0 0 2px #f59e0b,
-          0 -10px 28px rgba(0, 0, 0, 0.45),
           4px 6px 0 #020617;
+        overflow: visible;
+        flex: 0 1 auto;
+        min-height: 0;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-card.vis-lobby {
+        padding-top: 24px;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-card::before {
+        left: 12px;
+        top: -14px;
+        font-size: 8px;
+        padding: 3px 7px;
+        line-height: 1.2;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-brand {
-        font-size: 30px;
+        font-size: clamp(22px, 7.5vw, 28px);
+        letter-spacing: 0.1em;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-card.vis-lobby .vis-brand {
+        margin-top: 2px;
       }
       html.denizen-touch #denizen-visitor-name-modal h2 {
-        font-size: 22px;
+        font-size: 20px;
         letter-spacing: 0;
       }
       html.denizen-touch #denizen-visitor-name-modal p,
       html.denizen-touch #denizen-visitor-name-modal .vis-tagline {
-        margin-bottom: 14px;
+        margin-bottom: 12px;
         font-size: 14px;
         line-height: 1.35;
       }
-      html.denizen-touch #denizen-visitor-name-modal .vis-tagline {
-        letter-spacing: 0.02em;
-        font-size: 12px;
+      html.denizen-touch #denizen-visitor-name-modal .vis-tagline,
+      html.denizen-touch #denizen-visitor-name-modal .vis-card.vis-lobby .vis-tagline {
+        letter-spacing: 0.01em;
+        font-size: 13px;
+        margin-bottom: 14px;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-paths {
-        gap: 8px;
+        gap: 10px;
         margin-bottom: 0;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-path-btn {
-        min-height: 58px;
-        padding: 10px 12px;
+        min-height: 56px;
+        padding: 12px 14px;
         text-align: left;
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 15px;
         line-height: 1.2;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-choice {
+        grid-template-columns: 40px 1fr;
+        column-gap: 12px;
+        min-height: 64px;
+        text-align: left;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-choice .vis-path-ico {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-choice .vis-path-title {
+        font-size: 16px;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-path-sub {
         margin-top: 2px;
         font-size: 12px;
-        line-height: 1.25;
+        line-height: 1.3;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.primary {
         background: rgba(14, 40, 58, 0.92);
@@ -1084,23 +1195,118 @@
       html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-staff {
         background: #0c4a6e;
       }
-      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-choice {
-        text-align: left;
+      html.denizen-touch #denizen-visitor-name-modal .vis-input,
+      html.denizen-touch #denizen-visitor-name-input {
+        font-size: 16px;
+        min-height: 48px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+      }
+      html.denizen-touch #denizen-visitor-name-continue {
+        min-height: 52px;
+        font-size: 16px;
+        border-radius: 10px;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-back {
+        min-height: 44px;
+        padding: 10px 0;
+        margin-bottom: 4px;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-link-row {
+        font-size: 12px;
+        margin-top: 12px;
+        line-height: 1.4;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-link {
+        font-size: 12px;
+        min-height: 44px;
+        padding: 8px 2px;
+        display: inline-flex;
+        align-items: center;
+      }
+      html.denizen-touch #denizen-demo-account-modal {
+        align-items: center;
+        justify-content: center;
+        padding: max(12px, env(safe-area-inset-top, 0px))
+          max(12px, env(safe-area-inset-right, 0px))
+          max(12px, env(safe-area-inset-bottom, 0px))
+          max(12px, env(safe-area-inset-left, 0px));
+        overflow: auto;
+      }
+      html.denizen-touch #denizen-demo-account-modal .vis-panel {
+        width: min(100%, var(--denizen-panel-max-width, 440px));
+        flex-direction: column;
+        position: relative;
+        padding-top: 18px;
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overflow-x: visible;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      html.denizen-touch #denizen-demo-account-modal .vis-mascot {
+        position: relative;
+        left: auto;
+        right: auto;
+        top: auto;
+        margin: 0 0 10px;
+        align-self: flex-start;
+        transform: rotate(-6deg) scale(0.78);
+        transform-origin: bottom left;
+        pointer-events: none;
+        flex-shrink: 0;
+      }
+      html.denizen-touch #denizen-demo-account-modal .vis-mascot .vis-mascot-tag {
+        display: none;
+      }
+      html.denizen-touch #denizen-demo-account-modal .vis-card {
+        width: 100%;
+        max-height: none;
+        padding: 22px 16px 16px;
+        overflow: visible;
+        flex: 0 1 auto;
+        min-height: 0;
+      }
+      html.denizen-touch #denizen-demo-account-modal .vis-input {
+        font-size: 16px;
+        min-height: 48px;
+      }
+      @media (max-width: 520px) {
+        #denizen-visitor-name-modal .vis-panel,
+        #denizen-demo-account-modal .vis-panel {
+          width: min(100%, calc(100vw - 20px));
+        }
       }
       @media (max-height: 430px) {
         html.denizen-touch #denizen-visitor-name-modal {
           align-items: center;
           padding: 8px;
         }
+        html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
+          margin-bottom: 6px;
+          transform: rotate(-3deg) scale(0.85);
+        }
+        html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-bubble {
+          font-size: 11px;
+          max-width: 140px;
+          margin-bottom: 10px;
+        }
+        html.denizen-touch #denizen-visitor-name-modal .vis-mascot--quiet {
+          margin-bottom: 6px;
+          transform: rotate(-4deg) scale(0.62);
+        }
         html.denizen-touch #denizen-visitor-name-modal .vis-card {
-          max-height: calc(100dvh - 16px);
-          padding: 12px;
+          max-height: none;
+          padding: 14px 12px 12px;
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-brand {
-          font-size: 24px;
+          font-size: 22px;
         }
         html.denizen-touch #denizen-visitor-name-modal h2 {
-          font-size: 18px;
+          font-size: 17px;
         }
         html.denizen-touch #denizen-visitor-name-modal p,
         html.denizen-touch #denizen-visitor-name-modal .vis-tagline {
@@ -1110,16 +1316,22 @@
         html.denizen-touch #denizen-visitor-name-modal .vis-paths {
           gap: 6px;
         }
-        html.denizen-touch #denizen-visitor-name-modal .vis-path-btn {
-          min-height: 46px;
+        html.denizen-touch #denizen-visitor-name-modal .vis-path-btn,
+        html.denizen-touch #denizen-visitor-name-modal .vis-path-btn.lobby-choice {
+          min-height: 48px;
           padding: 8px 10px;
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-path-sub {
           display: none;
         }
       }
+      @media (max-height: 560px) {
+        html.denizen-touch #denizen-visitor-name-modal .vis-panel,
+        html.denizen-touch #denizen-demo-account-modal .vis-panel {
+          max-height: calc(100dvh - 12px);
+        }
+      }
     `;
-    document.head.appendChild(s);
   }
 
   const SESSION_FETCH_MS = 10000;
@@ -1977,7 +2189,7 @@
 
         ensurePanelWithMascot(modalEl, {
           quiet: step !== 'choose',
-          bubble: step === 'choose' ? "Hey! Who's at the door?" : '',
+          bubble: step === 'choose' ? 'Buzz buzz — never too buzzy' : '',
         });
         wireStepControls();
         applyPrefills();

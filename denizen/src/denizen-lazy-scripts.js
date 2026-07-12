@@ -83,12 +83,12 @@
       ]);
       await loadParallel([
         './src/tabler-icons.js?v=ti1',
-        './src/office-hq/office-level-chip.js?v=lvl3',
+        './src/office-hq/office-level-chip.js?v=lvl4',
         './src/office-hq/office-hq-panel.js?v=hq2',
         './src/visitor-desktop-pairing.js?v=pair3',
         './src/visitor-credits-chip.js?v=node7',
         './src/visitor-handoff-ui.js?v=vis3',
-        './src/visitor-projects-ui.js?v=vis2',
+        './src/visitor-projects-ui.js?v=vis3',
         './src/visitor-assistant-labels.js?v=vis2',
         './src/bouncer-client-init.js?v=sec3',
         './src/security-monitor.js?v=sec3',

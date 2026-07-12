@@ -15,23 +15,32 @@
   let busy = false;
 
   function injectStyles() {
-    if (document.getElementById(STYLE_ID)) return;
-    const s = document.createElement('style');
-    s.id = STYLE_ID;
+    let s = document.getElementById(STYLE_ID);
+    if (!s) {
+      s = document.createElement('style');
+      s.id = STYLE_ID;
+      document.head.appendChild(s);
+    }
     s.textContent = `
       #${BTN_ID} {
-        margin-left: 6px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: rgba(251, 191, 36, 0.12);
-        border: 1px solid rgba(251, 191, 36, 0.35);
+        margin-left: auto;
+        margin-right: 4px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        background: rgba(245, 158, 11, 0.12);
+        border: 2px solid #020617;
         color: #fde68a;
-        font: 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-weight: bold;
+        font: 700 10px/1.2 "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
         cursor: pointer;
-        vertical-align: middle;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45), 2px 2px 0 #020617;
       }
-      #${BTN_ID}:hover { background: rgba(251, 191, 36, 0.22); }
+      #${BTN_ID}:hover {
+        background: rgba(245, 158, 11, 0.22);
+        color: #fff7ed;
+      }
       #${PANEL_ID} {
         position: fixed;
         z-index: 100550;
@@ -41,33 +50,68 @@
         max-height: min(50vh, 320px);
         display: none;
         flex-direction: column;
-        background: rgba(2, 6, 23, 0.98);
-        border: 1px solid #1f2937;
-        border-radius: 10px;
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background:
+          repeating-linear-gradient(
+            -12deg,
+            transparent,
+            transparent 11px,
+            rgba(148, 163, 184, 0.03) 11px,
+            rgba(148, 163, 184, 0.03) 12px
+          ),
+          #111827;
+        border: 3px solid #020617;
+        border-radius: 4px;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 2px #f59e0b,
+          5px 7px 0 #020617;
+        font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 11px;
         color: #e2e8f0;
-        overflow: hidden;
+        overflow: visible;
+      }
+      #${PANEL_ID}::before {
+        content: "PROJECTS";
+        position: absolute;
+        top: -11px;
+        left: 12px;
+        padding: 2px 7px;
+        font-family: "Syne", "Avenir Next", system-ui, sans-serif;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        color: #0b1220;
+        background: #f59e0b;
+        border: 2px solid #020617;
+        border-radius: 3px;
+        box-shadow: 2px 2px 0 #020617;
+        pointer-events: none;
       }
       #${PANEL_ID}.open { display: flex; }
       #${PANEL_ID} .proj-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px 12px;
-        border-bottom: 1px solid #1f2937;
-        color: #94a3b8;
+        padding: 16px 12px 10px;
+        border-bottom: 2px solid #020617;
+        color: #7dd3fc;
         font-weight: bold;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-size: 10px;
       }
       #${PANEL_ID} .proj-close {
-        background: transparent;
-        border: none;
-        color: #64748b;
+        background: rgba(2, 6, 23, 0.65);
+        border: 2px solid #020617;
+        border-radius: 4px;
+        color: #94a3b8;
         cursor: pointer;
-        font: inherit;
-        font-size: 14px;
+        font: 700 12px/1 inherit;
+        width: 28px;
+        height: 28px;
+        box-shadow: 1px 1px 0 #020617;
       }
+      #${PANEL_ID} .proj-close:hover { color: #fde68a; border-color: #f59e0b; }
       #${PANEL_ID} .proj-list {
         flex: 1;
         overflow-y: auto;
@@ -80,14 +124,14 @@
         align-items: flex-start;
         gap: 8px;
         padding: 8px 0;
-        border-bottom: 1px solid rgba(31, 41, 55, 0.8);
+        border-bottom: 1px solid rgba(51, 65, 85, 0.8);
       }
       #${PANEL_ID} .proj-item:last-child { border-bottom: none; }
-      #${PANEL_ID} .proj-name { color: #4ade80; font-weight: bold; }
+      #${PANEL_ID} .proj-name { color: #7dd3fc; font-weight: bold; }
       #${PANEL_ID} .proj-notes { color: #64748b; font-size: 10px; margin-top: 2px; }
       #${PANEL_ID} .proj-delete {
         background: rgba(127, 29, 29, 0.35);
-        border: 1px solid rgba(248, 113, 113, 0.35);
+        border: 2px solid #020617;
         color: #fecaca;
         border-radius: 4px;
         padding: 2px 6px;
@@ -95,11 +139,12 @@
         font-size: 9px;
         cursor: pointer;
         flex-shrink: 0;
+        box-shadow: 1px 1px 0 #020617;
       }
       #${PANEL_ID} .proj-empty { color: #64748b; font-size: 10px; padding: 8px 0; }
       #${PANEL_ID} .proj-form {
         padding: 10px 12px;
-        border-top: 1px solid #1f2937;
+        border-top: 2px solid #020617;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -108,31 +153,35 @@
       #${PANEL_ID} .proj-form textarea {
         width: 100%;
         box-sizing: border-box;
-        background: #1e293b;
-        border: 1px solid #1f2937;
-        border-radius: 6px;
+        background: #0b1220;
+        border: 2px solid #020617;
+        border-radius: 4px;
         color: #e2e8f0;
         padding: 8px 10px;
         font: inherit;
         font-size: 11px;
         outline: none;
+        box-shadow: inset 0 0 0 1px #334155;
       }
       #${PANEL_ID} .proj-form input:focus,
-      #${PANEL_ID} .proj-form textarea:focus { border-color: #4ade80; }
+      #${PANEL_ID} .proj-form textarea:focus {
+        border-color: #7dd3fc;
+        box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.2);
+      }
       #${PANEL_ID} .proj-add {
-        background: #4ade80;
-        color: #0f172a;
-        border: none;
-        border-radius: 6px;
+        background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+        color: #0b1220;
+        border: 2px solid #020617;
+        border-radius: 4px;
         padding: 8px 12px;
         font: inherit;
-        font-weight: bold;
+        font-weight: 800;
         font-size: 11px;
         cursor: pointer;
+        box-shadow: 2px 2px 0 #020617;
       }
       #${PANEL_ID} .proj-add:disabled { opacity: 0.5; cursor: not-allowed; }
     `;
-    document.head.appendChild(s);
   }
 
   function ensureProjectsBtn() {
@@ -149,9 +198,9 @@
       chip.parentNode.insertBefore(projectsBtn, chip.nextSibling);
     } else {
       const header = document.getElementById('player-chat-header');
-      header?.querySelector('div')?.appendChild(projectsBtn)
-        || header?.appendChild(projectsBtn)
-        || document.body.appendChild(projectsBtn);
+      const closeBtn = header?.querySelector('#player-chat-close-btn');
+      if (header && closeBtn) header.insertBefore(projectsBtn, closeBtn);
+      else header?.appendChild(projectsBtn) || document.body.appendChild(projectsBtn);
     }
     return projectsBtn;
   }
