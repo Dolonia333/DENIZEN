@@ -218,6 +218,16 @@
       html.denizen-touch.denizen-tap-move #${CONTROLS_ID} {
         display: none !important;
       }
+      /* Portrait phones: the canvas is only the top third of the screen, so
+         tap-to-move alone feels dead — show the joystick too, floating over
+         the empty city letterbox. Both input styles work side by side. */
+      html.denizen-touch.denizen-tap-move.denizen-phone.denizen-portrait #${CONTROLS_ID} {
+        display: block !important;
+      }
+      /* Sit above the Speak FAB, which owns the bottom-left corner */
+      html.denizen-touch.denizen-tap-move.denizen-phone.denizen-portrait #${CONTROLS_ID} .mc-joy-base {
+        bottom: 96px;
+      }
       html.denizen-touch.denizen-chat-open #${CONTROLS_ID},
       html.denizen-touch.denizen-llm-tel-open #${CONTROLS_ID} {
         display: none !important;

@@ -3451,4 +3451,15 @@
   };
 
   globalThis.DenizenVisitorSession = DenizenVisitorSession;
+
+  // Phones: the login card is bottom-anchored, exactly where the on-screen
+  // keyboard opens. Once the viewport resizes (interactive-widget), scroll the
+  // focused field back into view so people can see what they're typing.
+  document.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (!el || !el.classList || !el.classList.contains('vis-input')) return;
+    setTimeout(() => {
+      try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
+    }, 250);
+  });
 })();
