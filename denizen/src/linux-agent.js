@@ -62,6 +62,14 @@ function getPatrolProbeTargets() {
 
 // ── Threat → command sets ────────────────────────────────────────────────────
 
+// Which threat categories warrant live packet capture (Wireshark/tshark).
+// Blue-team default: any network-facing threat gets a capture, not just
+// packet_anomaly. investigate() appends the tshark steps at runtime.
+const PACKET_CAPTURE_THREATS = new Set([
+  'network_scan', 'packet_anomaly', 'brute_force', 'data_breach',
+  'exfiltration', 'scan_probe', 'api_abuse', 'unknown',
+]);
+
 const THREAT_COMMANDS = {
   network_scan: (ip) => [
     { label: 'Active connections', cmd: "ss -tnp 2>/dev/null | head -30" },
@@ -74,7 +82,7 @@ const THREAT_COMMANDS = {
     { label: 'Listening sockets',  cmd: "ss -tlnp 2>/dev/null | head -20" },
     ip ? { label: `Connections to/from attacker`, cmd: `netstat -an 2>/dev/null | grep ${ip}` } : null,
     { label: 'Recent packets (5s capture)', cmd: "timeout 5 tcpdump -i any -c 40 -nn 2>/dev/null || echo 'tcpdump needs root — skipping'" },
-    // Tshark capture — only added at runtime if tshark is installed and ip is present
+    // Tshark capture + protocol breakdown appended at runtime.
   ],
 
   brute_force: (ip) => [
@@ -203,14 +211,38 @@ async function investigate(threat) {
   const cmdFn = THREAT_COMMANDS[category] || THREAT_COMMANDS.unknown;
   const steps = (cmdFn(ip) || []).filter(Boolean);
 
-  // Feature 5: tshark integration for packet_anomaly — add step if tshark present
-  if (category === 'packet_anomaly' && ip) {
+  // Blue-team packet capture — Wireshark/tshark on ANY network-facing threat,
+  // not just packet_anomaly. Self-heals: installs tshark if the box is missing it.
+  if (PACKET_CAPTURE_THREATS.has(category)) {
     try {
-      const tsharkCheck = await checkTshark();
+      let tsharkCheck = await checkTshark();
+      if (!tsharkCheck.installed) {
+        // One-shot self-heal so the blue team is never toolless.
+        await ensureTshark();
+        tsharkCheck = await checkTshark();
+      }
       if (tsharkCheck.installed) {
+        const bpf = ip ? `host ${ip}` : 'tcp';
+        const ipFilter = ip ? `-Y "ip.src == ${ip} or ip.dst == ${ip}"` : '';
+        // 1. Raw capture — who is talking to whom, with TCP flags (SYN floods, scans)
         steps.push({
-          label: 'Tshark packet capture (5s)',
-          cmd: `timeout 5 tshark -i any -c 50 -Y "ip.src == ${ip} or ip.dst == ${ip}" -T fields -e ip.src -e ip.dst -e tcp.dstport -e tcp.flags.syn 2>/dev/null || echo "tshark not available"`,
+          label: `Wireshark capture (tshark, 6s${ip ? `, ${ip}` : ''})`,
+          cmd: `timeout 6 tshark -i any -a duration:6 -f "${bpf}" ${ipFilter} -T fields -e frame.time_relative -e ip.src -e ip.dst -e _ws.col.Protocol -e tcp.dstport -e tcp.flags 2>/dev/null | head -60 || echo "tshark capture unavailable"`,
+        });
+        // 2. Protocol hierarchy — what kinds of traffic dominate (exfil = odd protocol mix)
+        steps.push({
+          label: 'Protocol breakdown (tshark -z io,phs)',
+          cmd: `timeout 7 tshark -i any -a duration:6 -f "${bpf}" -q -z io,phs 2>/dev/null | head -40 || echo "protocol breakdown unavailable"`,
+        });
+        // 3. Top conversations — biggest talkers by bytes (exfiltration / beaconing)
+        steps.push({
+          label: 'Top TCP conversations (tshark -z conv,tcp)',
+          cmd: `timeout 7 tshark -i any -a duration:6 -f "${bpf}" -q -z conv,tcp 2>/dev/null | head -25 || echo "conversation stats unavailable"`,
+        });
+      } else {
+        steps.push({
+          label: 'Wireshark capture',
+          cmd: `echo "tshark not installed and auto-install failed — run: sudo apt install -y tshark && sudo setcap cap_net_raw,cap_net_admin=eip \\$(which dumpcap)"`,
         });
       }
     } catch (_) {}
@@ -240,13 +272,23 @@ async function investigate(threat) {
     } catch (_) {}
   }
 
+  // Blue-team IDS pass — turn raw capture + connection state into verdict alerts.
+  const alerts = detectIntrusions(results);
+  if (alerts.length) {
+    results.push({
+      label: `IDS alerts (${alerts.length})`,
+      output: alerts.map((a) => `[${a.severity.toUpperCase()}] ${a.rule}: ${a.detail}`).join('\n'),
+      ms: 0,
+    });
+  }
+
   // Build a readable summary
   const lines = results.map(r =>
     `[${r.label}]\n${r.output}`
   ).join('\n\n');
 
   const elapsed = Date.now() - start;
-  return { ok: true, category, ip, steps: results, summary: lines, elapsed };
+  return { ok: true, category, ip, steps: results, summary: lines, alerts, elapsed };
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -308,9 +350,19 @@ async function whoisLookup(ip) {
  * NOTE: Requires root in WSL (runs with sudo -n, silently skips if not available).
  */
 async function trafficSnapshot() {
-  // -c 30 = cap at 30 packets, -q = quiet, -i lo = loopback, timeout via timeout cmd
-  const r = await runCommand(`timeout 5 sudo tcpdump -i lo -c 30 -q -n 2>/dev/null || echo "(tcpdump requires root — run: sudo tcpdump -i lo -c 30 -q)"`)
-  return { ok: r.exitCode === 0 || r.exitCode === 124, raw: (r.stdout || r.stderr || '').slice(0, 1200) };
+  // Prefer tshark (real Wireshark): capture + live protocol hierarchy. Falls
+  // back to tcpdump if tshark isn't present. Self-heals a missing tshark once.
+  let ts = await checkTshark();
+  if (!ts.installed) { await ensureTshark(); ts = await checkTshark(); }
+  if (ts.installed) {
+    const capture = `timeout 6 tshark -i any -a duration:5 -T fields -e frame.time_relative -e ip.src -e ip.dst -e _ws.col.Protocol -e tcp.dstport 2>/dev/null | head -40`;
+    const phs = `timeout 7 tshark -i any -a duration:5 -q -z io,phs 2>/dev/null | head -30`;
+    const r = await runCommand(`${capture}; echo '--- protocol hierarchy ---'; ${phs}`);
+    const raw = (r.stdout || r.stderr || '').trim();
+    return { ok: !!raw, tool: 'tshark', raw: (raw || '(no traffic captured)').slice(0, 1600) };
+  }
+  const r = await runCommand(`timeout 5 sudo tcpdump -i any -c 30 -q -n 2>/dev/null || echo "(tcpdump requires root — install tshark: sudo apt install -y tshark)"`);
+  return { ok: r.exitCode === 0 || r.exitCode === 124, tool: 'tcpdump', raw: (r.stdout || r.stderr || '').slice(0, 1200) };
 }
 
 /**
@@ -328,6 +380,74 @@ async function dnsInvestigate(hostname) {
 async function checkTshark() {
   const r = await runCommand(`which tshark 2>/dev/null && tshark --version 2>/dev/null | head -1 || echo "NOT INSTALLED — run: sudo apt install -y tshark"`);
   return { installed: !r.stdout.includes('NOT INSTALLED'), detail: r.stdout.trim() };
+}
+
+/**
+ * Self-heal: install tshark and grant dumpcap the capture capability so it
+ * runs without root. Best-effort — needs passwordless sudo in the Kali WSL.
+ * Runs at most once per process (cached) to avoid hammering apt.
+ */
+let _tsharkInstallTried = false;
+async function ensureTshark() {
+  if (_tsharkInstallTried) return { attempted: true, cached: true };
+  _tsharkInstallTried = true;
+  const cmd = [
+    'sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y tshark 2>&1 | tail -3',
+    'sudo -n setcap cap_net_raw,cap_net_admin=eip "$(which dumpcap)" 2>&1',
+  ].join(' ; ');
+  const r = await runCommand(`timeout 60 bash -c '${cmd}' || echo "install needs passwordless sudo"`);
+  console.log('[LinuxAgent] tshark self-install:', (r.stdout || r.stderr || '').slice(0, 120).replace(/\n/g, ' '));
+  return { attempted: true, detail: (r.stdout || r.stderr || '').slice(0, 300) };
+}
+
+/**
+ * IDS-style detection pass over captured traffic + connection state.
+ * Flags classic blue-team signals (SYN scan, connection floods, exfil-sized
+ * transfers, beaconing intervals) as structured alerts. Pattern-based — cheap
+ * and deterministic, meant to give Bouncer a verdict, not just raw packets.
+ * @param {Array<{label:string,output:string}>} steps
+ * @returns {Array<{rule:string,severity:string,detail:string}>}
+ */
+function detectIntrusions(steps) {
+  const alerts = [];
+  const text = steps.map((s) => `${s.label}\n${s.output || ''}`).join('\n');
+  const low = text.toLowerCase();
+
+  // SYN scan / half-open: many SYNs without matching ACKs
+  const synCount = (text.match(/0x0*002\b/g) || []).length      // tcp.flags == SYN
+                 + (low.match(/\bsyn_sent\b/g) || []).length;
+  if (synCount >= 10) {
+    alerts.push({ rule: 'SYN_SCAN', severity: 'high',
+      detail: `${synCount} SYN / half-open indicators — likely port scan or SYN flood.` });
+  }
+
+  // Connection flood: high count of ESTABLISHED from one peer
+  const estFlood = /\b([5-9]\d|\d{3,})\s+established/i.test(low);
+  if (estFlood) {
+    alerts.push({ rule: 'CONN_FLOOD', severity: 'high',
+      detail: 'Unusually high ESTABLISHED connection count — possible flood or C2 fan-out.' });
+  }
+
+  // Exfil-sized transfer: conversation stats showing large byte counts
+  const bigBytes = text.match(/\b(\d[\d,]{6,})\s*(bytes|kB|MB|GB)\b/i);
+  if (bigBytes || /\bMB\b|\bGB\b/.test(text)) {
+    alerts.push({ rule: 'LARGE_TRANSFER', severity: 'medium',
+      detail: `Large data volume in captured conversations${bigBytes ? ` (${bigBytes[0]})` : ''} — check for exfiltration.` });
+  }
+
+  // Odd protocol mix (protocol hierarchy showing non-web protocols outbound)
+  if (/\b(irc|tftp|telnet|smb|rdp)\b/i.test(low)) {
+    alerts.push({ rule: 'SUSPICIOUS_PROTOCOL', severity: 'medium',
+      detail: 'Uncommon protocol seen in capture (IRC/TFTP/Telnet/SMB/RDP) — often C2 or lateral movement.' });
+  }
+
+  // Auth failures alongside live sessions (credential attack in progress)
+  if ((low.includes('failed') || low.includes('invalid user')) && low.includes('established')) {
+    alerts.push({ rule: 'AUTH_ATTACK', severity: 'high',
+      detail: 'Failed auth attempts alongside active sessions — brute force may have succeeded.' });
+  }
+
+  return alerts;
 }
 
 // ── Baseline helpers ──────────────────────────────────────────────────────────
@@ -489,13 +609,27 @@ function buildReport(threat, investigation, whoisData) {
 
   const recList = recommendations.map(r => `- ${r}`).join('\n');
 
+  // ── IDS alerts (from the blue-team detection pass) ─────────────────────────
+  const alerts = Array.isArray(investigation.alerts) ? investigation.alerts : [];
+  const idsSection = alerts.length
+    ? alerts.map((a) => `- **[${String(a.severity || '').toUpperCase()}] ${a.rule}** — ${a.detail}`).join('\n')
+    : '_No IDS rules triggered on the captured traffic._';
+  // A confirmed high IDS alert overrides an otherwise-inconclusive verdict.
+  if (alerts.some((a) => a.severity === 'high') && status === 'INCONCLUSIVE') {
+    status = 'THREAT CONFIRMED';
+  }
+
   return [
     `# Security Investigation Report`,
     `**Date:** ${ts}`,
     `**Threat Category:** ${category}`,
     `**Severity:** ${severity}`,
     `**Source IP:** ${ip}`,
-    `**Investigated by:** Bouncer`,
+    `**Investigated by:** Bouncer (blue team)`,
+    ``,
+    `## IDS Alerts`,
+    ``,
+    idsSection,
     ``,
     `## Findings`,
     ``,
@@ -658,6 +792,8 @@ module.exports = {
   trafficSnapshot,
   dnsInvestigate,
   checkTshark,
+  ensureTshark,
+  detectIntrusions,
   perimeterPatrol,
   perimeterPatrolContainer,
 };

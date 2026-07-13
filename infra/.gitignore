@@ -6,3 +6,6 @@ supabase-project/.env.old
 supabase-project/DOLONIA_CREDENTIALS.txt
 supabase-project/volumes/db/data/
 supabase-project/volumes/storage/
+
+.bouncer-token.local
+.cli-bridge-tokens.local
