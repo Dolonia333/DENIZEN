@@ -5,7 +5,7 @@
  */
 
 /** No heavy NPC bursts (think, tour, visitor, Grok pulse) during this window. */
-const PLAY_WARMUP_MS = 10 * 60 * 1000;
+const PLAY_WARMUP_MS = 90 * 1000;
 
 class AgentOfficeManager {
   /**
@@ -502,9 +502,14 @@ class AgentOfficeManager {
         loop: true,
         callback: () => this._updateStatusIndicators(),
       });
-      console.log('[AgentManager] Light office — autonomous NPC bursts disabled (player-first). DenizenSetLightOffice(false) to re-enable.');
+      // Light office used to freeze everyone at desks. Keep ambient walks/breaks
+      // so the office still feels alive; only LLM think bursts stay off.
+      this._startAmbientOfficeLife(true);
+      console.log('[AgentManager] Light office — LLM thinks paused; ambient walks on. DenizenSetLightOffice(false) for full sim.');
       return;
     }
+
+    this._startAmbientOfficeLife(false);
 
     // After everyone settles in, start AI think loops (staggered; one tab only).
     // Warmup: first think was 20s after behaviors (+ furniture load ≈ 28s total) and
@@ -592,6 +597,82 @@ class AgentOfficeManager {
     // Morning broadcast — fires 10s after startup so it doesn't overlap greetings
     this.scene.time.delayedCall(10000, () => {
       this._broadcastOfficeEvent('morning', {});
+    });
+  }
+
+  /**
+   * Stand a few desk-bound NPCs up and send them on short walks/breaks so the
+   * office isn't a wax museum while think loops warm up (or in light office).
+   */
+  _startAmbientOfficeLife(light = false) {
+    if (this._ambientLifeStarted) return;
+    this._ambientLifeStarted = true;
+    this.scene.time.delayedCall(7000, () => this._ambientReleaseWalkers(light ? 4 : 3));
+    this.scene.time.addEvent({
+      delay: light ? 15000 : 26000,
+      loop: true,
+      callback: () => this._ambientReleaseWalkers(light ? 2 : 1),
+    });
+  }
+
+  _ambientReleaseWalkers(count = 1) {
+    if (!this.agents || !this.actions) return;
+    const busy = new Set([
+      'task_override', 'tour_guide', 'engaging', 'securing', 'honeypot',
+      'reporting', 'ceo_conversation',
+    ]);
+    const keys = [];
+    this.agents.forEach((agent, npcKey) => {
+      if (!agent || busy.has(agent.status)) return;
+      keys.push(npcKey);
+    });
+    if (!keys.length) return;
+    for (let i = keys.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = keys[i];
+      keys[i] = keys[j];
+      keys[j] = tmp;
+    }
+    const pick = keys.slice(0, Math.min(Math.max(1, count), keys.length));
+    pick.forEach((npcKey) => {
+      const agent = this.agents.get(npcKey);
+      if (!agent || busy.has(agent.status)) return;
+      try { this.actions.standUp(npcKey); } catch (_) {}
+      const sprite = this.actions._getNpc?.(npcKey);
+      if (sprite?.ai) {
+        sprite.ai.mode = 'wander';
+        sprite.ai.taskState = null;
+        sprite.ai.taskTarget = null;
+        sprite.ai._sitSnap = null;
+        sprite.ai.nextWanderAt = 0;
+      }
+      const roll = Math.random();
+      try {
+        if (roll < 0.4 && typeof this.actions.goToBreakroom === 'function') {
+          agent.status = 'break';
+          this.actions.goToBreakroom(npcKey);
+        } else if (roll < 0.65 && typeof this.actions.goToRoom === 'function') {
+          agent.status = 'wandering';
+          this.actions.goToRoom(npcKey, Math.random() < 0.5 ? 'open_office' : 'reception');
+        } else if (typeof this.actions.visitCoworker === 'function') {
+          agent.status = 'visiting';
+          this.actions.visitCoworker(npcKey);
+        } else {
+          agent.status = 'wandering';
+        }
+      } catch (_) {
+        agent.status = 'wandering';
+      }
+      const returnMs = 16000 + Math.floor(Math.random() * 16000);
+      this.scene.time.delayedCall(returnMs, () => {
+        const again = this.agents.get(npcKey);
+        if (!again || busy.has(again.status)) return;
+        if (!again.assignedDesk) return;
+        try {
+          this.actions.useComputer(npcKey, again.assignedDesk);
+          again.status = 'working';
+        } catch (_) {}
+      });
     });
   }
 
@@ -1862,8 +1943,8 @@ class AgentOfficeManager {
     // This NPC's location
     const mySprite = this.scene?.npcs?.find(n => (n.npcKey || n.texture?.key) === npcKey) ||
                      (Array.isArray(this.scene?.npcs) ? this.scene.npcs.find(n => n.texture?.key === npcKey) : null);
-    if (mySprite) {
-      const myRoom = this.getRoom(mySprite.x, mySprite.y) || 'open area';
+    if (mySprite && this.actions?.getRoom) {
+      const myRoom = this.actions.getRoom(mySprite.x, mySprite.y) || 'open area';
       lines.push(`You are currently in/near: ${myRoom} around (${Math.round(mySprite.x)}, ${Math.round(mySprite.y)}).`);
     }
 
