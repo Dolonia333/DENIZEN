@@ -14863,8 +14863,8 @@
     {
       "id": "sofa_2person",
       "instanceId": "editor_sofa_2person_94",
-      "x": 252,
-      "y": 548
+      "x": 150,
+      "y": 620
     },
     {
       "id": "cert_2",
@@ -14899,8 +14899,8 @@
     {
       "id": "plant_spikey",
       "instanceId": "editor_plant_spikey_101",
-      "x": 212,
-      "y": 532
+      "x": 62,
+      "y": 500
     },
     {
       "id": "cubicle_desk",

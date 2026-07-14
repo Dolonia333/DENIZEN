@@ -192,9 +192,10 @@ function playfieldZoomForProfile(profile) {
   const dp = globalThis.DenizenDeviceProfile;
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
   if (profile?.isPhone || profile?.tier === 'phone-compact') {
-    return profile?.isCompactPhone ? 2.05 : 1.95;
+    if (profile?.isLandscape) return 1.0;
+    return profile?.isCompactPhone ? 1.42 : 1.32;
   }
-  if (profile?.isTablet) return 1.85;
+  if (profile?.isTablet) return profile?.isLandscape ? 1.2 : 1.65;
   return 2.35;
 }
 
@@ -208,6 +209,12 @@ class OfficeScene extends Phaser.Scene {
     const cam = this.cameras?.main;
     if (!cam) return;
     cam.setZoom(playfieldZoomForProfile(getPlayfieldDeviceProfile()));
+    // Pokémon-style: hard-lock on the player (no floaty chase lag).
+    if (this.player) {
+      cam.startFollow(this.player, true, 1, 1);
+      try { cam.setRoundPixels(true); } catch (_) {}
+    }
+    try { this.scale?.refresh?.(); } catch (_) {}
   }
 
   /** Walk sprite is 32×64 at scale 1; sit sprite is 16×32 at scale 2 — always reset on stand. */
@@ -293,7 +300,7 @@ class OfficeScene extends Phaser.Scene {
       'assets/Walls_TILESET_A4.png'
     );
     // Core JSON catalogs
-    const catalogV = 'cat26north';
+    const catalogV = 'cat27breakroom';
     this.load.json('furniture_catalog_openplan', `./data/furniture_catalog_openplan.json?v=${catalogV}`);
     this.load.json('openplan_walls', `./data/openplan_walls.json?v=${catalogV}`);
     this.load.json('office_blueprint', `./data/office_blueprint.json?v=${catalogV}`);
@@ -413,20 +420,17 @@ class OfficeScene extends Phaser.Scene {
     // Also remove the DOLONIA title text objects created in preload
     this.children.list.filter(c => c.type === 'Text' && (c.text === 'DOLONIA' || c.text === 'AI Office Simulator')).forEach(t => t.destroy());
 
-    // Make EVERY Text object render at 2x internal resolution. pixelArt:true
-    // forces NEAREST sampling on text textures too, so tiny 6-7px task
-    // labels / speech bubbles / status indicators look blurry: Phaser
-    // rasterises them at native 1x with antialiasing, then nearest-neighbor
-    // downsamples → smeared glyphs. Bumping resolution to 2 makes the
-    // internal raster 2x larger; the GPU downsample then preserves the
-    // glyph edges cleanly. Wrap the factory so we don't have to add
-    // .setResolution(2) to every single .add.text() call in the codebase.
+    // Make EVERY Text object render at internal resolution suitable for the
+    // device. pixelArt:true forces NEAREST sampling on text textures too, so
+    // tiny 6-7px labels look blurry at 1x — bump to 2x on desktop. On
+    // phone/light-perf keep 1x to cut canvas fill + texture upload cost.
     if (!this._textFactoryPatched) {
       const factory = this.add;
       const origText = factory.text.bind(factory);
+      const textRes = (window.DenizenDeviceProfile?.lightPerf?.()?.textResolution) || 2;
       factory.text = function (x, y, content, style) {
         const t = origText(x, y, content, style);
-        if (t && typeof t.setResolution === 'function') t.setResolution(2);
+        if (t && typeof t.setResolution === 'function') t.setResolution(textRes);
         return t;
       };
       this._textFactoryPatched = true;
@@ -847,7 +851,7 @@ class OfficeScene extends Phaser.Scene {
            const playProfile = getPlayfieldDeviceProfile();
            if (playProfile.isPhone) {
              cam.setZoom(playfieldZoomForProfile(playProfile));
-             cam.startFollow(this.player, true, 0.12, 0.12);
+             cam.startFollow(this.player, true, 1, 1);
            } else {
              // Full openplan zone 1264×700. Zoom 1.0 fits in a 1280×720 viewport.
              cam.setZoom(playProfile.isTablet ? playfieldZoomForProfile(playProfile) : 1.0);
@@ -1267,10 +1271,12 @@ class OfficeScene extends Phaser.Scene {
     // Shrink physics body to foot hitbox
     this.player.body.setSize(14, 10);
     this.player.body.setOffset(9, 54);
+    // Keep max velocity above walk speed (touch can push ~700+).
+    this.player.body.setMaxVelocity(800, 800);
+    this.player.setDrag(0, 0);
     const scale = 1; // used by NPCs below
 
-    // Camera: device-tier zoom, follow player, clamp to world bounds
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    // Camera: Pokémon-style — hard-lock follow, tier zoom, clamp to world
     this.cameras.main.setBounds(0, 0, 1280, 720);
     this._applyPlayfieldCamera();
     this._onDeviceProfileChange = () => this._applyPlayfieldCamera();
@@ -1312,7 +1318,13 @@ class OfficeScene extends Phaser.Scene {
       { x: 1060, y: 160 }, { x: 520, y: 320 }, { x: 620, y: 580 }, { x: 1040, y: 390 },
       { x: 300, y: 300 }, { x: 700, y: 350 }, { x: 950, y: 580 }, { x: 440, y: 530 }
     ];
-    const npcCount = layoutParam === 'reference_office' ? 2 : Math.min(20, npcKeys.length);
+    const npcCap = (window.DenizenDeviceProfile?.lightPerf?.()?.npcCap) || 20;
+    const npcCount = layoutParam === 'reference_office' ? 2 : Math.min(npcCap, npcKeys.length);
+    try {
+      if (window.DenizenDeviceProfile?.wantsLightPerf?.()) {
+        console.log('[Perf] light profile — NPC cap', npcCount, '/', npcKeys.length);
+      }
+    } catch (_) {}
     npcKeys.slice(0, npcCount).forEach((texKey, i) => {
       if (!this.textures.exists(texKey)) return;
       const spawn = i < deskSpawns.length ? deskSpawns[i] : otherSpawns[i - deskSpawns.length] || { x: Phaser.Math.Between(120, 1100), y: Phaser.Math.Between(120, 600) };
@@ -1910,8 +1922,16 @@ class OfficeScene extends Phaser.Scene {
     try { console.log('[BootTiming] before pathfinding registration', performance.now()); } catch (_) {}
     // --- Pathfinding System ---
     if (window.OfficePathfinder && window.NpcPathFollower) {
-      // cellSize omitted — defaults to 8 in pathfinding.js (finer paths).
-      this._pathfinder = new window.OfficePathfinder(1280, 720);
+      const perf = window.DenizenDeviceProfile?.lightPerf?.() || {};
+      const cellSize = perf.pathCellSize || 8;
+      const maxIter = perf.pathMaxIterations || null;
+      this._pathfinder = new window.OfficePathfinder(1280, 720, cellSize, maxIter);
+      try {
+        if (perf.light) console.log('[Perf] path grid cell', cellSize, 'maxIter', maxIter || 6000);
+      } catch (_) {}
+      // Install tap-to-move as soon as the follower exists (don't wait on path build).
+      this._playerPathFollower = new window.NpcPathFollower(this.player, this._pathfinder);
+      this._installTapToMove();
       // Build the grid after a short delay so all furniture/walls are placed
       this.time.delayedCall(500, () => {
         this._pathfinder.buildFromScene(this);
@@ -1942,8 +1962,6 @@ class OfficeScene extends Phaser.Scene {
             }
           });
         }
-        this._playerPathFollower = new window.NpcPathFollower(this.player, this._pathfinder);
-        this._installTapToMove();
         console.log('[OfficeScene] Pathfinding system initialized (with door gap fix)');
       });
     }
@@ -2240,6 +2258,10 @@ class OfficeScene extends Phaser.Scene {
       try {
         window.DenizenMovementGuard?.unlock?.();
       } catch (_) {}
+      try {
+        window.__DenizenGameInputBlocked = false;
+        if (this.game?.input) this.game.input.enabled = true;
+      } catch (_) {}
       const el = document.activeElement;
       const isField = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
       if (!isField) return;
@@ -2253,6 +2275,125 @@ class OfficeScene extends Phaser.Scene {
       } catch (_) {}
     };
     canvas.addEventListener('pointerdown', refocus);
+  }
+
+  /** Convert a DOM pointer on the game canvas into world coords (handles CSS scale + camera zoom). */
+  _worldPointFromClient(clientX, clientY) {
+    const canvas = this.game?.canvas;
+    const cam = this.cameras?.main;
+    if (!canvas || !cam) return null;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const sx = (clientX - rect.left) / rect.width;
+    const sy = (clientY - rect.top) / rect.height;
+    if (sx < 0 || sx > 1 || sy < 0 || sy > 1) return null;
+    const view = cam.worldView;
+    return {
+      x: view.x + sx * view.width,
+      y: view.y + sy * view.height,
+    };
+  }
+
+  _unlockPlayerForTapMove() {
+    try {
+      window.__DenizenGameInputBlocked = false;
+      if (this.game?.input) this.game.input.enabled = true;
+      window.DenizenMovementGuard?.unlock?.();
+    } catch (_) {}
+    if (this._editorHandlers) return false;
+    if (this.playerLocked || this._playerSitting || this._playerOnPhone) {
+      this.playerLocked = false;
+      this._playerOnPhone = false;
+      this._phonePhase = 'none';
+      this._sitPhase = 'none';
+      if (this._playerSitting) {
+        try { this._restorePlayerWalkSprite?.(20); } catch (_) {}
+        this._playerSitting = false;
+        this._sitChair = null;
+        if (this._sitReturnPos) {
+          this.player.x = this._sitReturnPos.x;
+          this.player.y = this._sitReturnPos.y;
+          this._sitReturnPos = null;
+        }
+      }
+      if (this.player?.texture?.key === 'dolo_phone') {
+        try {
+          this.player.setTexture('dolo');
+          this.player.setFrame(20);
+        } catch (_) {}
+      }
+    }
+    return true;
+  }
+
+  /** Shared tap-to-move — Phaser pointer OR DOM canvas tap. */
+  _tapMoveToWorld(tx, ty) {
+    if (!(window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch'))) return false;
+    if (document.documentElement.dataset.denizenModal === 'open') return false;
+    if (document.documentElement.classList.contains('denizen-portrait-blocked')) return false;
+    if (document.documentElement.classList.contains('denizen-chat-open')) return false;
+    if (document.documentElement.classList.contains('denizen-phone-open')) return false;
+    if (!this._unlockPlayerForTapMove()) return false;
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return false;
+
+    const now = Date.now();
+    // Debounce Phaser pointerdown + DOM pointerdown/touchend double delivery
+    if (this._lastDomTapAt && now - this._lastDomTapAt < 140) return true;
+    this._lastDomTapAt = now;
+
+    const pf = this._pathfinder;
+    const follower = this._playerPathFollower;
+    let destX = tx;
+    let destY = ty;
+    if (follower?.navigateTo) {
+      let ok = !!follower.navigateTo(destX, destY);
+      if (!ok && pf?._nearestWalkable && pf?.toGrid && pf?.toPixel) {
+        try {
+          const g = pf.toGrid(destX, destY);
+          const near = pf._nearestWalkable(g.x, g.y);
+          if (near) {
+            const w = pf.toPixel(near.x, near.y);
+            destX = w.x;
+            destY = w.y;
+            ok = !!follower.navigateTo(destX, destY);
+          }
+        } catch (_) {}
+      }
+    }
+    // Always keep a seek target so a blocked path still walks toward the tap.
+    this._tapSeekTarget = { x: destX, y: destY, until: (this.time?.now || 0) + 5200 };
+    window.DenizenHaptics?.tap?.();
+    if (window.DenizenMobilePlay?.useTapMove?.() || window.__DenizenIsTouch) {
+      this._showTapMarker?.(destX, destY);
+    }
+    return true;
+  }
+
+  _installDomTapToMove() {
+    if (this._domTapToMoveInstalled) return;
+    this._domTapToMoveInstalled = true;
+    const canvas = this.game?.canvas;
+    if (!canvas) return;
+    const onPointer = (e) => {
+      if (e.pointerType === 'mouse' && typeof e.button === 'number' && e.button !== 0) return;
+      if (!(window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch'))) return;
+      if (document.documentElement.dataset.denizenModal === 'open') return;
+      if (e.target?.closest?.('#denizen-visitor-name-modal, #denizen-demo-account-modal')) return;
+      const pt = this._worldPointFromClient(e.clientX, e.clientY);
+      if (!pt) return;
+      this._tapMoveToWorld(pt.x, pt.y);
+    };
+    canvas.addEventListener('pointerdown', onPointer, { passive: true });
+    // iOS Safari sometimes drops pointer events on Canvas2D — touchend is a backup.
+    canvas.addEventListener('touchend', (e) => {
+      if (!(window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch'))) return;
+      if (document.documentElement.dataset.denizenModal === 'open') return;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+      const pt = this._worldPointFromClient(t.clientX, t.clientY);
+      if (!pt) return;
+      this._tapMoveToWorld(pt.x, pt.y);
+    }, { passive: true });
   }
 
   /** Click / tap NPCs to open player chat (wired after PlayerChat + AgentManager exist). */
@@ -2314,19 +2455,21 @@ class OfficeScene extends Phaser.Scene {
   _installTapToMove() {
     if (this._tapToMoveInstalled) return;
     this._tapToMoveInstalled = true;
+    this._installDomTapToMove();
     this.input.on('pointerdown', (pointer, gameObjects) => {
-      if (!window.__DenizenIsTouch) return;
-      if (document.documentElement.classList.contains('denizen-portrait-blocked')) return;
-      if (this.playerLocked || this._editorHandlers) return;
-      if (document.documentElement.classList.contains('denizen-chat-open')) return;
+      if (!(window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch'))) return;
+      if (document.documentElement.dataset.denizenModal === 'open') return;
       const hitNpc = gameObjects?.some((go) => Array.isArray(this.npcs) && this.npcs.includes(go));
       if (hitNpc) return;
-      if (this._playerPathFollower?.navigateTo(pointer.worldX, pointer.worldY)) {
-        window.DenizenHaptics?.tap?.();
-        if (window.DenizenMobilePlay?.useTapMove?.()) {
-          this._showTapMarker(pointer.worldX, pointer.worldY);
+      // Prefer DOM world mapping on touch — Phaser worldX can drift with CSS-scaled canvas.
+      if (pointer?.event && Number.isFinite(pointer.event.clientX)) {
+        const pt = this._worldPointFromClient(pointer.event.clientX, pointer.event.clientY);
+        if (pt) {
+          this._tapMoveToWorld(pt.x, pt.y);
+          return;
         }
       }
+      this._tapMoveToWorld(pointer.worldX, pointer.worldY);
     });
   }
 
@@ -2448,6 +2591,19 @@ class OfficeScene extends Phaser.Scene {
   /**
    * Retry seating at assigned desk — rate-limited so we don't spam useComputer every frame.
    */
+  /**
+   * Player walk speed in world px/s.
+   * Zoom changes on-screen pace (Pokémon pull-back made fixed px/s feel slow).
+   * Scale so walking stays snappy at any camera zoom.
+   */
+  _playerMoveSpeed() {
+    const base = 380;
+    const zoom = Math.max(0.85, this.cameras?.main?.zoom || 1);
+    // Target on-screen feel as if the camera were ~2.1×.
+    const feel = 2.1 / zoom;
+    return Math.round(base * Math.min(2.8, Math.max(1.15, feel)));
+  }
+
   _rawMoveActive() {
     const r = window.__DenizenRawMoveKeys || {};
     return !!(r.up || r.down || r.left || r.right);
@@ -2494,7 +2650,7 @@ class OfficeScene extends Phaser.Scene {
     }
 
     const r = window.__DenizenRawMoveKeys;
-    const speed = 220;
+    const speed = this._playerMoveSpeed?.() || 380;
     let vx = 0;
     let vy = 0;
     if (r.left) vx = -speed;
@@ -2553,7 +2709,7 @@ class OfficeScene extends Phaser.Scene {
       }
       this.input.keyboard.clearCaptures();
     }
-    const speed = 220;
+    const speed = this._playerMoveSpeed();
     const body = this.player?.body;
     const hasPlayer = !!body;
 
@@ -2794,6 +2950,7 @@ class OfficeScene extends Phaser.Scene {
       const pathFollower = this._playerPathFollower;
 
       if (manualMove) {
+        this._tapSeekTarget = null;
         if (pathFollower?.isNavigating()) pathFollower.stop();
         if (left) {
           body.setVelocityX(-speed);
@@ -2825,6 +2982,23 @@ class OfficeScene extends Phaser.Scene {
             this.facing = vel.vy < 0 ? 'up' : 'down';
           }
         }
+      } else if (this._tapSeekTarget && this.time.now < this._tapSeekTarget.until) {
+        const tx = this._tapSeekTarget.x;
+        const ty = this._tapSeekTarget.y;
+        const dx = tx - this.player.x;
+        const dy = ty - this.player.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 12) {
+          this._tapSeekTarget = null;
+          body.setVelocity(0, 0);
+        } else {
+          body.setVelocity((dx / dist) * speed, (dy / dist) * speed);
+          moving = true;
+          if (Math.abs(dx) > Math.abs(dy)) this.facing = dx < 0 ? 'left' : 'right';
+          else this.facing = dy < 0 ? 'up' : 'down';
+        }
+      } else if (this._tapSeekTarget) {
+        this._tapSeekTarget = null;
       }
     }
 
@@ -2942,10 +3116,8 @@ class OfficeScene extends Phaser.Scene {
       this._talkPrompt.setVisible(false);
     }
 
-    // --- NPC AI ---
-    const lightOffice = window.__DenizenLightOffice !== false
-      && this._agentManager?._officeConfig?.lightOffice !== false;
-    if (Array.isArray(this.npcs) && !lightOffice) {
+    // --- NPC AI (always run local wander / desk walks — lightOffice only gates LLM thinks) ---
+    if (Array.isArray(this.npcs)) {
       const now = this.time.now;
       const followDistance = 44;
       const followSpeed = 140;
@@ -2955,10 +3127,15 @@ class OfficeScene extends Phaser.Scene {
       // from any neighbor within SEP_RADIUS px. Stationary NPCs (sitting,
       // working, reading) are ignored as neighbors so you can still walk up to
       // talk to someone at their desk.
+      // Light-perf: run every N frames — O(n²) is expensive with many walkers.
       const SEP_RADIUS = 24;
       const SEP_RADIUS_SQ = SEP_RADIUS * SEP_RADIUS;
       const SEP_STRENGTH = 55; // px/s max repulsion magnitude
+      const sepEvery = (window.DenizenDeviceProfile?.lightPerf?.()?.sepEveryNFrames) || 1;
+      this._sepFrame = (this._sepFrame || 0) + 1;
+      const runSep = sepEvery <= 1 || (this._sepFrame % sepEvery) === 0;
       const _applySeparation = (npc, vx, vy) => {
+        if (!runSep) return { vx, vy };
         let sx = 0, sy = 0;
         for (let j = 0; j < this.npcs.length; j++) {
           const other = this.npcs[j];
@@ -3193,15 +3370,9 @@ class OfficeScene extends Phaser.Scene {
             if (pf) pf.stop();
           }
         } else {
-          const npcKey = npc.texture?.key;
-          const deskAgent = npcKey ? this._agentManager?.agents?.get(npcKey) : null;
-          if (deskAgent?.assignedDesk && deskAgent.status === 'working' && ai.mode === 'wander') {
-            ai.mode = 'agent_task';
-            ai.taskState = 'walking';
-            ai.taskTarget = ai._assignedDeskPos || deskAgent._assignedDeskPos || ai.taskTarget;
-            npc.body.setVelocity(0, 0);
-          } else {
           // Wander mode — pick a new random walkable destination
+          // (Desk return is AgentManager._forceReturnToDesks + think decisions —
+          //  do not auto-hijack wander every frame while status is "working".)
           if (now >= ai.nextWanderAt) {
             ai.nextWanderAt = now + Phaser.Math.Between(2200, 5800);
             let target = null;
@@ -3260,7 +3431,6 @@ class OfficeScene extends Phaser.Scene {
             // Not navigating (path failed) — pick a new target soon
             npc.body.setVelocity(0, 0);
             ai.nextWanderAt = Math.min(ai.nextWanderAt || 0, now + 420);
-          }
           }
         }
 
@@ -3337,6 +3507,13 @@ function bootOfficeGame() {
 
   const OfficeScene = createOfficeSceneClass();
   const useCanvas = preferCanvasRenderer();
+  const perf = (typeof window.DenizenDeviceProfile?.lightPerf === 'function')
+    ? window.DenizenDeviceProfile.lightPerf()
+    : { light: false, targetFps: 0 };
+  try {
+    window.__DenizenLightPerf = !!perf.light;
+    if (perf.light) console.log('[Perf] light office profile ON', perf);
+  } catch (_) {}
   const config = {
     type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
     width: 1280,
@@ -3366,6 +3543,11 @@ function bootOfficeGame() {
     },
     scene: [OfficeScene]
   };
+  // Soft FPS hint on phones / weak hardware — do NOT use forceSetTimeOut
+  // (setTimeout pacing feels laggy and makes walking read as "slow").
+  if (perf.targetFps && perf.targetFps > 0) {
+    config.fps = { target: perf.targetFps, min: 20, forceSetTimeOut: false };
+  }
 
   const banner = document.getElementById('denizen-load-banner');
   const showBootError = (msg) => {

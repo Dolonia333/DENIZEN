@@ -40,12 +40,16 @@ class OfficePathfinder {
    * @param {number} worldH - World height in pixels
    * @param {number} cellSize - Grid cell size in pixels (default 8 for finer navigation)
    */
-  constructor(worldW, worldH, cellSize = 8) {
+  constructor(worldW, worldH, cellSize = 8, maxIterations = null) {
     this.worldW = worldW;
     this.worldH = worldH;
     this.cellSize = cellSize;
     this.cols = Math.ceil(worldW / cellSize);
     this.rows = Math.ceil(worldH / cellSize);
+    // Optional A* budget (light-perf / coarse grids use a lower cap).
+    this.maxIterations = (typeof maxIterations === 'number' && maxIterations > 0)
+      ? maxIterations
+      : null;
 
     // Grid: 0 = walkable, 1 = blocked
     this.grid = new Uint8Array(this.cols * this.rows);
@@ -124,9 +128,12 @@ class OfficePathfinder {
    */
   carveDoorwayGaps() {
     const cs = this.cellSize || 8;
+    // The lower-room back wall (openplan_walls wall_div_h_south) is 64px thick
+    // (y 448–512). Its door gaps must be carved through the FULL thickness or
+    // NPCs reach the doorway and stick against the un-carved lower half.
     const gaps = [
-      { x0: 278, x1: 398, y0: 412, y1: 478, label: 'breakroom_north' },
-      { x0: 550, x1: 666, y0: 412, y1: 478, label: 'reception_north' },
+      { x0: 288, x1: 384, y0: 436, y1: 520, label: 'breakroom_north' },
+      { x0: 560, x1: 656, y0: 436, y1: 520, label: 'reception_north' },
       { x0: 832, x1: 864, y0: 150, y1: 250, label: 'manager_west' },
       { x0: 832, x1: 864, y0: 342, y1: 458, label: 'conference_west' },
       { x0: 988, x1: 1118, y0: 232, y1: 292, label: 'ceo_to_meeting' },
@@ -485,7 +492,8 @@ class OfficePathfinder {
 
     // Limit iterations to prevent freezing on impossible paths.
     // Bumped for 8px grid (160×90 = 14400 cells — longer paths need more room).
-    const maxIterations = 6000;
+    // Coarse/light-perf grids pass a lower budget via constructor.
+    const maxIterations = this.maxIterations || 6000;
     let iterations = 0;
 
     // 8-directional neighbors
@@ -788,8 +796,10 @@ class NpcPathFollower {
 
     // Arrival slowdown — when approaching the FINAL waypoint, scale speed
     // by dist/40 (floor 0.35). Prevents overshoot / jitter at the goal.
+    // Skip for the player avatar — crawl-in feels like "walking slow".
     let effSpeed = speed;
-    if (this.waypointIndex === this.waypoints.length - 1 && dist < 40) {
+    const isPlayer = !!(this.npc && window.game?.scene?.scenes?.[0]?.player === this.npc);
+    if (!isPlayer && this.waypointIndex === this.waypoints.length - 1 && dist < 40) {
       const slowFactor = Math.max(0.35, dist / 40);
       effSpeed = speed * slowFactor;
     }
