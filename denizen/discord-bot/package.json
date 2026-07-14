@@ -1,0 +1,22 @@
+{
+  "name": "denizen-discord-bot",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Denizen Discord bot — canvas tracker + Bleed-parity modules",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --env-file=../.env index.js",
+    "smoke": "node --env-file=../.env index.js --smoke",
+    "dump": "node --env-file=../.env index.js --dump",
+    "test": "node --test test/*.test.js",
+    "test:tracker": "node --test test/tracker.test.js",
+    "test:core": "node --test test/core.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0"
+  }
+}
