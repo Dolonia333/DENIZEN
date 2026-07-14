@@ -222,7 +222,10 @@
     NPC_SHEETS.push({ key: `npc_m${i}`, path: `${PACK}/NPCs/Male/NPC ${i}.png` });
     NPC_SHEETS.push({ key: `npc_f${i}`, path: `${PACK}/NPCs/Female/NPC ${i}.png` });
   }
-  const NPC_FRAME = { w: 16, h: 32 };
+  // Sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
+  // loading at half-width used to slice each character in two down the middle.
+  const NPC_FRAME = { w: 32, h: 32 };
+  const NPC_COLS = 8;
 
   // Distinct saturated wall color per room + warm floor strip — the #1 reference
   // signature. Rooms used to all be near-white beige.
@@ -367,15 +370,17 @@
     }
 
     setupPlayer() {
-      // NPC frames are 16x32 (feet at the bottom of the cell); the collision
-      // body is a small box at the feet so origin (0.5,1) plants on the floor.
+      // NPC frames are 32x32 cells; the character art itself is a small chibi
+      // bust roughly x11-21,y9-23 within each cell (not flush to the edges).
+      // The collision body is a small box over the legs so origin (0.5,1)
+      // plants the character reasonably on the floor.
       this.playerSheet = NPC_SHEETS.find((n) => this.textures.exists(n.key))?.key || NPC_SHEETS[0].key;
       this.player = this.physics.add.sprite(160, this.groundY - 1, this.playerSheet, 0)
         .setScale(SCALE)
         .setOrigin(0.5, 1)
         .setDepth(45)
         .setCollideWorldBounds(true);
-      this.player.body.setSize(10, 6).setOffset(3, 24);
+      this.player.body.setSize(12, 8).setOffset(10, 16);
       const mw = this.mapWidth || W;
       this.physics.world.setBounds(0, 0, mw + 40, H);
       this.cameras.main.setBounds(0, 0, mw + 40, H);
@@ -1065,8 +1070,8 @@
     }
 
     makeAnims() {
-      // Each NPC sheet (16x32, 16 cols): row 0 (frames 0-3) = walk, row 1
-      // (frames 16-18) = idle. Build `${key}_walk` / `${key}_idle` per sheet.
+      // Each NPC sheet is an 8-col x 14-row grid of 32x32 cells (frame index =
+      // row*8+col). Row 0 = MOVE (cols 0-3 walk cycle), row 1 = IDLE (cols 0-3).
       NPC_SHEETS.forEach((n) => {
         if (this.anims.exists(`${n.key}_walk`)) return;
         if (!this.textures.exists(n.key)) return;
@@ -1078,7 +1083,7 @@
         });
         this.anims.create({
           key: `${n.key}_idle`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: 16, end: 18 }),
+          frames: this.anims.generateFrameNumbers(n.key, { start: NPC_COLS, end: NPC_COLS + 3 }),
           frameRate: 2,
           repeat: -1,
         });
