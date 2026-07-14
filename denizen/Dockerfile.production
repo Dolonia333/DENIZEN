@@ -23,6 +23,11 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 COPY package*.json ./
 RUN npm ci --omit=dev \
  && npx playwright install --with-deps chromium
+# Discord bot sidecar deps — installed explicitly so discord.js is baked into
+# the image. The deploy tarball excludes node_modules, so without this the bot
+# only ran by luck of a cached COPY layer and vanished on any cache bust.
+COPY discord-bot/package*.json ./discord-bot/
+RUN cd discord-bot && npm ci --omit=dev --no-audit --no-fund
 COPY . .
 COPY --from=crm-builder /build/crm/dist ./crm/dist
 EXPOSE 8080 8888
