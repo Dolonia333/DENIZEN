@@ -899,20 +899,36 @@
         this.registerDoor({ x: elevX, floorId: chKey(channels[1].id), radius: 20 });
       }
       if (channels[0] && channels[2]) {
+        const sx = padX + roomW * 0.5;
         this.registerStairs({
-          x: padX + roomW * 0.5,
+          x: sx,
           fromFloorId: chKey(channels[2].id),
           toFloorId: chKey(channels[0].id),
-          radius: 18,
+          // Wide enough to cover the whole room (roomW=126, walkable half-
+          // width ~55) — the room is small enough that a tight radius left a
+          // dead zone between the door-spawn point and the stairs, so a
+          // player's first "down" press right after entering just ejected
+          // them outside instead of taking the stairs to the room below.
+          radius: 60,
         });
+        this.markStairs(sx, chKey(channels[0].id));
+        this.markStairs(sx, chKey(channels[2].id));
       }
       if (channels[1] && channels[3]) {
+        const sx = padX + roomW + gap + roomW * 0.5;
         this.registerStairs({
-          x: padX + roomW + gap + roomW * 0.5,
+          x: sx,
           fromFloorId: chKey(channels[3].id),
           toFloorId: chKey(channels[1].id),
-          radius: 18,
+          // Wide enough to cover the whole room (roomW=126, walkable half-
+          // width ~55) — the room is small enough that a tight radius left a
+          // dead zone between the door-spawn point and the stairs, so a
+          // player's first "down" press right after entering just ejected
+          // them outside instead of taking the stairs to the room below.
+          radius: 60,
         });
+        this.markStairs(sx, chKey(channels[1].id));
+        this.markStairs(sx, chKey(channels[3].id));
       }
       if (channels[2] && channels[3]) {
         this.registerPassage({
@@ -1010,6 +1026,18 @@
         .setScale(scale)
         .setOrigin(0.5, 1)
         .setDepth(depth);
+    }
+
+    /**
+     * Visible stairs icon at the exact trigger x, inside the given room.
+     * The stairs trigger was previously invisible logic only — a player had
+     * no way to know where to stand to go up/down, and the spawn point after
+     * walking in the front door doesn't land on it. Draw it so it's obvious.
+     */
+    markStairs(x, floorId) {
+      const floor = this.floors.get(floorId);
+      if (!floor) return;
+      this.furn('stairs', x, floor.floorY, 25);
     }
 
     /** Place wall-mounted decor hanging from the room's top edge (origin top-center). */
