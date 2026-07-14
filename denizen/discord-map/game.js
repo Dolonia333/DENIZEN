@@ -1,6 +1,6 @@
 /* Pixel Spaces side-view — polished closer to itch example */
 (() => {
-  const PACK = './PixelSpaces Free Pack';
+  const PACK = './PixelSpaces';
   const W = 980;
   const H = 420;
   const SCALE = 2;
@@ -98,101 +98,221 @@
     return IS_TOUCH ? '◀ ▶ move · ▲ ▼ stairs · ▼ leave' : '↓ / S leave · ↑ stairs · A/D walk';
   }
 
+  const LR = `${PACK}/Furniture/Living Room`;
+  const KIT = `${PACK}/Furniture/Kitchen`;
+  const BR = `${PACK}/Furniture/Bedroom`;
+  const OBJ = `${PACK}/Objects/Living Room`;
+  const OBR = `${PACK}/Objects/Bedroom`;
+  const INF = `${PACK}/Infrastructure`;
+  const BG = `${PACK}/Backgrounds`;
+
   const ASSETS = {
-    male: `${PACK}/Pre-made NPCs/Male.png`,
-    female: `${PACK}/Pre-made NPCs/Female.png`,
-    cloud: `${PACK}/Backgrounds/Cloud_1.png`,
-    cloudSm: `${PACK}/Backgrounds/Cloud_small_3.png`,
-    mountainL: `${PACK}/Backgrounds/Mountain_large_1.png`,
-    mountainM: `${PACK}/Backgrounds/Mountain_medium_1.png`,
-    mountainS: `${PACK}/Backgrounds/Mountain_small_1.png`,
-    tree: `${PACK}/Backgrounds/Tree_medium.png`,
-    houseRed: `${PACK}/Backgrounds/House_largel_red.png`,
-    houseBeige: `${PACK}/Backgrounds/House_small_beige.png`,
-    door: `${PACK}/Furniture/Door_opened.png`,
-    doorClosed: `${PACK}/Furniture/Door_closed.png`,
-    elevClosed: `${PACK}/Furniture/Elevator_closed.png`,
-    elevOpen: `${PACK}/Furniture/Elevator_opened.png`,
-    stairs: `${PACK}/Furniture/Stairs.png`,
+    // Backgrounds / outdoor
+    cloud: `${BG}/Cloud_1.png`,
+    cloudSm: `${BG}/Cloud_small_3.png`,
+    mountainL: `${BG}/Mountain_large_1.png`,
+    mountainM: `${BG}/Mountain_medium_1.png`,
+    mountainS: `${BG}/Mountain_small_1.png`,
+    tree: `${BG}/Tree_medium.png`,
+    houseRed: `${BG}/House_large_red.png`,
+    houseBeige: `${BG}/House_small_beige.png`,
+    houseBlue: `${BG}/House_small_blue.png`,
+    houseGreen: `${BG}/House_small_green.png`,
+    // Infrastructure (interaction anchors — keep intact)
+    door: `${INF}/Door_wood_opened.png`,
+    doorClosed: `${INF}/Door_wood_closed.png`,
+    doorGlass: `${INF}/Door_glass_opened.png`,
+    elevClosed: `${INF}/Elevator_closed.png`,
+    elevOpen: `${INF}/Elevator_opened.png`,
+    stairs: `${INF}/Stairs.png`,
     light1: `${PACK}/Furniture/Light_1.png`,
     light2: `${PACK}/Furniture/Light_2.png`,
-    couchBlue: `${PACK}/Furniture/Living Room/Couch_large_2_blue.png`,
-    couchGreen: `${PACK}/Furniture/Living Room/Couch_large_2_green.png`,
-    couchRed: `${PACK}/Furniture/Living Room/Couch_large_2_red.png`,
-    couchSmall: `${PACK}/Furniture/Living Room/Couch_small_2_blue.png`,
-    couchSmallG: `${PACK}/Furniture/Living Room/Couch_small_2_green.png`,
-    couchSmallR: `${PACK}/Furniture/Living Room/Couch_small_2_red.png`,
-    couchSmallBSide: `${PACK}/Furniture/Living Room/Couch_small_2_blue_side.png`,
-    couchSmallGSide: `${PACK}/Furniture/Living Room/Couch_small_2_green_side.png`,
-    couchSmallRSide: `${PACK}/Furniture/Living Room/Couch_small_2_red_side.png`,
-    table: `${PACK}/Furniture/Living Room/Table_medium.png`,
-    tableLong: `${PACK}/Furniture/Living Room/Table_long.png`,
-    bookshelf: `${PACK}/Furniture/Living Room/Bookshelf_1.png`,
-    bookshelfSm: `${PACK}/Furniture/Living Room/Bookshelf_small.png`,
-    shelfLarge: `${PACK}/Furniture/Living Room/Shelf_large.png`,
-    shelfMedium: `${PACK}/Furniture/Living Room/Shelf_medium.png`,
-    coffee: `${PACK}/Furniture/Living Room/Coffee_table_1.png`,
-    windowSq: `${PACK}/Furniture/Living Room/Window_square.png`,
-    windowCircle: `${PACK}/Furniture/Living Room/Window_circle.png`,
-    curtain: `${PACK}/Furniture/Living Room/Curtain_medium_green.png`,
-    curtainR: `${PACK}/Furniture/Living Room/Curtain_medium_red.png`,
-    bed: `${PACK}/Furniture/Bedroom/Bed_red.png`,
-    lamp: `${PACK}/Furniture/Bedroom/Lamp_stand_1.png`,
-    laptop: `${PACK}/Furniture/Bedroom/Laptop.png`,
-    drawer: `${PACK}/Furniture/Bedroom/Drawer_medium_1_c.png`,
-    fridge: `${PACK}/Furniture/Kitchen/Refrigerator_large_white.png`,
-    sink: `${PACK}/Furniture/Kitchen/Sink.png`,
-    counter: `${PACK}/Furniture/Kitchen/Countertop.png`,
-    counterEnd: `${PACK}/Furniture/Kitchen/Countertop_end.png`,
-    box: `${PACK}/Objects/Bedroom/Box_blue_large.png`,
-    boxSm: `${PACK}/Objects/Bedroom/Box_blue_small.png`,
-    package: `${PACK}/Objects/Bedroom/Moving_package_small.png`,
-    flora: `${PACK}/Objects/Living Room/Flora_poppy.png`,
-    pot: `${PACK}/Objects/Living Room/Flowerpot_medium_green.png`,
-    books: `${PACK}/Objects/Living Room/Books_outside_1.png`,
+    // Couches — large 2-seat (6 colors)
+    couchBlue: `${LR}/Couch_large_2_blue.png`,
+    couchGreen: `${LR}/Couch_large_2_green.png`,
+    couchRed: `${LR}/Couch_large_2_red.png`,
+    couchGrey: `${LR}/Couch_large_2_grey.png`,
+    couchYellow: `${LR}/Couch_large_2_yellow.png`,
+    couchDark: `${LR}/Couch_large_2_darkgrey.png`,
+    // Couches — small front (for tight kits)
+    couchSmall: `${LR}/Couch_small_2_blue.png`,
+    couchSmallG: `${LR}/Couch_small_2_green.png`,
+    couchSmallR: `${LR}/Couch_small_2_red.png`,
+    couchSmallY: `${LR}/Couch_small_2_yellow.png`,
+    couchSmallGr: `${LR}/Couch_small_2_grey.png`,
+    // Tables
+    table: `${LR}/Table_medium.png`,
+    tableLong: `${LR}/Table_long.png`,
+    coffee: `${LR}/Coffee_table_1.png`,
+    coffee2: `${LR}/Coffee_table_2.png`,
+    // Office (dev channels)
+    desk: `${LR}/Drawerdesk.png`,
+    desk2: `${LR}/Drawerdesk_2.png`,
+    officechairBlue: `${LR}/Officechair_blue.png`,
+    officechairRed: `${LR}/Officechair_red.png`,
+    officechairPurple: `${LR}/Officechair_purple.png`,
+    officechairOrange: `${LR}/Officechair_orange.png`,
+    // Shelves / books (library)
+    bookshelf: `${LR}/Bookshelf_1.png`,
+    bookshelf2: `${LR}/Bookshelf_2.png`,
+    bookshelfSm: `${LR}/Bookshelf_small.png`,
+    shelfLarge: `${LR}/Shelf_large.png`,
+    shelfMedium: `${LR}/Shelf_medium.png`,
+    // Stools (cafe/bar)
+    stoolBlue: `${LR}/Stool_blue.png`,
+    stoolRed: `${LR}/Stool_red.png`,
+    stoolYellow: `${LR}/Stool_yellow.png`,
+    stoolGreen: `${LR}/Stool_green.png`,
+    // Windows / curtains (wall decor)
+    windowSq: `${LR}/Window_square.png`,
+    windowCircle: `${LR}/Window_circle.png`,
+    windowGlass: `${LR}/Window_glass.png`,
+    windowSmall: `${LR}/Window_small.png`,
+    curtain: `${LR}/Curtain_medium_green.png`,
+    curtainR: `${LR}/Curtain_medium_red.png`,
+    curtainB: `${LR}/Curtain_medium_blue.png`,
+    curtainY: `${LR}/Curtain_medium_yellow.png`,
+    // Bedroom
+    bed: `${BR}/Bed_red.png`,
+    bedBlue: `${BR}/Bed_blue.png`,
+    bedGreen: `${BR}/Bed_green.png`,
+    lamp: `${BR}/Lamp_stand_1.png`,
+    lamp2: `${BR}/Lamp_stand_2.png`,
+    lamp3: `${BR}/Lamp_stand_3.png`,
+    cabinet: `${BR}/Cabinet_1.png`,
+    drawer: `${BR}/Drawer_medium_1_c.png`,
+    laptop: `${OBR}/Laptop.png`,
+    // Kitchen (food/break channels)
+    fridge: `${KIT}/Refrigerator_large_white.png`,
+    fridgeBlack: `${KIT}/Refrigerator_large_black.png`,
+    sink: `${KIT}/Sink.png`,
+    counter: `${KIT}/Countertop.png`,
+    counterEnd: `${KIT}/Countertop_end.png`,
+    oven: `${KIT}/Oven.png`,
+    cupboard: `${KIT}/Cupboard_single.png`,
+    // Small floor objects (lived-in life)
+    flora: `${OBJ}/Flora_poppy.png`,
+    floraAloe: `${OBJ}/Flora_aloe.png`,
+    floraFern: `${OBJ}/Flora_fern.png`,
+    floraBonsai: `${OBJ}/Flora_bonsai.png`,
+    floraRose: `${OBJ}/Flora_rose.png`,
+    floraSnake: `${OBJ}/Flora_snake.png`,
+    floraSucculent: `${OBJ}/Flora_succulent.png`,
+    potGreen: `${OBJ}/Flowerpot_medium_green.png`,
+    potRed: `${OBJ}/Flowerpot_medium_red.png`,
+    potBlue: `${OBJ}/Flowerpot_medium_blue.png`,
+    potYellow: `${OBJ}/Flowerpot_medium_yellow.png`,
+    books: `${OBJ}/Books_outside_1.png`,
+    books2: `${OBJ}/Books_outside_2.png`,
+    aquarium: `${OBJ}/Aquarium.png`,
+    terrarium: `${OBJ}/Terrarium.png`,
+    radio: `${OBJ}/Radio.png`,
+    vaseBlue: `${OBJ}/Vase_blue.png`,
+    vasePink: `${OBJ}/Vase_pink.png`,
+    trashcan: `${OBJ}/Trashcan.png`,
+    clipboard: `${OBJ}/Clipboard_wall.png`,
+    box: `${OBR}/Box_blue_large.png`,
+    boxSm: `${OBR}/Box_blue_small.png`,
   };
 
-  // Room-decor variety: every room used to render the exact same 4 items
-  // (bookshelfSm, lamp, couchSmallG, flora). Kits + a seeded pick (keyed off
-  // the Discord channel id, so it's stable across reloads) give each room a
-  // distinct look without needing per-channel authoring.
-  const COUCH_FRONT_KEYS = ['couchSmall', 'couchSmallG', 'couchSmallR'];
-  const COUCH_SIDE_KEYS = ['couchSmallBSide', 'couchSmallGSide', 'couchSmallRSide'];
-  const CURTAIN_KEYS = ['curtain', 'curtainR'];
-  const WINDOW_KEYS = ['windowSq', 'windowCircle'];
+  // 30 pre-made NPC sheets (15 male + 15 female), 16x32 frames, 14 anim rows
+  // (row 0 = walk, row 1 = idle). Real characters replace the old 2-sprite crowd.
+  const NPC_SHEETS = [];
+  for (let i = 1; i <= 15; i += 1) {
+    NPC_SHEETS.push({ key: `npc_m${i}`, path: `${PACK}/NPCs/Male/NPC ${i}.png` });
+    NPC_SHEETS.push({ key: `npc_f${i}`, path: `${PACK}/NPCs/Female/NPC ${i}.png` });
+  }
+  const NPC_FRAME = { w: 16, h: 32 };
 
-  const FURNITURE_KITS = [
-    [ // reading corner
-      { key: 'bookshelfSm', xf: 0.12, depth: 22 },
-      { key: 'lamp', xf: 0.38, depth: 22 },
-      { key: 'couch', xf: 0.64, depth: 23 },
-      { key: 'flora', xf: 0.88, depth: 24 },
-    ],
-    [ // shelf + coffee lounge
-      { key: 'shelfMedium', xf: 0.14, depth: 22 },
-      { key: 'coffee', xf: 0.40, depth: 24 },
-      { key: 'couchSide', xf: 0.66, depth: 23 },
-      { key: 'pot', xf: 0.88, depth: 24 },
-    ],
-    [ // study desk
-      { key: 'table', xf: 0.16, depth: 24 },
-      { key: 'bookshelf', xf: 0.42, depth: 22 },
-      { key: 'lamp', xf: 0.66, depth: 22 },
-      { key: 'flora', xf: 0.88, depth: 24 },
-    ],
-    [ // big lounge
-      { key: 'couch', xf: 0.16, depth: 23 },
-      { key: 'coffee', xf: 0.40, depth: 24 },
-      { key: 'shelfLarge', xf: 0.66, depth: 22 },
-      { key: 'pot', xf: 0.88, depth: 24 },
-    ],
-    [ // cozy nook
-      { key: 'lamp', xf: 0.14, depth: 22 },
-      { key: 'couchSide', xf: 0.38, depth: 23 },
-      { key: 'bookshelfSm', xf: 0.64, depth: 22 },
-      { key: 'flora', xf: 0.88, depth: 24 },
-    ],
+  // Distinct saturated wall color per room + warm floor strip — the #1 reference
+  // signature. Rooms used to all be near-white beige.
+  const ROOM_WALL_COLORS = [
+    0x2f6f9e, 0xd9862b, 0x3f9e57, 0xc0433d, 0x7d54ad,
+    0xc99a22, 0x2f9e93, 0xc4577e, 0x4560c0, 0xb5642f,
+    0x4a8fb0, 0x8a5a3c, 0x5b9e6a, 0x9e4d6e, 0x6a5aa0,
   ];
+  const ROOM_FLOOR_STRIP = 0x7a5a3c; // warm wood baseboard
+
+  // Channel-name -> themed furniture kit. Each kit is a set of {key,xf(0-1),depth,
+  // scaleMul?}. Keys resolve against ASSETS (arrays = seeded pick a variant).
+  // This is the semantic art direction the design panel converged on: a server
+  // reads like a real building (library, dev office, cafe, lounge...) not 8 clones.
+  const KITS = {
+    lounge: [
+      { key: ['couchBlue', 'couchGreen', 'couchRed', 'couchYellow'], xf: 0.22, depth: 23 },
+      { key: 'coffee', xf: 0.5, depth: 24 },
+      { key: ['lamp', 'lamp2', 'lamp3'], xf: 0.74, depth: 22 },
+      { key: ['floraFern', 'floraSnake', 'floraAloe'], xf: 0.9, depth: 24 },
+    ],
+    library: [
+      { key: 'bookshelf', xf: 0.14, depth: 22 },
+      { key: 'bookshelf2', xf: 0.34, depth: 22 },
+      { key: ['couchSmall', 'couchSmallGr'], xf: 0.62, depth: 23 },
+      { key: ['books', 'books2'], xf: 0.84, depth: 24 },
+      { key: ['floraBonsai', 'floraSucculent'], xf: 0.93, depth: 24 },
+    ],
+    office: [
+      { key: ['desk', 'desk2'], xf: 0.22, depth: 22 },
+      { key: 'laptop', xf: 0.22, depth: 24, offY: -13 },
+      { key: ['officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange'], xf: 0.4, depth: 23 },
+      { key: 'shelfMedium', xf: 0.66, depth: 22 },
+      { key: ['floraSucculent', 'flora'], xf: 0.9, depth: 24 },
+    ],
+    cafe: [
+      { key: 'counter', xf: 0.16, depth: 22 },
+      { key: 'counterEnd', xf: 0.31, depth: 22 },
+      { key: ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], xf: 0.5, depth: 23 },
+      { key: 'radio', xf: 0.72, depth: 24 },
+      { key: ['potRed', 'potYellow'], xf: 0.9, depth: 24 },
+    ],
+    kitchen: [
+      { key: 'fridge', xf: 0.14, depth: 22 },
+      { key: 'counter', xf: 0.36, depth: 22 },
+      { key: 'oven', xf: 0.52, depth: 22 },
+      { key: 'sink', xf: 0.68, depth: 22 },
+      { key: 'trashcan', xf: 0.9, depth: 24 },
+    ],
+    reception: [
+      { key: 'tableLong', xf: 0.28, depth: 22 },
+      { key: 'clipboard', xf: 0.28, depth: 24, offY: -16, wall: true },
+      { key: ['floraRose', 'floraFern'], xf: 0.6, depth: 24 },
+      { key: ['couchSmall', 'couchSmallY'], xf: 0.82, depth: 23 },
+    ],
+    cozy: [
+      { key: ['bedBlue', 'bedGreen', 'bed'], xf: 0.24, depth: 23 },
+      { key: ['lamp2', 'lamp3'], xf: 0.5, depth: 22 },
+      { key: 'drawer', xf: 0.68, depth: 22 },
+      { key: ['floraAloe', 'floraSnake'], xf: 0.9, depth: 24 },
+    ],
+    gallery: [
+      { key: 'aquarium', xf: 0.2, depth: 23 },
+      { key: 'terrarium', xf: 0.46, depth: 23 },
+      { key: ['vaseBlue', 'vasePink'], xf: 0.68, depth: 24 },
+      { key: ['floraBonsai', 'floraRose'], xf: 0.88, depth: 24 },
+    ],
+  };
+  const KIT_NAMES = Object.keys(KITS);
+
+  // Pick a kit name for a channel: keyword on name first, then type, then seed.
+  function kitForChannel(name, type, seed) {
+    const n = String(name || '').toLowerCase();
+    const test = (re) => re.test(n);
+    if (type === 'voice' || type === 'stage') {
+      // Voice = social spaces (never bedrooms). Meeting/conference rooms get the
+      // long-table reception kit; the rest are lounges/cafes.
+      if (test(/(meet|conf|stand.?up|board|call|stage|podium)/)) return 'reception';
+      return seededPick(seed, ['lounge', 'cafe']);
+    }
+    if (test(/(read|doc|wiki|book|faq|resource|guide|rule|info)/)) return 'library';
+    if (test(/(dev|code|eng|build|git|ci|ops|cmd|tech|bug|deploy|infra)/)) return 'office';
+    if (test(/(cafe|coffee|food|snack|lunch|bar|drink)/)) return 'cafe';
+    if (test(/(kitchen|cook|recipe|meal)/)) return 'kitchen';
+    if (test(/(welcome|start|rule|announce|intro|lobby|front|greet)/)) return 'reception';
+    if (test(/(art|gallery|show|media|photo|design|pet|fish)/)) return 'gallery';
+    if (test(/(general|chat|hang|off.?topic|random|talk|lounge|social)/)) return 'lounge';
+    if (test(/(afk|sleep|quiet|zzz|away|vent|feel)/)) return 'cozy';
+    return seededPick(seed, KIT_NAMES);
+  }
 
   class ExampleMapScene extends Phaser.Scene {
     constructor() {
@@ -201,8 +321,10 @@
 
     preload() {
       Object.entries(ASSETS).forEach(([k, p]) => this.load.image(k, p));
-      this.load.spritesheet('maleSheet', ASSETS.male, { frameWidth: 16, frameHeight: 16 });
-      this.load.spritesheet('femaleSheet', ASSETS.female, { frameWidth: 16, frameHeight: 16 });
+      // 30 pre-made NPC sheets (16x32 frames): row 0 walk, row 1 idle.
+      NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
+      // Missing-asset diagnostics so a bad path shows in console instead of silently vanishing.
+      this.load.on('loaderror', (file) => console.warn('[map] asset failed:', file.key, file.src));
     }
 
     create() {
@@ -245,12 +367,15 @@
     }
 
     setupPlayer() {
-      this.player = this.physics.add.sprite(160, this.groundY - 1, 'maleSheet', 0)
+      // NPC frames are 16x32 (feet at the bottom of the cell); the collision
+      // body is a small box at the feet so origin (0.5,1) plants on the floor.
+      this.playerSheet = NPC_SHEETS.find((n) => this.textures.exists(n.key))?.key || NPC_SHEETS[0].key;
+      this.player = this.physics.add.sprite(160, this.groundY - 1, this.playerSheet, 0)
         .setScale(SCALE)
         .setOrigin(0.5, 1)
         .setDepth(45)
         .setCollideWorldBounds(true);
-      this.player.body.setSize(10, 6).setOffset(3, 10);
+      this.player.body.setSize(10, 6).setOffset(3, 24);
       const mw = this.mapWidth || W;
       this.physics.world.setBounds(0, 0, mw + 40, H);
       this.cameras.main.setBounds(0, 0, mw + 40, H);
@@ -640,12 +765,12 @@
           : roomH - 4;
         const roomKey = isPlaceholder ? `vc_placeholder_${idx}` : chKey(channels[idx].id);
         const label = isPlaceholder ? '' : channelLabel(channels[idx]);
-        const fill = isPlaceholder ? 0xc2c6e6 : ((idx % 2 === 0) ? 0xd8dff8 : 0xe8ecff);
+        const fill = isPlaceholder ? 0xc2c6e6 : this.roomWallColor(roomKey);
 
         this.cutawayRoom(g, x0, y0, roomW, h, fill, () => {
           if (!isPlaceholder) {
             const floor = y0 + h - 2;
-            this.decorateRoom(roomKey, x0, y0, roomW, h, floor);
+            this.decorateRoom(channels[idx], x0, y0, roomW, h, floor);
             this.addRoomSlots(roomKey, this.slotPointsForRoom(x0, roomW, floor, 4));
           }
         });
@@ -727,9 +852,9 @@
         const slot = grid[idx];
         const roomKey = chKey(ch.id);
         const label = channelLabel(ch);
-        this.cutawayRoom(g, slot.x, slot.y, slot.w, slot.h, fills[idx % fills.length], () => {
+        this.cutawayRoom(g, slot.x, slot.y, slot.w, slot.h, this.roomWallColor(roomKey), () => {
           const floor = slot.y + slot.h - 2;
-          this.decorateRoom(roomKey, slot.x, slot.y, slot.w, slot.h, floor);
+          this.decorateRoom(ch, slot.x, slot.y, slot.w, slot.h, floor);
           this.addRoomSlots(roomKey, this.slotPointsForRoom(slot.x, slot.w, floor, 3));
         });
         this.channelBadge(slot.x + 4, slot.y + 4, shortLabel(label, 16));
@@ -877,36 +1002,49 @@
         .setDepth(depth);
     }
 
+    /** Wall color for a room, deterministic per channel id. */
+    roomWallColor(roomKey) {
+      return ROOM_WALL_COLORS[hashSeed(roomKey) % ROOM_WALL_COLORS.length];
+    }
+
     /**
-     * Decorate a room slot with a furniture kit + wall decor, both picked
-     * deterministically from roomKey (stable per Discord channel across
-     * reloads, varied room to room). Replaces the old hardcoded 4-item set.
+     * Decorate a room with a channel-THEMED furniture kit (library/office/cafe/
+     * lounge/...) chosen from the channel name + type, plus seeded wall decor.
+     * Deterministic per channel id so a room always looks the same across reloads.
      */
-    decorateRoom(roomKey, slotX, slotY, slotW, slotH, floorY) {
+    decorateRoom(ch, slotX, slotY, slotW, slotH, floorY) {
+      const roomKey = chKey(ch.id);
       const seed = hashSeed(roomKey);
-      const kit = seededPick(seed, FURNITURE_KITS);
-      const couchFront = seededPick(seed, COUCH_FRONT_KEYS, 3);
-      const couchSide = seededPick(seed, COUCH_SIDE_KEYS, 3);
-      kit.forEach((item) => {
-        const key = item.key === 'couch' ? couchFront : (item.key === 'couchSide' ? couchSide : item.key);
-        this.furn(key, slotX + item.xf * slotW, floorY, item.depth);
+      const kitName = kitForChannel(ch.name, ch.type, seed);
+      const kit = KITS[kitName] || KITS.lounge;
+
+      kit.forEach((item, idx) => {
+        const key = Array.isArray(item.key) ? seededPick(seed, item.key, idx * 7 + 1) : item.key;
+        const x = slotX + item.xf * slotW;
+        if (item.wall) {
+          this.wallDecor(key, x, slotY + 6, item.depth, SCALE * (item.scaleMul || 1));
+        } else {
+          const sp = this.furn(key, x, floorY + (item.offY || 0), item.depth, SCALE * (item.scaleMul || 1));
+          if (sp && item.offY) sp.setDepth(item.depth); // laptop-on-desk etc.
+        }
       });
-      // Back-wall decor — only when the room is tall enough (window is 30px
-      // tall at SCALE 2) to avoid crowding short slots. Window and curtains
-      // are both bold reds/greens in this pack, so pairing them on top of
-      // each other reads as a clashing blob — pick ONE style per room
-      // instead: a framed window, or a pair of curtains flanking open wall.
+
+      // Back-wall decor — only when the room is tall enough (window ~30px at
+      // SCALE 2). Window OR curtains, never stacked (both are bold in this pack).
       if (slotH >= 70) {
         const wallX = slotX + slotW * 0.5;
         const wallTop = slotY + 6;
-        if (seed % 2 === 0) {
-          const winKey = seededPick(seed, WINDOW_KEYS, 11);
+        if (seed % 3 === 0) {
+          const winKey = seededPick(seed, ['windowSq', 'windowCircle', 'windowGlass', 'windowSmall'], 11);
           this.wallDecor(winKey, wallX, wallTop, 21);
-        } else {
-          const curtainKey = seededPick(seed, CURTAIN_KEYS, 17);
-          const spread = Math.min(slotW * 0.32, 30);
+        } else if (seed % 3 === 1) {
+          const curtainKey = seededPick(seed, ['curtain', 'curtainR', 'curtainB', 'curtainY'], 17);
+          const spread = Math.min(slotW * 0.3, 34);
           this.wallDecor(curtainKey, wallX - spread, wallTop, 21);
           this.wallDecor(curtainKey, wallX + spread, wallTop, 21);
+        } else {
+          // clipboard/notice on the wall for a lived-in office/reception feel
+          this.wallDecor('clipboard', wallX + slotW * 0.28, wallTop + 2, 21);
         }
       }
     }
@@ -927,21 +1065,31 @@
     }
 
     makeAnims() {
-      if (this.anims.exists('idle_m')) return;
-      this.anims.create({ key: 'idle_m', frames: [{ key: 'maleSheet', frame: 0 }] });
-      this.anims.create({
-        key: 'walk_m',
-        frames: this.anims.generateFrameNumbers('maleSheet', { start: 0, end: 3 }),
-        frameRate: 8,
-        repeat: -1,
+      // Each NPC sheet (16x32, 16 cols): row 0 (frames 0-3) = walk, row 1
+      // (frames 16-18) = idle. Build `${key}_walk` / `${key}_idle` per sheet.
+      NPC_SHEETS.forEach((n) => {
+        if (this.anims.exists(`${n.key}_walk`)) return;
+        if (!this.textures.exists(n.key)) return;
+        this.anims.create({
+          key: `${n.key}_walk`,
+          frames: this.anims.generateFrameNumbers(n.key, { start: 0, end: 3 }),
+          frameRate: 8,
+          repeat: -1,
+        });
+        this.anims.create({
+          key: `${n.key}_idle`,
+          frames: this.anims.generateFrameNumbers(n.key, { start: 16, end: 18 }),
+          frameRate: 2,
+          repeat: -1,
+        });
       });
-      this.anims.create({ key: 'idle_f', frames: [{ key: 'femaleSheet', frame: 0 }] });
-      this.anims.create({
-        key: 'walk_f',
-        frames: this.anims.generateFrameNumbers('femaleSheet', { start: 0, end: 3 }),
-        frameRate: 8,
-        repeat: -1,
-      });
+    }
+
+    /** Deterministic NPC sheet key for a user/seed, spread across all 30. */
+    npcSheetFor(seedStr) {
+      const list = NPC_SHEETS.filter((n) => this.textures.exists(n.key));
+      if (!list.length) return NPC_SHEETS[0].key;
+      return list[hashSeed(seedStr) % list.length].key;
     }
 
     spawnChar(x, y, sheet, idle, label, depth = 30) {
@@ -1087,8 +1235,9 @@
     spawnLivePerson(person) {
       const slot = this.claimSlot(person.roomKey, person.userId);
       const isMe = ME_DISCORD_ID && String(person.userId) === ME_DISCORD_ID;
-      const sheet = isMe ? 'maleSheet' : ((Number(person.userId.slice(-1)) % 2 === 0) ? 'femaleSheet' : 'maleSheet');
-      const idle = sheet === 'femaleSheet' ? 'idle_f' : 'idle_m';
+      // Each real Discord user gets a distinct-but-stable avatar from the 30 sheets.
+      const sheet = isMe ? this.playerSheet : this.npcSheetFor(String(person.userId));
+      const idle = `${sheet}_idle`;
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
       const label = isMe ? `${person.displayName} (you)` : person.displayName;
@@ -1100,7 +1249,7 @@
         .setAlpha(0);
       sprite.anims.play(idle);
 
-      const tag = this.add.text(slot.x, slot.y - 22, label, {
+      const tag = this.add.text(slot.x, slot.y - 40, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
         fontSize: '10px',
         fontStyle: 'bold',
@@ -1125,7 +1274,7 @@
       });
       this.tweens.add({
         targets: tag,
-        y: slot.y - 23.5,
+        y: slot.y - 41.5,
         duration: 700 + Math.random() * 400,
         yoyo: true,
         repeat: -1,
@@ -1142,20 +1291,31 @@
 
     spawnDecorNpcs() {
       const mw = this.mapWidth || W;
-      this.spawnChar(12, this.groundY, 'maleSheet', 'idle_m', null, 40);
-      this.spawnChar(Math.min(290, mw - 120), this.groundY, 'femaleSheet', 'idle_f', null, 40);
-      if (mw > 500) {
-        const walker = this.spawnChar(mw * 0.55, this.groundY, 'maleSheet', 'walk_m', null, 40);
+      const avail = NPC_SHEETS.filter((n) => this.textures.exists(n.key) && n.key !== this.playerSheet);
+      if (!avail.length) return;
+      // A lively street: idle bystanders + a couple of strollers, all distinct
+      // sprites, seeded by position so the crowd is stable across reloads.
+      const idleSpots = [24, 96, mw * 0.42, mw - 60, mw - 150].filter((x) => x > 0 && x < mw);
+      idleSpots.forEach((x, i) => {
+        const sheet = avail[(hashSeed('idle' + i + Math.round(x)) % avail.length)].key;
+        const sp = this.spawnChar(x, this.groundY, sheet, `${sheet}_idle`, null, 40);
+        if (i % 2 === 0) sp.setFlipX(true);
+      });
+      // Two strollers pacing different stretches of the street.
+      const strollers = mw > 500 ? [[mw * 0.55, mw * 0.68, 4200], [mw * 0.2, mw * 0.34, 5200]] : [];
+      strollers.forEach(([x0, x1, dur], i) => {
+        const sheet = avail[(hashSeed('walk' + i) % avail.length)].key;
+        const walker = this.spawnChar(x0, this.groundY, sheet, `${sheet}_walk`, null, 40);
         this.tweens.add({
           targets: walker,
-          x: mw * 0.65,
-          duration: 4200,
+          x: x1,
+          duration: dur,
           yoyo: true,
           repeat: -1,
           onYoyo: () => walker.setFlipX(true),
           onRepeat: () => walker.setFlipX(false),
         });
-      }
+      });
     }
 
     registerFloor(def) {
@@ -1338,12 +1498,12 @@
       }
 
       if (vx) {
-        this.player.anims.play('walk_m', true);
+        this.player.anims.play(`${this.playerSheet}_walk`, true);
         this.player.setFlipX(vx < 0);
       } else {
-        this.player.anims.play('idle_m', true);
+        this.player.anims.play(`${this.playerSheet}_idle`, true);
       }
-      this.playerTag.setPosition(this.player.x, this.player.y - 22);
+      this.playerTag.setPosition(this.player.x, this.player.y - 34);
 
       // Zone label
       let zone = 'lobby';

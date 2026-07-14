@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#10182c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Discord Spaces — Denizen</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #151c31;
+      --ink: #e8eefc;
+      --muted: #93a0c0;
+      --accent: #5865f2;
+      --accent-dim: rgba(88, 101, 242, 0.22);
+      --ok: #3dd68c;
+      --bad: #f07178;
+      --warn: #e6c07b;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #app {
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    header {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 16px;
+      padding-top: max(10px, env(safe-area-inset-top, 0px));
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: #10182c;
+    }
+    .back-office {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.78rem;
+      font-weight: 650;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .back-office:hover { border-color: var(--accent); color: #c9d4ff; }
+    #pane-connect {
+      overflow: auto;
+      padding: 14px 16px 32px;
+      padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
+      max-width: 920px;
+      margin: 0 auto;
+      width: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+    #pane-map { display: none; }
+    #pane-map.show {
+      display: block;
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+    }
+    body.map-view #app {
+      grid-template-rows: 1fr;
+    }
+    body.map-view header {
+      display: none;
+    }
+    body.map-view #pane-map.show {
+      grid-row: 1;
+    }
+    .map-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: #10182c;
+    }
+    .map-bar h2 {
+      margin: 0;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      flex: 1;
+    }
+    .tabs { display: flex; gap: 6px; }
+    .tabs button, .btn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .tabs button.active {
+      background: var(--accent);
+      border-color: transparent;
+    }
+    .btn:disabled { opacity: 0.45; cursor: default; }
+    .btn.primary {
+      background: var(--accent);
+      border-color: transparent;
+    }
+    .btn.ghost {
+      background: transparent;
+    }
+    .btn.block { width: 100%; padding: 11px 12px; margin-top: 8px; }
+    #pane-connect, #pane-map {
+      min-height: 0;
+      height: 100%;
+      grid-row: 2;
+    }
+    #pane-connect.hidden { display: none; }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 0.92rem;
+    }
+    .card p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    .hero {
+      background:
+        radial-gradient(120% 80% at 10% 0%, rgba(88,101,242,0.35), transparent 55%),
+        var(--card);
+    }
+    .hero .connected-name {
+      font-size: 1.15rem;
+      font-weight: 750;
+      margin: 4px 0 2px;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      margin-top: 10px;
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--bad);
+      flex-shrink: 0;
+    }
+    .dot.ok { background: var(--ok); }
+    .dot.warn { background: var(--warn); }
+    .guild-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .guild {
+      display: grid;
+      grid-template-columns: 42px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: var(--ink);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .guild:hover, .guild:focus-visible {
+      border-color: rgba(88,101,242,0.55);
+      background: var(--accent-dim);
+      outline: none;
+    }
+    .guild.active {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: inset 0 0 0 1px rgba(88,101,242,0.35);
+    }
+    .guild-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #6a76f5, #3c47b8);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+    }
+    .guild-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      line-height: 1.2;
+    }
+    .guild-meta {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+    .guild-cta {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #c9d4ff;
+      white-space: nowrap;
+    }
+    .empty {
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255,255,255,0.14);
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+    details.advanced {
+      margin-top: 4px;
+    }
+    details.advanced summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 650;
+      margin-bottom: 8px;
+    }
+    label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 10px 0 5px;
+    }
+    input {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #0c1222;
+      color: var(--ink);
+      padding: 10px 12px;
+      font-size: 16px;
+    }
+    .row-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .row-actions .btn { flex: 1; }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #0d111a;
+      display: block;
+    }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .toolbar h2 { flex: 1; margin: 0; font-size: 0.92rem; }
+    .invite-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .invite-row .btn { flex: 1; min-width: 140px; }
+    .steps {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .account-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .account-row .btn { flex: 1; min-width: 140px; }
+    .account-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(61, 214, 140, 0.12);
+      border: 1px solid rgba(61, 214, 140, 0.35);
+      font-size: 0.82rem;
+      margin-top: 8px;
+    }
+    .account-chip img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+    }
+    @media (max-width: 640px) {
+      header {
+        flex-wrap: wrap;
+        padding: 8px 12px;
+        padding-top: max(8px, env(safe-area-inset-top, 0px));
+      }
+      header h1 {
+        flex: 1 1 auto;
+        font-size: 0.88rem;
+        min-width: 0;
+      }
+      .tabs {
+        flex: 1 1 100%;
+        justify-content: stretch;
+      }
+      .tabs button {
+        flex: 1;
+        min-height: 44px;
+        font-size: 0.85rem;
+      }
+      .back-office {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+      }
+      #pane-connect {
+        padding: 12px 12px 24px;
+        padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+      }
+      .card { padding: 12px; border-radius: 12px; }
+      .guild {
+        grid-template-columns: 40px 1fr auto;
+        padding: 12px;
+        min-height: 64px;
+      }
+      .guild-icon { width: 40px; height: 40px; }
+      .invite-row { flex-direction: column; }
+      .invite-row .btn { min-width: 0; width: 100%; min-height: 44px; }
+      .row-actions { flex-direction: column; }
+      .row-actions .btn { min-height: 44px; }
+      .btn.block { min-height: 48px; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <a class="back-office" href="/">← Office</a>
+      <h1>Discord Spaces</h1>
+      <div class="tabs">
+        <button type="button" id="tab-connect" class="active">Connect</button>
+        <button type="button" id="tab-map">Map</button>
+      </div>
+    </header>
+
+    <section id="pane-connect">
+      <div class="card hero" id="heroCard">
+        <h2>Your Discord map</h2>
+        <p>Pick a server the Denizen bot is in. Join a voice channel and you appear on the map.</p>
+        <div class="connected-name" id="heroName">Not connected</div>
+        <div class="meta" id="heroMeta">Choose a server below</div>
+        <div class="status">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">Looking for servers…</span>
+        </div>
+        <button type="button" class="btn primary block" id="btnOpenMap" disabled>Open map</button>
+      </div>
+
+      <div class="card" id="accountCard">
+        <h2>Denizen account</h2>
+        <p id="accountBlurb">Link Discord so the map knows which avatar is <strong>you</strong>. Or type <code>,signup</code> in Discord.</p>
+        <div id="accountLinked" hidden></div>
+        <div class="account-row" id="accountActions">
+          <button type="button" class="btn primary" id="btnDiscordSignup">Sign up with Discord</button>
+          <button type="button" class="btn" id="btnDiscordLink">Link Discord</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Add Denizen to your server</h2>
+        <p>Invite the bot with admin (or Manage Server). It reads your channel list and live voice/text presence — no manual setup.</p>
+        <ol class="steps">
+          <li>Click <strong>Invite Denizen bot</strong> and pick your Discord server.</li>
+          <li>No extra Discord Developer Portal toggles needed for basic voice + text presence.</li>
+          <li>Hit <strong>Refresh</strong> — your server appears in the list.</li>
+          <li>Tap <strong>Connect</strong>, then join a voice channel to spawn on the map.</li>
+        </ol>
+        <div class="invite-row">
+          <button type="button" class="btn primary" id="btnInvite">Invite Denizen bot</button>
+          <button type="button" class="btn" id="btnCopyInvite" disabled>Copy invite link</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <h2>Available servers</h2>
+          <button type="button" class="btn" id="btnRefresh">Refresh</button>
+        </div>
+        <p>Servers where the Denizen Discord bot is already invited.</p>
+        <div class="guild-list" id="guildList"></div>
+      </div>
+
+      <div class="card">
+        <details class="advanced" id="advancedBox">
+          <summary>Advanced — custom presence URL</summary>
+          <p>Only needed if you’re running your own bot elsewhere.</p>
+          <label for="presenceUrl">Presence API URL</label>
+          <input id="presenceUrl" type="url" placeholder="https://denizen.dolonia.cloud/api/discord/map/presence" autocomplete="off" />
+          <label for="guildId">Guild ID (optional)</label>
+          <input id="guildId" type="text" placeholder="Discord server snowflake" autocomplete="off" />
+          <label for="label">Label (optional)</label>
+          <input id="label" type="text" placeholder="My server" autocomplete="off" />
+          <div class="row-actions">
+            <button type="button" class="btn" id="btnTest">Test</button>
+            <button type="button" class="btn primary" id="btnSaveCustom">Save</button>
+          </div>
+          <button type="button" class="btn ghost block" id="btnLocal">Reset to Denizen hosted</button>
+        </details>
+      </div>
+    </section>
+
+    <section id="pane-map">
+      <iframe id="mapFrame" title="Discord channel map" allow="autoplay"></iframe>
+    </section>
+  </div>
+
+  <script>
+    const KEY = 'denizen-discord-map';
+    const SESSION_KEY = 'denizen-discord-session';
+    const $ = (id) => document.getElementById(id);
+
+    function loadSession() {
+      try { return JSON.parse(localStorage.getItem(SESSION_KEY) || '{}'); } catch { return {}; }
+    }
+    function saveSession(data) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+    }
+
+    function updateAccountUi(linked = null) {
+      const cfg = loadCfg();
+      const discordUserId = linked?.discord_user_id || cfg.discordUserId || null;
+      const name = linked?.display_name || cfg.discordDisplayName || linked?.discord_username || cfg.discordUsername || '';
+      const avatar = linked?.discord_avatar_url || cfg.discordAvatarUrl || null;
+      const linkedEl = $('accountLinked');
+      const actions = $('accountActions');
+      if (discordUserId) {
+        linkedEl.hidden = false;
+        linkedEl.innerHTML = avatar
+          ? `<div class="account-chip"><img src="${avatar.replace(/"/g, '&quot;')}" alt="" /> <span><strong>${String(name || 'Linked').replace(/</g, '&lt;')}</strong> · map shows you in green</span></div>`
+          : `<div class="account-chip"><span><strong>${String(name || 'Linked').replace(/</g, '&lt;')}</strong> · map shows you in green</span></div>`;
+        actions.hidden = true;
+        $('accountBlurb').textContent = 'Your Discord profile is linked to Denizen.';
+      } else {
+        linkedEl.hidden = true;
+        linkedEl.innerHTML = '';
+        actions.hidden = false;
+        $('accountBlurb').innerHTML = 'Link Discord so the map knows which avatar is <strong>you</strong>. Or type <code>,signup</code> in Discord.';
+      }
+    }
+
+    function discordConnectUrl(mode) {
+      const session = loadSession();
+      const params = new URLSearchParams({
+        mode,
+        return: '/discord-map/',
+      });
+      if (session.session_id) params.set('session_id', session.session_id);
+      if (session.session_token) params.set('session_token', session.session_token);
+      return `/api/visitor/auth/discord/connect?${params.toString()}`;
+    }
+
+    async function bootstrapFromGrant() {
+      const q = new URLSearchParams(location.search);
+      const grant = q.get('access_grant');
+      if (!grant) return false;
+      try {
+        const res = await fetch('/api/visitor/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_grant: grant }),
+        });
+        const data = await res.json();
+        if (!data.ok || !data.session?.id) return false;
+        saveSession({
+          session_id: data.session.id,
+          session_token: data.session_token || null,
+          identity: data.identity || null,
+        });
+        const identity = data.identity || {};
+        if (identity.discord_user_id) {
+          saveCfg({
+            ...loadCfg(),
+            discordUserId: identity.discord_user_id,
+            discordUsername: identity.discord_username || null,
+            discordDisplayName: identity.display_name || null,
+            discordAvatarUrl: identity.discord_avatar_url || null,
+          });
+        }
+        updateAccountUi(identity);
+        q.delete('access_grant');
+        q.delete('discord_linked');
+        const next = `${location.pathname}${q.toString() ? `?${q}` : ''}`;
+        history.replaceState(null, '', next);
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function refreshAccountStatus() {
+      const session = loadSession();
+      if (!session.session_id) {
+        updateAccountUi(loadCfg());
+        return;
+      }
+      try {
+        const params = new URLSearchParams({ session_id: session.session_id });
+        if (session.session_token) params.set('session_token', session.session_token);
+        const res = await fetch(`/api/visitor/auth/discord/status?${params}`);
+        const data = await res.json();
+        if (data.ok && data.linked && data.discord_user_id) {
+          saveCfg({
+            ...loadCfg(),
+            discordUserId: data.discord_user_id,
+            discordUsername: data.discord_username || null,
+            discordDisplayName: data.display_name || null,
+            discordAvatarUrl: data.discord_avatar_url || null,
+          });
+          updateAccountUi(data);
+        } else {
+          updateAccountUi(loadCfg());
+        }
+      } catch (_) {
+        updateAccountUi(loadCfg());
+      }
+    }
+
+    function loadCfg() {
+      try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
+    }
+    function saveCfg(cfg) {
+      localStorage.setItem(KEY, JSON.stringify(cfg));
+    }
+
+    function hostedPresenceBase() {
+      const host = location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://127.0.0.1:5180/presence';
+      }
+      return `${location.origin}/api/discord/map/presence`;
+    }
+
+    function hostedGuildsUrl() {
+      const host = location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://127.0.0.1:5180/guilds';
+      }
+      return `${location.origin}/api/discord/map/guilds`;
+    }
+
+    function hostedInviteUrl() {
+      const host = location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://127.0.0.1:5180/invite';
+      }
+      return `${location.origin}/api/discord/map/invite`;
+    }
+
+    let inviteLink = '';
+
+    async function loadInviteLink() {
+      try {
+        const res = await fetch(hostedInviteUrl(), { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.url) {
+          inviteLink = data.url;
+          $('btnCopyInvite').disabled = false;
+        }
+      } catch (_) { /* bot offline */ }
+    }
+
+    function defaultPresenceUrl() {
+      return hostedPresenceBase();
+    }
+
+    function initials(name) {
+      const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return '?';
+      if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+
+    function buildPresenceUrl(baseIn, guildIdIn) {
+      const base = String(baseIn || $('presenceUrl').value || '').trim().replace(/\/$/, '');
+      if (!base) return '';
+      const gid = String(guildIdIn != null ? guildIdIn : $('guildId').value || '').trim();
+      try {
+        const u = new URL(base.includes('://') ? base : `http://${base}`);
+        if (!u.pathname || u.pathname === '/' || u.pathname === '/guilds') u.pathname = '/presence';
+        if (u.pathname.endsWith('/guilds')) u.pathname = u.pathname.replace(/\/guilds$/, '/presence');
+        if (gid) u.searchParams.set('guildId', gid);
+        else u.searchParams.delete('guildId');
+        return u.toString();
+      } catch {
+        return base;
+      }
+    }
+
+    function setStatus(ok, text, warn) {
+      $('statusDot').classList.toggle('ok', !!ok);
+      $('statusDot').classList.toggle('warn', !!warn && !ok);
+      $('statusText').textContent = text;
+    }
+
+    function updateHero(cfg = loadCfg()) {
+      const name = cfg.label || cfg.guildName || (cfg.guildId ? `Server ${cfg.guildId.slice(0, 6)}…` : '');
+      const connected = !!(cfg.presenceUrlResolved);
+      $('heroName').textContent = connected ? (name || 'Connected') : 'Not connected';
+      if (!connected) {
+        $('heroMeta').textContent = 'Choose a server below';
+        $('btnOpenMap').disabled = true;
+        return;
+      }
+      const bits = [];
+      if (cfg.channelCount != null) bits.push(`${cfg.channelCount} channels`);
+      if (cfg.voiceLive != null) bits.push(`${cfg.voiceLive} in voice`);
+      $('heroMeta').textContent = bits.length ? bits.join(' · ') : 'Ready to open map';
+      $('btnOpenMap').disabled = false;
+    }
+
+    function fillForm() {
+      const c = loadCfg();
+      $('presenceUrl').value = c.presenceUrl || defaultPresenceUrl();
+      $('guildId').value = c.guildId || '';
+      $('label').value = c.label || '';
+      updateHero(c);
+    }
+
+    function renderGuilds(guilds, selectedId) {
+      const root = $('guildList');
+      root.innerHTML = '';
+      if (!guilds.length) {
+        root.innerHTML = '<div class="empty">No servers found yet. Invite the Denizen bot to your Discord, then hit Refresh.</div>';
+        return;
+      }
+      for (const g of guilds) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'guild' + (g.guildId === selectedId ? ' active' : '');
+        btn.innerHTML =
+          `<span class="guild-icon">${initials(g.name)}</span>` +
+          `<span><div class="guild-name"></div><div class="guild-meta"></div></span>` +
+          `<span class="guild-cta">${g.guildId === selectedId ? 'Selected' : 'Connect'}</span>`;
+        btn.querySelector('.guild-name').textContent = g.name || g.guildId;
+        const meta = [
+          `${g.channelCount || 0} channels`,
+          `${g.voiceCount || 0} voice`,
+          g.voiceLive ? `${g.voiceLive} live` : null,
+        ].filter(Boolean).join(' · ');
+        btn.querySelector('.guild-meta').textContent = meta;
+        btn.addEventListener('click', () => { void connectGuild(g); });
+        root.appendChild(btn);
+      }
+    }
+
+    async function fetchGuilds() {
+      setStatus(false, 'Looking for servers…', true);
+      try {
+        const res = await fetch(hostedGuildsUrl(), { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const guilds = Array.isArray(data.guilds) ? data.guilds : [];
+        const cfg = loadCfg();
+        renderGuilds(guilds, cfg.guildId);
+        if (!guilds.length) {
+          setStatus(false, 'Bot online, but no servers yet — invite Denizen', true);
+        } else if (cfg.presenceUrlResolved) {
+          setStatus(true, `Connected · ${cfg.label || cfg.guildName || 'server'}`);
+        } else {
+          setStatus(false, `${guilds.length} server${guilds.length === 1 ? '' : 's'} ready — tap one`, true);
+        }
+        return guilds;
+      } catch (err) {
+        renderGuilds([], null);
+        setStatus(false, `Bot offline — ${err.message || 'unreachable'}`);
+        return [];
+      }
+    }
+
+    async function connectGuild(g) {
+      const presenceUrl = hostedPresenceBase();
+      const presenceUrlResolved = buildPresenceUrl(presenceUrl, g.guildId);
+      const cfg = {
+        presenceUrl,
+        guildId: g.guildId,
+        label: g.name || '',
+        guildName: g.name || '',
+        channelCount: g.channelCount || 0,
+        voiceLive: g.voiceLive || 0,
+        presenceUrlResolved,
+        connectedAt: Date.now(),
+      };
+      saveCfg(cfg);
+      $('presenceUrl').value = presenceUrl;
+      $('guildId').value = g.guildId;
+      $('label').value = g.name || '';
+      updateHero(cfg);
+      setStatus(false, 'Checking live presence…', true);
+      const ok = await testConnection();
+      if (ok) {
+        renderGuilds((await fetchGuildsSilent()) || [], g.guildId);
+        showMap();
+      }
+    }
+
+    async function fetchGuildsSilent() {
+      try {
+        const res = await fetch(hostedGuildsUrl(), { cache: 'no-store' });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data.guilds) ? data.guilds : [];
+      } catch {
+        return [];
+      }
+    }
+
+    async function testConnection() {
+      const url = buildPresenceUrl();
+      if (!url) {
+        setStatus(false, 'Enter a presence URL');
+        return false;
+      }
+      setStatus(false, 'Testing…', true);
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const rooms = (data.rooms || []).length;
+        const people = (data.people || []).length;
+        const name = data.guildName || $('label').value || 'guild';
+        const cfg = {
+          ...loadCfg(),
+          presenceUrl: String($('presenceUrl').value || '').trim() || hostedPresenceBase(),
+          guildId: String($('guildId').value || data.guildId || '').trim(),
+          label: String($('label').value || data.guildName || '').trim(),
+          guildName: data.guildName || '',
+          channelCount: rooms,
+          voiceLive: people,
+          presenceUrlResolved: buildPresenceUrl(
+            String($('presenceUrl').value || '').trim() || hostedPresenceBase(),
+            String($('guildId').value || data.guildId || '').trim(),
+          ),
+        };
+        saveCfg(cfg);
+        updateHero(cfg);
+        setStatus(true, `Connected · ${name} · ${rooms} channels · ${people} live`);
+        return true;
+      } catch (err) {
+        setStatus(false, `Offline — ${err.message || 'unreachable'}`);
+        return false;
+      }
+    }
+
+    function showMap() {
+      const cfg = loadCfg();
+      const presence = cfg.presenceUrlResolved || buildPresenceUrl();
+      if (!presence) {
+        setStatus(false, 'Connect a server first');
+        return;
+      }
+      const src = `/discord-map/play.html?presence=${encodeURIComponent(presence)}&v=${Date.now()}${cfg.discordUserId ? `&me=${encodeURIComponent(cfg.discordUserId)}` : ''}`;
+      $('mapFrame').src = src;
+      $('pane-connect').classList.add('hidden');
+      $('pane-map').classList.add('show');
+      $('tab-connect').classList.remove('active');
+      $('tab-map').classList.add('active');
+      document.body.classList.add('map-view');
+    }
+
+    function showConnect() {
+      $('pane-connect').classList.remove('hidden');
+      $('pane-map').classList.remove('show');
+      $('tab-connect').classList.add('active');
+      $('tab-map').classList.remove('active');
+      document.body.classList.remove('map-view');
+      void fetchGuilds();
+    }
+
+    $('tab-connect').addEventListener('click', showConnect);
+    $('tab-map').addEventListener('click', () => {
+      const cfg = loadCfg();
+      if (!cfg.presenceUrlResolved && !buildPresenceUrl()) {
+        showConnect();
+        setStatus(false, 'Connect a server first');
+        return;
+      }
+      showMap();
+    });
+    $('btnOpenMap').addEventListener('click', showMap);
+    $('btnDiscordSignup').addEventListener('click', () => { location.href = discordConnectUrl('signup'); });
+    $('btnDiscordLink').addEventListener('click', () => { location.href = discordConnectUrl('link'); });
+    $('btnRefresh').addEventListener('click', () => { void fetchGuilds(); });
+    $('btnInvite').addEventListener('click', async () => {
+      if (!inviteLink) await loadInviteLink();
+      if (inviteLink) window.open(inviteLink, '_blank', 'noopener,noreferrer');
+      else setStatus(false, 'Invite link unavailable — is the bot running?');
+    });
+    $('btnCopyInvite').addEventListener('click', async () => {
+      if (!inviteLink) await loadInviteLink();
+      if (!inviteLink) return;
+      try {
+        await navigator.clipboard.writeText(inviteLink);
+        setStatus(true, 'Invite link copied');
+      } catch {
+        setStatus(false, 'Could not copy — open invite instead');
+      }
+    });
+    $('btnLocal').addEventListener('click', () => {
+      $('presenceUrl').value = defaultPresenceUrl();
+      $('guildId').value = '';
+      $('label').value = '';
+    });
+    $('btnTest').addEventListener('click', () => { void testConnection(); });
+    $('btnSaveCustom').addEventListener('click', async () => {
+      const presenceUrl = String($('presenceUrl').value || '').trim();
+      const guildId = String($('guildId').value || '').trim();
+      const label = String($('label').value || '').trim();
+      const presenceUrlResolved = buildPresenceUrl(presenceUrl, guildId);
+      saveCfg({ ...loadCfg(), presenceUrl, guildId, label, presenceUrlResolved });
+      updateHero();
+      const ok = await testConnection();
+      if (ok) showMap();
+    });
+
+    fillForm();
+    void loadInviteLink();
+    void bootstrapFromGrant().then(() => refreshAccountStatus());
+    const boot = loadCfg();
+    const q = new URLSearchParams(location.search);
+    if (q.get('play') === '1' && boot.presenceUrlResolved) {
+      showMap();
+    } else {
+      void fetchGuilds();
+    }
+  </script>
+</body>
+</html>
