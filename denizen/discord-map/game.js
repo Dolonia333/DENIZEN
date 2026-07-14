@@ -226,6 +226,12 @@
   // loading at half-width used to slice each character in two down the middle.
   const NPC_FRAME = { w: 32, h: 32 };
   const NPC_COLS = 8;
+  // The character art itself only fills roughly y9-23 of each 32-tall cell
+  // (walk/idle rows) — the frame has ~9px of transparent padding below the
+  // feet. Anchoring at the frame's true bottom (origin.y = 1) floats the
+  // sprite above the floor; anchor at the feet instead so origin (0.5, this)
+  // plants the character on the ground line.
+  const NPC_FOOT_ORIGIN_Y = 24 / 32;
 
   // Distinct saturated wall color per room + warm floor strip — the #1 reference
   // signature. Rooms used to all be near-white beige.
@@ -343,6 +349,7 @@
       this.buildings = [];
       this.indoors = null;
       this.enterCooldown = 0;
+      this._sceneMinY = 0; // tallest building's roof, tracked as buildings draw
       this.presenceEl = document.getElementById('presence-status');
       this.hintEl = document.getElementById('enter-hint');
 
@@ -372,18 +379,23 @@
     setupPlayer() {
       // NPC frames are 32x32 cells; the character art itself is a small chibi
       // bust roughly x11-21,y9-23 within each cell (not flush to the edges).
-      // The collision body is a small box over the legs so origin (0.5,1)
-      // plants the character reasonably on the floor.
+      // The collision body is a small box over the legs, anchored at the
+      // feet (NPC_FOOT_ORIGIN_Y) so the character actually stands on the
+      // floor line instead of floating above it.
       this.playerSheet = NPC_SHEETS.find((n) => this.textures.exists(n.key))?.key || NPC_SHEETS[0].key;
       this.player = this.physics.add.sprite(160, this.groundY - 1, this.playerSheet, 0)
         .setScale(SCALE)
-        .setOrigin(0.5, 1)
+        .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
         .setDepth(45)
         .setCollideWorldBounds(true);
       this.player.body.setSize(12, 8).setOffset(10, 16);
       const mw = this.mapWidth || W;
-      this.physics.world.setBounds(0, 0, mw + 40, H);
-      this.cameras.main.setBounds(0, 0, mw + 40, H);
+      // Tall stacked-floor buildings can extend above y=0; widen bounds so
+      // the camera can actually scroll up to follow the player onto upper
+      // floors instead of clamping at the canvas top.
+      const topBound = Math.min(0, this._sceneMinY ?? 0);
+      this.physics.world.setBounds(0, topBound, mw + 40, H - topBound);
+      this.cameras.main.setBounds(0, topBound, mw + 40, H - topBound);
       this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
       const narrow = window.innerWidth < 640;
       this.outdoorZoom = IS_TOUCH && narrow ? 0.98 : 1.1;
@@ -725,6 +737,7 @@
       const totalRoomsHeight = rows * minRoomH + (rows - 1) * gap;
       const bh = Math.max(320, totalRoomsHeight + doorStrip + 32);
       const top = groundY - bh;
+      this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 30);
       const title = channels.length === 1
         ? shortLabel(channelLabel(channels[0]), 24)
         : 'Voice Channels';
@@ -821,6 +834,7 @@
       const bw = 290;
       const bh = 228;
       const top = groundY - bh;
+      this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 30);
       const gap = 6;
       const roomW = (bw - 32 - gap) / 2;
       const doorStrip = 54;
@@ -1071,7 +1085,10 @@
 
     makeAnims() {
       // Each NPC sheet is an 8-col x 14-row grid of 32x32 cells (frame index =
-      // row*8+col). Row 0 = MOVE (cols 0-3 walk cycle), row 1 = IDLE (cols 0-3).
+      // row*8+col). Row 0 = MOVE (4 real frames, cols 0-3, then a "MOVE" text
+      // label drawn in col4 — NOT a 5th frame). Row 1 = IDLE (only 3 real
+      // frames, cols 0-2; col3 holds the "IDLE" label). Including a label
+      // column in the loop flashed the sheet's own text captions in-game.
       NPC_SHEETS.forEach((n) => {
         if (this.anims.exists(`${n.key}_walk`)) return;
         if (!this.textures.exists(n.key)) return;
@@ -1083,7 +1100,7 @@
         });
         this.anims.create({
           key: `${n.key}_idle`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: NPC_COLS, end: NPC_COLS + 3 }),
+          frames: this.anims.generateFrameNumbers(n.key, { start: NPC_COLS, end: NPC_COLS + 2 }),
           frameRate: 2,
           repeat: -1,
         });
@@ -1100,7 +1117,7 @@
     spawnChar(x, y, sheet, idle, label, depth = 30) {
       const sp = this.add.sprite(x, y, sheet, 0)
         .setScale(SCALE)
-        .setOrigin(0.5, 1)
+        .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
         .setDepth(depth);
       sp.anims.play(idle);
       this.tweens.add({
@@ -1249,7 +1266,7 @@
 
       const sprite = this.add.sprite(slot.x, slot.y, sheet, 0)
         .setScale(SCALE)
-        .setOrigin(0.5, 1)
+        .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
         .setDepth(depth)
         .setAlpha(0);
       sprite.anims.play(idle);
@@ -1347,12 +1364,23 @@
 
     registerPassage(def) {
       if (!this.passages) this.passages = [];
+      const radius = def.radius || 12;
       this.passages.push({
         x: def.x,
         fromFloorId: def.fromFloorId,
         toFloorId: def.toFloorId,
-        radius: def.radius || 12,
+        radius,
       });
+      // Each room's walkable minX/maxX stops a few px short of the shared
+      // wall, so the passage trigger point (sitting in that gap) was never
+      // actually reachable — the per-frame clamp pinned the player just
+      // short of it, so crossing silently failed or glitched. fromFloorId is
+      // always the left-hand room and toFloorId the right-hand room at this
+      // call site, so extend each room's bound toward the passage.
+      const from = this.floors.get(def.fromFloorId);
+      const to = this.floors.get(def.toFloorId);
+      if (from) from.maxX = Math.max(from.maxX, def.x + radius);
+      if (to) to.minX = Math.min(to.minX, def.x - radius);
     }
 
     setEnterHint(text) {
