@@ -159,6 +159,7 @@ const { startContentPipelineScheduler } = require('./src/content-pipeline-schedu
 const npcThinkRunner   = require('./src/npc-think-runner');
 const { ensureBrowserclawRunning } = require('./jelly/services/browserclaw/ensure.cjs');
 const robinhoodMcp     = require('./src/robinhood-mcp');
+const rokiPaper        = require('./src/roki-paper-broker');
 const marketScheduler  = require('./src/denizen-market-scheduler');
 const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
 const teamMcpGateway   = require('./src/denizen-mcp-team-gateway');
@@ -837,6 +838,7 @@ const MIME = {
   '.md': 'text/markdown; charset=utf-8',
   '.yml': 'text/yaml; charset=utf-8',
   '.yaml': 'text/yaml; charset=utf-8',
+  '.pdf': 'application/pdf',
   '.exe': 'application/octet-stream',
   '.blockmap': 'application/octet-stream',
 };
@@ -993,6 +995,69 @@ function _broadcastConnectionUpdate(connection, { event, sessionIds = [] } = {})
 function _broadcastToOffice(officeId, payload) {
   if (!officeId || !payload) return;
   officeRegistry.broadcastAgent(_agentClients(), payload, { officeId });
+}
+
+function _mpPresenceKey(ws) {
+  return officeRegistry.ensurePresenceKey(ws);
+}
+
+function _mpIsSpectator(msg) {
+  if (msg?.spectator === true || msg?.interactive === false) return true;
+  if (msg?.demo === true || msg?.mode === 'demo') return true;
+  return false;
+}
+
+function _mpSendOfficeSync(ws, office) {
+  if (!ws || ws.readyState !== 1 || !office?.officeId) return;
+  const officeId = office.officeId;
+  const presenceKey = _mpPresenceKey(ws);
+  // If we just upgraded anon → sess, tell the office to drop the ghost.
+  const migrated = ws._denizenPresenceKeyMigrated;
+  if (migrated?.from) {
+    _broadcastToOffice(officeId, {
+      type: 'player_left',
+      office_id: officeId,
+      sessionId: migrated.from,
+      displayName: migrated.removed?.displayName || null,
+      ts: Date.now(),
+    });
+    ws._denizenPresenceKeyMigrated = null;
+  }
+  const players = officeRegistry.listPlayersInOffice(officeId)
+    .filter((p) => p.sessionId !== presenceKey);
+  const hostResult = officeRegistry.ensureSimHost(officeId, _agentClients(), presenceKey);
+  try {
+    ws.send(JSON.stringify({
+      type: 'players_snapshot',
+      office_id: officeId,
+      players,
+      selfSessionId: presenceKey,
+      ts: Date.now(),
+    }));
+  } catch (_) {}
+  if (hostResult.message) {
+    _broadcastToOffice(officeId, hostResult.message);
+  }
+}
+
+function _mpHandleDisconnect(ws) {
+  const officeId = ws?._denizenOfficeId;
+  const key = ws?._denizenPresenceKey || (ws?._denizenSessionId ? `sess:${ws._denizenSessionId}` : null);
+  if (!officeId || !key) return;
+  const removed = officeRegistry.removePlayerFromOffice(officeId, key);
+  if (removed) {
+    _broadcastToOffice(officeId, {
+      type: 'player_left',
+      office_id: officeId,
+      sessionId: key,
+      displayName: removed.displayName || null,
+      ts: Date.now(),
+    });
+  }
+  const hostResult = officeRegistry.clearSimHostIf(key, officeId, _agentClients());
+  if (hostResult?.message) {
+    _broadcastToOffice(officeId, hostResult.message);
+  }
 }
 
 function _notifyCeoHandoff(handoff) {
@@ -1325,6 +1390,87 @@ function _handleVisitorAuthRoutes(req, res, urlPath) {
     return true;
   }
 
+  if (urlPath === '/api/visitor/auth/discord/connect' && req.method === 'GET') {
+    (async () => {
+      const discordAuth = require('./src/denizen-discord-auth.js');
+      const u = new URL(req.url, 'http://localhost');
+      const mode = u.searchParams.get('mode') || 'signup';
+      const returnTo = u.searchParams.get('return') || '/discord-map/';
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const sessionToken = sessionAuth.extractSessionAuth(req, {
+        session_token: u.searchParams.get('session_token') || u.searchParams.get('sessionToken'),
+      });
+      let identityId = u.searchParams.get('identity_id') || u.searchParams.get('identityId') || null;
+      if (mode === 'link' && sessionId && !identityId) {
+        const identity = await userIdentity.getIdentityBySession(sessionId).catch(() => null);
+        identityId = identity?.id || null;
+      }
+      const url = discordAuth.buildConnectUrl({
+        mode,
+        returnTo,
+        identityId,
+        sessionId,
+        sessionToken,
+      });
+      res.writeHead(302, { Location: url });
+      res.end();
+    })().catch((err) => {
+      const discordAuth = require('./src/denizen-discord-auth.js');
+      const status = discordAuth.discordAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(discordAuth.errorHtml(err?.message || String(err)));
+    });
+    return true;
+  }
+
+  if (urlPath.startsWith('/api/visitor/auth/discord/callback') && req.method === 'GET') {
+    (async () => {
+      const discordAuth = require('./src/denizen-discord-auth.js');
+      const u = new URL(req.url, 'http://localhost');
+      const code = u.searchParams.get('code');
+      const state = u.searchParams.get('state');
+      const error = u.searchParams.get('error');
+      if (error || !code) {
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(discordAuth.errorHtml(error || 'No authorization code received'));
+        return;
+      }
+      const result = await discordAuth.completeOAuth({ code, stateToken: state });
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(discordAuth.successHtml(result));
+    })().catch((err) => {
+      const discordAuth = require('./src/denizen-discord-auth.js');
+      const status = discordAuth.discordAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(discordAuth.errorHtml(err?.message || String(err)));
+    });
+    return true;
+  }
+
+  if (urlPath === '/api/visitor/auth/discord/status' && req.method === 'GET') {
+    (async () => {
+      const discordAuth = require('./src/denizen-discord-auth.js');
+      const u = new URL(req.url, 'http://localhost');
+      const sessionId = u.searchParams.get('session_id') || u.searchParams.get('sessionId');
+      const sessionToken = sessionAuth.extractSessionAuth(req, {
+        session_token: u.searchParams.get('session_token') || u.searchParams.get('sessionToken'),
+      });
+      const status = await discordAuth.getLinkStatusForSession(sessionId, sessionToken);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, ...status }));
+    })().catch((err) => {
+      if (err instanceof visitorAccess.VisitorAccessError) {
+        _writeVisitorAccessError(res, err);
+        return;
+      }
+      const discordAuth = require('./src/denizen-discord-auth.js');
+      const status = discordAuth.discordAuthErrorStatus(err);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return true;
+  }
+
   return false;
 }
 
@@ -1409,7 +1555,8 @@ async function _createVisitorSession(req, res, body) {
     || tier === 'demo'
     || body.demo === true
     || metadata.access_method === 'demo'
-    || metadata.access_method === 'demo_login';
+    || metadata.access_method === 'demo_login'
+    || metadata.access_method === 'discord';
   if (isDemoOrg) {
     ceoVerified = false;
     tier = 'demo';
@@ -2920,6 +3067,7 @@ const jelly = createJelly({
     webResearch,
     skillBuilder,
     robinhoodMcp,
+    rokiPaper,
     codingTaskRunner,
     linuxAgent: linuxAgentBridge,
     worldState,
@@ -6480,6 +6628,36 @@ const server = http.createServer((req, res) => {
 
   // OAuth2 PKCE initiation — redirect user to Robinhood login
   if (urlPath === '/api/market/auth/connect' && req.method === 'GET') {
+    // Robinhood rejects hosted HTTPS callbacks (shows "Uh oh! Something's gone wrong").
+    // Loopback http://127.0.0.1 works — guide cloud users to the local connect script.
+    try {
+      const redirectUri = String(robinhoodMcp.getRedirectUri?.() || '');
+      const hostedHttps = /^https:\/\//i.test(redirectUri)
+        && !/(localhost|127\.0\.0\.1)/i.test(redirectUri);
+      if (hostedHttps) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Connect Robinhood</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.box{max-width:520px;background:#1e293b;border:1px solid #334155;border-radius:14px;padding:28px}
+h1{margin:0 0 12px;font-size:22px;color:#86efac}
+p{line-height:1.5;color:#cbd5e1}
+code{display:block;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;margin:14px 0;color:#fde68a;overflow:auto}
+a{color:#93c5fd}
+</style></head><body><div class="box">
+<h1>Robinhood needs a local connect</h1>
+<p>Robinhood’s OAuth only accepts <b>localhost</b> redirects. Connecting from
+<code style="display:inline;padding:2px 6px;margin:0">${redirectUri.replace(/</g, '')}</code>
+fails with “Uh oh! Something’s gone wrong”.</p>
+<p>On your PC (in the Denizen OS repo), run:</p>
+<code>py infra/connect-robinhood-local.py</code>
+<p>That opens Robinhood, saves the token, and pushes it to the office server.
+Then hard-refresh and open <b>Roki Market</b>.</p>
+<p><a href="/office">← Back to office</a></p>
+</div></body></html>`);
+        return;
+      }
+    } catch (_) {}
     robinhoodMcp.buildAuthUrl()
       .then(authUrl => {
         res.writeHead(302, { Location: authUrl });
@@ -6544,6 +6722,26 @@ const server = http.createServer((req, res) => {
       .catch(err => { res.writeHead(502, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })); });
     return;
   }
+  if (urlPath === '/api/market/chart' && req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const symbol = (url.searchParams.get('symbol') || '').trim().toUpperCase();
+    const range = (url.searchParams.get('range') || '1D').trim().toUpperCase();
+    if (!symbol) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'symbol required, e.g. ?symbol=AAPL&range=1D' }));
+      return;
+    }
+    robinhoodMcp.getChart(symbol, range)
+      .then((data) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(data));
+      })
+      .catch((err) => {
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      });
+    return;
+  }
   if (urlPath === '/api/market/portfolio' && req.method === 'GET') {
     robinhoodMcp.getPortfolio()
       .then(data => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)); })
@@ -6580,7 +6778,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Trade suggestions — display only, no execution
+  // Trade suggestions — display + optional paper fills (never live orders)
   if (urlPath === '/api/trade-suggestions' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ suggestions: robinhoodMcp.loadSuggestions() }));
@@ -6591,6 +6789,74 @@ const server = http.createServer((req, res) => {
     const entry = robinhoodMcp.dismissSuggestion(id);
     res.writeHead(entry ? 200 : 404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(entry ? { ok: true, entry } : { error: 'not found' }));
+    return;
+  }
+
+  // Roki paper trading ledger
+  if (urlPath === '/api/market/paper' && req.method === 'GET') {
+    rokiPaper.getSnapshot(robinhoodMcp)
+      .then((account) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(account));
+      })
+      .catch((err) => {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      });
+    return;
+  }
+  if (urlPath === '/api/market/paper/reset' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', () => {
+      try {
+        const parsed = body ? JSON.parse(body) : {};
+        const account = rokiPaper.resetAccount(parsed.cash);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, account: rokiPaper.markAccount(account, {}) }));
+      } catch (e) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      }
+    });
+    return;
+  }
+  if (urlPath === '/api/market/paper/order' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; });
+    req.on('end', () => {
+      Promise.resolve()
+        .then(() => JSON.parse(body || '{}'))
+        .then((parsed) => rokiPaper.placeOrder({ ...parsed, robinhoodMcp }))
+        .then((result) => {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(result));
+        })
+        .catch((err) => {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: err.message }));
+        });
+    });
+    return;
+  }
+  if (/^\/api\/market\/paper\/from-suggestion\/([^/]+)$/.test(urlPath) && req.method === 'POST') {
+    const id = urlPath.split('/').pop();
+    const suggestions = robinhoodMcp.loadSuggestions();
+    const suggestion = suggestions.find((s) => s.id === id);
+    if (!suggestion) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'suggestion not found' }));
+      return;
+    }
+    rokiPaper.placeFromSuggestion(suggestion, robinhoodMcp)
+      .then((result) => {
+        res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      })
+      .catch((err) => {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      });
     return;
   }
 
@@ -6648,6 +6914,130 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: err.message }));
       }
     });
+    return;
+  }
+
+  // Discord pixel map — proxy guild list + VC presence from discord-bot sidecar.
+  if (
+    (urlPath === '/api/discord/map/presence'
+      || urlPath === '/api/discord/map/guilds'
+      || urlPath === '/api/discord/map/invite')
+    && req.method === 'GET'
+  ) {
+    (async () => {
+      try {
+        const botPort = Number(process.env.DISCORD_PRESENCE_PORT) || 5180;
+        const qs = (req.url || '').includes('?') ? (req.url || '').slice((req.url || '').indexOf('?')) : '';
+        const pathPart = urlPath === '/api/discord/map/guilds'
+          ? '/guilds'
+          : urlPath === '/api/discord/map/invite'
+            ? '/invite'
+            : '/presence';
+        const upstream = `http://127.0.0.1:${botPort}${pathPart}${qs}`;
+        const r = await fetch(upstream, { signal: AbortSignal.timeout(8000) });
+        const body = await r.text();
+        res.writeHead(r.status, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(body);
+      } catch (err) {
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: false,
+          error: 'discord presence unavailable',
+          detail: err?.message || String(err),
+        }));
+      }
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  // --- Discord bot → office presence (VC join/leave/move) ---
+  // Auth: DISCORD_BRIDGE_SECRET via x-denizen-secret (or body.secret).
+  // When secret unset, endpoint is open (local/dev only).
+  if (urlPath === '/api/discord/presence' && req.method === 'POST') {
+    (async () => {
+      try {
+        const payload = await _readJsonBody(req, 16 * 1024);
+        const expected = String(process.env.DISCORD_BRIDGE_SECRET || '').trim();
+        if (expected) {
+          const got = String(payload.secret || req.headers['x-denizen-secret'] || '');
+          if (got !== expected) {
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'bad or missing secret' }));
+            return;
+          }
+        }
+        const userId = String(payload.userId || payload.user_id || '').trim();
+        if (!userId) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'userId required' }));
+          return;
+        }
+        const officeId = officeRegistry.normalizeOfficeId(
+          payload.office_id || payload.officeId || process.env.DISCORD_OFFICE_ID || officeRegistry.CEO_OFFICE_ID,
+        );
+        const sessionId = `discord:${userId}`;
+        const event = String(payload.event || 'voice_join').toLowerCase();
+        if (event === 'voice_leave' || event === 'leave') {
+          const removed = officeRegistry.removePlayerFromOffice(officeId, sessionId);
+          if (removed) {
+            _broadcastToOffice(officeId, {
+              type: 'player_left',
+              office_id: officeId,
+              sessionId,
+              displayName: removed.displayName || null,
+              source: 'discord',
+              ts: Date.now(),
+            });
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, event: 'voice_leave', sessionId, office_id: officeId }));
+          return;
+        }
+        const displayName = String(payload.displayName || payload.display_name || `Discord ${userId}`).slice(0, 48);
+        const x = Number.isFinite(Number(payload.x)) ? Number(payload.x) : 310;
+        const y = Number.isFinite(Number(payload.y)) ? Number(payload.y) : 200;
+        const seeded = officeRegistry.upsertPlayerPose(officeId, {
+          sessionId,
+          visitorId: null,
+          displayName,
+          x,
+          y,
+          facing: payload.facing || 'down',
+          anim: payload.anim || 'idle',
+          room: payload.room || payload.channelName || null,
+          interactive: false,
+          spectator: true,
+        }, { force: true });
+        if (seeded.ok) {
+          _broadcastToOffice(officeId, {
+            type: 'player_pose',
+            office_id: officeId,
+            source: 'discord',
+            channelId: payload.channelId || null,
+            channelName: payload.channelName || null,
+            ...seeded.pose,
+          });
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: true,
+          event,
+          sessionId,
+          office_id: officeId,
+          pose: seeded.pose || null,
+        }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err?.message || String(err) }));
+      }
+    })();
     return;
   }
 
@@ -9721,6 +10111,46 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Discord Spaces map (phone app) — static under /app/discord-map (NAS + local)
+  if (urlPath === '/discord-map' || urlPath.startsWith('/discord-map/')) {
+    const DISCORD_MAP_ROOT = path.join(ROOT, 'discord-map');
+    const DISCORD_MAP_DEV = path.join(ROOT, '..', 'discord pixel game');
+    let rel = urlPath.replace(/^\/discord-map\/?/, '') || 'index.html';
+    if (rel.endsWith('/')) rel += 'index.html';
+    const primaryFile = path.resolve(DISCORD_MAP_ROOT, rel);
+    const devFile = path.resolve(DISCORD_MAP_DEV, rel);
+    const primaryInside = path.relative(DISCORD_MAP_ROOT, primaryFile);
+    const devInside = path.relative(DISCORD_MAP_DEV, devFile);
+    const primaryOk = !primaryInside.startsWith('..') && !path.isAbsolute(primaryInside);
+    const devOk = !devInside.startsWith('..') && !path.isAbsolute(devInside);
+    let filePath = null;
+    if (primaryOk && fs.existsSync(primaryFile) && fs.statSync(primaryFile).isFile()) filePath = primaryFile;
+    else if (devOk && fs.existsSync(devFile) && fs.statSync(devFile).isFile()) filePath = devFile;
+    if (!filePath) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+      const ext = path.extname(filePath).toLowerCase();
+      const headers = { 'Content-Type': MIME[ext] || 'application/octet-stream' };
+      if (['.html', '.js'].includes(ext)) {
+        headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+        headers.Pragma = 'no-cache';
+      } else if (['.png', '.jpg', '.jpeg', '.gif', '.webp'].includes(ext)) {
+        headers['Cache-Control'] = 'public, max-age=86400';
+      }
+      res.writeHead(200, headers);
+      res.end(data);
+    });
+    return;
+  }
+
   // Deal Weaver CRM — Vite SPA served at /crm/ (phone app embeds this route)
   if (urlPath === '/crm' || urlPath.startsWith('/crm/')) {
     let crmRel = urlPath.replace(/^\/crm\/?/, '') || 'index.html';
@@ -10046,8 +10476,13 @@ agentWss.on('connection', (ws) => {
         const sid = msg.session_id || null;
         const isCeo = !sid || msg.is_ceo === true;
         const displayName = msg.display_name || msg.displayName || null;
+        ws._denizenJoinedAt = ws._denizenJoinedAt || Date.now();
+        ws._denizenDemoMode = _mpIsSpectator(msg) || !!msg.demo;
+        ws._denizenSpectator = ws._denizenDemoMode || msg.spectator === true;
+        ws._denizenInteractive = !ws._denizenSpectator && msg.interactive !== false;
         _applyOfficeToSocket(ws, { sessionId: sid, displayName, isCeo })
           .then((office) => {
+            officeRegistry.ensurePresenceKey(ws);
             if (ws.readyState === 1) {
               ws.send(JSON.stringify({
                 type: 'office_registered',
@@ -10055,7 +10490,31 @@ agentWss.on('connection', (ws) => {
                 identity_id: office.identityId,
                 is_operator_office: office.isOperatorOffice,
                 session_id: sid,
+                presence_key: ws._denizenPresenceKey,
               }));
+            }
+            _mpSendOfficeSync(ws, office);
+            // Seed presence so peers see the joiner before first pose tick.
+            if (ws._denizenInteractive !== false && !ws._denizenSpectator) {
+              const key = officeRegistry.ensurePresenceKey(ws);
+              const seeded = officeRegistry.upsertPlayerPose(office.officeId, {
+                sessionId: key,
+                visitorId: ws._denizenIdentityId || null,
+                displayName: ws._denizenDisplayName || displayName || 'Guest',
+                x: 310,
+                y: 200,
+                facing: 'down',
+                anim: 'idle',
+                interactive: true,
+                spectator: false,
+              }, { force: true });
+              if (seeded.ok) {
+                _broadcastToOffice(office.officeId, {
+                  type: 'player_pose',
+                  office_id: office.officeId,
+                  ...seeded.pose,
+                });
+              }
             }
             if (sid && !isCeo) {
               const markOnline = () => {
@@ -10085,6 +10544,61 @@ agentWss.on('connection', (ws) => {
             }
           })
           .catch((err) => console.warn('[Office] visitor_register:', err?.message || err));
+      } else if (msg.type === 'player_pose') {
+        const officeId = ws._denizenOfficeId || msg.office_id || msg.officeId;
+        if (!officeId) {
+          // ignore until registered
+        } else {
+          const presenceKey = officeRegistry.ensurePresenceKey(ws);
+          const result = officeRegistry.upsertPlayerPose(officeId, {
+            sessionId: presenceKey,
+            visitorId: ws._denizenIdentityId || msg.visitorId || null,
+            displayName: ws._denizenDisplayName || msg.displayName || msg.display_name || 'Guest',
+            x: msg.x,
+            y: msg.y,
+            facing: msg.facing,
+            anim: msg.anim,
+            room: msg.room,
+            interactive: ws._denizenInteractive !== false,
+            spectator: !!ws._denizenSpectator,
+          });
+          if (result.ok && result.pose) {
+            // Feed Lucy/tour awareness (same as player_idle path).
+            if (worldState) {
+              worldState.environment = worldState.environment || {};
+              worldState.environment.playerPosition = {
+                x: result.pose.x,
+                y: result.pose.y,
+                room: result.pose.room,
+              };
+            }
+            _broadcastToOffice(officeId, {
+              type: 'player_pose',
+              office_id: officeId,
+              ...result.pose,
+            });
+          }
+        }
+      } else if (msg.type === 'npc_poses') {
+        const officeId = ws._denizenOfficeId || msg.office_id || msg.officeId;
+        const presenceKey = officeRegistry.ensurePresenceKey(ws);
+        const host = officeId ? officeRegistry.getSimHost(officeId) : null;
+        if (officeId && host && host.presenceKey === presenceKey && Array.isArray(msg.npcs)) {
+          _broadcastToOffice(officeId, {
+            type: 'npc_poses',
+            office_id: officeId,
+            npcs: msg.npcs.slice(0, 40).map((n) => ({
+              key: n.key || n.id || n.npcKey,
+              x: Number(n.x) || 0,
+              y: Number(n.y) || 0,
+              facing: n.facing || 'down',
+              anim: n.anim || null,
+              taskState: n.taskState || n.status || null,
+            })).filter((n) => n.key),
+            ts: Date.now(),
+            hostSessionId: presenceKey,
+          });
+        }
       } else if (msg.type === 'player_chat_cancel') {
         const turnId = typeof msg.turn_id === 'string' ? msg.turn_id.trim() : '';
         if (turnId && ws._activePlayerTurnId === turnId) {
@@ -11486,6 +12000,9 @@ agentWss.on('connection', (ws) => {
 
   ws.on('close', () => {
     console.log(`[CofounderAgent] WS client disconnected (${cofounderAgent.wsClients.size - 1} remaining)`);
+    try { _mpHandleDisconnect(ws); } catch (err) {
+      console.warn('[Office] multiplayer disconnect:', err?.message || err);
+    }
     cofounderAgent.removeClient(ws);
     let mobileCount = 0;
     (agentWss ? agentWss.clients : cofounderAgent.wsClients).forEach((c) => {
@@ -11494,6 +12011,7 @@ agentWss.on('connection', (ws) => {
     global._denizenMobileClients = mobileCount;
   });
   ws.on('error', () => {
+    try { _mpHandleDisconnect(ws); } catch (_) {}
     cofounderAgent.removeClient(ws);
   });
 });
@@ -11655,6 +12173,48 @@ const _questTickTimer = setInterval(() => {
 _questTickTimer.unref?.();
 setTimeout(() => { try { denizenQuests.tickQuests(); } catch (_) {} }, 20_000);
 
+const DISCORD_SIDECAR_MAX_RETRIES = 5;
+const DISCORD_SIDECAR_RETRY_BASE_MS = 10_000;
+const DISCORD_SIDECAR_STABLE_MS = 60_000; // ran this long without exiting -> reset backoff
+let _discordSidecarAttempt = 0;
+
+function _startDiscordBotSidecar() {
+  if (/^(0|false|no|off)$/i.test(String(process.env.DENIZEN_DISCORD_BOT || 'auto'))) return;
+  const token = String(process.env.DISCORD_BOT_TOKEN || '').trim();
+  if (!token) return;
+  const botRoot = path.join(ROOT, 'discord-bot');
+  const botMain = path.join(botRoot, 'index.js');
+  if (!fs.existsSync(botMain)) return;
+  const { spawn } = require('child_process');
+  try {
+    const startedAt = Date.now();
+    const child = spawn(process.execPath, [botMain], {
+      cwd: botRoot,
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    child.stdout?.on('data', (d) => process.stdout.write(d));
+    child.stderr?.on('data', (d) => process.stderr.write(d));
+    child.on('exit', (code) => {
+      log.warn('DiscordBot', `sidecar exited (${code})`);
+      if (Date.now() - startedAt >= DISCORD_SIDECAR_STABLE_MS) _discordSidecarAttempt = 0;
+      if (code === 0) return; // clean shutdown, don't restart
+      if (_discordSidecarAttempt >= DISCORD_SIDECAR_MAX_RETRIES) {
+        log.warn('DiscordBot', `giving up after ${_discordSidecarAttempt} restart attempts`);
+        return;
+      }
+      _discordSidecarAttempt += 1;
+      const delay = DISCORD_SIDECAR_RETRY_BASE_MS * _discordSidecarAttempt;
+      log.info('DiscordBot', `retrying sidecar in ${Math.round(delay / 1000)}s (attempt ${_discordSidecarAttempt}/${DISCORD_SIDECAR_MAX_RETRIES})`);
+      setTimeout(_startDiscordBotSidecar, delay);
+    });
+    const presencePort = Number(process.env.DISCORD_PRESENCE_PORT) || 5180;
+    log.info('DiscordBot', `sidecar started · presence http://127.0.0.1:${presencePort}/presence`);
+  } catch (err) {
+    log.warn('DiscordBot', `sidecar start failed: ${err?.message || err}`);
+  }
+}
+
 const PREDICTION_MAINTENANCE_MS = 6 * 60 * 60 * 1000;
 let _predictionMaintenanceTimer = null;
 let _visitorIntelligenceLoop = null;
@@ -11721,6 +12281,7 @@ server.listen(PORT, () => {
   log.info('Server', `http://localhost:${PORT}`);
   log.info('WS', `ws://localhost:${PORT}/agent-ws`);
   log.info('Security', `ws://localhost:${PORT}/security-ws`);
+  _startDiscordBotSidecar();
   const ttsStatus = elevenLabs.status();
   if (ttsStatus.configured) {
     log.info('TTS', `ElevenLabs ✓ (key from ${ttsStatus.source})`);
