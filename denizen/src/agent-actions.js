@@ -317,6 +317,13 @@ class AgentActions {
         npc.ai.taskTarget = { x: ox, y: oy };
         npc.ai.taskState = 'walking';
 
+        // Purposeful-trip window: the desk-return enforcer must not teleport an
+        // NPC back to its seat while it is deliberately walking somewhere (and
+        // for a short linger after arrival). Covers the whole walk (12s timeout)
+        // plus ~8s at the destination so the visit actually reads on screen.
+        // A flag, not ai.mode/waypoints, because those flicker between segments.
+        npc._purposefulWalkUntil = Date.now() + 20000;
+
         const checkInterval = this.scene.time.addEvent({
           delay: 100,
           loop: true,
@@ -1261,8 +1268,10 @@ class AgentActions {
   _showSpeechBubble(npc, npcKey, text, style, duration) {
     this._clearBubble(npcKey, this._speechBubbles);
 
-    const truncated = text.length > 60 ? text.slice(0, 57) + '...' : text;
     const isThought = style === 'thought';
+    // Compact — thoughts shorter than spoken lines so the head isn't buried.
+    const maxChars = isThought ? 42 : 52;
+    const truncated = text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
 
     // Voice — route speech (not thought) through DenizenSpeak. The voice
     // gate handles the presence check and the provider override
@@ -1285,43 +1294,48 @@ class AgentActions {
       }
     }
 
-    const bgColor = isThought ? '#1a1a2e' : '#1e293b';
-    const textColor = isThought ? '#c4b5fd' : '#ffffff';
-    const prefix = isThought ? '( ' : '';
-    const suffix = isThought ? ' )' : '';
+    // Pokémon-style: light glass chip + dark readable text (not a black slab).
+    const bgColor = isThought ? '#e0f2fede' : '#f8fafcee';
+    const textColor = isThought ? '#0c4a6e' : '#0f172a';
+    const borderHint = isThought ? '#7dd3fc' : '#38bdf8';
+    const prefix = isThought ? '…' : '';
+    const label = prefix ? `${prefix}${truncated}` : truncated;
 
-    const bubbleText = this.scene.add.text(0, 0, prefix + truncated + suffix, {
-      fontSize: '10px',
+    const bubbleText = this.scene.add.text(0, 0, label, {
+      fontSize: isThought ? '8px' : '9px',
       fontFamily: 'monospace',
       color: textColor,
       backgroundColor: bgColor,
-      padding: { x: 5, y: 4 },
-      wordWrap: { width: 180 },
+      padding: { x: 4, y: 3 },
+      wordWrap: { width: isThought ? 110 : 130 },
       align: 'center',
+      stroke: borderHint,
+      strokeThickness: 0.5,
     });
     bubbleText.setOrigin(0.5, 1);
     bubbleText.setDepth(9998);
+    bubbleText.setAlpha(0.96);
     bubbleText.x = npc.x;
-    bubbleText.y = npc.y - 48;
+    bubbleText.y = npc.y - (isThought ? 44 : 48);
 
     // duration=0 means persist forever (no auto-clear), undefined defaults to 5s
-    const dur = duration !== undefined ? duration : 5000;
+    const dur = duration !== undefined ? duration : (isThought ? 3500 : 5000);
     const timer = dur > 0 ? this.scene.time.delayedCall(dur, () => {
       this._clearBubble(npcKey, this._speechBubbles);
     }) : null;
 
-    this._speechBubbles.set(npcKey, { text: bubbleText, timer, npc });
+    this._speechBubbles.set(npcKey, { text: bubbleText, timer, npc, isThought });
   }
 
   _showEmote(npc, npcKey, symbol) {
     this._clearBubble(npcKey, this._emoteBubbles);
 
     const emoteText = this.scene.add.text(0, 0, symbol, {
-      fontSize: '12px',
+      fontSize: '11px',
       fontFamily: 'monospace',
       fontStyle: 'bold',
-      color: '#fbbf24',
-      backgroundColor: '#00000088',
+      color: '#0c4a6e',
+      backgroundColor: '#e0f2fede',
       padding: { x: 3, y: 1 },
     });
     emoteText.setOrigin(0.5, 1);
@@ -1339,15 +1353,16 @@ class AgentActions {
   _showTypingIndicator(npc, npcKey) {
     this._hideTypingIndicator(npcKey);
 
-    const indicator = this.scene.add.text(0, 0, '...', {
+    const indicator = this.scene.add.text(0, 0, '…', {
       fontSize: '8px',
       fontFamily: 'monospace',
-      color: '#4ade80',
-      backgroundColor: '#0f172a',
+      color: '#0c4a6e',
+      backgroundColor: '#e0f2fede',
       padding: { x: 3, y: 2 },
     });
     indicator.setOrigin(0.5, 1);
     indicator.setDepth(9997);
+    indicator.setAlpha(0.95);
     indicator.x = npc.x;
     indicator.y = npc.y - 36;
 
@@ -1376,15 +1391,16 @@ class AgentActions {
   _showReadingIndicator(npc, npcKey) {
     this._hideTypingIndicator(npcKey);
 
-    const indicator = this.scene.add.text(0, 0, 'Reading...', {
+    const indicator = this.scene.add.text(0, 0, 'Reading…', {
       fontSize: '7px',
       fontFamily: 'monospace',
-      color: '#60a5fa',
-      backgroundColor: '#0f172a',
+      color: '#0c4a6e',
+      backgroundColor: '#e0f2fede',
       padding: { x: 3, y: 2 },
     });
     indicator.setOrigin(0.5, 1);
     indicator.setDepth(9997);
+    indicator.setAlpha(0.95);
     indicator.x = npc.x;
     indicator.y = npc.y - 36;
 
@@ -1446,7 +1462,8 @@ class AgentActions {
         if (entry.npc && entry.text && !entry.text.scene) return;
         if (entry.npc && entry.text) {
           entry.text.x = entry.npc.x;
-          entry.text.y = entry.npc.y - yOffset;
+          const off = entry.isThought ? 44 : yOffset;
+          entry.text.y = entry.npc.y - off;
         }
       });
     };

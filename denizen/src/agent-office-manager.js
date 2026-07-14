@@ -519,7 +519,10 @@ class AgentOfficeManager {
     const thinkStagger = cadence.thinkStaggerMs;
     const thinkWarmupMs = cadence.thinkWarmupMs ?? PLAY_WARMUP_MS;
     let delay = thinkWarmupMs;
+    const lightPerf = !!window.DenizenDeviceProfile?.wantsLightPerf?.();
     this.agents.forEach((agent, npcKey) => {
+      // Light-perf may spawn fewer sprites — don't start think loops for ghosts.
+      if (lightPerf && !this.actions?._getNpc?.(npcKey)) return;
       this.scene.time.delayedCall(delay, () => {
         if (this._refreshThinkLeader()) this._npcThinkLoop(npcKey);
       });
@@ -607,11 +610,25 @@ class AgentOfficeManager {
   _startAmbientOfficeLife(light = false) {
     if (this._ambientLifeStarted) return;
     this._ambientLifeStarted = true;
-    this.scene.time.delayedCall(7000, () => this._ambientReleaseWalkers(light ? 4 : 3));
+    const perf = (typeof window.DenizenDeviceProfile?.lightPerf === 'function')
+      ? window.DenizenDeviceProfile.lightPerf()
+      : null;
+    // Light-render profile (phone / weak HW): fewer walkers so pathfinding
+    // and depth-sort stay cheap. Distinct from lightOffice (LLM think gate).
+    const initial = (perf?.light && perf.ambientInitial != null)
+      ? perf.ambientInitial
+      : (light ? 4 : 3);
+    const batch = (perf?.light && perf.ambientBatch != null)
+      ? perf.ambientBatch
+      : (light ? 2 : 1);
+    const delay = (perf?.light && perf.ambientDelayMs != null)
+      ? perf.ambientDelayMs
+      : (light ? 15000 : 26000);
+    this.scene.time.delayedCall(7000, () => this._ambientReleaseWalkers(initial));
     this.scene.time.addEvent({
-      delay: light ? 15000 : 26000,
+      delay,
       loop: true,
-      callback: () => this._ambientReleaseWalkers(light ? 2 : 1),
+      callback: () => this._ambientReleaseWalkers(batch),
     });
   }
 
@@ -624,6 +641,8 @@ class AgentOfficeManager {
     const keys = [];
     this.agents.forEach((agent, npcKey) => {
       if (!agent || busy.has(agent.status)) return;
+      // Skip agents with no sprite (light-perf NPC cap).
+      if (!this.actions._getNpc?.(npcKey)) return;
       keys.push(npcKey);
     });
     if (!keys.length) return;
@@ -1114,6 +1133,16 @@ class AgentOfficeManager {
         if (status !== 'working') agent.status = 'working';
         return;
       }
+
+      // Don't teleport NPCs that are deliberately walking somewhere (breakroom,
+      // coffee, a meeting, any walkTo). Yanking them mid-journey — or the
+      // instant they arrive — is the "walk off then snap back to desk" glitch.
+      // The explicit trip window survives the mode/waypoint flicker between
+      // path segments; the follower check is a belt-and-suspenders backup.
+      const follower = sprite._pathFollower;
+      const onTrip = (sprite._purposefulWalkUntil && Date.now() < sprite._purposefulWalkUntil)
+        || (follower && Array.isArray(follower.waypoints) && follower.waypoints.length > 0);
+      if (onTrip) return;
 
       const distToDesk = Math.hypot(sprite.x - desk.x, sprite.y - desk.y);
       if (distToDesk > 48 || sprite.ai.mode === 'wander' || status === 'idle' || status === 'wandering' || status === 'visiting') {
