@@ -42,8 +42,9 @@
       font-size: clamp(15px, 0.35vw + 14px, 16px);
       padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
       /* page gutters used across sections */
-      --page-gutter: clamp(12px, 3.5vw, 28px);
-      --section-y: clamp(28px, 5vw, 48px);
+      --page-gutter: clamp(16px, 4vw, 36px);
+      --section-y: clamp(40px, 7vw, 72px);
+      --block-gap: clamp(14px, 2.5vw, 24px);
     }
     body::before {
       content: "";
@@ -940,7 +941,8 @@
       display: grid;
       grid-template-columns: minmax(0, 1.15fr) minmax(200px, 0.8fr);
       align-items: center;
-      gap: clamp(16px, 3.5vw, 40px);
+      gap: clamp(24px, 4.5vw, 56px);
+      padding-inline: 4px;
     }
     .hero-copy {
       text-align: left;
@@ -1385,7 +1387,11 @@
       70% { transform: scale(0.98); }
       100% { transform: scale(1); }
     }
-    .compare-section { padding: var(--section-y) var(--page-gutter) clamp(28px, 5vw, 48px); }
+    .compare-section {
+      padding: var(--section-y) var(--page-gutter) clamp(36px, 6vw, 64px);
+      max-width: 1100px;
+      margin-inline: auto;
+    }
 
     @media (max-width: 860px) {
       .hero {
@@ -1737,8 +1743,8 @@
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 20px;
+      gap: var(--block-gap);
+      margin-bottom: clamp(18px, 3vw, 28px);
       flex-wrap: wrap;
     }
     .crew-head h2 {
@@ -2093,7 +2099,7 @@
     }
     .why-strip-head {
       text-align: center;
-      margin-bottom: 14px;
+      margin-bottom: var(--block-gap);
     }
     .why-strip-head h2 {
       font-family: var(--display);

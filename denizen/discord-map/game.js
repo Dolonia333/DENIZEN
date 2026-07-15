@@ -98,8 +98,20 @@
   }
 
   function defaultIndoorHint() {
-    return IS_TOUCH ? '◀ ▶ move · ▲ ▼ stairs · ▼ leave' : '↓ / S leave · ↑ stairs · A/D walk';
+    return IS_TOUCH
+      ? '◀ ▶ move · ▲ stairs/elev · hold ▲ sit · ▼ leave'
+      : 'A/D walk · ↑ stairs/elev · E sit · ↓ leave';
   }
+
+  /** Furniture keys the player can sit / lie on. */
+  const SIT_KEYS = new Set([
+    'couchBlue', 'couchGreen', 'couchRed', 'couchGrey', 'couchYellow', 'couchDark',
+    'couchSmall', 'couchSmallG', 'couchSmallR', 'couchSmallY', 'couchSmallGr',
+    'officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange',
+    'stoolBlue', 'stoolRed', 'stoolYellow', 'stoolGreen', 'stool', 'stoolB',
+    'bed', 'bedBlue', 'bedGreen', 'bedHosp', 'bunkBottom',
+  ]);
+  const BED_KEYS = new Set(['bed', 'bedBlue', 'bedGreen', 'bedHosp', 'bunkBottom', 'bunkTop']);
 
   const LR = `${PACK}/Furniture/Living Room`;
   const KIT = `${PACK}/Furniture/Kitchen`;
@@ -127,6 +139,12 @@
     doorGlass: `${INF}/Door_glass_opened.png`,
     elevClosed: `${INF}/Elevator_closed.png`,
     elevOpen: `${INF}/Elevator_opened.png`,
+    elevSlightly: `${INF}/Elevator_slightlyOpened.png`,
+    roofVents1: `${INF}/Roof_vents_1.png`,
+    roofVents2: `${INF}/Roof_vents_2.png`,
+    treeRoof1: `${BG}/Tree_rooftop_1.png`,
+    treeRoof2: `${BG}/Tree_rooftop_2.png`,
+    craneRoof: `${BG}/Crane_rooftop.png`,
     stairs: `${INF}/Stairs.png`,
     light1: `${PACK}/Furniture/Light_1.png`,
     light2: `${PACK}/Furniture/Light_2.png`,
@@ -480,6 +498,27 @@
 
   // Distinct saturated wall color per room + warm floor strip — the #1 reference
   // signature. Rooms used to all be near-white beige.
+  // ——— Interactable furniture ———
+  // Any placed sprite whose ASSETS key appears here becomes a live
+  // interactable: SEAT_INFO → press E (or ▲ on touch) to sit, BED_INFO →
+  // lie down. The value is the pixel height of the seating/lying surface
+  // above the floor line (screen px at SCALE 2), used to park the player
+  // sprite on top of the furniture. Registration happens automatically in
+  // furn(), so every couch/stool/bed across every kit and theme works.
+  const SEAT_INFO = {
+    couchBlue: 10, couchGreen: 10, couchRed: 10, couchGrey: 10, couchYellow: 10, couchDark: 10,
+    couchSmall: 10, couchSmallG: 10, couchSmallR: 10, couchSmallY: 10, couchSmallGr: 10,
+    stoolBlue: 12, stoolRed: 12, stoolYellow: 12, stoolGreen: 12, stool: 12, stoolB: 12,
+    officechairBlue: 12, officechairRed: 12, officechairPurple: 12, officechairOrange: 12,
+    throneRed: 12, throneBlue: 12, throneGreen: 12, thronePurple: 12, throneYellow: 12,
+    waitChairSolo: 12, waitChairSoloRed: 12, waitChairs: 12, waitChairsRed: 12,
+    chairHalloween: 12, benchWood: 10,
+  };
+  const BED_INFO = {
+    bed: 12, bedBlue: 12, bedGreen: 12,
+    bedHosp: 12, bunkBottom: 12, tableSurgery: 14, coffin: 12,
+  };
+
   const ROOM_WALL_COLORS = [
     0x2f6f9e, 0xd9862b, 0x3f9e57, 0xc0433d, 0x7d54ad,
     0xc99a22, 0x2f9e93, 0xc4577e, 0x4560c0, 0xb5642f,
@@ -491,57 +530,59 @@
   // scaleMul?}. Keys resolve against ASSETS (arrays = seeded pick a variant).
   // This is the semantic art direction the design panel converged on: a server
   // reads like a real building (library, dev office, cafe, lounge...) not 8 clones.
+  // Layout rule: stairs/elev use the LEFT clear lane (~0.12–0.22).
+  // Furniture lives in the mid/right band so the ladder never blocks the room.
   const KITS = {
     lounge: [
-      { key: ['couchBlue', 'couchGreen', 'couchRed', 'couchYellow'], xf: 0.22, depth: 23 },
-      { key: 'coffee', xf: 0.5, depth: 24 },
-      { key: ['lamp', 'lamp2', 'lamp3'], xf: 0.74, depth: 22 },
+      { key: ['couchBlue', 'couchGreen', 'couchRed', 'couchYellow'], xf: 0.38, depth: 23, sit: true },
+      { key: 'coffee', xf: 0.58, depth: 24 },
+      { key: ['lamp', 'lamp2', 'lamp3'], xf: 0.76, depth: 22 },
       { key: ['floraFern', 'floraSnake', 'floraAloe'], xf: 0.9, depth: 24 },
     ],
     library: [
-      { key: 'bookshelf', xf: 0.14, depth: 22 },
-      { key: 'bookshelf2', xf: 0.34, depth: 22 },
-      { key: ['couchSmall', 'couchSmallGr'], xf: 0.62, depth: 23 },
+      { key: 'bookshelf', xf: 0.32, depth: 22 },
+      { key: 'bookshelf2', xf: 0.48, depth: 22 },
+      { key: ['couchSmall', 'couchSmallGr'], xf: 0.68, depth: 23, sit: true },
       { key: ['books', 'books2'], xf: 0.84, depth: 24 },
       { key: ['floraBonsai', 'floraSucculent'], xf: 0.93, depth: 24 },
     ],
     office: [
-      { key: ['desk', 'desk2'], xf: 0.22, depth: 22 },
-      { key: 'laptop', xf: 0.22, depth: 24, offY: -13 },
-      { key: ['officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange'], xf: 0.4, depth: 23 },
-      { key: 'shelfMedium', xf: 0.66, depth: 22 },
+      { key: ['desk', 'desk2'], xf: 0.36, depth: 22 },
+      { key: 'laptop', xf: 0.36, depth: 24, offY: -13 },
+      { key: ['officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange'], xf: 0.52, depth: 23, sit: true },
+      { key: 'shelfMedium', xf: 0.72, depth: 22 },
       { key: ['floraSucculent', 'flora'], xf: 0.9, depth: 24 },
     ],
     cafe: [
-      { key: 'counter', xf: 0.16, depth: 22 },
-      { key: 'counterEnd', xf: 0.31, depth: 22 },
-      { key: ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], xf: 0.5, depth: 23 },
-      { key: 'radio', xf: 0.72, depth: 24 },
+      { key: 'counter', xf: 0.34, depth: 22 },
+      { key: 'counterEnd', xf: 0.48, depth: 22 },
+      { key: ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], xf: 0.62, depth: 23, sit: true },
+      { key: 'radio', xf: 0.78, depth: 24 },
       { key: ['potRed', 'potYellow'], xf: 0.9, depth: 24 },
     ],
     kitchen: [
-      { key: 'fridge', xf: 0.14, depth: 22 },
-      { key: 'counter', xf: 0.36, depth: 22 },
-      { key: 'oven', xf: 0.52, depth: 22 },
-      { key: 'sink', xf: 0.68, depth: 22 },
+      { key: 'fridge', xf: 0.32, depth: 22 },
+      { key: 'counter', xf: 0.48, depth: 22 },
+      { key: 'oven', xf: 0.62, depth: 22 },
+      { key: 'sink', xf: 0.76, depth: 22 },
       { key: 'trashcan', xf: 0.9, depth: 24 },
     ],
     reception: [
-      { key: 'tableLong', xf: 0.28, depth: 22 },
-      { key: 'clipboard', xf: 0.28, depth: 24, offY: -16, wall: true },
-      { key: ['floraRose', 'floraFern'], xf: 0.6, depth: 24 },
-      { key: ['couchSmall', 'couchSmallY'], xf: 0.82, depth: 23 },
+      { key: 'tableLong', xf: 0.42, depth: 22 },
+      { key: 'clipboard', xf: 0.42, depth: 24, offY: -16, wall: true },
+      { key: ['floraRose', 'floraFern'], xf: 0.68, depth: 24 },
+      { key: ['couchSmall', 'couchSmallY'], xf: 0.86, depth: 23, sit: true },
     ],
     cozy: [
-      { key: ['bedBlue', 'bedGreen', 'bed'], xf: 0.24, depth: 23 },
-      { key: ['lamp2', 'lamp3'], xf: 0.5, depth: 22 },
-      { key: 'drawer', xf: 0.68, depth: 22 },
+      { key: ['bedBlue', 'bedGreen', 'bed'], xf: 0.4, depth: 23, sit: true, bed: true },
+      { key: ['lamp2', 'lamp3'], xf: 0.62, depth: 22 },
+      { key: 'drawer', xf: 0.76, depth: 22 },
       { key: ['floraAloe', 'floraSnake'], xf: 0.9, depth: 24 },
     ],
     gallery: [
-      { key: 'aquarium', xf: 0.2, depth: 23 },
-      { key: 'terrarium', xf: 0.46, depth: 23 },
-      { key: ['vaseBlue', 'vasePink'], xf: 0.68, depth: 24 },
+      { key: 'aquarium', xf: 0.34, depth: 23 },
+      { key: 'terrarium', xf: 0.54, depth: 23 },
+      { key: ['vaseBlue', 'vasePink'], xf: 0.72, depth: 24 },
       { key: ['floraBonsai', 'floraRose'], xf: 0.88, depth: 24 },
     ],
   };
@@ -582,36 +623,36 @@
       wall: 0xd88a5a, side: 0xb06a40, outline: 0x4a2410, roof: 0xc07048, band: 0x8a4e2c,
       signKey: 'cafeSign', signScale: SCALE,
       stripStyle: { color: '#ffe8d0', bg: '#6a3a1a' },
-      // Clear lane at dx=125: between the two dining clusters in recipe A
-      // (46-94 / 151-199) and between the counter/pastry run and the long
-      // table in recipe B (up to ~100 / from ~156) — checked against both.
-      stairsDx: 125,
+      // Elevator lane is the shared left strip (dx 14-58, shaft at 36).
+      // Layout logic: dining sets read as table-flanked-by-seats pairs,
+      // greenery bookends the right wall, food service runs left-of-center.
+      stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0xf4e0c8, slots: [50, 90, 150, 200],
+          h: 84, fill: 0xf4e0c8, slots: [90, 122, 150, 200],
           items: [
             ['w', 'plantHang', 20, 2],
-            ['w', ['posterDonut1', 'posterDonut3', 'posterDonut5'], 70, 6],
-            ['w', ['posterDonut2', 'posterDonut4'], 190, 6],
-            ['f', 'tableMed2', 70, 1, 0], ['f', 'mug', 70, 1, 22],
-            ['f', 'stool', 46, 1, 0], ['f', 'stool', 94, 1, 0],
-            ['f', 'tableMed2', 175, 1, 0], ['f', 'glassJuice', 175, 1, 22],
-            ['f', 'stoolB', 151, 1, 0], ['f', 'stoolB', 199, 1, 0], ['f', 'floraBonsaiFull', 240, 1, 0],
+            ['w', ['posterDonut1', 'posterDonut3', 'posterDonut5'], 100, 6],
+            ['w', ['posterDonut2', 'posterDonut4'], 205, 6],
+            ['f', 'stool', 76, 1, 0], ['f', 'tableMed2', 100, 1, 0], ['f', 'mug', 100, 1, 22],
+            ['f', 'stool', 124, 1, 0],
+            ['f', 'stoolB', 166, 1, 0], ['f', 'tableMed2', 190, 1, 0], ['f', 'glassJuice', 190, 1, 22],
+            ['f', 'stoolB', 214, 1, 0], ['f', 'floraBonsaiFull', 244, 1, 0],
           ],
         }),
         () => ({
-          h: 102, fill: 0xf8ead2, slots: [120, 150, 185, 220],
+          h: 102, fill: 0xf8ead2, slots: [150, 176, 205, 228],
           items: [
             ['glow', 0xffd8a0, 0.08],
-            ['w', 'plantHang', 240, 2], ['w', 'cafeSignBoard', 150, 8],
-            ['f', 'fridge', 18, 1, 0], ['f', 'counter', 52, 1, 0], ['f', 'counter', 68, 1, 0],
-            ['f', 'counter', 84, 1, 0], ['f', 'counterEnd', 100, 1, 0],
-            ['f', ['pastryPink', 'pastryGreen', 'pastryWhite'], 54, 1, 26],
-            ['f', ['pastryBlue', 'pastryRed', 'pastryPurple'], 74, 1, 26],
-            ['f', ['pastryYellow', 'pastryPink', 'pastryGreen'], 94, 1, 26],
-            ['npc', 'cafe-barista', 36],
-            ['f', 'tableLong', 180, 1, 0], ['f', 'stool', 156, 1, 0], ['f', 'stool', 205, 1, 0],
-            ['f', 'plantLarge', 245, 1, 0],
+            ['w', 'plantHang', 244, 2], ['w', 'cafeSignBoard', 160, 8],
+            ['f', 'fridge', 70, 1, 0], ['f', 'counter', 98, 1, 0], ['f', 'counter', 114, 1, 0],
+            ['f', 'counter', 130, 1, 0], ['f', 'counterEnd', 146, 1, 0],
+            ['f', ['pastryPink', 'pastryGreen', 'pastryWhite'], 100, 1, 26],
+            ['f', ['pastryBlue', 'pastryRed', 'pastryPurple'], 120, 1, 26],
+            ['f', ['pastryYellow', 'pastryPink', 'pastryGreen'], 140, 1, 26],
+            ['npc', 'cafe-barista', 122],
+            ['f', 'stool', 176, 1, 0], ['f', 'tableLong', 200, 1, 0], ['f', 'stool', 226, 1, 0],
+            ['f', 'plantLarge', 248, 1, 0],
           ],
         }),
       ],
@@ -627,41 +668,42 @@
       wall: 0x2a2a3e, side: 0x1c1c2c, outline: 0x0c0c16, roof: 0x3c3c58, band: 0x14142a,
       title: { color: '#c8f8ff', bg: '#1c1c2c' },
       stripStyle: { color: '#c8f8ff', bg: '#14142a' },
-      // Clear lane at dx=140: between the desk cluster (ends ~96) and shelf
-      // cluster (starts ~170) in recipe A, and between the arcade row (ends
-      // ~120) and vending machines (starts ~165) in recipe B.
-      stairsDx: 140,
+      // Elevator lane left (shaft at 36). Layout logic: battlestation desk
+      // cluster (PC + desk + monitor + mic + throne) center-left, trophy
+      // shelf mid-right, second throne facing the mounted TV on the right.
+      stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0x3a3a54, slots: [70, 120, 190],
+          h: 84, fill: 0x3a3a54, slots: [70, 165, 205],
           items: [
             ['glow', 0x8a6aff, 0.1],
-            ['w', ['gLight1', 'gLightRed'], 30, 4],
-            ['w', ['poster10', 'poster11'], 95, 4],
-            ['w', ['gLight2', 'gLightYellow'], 160, 4],
-            ['w', ['poster11', 'poster10'], 225, 4],
-            ['f', 'deskOfficeLong', 60, 1, 0], ['f', 'monitor', 48, 1, 14], ['f', 'micDesk', 72, 1, 14],
-            ['f', ['throneRed', 'throneGreen', 'thronePurple'], 96, 1, 0], ['f', 'pc', 20, 1, 0],
-            ['f', 'shelfMed', 170, 1, 0],
-            ['f', ['headsetBlue', 'headsetGreen', 'headsetPurple', 'headsetRed', 'headsetVR'], 170, 1, 26],
-            ['f', 'trophy', 182, 1, 26],
-            ['f', ['throneBlue', 'throneYellow', 'throneGreen'], 215, 1, 0], ['f', 'tvGame', 236, 1, 30],
+            ['w', ['gLight1', 'gLightRed'], 70, 4],
+            ['w', ['poster10', 'poster11'], 125, 4],
+            ['w', ['gLight2', 'gLightYellow'], 175, 4],
+            ['w', ['poster11', 'poster10'], 230, 4],
+            ['f', 'pc', 66, 1, 0],
+            ['f', 'deskOfficeLong', 105, 1, 0], ['f', 'monitor', 93, 1, 14], ['f', 'micDesk', 117, 1, 14],
+            ['f', ['throneRed', 'throneGreen', 'thronePurple'], 140, 1, 0],
+            ['f', 'shelfMed', 190, 1, 0],
+            ['f', ['headsetBlue', 'headsetGreen', 'headsetPurple', 'headsetRed', 'headsetVR'], 190, 1, 26],
+            ['f', 'trophy', 202, 1, 26],
+            ['f', ['throneBlue', 'throneYellow', 'throneGreen'], 225, 1, 0], ['f', 'tvGame', 246, 1, 30],
           ],
         }),
         () => ({
-          h: 102, fill: 0x2e2e46, slots: [95, 130, 200, 235],
+          h: 102, fill: 0x2e2e46, slots: [86, 150, 216, 244],
           items: [
             ['glow', 0x5a8aff, 0.12],
-            ['w', ['gLight3', 'gLightYellow'], 60, 4],
-            ['w', ['gLight1', 'gLightRed'], 130, 4],
-            ['w', ['gLight2', 'gLight3'], 200, 4],
-            ['f', ['arcadeBlue', 'arcadeGreen'], 24, 1, 0],
-            ['f', ['arcadeRed', 'arcadeYellow'], 56, 1, 0],
-            ['f', ['arcadeGreen', 'arcadeBlue'], 88, 1, 0],
-            ['f', ['arcadeYellow', 'arcadeRed'], 120, 1, 0],
-            ['f', ['vendingBlue', 'vendingGreen', 'vendingYellow'], 165, 1, 0],
-            ['f', ['vendingRed', 'vendingOrange'], 197, 1, 0],
-            ['f', 'gameConsole', 232, 1, 0], ['f', 'trashcanFull', 250, 1, 0],
+            ['w', ['gLight3', 'gLightYellow'], 85, 4],
+            ['w', ['gLight1', 'gLightRed'], 150, 4],
+            ['w', ['gLight2', 'gLight3'], 215, 4],
+            ['f', ['arcadeBlue', 'arcadeGreen'], 70, 1, 0],
+            ['f', ['arcadeRed', 'arcadeYellow'], 102, 1, 0],
+            ['f', ['arcadeGreen', 'arcadeBlue'], 134, 1, 0],
+            ['f', ['arcadeYellow', 'arcadeRed'], 166, 1, 0],
+            ['f', ['vendingBlue', 'vendingGreen', 'vendingYellow'], 200, 1, 0],
+            ['f', ['vendingRed', 'vendingOrange'], 232, 1, 0],
+            ['f', 'gameConsole', 252, 1, 0], ['f', 'trashcanFull', 184, 1, 0],
           ],
         }),
       ],
@@ -670,30 +712,32 @@
       wall: 0xe8ecf2, side: 0xc0c8d4, outline: 0x2a3444, roof: 0xd8e0ea, band: 0x9aa8ba,
       signKey: 'hospSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#ffffff', bg: '#c0392b' },
-      // Clear lane at dx=162: past the surgery cluster (up to ~135) in recipe
-      // A, and between the nurse (140) and computer (185) in recipe B.
-      stairsDx: 162,
+      // Elevator lane left (shaft at 36). Layout logic: supply storage sits
+      // by the lane, the operating table + light are the room's centerpiece
+      // with the saline drip at its head, records computer against the far
+      // wall; the ward runs bed → drip → bed with the nurse making rounds.
+      stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0xdaf0ea, slots: [60, 180],
+          h: 84, fill: 0xdaf0ea, slots: [90, 185],
           items: [
-            ['w', 'lightSurgery', 105, 2],
-            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 165, 6], ['w', 'posterMed', 235, 6],
-            ['f', ['tableSurgery', 'ctScanner'], 105, 1, 0],
-            ['f', ['storageMed', 'storageMedBlack'], 25, 1, 0], ['f', 'salineStand', 135, 1, 0],
-            ['npc', 'hospital-surgeon', 80], ['f', ['computerMed', 'computerMedBlack'], 210, 1, 0],
+            ['w', 'lightSurgery', 130, 2],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 185, 6], ['w', 'posterMed', 240, 6],
+            ['f', ['storageMed', 'storageMedBlack'], 70, 1, 0],
+            ['f', ['tableSurgery', 'ctScanner'], 130, 1, 0], ['f', 'salineStand', 160, 1, 0],
+            ['npc', 'hospital-surgeon', 102], ['f', ['computerMed', 'computerMedBlack'], 215, 1, 0],
           ],
         }),
         () => ({
-          h: 102, fill: 0xe8f4f0, slots: [130, 165, 225],
+          h: 102, fill: 0xe8f4f0, slots: [110, 170, 232],
           items: [
             ['glow', 0xc8f0e0, 0.08],
-            ['w', 'hospLogo', 145, 6], ['w', 'posterMed', 55, 8],
-            ['f', 'bedHosp', 35, 1, 0], ['f', 'salineStand', 62, 1, 0], ['f', 'bedHosp', 95, 1, 0],
-            ['npc', 'hospital-nurse', 140],
-            ['f', ['computerMed', 'computerMedBlack'], 185, 1, 0],
-            ['f', ['storageMed', 'storageMedBlack'], 225, 1, 0],
-            ['f', 'floraFernFull', 250, 1, 0],
+            ['w', 'hospLogo', 160, 6], ['w', 'posterMed', 82, 8],
+            ['f', 'bedHosp', 78, 1, 0], ['f', 'salineStand', 105, 1, 0], ['f', 'bedHosp', 138, 1, 0],
+            ['npc', 'hospital-nurse', 172],
+            ['f', ['computerMed', 'computerMedBlack'], 205, 1, 0],
+            ['f', ['storageMed', 'storageMedBlack'], 238, 1, 0],
+            ['f', 'floraFernFull', 118, 1, 0],
           ],
         }),
       ],
@@ -703,36 +747,38 @@
       wall: 0xd8c8a8, side: 0xb8a888, outline: 0x3a2e1c, roof: 0xc8b896, band: 0x8a7a5a,
       title: { color: '#3a2e1c', bg: '#f0e4c8' },
       stripStyle: { color: '#f8f0d8', bg: '#5a4a30' },
-      // Clear lane at dx=97: between the sun/earth cluster and the display
-      // case cluster in recipe A, and just past the left statue (55) before
-      // the guard rail (110) that boxes in the triceratops in recipe B.
-      stairsDx: 97,
+      // Elevator lane left (shaft at 36). Layout logic: the space wing hangs
+      // the solar system in orbit order left→right with exhibit cases below;
+      // the fossil hall centers the triceratops on its platform between
+      // guard rails, flanked by a statue and a rail-guarded display case.
+      stairsDx: 36,
       recipes: [
         () => ({
-          h: 90, fill: 0x2a2848, slots: [70, 140, 230],
+          h: 90, fill: 0x2a2848, slots: [95, 140, 230],
           items: [
             ['glow', 0x4a4a9a, 0.1],
-            ['w', 'sun', 30, 6],
-            ['w', ['earth', 'venus'], 75, 18],
-            ['w', ['mars', 'mercury'], 105, 10],
-            ['w', 'jupiter', 145, 16],
-            ['w', ['saturn', 'uranus'], 195, 8],
-            ['w', ['neptune', 'uranus'], 240, 20], ['w', 'spaceship', 275, 10],
-            ['f', 'itemDisplayM', 60, 1, 0],
-            ['f', ['meteorite1', 'meteorite2'], 60, 1, 15],
-            ['f', 'itemDisplayL', 165, 1, 0], ['f', 'guardRail', 165, 1, 0],
+            ['w', 'sun', 70, 6],
+            ['w', ['earth', 'venus'], 108, 18],
+            ['w', ['mars', 'mercury'], 138, 10],
+            ['w', 'jupiter', 175, 16],
+            ['w', ['saturn', 'uranus'], 218, 8],
+            ['w', ['neptune', 'uranus'], 255, 20], ['w', 'spaceship', 285, 10],
+            ['f', 'itemDisplayM', 90, 1, 0],
+            ['f', ['meteorite1', 'meteorite2'], 90, 1, 15],
+            ['f', 'itemDisplayL', 195, 1, 0], ['f', 'guardRail', 195, 1, 0],
           ],
         }),
         () => ({
-          h: 112, fill: 0xf0e8d0, slots: [40, 90, 220, 260],
+          h: 112, fill: 0xf0e8d0, slots: [95, 125, 240, 268],
           items: [
-            ['w', 'lightFixture', 150, 2], ['w', 'monaPixa', 40, 12], ['w', 'paintingNight', 260, 12],
-            ['f', 'pillarMuseum', 12, 1, 0], ['f', 'pillarMuseum', 296, 1, 0],
-            ['f', 'platformMuseum', 150, 1, 0], ['f', 'triceratops', 150, 1, 6],
-            ['f', 'guardRail', 110, 1, 0], ['f', 'guardRail', 190, 1, 0],
-            ['f', 'statueF', 55, 1, 0], ['f', 'statueM', 245, 1, 0],
-            ['f', 'itemDisplayM', 80, 1, 0],
-            ['f', ['megalodonJaw', 'trunkMammoth'], 80, 1, 15],
+            ['w', 'lightFixture', 180, 2], ['w', 'monaPixa', 100, 12], ['w', 'paintingNight', 262, 12],
+            ['f', 'pillarMuseum', 70, 1, 0], ['f', 'pillarMuseum', 296, 1, 0],
+            ['f', 'platformMuseum', 180, 1, 0], ['f', 'triceratops', 180, 1, 6],
+            ['f', 'guardRail', 143, 1, 0], ['f', 'guardRail', 217, 1, 0],
+            ['f', 'statueF', 97, 1, 0],
+            ['f', 'itemDisplayM', 122, 1, 0],
+            ['f', ['megalodonJaw', 'trunkMammoth'], 122, 1, 15],
+            ['f', 'statueM', 250, 1, 0],
           ],
         }),
       ],
@@ -741,28 +787,33 @@
       wall: 0x5a7a9a, side: 0x42607e, outline: 0x14202e, roof: 0x4a6a8a, band: 0x2a4058,
       signKey: 'policeSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#d8e8f8', bg: '#1a2a3a' },
-      // Clear lane at dx=167: past the desk cluster (ends ~150) in recipe A,
-      // and between the desk/cop cluster (135) and waiting chairs (215) in B.
-      stairsDx: 167,
+      // Elevator lane left (shaft at 36). Layout logic: booking room reads
+      // left→right as records cabinet, officer desk with paperwork under
+      // the duty clipboard/portrait, then the holding cell (bars over the
+      // right end with a prisoner bench inside); the lobby pairs wanted
+      // posters over the front desk with visitor chairs by the wall.
+      stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0xb8c0c8, slots: [40, 210],
+          h: 84, fill: 0xb8c0c8, slots: [80, 150],
           items: [
-            ['w', ['clipboardWallSmall', 'clipboardLong1', 'clipboardLong2'], 130, 6],
-            ['w', ['portraitOfficer', 'portraitOfficer2', 'portraitOfficer3'], 165, 6],
-            ['f', 'deskOffice', 150, 1, 0],
-            ['f', ['paperStack', 'paperStack2'], 143, 1, 14],
-            ['f', ['waitChairSolo', 'waitChairSoloRed'], 185, 1, 0], ['f', 'filecabinet', 236, 1, 0],
+            ['w', ['clipboardWallSmall', 'clipboardLong1', 'clipboardLong2'], 90, 6],
+            ['w', ['portraitOfficer', 'portraitOfficer2', 'portraitOfficer3'], 150, 6],
+            ['f', 'filecabinet', 66, 1, 0],
+            ['f', 'deskOffice', 130, 1, 0],
+            ['f', ['paperStack', 'paperStack2'], 123, 1, 14],
+            ['f', ['waitChairSolo', 'waitChairSoloRed'], 205, 1, 0],
           ],
           bars: true,
         }),
         () => ({
-          h: 102, fill: 0xd0d8e0, slots: [60, 100, 180],
+          h: 102, fill: 0xd0d8e0, slots: [72, 110, 185],
           items: [
-            ['w', 'posterWanted', 30, 8], ['w', 'posterWanted2', 60, 8], ['w', 'policeLogo', 135, 6],
-            ['f', 'policeDesk', 135, 1, 0], ['npc', 'police-cop', 135],
-            ['f', ['waitChairs', 'waitChairsRed'], 215, 1, 0],
-            ['f', 'filecabinet', 25, 1, 0], ['f', 'floraFernFull', 250, 1, 0],
+            ['w', 'posterWanted', 80, 8], ['w', 'posterWanted2', 108, 8], ['w', 'policeLogo', 165, 6],
+            ['f', 'filecabinet', 68, 1, 0],
+            ['f', 'policeDesk', 160, 1, 0], ['npc', 'police-cop', 160],
+            ['f', ['waitChairs', 'waitChairsRed'], 212, 1, 0],
+            ['f', 'floraFernFull', 246, 1, 0],
           ],
         }),
       ],
@@ -772,33 +823,34 @@
       signKey: 'fireSign', signScale: SCALE * 0.85,
       stripStyle: { color: '#ffe0d0', bg: '#701e14' },
       doorKind: 'elev',
-      // Clear lane at dx=100: between the first bunk/cabinet cluster (ends
-      // ~75) and the emergency box (145) in recipe A, and symmetric between
-      // the locker/rack/firefighter cluster (ends ~120) and fire extinguisher
-      // (200) in recipe B.
-      stairsDx: 100,
+      // Elevator lane left (shaft at 36). Layout logic: crew quarters put a
+      // bunk at each end with the shared cabinet + emergency kit between;
+      // the engine bay reads as a working wall — lockers (helmet on top),
+      // equipment rack, crew member, extinguisher, emergency box — under
+      // the hose and hanging turnout uniforms.
+      stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0xf0dcc8, slots: [110, 170],
+          h: 84, fill: 0xf0dcc8, slots: [130, 185],
           items: [
-            ['w', 'framedCert', 60, 6],
-            ['w', ['portraitFF', 'portraitFF2', 'portraitFF3'], 130, 6],
-            ['w', ['fireAlarm', 'fireAxe'], 200, 6],
-            ['f', 'bunkBottom', 30, 1, 0], ['f', 'bunkTop', 30, 1, 22], ['f', 'cabinetFull', 75, 1, 0],
-            ['f', 'boxEmergency', 145, 1, 0], ['f', 'bunkBottom', 220, 1, 0], ['f', 'bunkTop', 220, 1, 22],
+            ['w', 'framedCert', 100, 6],
+            ['w', ['portraitFF', 'portraitFF2', 'portraitFF3'], 155, 6],
+            ['w', ['fireAlarm', 'fireAxe'], 205, 6],
+            ['f', 'bunkBottom', 80, 1, 0], ['f', 'bunkTop', 80, 1, 22], ['f', 'cabinetFull', 122, 1, 0],
+            ['f', 'boxEmergency', 160, 1, 0], ['f', 'bunkBottom', 226, 1, 0], ['f', 'bunkTop', 226, 1, 22],
           ],
         }),
         () => ({
-          h: 102, fill: 0xe0d4c4, slots: [95, 150, 210],
+          h: 102, fill: 0xe0d4c4, slots: [110, 165, 230],
           items: [
             ['glow', 0xffb090, 0.07],
-            ['w', ['hoseWall', 'hoseWallShort'], 100, 6],
-            ['w', ['uniformHang', 'uniformHang2'], 150, 10],
-            ['w', ['uniformHang2', 'uniformHang'], 175, 10],
-            ['w', 'fireLogo', 230, 6],
-            ['f', 'locker', 20, 1, 0], ['f', 'locker', 50, 1, 0], ['f', 'rackEquip', 80, 1, 0],
-            ['f', 'helmetFF', 50, 1, 46],
-            ['npc', 'fire-firefighter', 120], ['f', 'fireExt', 200, 1, 0], ['f', 'boxEmergency', 235, 1, 0],
+            ['w', ['hoseWall', 'hoseWallShort'], 125, 6],
+            ['w', ['uniformHang', 'uniformHang2'], 170, 10],
+            ['w', ['uniformHang2', 'uniformHang'], 195, 10],
+            ['w', 'fireLogo', 240, 6],
+            ['f', 'locker', 70, 1, 0], ['f', 'locker', 96, 1, 0], ['f', 'rackEquip', 126, 1, 0],
+            ['f', 'helmetFF', 96, 1, 46],
+            ['npc', 'fire-firefighter', 156], ['f', 'fireExt', 216, 1, 0], ['f', 'boxEmergency', 190, 1, 0],
           ],
         }),
       ],
@@ -810,37 +862,38 @@
       wall: 0x4a3458, side: 0x362442, outline: 0x140a1c, roof: 0x3a2848, band: 0x241432,
       title: { color: '#ffb858', bg: '#241432' },
       stripStyle: { color: '#ffb858', bg: '#140a1c' },
-      // Clear lane at dx=110: between candleTable (75) and the mummy (moved
-      // to 145, was 125) in recipe A, and past the chair (95) before the
-      // witch (150) in recipe B.
-      stairsDx: 110,
+      // Elevator lane left (shaft at 36; the cobweb stays in the top-left
+      // corner above it). Layout logic: attic = coffin flanked by a grave
+      // candle, then mummy / ghost-lamp / skeleton spaced down the room;
+      // parlor = reading corner (dark bookshelf + candelabra + cursed
+      // chair) then witch tending her jack-o-lantern patch on the right.
+      stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0x584668, slots: [80, 150, 220],
+          h: 84, fill: 0x584668, slots: [110, 165, 235],
           items: [
             ['glow', 0x8a5aff, 0.08],
             ['w', ['cobwebRoom', 'cobwebRoom2'], 12, 2],
-            ['w', ['lanternHang', 'lanternHang2'], 100, 2],
+            ['w', ['lanternHang', 'lanternHang2'], 130, 2],
             ['w', ['cobwebRoom2', 'cobwebRoom'], 245, 2],
-            ['f', 'coffin', 40, 1, 0],
-            ['f', ['candleTable', 'candleTable2', 'candleTable3'], 75, 1, 0],
-            ['npc', 'halloween-mummy', 145], ['f', 'lampGhost', 185, 1, 0], ['npc', 'halloween-skeleton', 225],
+            ['f', 'coffin', 80, 1, 0],
+            ['f', ['candleTable', 'candleTable2', 'candleTable3'], 115, 1, 0],
+            ['npc', 'halloween-mummy', 152], ['f', 'lampGhost', 192, 1, 0], ['npc', 'halloween-skeleton', 228],
           ],
         }),
         () => ({
-          h: 102, fill: 0x6a5478, slots: [70, 130, 200],
+          h: 102, fill: 0x6a5478, slots: [105, 155, 220],
           items: [
             ['glow', 0xff8a30, 0.06],
-            ['w', 'chandelier', 130, 2], ['w', 'portraitDracula', 65, 8],
+            ['w', 'chandelier', 150, 2], ['w', 'portraitDracula', 85, 8],
             ['w', ['cobwebRoom', 'cobwebRoom2'], 250, 2],
-            ['f', 'bookshelfDark', 22, 1, 0],
-            ['f', ['candelabra', 'candelabra2', 'candelabra3'], 48, 1, 0],
-            ['f', 'chairHalloween', 95, 1, 0],
-            ['npc', 'halloween-witch', 150],
-            ['f', ['jack1', 'jack3'], 180, 1, 0],
-            ['f', ['jack2', 'jack4'], 200, 1, 0],
-            ['f', ['pumpkinBasket', 'pumpkinBasket2'], 230, 1, 0],
-            ['f', ['candleTable2', 'candleTable'], 250, 1, 0],
+            ['f', 'bookshelfDark', 70, 1, 0],
+            ['f', ['candelabra', 'candelabra2', 'candelabra3'], 102, 1, 0],
+            ['f', 'chairHalloween', 132, 1, 0],
+            ['npc', 'halloween-witch', 168],
+            ['f', ['jack1', 'jack3'], 198, 1, 0],
+            ['f', ['jack2', 'jack4'], 218, 1, 0],
+            ['f', ['pumpkinBasket', 'pumpkinBasket2'], 242, 1, 0],
           ],
         }),
       ],
@@ -901,11 +954,19 @@
       this.stairs = [];
       this.passages = [];
       this.buildings = [];
+      this.sitables = []; // { x, floorId, kind: 'sit'|'bed', radius }
+      this.elevSprites = []; // { x, sprite } outdoor elevators for open/close anim
       this.indoors = null;
       this.enterCooldown = 0;
+      this._sitting = null; // { x, floorY, kind } while seated/lying
       this._sceneMinY = 0; // tallest building's roof, tracked as buildings draw
       this.decorNpcQueue = []; // [sheetKey, x, floorY] queued by themed rooms, flushed after layout
       this._themeRR = 0; // round-robin index for THEME_ROTATION_POOL
+      this._missingAssets = new Set();
+      this.seats = []; // interactable seats/beds, auto-registered by furn()
+      this.autoDoors = []; // entrance door sprites that open on approach
+      this.elevatorDoors = []; // per-floor elevator shaft doors {x, floorId, img}
+      this.seated = null; // { seat, prevDepth } while sitting/lying
       this.presenceEl = document.getElementById('presence-status');
       this.hintEl = document.getElementById('enter-hint');
 
@@ -968,6 +1029,13 @@
         backgroundColor: '#000000',
         padding: { x: 5, y: 2 },
       }).setOrigin(0.5, 1).setDepth(46).setResolution(3);
+
+      // Sit / stand (E) — created once, not every frame
+      try {
+        this.keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+      } catch (_) {
+        this.keyE = null;
+      }
 
       const floor = this.add.rectangle(mw / 2, this.groundY + 24, mw + 120, 48, 0x000000, 0);
       this.physics.add.existing(floor, true);
@@ -1201,15 +1269,40 @@
       this.registerDoor({ x: doorX2, floorId: lowest.id, radius: 18 });
 
       for (let i = floorDefs.length - 1; i > 0; i -= 1) {
-        // cfg.stairsDx is a clear lane hand-picked per theme (checked against
-        // both of its recipes' furniture) — the old generic 0.35/0.65 split
-        // routinely landed the stairs on top of a themed room's furniture.
-        const sx = cfg.stairsDx != null ? padX + cfg.stairsDx : padX + roomW * (0.35 + 0.3 * (i % 2));
+        // Prefer theme stairsDx; fall back to left climb lane (not room center).
+        const sx = cfg.stairsDx != null ? padX + cfg.stairsDx : padX + roomW * 0.14;
         this.registerStairs({
-          x: sx, fromFloorId: floorDefs[i].id, toFloorId: floorDefs[i - 1].id, radius: 60,
+          x: sx, fromFloorId: floorDefs[i].id, toFloorId: floorDefs[i - 1].id, radius: 32,
         });
         this.markStairs(sx, floorDefs[i].id);
         this.markStairs(sx, floorDefs[i - 1].id);
+      }
+
+      // Rooftop walkway above the top floor
+      if (floorDefs.length) {
+        const topFloor = floorDefs[0];
+        const roofId = `roof_theme_${left}`;
+        const roofY = top + 6;
+        const roofStairX = cfg.stairsDx != null ? padX + cfg.stairsDx : padX + roomW * 0.14;
+        this.registerFloor({
+          id: roofId,
+          roomKey: roofId,
+          floorY: roofY,
+          minX: padX + 10,
+          maxX: padX + roomW - 10,
+          label: 'Rooftop',
+          isRoof: true,
+        });
+        this.registerStairs({
+          x: roofStairX,
+          fromFloorId: topFloor.id,
+          toFloorId: roofId,
+          radius: 32,
+        });
+        this.markStairs(roofStairX, topFloor.id);
+        this.markStairs(roofStairX, roofId);
+        this.furn('roofVents1', padX + roomW * 0.45, roofY, 22);
+        this.furn('treeRoof2', padX + roomW * 0.72, roofY, 22);
       }
 
       if (cfg.strip) {
@@ -1233,12 +1326,18 @@
      */
     placeRoomItems(room, x0, y0, floorY, roomW) {
       const seed = hashSeed(room.roomKey || room.id || '');
+      const floorId = room.roomKey || room.id || null;
       const pick = (key, idx) => (Array.isArray(key) ? seededPick(seed, key, idx * 13 + 5) : key);
+      // Theme stairs lane — skip floor items that land inside it
+      const clearX = x0 + (room.stairsDx != null ? room.stairsDx : roomW * 0.14);
+      const clearR = 22;
       (room.items || []).forEach((it, idx) => {
         const kind = it[0];
         if (kind === 'f') {
           const [, key, dx, sc, dy] = it;
-          this.furn(pick(key, idx), x0 + dx, floorY - (dy || 0), 23, (sc || 1) * SCALE);
+          const x = x0 + dx;
+          if (Math.abs(x - clearX) < clearR && !(dy > 0)) return; // keep climb lane free
+          this.furn(pick(key, idx), x, floorY - (dy || 0), 23, (sc || 1) * SCALE, floorId);
         } else if (kind === 'w') {
           const [, key, dx, dyTop, sc] = it;
           this.wallDecor(pick(key, idx), x0 + dx, y0 + dyTop, 22, (sc || 1) * SCALE);
@@ -1281,11 +1380,14 @@
         rooms,
       });
 
+      // Holding-cell bars wall the RIGHT end of the room (dx 178-234) so the
+      // prisoner bench at 205 sits behind them — the left strip is the
+      // shared elevator lane and must stay clear.
       const barsRoomIdx = rooms.findIndex((r) => r.bars);
       if (barsRoomIdx !== -1) {
         const cellsTop = b.top + 12;
         for (let i = 0; i < 9; i += 1) {
-          this.add.image(b.padX + 14 + i * 7, cellsTop + rooms[barsRoomIdx].h - 2, 'prisonDoor')
+          this.add.image(b.padX + 178 + i * 7, cellsTop + rooms[barsRoomIdx].h - 2, 'prisonDoor')
             .setScale(SCALE).setOrigin(0.5, 1).setDepth(24);
         }
       }
@@ -1722,7 +1824,10 @@
         this.cutawayRoom(g, x0, y0, roomW, h, fill, () => {
           if (!isPlaceholder) {
             const floor = y0 + h - 2;
-            this.decorateRoom(channels[idx], x0, y0, roomW, h, floor);
+            this.decorateRoom(channels[idx], x0, y0, roomW, h, floor, {
+              clearXf: 0.14,
+              roomKey: isPlaceholder ? undefined : chKey(channels[idx].id),
+            });
             this.addRoomSlots(roomKey, this.slotPointsForRoom(x0, roomW, floor, 4));
           }
         });
@@ -1807,7 +1912,10 @@
         const label = channelLabel(ch);
         this.cutawayRoom(g, slot.x, slot.y, slot.w, slot.h, this.roomWallColor(roomKey), () => {
           const floor = slot.y + slot.h - 2;
-          this.decorateRoom(ch, slot.x, slot.y, slot.w, slot.h, floor);
+          this.decorateRoom(ch, slot.x, slot.y, slot.w, slot.h, floor, {
+            clearXf: 0.14,
+            roomKey,
+          });
           this.addRoomSlots(roomKey, this.slotPointsForRoom(slot.x, slot.w, floor, 3));
         });
         this.channelBadge(slot.x + 4, slot.y + 4, shortLabel(label, 16));
@@ -1826,43 +1934,61 @@
       const elevX = left + bw - 44;
       if (firstKey) {
         this.placeEntrance(g, doorX, groundY, 'door', pal.lintel, 26);
-        this.registerDoor({ x: doorX, floorId: firstKey, radius: 18 });
+        this.registerDoor({ x: doorX, floorId: firstKey, radius: 18, kind: 'door' });
       }
       if (channels[1]) {
         this.placeEntrance(g, elevX, groundY, 'elev', pal.lintel, 26);
-        this.registerDoor({ x: elevX, floorId: chKey(channels[1].id), radius: 20 });
+        this.registerDoor({ x: elevX, floorId: chKey(channels[1].id), radius: 20, kind: 'elev' });
       }
+      // Climb lane on the LEFT of each room (~14%) so elevators don't block decor.
       if (channels[0] && channels[2]) {
-        const sx = padX + roomW * 0.5;
+        const sx = padX + roomW * 0.14;
         this.registerStairs({
           x: sx,
           fromFloorId: chKey(channels[2].id),
           toFloorId: chKey(channels[0].id),
-          // Wide enough to cover the whole room (roomW=126, walkable half-
-          // width ~55) — the room is small enough that a tight radius left a
-          // dead zone between the door-spawn point and the stairs, so a
-          // player's first "down" press right after entering just ejected
-          // them outside instead of taking the stairs to the room below.
-          radius: 60,
+          radius: 28,
         });
         this.markStairs(sx, chKey(channels[0].id));
         this.markStairs(sx, chKey(channels[2].id));
       }
       if (channels[1] && channels[3]) {
-        const sx = padX + roomW + gap + roomW * 0.5;
+        const sx = padX + roomW + gap + roomW * 0.14;
         this.registerStairs({
           x: sx,
           fromFloorId: chKey(channels[3].id),
           toFloorId: chKey(channels[1].id),
-          // Wide enough to cover the whole room (roomW=126, walkable half-
-          // width ~55) — the room is small enough that a tight radius left a
-          // dead zone between the door-spawn point and the stairs, so a
-          // player's first "down" press right after entering just ejected
-          // them outside instead of taking the stairs to the room below.
-          radius: 60,
+          radius: 28,
         });
         this.markStairs(sx, chKey(channels[1].id));
         this.markStairs(sx, chKey(channels[3].id));
+      }
+      // Rooftop access from top-left room
+      if (channels[0]) {
+        const topKey = chKey(channels[0].id);
+        const roofId = `roof_${left}`;
+        const roofY = top + 4;
+        this.registerFloor({
+          id: roofId,
+          roomKey: roofId,
+          floorY: roofY,
+          minX: padX + 8,
+          maxX: padX + roomW * 2 + gap - 8,
+          label: 'Rooftop',
+          isRoof: true,
+        });
+        const roofStairX = padX + roomW * 0.14;
+        this.registerStairs({
+          x: roofStairX,
+          fromFloorId: topKey,
+          toFloorId: roofId,
+          radius: 28,
+        });
+        this.markStairs(roofStairX, topKey);
+        this.markStairs(roofStairX, roofId);
+        this.furn('roofVents1', padX + roomW * 0.55, roofY, 22);
+        this.furn('treeRoof1', padX + roomW * 1.2, roofY, 22);
+        this.furn('roofVents2', padX + roomW * 1.7, roofY, 22);
       }
       if (channels[2] && channels[3]) {
         this.registerPassage({
@@ -1945,17 +2071,37 @@
       g.lineStyle(2, 0x0a0806, 1);
       g.strokeRect(fx, fy, frameW, frameH);
 
-      this.add.image(cx, groundY - 1, key)
+      const img = this.add.image(cx, groundY - 1, key)
         .setScale(scale)
         .setOrigin(0.5, 1)
         .setDepth(depth);
+      // Entrance doors react to the player: wood doors swing open on
+      // approach, elevators run closed → slightly open → open as you near.
+      this.autoDoors.push({ x: cx, img, kind });
+      if (kind === 'elev') {
+        if (!this.elevSprites) this.elevSprites = [];
+        this.elevSprites.push({ x: cx, sprite: img, kind: 'elev' });
+      }
 
-      return { fx, fy, frameW, frameH, dw, dh };
+      return { fx, fy, frameW, frameH, dw, dh, sprite: img, kind };
     }
 
-    /** Place furniture sitting on a floor line (origin bottom-center). */
-    furn(key, x, floorY, depth = 23, scale = SCALE) {
-      if (!this.textures.exists(key)) return null;
+    /** Place furniture sitting on a floor line (origin bottom-center).
+     *  Seats and beds (SEAT_INFO/BED_INFO) auto-register as interactables. */
+    furn(key, x, floorY, depth = 23, scale = SCALE, floorId = null) {
+      if (!this.textures.exists(key)) {
+        this._missingAssets?.add?.(key);
+        return null;
+      }
+      if (SEAT_INFO[key] != null) {
+        this.seats.push({
+          x, floorY, floorId, surfaceH: SEAT_INFO[key], kind: 'seat', key, radius: 16,
+        });
+      } else if (BED_INFO[key] != null) {
+        this.seats.push({
+          x, floorY, floorId, surfaceH: BED_INFO[key], kind: 'bed', key, radius: 22,
+        });
+      }
       return this.add.image(x, floorY, key)
         .setScale(scale)
         .setOrigin(0.5, 1)
@@ -1963,15 +2109,18 @@
     }
 
     /**
-     * Visible stairs icon at the exact trigger x, inside the given room.
-     * The stairs trigger was previously invisible logic only — a player had
-     * no way to know where to stand to go up/down, and the spawn point after
-     * walking in the front door doesn't land on it. Draw it so it's obvious.
+     * Elevator shaft doors at the vertical-transport trigger x on the given
+     * floor. This replaced the old 56x56 staircase sprite, which at SCALE 2
+     * was a 112px diagonal slab that covered half the room's decor — the
+     * elevator doors are compact (52x46), sit flush at the lane, and animate
+     * open as the player approaches / rides.
      */
     markStairs(x, floorId) {
       const floor = this.floors.get(floorId);
       if (!floor) return;
-      this.furn('stairs', x, floor.floorY, 25);
+      const img = this.add.image(x, floor.floorY, 'elevClosed')
+        .setScale(SCALE).setOrigin(0.5, 1).setDepth(22);
+      this.elevatorDoors.push({ x, floorId, img });
     }
 
     /** Place wall-mounted decor hanging from the room's top edge (origin top-center). */
@@ -1989,43 +2138,82 @@
     }
 
     /**
-     * Decorate a room with a channel-THEMED furniture kit (library/office/cafe/
-     * lounge/...) chosen from the channel name + type, plus seeded wall decor.
-     * Deterministic per channel id so a room always looks the same across reloads.
+     * Decorate a room with a channel-THEMED furniture kit.
+     * Layout rules (readable rooms for humans + AI map gen):
+     *  1. Left ~18% is the CLIMB LANE (stairs/elev) — no furniture.
+     *  2. Floor props keep a min gap so pieces don't stack.
+     *  3. Sitables (couch/chair/bed) register for E / hold-↑ interaction.
+     *  4. Deterministic per channel id.
+     * @param {{ clearXf?: number, roomKey?: string }} [opts]
      */
-    decorateRoom(ch, slotX, slotY, slotW, slotH, floorY) {
-      const roomKey = chKey(ch.id);
+    decorateRoom(ch, slotX, slotY, slotW, slotH, floorY, opts = {}) {
+      const roomKey = opts.roomKey || chKey(ch.id);
       const seed = hashSeed(roomKey);
       const kitName = kitForChannel(ch.name, ch.type, seed);
       const kit = KITS[kitName] || KITS.lounge;
+      const clearXf = opts.clearXf != null ? opts.clearXf : 0.14;
+      const clearHalf = 0.11; // reserved climb band
+      const minGap = Math.max(20, slotW * 0.15);
+      const placed = [];
+
+      const inClear = (xf) => Math.abs(xf - clearXf) < clearHalf;
+      const pushFromClear = (xf) => {
+        if (!inClear(xf)) return xf;
+        return clearXf < 0.5
+          ? Math.min(0.9, clearXf + clearHalf + 0.06)
+          : Math.max(0.1, clearXf - clearHalf - 0.06);
+      };
 
       kit.forEach((item, idx) => {
         const key = Array.isArray(item.key) ? seededPick(seed, item.key, idx * 7 + 1) : item.key;
-        const x = slotX + item.xf * slotW;
+        let xf = pushFromClear(item.xf);
+        xf = Math.min(0.92, Math.max(0.1, xf));
+        let x = slotX + xf * slotW;
+
         if (item.wall) {
+          // Wall art stays off the climb lane too
+          if (inClear((x - slotX) / slotW)) x = slotX + pushFromClear(0.55) * slotW;
           this.wallDecor(key, x, slotY + 6, item.depth, SCALE * (item.scaleMul || 1));
-        } else {
-          const sp = this.furn(key, x, floorY + (item.offY || 0), item.depth, SCALE * (item.scaleMul || 1));
-          if (sp && item.offY) sp.setDepth(item.depth); // laptop-on-desk etc.
+          return;
         }
+
+        // Resolve floor collisions — nudge right, then left, or skip
+        for (let tries = 0; tries < 10; tries += 1) {
+          const clash = placed.find((p) => Math.abs(p - x) < minGap);
+          if (!clash) break;
+          x = clash + minGap;
+          if (x > slotX + slotW * 0.92) x = clash - minGap;
+        }
+        if (x < slotX + slotW * 0.1 || x > slotX + slotW * 0.92) return;
+        if (inClear((x - slotX) / slotW)) return;
+
+        placed.push(x);
+        const sp = this.furn(
+          key,
+          x,
+          floorY + (item.offY || 0),
+          item.depth,
+          SCALE * (item.scaleMul || 1),
+          roomKey,
+        );
+        if (sp && item.offY) sp.setDepth(item.depth);
       });
 
-      // Back-wall decor — only when the room is tall enough (window ~30px at
-      // SCALE 2). Window OR curtains, never stacked (both are bold in this pack).
+      // Back-wall decor — only when tall enough; keep away from climb lane.
       if (slotH >= 70) {
-        const wallX = slotX + slotW * 0.5;
         const wallTop = slotY + 6;
+        const wallXf = pushFromClear(0.55);
+        const wallX = slotX + wallXf * slotW;
         if (seed % 3 === 0) {
           const winKey = seededPick(seed, ['windowSq', 'windowCircle', 'windowGlass', 'windowSmall'], 11);
           this.wallDecor(winKey, wallX, wallTop, 21);
         } else if (seed % 3 === 1) {
           const curtainKey = seededPick(seed, ['curtain', 'curtainR', 'curtainB', 'curtainY'], 17);
-          const spread = Math.min(slotW * 0.3, 34);
+          const spread = Math.min(slotW * 0.22, 28);
           this.wallDecor(curtainKey, wallX - spread, wallTop, 21);
           this.wallDecor(curtainKey, wallX + spread, wallTop, 21);
         } else {
-          // clipboard/notice on the wall for a lived-in office/reception feel
-          this.wallDecor('clipboard', wallX + slotW * 0.28, wallTop + 2, 21);
+          this.wallDecor('clipboard', wallX + Math.min(28, slotW * 0.18), wallTop + 2, 21);
         }
       }
     }
@@ -2065,6 +2253,43 @@
           frames: this.anims.generateFrameNumbers(n.key, { start: NPC_COLS, end: NPC_COLS + 2 }),
           frameRate: 2,
           repeat: -1,
+        });
+        // Interaction poses — the sheets ship full SIT/LIE rows we now use:
+        // row 3 SIT (3f, sink into the seat), row 4 SIT IDLE (3f loop),
+        // row 5 SIT FINISH (3f, stand back up), row 6 LIE DOWN (6f),
+        // row 7 LIE FINISH (6f, get back up). frame = row * NPC_COLS + col.
+        const row = (r) => r * NPC_COLS;
+        this.anims.create({
+          key: `${n.key}_sit`,
+          frames: this.anims.generateFrameNumbers(n.key, { start: row(3), end: row(3) + 2 }),
+          frameRate: 10,
+        });
+        this.anims.create({
+          key: `${n.key}_sitIdle`,
+          frames: this.anims.generateFrameNumbers(n.key, { start: row(4), end: row(4) + 2 }),
+          frameRate: 2,
+          repeat: -1,
+        });
+        this.anims.create({
+          key: `${n.key}_sitFinish`,
+          frames: this.anims.generateFrameNumbers(n.key, { start: row(5), end: row(5) + 2 }),
+          frameRate: 12,
+        });
+        this.anims.create({
+          key: `${n.key}_lie`,
+          frames: this.anims.generateFrameNumbers(n.key, { start: row(6), end: row(6) + 5 }),
+          frameRate: 10,
+        });
+        this.anims.create({
+          key: `${n.key}_lieIdle`,
+          frames: [{ key: n.key, frame: row(6) + 5 }],
+          frameRate: 1,
+          repeat: -1,
+        });
+        this.anims.create({
+          key: `${n.key}_lieFinish`,
+          frames: this.anims.generateFrameNumbers(n.key, { start: row(7), end: row(7) + 5 }),
+          frameRate: 12,
         });
       });
     }
@@ -2312,6 +2537,7 @@
         floorId: def.floorId,
         radius: def.radius || 16,
         outdoorX: def.outdoorX ?? def.x,
+        kind: def.kind || 'door',
       });
     }
 
@@ -2388,10 +2614,32 @@
       return null;
     }
 
-    enterFloor(floorId, fromOutdoorX = null) {
+    /** Animate outdoor or indoor elevator doors: closed → slightly → open. */
+    animateElevatorAt(x, floorId = null) {
+      const imgs = [];
+      for (const e of this.elevatorDoors || []) {
+        if (Math.abs(e.x - x) < 12 && (floorId == null || e.floorId === floorId || !e.floorId)) {
+          if (e.img) imgs.push(e.img);
+        }
+      }
+      // Outdoor elev entrances from placeEntrance
+      for (const e of this.autoDoors || []) {
+        if (e.kind === 'elev' && Math.abs(e.x - x) < 14 && e.img) imgs.push(e.img);
+      }
+      imgs.forEach((img) => {
+        if (!img?.setTexture) return;
+        img.setTexture('elevSlightly');
+        this.time.delayedCall(90, () => { try { img.setTexture('elevOpen'); } catch (_) {} });
+        this.time.delayedCall(520, () => { try { img.setTexture('elevClosed'); } catch (_) {} });
+      });
+    }
+
+    enterFloor(floorId, fromOutdoorX = null, viaElev = false) {
+      this.standUp();
       const floor = this.floors.get(floorId);
       if (!floor) return;
       const outdoorX = fromOutdoorX != null ? fromOutdoorX : this.player.x;
+      if (viaElev) this.animateElevatorAt(outdoorX);
       this.indoors = { floorId, outdoorX };
       const spawnX = Phaser.Math.Clamp(this.player.x, floor.minX, floor.maxX);
       this.player.setPosition(spawnX, floor.floorY);
@@ -2403,6 +2651,7 @@
 
     leaveBuilding() {
       if (!this.indoors) return;
+      this.standUp();
       const outX = this.indoors.outdoorX;
       this.indoors = null;
       this.player.setPosition(outX, this.groundY - 1);
@@ -2412,17 +2661,86 @@
       this.setEnterHint(defaultOutdoorHint());
     }
 
-    goToFloor(floorId) {
+    goToFloor(floorId, viaElev = true) {
+      this.standUp();
       const floor = this.floors.get(floorId);
       if (!floor || !this.indoors) return;
+      if (viaElev) this.animateElevatorAt(this.player.x, this.indoors.floorId);
       this.indoors.floorId = floorId;
+      // Keep x near the climb shaft when changing floors
       const x = Phaser.Math.Clamp(this.player.x, floor.minX, floor.maxX);
       this.player.setPosition(x, floor.floorY);
+      if (floor.isRoof) {
+        this.setEnterHint(IS_TOUCH ? 'Rooftop · ▼ go down' : 'Rooftop · ↓ elevator down');
+      }
+    }
+
+    nearbySeat() {
+      if (!this.indoors || this.seated) return null;
+      const px = this.player.x;
+      const cur = this.indoors.floorId;
+      let best = null;
+      let bestD = 999;
+      for (const s of this.seats || []) {
+        if (s.floorId && s.floorId !== cur) continue;
+        // If no floorId, match by floorY
+        const floor = this.floors.get(cur);
+        if (!s.floorId && floor && Math.abs((s.floorY || 0) - floor.floorY) > 8) continue;
+        const dist = Math.abs(px - s.x);
+        const r = s.radius || 16;
+        if (dist <= r && dist < bestD) {
+          best = s;
+          bestD = dist;
+        }
+      }
+      return best;
+    }
+
+    sitOn(seat) {
+      if (!seat || !this.player || this.seated) return;
+      this.seated = { seat, prevDepth: this.player.depth };
+      this.player.setVelocityX(0);
+      this.player.x = seat.x;
+      this.player.y = seat.floorY - (seat.surfaceH || 10);
+      this.player.setDepth(44);
+      // Play the sheet's real SIT (row 3) / LIE DOWN (row 6) animation, then
+      // settle into the matching idle loop (SIT IDLE row 4 / held lie frame).
+      const isBed = seat.kind === 'bed';
+      const startKey = `${this.playerSheet}_${isBed ? 'lie' : 'sit'}`;
+      const idleKey = `${this.playerSheet}_${isBed ? 'lieIdle' : 'sitIdle'}`;
+      if (this.anims.exists(startKey)) {
+        this.player.anims.play(startKey, true);
+        this.player.once(`animationcomplete-${startKey}`, () => {
+          if (this.seated && this.anims.exists(idleKey)) this.player.anims.play(idleKey, true);
+        });
+      } else {
+        this.player.anims.play(`${this.playerSheet}_idle`, true);
+      }
+      const tag = isBed ? 'lying down' : 'sitting';
+      this.setEnterHint(IS_TOUCH ? `${tag} · ▼ stand` : `${tag} · ↓ / E stand`);
+    }
+
+    standUp() {
+      if (!this.seated) return;
+      const isBed = this.seated.seat.kind === 'bed';
+      const floor = this.indoors ? this.floors.get(this.indoors.floorId) : null;
+      if (floor) this.player.y = floor.floorY;
+      else this.player.y = this.groundY - 1;
+      if (this.seated.prevDepth != null) this.player.setDepth(this.seated.prevDepth);
+      this.seated = null;
+      // SIT FINISH (row 5) / LIE FINISH (row 7) — briefly hold off the
+      // walk/idle animation switcher in update() so the get-up plays out.
+      const finKey = `${this.playerSheet}_${isBed ? 'lieFinish' : 'sitFinish'}`;
+      if (this.anims.exists(finKey)) {
+        this.player.anims.play(finKey, true);
+        this._poseHoldUntil = this.time.now + (isBed ? 480 : 260);
+      }
     }
 
     tryEnterExit() {
       if (this.enterCooldown > 0) return;
       const touch = touchInput();
+      const ePressed = this.keyE && Phaser.Input.Keyboard.JustDown(this.keyE);
       const up = Phaser.Input.Keyboard.JustDown(this.cursors.up)
         || Phaser.Input.Keyboard.JustDown(this.wasd.up)
         || (touch && touch.consumeEnter());
@@ -2430,31 +2748,94 @@
         || Phaser.Input.Keyboard.JustDown(this.wasd.down)
         || (touch && touch.consumeExit());
 
+      // Stand from sit/lie
+      if (this.seated && (down || ePressed || up)) {
+        this.standUp();
+        this.enterCooldown = 180;
+        return;
+      }
+
       if (!this.indoors) {
         if (up) {
           const door = this.nearbyDoor();
           if (door) {
-            this.enterFloor(door.floorId, door.outdoorX);
-            this.enterCooldown = 220;
+            // registerDoor doesn't carry the entrance kind — resolve it from
+            // the co-located autoDoors sprite so elevator entrances animate.
+            const isElev = (this.autoDoors || []).some((d) => d.kind === 'elev' && Math.abs(d.x - door.x) < 14);
+            this.enterFloor(door.floorId, door.outdoorX, isElev);
+            this.enterCooldown = 280;
           }
         }
         return;
       }
 
+      // Prefer elevator / stairs over sit when standing on the climb lane
       const stairs = this.nearbyStairs();
       if (up && stairs && stairs.dir === 'up') {
-        this.goToFloor(stairs.targetFloorId);
-        this.enterCooldown = 220;
+        this.goToFloor(stairs.targetFloorId, true);
+        this.enterCooldown = 280;
         return;
       }
       if (down && stairs && stairs.dir === 'down') {
-        this.goToFloor(stairs.targetFloorId);
-        this.enterCooldown = 220;
+        this.goToFloor(stairs.targetFloorId, true);
+        this.enterCooldown = 280;
         return;
       }
+
+      // Sit / lie on nearby furniture
+      if ((ePressed || up) && !stairs) {
+        const seat = this.nearbySeat();
+        if (seat) {
+          this.sitOn(seat);
+          this.enterCooldown = 220;
+          return;
+        }
+      }
+
       if (down) {
+        // From roof or ground floor leave; mid floors without stairs: leave if near entrance x
+        const floor = this.floors.get(this.indoors.floorId);
+        if (floor?.isRoof) {
+          // only down via stairs — already handled
+          return;
+        }
         this.leaveBuilding();
         this.enterCooldown = 220;
+      }
+    }
+
+    updateElevatorProximity() {
+      if (!this.indoors) return;
+      const px = this.player.x;
+      const cur = this.indoors.floorId;
+      for (const e of this.elevatorDoors || []) {
+        if (e.floorId !== cur || !e.img?.setTexture) continue;
+        const near = Math.abs(px - e.x) < 22;
+        if (near && e.img.texture?.key === 'elevClosed') e.img.setTexture('elevSlightly');
+        else if (!near && e.img.texture?.key !== 'elevClosed' && !this.enterCooldown) {
+          e.img.setTexture('elevClosed');
+        }
+      }
+    }
+
+    /**
+     * Street-level entrance doors react to the player: wood doors swing
+     * open as you approach and shut behind you; elevator entrances run the
+     * closed → slightly open → open sequence by distance band.
+     */
+    updateAutoDoors() {
+      const px = this.player.x;
+      const outside = !this.indoors;
+      for (const d of this.autoDoors || []) {
+        if (!d.img?.setTexture) continue;
+        const dist = Math.abs(px - d.x);
+        let want;
+        if (d.kind === 'elev') {
+          want = !outside ? 'elevClosed' : (dist < 16 ? 'elevOpen' : (dist < 42 ? 'elevSlightly' : 'elevClosed'));
+        } else {
+          want = outside && dist < 26 ? 'door' : 'doorClosed';
+        }
+        if (d.img.texture?.key !== want) d.img.setTexture(want);
       }
     }
 
@@ -2463,18 +2844,26 @@
       if (this.enterCooldown > 0) this.enterCooldown -= this.game.loop.delta;
 
       this.tryEnterExit();
+      this.updateElevatorProximity();
+      this.updateAutoDoors();
 
       let vx = 0;
       const touch = touchInput();
-      if (this.cursors.left.isDown || this.wasd.left.isDown || touch?.left) vx = -1;
-      if (this.cursors.right.isDown || this.wasd.right.isDown || touch?.right) vx = 1;
+      if (!this.seated) {
+        if (this.cursors.left.isDown || this.wasd.left.isDown || touch?.left) vx = -1;
+        if (this.cursors.right.isDown || this.wasd.right.isDown || touch?.right) vx = 1;
+      }
       this.player.setVelocityX(vx * 110);
 
-      if (this.indoors) {
+      if (this.seated) {
+        this.player.setVelocityX(0);
+        this.player.x = this.seated.seat.x;
+        this.player.y = this.seated.seat.floorY - (this.seated.seat.surfaceH || 10);
+        // Animation is owned by sitOn() (sit/lie intro → seated idle loop).
+      } else if (this.indoors) {
         const floor = this.floors.get(this.indoors.floorId);
         if (floor) {
           this.player.y = floor.floorY;
-          // Soft room edges — auto-cross passages
           const passage = this.nearbyPassage();
           if (passage && ((vx > 0 && this.player.x > passage.x - 2) || (vx < 0 && this.player.x < passage.x + 2))) {
             const next = this.floors.get(passage.targetFloorId);
@@ -2492,25 +2881,41 @@
         this.player.y = this.groundY - 1;
       }
 
-      if (vx) {
-        this.player.anims.play(`${this.playerSheet}_walk`, true);
-        this.player.setFlipX(vx < 0);
-      } else {
-        this.player.anims.play(`${this.playerSheet}_idle`, true);
+      if (!this.seated && this.time.now >= (this._poseHoldUntil || 0)) {
+        if (vx) {
+          this.player.anims.play(`${this.playerSheet}_walk`, true);
+          this.player.setFlipX(vx < 0);
+        } else {
+          this.player.anims.play(`${this.playerSheet}_idle`, true);
+        }
       }
       this.playerTag.setPosition(this.player.x, this.player.y - 34);
 
-      // Zone label
+      // Zone label + contextual hints
       let zone = 'lobby';
-      if (this.indoors) {
+      if (this.seated) {
+        zone = this.seated.seat.kind === 'bed' ? 'lying down' : 'sitting';
+        this.setEnterHint(IS_TOUCH ? '▼ stand up' : '↓ / E stand up');
+      } else if (this.indoors) {
         const floor = this.floors.get(this.indoors.floorId);
-        zone = floor?.label || this.indoors.floorId;
+        zone = floor?.isRoof ? 'Rooftop' : (floor?.label || this.indoors.floorId);
         const n = [...this.livePeople.values()].filter((p) => p.roomKey === floor?.roomKey).length;
         if (n) zone = `${zone} (${n})`;
         const doorHint = this.nearbyStairs();
-        if (doorHint?.dir === 'up') this.setEnterHint(IS_TOUCH ? '▲ go upstairs' : '↑ climb upstairs');
-        else if (doorHint?.dir === 'down') this.setEnterHint(IS_TOUCH ? '▼ go downstairs · or leave' : '↓ go downstairs · or leave');
-        else this.setEnterHint(defaultIndoorHint());
+        const seat = this.nearbySeat();
+        if (doorHint?.dir === 'up') {
+          this.setEnterHint(IS_TOUCH
+            ? (floor?.isRoof ? '▲ stay' : '▲ elevator / roof')
+            : '↑ elevator up');
+        } else if (doorHint?.dir === 'down') {
+          this.setEnterHint(IS_TOUCH ? '▼ elevator down' : '↓ elevator down · or leave');
+        } else if (seat) {
+          this.setEnterHint(IS_TOUCH
+            ? (seat.kind === 'bed' ? '▲ lie down' : '▲ sit')
+            : (seat.kind === 'bed' ? 'E / ↑ lie on bed' : 'E / ↑ sit'));
+        } else {
+          this.setEnterHint(defaultIndoorHint());
+        }
       } else {
         const x = this.player.x;
         if (this.nearbyDoor()) this.setEnterHint(IS_TOUCH ? '▲ enter building' : '↑ / W enter building');
