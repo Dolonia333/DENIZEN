@@ -369,6 +369,82 @@
     sled: `${EXP}/Winter 2023/Individual Assets/Sled.png`,
     lampPostW: `${EXP}/Winter 2023/Individual Assets/LampPost.png`,
 
+    // — seeded per-room color/style variants (picked by channel id, so a
+    //   given room always looks the same but sibling rooms differ) —
+    pastryGreen: `${EXP}/Cafe/Individual Assets/Display_pastry_green.png`,
+    pastryRed: `${EXP}/Cafe/Individual Assets/Display_pastry_red.png`,
+    pastryPurple: `${EXP}/Cafe/Individual Assets/Display_pastry_purple.png`,
+    pastryWhite: `${EXP}/Cafe/Individual Assets/Display_pastry_white.png`,
+    posterDonut3: `${EXP}/Cafe/Individual Assets/Poster_donut_2.png`,
+    posterDonut4: `${EXP}/Cafe/Individual Assets/Poster_donut_3.png`,
+    posterDonut5: `${EXP}/Cafe/Individual Assets/Poster_donut_5.png`,
+    umbrellaBlue: `${EXP}/Cafe/Individual Assets/Umbrella_outdoor_blue.png`,
+    umbrellaYellow: `${EXP}/Cafe/Individual Assets/Umbrella_outdoor_yellow.png`,
+
+    throneGreen: `${EXP}/Gamer Room/Individual Assets/Throne_gaming_green.png`,
+    thronePurple: `${EXP}/Gamer Room/Individual Assets/Throne_gaming_purple.png`,
+    throneYellow: `${EXP}/Gamer Room/Individual Assets/Throne_gaming_yellow.png`,
+    vendingGreen: `${EXP}/Gamer Room/Individual Assets/Vending_machine_green.png`,
+    vendingOrange: `${EXP}/Gamer Room/Individual Assets/Vending_machine_orange.png`,
+    vendingYellow: `${EXP}/Gamer Room/Individual Assets/Vending_machine_yellow.png`,
+    headsetGreen: `${EXP}/Gamer Room/Individual Assets/Headset_gaming_green.png`,
+    headsetPurple: `${EXP}/Gamer Room/Individual Assets/Headset_gaming_purple.png`,
+    headsetRed: `${EXP}/Gamer Room/Individual Assets/Headset_gaming_red.png`,
+    headsetVR: `${EXP}/Gamer Room/Individual Assets/Headset_VR.png`,
+    gLightRed: `${EXP}/Gamer Room/Individual Assets/Lights_gaming_triangle_2_red.png`,
+    gLightYellow: `${EXP}/Gamer Room/Individual Assets/Lights_gaming_triangle_4_yellow.png`,
+
+    computerMedBlack: `${EXP}/Hospital/Individual Assets/Computer_medical_black.png`,
+    storageMedBlack: `${EXP}/Hospital/Individual Assets/Storage_medical_black.png`,
+    monitorMedWallBlack: `${EXP}/Hospital/Individual Assets/Monitor_medical_mounted_black.png`,
+    ctScanner: `${EXP}/Hospital/Individual Assets/CT_scanner.png`,
+
+    mercury: `${EXP}/Museum/Individual Assets/Mercury.png`,
+    venus: `${EXP}/Museum/Individual Assets/Venus.png`,
+    uranus: `${EXP}/Museum/Individual Assets/Uranus.png`,
+    meteorite2: `${EXP}/Museum/Individual Assets/Meteorite_2.png`,
+    trunkMammoth: `${EXP}/Museum/Individual Assets/Trunk_mammoth.png`,
+    itemDisplayS: `${EXP}/Museum/Individual Assets/Item_display_small.png`,
+
+    portraitOfficer2: `${EXP}/Police Station/Individual Assets/Portrait_officer_2.png`,
+    portraitOfficer3: `${EXP}/Police Station/Individual Assets/Portrait_officer_3.png`,
+    waitChairsRed: `${EXP}/Police Station/Individual Assets/WaitingChair_grouped_red.png`,
+    waitChairSoloRed: `${EXP}/Police Station/Individual Assets/WaitingChair_solo_red.png`,
+    paperStack2: `${EXP}/Police Station/Individual Assets/Paper_stack_2.png`,
+    clipboardLong1: `${EXP}/Police Station/Individual Assets/Clipboard_wall_long_1.png`,
+    clipboardLong2: `${EXP}/Police Station/Individual Assets/Clipboard_wall_long_2.png`,
+
+    portraitFF2: `${EXP}/Fire Station/Individual Assets/Portrait_firefighter_2.png`,
+    portraitFF3: `${EXP}/Fire Station/Individual Assets/Portrait_firefighter_3.png`,
+    hoseWallShort: `${EXP}/Fire Station/Individual Assets/Hose_wall_short.png`,
+    fireAxe: `${EXP}/Fire Station/Individual Assets/FireAxe.png`,
+    helmetFF: `${EXP}/Fire Station/Individual Assets/Helmet_firefighter.png`,
+
+    jack3: `${EXP}/Halloween/Individual Assets/JackOLantern_3.png`,
+    jack4: `${EXP}/Halloween/Individual Assets/JackOLantern_4.png`,
+    candelabra2: `${EXP}/Halloween/Individual Assets/Candles_2.png`,
+    candelabra3: `${EXP}/Halloween/Individual Assets/Candles_3.png`,
+    candleTable2: `${EXP}/Halloween/Individual Assets/Candle_table_2.png`,
+    candleTable3: `${EXP}/Halloween/Individual Assets/Candle_table_3.png`,
+    pumpkinBasket2: `${EXP}/Halloween/Individual Assets/Pumpkin_basket_2.png`,
+    lanternHang2: `${EXP}/Halloween/Individual Assets/Lantern_hanging_2.png`,
+    billboardGhosts: `${EXP}/Halloween/Individual Assets/Billboard_ghosts.png`,
+    billboardScary: `${EXP}/Halloween/Individual Assets/Billboard_scaryface.png`,
+    ghost2: `${EXP}/Halloween/Individual Assets/Ghost_2.png`,
+    bat2: `${EXP}/Halloween/Individual Assets/Bat_2.png`,
+
+    presentWhiteL: `${EXP}/Winter 2023/Individual Assets/Present_white_large.png`,
+    presentGreenS: `${EXP}/Winter 2023/Individual Assets/Present_green_small.png`,
+    snowGlobe: `${EXP}/Winter 2023/Individual Assets/SnowGlobe.png`,
+    candyCaneSmall: `${EXP}/Winter 2023/Individual Assets/CandyCane_small.png`,
+
+    crownDig: `${EXP}/Archaeology/Individual Assets/Crown.png`,
+    neolithicMask: `${EXP}/Archaeology/Individual Assets/NeolithicMask.png`,
+    megalodonTooth: `${EXP}/Archaeology/Individual Assets/MegalodonTooth.png`,
+    backpackDig: `${EXP}/Archaeology/Individual Assets/Backpack_large_green.png`,
+    pottery2: `${EXP}/Archaeology/Individual Assets/Pottery_ancient_2.png`,
+    pottery4: `${EXP}/Archaeology/Individual Assets/Pottery_ancient_4.png`,
+
     tentDig: `${EXP}/Archaeology/Individual Assets/Tent_large_grey.png`,
     dinoWhole: `${EXP}/Archaeology/Individual Assets/Skeleton_dino_whole.png`,
     dirtPile: `${EXP}/Archaeology/Individual Assets/DirtPile.png`,
@@ -514,7 +590,9 @@
         () => ({
           h: 84, fill: 0xf4e0c8, slots: [50, 90, 150, 200],
           items: [
-            ['w', 'plantHang', 20, 2], ['w', 'posterDonut1', 70, 6], ['w', 'posterDonut2', 190, 6],
+            ['w', 'plantHang', 20, 2],
+            ['w', ['posterDonut1', 'posterDonut3', 'posterDonut5'], 70, 6],
+            ['w', ['posterDonut2', 'posterDonut4'], 190, 6],
             ['f', 'tableMed2', 70, 1, 0], ['f', 'mug', 70, 1, 22],
             ['f', 'stool', 46, 1, 0], ['f', 'stool', 94, 1, 0],
             ['f', 'tableMed2', 175, 1, 0], ['f', 'glassJuice', 175, 1, 22],
@@ -528,7 +606,9 @@
             ['w', 'plantHang', 240, 2], ['w', 'cafeSignBoard', 150, 8],
             ['f', 'fridge', 18, 1, 0], ['f', 'counter', 52, 1, 0], ['f', 'counter', 68, 1, 0],
             ['f', 'counter', 84, 1, 0], ['f', 'counterEnd', 100, 1, 0],
-            ['f', 'pastryPink', 54, 1, 26], ['f', 'pastryBlue', 74, 1, 26], ['f', 'pastryYellow', 94, 1, 26],
+            ['f', ['pastryPink', 'pastryGreen', 'pastryWhite'], 54, 1, 26],
+            ['f', ['pastryBlue', 'pastryRed', 'pastryPurple'], 74, 1, 26],
+            ['f', ['pastryYellow', 'pastryPink', 'pastryGreen'], 94, 1, 26],
             ['npc', 'cafe-barista', 36],
             ['f', 'tableLong', 180, 1, 0], ['f', 'stool', 156, 1, 0], ['f', 'stool', 205, 1, 0],
             ['f', 'plantLarge', 245, 1, 0],
@@ -536,9 +616,10 @@
         }),
       ],
       outside(scene, left, bw, groundY) {
-        scene.furn('umbrellaRed', left - 34, groundY, 19);
+        const seed = hashSeed(`cafe${left}`);
+        scene.furn(seededPick(seed, ['umbrellaRed', 'umbrellaBlue'], 1), left - 34, groundY, 19);
         scene.furn('benchWood', left - 34, groundY, 20);
-        scene.furn('umbrellaGreen', left + bw + 36, groundY, 19);
+        scene.furn(seededPick(seed, ['umbrellaGreen', 'umbrellaYellow'], 2), left + bw + 36, groundY, 19);
         scene.furn('benchWood', left + bw + 36, groundY, 20);
       },
     },
@@ -555,20 +636,31 @@
           h: 84, fill: 0x3a3a54, slots: [70, 120, 190],
           items: [
             ['glow', 0x8a6aff, 0.1],
-            ['w', 'gLight1', 30, 4], ['w', 'poster10', 95, 4], ['w', 'gLight2', 160, 4], ['w', 'poster11', 225, 4],
+            ['w', ['gLight1', 'gLightRed'], 30, 4],
+            ['w', ['poster10', 'poster11'], 95, 4],
+            ['w', ['gLight2', 'gLightYellow'], 160, 4],
+            ['w', ['poster11', 'poster10'], 225, 4],
             ['f', 'deskOfficeLong', 60, 1, 0], ['f', 'monitor', 48, 1, 14], ['f', 'micDesk', 72, 1, 14],
-            ['f', 'throneRed', 96, 1, 0], ['f', 'pc', 20, 1, 0],
-            ['f', 'shelfMed', 170, 1, 0], ['f', 'headsetBlue', 170, 1, 26], ['f', 'trophy', 182, 1, 26],
-            ['f', 'throneBlue', 215, 1, 0], ['f', 'tvGame', 236, 1, 30],
+            ['f', ['throneRed', 'throneGreen', 'thronePurple'], 96, 1, 0], ['f', 'pc', 20, 1, 0],
+            ['f', 'shelfMed', 170, 1, 0],
+            ['f', ['headsetBlue', 'headsetGreen', 'headsetPurple', 'headsetRed', 'headsetVR'], 170, 1, 26],
+            ['f', 'trophy', 182, 1, 26],
+            ['f', ['throneBlue', 'throneYellow', 'throneGreen'], 215, 1, 0], ['f', 'tvGame', 236, 1, 30],
           ],
         }),
         () => ({
           h: 102, fill: 0x2e2e46, slots: [95, 130, 200, 235],
           items: [
             ['glow', 0x5a8aff, 0.12],
-            ['w', 'gLight3', 60, 4], ['w', 'gLight1', 130, 4], ['w', 'gLight2', 200, 4],
-            ['f', 'arcadeBlue', 24, 1, 0], ['f', 'arcadeRed', 56, 1, 0], ['f', 'arcadeGreen', 88, 1, 0],
-            ['f', 'arcadeYellow', 120, 1, 0], ['f', 'vendingBlue', 165, 1, 0], ['f', 'vendingRed', 197, 1, 0],
+            ['w', ['gLight3', 'gLightYellow'], 60, 4],
+            ['w', ['gLight1', 'gLightRed'], 130, 4],
+            ['w', ['gLight2', 'gLight3'], 200, 4],
+            ['f', ['arcadeBlue', 'arcadeGreen'], 24, 1, 0],
+            ['f', ['arcadeRed', 'arcadeYellow'], 56, 1, 0],
+            ['f', ['arcadeGreen', 'arcadeBlue'], 88, 1, 0],
+            ['f', ['arcadeYellow', 'arcadeRed'], 120, 1, 0],
+            ['f', ['vendingBlue', 'vendingGreen', 'vendingYellow'], 165, 1, 0],
+            ['f', ['vendingRed', 'vendingOrange'], 197, 1, 0],
             ['f', 'gameConsole', 232, 1, 0], ['f', 'trashcanFull', 250, 1, 0],
           ],
         }),
@@ -585,9 +677,11 @@
         () => ({
           h: 84, fill: 0xdaf0ea, slots: [60, 180],
           items: [
-            ['w', 'lightSurgery', 105, 2], ['w', 'monitorMedWall', 165, 6], ['w', 'posterMed', 235, 6],
-            ['f', 'tableSurgery', 105, 1, 0], ['f', 'storageMed', 25, 1, 0], ['f', 'salineStand', 135, 1, 0],
-            ['npc', 'hospital-surgeon', 80], ['f', 'computerMed', 210, 1, 0],
+            ['w', 'lightSurgery', 105, 2],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 165, 6], ['w', 'posterMed', 235, 6],
+            ['f', ['tableSurgery', 'ctScanner'], 105, 1, 0],
+            ['f', ['storageMed', 'storageMedBlack'], 25, 1, 0], ['f', 'salineStand', 135, 1, 0],
+            ['npc', 'hospital-surgeon', 80], ['f', ['computerMed', 'computerMedBlack'], 210, 1, 0],
           ],
         }),
         () => ({
@@ -596,7 +690,9 @@
             ['glow', 0xc8f0e0, 0.08],
             ['w', 'hospLogo', 145, 6], ['w', 'posterMed', 55, 8],
             ['f', 'bedHosp', 35, 1, 0], ['f', 'salineStand', 62, 1, 0], ['f', 'bedHosp', 95, 1, 0],
-            ['npc', 'hospital-nurse', 140], ['f', 'computerMed', 185, 1, 0], ['f', 'storageMed', 225, 1, 0],
+            ['npc', 'hospital-nurse', 140],
+            ['f', ['computerMed', 'computerMedBlack'], 185, 1, 0],
+            ['f', ['storageMed', 'storageMedBlack'], 225, 1, 0],
             ['f', 'floraFernFull', 250, 1, 0],
           ],
         }),
@@ -616,9 +712,14 @@
           h: 90, fill: 0x2a2848, slots: [70, 140, 230],
           items: [
             ['glow', 0x4a4a9a, 0.1],
-            ['w', 'sun', 30, 6], ['w', 'earth', 75, 18], ['w', 'mars', 105, 10], ['w', 'jupiter', 145, 16],
-            ['w', 'saturn', 195, 8], ['w', 'neptune', 240, 20], ['w', 'spaceship', 275, 10],
-            ['f', 'itemDisplayM', 60, 1, 0], ['f', 'meteorite1', 60, 1, 15],
+            ['w', 'sun', 30, 6],
+            ['w', ['earth', 'venus'], 75, 18],
+            ['w', ['mars', 'mercury'], 105, 10],
+            ['w', 'jupiter', 145, 16],
+            ['w', ['saturn', 'uranus'], 195, 8],
+            ['w', ['neptune', 'uranus'], 240, 20], ['w', 'spaceship', 275, 10],
+            ['f', 'itemDisplayM', 60, 1, 0],
+            ['f', ['meteorite1', 'meteorite2'], 60, 1, 15],
             ['f', 'itemDisplayL', 165, 1, 0], ['f', 'guardRail', 165, 1, 0],
           ],
         }),
@@ -630,7 +731,8 @@
             ['f', 'platformMuseum', 150, 1, 0], ['f', 'triceratops', 150, 1, 6],
             ['f', 'guardRail', 110, 1, 0], ['f', 'guardRail', 190, 1, 0],
             ['f', 'statueF', 55, 1, 0], ['f', 'statueM', 245, 1, 0],
-            ['f', 'itemDisplayM', 80, 1, 0], ['f', 'megalodonJaw', 80, 1, 15],
+            ['f', 'itemDisplayM', 80, 1, 0],
+            ['f', ['megalodonJaw', 'trunkMammoth'], 80, 1, 15],
           ],
         }),
       ],
@@ -646,9 +748,11 @@
         () => ({
           h: 84, fill: 0xb8c0c8, slots: [40, 210],
           items: [
-            ['w', 'clipboardWallSmall', 130, 6], ['w', 'portraitOfficer', 165, 6],
-            ['f', 'deskOffice', 150, 1, 0], ['f', 'paperStack', 143, 1, 14],
-            ['f', 'waitChairSolo', 185, 1, 0], ['f', 'filecabinet', 236, 1, 0],
+            ['w', ['clipboardWallSmall', 'clipboardLong1', 'clipboardLong2'], 130, 6],
+            ['w', ['portraitOfficer', 'portraitOfficer2', 'portraitOfficer3'], 165, 6],
+            ['f', 'deskOffice', 150, 1, 0],
+            ['f', ['paperStack', 'paperStack2'], 143, 1, 14],
+            ['f', ['waitChairSolo', 'waitChairSoloRed'], 185, 1, 0], ['f', 'filecabinet', 236, 1, 0],
           ],
           bars: true,
         }),
@@ -657,7 +761,8 @@
           items: [
             ['w', 'posterWanted', 30, 8], ['w', 'posterWanted2', 60, 8], ['w', 'policeLogo', 135, 6],
             ['f', 'policeDesk', 135, 1, 0], ['npc', 'police-cop', 135],
-            ['f', 'waitChairs', 215, 1, 0], ['f', 'filecabinet', 25, 1, 0], ['f', 'floraFernFull', 250, 1, 0],
+            ['f', ['waitChairs', 'waitChairsRed'], 215, 1, 0],
+            ['f', 'filecabinet', 25, 1, 0], ['f', 'floraFernFull', 250, 1, 0],
           ],
         }),
       ],
@@ -676,7 +781,9 @@
         () => ({
           h: 84, fill: 0xf0dcc8, slots: [110, 170],
           items: [
-            ['w', 'framedCert', 60, 6], ['w', 'portraitFF', 130, 6], ['w', 'fireAlarm', 200, 6],
+            ['w', 'framedCert', 60, 6],
+            ['w', ['portraitFF', 'portraitFF2', 'portraitFF3'], 130, 6],
+            ['w', ['fireAlarm', 'fireAxe'], 200, 6],
             ['f', 'bunkBottom', 30, 1, 0], ['f', 'bunkTop', 30, 1, 22], ['f', 'cabinetFull', 75, 1, 0],
             ['f', 'boxEmergency', 145, 1, 0], ['f', 'bunkBottom', 220, 1, 0], ['f', 'bunkTop', 220, 1, 22],
           ],
@@ -685,9 +792,12 @@
           h: 102, fill: 0xe0d4c4, slots: [95, 150, 210],
           items: [
             ['glow', 0xffb090, 0.07],
-            ['w', 'hoseWall', 100, 6], ['w', 'uniformHang', 150, 10], ['w', 'uniformHang2', 175, 10],
+            ['w', ['hoseWall', 'hoseWallShort'], 100, 6],
+            ['w', ['uniformHang', 'uniformHang2'], 150, 10],
+            ['w', ['uniformHang2', 'uniformHang'], 175, 10],
             ['w', 'fireLogo', 230, 6],
             ['f', 'locker', 20, 1, 0], ['f', 'locker', 50, 1, 0], ['f', 'rackEquip', 80, 1, 0],
+            ['f', 'helmetFF', 50, 1, 46],
             ['npc', 'fire-firefighter', 120], ['f', 'fireExt', 200, 1, 0], ['f', 'boxEmergency', 235, 1, 0],
           ],
         }),
@@ -709,8 +819,11 @@
           h: 84, fill: 0x584668, slots: [80, 150, 220],
           items: [
             ['glow', 0x8a5aff, 0.08],
-            ['w', 'cobwebRoom', 12, 2], ['w', 'lanternHang', 100, 2], ['w', 'cobwebRoom2', 245, 2],
-            ['f', 'coffin', 40, 1, 0], ['f', 'candleTable', 75, 1, 0],
+            ['w', ['cobwebRoom', 'cobwebRoom2'], 12, 2],
+            ['w', ['lanternHang', 'lanternHang2'], 100, 2],
+            ['w', ['cobwebRoom2', 'cobwebRoom'], 245, 2],
+            ['f', 'coffin', 40, 1, 0],
+            ['f', ['candleTable', 'candleTable2', 'candleTable3'], 75, 1, 0],
             ['npc', 'halloween-mummy', 145], ['f', 'lampGhost', 185, 1, 0], ['npc', 'halloween-skeleton', 225],
           ],
         }),
@@ -718,22 +831,29 @@
           h: 102, fill: 0x6a5478, slots: [70, 130, 200],
           items: [
             ['glow', 0xff8a30, 0.06],
-            ['w', 'chandelier', 130, 2], ['w', 'portraitDracula', 65, 8], ['w', 'cobwebRoom', 250, 2],
-            ['f', 'bookshelfDark', 22, 1, 0], ['f', 'candelabra', 48, 1, 0], ['f', 'chairHalloween', 95, 1, 0],
-            ['npc', 'halloween-witch', 150], ['f', 'jack1', 180, 1, 0], ['f', 'jack2', 200, 1, 0],
-            ['f', 'pumpkinBasket', 230, 1, 0], ['f', 'candleTable', 250, 1, 0],
+            ['w', 'chandelier', 130, 2], ['w', 'portraitDracula', 65, 8],
+            ['w', ['cobwebRoom', 'cobwebRoom2'], 250, 2],
+            ['f', 'bookshelfDark', 22, 1, 0],
+            ['f', ['candelabra', 'candelabra2', 'candelabra3'], 48, 1, 0],
+            ['f', 'chairHalloween', 95, 1, 0],
+            ['npc', 'halloween-witch', 150],
+            ['f', ['jack1', 'jack3'], 180, 1, 0],
+            ['f', ['jack2', 'jack4'], 200, 1, 0],
+            ['f', ['pumpkinBasket', 'pumpkinBasket2'], 230, 1, 0],
+            ['f', ['candleTable2', 'candleTable'], 250, 1, 0],
           ],
         }),
       ],
       outside(scene, left, bw, groundY) {
+        const seed = hashSeed(`hw${left}`);
         scene.furn('treeDeadL', left - 36, groundY, 18);
         scene.furn('treeDeadM', left + bw + 34, groundY, 18);
         scene.furn('lampPostHW', left + bw + 60, groundY, 19);
-        scene.furn('billboardPumpkin', left - 62, groundY, 18);
+        scene.furn(seededPick(seed, ['billboardPumpkin', 'billboardGhosts', 'billboardScary'], 1), left - 62, groundY, 18);
         scene.add.image(left + bw / 2, 60, 'moonHW').setScale(SCALE).setDepth(-60);
-        const ghost = scene.add.image(left - 20, groundY - 60, 'ghost1').setScale(SCALE).setDepth(19).setAlpha(0.8);
+        const ghost = scene.add.image(left - 20, groundY - 60, seededPick(seed, ['ghost1', 'ghost2'], 2)).setScale(SCALE).setDepth(19).setAlpha(0.8);
         scene.tweens.add({ targets: ghost, y: groundY - 80, x: left + 30, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        const bat = scene.add.image(left + bw + 20, groundY - 120, 'bat1').setScale(SCALE).setDepth(19);
+        const bat = scene.add.image(left + bw + 20, groundY - 120, seededPick(seed, ['bat1', 'bat2'], 3)).setScale(SCALE).setDepth(19);
         scene.tweens.add({ targets: bat, x: left + bw + 90, y: groundY - 150, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       },
     },
@@ -942,7 +1062,7 @@
             x += 480 + 60;
           } else {
             this.drawDigSite(x, this.groundY, cat);
-            x += 560 + 60;
+            x += 640 + 60;
           }
           continue;
         }
@@ -1105,18 +1225,23 @@
      * Room item placement for THEME_KITS recipes.
      * ['f', key, dx, scale?, dy?]        floor object, bottom-anchored
      * ['w', key, dx, dyFromTop, scale?]  wall/hanging object, top-anchored
-     * ['npc', sheetKey, dx]              idle decor NPC (16x16 expansion sheet)
+     * ['npc', seedStr, dx]               idle decor NPC (full-body cast, seeded)
      * ['glow', color, alpha]             breathing room glow
+     * `key` may be an ARRAY of asset keys — a variant is picked by the room's
+     * channel-id seed, so a given room always renders the same variant across
+     * reloads while sibling rooms of the same theme look different.
      */
     placeRoomItems(room, x0, y0, floorY, roomW) {
-      (room.items || []).forEach((it) => {
+      const seed = hashSeed(room.roomKey || room.id || '');
+      const pick = (key, idx) => (Array.isArray(key) ? seededPick(seed, key, idx * 13 + 5) : key);
+      (room.items || []).forEach((it, idx) => {
         const kind = it[0];
         if (kind === 'f') {
           const [, key, dx, sc, dy] = it;
-          this.furn(key, x0 + dx, floorY - (dy || 0), 23, (sc || 1) * SCALE);
+          this.furn(pick(key, idx), x0 + dx, floorY - (dy || 0), 23, (sc || 1) * SCALE);
         } else if (kind === 'w') {
           const [, key, dx, dyTop, sc] = it;
-          this.wallDecor(key, x0 + dx, y0 + dyTop, 22, (sc || 1) * SCALE);
+          this.wallDecor(pick(key, idx), x0 + dx, y0 + dyTop, 22, (sc || 1) * SCALE);
         } else if (kind === 'npc') {
           const [, key, dx] = it;
           this.decorNpcQueue.push([key, x0 + dx, floorY]);
@@ -1180,6 +1305,10 @@
       this.furn('presentRedL', left + 92, groundY, 21);
       this.furn('presentGreenL', left + 108, groundY, 21);
       this.furn('presentBlueS', left + 122, groundY, 21);
+      this.furn('presentWhiteL', left + 76, groundY, 21);
+      this.furn('presentGreenS', left + 134, groundY, 21);
+      this.furn('snowGlobe', left + 442, groundY, 21);
+      this.furn('candyCaneSmall', left + 130, groundY, 20);
       this.furn('snowman1', left + 160, groundY, 20);
       this.furn('snowman2', left + 200, groundY, 20);
       this.furn('snowman3', left + 240, groundY, 20);
@@ -1243,6 +1372,13 @@
       this.furn('fossilFish', left + 455, groundY - 15, 21);
       this.furn('stoneTablet', left + 485, groundY, 20);
       this.furn('potteryAncient', left + 505, groundY, 20);
+      this.furn('pottery2', left + 516, groundY, 20);
+      this.furn('pottery4', left + 527, groundY, 20);
+      this.furn('itemDisplayS', left + 550, groundY, 20);
+      this.furn('crownDig', left + 550, groundY - 13, 21);
+      this.furn('neolithicMask', left + 575, groundY, 20);
+      this.furn('megalodonTooth', left + 594, groundY, 20);
+      this.furn('backpackDig', left + 70, groundY, 20);
       this.furn('rockMed', left + 530, groundY, 19);
       this.furn('rockSm', left + 100, groundY, 19);
 
