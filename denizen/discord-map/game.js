@@ -252,7 +252,6 @@
     plantLarge: `${EXP}/Cafe/Individual Assets/Plant_potted_large.png`,
     umbrellaRed: `${EXP}/Cafe/Individual Assets/Umbrella_outdoor_red.png`,
     umbrellaGreen: `${EXP}/Cafe/Individual Assets/Umbrella_outdoor_green.png`,
-    npcBarista: `${EXP}/Cafe/Pre-made NPCs/female_npc_barista_1.png`,
 
     arcadeBlue: `${EXP}/Gamer Room/Individual Assets/Arcade_machine_blue.png`,
     arcadeRed: `${EXP}/Gamer Room/Individual Assets/Arcade_machine_red.png`,
@@ -281,8 +280,6 @@
     computerMed: `${EXP}/Hospital/Individual Assets/Computer_medical_white.png`,
     monitorMedWall: `${EXP}/Hospital/Individual Assets/Monitor_medical_mounted_white.png`,
     posterMed: `${EXP}/Hospital/Individual Assets/Poster_medical.png`,
-    npcNurse: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_1.png`,
-    npcSurgeon: `${EXP}/Hospital/NPCs/npc_surgeon_male_1.png`,
 
     triceratops: `${EXP}/Museum/Individual Assets/Skeleton_triceratops.png`,
     pillarMuseum: `${EXP}/Museum/Individual Assets/Pillar_museum.png`,
@@ -319,7 +316,6 @@
     waitChairSolo: `${EXP}/Police Station/Individual Assets/WaitingChair_solo.png`,
     prisonDoor: `${EXP}/Police Station/Individual Assets/Door_prison_closed.png`,
     clipboardWallSmall: `${EXP}/Police Station/Individual Assets/Clipboard_wall_small.png`,
-    npcCop: `${EXP}/Police Station/NPCs/Male/npc_cop_male_1.png`,
 
     fireSign: `${EXP}/Fire Station/Individual Assets/Firestation_sign_large.png`,
     fireLogo: `${EXP}/Fire Station/Individual Assets/Firestation_logo.png`,
@@ -334,7 +330,6 @@
     framedCert: `${EXP}/Fire Station/Individual Assets/FramedCertification.png`,
     boxEmergency: `${EXP}/Fire Station/Individual Assets/Box_emergency.png`,
     portraitFF: `${EXP}/Fire Station/Individual Assets/Portrait_firefighter_1.png`,
-    npcFirefighter: `${EXP}/Fire Station/NPCs/Male/npc_firefighter_male_1.png`,
 
     coffin: `${EXP}/Halloween/Individual Assets/Coffin.png`,
     candelabra: `${EXP}/Halloween/Individual Assets/Candles_1.png`,
@@ -357,9 +352,6 @@
     bat1: `${EXP}/Halloween/Individual Assets/Bat_1.png`,
     lampPostHW: `${EXP}/Halloween/Individual Assets/LampPost.png`,
     billboardPumpkin: `${EXP}/Halloween/Individual Assets/Billboard_pumpkin.png`,
-    npcWitch: `${EXP}/Halloween/NPCs/npc_witch_1.png`,
-    npcMummy: `${EXP}/Halloween/NPCs/npc_mummy_1.png`,
-    npcSkeletonHW: `${EXP}/Halloween/NPCs/npc_skeleton.png`,
 
     xmasTree: `${EXP}/Winter 2023/Individual Assets/XmasTree_decorated.png`,
     snowman1: `${EXP}/Winter 2023/Individual Assets/SnowMan_1.png`,
@@ -376,8 +368,6 @@
     snowballs: `${EXP}/Winter 2024/Individual Assets/Snowballs.png`,
     sled: `${EXP}/Winter 2023/Individual Assets/Sled.png`,
     lampPostW: `${EXP}/Winter 2023/Individual Assets/LampPost.png`,
-    npcSanta: `${EXP}/Winter 2023/NPCs/npc_male_santa_1.png`,
-    npcSweater: `${EXP}/Winter 2023/NPCs/npc_female_sweater_1.png`,
 
     tentDig: `${EXP}/Archaeology/Individual Assets/Tent_large_grey.png`,
     dinoWhole: `${EXP}/Archaeology/Individual Assets/Skeleton_dino_whole.png`,
@@ -392,19 +382,7 @@
     stoneTablet: `${EXP}/Archaeology/Individual Assets/StoneTablet_grey.png`,
     potteryAncient: `${EXP}/Archaeology/Individual Assets/Pottery_ancient_1.png`,
     fossilFish: `${EXP}/Archaeology/Individual Assets/Fossil_fish.png`,
-    npcArch: `${EXP}/Archaeology/NPCs/npc_archaeologist_male_1.png`,
-    npcArchF: `${EXP}/Archaeology/NPCs/npc_archaeologist_female_1.png`,
   };
-
-  // 16x16 single-frame decor NPC sheets for the expansion theme kits — a
-  // separate, much simpler system from the 30-character 32x32 NPC_SHEETS
-  // cast below (those are for the player + street crowd; these are the
-  // themed set-piece staff: barista, nurse, cop, firefighter, etc).
-  const EXPANSION_NPC_KEYS = [
-    'npcBarista', 'npcNurse', 'npcSurgeon', 'npcCop', 'npcFirefighter',
-    'npcWitch', 'npcMummy', 'npcSkeletonHW', 'npcSanta', 'npcSweater',
-    'npcArch', 'npcArchF',
-  ];
 
   // 30 pre-made NPC sheets (15 male + 15 female), 16x32 frames, 14 anim rows
   // (row 0 = walk, row 1 = idle). Real characters replace the old 2-sprite crowd.
@@ -528,9 +506,13 @@
       wall: 0xd88a5a, side: 0xb06a40, outline: 0x4a2410, roof: 0xc07048, band: 0x8a4e2c,
       signKey: 'cafeSign', signScale: SCALE,
       stripStyle: { color: '#ffe8d0', bg: '#6a3a1a' },
+      // Clear lane at dx=125: between the two dining clusters in recipe A
+      // (46-94 / 151-199) and between the counter/pastry run and the long
+      // table in recipe B (up to ~100 / from ~156) — checked against both.
+      stairsDx: 125,
       recipes: [
         () => ({
-          h: 70, fill: 0xf4e0c8, slots: [50, 90, 150, 200],
+          h: 84, fill: 0xf4e0c8, slots: [50, 90, 150, 200],
           items: [
             ['w', 'plantHang', 20, 2], ['w', 'posterDonut1', 70, 6], ['w', 'posterDonut2', 190, 6],
             ['f', 'tableMed2', 70, 1, 0], ['f', 'mug', 70, 1, 22],
@@ -540,14 +522,14 @@
           ],
         }),
         () => ({
-          h: 88, fill: 0xf8ead2, slots: [120, 150, 185, 220],
+          h: 102, fill: 0xf8ead2, slots: [120, 150, 185, 220],
           items: [
             ['glow', 0xffd8a0, 0.08],
             ['w', 'plantHang', 240, 2], ['w', 'cafeSignBoard', 150, 8],
             ['f', 'fridge', 18, 1, 0], ['f', 'counter', 52, 1, 0], ['f', 'counter', 68, 1, 0],
             ['f', 'counter', 84, 1, 0], ['f', 'counterEnd', 100, 1, 0],
             ['f', 'pastryPink', 54, 1, 26], ['f', 'pastryBlue', 74, 1, 26], ['f', 'pastryYellow', 94, 1, 26],
-            ['npc', 'npcBarista', 36],
+            ['npc', 'cafe-barista', 36],
             ['f', 'tableLong', 180, 1, 0], ['f', 'stool', 156, 1, 0], ['f', 'stool', 205, 1, 0],
             ['f', 'plantLarge', 245, 1, 0],
           ],
@@ -564,9 +546,13 @@
       wall: 0x2a2a3e, side: 0x1c1c2c, outline: 0x0c0c16, roof: 0x3c3c58, band: 0x14142a,
       title: { color: '#c8f8ff', bg: '#1c1c2c' },
       stripStyle: { color: '#c8f8ff', bg: '#14142a' },
+      // Clear lane at dx=140: between the desk cluster (ends ~96) and shelf
+      // cluster (starts ~170) in recipe A, and between the arcade row (ends
+      // ~120) and vending machines (starts ~165) in recipe B.
+      stairsDx: 140,
       recipes: [
         () => ({
-          h: 70, fill: 0x3a3a54, slots: [70, 120, 190],
+          h: 84, fill: 0x3a3a54, slots: [70, 120, 190],
           items: [
             ['glow', 0x8a6aff, 0.1],
             ['w', 'gLight1', 30, 4], ['w', 'poster10', 95, 4], ['w', 'gLight2', 160, 4], ['w', 'poster11', 225, 4],
@@ -577,7 +563,7 @@
           ],
         }),
         () => ({
-          h: 88, fill: 0x2e2e46, slots: [95, 130, 200, 235],
+          h: 102, fill: 0x2e2e46, slots: [95, 130, 200, 235],
           items: [
             ['glow', 0x5a8aff, 0.12],
             ['w', 'gLight3', 60, 4], ['w', 'gLight1', 130, 4], ['w', 'gLight2', 200, 4],
@@ -592,22 +578,25 @@
       wall: 0xe8ecf2, side: 0xc0c8d4, outline: 0x2a3444, roof: 0xd8e0ea, band: 0x9aa8ba,
       signKey: 'hospSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#ffffff', bg: '#c0392b' },
+      // Clear lane at dx=162: past the surgery cluster (up to ~135) in recipe
+      // A, and between the nurse (140) and computer (185) in recipe B.
+      stairsDx: 162,
       recipes: [
         () => ({
-          h: 70, fill: 0xdaf0ea, slots: [60, 180],
+          h: 84, fill: 0xdaf0ea, slots: [60, 180],
           items: [
             ['w', 'lightSurgery', 105, 2], ['w', 'monitorMedWall', 165, 6], ['w', 'posterMed', 235, 6],
             ['f', 'tableSurgery', 105, 1, 0], ['f', 'storageMed', 25, 1, 0], ['f', 'salineStand', 135, 1, 0],
-            ['npc', 'npcSurgeon', 80], ['f', 'computerMed', 210, 1, 0],
+            ['npc', 'hospital-surgeon', 80], ['f', 'computerMed', 210, 1, 0],
           ],
         }),
         () => ({
-          h: 88, fill: 0xe8f4f0, slots: [130, 165, 225],
+          h: 102, fill: 0xe8f4f0, slots: [130, 165, 225],
           items: [
             ['glow', 0xc8f0e0, 0.08],
             ['w', 'hospLogo', 145, 6], ['w', 'posterMed', 55, 8],
             ['f', 'bedHosp', 35, 1, 0], ['f', 'salineStand', 62, 1, 0], ['f', 'bedHosp', 95, 1, 0],
-            ['npc', 'npcNurse', 140], ['f', 'computerMed', 185, 1, 0], ['f', 'storageMed', 225, 1, 0],
+            ['npc', 'hospital-nurse', 140], ['f', 'computerMed', 185, 1, 0], ['f', 'storageMed', 225, 1, 0],
             ['f', 'floraFernFull', 250, 1, 0],
           ],
         }),
@@ -618,9 +607,13 @@
       wall: 0xd8c8a8, side: 0xb8a888, outline: 0x3a2e1c, roof: 0xc8b896, band: 0x8a7a5a,
       title: { color: '#3a2e1c', bg: '#f0e4c8' },
       stripStyle: { color: '#f8f0d8', bg: '#5a4a30' },
+      // Clear lane at dx=97: between the sun/earth cluster and the display
+      // case cluster in recipe A, and just past the left statue (55) before
+      // the guard rail (110) that boxes in the triceratops in recipe B.
+      stairsDx: 97,
       recipes: [
         () => ({
-          h: 74, fill: 0x2a2848, slots: [70, 140, 230],
+          h: 90, fill: 0x2a2848, slots: [70, 140, 230],
           items: [
             ['glow', 0x4a4a9a, 0.1],
             ['w', 'sun', 30, 6], ['w', 'earth', 75, 18], ['w', 'mars', 105, 10], ['w', 'jupiter', 145, 16],
@@ -630,7 +623,7 @@
           ],
         }),
         () => ({
-          h: 96, fill: 0xf0e8d0, slots: [40, 90, 220, 260],
+          h: 112, fill: 0xf0e8d0, slots: [40, 90, 220, 260],
           items: [
             ['w', 'lightFixture', 150, 2], ['w', 'monaPixa', 40, 12], ['w', 'paintingNight', 260, 12],
             ['f', 'pillarMuseum', 12, 1, 0], ['f', 'pillarMuseum', 296, 1, 0],
@@ -646,9 +639,12 @@
       wall: 0x5a7a9a, side: 0x42607e, outline: 0x14202e, roof: 0x4a6a8a, band: 0x2a4058,
       signKey: 'policeSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#d8e8f8', bg: '#1a2a3a' },
+      // Clear lane at dx=167: past the desk cluster (ends ~150) in recipe A,
+      // and between the desk/cop cluster (135) and waiting chairs (215) in B.
+      stairsDx: 167,
       recipes: [
         () => ({
-          h: 70, fill: 0xb8c0c8, slots: [40, 210],
+          h: 84, fill: 0xb8c0c8, slots: [40, 210],
           items: [
             ['w', 'clipboardWallSmall', 130, 6], ['w', 'portraitOfficer', 165, 6],
             ['f', 'deskOffice', 150, 1, 0], ['f', 'paperStack', 143, 1, 14],
@@ -657,10 +653,10 @@
           bars: true,
         }),
         () => ({
-          h: 88, fill: 0xd0d8e0, slots: [60, 100, 180],
+          h: 102, fill: 0xd0d8e0, slots: [60, 100, 180],
           items: [
             ['w', 'posterWanted', 30, 8], ['w', 'posterWanted2', 60, 8], ['w', 'policeLogo', 135, 6],
-            ['f', 'policeDesk', 135, 1, 0], ['npc', 'npcCop', 135],
+            ['f', 'policeDesk', 135, 1, 0], ['npc', 'police-cop', 135],
             ['f', 'waitChairs', 215, 1, 0], ['f', 'filecabinet', 25, 1, 0], ['f', 'floraFernFull', 250, 1, 0],
           ],
         }),
@@ -671,9 +667,14 @@
       signKey: 'fireSign', signScale: SCALE * 0.85,
       stripStyle: { color: '#ffe0d0', bg: '#701e14' },
       doorKind: 'elev',
+      // Clear lane at dx=100: between the first bunk/cabinet cluster (ends
+      // ~75) and the emergency box (145) in recipe A, and symmetric between
+      // the locker/rack/firefighter cluster (ends ~120) and fire extinguisher
+      // (200) in recipe B.
+      stairsDx: 100,
       recipes: [
         () => ({
-          h: 70, fill: 0xf0dcc8, slots: [110, 170],
+          h: 84, fill: 0xf0dcc8, slots: [110, 170],
           items: [
             ['w', 'framedCert', 60, 6], ['w', 'portraitFF', 130, 6], ['w', 'fireAlarm', 200, 6],
             ['f', 'bunkBottom', 30, 1, 0], ['f', 'bunkTop', 30, 1, 22], ['f', 'cabinetFull', 75, 1, 0],
@@ -681,13 +682,13 @@
           ],
         }),
         () => ({
-          h: 88, fill: 0xe0d4c4, slots: [95, 150, 210],
+          h: 102, fill: 0xe0d4c4, slots: [95, 150, 210],
           items: [
             ['glow', 0xffb090, 0.07],
             ['w', 'hoseWall', 100, 6], ['w', 'uniformHang', 150, 10], ['w', 'uniformHang2', 175, 10],
             ['w', 'fireLogo', 230, 6],
             ['f', 'locker', 20, 1, 0], ['f', 'locker', 50, 1, 0], ['f', 'rackEquip', 80, 1, 0],
-            ['npc', 'npcFirefighter', 120], ['f', 'fireExt', 200, 1, 0], ['f', 'boxEmergency', 235, 1, 0],
+            ['npc', 'fire-firefighter', 120], ['f', 'fireExt', 200, 1, 0], ['f', 'boxEmergency', 235, 1, 0],
           ],
         }),
       ],
@@ -699,23 +700,27 @@
       wall: 0x4a3458, side: 0x362442, outline: 0x140a1c, roof: 0x3a2848, band: 0x241432,
       title: { color: '#ffb858', bg: '#241432' },
       stripStyle: { color: '#ffb858', bg: '#140a1c' },
+      // Clear lane at dx=110: between candleTable (75) and the mummy (moved
+      // to 145, was 125) in recipe A, and past the chair (95) before the
+      // witch (150) in recipe B.
+      stairsDx: 110,
       recipes: [
         () => ({
-          h: 70, fill: 0x584668, slots: [80, 150, 220],
+          h: 84, fill: 0x584668, slots: [80, 150, 220],
           items: [
             ['glow', 0x8a5aff, 0.08],
             ['w', 'cobwebRoom', 12, 2], ['w', 'lanternHang', 100, 2], ['w', 'cobwebRoom2', 245, 2],
             ['f', 'coffin', 40, 1, 0], ['f', 'candleTable', 75, 1, 0],
-            ['npc', 'npcMummy', 125], ['f', 'lampGhost', 185, 1, 0], ['npc', 'npcSkeletonHW', 225],
+            ['npc', 'halloween-mummy', 145], ['f', 'lampGhost', 185, 1, 0], ['npc', 'halloween-skeleton', 225],
           ],
         }),
         () => ({
-          h: 88, fill: 0x6a5478, slots: [70, 130, 200],
+          h: 102, fill: 0x6a5478, slots: [70, 130, 200],
           items: [
             ['glow', 0xff8a30, 0.06],
             ['w', 'chandelier', 130, 2], ['w', 'portraitDracula', 65, 8], ['w', 'cobwebRoom', 250, 2],
             ['f', 'bookshelfDark', 22, 1, 0], ['f', 'candelabra', 48, 1, 0], ['f', 'chairHalloween', 95, 1, 0],
-            ['npc', 'npcWitch', 150], ['f', 'jack1', 180, 1, 0], ['f', 'jack2', 200, 1, 0],
+            ['npc', 'halloween-witch', 150], ['f', 'jack1', 180, 1, 0], ['f', 'jack2', 200, 1, 0],
             ['f', 'pumpkinBasket', 230, 1, 0], ['f', 'candleTable', 250, 1, 0],
           ],
         }),
@@ -758,13 +763,7 @@
     }
 
     preload() {
-      Object.entries(ASSETS).forEach(([k, p]) => {
-        if (EXPANSION_NPC_KEYS.includes(k)) return;
-        this.load.image(k, p);
-      });
-      EXPANSION_NPC_KEYS.forEach((k) => {
-        this.load.spritesheet(k, ASSETS[k], { frameWidth: 16, frameHeight: 16 });
-      });
+      Object.entries(ASSETS).forEach(([k, p]) => this.load.image(k, p));
       // 30 pre-made NPC sheets (16x32 frames): row 0 walk, row 1 idle.
       NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       // Missing-asset diagnostics so a bad path shows in console instead of silently vanishing.
@@ -1082,7 +1081,10 @@
       this.registerDoor({ x: doorX2, floorId: lowest.id, radius: 18 });
 
       for (let i = floorDefs.length - 1; i > 0; i -= 1) {
-        const sx = padX + roomW * (0.35 + 0.3 * (i % 2));
+        // cfg.stairsDx is a clear lane hand-picked per theme (checked against
+        // both of its recipes' furniture) — the old generic 0.35/0.65 split
+        // routinely landed the stairs on top of a themed room's furniture.
+        const sx = cfg.stairsDx != null ? padX + cfg.stairsDx : padX + roomW * (0.35 + 0.3 * (i % 2));
         this.registerStairs({
           x: sx, fromFloorId: floorDefs[i].id, toFloorId: floorDefs[i - 1].id, radius: 60,
         });
@@ -1150,6 +1152,7 @@
         title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title.color, bg: kit.title.bg },
         strip: { text: `${categoryLabel} · ↑ enter`, color: kit.stripStyle.color, bg: kit.stripStyle.bg },
         doorKind: kit.doorKind,
+        stairsDx: kit.stairsDx,
         rooms,
       });
 
@@ -1190,8 +1193,8 @@
       this.furn('treeWinterSnow', left + 460, groundY, 18);
       this.furn('treeWinterMed', left - 40, groundY, 18);
 
-      this.decorNpcQueue.push(['npcSanta', left + 345, groundY]);
-      this.decorNpcQueue.push(['npcSweater', left + 180, groundY]);
+      this.decorNpcQueue.push(['winter-santa', left + 345, groundY]);
+      this.decorNpcQueue.push(['winter-sweater', left + 180, groundY]);
 
       const points = [
         [left + 140, groundY - 1], [left + 220, groundY - 1],
@@ -1243,8 +1246,8 @@
       this.furn('rockMed', left + 530, groundY, 19);
       this.furn('rockSm', left + 100, groundY, 19);
 
-      this.decorNpcQueue.push(['npcArch', left + 195, groundY]);
-      this.decorNpcQueue.push(['npcArchF', left + 305, groundY]);
+      this.decorNpcQueue.push(['dig-archaeologist-m', left + 195, groundY]);
+      this.decorNpcQueue.push(['dig-archaeologist-f', left + 305, groundY]);
 
       const points = [
         [left + 160, groundY - 1], [left + 240, groundY - 1],
@@ -1256,14 +1259,17 @@
       });
     }
 
-    /** Spawn every queued expansion decor NPC (16x16 sheets) as a small idle sprite. */
+    /**
+     * Spawn every queued themed-room "staff member" using the same full-body
+     * 30-character NPC_SHEETS cast as the player and street crowd (proper
+     * walk/idle anims, no mismatched art style). Each queue entry carries a
+     * seed string (not a sprite key) so the same room always gets the same
+     * character across reloads, while different rooms get different faces.
+     */
     flushDecorNpcQueue() {
-      for (const [key, x, floorY] of this.decorNpcQueue) {
-        if (!this.textures.exists(key)) continue;
-        const sp = this.add.sprite(x, floorY, key, 0).setScale(SCALE).setOrigin(0.5, 1).setDepth(31);
-        this.tweens.add({
-          targets: sp, y: floorY - 1.5, duration: 700 + Math.random() * 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        });
+      for (const [seed, x, floorY] of this.decorNpcQueue) {
+        const sheet = this.npcSheetFor(seed);
+        this.spawnChar(x, floorY, sheet, `${sheet}_idle`, null, 31);
       }
       this.decorNpcQueue = [];
     }
