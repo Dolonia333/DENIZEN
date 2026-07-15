@@ -1,0 +1,9 @@
+{
+  "name": "denizen-discord-pixel-map",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Pixel Spaces Discord channel map (local preview)",
+  "scripts": {
+    "start": "npx --yes serve -l 5179 ."
+  }
+}

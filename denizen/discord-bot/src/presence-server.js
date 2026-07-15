@@ -103,6 +103,8 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
         id: r.id,
         name: r.name,
         type: r.type,
+        categoryId: r.categoryId || null,
+        categoryName: r.categoryName || null,
         occupantCount: r.occupantCount,
         occupants: r.occupants || [],
       }));
@@ -128,6 +130,7 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
         ts: Date.now(),
         guildId: snap?.guildId || qGuild || null,
         guildName: snap?.name || null,
+        categories: snap?.categories || [],
         rooms,
         people,
         members: snap?.members || [],

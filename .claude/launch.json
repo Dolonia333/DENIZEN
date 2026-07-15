@@ -11,6 +11,13 @@
       "waitForPort": 5000
     },
     {
+      "name": "pixel-map",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-l", "5179", "."],
+      "cwd": "discord pixel game",
+      "port": 5179
+    },
+    {
       "name": "crm",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],

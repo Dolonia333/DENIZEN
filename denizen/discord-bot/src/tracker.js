@@ -17,6 +17,7 @@ function roomTypeFromDiscord(type) {
   if (type === 13) return 'stage';      // GuildStageVoice
   if (type === 0 || type === 5) return 'text'; // GuildText / GuildAnnouncement
   if (type === 15) return 'forum';
+  if (type === 4) return 'category';    // GuildCategory
   return 'other';
 }
 
@@ -38,6 +39,7 @@ class TrackerEngine {
         name: guildId,
         channels: new Map(),
         members: new Map(),
+        categories: new Map(),
       };
       this.guilds.set(guildId, g);
     }
@@ -55,11 +57,15 @@ class TrackerEngine {
         type: typeof channel.type === 'string'
           ? channel.type
           : roomTypeFromDiscord(channel.type),
+        categoryId: channel.categoryId || null,
+        categoryName: channel.categoryName || null,
         occupants: new Set(),
       };
       g.channels.set(channel.id, room);
-    } else if (channel.name) {
-      room.name = channel.name;
+    } else {
+      if (channel.name) room.name = channel.name;
+      if (channel.categoryId !== undefined && channel.categoryId !== null) room.categoryId = channel.categoryId;
+      if (channel.categoryName !== undefined && channel.categoryName !== null) room.categoryName = channel.categoryName;
     }
     return room;
   }
@@ -93,10 +99,24 @@ class TrackerEngine {
     const g = this._guild(guild.id);
     g.name = guild.name || guild.id;
 
+    // Categories first so channels can resolve their categoryName below.
+    for (const ch of guild.channels.cache.values()) {
+      if (roomTypeFromDiscord(ch.type) !== 'category') continue;
+      g.categories.set(ch.id, {
+        id: ch.id,
+        name: ch.name || ch.id,
+        position: typeof ch.rawPosition === 'number' ? ch.rawPosition : (ch.position ?? 0),
+      });
+    }
+
     for (const ch of guild.channels.cache.values()) {
       const t = roomTypeFromDiscord(ch.type);
-      if (t === 'other') continue;
-      this._ensureChannel(guild.id, { id: ch.id, name: ch.name, type: t });
+      if (t === 'other' || t === 'category') continue;
+      const categoryId = ch.parentId || null;
+      const categoryName = categoryId ? (g.categories.get(categoryId)?.name || null) : null;
+      this._ensureChannel(guild.id, {
+        id: ch.id, name: ch.name, type: t, categoryId, categoryName,
+      });
     }
 
     for (const vs of guild.voiceStates.cache.values()) {
@@ -261,7 +281,7 @@ class TrackerEngine {
   snapshot(guildId) {
     if (guildId) {
       const g = this.guilds.get(guildId);
-      if (!g) return { guildId, name: null, rooms: [], members: [] };
+      if (!g) return { guildId, name: null, rooms: [], members: [], categories: [] };
       return this._snapshotGuild(guildId, g);
     }
     const out = [];
@@ -278,6 +298,8 @@ class TrackerEngine {
         id: room.id,
         name: room.name,
         type: room.type,
+        categoryId: room.categoryId || null,
+        categoryName: room.categoryName || null,
         occupantCount: room.occupants.size,
         occupants: [...room.occupants],
       });
@@ -292,11 +314,14 @@ class TrackerEngine {
         textUntil: m.textUntil,
       });
     }
+    const categories = [...(g.categories?.values() || [])]
+      .sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     return {
       guildId,
       name: g.name,
       rooms,
       members,
+      categories,
       ts: Date.now(),
     };
   }

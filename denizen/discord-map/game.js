@@ -1,6 +1,9 @@
 /* Pixel Spaces side-view — polished closer to itch example */
 (() => {
   const PACK = './PixelSpaces';
+  const FULL = './PixelSpacesFull';
+  const IA = `${FULL}/Individual Assets`;
+  const EXP = `${FULL}/Expansions`;
   const W = 980;
   const H = 420;
   const SCALE = 2;
@@ -213,7 +216,195 @@
     clipboard: `${OBJ}/Clipboard_wall.png`,
     box: `${OBR}/Box_blue_large.png`,
     boxSm: `${OBR}/Box_blue_small.png`,
+
+    // ---- Full-pack expansion themes (category buildings) ----
+    tableMed2: `${IA}/Furniture/Living Room/Table_medium_2.png`,
+    shelfMed: `${IA}/Furniture/Living Room/Shelf_medium.png`,
+    stool: `${IA}/Furniture/Living Room/Stool_red.png`,
+    stoolB: `${IA}/Furniture/Living Room/Stool_blue.png`,
+    monitor: `${IA}/Objects/Bedroom/Monitor.png`,
+    pc: `${IA}/Objects/Bedroom/PC.png`,
+    gameConsole: `${IA}/Objects/Bedroom/Game_console.png`,
+    trophy: `${IA}/Objects/Bedroom/Trophy.png`,
+    trashcanFull: `${IA}/Objects/Living Room/Trashcan.png`,
+    floraFernFull: `${IA}/Objects/Living Room/Flora_fern.png`,
+    floraBonsaiFull: `${IA}/Objects/Living Room/Flora_bonsai.png`,
+    mug: `${IA}/Objects/Kitchen/Mug.png`,
+    glassJuice: `${IA}/Objects/Kitchen/Glass_juice.png`,
+    benchWood: `${IA}/Backgrounds/Bench_wooden.png`,
+    treeWinterSnow: `${IA}/Backgrounds/Tree_winter_large_snow.png`,
+    treeWinterMed: `${IA}/Backgrounds/Tree_winter_medium_snow.png`,
+    rockMed: `${IA}/Backgrounds/Rock_medium_1.png`,
+    rockSm: `${IA}/Backgrounds/Rock_small_1.png`,
+    signWood: `${IA}/Backgrounds/Sign_wooden.png`,
+    bunkBottom: `${IA}/Furniture/Bedroom/Bunkbed_bottom_front_red.png`,
+    bunkTop: `${IA}/Furniture/Bedroom/Bunkbed_top_front_red.png`,
+    cabinetFull: `${IA}/Furniture/Bedroom/Cabinet_1.png`,
+
+    cafeSign: `${EXP}/Cafe/Individual Assets/Sign_cafe_large.png`,
+    cafeSignBoard: `${EXP}/Cafe/Individual Assets/Sign_cafe_board.png`,
+    pastryPink: `${EXP}/Cafe/Individual Assets/Display_pastry_pink.png`,
+    pastryBlue: `${EXP}/Cafe/Individual Assets/Display_pastry_blue.png`,
+    pastryYellow: `${EXP}/Cafe/Individual Assets/Display_pastry_yellow.png`,
+    posterDonut1: `${EXP}/Cafe/Individual Assets/Poster_donut_1.png`,
+    posterDonut2: `${EXP}/Cafe/Individual Assets/Poster_donut_4.png`,
+    plantHang: `${EXP}/Cafe/Individual Assets/Plant_pot_hanging.png`,
+    plantLarge: `${EXP}/Cafe/Individual Assets/Plant_potted_large.png`,
+    umbrellaRed: `${EXP}/Cafe/Individual Assets/Umbrella_outdoor_red.png`,
+    umbrellaGreen: `${EXP}/Cafe/Individual Assets/Umbrella_outdoor_green.png`,
+    npcBarista: `${EXP}/Cafe/Pre-made NPCs/female_npc_barista_1.png`,
+
+    arcadeBlue: `${EXP}/Gamer Room/Individual Assets/Arcade_machine_blue.png`,
+    arcadeRed: `${EXP}/Gamer Room/Individual Assets/Arcade_machine_red.png`,
+    arcadeGreen: `${EXP}/Gamer Room/Individual Assets/Arcade_machine_green.png`,
+    arcadeYellow: `${EXP}/Gamer Room/Individual Assets/Arcade_machine_yellow.png`,
+    throneRed: `${EXP}/Gamer Room/Individual Assets/Throne_gaming_red.png`,
+    throneBlue: `${EXP}/Gamer Room/Individual Assets/Throne_gaming_blue.png`,
+    tvGame: `${EXP}/Gamer Room/Individual Assets/TV_mounted_game.png`,
+    vendingBlue: `${EXP}/Gamer Room/Individual Assets/Vending_machine_blue.png`,
+    vendingRed: `${EXP}/Gamer Room/Individual Assets/Vending_machine_red.png`,
+    gLight1: `${EXP}/Gamer Room/Individual Assets/Lights_gaming_triangle_1_purple.png`,
+    gLight2: `${EXP}/Gamer Room/Individual Assets/Lights_gaming_triangle_3_blue.png`,
+    gLight3: `${EXP}/Gamer Room/Individual Assets/Lights_gaming_triangle_5_green.png`,
+    poster10: `${EXP}/Gamer Room/Individual Assets/Poster_10.png`,
+    poster11: `${EXP}/Gamer Room/Individual Assets/Poster_11.png`,
+    headsetBlue: `${EXP}/Gamer Room/Individual Assets/Headset_gaming_blue.png`,
+    micDesk: `${EXP}/Gamer Room/Individual Assets/Microphone_desktop.png`,
+
+    hospSign: `${EXP}/Hospital/Individual Assets/Hospital_sign_large.png`,
+    hospLogo: `${EXP}/Hospital/Individual Assets/Hospital_logo.png`,
+    bedHosp: `${EXP}/Hospital/Individual Assets/Bed_hospital_front.png`,
+    salineStand: `${EXP}/Hospital/Individual Assets/Saline_stand.png`,
+    tableSurgery: `${EXP}/Hospital/Individual Assets/Table_surgery.png`,
+    lightSurgery: `${EXP}/Hospital/Individual Assets/Light_surgery_white.png`,
+    storageMed: `${EXP}/Hospital/Individual Assets/Storage_medical_white.png`,
+    computerMed: `${EXP}/Hospital/Individual Assets/Computer_medical_white.png`,
+    monitorMedWall: `${EXP}/Hospital/Individual Assets/Monitor_medical_mounted_white.png`,
+    posterMed: `${EXP}/Hospital/Individual Assets/Poster_medical.png`,
+    npcNurse: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_1.png`,
+    npcSurgeon: `${EXP}/Hospital/NPCs/npc_surgeon_male_1.png`,
+
+    triceratops: `${EXP}/Museum/Individual Assets/Skeleton_triceratops.png`,
+    pillarMuseum: `${EXP}/Museum/Individual Assets/Pillar_museum.png`,
+    platformMuseum: `${EXP}/Museum/Individual Assets/Platform_museum.png`,
+    statueF: `${EXP}/Museum/Individual Assets/Statue_female.png`,
+    statueM: `${EXP}/Museum/Individual Assets/Statue_male.png`,
+    monaPixa: `${EXP}/Museum/Individual Assets/Painting_mona_pixa.png`,
+    paintingNight: `${EXP}/Museum/Individual Assets/Painting_blocky_night.png`,
+    guardRail: `${EXP}/Museum/Individual Assets/Guard_rail_connecting_both.png`,
+    itemDisplayL: `${EXP}/Museum/Individual Assets/Item_display_large.png`,
+    itemDisplayM: `${EXP}/Museum/Individual Assets/Item_display_medium.png`,
+    meteorite1: `${EXP}/Museum/Individual Assets/Meteorite_1.png`,
+    megalodonJaw: `${EXP}/Museum/Individual Assets/Megalodon_jaw.png`,
+    spaceship: `${EXP}/Museum/Individual Assets/Spaceship.png`,
+    sun: `${EXP}/Museum/Individual Assets/Sun.png`,
+    earth: `${EXP}/Museum/Individual Assets/Earth.png`,
+    mars: `${EXP}/Museum/Individual Assets/Mars.png`,
+    jupiter: `${EXP}/Museum/Individual Assets/Jupiter.png`,
+    saturn: `${EXP}/Museum/Individual Assets/Saturn.png`,
+    neptune: `${EXP}/Museum/Individual Assets/Neptune.png`,
+    lightFixture: `${EXP}/Museum/Individual Assets/Light_fixture_1.png`,
+
+    policeSign: `${EXP}/Police Station/Individual Assets/Police_sign_large.png`,
+    policeLogo: `${EXP}/Police Station/Individual Assets/Policestation_logo.png`,
+    policeDesk: `${EXP}/Police Station/Individual Assets/Police_lobby_desk.png`,
+    deskOffice: `${EXP}/Police Station/Individual Assets/Desk_office_medium.png`,
+    deskOfficeLong: `${EXP}/Police Station/Individual Assets/Desk_office_long.png`,
+    filecabinet: `${EXP}/Police Station/Individual Assets/Filecabinet.png`,
+    paperStack: `${EXP}/Police Station/Individual Assets/Paper_stack.png`,
+    posterWanted: `${EXP}/Police Station/Individual Assets/Poster_wanted.png`,
+    posterWanted2: `${EXP}/Police Station/Individual Assets/Poster_wanted_2.png`,
+    portraitOfficer: `${EXP}/Police Station/Individual Assets/Portrait_officer_1.png`,
+    waitChairs: `${EXP}/Police Station/Individual Assets/WaitingChair_grouped.png`,
+    waitChairSolo: `${EXP}/Police Station/Individual Assets/WaitingChair_solo.png`,
+    prisonDoor: `${EXP}/Police Station/Individual Assets/Door_prison_closed.png`,
+    clipboardWallSmall: `${EXP}/Police Station/Individual Assets/Clipboard_wall_small.png`,
+    npcCop: `${EXP}/Police Station/NPCs/Male/npc_cop_male_1.png`,
+
+    fireSign: `${EXP}/Fire Station/Individual Assets/Firestation_sign_large.png`,
+    fireLogo: `${EXP}/Fire Station/Individual Assets/Firestation_logo.png`,
+    locker: `${EXP}/Fire Station/Individual Assets/Locker.png`,
+    uniformHang: `${EXP}/Fire Station/Individual Assets/FirefighterUniform_hanging.png`,
+    uniformHang2: `${EXP}/Fire Station/Individual Assets/FirefighterUniform_hanging_2.png`,
+    rackEquip: `${EXP}/Fire Station/Individual Assets/Rack_equipment.png`,
+    fireExt: `${EXP}/Fire Station/Individual Assets/FireExtinguisher.png`,
+    fireHydrant: `${EXP}/Fire Station/Individual Assets/FireHydrant.png`,
+    fireAlarm: `${EXP}/Fire Station/Individual Assets/FireAlarm.png`,
+    hoseWall: `${EXP}/Fire Station/Individual Assets/Hose_wall_long.png`,
+    framedCert: `${EXP}/Fire Station/Individual Assets/FramedCertification.png`,
+    boxEmergency: `${EXP}/Fire Station/Individual Assets/Box_emergency.png`,
+    portraitFF: `${EXP}/Fire Station/Individual Assets/Portrait_firefighter_1.png`,
+    npcFirefighter: `${EXP}/Fire Station/NPCs/Male/npc_firefighter_male_1.png`,
+
+    coffin: `${EXP}/Halloween/Individual Assets/Coffin.png`,
+    candelabra: `${EXP}/Halloween/Individual Assets/Candles_1.png`,
+    candleTable: `${EXP}/Halloween/Individual Assets/Candle_table_1.png`,
+    chandelier: `${EXP}/Halloween/Individual Assets/Chandelier_candle.png`,
+    cobwebRoom: `${EXP}/Halloween/Individual Assets/Cobweb_room_1.png`,
+    cobwebRoom2: `${EXP}/Halloween/Individual Assets/Cobweb_room_2.png`,
+    jack1: `${EXP}/Halloween/Individual Assets/JackOLantern_1.png`,
+    jack2: `${EXP}/Halloween/Individual Assets/JackOLantern_2.png`,
+    pumpkinBasket: `${EXP}/Halloween/Individual Assets/Pumpkin_basket_1.png`,
+    portraitDracula: `${EXP}/Halloween/Individual Assets/Portrait_dracula.png`,
+    bookshelfDark: `${EXP}/Halloween/Individual Assets/Bookshelf_dark.png`,
+    chairHalloween: `${EXP}/Halloween/Individual Assets/Chair_halloween_theme.png`,
+    lampGhost: `${EXP}/Halloween/Individual Assets/Lamp_stand_ghost.png`,
+    lanternHang: `${EXP}/Halloween/Individual Assets/Lantern_hanging_1.png`,
+    treeDeadL: `${EXP}/Halloween/Individual Assets/Tree_dead_large.png`,
+    treeDeadM: `${EXP}/Halloween/Individual Assets/Tree_dead_medium.png`,
+    moonHW: `${EXP}/Halloween/Individual Assets/Moon.png`,
+    ghost1: `${EXP}/Halloween/Individual Assets/Ghost_1.png`,
+    bat1: `${EXP}/Halloween/Individual Assets/Bat_1.png`,
+    lampPostHW: `${EXP}/Halloween/Individual Assets/LampPost.png`,
+    billboardPumpkin: `${EXP}/Halloween/Individual Assets/Billboard_pumpkin.png`,
+    npcWitch: `${EXP}/Halloween/NPCs/npc_witch_1.png`,
+    npcMummy: `${EXP}/Halloween/NPCs/npc_mummy_1.png`,
+    npcSkeletonHW: `${EXP}/Halloween/NPCs/npc_skeleton.png`,
+
+    xmasTree: `${EXP}/Winter 2023/Individual Assets/XmasTree_decorated.png`,
+    snowman1: `${EXP}/Winter 2023/Individual Assets/SnowMan_1.png`,
+    snowman2: `${EXP}/Winter 2023/Individual Assets/SnowMan_2.png`,
+    snowman3: `${EXP}/Winter 2024/Individual Assets/Snowman_3.png`,
+    presentRedL: `${EXP}/Winter 2023/Individual Assets/Present_red_large.png`,
+    presentGreenL: `${EXP}/Winter 2023/Individual Assets/Present_green_large.png`,
+    presentBlueS: `${EXP}/Winter 2023/Individual Assets/Present_blue_small.png`,
+    santaSleigh: `${EXP}/Winter 2024/Individual Assets/SantaSleigh_gifts.png`,
+    candyCaneL: `${EXP}/Winter 2023/Individual Assets/CandyCane_large.png`,
+    candyStatueR: `${EXP}/Winter 2024/Individual Assets/CandyCane_statue_red_1.png`,
+    candyStatueG: `${EXP}/Winter 2024/Individual Assets/CandyCane_statue_green_1.png`,
+    snowfort: `${EXP}/Winter 2024/Individual Assets/Snowfort.png`,
+    snowballs: `${EXP}/Winter 2024/Individual Assets/Snowballs.png`,
+    sled: `${EXP}/Winter 2023/Individual Assets/Sled.png`,
+    lampPostW: `${EXP}/Winter 2023/Individual Assets/LampPost.png`,
+    npcSanta: `${EXP}/Winter 2023/NPCs/npc_male_santa_1.png`,
+    npcSweater: `${EXP}/Winter 2023/NPCs/npc_female_sweater_1.png`,
+
+    tentDig: `${EXP}/Archaeology/Individual Assets/Tent_large_grey.png`,
+    dinoWhole: `${EXP}/Archaeology/Individual Assets/Skeleton_dino_whole.png`,
+    dirtPile: `${EXP}/Archaeology/Individual Assets/DirtPile.png`,
+    flagRed: `${EXP}/Archaeology/Individual Assets/Flag_marker_red.png`,
+    flagBlue: `${EXP}/Archaeology/Individual Assets/Flag_marker_blue.png`,
+    pickaxe: `${EXP}/Archaeology/Individual Assets/Pickaxe.png`,
+    shovelDig: `${EXP}/Archaeology/Individual Assets/Shovel.png`,
+    bucketDig: `${EXP}/Archaeology/Individual Assets/Bucket.png`,
+    swordBuried: `${EXP}/Archaeology/Individual Assets/Sword_buried.png`,
+    totalStation: `${EXP}/Archaeology/Individual Assets/TotalStation.png`,
+    stoneTablet: `${EXP}/Archaeology/Individual Assets/StoneTablet_grey.png`,
+    potteryAncient: `${EXP}/Archaeology/Individual Assets/Pottery_ancient_1.png`,
+    fossilFish: `${EXP}/Archaeology/Individual Assets/Fossil_fish.png`,
+    npcArch: `${EXP}/Archaeology/NPCs/npc_archaeologist_male_1.png`,
+    npcArchF: `${EXP}/Archaeology/NPCs/npc_archaeologist_female_1.png`,
   };
+
+  // 16x16 single-frame decor NPC sheets for the expansion theme kits — a
+  // separate, much simpler system from the 30-character 32x32 NPC_SHEETS
+  // cast below (those are for the player + street crowd; these are the
+  // themed set-piece staff: barista, nurse, cop, firefighter, etc).
+  const EXPANSION_NPC_KEYS = [
+    'npcBarista', 'npcNurse', 'npcSurgeon', 'npcCop', 'npcFirefighter',
+    'npcWitch', 'npcMummy', 'npcSkeletonHW', 'npcSanta', 'npcSweater',
+    'npcArch', 'npcArchF',
+  ];
 
   // 30 pre-made NPC sheets (15 male + 15 female), 16x32 frames, 14 anim rows
   // (row 0 = walk, row 1 = idle). Real characters replace the old 2-sprite crowd.
@@ -323,13 +514,257 @@
     return seededPick(seed, KIT_NAMES);
   }
 
+  // =========================================================================
+  // Category-level theme kits — a whole Discord category becomes one of
+  // these themed building shells (cafe/arcade/hospital/museum/police/fire/
+  // haunted manor), with each channel inside becoming one room, cycling the
+  // kit's 2 recipes. This sits ABOVE the per-channel KITS system above: KITS
+  // decorates a "plain" text-building room, THEME_KITS decorates a whole
+  // building shell for categories whose name (or an unmatched round-robin
+  // slot) calls for a themed set-piece instead of the plain office park.
+  // =========================================================================
+  const THEME_KITS = {
+    cafe: {
+      wall: 0xd88a5a, side: 0xb06a40, outline: 0x4a2410, roof: 0xc07048, band: 0x8a4e2c,
+      signKey: 'cafeSign', signScale: SCALE,
+      stripStyle: { color: '#ffe8d0', bg: '#6a3a1a' },
+      recipes: [
+        () => ({
+          h: 70, fill: 0xf4e0c8, slots: [50, 90, 150, 200],
+          items: [
+            ['w', 'plantHang', 20, 2], ['w', 'posterDonut1', 70, 6], ['w', 'posterDonut2', 190, 6],
+            ['f', 'tableMed2', 70, 1, 0], ['f', 'mug', 70, 1, 22],
+            ['f', 'stool', 46, 1, 0], ['f', 'stool', 94, 1, 0],
+            ['f', 'tableMed2', 175, 1, 0], ['f', 'glassJuice', 175, 1, 22],
+            ['f', 'stoolB', 151, 1, 0], ['f', 'stoolB', 199, 1, 0], ['f', 'floraBonsaiFull', 240, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 88, fill: 0xf8ead2, slots: [120, 150, 185, 220],
+          items: [
+            ['glow', 0xffd8a0, 0.08],
+            ['w', 'plantHang', 240, 2], ['w', 'cafeSignBoard', 150, 8],
+            ['f', 'fridge', 18, 1, 0], ['f', 'counter', 52, 1, 0], ['f', 'counter', 68, 1, 0],
+            ['f', 'counter', 84, 1, 0], ['f', 'counterEnd', 100, 1, 0],
+            ['f', 'pastryPink', 54, 1, 26], ['f', 'pastryBlue', 74, 1, 26], ['f', 'pastryYellow', 94, 1, 26],
+            ['npc', 'npcBarista', 36],
+            ['f', 'tableLong', 180, 1, 0], ['f', 'stool', 156, 1, 0], ['f', 'stool', 205, 1, 0],
+            ['f', 'plantLarge', 245, 1, 0],
+          ],
+        }),
+      ],
+      outside(scene, left, bw, groundY) {
+        scene.furn('umbrellaRed', left - 34, groundY, 19);
+        scene.furn('benchWood', left - 34, groundY, 20);
+        scene.furn('umbrellaGreen', left + bw + 36, groundY, 19);
+        scene.furn('benchWood', left + bw + 36, groundY, 20);
+      },
+    },
+    gamer: {
+      wall: 0x2a2a3e, side: 0x1c1c2c, outline: 0x0c0c16, roof: 0x3c3c58, band: 0x14142a,
+      title: { color: '#c8f8ff', bg: '#1c1c2c' },
+      stripStyle: { color: '#c8f8ff', bg: '#14142a' },
+      recipes: [
+        () => ({
+          h: 70, fill: 0x3a3a54, slots: [70, 120, 190],
+          items: [
+            ['glow', 0x8a6aff, 0.1],
+            ['w', 'gLight1', 30, 4], ['w', 'poster10', 95, 4], ['w', 'gLight2', 160, 4], ['w', 'poster11', 225, 4],
+            ['f', 'deskOfficeLong', 60, 1, 0], ['f', 'monitor', 48, 1, 14], ['f', 'micDesk', 72, 1, 14],
+            ['f', 'throneRed', 96, 1, 0], ['f', 'pc', 20, 1, 0],
+            ['f', 'shelfMed', 170, 1, 0], ['f', 'headsetBlue', 170, 1, 26], ['f', 'trophy', 182, 1, 26],
+            ['f', 'throneBlue', 215, 1, 0], ['f', 'tvGame', 236, 1, 30],
+          ],
+        }),
+        () => ({
+          h: 88, fill: 0x2e2e46, slots: [95, 130, 200, 235],
+          items: [
+            ['glow', 0x5a8aff, 0.12],
+            ['w', 'gLight3', 60, 4], ['w', 'gLight1', 130, 4], ['w', 'gLight2', 200, 4],
+            ['f', 'arcadeBlue', 24, 1, 0], ['f', 'arcadeRed', 56, 1, 0], ['f', 'arcadeGreen', 88, 1, 0],
+            ['f', 'arcadeYellow', 120, 1, 0], ['f', 'vendingBlue', 165, 1, 0], ['f', 'vendingRed', 197, 1, 0],
+            ['f', 'gameConsole', 232, 1, 0], ['f', 'trashcanFull', 250, 1, 0],
+          ],
+        }),
+      ],
+    },
+    hospital: {
+      wall: 0xe8ecf2, side: 0xc0c8d4, outline: 0x2a3444, roof: 0xd8e0ea, band: 0x9aa8ba,
+      signKey: 'hospSign', signScale: SCALE * 0.9,
+      stripStyle: { color: '#ffffff', bg: '#c0392b' },
+      recipes: [
+        () => ({
+          h: 70, fill: 0xdaf0ea, slots: [60, 180],
+          items: [
+            ['w', 'lightSurgery', 105, 2], ['w', 'monitorMedWall', 165, 6], ['w', 'posterMed', 235, 6],
+            ['f', 'tableSurgery', 105, 1, 0], ['f', 'storageMed', 25, 1, 0], ['f', 'salineStand', 135, 1, 0],
+            ['npc', 'npcSurgeon', 80], ['f', 'computerMed', 210, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 88, fill: 0xe8f4f0, slots: [130, 165, 225],
+          items: [
+            ['glow', 0xc8f0e0, 0.08],
+            ['w', 'hospLogo', 145, 6], ['w', 'posterMed', 55, 8],
+            ['f', 'bedHosp', 35, 1, 0], ['f', 'salineStand', 62, 1, 0], ['f', 'bedHosp', 95, 1, 0],
+            ['npc', 'npcNurse', 140], ['f', 'computerMed', 185, 1, 0], ['f', 'storageMed', 225, 1, 0],
+            ['f', 'floraFernFull', 250, 1, 0],
+          ],
+        }),
+      ],
+    },
+    museum: {
+      bw: 340,
+      wall: 0xd8c8a8, side: 0xb8a888, outline: 0x3a2e1c, roof: 0xc8b896, band: 0x8a7a5a,
+      title: { color: '#3a2e1c', bg: '#f0e4c8' },
+      stripStyle: { color: '#f8f0d8', bg: '#5a4a30' },
+      recipes: [
+        () => ({
+          h: 74, fill: 0x2a2848, slots: [70, 140, 230],
+          items: [
+            ['glow', 0x4a4a9a, 0.1],
+            ['w', 'sun', 30, 6], ['w', 'earth', 75, 18], ['w', 'mars', 105, 10], ['w', 'jupiter', 145, 16],
+            ['w', 'saturn', 195, 8], ['w', 'neptune', 240, 20], ['w', 'spaceship', 275, 10],
+            ['f', 'itemDisplayM', 60, 1, 0], ['f', 'meteorite1', 60, 1, 15],
+            ['f', 'itemDisplayL', 165, 1, 0], ['f', 'guardRail', 165, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 96, fill: 0xf0e8d0, slots: [40, 90, 220, 260],
+          items: [
+            ['w', 'lightFixture', 150, 2], ['w', 'monaPixa', 40, 12], ['w', 'paintingNight', 260, 12],
+            ['f', 'pillarMuseum', 12, 1, 0], ['f', 'pillarMuseum', 296, 1, 0],
+            ['f', 'platformMuseum', 150, 1, 0], ['f', 'triceratops', 150, 1, 6],
+            ['f', 'guardRail', 110, 1, 0], ['f', 'guardRail', 190, 1, 0],
+            ['f', 'statueF', 55, 1, 0], ['f', 'statueM', 245, 1, 0],
+            ['f', 'itemDisplayM', 80, 1, 0], ['f', 'megalodonJaw', 80, 1, 15],
+          ],
+        }),
+      ],
+    },
+    police: {
+      wall: 0x5a7a9a, side: 0x42607e, outline: 0x14202e, roof: 0x4a6a8a, band: 0x2a4058,
+      signKey: 'policeSign', signScale: SCALE * 0.9,
+      stripStyle: { color: '#d8e8f8', bg: '#1a2a3a' },
+      recipes: [
+        () => ({
+          h: 70, fill: 0xb8c0c8, slots: [40, 210],
+          items: [
+            ['w', 'clipboardWallSmall', 130, 6], ['w', 'portraitOfficer', 165, 6],
+            ['f', 'deskOffice', 150, 1, 0], ['f', 'paperStack', 143, 1, 14],
+            ['f', 'waitChairSolo', 185, 1, 0], ['f', 'filecabinet', 236, 1, 0],
+          ],
+          bars: true,
+        }),
+        () => ({
+          h: 88, fill: 0xd0d8e0, slots: [60, 100, 180],
+          items: [
+            ['w', 'posterWanted', 30, 8], ['w', 'posterWanted2', 60, 8], ['w', 'policeLogo', 135, 6],
+            ['f', 'policeDesk', 135, 1, 0], ['npc', 'npcCop', 135],
+            ['f', 'waitChairs', 215, 1, 0], ['f', 'filecabinet', 25, 1, 0], ['f', 'floraFernFull', 250, 1, 0],
+          ],
+        }),
+      ],
+    },
+    fire: {
+      wall: 0xc84a3a, side: 0xa03828, outline: 0x3a0e08, roof: 0xb04030, band: 0x701e14,
+      signKey: 'fireSign', signScale: SCALE * 0.85,
+      stripStyle: { color: '#ffe0d0', bg: '#701e14' },
+      doorKind: 'elev',
+      recipes: [
+        () => ({
+          h: 70, fill: 0xf0dcc8, slots: [110, 170],
+          items: [
+            ['w', 'framedCert', 60, 6], ['w', 'portraitFF', 130, 6], ['w', 'fireAlarm', 200, 6],
+            ['f', 'bunkBottom', 30, 1, 0], ['f', 'bunkTop', 30, 1, 22], ['f', 'cabinetFull', 75, 1, 0],
+            ['f', 'boxEmergency', 145, 1, 0], ['f', 'bunkBottom', 220, 1, 0], ['f', 'bunkTop', 220, 1, 22],
+          ],
+        }),
+        () => ({
+          h: 88, fill: 0xe0d4c4, slots: [95, 150, 210],
+          items: [
+            ['glow', 0xffb090, 0.07],
+            ['w', 'hoseWall', 100, 6], ['w', 'uniformHang', 150, 10], ['w', 'uniformHang2', 175, 10],
+            ['w', 'fireLogo', 230, 6],
+            ['f', 'locker', 20, 1, 0], ['f', 'locker', 50, 1, 0], ['f', 'rackEquip', 80, 1, 0],
+            ['npc', 'npcFirefighter', 120], ['f', 'fireExt', 200, 1, 0], ['f', 'boxEmergency', 235, 1, 0],
+          ],
+        }),
+      ],
+      outside(scene, left) {
+        scene.furn('fireHydrant', left - 30, scene.groundY, 19);
+      },
+    },
+    halloween: {
+      wall: 0x4a3458, side: 0x362442, outline: 0x140a1c, roof: 0x3a2848, band: 0x241432,
+      title: { color: '#ffb858', bg: '#241432' },
+      stripStyle: { color: '#ffb858', bg: '#140a1c' },
+      recipes: [
+        () => ({
+          h: 70, fill: 0x584668, slots: [80, 150, 220],
+          items: [
+            ['glow', 0x8a5aff, 0.08],
+            ['w', 'cobwebRoom', 12, 2], ['w', 'lanternHang', 100, 2], ['w', 'cobwebRoom2', 245, 2],
+            ['f', 'coffin', 40, 1, 0], ['f', 'candleTable', 75, 1, 0],
+            ['npc', 'npcMummy', 125], ['f', 'lampGhost', 185, 1, 0], ['npc', 'npcSkeletonHW', 225],
+          ],
+        }),
+        () => ({
+          h: 88, fill: 0x6a5478, slots: [70, 130, 200],
+          items: [
+            ['glow', 0xff8a30, 0.06],
+            ['w', 'chandelier', 130, 2], ['w', 'portraitDracula', 65, 8], ['w', 'cobwebRoom', 250, 2],
+            ['f', 'bookshelfDark', 22, 1, 0], ['f', 'candelabra', 48, 1, 0], ['f', 'chairHalloween', 95, 1, 0],
+            ['npc', 'npcWitch', 150], ['f', 'jack1', 180, 1, 0], ['f', 'jack2', 200, 1, 0],
+            ['f', 'pumpkinBasket', 230, 1, 0], ['f', 'candleTable', 250, 1, 0],
+          ],
+        }),
+      ],
+      outside(scene, left, bw, groundY) {
+        scene.furn('treeDeadL', left - 36, groundY, 18);
+        scene.furn('treeDeadM', left + bw + 34, groundY, 18);
+        scene.furn('lampPostHW', left + bw + 60, groundY, 19);
+        scene.furn('billboardPumpkin', left - 62, groundY, 18);
+        scene.add.image(left + bw / 2, 60, 'moonHW').setScale(SCALE).setDepth(-60);
+        const ghost = scene.add.image(left - 20, groundY - 60, 'ghost1').setScale(SCALE).setDepth(19).setAlpha(0.8);
+        scene.tweens.add({ targets: ghost, y: groundY - 80, x: left + 30, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        const bat = scene.add.image(left + bw + 20, groundY - 120, 'bat1').setScale(SCALE).setDepth(19);
+        scene.tweens.add({ targets: bat, x: left + bw + 90, y: groundY - 150, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      },
+    },
+  };
+  // Round-robin pool for categories whose name matches nothing below —
+  // 'plain' keeps today's tasteful per-channel office-park building so a
+  // typical dev server still looks like today's map most of the time; the
+  // themed set-pieces are sprinkled in for variety.
+  const THEME_ROTATION_POOL = ['plain', 'plain', 'cafe', 'gamer', 'hospital', 'museum', 'police', 'fire', 'halloween'];
+  const KEYWORD_THEMES = [
+    [/cafe|coffee|food|kitchen/i, 'cafe'],
+    [/game|gaming|arcade|clip|media/i, 'gamer'],
+    [/support|help|health|med|hospital/i, 'hospital'],
+    [/art|gallery|showcase|museum|history/i, 'museum'],
+    [/mod|admin|staff|report|police|security/i, 'police'],
+    [/alert|incident|fire|urgent|emergency/i, 'fire'],
+    [/meme|spook|horror|halloween|off-?topic/i, 'halloween'],
+  ];
+  const SPECIAL_ZONE_THEMES = [
+    [/winter|xmas|christmas|holiday|snow/i, 'winterzone'],
+    [/dig|archaeo|fossil|excavat|research|\blab\b/i, 'digzone'],
+  ];
+
   class ExampleMapScene extends Phaser.Scene {
     constructor() {
       super('example');
     }
 
     preload() {
-      Object.entries(ASSETS).forEach(([k, p]) => this.load.image(k, p));
+      Object.entries(ASSETS).forEach(([k, p]) => {
+        if (EXPANSION_NPC_KEYS.includes(k)) return;
+        this.load.image(k, p);
+      });
+      EXPANSION_NPC_KEYS.forEach((k) => {
+        this.load.spritesheet(k, ASSETS[k], { frameWidth: 16, frameHeight: 16 });
+      });
       // 30 pre-made NPC sheets (16x32 frames): row 0 walk, row 1 idle.
       NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       // Missing-asset diagnostics so a bad path shows in console instead of silently vanishing.
@@ -350,6 +785,8 @@
       this.indoors = null;
       this.enterCooldown = 0;
       this._sceneMinY = 0; // tallest building's roof, tracked as buildings draw
+      this.decorNpcQueue = []; // [sheetKey, x, floorY] queued by themed rooms, flushed after layout
+      this._themeRR = 0; // round-robin index for THEME_ROTATION_POOL
       this.presenceEl = document.getElementById('presence-status');
       this.hintEl = document.getElementById('enter-hint');
 
@@ -364,6 +801,7 @@
       this.makeAnims();
 
       this.bootstrapLayout().then(() => {
+        this.flushDecorNpcQueue();
         this.spawnDecorNpcs();
         this.startPresenceLoop();
         this.setupPlayer();
@@ -429,16 +867,22 @@
       this.setEnterHint(defaultOutdoorHint());
     }
 
+    /**
+     * Group channels by their real Discord category, then build one
+     * building (or outdoor zone) per category: voice-only categories get
+     * the voice lounge, a category whose name matches a themed set-piece
+     * (or an unmatched round-robin slot) gets that theme, and everything
+     * else keeps the original plain per-channel office-park building.
+     */
     async bootstrapLayout() {
-      let data = { rooms: [], guildName: 'Discord' };
+      let data = { rooms: [], categories: [], guildName: 'Discord' };
       try {
         const res = await fetch(PRESENCE_URL, { cache: 'no-store' });
         if (res.ok) data = await res.json();
       } catch (_) { /* offline — draw placeholder */ }
 
-      const rooms = Array.isArray(data.rooms) ? data.rooms : [];
-      const voice = rooms.filter((r) => r.type === 'voice' || r.type === 'stage');
-      const text = rooms.filter((r) => r.type === 'text' || r.type === 'forum');
+      const rooms = (Array.isArray(data.rooms) ? data.rooms : [])
+        .filter((r) => r.type !== 'category' && r.type !== 'other');
       const guildName = data.guildName || 'Discord';
 
       const titleEl = document.getElementById('map-title');
@@ -446,34 +890,382 @@
 
       let x = 20;
       this.buildings = [];
+      this._themeRR = 0;
 
-      if (voice.length) {
-        const bw = 290;
-        this.drawVoiceBuilding(x, this.groundY, voice, guildName);
-        this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voice, label: 'Voice' });
-        x += bw + 36;
-      }
-
-      const perBuilding = 4;
-      const textPalettes = [0, 1, 2];
-      for (let i = 0; i < text.length; i += perBuilding) {
-        const chunk = text.slice(i, i + perBuilding);
-        const bw = 290;
-        const title = i === 0 ? guildName : `${guildName} · pt ${Math.floor(i / perBuilding) + 1}`;
-        this.drawTextBuilding(x, this.groundY, title, chunk, textPalettes[(i / perBuilding) % textPalettes.length]);
-        this.buildings.push({ left: x, right: x + bw, kind: 'text', channels: chunk, label: title });
-        x += bw + 20;
-      }
-
-      if (!voice.length && !text.length) {
+      if (!rooms.length) {
         this.drawEmptyBuilding(x, this.groundY, guildName);
         x += 320;
+        this.mapWidth = Math.max(W, x + 100);
+        this.drawGround();
+        this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
+        this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
+        return;
+      }
+
+      const categoriesMeta = new Map((data.categories || []).map((c) => [c.id, c]));
+      const byCat = new Map();
+      for (const r of rooms) {
+        // An uncategorized voice channel (no Discord category) still gets its
+        // own synthetic voice bucket, so a server without categories doesn't
+        // lose the dedicated voice lounge to the mixed uncategorized bucket.
+        const isVoice = r.type === 'voice' || r.type === 'stage';
+        const cid = r.categoryId || (isVoice ? '__uncat_voice__' : '__uncat__');
+        if (!byCat.has(cid)) byCat.set(cid, []);
+        byCat.get(cid).push(r);
+      }
+      const catList = [];
+      for (const [cid, chans] of byCat) {
+        let meta;
+        if (cid === '__uncat_voice__') meta = { id: cid, name: 'Voice', position: -2 };
+        else if (cid === '__uncat__') meta = { id: cid, name: guildName, position: -1 };
+        else meta = categoriesMeta.get(cid) || { id: cid, name: chans[0]?.categoryName || 'channels', position: 0 };
+        catList.push({ ...meta, channels: chans });
+      }
+      catList.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
+      let plainIdx = 0;
+      for (const cat of catList) {
+        const voiceChans = cat.channels.filter((c) => c.type === 'voice' || c.type === 'stage');
+        const decision = this.pickTheme(cat);
+
+        if (decision.kind === 'voice') {
+          if (!voiceChans.length) continue;
+          const bw = 290;
+          this.drawVoiceBuilding(x, this.groundY, voiceChans, cat.name);
+          this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: cat.name });
+          x += bw + 36;
+          continue;
+        }
+
+        if (decision.kind === 'zone') {
+          if (decision.theme === 'winterzone') {
+            this.drawWinterPark(x, this.groundY, cat);
+            x += 480 + 60;
+          } else {
+            this.drawDigSite(x, this.groundY, cat);
+            x += 560 + 60;
+          }
+          continue;
+        }
+
+        if (decision.kind === 'themed') {
+          const MAX_ROOMS = 2;
+          const total = cat.channels.length;
+          for (let i = 0; i < total; i += MAX_ROOMS) {
+            const chunk = cat.channels.slice(i, i + MAX_ROOMS);
+            const suffix = total > MAX_ROOMS ? ` ${Math.floor(i / MAX_ROOMS) + 1}` : '';
+            const b = this.buildGenericBuilding(decision.theme, x, `${cat.name}${suffix}`, chunk);
+            this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: cat.name });
+            x += b.bw + 20;
+          }
+          continue;
+        }
+
+        // Plain: the original per-channel office-park building, chunked at 4.
+        const perBuilding = 4;
+        const textPalettes = [0, 1, 2];
+        for (let i = 0; i < cat.channels.length; i += perBuilding) {
+          const chunk = cat.channels.slice(i, i + perBuilding);
+          const bw = 290;
+          const suffix = cat.channels.length > perBuilding ? ` · pt ${Math.floor(i / perBuilding) + 1}` : '';
+          const title = `${cat.name}${suffix}`;
+          this.drawTextBuilding(x, this.groundY, title, chunk, textPalettes[plainIdx % textPalettes.length]);
+          plainIdx += 1;
+          this.buildings.push({ left: x, right: x + bw, kind: 'text', channels: chunk, label: title });
+          x += bw + 20;
+        }
       }
 
       this.mapWidth = Math.max(W, x + 100);
       this.drawGround();
       this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
       this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
+    }
+
+    /** Decide a building theme (or special outdoor zone) for one category. */
+    pickTheme(cat) {
+      const name = String(cat.name || '').toLowerCase();
+      const channels = cat.channels;
+      const allVoice = channels.length > 0 && channels.every((c) => c.type === 'voice' || c.type === 'stage');
+      if (allVoice || /voice|\bvc\b|\btalk\b/i.test(name)) return { kind: 'voice' };
+      for (const [re, theme] of SPECIAL_ZONE_THEMES) {
+        if (re.test(name)) return { kind: 'zone', theme };
+      }
+      for (const [re, theme] of KEYWORD_THEMES) {
+        if (re.test(name)) return { kind: 'themed', theme };
+      }
+      const pick = THEME_ROTATION_POOL[this._themeRR % THEME_ROTATION_POOL.length];
+      this._themeRR += 1;
+      return pick === 'plain' ? { kind: 'plain' } : { kind: 'themed', theme: pick };
+    }
+
+    /**
+     * Generic themed building: shell + stacked cutaway floors + doors, one
+     * room per channel (cycling the theme's 2 recipes). Mirrors the shape of
+     * drawVoiceBuilding/drawTextBuilding above but data-driven by THEME_KITS
+     * instead of a single hand-authored layout.
+     */
+    drawThemeBuilding(cfg) {
+      const g = this.add.graphics().setDepth(20);
+      const left = cfg.left;
+      const bw = cfg.bw || 290;
+      const doorStrip = 54;
+      const bandH = 8;
+      const roomsH = cfg.rooms.reduce((s, r) => s + r.h, 0);
+      const bh = 18 + roomsH + bandH * (cfg.rooms.length - 1) + doorStrip;
+      const top = this.groundY - bh;
+      this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 30);
+      const padX = left + 16;
+      const roomW = bw - 32;
+
+      g.fillStyle(0x000000, 0.22);
+      g.fillRect(left + 8, this.groundY - 6, bw, 10);
+
+      g.fillStyle(cfg.wall, 1);
+      g.fillRect(left, top, bw, bh);
+      g.fillStyle(cfg.side, 1);
+      g.fillRect(left + bw - 14, top, 14, bh);
+      g.lineStyle(3, cfg.outline, 1);
+      g.strokeRect(left, top, bw, bh);
+
+      g.fillStyle(cfg.roof, 1);
+      g.fillRect(left - 6, top - 10, bw + 12, 12);
+      g.lineStyle(3, cfg.outline, 1);
+      g.strokeRect(left - 6, top - 10, bw + 12, 12);
+
+      if (cfg.signKey) {
+        this.add.image(left + bw / 2, top - 12, cfg.signKey)
+          .setScale(cfg.signScale || SCALE).setOrigin(0.5, 1).setDepth(28);
+      }
+      if (cfg.title) {
+        this.buildingTitle(left + bw / 2, top - (cfg.signKey ? 0 : 22), shortLabel(cfg.title.text, 22), {
+          color: cfg.title.color, bg: cfg.title.bg,
+        });
+      }
+
+      const floorDefs = [];
+      let y = top + 12;
+      cfg.rooms.forEach((room, idx) => {
+        const y0 = y;
+        this.cutawayRoom(g, padX, y0, roomW, room.h, room.fill, () => {
+          const floorY = y0 + room.h - 2;
+          this.placeRoomItems(room, padX, y0, floorY, roomW);
+          if (room.slots) {
+            this.addRoomSlots(room.roomKey, room.slots.map((dx) => [padX + dx, floorY - 1]));
+          }
+        });
+        this.channelBadge(padX + 4, y0 + 4, shortLabel(room.label, 16));
+        floorDefs.push({
+          id: room.id,
+          roomKey: room.roomKey,
+          floorY: y0 + room.h - 3,
+          minX: padX + 8,
+          maxX: padX + roomW - 8,
+          label: room.label,
+        });
+        y += room.h;
+        if (idx < cfg.rooms.length - 1) {
+          g.fillStyle(cfg.band, 1);
+          g.fillRect(left + 2, y + 1, bw - 4, 5);
+          y += bandH;
+        }
+      });
+
+      floorDefs.forEach((f) => this.registerFloor(f));
+
+      const lowest = floorDefs[floorDefs.length - 1];
+      const doorX = left + 42;
+      const doorX2 = left + bw - 48;
+      this.placeEntrance(g, doorX, this.groundY, cfg.doorKind || 'door', cfg.side, 26);
+      this.placeEntrance(g, doorX2, this.groundY, cfg.doorKind2 || 'door', cfg.side, 26);
+      this.registerDoor({ x: doorX, floorId: lowest.id, radius: 18 });
+      this.registerDoor({ x: doorX2, floorId: lowest.id, radius: 18 });
+
+      for (let i = floorDefs.length - 1; i > 0; i -= 1) {
+        const sx = padX + roomW * (0.35 + 0.3 * (i % 2));
+        this.registerStairs({
+          x: sx, fromFloorId: floorDefs[i].id, toFloorId: floorDefs[i - 1].id, radius: 60,
+        });
+        this.markStairs(sx, floorDefs[i].id);
+        this.markStairs(sx, floorDefs[i - 1].id);
+      }
+
+      if (cfg.strip) {
+        this.stripLabel(left + bw / 2, this.groundY - doorStrip + 6, shortLabel(cfg.strip.text, 26), {
+          color: cfg.strip.color, bg: cfg.strip.bg,
+        });
+      }
+
+      return { left, bw, top, bh, padX, roomW, floorDefs };
+    }
+
+    /**
+     * Room item placement for THEME_KITS recipes.
+     * ['f', key, dx, scale?, dy?]        floor object, bottom-anchored
+     * ['w', key, dx, dyFromTop, scale?]  wall/hanging object, top-anchored
+     * ['npc', sheetKey, dx]              idle decor NPC (16x16 expansion sheet)
+     * ['glow', color, alpha]             breathing room glow
+     */
+    placeRoomItems(room, x0, y0, floorY, roomW) {
+      (room.items || []).forEach((it) => {
+        const kind = it[0];
+        if (kind === 'f') {
+          const [, key, dx, sc, dy] = it;
+          this.furn(key, x0 + dx, floorY - (dy || 0), 23, (sc || 1) * SCALE);
+        } else if (kind === 'w') {
+          const [, key, dx, dyTop, sc] = it;
+          this.wallDecor(key, x0 + dx, y0 + dyTop, 22, (sc || 1) * SCALE);
+        } else if (kind === 'npc') {
+          const [, key, dx] = it;
+          this.decorNpcQueue.push([key, x0 + dx, floorY]);
+        } else if (kind === 'glow') {
+          const [, color, alpha] = it;
+          const glow = this.add.rectangle(x0 + roomW / 2, y0 + room.h / 2, roomW - 16, room.h - 12, color, alpha).setDepth(21);
+          this.tweens.add({ targets: glow, alpha: alpha + 0.08, duration: 1700, yoyo: true, repeat: -1 });
+        }
+      });
+    }
+
+    /** Build one themed building for `channels` (already chunked to <= 2). */
+    buildGenericBuilding(theme, left, categoryLabel, channels) {
+      const kit = THEME_KITS[theme];
+      const rooms = channels.map((ch, i) => {
+        const recipe = kit.recipes[i % kit.recipes.length]();
+        return {
+          id: chKey(ch.id),
+          roomKey: chKey(ch.id),
+          label: channelLabel(ch),
+          h: recipe.h,
+          fill: recipe.fill,
+          slots: recipe.slots,
+          items: recipe.items,
+          bars: recipe.bars,
+        };
+      });
+      const b = this.drawThemeBuilding({
+        left,
+        bw: kit.bw,
+        wall: kit.wall, side: kit.side, outline: kit.outline, roof: kit.roof, band: kit.band,
+        signKey: kit.signKey, signScale: kit.signScale,
+        title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title.color, bg: kit.title.bg },
+        strip: { text: `${categoryLabel} · ↑ enter`, color: kit.stripStyle.color, bg: kit.stripStyle.bg },
+        doorKind: kit.doorKind,
+        rooms,
+      });
+
+      const barsRoomIdx = rooms.findIndex((r) => r.bars);
+      if (barsRoomIdx !== -1) {
+        const cellsTop = b.top + 12;
+        for (let i = 0; i < 9; i += 1) {
+          this.add.image(b.padX + 14 + i * 7, cellsTop + rooms[barsRoomIdx].h - 2, 'prisonDoor')
+            .setScale(SCALE).setOrigin(0.5, 1).setDepth(24);
+        }
+      }
+
+      if (typeof kit.outside === 'function') kit.outside(this, b.left, b.bw, this.groundY);
+      return b;
+    }
+
+    /** Outdoor winter park — no building shell, an open themed zone. */
+    drawWinterPark(left, groundY, cat) {
+      const g = this.add.graphics().setDepth(9);
+      g.fillStyle(0xf0f6fc, 0.9);
+      g.fillEllipse(left + 220, groundY - 2, 500, 18);
+
+      this.furn('lampPostW', left - 10, groundY, 19);
+      this.furn('xmasTree', left + 60, groundY, 20);
+      this.furn('presentRedL', left + 92, groundY, 21);
+      this.furn('presentGreenL', left + 108, groundY, 21);
+      this.furn('presentBlueS', left + 122, groundY, 21);
+      this.furn('snowman1', left + 160, groundY, 20);
+      this.furn('snowman2', left + 200, groundY, 20);
+      this.furn('snowman3', left + 240, groundY, 20);
+      this.furn('snowfort', left + 285, groundY, 20);
+      this.furn('snowballs', left + 305, groundY, 21);
+      this.furn('santaSleigh', left + 360, groundY, 20);
+      this.furn('candyStatueR', left + 25, groundY, 20);
+      this.furn('candyStatueG', left + 420, groundY, 20);
+      this.furn('candyCaneL', left + 330, groundY, 20);
+      this.furn('sled', left + 395, groundY, 21);
+      this.furn('treeWinterSnow', left + 460, groundY, 18);
+      this.furn('treeWinterMed', left - 40, groundY, 18);
+
+      this.decorNpcQueue.push(['npcSanta', left + 345, groundY]);
+      this.decorNpcQueue.push(['npcSweater', left + 180, groundY]);
+
+      const points = [
+        [left + 140, groundY - 1], [left + 220, groundY - 1],
+        [left + 260, groundY - 1], [left + 310, groundY - 1],
+      ];
+      cat.channels.forEach((ch) => this.addRoomSlots(chKey(ch.id), points));
+      this.stripLabel(left + 220, groundY - 74, `⛄ ${shortLabel(cat.name, 22)} · outdoor hangout`, {
+        color: '#1a2a3a', bg: '#e8f4ff',
+      });
+
+      for (let i = 0; i < 40; i += 1) {
+        const fx = left - 40 + Math.random() * 540;
+        const fy = 40 + Math.random() * 240;
+        const flake = this.add.circle(fx, fy, 1 + Math.random(), 0xffffff, 0.8).setDepth(30);
+        this.tweens.add({
+          targets: flake, y: groundY - 4, x: fx + (Math.random() * 40 - 20),
+          duration: 5000 + Math.random() * 6000, repeat: -1, delay: Math.random() * 4000,
+          onRepeat: () => flake.setY(30 + Math.random() * 60),
+        });
+      }
+    }
+
+    /** Outdoor archaeology dig — open zone, no building shell. */
+    drawDigSite(left, groundY, cat) {
+      const g = this.add.graphics().setDepth(9);
+      g.fillStyle(0xc8a878, 0.9);
+      g.fillEllipse(left + 220, groundY - 2, 520, 18);
+      g.fillStyle(0x8a6a44, 1);
+      g.fillRect(left + 130, groundY - 4, 180, 14);
+      g.lineStyle(2, 0x5a4428, 1);
+      g.strokeRect(left + 130, groundY - 4, 180, 14);
+
+      this.furn('signWood', left - 20, groundY, 19);
+      this.furn('tentDig', left + 50, groundY, 18);
+      this.furn('dirtPile', left + 120, groundY, 20);
+      this.add.image(left + 220, groundY + 8, 'dinoWhole').setScale(SCALE).setOrigin(0.5, 1).setDepth(21);
+      this.furn('flagRed', left + 150, groundY, 21);
+      this.furn('flagBlue', left + 290, groundY, 21);
+      this.furn('pickaxe', left + 175, groundY, 21);
+      this.furn('shovelDig', left + 265, groundY, 21);
+      this.furn('bucketDig', left + 320, groundY, 20);
+      this.furn('dirtPile', left + 340, groundY, 20);
+      this.furn('swordBuried', left + 380, groundY, 20);
+      this.furn('totalStation', left + 410, groundY, 20);
+      this.furn('itemDisplayM', left + 455, groundY, 20);
+      this.furn('fossilFish', left + 455, groundY - 15, 21);
+      this.furn('stoneTablet', left + 485, groundY, 20);
+      this.furn('potteryAncient', left + 505, groundY, 20);
+      this.furn('rockMed', left + 530, groundY, 19);
+      this.furn('rockSm', left + 100, groundY, 19);
+
+      this.decorNpcQueue.push(['npcArch', left + 195, groundY]);
+      this.decorNpcQueue.push(['npcArchF', left + 305, groundY]);
+
+      const points = [
+        [left + 160, groundY - 1], [left + 240, groundY - 1],
+        [left + 280, groundY - 1], [left + 350, groundY - 1],
+      ];
+      cat.channels.forEach((ch) => this.addRoomSlots(chKey(ch.id), points));
+      this.stripLabel(left + 240, groundY - 74, `⛏️ ${shortLabel(cat.name, 22)} · outdoor hangout`, {
+        color: '#3a2e1c', bg: '#f0e4c8',
+      });
+    }
+
+    /** Spawn every queued expansion decor NPC (16x16 sheets) as a small idle sprite. */
+    flushDecorNpcQueue() {
+      for (const [key, x, floorY] of this.decorNpcQueue) {
+        if (!this.textures.exists(key)) continue;
+        const sp = this.add.sprite(x, floorY, key, 0).setScale(SCALE).setOrigin(0.5, 1).setDepth(31);
+        this.tweens.add({
+          targets: sp, y: floorY - 1.5, duration: 700 + Math.random() * 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        });
+      }
+      this.decorNpcQueue = [];
     }
 
     buildSky() {

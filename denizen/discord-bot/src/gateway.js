@@ -39,10 +39,13 @@ function channelMeta(channel) {
     || channel.type === ChannelType.GuildAnnouncement
   ) type = 'text';
   else if (channel.type === ChannelType.GuildForum) type = 'forum';
+  else if (channel.type === ChannelType.GuildCategory) type = 'category';
   return {
     id: channel.id,
     name: channel.name || channel.id,
     type,
+    categoryId: channel.parentId || null,
+    categoryName: channel.parent?.name || null,
   };
 }
 
