@@ -79,12 +79,72 @@ class TrackerEngine {
         voiceChannelId: null,
         textChannelId: null,
         textUntil: null,
+        // Voice UI flags (no true speaking stream without joining VC)
+        muted: false,
+        deafened: false,
+        streaming: false,
+        video: false,
+        suppressed: false,
+        // Soft social
+        lastTextAt: null,
+        textSnippet: null,
+        // Hangout stats (ms in VC this ISO week)
+        voiceJoinedAt: null,
+        hangoutMs: 0,
+        hangoutWeek: isoWeekKey(),
       };
       g.members.set(userId, m);
     } else if (displayName) {
       m.displayName = displayName;
     }
+    // Migrate older in-memory rows
+    if (m.hangoutMs == null) m.hangoutMs = 0;
+    if (!m.hangoutWeek) m.hangoutWeek = isoWeekKey();
     return m;
+  }
+
+  _rollHangoutWeek(member, now = Date.now()) {
+    const wk = isoWeekKey(new Date(now));
+    if (member.hangoutWeek !== wk) {
+      member.hangoutWeek = wk;
+      member.hangoutMs = 0;
+    }
+  }
+
+  _creditVoiceTime(member, now = Date.now()) {
+    if (!member?.voiceJoinedAt) return;
+    this._rollHangoutWeek(member, now);
+    const delta = Math.max(0, now - member.voiceJoinedAt);
+    member.hangoutMs = (member.hangoutMs || 0) + delta;
+    member.voiceJoinedAt = member.voiceChannelId ? now : null;
+  }
+
+  /**
+   * Mute/deaf/stream/video without channel change (same VC).
+   */
+  applyVoiceFlags(evt) {
+    const {
+      guildId,
+      userId,
+      displayName,
+      muted,
+      deafened,
+      streaming,
+      video,
+      suppressed,
+      channelId,
+    } = evt;
+    if (!guildId || !userId) return { ok: false };
+    const member = this._ensureMember(guildId, userId, displayName);
+    if (channelId && !member.voiceChannelId) {
+      // flags without occupancy — ignore
+    }
+    if (muted != null) member.muted = !!muted;
+    if (deafened != null) member.deafened = !!deafened;
+    if (streaming != null) member.streaming = !!streaming;
+    if (video != null) member.video = !!video;
+    if (suppressed != null) member.suppressed = !!suppressed;
+    return { ok: true };
   }
 
   _count(room) {
@@ -135,6 +195,11 @@ class TrackerEngine {
           : { id: vs.channelId, name: vs.channelId, type: 'voice' },
         kind: 'join',
         silent: true,
+        muted: !!(vs.selfMute || vs.serverMute),
+        deafened: !!(vs.selfDeaf || vs.serverDeaf),
+        streaming: !!vs.streaming,
+        video: !!vs.selfVideo,
+        suppressed: !!vs.suppress,
       });
     }
   }
@@ -165,10 +230,36 @@ class TrackerEngine {
       ? this._ensureChannel(guildId, toChannel || { id: toChannelId, type: 'voice' })
       : null;
 
+    const now = evt.now || Date.now();
+    this._rollHangoutWeek(member, now);
+
+    // Leaving or moving: bank time on the previous channel
+    if (fromRoom && member.voiceChannelId) {
+      this._creditVoiceTime(member, now);
+    }
+
     if (fromRoom) fromRoom.occupants.delete(userId);
     if (toRoom) toRoom.occupants.add(userId);
 
     member.voiceChannelId = toChannelId || null;
+
+    if (toRoom) {
+      member.voiceJoinedAt = now;
+    } else {
+      member.voiceJoinedAt = null;
+      member.muted = false;
+      member.deafened = false;
+      member.streaming = false;
+      member.video = false;
+      member.suppressed = false;
+    }
+
+    // Optional flags on join/move
+    if (evt.muted != null) member.muted = !!evt.muted;
+    if (evt.deafened != null) member.deafened = !!evt.deafened;
+    if (evt.streaming != null) member.streaming = !!evt.streaming;
+    if (evt.video != null) member.video = !!evt.video;
+    if (evt.suppressed != null) member.suppressed = !!evt.suppressed;
 
     // Voice presence supersedes soft text in the same mental model for canvas:
     // still track text separately; counts are per-room occupants sets.
@@ -220,6 +311,12 @@ class TrackerEngine {
     room.occupants.add(userId);
     member.textChannelId = channelId;
     member.textUntil = now + this.textWindowMs;
+    member.lastTextAt = now;
+    if (evt.snippet != null) {
+      member.textSnippet = String(evt.snippet).replace(/\s+/g, ' ').trim().slice(0, 48) || null;
+    } else if (evt.source === 'typing') {
+      member.textSnippet = member.textSnippet || '…';
+    }
 
     this.log.text({
       displayName: member.displayName,
@@ -233,10 +330,17 @@ class TrackerEngine {
   /**
    * Expire soft text presence whose window elapsed.
    * Call periodically from the boot loop.
+   * Also banks in-progress VC time for hangout stats.
    */
   tick(now = Date.now()) {
     for (const [guildId, g] of this.guilds) {
       for (const [userId, member] of g.members) {
+        // Keep hangout clock accurate while sitting in VC
+        if (member.voiceChannelId && member.voiceJoinedAt) {
+          this._creditVoiceTime(member, now);
+          member.voiceJoinedAt = now;
+        }
+
         if (!member.textChannelId || !member.textUntil) continue;
         if (member.textUntil > now) continue;
 
@@ -252,8 +356,40 @@ class TrackerEngine {
         }
         member.textChannelId = null;
         member.textUntil = null;
+        // Keep last snippet briefly for UI, then clear
+        if (member.lastTextAt && now - member.lastTextAt > this.textWindowMs) {
+          member.textSnippet = null;
+        }
       }
     }
+  }
+
+  /**
+   * Weekly hangout leaderboard for a guild (top voice minutes this ISO week).
+   * @returns {{ week: string, rows: { userId, displayName, ms, minutes }[] }}
+   */
+  hangoutLeaderboard(guildId, { limit = 10 } = {}) {
+    const g = this.guilds.get(guildId);
+    const week = isoWeekKey();
+    if (!g) return { week, rows: [] };
+    const rows = [];
+    for (const [userId, m] of g.members) {
+      this._rollHangoutWeek(m);
+      // Include live session so open VCs count
+      let ms = m.hangoutMs || 0;
+      if (m.voiceChannelId && m.voiceJoinedAt) {
+        ms += Math.max(0, Date.now() - m.voiceJoinedAt);
+      }
+      if (ms < 30_000) continue; // ignore <30s blips
+      rows.push({
+        userId,
+        displayName: m.displayName || userId,
+        ms,
+        minutes: Math.round(ms / 60_000),
+      });
+    }
+    rows.sort((a, b) => b.ms - a.ms);
+    return { week, rows: rows.slice(0, limit) };
   }
 
   getRoom(guildId, channelId) {
@@ -306,12 +442,23 @@ class TrackerEngine {
     }
     const members = [];
     for (const [userId, m] of g.members) {
+      const live = !!(m.voiceChannelId && !m.muted && !m.deafened && !m.suppressed);
       members.push({
         userId,
         displayName: m.displayName,
         voiceChannelId: m.voiceChannelId,
         textChannelId: m.textChannelId,
         textUntil: m.textUntil,
+        muted: !!m.muted,
+        deafened: !!m.deafened,
+        streaming: !!m.streaming,
+        video: !!m.video,
+        suppressed: !!m.suppressed,
+        live,
+        lastTextAt: m.lastTextAt || null,
+        textSnippet: m.textSnippet || null,
+        hangoutMs: m.hangoutMs || 0,
+        hangoutWeek: m.hangoutWeek || isoWeekKey(),
       });
     }
     const categories = [...(g.categories?.values() || [])]
@@ -327,8 +474,19 @@ class TrackerEngine {
   }
 }
 
+/** ISO week key YYYY-Www (UTC). */
+function isoWeekKey(date = new Date()) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  // Thursday in current week decides the year
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+}
+
 module.exports = {
   TrackerEngine,
   roomTypeFromDiscord,
   DEFAULT_TEXT_WINDOW_MS,
+  isoWeekKey,
 };

@@ -141,6 +141,7 @@ attachGateway(client, {
       guildId: GUILD_FILTER,
       port: PRESENCE_PORT,
       applicationId: c.application?.id || process.env.DISCORD_APPLICATION_ID || '',
+      config,
     }).listen().catch((err) => {
       console.warn('[discord-bot] presence API failed:', err.message || err);
     });
@@ -153,6 +154,9 @@ attachGateway(client, {
   onVoice(evt) {
     tracker.applyVoice(evt);
     forwardOffice(evt);
+  },
+  onVoiceFlags(evt) {
+    tracker.applyVoiceFlags(evt);
   },
   onTextActivity(evt) {
     tracker.applyTextActivity(evt);

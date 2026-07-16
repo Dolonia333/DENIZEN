@@ -453,20 +453,35 @@ denizen/
 
 **Members**
 
-- Join VC → appear on map  
+- Join VC → appear on map (🟢 open mic · 🔇 muted · 💬 text)  
 - `/avatar`, `,skin`, `,hair`, `,clothes`  
 - Boost server → golden headset  
 - `/denizen signup|map`, OAuth link  
+- Public share link from connect UI (`?view=public`)  
 
 **Staff**
 
 - `/setup`, ban/kick/mute/jail, automod, antinuke/antiraid  
 - Welcome, starboard, tickets, voicemaster  
 - `/roomsnapshot` for live occupancy  
+- `/hangout setup|report|enable` — weekly who-hung-out recap  
 
 **Operators**
 
 - Env + sidecar, presence port, OAuth redirect, avatar data dir  
+- `DENIZEN_SPACES_PLAN` / `DENIZEN_SPACES_REMOVE_BRANDING` for watermark  
+
+---
+
+## Engagement features (Spaces)
+
+| Feature | How it works |
+|---------|----------------|
+| **Live mic indicator** | Unmuted VC → green pulse ring + 🟢 tag; muted/deaf → 🔇 |
+| **Soft social** | Recent text → 💬 on nameplate + floating snippet bubble |
+| **Public map link** | `/discord-map/?view=public&guildId=…` — copy from connect UI |
+| **Watermark** | Free plan shows “Powered by Denizen Spaces”; community/pro or `REMOVE_BRANDING=1` hides it |
+| **Weekly hangout** | Voice minutes leaderboard via `/hangout` to a channel |
 
 ---
 

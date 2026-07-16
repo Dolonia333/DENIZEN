@@ -18,6 +18,7 @@ const { createMisc } = require('./misc');
 const { createCanvasBridge } = require('./canvas');
 const { createDenizenAccount } = require('./denizen');
 const { createAvatarModule } = require('./avatar');
+const { createHangoutModule } = require('./hangout');
 
 function loadModules(deps) {
   const hooks = {
@@ -86,6 +87,9 @@ function loadModules(deps) {
   const avatar = createAvatarModule(deps);
   avatar.register(deps.registry);
   hooks.onInteraction.push(avatar.onInteraction);
+
+  const hangout = createHangoutModule(deps);
+  hangout.register(deps.registry);
 
   // Core help / ping
   deps.registry.register({

@@ -975,6 +975,8 @@
       this._floorCollider = null;
       this.presenceEl = document.getElementById('presence-status');
       this.hintEl = document.getElementById('enter-hint');
+      this._branding = { watermark: true, plan: 'free' };
+      this._watermarkText = null;
 
       Object.keys(this.textures.list).forEach((key) => {
         if (key === '__DEFAULT' || key === '__MISSING') return;
@@ -985,6 +987,7 @@
       this.buildFarMountains();
       this.buildDistantSkyline();
       this.makeAnims();
+      this.ensureWatermark();
 
       this.bootstrapLayout().then(() => {
         this.flushDecorNpcQueue();
@@ -2590,6 +2593,135 @@
       this.presenceEl.dataset.ok = ok ? '1' : '0';
     }
 
+    ensureWatermark() {
+      if (this._watermarkText?.active) return;
+      this._watermarkText = this.add.text(12, H - 14, 'Powered by Denizen Spaces', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '11px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+        backgroundColor: '#000000aa',
+        padding: { x: 8, y: 4 },
+      })
+        .setScrollFactor(0)
+        .setDepth(1000)
+        .setOrigin(0, 1)
+        .setAlpha(0.85);
+    }
+
+    applyBranding(branding) {
+      this._branding = branding || { watermark: true, plan: 'free' };
+      this.ensureWatermark();
+      const show = this._branding.watermark !== false
+        && !this._branding.removeBranding
+        && this._branding.plan !== 'community'
+        && this._branding.plan !== 'pro';
+      if (this._watermarkText) {
+        this._watermarkText.setVisible(!!show);
+        if (this._branding.plan && this._branding.plan !== 'free') {
+          this._watermarkText.setText(`Denizen Spaces · ${this._branding.plan}`);
+        } else {
+          this._watermarkText.setText('Powered by Denizen Spaces');
+        }
+      }
+      // Expose share URL for parent UI
+      try {
+        if (this._lastPresenceData?.share) {
+          window.__DenizenSpacesShare = this._lastPresenceData.share;
+          window.dispatchEvent(new CustomEvent('denizen-spaces-share', { detail: this._lastPresenceData.share }));
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'denizen-spaces-share', share: this._lastPresenceData.share }, '*');
+          }
+        }
+        if (this._branding && window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'denizen-branding', branding: this._branding }, '*');
+        }
+      } catch (_) { /* ignore */ }
+    }
+
+    /** Build nameplate with mic / soft social cues */
+    formatPersonLabel(person) {
+      const name = String(person.displayName || 'member').slice(0, 14);
+      if (person.soft) {
+        const snip = person.textSnippet && person.textSnippet !== '…'
+          ? ` 💬${String(person.textSnippet).slice(0, 12)}`
+          : ' 💬';
+        return `${name}${snip}`;
+      }
+      let icons = '';
+      if (person.deafened) icons += '🔇';
+      else if (person.muted) icons += '🔇';
+      else if (person.live) icons += '🟢';
+      else icons += '🎙';
+      if (person.streaming) icons += '📺';
+      if (person.video) icons += '📷';
+      return `${icons} ${name}`.trim();
+    }
+
+    personTagColor(person) {
+      if (person.soft) return '#334155';
+      if (person.live) return '#16a34a';
+      if (person.muted || person.deafened) return '#64748b';
+      return '#5865f2';
+    }
+
+    /** Green pulse ring for unmuted VC members; chat bubble pulse for soft text */
+    updatePersonSocialFx(live, person) {
+      if (!live?.sprite) return;
+      // Destroy old ring if state no longer live
+      if (!person.live || person.soft) {
+        if (live.ring) {
+          this.tweens.killTweensOf(live.ring);
+          live.ring.destroy();
+          live.ring = null;
+        }
+      } else if (!live.ring || !live.ring.active) {
+        const ring = this.add.circle(live.sprite.x, live.sprite.y - 8, 14, 0x22c55e, 0.0)
+          .setStrokeStyle(2, 0x4ade80, 0.9)
+          .setDepth((live.sprite.depth || 30) - 1);
+        this.tweens.add({
+          targets: ring,
+          scale: 1.35,
+          alpha: 0.15,
+          duration: 900,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+        live.ring = ring;
+      }
+      if (live.ring?.active && live.sprite) {
+        live.ring.x = live.sprite.x;
+        live.ring.y = live.sprite.y - 8;
+      }
+
+      // Soft text bubble flash when snippet changes
+      if (person.soft && person.textSnippet && person.textSnippet !== live._lastSnippet) {
+        live._lastSnippet = person.textSnippet;
+        if (live.bubble) {
+          this.tweens.killTweensOf(live.bubble);
+          live.bubble.destroy();
+        }
+        const bubble = this.add.text(live.sprite.x, live.sprite.y - 52, String(person.textSnippet).slice(0, 18), {
+          fontFamily: 'Segoe UI, sans-serif',
+          fontSize: '9px',
+          color: '#0f172a',
+          backgroundColor: '#f8fafc',
+          padding: { x: 5, y: 3 },
+        }).setOrigin(0.5, 1).setDepth(40).setAlpha(0);
+        this.tweens.add({
+          targets: bubble,
+          alpha: 1,
+          y: live.sprite.y - 56,
+          duration: 200,
+          hold: 2200,
+          yoyo: true,
+          onComplete: () => { try { bubble.destroy(); } catch (_) {} live.bubble = null; },
+        });
+        live.bubble = bubble;
+      }
+    }
+
     startPresenceLoop() {
       const tick = async () => {
         if (this._rebuilding) return;
@@ -2605,9 +2737,11 @@
             this._layoutFp = fp;
           }
           this.applyPresence(data);
+          this.applyBranding(data.branding);
           const voiceN = (data.people || []).filter((p) => p.channelType === 'voice' || p.channelType === 'stage').length;
           const textN = (data.people || []).length - voiceN;
-          this.setPresenceStatus(`live · ${voiceN} in VC · ${textN} text`, true);
+          const liveN = (data.people || []).filter((p) => p.live).length;
+          this.setPresenceStatus(`live · ${voiceN} VC (${liveN} open mic) · ${textN} text`, true);
         } catch (err) {
           this.setPresenceStatus('offline · start discord-bot', false);
         }
@@ -2623,25 +2757,24 @@
         const roomKey = this.resolveRoomKey(p);
         if (!roomKey) continue;
         const userId = String(p.userId);
-        // Local player avatar is "you" — don't double-spawn a live marker for self.
-        if (ME_DISCORD_ID && userId === String(ME_DISCORD_ID)) {
-          want.set(userId, {
-            userId,
-            displayName: String(p.displayName || 'member').slice(0, 16),
-            roomKey,
-            soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
-            isMe: true,
-          });
-          continue;
-        }
-        want.set(userId, {
+        const soft = !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage');
+        const person = {
           userId,
           displayName: String(p.displayName || 'member').slice(0, 16),
           roomKey,
-          soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
-          isMe: false,
+          soft,
+          isMe: !!(ME_DISCORD_ID && userId === String(ME_DISCORD_ID)),
           avatar: p.avatar || null,
-        });
+          muted: !!p.muted,
+          deafened: !!p.deafened,
+          streaming: !!p.streaming,
+          video: !!p.video,
+          live: soft ? false : !!p.live,
+          textSnippet: p.textSnippet || null,
+          lastTextAt: p.lastTextAt || null,
+        };
+        // Local player avatar is "you" — don't double-spawn a live marker for self.
+        want.set(userId, person);
       }
 
       // Despawn people who left (fade out)
@@ -2662,14 +2795,15 @@
         } else {
           const live = existing;
           if (live.tag) {
-            const label = person.displayName;
+            const label = this.formatPersonLabel(person);
             if (live.tag.text !== label) live.tag.setText(label);
-            live.tag.setBackgroundColor(person.soft ? '#334155' : '#5865f2');
+            live.tag.setBackgroundColor(this.personTagColor(person));
           }
           if (live.sprite && !live.moving) {
             live.sprite.setAlpha(person.soft ? 0.72 : 1);
             live.soft = person.soft;
           }
+          this.updatePersonSocialFx(live, person);
           // Hot-reload look when rev changes
           const rev = person.avatar?.rev;
           if (rev != null && live.avatarRev !== rev) {
@@ -2695,6 +2829,14 @@
       this.releaseSlot(live.roomKey, userId);
       this.tweens.killTweensOf(live.sprite);
       this.tweens.killTweensOf(live.tag);
+      if (live.ring) {
+        this.tweens.killTweensOf(live.ring);
+        live.ring.destroy();
+      }
+      if (live.bubble) {
+        this.tweens.killTweensOf(live.bubble);
+        live.bubble.destroy();
+      }
       const targets = [live.sprite, live.tag].filter(Boolean);
       if (!targets.length) {
         this.livePeople.delete(userId);
@@ -2717,9 +2859,14 @@
       if (!live?.sprite) return;
       this.tweens.killTweensOf(live.sprite);
       this.tweens.killTweensOf(live.tag);
+      if (live.ring) this.tweens.killTweensOf(live.ring);
       live.baseY = baseY;
       live.sprite.y = baseY;
       if (live.tag) live.tag.y = baseY - 40;
+      if (live.ring) {
+        live.ring.x = live.sprite.x;
+        live.ring.y = baseY - 8;
+      }
       const dur = 700 + Math.random() * 400;
       this.tweens.add({
         targets: live.sprite,
@@ -2728,6 +2875,15 @@
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
+        onUpdate: () => {
+          if (live.ring?.active && live.sprite) {
+            live.ring.x = live.sprite.x;
+            live.ring.y = live.sprite.y - 8;
+          }
+          if (live.tag?.active && live.sprite) {
+            live.tag.x = live.sprite.x;
+          }
+        },
       });
       if (live.tag) {
         this.tweens.add({
@@ -2848,7 +3004,7 @@
         : this.npcSheetFor(String(person.userId));
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
-      const label = person.displayName;
+      const label = this.formatPersonLabel(person);
 
       const sprite = this.add.sprite(slot.x, slot.y, fallbackSheet, 0)
         .setScale(SCALE)
@@ -2862,7 +3018,7 @@
         fontSize: '10px',
         fontStyle: 'bold',
         color: '#ffffff',
-        backgroundColor: person.soft ? '#334155' : '#5865f2',
+        backgroundColor: this.personTagColor(person),
         padding: { x: 4, y: 2 },
       }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(3).setAlpha(0);
 
@@ -2882,9 +3038,13 @@
         moving: false,
         baseY: slot.y,
         avatarRev: person.avatar?.rev ?? null,
+        ring: null,
+        bubble: null,
+        _lastSnippet: null,
       };
       this.livePeople.set(person.userId, live);
       this.startLiveBob(live, slot.y);
+      this.updatePersonSocialFx(live, person);
 
       // Upgrade to custom baked sheet when available
       this.resolveSheetForUser(person.userId, person.avatar).then((sheet) => {
