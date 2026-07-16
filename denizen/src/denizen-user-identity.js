@@ -323,6 +323,10 @@ function markCeoPrincipal(identityId) {
 
 function toClientIdentity(identity) {
   if (!identity) return null;
+  const meta = identity.metadata && typeof identity.metadata === 'object'
+    ? identity.metadata
+    : {};
+  const discordUserId = identity.discord_user_id || meta.discord_user_id || null;
   return {
     id: identity.id,
     email: identity.email_normalized || identity.email,
@@ -334,6 +338,10 @@ function toClientIdentity(identity) {
     notify_email: identity.notify_email !== false,
     subscription_status: identity.subscription_status || 'none',
     has_password: !!identity.password_hash,
+    // Discord Spaces map linking
+    discord_user_id: discordUserId,
+    discord_username: meta.discord_username || null,
+    discord_avatar_url: meta.discord_avatar_url || null,
   };
 }
 

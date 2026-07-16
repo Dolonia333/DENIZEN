@@ -1400,15 +1400,22 @@ function _handleVisitorAuthRoutes(req, res, urlPath) {
       const sessionToken = sessionAuth.extractSessionAuth(req, {
         session_token: u.searchParams.get('session_token') || u.searchParams.get('sessionToken'),
       });
-      let identityId = u.searchParams.get('identity_id') || u.searchParams.get('identityId') || null;
-      if (mode === 'link' && sessionId && !identityId) {
-        const identity = await userIdentity.getIdentityBySession(sessionId).catch(() => null);
-        identityId = identity?.id || null;
+      if (mode === 'link') {
+        if (!sessionId || !sessionToken) {
+          throw new discordAuth.DiscordAuthError(
+            'Authenticated session required for Discord linking',
+            'DENIED',
+          );
+        }
+        try {
+          await visitorAccess.assertSessionToken(sessionId, sessionToken);
+        } catch (err) {
+          throw new discordAuth.DiscordAuthError(err?.message || 'Invalid session', 'DENIED');
+        }
       }
       const url = discordAuth.buildConnectUrl({
         mode,
         returnTo,
-        identityId,
         sessionId,
         sessionToken,
       });
@@ -6913,6 +6920,104 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: err.message }));
       }
+    });
+    return;
+  }
+
+  // Discord Spaces avatars — catalog, JSON, baked PNG (shared with bot store).
+  if (urlPath === '/api/discord/avatar/catalog' && req.method === 'GET') {
+    try {
+      const avatarApi = require('./src/discord-avatar');
+      const unlocks = avatarApi.resolveUnlocks({});
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ ok: true, ...avatarApi.publicCatalog(unlocks) }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    }
+    return;
+  }
+
+  if (urlPath.startsWith('/api/discord/avatar/') && (req.method === 'GET' || req.method === 'PUT')) {
+    (async () => {
+      const avatarApi = require('./src/discord-avatar');
+      const store = avatarApi.getAvatarStore();
+      let rest = urlPath.slice('/api/discord/avatar/'.length);
+      let asPng = false;
+      if (rest.endsWith('.png')) {
+        asPng = true;
+        rest = rest.slice(0, -4);
+      }
+      const userId = String(rest || '').replace(/[^0-9]/g, '');
+      if (!userId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'userId required' }));
+        return;
+      }
+      if (req.method === 'GET' && asPng) {
+        let buf = store.readPng(userId);
+        if (!buf) {
+          if (!store.hasCustom(userId)) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: false, error: 'custom avatar not found' }));
+            return;
+          }
+          const av = store.get(userId);
+          buf = await avatarApi.bakeSheet(av);
+          try { store.writePng(userId, buf); } catch (_) { /* ignore */ }
+        }
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+          'Cache-Control': 'public, max-age=60',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(buf);
+        return;
+      }
+      if (req.method === 'GET') {
+        const av = store.get(userId);
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({
+          ok: true,
+          userId,
+          avatar: avatarApi.clientAvatar(av, userId),
+          raw: av,
+        }));
+        return;
+      }
+      // PUT
+      const payload = await _readJsonBody(req, 64 * 1024);
+      const sessionId = String(
+        req.headers['x-session-id']
+        || payload.session_id
+        || payload.sessionId
+        || '',
+      ).trim();
+      const sessionToken = sessionAuth.extractSessionAuth(req, payload);
+      let linked;
+      try {
+        const discordAuth = require('./src/denizen-discord-auth.js');
+        linked = await discordAuth.getLinkStatusForSession(sessionId, sessionToken);
+      } catch (_) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'authenticated Discord session required' }));
+        return;
+      }
+      if (!linked?.linked || String(linked.discord_user_id) !== userId) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'cannot edit another Discord user avatar' }));
+        return;
+      }
+      const av = await avatarApi.ensureBaked(store, userId, payload.avatar || payload);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        userId,
+        avatar: avatarApi.clientAvatar(av, userId),
+      }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
     });
     return;
   }
