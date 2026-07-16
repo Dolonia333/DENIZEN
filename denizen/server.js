@@ -859,6 +859,7 @@ const securityMonitor = new SecurityMonitorServer({
   watchDirs: [
     path.resolve(__dirname),  // watch the game directory
   ],
+  recursiveFileWatch: process.env.NODE_ENV !== 'production',
   failedLoginThreshold: 3,
   portScanThreshold: 10,
   apiRateLimit: 100,

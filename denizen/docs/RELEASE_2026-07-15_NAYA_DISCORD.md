@@ -35,7 +35,10 @@ from disappearing without failing CI.
 
 NAS validation additionally corrected the Discord presence sidecar's shared
 avatar-module path and made the Lucy mirror watcher tolerate an exhausted
-inotify pool while retaining its polling fallback. The room-generator capacity
+inotify pool while retaining its polling fallback. The production security
+monitor now uses a single non-recursive filesystem watcher instead of allocating
+an inotify entry for every directory under the immutable application image.
+The room-generator capacity
 test now uses semantic instance IDs instead of randomized catalog asset names,
 removing a false intermittent failure from the complete run.
 - JavaScript syntax checks pass for every changed JavaScript file.

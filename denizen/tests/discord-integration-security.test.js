@@ -45,9 +45,13 @@ describe('Discord integration security boundaries', () => {
 
   it('handles NAS inotify exhaustion and keeps the polling fallback alive', () => {
     const server = read('server.js');
+    const monitor = read('security-monitor-server.js');
     const start = server.indexOf('function _startLucyMirrorFrameWatcher');
     const watcher = server.slice(start, server.indexOf('function closeLucyBrowser', start));
     assert.match(watcher, /mirrorWatcher\.on\('error', \(\) => \{\}\)/);
     assert.match(watcher, /setInterval\(_pushLucyBrowserFrame, 120\)/);
+    assert.match(server, /recursiveFileWatch: process\.env\.NODE_ENV !== 'production'/);
+    assert.match(monitor, /recursiveFileWatch: options\.recursiveFileWatch === true/);
+    assert.match(monitor, /watcher\.on\('error'/);
   });
 });
