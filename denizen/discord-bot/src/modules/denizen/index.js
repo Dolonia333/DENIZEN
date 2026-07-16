@@ -23,31 +23,46 @@ function createDenizenAccount(deps) {
   function register(registry) {
     registry.register({
       name: 'denizen',
-      description: 'Create or open your Denizen Discord map profile',
+      description: 'Discord Spaces map link or account signup/link',
       module: 'denizen',
       options: [
         {
           name: 'action',
-          description: 'signup, link, or map',
+          description: 'What to open',
           type: 3,
           required: false,
           choices: [
+            { name: 'map — open the live pixel map', value: 'map' },
             { name: 'signup — create Denizen account', value: 'signup' },
             { name: 'link — link Discord to Denizen', value: 'link' },
-            { name: 'map — open the pixel map', value: 'map' },
           ],
         },
       ],
       async run(ctx) {
         const action = ctx.getString?.('action')
           || ctx.args?.[0]
-          || 'signup';
+          || 'map';
         const mode = action === 'link' ? 'link' : 'signup';
-        const mapUrl = `${publicUrl()}/discord-map/`;
+        const gid = ctx.guild?.id;
+        const mapUrl = gid
+          ? `${publicUrl()}/discord-map/?guildId=${encodeURIComponent(gid)}`
+          : `${publicUrl()}/discord-map/`;
+        const publicMap = gid
+          ? `${publicUrl()}/discord-map/?guildId=${encodeURIComponent(gid)}&view=public`
+          : `${publicUrl()}/discord-map/?view=public`;
 
-        if (action === 'map') {
+        if (action === 'map' || action === 'open') {
           return ctx.reply({
-            content: `**Discord Spaces map**\n${mapUrl}\n\nJoin a voice channel after connecting — you'll appear on the map.`,
+            content: [
+              '**Discord Spaces map**',
+              mapUrl,
+              '',
+              '1. Open the link',
+              '2. Join a **voice channel** — you appear in that room',
+              '3. `/avatar` — customize look · **Boost** — golden headset',
+              '',
+              `Public share (read-only): ${publicMap}`,
+            ].join('\n'),
             ephemeral: true,
           });
         }
@@ -57,11 +72,12 @@ function createDenizenAccount(deps) {
         return ctx.reply({
           content: [
             `**${verb} your Denizen profile**`,
-            'Sign in with Discord — same account on the pixel map.',
+            'Sign in with Discord so the map knows which avatar is **you** (green tag).',
             '',
             url,
             '',
-            '_Only you can see this link. It expires in 15 minutes._',
+            `_Only you can see this · expires in 15 minutes_`,
+            `Map anytime: ${mapUrl}`,
           ].join('\n'),
           ephemeral: true,
         });
@@ -70,13 +86,20 @@ function createDenizenAccount(deps) {
 
     registry.register({
       name: 'signup',
-      description: 'Create a Denizen account with your Discord profile',
+      description: 'Create a Denizen profile (shows as you on the map)',
       aliases: ['join', 'account'],
       module: 'denizen',
       async run(ctx) {
         const url = connectPath('signup');
+        const mapUrl = `${publicUrl()}/discord-map/`;
         return ctx.reply({
-          content: `**Denizen signup**\nTap to create your profile (matches your Discord on the map):\n${url}`,
+          content: [
+            '**Create your Denizen profile**',
+            'Links Discord → pixel map identity.',
+            url,
+            '',
+            `Then open the map: ${mapUrl}`,
+          ].join('\n'),
           ephemeral: true,
         });
       },
@@ -84,12 +107,16 @@ function createDenizenAccount(deps) {
 
     registry.register({
       name: 'link',
-      description: 'Link Discord to an existing Denizen profile',
+      description: 'Link Discord to an existing Denizen login',
       module: 'denizen',
       async run(ctx) {
         const url = connectPath('link');
         return ctx.reply({
-          content: `**Link Discord**\nOpen while logged into Denizen, or use \`,signup\` to create a new profile:\n${url}`,
+          content: [
+            '**Link Discord to Denizen**',
+            'Use while already signed into Denizen, or run `/signup` for a new profile.',
+            url,
+          ].join('\n'),
           ephemeral: true,
         });
       },

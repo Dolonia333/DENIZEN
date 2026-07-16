@@ -391,6 +391,11 @@
           <span id="statusText">Looking for servers…</span>
         </div>
         <button type="button" class="btn primary block" id="btnOpenMap" disabled>Open map</button>
+        <div class="invite-row" style="margin-top:10px">
+          <button type="button" class="btn block" id="btnSharePublic" disabled>Copy public map link</button>
+        </div>
+        <p class="guild-meta" id="shareHint" style="margin-top:8px">Public link works for anyone — read-only hangout view for marketing &amp; OBS.</p>
+        <p class="guild-meta" id="brandingHint" style="margin-top:6px"></p>
       </div>
 
       <div class="card" id="accountCard">
@@ -776,6 +781,7 @@
       const ok = await testConnection();
       if (ok) {
         renderGuilds((await fetchGuildsSilent()) || [], g.guildId);
+        updateShareUi(loadCfg());
         showMap();
       }
     }
@@ -828,6 +834,23 @@
       }
     }
 
+    function publicShareUrl(cfg = loadCfg()) {
+      const gid = cfg.guildId || '';
+      const label = cfg.label || cfg.guildName || '';
+      const params = new URLSearchParams({ view: 'public' });
+      if (gid) params.set('guildId', gid);
+      if (label) params.set('label', label);
+      // Prefer server-provided absolute URL when presence last reported it
+      if (window.__DenizenSpacesShare?.url) return window.__DenizenSpacesShare.url;
+      return `${location.origin}/discord-map/?${params.toString()}`;
+    }
+
+    function updateShareUi(cfg = loadCfg()) {
+      const btn = $('btnSharePublic');
+      if (!btn) return;
+      btn.disabled = !cfg.presenceUrlResolved && !cfg.guildId;
+    }
+
     function showMap() {
       const cfg = loadCfg();
       const presence = cfg.presenceUrlResolved || buildPresenceUrl();
@@ -835,13 +858,17 @@
         setStatus(false, 'Connect a server first');
         return;
       }
-      const src = `/discord-map/play.html?presence=${encodeURIComponent(presence)}&v=${Date.now()}${cfg.discordUserId ? `&me=${encodeURIComponent(cfg.discordUserId)}` : ''}`;
+      const me = cfg.discordUserId && !cfg.publicView
+        ? `&me=${encodeURIComponent(cfg.discordUserId)}`
+        : '';
+      const src = `/discord-map/play.html?presence=${encodeURIComponent(presence)}&v=${Date.now()}${me}`;
       $('mapFrame').src = src;
       $('pane-connect').classList.add('hidden');
       $('pane-map').classList.add('show');
       $('tab-connect').classList.remove('active');
       $('tab-map').classList.add('active');
       document.body.classList.add('map-view');
+      updateShareUi(cfg);
     }
 
     function showConnect() {
@@ -864,6 +891,38 @@
       showMap();
     });
     $('btnOpenMap').addEventListener('click', showMap);
+    $('btnSharePublic')?.addEventListener('click', async () => {
+      const url = publicShareUrl();
+      try {
+        await navigator.clipboard.writeText(url);
+        setStatus(true, 'Public map link copied');
+        $('shareHint').textContent = `Copied: ${url}`;
+      } catch {
+        $('shareHint').textContent = url;
+        setStatus(false, 'Copy failed — link shown below');
+      }
+    });
+    window.addEventListener('denizen-spaces-share', (ev) => {
+      if (ev.detail?.url) $('shareHint').textContent = `Public: ${ev.detail.url}`;
+    });
+    // Listen for branding from iframe (play.html posts via parent if needed)
+    window.addEventListener('message', (ev) => {
+      if (ev.data?.type === 'denizen-branding' && ev.data.branding) {
+        const b = ev.data.branding;
+        const el = $('brandingHint');
+        if (!el) return;
+        if (b.watermark && !b.removeBranding) {
+          el.textContent = 'Free plan shows “Powered by Denizen Spaces”. Set DENIZEN_SPACES_REMOVE_BRANDING=1 or spaces.plan=community to remove.';
+        } else {
+          el.textContent = `Branding off · plan ${b.plan || 'community'}`;
+        }
+      }
+      if (ev.data?.type === 'denizen-spaces-share' && ev.data.share?.url) {
+        window.__DenizenSpacesShare = ev.data.share;
+        $('shareHint').textContent = `Public: ${ev.data.share.url}`;
+        updateShareUi(loadCfg());
+      }
+    });
     $('btnDiscordSignup').addEventListener('click', () => { location.href = discordConnectUrl('signup'); });
     $('btnDiscordLink').addEventListener('click', () => { location.href = discordConnectUrl('link'); });
 
@@ -1079,11 +1138,39 @@
     });
     const boot = loadCfg();
     const q = new URLSearchParams(location.search);
-    if (q.get('play') === '1' && boot.presenceUrlResolved) {
+
+    // Public share link: /discord-map/?view=public&guildId=...
+    if (q.get('view') === 'public') {
+      const gid = q.get('guildId') || '';
+      const label = q.get('label') || 'Public map';
+      const presenceUrl = hostedPresenceBase();
+      const presenceUrlResolved = buildPresenceUrl(presenceUrl, gid);
+      saveCfg({
+        ...loadCfg(),
+        presenceUrl,
+        guildId: gid,
+        label,
+        guildName: label,
+        presenceUrlResolved,
+        publicView: true,
+        connectedAt: Date.now(),
+      });
+      document.body.classList.add('public-view');
+      const account = $('accountCard');
+      const closet = $('closetCard');
+      if (account) account.hidden = true;
+      if (closet) closet.hidden = true;
+      $('heroName').textContent = label;
+      $('heroMeta').textContent = 'Public read-only · join the Discord to appear';
+      $('btnOpenMap').disabled = false;
+      updateShareUi(loadCfg());
+      showMap();
+    } else if (q.get('play') === '1' && boot.presenceUrlResolved) {
       showMap();
     } else {
       void fetchGuilds();
     }
+    updateShareUi(boot);
   </script>
 </body>
 </html>

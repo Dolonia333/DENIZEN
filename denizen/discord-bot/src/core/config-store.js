@@ -94,6 +94,22 @@ function defaultGuildConfig() {
     misc: {
       tts: true,
     },
+    // Discord Spaces product flags (billing can flip these manually for now)
+    spaces: {
+      // free | community | pro
+      plan: String(process.env.DENIZEN_SPACES_PLAN || 'free').toLowerCase(),
+      // When true (or plan is community/pro), map hides "Powered by Denizen Spaces"
+      removeBranding: /^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_SPACES_REMOVE_BRANDING || '')),
+      publicMap: true,
+    },
+    hangout: {
+      enabled: false,
+      channelId: null,
+      // 0=Sun … 1=Mon … 6=Sat (UTC)
+      weekday: 1,
+      hourUtc: 17,
+      lastPostedWeek: null,
+    },
   };
 }
 

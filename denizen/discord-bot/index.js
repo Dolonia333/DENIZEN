@@ -112,11 +112,11 @@ attachGateway(client, {
     audit.attach(c);
 
     console.log(`[discord-bot] logged in as ${c.user.tag}`);
-    console.log(`[discord-bot] bleed-parity modules loaded · prefix=\`${PREFIX}\` · officeForward=${FORWARD_OFFICE ? 'on' : 'off'}`);
+    console.log(`[discord-bot] Spaces + modules · prefix=\`${PREFIX}\` · officeForward=${FORWARD_OFFICE ? 'on' : 'off'}`);
     if (GUILD_FILTER) console.log(`[discord-bot] guild filter: ${GUILD_FILTER}`);
     const guilds = [...c.guilds.cache.values()];
     console.log(`[discord-bot] in ${guilds.length} guild(s): ${guilds.map((g) => g.name).join(', ') || '(none)'}`);
-    console.log('[discord-bot] try `,help` or `/help` · `@Denizen rooms` for canvas tracker');
+    console.log('[discord-bot] try `/help` or `/start` · `/avatar` · `/hangout` · map at /discord-map/');
 
     if (SMOKE) {
       console.log('[discord-bot] smoke ok — token works');
@@ -141,6 +141,7 @@ attachGateway(client, {
       guildId: GUILD_FILTER,
       port: PRESENCE_PORT,
       applicationId: c.application?.id || process.env.DISCORD_APPLICATION_ID || '',
+      config,
     }).listen().catch((err) => {
       console.warn('[discord-bot] presence API failed:', err.message || err);
     });
@@ -153,6 +154,9 @@ attachGateway(client, {
   onVoice(evt) {
     tracker.applyVoice(evt);
     forwardOffice(evt);
+  },
+  onVoiceFlags(evt) {
+    tracker.applyVoiceFlags(evt);
   },
   onTextActivity(evt) {
     tracker.applyTextActivity(evt);

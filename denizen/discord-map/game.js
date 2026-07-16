@@ -16,7 +16,7 @@
   function channelLabel(ch) {
     const name = String(ch?.name || 'channel').slice(0, 22);
     const type = String(ch?.type || '').toLowerCase();
-    if (type === 'voice' || type === 'stage') return `🔊 ${name}`;
+    if (type === 'voice' || type === 'stage') return `VC ${name}`;
     return `#${name}`;
   }
 
@@ -120,8 +120,38 @@
   const OBR = `${PACK}/Objects/Bedroom`;
   const INF = `${PACK}/Infrastructure`;
   const BG = `${PACK}/Backgrounds`;
+  // Pixel Spaces UI Expansion (itch New Assets #4)
+  const UI = `${FULL}/UI`;
+  const UI_CTRL = `${UI}/Buttons, Sliders, Panels, Frames, Selection`;
+  const UI_IC = `${UI}/Icons`;
+  const UI_CHAT = `${UI}/Chat Bubbles`;
+  const UI_EM = `${UI}/Emotes`;
 
   const ASSETS = {
+    // —— UI expansion (status, chat, boost — replace emoji HUD) ——
+    uiChatBlue: `${UI_CHAT}/ChatBubble_blue.png`,
+    uiChatGreen: `${UI_CHAT}/ChatBubble_green.png`,
+    uiChatGrey: `${UI_CHAT}/ChatBubble_grey.png`,
+    uiChatYellow: `${UI_CHAT}/ChatBubble_yellow.png`,
+    uiChatWhite: `${UI_CHAT}/ChatBubble_white.png`,
+    uiChatShadow: `${UI_CHAT}/ChatBubble_shadow.png`,
+    // happiness: 0 dead … 4 happy (pack convention)
+    uiHappy: `${UI_IC}/Status_happiness_4.png`,
+    uiNeutral: `${UI_IC}/Status_happiness_2.png`,
+    uiSad: `${UI_IC}/Status_happiness_1.png`,
+    uiAngry: `${UI_IC}/Status_happiness_0.png`,
+    uiEnergy: `${UI_IC}/Status_energy.png`,
+    uiPointerGreen: `${UI_IC}/Pointer_green.png`,
+    uiPointerGrey: `${UI_IC}/Pointer_grey.png`,
+    uiPointerRed: `${UI_IC}/Pointer_red.png`,
+    uiBoost: `${UI_IC}/Boost.png`,
+    uiBoostOff: `${UI_IC}/Boost_off.png`,
+    uiRedDot: `${UI_IC}/Red_dot.png`,
+    uiExclaim: `${UI_EM}/Exclamation_yellow.png`,
+    uiMail: `${UI_IC}/Mail.png`,
+    uiPanelGrey: `${UI_CTRL}/Panel_grey.png`,
+    uiPanelBlue: `${UI_CTRL}/Panel_blue.png`,
+    uiPanelGreen: `${UI_CTRL}/Panel_green.png`,
     // Backgrounds / outdoor
     cloud: `${BG}/Cloud_1.png`,
     cloudSm: `${BG}/Cloud_small_3.png`,
@@ -975,6 +1005,8 @@
       this._floorCollider = null;
       this.presenceEl = document.getElementById('presence-status');
       this.hintEl = document.getElementById('enter-hint');
+      this._branding = { watermark: true, plan: 'free' };
+      this._watermarkText = null;
 
       Object.keys(this.textures.list).forEach((key) => {
         if (key === '__DEFAULT' || key === '__MISSING') return;
@@ -985,6 +1017,7 @@
       this.buildFarMountains();
       this.buildDistantSkyline();
       this.makeAnims();
+      this.ensureWatermark();
 
       this.bootstrapLayout().then(() => {
         this.flushDecorNpcQueue();
@@ -2590,6 +2623,226 @@
       this.presenceEl.dataset.ok = ok ? '1' : '0';
     }
 
+    ensureWatermark() {
+      if (this._watermarkText?.active) return;
+      // Pixel panel backdrop from UI expansion when available
+      if (this.textures.exists('uiPanelGrey')) {
+        this._watermarkPanel = this.add.image(8, H - 8, 'uiPanelGrey')
+          .setScrollFactor(0)
+          .setDepth(999)
+          .setOrigin(0, 1)
+          .setScale(SCALE * 0.55)
+          .setAlpha(0.92);
+      }
+      this._watermarkText = this.add.text(18, H - 16, 'Denizen Spaces', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '10px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+        padding: { x: 4, y: 2 },
+      })
+        .setScrollFactor(0)
+        .setDepth(1000)
+        .setOrigin(0, 1)
+        .setAlpha(0.95);
+    }
+
+    applyBranding(branding) {
+      this._branding = branding || { watermark: true, plan: 'free' };
+      this.ensureWatermark();
+      const show = this._branding.watermark !== false
+        && !this._branding.removeBranding
+        && this._branding.plan !== 'community'
+        && this._branding.plan !== 'pro';
+      if (this._watermarkPanel) this._watermarkPanel.setVisible(!!show);
+      if (this._watermarkText) {
+        this._watermarkText.setVisible(!!show);
+        if (this._branding.plan && this._branding.plan !== 'free') {
+          this._watermarkText.setText(`Denizen Spaces · ${this._branding.plan}`);
+        } else {
+          this._watermarkText.setText('Denizen Spaces');
+        }
+      }
+      // Expose share URL for parent UI
+      try {
+        if (this._lastPresenceData?.share) {
+          window.__DenizenSpacesShare = this._lastPresenceData.share;
+          window.dispatchEvent(new CustomEvent('denizen-spaces-share', { detail: this._lastPresenceData.share }));
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'denizen-spaces-share', share: this._lastPresenceData.share }, '*');
+          }
+        }
+        if (this._branding && window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'denizen-branding', branding: this._branding }, '*');
+        }
+      } catch (_) { /* ignore */ }
+    }
+
+    /** Name only — status uses Pixel Spaces UI icons, not emoji. */
+    formatPersonLabel(person) {
+      return String(person.displayName || 'member').slice(0, 14);
+    }
+
+    personTagColor(person) {
+      if (person.soft) return '#334155';
+      if (person.live) return '#14532d';
+      if (person.muted || person.deafened) return '#475569';
+      return '#1e3a8a';
+    }
+
+    /** Which status icon key for a person (UI expansion). */
+    statusIconKey(person) {
+      if (person.soft) return 'uiMail';
+      if (person.deafened) return 'uiAngry';
+      if (person.muted) return 'uiSad';
+      if (person.live) return 'uiHappy';
+      if (person.streaming) return 'uiEnergy';
+      return 'uiNeutral';
+    }
+
+    /** Ensure a floating status icon sprite above the character. */
+    ensureStatusIcon(live, person) {
+      const key = this.statusIconKey(person);
+      if (!this.textures.exists(key)) return;
+      const depth = (live.sprite?.depth || 30) + 2;
+      if (!live.statusIcon || !live.statusIcon.active) {
+        live.statusIcon = this.add.image(0, 0, key)
+          .setScale(SCALE)
+          .setOrigin(0.5, 1)
+          .setDepth(depth);
+      } else if (live.statusIcon.texture?.key !== key) {
+        live.statusIcon.setTexture(key);
+      }
+      live.statusIcon.setDepth(depth);
+      live.statusIcon.setVisible(true);
+      // Green pointer bob above open-mic users
+      if (person.live && !person.soft && this.textures.exists('uiPointerGreen')) {
+        if (!live.pointer || !live.pointer.active) {
+          live.pointer = this.add.image(0, 0, 'uiPointerGreen')
+            .setScale(SCALE)
+            .setOrigin(0.5, 1)
+            .setDepth(depth + 1);
+          this.tweens.add({
+            targets: live.pointer,
+            y: '-=3',
+            duration: 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+        }
+        live.pointer.setVisible(true);
+      } else if (live.pointer) {
+        live.pointer.setVisible(false);
+      }
+      // Boost star for golden-headset / booster looks
+      const isBooster = person.avatar?.hat?.set === 'headsets'
+        || person.avatar?.tint?.hat
+        || person.booster;
+      if (isBooster && this.textures.exists('uiBoost')) {
+        if (!live.boostIcon || !live.boostIcon.active) {
+          live.boostIcon = this.add.image(0, 0, 'uiBoost')
+            .setScale(SCALE)
+            .setOrigin(0.5, 1)
+            .setDepth(depth + 1);
+        }
+        live.boostIcon.setVisible(true);
+      } else if (live.boostIcon) {
+        live.boostIcon.setVisible(false);
+      }
+    }
+
+    layoutSocialSprites(live) {
+      if (!live?.sprite) return;
+      const x = live.sprite.x;
+      const y = live.sprite.y;
+      if (live.statusIcon?.active) {
+        live.statusIcon.x = x + 10;
+        live.statusIcon.y = y - 22;
+      }
+      if (live.pointer?.visible && live.pointer.active) {
+        live.pointer.x = x;
+        live.pointer.y = y - 36;
+      }
+      if (live.boostIcon?.visible && live.boostIcon.active) {
+        live.boostIcon.x = x - 11;
+        live.boostIcon.y = y - 22;
+      }
+      if (live.tagBg?.active) {
+        live.tagBg.x = x;
+        live.tagBg.y = y - 38;
+      }
+      if (live.tag?.active) {
+        live.tag.x = x;
+        live.tag.y = y - 40;
+      }
+      if (live.bubbleImg?.active) {
+        live.bubbleImg.x = x;
+        live.bubbleImg.y = y - 48;
+      }
+      if (live.bubbleText?.active) {
+        live.bubbleText.x = x;
+        live.bubbleText.y = y - 54;
+      }
+    }
+
+    /**
+     * Pixel Spaces UI: status icons, pointer for open mic, chat bubbles for text.
+     * Replaces emoji-based feedback.
+     */
+    updatePersonSocialFx(live, person) {
+      if (!live?.sprite) return;
+      this.ensureStatusIcon(live, person);
+      this.layoutSocialSprites(live);
+
+      // Soft text: Pixel Spaces chat bubble + short caption
+      if (person.soft && person.textSnippet && person.textSnippet !== live._lastSnippet) {
+        live._lastSnippet = person.textSnippet;
+        if (live.bubbleImg) {
+          this.tweens.killTweensOf(live.bubbleImg);
+          live.bubbleImg.destroy();
+        }
+        if (live.bubbleText) {
+          this.tweens.killTweensOf(live.bubbleText);
+          live.bubbleText.destroy();
+        }
+        const bubbleKey = this.textures.exists('uiChatBlue') ? 'uiChatBlue' : null;
+        if (bubbleKey) {
+          live.bubbleImg = this.add.image(live.sprite.x, live.sprite.y - 48, bubbleKey)
+            .setScale(SCALE)
+            .setOrigin(0.5, 1)
+            .setDepth(41)
+            .setAlpha(0);
+        }
+        live.bubbleText = this.add.text(
+          live.sprite.x,
+          live.sprite.y - 54,
+          String(person.textSnippet).slice(0, 16),
+          {
+            fontFamily: 'Segoe UI, sans-serif',
+            fontSize: '8px',
+            color: '#0f172a',
+            align: 'center',
+          },
+        ).setOrigin(0.5, 1).setDepth(42).setAlpha(0);
+
+        const targets = [live.bubbleImg, live.bubbleText].filter(Boolean);
+        this.tweens.add({
+          targets,
+          alpha: 1,
+          duration: 180,
+          hold: 2400,
+          yoyo: true,
+          onComplete: () => {
+            try { live.bubbleImg?.destroy(); } catch (_) { /* ignore */ }
+            try { live.bubbleText?.destroy(); } catch (_) { /* ignore */ }
+            live.bubbleImg = null;
+            live.bubbleText = null;
+          },
+        });
+      }
+    }
+
     startPresenceLoop() {
       const tick = async () => {
         if (this._rebuilding) return;
@@ -2605,9 +2858,11 @@
             this._layoutFp = fp;
           }
           this.applyPresence(data);
+          this.applyBranding(data.branding);
           const voiceN = (data.people || []).filter((p) => p.channelType === 'voice' || p.channelType === 'stage').length;
           const textN = (data.people || []).length - voiceN;
-          this.setPresenceStatus(`live · ${voiceN} in VC · ${textN} text`, true);
+          const liveN = (data.people || []).filter((p) => p.live).length;
+          this.setPresenceStatus(`live · ${voiceN} VC (${liveN} open mic) · ${textN} text`, true);
         } catch (err) {
           this.setPresenceStatus('offline · start discord-bot', false);
         }
@@ -2623,25 +2878,24 @@
         const roomKey = this.resolveRoomKey(p);
         if (!roomKey) continue;
         const userId = String(p.userId);
-        // Local player avatar is "you" — don't double-spawn a live marker for self.
-        if (ME_DISCORD_ID && userId === String(ME_DISCORD_ID)) {
-          want.set(userId, {
-            userId,
-            displayName: String(p.displayName || 'member').slice(0, 16),
-            roomKey,
-            soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
-            isMe: true,
-          });
-          continue;
-        }
-        want.set(userId, {
+        const soft = !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage');
+        const person = {
           userId,
           displayName: String(p.displayName || 'member').slice(0, 16),
           roomKey,
-          soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
-          isMe: false,
+          soft,
+          isMe: !!(ME_DISCORD_ID && userId === String(ME_DISCORD_ID)),
           avatar: p.avatar || null,
-        });
+          muted: !!p.muted,
+          deafened: !!p.deafened,
+          streaming: !!p.streaming,
+          video: !!p.video,
+          live: soft ? false : !!p.live,
+          textSnippet: p.textSnippet || null,
+          lastTextAt: p.lastTextAt || null,
+        };
+        // Local player avatar is "you" — don't double-spawn a live marker for self.
+        want.set(userId, person);
       }
 
       // Despawn people who left (fade out)
@@ -2662,14 +2916,15 @@
         } else {
           const live = existing;
           if (live.tag) {
-            const label = person.displayName;
+            const label = this.formatPersonLabel(person);
             if (live.tag.text !== label) live.tag.setText(label);
-            live.tag.setBackgroundColor(person.soft ? '#334155' : '#5865f2');
+            live.tag.setBackgroundColor(this.personTagColor(person));
           }
           if (live.sprite && !live.moving) {
             live.sprite.setAlpha(person.soft ? 0.72 : 1);
             live.soft = person.soft;
           }
+          this.updatePersonSocialFx(live, person);
           // Hot-reload look when rev changes
           const rev = person.avatar?.rev;
           if (rev != null && live.avatarRev !== rev) {
@@ -2695,6 +2950,13 @@
       this.releaseSlot(live.roomKey, userId);
       this.tweens.killTweensOf(live.sprite);
       this.tweens.killTweensOf(live.tag);
+      for (const k of ['ring', 'bubble', 'bubbleImg', 'bubbleText', 'statusIcon', 'pointer', 'boostIcon', 'tagBg']) {
+        if (live[k]) {
+          this.tweens.killTweensOf(live[k]);
+          try { live[k].destroy(); } catch (_) { /* ignore */ }
+          live[k] = null;
+        }
+      }
       const targets = [live.sprite, live.tag].filter(Boolean);
       if (!targets.length) {
         this.livePeople.delete(userId);
@@ -2720,6 +2982,7 @@
       live.baseY = baseY;
       live.sprite.y = baseY;
       if (live.tag) live.tag.y = baseY - 40;
+      this.layoutSocialSprites(live);
       const dur = 700 + Math.random() * 400;
       this.tweens.add({
         targets: live.sprite,
@@ -2728,6 +2991,7 @@
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
+        onUpdate: () => this.layoutSocialSprites(live),
       });
       if (live.tag) {
         this.tweens.add({
@@ -2848,7 +3112,7 @@
         : this.npcSheetFor(String(person.userId));
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
-      const label = person.displayName;
+      const label = this.formatPersonLabel(person);
 
       const sprite = this.add.sprite(slot.x, slot.y, fallbackSheet, 0)
         .setScale(SCALE)
@@ -2857,18 +3121,32 @@
         .setAlpha(0);
       if (this.anims.exists(`${fallbackSheet}_idle`)) sprite.anims.play(`${fallbackSheet}_idle`);
 
+      // Nameplate: pixel panel when available, else flat color
+      const panelKey = person.live && this.textures.exists('uiPanelGreen')
+        ? 'uiPanelGreen'
+        : (person.soft && this.textures.exists('uiPanelGrey')
+          ? 'uiPanelGrey'
+          : (this.textures.exists('uiPanelBlue') ? 'uiPanelBlue' : null));
+      let tagBg = null;
+      if (panelKey) {
+        tagBg = this.add.image(slot.x, slot.y - 38, panelKey)
+          .setScale(SCALE * 0.35)
+          .setOrigin(0.5, 1)
+          .setDepth(depth + 1)
+          .setAlpha(0);
+      }
       const tag = this.add.text(slot.x, slot.y - 40, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
-        fontSize: '10px',
+        fontSize: '9px',
         fontStyle: 'bold',
         color: '#ffffff',
-        backgroundColor: person.soft ? '#334155' : '#5865f2',
-        padding: { x: 4, y: 2 },
-      }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(3).setAlpha(0);
+        backgroundColor: panelKey ? '#00000000' : this.personTagColor(person),
+        padding: { x: panelKey ? 2 : 4, y: 2 },
+      }).setOrigin(0.5, 1).setDepth(depth + 2).setResolution(3).setAlpha(0);
 
       this.tweens.add({
-        targets: [sprite, tag],
-        alpha: person.soft ? 0.72 : 1,
+        targets: [sprite, tag, tagBg].filter(Boolean),
+        alpha: person.soft ? 0.78 : 1,
         duration: 280,
         ease: 'Sine.easeOut',
       });
@@ -2876,15 +3154,23 @@
       const live = {
         sprite,
         tag,
+        tagBg,
         roomKey: person.roomKey,
         soft: person.soft,
         sheet: fallbackSheet,
         moving: false,
         baseY: slot.y,
         avatarRev: person.avatar?.rev ?? null,
+        statusIcon: null,
+        pointer: null,
+        boostIcon: null,
+        bubbleImg: null,
+        bubbleText: null,
+        _lastSnippet: null,
       };
       this.livePeople.set(person.userId, live);
       this.startLiveBob(live, slot.y);
+      this.updatePersonSocialFx(live, person);
 
       // Upgrade to custom baked sheet when available
       this.resolveSheetForUser(person.userId, person.avatar).then((sheet) => {
