@@ -210,7 +210,8 @@ async function bakeLayers(avatar) {
         if (tile) out.composite(tile, dx, dy);
       }
       stamp(hairSheet, hairIdx, avatar.tint?.hair);
-      stamp(hatSheet, hatIdx, null);
+      // Booster golden headsets use tint.hat (gold); other hats usually untinted
+      stamp(hatSheet, hatIdx, avatar.tint?.hat || null);
     }
   }
 

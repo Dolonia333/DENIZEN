@@ -19,34 +19,33 @@ const avatarApi = require(path.join(__dirname, '../../../../src/discord-avatar')
 
 const drafts = new Map(); // userId -> avatar draft
 
-function isMod(member) {
-  if (!member?.permissions) return false;
-  try {
-    return member.permissions.has('ManageGuild') || member.permissions.has('Administrator');
-  } catch (_) {
-    return false;
-  }
-}
-
 function unlocksFor(member) {
-  return avatarApi.resolveUnlocks({ isMod: isMod(member) });
+  return avatarApi.detectRoles(member).unlocks;
 }
 
+/**
+ * Load saved look and apply booster golden headset (if eligible).
+ */
 function getDraft(userId, member) {
   if (!drafts.has(userId)) {
     const store = avatarApi.getAvatarStore();
     const saved = store.get(userId);
-    drafts.set(userId, avatarApi.normalizeAvatar({
-      ...saved,
-      unlocks: unlocksFor(member),
-    }, userId));
+    const { avatar, summary } = avatarApi.applyRoleCosmetics(saved, member);
+    avatar._roleSummary = summary;
+    drafts.set(userId, avatar);
   }
   return drafts.get(userId);
 }
 
-function setDraft(userId, avatar) {
-  drafts.set(userId, avatarApi.normalizeAvatar(avatar, userId));
-  return drafts.get(userId);
+function setDraft(userId, avatar, member = null) {
+  let av = avatarApi.normalizeAvatar(avatar, userId);
+  if (member) {
+    const { avatar: next, summary } = avatarApi.applyRoleCosmetics(av, member);
+    av = next;
+    av._roleSummary = summary;
+  }
+  drafts.set(userId, av);
+  return av;
 }
 
 function summarize(av) {
@@ -59,9 +58,14 @@ function summarize(av) {
     `hair **${av.hair.set}#${av.hair.index}**`,
     `outfit **${av.outfit.set}#${av.outfit.index}**`,
   ];
-  if (av.hat?.set && av.hat.set !== 'none') bits.push(`hat **${av.hat.set}#${av.hat.index}**`);
+  if (av.hat?.set === 'headsets') {
+    bits.push('🎧 **golden headset** (Booster)');
+  } else if (av.hat?.set && av.hat.set !== 'none') {
+    bits.push(`hat **${av.hat.set}#${av.hat.index}**`);
+  }
   if (av.tint?.hair) bits.push(`hair tint ${av.tint.hair}`);
   if (av.tint?.clothes) bits.push(`clothes tint ${av.tint.clothes}`);
+  if (av.tint?.hat) bits.push(`hat tint ${av.tint.hat}`);
   return bits.join(' · ');
 }
 
@@ -152,23 +156,30 @@ function buttonRow(userId) {
 }
 
 async function closetPayload(userId, member, av) {
-  const unlocks = unlocksFor(member);
+  const roles = avatarApi.detectRoles(member);
+  const unlocks = roles.unlocks;
   const events = avatarApi.getActiveEvents();
   const eventLine = events.length
     ? `Events: ${events.map((e) => e.label).join(', ')}`
     : 'No seasonal events right now';
+  const roleLine = roles.isBooster
+    ? '✨ **Server booster** — golden headset equipped (or unlocked in closet).'
+    : 'Boost this server to unlock the **golden headset**.';
   const file = await buildPreviewAttachment(userId, av);
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
+    .setColor(roles.isBooster ? 0xf0c14a : 0x5865f2)
     .setTitle('Discord Spaces — Avatar closet')
     .setDescription([
       summarize(av),
       '',
+      roleLine,
       eventLine,
       '_Changes apply on the pixel map after you **Save** (next presence tick)._',
     ].join('\n'))
     .setImage(`attachment://avatar-${userId}.png`)
-    .setFooter({ text: `rev ${av.rev || 1} · unlocks ${unlocks.length}` });
+    .setFooter({
+      text: `rev ${av.rev || 1} · ${roles.labels.join('/') || 'member'} · unlocks ${unlocks.length}`,
+    });
 
   const components = [...selectMenus(userId, av, unlocks), buttonRow(userId)];
   return {
@@ -254,8 +265,8 @@ function createAvatarModule() {
         }
 
         if (sub === 'random') {
-          const av = avatarApi.randomAvatar(userId, unlocksFor(ctx.member));
-          setDraft(userId, av);
+          let av = avatarApi.randomAvatar(userId, unlocksFor(ctx.member));
+          av = setDraft(userId, av, ctx.member);
           const saved = await avatarApi.ensureBaked(store, userId, av);
           drafts.set(userId, saved);
           const payload = await closetPayload(userId, ctx.member, saved);
@@ -264,11 +275,12 @@ function createAvatarModule() {
         }
 
         if (sub === 'reset') {
-          const av = avatarApi.defaultAvatar(userId);
+          let av = avatarApi.defaultAvatar(userId);
+          av = setDraft(userId, av, ctx.member);
           const saved = await avatarApi.ensureBaked(store, userId, av);
           drafts.set(userId, saved);
           return ctx.reply({
-            content: `Reset to default **${saved.premade}**.`,
+            content: `Reset · ${summarize(saved)}`,
             ephemeral: true,
           });
         }
@@ -280,7 +292,8 @@ function createAvatarModule() {
           return ctx.reply({ content: `Saved · ${summarize(saved)}`, ephemeral: true });
         }
 
-        // edit (default)
+        // edit (default) — refresh role cosmetics each open
+        drafts.delete(userId);
         const draft = getDraft(userId, ctx.member);
         const payload = await closetPayload(userId, ctx.member, draft);
         return ctx.reply(payload);
@@ -383,7 +396,7 @@ function createAvatarModule() {
           draft.hair = { set, index: Number(idx) || 0 };
           draft.mode = 'layers';
         }
-        draft = setDraft(userId, draft);
+        draft = setDraft(userId, draft, interaction.member);
         // Live preview without save
         const payload = await closetPayload(userId, interaction.member, draft);
         await interaction.update(payload);
@@ -392,7 +405,11 @@ function createAvatarModule() {
 
       if (interaction.isButton()) {
         if (action === 'random') {
-          draft = setDraft(userId, avatarApi.randomAvatar(userId, unlocksFor(interaction.member)));
+          draft = setDraft(
+            userId,
+            avatarApi.randomAvatar(userId, unlocksFor(interaction.member)),
+            interaction.member,
+          );
           const payload = await closetPayload(userId, interaction.member, draft);
           payload.content = '🎲 Randomized (not saved yet — hit **Save**).';
           await interaction.update(payload);
@@ -422,13 +439,15 @@ function createAvatarModule() {
           return true;
         }
         if (action === 'reset') {
-          draft = setDraft(userId, avatarApi.defaultAvatar(userId));
+          draft = setDraft(userId, avatarApi.defaultAvatar(userId), interaction.member);
           const payload = await closetPayload(userId, interaction.member, draft);
           await interaction.update(payload);
           return true;
         }
         if (action === 'save') {
           await interaction.deferUpdate();
+          // Re-apply booster headset on save so it sticks on the map
+          draft = setDraft(userId, draft, interaction.member);
           const saved = await avatarApi.ensureBaked(store, userId, draft);
           drafts.set(userId, saved);
           const payload = await closetPayload(userId, interaction.member, saved);
