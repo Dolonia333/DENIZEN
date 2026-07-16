@@ -9,6 +9,7 @@ const {
 } = require('discord.js');
 const { canRunCommand } = require('../../core/permissions');
 const { renderTemplate, sendRendered } = require('../../core/embed-vars');
+const { rankCardEmbed, successEmbed, infoEmbed } = require('../../core/ui-kit');
 const fs = require('fs');
 const path = require('path');
 
@@ -372,18 +373,20 @@ function createCommunity(deps) {
           const lvl = levelFromXp(xp);
           const nextXp = Math.pow((lvl + 1) * 10, 2);
           const prevXp = Math.pow(lvl * 10, 2);
-          const progress = Math.min(1, (xp - prevXp) / Math.max(1, nextXp - prevXp));
-          const barLen = 12;
-          const filled = Math.round(progress * barLen);
-          const bar = '█'.repeat(filled) + '░'.repeat(barLen - filled);
           const data = loadXp(ctx.guild.id);
           const rank = Object.entries(data).sort((a, b) => b[1] - a[1]).findIndex(([id]) => id === target.id) + 1;
-          return ctx.reply([
-            `**Rank card · ${target.tag || target.username}**`,
-            `Level **${lvl}** · #${rank || '—'} · ${xp} XP`,
-            `\`${bar}\` ${Math.round(progress * 100)}% to ${lvl + 1}`,
-            `Next level at **${nextXp}** XP`,
-          ].join('\n'));
+          const avatarUrl = target.displayAvatarURL?.({ size: 256 }) || target.avatarURL?.({ size: 256 });
+          return ctx.reply({
+            embeds: [rankCardEmbed({
+              user: target,
+              xp,
+              level: lvl,
+              rank,
+              nextXp,
+              prevXp,
+              avatarUrl,
+            })],
+          });
         }
         if (action === 'ignorerole') {
           if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');

@@ -11,6 +11,7 @@ const {
   restoreRolePerms,
   isGuildOwner,
 } = require('../../core/permissions');
+const { securityDashboardEmbed, successEmbed, dangerEmbed, infoEmbed } = require('../../core/ui-kit');
 
 /**
  * Bleed-style fake permissions + security suite control.
@@ -188,16 +189,17 @@ function createFakePerms(deps) {
         }
         if (action === 'doctor') {
           const report = await runSecurityDoctor(ctx.guild, ctx.client);
-          if (report.ok) return ctx.reply(`✅ Security doctor OK (bot role: ${report.botRole}).`);
-          return ctx.reply(`⚠️ Issues:\n• ${report.issues.join('\n• ')}`);
+          if (report.ok) {
+            return ctx.reply({
+              embeds: [successEmbed('Security doctor', `OK · bot role **${report.botRole}**`)],
+            });
+          }
+          return ctx.reply({
+            embeds: [dangerEmbed('Security doctor', report.issues.map((i) => `• ${i}`).join('\n'))],
+          });
         }
         const s = config.get(ctx.guild.id).security;
-        return ctx.reply([
-          `security=${s.enabled}`,
-          `antinuke=${s.antinuke.enabled} antiraid=${s.antiraid.enabled} raidState=${s.antiraid.raidState}`,
-          `forceBotMod=${!!s.fakePermissions?.forceBotMod}`,
-          `fakeperm roles=${Object.keys(s.fakePermissions?.roles || {}).length}`,
-        ].join('\n'));
+        return ctx.reply({ embeds: [securityDashboardEmbed(s)] });
       },
     });
   }

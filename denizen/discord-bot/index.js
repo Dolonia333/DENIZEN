@@ -203,6 +203,7 @@ attachGateway(client, {
     });
   },
   async onInteraction(interaction) {
+    // Slash commands only here — buttons/modals/selects handled by module hooks in gateway
     if (interaction.isChatInputCommand()) {
       const cmd = registry.get(interaction.commandName);
       if (cmd) {

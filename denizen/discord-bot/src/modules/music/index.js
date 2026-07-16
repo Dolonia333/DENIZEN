@@ -12,6 +12,15 @@
 
 const { GatewayDispatchEvents } = require('discord.js');
 const { LavalinkClient, filterPreset } = require('../../music/lavalink-client');
+const {
+  musicNowPlayingEmbed,
+  musicControlRows,
+  successEmbed,
+  dangerEmbed,
+  infoEmbed,
+  baseEmbed,
+  BRAND,
+} = require('../../core/ui-kit');
 
 function createMusic(deps) {
   const { config, hub, client } = deps;
@@ -285,13 +294,52 @@ function createMusic(deps) {
     const voice = chId ? guild?.channels?.cache?.get(chId) : null;
     if (guild && voice) {
       await tryPlay(guild, voice, queue.playing);
-      if (queue.textChannelId) {
+      await refreshPanel(guild.id).catch(() => {});
+      if (queue.textChannelId && !queue.panelMessageId) {
         const text = await guild.channels.fetch(queue.textChannelId).catch(() => null);
         if (text?.isTextBased?.()) {
-          await text.send(`▶️ Now playing **${queue.playing.title}**`).catch(() => {});
+          await postOrUpdatePanel(text, guild.id).catch(() => {});
         }
       }
     }
+  }
+
+  function playerPayload(guildId, guildName) {
+    const queue = q(guildId);
+    return {
+      embeds: [musicNowPlayingEmbed({
+        track: queue.playing,
+        queue,
+        guildName,
+      })],
+      components: musicControlRows(!queue.playing && !queue.tracks.length),
+    };
+  }
+
+  async function postOrUpdatePanel(channel, guildId) {
+    const queue = q(guildId);
+    const payload = playerPayload(guildId, channel.guild?.name);
+    if (queue.panelMessageId) {
+      const msg = await channel.messages.fetch(queue.panelMessageId).catch(() => null);
+      if (msg) {
+        await msg.edit(payload).catch(() => {});
+        return msg;
+      }
+    }
+    const msg = await channel.send(payload);
+    queue.panelMessageId = msg.id;
+    queue.panelChannelId = channel.id;
+    return msg;
+  }
+
+  async function refreshPanel(guildId) {
+    const queue = q(guildId);
+    if (!queue.panelChannelId || !queue.panelMessageId || !client) return;
+    const ch = await client.channels.fetch(queue.panelChannelId).catch(() => null);
+    if (!ch?.isTextBased?.()) return;
+    const msg = await ch.messages.fetch(queue.panelMessageId).catch(() => null);
+    if (!msg) return;
+    await msg.edit(playerPayload(guildId, ch.guild?.name)).catch(() => {});
   }
 
   function register(registry) {
@@ -319,7 +367,6 @@ function createMusic(deps) {
 
         ensureLavalink();
         config.update(ctx.guild.id, (c) => { c.music.enabled = true; return c; });
-        await ctx.reply('🔎 Resolving…').catch(() => {});
 
         const track = await resolveTrack(query);
         const queue = q(ctx.guild.id);
@@ -328,27 +375,48 @@ function createMusic(deps) {
 
         if (queue.playing) {
           queue.tracks.push(track);
-          return ctx.reply(`➕ Queued **${track.title}** (#${queue.tracks.length})`);
+          await refreshPanel(ctx.guild.id).catch(() => {});
+          return ctx.reply({
+            embeds: [successEmbed('Queued', `**${track.title}** is #${queue.tracks.length} in line.`)],
+          });
         }
 
         queue.playing = track;
         const result = await tryPlay(ctx.guild, voice, track);
         if (!result.ok) {
           queue.playing = null;
-          return ctx.reply(
-            [
-              `Could not play **${track.title}**.`,
-              `\`${result.error || 'unknown'}\``,
-              '',
-              '**Lavalink setup** (recommended):',
-              '1. `cd discord-bot && docker compose -f docker-compose.lavalink.yml up -d`',
-              '2. Set `LAVALINK_HOST=127.0.0.1` `LAVALINK_PORT=2333` `LAVALINK_PASSWORD=youshallnotpass`',
-              '3. Restart the bot',
-              'Docs: https://github.com/lavalink-devs/Lavalink',
-            ].join('\n'),
-          );
+          return ctx.reply({
+            embeds: [dangerEmbed(
+              'Playback failed',
+              [
+                `**${track.title}**`,
+                `\`${result.error || 'unknown'}\``,
+                '',
+                'Start Lavalink: `docker compose -f docker-compose.lavalink.yml up -d`',
+                'Env: `LAVALINK_HOST` · `LAVALINK_PASSWORD`',
+                'https://github.com/lavalink-devs/Lavalink',
+              ].join('\n'),
+            )],
+          });
         }
-        return ctx.reply(`▶️ Playing **${track.title}** (${result.mode})`);
+        await postOrUpdatePanel(ctx.channel, ctx.guild.id);
+        return ctx.reply({
+          embeds: [successEmbed('Now playing', `**${track.title}** · \`${result.mode}\`\n_Player panel updated below / above._`)],
+        });
+      },
+    });
+
+    registry.register({
+      name: 'player',
+      description: 'Post the interactive music player panel',
+      aliases: ['panel', 'now'],
+      module: 'music',
+      async run(ctx) {
+        const msg = await postOrUpdatePanel(ctx.channel, ctx.guild.id);
+        return ctx.reply({
+          embeds: [infoEmbed('Player panel', `Live controls posted ${msg?.url ? `[here](${msg.url})` : 'in this channel'}.\nPin it in #music for a Bleed-beating UI.`)],
+          ephemeral: true,
+        }).catch(() => ctx.reply('Player panel posted.'));
       },
     });
 
@@ -359,13 +427,26 @@ function createMusic(deps) {
       module: 'music',
       async run(ctx) {
         const queue = q(ctx.guild.id);
-        if (!queue.playing && !queue.tracks.length) return ctx.reply('Queue empty.');
+        if (!queue.playing && !queue.tracks.length) {
+          return ctx.reply({ embeds: [infoEmbed('Queue empty', 'Use `/play` or `,play <song>`.')] });
+        }
         const lines = [];
         if (queue.playing) lines.push(`**Now:** ${queue.playing.title}`);
-        queue.tracks.slice(0, 15).forEach((t, i) => lines.push(`${i + 1}. ${t.title}`));
-        if (queue.tracks.length > 15) lines.push(`…+${queue.tracks.length - 15} more`);
-        lines.push(`_loop=${queue.loop} filter=${queue.filter} vol=${queue.volume}_`);
-        return ctx.reply(lines.join('\n'));
+        queue.tracks.slice(0, 15).forEach((t, i) => lines.push(`\`${i + 1}.\` ${t.title}`));
+        if (queue.tracks.length > 15) lines.push(`_…+${queue.tracks.length - 15} more_`);
+        return ctx.reply({
+          embeds: [baseEmbed({
+            color: BRAND.primary,
+            title: 'Queue',
+            description: lines.join('\n'),
+            fields: [
+              { name: 'Loop', value: `\`${queue.loop}\``, inline: true },
+              { name: 'Filter', value: `\`${queue.filter}\``, inline: true },
+              { name: 'Volume', value: `\`${queue.volume}%\``, inline: true },
+            ],
+          })],
+          components: musicControlRows(false),
+        });
       },
     });
 
@@ -386,9 +467,13 @@ function createMusic(deps) {
           const next = queue.tracks.shift();
           queue.playing = next;
           await tryPlay(ctx.guild, voice, next);
-          return ctx.reply(`Skipped **${skipped.title}** → **${next.title}**`);
+          await refreshPanel(ctx.guild.id).catch(() => {});
+          return ctx.reply({
+            embeds: [successEmbed('Skipped', `**${skipped.title}** → **${next.title}**`)],
+          });
         }
-        return ctx.reply(`Skipped **${skipped.title}**. Queue empty.`);
+        await refreshPanel(ctx.guild.id).catch(() => {});
+        return ctx.reply({ embeds: [infoEmbed('Skipped', `**${skipped.title}** · queue empty`)] });
       },
     });
 
@@ -556,7 +641,118 @@ function createMusic(deps) {
     });
   }
 
-  return { register, queues, ensureLavalink };
+  async function onInteraction(interaction) {
+    if (!interaction.guild) return false;
+    const id = interaction.customId || '';
+    if (!id.startsWith('denizen_music_')) return false;
+
+    const queue = q(interaction.guild.id);
+    const member = interaction.member;
+    const voice = member?.voice?.channel;
+    const botCh = queue.voiceChannelId;
+
+    // Anyone in the same VC (or staff) can control
+    const allowed = !botCh
+      || voice?.id === botCh
+      || member?.permissions?.has?.('ManageGuild');
+    if (!allowed) {
+      await interaction.reply({
+        embeds: [dangerEmbed('Denied', 'Join the listening voice channel to use the player.')],
+        ephemeral: true,
+      }).catch(() => {});
+      return true;
+    }
+
+    try {
+      if (id === 'denizen_music_refresh') {
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        return true;
+      }
+
+      if (id === 'denizen_music_pause') {
+        queue.paused = !queue.paused;
+        try { await lavalink?.pause(interaction.guild.id, queue.paused); } catch (_) {}
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        return true;
+      }
+
+      if (id === 'denizen_music_skip') {
+        const skipped = queue.playing;
+        try { await lavalink?.stop(interaction.guild.id); } catch (_) {}
+        queue.playing = null;
+        if (queue.tracks.length && voice) {
+          queue.playing = queue.tracks.shift();
+          await tryPlay(interaction.guild, voice, queue.playing);
+        }
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        if (skipped) {
+          await interaction.followUp({
+            embeds: [infoEmbed('Skipped', skipped.title)],
+            ephemeral: true,
+          }).catch(() => {});
+        }
+        return true;
+      }
+
+      if (id === 'denizen_music_stop') {
+        queue.tracks = [];
+        queue.playing = null;
+        try { await lavalink?.stop(interaction.guild.id); } catch (_) {}
+        try { await lavalink?.destroy(interaction.guild.id); } catch (_) {}
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        return true;
+      }
+
+      if (id === 'denizen_music_shuffle') {
+        for (let i = queue.tracks.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [queue.tracks[i], queue.tracks[j]] = [queue.tracks[j], queue.tracks[i]];
+        }
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        return true;
+      }
+
+      if (id === 'denizen_music_vol_up' || id === 'denizen_music_vol_down') {
+        const delta = id.endsWith('up') ? 10 : -10;
+        queue.volume = Math.max(1, Math.min(100, (queue.volume || 80) + delta));
+        try { await lavalink?.setVolume(interaction.guild.id, queue.volume); } catch (_) {}
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        return true;
+      }
+
+      if (id === 'denizen_music_loop') {
+        const order = ['off', 'track', 'queue'];
+        const i = order.indexOf(queue.loop || 'off');
+        queue.loop = order[(i + 1) % order.length];
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        return true;
+      }
+
+      if (interaction.isStringSelectMenu() && id === 'denizen_music_filter') {
+        const name = interaction.values[0];
+        queue.filter = name;
+        try { await lavalink?.setFilters(interaction.guild.id, filterPreset(name)); } catch (_) {}
+        await interaction.update(playerPayload(interaction.guild.id, interaction.guild.name));
+        return true;
+      }
+    } catch (err) {
+      await interaction.reply({
+        embeds: [dangerEmbed('Player error', err.message)],
+        ephemeral: true,
+      }).catch(() => {});
+    }
+    return true;
+  }
+
+  return {
+    register,
+    queues,
+    ensureLavalink,
+    onInteraction,
+    postOrUpdatePanel,
+    refreshPanel,
+  };
 }
 
 module.exports = { createMusic };
+

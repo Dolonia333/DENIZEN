@@ -9,9 +9,21 @@ const {
   StringSelectMenuBuilder,
   EmbedBuilder,
   Colors,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
 } = require('discord.js');
 const { canRunCommand } = require('../../core/permissions');
 const { renderTemplate, renderScript } = require('../../core/embed-vars');
+const {
+  ticketPanelEmbed,
+  ticketOpenRows,
+  successEmbed,
+  infoEmbed,
+  dangerEmbed,
+  baseEmbed,
+  BRAND,
+} = require('../../core/ui-kit');
 
 /**
  * Tickets product: panels, forms, claim, notes, reopen, SLA warning, transcripts.
@@ -275,35 +287,30 @@ function createTickets(deps) {
         }
 
         if (action === 'panel') {
-          if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
-          const title = ctx.args?.slice(1).join(' ') || 'Support Tickets';
-          const options = ticketCfg(ctx.guild.id).forms || [];
-          let msg;
-          if (options.length) {
-            const menu = new StringSelectMenuBuilder()
-              .setCustomId('denizen_ticket_select')
-              .setPlaceholder('Select ticket type…')
-              .addOptions(options.slice(0, 25).map((o, i) => ({
-                label: o.label.slice(0, 100),
-                description: (o.description || '').slice(0, 100) || undefined,
-                value: String(i),
-              })));
-            msg = await ctx.channel.send({
-              content: `**${title}**\nChoose a category to open a private ticket.`,
-              components: [new ActionRowBuilder().addComponents(menu)],
-            });
-          } else {
-            const row = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setCustomId('denizen_ticket_open')
-                .setLabel('Open Ticket')
-                .setStyle(ButtonStyle.Primary),
-            );
-            msg = await ctx.channel.send({
-              content: `**${title}**\nClick to open a private ticket.`,
-              components: [row],
-            });
+          if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) {
+            return ctx.reply({ embeds: [dangerEmbed('Denied', 'Need Manage Guild.')] });
           }
+          const title = ctx.args?.slice(1).join(' ') || 'Support desk';
+          const options = ticketCfg(ctx.guild.id).forms || [];
+          const components = [];
+          if (options.length) {
+            components.push(new ActionRowBuilder().addComponents(
+              new StringSelectMenuBuilder()
+                .setCustomId('denizen_ticket_select')
+                .setPlaceholder('Choose a ticket category…')
+                .addOptions(options.slice(0, 25).map((o, i) => ({
+                  label: o.label.slice(0, 100),
+                  description: (o.description || 'Open a private ticket').slice(0, 100),
+                  value: String(i),
+                  emoji: '🎫',
+                }))),
+            ));
+          }
+          components.push(...ticketOpenRows(false));
+          const msg = await ctx.channel.send({
+            embeds: [ticketPanelEmbed(title)],
+            components,
+          });
           config.update(ctx.guild.id, (c) => {
             c.tickets.panels = c.tickets.panels || [];
             c.tickets.panels.push({
@@ -314,7 +321,10 @@ function createTickets(deps) {
             });
             return c;
           });
-          return ctx.reply({ content: `Panel posted.`, ephemeral: true }).catch(() => ctx.reply('Panel posted.'));
+          return ctx.reply({
+            embeds: [successEmbed('Panel live', 'Pin this in #support — structured desk UI, not a command dump.')],
+            ephemeral: true,
+          }).catch(() => ctx.reply('Panel posted.'));
         }
 
         if (action === 'form' || action === 'option') {
@@ -502,23 +512,63 @@ function createTickets(deps) {
 
   async function onInteraction(interaction) {
     if (interaction.isButton()) {
+      if (interaction.customId === 'denizen_ticket_guide') {
+        await interaction.reply({
+          embeds: [infoEmbed(
+            'How tickets work',
+            [
+              '1. Open a ticket from the panel',
+              '2. Fill the form (modal) if your category needs it',
+              '3. Staff **Claim** then resolve in your private channel',
+              '4. Close → transcript lands in staff logs',
+              '',
+              '_Denizen Spaces support desk — structured, not a bare channel factory._',
+            ].join('\n'),
+          )],
+          ephemeral: true,
+        });
+        return true;
+      }
       if (interaction.customId === 'denizen_ticket_open') {
-        try {
-          await interaction.deferReply({ ephemeral: true });
-          const ch = await openTicket(interaction.guild, interaction.user, 'Panel');
-          await interaction.editReply(`Opened ${ch}`);
-        } catch (err) {
-          if (interaction.deferred) await interaction.editReply(err.message).catch(() => {});
-          else await interaction.reply({ content: err.message, ephemeral: true }).catch(() => {});
-        }
+        // Modal first for a polished intake
+        const modal = new ModalBuilder()
+          .setCustomId('denizen_ticket_modal_open')
+          .setTitle('Open a ticket');
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('subject')
+              .setLabel('Subject')
+              .setStyle(TextInputStyle.Short)
+              .setPlaceholder('Short summary')
+              .setRequired(true)
+              .setMaxLength(80),
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('details')
+              .setLabel('Details')
+              .setStyle(TextInputStyle.Paragraph)
+              .setPlaceholder('What do you need help with?')
+              .setRequired(true)
+              .setMaxLength(800),
+          ),
+        );
+        await interaction.showModal(modal);
         return true;
       }
       if (interaction.customId === 'denizen_ticket_close') {
         try {
-          await interaction.reply({ content: 'Closing…', ephemeral: true });
+          await interaction.reply({
+            embeds: [infoEmbed('Closing', 'Saving transcript…')],
+            ephemeral: true,
+          });
           await closeTicket(interaction.guild, interaction.channel, interaction.user);
         } catch (err) {
-          await interaction.reply({ content: err.message, ephemeral: true }).catch(() => {});
+          await interaction.reply({
+            embeds: [dangerEmbed('Close failed', err.message)],
+            ephemeral: true,
+          }).catch(() => {});
         }
         return true;
       }
@@ -530,27 +580,158 @@ function createTickets(deps) {
           }
           return c;
         });
-        await interaction.reply(`Claimed by <@${interaction.user.id}>.`);
+        await interaction.reply({
+          embeds: [successEmbed('Claimed', `<@${interaction.user.id}> is on this ticket.`)],
+        });
         return true;
       }
       if (interaction.customId === 'denizen_ticket_note') {
+        const modal = new ModalBuilder()
+          .setCustomId('denizen_ticket_modal_note')
+          .setTitle('Staff note');
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('note')
+              .setLabel('Internal note')
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(true)
+              .setMaxLength(500),
+          ),
+        );
+        await interaction.showModal(modal);
+        return true;
+      }
+    }
+
+    if (interaction.isModalSubmit()) {
+      if (interaction.customId === 'denizen_ticket_modal_open') {
+        try {
+          await interaction.deferReply({ ephemeral: true });
+          const subject = interaction.fields.getTextInputValue('subject');
+          const details = interaction.fields.getTextInputValue('details');
+          const reason = subject;
+          const ch = await openTicket(interaction.guild, interaction.user, reason, {
+            label: subject,
+            fields: ['Details'],
+          });
+          await ch.send({
+            embeds: [baseEmbed({
+              color: BRAND.info,
+              title: 'Intake',
+              fields: [
+                { name: 'Subject', value: subject.slice(0, 256) },
+                { name: 'Details', value: details.slice(0, 1024) },
+              ],
+            })],
+          }).catch(() => {});
+          await interaction.editReply({
+            embeds: [successEmbed('Ticket opened', `${ch} — staff will claim shortly.`)],
+          });
+        } catch (err) {
+          if (interaction.deferred) {
+            await interaction.editReply({ embeds: [dangerEmbed('Failed', err.message)] }).catch(() => {});
+          }
+        }
+        return true;
+      }
+      if (interaction.customId === 'denizen_ticket_modal_note') {
+        const open = ticketCfg(interaction.guild.id).open[interaction.channel.id];
+        if (!open) {
+          await interaction.reply({ embeds: [dangerEmbed('Not a ticket', '')], ephemeral: true });
+          return true;
+        }
+        const text = interaction.fields.getTextInputValue('note');
+        config.update(interaction.guild.id, (c) => {
+          const t = c.tickets.open[interaction.channel.id];
+          t.notes = t.notes || [];
+          t.notes.push({
+            text,
+            modId: interaction.user.id,
+            modTag: interaction.user.tag,
+            ts: Date.now(),
+          });
+          return c;
+        });
         await interaction.reply({
-          content: 'Add a staff note with `,tickets note your text here`',
+          embeds: [successEmbed('Note saved', text.slice(0, 200))],
           ephemeral: true,
         });
         return true;
       }
+      // Category form modal: denizen_ticket_modal_form_<idx>
+      if (interaction.customId.startsWith('denizen_ticket_modal_form_')) {
+        try {
+          await interaction.deferReply({ ephemeral: true });
+          const idx = Number(interaction.customId.replace('denizen_ticket_modal_form_', ''));
+          const form = ticketCfg(interaction.guild.id).forms?.[idx];
+          const reason = form?.label || 'Support';
+          const answers = [];
+          for (let i = 0; i < 5; i += 1) {
+            try {
+              const v = interaction.fields.getTextInputValue(`f${i}`);
+              if (v) answers.push({ q: form?.fields?.[i] || `Field ${i + 1}`, a: v });
+            } catch (_) { /* field not present */ }
+          }
+          const ch = await openTicket(interaction.guild, interaction.user, reason, form);
+          if (answers.length) {
+            await ch.send({
+              embeds: [baseEmbed({
+                color: BRAND.info,
+                title: 'Form answers',
+                fields: answers.map((x) => ({
+                  name: x.q.slice(0, 256),
+                  value: x.a.slice(0, 1024),
+                })),
+              })],
+            }).catch(() => {});
+          }
+          await interaction.editReply({
+            embeds: [successEmbed('Ticket opened', `${ch} · **${reason}**`)],
+          });
+        } catch (err) {
+          if (interaction.deferred) {
+            await interaction.editReply({ embeds: [dangerEmbed('Failed', err.message)] }).catch(() => {});
+          }
+        }
+        return true;
+      }
     }
+
     if (interaction.isStringSelectMenu() && interaction.customId === 'denizen_ticket_select') {
+      const idx = Number(interaction.values[0]);
+      const form = ticketCfg(interaction.guild.id).forms?.[idx];
+      const fields = (form?.fields || []).slice(0, 5);
+      if (fields.length) {
+        const modal = new ModalBuilder()
+          .setCustomId(`denizen_ticket_modal_form_${idx}`)
+          .setTitle(String(form.label || 'Ticket').slice(0, 45));
+        for (let i = 0; i < fields.length; i += 1) {
+          modal.addComponents(
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId(`f${i}`)
+                .setLabel(String(fields[i]).slice(0, 45))
+                .setStyle(i === 0 ? TextInputStyle.Paragraph : TextInputStyle.Short)
+                .setRequired(true)
+                .setMaxLength(i === 0 ? 800 : 200),
+            ),
+          );
+        }
+        await interaction.showModal(modal);
+        return true;
+      }
       try {
         await interaction.deferReply({ ephemeral: true });
-        const idx = Number(interaction.values[0]);
-        const form = ticketCfg(interaction.guild.id).forms?.[idx];
         const reason = form?.label || 'Support';
         const ch = await openTicket(interaction.guild, interaction.user, reason, form);
-        await interaction.editReply(`Opened ${ch} (${reason})`);
+        await interaction.editReply({
+          embeds: [successEmbed('Ticket opened', `${ch} · **${reason}**`)],
+        });
       } catch (err) {
-        if (interaction.deferred) await interaction.editReply(err.message).catch(() => {});
+        if (interaction.deferred) {
+          await interaction.editReply({ embeds: [dangerEmbed('Failed', err.message)] }).catch(() => {});
+        }
       }
       return true;
     }
