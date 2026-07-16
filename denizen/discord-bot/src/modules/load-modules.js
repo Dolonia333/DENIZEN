@@ -17,6 +17,8 @@ const { createIntegrations } = require('./integrations');
 const { createMisc } = require('./misc');
 const { createCanvasBridge } = require('./canvas');
 const { createDenizenAccount } = require('./denizen');
+const { createAvatarModule } = require('./avatar');
+const { createHangoutModule } = require('./hangout');
 
 function loadModules(deps) {
   const hooks = {
@@ -82,31 +84,115 @@ function loadModules(deps) {
   const denizenAccount = createDenizenAccount(deps);
   denizenAccount.register(deps.registry);
 
-  // Core help / ping
+  const avatar = createAvatarModule(deps);
+  avatar.register(deps.registry);
+  hooks.onInteraction.push(avatar.onInteraction);
+
+  const hangout = createHangoutModule(deps);
+  hangout.register(deps.registry);
+
+  const helpCopy = require('../help-copy');
+  const prefix = deps.registry.prefix || ',';
+
+  // Core help / ping — Spaces-first (avatar, map, hangout)
   deps.registry.register({
     name: 'ping',
-    description: 'Latency check',
+    description: 'Check bot latency',
     module: 'core',
     async run(ctx) {
       const t = Date.now();
-      await ctx.reply(`Pong — ${Date.now() - t}ms (ws ${Math.round(ctx.client.ws.ping)}ms)`);
+      await ctx.reply(
+        `Pong — ${Date.now() - t}ms (ws ${Math.round(ctx.client.ws.ping)}ms)\n`
+        + `_Try \`${prefix}help\` for the map, avatar, and hangout commands._`,
+      );
     },
   });
 
   deps.registry.register({
     name: 'help',
-    description: 'List commands by module',
+    description: 'How to use Denizen Spaces + full command list',
     module: 'core',
+    options: [
+      {
+        type: 3,
+        name: 'topic',
+        description: 'spaces | avatar | hangout | mods | all',
+        required: false,
+        choices: [
+          { name: 'Spaces map (start here)', value: 'spaces' },
+          { name: 'Avatar closet', value: 'avatar' },
+          { name: 'Weekly hangout', value: 'hangout' },
+          { name: 'Staff / moderation', value: 'mods' },
+          { name: 'All modules', value: 'all' },
+        ],
+      },
+    ],
     async run(ctx) {
+      const topic = (ctx.getString?.('topic') || ctx.args?.[0] || 'spaces').toLowerCase();
+      const guildId = ctx.guild?.id;
       const by = new Map();
       for (const cmd of deps.registry.list()) {
         if (!by.has(cmd.module)) by.set(cmd.module, []);
         by.get(cmd.module).push(cmd.name);
       }
-      const lines = [...by.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([mod, names]) => `**${mod}**: ${names.join(', ')}`);
-      await ctx.reply(`Denizen commands (prefix \`,\` or slash)\n${lines.join('\n')}`.slice(0, 1900));
+
+      if (topic === 'avatar') {
+        await ctx.reply([
+          '**Avatar closet**',
+          `• \`${prefix}avatar\` / \`/avatar edit\` — open closet (preview + Save)`,
+          `• \`/avatar random\` · \`reset\` · \`show @user\``,
+          `• \`${prefix}skin dark\` · \`${prefix}hair short 3\` · \`${prefix}clothes 7\``,
+          '• **Server boost** → golden headset on the pixel map',
+          '',
+          helpCopy.mapFooter(guildId),
+        ].join('\n'));
+        return;
+      }
+
+      if (topic === 'hangout') {
+        await ctx.reply([
+          '**Weekly hangout recap** (voice minutes)',
+          `• \`/hangout setup #channel\` — where to post`,
+          `• \`/hangout report\` — post this week's top hangers now`,
+          `• \`/hangout enable\` · \`disable\` · \`status\``,
+          'Default schedule: Monday 17:00 UTC (configurable).',
+          '',
+          helpCopy.mapFooter(guildId),
+        ].join('\n'));
+        return;
+      }
+
+      if (topic === 'mods') {
+        await ctx.reply([
+          '**Staff tools**',
+          `• \`${prefix}setup\` — jail role + mod log`,
+          '• ban · softban · kick · timeout · warn · jail · mute',
+          `• \`${prefix}automod\` · \`${prefix}antinuke\` · \`${prefix}antiraid\``,
+          `• \`${prefix}welcome\` · \`${prefix}tickets\` · \`${prefix}voicemaster\``,
+          '',
+          '_Spaces map still works for everyone — staff tools are optional._',
+        ].join('\n'));
+        return;
+      }
+
+      await ctx.reply(helpCopy.fullHelp({
+        prefix,
+        guildId,
+        modules: topic === 'all' ? by : null,
+      }));
+    },
+  });
+
+  deps.registry.register({
+    name: 'start',
+    description: 'Get started with the Discord Spaces map',
+    module: 'core',
+    aliases: ['maphelp', 'spaces'],
+    async run(ctx) {
+      await ctx.reply(helpCopy.spacesIntro({
+        prefix,
+        guildId: ctx.guild?.id,
+      }));
     },
   });
 

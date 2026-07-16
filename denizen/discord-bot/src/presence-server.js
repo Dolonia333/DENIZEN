@@ -4,11 +4,52 @@
  * Tiny presence HTTP API for the Discord pixel map.
  * GET /presence — tracker snapshot (cors open for local canvas)
  * GET /health
+ * GET /avatar/:userId[.png] — custom look for map sprites
+ * GET /avatar/catalog — closet options
  */
 
 const http = require('http');
+const path = require('path');
+const fs = require('fs');
 
-function createPresenceServer({ tracker, guildId = '', port = 5180, applicationId = '' }) {
+function createPresenceServer({
+  tracker,
+  guildId = '',
+  port = 5180,
+  applicationId = '',
+  config = null,
+} = {}) {
+  let avatarApi = null;
+  try {
+    avatarApi = require(path.join(__dirname, '../../src/discord-avatar'));
+  } catch (err) {
+    console.warn('[presence] avatar module unavailable:', err.message || err);
+  }
+
+  function spacesBranding(forGuildId) {
+    const envPlan = String(process.env.DENIZEN_SPACES_PLAN || 'free').toLowerCase();
+    const envRemove = /^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_SPACES_REMOVE_BRANDING || ''));
+    let plan = envPlan;
+    let removeBranding = envRemove;
+    if (config && forGuildId) {
+      try {
+        const sp = config.get(forGuildId)?.spaces || {};
+        if (sp.plan) plan = String(sp.plan).toLowerCase();
+        if (sp.removeBranding != null) removeBranding = !!sp.removeBranding;
+      } catch (_) { /* ignore */ }
+    }
+    if (plan === 'community' || plan === 'pro' || plan === 'paid') removeBranding = true;
+    return {
+      plan: plan || 'free',
+      removeBranding: !!removeBranding,
+      watermark: !removeBranding,
+      productName: 'Denizen Spaces',
+      upgradeHint: removeBranding
+        ? null
+        : 'Community plan removes branding — set DENIZEN_SPACES_REMOVE_BRANDING=1 or guild spaces.plan',
+    };
+  }
+
   const invitePermissions = 68608; // View Channels + Send Messages + Read Message History
   const server = http.createServer((req, res) => {
     const url = new URL(req.url || '/', `http://${req.headers.host || '127.0.0.1'}`);
@@ -19,6 +60,15 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
     if (req.method === 'OPTIONS') {
       res.writeHead(204);
       res.end();
+      return;
+    }
+
+    // Avatar PNG / JSON
+    if (avatarApi && url.pathname.startsWith('/avatar')) {
+      handleAvatar(req, res, url, avatarApi).catch((err) => {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err.message || String(err) }));
+      });
       return;
     }
 
@@ -110,30 +160,72 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
       }));
 
       const memberById = new Map((snap?.members || []).map((m) => [m.userId, m]));
+      const store = avatarApi ? avatarApi.getAvatarStore() : null;
       const people = [];
       for (const room of rooms) {
         for (const userId of room.occupants || []) {
           const m = memberById.get(userId);
+          let avatar = null;
+          if (store) {
+            try {
+              const av = store.get(userId);
+              avatar = avatarApi.clientAvatar(av, userId);
+              // Prefer local presence URL for baked PNG when custom file exists
+              // Relative URL so browser hits Denizen (or local presence) same-origin
+              avatar.sheetUrl = `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${av.rev || 1}`;
+              avatar.rev = av.rev || 1;
+            } catch (_) { /* ignore */ }
+          }
+          const soft = room.type === 'text' || room.type === 'forum';
+          const muted = !!(m?.muted);
+          const deafened = !!(m?.deafened);
+          const live = !soft && !muted && !deafened && !m?.suppressed;
           people.push({
             userId,
             displayName: m?.displayName || userId.slice(0, 8),
             channelId: room.id,
             channelName: room.name,
             channelType: room.type,
-            soft: room.type === 'text' || room.type === 'forum',
+            soft,
+            // Map social indicators
+            muted,
+            deafened,
+            streaming: !!(m?.streaming),
+            video: !!(m?.video),
+            suppressed: !!(m?.suppressed),
+            live: soft ? false : live,
+            // Soft social: recent text
+            textSnippet: soft ? (m?.textSnippet || null) : null,
+            lastTextAt: m?.lastTextAt || null,
+            avatar,
           });
         }
       }
 
+      const gid = snap?.guildId || qGuild || null;
+      const brand = spacesBranding(gid);
+      const publicBase = String(
+        process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '',
+      ).replace(/\/$/, '');
+      const sharePath = gid
+        ? `/discord-map/?guildId=${encodeURIComponent(gid)}&view=public`
+        : '/discord-map/?view=public';
       const body = {
         ok: true,
         ts: Date.now(),
-        guildId: snap?.guildId || qGuild || null,
+        guildId: gid,
         guildName: snap?.name || null,
         categories: snap?.categories || [],
         rooms,
         people,
         members: snap?.members || [],
+        events: avatarApi ? avatarApi.getActiveEvents() : [],
+        branding: brand,
+        share: {
+          path: sharePath,
+          url: publicBase ? `${publicBase}${sharePath}` : sharePath,
+          readOnly: true,
+        },
       };
 
       res.writeHead(200, {
@@ -148,80 +240,14 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
     res.end(JSON.stringify({ error: 'not found' }));
   });
 
-  function freePortIfBusy(p) {
-    // Best-effort: on Windows a previous crashed sidecar can leave :5180
-    // LISTENING under a dead-ish node. Kill only LISTENING holders of this port.
-    try {
-      const { execSync } = require('child_process');
-      if (process.platform === 'win32') {
-        const out = execSync(`netstat -ano | findstr :${p}`, { encoding: 'utf8', timeout: 3000 });
-        const pids = new Set();
-        for (const line of out.split(/\r?\n/)) {
-          if (!/LISTENING/i.test(line)) continue;
-          const parts = line.trim().split(/\s+/);
-          const pid = parts[parts.length - 1];
-          if (/^\d+$/.test(pid) && pid !== '0' && Number(pid) !== process.pid) pids.add(pid);
-        }
-        for (const pid of pids) {
-          try {
-            execSync(`taskkill /PID ${pid} /F`, { stdio: 'ignore', timeout: 3000 });
-            console.warn(`[discord-bot] freed presence port ${p} (killed PID ${pid})`);
-          } catch (_) { /* ignore */ }
-        }
-      } else {
-        try {
-          const out = execSync(`lsof -ti tcp:${p} -sTCP:LISTEN`, { encoding: 'utf8', timeout: 3000 });
-          for (const pid of out.split(/\s+/).filter(Boolean)) {
-            if (Number(pid) === process.pid) continue;
-            try {
-              process.kill(Number(pid), 'SIGTERM');
-              console.warn(`[discord-bot] freed presence port ${p} (killed PID ${pid})`);
-            } catch (_) { /* ignore */ }
-          }
-        } catch (_) { /* no listeners */ }
-      }
-    } catch (_) { /* ignore */ }
-  }
-
   return {
-    /**
-     * Bind the presence HTTP server. Retries on EADDRINUSE (common after a
-     * crashed previous bot left the port held). Without this, the Discord
-     * map shows "Bot offline — Failed to fetch" forever even though the
-     * bot itself is online in guilds.
-     */
-    listen({ retries = 5, retryMs = 700 } = {}) {
-      let attempt = 0;
+    listen() {
       return new Promise((resolve, reject) => {
-        const tryListen = () => {
-          attempt += 1;
-          const onError = (err) => {
-            server.removeListener('listening', onListening);
-            const code = err?.code || '';
-            if ((code === 'EADDRINUSE' || code === 'EACCES') && attempt <= retries) {
-              console.warn(
-                `[discord-bot] presence port ${port} busy (${code}) — retry ${attempt}/${retries}…`,
-              );
-              if (code === 'EADDRINUSE') freePortIfBusy(port);
-              setTimeout(tryListen, retryMs * attempt);
-              return;
-            }
-            reject(err);
-          };
-          const onListening = () => {
-            server.removeListener('error', onError);
-            console.log(`[discord-bot] presence API http://127.0.0.1:${port}/presence`);
-            resolve(server);
-          };
-          server.once('error', onError);
-          server.once('listening', onListening);
-          try {
-            server.listen(port, '127.0.0.1');
-          } catch (err) {
-            onError(err);
-          }
-        };
-        tryListen();
+        server.once('error', reject);
+        server.listen(port, '127.0.0.1', () => {
+          console.log(`[discord-bot] presence API http://127.0.0.1:${port}/presence`);
+          resolve(server);
+        });
       });
     },
     close() {
@@ -229,6 +255,78 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
     },
     server,
   };
+}
+
+async function handleAvatar(req, res, url, avatarApi) {
+  const store = avatarApi.getAvatarStore();
+  const parts = url.pathname.split('/').filter(Boolean); // avatar | catalog | :id
+
+  if (parts[0] === 'avatar' && parts[1] === 'catalog' && req.method === 'GET') {
+    const plan = avatarApi.resolvePlan(url.searchParams.get('plan') || process.env.DENIZEN_SPACES_PLAN);
+    const unlocks = avatarApi.resolveUnlocks({});
+    const cat = avatarApi.publicCatalogForPlan(plan, unlocks, {});
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ ok: true, plan, ...cat }));
+    return;
+  }
+
+  if (parts[0] === 'avatar' && parts[1] === 'events' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ ok: true, events: avatarApi.getActiveEvents() }));
+    return;
+  }
+
+  // /avatar/:userId.json or /avatar/:userId or /avatar/:userId.png
+  let userId = parts[1] || '';
+  let asPng = false;
+  if (userId.endsWith('.png')) {
+    asPng = true;
+    userId = userId.slice(0, -4);
+  } else if (userId.endsWith('.json')) {
+    userId = userId.slice(0, -5);
+  }
+  userId = userId.replace(/[^0-9]/g, '');
+  if (!userId) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: false, error: 'userId required' }));
+    return;
+  }
+
+  if (req.method === 'GET' && asPng) {
+    let buf = store.readPng(userId);
+    if (!buf) {
+      if (!store.hasCustom(userId)) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'custom avatar not found' }));
+        return;
+      }
+      // Bake on demand from a stored custom config.
+      const av = store.get(userId);
+      buf = await avatarApi.bakeSheet(av);
+      try { store.writePng(userId, buf); } catch (_) { /* ignore */ }
+    }
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=60',
+    });
+    res.end(buf);
+    return;
+  }
+
+  if (req.method === 'GET') {
+    const av = store.get(userId);
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({
+      ok: true,
+      userId,
+      avatar: avatarApi.clientAvatar(av, userId),
+      raw: av,
+    }));
+    return;
+  }
+
+  res.writeHead(405, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'method not allowed' }));
 }
 
 module.exports = { createPresenceServer };

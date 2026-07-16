@@ -98,17 +98,37 @@ function attachGateway(client, handlers = {}) {
 
       const fromChannelId = oldState.channelId || null;
       const toChannelId = newState.channelId || null;
-      if (fromChannelId === toChannelId) return;
+      const member = newState.member || oldState.member;
+      const userId = newState.id || oldState.id;
+      const displayName = displayNameFrom(member, member?.user, userId);
+
+      const voiceFlags = {
+        muted: !!(newState.selfMute || newState.serverMute),
+        deafened: !!(newState.selfDeaf || newState.serverDeaf),
+        streaming: !!newState.streaming,
+        video: !!newState.selfVideo,
+        suppressed: !!newState.suppress,
+      };
+
+      // Same channel: still update mute/deaf/stream/camera for map "live" indicators
+      if (fromChannelId === toChannelId) {
+        if (toChannelId && typeof handlers.onVoiceFlags === 'function') {
+          handlers.onVoiceFlags({
+            guildId,
+            userId,
+            displayName,
+            channelId: toChannelId,
+            ...voiceFlags,
+          });
+        }
+        return;
+      }
 
       const joined = !fromChannelId && !!toChannelId;
       const left = !!fromChannelId && !toChannelId;
       const moved = !!fromChannelId && !!toChannelId;
       const kind = joined ? 'join' : left ? 'leave' : moved ? 'move' : null;
       if (!kind) return;
-
-      const member = newState.member || oldState.member;
-      const userId = newState.id || oldState.id;
-      const displayName = displayNameFrom(member, member?.user, userId);
 
       const toCh = newState.channel;
       const fromCh = oldState.channel;
@@ -131,6 +151,7 @@ function attachGateway(client, handlers = {}) {
           toChannelId,
           fromChannel: channelMeta(fromCh),
           toChannel: channelMeta(toCh),
+          ...voiceFlags,
         });
       }
     } catch (err) {
@@ -158,6 +179,7 @@ function attachGateway(client, handlers = {}) {
           displayName,
           channelId: message.channelId,
           channel: channelMeta(message.channel),
+          snippet: String(message.content || '').slice(0, 80),
         });
       }
     } catch (err) {

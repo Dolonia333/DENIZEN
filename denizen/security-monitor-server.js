@@ -49,6 +49,10 @@ class SecurityMonitorServer {
 
       // Monitored directories (file access)
       watchDirs: options.watchDirs || [],
+      // Recursive watching allocates one inotify watcher per subdirectory on
+      // Linux. Keep it opt-in so production containers do not exhaust the
+      // host-wide watcher pool while scanning immutable application files.
+      recursiveFileWatch: options.recursiveFileWatch === true,
 
       // OpenClaw gateway URL
       openclawUrl: options.openclawUrl || 'ws://localhost:18792',
@@ -431,7 +435,10 @@ class SecurityMonitorServer {
     this.config.watchDirs.forEach(dir => {
       try {
         if (!fs.existsSync(dir)) return;
-        const watcher = fs.watch(dir, { recursive: true, persistent: false }, (eventType, filename) => {
+        const watcher = fs.watch(dir, {
+          recursive: this.config.recursiveFileWatch,
+          persistent: false,
+        }, (eventType, filename) => {
           if (!filename) return;
           const filePath = path.join(dir, filename);
 
@@ -470,6 +477,9 @@ class SecurityMonitorServer {
               break;
             }
           }
+        });
+        watcher.on('error', (err) => {
+          console.warn(`[SecurityMonitor] File watcher stopped for ${dir}:`, err.message);
         });
         this._watchers.push(watcher);
         console.log(`[SecurityMonitor] Watching: ${dir}`);

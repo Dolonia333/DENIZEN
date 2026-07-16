@@ -112,11 +112,11 @@ attachGateway(client, {
     audit.attach(c);
 
     console.log(`[discord-bot] logged in as ${c.user.tag}`);
-    console.log(`[discord-bot] bleed-parity modules loaded · prefix=\`${PREFIX}\` · officeForward=${FORWARD_OFFICE ? 'on' : 'off'}`);
+    console.log(`[discord-bot] Spaces + modules · prefix=\`${PREFIX}\` · officeForward=${FORWARD_OFFICE ? 'on' : 'off'}`);
     if (GUILD_FILTER) console.log(`[discord-bot] guild filter: ${GUILD_FILTER}`);
     const guilds = [...c.guilds.cache.values()];
     console.log(`[discord-bot] in ${guilds.length} guild(s): ${guilds.map((g) => g.name).join(', ') || '(none)'}`);
-    console.log('[discord-bot] try `,help` or `/help` · `@Denizen rooms` for canvas tracker');
+    console.log('[discord-bot] try `/help` or `/start` · `/avatar` · `/hangout` · map at /discord-map/');
 
     if (SMOKE) {
       console.log('[discord-bot] smoke ok — token works');
@@ -141,11 +141,12 @@ attachGateway(client, {
       guildId: GUILD_FILTER,
       port: PRESENCE_PORT,
       applicationId: c.application?.id || process.env.DISCORD_APPLICATION_ID || '',
+      config,
     });
-    presence.listen({ retries: 6, retryMs: 600 }).catch((err) => {
+    // Retry loop kept from production hardening — temporary port conflicts
+    // must not leave Discord map stuck on "Bot offline" for the whole process.
+    const startPresence = () => presence.listen().catch((err) => {
       console.warn('[discord-bot] presence API failed:', err.message || err);
-      // Keep trying in the background so a temporary port conflict doesn't
-      // leave the Discord map stuck on "Bot offline" for the whole process.
       let n = 0;
       const keepTrying = setInterval(() => {
         n += 1;
@@ -153,12 +154,13 @@ attachGateway(client, {
           clearInterval(keepTrying);
           return;
         }
-        presence.listen({ retries: 2, retryMs: 400 }).then(() => {
+        presence.listen().then(() => {
           clearInterval(keepTrying);
           console.log('[discord-bot] presence API recovered after delayed retry');
         }).catch(() => { /* keep interval */ });
       }, 15_000);
     });
+    startPresence();
   },
   onGuildSeed(guild) {
     tracker.seedGuild(guild);
@@ -168,6 +170,9 @@ attachGateway(client, {
   onVoice(evt) {
     tracker.applyVoice(evt);
     forwardOffice(evt);
+  },
+  onVoiceFlags(evt) {
+    tracker.applyVoiceFlags(evt);
   },
   onTextActivity(evt) {
     tracker.applyTextActivity(evt);

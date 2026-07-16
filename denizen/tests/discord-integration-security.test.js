@@ -1,0 +1,63 @@
+'use strict';
+
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const root = path.join(__dirname, '..');
+const read = (name) => fs.readFileSync(path.join(root, name), 'utf8');
+
+describe('Discord integration security boundaries', () => {
+  it('authenticates the Denizen session before starting link-mode OAuth', () => {
+    const server = read('server.js');
+    const start = server.indexOf("urlPath === '/api/visitor/auth/discord/connect'");
+    const end = server.indexOf("urlPath.startsWith('/api/visitor/auth/discord/callback')", start);
+    const route = server.slice(start, end);
+    assert.match(route, /visitorAccess\.assertSessionToken\(sessionId, sessionToken\)/);
+    assert.doesNotMatch(route, /searchParams\.get\('identity_id'\)/);
+  });
+
+  it('requires the linked session owner for public avatar writes', () => {
+    const server = read('server.js');
+    const start = server.indexOf("urlPath.startsWith('/api/discord/avatar/')");
+    const end = server.indexOf('// Discord pixel map', start);
+    const route = server.slice(start, end);
+    assert.match(route, /getLinkStatusForSession\(sessionId, sessionToken\)/);
+    assert.match(route, /String\(linked\.discord_user_id\) !== userId/);
+    assert.match(route, /!store\.hasCustom\(userId\)/);
+  });
+
+  it('requires session credentials on public avatar PUT (closet UI ships separately)', () => {
+    // Map closet UI rewrite is intentionally deferred so office/map layout
+    // stays stable; the server-side write path must still require session auth.
+    const server = read('server.js');
+    const start = server.indexOf("urlPath.startsWith('/api/discord/avatar/')");
+    const end = server.indexOf('// Discord pixel map', start);
+    const route = server.slice(start, end);
+    assert.match(route, /sessionAuth\.extractSessionAuth/);
+    assert.match(route, /getLinkStatusForSession\(sessionId, sessionToken\)/);
+    assert.match(route, /req\.method === 'PUT'/);
+  });
+
+  it('keeps the localhost presence avatar API read-only', () => {
+    const presence = read('discord-bot/src/presence-server.js');
+    const handler = presence.slice(presence.indexOf('async function handleAvatar'));
+    assert.match(presence, /path\.join\(__dirname, '\.\.\/\.\.\/src\/discord-avatar'\)/);
+    assert.match(presence, /Access-Control-Allow-Methods', 'GET, OPTIONS'/);
+    assert.doesNotMatch(handler, /req\.method === 'PUT'/);
+    assert.match(handler, /!store\.hasCustom\(userId\)/);
+  });
+
+  it('handles NAS inotify exhaustion and keeps the polling fallback alive', () => {
+    const server = read('server.js');
+    const monitor = read('security-monitor-server.js');
+    const start = server.indexOf('function _startLucyMirrorFrameWatcher');
+    const watcher = server.slice(start, server.indexOf('function closeLucyBrowser', start));
+    assert.match(watcher, /mirrorWatcher\.on\('error', \(\) => \{\}\)/);
+    assert.match(watcher, /setInterval\(_pushLucyBrowserFrame, 120\)/);
+    assert.match(server, /recursiveFileWatch: process\.env\.NODE_ENV !== 'production'/);
+    assert.match(monitor, /recursiveFileWatch: options\.recursiveFileWatch === true/);
+    assert.match(monitor, /watcher\.on\('error'/);
+  });
+});

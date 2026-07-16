@@ -61,3 +61,7 @@ desktop.ini
 
 # Allowed templates
 !jelly/services/supabase-bridge/.env.secure.template
+
+# Discord Spaces custom avatars (runtime)
+data/discord-avatars/
+
