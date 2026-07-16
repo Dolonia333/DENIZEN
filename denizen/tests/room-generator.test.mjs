@@ -71,18 +71,13 @@ describe('workspace scaling', () => {
   before(() => { gen = new RoomGenerator(catalogData); });
 
   it('workspace has desks and chairs for each occupant', () => {
-    // Run multiple attempts because generation is randomised
-    let bestDesks = 0;
-    let bestChairs = 0;
-    for (let attempt = 0; attempt < 5; attempt++) {
-      const tpl = gen.generate({ purpose: 'workspace', occupants: 4, width: 512, height: 512 });
-      const desks = tpl.items.filter(i => /desk|cubicle/.test(i.id) && !/setup|monitor/.test(i.id));
-      const chairs = tpl.items.filter(i => /chair/.test(i.id));
-      bestDesks = Math.max(bestDesks, desks.length);
-      bestChairs = Math.max(bestChairs, chairs.length);
-    }
-    assert.ok(bestDesks >= 3, `should have at least 3 desks, got ${bestDesks}`);
-    assert.ok(bestChairs >= 3, `should have at least 3 chairs, got ${bestChairs}`);
+    const tpl = gen.generate({ purpose: 'workspace', occupants: 4, width: 512, height: 512 });
+    // Catalog IDs are visual asset names and do not consistently contain
+    // "desk" or "chair". Recipe instance IDs are the stable semantic marker.
+    const desks = tpl.items.filter(i => /^desk_/.test(i.instanceId || ''));
+    const chairs = tpl.items.filter(i => /^chair_/.test(i.instanceId || ''));
+    assert.equal(desks.length, 4, 'should have one desk per occupant');
+    assert.equal(chairs.length, 4, 'should have one chair per occupant');
   });
 
   it('more occupants → more items', () => {

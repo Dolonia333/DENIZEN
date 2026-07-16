@@ -37,8 +37,17 @@ describe('Discord integration security boundaries', () => {
   it('keeps the localhost presence avatar API read-only', () => {
     const presence = read('discord-bot/src/presence-server.js');
     const handler = presence.slice(presence.indexOf('async function handleAvatar'));
+    assert.match(presence, /path\.join\(__dirname, '\.\.\/\.\.\/src\/discord-avatar'\)/);
     assert.match(presence, /Access-Control-Allow-Methods', 'GET, OPTIONS'/);
     assert.doesNotMatch(handler, /req\.method === 'PUT'/);
     assert.match(handler, /!store\.hasCustom\(userId\)/);
+  });
+
+  it('handles NAS inotify exhaustion and keeps the polling fallback alive', () => {
+    const server = read('server.js');
+    const start = server.indexOf('function _startLucyMirrorFrameWatcher');
+    const watcher = server.slice(start, server.indexOf('function closeLucyBrowser', start));
+    assert.match(watcher, /mirrorWatcher\.on\('error', \(\) => \{\}\)/);
+    assert.match(watcher, /setInterval\(_pushLucyBrowserFrame, 120\)/);
   });
 });

@@ -15,7 +15,7 @@ const fs = require('fs');
 function createPresenceServer({ tracker, guildId = '', port = 5180, applicationId = '' }) {
   let avatarApi = null;
   try {
-    avatarApi = require(path.join(__dirname, '../../../src/discord-avatar'));
+    avatarApi = require(path.join(__dirname, '../../src/discord-avatar'));
   } catch (err) {
     console.warn('[presence] avatar module unavailable:', err.message || err);
   }

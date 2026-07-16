@@ -551,7 +551,15 @@ function _startLucyMirrorFrameWatcher() {
   jellyPaths.ensureJellyDirs();
   const watchDir = jellyPaths.canvasDir();
   try {
-    fs.watch(watchDir, { persistent: false }, () => _pushLucyBrowserFrame());
+    const mirrorWatcher = fs.watch(
+      watchDir,
+      { persistent: false },
+      () => _pushLucyBrowserFrame(),
+    );
+    // Synology's shared inotify pool can be exhausted by other containers.
+    // Polling below remains the fallback, so a watcher error must not become
+    // an uncaught process-level exception.
+    mirrorWatcher.on('error', () => {});
   } catch (_) {}
   setInterval(_pushLucyBrowserFrame, 120);
 }
