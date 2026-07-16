@@ -199,7 +199,33 @@ function ingestChatEvent(evt = {}) {
     });
   } catch (_) { /* optional */ }
 
-  return { ok: true, signals, topics, sense };
+  // Dolonia warehouse — quality-scored events for the data company layer
+  let warehouse = null;
+  try {
+    // eslint-disable-next-line global-require
+    const dolonia = require('./dolonia-conversation-data');
+    warehouse = dolonia.recordConversationEvent({
+      productKey: 'denizen',
+      source,
+      guildId,
+      channelId,
+      userHash: row.userHash,
+      messageId: evt.messageId || null,
+      ts,
+      len: raw.length,
+      signals,
+      topics,
+      stylePrimary: sense?.primary || null,
+      styleTypes: sense?.types || [],
+      body,
+      content: raw,
+      displayName: row.displayName,
+      guildName: row.guildName,
+      channelName: row.channelName,
+    });
+  } catch (_) { /* optional */ }
+
+  return { ok: true, signals, topics, sense, warehouse };
 }
 
 function updateTopicRollup(topics, signals, ts) {

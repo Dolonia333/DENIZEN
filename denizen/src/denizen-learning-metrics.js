@@ -326,6 +326,20 @@ function buildLearningScorecard(opts = {}) {
       conversationSense = null;
     }
 
+    // Dolonia warehouse (async not available here — surface enable flag only)
+    let doloniaData = null;
+    try {
+      const dolonia = require('./dolonia-conversation-data');
+      doloniaData = {
+        enabled: dolonia.dataEnabled(),
+        productKey: dolonia.productKey(),
+        qualityThreshold: dolonia.QUALITY_THRESHOLD,
+      };
+      if (doloniaData.enabled) notes.push('dolonia_warehouse_on');
+    } catch (_) {
+      doloniaData = null;
+    }
+
     const ok = true;
 
     return {
@@ -347,6 +361,7 @@ function buildLearningScorecard(opts = {}) {
       targetMet,
       discordFarm,
       conversationSense,
+      doloniaData,
       paths: {
         mentorLessons: paths.mentorLessons,
         consultImprove: paths.consultImprove,

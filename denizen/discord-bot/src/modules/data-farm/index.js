@@ -256,17 +256,25 @@ function createDataFarm(deps) {
         const community = (sense && ctx.guild) ? sense.getCommunityVoice(ctx.guild.id) : null;
         const filters = channelFilters(ctx.guild?.id);
         const myStyle = sense ? sense.getPersonStyle(ctx.user?.id || ctx.author?.id) : null;
+        let warehouseLine = '—';
+        try {
+          const dolonia = require(path.join(ROOT_SRC, 'dolonia-conversation-data.js'));
+          warehouseLine = dolonia.dataEnabled()
+            ? `Supabase · product \`${dolonia.productKey()}\` · quality≥${dolonia.QUALITY_THRESHOLD}`
+            : 'offline (set SUPABASE_URL)';
+        } catch (_) { /* optional */ }
 
         return ctx.reply({
           embeds: [baseEmbed({
             color: isOn(ctx.guild?.id) ? BRAND.success : BRAND.warn,
             title: 'Conversation sense',
             description: [
-              'Denizen uses real Discord conversation to **get better at talking to different people** —',
-              'not to train a creepy model copy of the server.',
+              '**Dolonia data** (Denizen = first product): real chats become **quality conversation data**',
+              'so the AI talks better to different kinds of people.',
               '',
               '• **Styles** — concise, technical, social, expressive…',
               '• **Themes** — what the room cares about / gets stuck on',
+              '• **Warehouse** — scored events in Supabase (durable)',
               '• **Replies** — length, energy, and tone adapt to *you*',
               '',
               ...(s?.notes || []),
@@ -296,6 +304,7 @@ function createDataFarm(deps) {
                 name: 'Hot themes',
                 value: (h?.topicsHot || []).slice(0, 5).map((t) => `\`${t.topic}\``).join(' · ') || '—',
               },
+              { name: 'Dolonia warehouse', value: warehouseLine },
               {
                 name: 'Channels',
                 value: `include: ${filters.channelAllow.length || 'all'} · exclude: ${filters.channelDeny.length || 'none'}`,
@@ -305,7 +314,7 @@ function createDataFarm(deps) {
                 value: '`,sense` · `,sense me` · `,sense types` · `,sense topics` · `,sense on|off`',
               },
             ],
-            footerExtra: 'privacy: hashed users · redacted secrets · not weight training',
+            footerExtra: 'Dolonia · hashed users · quality-scored · not weight training',
           })],
         });
       },

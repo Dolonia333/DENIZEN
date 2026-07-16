@@ -9779,6 +9779,61 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
+  // --- Dolonia data plane: conversation quality warehouse (Denizen = first product) ---
+  if ((urlPath === '/api/dolonia/conversation-quality' || urlPath === '/api/data/conversation-quality')
+    && req.method === 'GET') {
+    (async () => {
+      try {
+        const dolonia = require('./src/dolonia-conversation-data');
+        const sense = require('./src/denizen-conversation-sense');
+        const farm = require('./src/denizen-discord-farm');
+        const warehouse = await dolonia.buildWarehouseScorecard({
+          productKey: String(new URL(req.url, 'http://local').searchParams.get('product') || 'denizen'),
+        });
+        const localSense = sense.buildSenseScorecard();
+        const localThemes = farm.buildDiscordFarmScorecard();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          ok: true,
+          company: 'dolonia',
+          product: warehouse.productKey || 'denizen',
+          warehouse,
+          local: {
+            sense: localSense,
+            themes: {
+              messages24h: localThemes.messages24h,
+              questions24h: localThemes.questions24h,
+              friction24h: localThemes.friction24h,
+              topicsHot: (localThemes.topicsHot || []).slice(0, 8),
+            },
+          },
+          notes: [
+            'Denizen is Dolonia product #1 — conversation quality dual-writes to Supabase.',
+            'user_hash only · redacted bodies · quality_score gates data products.',
+          ],
+        }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    })();
+    return;
+  }
+  if (urlPath === '/api/dolonia/conversation-retain' && req.method === 'POST') {
+    (async () => {
+      try {
+        const dolonia = require('./src/dolonia-conversation-data');
+        const result = await dolonia.retain({});
+        res.writeHead(result.ok ? 200 : 502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    })();
+    return;
+  }
+
   // --- Denizen Harness control plane ---
   if ((urlPath === '/api/harness' || urlPath === '/api/harness/status') && req.method === 'GET') {
     (async () => {

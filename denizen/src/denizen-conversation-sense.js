@@ -269,6 +269,7 @@ function observeChat(evt = {}) {
   people.updatedAt = Date.now();
   saveJson(PEOPLE_PATH, people);
 
+  let communityRow = null;
   if (guildId) {
     const comm = loadJson(COMMUNITIES_PATH, { updatedAt: 0, communities: {} });
     comm.communities = comm.communities || {};
@@ -281,7 +282,7 @@ function observeChat(evt = {}) {
     const topTypes = Object.entries(typeCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 20);
-    comm.communities[guildId] = {
+    communityRow = {
       stats: cstats,
       primary: ctype.primary,
       types: ctype.types,
@@ -289,6 +290,7 @@ function observeChat(evt = {}) {
       peopleSample: Math.min(5000, (cprev.peopleSample || 0) + 1),
       updatedAt: Date.now(),
     };
+    comm.communities[guildId] = communityRow;
     comm.updatedAt = Date.now();
     saveJson(COMMUNITIES_PATH, comm);
   }
@@ -301,6 +303,31 @@ function observeChat(evt = {}) {
     types.updatedAt = Date.now();
     saveJson(TYPES_PATH, types);
   } catch (_) { /* ignore */ }
+
+  // Dolonia data warehouse (Supabase) — durable quality profiles
+  try {
+    // eslint-disable-next-line global-require
+    const dolonia = require('./dolonia-conversation-data');
+    dolonia.upsertPersonStyle({
+      userHash,
+      sampleN: stats.n,
+      primary: classified.primary,
+      types: classified.types,
+      stats,
+      lastGuildId: guildId,
+      source: evt.source || 'discord',
+    });
+    if (guildId && communityRow) {
+      dolonia.upsertCommunity({
+        communityId: guildId,
+        sampleN: communityRow.peopleSample,
+        primary: communityRow.primary,
+        types: communityRow.types,
+        typeCounts: communityRow.typeCounts,
+        stats: communityRow.stats,
+      });
+    }
+  } catch (_) { /* warehouse optional */ }
 
   return {
     ok: true,
