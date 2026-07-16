@@ -1,0 +1,74 @@
+{
+  "_README": "Import into n8n: watches Gmail for mail from Angela and POSTs to Denizen Meridian CRM /api/crm/email-inbound. Attach Gmail OAuth2 credential. Set X-Denizen-Secret if DENIZEN_EMAIL_SECRET is set on the server.",
+  "name": "Denizen — Angela Gmail → CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [{ "mode": "everyMinute" }]
+        },
+        "simple": false,
+        "filters": {
+          "q": "from:(vzion253@gmail.com OR angelavanzandt1921@gmail.com) newer_than:7d"
+        },
+        "options": {}
+      },
+      "id": "angela-gmail-trigger-0001",
+      "name": "Gmail Trigger (Angela)",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail OAuth2 (Zion)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json || {};\n\nfunction header(name) {\n  for (const headers of [item.payload?.headers, item.headers].filter(Array.isArray)) {\n    const hit = headers.find((h) => String(h.name || '').toLowerCase() === name.toLowerCase());\n    if (hit) return String(hit.value || '');\n  }\n  return '';\n}\n\nfunction fromAddress() {\n  const direct = item.from || item.From;\n  if (typeof direct === 'string' && direct.trim()) return direct.trim();\n  if (direct && typeof direct === 'object') {\n    const v = direct.value?.[0] || direct;\n    const addr = v.address || v.email || '';\n    const name = v.name || '';\n    if (name && addr) return `${name} <${addr}>`;\n    return String(addr || name || '').trim();\n  }\n  return header('from').trim();\n}\n\nfunction extractBody(part) {\n  if (!part) return '';\n  if (part.mimeType === 'text/plain' && part.body?.data) {\n    return Buffer.from(part.body.data, 'base64').toString('utf8');\n  }\n  if (Array.isArray(part.parts)) {\n    for (const p of part.parts) {\n      const t = extractBody(p);\n      if (t) return t;\n    }\n  }\n  return '';\n}\n\nconst from = fromAddress();\nconst subject = String(item.subject || item.Subject || header('subject') || '').trim();\nlet body = String(item.textPlain || item.text || item.body || item.snippet || '').trim();\nif (!body) body = extractBody(item.payload).trim();\n\nreturn [{\n  json: {\n    from,\n    fromEmail: (from.match(/<([^>]+)>/) || [])[1] || from,\n    subject,\n    body,\n    bodyText: body,\n    threadId: item.threadId || item.thread_id || null,\n    id: item.id || item.messageId || null,\n    gmailId: item.id || item.messageId || null,\n    snippet: item.snippet || body.slice(0, 200),\n    source: 'n8n_gmail',\n  },\n}];"
+      },
+      "id": "angela-gmail-normalize-0002",
+      "name": "Normalize email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8888/api/crm/email-inbound",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "X-Denizen-Secret", "value": "" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ from: $json.from, fromEmail: $json.fromEmail, subject: $json.subject, body: $json.body, bodyText: $json.bodyText, threadId: $json.threadId, id: $json.id, gmailId: $json.gmailId, snippet: $json.snippet, source: $json.source, org_slug: 'zion' }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "angela-gmail-post-0003",
+      "name": "POST → Denizen CRM inbound",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [820, 300]
+    }
+  ],
+  "connections": {
+    "Gmail Trigger (Angela)": {
+      "main": [[{ "node": "Normalize email", "type": "main", "index": 0 }]]
+    },
+    "Normalize email": {
+      "main": [[{ "node": "POST → Denizen CRM inbound", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

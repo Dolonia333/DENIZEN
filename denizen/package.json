@@ -65,6 +65,7 @@
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
     "@tabler/icons-webfont": "^3.34.0",
+    "googleapis": "^144.0.0",
     "jimp": "^0.22.10",
     "playwright": "^1.60.0",
     "redis": "^4.7.1",
