@@ -171,10 +171,13 @@ class AgentActions {
     let x = chair.sprite.x + (snap.x || 0);
     let y = chair.sprite.y + (snap.y || 0);
 
-    // Match office-scene player sit offsets (front-facing chairs sit slightly lower)
-    if (/front/.test(id) || chairInfo.facing === 'down') {
-      y += 12;
-    }
+    // The blueprint already stores the exact bottom-center chair anchor.
+    // Do not add a generic Y offset: front chairs are north of their desk and
+    // back chairs are south of it, so one shared offset moves half the roster
+    // onto the desktop. The seated crop below handles body height instead.
+    // A tiny seat-depth nudge centers the cropped torso in the chair cushion
+    // without moving it into the desk surface.
+    y += chairInfo.backFacing ? 4 : 3;
 
     return { x, y, ...chairInfo };
   }
@@ -182,7 +185,8 @@ class AgentActions {
   /**
    * Snap NPC sprite to a chair sit pose (position, frame, depth).
    */
-  _applySitPose(npc, npcKey, chair, sit) {
+  _applySitPose(npc, npcKey, chair, sit, desk = null) {
+    const existingSit = this._sittingNpcs.get(npcKey);
     npc.body?.setVelocity(0, 0);
     npc.x = sit.x;
     npc.y = sit.y;
@@ -192,9 +196,22 @@ class AgentActions {
     else if (sit.facing === 'down') npc.setFrame(0);
     else if (sit.facing === 'left') npc.setFrame(4);
     else npc.setFrame(8);
+    // XP character sheets have no dedicated seated frames. Crop away the legs
+    // while seated so only the head/upper torso rises above the workstation.
+    // This is true desk occlusion; scaling the whole standing body still read
+    // as a tiny person standing on top of the desk.
+    if (typeof npc.setCrop === 'function') {
+      const frameWidth = npc.frame?.realWidth || npc.frame?.width || 32;
+      const frameHeight = npc.frame?.realHeight || npc.frame?.height || 48;
+      npc.setCrop(0, 0, frameWidth, Math.max(28, frameHeight - 15));
+    }
     npc.ai.taskState = 'sitting';
+    if (npc._bootHidden) {
+      npc._bootHidden = false;
+      npc.setVisible?.(true);
+    }
     if (chair?.sprite) {
-      this._applySitDepth(npc, npcKey, chair, sit);
+      this._applySitDepth(npc, npcKey, chair, sit, desk);
     }
   }
 
@@ -395,7 +412,7 @@ class AgentActions {
       npc.body.setOffset(3, 16);
       npc.body.setVelocity(0, 0);
     }
-    this._applySitPose(npc, npcKey, chair, sit);
+    this._applySitPose(npc, npcKey, chair, sit, desk);
     npc.ai.mode = 'agent_task';
     npc.ai.taskTarget = null;
     this._showTypingIndicator(npc, npcKey);
@@ -422,7 +439,10 @@ class AgentActions {
         if (!sit) { resolve(); return; }
 
         const dist = Math.hypot(npc.x - sit.x, npc.y - sit.y);
-        const instant = opts.instant === true || npcKey === 'xp_grok' || dist < 120;
+        // Only teleport when already at the chair (or caller forced it).
+        // Old: dist < 120 OR 4.5s timeout → mid-office NPCs vanished and
+        // "spawned" back at their desk. Walk the whole way instead.
+        const instant = opts.instant === true || dist < 40;
 
         if (instant) {
           this._sitAtDeskNow(npcKey, deskId);
@@ -447,6 +467,14 @@ class AgentActions {
         npc.ai.taskState = 'walking';
         npc.body?.setSize(6, 4);
         npc.body?.setOffset(5, 20);
+        // Kick pathfinder immediately so they don't idle for a frame then snap.
+        try {
+          if (npc._pathFollower?.navigateTo) {
+            npc._pathFollower.navigateTo(approachX, approachY);
+          }
+        } catch (_) {}
+        // Protect from desk-enforce yank while walking home.
+        npc._purposefulWalkUntil = Date.now() + 25000;
 
         let finished = false;
         const finishSit = () => {
@@ -462,11 +490,30 @@ class AgentActions {
           loop: true,
           callback: () => {
             const d = Math.hypot(approachX - npc.x, approachY - npc.y);
-            if (d <= 20 || (npc.ai._sitSnap && d <= 36)) finishSit();
+            if (d <= 22 || (npc.ai._sitSnap && d <= 40)) finishSit();
           },
         });
 
-        npc.ai._deskSitTimeout = this.scene.time.delayedCall(4500, finishSit);
+        // Long timeout — never teleport across the office. If still far,
+        // abandon the sit and keep them free on the floor.
+        npc.ai._deskSitTimeout = this.scene.time.delayedCall(22000, () => {
+          if (finished) return;
+          const d = Math.hypot(approachX - npc.x, approachY - npc.y);
+          if (d <= 56) {
+            finishSit();
+            return;
+          }
+          finished = true;
+          this._cancelDeskWalk(npcKey);
+          if (npc.ai) {
+            npc.ai.mode = 'wander';
+            npc.ai.taskState = null;
+            npc.ai.taskTarget = null;
+            npc.ai._sitSnap = null;
+            npc.ai.nextWanderAt = 0;
+          }
+          resolve();
+        });
       });
     });
   }
@@ -486,7 +533,7 @@ class AgentActions {
     if (!npc || !this._sittingNpcs.has(npcKey)) return;
     const sit = this._getChairSitPos(chair, desk);
     if (!sit) return;
-    this._applySitPose(npc, npcKey, chair, sit);
+    this._applySitPose(npc, npcKey, chair, sit, desk);
   }
 
   /**
@@ -494,14 +541,22 @@ class AgentActions {
    * Back-facing chair: chair renders ON TOP of NPC (higher depth)
    * Front-facing chair: NPC renders ON TOP of chair (higher depth)
    */
-  _applySitDepth(npc, npcKey, chair, chairInfo) {
-    const origDepth = npc.depth;
+  _applySitDepth(npc, npcKey, chair, chairInfo, desk = null) {
+    const existingSit = this._sittingNpcs.get(npcKey);
+    const origDepth = existingSit?.origDepth ?? npc.depth;
+    const origScaleX = existingSit?.origScaleX ?? npc.scaleX;
+    const origScaleY = existingSit?.origScaleY ?? npc.scaleY;
     const chairDepth = chair.sprite.depth;
 
     if (chairInfo.backFacing) {
-      // Back-facing: chair should be on top of NPC (NPC is behind the chair back)
-      // Set NPC depth below chair
-      npc.setDepth(chairDepth - 0.5);
+      // Back-facing workstation: both the chair back and desk surface must
+      // cover the seated body. Comparing only with the chair made NPCs render
+      // on top of desks whose sprite depth happened to be lower.
+      const deskDepth = desk?.sprite?.depth;
+      const occluderDepth = Number.isFinite(deskDepth)
+        ? Math.min(chairDepth, deskDepth)
+        : chairDepth;
+      npc.setDepth(occluderDepth - 0.5);
     } else {
       // Front-facing: NPC should be on top of chair
       npc.setDepth(chairDepth + 0.5);
@@ -509,7 +564,10 @@ class AgentActions {
 
     this._sittingNpcs.set(npcKey, {
       chairSprite: chair.sprite,
+      deskSprite: desk?.sprite || null,
       origDepth,
+      origScaleX,
+      origScaleY,
       origY: npc.y,
       chairInfo,
     });
@@ -526,8 +584,43 @@ class AgentActions {
     if (npc) {
       // Restore original depth (Y-sort will take over)
       npc.setDepth(sitData.origDepth);
-      // Step away from chair — direction depends on which way the chair faces
-      npc.y += sitData.chairInfo.backFacing ? -16 : 16;
+      if (typeof npc.setCrop === 'function') npc.setCrop();
+      if (typeof npc.setScale === 'function') {
+        npc.setScale(sitData.origScaleX, sitData.origScaleY);
+      }
+      // Step onto floor on the side AWAY from the desk before pathfinding.
+      // The old facing-only offset was reversed for south-side chairs and
+      // placed NPCs inside/on top of the desktop for their first walk frames.
+      const chair = sitData.chairSprite;
+      const desk = sitData.deskSprite;
+      let awayX = 0;
+      let awayY = sitData.chairInfo.backFacing ? 1 : -1;
+      if (chair && desk) {
+        const dx = chair.x - desk.x;
+        const dy = chair.y - desk.y;
+        const len = Math.hypot(dx, dy) || 1;
+        awayX = dx / len;
+        awayY = dy / len;
+      }
+      let standX = npc.x + awayX * 26;
+      let standY = npc.y + awayY * 26;
+      const pf = this.scene?._pathfinder;
+      if (pf?.findWalkableNear) {
+        const floor = pf.findWalkableNear(standX, standY, 24);
+        if (floor) {
+          standX = floor.x;
+          standY = floor.y;
+        }
+      }
+      npc.x = standX;
+      npc.y = standY;
+      if (npc.ai) {
+        npc.ai.facing = Math.abs(awayX) > Math.abs(awayY)
+          ? (awayX < 0 ? 'left' : 'right')
+          : (awayY < 0 ? 'up' : 'down');
+        npc.ai.taskTarget = null;
+        npc.ai._sitSnap = null;
+      }
     }
 
     this._hideTypingIndicator(npcKey);
@@ -1294,10 +1387,9 @@ class AgentActions {
       }
     }
 
-    // Pokémon-style: light glass chip + dark readable text (not a black slab).
+    // Pokémon-style: light glass chip + dark readable text (no stroke halo).
     const bgColor = isThought ? '#e0f2fede' : '#f8fafcee';
     const textColor = isThought ? '#0c4a6e' : '#0f172a';
-    const borderHint = isThought ? '#7dd3fc' : '#38bdf8';
     const prefix = isThought ? '…' : '';
     const label = prefix ? `${prefix}${truncated}` : truncated;
 
@@ -1309,9 +1401,8 @@ class AgentActions {
       padding: { x: 4, y: 3 },
       wordWrap: { width: isThought ? 110 : 130 },
       align: 'center',
-      stroke: borderHint,
-      strokeThickness: 0.5,
     });
+    if (typeof bubbleText.setResolution === 'function') bubbleText.setResolution(1);
     bubbleText.setOrigin(0.5, 1);
     bubbleText.setDepth(9998);
     bubbleText.setAlpha(0.96);
@@ -1416,21 +1507,36 @@ class AgentActions {
     const npc = this._getNpc(npcKey);
     if (!npc) return;
 
-    const labelText = `${name}\n${role}`;
-    const label = this.scene.add.text(0, 0, labelText, {
-      fontSize: '7px',
-      fontFamily: 'monospace',
-      color: '#1e293b',
+    // Micro nameplate — world-space; camera zoom is often 1.5–2.8× so
+    // even 7–8px chips read huge over ~32px sprites. Name only, one line.
+    const who = String(name || npcKey || '').trim() || 'Agent';
+    const label = this.scene.add.text(0, 0, who, {
+      fontSize: '5px',
+      fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
+      fontStyle: '600',
+      color: '#0f172a',
+      backgroundColor: '#ffffffee',
+      padding: { x: 2, y: 0 },
       align: 'center',
-      stroke: '#ffffff',
-      strokeThickness: 2,
     });
     label.setOrigin(0.5, 1);
     label.setDepth(9996);
+    label.setAlpha(0.92);
+    // Crisp on retina; 1 on light-perf phones.
+    let res = 2;
+    try {
+      const light = globalThis.DenizenDeviceProfile?.lightPerf?.()?.light
+        || globalThis.DenizenDeviceProfile?.wantsLightPerf?.();
+      if (light) res = 1;
+    } catch (_) {}
+    if (typeof label.setResolution === 'function') label.setResolution(res);
+    // Optional: keep role for tooltips if Phaser exposes it (no visual line).
+    if (role && typeof label.setData === 'function') label.setData('role', String(role).trim());
     label.x = npc.x;
-    label.y = npc.y - 52;
+    // Just above the sprite head.
+    label.y = npc.y - 34;
 
-    this._roleLabels.set(npcKey, { text: label, npc });
+    this._roleLabels.set(npcKey, { text: label, npc, yOff: 34 });
   }
 
   _clearRoleLabel(npcKey) {
@@ -1462,7 +1568,7 @@ class AgentActions {
         if (entry.npc && entry.text && !entry.text.scene) return;
         if (entry.npc && entry.text) {
           entry.text.x = entry.npc.x;
-          const off = entry.isThought ? 44 : yOffset;
+          const off = entry.isThought ? 44 : (entry.yOff != null ? entry.yOff : yOffset);
           entry.text.y = entry.npc.y - off;
         }
       });
@@ -1470,7 +1576,7 @@ class AgentActions {
 
     updateMap(this._speechBubbles, 48);
     updateMap(this._emoteBubbles, 56);
-    updateMap(this._roleLabels, 52);
+    updateMap(this._roleLabels, 34);
 
     this._typingIndicators.forEach((entry) => {
       if (entry.npc && entry.text) {

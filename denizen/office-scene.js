@@ -192,11 +192,11 @@ function playfieldZoomForProfile(profile) {
   const dp = globalThis.DenizenDeviceProfile;
   if (dp?.playfieldZoomFor) return dp.playfieldZoomFor(profile);
   if (profile?.isPhone || profile?.tier === 'phone-compact') {
-    if (profile?.isLandscape) return 1.0;
-    return profile?.isCompactPhone ? 1.42 : 1.32;
+    if (profile?.isLandscape) return 1.55;
+    return profile?.isCompactPhone ? 1.95 : 1.85;
   }
-  if (profile?.isTablet) return profile?.isLandscape ? 1.2 : 1.65;
-  return 2.35;
+  if (profile?.isTablet) return profile?.isLandscape ? 1.85 : 2.15;
+  return 2.75;
 }
 
 function createOfficeSceneClass() {
@@ -208,11 +208,13 @@ class OfficeScene extends Phaser.Scene {
   _applyPlayfieldCamera() {
     const cam = this.cameras?.main;
     if (!cam) return;
+    // Scripted cutscenes (?demo=investor|tour) own the camera — don't fight them.
+    if (this._agentManager?._demoMode) return;
     cam.setZoom(playfieldZoomForProfile(getPlayfieldDeviceProfile()));
-    // Pokémon-style: hard-lock on the player (no floaty chase lag).
+    // Soft follow — hard-lock (1,1) + roundPixels made walking read as judder.
     if (this.player) {
-      cam.startFollow(this.player, true, 1, 1);
-      try { cam.setRoundPixels(true); } catch (_) {}
+      cam.startFollow(this.player, true, 0.16, 0.16);
+      try { cam.setRoundPixels(false); } catch (_) {}
     }
     try { this.scale?.refresh?.(); } catch (_) {}
   }
@@ -420,17 +422,14 @@ class OfficeScene extends Phaser.Scene {
     // Also remove the DOLONIA title text objects created in preload
     this.children.list.filter(c => c.type === 'Text' && (c.text === 'DOLONIA' || c.text === 'AI Office Simulator')).forEach(t => t.destroy());
 
-    // Make EVERY Text object render at internal resolution suitable for the
-    // device. pixelArt:true forces NEAREST sampling on text textures too, so
-    // tiny 6-7px labels look blurry at 1x — bump to 2x on desktop. On
-    // phone/light-perf keep 1x to cut canvas fill + texture upload cost.
+    // Text at 1× with pixelArt. Resolution 2 looked sharper in theory but
+    // nearest-neighbor sampling puts a bright/white fringe around every glyph.
     if (!this._textFactoryPatched) {
       const factory = this.add;
       const origText = factory.text.bind(factory);
-      const textRes = (window.DenizenDeviceProfile?.lightPerf?.()?.textResolution) || 2;
       factory.text = function (x, y, content, style) {
         const t = origText(x, y, content, style);
-        if (t && typeof t.setResolution === 'function') t.setResolution(textRes);
+        if (t && typeof t.setResolution === 'function') t.setResolution(1);
         return t;
       };
       this._textFactoryPatched = true;
@@ -849,12 +848,11 @@ class OfficeScene extends Phaser.Scene {
            const cam = this.cameras.main;
            cam.setBounds(zoneX - 32, zoneY - 32, zoneW + 64, zoneH + 64);
            const playProfile = getPlayfieldDeviceProfile();
-           if (playProfile.isPhone) {
-             cam.setZoom(playfieldZoomForProfile(playProfile));
+           // Same tier zoom as the main office — do not force desktop to 1.0 (too far out).
+           cam.setZoom(playfieldZoomForProfile(playProfile));
+           if (this.player) {
              cam.startFollow(this.player, true, 1, 1);
            } else {
-             // Full openplan zone 1264×700. Zoom 1.0 fits in a 1280×720 viewport.
-             cam.setZoom(playProfile.isTablet ? playfieldZoomForProfile(playProfile) : 1.0);
              cam.centerOn(zoneX + zoneW / 2, zoneY + zoneH / 2);
            }
         }
@@ -1114,10 +1112,11 @@ class OfficeScene extends Phaser.Scene {
       const makeKey = (k) => `${texKey}:${k}`;
       if (!this.textures.exists(texKey)) return makeKey;
       const defs = {
-        walk_down:  { frames: [0, 1, 2, 3],   fps: 10, loop: true },
-        walk_left:  { frames: [4, 5, 6, 7],   fps: 10, loop: true },
-        walk_right: { frames: [8, 9, 10, 11], fps: 10, loop: true },
-        walk_up:    { frames: [12, 13, 14, 15], fps: 10, loop: true },
+        // Slightly higher frame rate so legs match the snappier walk speed.
+        walk_down:  { frames: [0, 1, 2, 3],   fps: 13, loop: true },
+        walk_left:  { frames: [4, 5, 6, 7],   fps: 13, loop: true },
+        walk_right: { frames: [8, 9, 10, 11], fps: 13, loop: true },
+        walk_up:    { frames: [12, 13, 14, 15], fps: 13, loop: true },
         idle_down:  { frames: [0],  fps: 0, loop: true },
         idle_left:  { frames: [4],  fps: 0, loop: true },
         idle_right: { frames: [8],  fps: 0, loop: true },
@@ -1150,10 +1149,10 @@ class OfficeScene extends Phaser.Scene {
         idle_up:    { frames: [8],                     fps: 1 },
         idle_left:  { frames: [14],                    fps: 1 },
         idle_down:  { frames: [20],                    fps: 1 },
-        walk_right: { frames: [0, 1, 2, 3, 4, 5],     fps: 10 },
-        walk_up:    { frames: [6, 7, 8, 9, 10, 11],   fps: 10 },
-        walk_left:  { frames: [12, 13, 14, 15, 16, 17], fps: 10 },
-        walk_down:  { frames: [18, 19, 20, 21, 22, 23], fps: 10 }
+        walk_right: { frames: [0, 1, 2, 3, 4, 5],     fps: 13 },
+        walk_up:    { frames: [6, 7, 8, 9, 10, 11],   fps: 13 },
+        walk_left:  { frames: [12, 13, 14, 15, 16, 17], fps: 13 },
+        walk_down:  { frames: [18, 19, 20, 21, 22, 23], fps: 13 }
       };
       Object.entries(defs).forEach(([name, def]) => {
         this.anims.create({
@@ -1245,10 +1244,10 @@ class OfficeScene extends Phaser.Scene {
         idle_up:    { frames: [8],                     fps: 1 },
         idle_left:  { frames: [14],                    fps: 1 },
         idle_down:  { frames: [20],                    fps: 1 },
-        walk_right: { frames: [0, 1, 2, 3, 4, 5],     fps: 10 },
-        walk_up:    { frames: [6, 7, 8, 9, 10, 11],   fps: 10 },
-        walk_left:  { frames: [12, 13, 14, 15, 16, 17], fps: 10 },
-        walk_down:  { frames: [18, 19, 20, 21, 22, 23], fps: 10 },
+        walk_right: { frames: [0, 1, 2, 3, 4, 5],     fps: 13 },
+        walk_up:    { frames: [6, 7, 8, 9, 10, 11],   fps: 13 },
+        walk_left:  { frames: [12, 13, 14, 15, 16, 17], fps: 13 },
+        walk_down:  { frames: [18, 19, 20, 21, 22, 23], fps: 13 },
       };
       Object.entries(defs).forEach(([name, def]) => {
         this.anims.create({
@@ -1318,36 +1317,57 @@ class OfficeScene extends Phaser.Scene {
       { x: 1060, y: 160 }, { x: 520, y: 320 }, { x: 620, y: 580 }, { x: 1040, y: 390 },
       { x: 300, y: 300 }, { x: 700, y: 350 }, { x: 950, y: 580 }, { x: 440, y: 530 }
     ];
-    const npcCap = (window.DenizenDeviceProfile?.lightPerf?.()?.npcCap) || 20;
-    const npcCount = layoutParam === 'reference_office' ? 2 : Math.min(npcCap, npcKeys.length);
+    // Always spawn the full roster. Light-perf used to cap at 6–12 and
+    // people vanished from the floor; pathfinding/sep already throttle cost.
+    const npcCount = layoutParam === 'reference_office' ? 2 : npcKeys.length;
     try {
-      if (window.DenizenDeviceProfile?.wantsLightPerf?.()) {
-        console.log('[Perf] light profile — NPC cap', npcCount, '/', npcKeys.length);
-      }
+      console.log('[Office] spawning NPCs', npcCount, '/', npcKeys.length, npcKeys.join(','));
     } catch (_) {}
     npcKeys.slice(0, npcCount).forEach((texKey, i) => {
-      if (!this.textures.exists(texKey)) return;
+      if (!this.textures.exists(texKey)) {
+        try { console.warn('[Office] missing texture, skip NPC', texKey); } catch (_) {}
+        return;
+      }
       const spawn = i < deskSpawns.length ? deskSpawns[i] : otherSpawns[i - deskSpawns.length] || { x: Phaser.Math.Between(120, 1100), y: Phaser.Math.Between(120, 600) };
       const x = spawn.x + Phaser.Math.Between(-10, 10);
       const y = spawn.y + Phaser.Math.Between(-10, 10);
       const npc = this.physics.add.sprite(x, y, texKey, 8);
       npc.setOrigin(0.5, 1);
       npc.setScale(scale);
+      // Furniture/desk anchors are resolved a moment later. Keep the generic
+      // spawn pose hidden so users never see the roster pop from spawn points
+      // back into chairs during boot.
+      npc.setVisible(false);
+      npc._bootHidden = true;
       npc.setCollideWorldBounds(true);
-      npc.setDrag(900, 900);
-      npc.body.setMaxVelocity(160, 160);
+      npc.setDrag(700, 700);
+      // Cap must sit above wander/follow speed + separation so NPCs aren't soft-clamped.
+      npc.body.setMaxVelocity(320, 320);
       // Shrink physics body to small foot hitbox so NPCs navigate between desks
       npc.body.setSize(10, 8);
       npc.body.setOffset(3, 16);
       npc.ai = {
-        mode: 'wander',
+        // Hold still during boot. AgentOfficeManager assigns the real desk and
+        // seated pose once furniture anchors are ready; starting in wander
+        // made NPCs walk briefly, then visibly snap back to their chairs.
+        mode: 'agent_task',
         facing: 'right',
-        nextWanderAt: 0,
+        taskState: 'loading',
+        taskTarget: { x, y },
+        nextWanderAt: Number.POSITIVE_INFINITY,
         wanderTarget: { x, y },
         followOffset: { x: (i % 4) * 32 - 48, y: Math.floor(i / 4) * 28 - 28 }
       };
       npc._animKey = registerXpAnims(texKey);
       this.npcs.push(npc);
+      this.time.delayedCall(8000, () => {
+        // Failsafe only: AgentActions normally reveals the NPC as soon as its
+        // real chair pose is applied.
+        if (npc._bootHidden) {
+          npc._bootHidden = false;
+          npc.setVisible(true);
+        }
+      });
     });
 
     // Hotkeys: F = toggle follow-chain. (Wander toggle moved off W so W can
@@ -1887,13 +1907,17 @@ class OfficeScene extends Phaser.Scene {
       }
     }
 
-    // --- Demo Mode ---
-    // Two scenarios:
-    //   ?demo=investor  — original 20s research vignette
-    //   ?demo=tour      — 60s feature tour with voice + agent-bus + threats + n8n tasks
+    // --- Scripted Demo cutscenes (camera pull-back) ---
+    // Only these values start DemoScene (which zooms to 1× and stopFollow):
+    //   ?demo=investor  — 20s research vignette
+    //   ?demo=tour      — 60s feature tour
+    // Public live demo uses ?demo=1 / ?mode=demo (public-demo-mode.js) and must
+    // keep the playfield zoom + player follow. Treating demo=1 as investor
+    // used to zoom the whole office out ~3s after load; walking then felt
+    // "stuck zoomed out" because follow was already stopped.
     const demoParams = new URLSearchParams(window.location.search);
-    const demoKind = demoParams.get('demo');
-    if (demoKind) {
+    const demoKind = (demoParams.get('demo') || '').trim().toLowerCase();
+    if (demoKind === 'investor' || demoKind === 'tour') {
       const startDemo = () => {
         if (!window.DemoScene) return;
         const demo = new window.DemoScene(this, this._agentManager);
@@ -1902,7 +1926,7 @@ class OfficeScene extends Phaser.Scene {
           console.log('[OfficeScene] 60s tour triggered via ?demo=tour');
         } else {
           demo.start();
-          console.log(`[OfficeScene] Investor demo triggered via ?demo=${demoKind}`);
+          console.log('[OfficeScene] Investor demo triggered via ?demo=investor');
         }
       };
       if (window.DemoScene) {
@@ -2593,15 +2617,20 @@ class OfficeScene extends Phaser.Scene {
    */
   /**
    * Player walk speed in world px/s.
-   * Zoom changes on-screen pace (Pokémon pull-back made fixed px/s feel slow).
-   * Scale so walking stays snappy at any camera zoom.
+   * Zoom changes on-screen pace; phones get a lower base so tap-to-move
+   * doesn't feel like turbo (desktop still stays snappy).
    */
   _playerMoveSpeed() {
-    const base = 380;
+    const isPhone = !!window.DenizenDeviceProfile?.isPhone?.();
+    const isTablet = !!window.DenizenDeviceProfile?.isTablet?.();
+    // Phones were overshooting — base was ~380 with a large zoom boost.
+    const base = isPhone ? 250 : isTablet ? 290 : 360;
     const zoom = Math.max(0.85, this.cameras?.main?.zoom || 1);
-    // Target on-screen feel as if the camera were ~2.1×.
-    const feel = 2.1 / zoom;
-    return Math.round(base * Math.min(2.8, Math.max(1.15, feel)));
+    const feelTarget = isPhone ? 1.5 : isTablet ? 1.7 : 2.0;
+    const feel = feelTarget / zoom;
+    const cap = isPhone ? 1.35 : isTablet ? 1.55 : 2.15;
+    const floor = isPhone ? 0.95 : 1.0;
+    return Math.round(base * Math.min(cap, Math.max(floor, feel)));
   }
 
   _rawMoveActive() {
@@ -2634,6 +2663,16 @@ class OfficeScene extends Phaser.Scene {
 
     this.playerLocked = false;
     this.playerState = 'walk';
+    // If a cutscene pulled the camera wide and never restored it, snap back
+    // the first time the player actually walks (playfield zoom + follow).
+    if (!this._agentManager?._demoMode) {
+      const cam = this.cameras?.main;
+      const want = playfieldZoomForProfile(getPlayfieldDeviceProfile());
+      const following = !!(cam && (cam.follow || cam._follow));
+      if (cam && (Math.abs((cam.zoom || 1) - want) > 0.05 || !following)) {
+        this._applyPlayfieldCamera();
+      }
+    }
     this._playerOnPhone = false;
     this._phonePhase = 'none';
     this._playerOnPhoneSince = 0;
@@ -2682,6 +2721,68 @@ class OfficeScene extends Phaser.Scene {
     ai._seatRetryAt = now;
     this._agentManager.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
     agent.status = 'working';
+  }
+
+  /**
+   * Living-office destinations. Instead of Brownian random hops, an idle NPC
+   * picks somewhere a real coworker would actually go — a spot by the
+   * coffee/kitchen gear, a bookshelf or plant, a colleague who's currently
+   * settled, or an occasional aimless stroll — then DWELLS there for a
+   * while (dwell is applied on arrival by the wander loop).
+   * Returns { pos, dwellMs, faceNpc? }.
+   */
+  _pickNpcPoi(npc) {
+    // Lazily index interactable furniture into "hangout" spots.
+    if (!this._npcPoiSpots || this._npcPoiDirty) {
+      this._npcPoiDirty = false;
+      const spots = [];
+      for (const it of this._interactables || []) {
+        const sp = it?.sprite;
+        if (!sp) continue;
+        const id = String(it.id || '');
+        const action = String(it.def?.action || '');
+        // Things worth loitering near — appliances, shelves, greenery, seats.
+        if (action === 'sit' || /coffee|kettle|fridge|sink|plant|flora|shelf|book|printer|water|vending|window|aquarium|radio/i.test(id)) {
+          spots.push({ x: sp.x, y: sp.y + 18 });
+        }
+      }
+      this._npcPoiSpots = spots;
+    }
+
+    const pf = this._pathfinder;
+    const roll = Math.random();
+
+    // ~25%: wander over to a colleague who is settled (seated or dwelling)
+    if (roll < 0.25 && Array.isArray(this.npcs)) {
+      const settled = this.npcs.filter((o) => {
+        if (o === npc || !o.ai) return false;
+        const ts = o.ai.taskState;
+        const dwelling = o.ai.mode === 'wander' && !o._pathFollower?.isNavigating?.();
+        return ts === 'sitting' || ts === 'working' || ts === 'reading' || dwelling;
+      });
+      if (settled.length) {
+        const other = settled[Math.floor(Math.random() * settled.length)];
+        const approach = pf?.findGoodApproachNear?.(other.x, other.y, 20, 40)
+          || { x: other.x + (npc.x > other.x ? 24 : -24), y: other.y };
+        return { pos: approach, dwellMs: Phaser.Math.Between(3500, 9000), faceNpc: other };
+      }
+    }
+
+    // ~40%: hang out at a furniture spot (coffee corner, shelf, plant, …)
+    if (roll < 0.65 && this._npcPoiSpots.length) {
+      const spot = this._npcPoiSpots[Math.floor(Math.random() * this._npcPoiSpots.length)];
+      const pos = pf?.findWalkableNear?.(spot.x, spot.y, 40) || spot;
+      return { pos, dwellMs: Phaser.Math.Between(5000, 14000) };
+    }
+
+    // Rest: a short aimless stroll with a brief pause at the end.
+    let pos = pf?.sampleSafeWalkTarget?.(npc.x, npc.y, 180, 14) || null;
+    if (!pos) {
+      const wx = Phaser.Math.Between(140, 1140);
+      const wy = Phaser.Math.Between(170, 620);
+      pos = pf?.findWalkableNear?.(wx, wy, 48) || { x: wx, y: wy };
+    }
+    return { pos, dwellMs: Phaser.Math.Between(1800, 5200) };
   }
 
   update(time, delta) {
@@ -2738,63 +2839,29 @@ class OfficeScene extends Phaser.Scene {
       }
     }
 
-    // Automated Z-sorting (Y-sorting): only runs when _depthDirty is true.
-    // Mark dirty whenever the player or any NPC is moving (non-zero velocity).
-    if (!this._depthDirty) {
-      const pv = this.player?.body?.velocity;
-      if (pv && (Math.abs(pv.x) > 1 || Math.abs(pv.y) > 1)) {
-        this._depthDirty = true;
-      } else if (Array.isArray(this.npcs)) {
-        for (const npc of this.npcs) {
-          const v = npc.body?.velocity;
-          if (v && (Math.abs(v.x) > 1 || Math.abs(v.y) > 1)) { this._depthDirty = true; break; }
+    // Y-depth for characters only (cheap). Full furniture re-sort is rare —
+    // every-frame full sort with 18 NPCs + desks was a major hitch source.
+    this._depthFrame = (this._depthFrame || 0) + 1;
+    const depthEvery = 2; // ~30 Hz depth updates at 60fps
+    if ((this._depthFrame % depthEvery) === 0 || this._depthDirty) {
+      this._depthDirty = false;
+      const sittingNpcSet = this._agentActions?._sittingNpcs || new Map();
+      const chars = [];
+      if (this.player) chars.push(this.player);
+      if (Array.isArray(this.npcs)) {
+        for (let i = 0; i < this.npcs.length; i++) {
+          const n = this.npcs[i];
+          if (n) chars.push(n);
         }
       }
-    }
-    if (this._depthDirty) {
-      this._depthDirty = false;
-      const isCharacter = (s) => s === this.player || (Array.isArray(this.npcs) && this.npcs.includes(s));
-      const sittingNpcSet = this._agentActions?._sittingNpcs || new Map();
-      const isSittingNpc = (s) => {
-        if (!isCharacter(s) || s === this.player) return false;
+      chars.sort((a, b) => (a.y - b.y));
+      for (let i = 0; i < chars.length; i++) {
+        const s = chars[i];
         const key = s.texture?.key;
-        return key && sittingNpcSet.has(key);
-      };
-      const sortY = (s) => {
-        const baseY = s.y + (s.displayHeight * (1 - s.originY));
-        return isCharacter(s) ? baseY + 1 : baseY;
-      };
-      // Only Y-sort root furniture — desk children are rebased above their parent after.
-      // Wall-hung props stay in the wall band (~1.55); floor paint tiles stay under furniture.
-      const childSprites = new Set();
-      const fixedDepthSprites = new Set();
-      (this._interactables || []).forEach((e) => {
-        if (!e?.sprite) return;
-        if (e.parentInstanceId) childSprites.add(e.sprite);
-        const pl = e.def?._placement || e;
-        const isWall = !!(pl?.wallMount || e.def?.wall_mount || window.DenizenMapEngine?.isWallMount?.(e.id, e.def, pl));
-        const isFloor = e.def?.type === 'floor' || e.def?.category === 'floors';
-        if (isWall || isFloor) fixedDepthSprites.add(e.sprite);
-      });
-      const sortable = [];
-      if (this.player) sortable.push(this.player);
-      if (Array.isArray(this.npcs)) sortable.push(...this.npcs);
-      (this._interactables || []).forEach((e) => {
-        if (!e?.sprite || childSprites.has(e.sprite) || fixedDepthSprites.has(e.sprite)) return;
-        sortable.push(e.sprite);
-      });
-      sortable.sort((a, b) => sortY(a) - sortY(b));
-      sortable.forEach((s, i) => {
-        if (isSittingNpc(s)) return;
-        s.setDepth(10 + i);
-      });
-      // Keep wall mounts / floor tiles at their band depths.
-      (this._interactables || []).forEach((e) => {
-        if (!e?.sprite || !fixedDepthSprites.has(e.sprite)) return;
-        const pl = e.def?._placement || e;
-        e.sprite.setDepth(furnitureRenderDepth(e.sprite.y, e.def, pl));
-      });
-      restackDeskChildren(this);
+        if (key && sittingNpcSet.has(key)) continue;
+        // Band 200+ keeps people above furniture roots (~10–180 typical).
+        s.setDepth(200 + i);
+      }
       sittingNpcSet.forEach((sitData, npcKey) => {
         const npc = this.npcs?.find(n => n.texture?.key === npcKey);
         if (!npc || !sitData.chairSprite) return;
@@ -3120,45 +3187,86 @@ class OfficeScene extends Phaser.Scene {
     if (Array.isArray(this.npcs)) {
       const now = this.time.now;
       const followDistance = 44;
-      const followSpeed = 140;
-      const wanderSpeed = 90;
+      // Floor pace — a 32px character at 160px/s crossed 5 body-lengths a
+      // second, which read as everyone rushing. ~105 is a calm office walk
+      // (and matches the walk-cycle frame rate); follow stays quicker so
+      // an NPC summoned to the player doesn't dawdle.
+      const followSpeed = 150;
+      const wanderSpeed = 105;
 
-      // #1 — Separation steering. For each walking NPC we add a small repulsion
-      // from any neighbor within SEP_RADIUS px. Stationary NPCs (sitting,
-      // working, reading) are ignored as neighbors so you can still walk up to
-      // talk to someone at their desk.
-      // Light-perf: run every N frames — O(n²) is expensive with many walkers.
-      const SEP_RADIUS = 24;
+      // Separation — O(n²); throttle + soft strength so walkers don't jitter.
+      // Kept small relative to walk speed: with axis-aligned Manhattan paths
+      // a big sideways push made walkers drift diagonally off their lane.
+      const SEP_RADIUS = 22;
       const SEP_RADIUS_SQ = SEP_RADIUS * SEP_RADIUS;
-      const SEP_STRENGTH = 55; // px/s max repulsion magnitude
-      const sepEvery = (window.DenizenDeviceProfile?.lightPerf?.()?.sepEveryNFrames) || 1;
+      const SEP_STRENGTH = 20;
+      const sepEvery = (window.DenizenDeviceProfile?.lightPerf?.()?.sepEveryNFrames) || 3;
       this._sepFrame = (this._sepFrame || 0) + 1;
       const runSep = sepEvery <= 1 || (this._sepFrame % sepEvery) === 0;
+      // Cache last sep push per npc so we can reuse between frames (smoother).
+      if (!this._sepCache) this._sepCache = new WeakMap();
       const _applySeparation = (npc, vx, vy) => {
-        if (!runSep) return { vx, vy };
+        if (!runSep) {
+          const cached = this._sepCache.get(npc);
+          if (cached) return { vx: vx + cached.sx * 0.6, vy: vy + cached.sy * 0.6 };
+          return { vx, vy };
+        }
         let sx = 0, sy = 0;
+        let speedScale = 1;
         for (let j = 0; j < this.npcs.length; j++) {
           const other = this.npcs[j];
           if (!other || other === npc) continue;
           const oai = other.ai;
-          // Don't push AWAY from seated targets — we want to be ABLE to approach them.
-          if (oai && (oai.taskState === 'sitting' || oai.taskState === 'working' || oai.taskState === 'reading')) continue;
+          if (oai && (oai.taskState === 'sitting' || oai.taskState === 'reading')) continue;
           const dx = npc.x - other.x;
           const dy = npc.y - other.y;
           const dsq = dx * dx + dy * dy;
           if (dsq === 0 || dsq > SEP_RADIUS_SQ) continue;
           const d = Math.sqrt(dsq);
-          // Falloff: closer = stronger, scaled to SEP_STRENGTH at d=0, 0 at d=SEP_RADIUS
           const strength = (1 - d / SEP_RADIUS) * SEP_STRENGTH;
           sx += (dx / d) * strength;
           sy += (dy / d) * strength;
+          // Head-on aisle encounter: one deterministic walker yields instead
+          // of both pushing into each other and jittering. Texture-key order
+          // keeps the same NPC yielding for the whole encounter.
+          const ovx = other.body?.velocity?.x || 0;
+          const ovy = other.body?.velocity?.y || 0;
+          const closing = vx * ovx + vy * ovy < 0;
+          const myKey = String(npc.texture?.key || '');
+          const otherKey = String(other.texture?.key || '');
+          if (d < 18 && closing && myKey > otherKey) speedScale = Math.min(speedScale, 0.22);
         }
-        return { vx: vx + sx, vy: vy + sy };
+        this._sepCache.set(npc, { sx, sy });
+        return { vx: vx * speedScale + sx, vy: vy * speedScale + sy };
+      };
+      // Soft-blend velocity so path turns don't hard-snap every frame.
+      const _setSmoothVel = (npc, vx, vy) => {
+        if (!npc?.body) return;
+        const curVx = npc.body.velocity.x || 0;
+        const curVy = npc.body.velocity.y || 0;
+        // Higher blend = snappier; 0.28 keeps corners smooth with 18 walkers.
+        const blend = 0.28;
+        npc.body.setVelocity(
+          curVx + (vx - curVx) * blend,
+          curVy + (vy - curVy) * blend,
+        );
       };
 
       this.npcs.forEach((npc, idx) => {
         const ai = npc.ai;
         if (!ai) return;
+        // Multiplayer mirror — walk smoothly toward host targets (don't zero velocity).
+        if (npc._mpMirrorUntil && this.time.now < npc._mpMirrorUntil) {
+          this._driveMirroredNpc(npc);
+          return;
+        }
+        // Non-sim-host: don't invent wander (host broadcasts poses).
+        if (window.__DenizenIsSimHost === false && this._agentManager?._simHostKnown) {
+          if (ai.mode === 'wander' && !npc._pathFollower?.isNavigating?.()) {
+            if (npc.body) npc.body.setVelocity(0, 0);
+            return;
+          }
+        }
 
         // Helper: use pathfinding if available, otherwise straight-line
         const pf = npc._pathFollower;
@@ -3186,22 +3294,22 @@ class OfficeScene extends Phaser.Scene {
               else {
                 ai.taskState = 'idle';
                 ai.mode = 'wander';
-                ai.nextWanderAt = now + 2000;
+                ai.nextWanderAt = now + 900;
               }
             } else if (ai.mode === 'wander') {
               ai.wanderTarget = null;
-              ai.nextWanderAt = now + 1000;
+              ai.nextWanderAt = now + 400;
             }
-          } else if (ai._physicsStuckTime > 200) {
-            // Nudge perpendicular to the blocked direction
-            const nudge = 20;
+          } else if (ai._physicsStuckTime > 450) {
+            // Gentle unstick — big random jumps looked like glitching.
+            const nudge = 6;
             if (b.left || b.right) {
               npc.y += (Math.random() > 0.5 ? nudge : -nudge);
             }
             if (b.up || b.down) {
               npc.x += (Math.random() > 0.5 ? nudge : -nudge);
             }
-            // Force repath
+            // Force repath at most once per unstick
             if (pf && pf.waypoints) {
               const dest = pf.waypoints[pf.waypoints.length - 1];
               if (dest) pf.navigateTo(dest.x, dest.y);
@@ -3218,7 +3326,13 @@ class OfficeScene extends Phaser.Scene {
         // === Robust position-based stuck watchdog (catches soft stucks pathfinder didn't see) ===
         // If the NPC should be moving but hasn't made real progress for >~2.2s, force unstick + fresh wander.
         // Be gentler when the goal is the player (reporting/talk/ceo convo) — just repath to a fresh approach spot.
-        const wantsToMove = (ai.mode === 'wander') || (ai.mode === 'agent_task' && ai.taskState === 'walking');
+        // Only count as "wants to move" while actually navigating a path.
+        // Plain `mode === 'wander'` also matched NPCs deliberately DWELLING
+        // at a spot (coffee corner, a colleague's desk), so the watchdog
+        // kicked every resting NPC after 2.2s and sent them somewhere new —
+        // that constant churn was why the floor never looked settled.
+        const wantsToMove = (ai.mode === 'wander' && (npc._pathFollower?.isNavigating?.() ?? true))
+          || (ai.mode === 'agent_task' && ai.taskState === 'walking');
         const nearPlayer = this.player && ai.taskTarget && Math.hypot(ai.taskTarget.x - this.player.x, ai.taskTarget.y - this.player.y) < 120;
         const isCeoApproach = nearPlayer || ai.taskState === 'reporting' || (ai._ceoConvoUntil && ai._ceoConvoUntil > now);
         if (wantsToMove) {
@@ -3291,7 +3405,7 @@ class OfficeScene extends Phaser.Scene {
               const vel = pf.update(wanderSpeed, delta);
               if (vel) {
                 const sep = _applySeparation(npc, vel.vx, vel.vy);
-                npc.body.setVelocity(sep.vx, sep.vy);
+                _setSmoothVel(npc, sep.vx, sep.vy);
                 if (ai.taskState !== 'walking') ai.taskState = 'walking';
               } else {
                 // Path follower returned null — arrived or gave up
@@ -3320,7 +3434,7 @@ class OfficeScene extends Phaser.Scene {
               const rawVx = ((t.x - npc.x) / dist) * wanderSpeed;
               const rawVy = ((t.y - npc.y) / dist) * wanderSpeed;
               const sep = _applySeparation(npc, rawVx, rawVy);
-              npc.body.setVelocity(sep.vx, sep.vy);
+              _setSmoothVel(npc, sep.vx, sep.vy);
               if (ai.taskState !== 'walking') ai.taskState = 'walking';
             }
           } else {
@@ -3355,7 +3469,7 @@ class OfficeScene extends Phaser.Scene {
               const vel = pf.update(followSpeed, delta);
               if (vel) {
                 const sep = _applySeparation(npc, vel.vx, vel.vy);
-                npc.body.setVelocity(sep.vx, sep.vy);
+                _setSmoothVel(npc, sep.vx, sep.vy);
               } else {
                 npc.body.setVelocity(0, 0);
               }
@@ -3363,7 +3477,7 @@ class OfficeScene extends Phaser.Scene {
               const rawVx = ((targetX - npc.x) / dist) * followSpeed;
               const rawVy = ((targetY - npc.y) / dist) * followSpeed;
               const sep = _applySeparation(npc, rawVx, rawVy);
-              npc.body.setVelocity(sep.vx, sep.vy);
+              _setSmoothVel(npc, sep.vx, sep.vy);
             }
           } else {
             npc.body.setVelocity(0, 0);
@@ -3374,87 +3488,109 @@ class OfficeScene extends Phaser.Scene {
           // (Desk return is AgentManager._forceReturnToDesks + think decisions —
           //  do not auto-hijack wander every frame while status is "working".)
           if (now >= ai.nextWanderAt) {
-            ai.nextWanderAt = now + Phaser.Math.Between(2200, 5800);
-            let target = null;
-
-            if (this._pathfinder) {
-              // Prefer smart sampling away from current position
-              target = this._pathfinder.sampleSafeWalkTarget(npc.x, npc.y, 160, 16);
-            }
-            if (!target) {
-              // Fallback old random + snap — allow lower y for breakroom/reception
-              let wx = Phaser.Math.Between(140, 1140);
-              let wy = Phaser.Math.Between(170, 620);
-              if (this._pathfinder) {
-                const s = this._pathfinder.findWalkableNear(wx, wy, 48);
-                if (s) target = s;
-              }
-              if (!target) target = { x: wx, y: wy };
-            }
-            ai.wanderTarget = target;
+            // Living-office routine: pick a meaningful destination; the real
+            // dwell timer is set on ARRIVAL (below), this is just a ceiling
+            // so a lost path can't leave the NPC parked forever.
+            const poi = this._pickNpcPoi(npc);
+            ai._poi = poi;
+            ai._poiArrived = false;
+            ai.wanderTarget = poi.pos;
+            ai.nextWanderAt = now + 30000;
             if (usePathfinding) {
-              const found = pf.navigateTo(target.x, target.y);
+              const found = pf.navigateTo(poi.pos.x, poi.pos.y);
               if (!found) {
-                // Path impossible even after smart pick — pick again very soon + jitter
-                ai.nextWanderAt = now + 280;
-                const jx = (Math.random() - 0.5) * 18;
-                const jy = (Math.random() - 0.5) * 18;
-                npc.x = Phaser.Math.Clamp(npc.x + jx, 60, 1220);
-                npc.y = Phaser.Math.Clamp(npc.y + jy, 80, 640);
+                ai._poi = null;
+                ai.nextWanderAt = now + 500;
               }
             }
           }
 
+          // Per-NPC pace so the floor doesn't march in lockstep.
+          if (ai._paceMul == null) ai._paceMul = 0.85 + Math.random() * 0.3;
+          const npcWanderSpeed = wanderSpeed * ai._paceMul;
+
+          // Applied when a POI leg finishes: rest there for a while and turn
+          // toward whoever/whatever we came to see.
+          const _arriveAtPoi = () => {
+            if (ai._poiArrived) return;
+            ai._poiArrived = true;
+            const dwell = ai._poi?.dwellMs || Phaser.Math.Between(1500, 4000);
+            ai.nextWanderAt = now + dwell;
+            const other = ai._poi?.faceNpc;
+            if (other?.ai) {
+              const ddx = other.x - npc.x;
+              const ddy = other.y - npc.y;
+              ai.facing = Math.abs(ddx) > Math.abs(ddy)
+                ? (ddx < 0 ? 'left' : 'right')
+                : (ddy < 0 ? 'up' : 'down');
+              // A settled-but-standing colleague glances back. (Seated ones
+              // keep their sit pose — their frame is owned by the seat.)
+              const otherDwelling = other.ai.mode === 'wander' && !other._pathFollower?.isNavigating?.();
+              if (otherDwelling) {
+                other.ai.facing = Math.abs(ddx) > Math.abs(ddy)
+                  ? (ddx < 0 ? 'right' : 'left')
+                  : (ddy < 0 ? 'down' : 'up');
+              }
+            }
+          };
+
           if (usePathfinding && pf.isNavigating()) {
-            const vel = pf.update(wanderSpeed, delta);
+            const vel = pf.update(npcWanderSpeed, delta);
             if (vel) {
               const sep = _applySeparation(npc, vel.vx, vel.vy);
-              npc.body.setVelocity(sep.vx, sep.vy);
+              _setSmoothVel(npc, sep.vx, sep.vy);
             } else {
-              // Arrived or path lost — pick a new target soon
+              // Arrived (or path lost close enough) — settle in.
               npc.body.setVelocity(0, 0);
-              ai.nextWanderAt = Math.min(ai.nextWanderAt || 0, now + 420);
+              _arriveAtPoi();
             }
           } else if (!usePathfinding) {
             const dx = ai.wanderTarget.x - npc.x;
             const dy = ai.wanderTarget.y - npc.y;
             const dist = Math.hypot(dx, dy);
             if (dist > 12) {
-              const rawVx = (dx / dist) * wanderSpeed;
-              const rawVy = (dy / dist) * wanderSpeed;
+              const rawVx = (dx / dist) * npcWanderSpeed;
+              const rawVy = (dy / dist) * npcWanderSpeed;
               const sep = _applySeparation(npc, rawVx, rawVy);
-              npc.body.setVelocity(sep.vx, sep.vy);
+              _setSmoothVel(npc, sep.vx, sep.vy);
             } else {
               npc.body.setVelocity(0, 0);
+              _arriveAtPoi();
             }
           } else {
-            // Not navigating (path failed) — pick a new target soon
+            // Not navigating — either dwelling at a POI (rest until the
+            // dwell timer elapses) or the path failed (retry soon).
             npc.body.setVelocity(0, 0);
-            ai.nextWanderAt = Math.min(ai.nextWanderAt || 0, now + 420);
+            if (!ai._poiArrived) {
+              if (ai._poi) _arriveAtPoi();
+              else ai.nextWanderAt = Math.min(ai.nextWanderAt || 0, now + 280);
+            }
           }
         }
 
-        // Animations based on velocity
+        // Animations based on velocity — only change when facing changes (less anim thrash).
         const vx = npc.body.velocity.x;
         const vy = npc.body.velocity.y;
-        const npcMoving = Math.abs(vx) > 2 || Math.abs(vy) > 2;
+        const npcMoving = Math.abs(vx) > 4 || Math.abs(vy) > 4;
         if (npcMoving) {
+          let nextFacing = ai.facing;
           if (Math.abs(vx) > Math.abs(vy)) {
-            ai.facing = vx < 0 ? 'left' : 'right';
+            nextFacing = vx < 0 ? 'left' : 'right';
           } else {
-            ai.facing = vy < 0 ? 'up' : 'down';
+            nextFacing = vy < 0 ? 'up' : 'down';
           }
-          if (ai.facing === 'up') npc.anims.play(npc._animKey('walk_up'), true);
-          else if (ai.facing === 'down') npc.anims.play(npc._animKey('walk_down'), true);
-          else if (ai.facing === 'left') npc.anims.play(npc._animKey('walk_left'), true);
-          else npc.anims.play(npc._animKey('walk_right'), true);
+          if (nextFacing !== ai.facing || !npc.anims?.isPlaying) {
+            ai.facing = nextFacing;
+            if (ai.facing === 'up') npc.anims.play(npc._animKey('walk_up'), true);
+            else if (ai.facing === 'down') npc.anims.play(npc._animKey('walk_down'), true);
+            else if (ai.facing === 'left') npc.anims.play(npc._animKey('walk_left'), true);
+            else npc.anims.play(npc._animKey('walk_right'), true);
+          }
         } else {
-          // idle frames: up=12 down=0 left=4 right=8
-          // Skip redundant setFrame() calls — only update when facing changes
           const idleFrame = ai.facing === 'up' ? 12 : ai.facing === 'down' ? 0 : ai.facing === 'left' ? 4 : 8;
-          if (npc.frame?.name !== idleFrame) {
-            npc.setFrame(idleFrame);
-            npc.anims.stop();
+          if (npc.anims?.isPlaying) npc.anims.stop();
+          if (npc.frame?.name !== idleFrame && npc.frame?.name !== String(idleFrame)) {
+            try { npc.setFrame(idleFrame); } catch (_) {}
           }
         }
       });
@@ -3467,8 +3603,11 @@ class OfficeScene extends Phaser.Scene {
 
     // Update agent office manager (AI agent coordination)
     if (this._agentManager) {
-      this._agentManager.update();
+      this._agentManager.update(delta);
     }
+
+    // Multiplayer remote visitor sprites
+    this._updateRemotePlayers(delta);
 
     // Update player chat bubbles
     if (this._playerChat) {
@@ -3479,6 +3618,283 @@ class OfficeScene extends Phaser.Scene {
     if (this._robberCtrl) {
       this._robberCtrl.update(this.time.now, delta);
     }
+  }
+
+  // ---- Multiplayer remote visitors ----
+
+  _ensureRemotePlayers() {
+    if (!this._remotePlayers) this._remotePlayers = new Map();
+  }
+
+  /** Drop any remote sprites that are actually us (stale anon/sess echo). */
+  purgeSelfRemotePlayers() {
+    this._ensureRemotePlayers();
+    const selfKey = window.__DenizenPresenceKey || this._agentManager?._presenceKey;
+    const ghosts = Array.isArray(window.__DenizenPresenceGhosts)
+      ? window.__DenizenPresenceGhosts
+      : [];
+    if (selfKey) this.removeRemotePlayer(selfKey);
+    ghosts.forEach((g) => this.removeRemotePlayer(g));
+
+    // Same display name near local avatar = second "me"
+    const myName = (globalThis.DenizenVisitorSession?.getDisplayName?.()
+      || window.__DenizenVisitorDisplayName
+      || '').trim().toLowerCase();
+    if (!myName || !this.player) return;
+    [...this._remotePlayers.keys()].forEach((id) => {
+      const entry = this._remotePlayers.get(id);
+      if (!entry) return;
+      const n = String(entry.displayName || '').trim().toLowerCase();
+      if (!n || n !== myName) return;
+      const dx = (entry.targetX || entry.sprite?.x || 0) - this.player.x;
+      const dy = (entry.targetY || entry.sprite?.y || 0) - this.player.y;
+      // Wide radius — pose lag can leave the ghost a step behind.
+      if ((dx * dx + dy * dy) < (220 * 220)) this.removeRemotePlayer(id);
+    });
+  }
+
+  upsertRemotePlayer(pose) {
+    this._ensureRemotePlayers();
+    const id = String(pose?.sessionId || '').trim();
+    if (!id) return;
+    const selfKey = window.__DenizenPresenceKey || this._agentManager?._presenceKey;
+    // Critical: early return used to leave an already-spawned self ghost alive.
+    if (selfKey && id === selfKey) {
+      this.removeRemotePlayer(id);
+      return;
+    }
+    // Also drop ghost keys we used before sess: upgrade.
+    const ghosts = window.__DenizenPresenceGhosts;
+    if (Array.isArray(ghosts) && ghosts.includes(id)) {
+      this.removeRemotePlayer(id);
+      return;
+    }
+
+    // Same display name glued to local player = echo of me (stale anon pose).
+    const myName = (globalThis.DenizenVisitorSession?.getDisplayName?.()
+      || window.__DenizenVisitorDisplayName
+      || '').trim().toLowerCase();
+    const poseName = String(pose.displayName || '').trim().toLowerCase();
+    if (myName && poseName && myName === poseName && this.player) {
+      const dx = (Number(pose.x) || 0) - this.player.x;
+      const dy = (Number(pose.y) || 0) - this.player.y;
+      // Match laggy poses + near-field doubles.
+      if ((dx * dx + dy * dy) < (220 * 220)) {
+        this.removeRemotePlayer(id);
+        return;
+      }
+    }
+
+    let entry = this._remotePlayers.get(id);
+    const x = Number(pose.x) || 0;
+    const y = Number(pose.y) || 0;
+    const facing = pose.facing || 'down';
+    const anim = pose.anim || 'idle';
+    const name = String(pose.displayName || 'Guest').slice(0, 24);
+
+    if (!entry) {
+      if (!this.textures.exists('dolo')) return;
+      const sprite = this.physics.add.sprite(x, y, 'dolo', 20);
+      sprite.setOrigin(0.5, 1);
+      sprite.setScale(1);
+      sprite.setDepth(10);
+      sprite.body.moves = false;
+      sprite.body.enable = false;
+      // Compact remote-player tag — world-space text next to ~32px sprites
+      // at 2-3x camera zoom, so 11px + fat padding loomed over heads.
+      const label = this.add.text(x, y - 38, name, {
+        fontSize: '8px',
+        fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
+        fontStyle: 'bold',
+        color: '#0f172a',
+        backgroundColor: '#fffffff5',
+        padding: { x: 4, y: 2 },
+        align: 'center',
+      });
+      label.setOrigin(0.5, 1);
+      label.setDepth(9995);
+      label.setAlpha(0.98);
+      if (typeof label.setResolution === 'function') {
+        try {
+          const light = globalThis.DenizenDeviceProfile?.lightPerf?.()?.light
+            || globalThis.DenizenDeviceProfile?.wantsLightPerf?.();
+          label.setResolution(light ? 1 : 2);
+        } catch (_) {
+          label.setResolution(2);
+        }
+      }
+      entry = {
+        id,
+        sprite,
+        label,
+        targetX: x,
+        targetY: y,
+        facing,
+        anim,
+        displayName: name,
+      };
+      this._remotePlayers.set(id, entry);
+    } else {
+      entry.targetX = x;
+      entry.targetY = y;
+      entry.facing = facing;
+      entry.anim = anim;
+      if (name && entry.displayName !== name) {
+        entry.displayName = name;
+        entry.label?.setText(name);
+      }
+    }
+    this._playRemoteAnim(entry);
+  }
+
+  removeRemotePlayer(sessionId) {
+    this._ensureRemotePlayers();
+    const id = String(sessionId || '').trim();
+    const entry = this._remotePlayers.get(id);
+    if (!entry) return;
+    try { entry.sprite?.destroy(); } catch (_) {}
+    try { entry.label?.destroy(); } catch (_) {}
+    this._remotePlayers.delete(id);
+  }
+
+  applyRemotePlayersSnapshot(players = []) {
+    this._ensureRemotePlayers();
+    const selfKey = window.__DenizenPresenceKey || this._agentManager?._presenceKey;
+    const ghosts = Array.isArray(window.__DenizenPresenceGhosts)
+      ? new Set(window.__DenizenPresenceGhosts)
+      : new Set();
+    const keep = new Set();
+    (players || []).forEach((p) => {
+      const id = String(p.sessionId || '').trim();
+      if (!id) return;
+      if (selfKey && id === selfKey) return;
+      if (ghosts.has(id)) return;
+      keep.add(id);
+      this.upsertRemotePlayer(p);
+    });
+    [...this._remotePlayers.keys()].forEach((id) => {
+      if (!keep.has(id)) this.removeRemotePlayer(id);
+    });
+    this.purgeSelfRemotePlayers();
+  }
+
+  _playRemoteAnim(entry) {
+    if (!entry?.sprite || !this._playerAnimKey) return;
+    const dir = entry.facing || 'down';
+    const moving = entry.anim === 'walk' || entry.anim === 'walking';
+    const key = this._playerAnimKey(moving ? `walk_${dir}` : `idle_${dir}`);
+    if (this.anims.exists(key)) {
+      try { entry.sprite.anims.play(key, true); } catch (_) {}
+    }
+  }
+
+  _updateRemotePlayers(delta) {
+    if (!this._remotePlayers || this._remotePlayers.size === 0) return;
+    // Periodic self-scrub (anon→sess lag, pose echo) — keep rare to save CPU.
+    this._selfPurgeAt = this._selfPurgeAt || 0;
+    const now = this.time?.now || Date.now();
+    if (now - this._selfPurgeAt > 2500) {
+      this._selfPurgeAt = now;
+      this.purgeSelfRemotePlayers();
+      if (!this._remotePlayers.size) return;
+    }
+    const dt = Math.min(0.05, (delta || 16) / 1000);
+    const lerp = 1 - Math.pow(0.001, dt); // snappy follow
+    this._remotePlayers.forEach((entry) => {
+      const sp = entry.sprite;
+      if (!sp || !sp.active) return;
+      const dx = entry.targetX - sp.x;
+      const dy = entry.targetY - sp.y;
+      sp.x += dx * Math.min(1, lerp * 14);
+      sp.y += dy * Math.min(1, lerp * 14);
+      if (entry.label) {
+        entry.label.x = sp.x;
+        entry.label.y = sp.y - 38;
+      }
+    });
+  }
+
+  /**
+   * Drive an NPC toward the latest host pose target with continuous velocity
+   * (avoids the old stop/snap/stop stutter from ~5 Hz pose packets).
+   */
+  _driveMirroredNpc(npc) {
+    if (!npc?.body) return;
+    const tx = npc._mpTargetX;
+    const ty = npc._mpTargetY;
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) {
+      npc.body.setVelocity(0, 0);
+      return;
+    }
+    const dx = tx - npc.x;
+    const dy = ty - npc.y;
+    const dist = Math.hypot(dx, dy);
+    const ai = npc.ai;
+    if (dist < 3.5) {
+      npc.body.setVelocity(0, 0);
+      npc.x = tx;
+      npc.y = ty;
+      if (ai && npc._animKey) {
+        const idleFrame = ai.facing === 'up' ? 12 : ai.facing === 'down' ? 0 : ai.facing === 'left' ? 4 : 8;
+        if (npc.frame?.name !== idleFrame) {
+          try { npc.setFrame(idleFrame); npc.anims.stop(); } catch (_) {}
+        }
+      }
+      return;
+    }
+    // Match wander speed; catch-up a bit when behind the host sample.
+    const speed = dist > 48 ? 175 : dist > 18 ? 145 : 120;
+    const vx = (dx / dist) * speed;
+    const vy = (dy / dist) * speed;
+    npc.body.setVelocity(vx, vy);
+    if (!ai || !npc._animKey) return;
+    if (Math.abs(vx) > Math.abs(vy)) ai.facing = vx < 0 ? 'left' : 'right';
+    else ai.facing = vy < 0 ? 'up' : 'down';
+    try {
+      if (ai.facing === 'up') npc.anims.play(npc._animKey('walk_up'), true);
+      else if (ai.facing === 'down') npc.anims.play(npc._animKey('walk_down'), true);
+      else if (ai.facing === 'left') npc.anims.play(npc._animKey('walk_left'), true);
+      else npc.anims.play(npc._animKey('walk_right'), true);
+    } catch (_) {}
+  }
+
+  /**
+   * Mirror host NPC poses (non-host clients). Set targets only — scene update
+   * walks toward them with velocity so motion stays continuous between packets.
+   */
+  applyNpcPoses(npcs = []) {
+    if (!Array.isArray(npcs) || !Array.isArray(this.npcs)) return;
+    const byKey = new Map();
+    this.npcs.forEach((npc) => {
+      const key = npc?.texture?.key;
+      if (key) byKey.set(key, npc);
+    });
+    npcs.forEach((pose) => {
+      const key = pose.key || pose.id || pose.npcKey;
+      const npc = byKey.get(key);
+      if (!npc) return;
+      const tx = Number(pose.x);
+      const ty = Number(pose.y);
+      if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
+      // Soft-correct big desyncs (late join / tab focus) without every-tick snaps.
+      const gap = Math.hypot(tx - npc.x, ty - npc.y);
+      if (gap > 160) {
+        npc.x = tx;
+        npc.y = ty;
+        if (npc.body) {
+          try { npc.body.setVelocity(0, 0); } catch (_) {}
+        }
+      }
+      // Stop inventing a different path — host owns destination.
+      if (npc._pathFollower?.isNavigating?.()) {
+        try { npc._pathFollower.stop(); } catch (_) {}
+      }
+      npc._mpTargetX = tx;
+      npc._mpTargetY = ty;
+      npc._mpMirrorUntil = this.time.now + 450;
+      if (pose.facing && npc.ai) npc.ai.facing = pose.facing;
+      if (pose.taskState && npc.ai) npc.ai.taskState = pose.taskState;
+    });
   }
 }
 

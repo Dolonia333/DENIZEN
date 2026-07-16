@@ -67,7 +67,7 @@
   // type 'panel'    : opens an existing floating panel, constrained to the screen
   // type 'action'   : proxies a toggle chip; stays on the grid with live state
   // type 'launch'   : closes the phone, then triggers (tours / full-screen guides)
-  // type 'internal' : renders its own screen inside the phone (Settings / Office Guide)
+  // type 'internal' : renders its own screen inside the phone (Settings, Link Station, …)
   // type 'navigate' : leave the phone and open a full Denizen page (CRM at /crm/)
   // c: [light, dark] icon tile gradient; dock placement comes from saved home layout
   const APPS = [
@@ -140,12 +140,21 @@
         return '';
       } },
     { id: 'compute', tabler: 'bolt', icon: '💠', label: 'City Power', type: 'special-compute', c: ['#c084fc', '#7e22ce'] },
-    { id: 'tour', tabler: 'book', icon: '📖', label: 'Office Tour', type: 'launch', trigger: '#denizen-onboarding-replay-chip',
-      c: ['#67e8f9', '#155e75'], gated: true },
-    { id: 'meshtour', tabler: 'map', icon: '🗺️', label: 'Power Tour', type: 'launch', trigger: '#denizen-superuser-replay-chip',
-      c: ['#a3e635', '#3f6212'], gated: true },
-    { id: 'guide', tabler: 'compass', icon: '🧭', label: 'Office Guide', type: 'internal',
-      c: ['#facc15', '#854d0e'], gated: true },
+    { id: 'tour', tabler: 'book', icon: '📖', label: 'Office Tour', type: 'launch',
+      trigger: '#denizen-onboarding-replay-chip',
+      c: ['#67e8f9', '#155e75'],
+      // Buzz's branded office tour — don't depend only on a dock chip existing in the DOM.
+      available: () => {
+        if (globalThis.DenizenVisitorSession?.isCeoPrincipal?.()) return false;
+        return typeof globalThis.DenizenVisitorOnboarding?.replay === 'function'
+          || !!document.getElementById('denizen-onboarding-replay-chip')
+          || !scriptsSettled;
+      },
+    },
+    // Discord Spaces + CRM sit high so they’re on the first home page (not
+    // buried under a long scroll of utility apps / old localStorage layouts).
+    { id: 'discordmap', tabler: 'brand-discord', icon: '🗺️', label: 'Discord', type: 'navigate', url: '/discord-map/', c: ['#5865f2', '#3c45c0'],
+      available: () => true },
     { id: 'crm', tabler: 'address-book', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
       available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
@@ -165,30 +174,36 @@
     return app?.icon || '';
   }
 
+  /** Tour-quality Buzz mascot for the bottom-right phone FAB (CRM, chat, etc.). */
+  function buzzFabMarkup() {
+    return (
+      '<span class="dzp-fab-buzz-stage" aria-hidden="true">'
+      + '<span class="dzp-fab-buzz-bubble">Hey — I work here too.</span>'
+      + '<span class="dzp-fab-buzz">'
+      + '<span class="dzp-fab-buzz-antenna"></span>'
+      + '<span class="dzp-fab-buzz-screen">'
+      + '<span class="dzp-fab-buzz-eye"></span>'
+      + '<span class="dzp-fab-buzz-eye"></span>'
+      + '</span>'
+      + '<span class="dzp-fab-buzz-pad">'
+      + '<i></i><i></i><i></i><i></i><i></i><i></i>'
+      + '</span>'
+      + '<span class="dzp-fab-buzz-tag">Buzz</span>'
+      + '</span>'
+      + '</span>'
+    );
+  }
+
   function paintPhoneFab() {
     if (!fabEl) return;
     const badge = fabEl.querySelector('.dzp-fab-badge');
     const badgeHtml = badge ? badge.outerHTML : '<span class="dzp-fab-badge"></span>';
-    const T = globalThis.DenizenTablerIcons;
-    if (T?.icon) {
-      T.ensureStyles?.();
-      fabEl.innerHTML = `${T.icon('device-mobile', { size: 24, className: 'dzp-fab-ti' })}${badgeHtml}`;
-      fabEl.dataset.icon = 'tabler';
-      return;
-    }
-    fabEl.innerHTML = `📱${badgeHtml}`;
-    fabEl.dataset.icon = 'emoji';
+    fabEl.innerHTML = `${buzzFabMarkup()}${badgeHtml}`;
+    fabEl.dataset.icon = 'buzz';
   }
 
   function ensurePhoneFabIcon() {
     paintPhoneFab();
-    if (fabEl?.dataset.icon === 'tabler') return;
-    let tries = 0;
-    const t = setInterval(() => {
-      paintPhoneFab();
-      tries += 1;
-      if (fabEl?.dataset.icon === 'tabler' || tries >= 40) clearInterval(t);
-    }, 250);
   }
 
   function repaintAppIcons() {
@@ -231,6 +246,9 @@
   const OFFICE_GUIDE_STORAGE_KEY = 'denizen-office-guide-progress-v1';
   const MAX_DOCK_APPS = 4;
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workflow', 'profile'];
+  /** Prefer these near the top of the home grid (first page / less scroll). */
+  const PRIORITY_GRID_IDS = ['discordmap', 'crm', 'tour', 'npcteam', 'market', 'station', 'compute'];
+  const LAYOUT_VERSION = 2;
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {
@@ -277,12 +295,19 @@
 
   const appById = Object.fromEntries(APPS.map((a) => [a.id, a]));
 
-  function defaultPhoneLayout() {
+  function defaultGridOrder() {
     const dockSet = new Set(DEFAULT_DOCK_IDS);
+    const rest = APPS.map((a) => a.id).filter((id) => !dockSet.has(id));
+    const priority = PRIORITY_GRID_IDS.filter((id) => rest.includes(id));
+    const prioritySet = new Set(priority);
+    return [...priority, ...rest.filter((id) => !prioritySet.has(id))];
+  }
+
+  function defaultPhoneLayout() {
     return {
-      v: 1,
+      v: LAYOUT_VERSION,
       dock: [...DEFAULT_DOCK_IDS],
-      grid: APPS.map((a) => a.id).filter((id) => !dockSet.has(id)),
+      grid: defaultGridOrder(),
       folders: {},
     };
   }
@@ -355,12 +380,41 @@
     };
 
     if (Array.isArray(raw.grid)) raw.grid.forEach(pushGrid);
+
+    // Missing apps (e.g. Discord Map added after an old layout was saved)
+    // go near the front of the home grid, not dumped at the bottom.
+    const missing = [];
     for (const id of known) {
-      if (!placed.has(id)) pushGrid(id);
+      if (!placed.has(id)) missing.push(id);
+    }
+    if (missing.length) {
+      const priorityMissing = PRIORITY_GRID_IDS.filter((id) => missing.includes(id));
+      const prioritySet = new Set(priorityMissing);
+      const otherMissing = missing.filter((id) => !prioritySet.has(id));
+      const front = [...priorityMissing, ...otherMissing];
+      for (let i = front.length - 1; i >= 0; i -= 1) {
+        if (!placed.has(front[i])) {
+          placed.add(front[i]);
+          grid.unshift(front[i]);
+        }
+      }
+    }
+
+    // One-time layout bump: if Discord/CRM are still buried (old v1 saves),
+    // pull priority apps into the first slots of the grid.
+    const rawV = Number(raw.v) || 1;
+    if (rawV < LAYOUT_VERSION) {
+      const priorityOnGrid = PRIORITY_GRID_IDS.filter((id) => grid.includes(id));
+      if (priorityOnGrid.length) {
+        const pset = new Set(priorityOnGrid);
+        const rest = grid.filter((ref) => !pset.has(ref));
+        grid.length = 0;
+        grid.push(...priorityOnGrid, ...rest);
+      }
     }
 
     return {
-      v: 1,
+      v: LAYOUT_VERSION,
       dock: dock.length ? dock : [...base.dock],
       grid,
       folders,
@@ -370,7 +424,13 @@
   function readPhoneLayout() {
     try {
       const raw = JSON.parse(localStorage.getItem(LAYOUT_STORAGE_KEY) || 'null');
-      return normalizePhoneLayout(raw);
+      const prevV = Number(raw?.v) || 0;
+      const next = normalizePhoneLayout(raw);
+      // Persist layout bumps (e.g. surface Discord Map) so we don't re-reorder every load.
+      if (!raw || prevV < LAYOUT_VERSION) {
+        try { localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(next)); } catch (_) {}
+      }
+      return next;
     } catch (_) {
       return defaultPhoneLayout();
     }
@@ -678,65 +738,257 @@
       ${M}.denizen-desktop #denizen-node-ui-restore,
       ${M}.denizen-desktop #denizen-visitor-credits-chip { display: none !important; }
 
-      /* ---- FAB: a tiny phone with a lit screen ---- */
+      /* ---- FAB: tour-quality Buzz (bottom-right phone → CRM, chat, tours…) ----
+         Outer #fab transform = corner slide only.
+         Stage holds bubble + phone; bob/tilt match visitor-onboarding Buzz. */
+      @keyframes dzp-fab-bob {
+        0%, 100% { transform: translateY(0) rotate(3deg); }
+        50% { transform: translateY(-5px) rotate(3deg); }
+      }
+      @keyframes dzp-fab-blink {
+        0%, 46%, 54%, 100% { transform: scaleY(1); }
+        50% { transform: scaleY(0.12); }
+      }
+      @keyframes dzp-fab-antenna {
+        0%, 100% { background: #f87171; transform: scale(1); }
+        50% { background: #fca5a5; transform: scale(1.15); }
+      }
+      @keyframes dzp-fab-pop-in {
+        from { opacity: 0; transform: translate(18px, 12px) rotate(8deg) scale(0.9); }
+        to { opacity: 1; transform: translate(0, 0) rotate(3deg) scale(1); }
+      }
       #${FAB_ID} {
         position: fixed;
-        right: max(14px, env(safe-area-inset-right, 0px));
-        bottom: max(14px, env(safe-area-inset-bottom, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+        bottom: max(10px, env(safe-area-inset-bottom, 0px));
         z-index: 2147483490;
-        width: 54px;
-        height: 64px;
-        border-radius: 14px;
-        border: 2px solid #475569;
-        background:
-          linear-gradient(160deg, rgba(125, 211, 252, 0.16), rgba(2, 6, 23, 0) 55%),
-          linear-gradient(180deg, #1e293b, #020617 80%);
+        width: 168px;
+        height: 118px;
+        margin: 0;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
         color: #e2e8f0;
-        font-size: 22px;
-        line-height: 1;
+        font-size: 0;
+        line-height: 0;
         cursor: pointer;
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 0 3px #020617;
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
         user-select: none;
-        transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.2s ease;
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        /* transform owned by corner-hud-autohide (slide in on hover) */
+        transition: transform 0.22s cubic-bezier(0.22, 1.1, 0.36, 1), opacity 0.2s ease;
       }
-      #${FAB_ID} .dzp-fab-ti {
-        color: #7dd3fc;
-        filter: drop-shadow(0 1px 3px rgba(2, 6, 23, 0.55));
+      #${FAB_ID} .dzp-fab-buzz-stage {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        padding: 18px 8px 4px 4px;
+        pointer-events: none;
+        filter: drop-shadow(3px 5px 0 rgba(0, 0, 0, 0.42));
       }
-      #${FAB_ID}::after {
-        content: '';
+      /* Speech bubble — tour-style cream card */
+      #${FAB_ID} .dzp-fab-buzz-bubble {
+        position: relative;
+        max-width: 132px;
+        margin: 0 2px 0 0;
+        padding: 7px 10px;
+        border-radius: 10px 10px 3px 10px;
+        background: #fef3c7;
+        color: #422006;
+        font-family: "Syne", "Segoe UI", system-ui, sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        line-height: 1.25;
+        border: 2px solid #020617;
+        box-shadow: 2px 3px 0 #020617;
+        text-align: right;
+        opacity: 0;
+        transform: translateY(6px) scale(0.96);
+        transition: opacity 0.2s ease, transform 0.22s cubic-bezier(0.22, 1.1, 0.36, 1);
+      }
+      #${FAB_ID} .dzp-fab-buzz-bubble::after {
+        content: "";
         position: absolute;
-        left: 50%;
-        bottom: 5px;
-        width: 16px;
-        height: 3px;
+        right: 16px;
+        bottom: -7px;
+        border: 6px solid transparent;
+        border-top-color: #020617;
+        border-bottom: 0;
+      }
+      #${FAB_ID} .dzp-fab-buzz-bubble::before {
+        content: "";
+        position: absolute;
+        right: 18px;
+        bottom: -4px;
+        border: 5px solid transparent;
+        border-top-color: #fef3c7;
+        border-bottom: 0;
+        z-index: 1;
+      }
+      /* Phone body — same construction as onboarding .onb-buzz-phone */
+      #${FAB_ID} .dzp-fab-buzz {
+        position: relative;
+        width: 54px;
+        height: 66px;
+        border-radius: 12px 12px 16px 16px;
+        border: 3px solid #020617;
+        background: #1e293b;
+        box-shadow:
+          inset 0 2px 0 rgba(255, 255, 255, 0.12),
+          3px 4px 0 #020617;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding-top: 10px;
+        gap: 5px;
+        transform: rotate(3deg);
+        animation: dzp-fab-bob 2.2s ease-in-out infinite;
+      }
+      #${FAB_ID} .dzp-fab-buzz-antenna {
+        position: absolute;
+        top: -12px;
+        right: 12px;
+        width: 3px;
+        height: 12px;
+        background: #94a3b8;
         border-radius: 2px;
+      }
+      #${FAB_ID} .dzp-fab-buzz-antenna::after {
+        content: "";
+        position: absolute;
+        top: -4px;
+        left: -3px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #f87171;
+        border: 2px solid #020617;
+        animation: dzp-fab-antenna 1.4s ease-in-out infinite;
+      }
+      #${FAB_ID} .dzp-fab-buzz-screen {
+        width: 32px;
+        height: 22px;
+        border-radius: 4px;
+        background: #38bdf8;
+        border: 2px solid #020617;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+      #${FAB_ID} .dzp-fab-buzz-eye {
+        width: 5px;
+        height: 7px;
+        border-radius: 2px;
+        background: #0b1220;
+        transform-origin: center;
+        animation: dzp-fab-blink 3.6s ease-in-out infinite;
+      }
+      #${FAB_ID} .dzp-fab-buzz-eye:nth-child(2) { animation-delay: 0.12s; }
+      #${FAB_ID} .dzp-fab-buzz-pad {
+        display: grid;
+        grid-template-columns: repeat(3, 5px);
+        gap: 2px;
+      }
+      #${FAB_ID} .dzp-fab-buzz-pad i {
+        display: block;
+        width: 5px;
+        height: 5px;
+        border-radius: 1px;
         background: #475569;
-        transform: translateX(-50%);
+        border: 1px solid #020617;
+      }
+      #${FAB_ID} .dzp-fab-buzz-tag {
+        position: absolute;
+        right: -8px;
+        bottom: 10px;
+        font-family: "Syne", "Segoe UI", system-ui, sans-serif;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #fde68a;
+        background: #0b1220;
+        border: 2px solid #f59e0b;
+        border-radius: 4px;
+        padding: 1px 5px;
+        box-shadow: 2px 2px 0 #020617;
+        white-space: nowrap;
+        z-index: 2;
+      }
+      /* Bubble + polish when corner peeks / hover / open */
+      html.denizen-corner-hud-open #${FAB_ID} .dzp-fab-buzz-stage,
+      #${FAB_ID}:hover .dzp-fab-buzz-stage,
+      #${FAB_ID}:focus-within .dzp-fab-buzz-stage,
+      #${FAB_ID}.active .dzp-fab-buzz-stage {
+        animation: dzp-fab-pop-in 380ms cubic-bezier(0.22, 1.2, 0.36, 1) both;
+      }
+      html.denizen-corner-hud-open #${FAB_ID} .dzp-fab-buzz-bubble,
+      #${FAB_ID}:hover .dzp-fab-buzz-bubble,
+      #${FAB_ID}:focus-within .dzp-fab-buzz-bubble,
+      #${FAB_ID}.active .dzp-fab-buzz-bubble {
+        opacity: 1;
+        transform: translateY(0) scale(1);
       }
       @media (hover: hover) and (pointer: fine) {
-        #${FAB_ID}:hover { transform: scale(1.06); border-color: #60a5fa; }
+        #${FAB_ID}:hover .dzp-fab-buzz {
+          filter: brightness(1.08);
+        }
       }
-      #${FAB_ID}.denizen-press-active,
-      #${FAB_ID}:active {
-        transform: scale(0.94);
-        border-color: #60a5fa;
+      #${FAB_ID}.denizen-press-active .dzp-fab-buzz,
+      #${FAB_ID}:active .dzp-fab-buzz {
+        filter: brightness(1.12);
+        animation: none;
+        transform: rotate(3deg) scale(0.95);
       }
-      #${FAB_ID}.active { border-color: #4ade80; }
+      #${FAB_ID}.active .dzp-fab-buzz {
+        box-shadow:
+          inset 0 2px 0 rgba(255, 255, 255, 0.14),
+          3px 4px 0 #020617,
+          0 0 0 2px rgba(125, 211, 252, 0.55);
+      }
       #${FAB_ID} .dzp-fab-badge {
         position: absolute;
-        top: -5px;
-        right: -5px;
+        top: 14px;
+        right: 4px;
         width: 12px;
         height: 12px;
         border-radius: 50%;
         background: #ef4444;
         border: 2px solid #020617;
         display: none;
+        z-index: 3;
       }
       #${FAB_ID}.has-badge .dzp-fab-badge { display: block; }
+      @media (max-width: 480px) {
+        #${FAB_ID} {
+          width: 72px;
+          height: 88px;
+        }
+        #${FAB_ID} .dzp-fab-buzz-bubble { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #${FAB_ID} .dzp-fab-buzz,
+        #${FAB_ID} .dzp-fab-buzz-eye,
+        #${FAB_ID} .dzp-fab-buzz-antenna::after,
+        #${FAB_ID} .dzp-fab-buzz-stage {
+          animation: none !important;
+        }
+        #${FAB_ID} .dzp-fab-buzz { transform: rotate(3deg); }
+        #${FAB_ID} .dzp-fab-buzz-bubble {
+          transition: opacity 0.15s ease;
+          transform: none;
+        }
+      }
 
       #${SHELL_ID} {
         position: fixed;
@@ -2241,8 +2493,10 @@
     if (opts.zone) btn.dataset.zone = opts.zone;
     if (opts.index != null) btn.dataset.index = String(opts.index);
     btn.setAttribute('role', 'menuitem');
-    btn.setAttribute('aria-label', app.label);
-    btn.setAttribute('title', app.label);
+    // Short home labels (e.g. "Discord") with fuller titles for tooltips / a11y.
+    const fullName = app.id === 'discordmap' ? 'Discord Map' : app.label;
+    btn.setAttribute('aria-label', fullName);
+    btn.setAttribute('title', fullName);
     btn.dataset.label = app.label;
     btn.innerHTML = `
       <span class="dzp-app-icon" style="--tile-a:${app.c[0]};--tile-b:${app.c[1]}">${appIconMarkup(app)}</span>
@@ -2960,6 +3214,29 @@
   }
 
   async function runLaunchApp(app) {
+    // Office Tour = Buzz's branded overlay ("Hey — I work here too"). Call the API
+    // directly so the app still works if the dock replay chip never mounted.
+    if (app.id === 'tour') {
+      closePhoneFromUi();
+      setTimeout(() => {
+        const replay = globalThis.DenizenVisitorOnboarding?.replay;
+        if (typeof replay === 'function') {
+          const ok = replay.call(globalThis.DenizenVisitorOnboarding);
+          if (ok !== false) {
+            showToast("Buzz's Office Tour");
+            return;
+          }
+        }
+        const trigger = $(app.trigger);
+        if (trigger) {
+          trigger.click();
+          return;
+        }
+        showToast('Office Tour is loading — open the phone again in a moment');
+      }, 180);
+      return;
+    }
+
     let trigger = $(app.trigger);
     if (!trigger) {
       showToast(`Loading ${app.label}…`);
@@ -2978,7 +3255,8 @@
     try {
       href = new URL(path, window.location.origin).href;
     } catch (_) {}
-    showToast(`Opening ${app.label}…`);
+    const toastName = app.id === 'discordmap' ? 'Discord Map' : app.label;
+    showToast(`Opening ${toastName}…`);
     // Fast exit — don't rebuild the home grid while navigating away.
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -3104,8 +3382,8 @@
       <div class="sec">
         <h3>Help</h3>
         <div class="row">
-          <span>What can Denizen do?</span>
-          <button type="button" data-act="guide">Open guide</button>
+          <span>Buzz's Office Tour<br><span class="v">Walk the floor with your office key</span></span>
+          <button type="button" data-act="office-tour">Start tour</button>
         </div>
       </div>`;
     settingsEl.classList.add('show');
@@ -3123,9 +3401,9 @@
         enterEditMode();
       } else if (act === 'reset-home') {
         resetPhoneLayout();
-      } else if (act === 'guide') {
-        const guide = APPS.find((a) => a.id === 'guide');
-        if (guide) renderOfficeGuide(guide);
+      } else if (act === 'office-tour') {
+        const tour = APPS.find((a) => a.id === 'tour');
+        if (tour) runLaunchApp(tour);
       }
     };
     settingsEl.onclick = onAct;
@@ -3150,8 +3428,7 @@
     if (app.type === 'launch') { runLaunchApp(app); return; }
     if (app.type === 'navigate') { runNavigateApp(app); return; }
     if (app.type === 'internal') {
-      if (app.id === 'guide') renderOfficeGuide(app);
-      else if (app.id === 'station') { void renderStationConnect(app); }
+      if (app.id === 'station') { void renderStationConnect(app); }
       else if (app.id === 'workflow') renderWorkflowApp(app);
       else renderSettings(app);
       return;
@@ -3322,8 +3599,8 @@
     fabEl.type = 'button';
     fabEl.innerHTML = '<span class="dzp-fab-badge"></span>';
     ensurePhoneFabIcon();
-    fabEl.title = 'Open your office key — chat, Citizen ID, City Power, and tools';
-    fabEl.setAttribute('aria-label', 'Open phone');
+    fabEl.title = 'Buzz — open your office phone (chat, Citizen ID, City Power, tools)';
+    fabEl.setAttribute('aria-label', 'Open Buzz phone');
     const bind = window.DenizenTouchBind?.bindPress;
     if (bind) bind(fabEl, togglePhone);
     else fabEl.addEventListener('click', togglePhone);

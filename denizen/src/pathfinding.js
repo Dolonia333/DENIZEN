@@ -56,6 +56,9 @@ class OfficePathfinder {
     // Soft-cost layer — added to A* g-score for cells adjacent to obstacles.
     // Encourages paths through open space instead of hugging walls/corners.
     this.softCost = new Float32Array(this.cols * this.rows);
+    // Short-lived destination reservations stop several NPCs from selecting
+    // the same coffee/conversation/doorway pixel at once.
+    this.reservations = new Map();
   }
 
   /**
@@ -270,6 +273,65 @@ class OfficePathfinder {
     return null;
   }
 
+  _reservationKey(px, py) {
+    const g = this.toGrid(px, py);
+    return `${g.x},${g.y}`;
+  }
+
+  releaseReservation(owner) {
+    if (!owner || !this.reservations) return;
+    for (const [key, value] of this.reservations) {
+      if (value.owner === owner) this.reservations.delete(key);
+    }
+  }
+
+  reserveWalkableNear(owner, px, py, maxRadiusPx = 48) {
+    if (!owner) return this.findWalkableNear(px, py, maxRadiusPx);
+    const now = Date.now();
+    for (const [key, value] of this.reservations) {
+      if (value.expiresAt <= now) this.reservations.delete(key);
+    }
+    this.releaseReservation(owner);
+    const cs = this.cellSize;
+    const base = this.toGrid(px, py);
+    const maxRing = Math.max(1, Math.ceil(maxRadiusPx / cs));
+    let best = null;
+    let bestScore = Infinity;
+    for (let r = 0; r <= maxRing; r++) {
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          if (r && Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          const gx = base.x + dx, gy = base.y + dy;
+          if (!this.isWalkable(gx, gy)) continue;
+          const pos = this.toPixel(gx, gy);
+          let crowded = false;
+          for (const value of this.reservations.values()) {
+            if (value.owner === owner) continue;
+            if (Math.hypot(value.x - pos.x, value.y - pos.y) < 24) {
+              crowded = true;
+              break;
+            }
+          }
+          if (crowded) continue;
+          const idx = gy * this.cols + gx;
+          const score = Math.hypot(pos.x - px, pos.y - py) + (this.softCost?.[idx] || 0) * 6;
+          if (score < bestScore) {
+            bestScore = score;
+            best = pos;
+          }
+        }
+      }
+      if (best && r >= 2) break;
+    }
+    if (!best) best = this.findWalkableNear(px, py, maxRadiusPx);
+    if (best) {
+      this.reservations.set(this._reservationKey(best.x, best.y), {
+        owner, x: best.x, y: best.y, expiresAt: now + 20000,
+      });
+    }
+    return best;
+  }
+
   /**
    * Pick a random walkable point in the office, preferring open areas away from avoid point.
    * Tries multiple samples and snaps each with findWalkableNear. Returns pixel {x,y} or null.
@@ -378,10 +440,9 @@ class OfficePathfinder {
    */
   _blockRect(px, py, pw, ph) {
     const cs = this.cellSize;
-    // NPC foot hitboxes are ~10x8, so minimal padding needed.
-    // Soft-cost layer handles corner-hugging; keep pad tight (3px) so NPCs
-    // can still fit through doorways on the 8px grid.
-    const pad = 3;
+    // Leave shoulder room around furniture. Doorways are carved again after
+    // the grid builds, so this can be wider without sealing room entrances.
+    const pad = 8;
     const x0 = Math.max(0, Math.floor((px - pad) / cs));
     const y0 = Math.max(0, Math.floor((py - pad) / cs));
     const x1 = Math.min(this.cols - 1, Math.floor((px + pw + pad) / cs));
@@ -496,16 +557,17 @@ class OfficePathfinder {
     const maxIterations = this.maxIterations || 6000;
     let iterations = 0;
 
-    // 8-directional neighbors
+    // 4-directional neighbors ONLY. The character sheets have exactly four
+    // walk animations (up/down/left/right) — diagonal path legs made NPCs
+    // "skate" sideways while playing an axis-aligned walk cycle, which was
+    // the single biggest thing making movement look wrong. Manhattan paths
+    // cost a little extra distance but every step now matches its animation
+    // (the classic Pokémon/Stardew pixel-office walk).
     const dirs = [
       { dx: 0, dy: -1, cost: 1 },  // up
       { dx: 0, dy: 1, cost: 1 },   // down
       { dx: -1, dy: 0, cost: 1 },  // left
       { dx: 1, dy: 0, cost: 1 },   // right
-      { dx: -1, dy: -1, cost: 1.41 }, // diagonals
-      { dx: 1, dy: -1, cost: 1.41 },
-      { dx: -1, dy: 1, cost: 1.41 },
-      { dx: 1, dy: 1, cost: 1.41 },
     ];
 
     while (openSet.size() > 0 && iterations < maxIterations) {
@@ -532,15 +594,6 @@ class OfficePathfinder {
         const ny = current.y + dir.dy;
 
         if (!this.isWalkable(nx, ny)) continue;
-
-        // For diagonals, check that both adjacent cardinal cells are walkable
-        // (prevent cutting through diagonal wall corners)
-        if (dir.dx !== 0 && dir.dy !== 0) {
-          if (!this.isWalkable(current.x + dir.dx, current.y) ||
-              !this.isWalkable(current.x, current.y + dir.dy)) {
-            continue;
-          }
-        }
 
         const nk = key(nx, ny);
         // Movement cost + soft penalty for cells near obstacles (favors open space).
@@ -578,8 +631,13 @@ class OfficePathfinder {
   }
 
   /**
-   * Simplify path by removing collinear waypoints (ray-cast simplification).
-   * Keeps corners, removes straight-line intermediate points.
+   * Simplify path by merging same-direction runs into single legs.
+   *
+   * IMPORTANT: this must NOT use line-of-sight shortcutting — that would
+   * splice diagonal legs back into the axis-aligned 4-dir A* output, and
+   * the whole point of Manhattan pathing is that every leg matches one of
+   * the four walk animations. Merging collinear steps keeps the corner
+   * waypoints and nothing else.
    */
   _simplifyPath(waypoints) {
     if (waypoints.length <= 2) return waypoints;
@@ -588,13 +646,15 @@ class OfficePathfinder {
 
     for (let i = 1; i < waypoints.length - 1; i++) {
       const prev = simplified[simplified.length - 1];
+      const cur = waypoints[i];
       const next = waypoints[i + 1];
-
-      // Check if we can walk straight from prev to next without hitting a wall
-      if (!this._lineOfSight(prev.x, prev.y, next.x, next.y)) {
-        // Can't skip this waypoint — it's a necessary corner
-        simplified.push(waypoints[i]);
-      }
+      const inDx = Math.sign(cur.x - prev.x);
+      const inDy = Math.sign(cur.y - prev.y);
+      const outDx = Math.sign(next.x - cur.x);
+      const outDy = Math.sign(next.y - cur.y);
+      // Same direction on both sides → cur is mid-run, drop it.
+      if (inDx === outDx && inDy === outDy) continue;
+      simplified.push(cur);
     }
 
     simplified.push(waypoints[waypoints.length - 1]);
@@ -648,6 +708,7 @@ class NpcPathFollower {
     this._rerouteCount = 0;      // how many times we've rerouted for this destination
     this._maxReroutes = 5;       // give up after this many reroutes
     this._totalStuckTime = 0;    // cumulative time stuck on this path
+    this._reservationOwner = npc?.texture?.key || npc;
   }
 
   /**
@@ -657,6 +718,13 @@ class NpcPathFollower {
    * @returns {boolean} True if a path was found
    */
   navigateTo(targetX, targetY) {
+    const reserved = this.pathfinder.reserveWalkableNear?.(
+      this._reservationOwner, targetX, targetY, 48,
+    );
+    if (reserved) {
+      targetX = reserved.x;
+      targetY = reserved.y;
+    }
     const finder = typeof this.pathfinder.findPathSmart === 'function'
       ? 'findPathSmart'
       : 'findPath';
@@ -701,26 +769,28 @@ class NpcPathFollower {
     const dy = target.y - this.npc.y;
     const dist = Math.hypot(dx, dy);
 
-    // Reached current waypoint?
-    if (dist < 10) {
+    // Reached current waypoint? Slightly larger radius = fewer micro-corner hitches.
+    if (dist < 14) {
       this.waypointIndex++;
       this._stuckTimer = 0;
       this._lastPos = { x: this.npc.x, y: this.npc.y };
       if (this.waypointIndex >= this.waypoints.length) {
         this.waypoints = null;
+        this.pathfinder.releaseReservation?.(this._reservationOwner);
         return null; // Arrived at destination
       }
       // Continue to next waypoint
       return this.update(speed, delta);
     }
 
-    // Stuck detection: accumulate time, check position every 500ms
+    // Stuck detection: check quickly enough to reroute before an NPC visibly
+    // grinds against furniture for several seconds.
     this._stuckTimer += delta;
     if (this._stuckTimer >= 500) {
       const movedDist = Math.hypot(this.npc.x - this._lastPos.x, this.npc.y - this._lastPos.y);
       this._lastPos = { x: this.npc.x, y: this.npc.y };
 
-      if (movedDist < 4) {
+      if (movedDist < 3) {
         this._stuckCount = (this._stuckCount || 0) + 1;
         this._totalStuckTime += 500;
 
@@ -735,8 +805,8 @@ class NpcPathFollower {
           return null;
         }
 
-        // Stuck for 3 checks (1.5s) — nudge randomly then reroute
-        if (this._stuckCount >= 3) {
+        // Stuck for 2 checks (~1s) — reroute before the collision reads as a bug.
+        if (this._stuckCount >= 2) {
           this._stuckCount = 0;
           this._rerouteCount++;
 
@@ -751,8 +821,8 @@ class NpcPathFollower {
             return null;
           }
 
-          // Apply a small random nudge to break free before rerouting
-          const nudgeAmt = 10 + Math.random() * 12;
+          // Tiny nudge only — large jumps looked like glitching
+          const nudgeAmt = 4 + Math.random() * 4;
           const nudgeAngle = Math.random() * Math.PI * 2;
           this.npc.x += Math.cos(nudgeAngle) * nudgeAmt;
           this.npc.y += Math.sin(nudgeAngle) * nudgeAmt;
@@ -794,13 +864,11 @@ class NpcPathFollower {
       this._stuckTimer = 0;
     }
 
-    // Arrival slowdown — when approaching the FINAL waypoint, scale speed
-    // by dist/40 (floor 0.35). Prevents overshoot / jitter at the goal.
-    // Skip for the player avatar — crawl-in feels like "walking slow".
+    // Gentle ease near final waypoint only (avoid crawl + hard stop).
     let effSpeed = speed;
     const isPlayer = !!(this.npc && window.game?.scene?.scenes?.[0]?.player === this.npc);
-    if (!isPlayer && this.waypointIndex === this.waypoints.length - 1 && dist < 40) {
-      const slowFactor = Math.max(0.35, dist / 40);
+    if (!isPlayer && this.waypointIndex === this.waypoints.length - 1 && dist < 22) {
+      const slowFactor = Math.max(0.7, dist / 22);
       effSpeed = speed * slowFactor;
     }
 
@@ -816,6 +884,7 @@ class NpcPathFollower {
   stop() {
     this.waypoints = null;
     this.waypointIndex = 0;
+    this.pathfinder.releaseReservation?.(this._reservationOwner);
   }
 
   /**
