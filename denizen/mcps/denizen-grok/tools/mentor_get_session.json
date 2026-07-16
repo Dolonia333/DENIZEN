@@ -1,0 +1,16 @@
+{
+  "name": "mentor_get_session",
+  "description": "Fetch one mentor dialogue session by id.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "session_id": {
+        "type": "string",
+        "description": "Session UUID"
+      }
+    },
+    "required": [
+      "session_id"
+    ]
+  }
+}

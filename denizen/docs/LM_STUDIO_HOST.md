@@ -12,8 +12,11 @@ Water cooling buys *sustained clocks* under multi-hour think loops. It does **no
 
 | Slot | Model | Context | Role |
 |------|-------|---------|------|
-| FAST | `google/gemma-4-e2b` | 8k | presence, ambient thinks, bouncer, skill args |
-| MAIN = HEAVY | `qwen2.5-14b-instruct-1m` (or `qwen/qwen3.6-27b` if it fits with FAST) | **12–16k** | player chat, Abby/Bob thinks, director, code, mentors |
+| FAST | `google/gemma-4-e2b` | 8–12k | presence, ambient thinks, bouncer, skill args |
+| MAIN = HEAVY | **`qwen/qwen3.6-27b`** Q4_K_M | **12–16k** | player chat, Abby/Bob thinks, director, code, mentors |
+
+Verified dual-load on 4070 Ti SUPER 16GB with those context caps.  
+**Fallback if VRAM tight:** unload Gemma temporarily, or pin MAIN=HEAVY to `qwen2.5-14b-instruct-1m` @ 12–16k — not the daily default.
 
 **Never load three mid/heavy models.** 2×fat + 1×small at 64k context = VRAM thrash, 10x latency, and the router silently falling back to the 2B — which is exactly the "feels dumb" failure.
 
@@ -26,13 +29,13 @@ Water cooling buys *sustained clocks* under multi-hour think loops. It does **no
 - [ ] Flash attention ON (if available for the runtime)
 - [ ] GPU offload: max layers that fit — if LM Studio warns about partial offload on MAIN, reduce context before reducing layers
 
-### Env pins (denizen/.env on the NAS — must match what's loaded)
+### Env pins (denizen/.env + .env.production — must match what's loaded)
 
 ```
-LM_STUDIO_URL=http://192.168.1.232:1234
+LM_STUDIO_REMOTE_URLS=http://192.168.1.232:1234
 LM_STUDIO_FAST_MODEL=google/gemma-4-e2b
-LM_STUDIO_MODEL=qwen2.5-14b-instruct-1m
-LM_STUDIO_HEAVY_MODEL=qwen2.5-14b-instruct-1m
+LM_STUDIO_MODEL=qwen/qwen3.6-27b
+LM_STUDIO_HEAVY_MODEL=qwen/qwen3.6-27b
 ```
 
 If you swap models in LM Studio, **update the pins and restart denizen-server**. The health endpoint will flag `main_model_unloaded` if the pin and reality disagree — that flag red = fix it now, the office is answering hard questions on the 2B.

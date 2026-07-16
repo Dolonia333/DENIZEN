@@ -165,6 +165,7 @@ const npcMcpGateway    = require('./src/denizen-npc-mcp-gateway');
 const teamMcpGateway   = require('./src/denizen-mcp-team-gateway');
 const mcpScopes        = require('./src/denizen-mcp-scopes');
 const mcpOauth         = require('./src/denizen-mcp-oauth');
+const mcpHealth        = require('./src/denizen-mcp-health');
 const routeRegistry    = require('./src/route-registry');
 const competencyMap    = require('./src/competency-map');
 const platformBridge   = require('./src/platform-bridge');
@@ -194,6 +195,9 @@ const playerChatSkills = require('./src/player-chat-skill-bridge');
 const chatAttachments = require('./src/chat-attachments');
 const localMetrics = require('./src/npc-local-metrics');
 const officeStatusBrief = require('./src/office-status-brief');
+const denizenDailyPlan = require('./src/denizen-daily-plan');
+let denizenImpactGates = null;
+try { denizenImpactGates = require('./src/denizen-impact-gates'); } catch (_) {}
 const crmNpcPersonas = require('./src/denizen-crm-npc-personas');
 const taskResourceAdvisor = require('./src/task-resource-advisor');
 const skillGapOrchestrator = require('./src/skill-gap-orchestrator');
@@ -9550,6 +9554,94 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     }
   }
 
+  // --- A+ P2.2 high-impact approval queue (email/code/trade/deploy gates) ---
+  if (urlPath === '/api/impact-approvals' && req.method === 'GET') {
+    try {
+      if (!denizenImpactGates) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'impact_gates_unavailable' }));
+        return;
+      }
+      const url = new URL(req.url, 'http://x');
+      const status = url.searchParams.get('status') || 'pending';
+      const approvals = denizenImpactGates.listPending({ status });
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, approvals, count: approvals.length }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    }
+    return;
+  }
+  const impactResolveMatch = urlPath.match(/^\/api\/impact-approvals\/([^/]+)\/resolve$/);
+  if (impactResolveMatch && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; if (body.length > 50_000) req.destroy(); });
+    req.on('end', () => {
+      try {
+        if (!denizenImpactGates) {
+          res.writeHead(503, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'impact_gates_unavailable' }));
+          return;
+        }
+        const id = decodeURIComponent(impactResolveMatch[1] || '');
+        const parsed = body ? JSON.parse(body) : {};
+        const result = denizenImpactGates.resolveApproval(id, {
+          approved: parsed.approved,
+          decision: parsed.decision,
+          note: parsed.note,
+          resolvedBy: parsed.resolvedBy || parsed.resolved_by || null,
+        });
+        if (!result.ok) {
+          const code = result.error === 'not_found' ? 404 : 400;
+          res.writeHead(code, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: result.error }));
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, approval: result.row }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
+  // --- A+ P2.2 company daily plan (heuristic 5 priorities) ---
+  if (urlPath === '/api/daily-plan' && req.method === 'GET') {
+    try {
+      const plan = denizenDailyPlan.getTodayPlan();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, plan }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    }
+    return;
+  }
+  if (urlPath === '/api/daily-plan/regenerate' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; if (body.length > 50_000) req.destroy(); });
+    req.on('end', () => {
+      try {
+        const parsed = body ? JSON.parse(body) : {};
+        const plan = denizenDailyPlan.buildDailyPlan({
+          officeSnapshot: parsed.officeSnapshot || parsed.office || null,
+          crmBrief: parsed.crmBrief || parsed.crm || null,
+          date: parsed.date || null,
+        });
+        denizenDailyPlan.saveDailyPlan(plan);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, plan, regenerated: true }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
   // --- Denizen Harness control plane ---
   if ((urlPath === '/api/harness' || urlPath === '/api/harness/status') && req.method === 'GET') {
     (async () => {
@@ -9693,6 +9785,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
                   issues.push('main_model_unloaded');
                 }
                 if (!lmStudioStatus?.reachable) issues.push('inference_unreachable');
+                // demo_mode = no LLM at all (scripted). local_only = LM Studio only (normal).
                 if (npcBrains._demoMode) issues.push('demo_mode');
                 const cfStatus = cofounderAgent?.buildDirectorHealth?.();
                 if (cfStatus?.offline) issues.push('director_offline');
@@ -9720,6 +9813,9 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
                 const stats = global._npcStats || {};
                 const providerOk = stats.providerOk || 0;
                 const harnessComplete = stats.harnessComplete || 0;
+                const streamParity = stats.streamParity || 0;
+                // Honest rate: only complete() counts as harness; streams are
+                // sampling-parity only (see streamParity).
                 return {
                   version: denizenHarness?.version || null,
                   skills: denizenHarness?.listSkills?.()?.length ?? null,
@@ -9727,6 +9823,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
                   // A+ scorecard: harnessComplete / providerOk ≥ 0.95
                   providerOk,
                   harnessComplete,
+                  streamParity,
                   harnessRate: providerOk > 0
                     ? Number((harnessComplete / providerOk).toFixed(4))
                     : null,
@@ -9740,6 +9837,14 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
                 };
               } catch (err) {
                 return { ok: false, error: err?.message || String(err) };
+              }
+            })(),
+            // MCP / BYO-AI surface (A-grade P3.2) — no secrets
+            mcp: (() => {
+              try {
+                return mcpHealth.summarizeMcpSurface();
+              } catch (err) {
+                return { ok: false, error: err?.message || String(err), notes: ['mcp_health_failed'] };
               }
             })(),
             publicDemo: {
@@ -9757,6 +9862,8 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
             worldPubsub: worldPubsub.buildStatus(),
             providers,
             demoMode: !!npcBrains._demoMode,
+            // Distinct from demoMode: local LM Studio with no cloud keys (normal lab).
+            localOnly: !!npcBrains._localOnlyMode,
             hardware: hardwarePayload,
             wsClients: {
               agent: cofounderAgent.wsClients.size,

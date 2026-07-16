@@ -147,10 +147,10 @@ input_schema · timeout · cooldown · preferred_tier · output_shape · inject_
 
 **P1 exit criteria**
 
-- [ ] Chat format errors &lt; 2%  
-- [ ] Context overflow events &lt; 1/day on dual-load  
-- [ ] Top-10 skills have contracts + tests  
-- [ ] Bouncer-style repetition gone under load test
+- [x] Chat structured parse path landed (`denizen-chat-schema` + wired in brains) — *measure &lt;2% live after soak*  
+- [x] Retrieval memory top-k for think/chat (`denizen-memory-retrieve`) — *overflow soak still open*  
+- [x] Top-10 skills have contracts + tests (`denizen-skill-contracts`, 83 A+ suite green)  
+- [ ] Bouncer-style repetition gone under load test (sampling live; soak not complete)
 
 ---
 
@@ -190,8 +190,11 @@ telemetry friction → consult queue → mentor answer → MEMORY inject
 
 **P2 exit criteria**
 
-- [ ] ≥ 5 evidence-backed work outcomes / day for 5 consecutive days  
-- [ ] Lesson citation rate ≥ 60% when lessons pending  
+- [x] Daily plan skeleton + API (`GET/POST /api/daily-plan`, Abby inject)  
+- [x] Lesson block in think + soft cite-to-save (`chatSchema` lessons)  
+- [x] Evidence helper + thought-only grounding queue (`denizen-evidence`)  
+- [ ] ≥ 5 evidence-backed work outcomes / day for 5 consecutive days *(ops metric)*  
+- [ ] Lesson citation rate ≥ 60% when lessons pending *(ops metric)*  
 - [ ] 0 high-impact actions without approval  
 - [ ] Operator weekly review &lt; 15 minutes of reading
 

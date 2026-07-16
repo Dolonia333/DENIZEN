@@ -1,0 +1,24 @@
+{
+  "name": "log_activity",
+  "description": "Log a work activity for this NPC (appears in work feed and facts spine).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "note": {
+        "type": "string",
+        "description": "What the NPC did"
+      },
+      "phase": {
+        "type": "string",
+        "description": "Optional phase tag (e.g. review, coding)"
+      },
+      "action": {
+        "type": "string",
+        "description": "Optional action verb"
+      }
+    },
+    "required": [
+      "note"
+    ]
+  }
+}

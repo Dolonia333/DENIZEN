@@ -15,6 +15,7 @@ const npcRoster = require('./npc-roster');
 const hallucinationGuard = require('./hallucination-guard');
 const { formatProviderError } = require('./format-provider-error');
 const promptBudget = require('./denizen-prompt-budget');
+const chatSchema = require('./denizen-chat-schema');
 
 // Shared world-state singleton + agent bus. Loaded lazily in a try/catch so
 // older test fixtures that import npc-brains in isolation don't break.
@@ -40,6 +41,12 @@ try { npcCapabilities = require('./npc-capabilities'); } catch (_) {}
 // Phase 3.2 — Task chain orchestration
 let taskChain = null;
 try { taskChain = require('./task-chain'); } catch (_) {}
+
+// A+ P2.2/P2.3 — company daily plan + evidence thought hooks (optional modules)
+let denizenDailyPlan = null;
+try { denizenDailyPlan = require('./denizen-daily-plan'); } catch (_) {}
+let denizenEvidence = null;
+try { denizenEvidence = require('./denizen-evidence'); } catch (_) {}
 
 // Phase 3.3 — NPC conflict detector (injects into Abby's prompt when NPCs disagree)
 let conflictDetector = null;
@@ -77,6 +84,9 @@ let localMetrics = null;
 try { localMetrics = require('./npc-local-metrics'); } catch (_) {}
 let inferenceSampling = null;
 try { inferenceSampling = require('./inference-sampling'); } catch (_) {}
+// P1.3 retrieval memory — top-k MEMORY lines (keyword; no GPU required)
+let memoryRetrieve = null;
+try { memoryRetrieve = require('./denizen-memory-retrieve'); } catch (_) {}
 const _sampleFor = (opts) => (inferenceSampling
   ? inferenceSampling.samplingFor({ kind: opts.kind, temperature: opts.temperature })
   : { temperature: opts.temperature || 0.8 });
@@ -896,7 +906,9 @@ class NpcBrainManager {
       this.providers.lmstudio = {
         baseUrl: lmBase,
         apiKey: process.env.LM_STUDIO_API_KEY || 'lm-studio',
-        model: process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning',
+        model: process.env.LM_STUDIO_MODEL
+          || process.env.LM_STUDIO_HEAVY_MODEL
+          || 'qwen/qwen3.6-27b',
         type: 'lmstudio',
       };
       // Second local model slot — fast-tier NPCs (Gemma 4 by default).
@@ -958,9 +970,15 @@ class NpcBrainManager {
       }
       return true;
     }).length;
-    this._demoMode = remoteCount === 0; // demo mode only when zero remote providers configured
+    // Local LM Studio IS real inference (Denizen's primary path). Demo mode only
+    // when there is no usable LLM at all — not merely "no cloud keys".
+    const hasLocalLlm = !!(this.providers.lmstudio || this.providers['lmstudio-fast']);
+    this._localOnlyMode = remoteCount === 0 && hasLocalLlm;
+    this._demoMode = remoteCount === 0 && !hasLocalLlm;
     if (this._demoMode) {
-      console.log('[NpcBrains] Demo mode active — NPCs use smart scripted responses (no API keys required)');
+      console.log('[NpcBrains] Demo mode active — NPCs use smart scripted responses (no LLM configured)');
+    } else if (this._localOnlyMode) {
+      console.log('[NpcBrains] Local-only mode — LM Studio / local inference (no cloud keys)');
     }
   }
 
@@ -1177,6 +1195,34 @@ class NpcBrainManager {
     'Oscar': 'oscar', 'Pier': 'pier', 'Rob': 'rob', 'Roki': 'roki',
     'Grok': 'grok', 'Claude': 'claude',
   };
+
+  /**
+   * P1.3 — select top-k relevant MEMORY lines for a prompt instead of dumping
+   * the full (or blind last-N) longTermMemory blob. Falls back to last-N chars.
+   * Never throws; safe when memoryRetrieve is unavailable.
+   */
+  _selectLongTermMemorySnippet(npcName, query, maxChars) {
+    const brain = this.brains[npcName];
+    const rawMemory = brain?.longTermMemory || '';
+    const cap = Math.max(80, Number(maxChars) || 220);
+    if (!rawMemory) return '';
+    if (rawMemory.length <= 80) return this._sanitize(rawMemory);
+
+    const folder = this._nameToFolder[npcName] || String(npcName || '').toLowerCase();
+    try {
+      if (memoryRetrieve?.retrieveMemoryOrFallback) {
+        const snippet = memoryRetrieve.retrieveMemoryOrFallback(folder, query, {
+          k: 8,
+          maxChars: cap,
+          text: rawMemory,
+        });
+        if (snippet && String(snippet).trim()) return this._sanitize(snippet);
+      }
+    } catch (_) {
+      // fall through to last-N
+    }
+    return this._sanitize(rawMemory.slice(-cap));
+  }
 
   saveMemory(npcName, entry) {
     const brain = this.brains[npcName];
@@ -2217,12 +2263,13 @@ class NpcBrainManager {
     }
 
     const rawMemory = brain.longTermMemory || '';
-    // Extract memories specifically about the person we're talking to
-    const memoryLines = rawMemory.split('\n').filter(l => l.trim());
-    const relevantMemories = memoryLines.filter(l => l.includes(fromName)).slice(-5).join('\n');
-    const recentMemories = memoryLines.slice(-5).join('\n');
+    // P1.3: retrieve top-k lines relevant to speaker + message (not full MEMORY dump)
+    const chatMemCap = promptTuning?.chatMemoryChars ?? 800;
+    const retrievedMem = rawMemory.length > 50
+      ? this._selectLongTermMemorySnippet(npcName, `${fromName} ${safeMessage}`, chatMemCap)
+      : '';
     const memorySection = rawMemory.length > 50
-      ? `\n\n## Past interactions with ${fromName}\n${relevantMemories || 'None yet — this is a new relationship.'}\n\n## Recent memories\n${this._sanitize(recentMemories)}`
+      ? `\n\n## Relevant memories (for ${fromName})\n${retrievedMem || 'None yet — this is a new relationship.'}`
       : '';
 
     // Add task context
@@ -2303,24 +2350,37 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     }
 
     const isUrgentReport = context.kind === 'incident-report' || context.kind === 'linux-investigation-report';
+    // Peer chat defaults to peer_chat so structured reply schema can apply (P1.1).
+    // Incident reports keep their explicit kind and skip JSON schema.
+    const responseKind = context.kind || 'peer_chat';
     const responseOpts = {
       maxTokens: isUrgentReport ? 120 : 200,
       sliceLen: isUrgentReport ? 400 : 300,
       npc: npcName,
-      kind: context.kind || 'response',
+      kind: responseKind,
       ...(isUrgentReport ? { priority: 'high' } : {}),
     };
+    if (!isUrgentReport && chatSchema.isChatKind(responseKind)) {
+      responseOpts.jsonSchema = chatSchema.CHAT_REPLY_SCHEMA;
+      responseOpts.jsonSchemaName = 'npc_chat_reply';
+    }
 
-    try {
-      const response = await this._callProvider(brain.providerConfig, systemPrompt, messages, responseOpts);
-      let out = response;
-      if (typeof out !== 'string') {
-        out = this._cannedResponse(npcName, fromName, safeMessage);
-      }
+    const finalizePeerSpeech = (raw) => {
+      let out = typeof raw === 'string' ? raw : this._cannedResponse(npcName, fromName, safeMessage);
+      // Always extract spoken reply — never leak raw JSON into bubbles.
+      out = chatSchema.parseChatReply(out).reply || out;
       out = this._cleanDisplayText(out, npcName);
       if (npcName === 'Bouncer' && isUrgentReport && this._isReasoningLeak(out)) {
         out = this._bouncerIncidentFallback(safeMessage);
       }
+      return out;
+    };
+
+    try {
+      const response = await this._callProvider(brain.providerConfig, systemPrompt, messages, responseOpts);
+      const out = finalizePeerSpeech(response);
+      // A+ P2.3 — unbacked ship/fix claims: queue thought-only note for next think; never rewrite speech
+      try { denizenEvidence?.maybeQueueThoughtDisclaimer?.(this, npcName, out); } catch (_) {}
       this.memories[npcName].push({ from: npcName, text: out });
       // If the NPC just promised the CEO something ("I'll look into it and
       // report back"), record it so their think loop actually follows through
@@ -2344,15 +2404,19 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
       // Try fallback
       if (brain.fallbackConfig && brain.fallbackConfig !== brain.providerConfig) {
         try {
-          const response = await this._callProvider(brain.fallbackConfig, systemPrompt, messages, { maxTokens: 200, sliceLen: 300, npc: npcName, kind: 'response-fallback' });
-          let out = response;
-          if (typeof out !== 'string') {
-            out = this._cannedResponse(npcName, fromName, safeMessage);
+          const fbOpts = {
+            maxTokens: 200,
+            sliceLen: 300,
+            npc: npcName,
+            kind: 'response-fallback',
+          };
+          if (!isUrgentReport) {
+            fbOpts.jsonSchema = chatSchema.CHAT_REPLY_SCHEMA;
+            fbOpts.jsonSchemaName = 'npc_chat_reply';
           }
-          out = this._cleanDisplayText(out, npcName);
-          if (npcName === 'Bouncer' && isUrgentReport && this._isReasoningLeak(out)) {
-            out = this._bouncerIncidentFallback(safeMessage);
-          }
+          const response = await this._callProvider(brain.fallbackConfig, systemPrompt, messages, fbOpts);
+          const out = finalizePeerSpeech(response);
+          try { denizenEvidence?.maybeQueueThoughtDisclaimer?.(this, npcName, out); } catch (_) {}
           this.memories[npcName].push({ from: npcName, text: out });
           return out;
         } catch (e2) {
@@ -2599,12 +2663,38 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
 
     const rawMemory = brain.longTermMemory || '';
     // Tighter default — telemetry showed ~1.5–7k tokens in from context bloat.
+    // P1.3: top-k retrieval by office/task context instead of blind last-N slice.
     const memCap = telemetryRebalance?.effectiveMemoryChars(
       npcName,
       promptTuning?.memoryChars ?? 220,
     ) ?? (promptTuning?.memoryChars ?? 220);
+    const dirEarly = this._directives.get(npcName) || rt.directives?.get?.(npcName);
+    const dirText = dirEarly == null
+      ? ''
+      : (typeof dirEarly === 'string'
+        ? dirEarly
+        : (dirEarly.text || dirEarly.message || dirEarly.task || ''));
+    const memQuery = memoryRetrieve?.buildQueryFromContext
+      ? memoryRetrieve.buildQueryFromContext({
+        task: rt.taskProgress[npcName]?.task,
+        thought: rt.lastDecisions[npcName]?.thought,
+        action: rt.lastDecisions[npcName]?.action,
+        directive: dirText,
+        goal: this._npcGoals?.[npcName]?.goal,
+        currentRoom: officeContext?.currentRoom,
+        location: officeContext?.currentRoom,
+        description: officeContext?.description,
+        recentChat: (this.memories[npcName] || []).slice(-2).map((m) => m.text).join(' '),
+        skill: rt.pendingSkillResults?.get?.(npcName)?.skill,
+      })
+      : [
+        rt.taskProgress[npcName]?.task,
+        rt.lastDecisions[npcName]?.thought,
+        officeContext?.currentRoom,
+        officeContext?.description,
+      ].filter(Boolean).join(' ');
     const recentMemory = rawMemory.length > 80
-      ? this._sanitize(rawMemory.slice(-memCap))
+      ? this._selectLongTermMemorySnippet(npcName, memQuery, memCap)
       : '';
 
     const coworkerContext = this._getCoworkerContext(npcName, '');
@@ -2691,6 +2781,14 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         ? dailyPlan.priorities[0]
         : dailyPlan.priorities.map((p, i) => `${i + 1}. ${p}`).join('\n'))
       : '';
+    // A+ P2.2 — company-level 5 priorities for Abby/CTO only (short board)
+    let companyDailyPlanBlock = '';
+    if (denizenDailyPlan && (npcName === 'Abby' || (brain && brain.role === 'CTO'))) {
+      try {
+        const companyPlan = denizenDailyPlan.getTodayPlan();
+        companyDailyPlanBlock = denizenDailyPlan.formatAbbyThinkBlock(companyPlan, compactThink ? 320 : 420) || '';
+      } catch (_) { companyDailyPlanBlock = ''; }
+    }
     const theoryOfMind = compactThink ? '' : this._getTheoryOfMind(npcName, 2);
     const eventsFeed = compactThink ? '' : this._getRecentEvents(2);
     const taskBoard = compactThink ? '' : this._getTaskBoard(3);
@@ -2939,6 +3037,14 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       ? `## Skill Result: ${skillResult.skill}\nYou just ran the "${skillResult.skill}" skill and got this data back:\n${skillResult.result}\nUse this to inform your next action.\n\n`
       : '';
 
+    // P2.1 — recent harness/mentor lessons from MEMORY (+ skill inject if tagged)
+    const lessonSources = [
+      rawMemory,
+      skillResult ? String(skillResult.result || '') : '',
+    ].filter(Boolean).join('\n');
+    const recentLessons = chatSchema.extractRecentLessons(lessonSources, 5);
+    const lessonBlock = chatSchema.lessonsPromptBlock(recentLessons);
+
     // Mood block
     const mood = this._getMood(npcName);
     this._tickMoodCycle(npcName);
@@ -3019,6 +3125,7 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         teamPurposeOverlay,
         teamMemberOverlay,
         planText,
+        companyDailyPlanBlock,
         recentMemory,
         recentConversations,
         continuitySection,
@@ -3039,6 +3146,7 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         hierarchyRules,
         conflictContext,
         skillResultBlock,
+        lessonBlock,
         chainContext,
         telemetryContext,
       })
@@ -3050,8 +3158,10 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
       (chainContext ? chainContext + '\n\n' : '') +
       (conflictContext ? conflictContext + '\n\n' : '') +
       (skillResultBlock ? skillResultBlock : '') +
+      (lessonBlock ? lessonBlock + '\n' : '') +
       (moodBlock ? moodBlock : '') +
       (sprintTaskBlock ? sprintTaskBlock : '') +
+      (companyDailyPlanBlock ? companyDailyPlanBlock + '\n\n' : '') +
       (companyContext ? '## Company & Sprint Context\n' + companyContext + '\n\n' : '') +
       (openClawContext ? '## OpenClaw Skills Available\n' + openClawContext + '\n\n' : '') +
       (pcAccessForPrompt ? pcAccessForPrompt + '\n\n' : '') +
@@ -3273,7 +3383,23 @@ ${actionFooter}`;
         decision._parseFallback = true;
       }
       if (decision) {
-        const normalized = this._normalizeThinkDecision(npcName, decision, officeContext);
+        let normalized = this._normalizeThinkDecision(npcName, decision, officeContext);
+        // P2.1 soft lesson cite — append note to save if lessons ignored (never fails think)
+        if (recentLessons.length) {
+          chatSchema.softCheckLessonCitation(normalized, recentLessons);
+          // Optional cite-event log for operator citation rate scorecard
+          try {
+            const lm = require('./denizen-learning-metrics');
+            lm.recordCiteEvent({
+              npc: npcName,
+              cited: !normalized._lessonCiteSoft,
+              soft: !!normalized._lessonCiteSoft,
+              lessonCount: recentLessons.length,
+              savePreview: String(normalized.save || '').slice(0, 160),
+              source: 'soft-check',
+            });
+          } catch (_) { /* metrics optional */ }
+        }
         return this._applyAutonomousDecision(npcName, normalized, _thinkStart, {
           h, brain, codeContext, officeContext,
         });
@@ -3960,11 +4086,11 @@ ${actionFooter}`;
           if (typeof globalThis !== 'undefined') {
             if (!globalThis._npcStats) globalThis._npcStats = {};
             globalThis._npcStats.lastProviderOkAt = Date.now();
-            // Stream parity (A+ plan P0.1): this path shares the harness
-            // sampling profile, router and telemetry, so it counts in the
-            // harness-rate ledger like the non-stream gate.
+            // Stream path shares sampling/router but does NOT go through
+            // harness.complete() — count providerOk + streamParity only so
+            // harnessRate stays honest (A+ scorecard).
             globalThis._npcStats.providerOk = (globalThis._npcStats.providerOk || 0) + 1;
-            globalThis._npcStats.harnessComplete = (globalThis._npcStats.harnessComplete || 0) + 1;
+            globalThis._npcStats.streamParity = (globalThis._npcStats.streamParity || 0) + 1;
           }
           resolve(text);
         });
@@ -4129,7 +4255,8 @@ ${actionFooter}`;
         tier,
         kind: opts.kind || 'chat',
         npc: opts.npc || null,
-        model: config.model,
+        // Prefer pin; harness may promote tier via npc_tiers + loaded catalog.
+        model: config.model || null,
         systemPrompt,
         messages: altMessages,
         max_tokens: maxTokens,
@@ -4142,10 +4269,13 @@ ${actionFooter}`;
           reachable: true,
           url: String(config.baseUrl || '').replace(/\/v1\/?$/i, '').replace(/\/+$/, ''),
           backend: 'lmstudio',
-          models: [config.model].filter(Boolean),
+          // Full catalog lets resolveTierModel promote off a tiny mis-pin.
+          models: Array.isArray(config._catalogModels) && config._catalogModels.length
+            ? config._catalogModels
+            : [config.model].filter(Boolean),
           main_model: config.model,
-          fast_model: config.model,
-          heavy_model: config.model,
+          fast_model: this.providers?.['lmstudio-fast']?.model || config.model,
+          heavy_model: process.env.LM_STUDIO_HEAVY_MODEL || config.model,
         },
       })).then((result) => {
         markSuccess();
@@ -4164,10 +4294,8 @@ ${actionFooter}`;
             out: result.usage.completion_tokens,
           };
         }
-        if (typeof globalThis !== 'undefined') {
-          if (!globalThis._npcStats) globalThis._npcStats = {};
-          globalThis._npcStats.harnessComplete = (globalThis._npcStats.harnessComplete || 0) + 1;
-        }
+        // harnessComplete + lastHarnessModel/Tier are owned by
+        // denizen-harness/inference.complete() — do not double-count here.
         resolve(responseText);
       }).catch((err) => {
         const errMsg = formatProviderError(err) || err?.message || String(err);
@@ -4438,8 +4566,10 @@ ${actionFooter}`;
       parts.chainContext ? String(parts.chainContext).slice(0, 320) : '',
       parts.conflictContext ? String(parts.conflictContext).slice(0, 400) : '',
       parts.skillResultBlock ? String(parts.skillResultBlock).slice(0, 500) : '',
+      parts.lessonBlock ? String(parts.lessonBlock).slice(0, 480) : '',
       parts.moodBlock ? String(parts.moodBlock).slice(0, 120) : '',
       parts.sprintTaskBlock ? String(parts.sprintTaskBlock).slice(0, 280) : '',
+      parts.companyDailyPlanBlock ? String(parts.companyDailyPlanBlock).slice(0, 320) : '',
       parts.planText ? `## Today\n${String(parts.planText).slice(0, 280)}` : '',
       memory ? `## Memory\n${memory}` : '',
       chat ? `## Recent chat\n${chat}` : '',
@@ -5547,9 +5677,13 @@ ${brain.voiceAnchor || ''}`;
     }
 
     const rawMemory = brain.longTermMemory || '';
+    // P1.3: retrieve memories relevant to this player message (not blind last-N)
     const memCap = promptTuning?.playerChatMemoryChars ?? 500;
+    const retrievedPlayerMem = rawMemory.length > 50
+      ? this._selectLongTermMemorySnippet(npcName, `${playerName} ${safeMessage}`, memCap)
+      : '';
     const memorySection = rawMemory.length > 50
-      ? `\n\n## Your Memories (what you remember from past days)\n${this._sanitize(rawMemory.slice(-memCap))}`
+      ? `\n\n## Your Memories (what you remember from past days)\n${retrievedPlayerMem}`
       : '';
 
     let visitorTeamOverlay = '';
@@ -5895,6 +6029,9 @@ ${brain.voiceAnchor || ''}`;
       kind: 'chat',
       conversationMsgs: chatCompaction.conversationMsgs,
       systemPromptChars: 0,
+      // P1.1 structured chat — json_schema when provider supports it; parse always.
+      jsonSchema: chatSchema.CHAT_REPLY_SCHEMA,
+      jsonSchemaName: 'npc_chat_reply',
     };
     const finalSystemPrompt = `${systemPrompt}${chatContextBlock}`;
     playerOpts.systemPromptChars = finalSystemPrompt.length;
@@ -5946,6 +6083,11 @@ ${brain.voiceAnchor || ''}`;
       wasFallback = true;
     }
 
+    // P1.1 — structured {reply,tone,next_action}; plain text still works.
+    // Extract spoken reply before tag parse / display clean so JSON never leaks.
+    const parsedChat = chatSchema.parseChatReply(responseText);
+    responseText = parsedChat.reply || responseText;
+
     // Guard against response collapse: a small model that once says "I need
     // more specifics" tends to repeat that exact framing every subsequent
     // turn because its own prior reply is sitting in the replayed history
@@ -5959,8 +6101,12 @@ ${brain.voiceAnchor || ''}`;
         try {
           const nudgedPrompt = `${finalSystemPrompt}\n\nIMPORTANT: You just said something almost identical to this in your last reply: "${String(lastOwnLine).slice(0, 200)}". Do not repeat that framing — actually engage with what they just said, even if it's still vague; ask something different or make a concrete suggestion.`;
           const retryText = await this._callProvider(activeProvider, nudgedPrompt, messages, playerOpts);
-          if (typeof retryText === 'string' && retryText.trim() && !this._isNearRepeat(retryText, lastOwnLine)) {
-            responseText = retryText;
+          if (typeof retryText === 'string' && retryText.trim()) {
+            const retryParsed = chatSchema.parseChatReply(retryText);
+            const retryReply = retryParsed.reply || retryText;
+            if (retryReply.trim() && !this._isNearRepeat(retryReply, lastOwnLine)) {
+              responseText = retryReply;
+            }
           }
         } catch (_) { /* keep the original reply if the retry fails */ }
       }

@@ -138,7 +138,16 @@ function ingestFromMachine(machine = {}) {
   });
 }
 
+function envModelPins() {
+  return {
+    main_model: process.env.LM_STUDIO_MODEL || null,
+    fast_model: process.env.LM_STUDIO_FAST_MODEL || null,
+    heavy_model: process.env.LM_STUDIO_HEAVY_MODEL || process.env.LM_STUDIO_MODEL || null,
+  };
+}
+
 function registerBootstrap() {
+  const pins = envModelPins();
   if (!isRemoteOnlyMode()) {
     const hostUrl = normalizeBaseUrl(
       process.env.LM_STUDIO_URL
@@ -152,6 +161,7 @@ function registerBootstrap() {
       role: 'host',
       url: hostUrl,
       source: 'bootstrap',
+      ...pins,
     });
   }
 
@@ -163,6 +173,7 @@ function registerBootstrap() {
       role: 'remote',
       url,
       source: 'env',
+      ...pins,
     });
   }
 }
@@ -306,19 +317,56 @@ function selectEndpoint(opts = {}) {
   };
 }
 
-function pickModelForTier(node, tier, configModel) {
+function pickFromCatalog(catalog, want) {
+  if (!want) return null;
+  const w = String(want).toLowerCase();
+  return catalog.find((m) => {
+    const s = String(m).toLowerCase();
+    return s === w || s.includes(w) || w.includes(s);
+  }) || null;
+}
+
+function pickHeavyModel(node, configModel) {
+  const catalog = [
+    ...(Array.isArray(node.models) ? node.models : []),
+    node.heavy_model,
+    node.main_model,
+    node.fast_model,
+    configModel,
+  ].filter(Boolean).map(String);
+  // Prefer exact env pin when loaded; else best large model in catalog.
+  const envHeavy = process.env.LM_STUDIO_HEAVY_MODEL || process.env.LM_STUDIO_MODEL;
+  const pinned = pickFromCatalog(catalog, envHeavy)
+    || pickFromCatalog(catalog, node.heavy_model);
+  if (pinned) return pinned;
+  if (envHeavy && !catalog.length) return envHeavy;
+  const prefer = [/qwen3\.6-27b/i, /27b/i, /32b/i, /14b-instruct-1m/i, /14b/i, /qwen3/i, /ministral.*14/i];
+  for (const re of prefer) {
+    const hit = catalog.find((m) => re.test(m));
+    if (hit) return hit;
+  }
+  return node.main_model || configModel || envHeavy || null;
+}
+
+function pickModelForTier(node, tier, configModel, opts = {}) {
+  if (opts.preferHeavy || opts.kind === 'cofounder' || opts.kind === 'mentor-synthesis' || opts.kind === 'directive') {
+    return pickHeavyModel(node, configModel);
+  }
   if (tier === 'fast') {
     return node.fast_model
       || process.env.LM_STUDIO_FAST_MODEL
       || configModel;
   }
-  return node.main_model
+  return pickHeavyModel(node, configModel)
+    || node.main_model
     || process.env.LM_STUDIO_MODEL
     || configModel;
 }
 
 function resolveProviderConfig(config, opts = {}) {
-  const tier = opts.tier === 'fast' ? 'fast' : 'main';
+  const forceMain = !!(opts.preferHeavy || config?._preferHeavy
+    || opts.kind === 'cofounder' || opts.kind === 'mentor-synthesis' || opts.kind === 'directive');
+  const tier = (!forceMain && opts.tier === 'fast') ? 'fast' : 'main';
   const pick = selectEndpoint({
     tier,
     priority: opts.priority,
@@ -327,7 +375,10 @@ function resolveProviderConfig(config, opts = {}) {
   });
 
   const node = nodes.get(pick.node_id) || {};
-  const model = pickModelForTier(node, tier, config?.model);
+  const model = pickModelForTier(node, tier, config?.model, {
+    preferHeavy: forceMain,
+    kind: opts.kind,
+  });
   const directReachable = node.reachable === true;
   const inferenceMode = directReachable && node.url ? 'direct' : (node.rpc_capable ? 'rpc' : 'direct');
 
@@ -341,6 +392,7 @@ function resolveProviderConfig(config, opts = {}) {
     _inferenceMode: inferenceMode,
     _rpcCapable: !!node.rpc_capable,
     _networkReachable: node.network_reachable != null ? !!node.network_reachable : directReachable,
+    _routerTier: tier,
   };
 }
 
@@ -352,12 +404,16 @@ async function probeNode(nodeId) {
     apiKey: process.env.LM_STUDIO_API_KEY,
   });
 
+  const pins = envModelPins();
   const next = upsertNode({
     ...node,
     url: probe.url || node.url,
     reachable: probe.reachable,
     models: probe.models,
-    main_model: probe.main_model || node.main_model,
+    // Probe picks respect env pins when the model is loaded.
+    main_model: probe.main_model || pins.main_model || node.main_model,
+    fast_model: probe.fast_model || pins.fast_model || node.fast_model,
+    heavy_model: probe.heavy_model || pins.heavy_model || node.heavy_model,
     last_probe_at: probe.probed_at,
     last_error: probe.error || null,
     source: node.source || 'probe',
@@ -409,6 +465,8 @@ function buildStatus(queueDepth = 0) {
     gpu_util: n.gpu_util,
     models: (n.models || []).slice(0, 6),
     main_model: n.main_model || null,
+    fast_model: n.fast_model || null,
+    heavy_model: n.heavy_model || process.env.LM_STUDIO_HEAVY_MODEL || null,
     last_probe_at: n.last_probe_at || null,
     heartbeat_at: n.heartbeat_at || null,
     score: scoreNode(n, { tier: 'main', queueDepth }),

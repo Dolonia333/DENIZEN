@@ -27,6 +27,9 @@ try { denizenDb = require('./denizen-db'); } catch (_) {}
 let npcRoster = null;
 try { npcRoster = require('./npc-roster'); } catch (_) {}
 
+let memoryInject = null;
+try { memoryInject = require('./npc-memory-inject'); } catch (_) {}
+
 function defaultGrokBin() {
   if (process.env.GROK_BIN) return process.env.GROK_BIN;
   return path.join(os.homedir(), '.grok', 'bin', process.platform === 'win32' ? 'grok.exe' : 'grok');
@@ -66,8 +69,40 @@ function buildGrokPrompt(npc, question, context) {
   );
 }
 
+function loadTelemetryFacts() {
+  try {
+    const p = path.join(DATA_DIR, 'grok-telemetry-latest.json');
+    if (!fs.existsSync(p)) return null;
+    return JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch (_) {
+    return null;
+  }
+}
+
+function answerFromTelemetry(npc, question) {
+  const tel = loadTelemetryFacts();
+  if (!tel) return null;
+  const stats = (tel.npcs && (tel.npcs[npc] || Object.entries(tel.npcs).find(([k]) => k.toLowerCase() === String(npc).toLowerCase())?.[1])) || {};
+  const facts = (tel.facts || []).filter((f) => String(f).toLowerCase().includes(String(npc).toLowerCase())).slice(0, 4);
+  const lat = stats.avg_latency_ms ?? '?';
+  const tin = stats.avg_tokens_in ?? stats.avg_tokens ?? '?';
+  return [
+    `Hey ${npc} — telemetry mentor (${tel.generatedAt || 'live'}):`,
+    String(question || '').slice(0, 300),
+    '',
+    `Your slice: ${stats.count || '?'} events, ${lat}ms, ~${tin}t in.`,
+    facts.length ? `Facts: ${facts.join(' | ')}` : 'Facts: compress context; ship one concrete outcome.',
+    '',
+    'Next cycle: (1) cut memory/map bloat, (2) no "continuing work" platitudes, (3) one real artifact/skill or desk deliverable.',
+  ].join('\n').slice(0, 1800);
+}
+
 function askGrokCli(prompt, grokBin = defaultGrokBin(), timeoutMs = 180_000) {
   return new Promise((resolve) => {
+    if (!fs.existsSync(grokBin) && !process.env.GROK_BIN) {
+      resolve('');
+      return;
+    }
     const proc = spawn(grokBin, ['-p', prompt], {
       windowsHide: true,
       env: process.env,
@@ -75,25 +110,33 @@ function askGrokCli(prompt, grokBin = defaultGrokBin(), timeoutMs = 180_000) {
     let stdout = '';
     let stderr = '';
     const timer = setTimeout(() => {
-      proc.kill('SIGTERM');
-      resolve('(Grok CLI timed out)');
+      try { proc.kill('SIGTERM'); } catch (_) {}
+      resolve('');
     }, timeoutMs);
     proc.stdout?.on('data', (c) => { stdout += c; });
     proc.stderr?.on('data', (c) => { stderr += c; });
-    proc.on('error', (err) => {
+    proc.on('error', () => {
       clearTimeout(timer);
-      resolve(`(Grok CLI not available: ${err.message})`);
+      resolve('');
     });
     proc.on('close', () => {
       clearTimeout(timer);
-      const out = stdout.trim();
-      resolve(out || `(Grok CLI returned no output; stderr: ${stderr.slice(0, 120)})`);
+      resolve(String(stdout || '').trim());
     });
   });
 }
 
 async function injectMentorMemory(npcName, answer, topic = 'grok-mentor-lesson') {
   const npcKey = npcKeyFromName(npcName);
+  // Always write MEMORY.md so lessons survive without Supabase.
+  if (memoryInject?.injectLesson) {
+    const file = memoryInject.injectLesson(npcName, answer, {
+      topic,
+      source: 'grok-mentor-drainer',
+      prefix: '[GROK MENTOR]',
+    });
+    if (file.ok) return { ok: true, npc_key: file.folder || npcKey, path: file.path, db: !!file.db };
+  }
   const body = `[GROK MENTOR] ${String(answer).slice(0, 2000)}`;
   if (denizenDb?.enabled) {
     const row = await denizenDb.insertNpcMemory({
@@ -105,7 +148,7 @@ async function injectMentorMemory(npcName, answer, topic = 'grok-mentor-lesson')
     });
     return { ok: !!row, npc_key: npcKey, memory_id: row?.id || null };
   }
-  return { ok: false, npc_key: npcKey, error: 'database disabled' };
+  return { ok: false, npc_key: npcKey, error: 'inject failed' };
 }
 
 function appendImprovementLog(entry, logPath = DEFAULT_LOG_PATH) {
@@ -147,31 +190,42 @@ async function drainConsultQueue(opts = {}) {
       continue;
     }
 
-    if (PROTECTED_NPC_KEYS.has(npcKey)) {
-      skipped += 1;
-      details.push({ npc, status: 'skipped', reason: 'protected NPC — use mentor panel' });
-      continue;
-    }
+    // Protected NPCs skip CLI but still get telemetry lessons into MEMORY.md.
+    const protectedNpc = PROTECTED_NPC_KEYS.has(npcKey);
 
     if (dryRun) {
-      details.push({ npc, status: 'dry_run', question: question.slice(0, 120) });
+      details.push({ npc, status: 'dry_run', question: question.slice(0, 120), protected: protectedNpc });
       continue;
     }
 
-    const answer = await askGrok(buildGrokPrompt(npc, question, context), opts.grokBin);
+    let answer = '';
+    let answeredBy = 'telemetry-fallback';
+    if (!protectedNpc) {
+      answer = await askGrok(buildGrokPrompt(npc, question, context), opts.grokBin);
+      if (answer) answeredBy = 'grok-cli';
+    }
+    if (!answer) {
+      answer = answerFromTelemetry(npc, question) || (
+        `Hey ${npc} — compress context, cut platitudes, and ship one concrete outcome next think. `
+        + `Question was: ${question.slice(0, 200)}`
+      );
+      answeredBy = protectedNpc ? 'telemetry-protected' : 'telemetry-fallback';
+    }
+
     let injected = false;
     try {
       const inj = await inject(npc, answer, topic);
       injected = !!inj?.ok;
     } catch (err) {
       details.push({ npc, status: 'inject_error', error: err?.message || String(err) });
-      continue;
     }
 
     row.status = 'answered';
     row.answer = String(answer).slice(0, 2000);
-    row.answered_by = 'grok-cli';
+    row.answered_by = answeredBy;
     row.answered_at = new Date().toISOString();
+    row.memory_injected = injected;
+    if (injected) row.memory_injected_at = row.answered_at;
 
     appendImprovementLog({
       ts: row.answered_at,
@@ -180,11 +234,12 @@ async function drainConsultQueue(opts = {}) {
       answer_preview: String(answer).slice(0, 150),
       injected,
       source: 'grok-mentor-drainer',
+      answered_by: answeredBy,
       expected: 'check next telemetry for lower latency/tokens + referencing this advice',
     }, logPath);
 
     processed += 1;
-    details.push({ npc, status: 'answered', injected, preview: String(answer).slice(0, 120) });
+    details.push({ npc, status: 'answered', injected, answeredBy, preview: String(answer).slice(0, 120) });
   }
 
   if (!dryRun && processed > 0) {

@@ -211,12 +211,70 @@
   window.addEventListener('resize', sync);
   window.addEventListener('orientationchange', () => { window.setTimeout(sync, 100); });
 
-  /** Camera zoom for Phaser playfield — synced with device tier. */
+  /**
+   * Camera zoom — follow the player with a readable floor, not a distant map.
+   * Higher = closer. Override anytime: ?zoom=2.8 (0.75–4).
+   */
   function playfieldZoomFor(p) {
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const z = parseFloat(q.get('zoom'));
+      if (Number.isFinite(z) && z >= 0.75 && z <= 4) return z;
+    } catch (_) {}
     const prof = p || profile;
-    if (prof.isPhone || prof.tier === 'phone-compact') return prof.isCompactPhone ? 2.05 : 1.95;
-    if (prof.isTablet) return 1.85;
-    return 2.35;
+    if (prof.isPhone || prof.tier === 'phone-compact') {
+      // Landscape still shows a room around you; portrait is tighter.
+      if (prof.isLandscape) return 1.55;
+      return prof.isCompactPhone ? 1.95 : 1.85;
+    }
+    if (prof.isTablet) return prof.isLandscape ? 1.85 : 2.15;
+    // Desktop: Pokémon-style close framing (2.15 still felt map-like).
+    return 2.75;
+  }
+
+  /**
+   * Light render/sim profile for phones + weak hardware.
+   * Override: ?perf=light | ?perf=full
+   */
+  function computeLightPerf(p) {
+    const prof = p || profile;
+    try {
+      const q = new URLSearchParams(window.location.search);
+      const override = (q.get('perf') || '').toLowerCase();
+      if (override === 'full' || override === 'off' || override === '0') return false;
+      if (override === 'light' || override === '1' || override === 'on') return true;
+    } catch (_) {}
+    if (prof.isPhone || prof.isTablet) return true;
+    let mem = 0;
+    let cores = 0;
+    let saveData = false;
+    try { mem = Number(navigator.deviceMemory) || 0; } catch (_) {}
+    try { cores = Number(navigator.hardwareConcurrency) || 0; } catch (_) {}
+    try { saveData = !!(navigator.connection && navigator.connection.saveData); } catch (_) {}
+    if (saveData) return true;
+    if (mem > 0 && mem <= 4) return true;
+    if (cores > 0 && cores <= 4 && prof.isTouch) return true;
+    return false;
+  }
+
+  function lightPerfHints(p) {
+    const light = computeLightPerf(p);
+    const prof = p || profile;
+    return {
+      light,
+      /** Full roster (18). Cap kept high so nothing is trimmed. */
+      npcCap: 24,
+      // Finer grid = smoother paths (16px zigzag looked glitchy).
+      pathCellSize: light ? 12 : 8,
+      pathMaxIterations: light ? 3500 : 6000,
+      textResolution: (light && (prof.isPhone || prof.isTablet)) ? 1 : 2,
+      // Cap at 30fps felt stuttery — leave uncapped; browser vsync handles it.
+      targetFps: 0,
+      sepEveryNFrames: light ? 4 : 3,
+      ambientInitial: light ? 4 : null,
+      ambientBatch: light ? 2 : null,
+      ambientDelayMs: light ? 14000 : null,
+    };
   }
 
   window.DenizenDeviceProfile = {
@@ -231,6 +289,8 @@
     panelMaxWidth: () => profile.panelMaxWidth,
     playfieldZoom: () => playfieldZoomFor(profile),
     playfieldZoomFor,
+    wantsLightPerf: () => computeLightPerf(profile),
+    lightPerf: () => lightPerfHints(profile),
     resetPhonePanelLayout,
   };
 })();

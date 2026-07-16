@@ -90,12 +90,20 @@
         visibility: visible !important;
         z-index: 2147483646 !important;
       }
+      /* Keep slide-in transform; scale lives on inner .dzp-fab-buzz so Buzz stays crisp */
       html:not(.denizen-phone) #denizen-phone-fab:hover {
-        transform: translateX(0) scale(1.06) !important;
+        transform: translateX(0) !important;
+      }
+      html:not(.denizen-phone) #denizen-phone-fab:hover .dzp-fab-buzz {
+        filter: brightness(1.08);
       }
       html:not(.denizen-phone) #denizen-phone-fab.denizen-press-active,
       html:not(.denizen-phone) #denizen-phone-fab:active {
-        transform: translateX(0) scale(0.94) !important;
+        transform: translateX(0) !important;
+      }
+      html:not(.denizen-phone) #denizen-phone-fab.denizen-press-active .dzp-fab-buzz,
+      html:not(.denizen-phone) #denizen-phone-fab:active .dzp-fab-buzz {
+        transform: scale(0.96);
       }
     `;
     if (s.textContent !== css) s.textContent = css;

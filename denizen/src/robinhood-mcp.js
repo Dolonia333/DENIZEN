@@ -434,6 +434,137 @@ async function getQuote(symbols) {
   return marketData.getQuotes(syms);
 }
 
+/** Map UI range tabs → Robinhood historicals window. */
+const CHART_RANGE_SPEC = {
+  '1D':  { lookbackMs: 5 * 864e5, interval: '5minute', bounds: 'extended', sessionOnly: true },
+  '1W':  { lookbackMs: 7 * 864e5, interval: '10minute', bounds: 'extended' },
+  '1M':  { lookbackMs: 35 * 864e5, interval: 'day', bounds: 'regular' },
+  '3M':  { lookbackMs: 100 * 864e5, interval: 'day', bounds: 'regular' },
+  'YTD': { ytd: true, interval: 'day', bounds: 'regular' },
+  '1Y':  { lookbackMs: 370 * 864e5, interval: 'day', bounds: 'regular' },
+  '5Y':  { lookbackMs: 5 * 365 * 864e5, interval: 'week', bounds: 'regular' },
+  'ALL': { lookbackMs: 20 * 365 * 864e5, interval: 'month', bounds: 'regular' },
+};
+
+function round4(n) {
+  return Math.round(Number(n) * 10000) / 10000;
+}
+
+function normalizeRhBars(bars) {
+  const out = [];
+  for (const b of bars || []) {
+    if (b?.interpolated === true) continue;
+    const close = Number(b.close_price ?? b.close);
+    if (!Number.isFinite(close)) continue;
+    const t = Date.parse(b.begins_at || b.starts_at || b.timestamp || '');
+    if (!Number.isFinite(t)) continue;
+    out.push({
+      t,
+      c: round4(close),
+      o: Number.isFinite(Number(b.open_price ?? b.open)) ? round4(b.open_price ?? b.open) : null,
+      h: Number.isFinite(Number(b.high_price ?? b.high)) ? round4(b.high_price ?? b.high) : null,
+      l: Number.isFinite(Number(b.low_price ?? b.low)) ? round4(b.low_price ?? b.low) : null,
+      v: Number.isFinite(Number(b.volume)) ? Number(b.volume) : null,
+      session: b.session || null,
+    });
+  }
+  return out;
+}
+
+function filterLastSession(points) {
+  if (!points.length) return points;
+  // Prefer regular-session bars for 1D look; fall back to all if needed.
+  const reg = points.filter((p) => !p.session || p.session === 'reg');
+  const pool = reg.length >= 2 ? reg : points;
+  const lastDay = new Date(pool[pool.length - 1].t).toISOString().slice(0, 10);
+  return pool.filter((p) => new Date(p.t).toISOString().slice(0, 10) === lastDay);
+}
+
+/**
+ * Live Robinhood OHLCV chart (falls back to Yahoo if unauthenticated / empty).
+ * @param {string} symbol
+ * @param {string} [rangeKey]
+ */
+async function getChart(symbol, rangeKey = '1D') {
+  const sym = String(symbol || '').toUpperCase().trim();
+  if (!sym) throw new Error('symbol required');
+  const key = String(rangeKey || '1D').toUpperCase();
+  const spec = CHART_RANGE_SPEC[key] || CHART_RANGE_SPEC['1D'];
+
+  if (isAuthenticated()) {
+    try {
+      await initialize();
+      const end = new Date();
+      let start;
+      if (spec.ytd) {
+        start = new Date(Date.UTC(end.getUTCFullYear(), 0, 1, 0, 0, 0));
+      } else {
+        start = new Date(end.getTime() - (spec.lookbackMs || 5 * 864e5));
+      }
+      const args = {
+        symbols: [sym],
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+        interval: spec.interval,
+        bounds: spec.bounds || 'regular',
+        adjustment_type: 'split',
+      };
+      const raw = unwrapToolResult(await callTool('get_equity_historicals', args));
+      let points = normalizeRhBars(raw?.data?.results?.[0]?.bars || raw?.results?.[0]?.bars);
+      if (spec.sessionOnly) points = filterLastSession(points);
+
+      let quote = null;
+      try {
+        const quotes = await getQuote([sym]);
+        quote = Array.isArray(quotes) ? quotes.find((q) => q.symbol === sym) : null;
+      } catch (_) {}
+
+      if (points.length >= 2 || quote?.price != null) {
+        const first = points[0];
+        const last = points[points.length - 1];
+        const price = quote?.price ?? last?.c ?? null;
+        // 1D change vs previous close when available; else open→last of series
+        let change = null;
+        let changePercent = null;
+        if (key === '1D' && quote?.previousClose != null && price != null) {
+          change = round4(price - quote.previousClose);
+          changePercent = quote.previousClose
+            ? round4((change / quote.previousClose) * 100)
+            : null;
+        } else if (first && last) {
+          const basis = first.o != null ? first.o : first.c;
+          change = round4(last.c - basis);
+          changePercent = basis ? round4((change / basis) * 100) : null;
+        } else if (quote?.change != null) {
+          change = quote.change;
+          changePercent = quote.changePercent;
+        }
+        return {
+          symbol: sym,
+          name: sym,
+          currency: 'USD',
+          range: key,
+          interval: raw?.data?.results?.[0]?.interval || spec.interval,
+          price,
+          previousClose: quote?.previousClose ?? null,
+          change,
+          changePercent,
+          points,
+          source: 'robinhood',
+          bid: quote?.bid ?? null,
+          ask: quote?.ask ?? null,
+          marketTime: quote?.marketTime || null,
+        };
+      }
+    } catch (_) {
+      // fall through to Yahoo
+    }
+  }
+
+  const fallback = await marketData.getChart(sym, key);
+  return { ...fallback, source: fallback.source || 'yahoo' };
+}
+
 async function getPortfolio() {
   await initialize();
   const accountNumber = await getDefaultAccountNumber();
@@ -661,6 +792,7 @@ module.exports = {
   // Market data
   initialize, listTools,
   getQuote, getPortfolio, getPositions, getOrderHistory,
+  getChart,
   runMarketObservation,
   // Low-level
   callTool,

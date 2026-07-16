@@ -1,0 +1,16 @@
+{
+  "name": "announce_in_office",
+  "description": "Make this NPC say something in the virtual office (speech bubble for connected viewers).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "Line of dialogue"
+      }
+    },
+    "required": [
+      "message"
+    ]
+  }
+}

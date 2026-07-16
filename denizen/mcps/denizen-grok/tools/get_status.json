@@ -1,0 +1,13 @@
+{
+  "name": "get_status",
+  "description": "Read current NPC status: recent work, memories, roster info.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "limit": {
+        "type": "number",
+        "description": "Max recent items (default 10)"
+      }
+    }
+  }
+}

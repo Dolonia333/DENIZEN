@@ -1,0 +1,25 @@
+{
+  "name": "mentor_peer_reply",
+  "description": "Post Grok or Claude peer reply to a mentor session (they talk to each other about how to help the local NPC).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "session_id": {
+        "type": "string"
+      },
+      "agent": {
+        "type": "string",
+        "description": "grok or claude"
+      },
+      "reply": {
+        "type": "string",
+        "description": "Peer mentor answer in conversational CLI style"
+      }
+    },
+    "required": [
+      "session_id",
+      "agent",
+      "reply"
+    ]
+  }
+}

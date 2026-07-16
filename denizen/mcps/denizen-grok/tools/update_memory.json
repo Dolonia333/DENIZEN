@@ -1,0 +1,24 @@
+{
+  "name": "update_memory",
+  "description": "Append a memory line to this NPC in Denizen (syncs to the in-world agent).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "body": {
+        "type": "string",
+        "description": "Memory text to remember"
+      },
+      "topic": {
+        "type": "string",
+        "description": "Optional topic tag"
+      },
+      "outcome": {
+        "type": "string",
+        "description": "Optional outcome label"
+      }
+    },
+    "required": [
+      "body"
+    ]
+  }
+}

@@ -340,7 +340,7 @@ Upgrade routing uses pathname only (query strings stripped for Cloudflare/nginx 
 
 | Type | Payload (key fields) |
 |---|---|
-| `visitor_register` | `{ session_id?, is_ceo?, display_name? }` — binds WS to visitor session |
+| `visitor_register` | `{ session_id?, is_ceo?, display_name?, interactive?, spectator?, demo? }` — binds WS to visitor session + multiplayer room |
 | `npc_think` | `{ npcName, context? }` — triggers `NpcBrainManager.think()` |
 | `npc_conversation` | `{ npcName, fromName, text, turn }` — ambient dialogue (scripted, no LLM) |
 | `player_chat` | `{ npcName, text, session_id?, isIncidentReport? }` — CEO/visitor talks to NPC |
@@ -348,10 +348,12 @@ Upgrade routing uses pathname only (query strings stripped for Cloudflare/nginx 
 | `npc_introduce` | `{ npcName, context? }` — tour introduction line |
 | `npc_addressed` | `{ target, from?, text?, ts? }` — conversation focus mirror |
 | `player_idle` | `{ idleMs, position? }` — receptionist tour trigger |
+| `player_pose` | `{ x, y, facing?, anim?, room?, displayName?, interactive?, spectator? }` — multiplayer avatar pose (~10–15 Hz); office-scoped fan-out |
+| `npc_poses` | `{ npcs:[{ key, x, y, facing?, anim?, taskState? }] }` — **sim host only**; mirrors NPC bodies to peers (~5 Hz) |
 | `client_profile` | `{ touch?, ... }` — mobile client metadata |
 | `bouncer_run_tool` | `{ tool, threat }` — nmap/wireshark via Kali |
 | `bouncer_run_linux` | `{ threat, openTerminal? }` — full WSL investigation |
-| `office_state` | `{ agents[], furniture[], tasks[], time }` — cofounder director input |
+| `office_state` | `{ agents[], furniture[], tasks[], time }` — cofounder director input (prefer sim host when multiplayer) |
 
 Unhandled types fall through to `cofounderAgent.handleClientMessage(msg)`.
 
@@ -365,6 +367,12 @@ Unhandled types fall through to `cofounderAgent.handleClientMessage(msg)`.
 | `npc_work_output` | Task phase updates during think |
 | `player_chat_response` | Player chat reply |
 | `player_chat_ack` | Queue depth ack before LLM |
+| `office_registered` | After `visitor_register` — includes `presence_key` |
+| `players_snapshot` | Current remote players in this `office_id` (excludes self) |
+| `player_pose` | Another visitor's live pose in the same office |
+| `player_left` | Visitor disconnected / left presence map |
+| `sim_host` | `{ sessionId }` — elected simulation host for this office (NPC locomotion + thinks) |
+| `npc_poses` | Host-authored NPC body snapshot for mirror clients |
 | `directive_assigned` | Directive push confirmation |
 | `assistant_handoff` | Visitor → CEO handoff alert |
 | `agent_command` / `agent_commands` | Cofounder director orders |

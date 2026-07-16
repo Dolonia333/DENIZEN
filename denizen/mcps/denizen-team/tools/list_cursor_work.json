@@ -1,0 +1,17 @@
+{
+  "name": "list_cursor_work",
+  "description": "List pending Cursor bridge tasks for your org (Cursor polls this to find work Denizen queued).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "description": "pending | in_progress | done | all (default pending)"
+      },
+      "limit": {
+        "type": "number",
+        "description": "Max rows (default 20)"
+      }
+    }
+  }
+}

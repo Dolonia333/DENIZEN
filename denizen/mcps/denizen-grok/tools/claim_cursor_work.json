@@ -1,0 +1,20 @@
+{
+  "name": "claim_cursor_work",
+  "description": "Mark a queued task in_progress (Cursor claims it before editing).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "work_id": {
+        "type": "string",
+        "description": "Work id from list_cursor_work"
+      },
+      "agent": {
+        "type": "string",
+        "description": "Optional agent label, e.g. cursor"
+      }
+    },
+    "required": [
+      "work_id"
+    ]
+  }
+}

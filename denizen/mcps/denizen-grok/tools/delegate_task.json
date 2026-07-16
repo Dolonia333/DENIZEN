@@ -1,0 +1,24 @@
+{
+  "name": "delegate_task",
+  "description": "Delegate a task to another teammate NPC by name or folder key.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "to_npc": {
+        "type": "string",
+        "description": "Target NPC, e.g. Josh or josh"
+      },
+      "task": {
+        "type": "string",
+        "description": "Task description"
+      },
+      "urgent": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "to_npc",
+      "task"
+    ]
+  }
+}

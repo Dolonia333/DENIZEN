@@ -2,8 +2,8 @@
   "$schema": "denizen-harness config v1",
   "meta": {
     "name": "Denizen Harness",
-    "version": "1.0.0",
-    "tagline": "One control plane for every brain, skill, mentor, and mesh call."
+    "version": "1.2.0",
+    "tagline": "A-grade control plane: skills, memory, plan, gates, mesh."
   },
   "tiers": {
     "fast": {
@@ -109,9 +109,14 @@
         "max_tier": "fast"
       },
       "roki": {
+        "comment": "Ambient/presence stays fast; real chat/think can use main (kind pin wins over max).",
         "max_tier": "fast",
         "kinds": {
-          "chat": "main"
+          "presence": "fast",
+          "idle": "fast",
+          "chat": "main",
+          "think": "main",
+          "decision": "main"
         }
       },
       "lucy": {

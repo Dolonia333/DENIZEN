@@ -515,29 +515,9 @@
   }
 
   function mountChip() {
-    if (sess()?.isCeoPrincipal?.()) return;
-    injectStyles();
-    let chip = document.getElementById(CHIP_ID);
-    if (!chip) {
-      chip = document.createElement('button');
-      chip.id = CHIP_ID;
-      chip.type = 'button';
-      globalThis.DenizenBottomDock?.renderChip?.('denizen-capabilities-guide-chip', touch ? '' : 'Guide', { iconOnly: touch });
-      if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = 'Guide';
-      chip.title = 'Office guide - agents, models, City Power, desktop';
-      document.body.appendChild(chip);
-    }
-    chip.classList.add('ready');
-    const clone = chip.cloneNode(true);
-    chip.replaceWith(clone);
-    const onPress = () => {
-      window.DenizenHaptics?.tap?.();
-      open();
-    };
-    const bind = window.DenizenTouchBind?.bindPress;
-    if (bind) bind(clone, onPress);
-    else clone.addEventListener('click', onPress);
-    window.DenizenBottomDock?.refresh?.();
+    // Office Guide is no longer offered as a dock/phone app (Office Tour only).
+    // Modal API remains available for internal deep-links if needed.
+    document.getElementById(CHIP_ID)?.remove();
   }
 
   function init() {

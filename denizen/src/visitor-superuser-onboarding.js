@@ -423,32 +423,8 @@
   }
 
   function mountReplayChip() {
-    if (!canShowChip()) {
-      document.getElementById(CHIP_ID)?.remove();
-      return;
-    }
-    injectStyles();
-    let chip = document.getElementById(CHIP_ID);
-    if (!chip) {
-      chip = document.createElement('button');
-      chip.id = CHIP_ID;
-      chip.type = 'button';
-      globalThis.DenizenBottomDock?.renderChip?.('denizen-superuser-replay-chip', touch ? '' : 'Power tour', { iconOnly: touch });
-      if (!globalThis.DenizenBottomDock?.renderChip) chip.textContent = 'Power tour';
-      chip.title = 'City Power tour — connect, contribute, stay in control';
-      document.body.appendChild(chip);
-    }
-    chip.classList.add('ready');
-    const clone = chip.cloneNode(true);
-    chip.replaceWith(clone);
-    const onPress = () => {
-      window.DenizenHaptics?.tap?.();
-      showTour({ force: true });
-    };
-    const bind = window.DenizenTouchBind?.bindPress;
-    if (bind) bind(clone, onPress);
-    else clone.addEventListener('click', onPress);
-    window.DenizenBottomDock?.refresh?.();
+    // Power Tour is no longer offered as a dock/phone app (Office Tour only).
+    document.getElementById(CHIP_ID)?.remove();
   }
 
   function onSessionReady() {

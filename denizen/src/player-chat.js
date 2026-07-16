@@ -182,10 +182,10 @@ class PlayerChat {
           <div id="player-chat-attach-chips" aria-label="Pending attachments"></div>
           <div id="player-chat-input-row" class="pc-composer-shell">
             <div class="pc-composer-bar">
-              <button id="player-chat-attach" type="button" title="Add photos & files (or drag-drop / paste)" aria-label="Add attachment">
+              <button id="player-chat-attach" type="button" title="Add photos, PDFs & files (or drag-drop / paste)" aria-label="Add attachment">
                 <span class="pc-attach-icon" aria-hidden="true">+</span>
               </button>
-              <input id="player-chat-file" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.csv,.json,.log,.yaml,.yml" style="display:none" />
+              <input id="player-chat-file" type="file" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,.pdf,.txt,.md,.csv,.json,.log,.yaml,.yml" style="display:none" />
               <textarea id="player-chat-input" rows="1" placeholder="Message…" autocomplete="off" enterkeyhint="send"></textarea>
               <div class="pc-composer-actions">
                 <button id="player-chat-speak" type="button" title="Voice input">
@@ -866,7 +866,13 @@ class PlayerChat {
 
     // Add to chat log
     this._addToLog('You', trimmed || '📎', {
-      attachments: outgoingAttachments.map((a) => ({ name: a.name, mime: a.mime, thumbUrl: a.thumbUrl })),
+      attachments: outgoingAttachments.map((a) => ({
+        name: a.name,
+        mime: a.mime,
+        kind: a.kind || null,
+        thumbUrl: a.thumbUrl,
+        previewUrl: a.previewUrl || null,
+      })),
     });
     if (trimmed) this._showPlayerBubble(trimmed);
     if (globalThis.DenizenVisitorSession?.isDemo?.()) {
@@ -2074,14 +2080,14 @@ class PlayerChat {
     }
     style.textContent = `
       #player-chat-panel {
-        --pc-bg: #111827;
-        --pc-surface: #0b1220;
+        --pc-bg: #0a0e1a;
+        --pc-surface: #111827;
         --pc-elevated: #1e293b;
         --pc-border: #020617;
         --pc-line: #334155;
         --pc-text: #e2e8f0;
         --pc-muted: #94a3b8;
-        --pc-accent: #7dd3fc;
+        --pc-accent: #38bdf8;
         --pc-user: #0ea5e9;
         --pc-amber: #f59e0b;
         --pc-display: "Syne", "Avenir Next", "Segoe UI", system-ui, sans-serif;
@@ -2100,7 +2106,7 @@ class PlayerChat {
             rgba(148, 163, 184, 0.03) 11px,
             rgba(148, 163, 184, 0.03) 12px
           ),
-          var(--pc-bg);
+          var(--pc-surface);
         border: 3px solid var(--pc-border);
         border-radius: 4px;
         display: none;
@@ -2115,7 +2121,11 @@ class PlayerChat {
           0 0 0 2px var(--pc-amber),
           5px 7px 0 #020617;
         contain: layout style;
+        box-sizing: border-box;
       }
+      #player-chat-panel *,
+      #player-chat-panel *::before,
+      #player-chat-panel *::after { box-sizing: border-box; }
       #player-chat-panel::before {
         content: "FLOOR LINE";
         position: absolute;
@@ -2161,7 +2171,7 @@ class PlayerChat {
         font-size: 16px;
         font-weight: 800;
         color: #0b1220;
-        background: linear-gradient(180deg, #bae6fd, var(--pc-accent));
+        background: linear-gradient(180deg, #7dd3fc, var(--pc-accent));
         border: 2px solid #020617;
         box-shadow: 2px 2px 0 #020617, inset 0 1px 0 rgba(255,255,255,0.35);
       }
@@ -2330,28 +2340,32 @@ class PlayerChat {
       }
       #player-chat-composer {
         flex-shrink: 0;
+        margin: 0 2px 2px;
         border-top: 2px solid var(--pc-border);
-        background: rgba(2, 6, 23, 0.72);
+        border-radius: 0 0 2px 2px;
+        background: rgba(2, 6, 23, 0.88);
         box-shadow: inset 0 1px 0 var(--pc-line);
       }
-      .pc-composer-shell { padding: 10px 12px 12px; }
+      .pc-composer-shell {
+        padding: 10px 10px 10px;
+      }
       .pc-composer-bar {
         display: flex;
-        align-items: flex-end;
-        gap: 4px;
-        padding: 6px 8px 6px 4px;
+        align-items: center;
+        gap: 6px;
+        min-height: 44px;
+        padding: 6px 8px;
         border-radius: 6px;
         border: 2px solid #020617;
-        background: rgba(17, 24, 39, 0.95);
-        box-shadow: inset 0 0 0 1px var(--pc-line), 2px 2px 0 #020617;
+        background: var(--pc-surface);
+        box-shadow: inset 0 0 0 1px var(--pc-line);
         transition: border-color 0.15s, box-shadow 0.15s;
       }
       .pc-composer-bar:focus-within {
         border-color: var(--pc-accent);
         box-shadow:
-          inset 0 0 0 1px rgba(125, 211, 252, 0.35),
-          0 0 0 2px rgba(125, 211, 252, 0.18),
-          2px 2px 0 #020617;
+          inset 0 0 0 1px rgba(56, 189, 248, 0.35),
+          0 0 0 2px rgba(56, 189, 248, 0.16);
       }
       #player-chat-input-row {
         display: block;
@@ -2363,18 +2377,25 @@ class PlayerChat {
         flex: 1 1 auto;
         min-width: 0;
         width: 100%;
-        min-height: 22px;
+        min-height: 28px;
         max-height: 120px;
         background: transparent;
         border: none;
         color: var(--pc-text);
-        padding: 8px 4px;
+        padding: 6px 4px;
         font-family: inherit;
         font-size: 14px;
         line-height: 1.45;
         outline: none;
         resize: none;
         overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      #player-chat-input::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
       }
       #player-chat-input::placeholder { color: #64748b; }
       #player-chat-send {
@@ -2385,7 +2406,7 @@ class PlayerChat {
         padding: 0;
         border: 2px solid #020617;
         border-radius: 6px;
-        background: linear-gradient(180deg, #bae6fd, #7dd3fc);
+        background: linear-gradient(180deg, #7dd3fc, #38bdf8);
         color: #0b1220;
         cursor: pointer;
         display: inline-flex;
@@ -2431,10 +2452,10 @@ class PlayerChat {
         color: #fca5a5;
       }
       #player-chat-attach {
-        flex: 0 0 32px;
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
         background: transparent;
         color: var(--pc-muted);
         border: none;
@@ -2451,13 +2472,13 @@ class PlayerChat {
         font-weight: 300;
         line-height: 1;
       }
-      #player-chat-attach:hover { color: var(--pc-accent); background: rgba(125, 211, 252, 0.1); }
+      #player-chat-attach:hover { color: var(--pc-accent); background: rgba(56, 189, 248, 0.1); }
       .pc-composer-actions {
         display: flex;
         align-items: center;
-        gap: 2px;
+        gap: 4px;
         flex-shrink: 0;
-        padding-left: 2px;
+        padding-left: 0;
       }
       #player-chat-attach-chips {
         display: none;
@@ -2476,9 +2497,37 @@ class PlayerChat {
         padding: 4px 8px;
         font-size: 11px;
         color: #cbd5e1;
-        max-width: 180px;
+        max-width: 220px;
         box-shadow: 1px 1px 0 #020617;
       }
+      .pc-attach-chip.is-pdf {
+        border-left: 3px solid var(--pc-accent, #38bdf8);
+      }
+      .pc-pdf-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 28px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 3px;
+        background: #38bdf8;
+        color: #0a0e1a;
+        font: 800 9px/1 var(--pc-mono, ui-monospace, monospace);
+        letter-spacing: 0.08em;
+      }
+      .pc-chip-view {
+        border: 1px solid #334155;
+        background: rgba(2, 6, 23, 0.65);
+        color: #38bdf8;
+        border-radius: 3px;
+        font: 700 10px/1 var(--pc-mono, ui-monospace, monospace);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 4px 6px;
+        cursor: pointer;
+      }
+      .pc-chip-view:hover { border-color: #38bdf8; }
       .pc-attach-chip img {
         width: 28px; height: 28px;
         object-fit: cover;
@@ -2504,6 +2553,117 @@ class PlayerChat {
         display: inline-flex; align-items: center; gap: 4px;
         background: #1e293b; border: 2px solid #020617; border-radius: 4px;
         padding: 3px 8px; font-size: 10px; color: #cbd5e1;
+      }
+      .pc-pdf-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 8px;
+        width: min(100%, 260px);
+        text-align: left;
+        border: 2px solid #020617;
+        border-radius: 4px;
+        background:
+          linear-gradient(180deg, rgba(56,189,248,0.12), transparent 55%),
+          #111827;
+        color: #e2e8f0;
+        padding: 8px 10px;
+        cursor: pointer;
+        box-shadow: 2px 2px 0 #020617;
+        font: 12px/1.3 var(--pc-mono, ui-monospace, monospace);
+      }
+      .pc-pdf-card:disabled { cursor: default; opacity: 0.85; }
+      .pc-pdf-card:not(:disabled):hover { border-color: #38bdf8; }
+      .pc-pdf-card-name {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-weight: 700;
+      }
+      .pc-pdf-card-cta {
+        color: #38bdf8;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      #denizen-pdf-preview {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2147483640;
+        background: rgba(2, 6, 23, 0.72);
+        padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+        align-items: center;
+        justify-content: center;
+      }
+      #denizen-pdf-preview.open { display: flex; }
+      #denizen-pdf-preview .pc-pdf-sheet {
+        width: min(920px, 96vw);
+        height: min(88vh, 900px);
+        display: flex;
+        flex-direction: column;
+        background: #0a0e1a;
+        border: 3px solid #020617;
+        border-radius: 4px;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 2px #f59e0b,
+          6px 8px 0 #020617;
+        overflow: hidden;
+      }
+      #denizen-pdf-preview .pc-pdf-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-bottom: 2px solid #020617;
+        background: rgba(17, 24, 39, 0.95);
+      }
+      #denizen-pdf-preview .pc-pdf-stamp {
+        flex-shrink: 0;
+        padding: 3px 8px;
+        font: 800 9px/1.2 "Syne", system-ui, sans-serif;
+        letter-spacing: 0.14em;
+        color: #0a0e1a;
+        background: #f59e0b;
+        border: 2px solid #020617;
+        border-radius: 3px;
+        box-shadow: 2px 2px 0 #020617;
+      }
+      #denizen-pdf-preview .pc-pdf-title {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+        font: 800 15px/1.2 "Syne", system-ui, sans-serif;
+        color: #e2e8f0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #denizen-pdf-preview .pc-pdf-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      #denizen-pdf-preview .pc-pdf-open,
+      #denizen-pdf-preview .pc-pdf-close {
+        border: 2px solid #020617;
+        border-radius: 4px;
+        background: rgba(2, 6, 23, 0.8);
+        color: #38bdf8;
+        font: 700 11px/1 ui-monospace, monospace;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-decoration: none;
+        padding: 8px 10px;
+        cursor: pointer;
+        box-shadow: 1px 1px 0 #020617;
+      }
+      #denizen-pdf-preview .pc-pdf-close { color: #e2e8f0; }
+      #denizen-pdf-preview .pc-pdf-frame {
+        flex: 1;
+        width: 100%;
+        border: 0;
+        background: #111827;
       }
       #player-chat-fab {
         background: rgba(11, 18, 32, 0.96);
@@ -2687,8 +2847,8 @@ class PlayerChat {
         padding: 8px 10px;
         font-size: 13px;
       }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-shell { padding: 8px 10px; }
-      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-bar { gap: 4px; }
+      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-shell { padding: 8px; }
+      html.denizen-touch.denizen-phone.denizen-landscape .pc-composer-bar { gap: 6px; }
       html.denizen-touch.denizen-phone.denizen-landscape #player-chat-input {
         min-height: 40px;
         font-size: 16px;
@@ -2733,9 +2893,9 @@ class PlayerChat {
       }
       html.denizen-touch #player-chat-log .msg.system.error .text { color: #fecaca; }
       html.denizen-touch .pc-composer-shell {
-        padding: 10px 12px max(10px, env(safe-area-inset-bottom, 0px));
+        padding: 10px;
       }
-      html.denizen-touch .pc-composer-bar { padding: 5px 6px 5px 2px; }
+      html.denizen-touch .pc-composer-bar { padding: 6px 8px; }
       html.denizen-touch #player-chat-input {
         min-height: 28px;
         font-size: 16px;
@@ -2846,6 +3006,13 @@ class PlayerChat {
     // --- Attachments: + picker, drag-drop onto the panel, paste into the input ---
     this._pendingAttachments = this._pendingAttachments || [];
     this._attachChipsEl = panel.querySelector('#player-chat-attach-chips');
+    this._logEl?.addEventListener('click', (e) => {
+      const card = e.target?.closest?.('[data-pdf-preview]');
+      if (!card || card.disabled) return;
+      const url = card.getAttribute('data-pdf-preview');
+      const name = card.getAttribute('data-pdf-name') || 'Document';
+      if (url) this._openPdfPreview(url, name);
+    });
     const attachBtn = panel.querySelector('#player-chat-attach');
     const fileInput = panel.querySelector('#player-chat-file');
     if (attachBtn && fileInput) {
@@ -3291,7 +3458,7 @@ class PlayerChat {
   /**
    * Queue files (from 📎 picker, drag-drop, or paste) to send with the next message.
    * Keeps full base64 for the wire and a small canvas thumbnail for display so
-   * cached thread messages stay tiny.
+   * cached thread messages stay tiny. PDFs get a blob previewUrl for in-chat viewing.
    */
   _addPendingFiles(fileList) {
     const files = Array.from(fileList || []);
@@ -3299,30 +3466,55 @@ class PlayerChat {
     if (!Array.isArray(this._pendingAttachments)) this._pendingAttachments = [];
     const MAX = 3;
     const IMG_CAP = 6 * 1024 * 1024;
+    const PDF_CAP = 4 * 1024 * 1024;
     const TXT_CAP = 512 * 1024;
+    const TEXT_EXT = /\.(txt|md|csv|json|log|ya?ml)$/i;
+    const IMG_EXT = /\.(png|jpe?g|webp|gif)$/i;
+    const PDF_EXT = /\.pdf$/i;
+
+    const classify = (f) => {
+      const mime = String(f.type || '').toLowerCase();
+      const name = String(f.name || '');
+      if (mime.startsWith('image/') || IMG_EXT.test(name)) return 'image';
+      if (mime === 'application/pdf' || PDF_EXT.test(name)) return 'pdf';
+      if (mime.startsWith('text/') || mime === 'application/json' || TEXT_EXT.test(name)) return 'text';
+      return null;
+    };
+
     for (const f of files) {
       if (this._pendingAttachments.length >= MAX) {
         this._addToLog('System', `Max ${MAX} attachments per message — extra files skipped.`);
         break;
       }
-      const isImage = /^image\//i.test(f.type || '');
-      if (f.size > (isImage ? IMG_CAP : TXT_CAP)) {
-        this._addToLog('System', `${f.name} is too large (max ${isImage ? '6MB for images' : '512KB for files'}).`);
+      const kind = classify(f);
+      if (!kind) {
+        this._addToLog('System', `${f.name || 'File'} isn't supported — use images, PDFs, or text files.`);
+        continue;
+      }
+      const cap = kind === 'image' ? IMG_CAP : (kind === 'pdf' ? PDF_CAP : TXT_CAP);
+      if (f.size > cap) {
+        this._addToLog('System', `${f.name} is too large (max ${kind === 'image' ? '6MB' : kind === 'pdf' ? '4MB' : '512KB'}).`);
         continue;
       }
       const reader = new FileReader();
       reader.onload = () => {
         const dataUrl = String(reader.result || '');
+        let previewUrl = null;
+        try {
+          if (kind === 'pdf' || kind === 'image') previewUrl = URL.createObjectURL(f);
+        } catch (_) {}
         const att = {
           name: f.name || 'file',
-          mime: f.type || '',
+          mime: f.type || (kind === 'pdf' ? 'application/pdf' : ''),
           size: f.size,
+          kind,
           data: dataUrl.slice(dataUrl.indexOf(',') + 1),
           thumbUrl: null,
+          previewUrl,
         };
         this._pendingAttachments.push(att);
         this._renderAttachChips();
-        if (isImage) {
+        if (kind === 'image') {
           this._makeThumb(dataUrl, (thumb) => {
             att.thumbUrl = thumb;
             this._renderAttachChips();
@@ -3352,6 +3544,13 @@ class PlayerChat {
     } catch (_) { cb(null); }
   }
 
+  _revokePreviewUrl(att) {
+    if (att?.previewUrl && String(att.previewUrl).startsWith('blob:')) {
+      try { URL.revokeObjectURL(att.previewUrl); } catch (_) {}
+      att.previewUrl = null;
+    }
+  }
+
   _renderAttachChips() {
     try { this._syncSendButton?.(); } catch (_) {}
     const el = this._attachChipsEl;
@@ -3362,21 +3561,43 @@ class PlayerChat {
     items.forEach((att, i) => {
       const chip = document.createElement('span');
       chip.className = 'pc-attach-chip';
+      if (att.kind === 'pdf') chip.classList.add('is-pdf');
       if (att.thumbUrl) {
         const img = document.createElement('img');
         img.src = att.thumbUrl;
         chip.appendChild(img);
+      } else if (att.kind === 'pdf') {
+        const badge = document.createElement('span');
+        badge.className = 'pc-pdf-badge';
+        badge.textContent = 'PDF';
+        chip.appendChild(badge);
       }
       const name = document.createElement('span');
       name.className = 'pc-chip-name';
       name.textContent = att.name;
       chip.appendChild(name);
+      if (att.kind === 'pdf' && att.previewUrl) {
+        const view = document.createElement('button');
+        view.type = 'button';
+        view.className = 'pc-chip-view';
+        view.textContent = 'View';
+        view.title = 'Preview PDF';
+        const openPreview = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          this._openPdfPreview(att.previewUrl, att.name);
+        };
+        if (window.DenizenTouchBind?.bindPress) window.DenizenTouchBind.bindPress(view, openPreview);
+        else view.onclick = openPreview;
+        chip.appendChild(view);
+      }
       const x = document.createElement('span');
       x.className = 'pc-chip-x';
       x.textContent = '×';
       x.title = 'Remove';
       const removeChip = () => {
-        this._pendingAttachments.splice(i, 1);
+        const [removed] = this._pendingAttachments.splice(i, 1);
+        this._revokePreviewUrl(removed);
         this._renderAttachChips();
       };
       if (window.DenizenTouchBind?.bindPress) {
@@ -3387,6 +3608,58 @@ class PlayerChat {
       chip.appendChild(x);
       el.appendChild(chip);
     });
+  }
+
+  _openPdfPreview(url, title) {
+    if (!url) return;
+    let overlay = document.getElementById('denizen-pdf-preview');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'denizen-pdf-preview';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.innerHTML = `
+        <div class="pc-pdf-sheet">
+          <header class="pc-pdf-head">
+            <span class="pc-pdf-stamp">DENIZEN · PDF</span>
+            <h2 class="pc-pdf-title"></h2>
+            <div class="pc-pdf-actions">
+              <a class="pc-pdf-open" target="_blank" rel="noopener">Open</a>
+              <button type="button" class="pc-pdf-close" aria-label="Close">✕</button>
+            </div>
+          </header>
+          <iframe class="pc-pdf-frame" title="PDF preview"></iframe>
+        </div>`;
+      document.body.appendChild(overlay);
+      const close = () => this._closePdfPreview();
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+      });
+      overlay.querySelector('.pc-pdf-close')?.addEventListener('click', close);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) close();
+      });
+    }
+    const frame = overlay.querySelector('.pc-pdf-frame');
+    const titleEl = overlay.querySelector('.pc-pdf-title');
+    const openLink = overlay.querySelector('.pc-pdf-open');
+    if (titleEl) titleEl.textContent = title || 'Document';
+    if (frame) frame.src = url;
+    if (openLink) {
+      openLink.href = url;
+      openLink.download = title || 'document.pdf';
+    }
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+
+  _closePdfPreview() {
+    const overlay = document.getElementById('denizen-pdf-preview');
+    if (!overlay) return;
+    const frame = overlay.querySelector('.pc-pdf-frame');
+    if (frame) frame.src = 'about:blank';
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
   }
 
   /** Take (and clear) pending attachments for sending. */
@@ -3455,9 +3728,21 @@ class PlayerChat {
 
     // Attachment previews: thumbUrl is generated locally by our own FileReader/canvas
     // (never from server or NPC text) and gated to data:image/ URLs only.
+    // PDF previewUrl is a blob: URL created from the user's own file picker.
     const attachHtml = (m) => {
       if (!Array.isArray(m.attachments) || !m.attachments.length) return '';
       const parts = m.attachments.map((a) => {
+        const isPdf = a.kind === 'pdf' || /pdf/i.test(a.mime || '') || /\.pdf$/i.test(a.name || '');
+        if (isPdf) {
+          const preview = (a.previewUrl && /^(blob:|https?:|\/data\/)/.test(a.previewUrl))
+            ? a.previewUrl
+            : '';
+          return `<button type="button" class="pc-pdf-card" data-pdf-preview="${esc(preview)}" data-pdf-name="${esc(a.name)}" ${preview ? '' : 'disabled'}>
+            <span class="pc-pdf-badge">PDF</span>
+            <span class="pc-pdf-card-name">${esc(a.name)}</span>
+            <span class="pc-pdf-card-cta">${preview ? 'View' : 'Attached'}</span>
+          </button>`;
+        }
         if (a.thumbUrl && /^data:image\//.test(a.thumbUrl)) {
           return `<img src="${a.thumbUrl}" alt="${esc(a.name)}" title="${esc(a.name)}" />`;
         }

@@ -5247,12 +5247,13 @@ class AgentOfficeManager {
         return;
       }
       // Older server without director block — derive from issues list.
+      // Note: demo_mode alone is NOT director offline when localOnly (LM Studio).
       const issues = Array.isArray(body?.issues) ? body.issues : [];
       if (issues.includes('director_offline')) {
         this._updateDirectorBanner({
           offline: true,
-          demoLoop: !!body?.demoMode || issues.includes('demo_mode'),
-          consecutiveErrors: 3,
+          demoLoop: !!body?.director?.demoLoop,
+          consecutiveErrors: body?.director?.consecutiveErrors || 3,
         });
       } else {
         this._updateDirectorBanner({ offline: false });

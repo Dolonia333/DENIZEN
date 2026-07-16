@@ -35,6 +35,17 @@ describe('chat-attachments', () => {
       assert.equal(r.items[0].kind, 'text');
     });
 
+    it('accepts a PDF by mime and extension fallback', () => {
+      const pdf = Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF');
+      const b64 = pdf.toString('base64');
+      const byMime = validateAttachments([{ name: 'brief.pdf', mime: 'application/pdf', data: b64 }]);
+      assert.equal(byMime.ok, true);
+      assert.equal(byMime.items[0].kind, 'pdf');
+      const byExt = validateAttachments([{ name: 'brief.pdf', mime: 'application/octet-stream', data: b64 }]);
+      assert.equal(byExt.ok, true);
+      assert.equal(byExt.items[0].mime, 'application/pdf');
+    });
+
     it('rejects unsupported types (exe)', () => {
       const r = validateAttachments([{ name: 'evil.exe', mime: 'application/x-msdownload', data: TINY_PNG_B64 }]);
       assert.equal(r.ok, false);
@@ -66,6 +77,31 @@ describe('chat-attachments', () => {
       assert.equal(_internals.sanitizeName('../../etc/passwd'), 'passwd');
       assert.equal(_internals.sanitizeName('..\\..\\win\\sys.ini'), 'sys.ini');
       assert.ok(!_internals.sanitizeName('a<b>|c?.txt').includes('<'));
+    });
+  });
+
+  describe('extractPdfText', () => {
+    it('pulls literal Tj strings from a minimal PDF', () => {
+      // Minimal-ish PDF with an uncompressed content stream containing (Hello Denizen) Tj
+      const body = [
+        '%PDF-1.4',
+        '1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj',
+        '2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj',
+        '3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R >>endobj',
+        '4 0 obj<< /Length 44 >>stream',
+        'BT /F1 12 Tf 10 100 Td (Hello Denizen) Tj ET',
+        'endstream',
+        'endobj',
+        'trailer<< /Root 1 0 R >>',
+        '%%EOF',
+      ].join('\n');
+      const out = _internals.extractPdfText(Buffer.from(body, 'latin1'));
+      assert.match(out, /Hello Denizen/);
+    });
+
+    it('notes when no extractable text is present', () => {
+      const out = _internals.extractPdfText(Buffer.from('%PDF-1.4\n%%EOF', 'latin1'));
+      assert.match(out, /No extractable text|scanned/i);
     });
   });
 

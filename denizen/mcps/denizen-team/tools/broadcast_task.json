@@ -1,0 +1,26 @@
+{
+  "name": "broadcast_task",
+  "description": "Assign the same mandatory task to multiple NPCs (wakes think loops).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "task": {
+        "type": "string",
+        "description": "Task description"
+      },
+      "npc_keys": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "NPC keys to assign (default: all non-protected roster NPCs)"
+      },
+      "urgent": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "task"
+    ]
+  }
+}

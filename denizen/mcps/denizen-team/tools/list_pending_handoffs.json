@@ -1,0 +1,13 @@
+{
+  "name": "list_pending_handoffs",
+  "description": "Pending assistant handoffs addressed to your session.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "limit": {
+        "type": "number",
+        "description": "Max rows (default 20)"
+      }
+    }
+  }
+}

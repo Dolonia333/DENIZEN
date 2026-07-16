@@ -21,7 +21,204 @@ const OFFICE_SCOPED_WS_TYPES = new Set([
   'npc_hallucination_flag',
   'office_bus_message',
   'assistant_handoff',
+  // Multiplayer world-sync
+  'player_pose',
+  'players_snapshot',
+  'player_left',
+  'sim_host',
+  'npc_poses',
 ]);
+
+/** Min ms between accepted player_pose updates per presence key (~15 Hz). */
+const POSE_MIN_INTERVAL_MS = 66;
+
+/** officeId -> Map(presenceKey -> pose) */
+const officePresence = new Map();
+/** officeId -> { presenceKey, joinedAt, interactive } */
+const officeSimHosts = new Map();
+/** presenceKey -> last accepted pose timestamp */
+const poseThrottleAt = new Map();
+let _anonSeq = 0;
+
+function ensurePresenceKey(ws) {
+  if (!ws) return null;
+  const prev = ws._denizenPresenceKey || null;
+  let next = null;
+  if (ws._denizenSessionId) {
+    next = `sess:${ws._denizenSessionId}`;
+  } else if (prev) {
+    next = prev;
+  } else {
+    _anonSeq += 1;
+    next = `anon:${Date.now().toString(36)}-${_anonSeq}`;
+  }
+  ws._denizenPresenceKey = next;
+
+  // Re-register often upgrades anon:* → sess:* — drop the ghost pose so
+  // peers (and this client) don't keep a second "me" in the room.
+  if (prev && prev !== next && ws._denizenOfficeId) {
+    const removed = removePlayerFromOffice(ws._denizenOfficeId, prev);
+    if (removed) {
+      ws._denizenPresenceKeyMigrated = { from: prev, to: next, removed };
+    }
+  }
+  return next;
+}
+
+function _officeMap(officeId) {
+  const id = normalizeOfficeId(officeId);
+  if (!officePresence.has(id)) officePresence.set(id, new Map());
+  return officePresence.get(id);
+}
+
+function listPlayersInOffice(officeId) {
+  const map = officePresence.get(normalizeOfficeId(officeId));
+  if (!map) return [];
+  return [...map.values()];
+}
+
+function upsertPlayerPose(officeId, pose, opts = {}) {
+  const id = normalizeOfficeId(officeId);
+  const key = String(pose?.sessionId || pose?.presenceKey || '').trim();
+  if (!key || !id) return { ok: false, reason: 'missing_key' };
+
+  const now = Date.now();
+  const throttleKey = `${id}:${key}`;
+  if (!opts.force) {
+    const last = poseThrottleAt.get(throttleKey) || 0;
+    if (now - last < POSE_MIN_INTERVAL_MS) return { ok: false, reason: 'throttled' };
+  }
+  poseThrottleAt.set(throttleKey, now);
+
+  const entry = {
+    sessionId: key,
+    visitorId: pose.visitorId || pose.identityId || null,
+    displayName: String(pose.displayName || pose.display_name || 'Guest').slice(0, 48),
+    x: Number(pose.x) || 0,
+    y: Number(pose.y) || 0,
+    facing: pose.facing || 'down',
+    anim: pose.anim || 'idle',
+    room: pose.room || null,
+    interactive: pose.interactive !== false,
+    spectator: !!pose.spectator,
+    ts: now,
+  };
+  _officeMap(id).set(key, entry);
+  return { ok: true, pose: entry, officeId: id };
+}
+
+function removePlayerFromOffice(officeId, presenceKey) {
+  const id = normalizeOfficeId(officeId);
+  const key = String(presenceKey || '').trim();
+  if (!key || !id) return null;
+  const map = officePresence.get(id);
+  if (!map || !map.has(key)) return null;
+  const removed = map.get(key);
+  map.delete(key);
+  if (map.size === 0) officePresence.delete(id);
+  poseThrottleAt.delete(`${id}:${key}`);
+  return removed;
+}
+
+function getSimHost(officeId) {
+  return officeSimHosts.get(normalizeOfficeId(officeId)) || null;
+}
+
+function _pickOldestInteractive(officeId, clients) {
+  const id = normalizeOfficeId(officeId);
+  let best = null;
+  forEachAgentClient(clients, (ws) => {
+    if (ws._denizenOfficeId !== id) return;
+    if (ws._denizenSpectator || ws._denizenDemoMode) return;
+    if (ws._denizenInteractive === false) return;
+    const key = ensurePresenceKey(ws);
+    const joined = ws._denizenJoinedAt || 0;
+    if (!best || joined < best.joinedAt) {
+      best = { presenceKey: key, joinedAt: joined, interactive: true };
+    }
+  });
+  return best;
+}
+
+/**
+ * Ensure an office has a sim host. Elects first interactive client if none.
+ * Returns { host, changed, message } where message is a sim_host payload or null.
+ */
+function ensureSimHost(officeId, clients, preferKey = null) {
+  const id = normalizeOfficeId(officeId);
+  const current = officeSimHosts.get(id);
+
+  const stillConnected = (key) => {
+    if (!key) return false;
+    let found = false;
+    forEachAgentClient(clients, (ws) => {
+      if (ws._denizenOfficeId !== id) return;
+      if (ensurePresenceKey(ws) === key && !ws._denizenSpectator && !ws._denizenDemoMode) {
+        found = true;
+      }
+    });
+    return found;
+  };
+
+  if (current && stillConnected(current.presenceKey)) {
+    return {
+      host: current,
+      changed: false,
+      message: {
+        type: 'sim_host',
+        office_id: id,
+        sessionId: current.presenceKey,
+        ts: Date.now(),
+      },
+    };
+  }
+
+  let next = null;
+  if (preferKey && stillConnected(preferKey)) {
+    next = { presenceKey: preferKey, joinedAt: Date.now(), interactive: true };
+  } else {
+    next = _pickOldestInteractive(id, clients);
+  }
+
+  if (!next) {
+    officeSimHosts.delete(id);
+    return {
+      host: null,
+      changed: !!current,
+      message: { type: 'sim_host', office_id: id, sessionId: null, ts: Date.now() },
+    };
+  }
+
+  officeSimHosts.set(id, next);
+  return {
+    host: next,
+    changed: !current || current.presenceKey !== next.presenceKey,
+    message: {
+      type: 'sim_host',
+      office_id: id,
+      sessionId: next.presenceKey,
+      ts: Date.now(),
+    },
+  };
+}
+
+function clearSimHostIf(presenceKey, officeId, clients) {
+  const id = normalizeOfficeId(officeId);
+  const current = officeSimHosts.get(id);
+  if (!current || current.presenceKey !== presenceKey) {
+    return ensureSimHost(id, clients);
+  }
+  officeSimHosts.delete(id);
+  return ensureSimHost(id, clients);
+}
+
+/** Test helper — wipe in-memory multiplayer state. */
+function _resetMultiplayerStateForTests() {
+  officePresence.clear();
+  officeSimHosts.clear();
+  poseThrottleAt.clear();
+  _anonSeq = 0;
+}
 
 /** Org-scoped — fan-out only to sockets with matching org_id. */
 const ORG_SCOPED_WS_TYPES = new Set([
@@ -153,6 +350,10 @@ function forEachAgentClient(clients, fn) {
 function broadcastAgent(clients, msg, opts = {}) {
   const officeId = opts.officeId ?? msg?.office_id ?? msg?.officeId ?? null;
   const orgId = opts.orgId ?? msg?.org_id ?? msg?.orgId ?? null;
+  const excludeWs = opts.excludeWs || null;
+  const excludePresenceKey = opts.excludePresenceKey
+    || (excludeWs && (excludeWs._denizenPresenceKey || null))
+    || null;
   let payload = msg;
   if (officeId) payload = attachOfficeId(payload, officeId);
   if (orgId && typeof payload === 'object' && payload) {
@@ -160,6 +361,8 @@ function broadcastAgent(clients, msg, opts = {}) {
   }
   const raw = typeof payload === 'string' ? payload : JSON.stringify(payload);
   forEachAgentClient(clients, (ws) => {
+    if (excludeWs && ws === excludeWs) return;
+    if (excludePresenceKey && ws._denizenPresenceKey === excludePresenceKey) return;
     if (!shouldDeliverToSocket(typeof payload === 'object' ? payload : msg, ws)) return;
     try { ws.send(raw); } catch (_) {}
   });
@@ -197,6 +400,7 @@ module.exports = {
   OFFICE_SCOPED_WS_TYPES,
   ORG_SCOPED_WS_TYPES,
   GLOBAL_WS_TYPES,
+  POSE_MIN_INTERVAL_MS,
   normalizeOfficeId,
   resolveOfficeFromSession,
   attachOfficeId,
@@ -205,4 +409,12 @@ module.exports = {
   listOfficesOnline,
   lucyRoleForOffice,
   isLucyCeoInOffice,
+  ensurePresenceKey,
+  listPlayersInOffice,
+  upsertPlayerPose,
+  removePlayerFromOffice,
+  getSimHost,
+  ensureSimHost,
+  clearSimHostIf,
+  _resetMultiplayerStateForTests,
 };

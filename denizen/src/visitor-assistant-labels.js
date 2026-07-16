@@ -75,13 +75,14 @@
     const text = scene.add.text(npc.x, npc.y - Y_OFFSET, labelText, {
       fontSize: '8px',
       fontFamily: 'monospace',
-      color: color || '#4ade80',
+      color: '#0f172a',
+      backgroundColor: color === '#fbbf24' ? '#fef08cee' : '#bbf7d0ee',
+      padding: { x: 3, y: 2 },
       align: 'center',
-      stroke: '#0f172a',
-      strokeThickness: 3,
     });
     text.setOrigin(0.5, 1);
     text.setDepth(9997);
+    if (typeof text.setResolution === 'function') text.setResolution(1);
     labels.set(npcKey, { text, npc, npcKey });
   }
 

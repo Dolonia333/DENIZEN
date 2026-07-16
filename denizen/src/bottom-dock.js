@@ -13,8 +13,6 @@
   const SLOT_MAP_DESKTOP = {
     left: [
       'denizen-onboarding-replay-chip',
-      'denizen-superuser-replay-chip',
-      'denizen-capabilities-guide-chip',
       'denizen-audio-mode-chip',
       'denizen-diag-chip',
       'denizen-security-chip',
@@ -35,8 +33,6 @@
   const SLOT_MAP_TOUCH = {
     left: [
       'denizen-onboarding-replay-chip',
-      'denizen-superuser-replay-chip',
-      'denizen-capabilities-guide-chip',
       'denizen-audio-mode-chip',
       'denizen-diag-chip',
       'denizen-security-chip',

@@ -13,6 +13,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Overview | [TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md) | new/local | **Start here (engineers)** — whole-platform architecture, subsystems, data model, API surface, deploy |
 | Overview | [PRODUCT_MANUAL.md](PRODUCT_MANUAL.md) | new/local | **Start here (users)** — getting started, NPCs, phone, MCP connect, CRM, compute, troubleshooting |
 | Overview | [PRD.md](PRD.md) | new/local | **Start here (product)** — vision, personas, goals, functional requirements, metrics, risks, roadmap |
+| Overview | [CURRENT_IMPLEMENTATION_STATUS.md](CURRENT_IMPLEMENTATION_STATUS.md) | new/local | **Current truth / gap inventory** — verified implemented, conditional, partial, missing, tests, and live deployment state |
 | Getting Started | [SETUP.md](SETUP.md) | on GitHub | End-to-end local setup and runtime prerequisites |
 | Getting Started | [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md) | new/local | New-contributor onboarding path and first-run workflow |
 | Architecture | [ARCHITECTURE.md](ARCHITECTURE.md) | on GitHub | Runtime topology, core services, and message flow |
@@ -34,6 +35,8 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Integrations | [OPENCLAW_INTEGRATION.md](OPENCLAW_INTEGRATION.md) | on GitHub | OpenClaw bridge integration and event routing |
 | Integrations | [EMAIL_INTEGRATION.md](EMAIL_INTEGRATION.md) | on GitHub | Lucy inbound/outbound email workflow and guardrails |
 | Integrations | [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md) | on GitHub | Robinhood live integration behavior and constraints |
+| Strategy | [A_PLUS_PLAN.md](A_PLUS_PLAN.md) | new/local | Raise every pillar to A+ — phases, metrics, anti-goals, S1 backlog |
+| Integrations | [DENIZEN_HARNESS.md](DENIZEN_HARNESS.md) | new/local | Denizen AI control plane — complete(), tiers, loops, Jelly tools, learning |
 | Integrations | [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md) | new/local | Jelly skill executor, supabase-bridge, denizen-data-actions |
 | Integrations | [FEDERAL_PIPELINE.md](FEDERAL_PIPELINE.md) | new/local | RFP pipeline, requirement review, org-gated briefing strip |
 | Integrations | [JOB_CRM.md](JOB_CRM.md) | new/local | Roki job applications, Supabase sync, facts trigger |
@@ -104,32 +107,35 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 ## Recommended Reading Order
 
 ### New Contributors
-1. [SETUP.md](SETUP.md)
-2. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
-3. [ARCHITECTURE.md](ARCHITECTURE.md)
-4. [NPCS.md](NPCS.md)
-5. [AI-SYSTEM.md](AI-SYSTEM.md)
-6. [FULL_WORLD.md](FULL_WORLD.md)
+1. [CURRENT_IMPLEMENTATION_STATUS.md](CURRENT_IMPLEMENTATION_STATUS.md) — what is real now and what is not
+2. [SETUP.md](SETUP.md)
+3. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
+4. [ARCHITECTURE.md](ARCHITECTURE.md)
+5. [NPCS.md](NPCS.md)
+6. [AI-SYSTEM.md](AI-SYSTEM.md)
+7. [FULL_WORLD.md](FULL_WORLD.md)
 
 ### Operators
-1. [../../MONOREPO.md](../../MONOREPO.md) — repo layout and where things live
-2. [COMPUTE_MESH.md](COMPUTE_MESH.md)
-3. [../../infra/README.md](../../infra/README.md)
-4. [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
-5. [TESTING.md](TESTING.md) — unit tests + mesh/desktop smokes
-6. [SERVER.md](SERVER.md) — route map for live debugging
-7. [SECURITY.md](SECURITY.md)
-8. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
-9. [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)
+1. [CURRENT_IMPLEMENTATION_STATUS.md](CURRENT_IMPLEMENTATION_STATUS.md) — current deploy/runtime truth and known gaps
+2. [../../MONOREPO.md](../../MONOREPO.md) — repo layout and where things live
+3. [COMPUTE_MESH.md](COMPUTE_MESH.md)
+4. [../../infra/README.md](../../infra/README.md)
+5. [PRODUCTION_DEPLOY.md](PRODUCTION_DEPLOY.md)
+6. [TESTING.md](TESTING.md) — unit tests + mesh/desktop smokes
+7. [SERVER.md](SERVER.md) — route map for live debugging
+8. [SECURITY.md](SECURITY.md)
+9. [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
+10. [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md)
 
 ### Developers
-1. [../../MONOREPO.md](../../MONOREPO.md) — repo layout
-2. [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) — **canonical** module map
-3. [SERVER.md](SERVER.md) — `server.js` routes and middleware
-4. [ARCHITECTURE.md](ARCHITECTURE.md) — runtime topology
-5. [SCENE.md](SCENE.md) → [ACTIONS.md](ACTIONS.md) → [AGENT_BUS.md](AGENT_BUS.md)
-6. [AI-SYSTEM.md](AI-SYSTEM.md) → [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
-7. [VISITOR_UI.md](VISITOR_UI.md) → [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
-8. [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md)
-9. [CATALOG_WORKFLOW.md](CATALOG_WORKFLOW.md) → [SCRIPTS.md](SCRIPTS.md)
-10. [TESTING.md](TESTING.md)
+1. [CURRENT_IMPLEMENTATION_STATUS.md](CURRENT_IMPLEMENTATION_STATUS.md) — verified implementation boundary
+2. [../../MONOREPO.md](../../MONOREPO.md) — repo layout
+3. [WORKSPACE_ARCHITECTURE.md](WORKSPACE_ARCHITECTURE.md) — **canonical** module map
+4. [SERVER.md](SERVER.md) — `server.js` routes and middleware
+5. [ARCHITECTURE.md](ARCHITECTURE.md) — runtime topology
+6. [SCENE.md](SCENE.md) → [ACTIONS.md](ACTIONS.md) → [AGENT_BUS.md](AGENT_BUS.md)
+7. [AI-SYSTEM.md](AI-SYSTEM.md) → [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
+8. [VISITOR_UI.md](VISITOR_UI.md) → [VISITOR_ONBOARDING.md](VISITOR_ONBOARDING.md)
+9. [JELLY_INTEGRATION.md](JELLY_INTEGRATION.md)
+10. [CATALOG_WORKFLOW.md](CATALOG_WORKFLOW.md) → [SCRIPTS.md](SCRIPTS.md)
+11. [TESTING.md](TESTING.md)

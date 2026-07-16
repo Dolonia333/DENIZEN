@@ -61,10 +61,8 @@
         }
       }
     } catch (_) { /* ignore */ }
-    const host = location.hostname;
-    if (host === 'localhost' || host === '127.0.0.1') {
-      return 'http://127.0.0.1:5180/presence';
-    }
+    // Prefer the Denizen server proxy (works even when the bot presence
+    // sidecar on :5180 is down / EADDRINUSE). Bot direct URL is a fallback.
     return `${location.origin}/api/discord/map/presence`;
   })();
   const PRESENCE_POLL_MS = 1500;
@@ -99,8 +97,8 @@
 
   function defaultIndoorHint() {
     return IS_TOUCH
-      ? '◀ ▶ move · ▲ stairs/elev · hold ▲ sit · ▼ leave'
-      : 'A/D walk · ↑ stairs/elev · E sit · ↓ leave';
+      ? '◀ ▶ rooms · ▲ climb · hold ▲ sit · ▼ leave'
+      : 'A/D rooms · ↑ climb floors/roof · E sit · ↓ leave';
   }
 
   /** Furniture keys the player can sit / lie on. */
@@ -134,9 +132,14 @@
     houseBlue: `${BG}/House_small_blue.png`,
     houseGreen: `${BG}/House_small_green.png`,
     // Infrastructure (interaction anchors — keep intact)
+    // Pack "closed" doors are edge-on 5px slivers (read as open/side). We keep
+    // the open swing sprite from the pack and generate a real front-facing
+    // closed door texture at runtime (see ensureFrontDoorTextures).
     door: `${INF}/Door_wood_opened.png`,
     doorClosed: `${INF}/Door_wood_closed.png`,
-    doorGlass: `${INF}/Door_glass_opened.png`,
+    doorOpen: `${INF}/Door_wood_opened.png`,
+    doorGlass: `${INF}/Door_glass_closed.png`,
+    doorGlassOpen: `${INF}/Door_glass_opened.png`,
     elevClosed: `${INF}/Elevator_closed.png`,
     elevOpen: `${INF}/Elevator_opened.png`,
     elevSlightly: `${INF}/Elevator_slightlyOpened.png`,
@@ -519,6 +522,14 @@
     bedHosp: 12, bunkBottom: 12, tableSurgery: 14, coffin: 12,
   };
 
+  /** Floor hosts that surface props (laptop etc.) can sit on — height = top above floor. */
+  const SURFACE_HOSTS = {
+    desk: 14, desk2: 14, coffee: 10, counter: 14, counterEnd: 14,
+    tableLong: 14, deskOffice: 14, policeDesk: 14, filecabinet: 0,
+  };
+  /** Props that must sit ON a surface host (not float mid-air). */
+  const SURFACE_PROPS = new Set(['laptop', 'books', 'books2', 'radio', 'paperStack', 'paperStack2']);
+
   const ROOM_WALL_COLORS = [
     0x2f6f9e, 0xd9862b, 0x3f9e57, 0xc0433d, 0x7d54ad,
     0xc99a22, 0x2f9e93, 0xc4577e, 0x4560c0, 0xb5642f,
@@ -532,57 +543,55 @@
   // reads like a real building (library, dev office, cafe, lounge...) not 8 clones.
   // Layout rule: stairs/elev use the LEFT clear lane (~0.12–0.22).
   // Furniture lives in the mid/right band so the ladder never blocks the room.
+  // Kits use layout "slots" left→right after the climb door band (~0.22+).
+  // Groups stay together (desk+laptop+chair). Sparse > cluttered.
   const KITS = {
     lounge: [
-      { key: ['couchBlue', 'couchGreen', 'couchRed', 'couchYellow'], xf: 0.38, depth: 23, sit: true },
-      { key: 'coffee', xf: 0.58, depth: 24 },
-      { key: ['lamp', 'lamp2', 'lamp3'], xf: 0.76, depth: 22 },
-      { key: ['floraFern', 'floraSnake', 'floraAloe'], xf: 0.9, depth: 24 },
+      { key: ['couchBlue', 'couchGreen', 'couchRed', 'couchYellow'], xf: 0.42, depth: 23, sit: true },
+      { key: 'coffee', xf: 0.58, depth: 24, near: 'couch' },
+      { key: ['lamp', 'lamp2', 'lamp3'], xf: 0.72, depth: 22 },
+      { key: ['floraFern', 'floraSnake', 'floraAloe'], xf: 0.88, depth: 24 },
     ],
     library: [
-      { key: 'bookshelf', xf: 0.32, depth: 22 },
-      { key: 'bookshelf2', xf: 0.48, depth: 22 },
-      { key: ['couchSmall', 'couchSmallGr'], xf: 0.68, depth: 23, sit: true },
-      { key: ['books', 'books2'], xf: 0.84, depth: 24 },
-      { key: ['floraBonsai', 'floraSucculent'], xf: 0.93, depth: 24 },
+      { key: 'bookshelf', xf: 0.36, depth: 22 },
+      { key: 'bookshelf2', xf: 0.52, depth: 22 },
+      { key: ['couchSmall', 'couchSmallGr'], xf: 0.72, depth: 23, sit: true },
+      { key: ['floraBonsai', 'floraSucculent'], xf: 0.9, depth: 24 },
     ],
     office: [
-      { key: ['desk', 'desk2'], xf: 0.36, depth: 22 },
-      { key: 'laptop', xf: 0.36, depth: 24, offY: -13 },
-      { key: ['officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange'], xf: 0.52, depth: 23, sit: true },
-      { key: 'shelfMedium', xf: 0.72, depth: 22 },
-      { key: ['floraSucculent', 'flora'], xf: 0.9, depth: 24 },
+      { key: ['desk', 'desk2'], xf: 0.42, depth: 22 },
+      { key: 'laptop', xf: 0.42, depth: 24, onSurface: true },
+      { key: ['officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange'], xf: 0.58, depth: 23, sit: true },
+      { key: 'shelfMedium', xf: 0.8, depth: 22 },
+      { key: ['floraSucculent', 'flora'], xf: 0.92, depth: 24 },
     ],
     cafe: [
-      { key: 'counter', xf: 0.34, depth: 22 },
-      { key: 'counterEnd', xf: 0.48, depth: 22 },
-      { key: ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], xf: 0.62, depth: 23, sit: true },
-      { key: 'radio', xf: 0.78, depth: 24 },
-      { key: ['potRed', 'potYellow'], xf: 0.9, depth: 24 },
+      { key: 'counter', xf: 0.38, depth: 22 },
+      { key: 'counterEnd', xf: 0.52, depth: 22 },
+      { key: ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], xf: 0.66, depth: 23, sit: true },
+      { key: ['potRed', 'potYellow'], xf: 0.88, depth: 24 },
     ],
     kitchen: [
-      { key: 'fridge', xf: 0.32, depth: 22 },
-      { key: 'counter', xf: 0.48, depth: 22 },
-      { key: 'oven', xf: 0.62, depth: 22 },
-      { key: 'sink', xf: 0.76, depth: 22 },
-      { key: 'trashcan', xf: 0.9, depth: 24 },
+      { key: 'fridge', xf: 0.34, depth: 22 },
+      { key: 'counter', xf: 0.52, depth: 22 },
+      { key: 'oven', xf: 0.68, depth: 22 },
+      { key: 'sink', xf: 0.84, depth: 22 },
     ],
     reception: [
-      { key: 'tableLong', xf: 0.42, depth: 22 },
-      { key: 'clipboard', xf: 0.42, depth: 24, offY: -16, wall: true },
-      { key: ['floraRose', 'floraFern'], xf: 0.68, depth: 24 },
-      { key: ['couchSmall', 'couchSmallY'], xf: 0.86, depth: 23, sit: true },
+      { key: 'tableLong', xf: 0.44, depth: 22 },
+      { key: 'clipboard', xf: 0.62, depth: 24, wall: true },
+      { key: ['couchSmall', 'couchSmallY'], xf: 0.8, depth: 23, sit: true },
+      { key: ['floraRose', 'floraFern'], xf: 0.92, depth: 24 },
     ],
     cozy: [
-      { key: ['bedBlue', 'bedGreen', 'bed'], xf: 0.4, depth: 23, sit: true, bed: true },
-      { key: ['lamp2', 'lamp3'], xf: 0.62, depth: 22 },
-      { key: 'drawer', xf: 0.76, depth: 22 },
-      { key: ['floraAloe', 'floraSnake'], xf: 0.9, depth: 24 },
+      { key: ['bedBlue', 'bedGreen', 'bed'], xf: 0.44, depth: 23, sit: true, bed: true },
+      { key: ['lamp2', 'lamp3'], xf: 0.66, depth: 22 },
+      { key: 'drawer', xf: 0.82, depth: 22 },
+      { key: ['floraAloe', 'floraSnake'], xf: 0.92, depth: 24 },
     ],
     gallery: [
-      { key: 'aquarium', xf: 0.34, depth: 23 },
-      { key: 'terrarium', xf: 0.54, depth: 23 },
-      { key: ['vaseBlue', 'vasePink'], xf: 0.72, depth: 24 },
+      { key: 'aquarium', xf: 0.4, depth: 23 },
+      { key: 'terrarium', xf: 0.62, depth: 23 },
       { key: ['floraBonsai', 'floraRose'], xf: 0.88, depth: 24 },
     ],
   };
@@ -822,12 +831,9 @@
       wall: 0xc84a3a, side: 0xa03828, outline: 0x3a0e08, roof: 0xb04030, band: 0x701e14,
       signKey: 'fireSign', signScale: SCALE * 0.85,
       stripStyle: { color: '#ffe0d0', bg: '#701e14' },
-      doorKind: 'elev',
-      // Elevator lane left (shaft at 36). Layout logic: crew quarters put a
-      // bunk at each end with the shared cabinet + emergency kit between;
-      // the engine bay reads as a working wall — lockers (helmet on top),
-      // equipment rack, crew member, extinguisher, emergency box — under
-      // the hose and hanging turnout uniforms.
+      doorKind: 'door',
+      // Climb door on the left lane (dx ~36). Rooms are too small for elev
+      // shafts — a compact door marks inter-floor travel instead.
       stairsDx: 36,
       recipes: [
         () => ({
@@ -943,6 +949,56 @@
       this.load.on('loaderror', (file) => console.warn('[map] asset failed:', file.key, file.src));
     }
 
+    /**
+     * Pack "Door_*_closed" sprites are 3–6px edge-on strips. Build a real
+     * front-facing leaf. Sized 14×22 so at SCALE=2 the outdoor door (44px)
+     * fits the 54px facade strip without poking into the first floor.
+     */
+    ensureFrontDoorTextures() {
+      if (this.textures.exists('doorFrontClosed')) return;
+      const w = 14;
+      const h = 22;
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      // Palette matches Door_wood_* (outline #2e222f, wood #e6904e)
+      const OUT = '#2e222f';
+      const WOOD = '#e6904e';
+      const WOOD_DK = '#c46a32';
+      const WOOD_LT = '#f0b078';
+      const PANEL = '#d47e3e';
+      const KNOB = '#f0e6c8';
+      const fill = (x, y, ww, hh, c) => {
+        ctx.fillStyle = c;
+        ctx.fillRect(x, y, ww, hh);
+      };
+      fill(0, 0, w, h, OUT);
+      fill(1, 1, w - 2, h - 2, WOOD);
+      fill(2, 2, 1, h - 4, WOOD_LT);
+      fill(w - 3, 2, 1, h - 4, WOOD_DK);
+      // Upper panel
+      fill(3, 3, w - 6, 6, OUT);
+      fill(4, 4, w - 8, 4, PANEL);
+      fill(5, 4, w - 10, 1, WOOD_LT);
+      // Mid rail
+      fill(3, 10, w - 6, 2, OUT);
+      fill(4, 10, w - 8, 1, WOOD_LT);
+      // Lower panel
+      fill(3, 13, w - 6, 6, OUT);
+      fill(4, 14, w - 8, 4, PANEL);
+      fill(5, 14, w - 10, 1, WOOD_LT);
+      // Handle
+      fill(w - 5, 11, 2, 2, OUT);
+      fill(w - 5, 11, 1, 1, KNOB);
+      fill(1, h - 2, w - 2, 1, WOOD_DK);
+
+      this.textures.addCanvas('doorFrontClosed', canvas);
+      try {
+        this.textures.get('doorFrontClosed').setFilter(Phaser.Textures.FilterMode.NEAREST);
+      } catch (_) { /* ignore */ }
+    }
+
     create() {
       this.groundY = 318;
       this.mapWidth = W;
@@ -975,6 +1031,8 @@
         this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
       });
 
+      this.ensureFrontDoorTextures();
+
       this.buildSky();
       this.buildFarMountains();
       this.buildDistantSkyline();
@@ -994,6 +1052,26 @@
       });
     }
 
+    /** Expand world + camera bounds so upper floors / rooftops are reachable. */
+    refreshCameraBounds() {
+      const mw = this.mapWidth || W;
+      let topBound = Math.min(0, this._sceneMinY ?? 0);
+      // Include every registered floor (rooms + roofs)
+      if (this.floors) {
+        for (const f of this.floors.values()) {
+          if (f?.floorY != null) topBound = Math.min(topBound, f.floorY - 140);
+        }
+      }
+      if (this.player) topBound = Math.min(topBound, this.player.y - 160);
+      const bottom = (this.groundY || 318) + 90;
+      const height = Math.max(H, bottom - topBound);
+      try {
+        this.physics.world.setBounds(0, topBound, mw + 40, height);
+        this.cameras.main.setBounds(0, topBound, mw + 40, height);
+      } catch (_) { /* ignore */ }
+      return topBound;
+    }
+
     setupPlayer() {
       // NPC frames are 32x32 cells; the character art itself is a small chibi
       // bust roughly x11-21,y9-23 within each cell (not flush to the edges).
@@ -1007,19 +1085,14 @@
         .setDepth(45)
         .setCollideWorldBounds(true);
       this.player.body.setSize(12, 8).setOffset(10, 16);
-      const mw = this.mapWidth || W;
-      // Tall stacked-floor buildings can extend above y=0; widen bounds so
-      // the camera can actually scroll up to follow the player onto upper
-      // floors instead of clamping at the canvas top.
-      const topBound = Math.min(0, this._sceneMinY ?? 0);
-      this.physics.world.setBounds(0, topBound, mw + 40, H - topBound);
-      this.cameras.main.setBounds(0, topBound, mw + 40, H - topBound);
-      this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+      this.refreshCameraBounds();
+      // Snappier follow so upper floors / roof don't leave the camera behind.
+      this.cameras.main.startFollow(this.player, true, 0.18, 0.22);
       const narrow = window.innerWidth < 640;
       this.outdoorZoom = IS_TOUCH && narrow ? 0.98 : 1.1;
       this.indoorZoom = IS_TOUCH && narrow ? 1.38 : 1.55;
       this.cameras.main.setZoom(this.outdoorZoom);
-      this.cameras.main.setDeadzone(narrow ? 60 : 90, narrow ? 36 : 50);
+      this.cameras.main.setDeadzone(narrow ? 40 : 70, narrow ? 24 : 36);
 
       this.playerTag = this.add.text(0, 0, 'you', {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
@@ -1037,6 +1110,7 @@
         this.keyE = null;
       }
 
+      const mw = this.mapWidth || W;
       const floor = this.add.rectangle(mw / 2, this.groundY + 24, mw + 120, 48, 0x000000, 0);
       this.physics.add.existing(floor, true);
       this.physics.add.collider(this.player, floor);
@@ -1063,10 +1137,20 @@
      */
     async bootstrapLayout() {
       let data = { rooms: [], categories: [], guildName: 'Discord' };
-      try {
-        const res = await fetch(PRESENCE_URL, { cache: 'no-store' });
-        if (res.ok) data = await res.json();
-      } catch (_) { /* offline — draw placeholder */ }
+      const tryUrls = [PRESENCE_URL];
+      // Local fallback if proxy is 502 and the bot sidecar is actually up.
+      if (/localhost|127\.0\.0\.1/.test(location.hostname)) {
+        tryUrls.push('http://127.0.0.1:5180/presence');
+      }
+      for (const url of tryUrls) {
+        try {
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            data = await res.json();
+            break;
+          }
+        } catch (_) { /* try next */ }
+      }
 
       const rooms = (Array.isArray(data.rooms) ? data.rooms : [])
         .filter((r) => r.type !== 'category' && r.type !== 'other');
@@ -1080,8 +1164,10 @@
       this._themeRR = 0;
 
       if (!rooms.length) {
-        this.drawEmptyBuilding(x, this.groundY, guildName);
-        x += 320;
+        // Offline demo layout so the map isn't a blank blue box — still
+        // has street doors + rooms to walk into while presence is down.
+        this.drawDemoLayout(x, this.groundY, guildName);
+        x += 620;
         this.mapWidth = Math.max(W, x + 100);
         this.drawGround();
         this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
@@ -1270,39 +1356,50 @@
 
       for (let i = floorDefs.length - 1; i > 0; i -= 1) {
         // Prefer theme stairsDx; fall back to left climb lane (not room center).
-        const sx = cfg.stairsDx != null ? padX + cfg.stairsDx : padX + roomW * 0.14;
+        // Compact climb DOORS — mounted on the left wall of the cutaway.
+        const prefer = cfg.stairsDx != null
+          ? padX + cfg.stairsDx
+          : padX + Math.max(22, roomW * 0.18);
+        const sx = this.markClimbDoor(prefer, floorDefs[i].id) || prefer;
+        this.markClimbDoor(prefer, floorDefs[i - 1].id);
         this.registerStairs({
           x: sx, fromFloorId: floorDefs[i].id, toFloorId: floorDefs[i - 1].id, radius: 32,
         });
-        this.markStairs(sx, floorDefs[i].id);
-        this.markStairs(sx, floorDefs[i - 1].id);
       }
-
-      // Rooftop walkway above the top floor
+      // Walkable rooftop — climb door up from the top floor.
       if (floorDefs.length) {
         const topFloor = floorDefs[0];
         const roofId = `roof_theme_${left}`;
-        const roofY = top + 6;
-        const roofStairX = cfg.stairsDx != null ? padX + cfg.stairsDx : padX + roomW * 0.14;
+        const roofY = top + 8;
+        const prefer = cfg.stairsDx != null
+          ? padX + cfg.stairsDx
+          : padX + Math.max(22, roomW * 0.18);
+        const roofMin = padX + 12;
+        const roofMax = padX + roomW - 12;
         this.registerFloor({
           id: roofId,
           roomKey: roofId,
           floorY: roofY,
-          minX: padX + 10,
-          maxX: padX + roomW - 10,
+          minX: roofMin,
+          maxX: roofMax,
           label: 'Rooftop',
           isRoof: true,
         });
+        this.markRooftopDeck(roofMin, roofMax, roofY);
+        // Single-floor buildings need a climb door on the only room; multi-floor
+        // already got one in the loop above — only add the roof-side door.
+        let sx = prefer;
+        if (floorDefs.length === 1) sx = this.markClimbDoor(prefer, topFloor.id) || prefer;
+        this.markClimbDoor(prefer, roofId);
         this.registerStairs({
-          x: roofStairX,
+          x: sx,
           fromFloorId: topFloor.id,
           toFloorId: roofId,
-          radius: 32,
+          radius: 36,
         });
-        this.markStairs(roofStairX, topFloor.id);
-        this.markStairs(roofStairX, roofId);
         this.furn('roofVents1', padX + roomW * 0.45, roofY, 22);
         this.furn('treeRoof2', padX + roomW * 0.72, roofY, 22);
+        this._sceneMinY = Math.min(this._sceneMinY ?? 0, roofY - 100);
       }
 
       if (cfg.strip) {
@@ -1330,20 +1427,80 @@
       const pick = (key, idx) => (Array.isArray(key) ? seededPick(seed, key, idx * 13 + 5) : key);
       // Theme stairs lane — skip floor items that land inside it
       const clearX = x0 + (room.stairsDx != null ? room.stairsDx : roomW * 0.14);
-      const clearR = 22;
+      const clearR = 26;
+      const placed = []; // { x, halfW }
+      const hosts = []; // surface hosts for dy props
+
+      const halfW = (key, sc) => {
+        try {
+          if (!this.textures.exists(key)) return 14;
+          const fr = this.textures.get(key).get();
+          return Math.max(8, (fr.width * sc) / 2);
+        } catch (_) {
+          return 14;
+        }
+      };
+      const collides = (x, hw) => placed.some((p) => Math.abs(p.x - x) < p.halfW + hw + 6);
+
+      // Pass 1: floor-standing props (no dy lift) with footprint spacing
+      (room.items || []).forEach((it, idx) => {
+        if (it[0] !== 'f') return;
+        const [, key, dx, scRaw, dy] = it;
+        if (dy > 0) return; // surface props in pass 2
+        const k = pick(key, idx);
+        const sc = (scRaw || 1) * SCALE;
+        let x = x0 + dx;
+        const hw = halfW(k, sc);
+        if (Math.abs(x - clearX) < clearR) return;
+        if (x < x0 + 10 + hw || x > x0 + roomW - 10 - hw) return;
+        // Nudge right then left to clear overlaps
+        let placedOk = false;
+        for (let t = 0; t < 8; t += 1) {
+          if (!collides(x, hw) && Math.abs(x - clearX) >= clearR) {
+            placedOk = true;
+            break;
+          }
+          x += hw + 8;
+          if (x > x0 + roomW - 12 - hw) x = (x0 + dx) - (t + 1) * (hw + 8);
+        }
+        if (!placedOk || collides(x, hw)) return;
+        if (x < x0 + 10 + hw || x > x0 + roomW - 10 - hw) return;
+        this.furn(k, x, floorY, 23, sc, floorId);
+        placed.push({ x, halfW: hw });
+        if (SURFACE_HOSTS[k] != null) hosts.push({ x, key: k, surfaceH: SURFACE_HOSTS[k] });
+      });
+
+      // Pass 2: lifted props — sit on a desk/table host, or stack on a floor
+      // prop at the same x (bunk top). Never float with no support.
+      (room.items || []).forEach((it, idx) => {
+        if (it[0] !== 'f') return;
+        const [, key, dx, scRaw, dy] = it;
+        if (!(dy > 0)) return;
+        const k = pick(key, idx);
+        const sc = (scRaw || 1) * SCALE;
+        const preferX = x0 + dx;
+        const host = hosts.find((h) => Math.abs(h.x - preferX) < 28)
+          || hosts.find((h) => Math.abs(h.x - preferX) < 40);
+        if (host) {
+          this.furn(k, host.x, floorY - (host.surfaceH || dy), 24, sc, floorId);
+          return;
+        }
+        // Stacked furniture (e.g. bunk top on bunk bottom)
+        const base = placed.find((p) => Math.abs(p.x - preferX) < 24);
+        if (!base) return;
+        this.furn(k, base.x, floorY - dy, 24, sc, floorId);
+      });
+
       (room.items || []).forEach((it, idx) => {
         const kind = it[0];
-        if (kind === 'f') {
-          const [, key, dx, sc, dy] = it;
-          const x = x0 + dx;
-          if (Math.abs(x - clearX) < clearR && !(dy > 0)) return; // keep climb lane free
-          this.furn(pick(key, idx), x, floorY - (dy || 0), 23, (sc || 1) * SCALE, floorId);
-        } else if (kind === 'w') {
+        if (kind === 'w') {
           const [, key, dx, dyTop, sc] = it;
           this.wallDecor(pick(key, idx), x0 + dx, y0 + dyTop, 22, (sc || 1) * SCALE);
         } else if (kind === 'npc') {
           const [, key, dx] = it;
-          this.decorNpcQueue.push([key, x0 + dx, floorY]);
+          const x = x0 + dx;
+          if (Math.abs(x - clearX) < clearR) return;
+          this.decorNpcQueue.push([key, x, floorY]);
         } else if (kind === 'glow') {
           const [, color, alpha] = it;
           const glow = this.add.rectangle(x0 + roomW / 2, y0 + room.h / 2, roomW - 16, room.h - 12, color, alpha).setDepth(21);
@@ -1366,6 +1523,7 @@
           slots: recipe.slots,
           items: recipe.items,
           bars: recipe.bars,
+          stairsDx: kit.stairsDx,
         };
       });
       const b = this.drawThemeBuilding({
@@ -1929,66 +2087,73 @@
         });
       });
 
+      // Two street DOORS (not elevators) — half-width rooms can't fit elev shafts.
       const firstKey = channels[0] ? chKey(channels[0].id) : null;
       const doorX = left + 40;
-      const elevX = left + bw - 44;
+      const doorX2 = left + bw - 44;
       if (firstKey) {
         this.placeEntrance(g, doorX, groundY, 'door', pal.lintel, 26);
         this.registerDoor({ x: doorX, floorId: firstKey, radius: 18, kind: 'door' });
       }
       if (channels[1]) {
-        this.placeEntrance(g, elevX, groundY, 'elev', pal.lintel, 26);
-        this.registerDoor({ x: elevX, floorId: chKey(channels[1].id), radius: 20, kind: 'elev' });
+        this.placeEntrance(g, doorX2, groundY, 'door', pal.lintel, 26);
+        this.registerDoor({ x: doorX2, floorId: chKey(channels[1].id), radius: 18, kind: 'door' });
       }
-      // Climb lane on the LEFT of each room (~14%) so elevators don't block decor.
+      // Climb DOORS in each stack's clear left strip + walkable rooftop.
+      let leftClimbX = padX + Math.max(20, roomW * 0.2);
+      let rightClimbX = padX + roomW + gap + Math.max(20, roomW * 0.2);
       if (channels[0] && channels[2]) {
-        const sx = padX + roomW * 0.14;
+        leftClimbX = this.markClimbDoor(leftClimbX, chKey(channels[0].id)) || leftClimbX;
+        this.markClimbDoor(leftClimbX, chKey(channels[2].id));
         this.registerStairs({
-          x: sx,
+          x: leftClimbX,
           fromFloorId: chKey(channels[2].id),
           toFloorId: chKey(channels[0].id),
           radius: 28,
         });
-        this.markStairs(sx, chKey(channels[0].id));
-        this.markStairs(sx, chKey(channels[2].id));
       }
       if (channels[1] && channels[3]) {
-        const sx = padX + roomW + gap + roomW * 0.14;
+        rightClimbX = this.markClimbDoor(rightClimbX, chKey(channels[1].id)) || rightClimbX;
+        this.markClimbDoor(rightClimbX, chKey(channels[3].id));
         this.registerStairs({
-          x: sx,
+          x: rightClimbX,
           fromFloorId: chKey(channels[3].id),
           toFloorId: chKey(channels[1].id),
           radius: 28,
         });
-        this.markStairs(sx, chKey(channels[1].id));
-        this.markStairs(sx, chKey(channels[3].id));
       }
-      // Rooftop access from top-left room
+      // Rooftop access from top-left room (channel 0) — ↑ at climb door.
       if (channels[0]) {
         const topKey = chKey(channels[0].id);
         const roofId = `roof_${left}`;
-        const roofY = top + 4;
+        const roofY = top + 8;
+        const roofMin = padX + 10;
+        const roofMax = padX + roomW * 2 + gap - 10;
         this.registerFloor({
           id: roofId,
           roomKey: roofId,
           floorY: roofY,
-          minX: padX + 8,
-          maxX: padX + roomW * 2 + gap - 8,
+          minX: roofMin,
+          maxX: roofMax,
           label: 'Rooftop',
           isRoof: true,
         });
-        const roofStairX = padX + roomW * 0.14;
+        this.markRooftopDeck(roofMin, roofMax, roofY);
+        // Ensure top room has a climb door if it wasn't part of a 0↔2 pair.
+        if (!channels[2]) {
+          leftClimbX = this.markClimbDoor(leftClimbX, topKey) || leftClimbX;
+        }
+        this.markClimbDoor(leftClimbX, roofId);
         this.registerStairs({
-          x: roofStairX,
+          x: leftClimbX,
           fromFloorId: topKey,
           toFloorId: roofId,
-          radius: 28,
+          radius: 36,
         });
-        this.markStairs(roofStairX, topKey);
-        this.markStairs(roofStairX, roofId);
         this.furn('roofVents1', padX + roomW * 0.55, roofY, 22);
         this.furn('treeRoof1', padX + roomW * 1.2, roofY, 22);
         this.furn('roofVents2', padX + roomW * 1.7, roofY, 22);
+        this._sceneMinY = Math.min(this._sceneMinY ?? 0, roofY - 100);
       }
       if (channels[2] && channels[3]) {
         this.registerPassage({
@@ -2030,60 +2195,108 @@
         color: '#eef0ff',
         align: 'center',
       }).setOrigin(0.5).setDepth(25).setResolution(2);
+      // Still place a door so offline mode isn't a dead wall.
+      this.placeEntrance(g, left + 42, groundY, 'door', 0x3c45c0, 26);
+      this.registerDoor({ x: left + 42, floorId: 'empty_lobby', radius: 18 });
+      this.registerFloor({
+        id: 'empty_lobby',
+        roomKey: 'empty_lobby',
+        floorY: groundY - 40,
+        minX: left + 20,
+        maxX: left + bw - 20,
+        label: 'lobby',
+      });
+    }
+
+    /** Offline / no-presence sample so doors and floors stay testable. */
+    drawDemoLayout(left, groundY, guildName) {
+      const demoChannels = [
+        { id: 'demo-rules', name: 'rules', type: 'text' },
+        { id: 'demo-chat', name: 'general', type: 'text' },
+        { id: 'demo-mod', name: 'mod', type: 'text' },
+        { id: 'demo-lounge', name: 'lounge', type: 'text' },
+      ];
+      this.drawTextBuilding(left, groundY, `${shortLabel(guildName, 16)} · demo`, demoChannels, 0);
+      this.buildings.push({
+        left,
+        right: left + 290,
+        kind: 'text',
+        channels: demoChannels,
+        label: 'demo',
+      });
+      // Badge above the roof — never cover street doors
+      this.stripLabel(left + 145, groundY - 248, 'Presence offline · demo layout', {
+        color: '#ffe8a0', bg: '#3a2a10',
+      });
     }
 
     placeEntrance(g, cx, groundY, kind = 'door', lintelColor = 0x2a5534, depth = 26) {
-      const key = kind === 'elev' ? 'elevClosed' : 'door';
-      // Door leaf 13×23, elev 26×23 — keep character-scale, slim recess padding
-      const scale = SCALE;
-      const dw = (kind === 'elev' ? 26 : 13) * scale;
-      const dh = 23 * scale;
-      const frameW = Math.ceil(dw + 8);
-      const frameH = Math.ceil(dh + 5);
+      // Integer SCALE=2 on a 14×22 leaf → 28×44. With a 3px lintel + frame
+      // pad the whole assembly is ≤50px and stays inside the 54px door-strip
+      // under the first-floor cutaway (no overlap into rooms above).
+      this.ensureFrontDoorTextures();
+      const scale = SCALE; // 2 — keep pixel-art crisp
+      const srcW = 14;
+      const srcH = 22;
+      const leafW = srcW * scale;
+      const leafH = srcH * scale;
+      const jamb = 2;
+      const lintelH = 3;
+      const frameW = leafW + jamb * 2;
+      const frameH = leafH + 2;
       const fx = Math.round(cx - frameW / 2);
       const fy = Math.round(groundY - frameH);
 
-      // Lintel / header brick
+      // Lintel
       g.fillStyle(lintelColor, 1);
-      g.fillRect(fx - 2, fy - 5, frameW + 4, 6);
-      g.lineStyle(2, 0x0a0806, 1);
-      g.strokeRect(fx - 2, fy - 5, frameW + 4, 6);
+      g.fillRect(fx - 1, fy - lintelH, frameW + 2, lintelH);
+      g.lineStyle(1, 0x0a0806, 1);
+      g.strokeRect(fx - 1, fy - lintelH, frameW + 2, lintelH);
 
-      // Outer recess (deep shadow)
+      // Dark recess
       g.fillStyle(0x0c0a08, 1);
       g.fillRect(fx, fy, frameW, frameH);
 
-      // Side jambs (thin)
+      // Jambs
       g.fillStyle(0x3a2e22, 1);
-      g.fillRect(fx, fy, 2, frameH);
-      g.fillRect(fx + frameW - 2, fy, 2, frameH);
+      g.fillRect(fx, fy, jamb, frameH);
+      g.fillRect(fx + frameW - jamb, fy, jamb, frameH);
 
-      // Back wall inside doorway
       g.fillStyle(0x1a1510, 1);
-      g.fillRect(fx + 2, fy + 2, frameW - 4, frameH - 2);
+      g.fillRect(fx + jamb, fy + 1, frameW - jamb * 2, frameH - 2);
 
-      // Threshold sitting on ground
+      // Threshold
       g.fillStyle(0x2c2118, 1);
-      g.fillRect(fx - 1, groundY - 2, frameW + 2, 3);
+      g.fillRect(fx - 1, groundY - 2, frameW + 2, 2);
       g.fillStyle(0x000000, 0.22);
-      g.fillRect(fx, groundY, frameW, 2);
+      g.fillRect(fx, groundY, frameW, 1);
 
-      g.lineStyle(2, 0x0a0806, 1);
+      g.lineStyle(1, 0x0a0806, 1);
       g.strokeRect(fx, fy, frameW, frameH);
 
-      const img = this.add.image(cx, groundY - 1, key)
-        .setScale(scale)
-        .setOrigin(0.5, 1)
+      // Leaf — left hinge, sits on ground
+      const hingeX = fx + jamb;
+      const leaf = this.add.image(hingeX, groundY - 1, 'doorFrontClosed')
+        .setOrigin(0, 1)
+        .setScale(scale, scale)
         .setDepth(depth);
-      // Entrance doors react to the player: wood doors swing open on
-      // approach, elevators run closed → slightly open → open as you near.
-      this.autoDoors.push({ x: cx, img, kind });
-      if (kind === 'elev') {
-        if (!this.elevSprites) this.elevSprites = [];
-        this.elevSprites.push({ x: cx, sprite: img, kind: 'elev' });
-      }
-
-      return { fx, fy, frameW, frameH, dw, dh, sprite: img, kind };
+      this.autoDoors.push({
+        x: cx,
+        kind: 'door',
+        mode: 'swing',
+        indoor: false,
+        leaf,
+        baseScale: scale,
+        openScaleX: scale * 0.18,
+        openRadius: 24,
+        closeRadius: 34,
+        isOpen: false,
+        animating: false,
+      });
+      return {
+        fx, fy, frameW, frameH, dw: leafW, dh: leafH,
+        sprite: leaf, kind: 'door',
+      };
     }
 
     /** Place furniture sitting on a floor line (origin bottom-center).
@@ -2109,18 +2322,57 @@
     }
 
     /**
-     * Elevator shaft doors at the vertical-transport trigger x on the given
-     * floor. This replaced the old 56x56 staircase sprite, which at SCALE 2
-     * was a 112px diagonal slab that covered half the room's decor — the
-     * elevator doors are compact (52x46), sit flush at the lane, and animate
-     * open as the player approaches / rides.
+     * Inter-floor climb door — leaf only, no frame.
+     * Sits in the climb lane on the room's floor plank (same baseline as
+     * furniture), not jammed into the left border or floating mid-wall.
+     * @returns {number} door center x (use for stairs / interaction)
      */
-    markStairs(x, floorId) {
+    markClimbDoor(preferredX, floorId) {
       const floor = this.floors.get(floorId);
-      if (!floor) return;
-      const img = this.add.image(x, floor.floorY, 'elevClosed')
-        .setScale(SCALE).setOrigin(0.5, 1).setDepth(22);
-      this.elevatorDoors.push({ x, floorId, img });
+      if (!floor) return preferredX;
+      this.ensureFrontDoorTextures();
+
+      // Door art is 14×22; scale 2 = 28×44 — fits short cutaway rooms.
+      const sc = SCALE;
+      const leafW = 14 * sc;
+
+      // Prefer the climb-lane x (empty left strip). Only nudge if it would
+      // clip the walkable bounds.
+      let cx = preferredX;
+      if (floor.minX != null) cx = Math.max(cx, floor.minX + leafW / 2);
+      if (floor.maxX != null) cx = Math.min(cx, floor.maxX - leafW / 2);
+
+      // Same baseline as furniture: origin bottom on floor.floorY.
+      // Tiny lift (2px) so the leaf rests on the wood plank, not sunk into it.
+      const doorBottomY = floor.floorY - 2;
+      // Left hinge so the swing opens into the room (to the right).
+      const hingeX = Math.round(cx - leafW / 2);
+      const leaf = this.add.image(hingeX, doorBottomY, 'doorFrontClosed')
+        .setOrigin(0, 1)
+        .setScale(sc, sc)
+        .setDepth(21.5);
+
+      this.autoDoors.push({
+        x: cx,
+        interactX: preferredX,
+        kind: 'door',
+        mode: 'swing',
+        indoor: true,
+        floorId,
+        leaf,
+        baseScale: sc,
+        openScaleX: sc * 0.18,
+        openRadius: 24,
+        closeRadius: 34,
+        isOpen: false,
+        animating: false,
+      });
+      return cx;
+    }
+
+    /** @deprecated use markClimbDoor — kept so older call sites don't break */
+    markStairs(x, floorId) {
+      return this.markClimbDoor(x, floorId);
     }
 
     /** Place wall-mounted decor hanging from the room's top edge (origin top-center). */
@@ -2139,83 +2391,142 @@
 
     /**
      * Decorate a room with a channel-THEMED furniture kit.
-     * Layout rules (readable rooms for humans + AI map gen):
-     *  1. Left ~18% is the CLIMB LANE (stairs/elev) — no furniture.
-     *  2. Floor props keep a min gap so pieces don't stack.
-     *  3. Sitables (couch/chair/bed) register for E / hold-↑ interaction.
-     *  4. Deterministic per channel id.
+     * Left climb band empty; footprint packing; surface props on desks only.
+     * Small rooms get fewer pieces so layouts stay readable.
      * @param {{ clearXf?: number, roomKey?: string }} [opts]
      */
     decorateRoom(ch, slotX, slotY, slotW, slotH, floorY, opts = {}) {
       const roomKey = opts.roomKey || chKey(ch.id);
       const seed = hashSeed(roomKey);
       const kitName = kitForChannel(ch.name, ch.type, seed);
-      const kit = KITS[kitName] || KITS.lounge;
-      const clearXf = opts.clearXf != null ? opts.clearXf : 0.14;
-      const clearHalf = 0.11; // reserved climb band
-      const minGap = Math.max(20, slotW * 0.15);
+      let kit = KITS[kitName] || KITS.lounge;
+      // Tiny rooms: drop the last 1–2 props so nothing crams.
+      if (slotW < 110) kit = kit.slice(0, Math.min(3, kit.length));
+      else if (slotW < 140) kit = kit.slice(0, Math.min(4, kit.length));
+
+      const clearLeft = slotX + Math.max(28, slotW * 0.22); // climb door zone
+      const leftBound = clearLeft + 6;
+      const rightBound = slotX + slotW - 10;
+      const usable = Math.max(40, rightBound - leftBound);
       const placed = [];
 
-      const inClear = (xf) => Math.abs(xf - clearXf) < clearHalf;
-      const pushFromClear = (xf) => {
-        if (!inClear(xf)) return xf;
-        return clearXf < 0.5
-          ? Math.min(0.9, clearXf + clearHalf + 0.06)
-          : Math.max(0.1, clearXf - clearHalf - 0.06);
+      const halfW = (key, sc) => {
+        try {
+          if (!this.textures.exists(key)) return 12;
+          const fr = this.textures.get(key).get();
+          return Math.max(7, (fr.width * sc) / 2);
+        } catch (_) {
+          return 12;
+        }
       };
+      const collides = (x, hw) => placed.some((p) => Math.abs(p.x - x) < p.halfW + hw + 10);
 
+      const floorItems = [];
+      const surfaceItems = [];
+      const wallItems = [];
       kit.forEach((item, idx) => {
         const key = Array.isArray(item.key) ? seededPick(seed, item.key, idx * 7 + 1) : item.key;
-        let xf = pushFromClear(item.xf);
-        xf = Math.min(0.92, Math.max(0.1, xf));
-        let x = slotX + xf * slotW;
-
-        if (item.wall) {
-          // Wall art stays off the climb lane too
-          if (inClear((x - slotX) / slotW)) x = slotX + pushFromClear(0.55) * slotW;
-          this.wallDecor(key, x, slotY + 6, item.depth, SCALE * (item.scaleMul || 1));
-          return;
-        }
-
-        // Resolve floor collisions — nudge right, then left, or skip
-        for (let tries = 0; tries < 10; tries += 1) {
-          const clash = placed.find((p) => Math.abs(p - x) < minGap);
-          if (!clash) break;
-          x = clash + minGap;
-          if (x > slotX + slotW * 0.92) x = clash - minGap;
-        }
-        if (x < slotX + slotW * 0.1 || x > slotX + slotW * 0.92) return;
-        if (inClear((x - slotX) / slotW)) return;
-
-        placed.push(x);
-        const sp = this.furn(
-          key,
-          x,
-          floorY + (item.offY || 0),
-          item.depth,
-          SCALE * (item.scaleMul || 1),
-          roomKey,
-        );
-        if (sp && item.offY) sp.setDepth(item.depth);
+        if (item.wall) wallItems.push({ item, key });
+        else if (item.onSurface || SURFACE_PROPS.has(key) || item.offY) surfaceItems.push({ item, key });
+        else floorItems.push({ item, key });
       });
 
-      // Back-wall decor — only when tall enough; keep away from climb lane.
-      if (slotH >= 70) {
-        const wallTop = slotY + 6;
-        const wallXf = pushFromClear(0.55);
-        const wallX = slotX + wallXf * slotW;
-        if (seed % 3 === 0) {
+      // Evenly pack floor items across the usable band (after climb door).
+      const n = floorItems.length || 1;
+      floorItems.forEach(({ item, key }, i) => {
+        const sc = SCALE * (item.scaleMul || 1);
+        const hw = halfW(key, sc);
+        // Ideal slot: spread evenly in usable width, biased by kit xf.
+        const t = (i + 0.55) / n;
+        const ideal = leftBound + t * usable;
+        const prefer = leftBound + (item.xf - 0.22) / 0.78 * usable;
+        let x = Phaser.Math.Clamp((ideal * 0.55 + prefer * 0.45), leftBound + hw, rightBound - hw);
+
+        for (let tries = 0; tries < 14; tries += 1) {
+          if (!collides(x, hw)) break;
+          x += (tries % 2 === 0 ? 1 : -1) * (hw + 12) * Math.ceil((tries + 1) / 2);
+          x = Phaser.Math.Clamp(x, leftBound + hw, rightBound - hw);
+        }
+        if (collides(x, hw)) return; // skip rather than stack
+
+        this.furn(key, x, floorY, item.depth || 23, sc, roomKey);
+        placed.push({ x, halfW: hw, key, surfaceH: SURFACE_HOSTS[key] || 0 });
+      });
+
+      // Surface props glued to nearest desk/table
+      surfaceItems.forEach(({ item, key }) => {
+        const sc = SCALE * (item.scaleMul || 1);
+        const host = placed
+          .filter((p) => p.surfaceH > 0)
+          .sort((a, b) => Math.abs(a.x - (slotX + item.xf * slotW)) - Math.abs(b.x - (slotX + item.xf * slotW)))[0];
+        if (!host) return;
+        this.furn(key, host.x, floorY - host.surfaceH, item.depth || 24, sc, roomKey);
+      });
+
+      wallItems.forEach(({ item, key }) => {
+        const x = Phaser.Math.Clamp(
+          slotX + Math.max(0.35, item.xf) * slotW,
+          leftBound + 8,
+          rightBound - 8,
+        );
+        this.wallDecor(key, x, slotY + 8, item.depth || 21, SCALE * (item.scaleMul || 1));
+      });
+
+      // One piece of wall decor max — window OR curtain, never both
+      if (slotH >= 72 && usable > 50) {
+        const wallTop = slotY + 8;
+        const wallX = leftBound + usable * 0.55;
+        if (seed % 2 === 0) {
           const winKey = seededPick(seed, ['windowSq', 'windowCircle', 'windowGlass', 'windowSmall'], 11);
           this.wallDecor(winKey, wallX, wallTop, 21);
-        } else if (seed % 3 === 1) {
-          const curtainKey = seededPick(seed, ['curtain', 'curtainR', 'curtainB', 'curtainY'], 17);
-          const spread = Math.min(slotW * 0.22, 28);
-          this.wallDecor(curtainKey, wallX - spread, wallTop, 21);
-          this.wallDecor(curtainKey, wallX + spread, wallTop, 21);
         } else {
-          this.wallDecor('clipboard', wallX + Math.min(28, slotW * 0.18), wallTop + 2, 21);
+          this.wallDecor('clipboard', wallX, wallTop + 2, 21);
         }
       }
+    }
+
+    /** Visual doorway gap between side-by-side rooms (horizontal passage). */
+    markPassageDoorway(x, floorY, roomH) {
+      const g = this.add.graphics().setDepth(20.8);
+      const doorH = Math.min(40, roomH - 12);
+      const doorW = 10;
+      const top = floorY - doorH;
+      // Dark opening in the shared wall
+      g.fillStyle(0x0c0a08, 0.85);
+      g.fillRect(x - doorW / 2, top, doorW, doorH);
+      // Thin jambs
+      g.fillStyle(0x2a2218, 1);
+      g.fillRect(x - doorW / 2 - 2, top, 2, doorH);
+      g.fillRect(x + doorW / 2, top, 2, doorH);
+      g.fillStyle(0x3a2e22, 1);
+      g.fillRect(x - doorW / 2 - 1, top - 3, doorW + 2, 3);
+    }
+
+    /** Rooftop floor strip + rail so the roof reads as a walkable place. */
+    markRooftopDeck(minX, maxX, floorY) {
+      const g = this.add.graphics().setDepth(19);
+      const w = maxX - minX;
+      // Deck plank
+      g.fillStyle(0x5a4a38, 1);
+      g.fillRect(minX, floorY - 4, w, 6);
+      g.fillStyle(0x3a3028, 1);
+      g.fillRect(minX, floorY + 1, w, 2);
+      // Low rail
+      g.lineStyle(2, 0x2a241c, 1);
+      g.strokeRect(minX, floorY - 18, w, 14);
+      for (let x = minX + 8; x < maxX; x += 16) {
+        g.fillStyle(0x3a342c, 1);
+        g.fillRect(x, floorY - 16, 2, 12);
+      }
+      // Small "ROOF" tag near left climb
+      this.add.text(minX + 18, floorY - 28, 'ROOF', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '9px',
+        fontStyle: 'bold',
+        color: '#f8fafc',
+        backgroundColor: '#0f172a',
+        padding: { x: 4, y: 1 },
+      }).setOrigin(0, 1).setDepth(28).setResolution(2).setAlpha(0.85);
     }
 
     cutawayRoom(g, x, y, w, h, fill, decorate) {
@@ -2552,7 +2863,7 @@
 
     registerPassage(def) {
       if (!this.passages) this.passages = [];
-      const radius = def.radius || 12;
+      const radius = def.radius || 14;
       this.passages.push({
         x: def.x,
         fromFloorId: def.fromFloorId,
@@ -2561,14 +2872,66 @@
       });
       // Each room's walkable minX/maxX stops a few px short of the shared
       // wall, so the passage trigger point (sitting in that gap) was never
-      // actually reachable — the per-frame clamp pinned the player just
-      // short of it, so crossing silently failed or glitched. fromFloorId is
-      // always the left-hand room and toFloorId the right-hand room at this
-      // call site, so extend each room's bound toward the passage.
+      // actually reachable — extend each room's bound toward the passage.
       const from = this.floors.get(def.fromFloorId);
       const to = this.floors.get(def.toFloorId);
-      if (from) from.maxX = Math.max(from.maxX, def.x + radius);
-      if (to) to.minX = Math.min(to.minX, def.x - radius);
+      if (from) from.maxX = Math.max(from.maxX, def.x + radius + 4);
+      if (to) to.minX = Math.min(to.minX, def.x - radius - 4);
+      // Draw a doorway so the horizontal transition is obvious
+      const floorY = from?.floorY || to?.floorY;
+      if (floorY != null) {
+        // Approximate room height from floorY spacing is unknown; use 48px opening.
+        this.markPassageDoorway(def.x, floorY, 52);
+      }
+    }
+
+    /**
+     * Smooth floor change: open climb door → fade player → move → camera follow.
+     * Used for stairs/roof so it feels like walking through a door.
+     */
+    transitionToFloor(floorId, { viaClimb = true } = {}) {
+      const floor = this.floors.get(floorId);
+      if (!floor || !this.indoors || !this.player) return;
+      const fromId = this.indoors.floorId;
+      if (fromId === floorId) return;
+
+      // Cancel any in-flight floor tween
+      try { this.tweens.killTweensOf(this.player); } catch (_) { /* ignore */ }
+      this.player.setAlpha(1);
+      this._floorTween = true;
+      this.standUp();
+      if (viaClimb) this.animateElevatorAt(this.player.x, fromId);
+
+      const destX = Phaser.Math.Clamp(this.player.x, floor.minX, floor.maxX);
+      const cam = this.cameras.main;
+      // Brief walk-in feel
+      this.tweens.add({
+        targets: this.player,
+        alpha: 0.12,
+        duration: 110,
+        ease: 'Sine.easeIn',
+        onComplete: () => {
+          this.indoors.floorId = floorId;
+          this.player.setPosition(destX, floor.floorY);
+          this.player.setDepth(floor.isRoof ? 46 : 44);
+          this.refreshCameraBounds();
+          cam.centerOn(this.player.x, this.player.y);
+          this.tweens.add({
+            targets: this.player,
+            alpha: 1,
+            duration: 150,
+            ease: 'Sine.easeOut',
+            onComplete: () => {
+              this._floorTween = false;
+              if (floor.isRoof) {
+                this.setEnterHint(IS_TOUCH ? 'Rooftop · ▼ go down' : 'Rooftop · ↓ climb down');
+              } else {
+                this.setEnterHint(defaultIndoorHint());
+              }
+            },
+          });
+        },
+      });
     }
 
     setEnterHint(text) {
@@ -2614,24 +2977,21 @@
       return null;
     }
 
-    /** Animate outdoor or indoor elevator doors: closed → slightly → open. */
+    /** Brief open pulse on nearby climb/street doors when changing floors. */
     animateElevatorAt(x, floorId = null) {
-      const imgs = [];
-      for (const e of this.elevatorDoors || []) {
-        if (Math.abs(e.x - x) < 12 && (floorId == null || e.floorId === floorId || !e.floorId)) {
-          if (e.img) imgs.push(e.img);
-        }
+      for (const d of this.autoDoors || []) {
+        if (d.mode !== 'swing' || !d.leaf) continue;
+        if (Math.abs(d.x - x) > 18) continue;
+        if (floorId != null && d.indoor && d.floorId && d.floorId !== floorId) continue;
+        this.setSwingDoorOpen(d, true);
+        this.time.delayedCall(380, () => {
+          if (!this.player || !d.leaf) return;
+          const far = Math.abs(this.player.x - d.x) > (d.closeRadius || 28);
+          const leftFloor = d.indoor && !(this.indoors && this.indoors.floorId === d.floorId);
+          const wentInside = !d.indoor && !!this.indoors;
+          if (far || leftFloor || wentInside) this.setSwingDoorOpen(d, false);
+        });
       }
-      // Outdoor elev entrances from placeEntrance
-      for (const e of this.autoDoors || []) {
-        if (e.kind === 'elev' && Math.abs(e.x - x) < 14 && e.img) imgs.push(e.img);
-      }
-      imgs.forEach((img) => {
-        if (!img?.setTexture) return;
-        img.setTexture('elevSlightly');
-        this.time.delayedCall(90, () => { try { img.setTexture('elevOpen'); } catch (_) {} });
-        this.time.delayedCall(520, () => { try { img.setTexture('elevClosed'); } catch (_) {} });
-      });
     }
 
     enterFloor(floorId, fromOutdoorX = null, viaElev = false) {
@@ -2642,10 +3002,16 @@
       if (viaElev) this.animateElevatorAt(outdoorX);
       this.indoors = { floorId, outdoorX };
       const spawnX = Phaser.Math.Clamp(this.player.x, floor.minX, floor.maxX);
+      // Fade in through the street door
+      this.player.setAlpha(0.2);
       this.player.setPosition(spawnX, floor.floorY);
       this.player.setDepth(44);
       this.playerTag.setDepth(45);
       this.cameras.main.setZoom(this.indoorZoom);
+      this.cameras.main.setDeadzone(36, 18);
+      this.refreshCameraBounds();
+      this.cameras.main.centerOn(this.player.x, this.player.y);
+      this.tweens.add({ targets: this.player, alpha: 1, duration: 180, ease: 'Sine.easeOut' });
       this.setEnterHint(defaultIndoorHint());
     }
 
@@ -2654,25 +3020,22 @@
       this.standUp();
       const outX = this.indoors.outdoorX;
       this.indoors = null;
+      this.player.setAlpha(0.25);
       this.player.setPosition(outX, this.groundY - 1);
       this.player.setDepth(45);
       this.playerTag.setDepth(46);
       this.cameras.main.setZoom(this.outdoorZoom);
+      const narrow = window.innerWidth < 640;
+      this.cameras.main.setDeadzone(narrow ? 40 : 70, narrow ? 24 : 36);
+      this.refreshCameraBounds();
+      this.cameras.main.centerOn(this.player.x, this.player.y);
+      this.tweens.add({ targets: this.player, alpha: 1, duration: 160, ease: 'Sine.easeOut' });
       this.setEnterHint(defaultOutdoorHint());
     }
 
     goToFloor(floorId, viaElev = true) {
-      this.standUp();
-      const floor = this.floors.get(floorId);
-      if (!floor || !this.indoors) return;
-      if (viaElev) this.animateElevatorAt(this.player.x, this.indoors.floorId);
-      this.indoors.floorId = floorId;
-      // Keep x near the climb shaft when changing floors
-      const x = Phaser.Math.Clamp(this.player.x, floor.minX, floor.maxX);
-      this.player.setPosition(x, floor.floorY);
-      if (floor.isRoof) {
-        this.setEnterHint(IS_TOUCH ? 'Rooftop · ▼ go down' : 'Rooftop · ↓ elevator down');
-      }
+      // Prefer the animated door transition (esp. roof).
+      this.transitionToFloor(floorId, { viaClimb: viaElev });
     }
 
     nearbySeat() {
@@ -2759,17 +3122,15 @@
         if (up) {
           const door = this.nearbyDoor();
           if (door) {
-            // registerDoor doesn't carry the entrance kind — resolve it from
-            // the co-located autoDoors sprite so elevator entrances animate.
-            const isElev = (this.autoDoors || []).some((d) => d.kind === 'elev' && Math.abs(d.x - door.x) < 14);
-            this.enterFloor(door.floorId, door.outdoorX, isElev);
+            // Pulse the street door open as you enter.
+            this.enterFloor(door.floorId, door.outdoorX, true);
             this.enterCooldown = 280;
           }
         }
         return;
       }
 
-      // Prefer elevator / stairs over sit when standing on the climb lane
+      // Prefer climb door / stairs over sit when standing on the climb lane
       const stairs = this.nearbyStairs();
       if (up && stairs && stairs.dir === 'up') {
         this.goToFloor(stairs.targetFloorId, true);
@@ -2805,37 +3166,59 @@
     }
 
     updateElevatorProximity() {
-      if (!this.indoors) return;
-      const px = this.player.x;
-      const cur = this.indoors.floorId;
-      for (const e of this.elevatorDoors || []) {
-        if (e.floorId !== cur || !e.img?.setTexture) continue;
-        const near = Math.abs(px - e.x) < 22;
-        if (near && e.img.texture?.key === 'elevClosed') e.img.setTexture('elevSlightly');
-        else if (!near && e.img.texture?.key !== 'elevClosed' && !this.enterCooldown) {
-          e.img.setTexture('elevClosed');
-        }
-      }
+      // Climb doors are swing-mode autoDoors — handled in updateAutoDoors.
     }
 
     /**
-     * Street-level entrance doors react to the player: wood doors swing
-     * open as you approach and shut behind you; elevator entrances run the
-     * closed → slightly open → open sequence by distance band.
+     * Front door leaf swings on a left hinge (scaleX). Same art open/closed.
      */
+    setSwingDoorOpen(d, open) {
+      if (!d?.leaf || d.isOpen === open) return;
+      d.isOpen = open;
+      const base = d.baseScale != null ? d.baseScale : SCALE;
+      const openSx = d.openScaleX != null ? d.openScaleX : base * 0.18;
+      const targetSx = open ? openSx : base;
+      try { this.tweens.killTweensOf(d.leaf); } catch (_) { /* ignore */ }
+      d.animating = true;
+      this.tweens.add({
+        targets: d.leaf,
+        scaleX: targetSx,
+        duration: open ? 140 : 160,
+        ease: open ? 'Cubic.easeOut' : 'Cubic.easeIn',
+        onComplete: () => { d.animating = false; },
+      });
+    }
+
     updateAutoDoors() {
+      if (!this.player) return;
       const px = this.player.x;
       const outside = !this.indoors;
+      const curFloor = this.indoors?.floorId || null;
       for (const d of this.autoDoors || []) {
-        if (!d.img?.setTexture) continue;
-        const dist = Math.abs(px - d.x);
-        let want;
-        if (d.kind === 'elev') {
-          want = !outside ? 'elevClosed' : (dist < 16 ? 'elevOpen' : (dist < 42 ? 'elevSlightly' : 'elevClosed'));
+        if (d.mode !== 'swing') continue;
+        // Indoor doors sit on the left wall; climb lane may be a few px right —
+        // treat either the door center or interactX as "near".
+        const distDoor = Math.abs(px - d.x);
+        const distLane = d.interactX != null ? Math.abs(px - d.interactX) : distDoor;
+        const dist = Math.min(distDoor, distLane);
+        const openR = d.openRadius != null ? d.openRadius : 24;
+        const closeR = d.closeRadius != null ? d.closeRadius : 34;
+        let wantOpen = d.isOpen;
+
+        if (d.indoor) {
+          // Indoor climb door: only react on its floor
+          const onFloor = !!curFloor && curFloor === d.floorId;
+          if (!onFloor) wantOpen = false;
+          else if (dist < openR) wantOpen = true;
+          else if (dist > closeR) wantOpen = false;
         } else {
-          want = outside && dist < 26 ? 'door' : 'doorClosed';
+          // Street door: open outdoors when near; shut when inside
+          if (!outside) wantOpen = false;
+          else if (dist < openR) wantOpen = true;
+          else if (dist > closeR) wantOpen = false;
         }
-        if (d.img.texture?.key !== want) d.img.setTexture(want);
+
+        if (wantOpen !== d.isOpen) this.setSwingDoorOpen(d, wantOpen);
       }
     }
 
@@ -2862,14 +3245,19 @@
         // Animation is owned by sitOn() (sit/lie intro → seated idle loop).
       } else if (this.indoors) {
         const floor = this.floors.get(this.indoors.floorId);
-        if (floor) {
+        if (floor && !this._floorTween) {
           this.player.y = floor.floorY;
+          // Horizontal room-to-room: walk into the doorway gap
           const passage = this.nearbyPassage();
-          if (passage && ((vx > 0 && this.player.x > passage.x - 2) || (vx < 0 && this.player.x < passage.x + 2))) {
+          if (passage && ((vx > 0 && this.player.x > passage.x - 3) || (vx < 0 && this.player.x < passage.x + 3))) {
             const next = this.floors.get(passage.targetFloorId);
-            if (next) {
+            if (next && next.floorY != null) {
+              // Soft handoff into the neighbor room
               this.indoors.floorId = passage.targetFloorId;
               this.player.y = next.floorY;
+              // Nudge past the door so you don't immediately bounce back
+              this.player.x = passage.x + (vx > 0 ? 10 : -10);
+              this.player.x = Phaser.Math.Clamp(this.player.x, next.minX, next.maxX);
             }
           }
           const cur = this.floors.get(this.indoors.floorId);
@@ -2903,12 +3291,20 @@
         if (n) zone = `${zone} (${n})`;
         const doorHint = this.nearbyStairs();
         const seat = this.nearbySeat();
+        const passage = this.nearbyPassage();
         if (doorHint?.dir === 'up') {
-          this.setEnterHint(IS_TOUCH
-            ? (floor?.isRoof ? '▲ stay' : '▲ elevator / roof')
-            : '↑ elevator up');
+          const dest = this.floors.get(doorHint.targetFloorId);
+          if (dest?.isRoof) {
+            this.setEnterHint(IS_TOUCH ? '▲ rooftop' : '↑ climb to rooftop');
+          } else {
+            this.setEnterHint(IS_TOUCH ? '▲ floor up' : '↑ climb up');
+          }
         } else if (doorHint?.dir === 'down') {
-          this.setEnterHint(IS_TOUCH ? '▼ elevator down' : '↓ elevator down · or leave');
+          this.setEnterHint(IS_TOUCH
+            ? (floor?.isRoof ? '▼ go inside' : '▼ floor down')
+            : (floor?.isRoof ? '↓ climb inside' : '↓ climb down · or leave'));
+        } else if (passage) {
+          this.setEnterHint(IS_TOUCH ? '◀ ▶ next room' : '← → walk through doorway');
         } else if (seat) {
           this.setEnterHint(IS_TOUCH
             ? (seat.kind === 'bed' ? '▲ lie down' : '▲ sit')
@@ -2960,6 +3356,7 @@
       },
       scene: ExampleMapScene,
     });
+    window.__DenizenMapGame = game;
 
     window.addEventListener('resize', () => {
       try { game.scale.refresh(); } catch (_) { /* ignore */ }

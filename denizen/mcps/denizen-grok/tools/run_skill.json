@@ -1,0 +1,28 @@
+{
+  "name": "run_skill",
+  "description": "Run a real skill as this NPC (mockups, research, CRM, coding-agent, web-search). Returns immediately unless wait=true.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "skill": {
+        "type": "string",
+        "description": "Skill name, e.g. canvas-render, research, crm-summary"
+      },
+      "params": {
+        "type": "object",
+        "description": "Skill parameters (query, task, etc.)"
+      },
+      "wait": {
+        "type": "boolean",
+        "description": "If false, return immediately (default true — waits for result)"
+      },
+      "timeout_ms": {
+        "type": "number",
+        "description": "Max wait when wait=true (default 180000)"
+      }
+    },
+    "required": [
+      "skill"
+    ]
+  }
+}

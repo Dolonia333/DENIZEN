@@ -89,7 +89,7 @@
         './src/visitor-credits-chip.js?v=node7',
         './src/visitor-handoff-ui.js?v=vis3',
         './src/visitor-projects-ui.js?v=vis3',
-        './src/visitor-assistant-labels.js?v=vis2',
+        './src/visitor-assistant-labels.js?v=noStroke1',
         './src/bouncer-client-init.js?v=sec3',
         './src/security-monitor.js?v=sec3',
         './src/robber-controller.js?v=sec3',

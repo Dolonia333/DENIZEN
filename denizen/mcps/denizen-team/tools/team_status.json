@@ -1,0 +1,8 @@
+{
+  "name": "team_status",
+  "description": "Office-wide snapshot: teammates, online presence, active directives, inference health.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

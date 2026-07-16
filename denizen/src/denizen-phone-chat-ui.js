@@ -273,6 +273,15 @@
         color: #e2e8f0;
         font-size: 16px; /* ≥16px prevents iOS zoom-on-focus */
         padding: 8px 2px;
+        resize: none;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      #player-chat-panel[data-phone-chat="1"] #player-chat-input::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
       }
       #player-chat-panel[data-phone-chat="1"] #player-chat-speak {
         width: 38px;

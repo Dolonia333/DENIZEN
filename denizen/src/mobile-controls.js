@@ -115,19 +115,25 @@
       :root {
         --denizen-play-top: var(--safe-top, env(safe-area-inset-top, 0px));
         --denizen-play-gap: 2px;
+        --denizen-frame-chrome: 20px; /* HQ frame pad + margin so border fits on screen */
         --denizen-keyboard-offset: 0px;
         --denizen-available-play-h: calc(
           100dvh - var(--denizen-dock-height, 48px) - var(--denizen-play-top)
                    - max(var(--denizen-play-gap), env(safe-area-inset-bottom, 0px))
                    - var(--denizen-play-gap)
+                   - var(--denizen-frame-chrome)
         );
-        --denizen-phone-portrait-game-height: calc(100dvw * 9 / 16);
+        --denizen-phone-portrait-game-height: min(
+          var(--denizen-available-play-h),
+          calc(100dvw * 9 / 16)
+        );
       }
 
-      /* Landscape: notch is on the sides — reclaim top/bottom space for the canvas */
+      /* Landscape: notch is on the sides — reclaim vertical space; keep side safe-area only once */
       html.denizen-touch.denizen-landscape {
-        --denizen-play-top: 0px;
-        --denizen-play-gap: 1px;
+        --denizen-play-top: max(2px, env(safe-area-inset-top, 0px));
+        --denizen-play-gap: 0px;
+        --denizen-frame-chrome: 12px;
       }
 
       html.denizen-touch body {
@@ -143,10 +149,20 @@
           max(var(--denizen-play-gap), env(safe-area-inset-left, 0px));
       }
 
+      html.denizen-touch.denizen-landscape body {
+        /* Don't double-pad: size math below already subtracts safe-area + dock */
+        padding:
+          var(--denizen-play-top)
+          max(6px, env(safe-area-inset-right, 0px))
+          calc(var(--denizen-dock-height, 40px) + env(safe-area-inset-bottom, 0px))
+          max(6px, env(safe-area-inset-left, 0px));
+      }
+
       html.denizen-touch #game-container {
         --denizen-play-w: calc(
           100dvw - max(var(--denizen-play-gap), env(safe-area-inset-left, 0px))
                   - max(var(--denizen-play-gap), env(safe-area-inset-right, 0px))
+                  - var(--denizen-frame-chrome)
         );
         --denizen-play-h: var(--denizen-available-play-h);
         width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
@@ -160,16 +176,35 @@
 
       html.denizen-touch.denizen-landscape #game-container {
         border-radius: 2px;
+        /* Match the padded content box — 100dvw alone overshoots and looks off-center */
+        --denizen-play-w: calc(
+          100dvw
+          - max(6px, env(safe-area-inset-left, 0px))
+          - max(6px, env(safe-area-inset-right, 0px))
+          - var(--denizen-frame-chrome)
+          - 4px
+        );
+        --denizen-play-h: calc(
+          100dvh
+          - var(--denizen-play-top)
+          - var(--denizen-dock-height, 40px)
+          - env(safe-area-inset-bottom, 0px)
+          - var(--denizen-frame-chrome)
+          - 2px
+        );
+        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
+        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
+        margin: 0 auto;
+        flex: 0 0 auto;
       }
 
-      /* Portrait phones crop-zoom the 16:9 office instead of leaving most of the screen empty. */
-      html.denizen-touch.denizen-phone.denizen-portrait {
-        --denizen-phone-portrait-game-height: min(50dvh, var(--denizen-available-play-h));
-      }
+      /* Portrait phones: contain the office in the screen width (no wider-than-viewport crop).
+         Leftover height below stays for chat / joystick letterbox. */
       html.denizen-touch.denizen-phone.denizen-portrait #game-container {
-        width: calc(var(--denizen-phone-portrait-game-height) * 1.777778);
-        height: var(--denizen-phone-portrait-game-height);
+        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
+        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
         flex: 0 0 auto;
+        margin: 0 auto;
       }
 
       /* Portrait hint — non-blocking toast, shown once per session */
@@ -211,22 +246,12 @@
         pointer-events: none;
         display: none;
       }
-      /* Tablets only — joystick (phones use tap-to-move) */
+      /* Tablets only — joystick (phones use tap-to-move, no on-screen stick) */
       html.denizen-touch:not(.denizen-tap-move) #${CONTROLS_ID} {
         display: block;
       }
       html.denizen-touch.denizen-tap-move #${CONTROLS_ID} {
         display: none !important;
-      }
-      /* Portrait phones: the canvas is only the top third of the screen, so
-         tap-to-move alone feels dead — show the joystick too, floating over
-         the empty city letterbox. Both input styles work side by side. */
-      html.denizen-touch.denizen-tap-move.denizen-phone.denizen-portrait #${CONTROLS_ID} {
-        display: block !important;
-      }
-      /* Sit above the Speak FAB, which owns the bottom-left corner */
-      html.denizen-touch.denizen-tap-move.denizen-phone.denizen-portrait #${CONTROLS_ID} .mc-joy-base {
-        bottom: 96px;
       }
       html.denizen-touch.denizen-chat-open #${CONTROLS_ID},
       html.denizen-touch.denizen-llm-tel-open #${CONTROLS_ID} {
@@ -501,6 +526,8 @@
     return Boolean(
       target.closest(`#${CONTROLS_ID}`) ||
       target.closest('#player-chat-panel') ||
+      target.closest('#denizen-visitor-name-modal') ||
+      target.closest('#denizen-demo-account-modal') ||
       target.closest('#denizen-bottom-dock') ||
       target.closest('#denizen-diag-panel') ||
       target.closest('#denizen-llm-tel-panel') ||
@@ -668,9 +695,18 @@
     syncLayoutClasses();
 
     window.addEventListener('orientationchange', () => {
-      setTimeout(syncLayoutClasses, 100);
+      setTimeout(() => {
+        syncLayoutClasses();
+        try { window.game?.scale?.refresh?.(); } catch (_) {}
+      }, 120);
+      setTimeout(() => {
+        try { window.game?.scale?.refresh?.(); } catch (_) {}
+      }, 400);
     });
-    window.addEventListener('resize', syncLayoutClasses);
+    window.addEventListener('resize', () => {
+      syncLayoutClasses();
+      try { window.game?.scale?.refresh?.(); } catch (_) {}
+    });
 
     console.log('[MobilePlay] touch controls ready — portrait and landscape supported');
   }

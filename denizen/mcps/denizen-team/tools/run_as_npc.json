@@ -1,0 +1,25 @@
+{
+  "name": "run_as_npc",
+  "description": "Run any MCP tool as another NPC in your org (skills, CRM, market on Roki, etc.).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "npc_key": {
+        "type": "string",
+        "description": "Target NPC folder key, e.g. rob, josh, roki"
+      },
+      "tool": {
+        "type": "string",
+        "description": "Tool name to invoke on that NPC"
+      },
+      "arguments": {
+        "type": "object",
+        "description": "Tool arguments"
+      }
+    },
+    "required": [
+      "npc_key",
+      "tool"
+    ]
+  }
+}

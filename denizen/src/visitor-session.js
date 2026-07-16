@@ -488,10 +488,16 @@
       #denizen-demo-account-modal .vis-mascot--quiet .vis-lobby-bubble {
         display: none;
       }
-      /* Phones: the mascot sits ON the card and hides the headings — desktop/tablet only */
+      /* Phones: keep a compact Buzz above the pass (was fully hidden — looked unfinished) */
       html.denizen-phone #denizen-visitor-name-modal .vis-mascot,
       html.denizen-phone #denizen-demo-account-modal .vis-mascot {
-        display: none;
+        display: flex;
+      }
+      html.denizen-phone #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet),
+      html.denizen-phone #denizen-demo-account-modal .vis-mascot:not(.vis-mascot--quiet) {
+        margin-bottom: 10px;
+        transform: rotate(-4deg) scale(0.92);
+        transform-origin: bottom left;
       }
       #denizen-visitor-name-modal .vis-mascot-tag,
       #denizen-demo-account-modal .vis-mascot-tag {
@@ -810,11 +816,16 @@
         color: var(--vis-ink);
         padding: 12px 14px;
         font: inherit;
-        font-size: 16px;
+        font-size: 16px; /* iOS: <16px triggers zoom + focus quirks */
         outline: none;
         margin-bottom: 14px;
-        min-height: 44px;
+        min-height: 48px;
         touch-action: manipulation;
+        -webkit-user-select: text;
+        user-select: text;
+        -webkit-touch-callout: default;
+        pointer-events: auto;
+        cursor: text;
         box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.06);
         transition: border-color 160ms ease, box-shadow 160ms ease;
       }
@@ -990,11 +1001,27 @@
       html[data-denizen-modal="open"] #denizen-rotate-hint,
       html[data-denizen-modal="open"] #denizen-ceo-shell,
       html[data-denizen-modal="open"] #denizen-ws-banner,
-      html[data-denizen-modal="open"] #denizen-load-banner {
+      html[data-denizen-modal="open"] #denizen-load-banner,
+      html[data-denizen-modal="open"] #denizen-speak-fab,
+      html[data-denizen-modal="open"] #denizen-phone-fab,
+      html[data-denizen-modal="open"] #denizen-corner-hit-speak,
+      html[data-denizen-modal="open"] #denizen-corner-hit-phone,
+      html[data-denizen-modal="open"] #denizen-office-level-chip,
+      html[data-denizen-modal="open"] #denizen-tod-hud,
+      html[data-denizen-modal="open"] #denizen-office-hq-toggle,
+      html[data-denizen-modal="open"] #denizen-work-feed-toggle,
+      html[data-denizen-modal="open"] #denizen-work-feed {
         pointer-events: none !important;
       }
       html[data-denizen-modal="open"] #denizen-rotate-hint,
-      html[data-denizen-modal="open"] #denizen-ceo-shell {
+      html[data-denizen-modal="open"] #denizen-ceo-shell,
+      html[data-denizen-modal="open"] #denizen-speak-fab,
+      html[data-denizen-modal="open"] #denizen-phone-fab,
+      html[data-denizen-modal="open"] #denizen-corner-hit-speak,
+      html[data-denizen-modal="open"] #denizen-corner-hit-phone,
+      html[data-denizen-modal="open"] #denizen-tod-hud,
+      html[data-denizen-modal="open"] #denizen-office-hq-toggle,
+      html[data-denizen-modal="open"] #denizen-work-feed-toggle {
         display: none !important;
       }
       html[data-denizen-modal="open"] #denizen-bottom-dock,
@@ -1008,10 +1035,11 @@
       html.denizen-touch #denizen-visitor-name-modal {
         align-items: center;
         justify-content: center;
-        padding: max(12px, env(safe-area-inset-top, 0px))
-          max(12px, env(safe-area-inset-right, 0px))
-          max(12px, env(safe-area-inset-bottom, 0px))
-          max(12px, env(safe-area-inset-left, 0px));
+        /* Extra inset so the amber HQ PASS ring + stamp are not clipped */
+        padding: max(18px, env(safe-area-inset-top, 0px))
+          max(18px, env(safe-area-inset-right, 0px))
+          max(18px, env(safe-area-inset-bottom, 0px))
+          max(18px, env(safe-area-inset-left, 0px));
         box-sizing: border-box;
         background:
           radial-gradient(ellipse 90% 50% at 50% 42%, rgba(56, 189, 248, 0.14), transparent 58%),
@@ -1025,12 +1053,46 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0;
-        padding-top: 18px;
+        /* Room for HQ PASS badge above + amber outline + hard shadow */
+        padding: 22px 10px 16px;
+        box-sizing: border-box;
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-        overflow-x: visible;
-        overflow-y: auto;
+        overflow-x: visible !important;
+        overflow-y: auto !important;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
+        pointer-events: auto !important;
+      }
+      html.denizen-touch #denizen-visitor-name-modal .vis-card {
+        width: calc(100% - 12px);
+        max-width: 100%;
+        margin: 6px auto 8px;
+        max-height: none;
+        padding: 26px 16px 18px;
+        border-radius: 4px;
+        border: 3px solid #020617;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 3px #f59e0b,
+          5px 7px 0 #020617;
+        overflow: visible;
+        flex: 0 1 auto;
+        min-height: 0;
+        box-sizing: border-box;
+        pointer-events: auto !important;
+      }
+      html.denizen-touch #denizen-visitor-name-modal #denizen-visitor-name-continue,
+      html.denizen-touch #denizen-visitor-name-modal .vis-path-btn {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(56, 189, 248, 0.25);
+        position: relative;
+        z-index: 2;
+      }
+      html.denizen-touch #denizen-visitor-name-modal #denizen-visitor-name-continue {
+        position: sticky;
+        bottom: 0;
+        margin-top: 12px;
+        box-shadow: 0 -10px 18px rgba(2, 6, 23, 0.55);
       }
       /* Choose: Buzz stays in-flow above the pass so he can't get clipped off-screen */
       html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
@@ -1111,28 +1173,34 @@
         gap: 4px;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card {
-        width: 100%;
+        width: calc(100% - 12px);
+        max-width: 100%;
+        margin: 6px auto 8px;
         max-height: none;
-        padding: 22px 16px 16px;
+        padding: 26px 16px 18px;
         border-radius: 4px;
-        border-color: #020617;
+        border: 3px solid #020617;
         box-shadow:
           inset 0 0 0 2px #334155,
-          0 0 0 2px #f59e0b,
-          4px 6px 0 #020617;
+          0 0 0 3px #f59e0b,
+          5px 7px 0 #020617;
         overflow: visible;
         flex: 0 1 auto;
         min-height: 0;
+        box-sizing: border-box;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card.vis-lobby {
-        padding-top: 24px;
+        padding-top: 28px;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-card::before {
         left: 12px;
-        top: -14px;
-        font-size: 8px;
-        padding: 3px 7px;
+        top: -13px;
+        font-size: 9px;
+        padding: 3px 8px;
         line-height: 1.2;
+        border: 2px solid #020617;
+        box-shadow: 2px 2px 0 #020617;
+        z-index: 6;
       }
       html.denizen-touch #denizen-visitor-name-modal .vis-brand {
         font-size: clamp(22px, 7.5vw, 28px);
@@ -1201,6 +1269,11 @@
         min-height: 48px;
         margin-bottom: 12px;
         border-radius: 8px;
+        -webkit-user-select: text !important;
+        user-select: text !important;
+        pointer-events: auto !important;
+        touch-action: manipulation;
+        cursor: text;
       }
       html.denizen-touch #denizen-visitor-name-continue {
         min-height: 52px;
@@ -1230,18 +1303,19 @@
       html.denizen-touch #denizen-demo-account-modal {
         align-items: center;
         justify-content: center;
-        padding: max(12px, env(safe-area-inset-top, 0px))
-          max(12px, env(safe-area-inset-right, 0px))
-          max(12px, env(safe-area-inset-bottom, 0px))
-          max(12px, env(safe-area-inset-left, 0px));
+        padding: max(18px, env(safe-area-inset-top, 0px))
+          max(18px, env(safe-area-inset-right, 0px))
+          max(18px, env(safe-area-inset-bottom, 0px))
+          max(18px, env(safe-area-inset-left, 0px));
         overflow: auto;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-panel {
         width: min(100%, var(--denizen-panel-max-width, 440px));
         flex-direction: column;
         position: relative;
-        padding-top: 18px;
-        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        padding: 22px 10px 16px;
+        box-sizing: border-box;
+        max-height: calc(100dvh - 36px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         overflow-x: visible;
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -1263,27 +1337,50 @@
         display: none;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-card {
-        width: 100%;
+        width: calc(100% - 12px);
+        max-width: 100%;
+        margin: 6px auto 8px;
         max-height: none;
-        padding: 22px 16px 16px;
+        padding: 26px 16px 18px;
+        border: 3px solid #020617;
+        border-radius: 4px;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 3px #f59e0b,
+          5px 7px 0 #020617;
         overflow: visible;
         flex: 0 1 auto;
         min-height: 0;
+        box-sizing: border-box;
+      }
+      html.denizen-touch #denizen-demo-account-modal .vis-card::before {
+        left: 12px;
+        top: -13px;
+        font-size: 9px;
+        padding: 3px 8px;
+        z-index: 6;
       }
       html.denizen-touch #denizen-demo-account-modal .vis-input {
         font-size: 16px;
         min-height: 48px;
+        -webkit-user-select: text !important;
+        user-select: text !important;
+        pointer-events: auto !important;
+        touch-action: manipulation;
       }
       @media (max-width: 520px) {
         #denizen-visitor-name-modal .vis-panel,
         #denizen-demo-account-modal .vis-panel {
-          width: min(100%, calc(100vw - 20px));
+          width: min(100%, calc(100vw - 36px));
         }
       }
       @media (max-height: 430px) {
         html.denizen-touch #denizen-visitor-name-modal {
           align-items: center;
-          padding: 8px;
+          padding: max(14px, env(safe-area-inset-top, 0px))
+            max(14px, env(safe-area-inset-right, 0px))
+            max(14px, env(safe-area-inset-bottom, 0px))
+            max(14px, env(safe-area-inset-left, 0px));
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
           margin-bottom: 6px;
@@ -1300,7 +1397,13 @@
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-card {
           max-height: none;
+          width: calc(100% - 12px);
+          margin: 6px auto 8px;
           padding: 14px 12px 12px;
+          box-shadow:
+            inset 0 0 0 2px #334155,
+            0 0 0 3px #f59e0b,
+            4px 6px 0 #020617;
         }
         html.denizen-touch #denizen-visitor-name-modal .vis-brand {
           font-size: 22px;
@@ -1324,6 +1427,138 @@
         html.denizen-touch #denizen-visitor-name-modal .vis-path-sub {
           display: none;
         }
+      }
+      /* Landscape phones: HQ PASS must fit the short side — Buzz beside card, buttons in a row */
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal {
+        align-items: center;
+        justify-content: center;
+        padding: max(12px, env(safe-area-inset-top, 0px))
+          max(14px, env(safe-area-inset-right, 0px))
+          max(8px, env(safe-area-inset-bottom, 0px))
+          max(14px, env(safe-area-inset-left, 0px));
+        overflow: auto;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-panel {
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        width: min(860px, 100%);
+        max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        /* Extra top padding so the HQ PASS stamp is never clipped */
+        padding: 24px 10px 14px;
+        overflow: visible;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) {
+        flex-direction: column;
+        align-items: center;
+        align-self: center;
+        margin: 0;
+        max-width: 130px;
+        transform: rotate(-6deg) scale(0.82);
+        transform-origin: center;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-bubble {
+        order: 0;
+        max-width: 118px;
+        margin: 0 0 8px;
+        font-size: 11px;
+        padding: 6px 8px;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-lobby-phone {
+        order: 1;
+        width: 48px;
+        height: 60px;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-mascot:not(.vis-mascot--quiet) .vis-mascot-tag {
+        position: static;
+        margin-top: 4px;
+        left: auto;
+        bottom: auto;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-mascot--quiet {
+        display: none;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-card {
+        width: min(460px, calc(100% - 140px));
+        margin: 12px 4px 12px;
+        padding: 18px 16px 14px;
+        max-height: none;
+        /* Panel scrolls; keep stamp visible around the card */
+        overflow: visible;
+        flex: 1 1 auto;
+        box-shadow:
+          inset 0 0 0 2px #334155,
+          0 0 0 3px #f59e0b,
+          5px 7px 0 #020617;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-card.vis-lobby {
+        padding-top: 22px;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-card::before {
+        top: -13px;
+        left: 12px;
+        font-size: 9px;
+        padding: 3px 8px;
+        letter-spacing: 0.12em;
+        z-index: 8;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-brand {
+        font-size: 22px;
+        margin: 0 0 4px;
+        letter-spacing: 0.1em;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-tagline,
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-card.vis-lobby .vis-tagline {
+        font-size: 12px;
+        margin-bottom: 10px;
+        line-height: 1.3;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-paths {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin: 0;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-path-btn.lobby-choice {
+        min-height: 58px;
+        padding: 10px 12px;
+        grid-template-columns: 36px 1fr;
+        column-gap: 10px;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-path-btn.lobby-choice .vis-path-ico {
+        width: 36px;
+        height: 36px;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-path-btn.lobby-choice .vis-path-title {
+        font-size: 14px;
+      }
+      html.denizen-touch.denizen-landscape #denizen-visitor-name-modal .vis-path-sub {
+        display: none;
+      }
+      html.denizen-touch.denizen-landscape #denizen-demo-account-modal {
+        padding: max(8px, env(safe-area-inset-top, 0px))
+          max(14px, env(safe-area-inset-right, 0px))
+          max(8px, env(safe-area-inset-bottom, 0px))
+          max(14px, env(safe-area-inset-left, 0px));
+      }
+      html.denizen-touch.denizen-landscape #denizen-demo-account-modal .vis-panel {
+        max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        padding: 24px 10px 14px;
+        overflow: visible;
+      }
+      html.denizen-touch.denizen-landscape #denizen-demo-account-modal .vis-card {
+        width: min(460px, calc(100% - 16px));
+        margin: 12px auto 12px;
+        max-height: calc(100dvh - 40px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overflow: visible;
+      }
+      html.denizen-touch.denizen-landscape #denizen-demo-account-modal .vis-card::before {
+        top: -13px;
+        left: 12px;
+        font-size: 9px;
+        padding: 3px 8px;
+        z-index: 8;
       }
       @media (max-height: 560px) {
         html.denizen-touch #denizen-visitor-name-modal .vis-panel,
@@ -1553,6 +1788,8 @@
       function closeModal(result) {
         delete document.documentElement.dataset.denizenModal;
         setGameInputBlocked(false);
+        try { window.DenizenUnlockMovement?.(); } catch (_) {}
+        try { window.DenizenMovementGuard?.unlock?.(); } catch (_) {}
         if (unbindPress) {
           unbindPress();
           unbindPress = null;
@@ -1582,6 +1819,11 @@
       }
 
       function focusFirstInput() {
+        // On touch, skip auto-focus — iOS won't open the keyboard without a
+        // real tap, and the failed focus makes the next tap feel like a long-press.
+        if (window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch')) {
+          return;
+        }
         const selector = (step === 'join-team' && prefilledTeamCode)
           ? '#denizen-visitor-username-input'
           : '.vis-input, #denizen-visitor-name-input';
@@ -2009,16 +2251,51 @@
 
       const onModalActivate = (btn) => {
         if (!btn || btn.disabled || busy) return;
+        const now = Date.now();
+        if (now - (onModalActivate._lastAt || 0) < 350) return;
+        onModalActivate._lastAt = now;
         handleAction(btn.getAttribute('data-action'));
       };
 
+      // Click fallback — must remain active on mobile. Older code returned early
+      // whenever TouchBind existed, which left taps dead if pointerup was canceled.
       modalEl.addEventListener('click', (e) => {
-        if (window.DenizenTouchBind?.bindPress) return;
         const btn = e.target.closest('[data-action]');
         if (!btn || btn.disabled || busy) return;
         e.preventDefault();
         e.stopPropagation();
         onModalActivate(btn);
+      });
+
+      // Preferred mobile path: delegate once (survives re-renders of button HTML).
+      if (window.DenizenTouchBind?.delegatePress) {
+        window.DenizenTouchBind.delegatePress(
+          modalEl,
+          '[data-action]',
+          (e, btn) => {
+            e?.preventDefault?.();
+            onModalActivate(btn);
+          },
+          { stop: true },
+        );
+      }
+
+      // First tap on a field must focus immediately (no long-press / select dance).
+      modalEl.addEventListener('pointerdown', (e) => {
+        const input = e.target?.closest?.('input.vis-input, textarea.vis-input, input, textarea');
+        if (!input || input.disabled || input.readOnly) return;
+        try { input.focus({ preventScroll: true }); } catch (_) {
+          try { input.focus(); } catch (__) {}
+        }
+      }, { capture: true });
+
+      // Keep focused fields / CTA above the soft keyboard on phones.
+      modalEl.addEventListener('focusin', (e) => {
+        const el = e.target;
+        if (!el || !/^(INPUT|TEXTAREA|BUTTON)$/i.test(el.tagName)) return;
+        setTimeout(() => {
+          try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
+        }, 280);
       });
 
       modalEl.addEventListener('keydown', (e) => {
@@ -2036,20 +2313,7 @@
       });
 
       function wireStepControls() {
-        stepUnbinds.forEach((fn) => fn());
-        stepUnbinds = [];
-        if (!window.DenizenTouchBind?.bindPress) return;
-        modalEl.querySelectorAll('[data-action]').forEach((btn) => {
-          const off = window.DenizenTouchBind.bindPress(
-            btn,
-            (e) => {
-              e?.preventDefault?.();
-              onModalActivate(btn);
-            },
-            { stop: true },
-          );
-          if (typeof off === 'function') stepUnbinds.push(off);
-        });
+        // Kept for call sites after render(); actions are delegated on modalEl.
       }
 
       function render() {
@@ -2189,7 +2453,7 @@
 
         ensurePanelWithMascot(modalEl, {
           quiet: step !== 'choose',
-          bubble: step === 'choose' ? 'Buzz buzz — never too buzzy' : '',
+          bubble: step === 'choose' ? 'Hey — I work here too.' : '',
         });
         wireStepControls();
         applyPrefills();
@@ -3083,12 +3347,23 @@
       const sid = sessionId;
       if (!sid) return;
       try {
+        let spectator = false;
+        try {
+          if (globalThis.DenizenPublicDemo?.active) spectator = true;
+          const q = new URLSearchParams(window.location.search);
+          if (q.get('mode') === 'demo' || q.get('demo') === '1' || q.get('spectate') === '1') {
+            spectator = true;
+          }
+        } catch (_) {}
         ws.send(JSON.stringify({
           type: 'visitor_register',
           session_id: sid,
           display_name: DenizenVisitorSession.getDisplayName(),
           identity_id: DenizenVisitorSession.getIdentityId(),
           is_ceo: isCeoPrincipalNow(),
+          interactive: !spectator,
+          spectator,
+          demo: spectator,
         }));
       } catch (err) {
         console.warn('[DenizenVisitorSession] visitor_register failed:', err?.message || err);
@@ -3455,11 +3730,15 @@
   // Phones: the login card is bottom-anchored, exactly where the on-screen
   // keyboard opens. Once the viewport resizes (interactive-widget), scroll the
   // focused field back into view so people can see what they're typing.
-  document.addEventListener('focusin', (e) => {
-    const el = e.target;
-    if (!el || !el.classList || !el.classList.contains('vis-input')) return;
-    setTimeout(() => {
-      try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
-    }, 250);
-  });
+  if (typeof document !== 'undefined') {
+    document.addEventListener('focusin', (e) => {
+      const el = e.target;
+      if (!el || !el.classList || !el.classList.contains('vis-input')) return;
+      // Don't fight the keyboard on the first focus frame — wait until it settles.
+      setTimeout(() => {
+        if (document.activeElement !== el) return;
+        try { el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (_) {}
+      }, 350);
+    });
+  }
 })();

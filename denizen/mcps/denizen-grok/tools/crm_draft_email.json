@@ -1,0 +1,24 @@
+{
+  "name": "crm_draft_email",
+  "description": "Draft a CRM email (does not send — returns draft text).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "to": {
+        "type": "string",
+        "description": "Recipient name or email context"
+      },
+      "subject": {
+        "type": "string",
+        "description": "Email subject or topic"
+      },
+      "context": {
+        "type": "string",
+        "description": "What the email should cover"
+      }
+    },
+    "required": [
+      "context"
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "enqueue_cursor_work",
+  "description": "Queue a coding/fix task for Cursor to pick up (self-improvement, bugfix, refactor). Cursor polls with list_cursor_work.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "title": {
+        "type": "string",
+        "description": "Short task title"
+      },
+      "description": {
+        "type": "string",
+        "description": "Full context: files, error logs, acceptance criteria"
+      },
+      "files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Repo-relative paths to focus on"
+      },
+      "priority": {
+        "type": "string",
+        "enum": [
+          "low",
+          "normal",
+          "high",
+          "urgent"
+        ],
+        "description": "Default normal"
+      },
+      "kind": {
+        "type": "string",
+        "description": "bugfix | feature | refactor | ops (default bugfix)"
+      }
+    },
+    "required": [
+      "title"
+    ]
+  }
+}

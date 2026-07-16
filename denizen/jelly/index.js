@@ -106,4 +106,7 @@ module.exports = {
   intents,
   paths: require('./paths'),
   configProvider: require('./config-provider'),
+  skillContracts: (() => {
+    try { return require('../src/denizen-skill-contracts'); } catch (_) { return null; }
+  })(),
 };

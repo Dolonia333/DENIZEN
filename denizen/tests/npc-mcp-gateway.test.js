@@ -8,6 +8,15 @@ const gateway = require('../src/denizen-npc-mcp-gateway.js');
 const mcpActions = require('../src/denizen-mcp-actions.js');
 const denizenDb = require('../src/denizen-db.js');
 
+// Node's global fetch pools HTTP/1.1 connections. Explicitly close each test
+// request so the process exits immediately after the temporary server closes.
+function fetchNoKeepAlive(url, options = {}) {
+  return fetch(url, {
+    ...options,
+    headers: { Connection: 'close', ...(options.headers || {}) },
+  });
+}
+
 const SCOPE = {
   ok: true,
   token_id: 'tok-1',
@@ -176,7 +185,7 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.listen(0, resolve));
     const { port } = server.address();
 
-    const res = await fetch(`http://127.0.0.1:${port}/mcp/npc/roki`, { method: 'GET' });
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/mcp/npc/roki`, { method: 'GET' });
     const body = await res.json();
     assert.equal(res.status, 401);
     assert.match(body.error, /Bearer/i);
@@ -191,7 +200,7 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.listen(0, resolve));
     const { port } = server.address();
 
-    const res = await fetch(`http://127.0.0.1:${port}/mcp/npc/roki`, {
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/mcp/npc/roki`, {
       method: 'GET',
       headers: { Authorization: 'Bearer good-token' },
     });
@@ -210,7 +219,7 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.listen(0, resolve));
     const { port } = server.address();
 
-    const res = await fetch(`http://127.0.0.1:${port}/mcp/npc/jenny`, {
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/mcp/npc/jenny`, {
       method: 'GET',
       headers: { Authorization: 'Bearer good-token' },
     });
@@ -236,7 +245,7 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.listen(0, resolve));
     const { port } = server.address();
 
-    const res = await fetch(`http://127.0.0.1:${port}/api/npc-sync/status`, {
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/api/npc-sync/status`, {
       headers: { Authorization: 'Bearer good-token' },
     });
     const body = await res.json();
@@ -254,7 +263,7 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.listen(0, resolve));
     const { port } = server.address();
 
-    const res = await fetch(`http://127.0.0.1:${port}/api/npc-sync/memory`, {
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/api/npc-sync/memory`, {
       method: 'POST',
       headers: {
         Authorization: 'Bearer good-token',
@@ -279,7 +288,7 @@ describe('npc-mcp-gateway', () => {
     await new Promise((resolve) => server.listen(0, resolve));
     const { port } = server.address();
 
-    const res = await fetch(`http://127.0.0.1:${port}/api/npc-sync/activity`, {
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/api/npc-sync/activity`, {
       method: 'POST',
       headers: {
         Authorization: 'Bearer good-token',

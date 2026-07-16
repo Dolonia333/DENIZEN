@@ -25,9 +25,11 @@ let _friction = {}; // npc -> { domain: { count, lastAt, score } }
 let _lastHostPoll = null; // cached pollHostInfrastructure() result
 
 const DEFAULT_THRESHOLDS = Object.freeze({
-  latencyMs: 4000,
-  avgTokens: 2000,
-  consultCooldownMs: 30 * 60 * 1000,
+  // Slightly higher floors so ambient noise doesn't re-spam the consult queue.
+  latencyMs: Number(process.env.DENIZEN_CONSULT_LATENCY_MS) || 5000,
+  avgTokens: Number(process.env.DENIZEN_CONSULT_TOKENS) || 2500,
+  // 2h default after a consult (was 30m) — lessons need time to take effect.
+  consultCooldownMs: Number(process.env.DENIZEN_CONSULT_COOLDOWN_MS) || 2 * 60 * 60 * 1000,
 });
 
 /** Friction score at which autonomy backlog items are enqueued (mentor consensus). */
@@ -707,14 +709,25 @@ function readQueueTail(limit = 40) {
 
 function hasRecentConsult(npcName, cooldownMs, sourcePrefix = '') {
   const now = Date.now();
-  const folder = npcName.toLowerCase();
-  for (const entry of readQueueTail(50).reverse()) {
+  const folder = String(npcName || '').toLowerCase();
+  // After a lesson lands in MEMORY, stay quiet longer so NPCs can apply it.
+  const answeredCooldown = Math.max(
+    cooldownMs,
+    Number(process.env.DENIZEN_CONSULT_ANSWERED_COOLDOWN_MS) || 3 * 60 * 60 * 1000,
+  );
+  for (const entry of readQueueTail(120).reverse()) {
     if (String(entry.npc || '').toLowerCase() !== folder) continue;
-    if (sourcePrefix && !String(entry.source || '').startsWith(sourcePrefix)) continue;
-    const ts = Date.parse(entry.ts || entry.replied_at || '');
-    if (!Number.isFinite(ts)) continue;
-    if (now - ts < cooldownMs) return true;
+    // Pending always blocks a re-ask (any source).
     if (entry.status === 'pending') return true;
+    const ts = Date.parse(entry.answered_at || entry.replied_at || entry.ts || '');
+    if (!Number.isFinite(ts)) continue;
+    if (entry.status === 'answered') {
+      const cool = (entry.memory_injected || entry.answer) ? answeredCooldown : cooldownMs;
+      if (now - ts < cool) return true;
+      continue;
+    }
+    if (sourcePrefix && !String(entry.source || '').startsWith(sourcePrefix)) continue;
+    if (now - ts < cooldownMs) return true;
   }
   return false;
 }
@@ -740,30 +753,38 @@ function evaluate(npcName, tel, opts = {}) {
   if (!stats) return { triggered: false, reason: 'no_stats' };
 
   const reasons = [];
+  // Prefer tokens_in when present (true prompt bloat signal).
+  const tokenSignal = Number(stats.avg_tokens_in || stats.avg_tokens || 0);
   if (Number(stats.avg_latency_ms) >= thresholds.latencyMs) {
     reasons.push(`latency>=${thresholds.latencyMs}ms`);
   }
-  if (Number(stats.avg_tokens) >= thresholds.avgTokens) {
+  if (tokenSignal >= thresholds.avgTokens) {
     reasons.push(`tokens>=${thresholds.avgTokens}`);
   }
 
-  // Friction metric for autonomy (Claude's proposal)
+  // Friction for consults: ignore NAS/host infrastructure noise (not NPC-fixable).
   const friction = getFrictionScore(npcName);
-  if (friction.overall >= 15) {
-    reasons.push(`friction_score>=${friction.overall} (hot: ${friction.hotDomains.join(',') || 'general'})`);
+  const details = friction.details || {};
+  const actionableDomains = (friction.hotDomains || []).filter(
+    (d) => !String(d).startsWith('nas_') && !String(d).includes('host_infrastructure'),
+  );
+  const actionableScore = actionableDomains.length
+    ? Math.max(...actionableDomains.map((d) => Number(details[d]?.score) || 0))
+    : 0;
+  // Higher bar (40) so sticky old friction doesn't re-spam after a lesson.
+  if (actionableScore >= 40) {
+    reasons.push(`friction_score>=${actionableScore} (hot: ${actionableDomains.join(',') || 'general'})`);
   }
   if (!reasons.length) return { triggered: false, reason: 'within_thresholds' };
 
-  // Enqueue autonomy backlog when friction crosses mentor threshold (>=8), skip host-only pain
-  if (friction.overall >= BACKLOG_FRICTION_THRESHOLD) {
-    const domain = friction.hotDomains[0] || 'general';
-    if (!domain.includes('host_infrastructure') && !domain.startsWith('nas_')) {
-      maybeEnqueueAutonomyBacklog(npcName, domain);
-    }
+  // Autonomy backlog only for actionable domains
+  if (actionableScore >= BACKLOG_FRICTION_THRESHOLD && actionableDomains[0]) {
+    maybeEnqueueAutonomyBacklog(npcName, actionableDomains[0]);
   }
 
+  // Global cooldown across all sources so mesh job + metrics don't double-fire.
   const cooldownMs = opts.cooldownMs ?? thresholds.consultCooldownMs;
-  if (hasRecentConsult(npcName, cooldownMs, opts.sourcePrefix || 'metrics-threshold')) {
+  if (hasRecentConsult(npcName, cooldownMs, '')) {
     return { triggered: false, reason: 'consult_cooldown' };
   }
 

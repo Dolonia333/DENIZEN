@@ -1,0 +1,23 @@
+{
+  "name": "mentor_finalize",
+  "description": "Synthesize Grok+Claude replies and inject into the asking NPC memory + office feed.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "session_id": {
+        "type": "string"
+      },
+      "synthesis": {
+        "type": "string",
+        "description": "Optional override synthesis text"
+      },
+      "announce": {
+        "type": "boolean",
+        "description": "Announce in office (default true)"
+      }
+    },
+    "required": [
+      "session_id"
+    ]
+  }
+}

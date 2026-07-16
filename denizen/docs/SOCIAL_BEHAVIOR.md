@@ -1,5 +1,7 @@
 # Denizen — Social Behavior
 
+> Current implementation and gap status: [CURRENT_IMPLEMENTATION_STATUS.md](CURRENT_IMPLEMENTATION_STATUS.md).
+
 > The layer that sits on top of [AWARENESS](AWARENESS.md). Once an NPC
 > *knows* what's around them, this doc covers what makes them *act*
 > like a coworker: stopping mid-sentence when someone speaks to them,
@@ -18,6 +20,25 @@
 | **Think aloud** | NPC emits `[ACTION:thinkAloud:...]` | Renders as a thought-cloud bubble. Does NOT pin anyone or generate audio. |
 | **Fatigue** | NPC sits at desk >45 min, or peer >60 min | Self: prompt line `"You've been at your desk for 50 minutes — a short break or chat would be reasonable."` Peer: appears in `Nearby:` as `tired (75m at desk)`. |
 | **Stuck-loop detection** | Same question repeated 3x between two NPCs inside 10 min | Prompt line: `"Stuck loop with Josh: 'mockups ready yet?' repeated 3x. Break the cycle — escalate, change topic, or stop checking in."` |
+| **Purposeful ambient trip** | Simulation host releases an eligible desk worker | NPC stands away from the desk, visits a room/coffee/coworker, then walks back to the assigned chair. |
+| **Coffee favor** | Scheduled eligible pair is available | Request, acceptance, coffee trip, delivery, thanks, and both return to work. |
+
+## Physical office-life choreography (2026-07 audit)
+
+The social layer now includes deterministic physical choreography in addition to
+LLM-selected actions. Every assigned NPC begins with a desk/chair pose before the
+first ambient release. The simulation host then releases small staggered batches
+for purposeful trips so the office stays active without sending the entire roster
+through one doorway at once.
+
+The coffee-favor sequence is deliberately bounded and timer-driven. It looks like
+a social understanding loop, but it is not a general plan negotiated by two
+agents. The dialogue lines are selected from short variations, movement uses the
+ordinary action/pathfinding layer, and a mutex prevents two coffee favors from
+overlapping. No persistent carried-cup inventory was verified.
+
+Spectator clients do not independently schedule these behaviors after simulation
+host state is known. They are expected to mirror the authoritative office state.
 
 ## Conversation focus (Phase A)
 

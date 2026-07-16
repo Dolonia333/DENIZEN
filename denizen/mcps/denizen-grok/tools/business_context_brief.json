@@ -1,0 +1,13 @@
+{
+  "name": "business_context_brief",
+  "description": "Canonical business model + CRM cross-reference + proactive blockers (OMES, teaming, goals).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "npcName": {
+        "type": "string",
+        "description": "Optional NPC name for owner-filtered proactive flags"
+      }
+    }
+  }
+}

@@ -108,6 +108,7 @@ const BY_NAME = {
     ],
     askMe: ['Summarize open issues', 'What\'s moving in the market today?', 'Help me understand this module'],
     skills: ['market-watch', 'get-quote', 'trade-suggest', 'github', 'research'],
+    // trade-suggest papers buy/sell on Roki's fake ledger; never live Robinhood orders.
   },
   Molly: {
     role: 'QA Engineer',

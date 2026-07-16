@@ -1,0 +1,32 @@
+{
+  "name": "send_handoff",
+  "description": "Send a message/handoff to a teammate, or escalate to the CEO office (Lucy bridge).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "message": {
+        "type": "string",
+        "description": "Handoff message (required)"
+      },
+      "to_session_id": {
+        "type": "string",
+        "description": "Target teammate session UUID"
+      },
+      "to_display_name": {
+        "type": "string",
+        "description": "Target by display name (partial match)"
+      },
+      "to_ceo": {
+        "type": "boolean",
+        "description": "Escalate to CEO / Lucy bridge"
+      },
+      "to_npc": {
+        "type": "string",
+        "description": "Optional target NPC key for routing metadata"
+      }
+    },
+    "required": [
+      "message"
+    ]
+  }
+}

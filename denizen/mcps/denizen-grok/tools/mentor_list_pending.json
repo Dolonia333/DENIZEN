@@ -1,0 +1,17 @@
+{
+  "name": "mentor_list_pending",
+  "description": "List mentor dialogue sessions awaiting Grok or Claude peer replies (local NPC questions).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "agent": {
+        "type": "string",
+        "description": "Filter: grok | claude | omit for all open"
+      },
+      "limit": {
+        "type": "number",
+        "description": "Max rows (default 15)"
+      }
+    }
+  }
+}

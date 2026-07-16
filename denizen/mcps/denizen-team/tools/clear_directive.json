@@ -1,0 +1,16 @@
+{
+  "name": "clear_directive",
+  "description": "Clear a stale/completed directive for one NPC (directives previously only got overwritten by a new one, never completed).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "npc_key": {
+        "type": "string",
+        "description": "NPC folder key, e.g. molly, dan"
+      }
+    },
+    "required": [
+      "npc_key"
+    ]
+  }
+}

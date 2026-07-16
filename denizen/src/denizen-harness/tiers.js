@@ -147,10 +147,12 @@ const TIER_RANK = { fast: 0, main: 1, heavy: 2, reasoning: 2 };
  *     }
  *   }
  *
- * Semantics applied to a tier the caller already resolved (kind default or
- * explicit): per-kind pin wins; then min_tier raises (a mapped "hard" NPC can
- * never be answered by a lower tier, even if the callsite asked for fast);
- * then max_tier lowers (ambient-only NPCs never burn the big model).
+ * Semantics (applied in order):
+ *  1. Start from baseTier (kind default or explicit).
+ *  2. min_tier raises (hard NPCs never answered by a lower tier).
+ *  3. max_tier lowers (ambient-only NPCs never burn the big model).
+ *  4. kinds.<kind> pin is absolute last — a kind pin always wins over min/max
+ *     (so roki can be max=fast for ambient but kinds.chat=main for real chat).
  */
 function tierForNpc(baseTier, npcKey, kind, npcTiersConfig = {}) {
   const map = npcTiersConfig?.map || npcTiersConfig || {};
@@ -159,14 +161,15 @@ function tierForNpc(baseTier, npcKey, kind, npcTiersConfig = {}) {
   const rule = map[key];
   let tier = String(baseTier || 'main').toLowerCase();
 
-  const kindPin = rule.kinds?.[String(kind || '').toLowerCase()];
-  if (kindPin && TIER_RANK[kindPin] != null) tier = kindPin;
-
   const min = String(rule.min_tier || '').toLowerCase();
   if (TIER_RANK[min] != null && TIER_RANK[tier] < TIER_RANK[min]) tier = min;
 
   const max = String(rule.max_tier || '').toLowerCase();
   if (TIER_RANK[max] != null && TIER_RANK[tier] > TIER_RANK[max]) tier = max;
+
+  // Kind pin last = absolute (overrides min/max).
+  const kindPin = rule.kinds?.[String(kind || '').toLowerCase()];
+  if (kindPin && TIER_RANK[kindPin] != null) tier = kindPin;
 
   return tier;
 }

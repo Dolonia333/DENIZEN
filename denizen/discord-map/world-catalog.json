@@ -46,7 +46,7 @@
     ]
    },
    "rooftop": "walkable floor at buildingTop+6, reached via the elevator lane from the top room; decorated with roofVents1/2 + treeRoof2",
-   "entrances": "two street doors at left+42 and left+bw-48; wood doors auto-open within 26px, elevator entrances animate closed->slightly->open by distance band (42/16px)"
+   "entrances": "two street swing-doors at left+42 and left+bw-48 (no elevators — rooms are too small); inter-floor climb uses compact doors on the left lane; no walkable rooftop elevators"
   },
   "roomItemFormat": {
    "f": "['f', keyOrVariantArray, dx, scale?, dyLift?] floor object, bottom-anchored at floorY-dyLift",

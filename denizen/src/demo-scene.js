@@ -27,6 +27,17 @@ class DemoScene {
     const actions = this.actions;
     if (!actions || !scene.npcs) return;
 
+    // --- Find our actors first — never pull the camera until we can run ---
+    const abby = this._findNpc('xp_abby');
+    const alex = this._findNpc('xp_alex');
+    const bob = this._findNpc('xp_bob');
+    const player = scene.player;
+
+    if (!abby || !alex || !bob || !player) {
+      console.warn('[DemoScene] Missing actors, aborting demo (camera left alone)');
+      return;
+    }
+
     console.log('[DemoScene] Starting investor demo...');
 
     // --- Step 0: Freeze ALL NPCs ---
@@ -76,17 +87,6 @@ class DemoScene {
         }
       }
     });
-
-    // --- Find our actors ---
-    const abby = this._findNpc('xp_abby');
-    const alex = this._findNpc('xp_alex');
-    const bob = this._findNpc('xp_bob');
-    const player = scene.player;
-
-    if (!abby || !alex || !bob || !player) {
-      console.warn('[DemoScene] Missing actors, aborting demo');
-      return;
-    }
 
     // --- Position actors at starting marks ---
 

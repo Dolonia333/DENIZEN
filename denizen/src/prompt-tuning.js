@@ -59,7 +59,7 @@ module.exports = {
   cofounderLmTimeoutMs: envInt('DENIZEN_COFOUNDER_LM_TIMEOUT_MS', economy ? 60000 : 90000),
   compactLiveContext: envBool('DENIZEN_COMPACT_LIVE_CONTEXT', true),
   /** Player-first: skip client autonomous NPC bursts (think walks, tours, desk snaps). */
-  lightOffice: envBool('DENIZEN_LIGHT_OFFICE', true),
+  lightOffice: envBool('DENIZEN_LIGHT_OFFICE', false),
   compactThinkPrompt: envBool('DENIZEN_COMPACT_THINK_PROMPT', true),
   includePcAccessBlock: envBool('DENIZEN_INCLUDE_PC_ACCESS', false),
   infraContextChance: envFloat('DENIZEN_INFRA_CONTEXT_CHANCE', economy ? 0.04 : 0.06),

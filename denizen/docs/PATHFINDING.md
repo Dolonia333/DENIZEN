@@ -1,7 +1,8 @@
 # Denizen — Pathfinding
 
-> A* on a grid + per-NPC route follower + stuck recovery. Three classes
-> in 623 lines.
+> A* on a grid + per-NPC route follower + destination reservations + stuck
+> recovery. See [CURRENT_IMPLEMENTATION_STATUS.md](CURRENT_IMPLEMENTATION_STATUS.md)
+> for the audited product-level status and limitations.
 
 Source: [`src/pathfinding.js`](../src/pathfinding.js).
 
@@ -33,10 +34,11 @@ pf.buildFromScene(scene);   // reads scene._obstacles + scene._npcs
 What gets blocked:
 
 1. World edges (2-cell border around the perimeter).
-2. Every entry in `scene._obstacles` (walls, furniture with collision
-   boxes). Each obstacle's bounding rect inflates the blocked region by
-   1 cell on every side so NPCs don't clip corners.
-3. Soft-cost halo: every cell within 2 of a blocked cell gets a
+2. Every entry in `scene._obstacles` (walls and furniture collision boxes).
+3. Selected large interactable furniture not already represented by an
+   obstacle. Seat/decor/couch-like objects are skipped, while surface footprints
+   use a deliberately shallow blocked height in crowded areas.
+4. Soft-cost halo: cells near blocked cells get a
    penalty added so A* avoids hugging walls.
 
 `buildFromScene()` is called once at scene start. If the layout changes
@@ -71,14 +73,13 @@ follower.navigateTo(targetX, targetY);
 follower.tick(delta);
 ```
 
-State the follower owns per NPC:
+State the follower owns per NPC includes:
 
-- `_waypoints` — the current A* path, popped from the front as the NPC
-  advances.
-- `_stuckCount` — how many consecutive ticks the NPC has had near-zero
-  velocity while supposedly moving. Reset on every successful step.
-- `_lastReplanAt` — timestamp; replans throttled to no more than once
-  per 600 ms.
+- `waypoints` and `waypointIndex` — current route and progress.
+- `_stuckCount` — consecutive failed movement samples.
+- `_rerouteCount` / `_maxReroutes` — bounded recovery attempts.
+- `_totalStuckTime` — cumulative stall time for the route.
+- `_reservationOwner` — identity used to reserve and release the destination.
 
 ### Stuck recovery
 
@@ -86,15 +87,17 @@ The signature failure mode of grid-based NPC movement is "agent gets
 wedged against a corner and oscillates." The follower handles this in
 three escalating steps:
 
-1. **Soft nudge** — at `_stuckCount === 1`, perpendicular impulse
-   based on the NPC's facing direction. Often enough to slip past
-   another NPC blocking the way.
-2. **Replan from current position** — at `_stuckCount === 2`, throw
-   away the current waypoints, run A* again from where the NPC actually
-   is. Handles cases where the world changed under the NPC.
-3. **Teleport to next waypoint** — at `_stuckCount >= 3`, just put the
-   NPC at the next waypoint. Last resort, but visible-glitch beats
-   permanent freeze.
+1. Movement is sampled every 500 ms.
+2. Two samples with less than 3 px progress trigger recovery after about 1s.
+3. Recovery applies only a small 4–8 px nudge, then tries a waypoint skip.
+4. If needed, the final goal is snapped to nearby walkable floor and A* runs
+   again from the current position.
+5. After five reroutes, no replacement path, or about eight cumulative seconds
+   stuck, navigation is abandoned and friction is reported.
+
+The normal follower no longer teleports an NPC to the next waypoint. An explicit
+`forceUnstick()` API remains as an aggressive external fallback and can visibly
+reposition a character.
 
 `_stuckCount` is initialized to `0` in the constructor. (One of the
 audit fixes in commit `fcdd397` — earlier code only set it inside
@@ -122,8 +125,11 @@ the 8000-node search budget.
 | `cellSize` (constructor) | 8 px | Grid resolution. Smaller = better paths, more memory. |
 | `softCost` halo radius | 2 cells | How wide a "stay away from walls" zone surrounds each obstacle. |
 | `pathfinder._maxExplored` | 8000 | Hard cap on A* nodes per search. |
-| `follower._stuckThreshold` | 3 | Ticks before teleport. |
-| `follower._replanCooldownMs` | 600 | Floor on replan frequency. |
+| Stuck sample interval | 500 ms | How often progress is checked. |
+| Failed samples before recovery | 2 | About 1 second before rerouting. |
+| `follower._maxReroutes` | 5 | Recovery attempts before abandoning route. |
+| Cumulative stuck limit | 8000 ms | Route is abandoned and reported. |
+| Destination reservation radius | 48 px | Finds a distinct nearby walkable goal. |
 | Separation radius | 24 px | NPCs closer than this push each other. |
 
 All live in the file as plain constants — change in place, no config.

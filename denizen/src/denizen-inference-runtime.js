@@ -162,19 +162,33 @@ async function probeInferenceRuntime(opts = {}) {
 async function resolveRuntimeModel(runtime, tier = 'main', pinnedModel = null) {
   if (pinnedModel) return pinnedModel;
   const env = process.env;
+  const models = runtime.models || [];
   if (tier === 'fast') {
     return runtime.fast_model
       || env.LM_STUDIO_FAST_MODEL
       || env.OLLAMA_MODEL
       || runtime.main_model
       || env.LM_STUDIO_MODEL
-      || (runtime.models || [])[0]
+      || models[0]
       || null;
   }
+  if (tier === 'heavy' || tier === 'reasoning') {
+    return runtime.heavy_model
+      || env.LM_STUDIO_HEAVY_MODEL
+      || env.LM_STUDIO_REASONING_MODEL
+      || runtime.main_model
+      || env.LM_STUDIO_MODEL
+      || env.OLLAMA_MODEL
+      || models[0]
+      || null;
+  }
+  // main — prefer mid/large pins; heavy is a valid same-resident fallback on 16GB dual-load
   return runtime.main_model
     || env.LM_STUDIO_MODEL
+    || runtime.heavy_model
+    || env.LM_STUDIO_HEAVY_MODEL
     || env.OLLAMA_MODEL
-    || (runtime.models || [])[0]
+    || models[0]
     || null;
 }
 
@@ -219,11 +233,23 @@ async function chatCompletion(opts = {}) {
   const base = normalizeBaseUrl(runtime.url);
   const stream = typeof opts.onToken === 'function';
   // Per-task sampling (top_p / min_p / repeat_penalty) — shared profiles.
+  // Harness may pass a full sampling object; otherwise derive from kind.
   let sampling = { temperature: Number(opts.temperature ?? 0.75) };
-  try {
-    const s = require('./inference-sampling');
-    sampling = s.samplingFor({ kind: opts.kind, temperature: opts.temperature });
-  } catch (_) { /* module optional */ }
+  if (opts.sampling && typeof opts.sampling === 'object') {
+    sampling = { ...opts.sampling };
+    if (typeof opts.temperature === 'number' && Number.isFinite(opts.temperature)) {
+      sampling.temperature = opts.temperature;
+    }
+  } else {
+    try {
+      const s = require('./inference-sampling');
+      sampling = s.samplingFor({
+        kind: opts.kind,
+        temperature: opts.temperature,
+        reasoning: opts.reasoning || opts.enableThinking,
+      });
+    } catch (_) { /* module optional */ }
+  }
   const body = {
     model,
     messages: buildChatMessages(opts.systemPrompt, opts.messages),
@@ -232,8 +258,13 @@ async function chatCompletion(opts = {}) {
     stream,
   };
 
+  if (opts.response_format) {
+    body.response_format = opts.response_format;
+  }
+
   if (runtime.backend === 'lmstudio') {
-    body.enable_thinking = false;
+    // Default off for speed; harness enables for R1/reasoning tiers.
+    body.enable_thinking = opts.enableThinking === true || opts.reasoning === true;
   }
 
   const headers = { 'Content-Type': 'application/json' };
@@ -345,14 +376,19 @@ function buildInferenceBlockFromProbe(probe, extra = {}) {
 
 async function runInferenceRpcJob(payload = {}) {
   const safe = payload && typeof payload === 'object' ? payload : {};
+  const tierRaw = String(safe.tier || 'main').toLowerCase();
+  const tier = tierRaw === 'fast'
+    ? 'fast'
+    : (tierRaw === 'heavy' || tierRaw === 'reasoning' ? 'heavy' : 'main');
   const result = await chatCompletion({
-    tier: safe.tier === 'fast' ? 'fast' : 'main',
+    tier,
     model: safe.model || null,
     systemPrompt: safe.system_prompt || safe.systemPrompt || '',
     messages: Array.isArray(safe.messages) ? safe.messages : [],
     max_tokens: safe.max_tokens ?? safe.maxTokens,
     temperature: safe.temperature,
     kind: safe.kind || safe.task_kind || 'chat',
+    enableThinking: safe.enable_thinking === true || safe.reasoning === true || tierRaw === 'reasoning',
   });
   return {
     ok: true,

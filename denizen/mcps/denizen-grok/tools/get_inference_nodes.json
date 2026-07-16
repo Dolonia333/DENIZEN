@@ -1,0 +1,13 @@
+{
+  "name": "get_inference_nodes",
+  "description": "Full LM Studio / inference mesh pool: nodes, scores, models, saturation.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "include_unreachable": {
+        "type": "boolean",
+        "description": "Include nodes marked unreachable (default true)"
+      }
+    }
+  }
+}

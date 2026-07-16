@@ -224,6 +224,7 @@ describe('tiers.tierForNpc (per-NPC policy)', () => {
     map: {
       abby: { min_tier: 'main', kinds: { think: 'heavy' } },
       bouncer: { max_tier: 'fast' },
+      roki: { max_tier: 'fast', kinds: { chat: 'main', presence: 'fast' } },
     },
   };
 
@@ -237,6 +238,11 @@ describe('tiers.tierForNpc (per-NPC policy)', () => {
 
   it('max_tier lowers — ambient NPC never burns the big model', () => {
     assert.equal(tierForNpc('heavy', 'bouncer', 'think', npcTiers), 'fast');
+  });
+
+  it('kind pin overrides max_tier (roki chat can be main)', () => {
+    assert.equal(tierForNpc('fast', 'roki', 'chat', npcTiers), 'main');
+    assert.equal(tierForNpc('main', 'roki', 'presence', npcTiers), 'fast');
   });
 
   it('unmapped NPC keeps the base tier', () => {

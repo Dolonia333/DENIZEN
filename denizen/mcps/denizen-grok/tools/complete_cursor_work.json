@@ -1,0 +1,33 @@
+{
+  "name": "complete_cursor_work",
+  "description": "Mark Cursor work done or failed; optionally log summary and files changed.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "work_id": {
+        "type": "string"
+      },
+      "ok": {
+        "type": "boolean",
+        "description": "true if succeeded (default true)"
+      },
+      "summary": {
+        "type": "string",
+        "description": "What was done"
+      },
+      "files_changed": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "pr_url": {
+        "type": "string",
+        "description": "Optional PR or commit link"
+      }
+    },
+    "required": [
+      "work_id"
+    ]
+  }
+}

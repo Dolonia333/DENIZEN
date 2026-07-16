@@ -1,0 +1,8 @@
+{
+  "name": "list_team",
+  "description": "List teammates in your org with claimed assistant NPC and online presence.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}

@@ -123,16 +123,25 @@ async function toolRunSkill(scope, args) {
     SKILL_TIMEOUT_MS,
     Number(args?.timeout_ms) || SKILL_TIMEOUT_MS,
   );
-  const result = await Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`skill timeout after ${timeout}ms`)), timeout);
-    }),
-  ]).catch((err) => ({
-    ok: false,
-    output: err?.message || String(err),
-    skill: gate.skill,
-  }));
+  let timeoutId = null;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error(`skill timeout after ${timeout}ms`)),
+      timeout,
+    );
+  });
+  let result;
+  try {
+    result = await Promise.race([promise, timeoutPromise]).catch((err) => ({
+      ok: false,
+      output: err?.message || String(err),
+      skill: gate.skill,
+    }));
+  } finally {
+    // A successful fast skill used to leave the full 180s rejection timer
+    // alive. That kept tests and short-lived CLI/MCP processes from exiting.
+    if (timeoutId) clearTimeout(timeoutId);
+  }
 
   return {
     ok: result?.ok !== false,

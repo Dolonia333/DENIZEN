@@ -1,0 +1,24 @@
+{
+  "name": "get_job_status",
+  "description": "Poll a mesh compute job by id (queued, assigned, done, failed).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "job_id": {
+        "type": "string",
+        "description": "Job UUID from enqueue_compute_job"
+      },
+      "wait": {
+        "type": "boolean",
+        "description": "If true, poll until terminal state"
+      },
+      "timeout_ms": {
+        "type": "number",
+        "description": "Max wait when wait=true (default 60000)"
+      }
+    },
+    "required": [
+      "job_id"
+    ]
+  }
+}

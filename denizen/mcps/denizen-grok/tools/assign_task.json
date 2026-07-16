@@ -1,0 +1,24 @@
+{
+  "name": "assign_task",
+  "description": "Assign a mandatory task to this NPC (wakes think loop, shows in directive inbox).",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "task": {
+        "type": "string",
+        "description": "What the NPC should do"
+      },
+      "urgent": {
+        "type": "boolean",
+        "description": "Skip think cooldown when true"
+      },
+      "from": {
+        "type": "string",
+        "description": "Who assigned it (default MCP teammate)"
+      }
+    },
+    "required": [
+      "task"
+    ]
+  }
+}

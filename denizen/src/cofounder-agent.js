@@ -215,6 +215,7 @@ YOUR JOB — create a LIVING office:
   /**
    * Demo think loop — pre-scripted office behaviors that run without any API.
    * Cycles through realistic work scenarios so the office looks alive.
+   * Probes LM Studio every ~60s and auto-recovers into the real think loop.
    */
   _startDemoLoop() {
     // Entering the scripted loop is a director-offline state — tell every
@@ -278,7 +279,14 @@ YOUR JOB — create a LIVING office:
     ];
 
     let idx = 0;
-    const runNext = () => {
+    const runNext = async () => {
+      if (!this._usingDemoLoop) return;
+      // Auto-recover when LM Studio is healthy again (every ~60s).
+      if (Date.now() - (this._lastRecoveryAttempt || 0) > 60_000) {
+        this._lastRecoveryAttempt = Date.now();
+        const recovered = await this._tryRecoverFromDemoLoop();
+        if (recovered) return;
+      }
       const commands = scripts[idx % scripts.length];
       idx++;
       // Broadcast to all connected game clients
@@ -288,11 +296,35 @@ YOUR JOB — create a LIVING office:
       });
       // Next script in 20-40 seconds
       const delay = 20000 + Math.random() * 20000;
-      this._thinkInterval = setTimeout(runNext, delay);
+      this._thinkInterval = setTimeout(() => { runNext().catch(() => {}); }, delay);
     };
 
     // Start after 8 seconds
-    setTimeout(runNext, 8000);
+    this._thinkInterval = setTimeout(() => { runNext().catch(() => {}); }, 8000);
+  }
+
+  /**
+   * Exit scripted demo loop when local inference answers again.
+   * @returns {Promise<boolean>} true if recovered and real loop restarted
+   */
+  async _tryRecoverFromDemoLoop() {
+    if (!this._usingDemoLoop) return false;
+    try {
+      const text = await this._callLmStudio([
+        { role: 'user', content: 'Reply with exactly the word OK and nothing else.' },
+      ]);
+      if (!text || !/\bok\b/i.test(String(text).slice(0, 40))) return false;
+      console.log('[CofounderAgent] LM Studio recovered — exiting demo think loop');
+      this.stop();
+      this._usingDemoLoop = false;
+      this._consecutiveErrors = 0;
+      this._broadcastDirectorHealth?.();
+      this.start();
+      return true;
+    } catch (err) {
+      console.warn('[CofounderAgent] Recovery probe failed:', err?.message || err);
+      return false;
+    }
   }
 
   /**

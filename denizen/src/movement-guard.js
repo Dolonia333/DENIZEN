@@ -80,7 +80,7 @@
       return;
     }
     const r = window.__DenizenRawMoveKeys || {};
-    const speed = 220;
+    const speed = (typeof sc._playerMoveSpeed === 'function' ? sc._playerMoveSpeed() : 220);
     let dx = 0;
     let dy = 0;
     if (r.left) dx = -speed * dt;
@@ -213,8 +213,8 @@
     const stored = localStorage.getItem('denizen-light-office');
     if (stored === '0') window.__DenizenLightOffice = false;
     else if (stored === '1') window.__DenizenLightOffice = true;
-    else window.__DenizenLightOffice = true;
+    else window.__DenizenLightOffice = false;
   } catch (_) {
-    window.__DenizenLightOffice = true;
+    window.__DenizenLightOffice = false;
   }
 })();

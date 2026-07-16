@@ -125,28 +125,54 @@ async function runMeshInference(opts = {}) {
 async function runDirectInference(opts = {}) {
   const started = Date.now();
   try {
-    const result = await inferenceRuntime.chatCompletion({
-      backend: opts.backend,
-      baseUrl: opts.baseUrl || opts.url,
-      lmStudioUrl: opts.baseUrl || opts.url,
-      model: opts.model,
-      tier: opts.tier,
-      systemPrompt: opts.systemPrompt || opts.system_prompt,
-      messages: opts.messages,
-      max_tokens: opts.max_tokens ?? opts.maxTokens,
-      temperature: opts.temperature,
-      kind: opts.kind || opts.task_kind || 'chat',
-      apiKey: opts.apiKey,
-      timeoutMs: opts.timeoutMs,
-      onToken: opts.onToken,
-    });
-    inferenceMetrics.recordInferenceResult('direct', true, Date.now() - started);
+    let result = null;
+    let mode = 'direct';
+    try {
+      const { getActiveHarness } = require('./denizen-harness');
+      const harness = getActiveHarness?.();
+      if (harness?.complete && !opts.onToken) {
+        result = await harness.complete({
+          backend: opts.backend,
+          baseUrl: opts.baseUrl || opts.url,
+          model: opts.model,
+          tier: opts.tier === 'fast' ? 'fast' : (opts.tier === 'heavy' || opts.tier === 'reasoning' ? 'heavy' : 'main'),
+          systemPrompt: opts.systemPrompt || opts.system_prompt,
+          messages: opts.messages,
+          max_tokens: opts.max_tokens ?? opts.maxTokens,
+          temperature: opts.temperature,
+          kind: opts.kind || opts.task_kind || 'chat',
+          apiKey: opts.apiKey,
+          timeoutMs: opts.timeoutMs,
+          enableThinking: opts.enableThinking === true || opts.reasoning === true,
+        });
+        mode = 'harness';
+      }
+    } catch (_) { /* fall through to runtime */ }
+
+    if (!result) {
+      result = await inferenceRuntime.chatCompletion({
+        backend: opts.backend,
+        baseUrl: opts.baseUrl || opts.url,
+        lmStudioUrl: opts.baseUrl || opts.url,
+        model: opts.model,
+        tier: opts.tier,
+        systemPrompt: opts.systemPrompt || opts.system_prompt,
+        messages: opts.messages,
+        max_tokens: opts.max_tokens ?? opts.maxTokens,
+        temperature: opts.temperature,
+        kind: opts.kind || opts.task_kind || 'chat',
+        apiKey: opts.apiKey,
+        timeoutMs: opts.timeoutMs,
+        onToken: opts.onToken,
+      });
+    }
+    inferenceMetrics.recordInferenceResult(mode === 'harness' ? 'harness' : 'direct', true, Date.now() - started);
     return {
       ok: true,
       text: result.text,
       model: result.model,
       backend: result.backend,
-      mode: 'direct',
+      mode,
     };
   } catch (err) {
     inferenceMetrics.recordInferenceResult('direct', false);

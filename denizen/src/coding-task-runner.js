@@ -205,8 +205,7 @@ async function runLmStudioFileEdit({ worktreePath, targetFiles, task }) {
       continue;
     }
 
-    const result = await inferenceRuntime.chatCompletion({
-      lmStudioUrl,
+    const codePrompt = {
       systemPrompt:
         'You edit source files. Return ONLY the complete updated file content. ' +
         'No markdown fences, no explanation — raw file text only.',
@@ -218,15 +217,45 @@ async function runLmStudioFileEdit({ worktreePath, targetFiles, task }) {
       }],
       maxTokens: Math.min(8192, Math.max(512, Math.ceil(content.length / 2))),
       temperature: 0.15,
-      tier: 'fast',
       timeoutMs: 120000,
-    });
+    };
+    let result;
+    let via = 'inference-runtime';
+    try {
+      const { getActiveHarness } = require('./denizen-harness');
+      const harness = getActiveHarness?.();
+      if (harness?.complete) {
+        result = await harness.complete({
+          tier: 'heavy',
+          kind: 'code',
+          systemPrompt: codePrompt.systemPrompt,
+          messages: codePrompt.messages,
+          max_tokens: codePrompt.maxTokens,
+          temperature: codePrompt.temperature,
+          timeoutMs: codePrompt.timeoutMs,
+          baseUrl: lmStudioUrl || undefined,
+        });
+        via = 'harness';
+      }
+    } catch (_) { /* fall through */ }
+    if (!result) {
+      result = await inferenceRuntime.chatCompletion({
+        lmStudioUrl,
+        systemPrompt: codePrompt.systemPrompt,
+        messages: codePrompt.messages,
+        maxTokens: codePrompt.maxTokens,
+        temperature: codePrompt.temperature,
+        tier: 'heavy',
+        kind: 'code',
+        timeoutMs: codePrompt.timeoutMs,
+      });
+    }
     const updated = String(result?.text || '').trim();
     if (!updated || updated.length < 4) {
       throw new Error(`LM Studio returned empty content for ${rel}`);
     }
     fs.writeFileSync(fp, updated, 'utf8');
-    outputs.push(`Edited ${rel} via LM Studio (${result.model || 'fast'})`);
+    outputs.push(`Edited ${rel} via ${via} (${result.model || 'heavy'})`);
   }
   return outputs.join('\n');
 }

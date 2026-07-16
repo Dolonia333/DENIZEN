@@ -143,4 +143,80 @@ async function getQuotes(symbols) {
 
 function round2(n) { return Math.round(n * 100) / 100; }
 
-module.exports = { getQuote, getQuotes };
+// ─── Historical charts (Yahoo v8) ──────────────────────────────────────────────
+// Robinhood-style range keys → Yahoo interval/range
+
+const CHART_RANGES = {
+  '1D':  { interval: '5m',  range: '1d' },
+  '1W':  { interval: '30m', range: '5d' },
+  '1M':  { interval: '1d',  range: '1mo' },
+  '3M':  { interval: '1d',  range: '3mo' },
+  'YTD': { interval: '1d',  range: 'ytd' },
+  '1Y':  { interval: '1d',  range: '1y' },
+  '5Y':  { interval: '1wk', range: '5y' },
+  'ALL': { interval: '1mo', range: 'max' },
+};
+
+/**
+ * Intraday/daily OHLC series for charts.
+ * @param {string} symbol
+ * @param {string} [rangeKey] one of 1D|1W|1M|3M|YTD|1Y|5Y|ALL
+ * @returns {Promise<object>}
+ */
+async function getChart(symbol, rangeKey = '1D') {
+  const sym = String(symbol || '').toUpperCase().trim();
+  if (!sym) throw new Error('symbol required');
+  const key = String(rangeKey || '1D').toUpperCase();
+  const cfg = CHART_RANGES[key] || CHART_RANGES['1D'];
+  const path = `/v8/finance/chart/${encodeURIComponent(sym)}?interval=${cfg.interval}&range=${cfg.range}&includePrePost=false`;
+  const raw = await httpsGet(YAHOO_HOST, path);
+  const json = JSON.parse(raw);
+  const result = json?.chart?.result?.[0];
+  if (!result) {
+    const err = json?.chart?.error?.description || `No chart for ${sym}`;
+    throw new Error(err);
+  }
+  const meta = result.meta || {};
+  const ts = Array.isArray(result.timestamp) ? result.timestamp : [];
+  const quote = result.indicators?.quote?.[0] || {};
+  const closes = Array.isArray(quote.close) ? quote.close : [];
+  const points = [];
+  for (let i = 0; i < ts.length; i++) {
+    const close = closes[i];
+    if (!Number.isFinite(close)) continue;
+    points.push({
+      t: ts[i] * 1000,
+      c: round2(close),
+      o: Number.isFinite(quote.open?.[i]) ? round2(quote.open[i]) : null,
+      h: Number.isFinite(quote.high?.[i]) ? round2(quote.high[i]) : null,
+      l: Number.isFinite(quote.low?.[i]) ? round2(quote.low[i]) : null,
+      v: Number.isFinite(quote.volume?.[i]) ? quote.volume[i] : null,
+    });
+  }
+  const price = meta.regularMarketPrice != null ? round2(meta.regularMarketPrice) : (points.at(-1)?.c ?? null);
+  const prev = meta.chartPreviousClose ?? meta.previousClose ?? points[0]?.c ?? null;
+  const first = points[0]?.c ?? prev;
+  const last = points.at(-1)?.c ?? price;
+  const change = (last != null && first != null) ? round2(last - first) : null;
+  const changePercent = (first != null && first !== 0 && change != null)
+    ? round2((change / first) * 100)
+    : null;
+  return {
+    symbol: sym,
+    name: meta.longName || meta.shortName || sym,
+    currency: meta.currency || 'USD',
+    range: key,
+    interval: cfg.interval,
+    price,
+    previousClose: prev != null ? round2(prev) : null,
+    change,
+    changePercent,
+    points,
+    source: 'yahoo',
+    marketTime: meta.regularMarketTime
+      ? new Date(meta.regularMarketTime * 1000).toISOString()
+      : null,
+  };
+}
+
+module.exports = { getQuote, getQuotes, getChart, CHART_RANGES };

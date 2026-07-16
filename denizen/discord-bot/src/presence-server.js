@@ -148,14 +148,80 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
     res.end(JSON.stringify({ error: 'not found' }));
   });
 
+  function freePortIfBusy(p) {
+    // Best-effort: on Windows a previous crashed sidecar can leave :5180
+    // LISTENING under a dead-ish node. Kill only LISTENING holders of this port.
+    try {
+      const { execSync } = require('child_process');
+      if (process.platform === 'win32') {
+        const out = execSync(`netstat -ano | findstr :${p}`, { encoding: 'utf8', timeout: 3000 });
+        const pids = new Set();
+        for (const line of out.split(/\r?\n/)) {
+          if (!/LISTENING/i.test(line)) continue;
+          const parts = line.trim().split(/\s+/);
+          const pid = parts[parts.length - 1];
+          if (/^\d+$/.test(pid) && pid !== '0' && Number(pid) !== process.pid) pids.add(pid);
+        }
+        for (const pid of pids) {
+          try {
+            execSync(`taskkill /PID ${pid} /F`, { stdio: 'ignore', timeout: 3000 });
+            console.warn(`[discord-bot] freed presence port ${p} (killed PID ${pid})`);
+          } catch (_) { /* ignore */ }
+        }
+      } else {
+        try {
+          const out = execSync(`lsof -ti tcp:${p} -sTCP:LISTEN`, { encoding: 'utf8', timeout: 3000 });
+          for (const pid of out.split(/\s+/).filter(Boolean)) {
+            if (Number(pid) === process.pid) continue;
+            try {
+              process.kill(Number(pid), 'SIGTERM');
+              console.warn(`[discord-bot] freed presence port ${p} (killed PID ${pid})`);
+            } catch (_) { /* ignore */ }
+          }
+        } catch (_) { /* no listeners */ }
+      }
+    } catch (_) { /* ignore */ }
+  }
+
   return {
-    listen() {
+    /**
+     * Bind the presence HTTP server. Retries on EADDRINUSE (common after a
+     * crashed previous bot left the port held). Without this, the Discord
+     * map shows "Bot offline — Failed to fetch" forever even though the
+     * bot itself is online in guilds.
+     */
+    listen({ retries = 5, retryMs = 700 } = {}) {
+      let attempt = 0;
       return new Promise((resolve, reject) => {
-        server.once('error', reject);
-        server.listen(port, '127.0.0.1', () => {
-          console.log(`[discord-bot] presence API http://127.0.0.1:${port}/presence`);
-          resolve(server);
-        });
+        const tryListen = () => {
+          attempt += 1;
+          const onError = (err) => {
+            server.removeListener('listening', onListening);
+            const code = err?.code || '';
+            if ((code === 'EADDRINUSE' || code === 'EACCES') && attempt <= retries) {
+              console.warn(
+                `[discord-bot] presence port ${port} busy (${code}) — retry ${attempt}/${retries}…`,
+              );
+              if (code === 'EADDRINUSE') freePortIfBusy(port);
+              setTimeout(tryListen, retryMs * attempt);
+              return;
+            }
+            reject(err);
+          };
+          const onListening = () => {
+            server.removeListener('error', onError);
+            console.log(`[discord-bot] presence API http://127.0.0.1:${port}/presence`);
+            resolve(server);
+          };
+          server.once('error', onError);
+          server.once('listening', onListening);
+          try {
+            server.listen(port, '127.0.0.1');
+          } catch (err) {
+            onError(err);
+          }
+        };
+        tryListen();
       });
     },
     close() {

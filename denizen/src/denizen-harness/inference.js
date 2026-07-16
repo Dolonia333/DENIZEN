@@ -150,6 +150,18 @@ function createInferenceGate(deps = {}) {
       throw e;
     }
 
+    // Single ledger owner for complete() — covers director, /api/harness/complete,
+    // brains queue, mesh direct. npc-brains must not double-increment.
+    try {
+      if (typeof globalThis !== 'undefined') {
+        if (!globalThis._npcStats) globalThis._npcStats = {};
+        globalThis._npcStats.harnessComplete = (globalThis._npcStats.harnessComplete || 0) + 1;
+        globalThis._npcStats.lastHarnessModel = result.model || model || null;
+        globalThis._npcStats.lastHarnessTier = tier || null;
+        globalThis._npcStats.lastProviderOkAt = Date.now();
+      }
+    } catch (_) {}
+
     return {
       ok: true,
       text: result.text,

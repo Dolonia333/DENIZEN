@@ -136,13 +136,28 @@ attachGateway(client, {
     if (DUMP_INTERVAL_MS > 0) setInterval(() => printSnapshot('interval'), DUMP_INTERVAL_MS);
     setInterval(() => tracker.tick(), 5_000);
 
-    createPresenceServer({
+    const presence = createPresenceServer({
       tracker,
       guildId: GUILD_FILTER,
       port: PRESENCE_PORT,
       applicationId: c.application?.id || process.env.DISCORD_APPLICATION_ID || '',
-    }).listen().catch((err) => {
+    });
+    presence.listen({ retries: 6, retryMs: 600 }).catch((err) => {
       console.warn('[discord-bot] presence API failed:', err.message || err);
+      // Keep trying in the background so a temporary port conflict doesn't
+      // leave the Discord map stuck on "Bot offline" for the whole process.
+      let n = 0;
+      const keepTrying = setInterval(() => {
+        n += 1;
+        if (n > 30) {
+          clearInterval(keepTrying);
+          return;
+        }
+        presence.listen({ retries: 2, retryMs: 400 }).then(() => {
+          clearInterval(keepTrying);
+          console.log('[discord-bot] presence API recovered after delayed retry');
+        }).catch(() => { /* keep interval */ });
+      }, 15_000);
     });
   },
   onGuildSeed(guild) {

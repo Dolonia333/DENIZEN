@@ -42,6 +42,105 @@ async function getIdentityByEmail(email) {
   return rows?.[0] || null;
 }
 
+async function getIdentityByDiscordId(discordUserId) {
+  if (!isEnabled() || !discordUserId) return null;
+  const id = String(discordUserId).trim();
+  const rows = await denizenDb._getSoft(
+    `denizen_user_identities?select=*&discord_user_id=eq.${encodeURIComponent(id)}&limit=1`,
+  );
+  return rows?.[0] || null;
+}
+
+async function linkDiscordToIdentity(identityId, {
+  discordUserId,
+  discordUsername = null,
+  discordGlobalName = null,
+  avatarUrl = null,
+  notifyDiscord = true,
+  displayName = null,
+} = {}) {
+  if (!isEnabled() || !identityId || !discordUserId) return null;
+  const id = String(discordUserId).trim();
+  const existing = await getIdentityByDiscordId(id);
+  if (existing && existing.id !== identityId) {
+    const err = new Error('Discord account already linked to another Denizen profile');
+    err.code = 'CONFLICT';
+    throw err;
+  }
+  const identity = await getIdentityById(identityId);
+  if (!identity?.id) return null;
+  const meta = identity.metadata && typeof identity.metadata === 'object'
+    ? { ...identity.metadata }
+    : {};
+  if (discordUsername) meta.discord_username = String(discordUsername).slice(0, 64);
+  if (discordGlobalName) meta.discord_global_name = String(discordGlobalName).slice(0, 120);
+  if (avatarUrl) meta.discord_avatar_url = String(avatarUrl).slice(0, 500);
+  meta.discord_linked_at = new Date().toISOString();
+  const patch = {
+    discord_user_id: id,
+    notify_discord: notifyDiscord !== false,
+    metadata: meta,
+    last_login_at: new Date().toISOString(),
+    login_count: (identity.login_count || 0) + 1,
+  };
+  if (displayName) patch.display_name = String(displayName).slice(0, 200);
+  const rows = await denizenDb._patchSoft(
+    `denizen_user_identities?id=eq.${encodeURIComponent(identityId)}`,
+    patch,
+    { prefer: 'return=representation' },
+  );
+  return rows?.[0] || { ...identity, ...patch };
+}
+
+async function createIdentityFromDiscord({
+  discordUserId,
+  discordUsername = null,
+  discordGlobalName = null,
+  email = null,
+  displayName = null,
+  avatarUrl = null,
+} = {}) {
+  if (!isEnabled() || !discordUserId) return { identity: null, created: false };
+  const id = String(discordUserId).trim();
+  const existing = await getIdentityByDiscordId(id);
+  if (existing) {
+    const linked = await linkDiscordToIdentity(existing.id, {
+      discordUserId: id,
+      discordUsername,
+      discordGlobalName,
+      avatarUrl,
+      displayName,
+    });
+    return { identity: linked, created: false };
+  }
+  const resolvedEmail = normalizeEmail(email) || `discord+${id}@discord.denizen.local`;
+  const name = String(displayName || discordGlobalName || discordUsername || 'Discord User').slice(0, 200);
+  const meta = {
+    discord_username: discordUsername ? String(discordUsername).slice(0, 64) : null,
+    discord_global_name: discordGlobalName ? String(discordGlobalName).slice(0, 120) : null,
+    discord_avatar_url: avatarUrl ? String(avatarUrl).slice(0, 500) : null,
+    discord_linked_at: new Date().toISOString(),
+  };
+  Object.keys(meta).forEach((k) => { if (meta[k] == null) delete meta[k]; });
+  const rows = await denizenDb._postSoft(
+    'denizen_user_identities',
+    {
+      email: resolvedEmail,
+      email_normalized: resolvedEmail,
+      display_name: name,
+      tier: 'demo',
+      notify_discord: true,
+      discord_user_id: id,
+      source: 'discord',
+      last_login_at: new Date().toISOString(),
+      login_count: 1,
+      metadata: meta,
+    },
+    { prefer: 'return=representation' },
+  );
+  return { identity: rows?.[0] || null, created: true };
+}
+
 async function getIdentityBySession(sessionId) {
   if (!isEnabled() || !sessionId) return null;
   const rows = await denizenDb._getSoft(
@@ -323,6 +422,7 @@ function markCeoPrincipal(identityId) {
 
 function toClientIdentity(identity) {
   if (!identity) return null;
+  const meta = identity.metadata && typeof identity.metadata === 'object' ? identity.metadata : {};
   return {
     id: identity.id,
     email: identity.email_normalized || identity.email,
@@ -334,6 +434,9 @@ function toClientIdentity(identity) {
     notify_email: identity.notify_email !== false,
     subscription_status: identity.subscription_status || 'none',
     has_password: !!identity.password_hash,
+    discord_user_id: identity.discord_user_id || null,
+    discord_username: meta.discord_username || null,
+    discord_avatar_url: meta.discord_avatar_url || null,
   };
 }
 
@@ -847,10 +950,13 @@ module.exports = {
   isEnabled,
   getIdentityById,
   getIdentityByEmail,
+  getIdentityByDiscordId,
   getIdentityBySession,
   upsertIdentity,
   updateIdentityProfile,
   changeIdentityPassword,
+  linkDiscordToIdentity,
+  createIdentityFromDiscord,
   linkSessionToIdentity,
   resolveIdentityForSession,
   ensureIdentityForSession,

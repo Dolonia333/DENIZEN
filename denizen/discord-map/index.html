@@ -570,26 +570,16 @@
     }
 
     function hostedPresenceBase() {
-      const host = location.hostname;
-      if (host === 'localhost' || host === '127.0.0.1') {
-        return 'http://127.0.0.1:5180/presence';
-      }
+      // Always use the Denizen proxy (same origin). It forwards to the bot
+      // sidecar on :5180 — avoids CORS issues and matches production.
       return `${location.origin}/api/discord/map/presence`;
     }
 
     function hostedGuildsUrl() {
-      const host = location.hostname;
-      if (host === 'localhost' || host === '127.0.0.1') {
-        return 'http://127.0.0.1:5180/guilds';
-      }
       return `${location.origin}/api/discord/map/guilds`;
     }
 
     function hostedInviteUrl() {
-      const host = location.hostname;
-      if (host === 'localhost' || host === '127.0.0.1') {
-        return 'http://127.0.0.1:5180/invite';
-      }
       return `${location.origin}/api/discord/map/invite`;
     }
 
