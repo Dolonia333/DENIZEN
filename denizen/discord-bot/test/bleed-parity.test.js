@@ -53,10 +53,28 @@ describe('Bleed-parity config + modules', () => {
     for (const n of [
       'antinuke', 'antiraid', 'fakepermissions', 'ban', 'softban', 'purge',
       'automod', 'tickets', 'voicemaster', 'play', 'lastfm', 'reactionrole',
-      'buttonrole', 'log', 'lockdown', 'setup', 'help',
+      'buttonrole', 'log', 'lockdown', 'setup', 'help', 'blacktea', 'image',
+      'translate', 'urban', 'define', 'afk',
     ]) {
       assert.ok(names.has(n), `missing command ${n}`);
     }
+  });
+
+  it('forceBotMod blocks Discord Admin without fakeperm', () => {
+    const { canRunCommand } = require('../src/core/permissions');
+    const cfg = defaultGuildConfig();
+    cfg.security.fakePermissions.forceBotMod = true;
+    const member = {
+      roles: { cache: new Map() },
+      permissions: { has: (p) => p === 'Administrator' },
+    };
+    const r = canRunCommand({
+      guild: { ownerId: 'owner' },
+      member,
+      user: { id: 'mod' },
+      config: { get: () => cfg },
+    }, { fakePerm: 'ban_members' });
+    assert.equal(r.ok, false);
   });
 
   it('antinuke trips after threshold audit events', async () => {

@@ -159,7 +159,10 @@ function createTickets(deps) {
 
         if (action === 'panel') {
           if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
+          // ,tickets panel [title]
+          const title = ctx.args?.slice(1).join(' ') || 'Support Tickets';
           const options = config.get(ctx.guild.id).tickets.forms || [];
+          let msg;
           if (options.length) {
             const menu = new StringSelectMenuBuilder()
               .setCustomId('denizen_ticket_select')
@@ -169,8 +172,8 @@ function createTickets(deps) {
                 description: (o.description || '').slice(0, 100) || undefined,
                 value: String(i),
               })));
-            await ctx.channel.send({
-              content: '**Support Tickets**\nChoose a category to open a private ticket.',
+            msg = await ctx.channel.send({
+              content: `**${title}**\nChoose a category to open a private ticket.`,
               components: [new ActionRowBuilder().addComponents(menu)],
             });
           } else {
@@ -180,26 +183,80 @@ function createTickets(deps) {
                 .setLabel('Open Ticket')
                 .setStyle(ButtonStyle.Primary),
             );
-            await ctx.channel.send({
-              content: '**Support Tickets**\nClick to open a private ticket.',
+            msg = await ctx.channel.send({
+              content: `**${title}**\nClick to open a private ticket.`,
               components: [row],
             });
           }
-          return ctx.reply({ content: 'Panel posted.', ephemeral: true }).catch(() => ctx.reply('Panel posted.'));
+          config.update(ctx.guild.id, (c) => {
+            c.tickets.panels = c.tickets.panels || [];
+            c.tickets.panels.push({
+              messageId: msg.id,
+              channelId: ctx.channel.id,
+              title,
+              ts: Date.now(),
+            });
+            return c;
+          });
+          return ctx.reply({ content: `Panel posted (${msg.id}).`, ephemeral: true }).catch(() => ctx.reply('Panel posted.'));
         }
 
         if (action === 'form' || action === 'option') {
           if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
+          if ((ctx.args?.[1] || '').toLowerCase() === 'list') {
+            const forms = config.get(ctx.guild.id).tickets.forms || [];
+            return ctx.reply(forms.length
+              ? forms.map((f, i) => `${i + 1}. **${f.label}** — ${f.description || ''}`).join('\n')
+              : 'No forms. `,tickets form Support | Get help`');
+          }
+          if ((ctx.args?.[1] || '').toLowerCase() === 'clear') {
+            config.update(ctx.guild.id, (c) => { c.tickets.forms = []; return c; });
+            return ctx.reply('Ticket forms cleared.');
+          }
           // ,tickets form Support | Get help from staff
           const raw = ctx.args?.slice(1).join(' ') || '';
           const [label, ...rest] = raw.split('|').map((s) => s.trim());
-          if (!label) return ctx.reply('Usage: ,tickets form Label | optional description');
+          if (!label) return ctx.reply('Usage: ,tickets form Label | optional description · list · clear');
           config.update(ctx.guild.id, (c) => {
             c.tickets.forms = c.tickets.forms || [];
             c.tickets.forms.push({ label, description: rest.join('|') || '' });
             return c;
           });
           return ctx.reply(`Ticket option added: **${label}**. Re-post panel to use select menu.`);
+        }
+
+        if (action === 'panels') {
+          const panels = config.get(ctx.guild.id).tickets.panels || [];
+          return ctx.reply(panels.length
+            ? panels.map((p) => `• ${p.title} in <#${p.channelId}> (\`${p.messageId}\`)`).join('\n')
+            : 'No panels recorded.');
+        }
+
+        if (action === 'adduser' || action === 'removeuser') {
+          const open = config.get(ctx.guild.id).tickets.open[ctx.channel.id];
+          if (!open) return ctx.reply('Not a ticket channel.');
+          const user = ctx.message?.mentions?.users?.first?.();
+          if (!user) return ctx.reply(`Usage: ,tickets ${action} @user`);
+          if (action === 'adduser') {
+            await ctx.channel.permissionOverwrites.edit(user.id, {
+              ViewChannel: true,
+              SendMessages: true,
+              AttachFiles: true,
+              ReadMessageHistory: true,
+            });
+            return ctx.reply(`Added <@${user.id}> to ticket.`);
+          }
+          await ctx.channel.permissionOverwrites.delete(user.id).catch(() => {});
+          return ctx.reply(`Removed <@${user.id}> from ticket.`);
+        }
+
+        if (action === 'rename') {
+          const open = config.get(ctx.guild.id).tickets.open[ctx.channel.id];
+          if (!open) return ctx.reply('Not a ticket channel.');
+          const name = ctx.args?.slice(1).join('-').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 90);
+          if (!name) return ctx.reply('Usage: ,tickets rename new-name');
+          await ctx.channel.setName(name);
+          return ctx.reply(`Renamed to **${name}**.`);
         }
 
         if (action === 'close') {

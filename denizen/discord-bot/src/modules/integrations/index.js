@@ -87,13 +87,22 @@ function createIntegrations(deps) {
       },
     });
 
+    async function lastfmTop(username, method = 'user.gettopartists') {
+      const key = process.env.LASTFM_API_KEY;
+      if (!key) throw new Error('LASTFM_API_KEY not set');
+      const url = `https://ws.audioscrobbler.com/2.0/?method=${method}&user=${encodeURIComponent(username)}&api_key=${key}&format=json&limit=5&period=7day`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error(`Last.fm HTTP ${r.status}`);
+      return r.json();
+    }
+
     registry.register({
       name: 'lastfm',
-      description: 'Last.fm now playing / set username',
+      description: 'Last.fm now playing / tops / set username',
       aliases: ['fm', 'npfm'],
       module: 'integrations',
       options: [
-        { name: 'action', description: 'set|np|remove', type: 3, required: false },
+        { name: 'action', description: 'set|np|remove|artists|tracks|recent', type: 3, required: false },
         { name: 'username', description: 'Last.fm username', type: 3, required: false },
       ],
       async run(ctx) {
@@ -116,9 +125,44 @@ function createIntegrations(deps) {
           return ctx.reply('Last.fm unlinked.');
         }
         const stored = config.get(ctx.guild.id).integrations.lastfm?.users?.[ctx.user.id];
-        const username = ctx.getString?.('username') || (action !== 'np' ? action : null) || stored;
+        const mentioned = ctx.message?.mentions?.users?.first?.();
+        const otherStored = mentioned
+          ? config.get(ctx.guild.id).integrations.lastfm?.users?.[mentioned.id]
+          : null;
+        const username = ctx.getString?.('username')
+          || (['np', 'artists', 'tracks', 'recent', 'top'].includes(action) ? null : action)
+          || otherStored
+          || stored;
         if (!username) return ctx.reply('Set username first: `,lastfm set <name>`');
+
         try {
+          if (action === 'artists' || action === 'top') {
+            const data = await lastfmTop(username, 'user.gettopartists');
+            const list = data?.topartists?.artist || [];
+            if (!list.length) return ctx.reply('No top artists.');
+            return ctx.reply(
+              `**Top artists (7d)** for **${username}**\n${list.map((a, i) => `${i + 1}. ${a.name} (${a.playcount})`).join('\n')}`,
+            );
+          }
+          if (action === 'tracks') {
+            const data = await lastfmTop(username, 'user.gettoptracks');
+            const list = data?.toptracks?.track || [];
+            if (!list.length) return ctx.reply('No top tracks.');
+            return ctx.reply(
+              `**Top tracks (7d)** for **${username}**\n${list.map((t, i) => `${i + 1}. ${t.name} — ${t.artist?.name || t.artist} (${t.playcount})`).join('\n')}`,
+            );
+          }
+          if (action === 'recent') {
+            const key = process.env.LASTFM_API_KEY;
+            if (!key) throw new Error('LASTFM_API_KEY not set');
+            const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(username)}&api_key=${key}&format=json&limit=5`;
+            const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+            const data = await r.json();
+            const list = data?.recenttracks?.track || [];
+            return ctx.reply(
+              `**Recent** for **${username}**\n${list.map((t) => `• ${t.name} — ${t.artist?.['#text'] || t.artist}`).join('\n')}`,
+            );
+          }
           const t = await lastfmNowPlaying(username);
           const status = t.now ? '🎵 Now playing' : '🎧 Last played';
           return ctx.reply(

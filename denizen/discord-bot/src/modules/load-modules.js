@@ -55,15 +55,6 @@ function loadModules(deps) {
   hooks.onMessageDelete.push(automod.onMessageDelete);
   hooks.onMessageUpdate.push(automod.onMessageUpdate);
 
-  const logging = createLogging(deps);
-  logging.register(deps.registry);
-  hooks.onMessageDelete.push(logging.onMessageDelete);
-  hooks.onMessageUpdate.push(logging.onMessageUpdate);
-  hooks.onMemberAdd.push(logging.onMemberAdd);
-  hooks.onMemberRemove.push(logging.onMemberRemove);
-  hooks.onVoiceStateUpdate.push(logging.onVoiceStateUpdate);
-  hooks.onAudit.push(logging.onAudit);
-
   const community = createCommunity(deps);
   community.register(deps.registry);
   hooks.onMemberAdd.push(community.onMemberAdd);
@@ -72,6 +63,16 @@ function loadModules(deps) {
   hooks.onReactionAdd.push(community.onReactionAdd);
   hooks.onGuildMemberUpdate.push(community.onGuildMemberUpdate);
   hooks.onInteraction.push(community.onInteraction);
+
+  // Logging after community so ,log embeds/toggles win as the logging module
+  const logging = createLogging(deps);
+  logging.register(deps.registry);
+  hooks.onMessageDelete.push(logging.onMessageDelete);
+  hooks.onMessageUpdate.push(logging.onMessageUpdate);
+  hooks.onMemberAdd.push(logging.onMemberAdd);
+  hooks.onMemberRemove.push(logging.onMemberRemove);
+  hooks.onVoiceStateUpdate.push(logging.onVoiceStateUpdate);
+  hooks.onAudit.push(logging.onAudit);
 
   const vm = createVoiceMaster(deps);
   vm.register(deps.registry);
@@ -90,6 +91,7 @@ function loadModules(deps) {
 
   const misc = createMisc(deps);
   misc.register(deps.registry);
+  if (misc.onMessage) hooks.onMessage.push(misc.onMessage);
 
   const canvas = createCanvasBridge(deps);
   canvas.attach();

@@ -23,6 +23,8 @@ function defaultGuildConfig() {
         whitelist: [],
         admins: [],
         commandDetection: true,
+        autoRestore: true,
+        moduleThresholds: {},
         modules: {
           ban: true,
           kick: true,
@@ -54,6 +56,8 @@ function defaultGuildConfig() {
       },
       fakePermissions: {
         roles: {},
+        forceBotMod: false,
+        roleBackups: {},
       },
       staffRoleIds: [],
       logChannelId: null,
@@ -80,6 +84,9 @@ function defaultGuildConfig() {
       zalgo: { enabled: false },
       images: { enabled: false, action: 'delete' },
       action: 'delete',
+      immuneRoles: [],
+      immuneChannels: [],
+      inviteWhitelist: [],
     },
     community: {
       welcome: {
@@ -113,6 +120,9 @@ function defaultGuildConfig() {
     logging: {
       enabled: false,
       channelId: null,
+      embeds: true,
+      ignoreChannels: [],
+      ignoreUsers: [],
       events: {
         messageDelete: true,
         messageEdit: true,
@@ -121,6 +131,8 @@ function defaultGuildConfig() {
         memberBan: true,
         voice: false,
         roles: true,
+        channels: true,
+        mod: true,
       },
     },
     voicemaster: {

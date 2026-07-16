@@ -107,13 +107,17 @@ function createCommunity(deps) {
     }
 
     if (cfg.levels?.enabled) {
+      if ((cfg.levels.ignoreChannels || []).includes(message.channel.id)) {
+        // skip xp
+      } else {
       const key = `${message.guild.id}:${message.author.id}`;
       const now = Date.now();
       const last = xpCooldown.get(key) || 0;
       if (now - last >= (cfg.levels.cooldownMs || 60000)) {
         xpCooldown.set(key, now);
         const before = getXp(message.guild.id, message.author.id);
-        const after = addXp(message.guild.id, message.author.id, cfg.levels.xpPerMsg || 15);
+        const gain = Math.round((cfg.levels.xpPerMsg || 15) * (cfg.levels.multiplier || 1));
+        const after = addXp(message.guild.id, message.author.id, gain);
         const oldLvl = levelFromXp(before);
         const newLvl = levelFromXp(after);
         hub.emit('community.xp', {
@@ -133,6 +137,7 @@ function createCommunity(deps) {
             `🎉 <@${message.author.id}> reached **level ${newLvl}**!`,
           ).catch(() => {});
         }
+      }
       }
     }
   }
@@ -301,7 +306,7 @@ function createCommunity(deps) {
 
     registry.register({
       name: 'levels',
-      description: 'Toggle leveling / rank / rewards',
+      description: 'Toggle leveling / rank / rewards / leaderboard',
       module: 'community',
       async run(ctx) {
         const action = (ctx.args?.[0] || 'rank').toLowerCase();
@@ -321,6 +326,41 @@ function createCommunity(deps) {
             return c;
           });
           return ctx.reply(`Level ${level} → ${role}`);
+        }
+        if (action === 'leaderboard' || action === 'lb' || action === 'top') {
+          const data = loadXp(ctx.guild.id);
+          const top = Object.entries(data)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+          if (!top.length) return ctx.reply('No XP yet.');
+          const lines = await Promise.all(top.map(async ([id, xp], i) => {
+            const u = await ctx.client.users.fetch(id).catch(() => null);
+            return `**${i + 1}.** ${u?.tag || id} — ${xp} XP (lvl ${levelFromXp(xp)})`;
+          }));
+          return ctx.reply(`**XP Leaderboard**\n${lines.join('\n')}`);
+        }
+        if (action === 'multiplier') {
+          if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
+          const n = Number(ctx.args?.[1]);
+          if (!n || n < 0.1 || n > 10) return ctx.reply('Usage: ,levels multiplier 1.5');
+          config.update(ctx.guild.id, (c) => {
+            c.community.levels.multiplier = n;
+            return c;
+          });
+          return ctx.reply(`XP multiplier → **${n}x**`);
+        }
+        if (action === 'ignore') {
+          if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
+          const ch = ctx.message?.mentions?.channels?.first?.() || ctx.channel;
+          config.update(ctx.guild.id, (c) => {
+            c.community.levels.ignoreChannels = c.community.levels.ignoreChannels || [];
+            const id = ch.id;
+            if (c.community.levels.ignoreChannels.includes(id)) {
+              c.community.levels.ignoreChannels = c.community.levels.ignoreChannels.filter((x) => x !== id);
+            } else c.community.levels.ignoreChannels.push(id);
+            return c;
+          });
+          return ctx.reply(`Toggled levels ignore for ${ch}.`);
         }
         const target = ctx.message?.mentions?.users?.first?.() || ctx.user;
         const xp = getXp(ctx.guild.id, target.id);
@@ -466,30 +506,65 @@ function createCommunity(deps) {
       async run(ctx) {
         if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
         const action = (ctx.args?.[0] || '').toLowerCase();
-        if (action === 'end') {
-          const msgId = ctx.args?.[1];
-          const g = (config.get(ctx.guild.id).community.giveaways || []).find((x) => x.messageId === msgId);
-          if (!g) return ctx.reply('Giveaway not found.');
+        async function pickWinners(g, count = 1) {
           const ch = await ctx.guild.channels.fetch(g.channelId).catch(() => null);
-          const msg = await ch?.messages?.fetch(msgId).catch(() => null);
+          const msg = await ch?.messages?.fetch(g.messageId).catch(() => null);
           const reaction = msg?.reactions?.cache?.get('🎉');
           const users = reaction ? await reaction.users.fetch().catch(() => null) : null;
-          const entrants = users ? [...users.values()].filter((u) => !u.bot) : [];
-          if (!entrants.length) return ctx.reply('No entrants.');
-          const winner = entrants[Math.floor(Math.random() * entrants.length)];
-          await ctx.channel.send(`🎉 Winner of **${g.prize}**: <@${winner.id}>!`);
+          let entrants = users ? [...users.values()].filter((u) => !u.bot) : [];
+          if (g.roleId) {
+            const role = ctx.guild.roles.cache.get(g.roleId);
+            if (role) {
+              entrants = entrants.filter((u) => role.members.has(u.id));
+            }
+          }
+          if (!entrants.length) return [];
+          const winners = [];
+          const pool = [...entrants];
+          const n = Math.min(count, pool.length);
+          for (let i = 0; i < n; i += 1) {
+            const idx = Math.floor(Math.random() * pool.length);
+            winners.push(pool.splice(idx, 1)[0]);
+          }
+          return winners;
+        }
+
+        if (action === 'end' || action === 'reroll') {
+          const msgId = ctx.args?.[1];
+          const g = (config.get(ctx.guild.id).community.giveaways || []).find((x) => x.messageId === msgId);
+          if (!g) return ctx.reply('Giveaway not found. Usage: ,giveaway end <messageId>');
+          const winners = await pickWinners(g, g.winners || 1);
+          if (!winners.length) return ctx.reply('No entrants.');
+          const label = action === 'reroll' ? 'Reroll winners' : 'Winners';
+          await ctx.channel.send(
+            `🎉 **${label}** of **${g.prize}**: ${winners.map((w) => `<@${w.id}>`).join(', ')}!`,
+          );
           return;
         }
-        const prize = ctx.args?.join(' ') || 'a prize';
-        const msg = await ctx.channel.send(`🎉 **GIVEAWAY** — ${prize}\nReact with 🎉 to enter! Staff: \`,giveaway end ${'{id}'}\``.replace('{id}', 'MSG_ID'));
+        // ,giveaway [winners] prize...
+        let winners = 1;
+        let prizeParts = ctx.args || [];
+        if (prizeParts[0] && /^\d+$/.test(prizeParts[0])) {
+          winners = Math.min(10, Math.max(1, Number(prizeParts[0])));
+          prizeParts = prizeParts.slice(1);
+        }
+        const role = ctx.message?.mentions?.roles?.first?.();
+        const prize = prizeParts.filter((a) => !a.startsWith('<@&')).join(' ') || 'a prize';
+        const req = role ? `\nRequirement: ${role}` : '';
+        const msg = await ctx.channel.send(
+          `🎉 **GIVEAWAY** — ${prize}${req}\nWinners: **${winners}** · React 🎉 to enter!\n_End: \`,giveaway end ${'{id}'}\` · Reroll: \`,giveaway reroll ${'{id}'}\``.replace(/\{id\}/g, '…'),
+        );
         await msg.react('🎉');
-        // fix id in message
-        await msg.edit(`🎉 **GIVEAWAY** — ${prize}\nReact with 🎉 to enter!\n_End with_ \`,giveaway end ${msg.id}\``).catch(() => {});
+        await msg.edit(
+          `🎉 **GIVEAWAY** — ${prize}${req}\nWinners: **${winners}** · React 🎉 to enter!\n_End: \`,giveaway end ${msg.id}\` · Reroll: \`,giveaway reroll ${msg.id}\``,
+        ).catch(() => {});
         config.update(ctx.guild.id, (c) => {
           c.community.giveaways.push({
             messageId: msg.id,
             channelId: ctx.channel.id,
             prize,
+            winners,
+            roleId: role?.id || null,
             ts: Date.now(),
           });
           return c;
@@ -547,33 +622,7 @@ function createCommunity(deps) {
       },
     });
 
-    registry.register({
-      name: 'log',
-      description: 'Configure server event logging',
-      aliases: ['logging'],
-      module: 'community',
-      permission: 'ManageGuild',
-      async run(ctx) {
-        if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
-        const action = (ctx.args?.[0] || 'status').toLowerCase();
-        if (action === 'on') {
-          const ch = ctx.message?.mentions?.channels?.first?.() || ctx.channel;
-          config.update(ctx.guild.id, (c) => {
-            c.logging.enabled = true;
-            c.logging.channelId = ch.id;
-            c.security.logChannelId = c.security.logChannelId || ch.id;
-            return c;
-          });
-          return ctx.reply(`Logging → ${ch}`);
-        }
-        if (action === 'off') {
-          config.update(ctx.guild.id, (c) => { c.logging.enabled = false; return c; });
-          return ctx.reply('Logging off.');
-        }
-        const L = config.get(ctx.guild.id).logging;
-        return ctx.reply(`logging=${L.enabled} channel=${L.channelId}`);
-      },
-    });
+    // Logging commands live in modules/logging (embeds + event toggles)
   }
 
   async function onInteraction(interaction) {

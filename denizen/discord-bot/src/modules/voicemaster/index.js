@@ -30,9 +30,14 @@ function createVoiceMaster(deps) {
       new ButtonBuilder().setCustomId('vm_claim').setLabel('Claim').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('vm_delete').setLabel('Delete').setStyle(ButtonStyle.Danger),
     );
+    const row3 = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId('vm_region').setLabel('Region Auto').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('vm_bitrate').setLabel('Bitrate 64').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId('vm_invite').setLabel('Invite link').setStyle(ButtonStyle.Success),
+    );
     await channel.send({
-      content: `🎙️ **VoiceMaster** — owner <@${ownerId}>\nLock · Unlock · Ghost · Reveal · Limit · Claim · Delete`,
-      components: [row1, row2],
+      content: `🎙️ **VoiceMaster** — owner <@${ownerId}>\nLock · Unlock · Ghost · Reveal · Limit · Claim · Delete · Region · Bitrate · Invite`,
+      components: [row1, row2, row3],
     }).catch(() => {});
   }
 
@@ -227,8 +232,32 @@ function createVoiceMaster(deps) {
           });
           return;
         }
+        if (action === 'kick' || action === 'reject') {
+          const user = ctx.message?.mentions?.users?.first?.();
+          if (!user) return ctx.reply(`Usage: ,vm ${action} @user`);
+          const member = await ctx.guild.members.fetch(user.id).catch(() => null);
+          if (!member?.voice?.channelId || member.voice.channelId !== voice.id) {
+            return ctx.reply('User is not in your channel.');
+          }
+          if (action === 'reject') {
+            await voice.permissionOverwrites.edit(user.id, { Connect: false });
+          }
+          await member.voice.disconnect(`VM ${action} by ${ctx.user.tag}`).catch(() => {});
+          return ctx.reply(`${action === 'reject' ? 'Rejected' : 'Kicked'} <@${user.id}>.`);
+        }
+        if (action === 'permit' || action === 'allow') {
+          const user = ctx.message?.mentions?.users?.first?.();
+          if (!user) return ctx.reply('Usage: ,vm permit @user');
+          await voice.permissionOverwrites.edit(user.id, { Connect: true, ViewChannel: true });
+          return ctx.reply(`Permitted <@${user.id}> to join.`);
+        }
+        if (action === 'invite') {
+          const inv = await voice.createInvite({ maxAge: 3600, maxUses: 5 }).catch(() => null);
+          if (!inv) return ctx.reply('Could not create invite.');
+          return ctx.reply(`Invite: ${inv.url}`);
+        }
         return ctx.reply(
-          'vm setup|off|status|lock|unlock|ghost|reveal|name|limit|claim|transfer|bitrate|delete',
+          'vm setup|off|status|lock|unlock|ghost|reveal|name|limit|claim|transfer|bitrate|kick|reject|permit|invite|delete',
         );
       },
     });
@@ -273,6 +302,16 @@ function createVoiceMaster(deps) {
       if (id === 'vm_reveal') await voice.permissionOverwrites.edit(interaction.guild.id, { ViewChannel: null });
       if (id === 'vm_limit') await voice.setUserLimit(2);
       if (id === 'vm_limit0') await voice.setUserLimit(0);
+      if (id === 'vm_bitrate') await voice.setBitrate(64000).catch(() => {});
+      if (id === 'vm_region') await voice.setRTCRegion(null).catch(() => {});
+      if (id === 'vm_invite') {
+        const inv = await voice.createInvite({ maxAge: 3600, maxUses: 5 }).catch(() => null);
+        await interaction.reply({
+          content: inv ? `Invite: ${inv.url}` : 'Invite failed.',
+          ephemeral: true,
+        });
+        return true;
+      }
       if (id === 'vm_delete') {
         await interaction.reply({ content: 'Deleting…', ephemeral: true });
         await voice.delete('VM button').catch(() => {});

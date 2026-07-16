@@ -7,17 +7,22 @@ function createAutomod(deps) {
   const recent = new Map();
   const snipes = new Map();
   const editSnipes = new Map();
-  const reactionSnipes = new Map();
+  const snipeHistory = new Map();
 
   function onMessageDelete(message) {
     if (!message.guild || message.author?.bot) return;
-    snipes.set(message.channel.id, {
+    const entry = {
       content: message.content || '[embed/attachment]',
       author: message.author?.tag || 'unknown',
       authorId: message.author?.id,
       attachments: [...(message.attachments?.values?.() || [])].map((a) => a.url),
       ts: Date.now(),
-    });
+    };
+    snipes.set(message.channel.id, entry);
+    const arr = snipeHistory.get(message.channel.id) || [];
+    arr.unshift(entry);
+    while (arr.length > 10) arr.pop();
+    snipeHistory.set(message.channel.id, arr);
   }
 
   function onMessageUpdate(oldMsg, newMsg) {
@@ -32,7 +37,6 @@ function createAutomod(deps) {
   }
 
   function hasZalgo(text) {
-    // combining marks density
     const marks = (text.match(/[\u0300-\u036f]/g) || []).length;
     return marks > 6 || marks / Math.max(text.length, 1) > 0.3;
   }
@@ -54,11 +58,20 @@ function createAutomod(deps) {
     const cfg = config.get(message.guild.id).automod;
     if (!cfg.enabled) return;
     if (message.member?.permissions?.has?.('ManageMessages')) return;
+    if ((cfg.immuneChannels || []).includes(message.channel.id)) return;
+    if (message.member?.roles?.cache && (cfg.immuneRoles || []).some((r) => message.member.roles.cache.has(r))) {
+      return;
+    }
 
     const content = message.content || '';
     let hit = null;
 
-    if (cfg.invites && /(discord\.gg|discord(?:app)?\.com\/invite)/i.test(content)) hit = 'invite';
+    if (cfg.invites && /(discord\.gg|discord(?:app)?\.com\/invite)/i.test(content)) {
+      const codes = [...content.matchAll(/(?:discord\.gg|discord(?:app)?\.com\/invite)\/([a-zA-Z0-9-]+)/gi)]
+        .map((m) => m[1].toLowerCase());
+      const wl = (cfg.inviteWhitelist || []).map((c) => String(c).toLowerCase());
+      if (!codes.length || codes.some((c) => !wl.includes(c))) hit = 'invite';
+    }
     if (!hit && cfg.links && /https?:\/\/\S+/i.test(content)) hit = 'link';
     if (!hit && cfg.words?.length) {
       const lower = content.toLowerCase();
@@ -102,7 +115,7 @@ function createAutomod(deps) {
       module: 'automod',
       permission: 'ManageGuild',
       options: [
-        { name: 'action', description: 'on|off|status|invites|links|spam|caps|mentions|zalgo|words|action', type: 3, required: true },
+        { name: 'action', description: 'on|off|status|invites|links|spam|caps|mentions|zalgo|words|action|immune', type: 3, required: true },
         { name: 'value', description: 'on|off|word|delete|timeout|warn', type: 3, required: false },
       ],
       async run(ctx) {
@@ -153,25 +166,65 @@ function createAutomod(deps) {
           config.update(ctx.guild.id, (c) => { c.automod.action = value; return c; });
           return ctx.reply(`Automod action → \`${value}\`.`);
         }
+        if (action === 'immune') {
+          const role = ctx.message?.mentions?.roles?.first?.();
+          const ch = ctx.message?.mentions?.channels?.first?.();
+          if (role) {
+            config.update(ctx.guild.id, (c) => {
+              c.automod.immuneRoles = c.automod.immuneRoles || [];
+              if (c.automod.immuneRoles.includes(role.id)) {
+                c.automod.immuneRoles = c.automod.immuneRoles.filter((id) => id !== role.id);
+              } else c.automod.immuneRoles.push(role.id);
+              return c;
+            });
+            return ctx.reply(`Toggled immune role ${role}.`);
+          }
+          const channel = ch || (value === 'channel' ? ctx.channel : null);
+          if (channel) {
+            config.update(ctx.guild.id, (c) => {
+              c.automod.immuneChannels = c.automod.immuneChannels || [];
+              if (c.automod.immuneChannels.includes(channel.id)) {
+                c.automod.immuneChannels = c.automod.immuneChannels.filter((id) => id !== channel.id);
+              } else c.automod.immuneChannels.push(channel.id);
+              return c;
+            });
+            return ctx.reply(`Toggled immune channel ${channel}.`);
+          }
+          return ctx.reply('Usage: ,automod immune @role | ,automod immune #channel');
+        }
+        if (action === 'whitelist' || action === 'invitewhitelist') {
+          const code = value || ctx.args?.[1];
+          if (!code) return ctx.reply('Usage: ,automod whitelist <inviteCode>');
+          config.update(ctx.guild.id, (c) => {
+            c.automod.inviteWhitelist = c.automod.inviteWhitelist || [];
+            if (!c.automod.inviteWhitelist.includes(code)) c.automod.inviteWhitelist.push(code);
+            return c;
+          });
+          return ctx.reply(`Invite code \`${code}\` whitelisted.`);
+        }
         const a = config.get(ctx.guild.id).automod;
         return ctx.reply([
           `**Automod** ${a.enabled ? 'ON' : 'OFF'} action=${a.action || 'delete'}`,
           `invites=${a.invites} links=${a.links} words=${(a.words || []).length}`,
           `spam=${a.spam?.enabled} caps=${a.caps?.enabled} mentions=${a.mentions?.enabled}`,
           `zalgo=${a.zalgo?.enabled} images=${a.images?.enabled}`,
+          `immune roles=${(a.immuneRoles || []).length} channels=${(a.immuneChannels || []).length}`,
         ].join('\n'));
       },
     });
 
     registry.register({
       name: 'snipe',
-      description: 'Show last deleted message in channel',
+      description: 'Show deleted message(s) in channel',
       module: 'automod',
+      options: [{ name: 'index', description: '1-10 history index', type: 4, required: false }],
       async run(ctx) {
-        const s = snipes.get(ctx.channel.id);
+        const idx = Math.max(0, (ctx.getInteger?.('index') || Number(ctx.args?.[0]) || 1) - 1);
+        const hist = snipeHistory.get(ctx.channel.id) || [];
+        const s = hist[idx] || snipes.get(ctx.channel.id);
         if (!s) return ctx.reply('Nothing to snipe.');
         const att = s.attachments?.length ? `\n${s.attachments.join('\n')}` : '';
-        return ctx.reply(`**${s.author}**: ${s.content.slice(0, 1800)}${att}`);
+        return ctx.reply(`**${s.author}** (${idx + 1}/${hist.length || 1}): ${s.content.slice(0, 1600)}${att}`);
       },
     });
 

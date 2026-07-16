@@ -23,10 +23,10 @@ const KIND_TO_MODULE = {
 
 function createAntinuke(deps) {
   const { config, hub } = deps;
-  /** guildId -> executorId -> timestamps */
-  const windows = new Map();
   /** per-module windows: guildId -> executorId -> kind -> timestamps */
   const moduleWindows = new Map();
+  /** guildId -> recent destructive actions for restore */
+  const recentDamage = new Map();
 
   function canConfigure(guild, userId) {
     if (isGuildOwner(guild, userId)) return true;
@@ -43,6 +43,46 @@ function createAntinuke(deps) {
     return e.get(kind);
   }
 
+  function noteDamage(guildId, record) {
+    if (!recentDamage.has(guildId)) recentDamage.set(guildId, []);
+    const arr = recentDamage.get(guildId);
+    arr.push({ ...record, ts: Date.now() });
+    while (arr.length > 50) arr.shift();
+  }
+
+  async function tryRestore(guild, kind, entry) {
+    if (!entry) return null;
+    try {
+      if (kind === 'channelDelete' || kind === 'channelCreate') {
+        // Only restore deletes
+        if (kind !== 'channelDelete') return null;
+        const name = entry.target?.name || entry.changes?.find((c) => c.key === 'name')?.old || 'restored-channel';
+        const type = entry.target?.type ?? 0;
+        const parentId = entry.target?.parentId || null;
+        const ch = await guild.channels.create({
+          name: String(name).slice(0, 100),
+          type,
+          parent: parentId || undefined,
+          reason: 'Denizen antinuke auto-restore',
+        });
+        return `restored channel ${ch}`;
+      }
+      if (kind === 'roleDelete') {
+        const name = entry.target?.name || 'restored-role';
+        const color = entry.target?.color || 0;
+        const role = await guild.roles.create({
+          name: String(name).slice(0, 100),
+          colors: { primaryColor: color },
+          reason: 'Denizen antinuke auto-restore',
+        });
+        return `restored role ${role}`;
+      }
+    } catch (err) {
+      return `restore failed: ${err.message}`;
+    }
+    return null;
+  }
+
   async function punish(guild, executorId, punishment) {
     const member = await guild.members.fetch(executorId).catch(() => null);
     if (!member) return;
@@ -55,7 +95,6 @@ function createAntinuke(deps) {
         for (const rid of cfg.security.staffRoleIds || []) {
           if (member.roles.cache.has(rid)) await member.roles.remove(rid, reason).catch(() => {});
         }
-        // Also strip roles with dangerous Discord perms
         for (const role of member.roles.cache.values()) {
           if (role.managed || role.id === guild.id) continue;
           if (
@@ -74,8 +113,8 @@ function createAntinuke(deps) {
     }
   }
 
-  function onAudit(evt) {
-    const { guild, guildId, executorId, kind } = evt;
+  async function onAudit(evt) {
+    const { guild, guildId, executorId, kind, entry } = evt;
     if (!guild || !executorId) return;
     const cfg = config.get(guildId);
     if (!cfg.security.enabled || !cfg.security.antinuke.enabled) return;
@@ -84,14 +123,33 @@ function createAntinuke(deps) {
     if (executorId === guild.client.user?.id) return;
     if ((cfg.security.antinuke.admins || []).includes(String(executorId))) return;
 
+    // Ignore soft false-positives: bot's own role updates
+    if (kind === 'memberRoleUpdate' && entry?.targetId === guild.client.user?.id) return;
+
     const modKey = KIND_TO_MODULE[kind];
     if (!modKey) return;
     const mods = cfg.security.antinuke.modules || {};
     if (!mods[modKey]) return;
 
+    // Snapshot damage for restore
+    if (['channelDelete', 'roleDelete', 'channelCreate', 'roleCreate'].includes(kind)) {
+      noteDamage(guildId, {
+        kind,
+        executorId,
+        targetId: evt.targetId,
+        name: entry?.target?.name || null,
+        entry,
+      });
+    }
+
     const now = Date.now();
     const windowMs = cfg.security.antinuke.windowMs || 10_000;
-    const threshold = cfg.security.antinuke.threshold || 3;
+    // Per-module threshold override (e.g. vanity = 1)
+    const moduleThresholds = cfg.security.antinuke.moduleThresholds || {};
+    const threshold = moduleThresholds[modKey]
+      || (modKey === 'vanity' || modKey === 'botadd' ? 1 : null)
+      || cfg.security.antinuke.threshold
+      || 3;
     const arr = bucket(guildId, executorId, modKey);
     arr.push(now);
     while (arr.length && now - arr[0] > windowMs) arr.shift();
@@ -101,17 +159,29 @@ function createAntinuke(deps) {
     const punishment = cfg.security.antinuke.punishment || 'timeout';
     console.log(`[antinuke] trip guild=${guildId} exec=${executorId} kind=${kind} do=${punishment}`);
     hub.emit('security.antinuke', { guildId, executorId, kind, punishment });
-    punish(guild, executorId, punishment);
+
+    // Best-effort auto-restore before punish (channels/roles)
+    let restoreNote = '';
+    if (cfg.security.antinuke.autoRestore !== false && (kind === 'channelDelete' || kind === 'roleDelete')) {
+      const note = await tryRestore(guild, kind, entry);
+      if (note) restoreNote = ` · ${note}`;
+    }
+
+    await punish(guild, executorId, punishment);
     const logId = cfg.security.logChannelId || cfg.logging?.channelId;
     if (logId) {
       guild.channels.fetch(logId).then((ch) => {
         if (ch?.isTextBased?.()) {
-          ch.send(`⚠️ **Antinuke** tripped on <@${executorId}> (\`${kind}\`) → \`${punishment}\``).catch(() => {});
+          ch.send(
+            `⚠️ **Antinuke** tripped on <@${executorId}> (\`${kind}\` ×${threshold}) → \`${punishment}\`${restoreNote}`,
+          ).catch(() => {});
         }
       }).catch(() => {});
     }
     guild.fetchOwner().then((owner) => {
-      owner.send(`Antinuke on **${guild.name}**: <@${executorId}> exceeded ${kind} threshold. Punish: ${punishment}`).catch(() => {});
+      owner.send(
+        `Antinuke on **${guild.name}**: <@${executorId}> exceeded ${kind} threshold. Punish: ${punishment}${restoreNote}`,
+      ).catch(() => {});
     }).catch(() => {});
   }
 
@@ -251,14 +321,38 @@ function createAntinuke(deps) {
           config.update(ctx.guild.id, (c) => { c.security.antinuke.punishment = p; return c; });
           return ctx.reply(`Punishment → \`${p}\`.`);
         }
+        if (action === 'restore') {
+          const damage = recentDamage.get(ctx.guild.id) || [];
+          const last = [...damage].reverse().find((d) => d.kind === 'channelDelete' || d.kind === 'roleDelete');
+          if (!last) return ctx.reply('No recent channel/role deletes to restore.');
+          const note = await tryRestore(ctx.guild, last.kind, last.entry);
+          return ctx.reply(note || 'Restore attempted (check server).');
+        }
+        if (action === 'autorestore') {
+          const on = (ctx.getString?.('value') || ctx.args?.[1] || 'on').toLowerCase() !== 'off';
+          config.update(ctx.guild.id, (c) => {
+            c.security.antinuke.autoRestore = on;
+            return c;
+          });
+          return ctx.reply(`Antinuke auto-restore → **${on ? 'on' : 'off'}**.`);
+        }
+        if (action === 'damage' || action === 'history') {
+          const damage = recentDamage.get(ctx.guild.id) || [];
+          if (!damage.length) return ctx.reply('No recent antinuke-tracked damage.');
+          return ctx.reply(
+            damage.slice(-10).map((d) =>
+              `• ${d.kind} by <@${d.executorId}> ${d.name || d.targetId || ''} <t:${Math.floor(d.ts / 1000)}:R>`,
+            ).join('\n'),
+          );
+        }
         return ctx.reply(
-          'Usage: ,antinuke on|off|config|list|whitelist @u|admin @u|module <name> on|off|threshold N|punishment X',
+          'Usage: ,antinuke on|off|config|list|whitelist|admin|module|threshold|punishment|restore|autorestore|damage',
         );
       },
     });
   }
 
-  return { onAudit, register };
+  return { onAudit, register, recentDamage, tryRestore };
 }
 
 module.exports = { createAntinuke, MODULE_KEYS };
