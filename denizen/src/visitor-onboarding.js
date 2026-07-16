@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY_PREFIX = 'denizen-onboarding-seen-v6';
+  const STORAGE_KEY_PREFIX = 'denizen-onboarding-seen-v7';
   const LEGACY_STORAGE_KEY = 'denizen-onboarding-seen-v2';
   const STYLE_ID = 'denizen-visitor-onboarding-style';
   const OVERLAY_ID = 'denizen-visitor-onboarding';
@@ -174,9 +174,9 @@
 
   function phoneTips() {
     return [
+      "I'm Buzz — your office key. Open me anytime for chat, Citizen ID, team, and station tools.",
       phoneLine(),
-      'Chat, your Citizen ID, your team, and station tools all live here.',
-      'The phone is the key that carries your assistant, credits, and next steps from office to city.',
+      'I carry your assistant, credits, and next steps from office to city.',
     ];
   }
 
@@ -229,7 +229,7 @@
       id: 'phone',
       icon: '▣',
       anchor: 'phone',
-      title: 'Your office key',
+      title: 'Hey — I work here too.',
       tips: phoneTips,
     },
     {
@@ -1225,14 +1225,14 @@
 
   function buzzGuideLine(step) {
     const lines = {
-      arrival: 'Buzz buzz — never too buzzy',
+      arrival: 'Hey — I work here too.',
       office: 'First stop: the live floor.',
       phone: 'Hey — I work here too. Use me.',
       claim: 'Pick a buddy on the floor.',
       power: 'Optional juice for the city.',
       ready: "You're cleared. Go walk.",
     };
-    return lines[step?.id] || 'Buzz buzz — never too buzzy';
+    return lines[step?.id] || 'Hey — I work here too.';
   }
 
   function tourAriaLabel() {

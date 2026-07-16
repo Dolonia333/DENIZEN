@@ -1,0 +1,46 @@
+{
+  "subject": "denizen",
+  "source": "company-brief.json + operator-pinned repo commit via facts_ref",
+  "updated": "2026-07-13",
+  "product": {
+    "name": "DENIZEN",
+    "version": "1.7.0",
+    "tagline": "Real-time visual operating environment where AI agents work, are observed, and are governed",
+    "status": "[IN-PROGRESS]"
+  },
+  "stack": [
+    "Node.js + WebSocket server",
+    "Phaser 3 (browser, Canvas/WebGL pixel office)",
+    "LM Studio inference mesh (LAN .232)",
+    "Grok CLI + Claude CLI subscription bridges (NPC dialogue + coding)",
+    "Supabase / PostgreSQL",
+    "Redis pubsub (threat + world-state relay to spectate followers)",
+    "Kali WSL security agent (nmap / tshark / tcpdump) at .232:8890",
+    "Tailscale compute mesh (delegated agent jobs across enrolled nodes)",
+    "Jelly skill runtime",
+    "Cloudflare Tunnel → Synology NAS Docker (production)"
+  ],
+  "capabilities": [
+    { "name": "Pixel office + 16 LLM NPCs", "status": "[DONE]", "provenance": "company-brief.json" },
+    { "name": "Meridian CRM integration", "status": "[DONE]", "provenance": "commit: Ship Meridian CRM workspace" },
+    { "name": "MCP per-NPC gateway", "status": "[DONE]", "provenance": "docs/NPC_MCP_GATEWAY.md" },
+    { "name": "Grok CLI + Claude CLI in-game chat (NPCs reason via subscription CLIs)", "status": "[DONE]", "provenance": "commit: feat(grok-cli) in-game chat via CLI bridge" },
+    { "name": "NPC chat attachments with local vision understanding (file/photo)", "status": "[DONE]", "provenance": "commit: feat(chat) file/photo attachments in NPC chat" },
+    { "name": "Bouncer blue-team security: Wireshark/tshark capture + IDS on all network threats, Kali investigation agent, mesh patrol, Redis threat relay, threat→robber visualization", "status": "[DONE]", "provenance": "docs/BOUNCER.md; commit: Bouncer blue-team upgrade" },
+    { "name": "Office HQ: quests, XP, levels, and operator panel", "status": "[DONE]", "provenance": "commit: feat(office-hq) port Office HQ panel, quests" },
+    { "name": "Fleet Control Deck: terminal dashboard for mesh observability", "status": "[DONE]", "provenance": "commit: Add fleet control deck terminal dashboard" },
+    { "name": "Mobile play: portrait joystick + tap-to-move, keyboard-aware sign-in, touch controls", "status": "[DONE]", "provenance": "commit: Mobile input fixes: joystick on portrait phones" },
+    { "name": "Marketing landing + Buzz lobby mascot + night-city day/night HQ frame", "status": "[DONE]", "provenance": "commit: Add night-city letterbox; feature/hq-buzz-night-city" },
+    { "name": "Tailscale compute-mesh delegation (agent jobs distributed across nodes)", "status": "[IN-PROGRESS]", "provenance": "docs/COMPUTE_MESH.md; roadmap stage 7" },
+    { "name": "Self-advancement harness: friction injection, multi-agent mutex locking, autonomy backlog lifecycle", "status": "[IN-PROGRESS]", "provenance": "docs/ROADMAP_SELF_ADVANCEMENT.md" },
+    { "name": "Paper-trading market layer (Roki paper broker, Robinhood MCP, visitor market panel)", "status": "[IN-PROGRESS]", "provenance": "src/roki-paper-broker.js; src/robinhood-mcp.js (working tree)" },
+    { "name": "Public multi-tenant launch (visitor sessions, demo mode, tiered access)", "status": "[IN-PROGRESS]", "provenance": "src/visitor-session.js; operator roadmap" }
+  ],
+  "not_claiming": [
+    "Built, not applied to every production tenant",
+    "Test counts and LOC require a pinned commit — run github skill before citing metrics",
+    "Do not cite revenue or fundraising figures without operator input",
+    "Version 1.7.0 is a working label for the July 2026 feature set — operator confirms release numbering"
+  ],
+  "provenance_note": "Pin commit in facts_ref before adding test counts or module maps to a technical dossier. Capabilities dated through 2026-07-13; see git log since 2026-06-24 for the full change set."
+}

@@ -2,8 +2,6 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const path = require('node:path');
-const fs = require('node:fs');
 
 const mcpResources = require('../src/denizen-mcp-resources.js');
 
@@ -25,14 +23,12 @@ describe('denizen-mcp-resources', () => {
     assert.equal(filtered.npcs.Bob, undefined);
   });
 
-  it('readTelemetryResource resolves grok and fleet URIs', () => {
-    const telPath = path.join(__dirname, '..', 'data', 'grok-telemetry-latest.json');
-    assert.ok(fs.existsSync(telPath));
+  it('readTelemetryResource resolves URIs without requiring a runtime snapshot', () => {
     const full = JSON.parse(mcpResources.readTelemetryResource('telemetry://fleet/latest'));
     assert.ok(Array.isArray(full.facts));
     const bouncer = JSON.parse(mcpResources.readTelemetryResource('telemetry://grok/latest/bouncer'));
     assert.equal(bouncer.npcId, 'bouncer');
-    assert.ok(bouncer.facts.length >= 1);
+    assert.ok(Array.isArray(bouncer.facts));
   });
 
   it('canReadTelemetry scopes grok full vs filtered', () => {

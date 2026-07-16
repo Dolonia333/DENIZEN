@@ -944,7 +944,20 @@ class NpcBrainManager {
     }
 
     const localProviders = new Set(['demo', 'lmstudio', 'lmstudio-fast']);
-    const remoteCount = Object.keys(this.providers).filter(k => !localProviders.has(k)).length;
+    const remoteCount = Object.entries(this.providers).filter(([key, provider]) => {
+      if (localProviders.has(key)) return false;
+      // CLI providers are registered unconditionally so their fallback routing is
+      // always available, but an empty registration is not a usable remote model.
+      // Counting it made clean machines report `_demoMode=false` even with no
+      // OpenClaw config, bridge, binary, or API key.
+      if (provider?.type === 'grok-cli') {
+        return Boolean(provider.grokBin || provider.bridgeUrl);
+      }
+      if (provider?.type === 'claude-cli') {
+        return Boolean(provider.claudeBin || provider.bridgeUrl);
+      }
+      return true;
+    }).length;
     this._demoMode = remoteCount === 0; // demo mode only when zero remote providers configured
     if (this._demoMode) {
       console.log('[NpcBrains] Demo mode active — NPCs use smart scripted responses (no API keys required)');
