@@ -3,7 +3,10 @@
 **Branch:** `feature/discord-bot-oauth-finish`  
 **Bot package:** `denizen/discord-bot` v0.3.0  
 **Prefix:** `,` (comma) — most commands also work as **/** slash  
-**Last updated:** 2026-07-15  
+**Last updated:** 2026-07-16  
+
+> **Ops / live NAS map:** see [`OPS_LIVE_STACK.md`](./OPS_LIVE_STACK.md) (conversation sense, Dolonia data, CRM GovCon, Angela Gmail→CRM via n8n).  
+
 
 ---
 
