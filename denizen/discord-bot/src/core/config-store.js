@@ -176,6 +176,12 @@ function defaultGuildConfig() {
       channelAllow: [],
       channelDeny: [],
     },
+    chat: {
+      /** Channel IDs where Denizen replies without @mention */
+      openChannels: [],
+      /** Min ms between open-chat replies per channel */
+      cooldownMs: 8000,
+    },
   };
 }
 

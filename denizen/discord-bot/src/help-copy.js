@@ -98,6 +98,9 @@ function mentionHelp(opts = {}) {
     '• Join a **voice channel** to show up',
     `• \`${p}avatar\` — customize look · **Boost** → golden headset`,
     '• `rooms` · `who` · `status` — live occupancy',
+    '• Ask me anything after @ — LM chat + community farm topics',
+    `• \`${p}chat on\` — I talk in this channel without @ (staff)`,
+    `• \`${p}farm status\` — what I’m learning from chats`,
     `• \`${p}help\` — full command list`,
     `• \`${p}hangout report\` — weekly VC hangout board (staff setup)`,
   ].join('\n');

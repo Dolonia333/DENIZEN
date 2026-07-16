@@ -65,7 +65,7 @@ describe('Bleed-parity config + modules', () => {
       'antinuke', 'antiraid', 'fakepermissions', 'ban', 'softban', 'purge',
       'automod', 'tickets', 'voicemaster', 'play', 'lastfm', 'reactionrole',
       'buttonrole', 'log', 'lockdown', 'setup', 'help', 'blacktea', 'image',
-      'translate', 'urban', 'define', 'afk', 'farm',
+      'translate', 'urban', 'define', 'afk', 'farm', 'chat',
     ]) {
       assert.ok(names.has(n), `missing command ${n}`);
     }

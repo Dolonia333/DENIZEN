@@ -9,6 +9,7 @@
 const { createClient, attachGateway } = require('./src/gateway');
 const { TrackerEngine } = require('./src/tracker');
 const { handleBotChat } = require('./src/chat');
+// chat controls registered via loadModules
 const { ConfigStore } = require('./src/core/config-store');
 const { CommandRegistry } = require('./src/core/command-registry');
 const { AuditBus } = require('./src/core/audit-bus');
@@ -199,7 +200,8 @@ attachGateway(client, {
     runGuardedCommand(async () => {
       const handled = await registry.handlePrefixMessage(message, { config, tracker, hub });
       if (handled) return;
-      await handleBotChat(message, { tracker, client });
+      // @mention / DM / opt-in open-channel chat (LM + farm context)
+      await handleBotChat(message, { tracker, client, config });
     });
   },
   async onInteraction(interaction) {

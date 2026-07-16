@@ -21,6 +21,7 @@ const { createDenizenAccount } = require('./denizen');
 const { createAvatarModule } = require('./avatar');
 const { createHangoutModule } = require('./hangout');
 const { createDataFarm } = require('./data-farm');
+const { createChatControls } = require('../chat');
 
 function loadModules(deps) {
   const hooks = {
@@ -118,6 +119,10 @@ function loadModules(deps) {
   const dataFarm = createDataFarm(deps);
   dataFarm.register(deps.registry);
   hooks.onMessage.push(dataFarm.onMessage);
+
+  // Open-channel chat controls (,chat on|off|status)
+  const chatControls = createChatControls(deps);
+  chatControls.register(deps.registry);
 
   const helpCopy = require('../help-copy');
   const {
