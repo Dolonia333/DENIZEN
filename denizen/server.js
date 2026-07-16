@@ -6973,14 +6973,24 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         }));
         return;
       }
-      // PUT
+      // PUT — enforce free (premade) vs paid (hair/clothes/hats) plan
       const payload = await _readJsonBody(req, 64 * 1024);
-      const av = await avatarApi.ensureBaked(store, userId, payload.avatar || payload);
+      const plan = avatarApi.resolvePlan(
+        payload.plan || process.env.DENIZEN_SPACES_PLAN || 'free',
+      );
+      const av = await avatarApi.ensureBaked(store, userId, payload.avatar || payload, {
+        plan,
+        isBooster: !!payload.isBooster,
+      });
+      const features = avatarApi.planFeatures(plan, { isBooster: !!payload.isBooster });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         ok: true,
         userId,
+        plan,
+        features,
         avatar: avatarApi.clientAvatar(av, userId),
+        upgrade: features.free ? avatarApi.upgradeMessage(features) : null,
       }));
     })().catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });

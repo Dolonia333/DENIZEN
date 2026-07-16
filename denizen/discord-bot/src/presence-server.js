@@ -262,9 +262,11 @@ async function handleAvatar(req, res, url, avatarApi) {
   const parts = url.pathname.split('/').filter(Boolean); // avatar | catalog | :id
 
   if (parts[0] === 'avatar' && parts[1] === 'catalog' && req.method === 'GET') {
+    const plan = avatarApi.resolvePlan(url.searchParams.get('plan') || process.env.DENIZEN_SPACES_PLAN);
     const unlocks = avatarApi.resolveUnlocks({});
+    const cat = avatarApi.publicCatalogForPlan(plan, unlocks, {});
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-    res.end(JSON.stringify({ ok: true, ...avatarApi.publicCatalog(unlocks) }));
+    res.end(JSON.stringify({ ok: true, plan, ...cat }));
     return;
   }
 
