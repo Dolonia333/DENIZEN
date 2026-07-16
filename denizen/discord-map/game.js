@@ -16,7 +16,7 @@
   function channelLabel(ch) {
     const name = String(ch?.name || 'channel').slice(0, 22);
     const type = String(ch?.type || '').toLowerCase();
-    if (type === 'voice' || type === 'stage') return `🔊 ${name}`;
+    if (type === 'voice' || type === 'stage') return `VC ${name}`;
     return `#${name}`;
   }
 
@@ -120,8 +120,38 @@
   const OBR = `${PACK}/Objects/Bedroom`;
   const INF = `${PACK}/Infrastructure`;
   const BG = `${PACK}/Backgrounds`;
+  // Pixel Spaces UI Expansion (itch New Assets #4)
+  const UI = `${FULL}/UI`;
+  const UI_CTRL = `${UI}/Buttons, Sliders, Panels, Frames, Selection`;
+  const UI_IC = `${UI}/Icons`;
+  const UI_CHAT = `${UI}/Chat Bubbles`;
+  const UI_EM = `${UI}/Emotes`;
 
   const ASSETS = {
+    // —— UI expansion (status, chat, boost — replace emoji HUD) ——
+    uiChatBlue: `${UI_CHAT}/ChatBubble_blue.png`,
+    uiChatGreen: `${UI_CHAT}/ChatBubble_green.png`,
+    uiChatGrey: `${UI_CHAT}/ChatBubble_grey.png`,
+    uiChatYellow: `${UI_CHAT}/ChatBubble_yellow.png`,
+    uiChatWhite: `${UI_CHAT}/ChatBubble_white.png`,
+    uiChatShadow: `${UI_CHAT}/ChatBubble_shadow.png`,
+    // happiness: 0 dead … 4 happy (pack convention)
+    uiHappy: `${UI_IC}/Status_happiness_4.png`,
+    uiNeutral: `${UI_IC}/Status_happiness_2.png`,
+    uiSad: `${UI_IC}/Status_happiness_1.png`,
+    uiAngry: `${UI_IC}/Status_happiness_0.png`,
+    uiEnergy: `${UI_IC}/Status_energy.png`,
+    uiPointerGreen: `${UI_IC}/Pointer_green.png`,
+    uiPointerGrey: `${UI_IC}/Pointer_grey.png`,
+    uiPointerRed: `${UI_IC}/Pointer_red.png`,
+    uiBoost: `${UI_IC}/Boost.png`,
+    uiBoostOff: `${UI_IC}/Boost_off.png`,
+    uiRedDot: `${UI_IC}/Red_dot.png`,
+    uiExclaim: `${UI_EM}/Exclamation_yellow.png`,
+    uiMail: `${UI_IC}/Mail.png`,
+    uiPanelGrey: `${UI_CTRL}/Panel_grey.png`,
+    uiPanelBlue: `${UI_CTRL}/Panel_blue.png`,
+    uiPanelGreen: `${UI_CTRL}/Panel_green.png`,
     // Backgrounds / outdoor
     cloud: `${BG}/Cloud_1.png`,
     cloudSm: `${BG}/Cloud_small_3.png`,
@@ -2595,18 +2625,26 @@
 
     ensureWatermark() {
       if (this._watermarkText?.active) return;
-      this._watermarkText = this.add.text(12, H - 14, 'Powered by Denizen Spaces', {
+      // Pixel panel backdrop from UI expansion when available
+      if (this.textures.exists('uiPanelGrey')) {
+        this._watermarkPanel = this.add.image(8, H - 8, 'uiPanelGrey')
+          .setScrollFactor(0)
+          .setDepth(999)
+          .setOrigin(0, 1)
+          .setScale(SCALE * 0.55)
+          .setAlpha(0.92);
+      }
+      this._watermarkText = this.add.text(18, H - 16, 'Denizen Spaces', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '11px',
+        fontSize: '10px',
         fontStyle: 'bold',
         color: '#ffffff',
-        backgroundColor: '#000000aa',
-        padding: { x: 8, y: 4 },
+        padding: { x: 4, y: 2 },
       })
         .setScrollFactor(0)
         .setDepth(1000)
         .setOrigin(0, 1)
-        .setAlpha(0.85);
+        .setAlpha(0.95);
     }
 
     applyBranding(branding) {
@@ -2616,12 +2654,13 @@
         && !this._branding.removeBranding
         && this._branding.plan !== 'community'
         && this._branding.plan !== 'pro';
+      if (this._watermarkPanel) this._watermarkPanel.setVisible(!!show);
       if (this._watermarkText) {
         this._watermarkText.setVisible(!!show);
         if (this._branding.plan && this._branding.plan !== 'free') {
           this._watermarkText.setText(`Denizen Spaces · ${this._branding.plan}`);
         } else {
-          this._watermarkText.setText('Powered by Denizen Spaces');
+          this._watermarkText.setText('Denizen Spaces');
         }
       }
       // Expose share URL for parent UI
@@ -2639,86 +2678,168 @@
       } catch (_) { /* ignore */ }
     }
 
-    /** Build nameplate with mic / soft social cues */
+    /** Name only — status uses Pixel Spaces UI icons, not emoji. */
     formatPersonLabel(person) {
-      const name = String(person.displayName || 'member').slice(0, 14);
-      if (person.soft) {
-        const snip = person.textSnippet && person.textSnippet !== '…'
-          ? ` 💬${String(person.textSnippet).slice(0, 12)}`
-          : ' 💬';
-        return `${name}${snip}`;
-      }
-      let icons = '';
-      if (person.deafened) icons += '🔇';
-      else if (person.muted) icons += '🔇';
-      else if (person.live) icons += '🟢';
-      else icons += '🎙';
-      if (person.streaming) icons += '📺';
-      if (person.video) icons += '📷';
-      return `${icons} ${name}`.trim();
+      return String(person.displayName || 'member').slice(0, 14);
     }
 
     personTagColor(person) {
       if (person.soft) return '#334155';
-      if (person.live) return '#16a34a';
-      if (person.muted || person.deafened) return '#64748b';
-      return '#5865f2';
+      if (person.live) return '#14532d';
+      if (person.muted || person.deafened) return '#475569';
+      return '#1e3a8a';
     }
 
-    /** Green pulse ring for unmuted VC members; chat bubble pulse for soft text */
+    /** Which status icon key for a person (UI expansion). */
+    statusIconKey(person) {
+      if (person.soft) return 'uiMail';
+      if (person.deafened) return 'uiAngry';
+      if (person.muted) return 'uiSad';
+      if (person.live) return 'uiHappy';
+      if (person.streaming) return 'uiEnergy';
+      return 'uiNeutral';
+    }
+
+    /** Ensure a floating status icon sprite above the character. */
+    ensureStatusIcon(live, person) {
+      const key = this.statusIconKey(person);
+      if (!this.textures.exists(key)) return;
+      const depth = (live.sprite?.depth || 30) + 2;
+      if (!live.statusIcon || !live.statusIcon.active) {
+        live.statusIcon = this.add.image(0, 0, key)
+          .setScale(SCALE)
+          .setOrigin(0.5, 1)
+          .setDepth(depth);
+      } else if (live.statusIcon.texture?.key !== key) {
+        live.statusIcon.setTexture(key);
+      }
+      live.statusIcon.setDepth(depth);
+      live.statusIcon.setVisible(true);
+      // Green pointer bob above open-mic users
+      if (person.live && !person.soft && this.textures.exists('uiPointerGreen')) {
+        if (!live.pointer || !live.pointer.active) {
+          live.pointer = this.add.image(0, 0, 'uiPointerGreen')
+            .setScale(SCALE)
+            .setOrigin(0.5, 1)
+            .setDepth(depth + 1);
+          this.tweens.add({
+            targets: live.pointer,
+            y: '-=3',
+            duration: 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+        }
+        live.pointer.setVisible(true);
+      } else if (live.pointer) {
+        live.pointer.setVisible(false);
+      }
+      // Boost star for golden-headset / booster looks
+      const isBooster = person.avatar?.hat?.set === 'headsets'
+        || person.avatar?.tint?.hat
+        || person.booster;
+      if (isBooster && this.textures.exists('uiBoost')) {
+        if (!live.boostIcon || !live.boostIcon.active) {
+          live.boostIcon = this.add.image(0, 0, 'uiBoost')
+            .setScale(SCALE)
+            .setOrigin(0.5, 1)
+            .setDepth(depth + 1);
+        }
+        live.boostIcon.setVisible(true);
+      } else if (live.boostIcon) {
+        live.boostIcon.setVisible(false);
+      }
+    }
+
+    layoutSocialSprites(live) {
+      if (!live?.sprite) return;
+      const x = live.sprite.x;
+      const y = live.sprite.y;
+      if (live.statusIcon?.active) {
+        live.statusIcon.x = x + 10;
+        live.statusIcon.y = y - 22;
+      }
+      if (live.pointer?.visible && live.pointer.active) {
+        live.pointer.x = x;
+        live.pointer.y = y - 36;
+      }
+      if (live.boostIcon?.visible && live.boostIcon.active) {
+        live.boostIcon.x = x - 11;
+        live.boostIcon.y = y - 22;
+      }
+      if (live.tagBg?.active) {
+        live.tagBg.x = x;
+        live.tagBg.y = y - 38;
+      }
+      if (live.tag?.active) {
+        live.tag.x = x;
+        live.tag.y = y - 40;
+      }
+      if (live.bubbleImg?.active) {
+        live.bubbleImg.x = x;
+        live.bubbleImg.y = y - 48;
+      }
+      if (live.bubbleText?.active) {
+        live.bubbleText.x = x;
+        live.bubbleText.y = y - 54;
+      }
+    }
+
+    /**
+     * Pixel Spaces UI: status icons, pointer for open mic, chat bubbles for text.
+     * Replaces emoji-based feedback.
+     */
     updatePersonSocialFx(live, person) {
       if (!live?.sprite) return;
-      // Destroy old ring if state no longer live
-      if (!person.live || person.soft) {
-        if (live.ring) {
-          this.tweens.killTweensOf(live.ring);
-          live.ring.destroy();
-          live.ring = null;
-        }
-      } else if (!live.ring || !live.ring.active) {
-        const ring = this.add.circle(live.sprite.x, live.sprite.y - 8, 14, 0x22c55e, 0.0)
-          .setStrokeStyle(2, 0x4ade80, 0.9)
-          .setDepth((live.sprite.depth || 30) - 1);
-        this.tweens.add({
-          targets: ring,
-          scale: 1.35,
-          alpha: 0.15,
-          duration: 900,
-          yoyo: true,
-          repeat: -1,
-          ease: 'Sine.easeInOut',
-        });
-        live.ring = ring;
-      }
-      if (live.ring?.active && live.sprite) {
-        live.ring.x = live.sprite.x;
-        live.ring.y = live.sprite.y - 8;
-      }
+      this.ensureStatusIcon(live, person);
+      this.layoutSocialSprites(live);
 
-      // Soft text bubble flash when snippet changes
+      // Soft text: Pixel Spaces chat bubble + short caption
       if (person.soft && person.textSnippet && person.textSnippet !== live._lastSnippet) {
         live._lastSnippet = person.textSnippet;
-        if (live.bubble) {
-          this.tweens.killTweensOf(live.bubble);
-          live.bubble.destroy();
+        if (live.bubbleImg) {
+          this.tweens.killTweensOf(live.bubbleImg);
+          live.bubbleImg.destroy();
         }
-        const bubble = this.add.text(live.sprite.x, live.sprite.y - 52, String(person.textSnippet).slice(0, 18), {
-          fontFamily: 'Segoe UI, sans-serif',
-          fontSize: '9px',
-          color: '#0f172a',
-          backgroundColor: '#f8fafc',
-          padding: { x: 5, y: 3 },
-        }).setOrigin(0.5, 1).setDepth(40).setAlpha(0);
+        if (live.bubbleText) {
+          this.tweens.killTweensOf(live.bubbleText);
+          live.bubbleText.destroy();
+        }
+        const bubbleKey = this.textures.exists('uiChatBlue') ? 'uiChatBlue' : null;
+        if (bubbleKey) {
+          live.bubbleImg = this.add.image(live.sprite.x, live.sprite.y - 48, bubbleKey)
+            .setScale(SCALE)
+            .setOrigin(0.5, 1)
+            .setDepth(41)
+            .setAlpha(0);
+        }
+        live.bubbleText = this.add.text(
+          live.sprite.x,
+          live.sprite.y - 54,
+          String(person.textSnippet).slice(0, 16),
+          {
+            fontFamily: 'Segoe UI, sans-serif',
+            fontSize: '8px',
+            color: '#0f172a',
+            align: 'center',
+          },
+        ).setOrigin(0.5, 1).setDepth(42).setAlpha(0);
+
+        const targets = [live.bubbleImg, live.bubbleText].filter(Boolean);
         this.tweens.add({
-          targets: bubble,
+          targets,
           alpha: 1,
-          y: live.sprite.y - 56,
-          duration: 200,
-          hold: 2200,
+          duration: 180,
+          hold: 2400,
           yoyo: true,
-          onComplete: () => { try { bubble.destroy(); } catch (_) {} live.bubble = null; },
+          onComplete: () => {
+            try { live.bubbleImg?.destroy(); } catch (_) { /* ignore */ }
+            try { live.bubbleText?.destroy(); } catch (_) { /* ignore */ }
+            live.bubbleImg = null;
+            live.bubbleText = null;
+          },
         });
-        live.bubble = bubble;
       }
     }
 
@@ -2829,13 +2950,12 @@
       this.releaseSlot(live.roomKey, userId);
       this.tweens.killTweensOf(live.sprite);
       this.tweens.killTweensOf(live.tag);
-      if (live.ring) {
-        this.tweens.killTweensOf(live.ring);
-        live.ring.destroy();
-      }
-      if (live.bubble) {
-        this.tweens.killTweensOf(live.bubble);
-        live.bubble.destroy();
+      for (const k of ['ring', 'bubble', 'bubbleImg', 'bubbleText', 'statusIcon', 'pointer', 'boostIcon', 'tagBg']) {
+        if (live[k]) {
+          this.tweens.killTweensOf(live[k]);
+          try { live[k].destroy(); } catch (_) { /* ignore */ }
+          live[k] = null;
+        }
       }
       const targets = [live.sprite, live.tag].filter(Boolean);
       if (!targets.length) {
@@ -2859,14 +2979,10 @@
       if (!live?.sprite) return;
       this.tweens.killTweensOf(live.sprite);
       this.tweens.killTweensOf(live.tag);
-      if (live.ring) this.tweens.killTweensOf(live.ring);
       live.baseY = baseY;
       live.sprite.y = baseY;
       if (live.tag) live.tag.y = baseY - 40;
-      if (live.ring) {
-        live.ring.x = live.sprite.x;
-        live.ring.y = baseY - 8;
-      }
+      this.layoutSocialSprites(live);
       const dur = 700 + Math.random() * 400;
       this.tweens.add({
         targets: live.sprite,
@@ -2875,15 +2991,7 @@
         yoyo: true,
         repeat: -1,
         ease: 'Sine.easeInOut',
-        onUpdate: () => {
-          if (live.ring?.active && live.sprite) {
-            live.ring.x = live.sprite.x;
-            live.ring.y = live.sprite.y - 8;
-          }
-          if (live.tag?.active && live.sprite) {
-            live.tag.x = live.sprite.x;
-          }
-        },
+        onUpdate: () => this.layoutSocialSprites(live),
       });
       if (live.tag) {
         this.tweens.add({
@@ -3013,18 +3121,32 @@
         .setAlpha(0);
       if (this.anims.exists(`${fallbackSheet}_idle`)) sprite.anims.play(`${fallbackSheet}_idle`);
 
+      // Nameplate: pixel panel when available, else flat color
+      const panelKey = person.live && this.textures.exists('uiPanelGreen')
+        ? 'uiPanelGreen'
+        : (person.soft && this.textures.exists('uiPanelGrey')
+          ? 'uiPanelGrey'
+          : (this.textures.exists('uiPanelBlue') ? 'uiPanelBlue' : null));
+      let tagBg = null;
+      if (panelKey) {
+        tagBg = this.add.image(slot.x, slot.y - 38, panelKey)
+          .setScale(SCALE * 0.35)
+          .setOrigin(0.5, 1)
+          .setDepth(depth + 1)
+          .setAlpha(0);
+      }
       const tag = this.add.text(slot.x, slot.y - 40, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
-        fontSize: '10px',
+        fontSize: '9px',
         fontStyle: 'bold',
         color: '#ffffff',
-        backgroundColor: this.personTagColor(person),
-        padding: { x: 4, y: 2 },
-      }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(3).setAlpha(0);
+        backgroundColor: panelKey ? '#00000000' : this.personTagColor(person),
+        padding: { x: panelKey ? 2 : 4, y: 2 },
+      }).setOrigin(0.5, 1).setDepth(depth + 2).setResolution(3).setAlpha(0);
 
       this.tweens.add({
-        targets: [sprite, tag],
-        alpha: person.soft ? 0.72 : 1,
+        targets: [sprite, tag, tagBg].filter(Boolean),
+        alpha: person.soft ? 0.78 : 1,
         duration: 280,
         ease: 'Sine.easeOut',
       });
@@ -3032,14 +3154,18 @@
       const live = {
         sprite,
         tag,
+        tagBg,
         roomKey: person.roomKey,
         soft: person.soft,
         sheet: fallbackSheet,
         moving: false,
         baseY: slot.y,
         avatarRev: person.avatar?.rev ?? null,
-        ring: null,
-        bubble: null,
+        statusIcon: null,
+        pointer: null,
+        boostIcon: null,
+        bubbleImg: null,
+        bubbleText: null,
         _lastSnippet: null,
       };
       this.livePeople.set(person.userId, live);
