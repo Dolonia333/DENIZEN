@@ -24,9 +24,14 @@
 
 ## Verification
 
-- `npm test`: 172 files, 1,234 tests, 0 failures.
+- `npm test`: 172 files, 1,235 tests, 0 failures.
 - Focused Discord OAuth, avatar baking, and integration-security tests: 28
   tests, 0 failures.
+
+Post-deployment validation also restored the multiplayer registry methods used by
+`server.js` for presence keys, player poses, disconnect cleanup, and simulation
+host election. A direct registry contract test prevents these runtime exports
+from disappearing without failing CI.
 - JavaScript syntax checks pass for every changed JavaScript file.
 - `npm audit --omit=dev`: no high or critical findings. Seven moderate Jimp
   dependency findings remain without an upstream fix; avatar decoding is
