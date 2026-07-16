@@ -120,7 +120,8 @@
     {
      "row": 2,
      "name": "jump",
-     "frames": 2
+     "frames": 2,
+     "fps": 6
     },
     {
      "row": 3,
@@ -156,35 +157,45 @@
     {
      "row": 8,
      "name": "eating",
-     "frames": 2
+     "frames": 2,
+     "fps": 4,
+     "repeat": 2
     },
     {
      "row": 9,
      "name": "eating_sit",
-     "frames": 2
+     "frames": 2,
+     "fps": 4,
+     "repeat": 3
     },
     {
      "row": 10,
      "name": "hurt",
-     "frames": 3
+     "frames": 3,
+     "fps": 8
     },
     {
      "row": 11,
      "name": "shrug",
-     "frames": 7
+     "frames": 7,
+     "fps": 9
     },
     {
      "row": 12,
      "name": "snicker",
-     "frames": 2
+     "frames": 2,
+     "fps": 4,
+     "repeat": 2
     },
     {
      "row": 13,
      "name": "wave",
-     "frames": 4
+     "frames": 4,
+     "fps": 8
     }
    ],
-   "warning": "each row also contains a text label drawn in the cell after the last real frame \u2014 never include it in an animation"
+   "warning": "each row also contains a text label drawn in the cell after the last real frame \u2014 never include it in an animation",
+   "runtime": "all rows are registered by game.js; decorative cast uses furniture-aware walk/sit/lie/eat/social routines, live Discord members use standing social poses"
   },
   "expansionNpcSheets": {
    "glob": "PixelSpacesFull/Expansions/*/NPCs/*.png (and Cafe/Pre-made NPCs)",
