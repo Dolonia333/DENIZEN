@@ -286,6 +286,30 @@ function buildLearningScorecard(opts = {}) {
     if (lessonsPending > 10) notes.push(`lessons_pending_high_${lessonsPending}`);
     if (consultPending > 15) notes.push(`consult_backlog_${consultPending}`);
 
+    // Discord / chat data farm (privacy-aware harvest → learning lake)
+    let discordFarm = null;
+    try {
+      const farmMod = require('./denizen-discord-farm');
+      const sc = farmMod.buildDiscordFarmScorecard({ windowMs });
+      discordFarm = {
+        enabled: sc.enabled,
+        messages24h: sc.messages24h || 0,
+        questions24h: sc.questions24h || 0,
+        friction24h: sc.friction24h || 0,
+        praise24h: sc.praise24h || 0,
+        commands24h: sc.commands24h || 0,
+        topicsHot: (sc.topicsHot || []).slice(0, 5),
+      };
+      if (sc.messages24h > 0) {
+        notes.push(`discord_farm_${sc.messages24h}_msgs`);
+      }
+      if (sc.friction24h > 0) {
+        notes.push(`discord_farm_friction_${sc.friction24h}`);
+      }
+    } catch (_) {
+      discordFarm = null;
+    }
+
     const ok = true;
 
     return {
@@ -305,6 +329,7 @@ function buildLearningScorecard(opts = {}) {
       answeredWithoutMemory: answeredNoMem.length,
       targetCitationRate: 0.6,
       targetMet,
+      discordFarm,
       paths: {
         mentorLessons: paths.mentorLessons,
         consultImprove: paths.consultImprove,

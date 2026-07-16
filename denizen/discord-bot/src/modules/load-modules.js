@@ -20,6 +20,7 @@ const { createCanvasBridge } = require('./canvas');
 const { createDenizenAccount } = require('./denizen');
 const { createAvatarModule } = require('./avatar');
 const { createHangoutModule } = require('./hangout');
+const { createDataFarm } = require('./data-farm');
 
 function loadModules(deps) {
   const hooks = {
@@ -112,6 +113,11 @@ function loadModules(deps) {
 
   const hangout = createHangoutModule(deps);
   hangout.register(deps.registry);
+
+  // Discord data farm — harvest guild chats into learning lake (privacy-aware)
+  const dataFarm = createDataFarm(deps);
+  dataFarm.register(deps.registry);
+  hooks.onMessage.push(dataFarm.onMessage);
 
   const helpCopy = require('../help-copy');
   const {

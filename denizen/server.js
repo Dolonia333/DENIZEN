@@ -11002,6 +11002,30 @@ agentWss.on('connection', (ws) => {
         }
       } else if (msg.type === 'player_chat') {
         // CEO (player) is talking directly to an NPC
+        // Office chat → data farm (privacy-aware; never blocks reply path)
+        try {
+          if (!/^(0|false|no|off)$/i.test(String(process.env.DISCORD_FARM ?? '1'))) {
+            const farmText = typeof msg.text === 'string' ? msg.text.trim() : '';
+            if (farmText.length >= 2) {
+              const farm = require('./src/denizen-discord-farm');
+              farm.ingestChatEvent({
+                source: 'office',
+                ts: Date.now(),
+                guildId: null,
+                channelId: 'office',
+                channelName: 'office-chat',
+                guildName: 'Denizen Office',
+                userId: String(msg.userId || msg.playerId || ws._sessionId || 'player'),
+                displayName: String(msg.displayName || msg.playerName || 'Player').slice(0, 64),
+                content: farmText,
+                messageId: typeof msg.turn_id === 'string' ? msg.turn_id : null,
+                isDm: false,
+                bot: false,
+                keepCommands: true,
+              });
+            }
+          }
+        } catch (_) { /* farm optional */ }
         const resolvedNpc = resolvePlayerChatNpc(msg);
         let npcName = resolvedNpc.npcName;
         if (!npcName) {

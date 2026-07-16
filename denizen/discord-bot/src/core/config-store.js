@@ -171,6 +171,11 @@ function defaultGuildConfig() {
     misc: {
       tts: true,
     },
+    farm: {
+      enabled: true,
+      channelAllow: [],
+      channelDeny: [],
+    },
   };
 }
 
