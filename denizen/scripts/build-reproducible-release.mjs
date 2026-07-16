@@ -85,6 +85,7 @@ rmSync(archivePath, { force: true });
 run('git', [
   'archive',
   '--format=tar',
+  `--mtime=${commitDate}`,
   `--prefix=denizen/`,
   `--output=${tarPath}`,
   `${commit}:${appPathspec}`,
