@@ -25,6 +25,27 @@
     return s.length > max ? `${s.slice(0, max - 1)}…` : s;
   }
 
+  /**
+   * Convert decorative Discord names into words the room director can read.
+   * NFKD handles mathematical/script alphabets; the explicit small-cap map
+   * covers characters such as ᴇ/ɴ/ᴛ that Unicode does not fold to ASCII.
+   * The displayed channel/category name is never changed.
+   */
+  function semanticText(value) {
+    const smallCaps = {
+      'ᴀ': 'a', 'ʙ': 'b', 'ᴄ': 'c', 'ᴅ': 'd', 'ᴇ': 'e', 'ꜰ': 'f',
+      'ғ': 'f', 'ɢ': 'g', 'ʜ': 'h', 'ɪ': 'i', 'ᴊ': 'j', 'ᴋ': 'k', 'ʟ': 'l',
+      'ᴍ': 'm', 'ɴ': 'n', 'ᴏ': 'o', 'ᴘ': 'p', 'ʀ': 'r', 'ꜱ': 's',
+      'ᴛ': 't', 'ᴜ': 'u', 'ᴠ': 'v', 'ᴡ': 'w', 'ʏ': 'y', 'ᴢ': 'z',
+    };
+    return Array.from(String(value || '').normalize('NFKD').toLowerCase())
+      .map((ch) => smallCaps[ch] || ch)
+      .join('')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
   /** Deterministic string hash — same channel id always yields the same seed,
    *  so room decor is stable across reloads but varies room to room. */
   function hashSeed(str) {
@@ -732,27 +753,123 @@
         { key: 'vaseBlue', xf: 0.88, depth: 24 },
       ],
     ],
+    gaming: [
+      [
+        { key: 'deskOfficeLong', xf: 0.4, depth: 22 },
+        { key: 'monitor', xf: 0.33, depth: 24, offY: -14, surface: true },
+        { key: 'micDesk', xf: 0.49, depth: 24, offY: -14, surface: true },
+        { key: ['throneBlue', 'throneGreen', 'thronePurple', 'throneRed'], xf: 0.78, depth: 23 },
+      ],
+      [
+        { key: ['arcadeBlue', 'arcadeGreen'], xf: 0.31, depth: 22 },
+        { key: ['arcadeRed', 'arcadeYellow'], xf: 0.59, depth: 22 },
+        { key: ['vendingBlue', 'vendingGreen', 'vendingYellow'], xf: 0.87, depth: 22 },
+      ],
+      [
+        { key: 'tvGame', xf: 0.72, depth: 21, wall: true },
+        { key: ['couchSmall', 'couchSmallGr', 'couchSmallR'], xf: 0.36, depth: 23 },
+        { key: 'coffee2', xf: 0.65, depth: 23 },
+        { key: 'gameConsole', xf: 0.65, depth: 24, offY: -10, surface: true },
+      ],
+    ],
+    cinema: [
+      [
+        { key: 'tvGame', xf: 0.76, depth: 21, wall: true },
+        { key: ['couchBlue', 'couchGrey', 'couchRed'], xf: 0.34, depth: 23 },
+        { key: 'coffee', xf: 0.68, depth: 23 },
+        { key: 'mug', xf: 0.68, depth: 24, offY: -12, surface: true },
+      ],
+      [
+        { key: ['poster10', 'poster11'], xf: 0.7, depth: 21, wall: true },
+        { key: ['couchSmall', 'couchSmallY'], xf: 0.3, depth: 23 },
+        { key: 'tableMed2', xf: 0.58, depth: 23 },
+        { key: ['couchSmallGr', 'couchSmallR'], xf: 0.85, depth: 23 },
+      ],
+      [
+        { key: 'radio', xf: 0.32, depth: 23 },
+        { key: 'tableLong', xf: 0.58, depth: 23 },
+        { key: 'laptop', xf: 0.52, depth: 24, offY: -14, surface: true },
+        { key: ['stoolBlue', 'stoolGreen', 'stoolRed', 'stoolYellow'], xf: 0.86, depth: 23 },
+      ],
+    ],
+    studio: [
+      [
+        { key: 'deskOfficeLong', xf: 0.38, depth: 22 },
+        { key: 'laptop', xf: 0.31, depth: 24, offY: -14, surface: true },
+        { key: 'micDesk', xf: 0.48, depth: 24, offY: -14, surface: true },
+        { key: ['officechairPurple', 'officechairOrange'], xf: 0.73, depth: 23 },
+        { key: ['monaPixa', 'paintingNight'], xf: 0.88, depth: 21, wall: true },
+      ],
+      [
+        { key: 'itemDisplayM', xf: 0.32, depth: 22 },
+        { key: ['meteorite1', 'potteryAncient'], xf: 0.32, depth: 24, offY: -14, surface: true },
+        { key: 'table', xf: 0.61, depth: 23 },
+        { key: 'books2', xf: 0.61, depth: 24, offY: -12, surface: true },
+        { key: ['officechairBlue', 'officechairRed'], xf: 0.86, depth: 23 },
+      ],
+      [
+        { key: ['paintingNight', 'monaPixa'], xf: 0.68, depth: 21, wall: true },
+        { key: ['couchSmallG', 'couchSmallY'], xf: 0.32, depth: 23 },
+        { key: 'coffee2', xf: 0.61, depth: 23 },
+        { key: 'vasePink', xf: 0.61, depth: 24, offY: -12, surface: true },
+        { key: 'lamp3', xf: 0.89, depth: 22 },
+      ],
+    ],
+    garden: [
+      [
+        { key: 'plantHang', xf: 0.72, depth: 21, wall: true },
+        { key: 'plantLarge', xf: 0.3, depth: 22 },
+        { key: ['couchSmallG', 'couchSmallY'], xf: 0.61, depth: 23 },
+        { key: ['floraFernFull', 'floraBonsaiFull'], xf: 0.88, depth: 23 },
+      ],
+      [
+        { key: 'terrarium', xf: 0.31, depth: 23 },
+        { key: 'aquarium', xf: 0.62, depth: 23 },
+        { key: ['floraAloe', 'floraSnake', 'floraSucculent'], xf: 0.88, depth: 24 },
+      ],
+      [
+        { key: 'benchWood', xf: 0.36, depth: 23 },
+        { key: 'tableMed2', xf: 0.66, depth: 23 },
+        { key: ['floraRose', 'flora', 'floraBonsai'], xf: 0.66, depth: 24, offY: -12, surface: true },
+        { key: 'plantLarge', xf: 0.89, depth: 22 },
+      ],
+    ],
   };
   const KIT_NAMES = Object.keys(KITS);
 
-  // Pick a kit name for a channel: keyword on name first, then type, then seed.
-  function kitForChannel(name, type, seed) {
-    const n = String(name || '').toLowerCase();
+  function semanticKitForText(value) {
+    const n = semanticText(value);
     const test = (re) => re.test(n);
+    if (test(/\b(rule|verify|role|welcome|start|announce|intro|lobby|suggest|moderator|mod only|staff|log)s?\b/)) return 'reception';
+    if (test(/\b(read|doc|wiki|book|faq|resource|guide|info|poetry)\b/)) return 'library';
+    if (test(/\b(dev|code|eng|build|git|ci|ops|cmd|tech|bug|deploy|infra)\b/)) return 'office';
+    if (test(/\b(game|gaming|arcade|poketwo|console|quest)\b/)) return 'gaming';
+    if (test(/\b(movie|theater|cinema|watch|video|tiktok|anime|stream|fight vids|crank)\b/)) return 'cinema';
+    if (test(/\b(selfie|photo|art|gallery|showcase|design|creator|tattoo|piercing|nail|writing)\b/)) return 'studio';
+    if (test(/\b(plant|garden|flower|grow|pet|fur|frog|aquarium|terrarium)\b/)) return 'garden';
+    if (test(/\b(cafe|coffee|food|snack|lunch|bar|drink|shot)\b/)) return 'cafe';
+    if (test(/\b(kitchen|cook|recipe|meal)\b/)) return 'kitchen';
+    if (test(/\b(general|main|chat|hang|off topic|random|talk|lounge|social|hotbox|sinner|nsfw)\b/)) return 'lounge';
+    if (test(/\b(afk|sleep|quiet|zzz|away|vent|feel)\b/)) return 'cozy';
+    return null;
+  }
+
+  // Pick a kit from the channel first, then use its category as a fallback.
+  // This keeps a book room a library even when it lives in Entertainment,
+  // while still giving opaque names such as "Vixens" the Selfies studio look.
+  function kitForChannel(name, type, seed, categoryName = '') {
+    const own = semanticKitForText(name);
+    const category = semanticKitForText(categoryName);
+    const n = semanticText(name);
     if (type === 'voice' || type === 'stage') {
-      // Voice = social spaces (never bedrooms). Meeting/conference rooms get the
-      // long-table reception kit; the rest are lounges/cafes.
-      if (test(/(meet|conf|stand.?up|board|call|stage|podium)/)) return 'reception';
-      return seededPick(seed, ['lounge', 'cafe']);
+      if (/\b(meet|conf|stand up|board|call|podium)\b/.test(n)) return 'reception';
+      if (/\b(movie|theater|cinema|watch|stage|stream)\b/.test(n)) return 'cinema';
+      if (own && !['office', 'library', 'cozy', 'garden'].includes(own)) return own;
+      if (category && ['gaming', 'cinema', 'cafe', 'lounge'].includes(category)) return category;
+      return seededPick(seed, ['lounge', 'cafe', 'cinema']);
     }
-    if (test(/(read|doc|wiki|book|faq|resource|guide|rule|info)/)) return 'library';
-    if (test(/(dev|code|eng|build|git|ci|ops|cmd|tech|bug|deploy|infra)/)) return 'office';
-    if (test(/(cafe|coffee|food|snack|lunch|bar|drink)/)) return 'cafe';
-    if (test(/(kitchen|cook|recipe|meal)/)) return 'kitchen';
-    if (test(/(welcome|start|rule|announce|intro|lobby|front|greet)/)) return 'reception';
-    if (test(/(art|gallery|show|media|photo|design|pet|fish)/)) return 'gallery';
-    if (test(/(general|chat|hang|off.?topic|random|talk|lounge|social)/)) return 'lounge';
-    if (test(/(afk|sleep|quiet|zzz|away|vent|feel)/)) return 'cozy';
+    if (own) return own;
+    if (category) return category;
     return seededPick(seed, KIT_NAMES);
   }
 
@@ -766,6 +883,157 @@
   // slot) calls for a themed set-piece instead of the plain office park.
   // =========================================================================
   const THEME_KITS = {
+    community: {
+      wall: 0x4f78a8, side: 0x34587f, outline: 0x14283c, roof: 0x6f98c0, band: 0x2b4866,
+      title: { color: '#10283b', bg: '#d7efff' },
+      facades: [
+        { wall: 0x4f78a8, side: 0x34587f, outline: 0x14283c, roof: 0x6f98c0, band: 0x2b4866 },
+        { wall: 0x4f927f, side: 0x34705f, outline: 0x14352b, roof: 0x72b39e, band: 0x2a5a4b },
+        { wall: 0x7d659f, side: 0x5d477c, outline: 0x2d1e42, roof: 0x9a82b8, band: 0x493660 },
+        { wall: 0xb57a48, side: 0x8e5930, outline: 0x402410, roof: 0xcf965f, band: 0x70411f },
+      ],
+      stairsDx: 36,
+      recipes: [
+        () => ({
+          h: 88, fill: 0xe8f0e8, slots: [92, 172, 234],
+          items: [
+            ['w', 'clipboardWallSmall', 92, 7], ['w', 'windowSq', 226, 7],
+            ['f', 'desk2', 118, 1, 0], ['f', 'laptop', 118, 1, 14],
+            ['f', ['waitChairSolo', 'waitChairSoloRed'], 176, 1, 0],
+            ['f', 'floraBonsaiFull', 232, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 104, fill: 0xf0e6d2, slots: [92, 164, 232],
+          items: [
+            ['w', ['clipboardLong1', 'clipboardLong2'], 174, 8],
+            ['f', ['bookshelf', 'bookshelf2'], 78, 1, 0],
+            ['f', 'tableLong', 150, 1, 0], ['f', 'books2', 150, 1, 13],
+            ['f', ['officechairBlue', 'officechairPurple'], 220, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 92, fill: 0xe2e8f2, slots: [82, 166, 238],
+          items: [
+            ['w', 'framedCert', 220, 7],
+            ['f', 'deskOfficeLong', 132, 1, 0],
+            ['f', 'monitor', 118, 1, 14], ['f', 'micDesk', 148, 1, 14],
+            ['f', ['officechairOrange', 'officechairRed'], 202, 1, 0],
+            ['npc', 'community-host', 238],
+          ],
+        }),
+        () => ({
+          h: 100, fill: 0xe6efe0, slots: [82, 148, 224],
+          items: [
+            ['w', 'clipboard', 224, 8],
+            ['f', ['couchSmallG', 'couchSmallY'], 92, 1, 0],
+            ['f', 'coffee2', 156, 1, 0], ['f', 'vasePink', 156, 1, 12],
+            ['f', 'filecabinet', 224, 1, 0],
+          ],
+        }),
+      ],
+    },
+    social: {
+      wall: 0xb05c76, side: 0x843f57, outline: 0x3e1727, roof: 0xcf7892, band: 0x6d3045,
+      title: { color: '#401426', bg: '#ffd9e7' },
+      facades: [
+        { wall: 0xb05c76, side: 0x843f57, outline: 0x3e1727, roof: 0xcf7892, band: 0x6d3045 },
+        { wall: 0x548c83, side: 0x396a63, outline: 0x17342f, roof: 0x71aaa0, band: 0x2d554f },
+        { wall: 0x8662a6, side: 0x63447f, outline: 0x2c1b3d, roof: 0xa27bc0, band: 0x4d3563 },
+      ],
+      stairsDx: 36,
+      recipes: [
+        () => ({
+          h: 90, fill: 0xf2d8df, slots: [82, 154, 232],
+          items: [
+            ['w', 'windowCircle', 218, 7],
+            ['f', ['couchBlue', 'couchRed', 'couchYellow'], 102, 1, 0],
+            ['f', 'coffee', 172, 1, 0], ['f', 'radio', 172, 1, 13],
+            ['f', ['lamp2', 'lamp3'], 232, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 104, fill: 0xf1e0c8, slots: [86, 152, 224],
+          items: [
+            ['w', ['posterDonut1', 'posterDonut3'], 220, 8],
+            ['f', ['stoolRed', 'stoolBlue'], 84, 1, 0],
+            ['f', 'tableMed2', 132, 1, 0], ['f', 'mug', 132, 1, 14],
+            ['f', ['stoolYellow', 'stoolGreen'], 180, 1, 0],
+            ['f', 'plantLarge', 234, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 94, fill: 0xd9d6ea, slots: [82, 150, 228],
+          items: [
+            ['w', 'tvGame', 214, 10],
+            ['f', ['couchSmall', 'couchSmallGr', 'couchSmallR'], 94, 1, 0],
+            ['f', 'coffee2', 158, 1, 0], ['f', 'gameConsole', 158, 1, 11],
+            ['f', ['lamp', 'lamp3'], 232, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 108, fill: 0xddebd8, slots: [84, 152, 226],
+          items: [
+            ['w', 'plantHang', 190, 5],
+            ['f', 'terrarium', 86, 1, 0],
+            ['f', ['couchSmallG', 'couchSmallY'], 148, 1, 0],
+            ['f', 'table', 202, 1, 0], ['f', 'floraBonsaiFull', 202, 1, 13],
+            ['f', 'plantLarge', 240, 1, 0],
+          ],
+        }),
+      ],
+    },
+    creative: {
+      wall: 0x8a63a8, side: 0x65427f, outline: 0x2d173f, roof: 0xa982c2, band: 0x503266,
+      title: { color: '#2c123d', bg: '#eadcff' },
+      facades: [
+        { wall: 0x8a63a8, side: 0x65427f, outline: 0x2d173f, roof: 0xa982c2, band: 0x503266 },
+        { wall: 0xb36588, side: 0x8b4667, outline: 0x421b2e, roof: 0xcf82a2, band: 0x6e3450 },
+        { wall: 0x557eae, side: 0x3a5e89, outline: 0x172d47, roof: 0x729bc5, band: 0x2e4d70 },
+      ],
+      stairsDx: 36,
+      recipes: [
+        () => ({
+          h: 92, fill: 0xeadcf0, slots: [86, 158, 230],
+          items: [
+            ['w', ['monaPixa', 'paintingNight'], 206, 8],
+            ['f', 'itemDisplayM', 88, 1, 0],
+            ['f', ['meteorite1', 'potteryAncient'], 88, 1, 15],
+            ['f', ['couchSmallR', 'couchSmallY'], 158, 1, 0],
+            ['f', 'lamp3', 232, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 106, fill: 0xe0e5f0, slots: [82, 154, 230],
+          items: [
+            ['w', 'gLight3', 212, 7],
+            ['f', 'deskOfficeLong', 126, 1, 0],
+            ['f', 'monitor', 112, 1, 14], ['f', 'micDesk', 144, 1, 14],
+            ['f', ['thronePurple', 'throneBlue'], 196, 1, 0],
+            ['f', 'shelfMed', 238, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 96, fill: 0xefe4d0, slots: [88, 158, 230],
+          items: [
+            ['w', 'windowSq', 220, 7],
+            ['f', ['bookshelf', 'bookshelf2'], 82, 1, 0],
+            ['f', 'tableLong', 154, 1, 0], ['f', 'books2', 154, 1, 13],
+            ['f', ['officechairRed', 'officechairPurple'], 222, 1, 0],
+          ],
+        }),
+        () => ({
+          h: 110, fill: 0xdde9df, slots: [84, 152, 228],
+          items: [
+            ['w', 'plantHang', 210, 6],
+            ['f', 'aquarium', 82, 1, 0],
+            ['f', 'terrarium', 146, 1, 0],
+            ['f', ['couchSmallG', 'couchSmallGr'], 210, 1, 0],
+            ['f', 'floraFernFull', 244, 1, 0],
+          ],
+        }),
+      ],
+    },
     cafe: {
       wall: 0xd88a5a, side: 0xb06a40, outline: 0x4a2410, roof: 0xc07048, band: 0x8a4e2c,
       signKey: 'cafeSign', signScale: SCALE,
@@ -1041,10 +1309,13 @@
   // 'plain' keeps today's tasteful per-channel office-park building so a
   // typical dev server still looks like today's map most of the time; the
   // themed set-pieces are sprinkled in for variety.
-  const THEME_ROTATION_POOL = ['plain', 'plain', 'cafe', 'gamer', 'hospital', 'museum', 'police', 'fire', 'halloween'];
+  const THEME_ROTATION_POOL = ['plain', 'plain', 'plain', 'community', 'social', 'creative', 'cafe', 'gamer', 'museum'];
   const KEYWORD_THEMES = [
+    [/intro|welcome|rule|verify|role|announcement|suggestion|community|onboard/i, 'community'],
+    [/main|chat|social|lounge|hotbox|nsfw|sinner|adult/i, 'social'],
+    [/selfie|photo|creator|creative/i, 'creative'],
     [/cafe|coffee|food|kitchen/i, 'cafe'],
-    [/game|gaming|arcade|clip|media/i, 'gamer'],
+    [/game|gaming|arcade/i, 'gamer'],
     [/support|help|health|med|hospital/i, 'hospital'],
     [/art|gallery|showcase|museum|history/i, 'museum'],
     [/mod|admin|staff|report|police|security/i, 'police'],
@@ -1055,6 +1326,38 @@
     [/winter|xmas|christmas|holiday|snow/i, 'winterzone'],
     [/dig|archaeo|fossil|excavat|research|\blab\b/i, 'digzone'],
   ];
+
+  function recipeIndexForTheme(theme, ch, count) {
+    if (count <= 1) return 0;
+    const name = semanticText(ch?.name);
+    const choose = (index) => Math.min(count - 1, index);
+    if (theme === 'community') {
+      if (/\b(announcements?|logs?|updates?)\b/.test(name)) return choose(2);
+      if (/\b(suggestions?|ideas?|feedback)\b/.test(name)) return choose(3);
+      if (/\b(moderators?|staff)\b/.test(name)) return choose(2);
+      if (/\b(rules?)\b/.test(name)) return choose(1);
+      if (/\b(verify)\b/.test(name)) return 0;
+      if (/\b(roles?)\b/.test(name)) return choose(3);
+      if (/\b(welcome|intro|start)\b/.test(name)) return 0;
+    }
+    if (theme === 'social') {
+      if (/\b(movie|theater|watch|video|stream)\b/.test(name)) return choose(2);
+      if (/\b(plant|garden|pet|fur|frog)\b/.test(name)) return choose(3);
+      if (/\b(hotbox|bar|shot|drink)\b/.test(name)) return choose(1);
+      if (/\b(main|chat|general|talk)\b/.test(name)) return 0;
+    }
+    if (theme === 'creative') {
+      if (/\b(write|writing|book|poetry)\b/.test(name)) return choose(2);
+      if (/\b(plant|pet|fur|frog)\b/.test(name)) return choose(3);
+      if (/\b(art|photo|selfie|tattoo|piercing|nail)\b/.test(name)) return 0;
+      if (/\b(video|tiktok|stream|creator)\b/.test(name)) return choose(1);
+    }
+    if (theme === 'cafe') {
+      if (/\b(coffee|bar|drink|counter)\b/.test(name)) return choose(1);
+      if (/\b(lunch|food|meal|table)\b/.test(name)) return 0;
+    }
+    return hashSeed(ch?.id || ch?.name || '') % count;
+  }
 
   class ExampleMapScene extends Phaser.Scene {
     constructor() {
@@ -1409,7 +1712,7 @@
 
         // Plain: the original per-channel office-park building, chunked at 4.
         const perBuilding = 4;
-        const textPalettes = [0, 1, 2];
+        const textPalettes = [0, 1, 2, 3, 4, 5];
         for (let i = 0; i < cat.channels.length; i += perBuilding) {
           const chunk = cat.channels.slice(i, i + perBuilding);
           const bw = 290;
@@ -1431,17 +1734,28 @@
 
     /** Decide a building theme (or special outdoor zone) for one category. */
     pickTheme(cat) {
-      const name = String(cat.name || '').toLowerCase();
+      const name = semanticText(cat.name);
       const channels = cat.channels;
+      const channelContext = semanticText(channels.map((ch) => ch.name).join(' '));
       const allVoice = channels.length > 0 && channels.every((c) => c.type === 'voice' || c.type === 'stage');
       if (allVoice || /voice|\bvc\b|\btalk\b/i.test(name)) return { kind: 'voice' };
+      // These mixed-use categories are intentionally resolved room-by-room.
+      // Treating all of Entertainment as an arcade or all of IRL as a cafe
+      // erases the purpose of book, art, pet, fitness, and food channels.
+      if (/\b(entertainment|irl|life|lifestyle)\b/.test(name)) return { kind: 'plain' };
+      // Uncategorized moderation/rules channels inherit the guild name as
+      // their category; use their actual channel words to avoid a random shell.
+      if (/\b(rule|verify|role|moderator|mod only|staff|log)s?\b/.test(channelContext)) {
+        return { kind: 'themed', theme: 'community' };
+      }
       for (const [re, theme] of SPECIAL_ZONE_THEMES) {
         if (re.test(name)) return { kind: 'zone', theme };
       }
       for (const [re, theme] of KEYWORD_THEMES) {
         if (re.test(name)) return { kind: 'themed', theme };
       }
-      const pick = THEME_ROTATION_POOL[this._themeRR % THEME_ROTATION_POOL.length];
+      const stableSeed = hashSeed(`${cat.id || ''}:${name}`);
+      const pick = THEME_ROTATION_POOL[stableSeed % THEME_ROTATION_POOL.length];
       this._themeRR += 1;
       return pick === 'plain' ? { kind: 'plain' } : { kind: 'themed', theme: pick };
     }
@@ -1461,6 +1775,7 @@
       const roomsH = cfg.rooms.reduce((s, r) => s + r.h, 0);
       const bh = 18 + roomsH + bandH * (cfg.rooms.length - 1) + doorStrip;
       const top = this.groundY - bh;
+      const facadeVariant = cfg.facadeVariant || 0;
       this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 42);
       const padX = left + 16;
       const roomW = bw - 32;
@@ -1479,6 +1794,24 @@
       g.fillRect(left - 6, top - 10, bw + 12, 12);
       g.lineStyle(3, cfg.outline, 1);
       g.strokeRect(left - 6, top - 10, bw + 12, 12);
+      if (facadeVariant === 1) {
+        // Tall corner pilasters make this chunk read as a narrow townhouse.
+        g.fillStyle(cfg.band, 0.88);
+        g.fillRect(left + 5, top + 4, 6, bh - doorStrip - 2);
+        g.fillRect(left + bw - 20, top + 4, 6, bh - doorStrip - 2);
+        g.fillStyle(cfg.roof, 1);
+        g.fillRect(left + 18, top - 15, bw - 36, 6);
+      } else if (facadeVariant === 2) {
+        // Raised center parapet breaks the repeated flat-roof silhouette.
+        const capX = left + Math.round(bw * 0.25);
+        const capW = Math.round(bw * 0.5);
+        g.fillStyle(cfg.roof, 1);
+        g.fillRect(capX, top - 20, capW, 11);
+        g.lineStyle(3, cfg.outline, 1);
+        g.strokeRect(capX, top - 20, capW, 11);
+        g.fillStyle(cfg.band, 0.9);
+        g.fillRect(left + 3, top + 8, bw - 20, 4);
+      }
       this.drawFacadeDepth(g, left, top, bw, bh, {
         outline: cfg.outline,
         roof: cfg.roof,
@@ -1591,6 +1924,7 @@
     placeRoomItems(room, x0, y0, floorY, roomW) {
       const seed = hashSeed(room.roomKey || room.id || '');
       const floorId = room.roomKey || room.id || null;
+      const itemOffset = Number(room.itemOffset) || 0;
       const pick = (key, idx) => (Array.isArray(key) ? seededPick(seed, key, idx * 13 + 5) : key);
       // Theme stairs lane — skip floor items that land inside it
       const clearX = x0 + (room.stairsDx != null ? room.stairsDx : roomW * 0.14);
@@ -1599,17 +1933,17 @@
         const kind = it[0];
         if (kind === 'f') {
           const [, key, dx, sc, dy] = it;
-          const x = x0 + dx;
+          const x = x0 + dx + itemOffset;
           if (Math.abs(x - clearX) < clearR && !(dy > 0)) return; // keep climb lane free
           this.furn(pick(key, idx), x, floorY - (dy || 0), 23, (sc || 1) * SCALE, floorId);
         } else if (kind === 'w') {
           const [, key, dx, dyTop, sc] = it;
-          this.wallDecor(pick(key, idx), x0 + dx, y0 + dyTop, 22, (sc || 1) * SCALE);
+          this.wallDecor(pick(key, idx), x0 + dx + itemOffset, y0 + dyTop, 22, (sc || 1) * SCALE);
         } else if (kind === 'npc') {
           const [, key, dx] = it;
           this.decorNpcQueue.push({
             seed: key,
-            x: x0 + dx,
+            x: x0 + dx + itemOffset,
             floorY,
             floorId,
             minX: x0 + 62,
@@ -1628,27 +1962,46 @@
     /** Build one themed building for `channels` (already chunked to <= 2). */
     buildGenericBuilding(theme, left, categoryLabel, channels) {
       const kit = THEME_KITS[theme];
-      const rooms = channels.map((ch, i) => {
-        const recipe = kit.recipes[i % kit.recipes.length]();
+      const buildingSeed = hashSeed(`${categoryLabel}:${channels.map((ch) => ch.id).join(':')}`);
+      const facade = kit.facades?.[buildingSeed % kit.facades.length] || kit;
+      const baseBw = kit.bw || 290;
+      const maxOccupants = Math.max(0, ...channels.map((ch) => Number(ch.occupantCount) || 0));
+      // Busy mixed categories need real breathing room.  Widen the whole
+      // building before inventing overlapping overflow slots in a 258px room.
+      const buildingBw = Math.min(430, baseBw + Math.max(0, maxOccupants - 4) * 44);
+      const roomInnerW = buildingBw - 32;
+      const itemOffset = (buildingBw - baseBw) / 2;
+      const rooms = channels.map((ch) => {
+        const recipeIndex = recipeIndexForTheme(theme, ch, kit.recipes.length);
+        const recipe = kit.recipes[recipeIndex]();
+        const desiredSlots = Math.max(recipe.slots?.length || 0, Math.min(8, Number(ch.occupantCount) || 0));
+        const slots = desiredSlots > (recipe.slots?.length || 0)
+          ? Array.from({ length: desiredSlots }, (_, idx) => (
+            70 + ((roomInnerW - 84) * idx) / Math.max(1, desiredSlots - 1)
+          ))
+          : (recipe.slots || []).map((x) => x + itemOffset);
         return {
           id: chKey(ch.id),
           roomKey: chKey(ch.id),
           label: channelLabel(ch),
           h: recipe.h,
           fill: recipe.fill,
-          slots: recipe.slots,
+          slots,
           items: recipe.items,
           bars: recipe.bars,
+          itemOffset,
+          stairsDx: kit.stairsDx,
         };
       });
       const b = this.drawThemeBuilding({
         left,
-        bw: kit.bw,
-        wall: kit.wall, side: kit.side, outline: kit.outline, roof: kit.roof, band: kit.band,
+        bw: buildingBw,
+        wall: facade.wall, side: facade.side, outline: facade.outline, roof: facade.roof, band: facade.band,
         signKey: kit.signKey, signScale: kit.signScale,
         title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title.color, bg: kit.title.bg },
         doorKind: kit.doorKind,
         stairsDx: kit.stairsDx,
+        facadeVariant: buildingSeed % 3,
         rooms,
       });
 
@@ -2261,21 +2614,27 @@
         { shell: 0x45b866, side: 0x2f8f4a, roof: 0x359a52, stroke: 0x12301a, titleBg: '#b8f0c8', titleFg: '#102818', lintel: 0x2a5534 },
         { shell: 0x3db4a8, side: 0x2a8f86, roof: 0x45c4b8, stroke: 0x0f3530, titleBg: '#b8f0ea', titleFg: '#0a2824', lintel: 0x2a5548 },
         { shell: 0xe8943a, side: 0xc47a2a, roof: 0xf0a850, stroke: 0x4a3010, titleBg: '#ffe8c8', titleFg: '#3a2208', lintel: 0x553822 },
+        { shell: 0x5876b8, side: 0x3d5791, roof: 0x6f8dcc, stroke: 0x172342, titleBg: '#d8e2ff', titleFg: '#142044', lintel: 0x303f70 },
+        { shell: 0xb8668d, side: 0x91496c, roof: 0xcf7ca2, stroke: 0x42172b, titleBg: '#ffe0ef', titleFg: '#40142a', lintel: 0x70304e },
+        { shell: 0x8d6c50, side: 0x6e5039, roof: 0xa98264, stroke: 0x342216, titleBg: '#f2dfcc', titleFg: '#372317', lintel: 0x5d422f },
       ];
       const pal = palettes[paletteIndex % palettes.length];
-      const fills = [0xead9b8, 0xe8dcc4, 0xe4eaf0, 0xf0e0c0];
       const g = this.add.graphics().setDepth(20);
       const bw = 290;
-      const bh = 228;
+      const roomCount = Math.min(4, channels.length);
+      const singleRow = roomCount <= 2;
+      const bh = singleRow ? 154 : 228;
       const top = groundY - bh;
       this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 42);
       const gap = 6;
-      const roomW = (bw - 32 - gap) / 2;
+      const innerW = bw - 32;
+      const roomW = (innerW - gap) / 2;
       const doorStrip = 54;
-      const upperH = 74;
+      const upperH = singleRow ? bh - doorStrip - 18 : 74;
       const lowerTop = top + 94;
       const lowerH = bh - (lowerTop - top) - doorStrip;
       const padX = left + 16;
+      const facadeVariant = paletteIndex % 4;
 
       g.fillStyle(0x000000, 0.22);
       g.fillRect(left + 8, groundY - 6, bw, 10);
@@ -2289,22 +2648,48 @@
       g.fillRect(left - 6, top - 10, bw + 12, 12);
       g.lineStyle(3, pal.stroke, 1);
       g.strokeRect(left - 6, top - 10, bw + 12, 12);
+      if (facadeVariant === 1) {
+        const capX = left + 62;
+        const capW = bw - 124;
+        g.fillStyle(pal.roof, 1);
+        g.fillRect(capX, top - 21, capW, 12);
+        g.lineStyle(3, pal.stroke, 1);
+        g.strokeRect(capX, top - 21, capW, 12);
+      } else if (facadeVariant === 2) {
+        g.fillStyle(pal.lintel, 0.95);
+        g.fillRect(left + 5, top + 8, bw - 24, 5);
+        g.fillRect(left + 7, top + 18, 6, bh - doorStrip - 22);
+        g.fillRect(left + bw - 25, top + 18, 6, bh - doorStrip - 22);
+      } else if (facadeVariant === 3) {
+        g.fillStyle(pal.roof, 1);
+        g.fillRect(left - 10, top - 15, Math.round(bw * 0.58), 6);
+        g.fillStyle(pal.lintel, 0.9);
+        g.fillRect(left + Math.round(bw * 0.58), top + 3, Math.round(bw * 0.36), 7);
+      }
       this.drawFacadeDepth(g, left, top, bw, bh, {
         outline: pal.stroke,
         roof: pal.roof,
         side: pal.side,
       });
 
-      this.buildingTitle(left + bw / 2, top - 22, shortLabel(title, 22), {
+      this.buildingTitle(left + bw / 2, top - (facadeVariant === 1 ? 30 : 22), shortLabel(title, 22), {
         color: pal.titleFg, bg: pal.titleBg,
       });
 
-      const grid = [
-        { x: padX, y: top + 12, w: roomW, h: upperH },
-        { x: padX + roomW + gap, y: top + 12, w: roomW, h: upperH },
-        { x: padX, y: lowerTop, w: roomW, h: lowerH },
-        { x: padX + roomW + gap, y: lowerTop, w: roomW, h: lowerH },
-      ];
+      const grid = roomCount === 1
+        ? [{ x: padX, y: top + 12, w: innerW, h: upperH }]
+        : [
+          { x: padX, y: top + 12, w: roomW, h: upperH },
+          { x: padX + roomW + gap, y: top + 12, w: roomW, h: upperH },
+          ...(roomCount === 3
+            ? [{ x: padX, y: lowerTop, w: innerW, h: lowerH }]
+            : roomCount >= 4
+              ? [
+                { x: padX, y: lowerTop, w: roomW, h: lowerH },
+                { x: padX + roomW + gap, y: lowerTop, w: roomW, h: lowerH },
+              ]
+              : []),
+        ];
       const shaftOffset = Math.min(32, roomW * 0.24);
       const leftHasShaft = !!(channels[0] && channels[2]);
       const rightHasShaft = false;
@@ -2335,27 +2720,6 @@
           maxX: slot.x + slot.w - 8,
           label,
         });
-      });
-
-      // A Discord category can contain fewer than four channels.  Keep those
-      // unused bays as believable exterior windows instead of broad empty
-      // rectangles, without registering them as navigable rooms.
-      grid.slice(Math.min(channels.length, 4)).forEach((slot, idx) => {
-        const inset = 5;
-        g.fillStyle(pal.stroke, 0.5);
-        g.fillRect(slot.x, slot.y, slot.w, slot.h);
-        g.fillStyle(0x8bb9c2, 0.62);
-        g.fillRect(slot.x + inset, slot.y + inset, slot.w - inset * 2, slot.h - inset * 2);
-        g.fillStyle(0xd6edf0, 0.28);
-        g.fillRect(slot.x + inset + 2, slot.y + inset + 2, slot.w - inset * 2 - 4, Math.max(5, slot.h * 0.28));
-        g.fillStyle(0x263744, 0.38);
-        g.fillRect(slot.x + slot.w / 2 - 1, slot.y + inset, 3, slot.h - inset * 2);
-        for (let blind = slot.y + 18; blind < slot.y + slot.h - 8; blind += 11) {
-          g.fillStyle(0xe7f3f4, 0.18 + (idx % 2) * 0.08);
-          g.fillRect(slot.x + inset + 2, blind, slot.w - inset * 2 - 4, 2);
-        }
-        g.lineStyle(2, pal.stroke, 0.9);
-        g.strokeRect(slot.x, slot.y, slot.w, slot.h);
       });
 
       const firstKey = channels[0] ? chKey(channels[0].id) : null;
@@ -2394,7 +2758,7 @@
           roomKey: roofId,
           floorY: roofY,
           minX: padX + 8,
-          maxX: padX + roomW * 2 + gap - 8,
+          maxX: padX + innerW - 8,
           label: 'Rooftop',
           isRoof: true,
         });
@@ -2407,15 +2771,20 @@
         });
         this.markStairs(roofStairX, topKey);
         this.markStairs(roofStairX, roofId);
-        this.furn('roofVents1', padX + roomW * 0.55, roofY, 22);
-        this.furn('treeRoof1', padX + roomW * 1.2, roofY, 22);
-        this.furn('roofVents2', padX + roomW * 1.7, roofY, 22);
+        if (facadeVariant % 2 === 0) {
+          this.furn('roofVents1', padX + innerW * 0.28, roofY, 22);
+          this.furn('treeRoof1', padX + innerW * 0.62, roofY, 22);
+          this.furn('roofVents2', padX + innerW * 0.84, roofY, 22);
+        } else {
+          this.furn('treeRoof2', padX + innerW * 0.3, roofY, 22);
+          this.furn('roofVents2', padX + innerW * 0.68, roofY, 22);
+        }
       }
       if (channels[2] && channels[3]) {
         this.registerPassage({
           fromFloorId: chKey(channels[2].id),
           toFloorId: chKey(channels[3].id),
-          x: padX + roomW + gap / 2,
+          x: grid[2].x + grid[2].w + gap / 2,
           radius: 14,
         });
       }
@@ -2423,7 +2792,7 @@
         this.registerPassage({
           fromFloorId: chKey(channels[0].id),
           toFloorId: chKey(channels[1].id),
-          x: padX + roomW + gap / 2,
+          x: grid[0].x + grid[0].w + gap / 2,
           radius: 14,
         });
       }
@@ -2574,7 +2943,7 @@
     decorateRoom(ch, slotX, slotY, slotW, slotH, floorY, opts = {}) {
       const roomKey = opts.roomKey || chKey(ch.id);
       const seed = hashSeed(roomKey);
-      const kitName = kitForChannel(ch.name, ch.type, seed);
+      const kitName = kitForChannel(ch.name, ch.type, seed, ch.categoryName);
       const variants = KITS[kitName] || KITS.lounge;
       const kit = variants[seed % variants.length];
       const clearXf = Number.isFinite(opts.clearXf) ? opts.clearXf : null;
@@ -3105,8 +3474,9 @@
     }
 
     /** Name only — status uses Pixel Spaces UI icons, not emoji. */
-    formatPersonLabel(person) {
-      return String(person.displayName || 'member').slice(0, 14);
+    formatPersonLabel(person, max = 14) {
+      const name = String(person.displayName || 'member');
+      return name.length > max ? `${name.slice(0, Math.max(1, max - 1))}…` : name;
     }
 
     personTagColor(person) {
@@ -3182,6 +3552,7 @@
       if (!live?.sprite) return;
       const x = live.sprite.x;
       const y = live.sprite.y;
+      const tagRise = Number(live.tagLane) || 0;
       if (live.statusIcon?.active) {
         live.statusIcon.x = x + 10;
         live.statusIcon.y = y - 22;
@@ -3196,11 +3567,11 @@
       }
       if (live.tagBg?.active) {
         live.tagBg.x = x;
-        live.tagBg.y = y - 38;
+        live.tagBg.y = y - 38 - tagRise;
       }
       if (live.tag?.active) {
         live.tag.x = x;
-        live.tag.y = y - 40;
+        live.tag.y = y - 40 - tagRise;
       }
       if (live.bubbleImg?.active) {
         live.bubbleImg.x = x;
@@ -3342,7 +3713,7 @@
         } else {
           const live = existing;
           if (live.tag) {
-            const label = this.formatPersonLabel(person);
+            const label = this.formatPersonLabel(person, live.labelMax || 14);
             if (live.tag.text !== label) live.tag.setText(label);
             live.tag.setBackgroundColor(this.personTagColor(person));
           }
@@ -3470,6 +3841,7 @@
 
       this.releaseSlot(live.roomKey, person.userId);
       const slot = this.claimSlot(person.roomKey, person.userId);
+      const slotIndex = Math.max(0, (this.roomSlots.get(person.roomKey) || []).indexOf(slot));
       const toX = slot.x;
       const toY = slot.y;
       const fromX = live.sprite.x;
@@ -3481,13 +3853,15 @@
       live.moving = true;
       live.roomKey = person.roomKey;
       live.soft = person.soft;
+      live.tagLane = (slotIndex % 2) * 11;
+      live.labelMax = (this.roomSlots.get(person.roomKey) || []).length >= 5 ? 9 : 14;
       this.stopLiveAmbient(live);
       this.tweens.killTweensOf(live.sprite);
       this.tweens.killTweensOf(live.tag);
       live.sprite.setAlpha(person.soft ? 0.72 : 1);
       live.sprite.setDepth(person.soft ? 30 : 34);
       if (live.tag) {
-        live.tag.setText(person.displayName);
+        live.tag.setText(this.formatPersonLabel(person, live.labelMax || 14));
         live.tag.setBackgroundColor(person.soft ? '#334155' : '#5865f2');
         live.tag.setDepth((person.soft ? 30 : 34) + 1);
       }
@@ -3500,10 +3874,7 @@
         if (live.sprite) live.sprite.setFlipX(x1 < x0);
       };
       const attachTag = () => {
-        if (live.tag && live.sprite) {
-          live.tag.x = live.sprite.x;
-          live.tag.y = live.sprite.y - 40;
-        }
+        this.layoutSocialSprites(live);
       };
 
       const legs = sameFloor
@@ -3551,13 +3922,17 @@
     spawnLivePerson(person) {
       if (person.isMe) return;
       const slot = this.claimSlot(person.roomKey, person.userId);
+      const slotList = this.roomSlots.get(person.roomKey) || [];
+      const slotIndex = Math.max(0, slotList.indexOf(slot));
+      const tagLane = (slotIndex % 2) * 11;
       const fallbackSheet = (person.avatar?.mode === 'premade' && person.avatar.premade
         && this.textures.exists(person.avatar.premade))
         ? person.avatar.premade
         : this.npcSheetFor(String(person.userId));
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
-      const label = this.formatPersonLabel(person);
+      const labelMax = slotList.length >= 5 ? 9 : 14;
+      const label = this.formatPersonLabel(person, labelMax);
 
       const sprite = this.add.sprite(slot.x, slot.y, fallbackSheet, 0)
         .setScale(SCALE)
@@ -3574,13 +3949,13 @@
           : (this.textures.exists('uiPanelBlue') ? 'uiPanelBlue' : null));
       let tagBg = null;
       if (panelKey) {
-        tagBg = this.add.image(slot.x, slot.y - 38, panelKey)
+        tagBg = this.add.image(slot.x, slot.y - 38 - tagLane, panelKey)
           .setScale(SCALE * 0.35)
           .setOrigin(0.5, 1)
           .setDepth(depth + 1)
           .setAlpha(0);
       }
-      const tag = this.add.text(slot.x, slot.y - 40, label, {
+      const tag = this.add.text(slot.x, slot.y - 40 - tagLane, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
         fontSize: '9px',
         fontStyle: 'bold',
@@ -3611,6 +3986,8 @@
         boostIcon: null,
         bubbleImg: null,
         bubbleText: null,
+        tagLane,
+        labelMax,
         _lastSnippet: null,
       };
       this.livePeople.set(person.userId, live);
