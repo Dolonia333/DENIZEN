@@ -718,7 +718,9 @@
     async function connectGuild(g) {
       const presenceUrl = hostedPresenceBase();
       const presenceUrlResolved = buildPresenceUrl(presenceUrl, g.guildId);
+      // Merge so OAuth-linked discordUserId / avatar survive server connect.
       const cfg = {
+        ...loadCfg(),
         presenceUrl,
         guildId: g.guildId,
         label: g.name || '',
@@ -862,7 +864,18 @@
 
     fillForm();
     void loadInviteLink();
-    void bootstrapFromGrant().then(() => refreshAccountStatus());
+    void bootstrapFromGrant().then(() => {
+      // successHtml may have written discordUserId to localStorage even when
+      // access_grant session exchange fails (DB offline) — still show the chip.
+      const q2 = new URLSearchParams(location.search);
+      if (q2.get('discord_linked') === '1') {
+        updateAccountUi(loadCfg());
+        q2.delete('discord_linked');
+        q2.delete('access_grant');
+        history.replaceState(null, '', `${location.pathname}${q2.toString() ? `?${q2}` : ''}`);
+      }
+      return refreshAccountStatus();
+    });
     const boot = loadCfg();
     const q = new URLSearchParams(location.search);
     if (q.get('play') === '1' && boot.presenceUrlResolved) {
