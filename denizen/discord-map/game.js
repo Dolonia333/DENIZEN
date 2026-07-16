@@ -1968,7 +1968,7 @@
       const maxOccupants = Math.max(0, ...channels.map((ch) => Number(ch.occupantCount) || 0));
       // Busy mixed categories need real breathing room.  Widen the whole
       // building before inventing overlapping overflow slots in a 258px room.
-      const buildingBw = Math.min(430, baseBw + Math.max(0, maxOccupants - 4) * 44);
+      const buildingBw = Math.min(430, baseBw + Math.max(0, maxOccupants - 3) * 44);
       const roomInnerW = buildingBw - 32;
       const itemOffset = (buildingBw - baseBw) / 2;
       const rooms = channels.map((ch) => {
@@ -3854,7 +3854,7 @@
       live.roomKey = person.roomKey;
       live.soft = person.soft;
       live.tagLane = (slotIndex % 2) * 11;
-      live.labelMax = (this.roomSlots.get(person.roomKey) || []).length >= 5 ? 9 : 14;
+      live.labelMax = (this.roomSlots.get(person.roomKey) || []).length >= 4 ? 9 : 14;
       this.stopLiveAmbient(live);
       this.tweens.killTweensOf(live.sprite);
       this.tweens.killTweensOf(live.tag);
@@ -3931,7 +3931,7 @@
         : this.npcSheetFor(String(person.userId));
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
-      const labelMax = slotList.length >= 5 ? 9 : 14;
+      const labelMax = slotList.length >= 4 ? 9 : 14;
       const label = this.formatPersonLabel(person, labelMax);
 
       const sprite = this.add.sprite(slot.x, slot.y, fallbackSheet, 0)
