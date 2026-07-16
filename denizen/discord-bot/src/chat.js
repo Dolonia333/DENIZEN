@@ -120,22 +120,20 @@ async function handleBotChat(message, ctx) {
   try {
     await message.channel.sendTyping().catch(() => {});
 
-    if (['help', 'commands', '?'].includes(cmd)) {
-      await message.reply(
-        [
-          '**Denizen** (room tracker)',
-          '• `@Denizen rooms` — voice/text occupancy',
-          '• `@Denizen who` — who is where',
-          '• `@Denizen status` — short summary',
-          '• `@Denizen <question>` — chat (uses LM Studio if running)',
-          'You can also DM me the same commands.',
-        ].join('\n'),
-      );
+    if (['help', 'commands', '?', 'start', 'spaces'].includes(cmd)) {
+      const helpCopy = require('./help-copy');
+      await message.reply(helpCopy.mentionHelp({
+        guildId: message.guild?.id || guildId,
+      }));
       return true;
     }
 
-    if (['rooms', 'room', 'vc'].includes(cmd)) {
-      await message.reply(`**Rooms**\n${formatRooms(snap)}`);
+    if (['rooms', 'room', 'vc', 'map'].includes(cmd)) {
+      const helpCopy = require('./help-copy');
+      const map = helpCopy.mapUrl(message.guild?.id || guildId);
+      await message.reply(
+        `**Rooms** (live on the map)\n${formatRooms(snap)}\n\n🗺️ ${map}`,
+      );
       return true;
     }
 
@@ -145,12 +143,20 @@ async function handleBotChat(message, ctx) {
     }
 
     if (['status', 'stats', 'ping'].includes(cmd)) {
+      const helpCopy = require('./help-copy');
       const voiceN = (snap.rooms || [])
         .filter((r) => r.type === 'voice' || r.type === 'stage')
-        .reduce((n, r) => n + r.occupantCount, 0);
+        .reduce((n, r) => n + (r.occupantCount || 0), 0);
       const textN = (snap.members || []).filter((m) => m.textChannelId).length;
+      const liveN = (snap.members || []).filter((m) => m.live).length;
+      const map = helpCopy.mapUrl(message.guild?.id || guildId);
       await message.reply(
-        `Online. Watching **${snap.name || 'guild'}** — ${voiceN} in VC, ${textN} soft-active in text.`,
+        [
+          `**${snap.name || 'Guild'}** — online`,
+          `• ${voiceN} in VC (${liveN} open mic) · ${textN} active in text`,
+          `• Map: ${map}`,
+          '• Join voice to appear · `/avatar` to change look · Boost for golden headset',
+        ].join('\n'),
       );
       return true;
     }
@@ -166,14 +172,15 @@ async function handleBotChat(message, ctx) {
       console.warn('[discord-chat] LM Studio unavailable:', err.message || err);
     }
 
+    const helpCopy = require('./help-copy');
     await message.reply(
       [
-        "I heard you, but my LLM brain isn't reachable (start LM Studio on :1234 for full chat).",
+        "I heard you — full chat needs LM Studio on :1234, but the map still works.",
         '',
-        '**Right now:**',
+        '**Right now on the map:**',
         formatRooms(snap),
         '',
-        'Try `@Denizen help` for commands.',
+        helpCopy.mentionHelp({ guildId: message.guild?.id || guildId }),
       ].join('\n').slice(0, 1900),
     );
     return true;

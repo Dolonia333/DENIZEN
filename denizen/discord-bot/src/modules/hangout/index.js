@@ -103,18 +103,18 @@ function createHangoutModule(deps) {
   function register(reg) {
     reg.register({
       name: 'hangout',
-      description: 'Weekly who-hung-out voice recap',
+      description: 'Who hung out — weekly VC minutes recap for your community',
       module: 'hangout',
       options: [
         {
           type: 1,
           name: 'setup',
-          description: 'Set the channel for weekly recaps',
+          description: 'Choose the channel for weekly “who hung out” posts',
           options: [
             {
               type: 7,
               name: 'channel',
-              description: 'Text channel for reports',
+              description: 'Text channel for the leaderboard',
               required: true,
               channel_types: [ChannelType.GuildText],
             },
@@ -123,22 +123,22 @@ function createHangoutModule(deps) {
         {
           type: 1,
           name: 'enable',
-          description: 'Enable automatic weekly posts (Mon 17:00 UTC by default)',
+          description: 'Turn on auto weekly posts (default Mon 17:00 UTC)',
         },
         {
           type: 1,
           name: 'disable',
-          description: 'Disable automatic weekly posts',
+          description: 'Turn off automatic weekly posts',
         },
         {
           type: 1,
           name: 'report',
-          description: 'Post this week’s hangout leaderboard now',
+          description: 'Post this week’s top voice hangers now',
         },
         {
           type: 1,
           name: 'status',
-          description: 'Show hangout tracker settings',
+          description: 'Settings + who’s leading this week',
         },
       ],
       async run(ctx) {

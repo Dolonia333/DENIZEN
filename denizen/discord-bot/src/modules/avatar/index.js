@@ -196,29 +196,29 @@ function createAvatarModule() {
   function register(registry) {
     registry.register({
       name: 'avatar',
-      description: 'Customize your Discord Spaces look (clothes, skin, hair)',
+      description: 'Pixel map look — closet, skin, hair, clothes (boosters get golden headset)',
       module: 'avatar',
-      aliases: ['closet', 'look', 'clothes'],
+      aliases: ['closet', 'look'],
       options: [
         {
           type: 1,
           name: 'edit',
-          description: 'Open the avatar closet',
+          description: 'Open the closet UI (preview + Save to map)',
         },
         {
           type: 1,
           name: 'random',
-          description: 'Randomize and save a new look',
+          description: 'Randomize look and save to the map',
         },
         {
           type: 1,
           name: 'show',
-          description: 'Show your look or another member',
+          description: 'Preview your look or @someone’s',
           options: [
             {
               type: 6,
               name: 'user',
-              description: 'Whose avatar to show',
+              description: 'Member to preview',
               required: false,
             },
           ],
@@ -226,12 +226,12 @@ function createAvatarModule() {
         {
           type: 1,
           name: 'reset',
-          description: 'Reset to default premade look',
+          description: 'Back to default premade character',
         },
         {
           type: 1,
           name: 'save',
-          description: 'Save current draft without opening menus',
+          description: 'Save draft to the live map',
         },
       ],
       async run(ctx) {
