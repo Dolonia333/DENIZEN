@@ -286,8 +286,9 @@ function buildLearningScorecard(opts = {}) {
     if (lessonsPending > 10) notes.push(`lessons_pending_high_${lessonsPending}`);
     if (consultPending > 15) notes.push(`consult_backlog_${consultPending}`);
 
-    // Discord / chat data farm (privacy-aware harvest → learning lake)
+    // Discord conversation sense + theme harvest (improve how AI talks)
     let discordFarm = null;
+    let conversationSense = null;
     try {
       const farmMod = require('./denizen-discord-farm');
       const sc = farmMod.buildDiscordFarmScorecard({ windowMs });
@@ -301,13 +302,28 @@ function buildLearningScorecard(opts = {}) {
         topicsHot: (sc.topicsHot || []).slice(0, 5),
       };
       if (sc.messages24h > 0) {
-        notes.push(`discord_farm_${sc.messages24h}_msgs`);
+        notes.push(`conversation_themes_${sc.messages24h}_msgs`);
       }
       if (sc.friction24h > 0) {
-        notes.push(`discord_farm_friction_${sc.friction24h}`);
+        notes.push(`conversation_friction_${sc.friction24h}`);
       }
     } catch (_) {
       discordFarm = null;
+    }
+    try {
+      const senseMod = require('./denizen-conversation-sense');
+      const ssc = senseMod.buildSenseScorecard();
+      conversationSense = {
+        enabled: ssc.enabled,
+        peopleKnown: ssc.peopleKnown || 0,
+        communities: ssc.communities || 0,
+        typeMix: (ssc.typeMix || []).slice(0, 6),
+      };
+      if (ssc.peopleKnown > 0) {
+        notes.push(`conversation_styles_${ssc.peopleKnown}`);
+      }
+    } catch (_) {
+      conversationSense = null;
     }
 
     const ok = true;
@@ -330,6 +346,7 @@ function buildLearningScorecard(opts = {}) {
       targetCitationRate: 0.6,
       targetMet,
       discordFarm,
+      conversationSense,
       paths: {
         mentorLessons: paths.mentorLessons,
         consultImprove: paths.consultImprove,

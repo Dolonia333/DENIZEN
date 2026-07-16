@@ -185,7 +185,21 @@ function ingestChatEvent(evt = {}) {
     maybeEmitLesson(row);
   } catch (_) { /* ignore */ }
 
-  return { ok: true, signals, topics };
+  // Conversation sense — how people talk (styles), for better replies
+  let sense = null;
+  try {
+    // eslint-disable-next-line global-require
+    const conv = require('./denizen-conversation-sense');
+    sense = conv.observeChat({
+      userId: evt.userId,
+      userHash: row.userHash,
+      guildId,
+      content: raw,
+      source,
+    });
+  } catch (_) { /* optional */ }
+
+  return { ok: true, signals, topics, sense };
 }
 
 function updateTopicRollup(topics, signals, ts) {

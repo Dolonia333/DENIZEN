@@ -176,6 +176,12 @@ function defaultGuildConfig() {
       channelAllow: [],
       channelDeny: [],
     },
+    /** Conversation sense — learn styles so replies fit different people */
+    sense: {
+      enabled: true,
+      channelAllow: [],
+      channelDeny: [],
+    },
     chat: {
       /** Channel IDs where Denizen replies without @mention */
       openChannels: [],

@@ -75,12 +75,10 @@ function formatWho(snapshot) {
 }
 
 /**
- * Pull privacy-aware farm signals for the chat brain.
- * @returns {{ block: string, topicsHot: object[], friction24h: number, questions24h: number, messages24h: number }|null}
+ * Topics / community themes (what people talk about).
  */
-function buildFarmContext() {
+function buildTopicContext() {
   try {
-    // discord-bot/src → denizen/src
     // eslint-disable-next-line import/no-dynamic-require, global-require
     const farm = require(path.join(__dirname, '..', '..', 'src', 'denizen-discord-farm.js'));
     const sc = farm.buildDiscordFarmScorecard();
@@ -94,15 +92,14 @@ function buildFarmContext() {
       }).join(', ')
       : '(none yet)';
     const block = [
-      'Community learning signals (privacy-aware data farm — hashed users, redacted secrets):',
+      'Community themes (what people are into / stuck on lately):',
       `- Messages 24h: ${sc.messages24h || 0}`,
       `- Questions 24h: ${sc.questions24h || 0}`,
       `- Friction 24h: ${sc.friction24h || 0}`,
       `- Praise 24h: ${sc.praise24h || 0}`,
       `- Hot topics: ${topicLine}`,
-      'Use these to sound aware of recurring community themes and pain points.',
+      'Sound aware of recurring themes. If friction is high, be helpful and concrete.',
       'Never invent private DMs, real names, or claim you stored secrets.',
-      'If friction is high on a topic, be helpful and concrete about that area.',
     ].join('\n');
     return {
       block,
@@ -116,24 +113,58 @@ function buildFarmContext() {
   }
 }
 
+/** @deprecated use buildTopicContext */
+function buildFarmContext() {
+  return buildTopicContext();
+}
+
+/**
+ * How this person + community tend to talk → adapt replies.
+ */
+function buildPersonSenseContext(opts = {}) {
+  try {
+    // eslint-disable-next-line import/no-dynamic-require, global-require
+    const sense = require(path.join(__dirname, '..', '..', 'src', 'denizen-conversation-sense.js'));
+    // Learn from this message too (even if harvest already ran)
+    try {
+      sense.observeChat({
+        userId: opts.userId,
+        guildId: opts.guildId,
+        content: opts.content,
+        source: 'discord-chat',
+      });
+    } catch (_) { /* ignore */ }
+    return sense.buildAdaptationBlock({
+      userId: opts.userId,
+      guildId: opts.guildId,
+      content: opts.content,
+    });
+  } catch (_) {
+    return null;
+  }
+}
+
 function buildSystemPrompt(opts = {}) {
-  const farm = opts.farmBlock
-    ? `\n\n${opts.farmBlock}`
-    : '';
+  const extras = [opts.senseBlock, opts.topicBlock, opts.farmBlock]
+    .filter(Boolean)
+    .map((b) => `\n\n${b}`)
+    .join('');
   return (
-    'You are Denizen, a Discord companion for Denizen Spaces — a live pixel map of Discord '
-    + 'voice/text rooms, plus mod/music/tickets tools. '
-    + 'Be concise, friendly, and slightly playful (2–6 short sentences unless asked for detail). '
-    + 'If asked about room occupancy, use the status block. '
-    + 'You can mention commands like ,help ,farm status ,player ,avatar when useful. '
+    'You are Denizen — a real-feeling Discord companion for Denizen Spaces '
+    + '(pixel map of voice/text rooms, music, tickets, community tools). '
+    + 'Your job is to talk like a sharp, kind human in this server — not a corporate bot. '
+    + 'Default: clear and natural. Length and energy should MATCH the person you are talking to '
+    + '(see conversation sense below). '
+    + 'If asked about rooms, use the status block. '
+    + 'Useful commands when relevant: ,help ,sense ,chat on ,player ,avatar. '
     + 'Do not pretend to ban/nuke the server unless the user is clearly roleplaying.'
-    + farm
+    + extras
   );
 }
 
 /**
  * @param {string} userText - what the human said
- * @param {{ baseUrl?: string, model?: string, timeoutMs?: number, statusBlock?: string, farmBlock?: string }} [opts]
+ * @param {{ baseUrl?: string, model?: string, timeoutMs?: number, statusBlock?: string, farmBlock?: string, topicBlock?: string, senseBlock?: string }} [opts]
  */
 async function askLmStudio(userText, opts = {}) {
   const text = String(userText || '').trim();
@@ -145,7 +176,11 @@ async function askLmStudio(userText, opts = {}) {
     || process.env.LM_STUDIO_MODEL
     || 'local';
   const timeoutMs = opts.timeoutMs || 45_000;
-  const system = buildSystemPrompt({ farmBlock: opts.farmBlock });
+  const system = buildSystemPrompt({
+    farmBlock: opts.farmBlock,
+    topicBlock: opts.topicBlock,
+    senseBlock: opts.senseBlock,
+  });
   const userContent = [
     opts.statusBlock ? `Server status:\n${opts.statusBlock}` : null,
     `User said: ${text}`,
@@ -262,7 +297,12 @@ async function handleBotChat(message, ctx) {
     formatRooms(snap),
   ].join('\n');
 
-  const farmCtx = buildFarmContext();
+  const topicCtx = buildTopicContext();
+  const senseCtx = buildPersonSenseContext({
+    userId: message.author?.id,
+    guildId: message.guild?.id,
+    content: text,
+  });
   const lowered = text.toLowerCase().trim();
   const cmd = lowered.split(/\s+/)[0].replace(/^!/, '');
 
@@ -276,12 +316,12 @@ async function handleBotChat(message, ctx) {
           mentionHelp({ prefix: p, guildId: message.guild?.id }),
           '',
           '**Chat**',
-          '• `@Denizen <question>` — freeform (LM Studio)',
+          '• `@Denizen <question>` — freeform (adapts to how you talk)',
           '• DM me the same commands',
           openChat
             ? '• Open chat **ON** in this channel (no @ needed)'
             : `• Staff: \`${p}chat on\` — I reply in this channel without @`,
-          `• \`${p}farm status\` — what I’m learning from chats`,
+          `• \`${p}sense\` — how I’m learning conversation styles`,
         ].join('\n').slice(0, 1900),
       );
       return true;
@@ -302,24 +342,29 @@ async function handleBotChat(message, ctx) {
         .filter((r) => r.type === 'voice' || r.type === 'stage')
         .reduce((n, r) => n + r.occupantCount, 0);
       const textN = (snap.members || []).filter((m) => m.textChannelId).length;
-      const farmLine = farmCtx
-        ? `Farm 24h: ${farmCtx.messages24h} msgs · ${farmCtx.questions24h} ? · ${farmCtx.friction24h} friction`
+      const themeLine = topicCtx
+        ? `Themes 24h: ${topicCtx.messages24h} msgs · ${topicCtx.questions24h} ? · ${topicCtx.friction24h} stuck spots`
+        : null;
+      const styleLine = senseCtx?.person
+        ? `Your style: **${senseCtx.person.primary}**${senseCtx.person.known ? '' : ' (still learning)'}`
         : null;
       await message.reply(
         [
           `Online. Watching **${snap.name || 'guild'}** — ${voiceN} in VC, ${textN} soft-active in text.`,
-          farmLine,
+          themeLine,
+          styleLine,
           openChat ? 'Open chat is **on** here.' : null,
         ].filter(Boolean).join('\n'),
       );
       return true;
     }
 
-    // Freeform chat via LM
+    // Freeform chat via LM — adapted to this person + community
     try {
       const reply = await askLmStudio(text, {
         statusBlock,
-        farmBlock: farmCtx?.block || null,
+        topicBlock: topicCtx?.block || null,
+        senseBlock: senseCtx?.block || null,
       });
       if (reply) {
         if (openChat && !mentioned) openChatCooldown.set(message.channel.id, Date.now());
@@ -330,9 +375,12 @@ async function handleBotChat(message, ctx) {
       console.warn('[discord-chat] LM Studio unavailable:', err.message || err);
     }
 
-    // Fallback when LM down — still useful + shows farm awareness
-    const topicHint = farmCtx?.topicsHot?.length
-      ? `Lately people talk about: ${(farmCtx.topicsHot || []).slice(0, 4).map((t) => t.topic).join(', ')}.`
+    // Fallback when LM down
+    const topicHint = topicCtx?.topicsHot?.length
+      ? `Lately people talk about: ${(topicCtx.topicsHot || []).slice(0, 4).map((t) => t.topic).join(', ')}.`
+      : null;
+    const styleHint = senseCtx?.person?.primary
+      ? `I'll keep it ${senseCtx.person.primary}-friendly when my brain is back.`
       : null;
     if (openChat && !mentioned) openChatCooldown.set(message.channel.id, Date.now());
     await message.reply(
@@ -342,8 +390,9 @@ async function handleBotChat(message, ctx) {
         '**Right now:**',
         formatRooms(snap),
         topicHint,
+        styleHint,
         '',
-        'Try `@Denizen help` or `,farm status`.',
+        'Try `@Denizen help` or `,sense`.',
       ].filter(Boolean).join('\n').slice(0, 1900),
     );
     return true;
@@ -408,28 +457,28 @@ function createChatControls(deps) {
         }
 
         const here = open.includes(ch.id);
-        const farmCtx = buildFarmContext();
+        const topicCtx = buildTopicContext();
         return ctx.reply({
           embeds: [baseEmbed({
             color: here ? BRAND.success : BRAND.info,
             title: 'Discord chat',
             description: [
               '**@mention / DM** — always works',
-              '**Open channel** — staff enable with `,chat on` in a channel',
+              '**Open channel** — staff: `,chat on` in a channel',
               '',
-              'Freeform replies use LM Studio + community farm topics.',
+              'Replies adapt to **how you talk** + room vibe (conversation sense).',
             ].join('\n'),
             fields: [
               { name: 'This channel', value: here ? '🟢 open chat' : '⚪ @mention only', inline: true },
               { name: 'Open channels', value: String(open.length), inline: true },
               {
-                name: 'Farm brain',
-                value: farmCtx
-                  ? `${farmCtx.messages24h} msgs · ${farmCtx.friction24h} friction · topics: ${(farmCtx.topicsHot || []).slice(0, 3).map((t) => t.topic).join(', ') || '—'}`
+                name: 'Themes',
+                value: topicCtx
+                  ? `${topicCtx.messages24h} msgs · topics: ${(topicCtx.topicsHot || []).slice(0, 3).map((t) => t.topic).join(', ') || '—'}`
                   : 'offline',
               },
             ],
-            footerExtra: 'privacy-aware · not weight training',
+            footerExtra: 'adapts per person · privacy-aware',
           })],
         });
       },
@@ -447,6 +496,8 @@ module.exports = {
   askLmStudio,
   resolveLmBases,
   buildFarmContext,
+  buildTopicContext,
+  buildPersonSenseContext,
   buildSystemPrompt,
   isOpenChatChannel,
   createChatControls,
