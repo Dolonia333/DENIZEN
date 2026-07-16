@@ -17,6 +17,7 @@ const { createIntegrations } = require('./integrations');
 const { createMisc } = require('./misc');
 const { createCanvasBridge } = require('./canvas');
 const { createDenizenAccount } = require('./denizen');
+const { createAvatarModule } = require('./avatar');
 
 function loadModules(deps) {
   const hooks = {
@@ -81,6 +82,10 @@ function loadModules(deps) {
 
   const denizenAccount = createDenizenAccount(deps);
   denizenAccount.register(deps.registry);
+
+  const avatar = createAvatarModule(deps);
+  avatar.register(deps.registry);
+  hooks.onInteraction.push(avatar.onInteraction);
 
   // Core help / ping
   deps.registry.register({

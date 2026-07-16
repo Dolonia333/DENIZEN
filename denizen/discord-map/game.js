@@ -989,14 +989,16 @@
       this.bootstrapLayout().then(() => {
         this.flushDecorNpcQueue();
         this.spawnDecorNpcs();
-        this.startPresenceLoop();
         this.setupPlayer();
-        this.cameras.main.fadeIn(500, 126, 200, 232);
+        this.applyPlayerAvatar().finally(() => {
+          this.startPresenceLoop();
+          this.cameras.main.fadeIn(500, 126, 200, 232);
+        });
       }).catch(() => {
         this.drawGround();
         this.drawEmptyBuilding(20, this.groundY, 'Discord');
         this.setupPlayer();
-        this.startPresenceLoop();
+        this.applyPlayerAvatar().finally(() => this.startPresenceLoop());
       });
     }
 
@@ -2360,58 +2362,59 @@
       // label drawn in col4 — NOT a 5th frame). Row 1 = IDLE (only 3 real
       // frames, cols 0-2; col3 holds the "IDLE" label). Including a label
       // column in the loop flashed the sheet's own text captions in-game.
-      NPC_SHEETS.forEach((n) => {
-        if (this.anims.exists(`${n.key}_walk`)) return;
-        if (!this.textures.exists(n.key)) return;
-        this.anims.create({
-          key: `${n.key}_walk`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: 0, end: 3 }),
-          frameRate: 8,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: `${n.key}_idle`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: NPC_COLS, end: NPC_COLS + 2 }),
-          frameRate: 2,
-          repeat: -1,
-        });
-        // Interaction poses — the sheets ship full SIT/LIE rows we now use:
-        // row 3 SIT (3f, sink into the seat), row 4 SIT IDLE (3f loop),
-        // row 5 SIT FINISH (3f, stand back up), row 6 LIE DOWN (6f),
-        // row 7 LIE FINISH (6f, get back up). frame = row * NPC_COLS + col.
-        const row = (r) => r * NPC_COLS;
-        this.anims.create({
-          key: `${n.key}_sit`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(3), end: row(3) + 2 }),
-          frameRate: 10,
-        });
-        this.anims.create({
-          key: `${n.key}_sitIdle`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(4), end: row(4) + 2 }),
-          frameRate: 2,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: `${n.key}_sitFinish`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(5), end: row(5) + 2 }),
-          frameRate: 12,
-        });
-        this.anims.create({
-          key: `${n.key}_lie`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(6), end: row(6) + 5 }),
-          frameRate: 10,
-        });
-        this.anims.create({
-          key: `${n.key}_lieIdle`,
-          frames: [{ key: n.key, frame: row(6) + 5 }],
-          frameRate: 1,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: `${n.key}_lieFinish`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(7), end: row(7) + 5 }),
-          frameRate: 12,
-        });
+      NPC_SHEETS.forEach((n) => this.makeAnimsForKey(n.key));
+    }
+
+    makeAnimsForKey(key) {
+      if (!key || this.anims.exists(`${key}_walk`)) return;
+      if (!this.textures.exists(key)) return;
+      try {
+        this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
+      } catch (_) { /* ignore */ }
+      this.anims.create({
+        key: `${key}_walk`,
+        frames: this.anims.generateFrameNumbers(key, { start: 0, end: 3 }),
+        frameRate: 8,
+        repeat: -1,
+      });
+      this.anims.create({
+        key: `${key}_idle`,
+        frames: this.anims.generateFrameNumbers(key, { start: NPC_COLS, end: NPC_COLS + 2 }),
+        frameRate: 2,
+        repeat: -1,
+      });
+      const row = (r) => r * NPC_COLS;
+      this.anims.create({
+        key: `${key}_sit`,
+        frames: this.anims.generateFrameNumbers(key, { start: row(3), end: row(3) + 2 }),
+        frameRate: 10,
+      });
+      this.anims.create({
+        key: `${key}_sitIdle`,
+        frames: this.anims.generateFrameNumbers(key, { start: row(4), end: row(4) + 2 }),
+        frameRate: 2,
+        repeat: -1,
+      });
+      this.anims.create({
+        key: `${key}_sitFinish`,
+        frames: this.anims.generateFrameNumbers(key, { start: row(5), end: row(5) + 2 }),
+        frameRate: 12,
+      });
+      this.anims.create({
+        key: `${key}_lie`,
+        frames: this.anims.generateFrameNumbers(key, { start: row(6), end: row(6) + 5 }),
+        frameRate: 10,
+      });
+      this.anims.create({
+        key: `${key}_lieIdle`,
+        frames: [{ key, frame: row(6) + 5 }],
+        frameRate: 1,
+        repeat: -1,
+      });
+      this.anims.create({
+        key: `${key}_lieFinish`,
+        frames: this.anims.generateFrameNumbers(key, { start: row(7), end: row(7) + 5 }),
+        frameRate: 12,
       });
     }
 
@@ -2420,6 +2423,95 @@
       const list = NPC_SHEETS.filter((n) => this.textures.exists(n.key));
       if (!list.length) return NPC_SHEETS[0].key;
       return list[hashSeed(seedStr) % list.length].key;
+    }
+
+    /**
+     * Resolve Phaser texture key for a Discord user (custom bake or premade).
+     * Loads remote spritesheet on demand; falls back to hash premade.
+     * @returns {Promise<string>}
+     */
+    resolveSheetForUser(userId, avatar) {
+      const fallback = () => {
+        if (avatar?.mode === 'premade' && avatar.premade && this.textures.exists(avatar.premade)) {
+          this.makeAnimsForKey(avatar.premade);
+          return avatar.premade;
+        }
+        return this.npcSheetFor(String(userId));
+      };
+
+      if (!avatar) return Promise.resolve(fallback());
+
+      if (avatar.mode === 'premade' && avatar.premade && this.textures.exists(avatar.premade)) {
+        this.makeAnimsForKey(avatar.premade);
+        return Promise.resolve(avatar.premade);
+      }
+
+      const rev = avatar.rev || 1;
+      const key = `u_${userId}_r${rev}`;
+      if (this.textures.exists(key)) {
+        this.makeAnimsForKey(key);
+        return Promise.resolve(key);
+      }
+
+      let url = avatar.sheetUrl || `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${rev}`;
+      if (url.startsWith('/')) {
+        // Local map may use presence on :5180 — prefer same host as page, with API path
+        try {
+          if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            // Try Denizen origin first; bake is on main server or presence sidecar
+            url = `${location.origin}${url}`;
+          } else {
+            url = `${location.origin}${url}`;
+          }
+        } catch (_) { /* ignore */ }
+      }
+
+      return new Promise((resolve) => {
+        let settled = false;
+        const done = (k) => {
+          if (settled) return;
+          settled = true;
+          resolve(k);
+        };
+        const onErr = () => done(fallback());
+        this.load.once(`filecomplete-spritesheet-${key}`, () => {
+          try {
+            this.makeAnimsForKey(key);
+            done(key);
+          } catch (_) {
+            onErr();
+          }
+        });
+        this.load.once('loaderror', onErr);
+        try {
+          this.load.spritesheet(key, url, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h });
+          this.load.start();
+        } catch (_) {
+          onErr();
+        }
+        // Safety timeout
+        this.time.delayedCall(4000, () => {
+          if (!settled) done(this.textures.exists(key) ? key : fallback());
+        });
+      });
+    }
+
+    /** Apply saved look to local player sprite. */
+    async applyPlayerAvatar() {
+      if (!ME_DISCORD_ID || !this.player) return;
+      try {
+        let avatar = null;
+        const res = await fetch(`/api/discord/avatar/${encodeURIComponent(ME_DISCORD_ID)}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          avatar = data.avatar || data.raw;
+        }
+        const sheet = await this.resolveSheetForUser(ME_DISCORD_ID, avatar);
+        if (!sheet || !this.textures.exists(sheet)) return;
+        this.playerSheet = sheet;
+        this.player.setTexture(sheet, 0);
+        if (this.anims.exists(`${sheet}_idle`)) this.player.anims.play(`${sheet}_idle`, true);
+      } catch (_) { /* keep default sheet */ }
     }
 
     spawnChar(x, y, sheet, idle, label, depth = 30) {
@@ -2548,6 +2640,7 @@
           roomKey,
           soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
           isMe: false,
+          avatar: p.avatar || null,
         });
       }
 
@@ -2576,6 +2669,17 @@
           if (live.sprite && !live.moving) {
             live.sprite.setAlpha(person.soft ? 0.72 : 1);
             live.soft = person.soft;
+          }
+          // Hot-reload look when rev changes
+          const rev = person.avatar?.rev;
+          if (rev != null && live.avatarRev !== rev) {
+            live.avatarRev = rev;
+            this.resolveSheetForUser(person.userId, person.avatar).then((sheet) => {
+              if (!live.sprite?.active || live.moving) return;
+              live.sheet = sheet;
+              live.sprite.setTexture(sheet, 0);
+              if (this.anims.exists(`${sheet}_idle`)) live.sprite.anims.play(`${sheet}_idle`, true);
+            });
           }
         }
       }
@@ -2738,18 +2842,20 @@
     spawnLivePerson(person) {
       if (person.isMe) return;
       const slot = this.claimSlot(person.roomKey, person.userId);
-      const sheet = this.npcSheetFor(String(person.userId));
-      const idle = `${sheet}_idle`;
+      const fallbackSheet = (person.avatar?.mode === 'premade' && person.avatar.premade
+        && this.textures.exists(person.avatar.premade))
+        ? person.avatar.premade
+        : this.npcSheetFor(String(person.userId));
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
       const label = person.displayName;
 
-      const sprite = this.add.sprite(slot.x, slot.y, sheet, 0)
+      const sprite = this.add.sprite(slot.x, slot.y, fallbackSheet, 0)
         .setScale(SCALE)
         .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
         .setDepth(depth)
         .setAlpha(0);
-      if (this.anims.exists(idle)) sprite.anims.play(idle);
+      if (this.anims.exists(`${fallbackSheet}_idle`)) sprite.anims.play(`${fallbackSheet}_idle`);
 
       const tag = this.add.text(slot.x, slot.y - 40, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
@@ -2772,12 +2878,21 @@
         tag,
         roomKey: person.roomKey,
         soft: person.soft,
-        sheet,
+        sheet: fallbackSheet,
         moving: false,
         baseY: slot.y,
+        avatarRev: person.avatar?.rev ?? null,
       };
       this.livePeople.set(person.userId, live);
       this.startLiveBob(live, slot.y);
+
+      // Upgrade to custom baked sheet when available
+      this.resolveSheetForUser(person.userId, person.avatar).then((sheet) => {
+        if (!live.sprite?.active || sheet === live.sheet) return;
+        live.sheet = sheet;
+        live.sprite.setTexture(sheet, 0);
+        if (this.anims.exists(`${sheet}_idle`)) live.sprite.anims.play(`${sheet}_idle`, true);
+      });
     }
 
     /**

@@ -6917,6 +6917,78 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
+  // Discord Spaces avatars — catalog, JSON, baked PNG (shared with bot store).
+  if (urlPath === '/api/discord/avatar/catalog' && req.method === 'GET') {
+    try {
+      const avatarApi = require('./src/discord-avatar');
+      const unlocks = avatarApi.resolveUnlocks({});
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ ok: true, ...avatarApi.publicCatalog(unlocks) }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    }
+    return;
+  }
+
+  if (urlPath.startsWith('/api/discord/avatar/') && (req.method === 'GET' || req.method === 'PUT')) {
+    (async () => {
+      const avatarApi = require('./src/discord-avatar');
+      const store = avatarApi.getAvatarStore();
+      let rest = urlPath.slice('/api/discord/avatar/'.length);
+      let asPng = false;
+      if (rest.endsWith('.png')) {
+        asPng = true;
+        rest = rest.slice(0, -4);
+      }
+      const userId = String(rest || '').replace(/[^0-9]/g, '');
+      if (!userId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'userId required' }));
+        return;
+      }
+      if (req.method === 'GET' && asPng) {
+        let buf = store.readPng(userId);
+        if (!buf) {
+          const av = store.get(userId);
+          buf = await avatarApi.bakeSheet(av);
+          try { store.writePng(userId, buf); } catch (_) { /* ignore */ }
+        }
+        res.writeHead(200, {
+          'Content-Type': 'image/png',
+          'Cache-Control': 'public, max-age=60',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.end(buf);
+        return;
+      }
+      if (req.method === 'GET') {
+        const av = store.get(userId);
+        res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+        res.end(JSON.stringify({
+          ok: true,
+          userId,
+          avatar: avatarApi.clientAvatar(av, userId),
+          raw: av,
+        }));
+        return;
+      }
+      // PUT
+      const payload = await _readJsonBody(req, 64 * 1024);
+      const av = await avatarApi.ensureBaked(store, userId, payload.avatar || payload);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        ok: true,
+        userId,
+        avatar: avatarApi.clientAvatar(av, userId),
+      }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   // Discord pixel map — proxy guild list + VC presence from discord-bot sidecar.
   if (
     (urlPath === '/api/discord/map/presence'

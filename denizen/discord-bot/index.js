@@ -179,6 +179,7 @@ attachGateway(client, {
     });
   },
   async onInteraction(interaction) {
+    // Component hooks (avatar, tickets) run after this via gateway hooks.onInteraction.
     if (interaction.isChatInputCommand()) {
       const cmd = registry.get(interaction.commandName);
       if (cmd) {

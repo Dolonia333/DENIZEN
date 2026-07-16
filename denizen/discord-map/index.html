@@ -403,6 +403,43 @@
         </div>
       </div>
 
+      <div class="card" id="closetCard">
+        <h2>Avatar closet</h2>
+        <p>Change clothes, skin, and hair. Same look as Discord <code>/avatar</code>. Needs your Discord user id (from account link or paste below).</p>
+        <div id="eventBanner" class="empty" style="margin-bottom:10px;display:none"></div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
+          <div style="flex:0 0 auto;text-align:center">
+            <img id="closetPreview" alt="preview" width="96" height="96"
+              style="image-rendering:pixelated;background:#0c1222;border-radius:12px;border:1px solid rgba(255,255,255,.12)" />
+            <div class="guild-meta" id="closetRev" style="margin-top:6px">—</div>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <label for="closetUserId">Discord user id</label>
+            <input id="closetUserId" type="text" inputmode="numeric" placeholder="snowflake from Developer Mode" autocomplete="off" />
+            <label for="closetMode">Mode</label>
+            <select id="closetMode" style="width:100%;padding:10px;border-radius:10px;background:#0c1222;color:inherit;border:1px solid rgba(255,255,255,.12);font-size:16px">
+              <option value="premade">Premade character</option>
+              <option value="layers">Custom layers</option>
+            </select>
+            <label for="closetPremade">Premade</label>
+            <select id="closetPremade" style="width:100%;padding:10px;border-radius:10px;background:#0c1222;color:inherit;border:1px solid rgba(255,255,255,.12);font-size:16px"></select>
+            <label for="closetBody">Skin</label>
+            <select id="closetBody" style="width:100%;padding:10px;border-radius:10px;background:#0c1222;color:inherit;border:1px solid rgba(255,255,255,.12);font-size:16px"></select>
+            <label for="closetHair">Hair</label>
+            <select id="closetHair" style="width:100%;padding:10px;border-radius:10px;background:#0c1222;color:inherit;border:1px solid rgba(255,255,255,.12);font-size:16px"></select>
+            <label for="closetOutfit">Outfit</label>
+            <select id="closetOutfit" style="width:100%;padding:10px;border-radius:10px;background:#0c1222;color:inherit;border:1px solid rgba(255,255,255,.12);font-size:16px"></select>
+            <label for="closetTint">Tint</label>
+            <select id="closetTint" style="width:100%;padding:10px;border-radius:10px;background:#0c1222;color:inherit;border:1px solid rgba(255,255,255,.12);font-size:16px"></select>
+            <div class="row-actions" style="margin-top:12px">
+              <button type="button" class="btn" id="btnClosetRandom">Randomize</button>
+              <button type="button" class="btn primary" id="btnClosetSave">Save look</button>
+            </div>
+            <p id="closetStatus" class="guild-meta" style="margin-top:8px"></p>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <h2>Add Denizen to your server</h2>
         <p>Invite the bot with admin (or Manage Server). It reads your channel list and live voice/text presence — no manual setup.</p>
@@ -829,6 +866,165 @@
     $('btnOpenMap').addEventListener('click', showMap);
     $('btnDiscordSignup').addEventListener('click', () => { location.href = discordConnectUrl('signup'); });
     $('btnDiscordLink').addEventListener('click', () => { location.href = discordConnectUrl('link'); });
+
+    // —— Avatar closet (P3 map UI) ——
+    let closetCatalog = null;
+    let closetDraft = null;
+
+    function fillSelect(sel, options, valueKey = 'id', labelKey = 'label') {
+      sel.innerHTML = '';
+      for (const o of options) {
+        const opt = document.createElement('option');
+        opt.value = typeof o === 'string' ? o : o[valueKey];
+        opt.textContent = typeof o === 'string' ? o : o[labelKey];
+        sel.appendChild(opt);
+      }
+    }
+
+    async function loadClosetCatalog() {
+      try {
+        const res = await fetch('/api/discord/avatar/catalog', { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        closetCatalog = await res.json();
+        const premade = (closetCatalog.premades || []).map((p) => ({ id: p.id, label: p.label }));
+        fillSelect($('closetPremade'), premade);
+        fillSelect($('closetBody'), closetCatalog.bodies || []);
+        const hairOpts = [];
+        for (const hs of closetCatalog.hairSets || []) {
+          if (hs.id === 'none') {
+            hairOpts.push({ id: 'none:0', label: 'None' });
+            continue;
+          }
+          for (let i = 0; i < Math.min(12, hs.count || 0); i += 1) {
+            hairOpts.push({ id: `${hs.id}:${i}`, label: `${hs.label} #${i + 1}` });
+          }
+        }
+        fillSelect($('closetHair'), hairOpts);
+        const outfitOpts = [];
+        for (const os of closetCatalog.outfitSets || []) {
+          for (let i = 0; i < Math.min(12, os.count || 0); i += 1) {
+            outfitOpts.push({ id: `${os.id}:${i}`, label: `${os.label} #${i + 1}` });
+          }
+        }
+        fillSelect($('closetOutfit'), outfitOpts);
+        fillSelect($('closetTint'), (closetCatalog.tints || []).map((t) => ({
+          id: t.id == null ? '' : t.id,
+          label: t.label,
+        })));
+        const ev = closetCatalog.events || [];
+        const banner = $('eventBanner');
+        if (ev.length) {
+          banner.style.display = 'block';
+          banner.textContent = `Seasonal unlocks: ${ev.map((e) => e.label).join(', ')}`;
+        }
+      } catch (err) {
+        $('closetStatus').textContent = `Catalog offline — ${err.message || err}`;
+      }
+    }
+
+    function draftFromForm() {
+      const hair = String($('closetHair').value || 'short:0').split(':');
+      const outfit = String($('closetOutfit').value || 'outfits:0').split(':');
+      const tint = $('closetTint').value || null;
+      return {
+        mode: $('closetMode').value || 'premade',
+        premade: $('closetPremade').value || 'npc_m1',
+        body: $('closetBody').value || 'light',
+        hair: { set: hair[0] || 'short', index: Number(hair[1]) || 0 },
+        outfit: { set: outfit[0] || 'outfits', index: Number(outfit[1]) || 0 },
+        pants: { index: 0 },
+        face: 0,
+        eyes: 0,
+        hat: { set: 'none', index: 0 },
+        tint: { hair: tint || null, clothes: tint || null },
+      };
+    }
+
+    function applyDraftToForm(av) {
+      if (!av) return;
+      $('closetMode').value = av.mode || 'premade';
+      if (av.premade) $('closetPremade').value = av.premade;
+      if (av.body) $('closetBody').value = av.body;
+      if (av.hair) $('closetHair').value = `${av.hair.set}:${av.hair.index}`;
+      if (av.outfit) $('closetOutfit').value = `${av.outfit.set}:${av.outfit.index}`;
+      const t = av.tint?.clothes || av.tint?.hair || '';
+      $('closetTint').value = t;
+    }
+
+    function refreshClosetPreview(userId, rev) {
+      if (!userId) return;
+      const url = `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${rev || Date.now()}#idle`;
+      // Full sheet — browsers show top-left; good enough cue. Prefer preview if we add later.
+      $('closetPreview').src = url;
+      $('closetRev').textContent = rev != null ? `rev ${rev}` : 'preview';
+    }
+
+    async function loadClosetForUser(userId) {
+      if (!userId) return;
+      try {
+        const res = await fetch(`/api/discord/avatar/${encodeURIComponent(userId)}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'load failed');
+        closetDraft = data.raw || data.avatar;
+        applyDraftToForm(closetDraft);
+        refreshClosetPreview(userId, closetDraft?.rev || data.avatar?.rev);
+        $('closetStatus').textContent = 'Loaded current look';
+      } catch (err) {
+        $('closetStatus').textContent = err.message || String(err);
+      }
+    }
+
+    async function saveCloset() {
+      const userId = String($('closetUserId').value || loadCfg().discordUserId || '').trim();
+      if (!/^\d{5,}$/.test(userId)) {
+        $('closetStatus').textContent = 'Enter a valid Discord user id (enable Developer Mode → Copy User ID)';
+        return;
+      }
+      saveCfg({ ...loadCfg(), discordUserId: userId });
+      $('closetStatus').textContent = 'Saving…';
+      try {
+        const res = await fetch(`/api/discord/avatar/${encodeURIComponent(userId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ avatar: draftFromForm() }),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        closetDraft = data.avatar;
+        refreshClosetPreview(userId, data.avatar?.rev);
+        $('closetStatus').textContent = 'Saved — open the map to see yourself';
+      } catch (err) {
+        $('closetStatus').textContent = `Save failed: ${err.message || err}`;
+      }
+    }
+
+    $('btnClosetSave').addEventListener('click', () => { void saveCloset(); });
+    $('btnClosetRandom').addEventListener('click', () => {
+      if (!closetCatalog) return;
+      const bodies = closetCatalog.bodies || [];
+      const premades = closetCatalog.premades || [];
+      $('closetMode').value = Math.random() > 0.4 ? 'layers' : 'premade';
+      if (premades.length) $('closetPremade').value = premades[Math.floor(Math.random() * premades.length)].id;
+      if (bodies.length) $('closetBody').value = bodies[Math.floor(Math.random() * bodies.length)].id;
+      const hairOpts = [...$('closetHair').options];
+      if (hairOpts.length) $('closetHair').selectedIndex = Math.floor(Math.random() * hairOpts.length);
+      const outOpts = [...$('closetOutfit').options];
+      if (outOpts.length) $('closetOutfit').selectedIndex = Math.floor(Math.random() * outOpts.length);
+      $('closetStatus').textContent = 'Randomized — hit Save look';
+    });
+    $('closetUserId').addEventListener('change', () => {
+      const id = $('closetUserId').value.trim();
+      if (/^\d{5,}$/.test(id)) void loadClosetForUser(id);
+    });
+
+    void loadClosetCatalog().then(() => {
+      const id = loadCfg().discordUserId || '';
+      if (id) {
+        $('closetUserId').value = id;
+        void loadClosetForUser(id);
+      }
+    });
+
     $('btnRefresh').addEventListener('click', () => { void fetchGuilds(); });
     $('btnInvite').addEventListener('click', async () => {
       if (!inviteLink) await loadInviteLink();
