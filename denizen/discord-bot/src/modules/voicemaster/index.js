@@ -245,19 +245,57 @@ function createVoiceMaster(deps) {
           await member.voice.disconnect(`VM ${action} by ${ctx.user.tag}`).catch(() => {});
           return ctx.reply(`${action === 'reject' ? 'Rejected' : 'Kicked'} <@${user.id}>.`);
         }
-        if (action === 'permit' || action === 'allow') {
+        if (action === 'permit' || action === 'allow' || action === 'trust') {
           const user = ctx.message?.mentions?.users?.first?.();
-          if (!user) return ctx.reply('Usage: ,vm permit @user');
+          if (!user) return ctx.reply('Usage: ,vm trust @user');
           await voice.permissionOverwrites.edit(user.id, { Connect: true, ViewChannel: true });
-          return ctx.reply(`Permitted <@${user.id}> to join.`);
+          config.update(ctx.guild.id, (c) => {
+            const t = c.voicemaster.tempChannels[voice.id];
+            if (t) {
+              t.trusted = t.trusted || [];
+              if (!t.trusted.includes(user.id)) t.trusted.push(user.id);
+            }
+            return c;
+          });
+          return ctx.reply(`Trusted <@${user.id}> to join.`);
+        }
+        if (action === 'untrust') {
+          const user = ctx.message?.mentions?.users?.first?.();
+          if (!user) return ctx.reply('Usage: ,vm untrust @user');
+          await voice.permissionOverwrites.delete(user.id).catch(() => {});
+          config.update(ctx.guild.id, (c) => {
+            const t = c.voicemaster.tempChannels[voice.id];
+            if (t?.trusted) t.trusted = t.trusted.filter((id) => id !== user.id);
+            return c;
+          });
+          return ctx.reply(`Removed trust for <@${user.id}>.`);
+        }
+        if (action === 'rejectall' || action === 'kickall') {
+          let n = 0;
+          for (const m of voice.members.values()) {
+            if (m.id === ctx.user.id || m.user.bot) continue;
+            await m.voice.disconnect(`VM ${action}`).catch(() => {});
+            n += 1;
+          }
+          return ctx.reply(`Disconnected **${n}** members.`);
         }
         if (action === 'invite') {
           const inv = await voice.createInvite({ maxAge: 3600, maxUses: 5 }).catch(() => null);
           if (!inv) return ctx.reply('Could not create invite.');
           return ctx.reply(`Invite: ${inv.url}`);
         }
+        if (action === 'info') {
+          const t = temp;
+          return ctx.reply([
+            `**${voice.name}**`,
+            `Owner: <@${t.ownerId}>`,
+            `Limit: ${voice.userLimit || '∞'} · Bitrate: ${Math.round((voice.bitrate || 0) / 1000)}kbps`,
+            `Trusted: ${(t.trusted || []).map((id) => `<@${id}>`).join(', ') || '(none)'}`,
+            `Members: ${voice.members.size}`,
+          ].join('\n'));
+        }
         return ctx.reply(
-          'vm setup|off|status|lock|unlock|ghost|reveal|name|limit|claim|transfer|bitrate|kick|reject|permit|invite|delete',
+          'vm setup|off|status|lock|unlock|ghost|reveal|name|limit|claim|transfer|bitrate|kick|reject|trust|untrust|rejectall|invite|info|delete',
         );
       },
     });

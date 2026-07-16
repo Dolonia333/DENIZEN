@@ -345,8 +345,34 @@ function createAntinuke(deps) {
             ).join('\n'),
           );
         }
+        if (action === 'unbanwave' || action === 'massunban') {
+          // Unban users banned in the last N minutes (default 10)
+          const mins = Number(ctx.getString?.('value') || ctx.args?.[1]) || 10;
+          const since = Date.now() - mins * 60_000;
+          let bans;
+          try {
+            bans = await ctx.guild.bans.fetch();
+          } catch (err) {
+            return ctx.reply(`Cannot fetch bans: ${err.message}`);
+          }
+          // Discord doesn't give ban time easily; unban last N ban audit entries
+          let unbanned = 0;
+          try {
+            const logs = await ctx.guild.fetchAuditLogs({ type: 22, limit: 20 }); // MEMBER_BAN_ADD
+            for (const [, entry] of logs.entries) {
+              if (entry.createdTimestamp < since) continue;
+              if (!entry.target?.id) continue;
+              await ctx.guild.members.unban(entry.target.id, `antinuke unbanwave by ${ctx.user.tag}`).then(() => {
+                unbanned += 1;
+              }).catch(() => {});
+            }
+          } catch (err) {
+            return ctx.reply(`Audit fetch failed: ${err.message}`);
+          }
+          return ctx.reply(`Unban wave: **${unbanned}** users (bans in last ${mins}m via audit log).`);
+        }
         return ctx.reply(
-          'Usage: ,antinuke on|off|config|list|whitelist|admin|module|threshold|punishment|restore|autorestore|damage',
+          'Usage: ,antinuke on|off|config|list|whitelist|admin|module|threshold|punishment|restore|autorestore|damage|unbanwave',
         );
       },
     });

@@ -148,8 +148,11 @@ function defaultGuildConfig() {
       categoryId: null,
       logChannelId: null,
       supportRoleId: null,
+      openMessage: null,
+      slaMinutes: 30,
       panels: [],
       open: {},
+      closed: {},
       forms: [],
     },
     music: {

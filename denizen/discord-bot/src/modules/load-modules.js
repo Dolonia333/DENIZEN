@@ -31,6 +31,7 @@ function loadModules(deps) {
     onMessageDelete: [],
     onMessageUpdate: [],
     onReactionAdd: [],
+    onReactionRemove: [],
     onVoiceStateUpdate: [],
     onInteraction: [],
   };
@@ -54,6 +55,10 @@ function loadModules(deps) {
   hooks.onMessage.push(automod.onMessage);
   hooks.onMessageDelete.push(automod.onMessageDelete);
   hooks.onMessageUpdate.push(automod.onMessageUpdate);
+  if (automod.onReactionRemove) {
+    hooks.onReactionRemove = hooks.onReactionRemove || [];
+    hooks.onReactionRemove.push(automod.onReactionRemove);
+  }
 
   const community = createCommunity(deps);
   community.register(deps.registry);

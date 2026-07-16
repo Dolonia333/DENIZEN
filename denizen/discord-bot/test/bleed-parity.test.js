@@ -36,6 +36,17 @@ describe('Bleed-parity config + modules', () => {
     assert.match(out, /HQ/);
   });
 
+  it('renderScript builds embed from $v fields', () => {
+    const { renderScript } = require('../src/core/embed-vars');
+    const payload = renderScript(
+      '{embed}$v{title: Hello}$v{description: Hi {user.name}}$v{color: #00ff00}',
+      { user: { id: '1', username: 'Ada' } },
+    );
+    assert.ok(payload.embeds?.length);
+    assert.equal(payload.embeds[0].data.title, 'Hello');
+    assert.match(payload.embeds[0].data.description, /Ada/);
+  });
+
   it('parseDurationMs handles 2h', () => {
     assert.equal(parseDurationMs('2h'), 2 * 3600 * 1000);
     assert.equal(parseDurationMs('30m'), 30 * 60 * 1000);

@@ -8,6 +8,7 @@ function createAutomod(deps) {
   const snipes = new Map();
   const editSnipes = new Map();
   const snipeHistory = new Map();
+  const reactionSnipes = new Map(); // channelId -> last reaction remove
 
   function onMessageDelete(message) {
     if (!message.guild || message.author?.bot) return;
@@ -238,9 +239,43 @@ function createAutomod(deps) {
         return ctx.reply(`**${s.author}**\nBefore: ${s.before.slice(0, 800)}\nAfter: ${s.after.slice(0, 800)}`);
       },
     });
+
+    registry.register({
+      name: 'reactionsnipe',
+      description: 'Show last removed reaction in channel',
+      aliases: ['rsnipe'],
+      module: 'automod',
+      async run(ctx) {
+        const s = reactionSnipes.get(ctx.channel.id);
+        if (!s) return ctx.reply('Nothing to reaction-snipe.');
+        return ctx.reply(
+          `**${s.userTag}** removed ${s.emoji} on message by **${s.messageAuthor}**\n${s.jump || ''}`.slice(0, 1900),
+        );
+      },
+    });
   }
 
-  return { register, onMessage, onMessageDelete, onMessageUpdate };
+  function onReactionRemove(reaction, user) {
+    try {
+      const msg = reaction.message;
+      if (!msg?.guild || user?.bot) return;
+      reactionSnipes.set(msg.channel.id, {
+        emoji: reaction.emoji?.name || reaction.emoji?.id || '?',
+        userTag: user.tag || user.id,
+        messageAuthor: msg.author?.tag || 'unknown',
+        jump: msg.url,
+        ts: Date.now(),
+      });
+    } catch (_) {}
+  }
+
+  return {
+    register,
+    onMessage,
+    onMessageDelete,
+    onMessageUpdate,
+    onReactionRemove,
+  };
 }
 
 module.exports = { createAutomod };

@@ -163,6 +163,42 @@ function createIntegrations(deps) {
               `**Recent** for **${username}**\n${list.map((t) => `• ${t.name} — ${t.artist?.['#text'] || t.artist}`).join('\n')}`,
             );
           }
+          if (action === 'collage' || action === 'chart') {
+            // Third-party collage services (no API key required for link)
+            const size = ctx.args?.[1] || '3x3';
+            const period = ctx.args?.[2] || '7day';
+            const link = `https://www.tapmusic.net/collage.php?user=${encodeURIComponent(username)}&type=${encodeURIComponent(period)}&size=${encodeURIComponent(size)}&caption=true`;
+            return ctx.reply(`**Collage** for **${username}** (${size} · ${period})\n${link}`);
+          }
+          if (action === 'plays' || action === 'playcount') {
+            const key = process.env.LASTFM_API_KEY;
+            if (!key) throw new Error('LASTFM_API_KEY not set');
+            const url = `https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${encodeURIComponent(username)}&api_key=${key}&format=json`;
+            const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+            const data = await r.json();
+            const u = data?.user;
+            if (!u) return ctx.reply('User not found.');
+            return ctx.reply(
+              `**${u.name}** — ${u.playcount} scrobbles · ${u.artist_count} artists · registered <t:${u.registered?.unixtime || 0}:D>`,
+            );
+          }
+          if (action === 'whoknows' || action === 'wk') {
+            const artist = ctx.args?.slice(1).join(' ') || ctx.args?.slice(0).join(' ');
+            if (!artist || artist === 'whoknows' || artist === 'wk') {
+              return ctx.reply('Usage: ,lastfm whoknows <artist> (needs LASTFM_API_KEY; shows your plays)');
+            }
+            const key = process.env.LASTFM_API_KEY;
+            if (!key) throw new Error('LASTFM_API_KEY not set');
+            const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(artist)}&username=${encodeURIComponent(username)}&api_key=${key}&format=json`;
+            const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+            const data = await r.json();
+            const plays = data?.artist?.stats?.userplaycount;
+            return ctx.reply(
+              plays != null
+                ? `**${username}** has **${plays}** plays of **${data.artist.name}**`
+                : `No play data for **${artist}**.`,
+            );
+          }
           const t = await lastfmNowPlaying(username);
           const status = t.now ? '🎵 Now playing' : '🎧 Last played';
           return ctx.reply(

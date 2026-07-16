@@ -8,7 +8,7 @@ const {
   ButtonStyle,
 } = require('discord.js');
 const { canRunCommand } = require('../../core/permissions');
-const { renderTemplate } = require('../../core/embed-vars');
+const { renderTemplate, sendRendered } = require('../../core/embed-vars');
 const fs = require('fs');
 const path = require('path');
 
@@ -56,12 +56,11 @@ function createCommunity(deps) {
     if (w?.enabled && w.channelId) {
       const ch = await member.guild.channels.fetch(w.channelId).catch(() => null);
       if (ch?.isTextBased?.()) {
-        const msg = renderTemplate(w.message || 'Welcome {user}!', {
+        await sendRendered(ch, w.message || 'Welcome {user}!', {
           user: member.user,
           guild: member.guild,
           member,
-        });
-        await ch.send(msg).catch(() => {});
+        }).catch(() => {});
       }
     }
     // Booster role is applied on guildMemberUpdate, not join
@@ -107,7 +106,9 @@ function createCommunity(deps) {
     }
 
     if (cfg.levels?.enabled) {
-      if ((cfg.levels.ignoreChannels || []).includes(message.channel.id)) {
+      const ignoreRole = message.member?.roles?.cache
+        && (cfg.levels.ignoreRoles || []).some((r) => message.member.roles.cache.has(r));
+      if ((cfg.levels.ignoreChannels || []).includes(message.channel.id) || ignoreRole) {
         // skip xp
       } else {
       const key = `${message.guild.id}:${message.author.id}`;
@@ -229,7 +230,10 @@ function createCommunity(deps) {
         if (action === 'message') {
           const text = ctx.getString?.('value') || ctx.args?.slice(1).join(' ');
           config.update(ctx.guild.id, (c) => { c.community.welcome.message = text; return c; });
-          return ctx.reply('Welcome message updated. Vars: {user} {user.name} {server} {memberCount}');
+          return ctx.reply(
+            'Welcome updated. Vars: {user} {user.name} {server} {memberCount}. '
+            + 'Embed script: `{embed}$v{title: Welcome}$v{description: Hi {user}}`',
+          );
         }
         if (action === 'test') {
           const w = config.get(ctx.guild.id).community.welcome;
@@ -362,9 +366,41 @@ function createCommunity(deps) {
           });
           return ctx.reply(`Toggled levels ignore for ${ch}.`);
         }
+        if (action === 'rank' || action === 'card') {
+          const target = ctx.message?.mentions?.users?.first?.() || ctx.user;
+          const xp = getXp(ctx.guild.id, target.id);
+          const lvl = levelFromXp(xp);
+          const nextXp = Math.pow((lvl + 1) * 10, 2);
+          const prevXp = Math.pow(lvl * 10, 2);
+          const progress = Math.min(1, (xp - prevXp) / Math.max(1, nextXp - prevXp));
+          const barLen = 12;
+          const filled = Math.round(progress * barLen);
+          const bar = '█'.repeat(filled) + '░'.repeat(barLen - filled);
+          const data = loadXp(ctx.guild.id);
+          const rank = Object.entries(data).sort((a, b) => b[1] - a[1]).findIndex(([id]) => id === target.id) + 1;
+          return ctx.reply([
+            `**Rank card · ${target.tag || target.username}**`,
+            `Level **${lvl}** · #${rank || '—'} · ${xp} XP`,
+            `\`${bar}\` ${Math.round(progress * 100)}% to ${lvl + 1}`,
+            `Next level at **${nextXp}** XP`,
+          ].join('\n'));
+        }
+        if (action === 'ignorerole') {
+          if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
+          const role = ctx.message?.mentions?.roles?.first?.();
+          if (!role) return ctx.reply('Usage: ,levels ignorerole @role');
+          config.update(ctx.guild.id, (c) => {
+            c.community.levels.ignoreRoles = c.community.levels.ignoreRoles || [];
+            if (c.community.levels.ignoreRoles.includes(role.id)) {
+              c.community.levels.ignoreRoles = c.community.levels.ignoreRoles.filter((id) => id !== role.id);
+            } else c.community.levels.ignoreRoles.push(role.id);
+            return c;
+          });
+          return ctx.reply(`Toggled levels ignore for ${role}.`);
+        }
         const target = ctx.message?.mentions?.users?.first?.() || ctx.user;
         const xp = getXp(ctx.guild.id, target.id);
-        return ctx.reply(`**${target.tag || target.username}** — ${xp} XP · level **${levelFromXp(xp)}**`);
+        return ctx.reply(`**${target.tag || target.username}** — ${xp} XP · level **${levelFromXp(xp)}** · \`,levels rank\``);
       },
     });
 

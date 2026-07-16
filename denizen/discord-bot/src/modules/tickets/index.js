@@ -7,17 +7,26 @@ const {
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
+  EmbedBuilder,
+  Colors,
 } = require('discord.js');
 const { canRunCommand } = require('../../core/permissions');
-const { renderTemplate } = require('../../core/embed-vars');
+const { renderTemplate, renderScript } = require('../../core/embed-vars');
 
+/**
+ * Tickets product: panels, forms, claim, notes, reopen, SLA warning, transcripts.
+ */
 function createTickets(deps) {
   const { config, hub } = deps;
 
+  function ticketCfg(guildId) {
+    return config.get(guildId).tickets;
+  }
+
   async function openTicket(guild, user, reason = 'Support', option = null) {
-    const cfg = config.get(guild.id).tickets;
+    const cfg = ticketCfg(guild.id);
     if (!cfg.enabled) throw new Error('Tickets disabled — run ,tickets setup');
-    const existing = Object.entries(cfg.open || {}).find(([, v]) => v.userId === user.id);
+    const existing = Object.entries(cfg.open || {}).find(([, v]) => v.userId === user.id && !v.closed);
     if (existing) throw new Error(`You already have a ticket: <#${existing[0]}>`);
 
     const overwrites = [
@@ -39,6 +48,7 @@ function createTickets(deps) {
           PermissionFlagsBits.ViewChannel,
           PermissionFlagsBits.SendMessages,
           PermissionFlagsBits.ManageChannels,
+          PermissionFlagsBits.ReadMessageHistory,
         ],
       });
     }
@@ -51,13 +61,18 @@ function createTickets(deps) {
       topic: `Ticket for ${user.tag} · ${reason}`,
     });
 
+    const slaMs = (cfg.slaMinutes || 0) * 60_000;
     config.update(guild.id, (c) => {
       c.tickets.open[ch.id] = {
         userId: user.id,
         reason,
         option,
         claimedBy: null,
+        notes: [],
+        fields: option?.fields || [],
         ts: Date.now(),
+        slaAt: slaMs ? Date.now() + slaMs : null,
+        closed: false,
       };
       return c;
     });
@@ -65,46 +80,131 @@ function createTickets(deps) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId('denizen_ticket_claim').setLabel('Claim').setStyle(ButtonStyle.Success),
       new ButtonBuilder().setCustomId('denizen_ticket_close').setLabel('Close').setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId('denizen_ticket_note').setLabel('Add note').setStyle(ButtonStyle.Secondary),
     );
 
-    const intro = renderTemplate(
-      cfg.openMessage || 'Ticket for {user} — **{reason}**\nStaff: Claim · Close when done.',
-      { user, guild, reason },
-    );
+    const introTpl = cfg.openMessage
+      || 'Ticket for {user} — **{reason}**\nStaff: Claim · Close · notes via `,tickets note <text>`';
+    const intro = renderTemplate(introTpl, { user, guild, reason });
+
+    const embed = new EmbedBuilder()
+      .setColor(Colors.Blurple)
+      .setTitle(`Ticket · ${reason}`.slice(0, 256))
+      .setDescription(intro.slice(0, 4000))
+      .addFields(
+        { name: 'User', value: `<@${user.id}>`, inline: true },
+        { name: 'Opened', value: `<t:${Math.floor(Date.now() / 1000)}:R>`, inline: true },
+      )
+      .setTimestamp(new Date());
+    if (cfg.slaMinutes) {
+      embed.addFields({ name: 'SLA', value: `${cfg.slaMinutes}m response target`, inline: true });
+    }
+    if (option?.fields?.length) {
+      embed.addFields({
+        name: 'Form',
+        value: option.fields.map((f) => `• **${f}**`).join('\n').slice(0, 1024),
+      });
+    }
+
     await ch.send({
-      content: `${intro}${cfg.supportRoleId ? `\n||<@&${cfg.supportRoleId}>||` : ''}`,
+      content: cfg.supportRoleId ? `||<@&${cfg.supportRoleId}>||` : undefined,
+      embeds: [embed],
       components: [row],
     });
+
+    if (option?.fields?.length) {
+      await ch.send(
+        `Please answer:\n${option.fields.map((f, i) => `**${i + 1}. ${f}**`).join('\n')}`,
+      ).catch(() => {});
+    }
+
     hub.emit('tickets.open', { guildId: guild.id, channelId: ch.id, userId: user.id });
+
+    // SLA reminder
+    if (slaMs) {
+      setTimeout(async () => {
+        const open = ticketCfg(guild.id).open?.[ch.id];
+        if (!open || open.claimedBy || open.closed) return;
+        const channel = await guild.channels.fetch(ch.id).catch(() => null);
+        if (channel?.isTextBased?.()) {
+          await channel.send(
+            `⏰ **SLA**: no claim yet (${cfg.slaMinutes}m). Staff please respond.`,
+          ).catch(() => {});
+        }
+      }, slaMs).unref?.();
+    }
+
     return ch;
   }
 
-  async function closeTicket(guild, channel, closer) {
-    const open = config.get(guild.id).tickets.open[channel.id];
-    if (!open) throw new Error('Not a ticket channel');
-
-    // Transcript (last 50 messages)
-    let transcript = `Ticket transcript · ${channel.name}\nUser: ${open.userId}\nReason: ${open.reason}\n\n`;
+  async function buildTranscript(channel, open) {
+    let transcript = `Ticket transcript · ${channel.name}\nUser: ${open.userId}\nReason: ${open.reason}\nClaimed: ${open.claimedBy || '—'}\nNotes: ${(open.notes || []).length}\n\n`;
+    for (const n of open.notes || []) {
+      transcript += `[NOTE ${new Date(n.ts).toISOString()}] ${n.modTag}: ${n.text}\n`;
+    }
+    transcript += '\n--- messages ---\n';
     try {
-      const msgs = await channel.messages.fetch({ limit: 50 });
+      const msgs = await channel.messages.fetch({ limit: 100 });
       const ordered = [...msgs.values()].sort((a, b) => a.createdTimestamp - b.createdTimestamp);
       for (const m of ordered) {
         transcript += `[${new Date(m.createdTimestamp).toISOString()}] ${m.author.tag}: ${m.content}\n`;
       }
     } catch (_) {}
+    return transcript;
+  }
 
-    const logId = config.get(guild.id).tickets.logChannelId;
+  async function closeTicket(guild, channel, closer, { archive = false } = {}) {
+    const open = ticketCfg(guild.id).open[channel.id];
+    if (!open || open.closed) throw new Error('Not an open ticket channel');
+
+    const transcript = await buildTranscript(channel, open);
+    const logId = ticketCfg(guild.id).logChannelId;
     if (logId) {
       const log = await guild.channels.fetch(logId).catch(() => null);
       if (log?.isTextBased?.()) {
         await log.send({
-          content: `🎫 Closed ticket **${channel.name}** by ${closer?.tag || closer?.id || 'system'} (user <@${open.userId}>)`,
+          content: `🎫 Closed **${channel.name}** by ${closer?.tag || closer?.id || 'system'} (user <@${open.userId}>)`,
           files: [{ attachment: Buffer.from(transcript, 'utf8'), name: `ticket-${channel.id}.txt` }],
         }).catch(() => {});
       }
     }
 
-    config.update(guild.id, (c) => { delete c.tickets.open[channel.id]; return c; });
+    if (archive) {
+      config.update(guild.id, (c) => {
+        c.tickets.open[channel.id] = {
+          ...open,
+          closed: true,
+          closedAt: Date.now(),
+          closedBy: closer?.id || null,
+        };
+        c.tickets.closed = c.tickets.closed || {};
+        c.tickets.closed[channel.id] = c.tickets.open[channel.id];
+        return c;
+      });
+      await channel.permissionOverwrites.edit(open.userId, { SendMessages: false }).catch(() => {});
+      await channel.setName(`closed-${channel.name}`.slice(0, 100)).catch(() => {});
+      await channel.send('Ticket archived (closed). Staff: `,tickets reopen` or delete channel.').catch(() => {});
+      hub.emit('tickets.close', { guildId: guild.id, channelId: channel.id, archived: true });
+      return;
+    }
+
+    config.update(guild.id, (c) => {
+      c.tickets.closed = c.tickets.closed || {};
+      c.tickets.closed[channel.id] = {
+        ...open,
+        closed: true,
+        closedAt: Date.now(),
+        closedBy: closer?.id || null,
+        channelName: channel.name,
+      };
+      // Keep last 20 closed meta for reopen by user id
+      const keys = Object.keys(c.tickets.closed);
+      if (keys.length > 30) {
+        for (const k of keys.slice(0, keys.length - 30)) delete c.tickets.closed[k];
+      }
+      delete c.tickets.open[channel.id];
+      return c;
+    });
     hub.emit('tickets.close', { guildId: guild.id, channelId: channel.id });
     await channel.delete('Ticket closed').catch(() => {});
   }
@@ -112,12 +212,12 @@ function createTickets(deps) {
   function register(registry) {
     registry.register({
       name: 'tickets',
-      description: 'Ticket system (setup, panel, close, claim, list)',
+      description: 'Ticket system — panels, forms, claim, notes, reopen, SLA',
       aliases: ['ticket', 'tix'],
       module: 'tickets',
       options: [
-        { name: 'action', description: 'setup|panel|close|claim|list|support|log', type: 3, required: true },
-        { name: 'reason', description: 'Open reason', type: 3, required: false },
+        { name: 'action', description: 'setup|panel|close|claim|note|reopen|list|…', type: 3, required: true },
+        { name: 'reason', description: 'Open reason / note text', type: 3, required: false },
       ],
       async run(ctx) {
         const action = (ctx.getString?.('action') || ctx.args?.[0] || 'list').toLowerCase();
@@ -137,9 +237,18 @@ function createTickets(deps) {
             c.tickets.enabled = true;
             c.tickets.categoryId = cat.id;
             c.tickets.logChannelId = log.id;
+            c.tickets.slaMinutes = c.tickets.slaMinutes || 30;
             return c;
           });
-          return ctx.reply(`Tickets ready: ${cat} · logs ${log}`);
+          return ctx.reply(`Tickets ready: ${cat} · logs ${log} · default SLA 30m (\`,tickets sla 60\`)`);
+        }
+
+        if (action === 'sla') {
+          if (!canRunCommand(ctx, { permission: 'Administrator' }).ok) return ctx.reply('Need Administrator.');
+          const n = Number(ctx.args?.[1] || ctx.getString?.('reason'));
+          if (!Number.isFinite(n) || n < 0 || n > 24 * 60) return ctx.reply('Usage: ,tickets sla <minutes> (0=off)');
+          config.update(ctx.guild.id, (c) => { c.tickets.slaMinutes = n; return c; });
+          return ctx.reply(`Ticket SLA → **${n || 'off'}** minutes.`);
         }
 
         if (action === 'support') {
@@ -157,11 +266,18 @@ function createTickets(deps) {
           return ctx.reply(`Ticket log → ${ch}`);
         }
 
+        if (action === 'message' || action === 'openmessage') {
+          if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
+          const text = ctx.args?.slice(1).join(' ');
+          if (!text) return ctx.reply('Usage: ,tickets message <template with {user} {reason}>');
+          config.update(ctx.guild.id, (c) => { c.tickets.openMessage = text; return c; });
+          return ctx.reply('Open message template saved. Supports `{embed}$v{title: …}` scripts.');
+        }
+
         if (action === 'panel') {
           if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
-          // ,tickets panel [title]
           const title = ctx.args?.slice(1).join(' ') || 'Support Tickets';
-          const options = config.get(ctx.guild.id).tickets.forms || [];
+          const options = ticketCfg(ctx.guild.id).forms || [];
           let msg;
           if (options.length) {
             const menu = new StringSelectMenuBuilder()
@@ -198,42 +314,143 @@ function createTickets(deps) {
             });
             return c;
           });
-          return ctx.reply({ content: `Panel posted (${msg.id}).`, ephemeral: true }).catch(() => ctx.reply('Panel posted.'));
+          return ctx.reply({ content: `Panel posted.`, ephemeral: true }).catch(() => ctx.reply('Panel posted.'));
         }
 
         if (action === 'form' || action === 'option') {
           if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
-          if ((ctx.args?.[1] || '').toLowerCase() === 'list') {
-            const forms = config.get(ctx.guild.id).tickets.forms || [];
+          const sub = (ctx.args?.[1] || '').toLowerCase();
+          if (sub === 'list') {
+            const forms = ticketCfg(ctx.guild.id).forms || [];
             return ctx.reply(forms.length
-              ? forms.map((f, i) => `${i + 1}. **${f.label}** — ${f.description || ''}`).join('\n')
-              : 'No forms. `,tickets form Support | Get help`');
+              ? forms.map((f, i) => `${i + 1}. **${f.label}** — ${f.description || ''} ${(f.fields || []).length ? `fields: ${f.fields.join(', ')}` : ''}`).join('\n')
+              : 'No forms. `,tickets form Support | Get help | What is the issue?, Account email`');
           }
-          if ((ctx.args?.[1] || '').toLowerCase() === 'clear') {
+          if (sub === 'clear') {
             config.update(ctx.guild.id, (c) => { c.tickets.forms = []; return c; });
             return ctx.reply('Ticket forms cleared.');
           }
-          // ,tickets form Support | Get help from staff
+          // Label | description | field1, field2
           const raw = ctx.args?.slice(1).join(' ') || '';
-          const [label, ...rest] = raw.split('|').map((s) => s.trim());
-          if (!label) return ctx.reply('Usage: ,tickets form Label | optional description · list · clear');
+          const parts = raw.split('|').map((s) => s.trim());
+          const label = parts[0];
+          if (!label) {
+            return ctx.reply('Usage: ,tickets form Label | description | Field1?, Field2?');
+          }
+          const description = parts[1] || '';
+          const fields = parts[2]
+            ? parts[2].split(',').map((s) => s.trim()).filter(Boolean)
+            : [];
           config.update(ctx.guild.id, (c) => {
             c.tickets.forms = c.tickets.forms || [];
-            c.tickets.forms.push({ label, description: rest.join('|') || '' });
+            c.tickets.forms.push({ label, description, fields });
             return c;
           });
-          return ctx.reply(`Ticket option added: **${label}**. Re-post panel to use select menu.`);
+          return ctx.reply(
+            `Form **${label}** added${fields.length ? ` with fields: ${fields.join(', ')}` : ''}. Re-post panel.`,
+          );
         }
 
         if (action === 'panels') {
-          const panels = config.get(ctx.guild.id).tickets.panels || [];
+          const panels = ticketCfg(ctx.guild.id).panels || [];
           return ctx.reply(panels.length
-            ? panels.map((p) => `• ${p.title} in <#${p.channelId}> (\`${p.messageId}\`)`).join('\n')
-            : 'No panels recorded.');
+            ? panels.map((p) => `• ${p.title} in <#${p.channelId}>`).join('\n')
+            : 'No panels.');
+        }
+
+        if (action === 'note') {
+          const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
+          if (!open || open.closed) return ctx.reply('Not an open ticket.');
+          const text = ctx.getString?.('reason') || ctx.args?.slice(1).join(' ');
+          if (!text) return ctx.reply('Usage: ,tickets note internal staff note');
+          config.update(ctx.guild.id, (c) => {
+            const t = c.tickets.open[ctx.channel.id];
+            t.notes = t.notes || [];
+            t.notes.push({ text, modId: ctx.user.id, modTag: ctx.user.tag, ts: Date.now() });
+            return c;
+          });
+          return ctx.reply({
+            content: `📝 Staff note saved (${(open.notes || []).length + 1} total).`,
+            ephemeral: true,
+          }).catch(() => ctx.reply('Note saved.'));
+        }
+
+        if (action === 'notes') {
+          const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
+          if (!open) return ctx.reply('Not a ticket channel.');
+          const notes = open.notes || [];
+          if (!notes.length) return ctx.reply('No staff notes.');
+          return ctx.reply(
+            notes.slice(-10).map((n, i) =>
+              `**${i + 1}.** ${n.modTag}: ${n.text} (<t:${Math.floor(n.ts / 1000)}:R>)`,
+            ).join('\n'),
+          );
+        }
+
+        if (action === 'close' || action === 'archive') {
+          try {
+            await closeTicket(ctx.guild, ctx.channel, ctx.user, { archive: action === 'archive' });
+            if (action === 'archive') return ctx.reply('Ticket archived.');
+          } catch (err) {
+            return ctx.reply(err.message);
+          }
+          return;
+        }
+
+        if (action === 'reopen') {
+          const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
+          if (open?.closed) {
+            config.update(ctx.guild.id, (c) => {
+              c.tickets.open[ctx.channel.id].closed = false;
+              c.tickets.open[ctx.channel.id].closedAt = null;
+              return c;
+            });
+            await ctx.channel.permissionOverwrites.edit(open.userId, {
+              ViewChannel: true,
+              SendMessages: true,
+              AttachFiles: true,
+              ReadMessageHistory: true,
+            }).catch(() => {});
+            await ctx.channel.setName(ctx.channel.name.replace(/^closed-/, '')).catch(() => {});
+            return ctx.reply(`Reopened ticket for <@${open.userId}>.`);
+          }
+          // Reopen by creating new ticket from last closed for a user
+          const user = ctx.message?.mentions?.users?.first?.();
+          if (!user) return ctx.reply('Usage: ,tickets reopen (in archived channel) or ,tickets reopen @user');
+          const closed = Object.values(ticketCfg(ctx.guild.id).closed || {})
+            .filter((t) => t.userId === user.id)
+            .sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0))[0];
+          try {
+            const ch = await openTicket(ctx.guild, user, closed?.reason || 'Reopened', closed?.option || null);
+            return ctx.reply(`Reopened as ${ch}`);
+          } catch (err) {
+            return ctx.reply(err.message);
+          }
+        }
+
+        if (action === 'claim') {
+          const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
+          if (!open || open.closed) return ctx.reply('Not an open ticket.');
+          config.update(ctx.guild.id, (c) => {
+            c.tickets.open[ctx.channel.id].claimedBy = ctx.user.id;
+            c.tickets.open[ctx.channel.id].claimedAt = Date.now();
+            return c;
+          });
+          return ctx.reply(`Ticket claimed by <@${ctx.user.id}>.`);
+        }
+
+        if (action === 'unclaim') {
+          const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
+          if (!open) return ctx.reply('Not a ticket.');
+          config.update(ctx.guild.id, (c) => {
+            c.tickets.open[ctx.channel.id].claimedBy = null;
+            return c;
+          });
+          return ctx.reply('Ticket unclaimed.');
         }
 
         if (action === 'adduser' || action === 'removeuser') {
-          const open = config.get(ctx.guild.id).tickets.open[ctx.channel.id];
+          const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open) return ctx.reply('Not a ticket channel.');
           const user = ctx.message?.mentions?.users?.first?.();
           if (!user) return ctx.reply(`Usage: ,tickets ${action} @user`);
@@ -244,38 +461,19 @@ function createTickets(deps) {
               AttachFiles: true,
               ReadMessageHistory: true,
             });
-            return ctx.reply(`Added <@${user.id}> to ticket.`);
+            return ctx.reply(`Added <@${user.id}>.`);
           }
           await ctx.channel.permissionOverwrites.delete(user.id).catch(() => {});
-          return ctx.reply(`Removed <@${user.id}> from ticket.`);
+          return ctx.reply(`Removed <@${user.id}>.`);
         }
 
         if (action === 'rename') {
-          const open = config.get(ctx.guild.id).tickets.open[ctx.channel.id];
+          const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open) return ctx.reply('Not a ticket channel.');
           const name = ctx.args?.slice(1).join('-').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 90);
           if (!name) return ctx.reply('Usage: ,tickets rename new-name');
           await ctx.channel.setName(name);
           return ctx.reply(`Renamed to **${name}**.`);
-        }
-
-        if (action === 'close') {
-          try {
-            await closeTicket(ctx.guild, ctx.channel, ctx.user);
-          } catch (err) {
-            return ctx.reply(err.message);
-          }
-          return;
-        }
-
-        if (action === 'claim') {
-          const open = config.get(ctx.guild.id).tickets.open[ctx.channel.id];
-          if (!open) return ctx.reply('Not a ticket channel.');
-          config.update(ctx.guild.id, (c) => {
-            c.tickets.open[ctx.channel.id].claimedBy = ctx.user.id;
-            return c;
-          });
-          return ctx.reply(`Ticket claimed by <@${ctx.user.id}>.`);
         }
 
         if (action === 'open') {
@@ -288,10 +486,15 @@ function createTickets(deps) {
           }
         }
 
-        const open = Object.entries(config.get(ctx.guild.id).tickets.open || {});
+        const open = Object.entries(ticketCfg(ctx.guild.id).open || {}).filter(([, v]) => !v.closed);
         if (!open.length) return ctx.reply('No open tickets.');
         return ctx.reply(
-          open.map(([id, v]) => `<#${id}> — <@${v.userId}>${v.claimedBy ? ` claimed by <@${v.claimedBy}>` : ''}`).join('\n'),
+          open.map(([id, v]) => {
+            const age = Math.round((Date.now() - v.ts) / 60000);
+            const claim = v.claimedBy ? `claimed <@${v.claimedBy}>` : '**unclaimed**';
+            const sla = v.slaAt && !v.claimedBy && Date.now() > v.slaAt ? ' ⏰SLA' : '';
+            return `<#${id}> — <@${v.userId}> · ${claim} · ${age}m${sla}`;
+          }).join('\n'),
         );
       },
     });
@@ -323,10 +526,18 @@ function createTickets(deps) {
         config.update(interaction.guild.id, (c) => {
           if (c.tickets.open[interaction.channel.id]) {
             c.tickets.open[interaction.channel.id].claimedBy = interaction.user.id;
+            c.tickets.open[interaction.channel.id].claimedAt = Date.now();
           }
           return c;
         });
         await interaction.reply(`Claimed by <@${interaction.user.id}>.`);
+        return true;
+      }
+      if (interaction.customId === 'denizen_ticket_note') {
+        await interaction.reply({
+          content: 'Add a staff note with `,tickets note your text here`',
+          ephemeral: true,
+        });
         return true;
       }
     }
@@ -334,7 +545,7 @@ function createTickets(deps) {
       try {
         await interaction.deferReply({ ephemeral: true });
         const idx = Number(interaction.values[0]);
-        const form = config.get(interaction.guild.id).tickets.forms?.[idx];
+        const form = ticketCfg(interaction.guild.id).forms?.[idx];
         const reason = form?.label || 'Support';
         const ch = await openTicket(interaction.guild, interaction.user, reason, form);
         await interaction.editReply(`Opened ${ch} (${reason})`);

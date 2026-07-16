@@ -239,6 +239,10 @@ function attachGateway(client, handlers = {}) {
     runAll(handlers.hooks?.onReactionAdd, reaction, user);
   });
 
+  client.on('messageReactionRemove', (reaction, user) => {
+    runAll(handlers.hooks?.onReactionRemove, reaction, user);
+  });
+
   client.on('interactionCreate', async (interaction) => {
     if (typeof handlers.onInteraction === 'function') {
       await handlers.onInteraction(interaction);

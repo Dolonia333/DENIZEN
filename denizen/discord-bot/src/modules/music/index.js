@@ -268,6 +268,76 @@ function createMusic(deps) {
         return ctx.reply(`🎵 **${track.title}**${track.author ? ` — ${track.author}` : ''}\n${track.uri || ''}`);
       },
     });
+
+    registry.register({
+      name: 'shuffle',
+      description: 'Shuffle the queue',
+      module: 'music',
+      async run(ctx) {
+        const queue = q(ctx.guild.id);
+        for (let i = queue.tracks.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [queue.tracks[i], queue.tracks[j]] = [queue.tracks[j], queue.tracks[i]];
+        }
+        return ctx.reply(`Shuffled **${queue.tracks.length}** tracks.`);
+      },
+    });
+
+    registry.register({
+      name: 'remove',
+      description: 'Remove a track from the queue by index',
+      module: 'music',
+      options: [{ name: 'index', description: '1-based index', type: 4, required: true }],
+      async run(ctx) {
+        const idx = (ctx.getInteger?.('index') || Number(ctx.args?.[0]) || 0) - 1;
+        const queue = q(ctx.guild.id);
+        if (idx < 0 || idx >= queue.tracks.length) return ctx.reply('Invalid index.');
+        const [t] = queue.tracks.splice(idx, 1);
+        return ctx.reply(`Removed **${t.title}**.`);
+      },
+    });
+
+    registry.register({
+      name: 'loop',
+      description: 'Toggle loop mode: off|track|queue',
+      module: 'music',
+      async run(ctx) {
+        const mode = (ctx.args?.[0] || 'track').toLowerCase();
+        if (!['off', 'track', 'queue'].includes(mode)) return ctx.reply('Usage: ,loop off|track|queue');
+        const queue = q(ctx.guild.id);
+        queue.loop = mode;
+        hub.emit('music.loop', { guildId: ctx.guild.id, mode });
+        return ctx.reply(`Loop → **${mode}**.`);
+      },
+    });
+
+    registry.register({
+      name: 'filter',
+      description: 'Set playback filter preset (backend dependent)',
+      module: 'music',
+      async run(ctx) {
+        const name = (ctx.args?.[0] || 'list').toLowerCase();
+        const presets = ['none', 'bassboost', 'nightcore', 'vaporwave', 'soft', '8d'];
+        if (name === 'list') return ctx.reply(`Filters: ${presets.join(', ')}`);
+        if (!presets.includes(name)) return ctx.reply(`Unknown filter. Try: ${presets.join(', ')}`);
+        q(ctx.guild.id).filter = name;
+        hub.emit('music.filter', { guildId: ctx.guild.id, filter: name });
+        return ctx.reply(`Filter → **${name}** (applied when Lavalink/worker supports it).`);
+      },
+    });
+
+    registry.register({
+      name: 'clearqueue',
+      description: 'Clear upcoming tracks (keep current)',
+      aliases: ['cq'],
+      module: 'music',
+      async run(ctx) {
+        const queue = q(ctx.guild.id);
+        const n = queue.tracks.length;
+        queue.tracks = [];
+        return ctx.reply(`Cleared **${n}** upcoming tracks.`);
+      },
+    });
   }
 
   return { register, queues };
