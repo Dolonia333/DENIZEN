@@ -967,6 +967,12 @@
       this.autoDoors = []; // entrance door sprites that open on approach
       this.elevatorDoors = []; // per-floor elevator shaft doors {x, floorId, img}
       this.seated = null; // { seat, prevDepth } while sitting/lying
+      this._layoutFp = null; // fingerprint of rooms+categories for live rebuild
+      this._rebuilding = false;
+      this._lastPresenceData = null;
+      this._lastMeRoomKey = null; // last hard-VC room for ME_DISCORD_ID
+      this._autoWarpCooldownUntil = 0;
+      this._floorCollider = null;
       this.presenceEl = document.getElementById('presence-status');
       this.hintEl = document.getElementById('enter-hint');
 
@@ -994,6 +1000,124 @@
       });
     }
 
+    /** Stable signature of guild topology (channels + categories), not occupancy. */
+    layoutFingerprint(data) {
+      const rooms = (Array.isArray(data?.rooms) ? data.rooms : [])
+        .filter((r) => r && r.type !== 'category' && r.type !== 'other')
+        .map((r) => `${r.id}|${r.name}|${r.type}|${r.categoryId || ''}|${r.categoryName || ''}`)
+        .sort();
+      const cats = (Array.isArray(data?.categories) ? data.categories : [])
+        .map((c) => `${c.id}|${c.name}|${c.position ?? 0}`)
+        .sort();
+      return `${data?.guildId || ''}\n${cats.join(';')}\n${rooms.join(';')}`;
+    }
+
+    /**
+     * Destroy layout/world props but keep sky parallax, player, and live people
+     * sprites we will re-sync after rebuild. Sky/mountains use depth <= -80.
+     */
+    clearLayoutArtifacts({ keepLivePeople = false } = {}) {
+      const keep = new Set();
+      if (this.player) keep.add(this.player);
+      if (this.playerTag) keep.add(this.playerTag);
+      if (this._floorCollider) keep.add(this._floorCollider);
+      if (keepLivePeople) {
+        for (const live of this.livePeople.values()) {
+          if (live.sprite) keep.add(live.sprite);
+          if (live.tag) keep.add(live.tag);
+        }
+      } else {
+        for (const live of [...this.livePeople.values()]) {
+          this.tweens.killTweensOf(live.sprite);
+          this.tweens.killTweensOf(live.tag);
+          live.sprite?.destroy();
+          live.tag?.destroy();
+        }
+        this.livePeople.clear();
+      }
+
+      const list = this.children?.list ? [...this.children.list] : [];
+      for (const child of list) {
+        if (!child || keep.has(child)) continue;
+        if (child.getData?.('persist')) continue;
+        // Parallax sky / mountains / distant city
+        const d = typeof child.depth === 'number' ? child.depth : 0;
+        if (d <= -80) continue;
+        try {
+          this.tweens.killTweensOf(child);
+          child.destroy();
+        } catch (_) { /* already gone */ }
+      }
+
+      this.roomSlots = new Map();
+      this.floors = new Map();
+      this.doors = [];
+      this.stairs = [];
+      this.passages = [];
+      this.buildings = [];
+      this.sitables = [];
+      this.elevSprites = [];
+      this.seats = [];
+      this.autoDoors = [];
+      this.elevatorDoors = [];
+      this.decorNpcQueue = [];
+      this._themeRR = 0;
+      this._sceneMinY = 0;
+      this.seated = null;
+      this._sitting = null;
+    }
+
+    refreshPlayerWorldBounds() {
+      if (!this.player) return;
+      const mw = this.mapWidth || W;
+      const topBound = Math.min(0, this._sceneMinY ?? 0);
+      this.physics.world.setBounds(0, topBound, mw + 40, H - topBound);
+      this.cameras.main.setBounds(0, topBound, mw + 40, H - topBound);
+      if (this._floorCollider?.body) {
+        try { this._floorCollider.destroy(); } catch (_) { /* ignore */ }
+      }
+      const floor = this.add.rectangle(mw / 2, this.groundY + 24, mw + 120, 48, 0x000000, 0);
+      this.physics.add.existing(floor, true);
+      this.physics.add.collider(this.player, floor);
+      this._floorCollider = floor;
+    }
+
+    /**
+     * Live rebuild when Discord adds/removes/renames channels or categories.
+     * Preserves player outdoor X when possible; re-enters the same room if it still exists.
+     */
+    async rebuildLayout(data) {
+      if (this._rebuilding) return;
+      this._rebuilding = true;
+      const saved = {
+        floorId: this.indoors?.floorId || null,
+        outdoorX: this.indoors?.outdoorX ?? this.player?.x ?? 160,
+        px: this.player?.x ?? 160,
+        outdoors: !this.indoors,
+      };
+      try {
+        this.standUp?.();
+        this.indoors = null;
+        this.clearLayoutArtifacts({ keepLivePeople: false });
+        await this.bootstrapLayout(data);
+        this.flushDecorNpcQueue();
+        this.spawnDecorNpcs();
+        this.refreshPlayerWorldBounds();
+        if (this.player) {
+          const x = Phaser.Math.Clamp(saved.px, 20, (this.mapWidth || W) - 20);
+          this.player.setPosition(x, this.groundY - 1);
+          this.player.setDepth(45);
+          this.cameras.main.setZoom(this.outdoorZoom || 1.1);
+          if (saved.floorId && this.floors.has(saved.floorId)) {
+            this.enterFloor(saved.floorId, saved.outdoorX, false);
+          }
+        }
+        this.setPresenceStatus('map updated · channels changed', true);
+      } finally {
+        this._rebuilding = false;
+      }
+    }
+
     setupPlayer() {
       // NPC frames are 32x32 cells; the character art itself is a small chibi
       // bust roughly x11-21,y9-23 within each cell (not flush to the edges).
@@ -1007,19 +1131,13 @@
         .setDepth(45)
         .setCollideWorldBounds(true);
       this.player.body.setSize(12, 8).setOffset(10, 16);
-      const mw = this.mapWidth || W;
-      // Tall stacked-floor buildings can extend above y=0; widen bounds so
-      // the camera can actually scroll up to follow the player onto upper
-      // floors instead of clamping at the canvas top.
-      const topBound = Math.min(0, this._sceneMinY ?? 0);
-      this.physics.world.setBounds(0, topBound, mw + 40, H - topBound);
-      this.cameras.main.setBounds(0, topBound, mw + 40, H - topBound);
       this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
       const narrow = window.innerWidth < 640;
       this.outdoorZoom = IS_TOUCH && narrow ? 0.98 : 1.1;
       this.indoorZoom = IS_TOUCH && narrow ? 1.38 : 1.55;
       this.cameras.main.setZoom(this.outdoorZoom);
       this.cameras.main.setDeadzone(narrow ? 60 : 90, narrow ? 36 : 50);
+      this.refreshPlayerWorldBounds();
 
       this.playerTag = this.add.text(0, 0, 'you', {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
@@ -1036,10 +1154,6 @@
       } catch (_) {
         this.keyE = null;
       }
-
-      const floor = this.add.rectangle(mw / 2, this.groundY + 24, mw + 120, 48, 0x000000, 0);
-      this.physics.add.existing(floor, true);
-      this.physics.add.collider(this.player, floor);
 
       this.cursors = this.input.keyboard.createCursorKeys();
       this.wasd = this.input.keyboard.addKeys({
@@ -1060,13 +1174,20 @@
      * the voice lounge, a category whose name matches a themed set-piece
      * (or an unmatched round-robin slot) gets that theme, and everything
      * else keeps the original plain per-channel office-park building.
+     * @param {object} [preset] optional presence payload (skip fetch when rebuilding)
      */
-    async bootstrapLayout() {
-      let data = { rooms: [], categories: [], guildName: 'Discord' };
-      try {
-        const res = await fetch(PRESENCE_URL, { cache: 'no-store' });
-        if (res.ok) data = await res.json();
-      } catch (_) { /* offline — draw placeholder */ }
+    async bootstrapLayout(preset = null) {
+      let data = preset && typeof preset === 'object'
+        ? preset
+        : { rooms: [], categories: [], guildName: 'Discord' };
+      if (!preset) {
+        try {
+          const res = await fetch(PRESENCE_URL, { cache: 'no-store' });
+          if (res.ok) data = await res.json();
+        } catch (_) { /* offline — draw placeholder */ }
+      }
+      this._lastPresenceData = data;
+      this._layoutFp = this.layoutFingerprint(data);
 
       const rooms = (Array.isArray(data.rooms) ? data.rooms : [])
         .filter((r) => r.type !== 'category' && r.type !== 'other');
@@ -2379,10 +2500,18 @@
 
     startPresenceLoop() {
       const tick = async () => {
+        if (this._rebuilding) return;
         try {
           const res = await fetch(PRESENCE_URL, { cache: 'no-store' });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
+          const fp = this.layoutFingerprint(data);
+          if (this._layoutFp != null && fp !== this._layoutFp) {
+            this._layoutFp = fp;
+            await this.rebuildLayout(data);
+          } else if (this._layoutFp == null) {
+            this._layoutFp = fp;
+          }
           this.applyPresence(data);
           const voiceN = (data.people || []).filter((p) => p.channelType === 'voice' || p.channelType === 'stage').length;
           const textN = (data.people || []).length - voiceN;
@@ -2396,74 +2525,238 @@
     }
 
     applyPresence(data) {
+      this._lastPresenceData = data;
       const want = new Map();
       for (const p of data.people || []) {
         const roomKey = this.resolveRoomKey(p);
         if (!roomKey) continue;
-        want.set(String(p.userId), {
-          userId: String(p.userId),
+        const userId = String(p.userId);
+        // Local player avatar is "you" — don't double-spawn a live marker for self.
+        if (ME_DISCORD_ID && userId === String(ME_DISCORD_ID)) {
+          want.set(userId, {
+            userId,
+            displayName: String(p.displayName || 'member').slice(0, 16),
+            roomKey,
+            soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
+            isMe: true,
+          });
+          continue;
+        }
+        want.set(userId, {
+          userId,
           displayName: String(p.displayName || 'member').slice(0, 16),
           roomKey,
           soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
+          isMe: false,
         });
       }
 
-      // Despawn people who left
+      // Despawn people who left (fade out)
       for (const [userId, live] of [...this.livePeople.entries()]) {
-        if (!want.has(userId)) {
-          this.releaseSlot(live.roomKey, userId);
-          live.sprite?.destroy();
-          live.tag?.destroy();
-          this.livePeople.delete(userId);
+        if (!want.has(userId) || want.get(userId)?.isMe) {
+          this.despawnLivePerson(userId, live);
         }
       }
 
-      // Spawn / move
+      // Spawn / smooth-move others
       for (const [userId, person] of want) {
+        if (person.isMe) continue;
         const existing = this.livePeople.get(userId);
         if (existing && existing.roomKey !== person.roomKey) {
-          this.releaseSlot(existing.roomKey, userId);
-          existing.sprite?.destroy();
-          existing.tag?.destroy();
-          this.livePeople.delete(userId);
-        }
-        if (!this.livePeople.has(userId)) {
+          this.moveLivePerson(existing, person);
+        } else if (!existing) {
           this.spawnLivePerson(person);
         } else {
-          const live = this.livePeople.get(userId);
-          if (live.tag && live.tag.text !== person.displayName && live.tag.text !== `${person.displayName} (you)`) {
-          const isMe = ME_DISCORD_ID && String(person.userId) === ME_DISCORD_ID;
-          live.tag.setText(isMe ? `${person.displayName} (you)` : person.displayName);
-          live.tag.setBackgroundColor(isMe ? '#16a34a' : (person.soft ? '#334155' : '#5865f2'));
+          const live = existing;
+          if (live.tag) {
+            const label = person.displayName;
+            if (live.tag.text !== label) live.tag.setText(label);
+            live.tag.setBackgroundColor(person.soft ? '#334155' : '#5865f2');
+          }
+          if (live.sprite && !live.moving) {
+            live.sprite.setAlpha(person.soft ? 0.72 : 1);
+            live.soft = person.soft;
+          }
         }
-          live.sprite.setAlpha(person.soft ? 0.72 : 1);
-        }
+      }
+
+      // Auto-warp local player into their hard VC room
+      if (ME_DISCORD_ID) {
+        const me = want.get(String(ME_DISCORD_ID));
+        this.maybeAutoWarpMe(me || null);
       }
     }
 
-    spawnLivePerson(person) {
+    despawnLivePerson(userId, live) {
+      this.releaseSlot(live.roomKey, userId);
+      this.tweens.killTweensOf(live.sprite);
+      this.tweens.killTweensOf(live.tag);
+      const targets = [live.sprite, live.tag].filter(Boolean);
+      if (!targets.length) {
+        this.livePeople.delete(userId);
+        return;
+      }
+      this.tweens.add({
+        targets,
+        alpha: 0,
+        duration: 220,
+        onComplete: () => {
+          live.sprite?.destroy();
+          live.tag?.destroy();
+        },
+      });
+      this.livePeople.delete(userId);
+    }
+
+    /** Bob idle animation at a floor position (after spawn or move settle). */
+    startLiveBob(live, baseY) {
+      if (!live?.sprite) return;
+      this.tweens.killTweensOf(live.sprite);
+      this.tweens.killTweensOf(live.tag);
+      live.baseY = baseY;
+      live.sprite.y = baseY;
+      if (live.tag) live.tag.y = baseY - 40;
+      const dur = 700 + Math.random() * 400;
+      this.tweens.add({
+        targets: live.sprite,
+        y: baseY - 1.5,
+        duration: dur,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+      if (live.tag) {
+        this.tweens.add({
+          targets: live.tag,
+          y: baseY - 41.5,
+          duration: dur,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+      }
+    }
+
+    /**
+     * Smooth multi-leg walk when a Discord user changes channels.
+     * Same floor → direct walk; otherwise street transit (down → along → up).
+     */
+    moveLivePerson(live, person) {
+      if (!live?.sprite || live.moving) {
+        // Already en route or broken — hard reset
+        if (live?.sprite) {
+          this.releaseSlot(live.roomKey, person.userId);
+          this.tweens.killTweensOf(live.sprite);
+          this.tweens.killTweensOf(live.tag);
+          live.sprite.destroy();
+          live.tag?.destroy();
+          this.livePeople.delete(person.userId);
+        }
+        this.spawnLivePerson(person);
+        return;
+      }
+
+      this.releaseSlot(live.roomKey, person.userId);
       const slot = this.claimSlot(person.roomKey, person.userId);
-      const isMe = ME_DISCORD_ID && String(person.userId) === ME_DISCORD_ID;
-      // Each real Discord user gets a distinct-but-stable avatar from the 30 sheets.
-      const sheet = isMe ? this.playerSheet : this.npcSheetFor(String(person.userId));
+      const toX = slot.x;
+      const toY = slot.y;
+      const fromX = live.sprite.x;
+      const fromY = live.baseY != null ? live.baseY : live.sprite.y;
+      const sheet = live.sheet || this.npcSheetFor(person.userId);
+      const streetY = this.groundY - 1;
+      const sameFloor = Math.abs(fromY - toY) < 14;
+
+      live.moving = true;
+      live.roomKey = person.roomKey;
+      live.soft = person.soft;
+      this.tweens.killTweensOf(live.sprite);
+      this.tweens.killTweensOf(live.tag);
+      live.sprite.setAlpha(person.soft ? 0.72 : 1);
+      live.sprite.setDepth(person.soft ? 30 : 34);
+      if (live.tag) {
+        live.tag.setText(person.displayName);
+        live.tag.setBackgroundColor(person.soft ? '#334155' : '#5865f2');
+        live.tag.setDepth((person.soft ? 30 : 34) + 1);
+      }
+      if (this.anims.exists(`${sheet}_walk`)) {
+        live.sprite.anims.play(`${sheet}_walk`, true);
+      }
+
+      const walkDur = (dx, dy) => Math.min(2000, Math.max(280, Math.hypot(dx, dy) * 7.5));
+      const face = (x0, x1) => {
+        if (live.sprite) live.sprite.setFlipX(x1 < x0);
+      };
+      const attachTag = () => {
+        if (live.tag && live.sprite) {
+          live.tag.x = live.sprite.x;
+          live.tag.y = live.sprite.y - 40;
+        }
+      };
+
+      const legs = sameFloor
+        ? [{ x: toX, y: toY }]
+        : [
+          { x: fromX, y: streetY },
+          { x: toX, y: streetY },
+          { x: toX, y: toY },
+        ];
+
+      let i = 0;
+      let cx = fromX;
+      let cy = fromY;
+      const step = () => {
+        if (!live.sprite || !live.sprite.active) return;
+        if (i >= legs.length) {
+          live.moving = false;
+          live.sprite.setPosition(toX, toY);
+          attachTag();
+          if (this.anims.exists(`${sheet}_idle`)) live.sprite.anims.play(`${sheet}_idle`, true);
+          this.startLiveBob(live, toY);
+          return;
+        }
+        const leg = legs[i];
+        i += 1;
+        face(cx, leg.x);
+        const dur = walkDur(leg.x - cx, leg.y - cy);
+        this.tweens.add({
+          targets: live.sprite,
+          x: leg.x,
+          y: leg.y,
+          duration: dur,
+          ease: 'Sine.easeInOut',
+          onUpdate: attachTag,
+          onComplete: () => {
+            cx = leg.x;
+            cy = leg.y;
+            step();
+          },
+        });
+      };
+      step();
+    }
+
+    spawnLivePerson(person) {
+      if (person.isMe) return;
+      const slot = this.claimSlot(person.roomKey, person.userId);
+      const sheet = this.npcSheetFor(String(person.userId));
       const idle = `${sheet}_idle`;
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
-      const label = isMe ? `${person.displayName} (you)` : person.displayName;
+      const label = person.displayName;
 
       const sprite = this.add.sprite(slot.x, slot.y, sheet, 0)
         .setScale(SCALE)
         .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
         .setDepth(depth)
         .setAlpha(0);
-      sprite.anims.play(idle);
+      if (this.anims.exists(idle)) sprite.anims.play(idle);
 
       const tag = this.add.text(slot.x, slot.y - 40, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
         fontSize: '10px',
         fontStyle: 'bold',
         color: '#ffffff',
-        backgroundColor: isMe ? '#16a34a' : (person.soft ? '#334155' : '#5865f2'),
+        backgroundColor: person.soft ? '#334155' : '#5865f2',
         padding: { x: 4, y: 2 },
       }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(3).setAlpha(0);
 
@@ -2473,29 +2766,101 @@
         duration: 280,
         ease: 'Sine.easeOut',
       });
-      this.tweens.add({
-        targets: sprite,
-        y: slot.y - 1.5,
-        duration: 700 + Math.random() * 400,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
-      this.tweens.add({
-        targets: tag,
-        y: slot.y - 41.5,
-        duration: 700 + Math.random() * 400,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
 
-      this.livePeople.set(person.userId, {
+      const live = {
         sprite,
         tag,
         roomKey: person.roomKey,
         soft: person.soft,
+        sheet,
+        moving: false,
+        baseY: slot.y,
+      };
+      this.livePeople.set(person.userId, live);
+      this.startLiveBob(live, slot.y);
+    }
+
+    /**
+     * When the linked Discord user joins/moves hard voice, put the local
+     * player in that room. Soft text presence does not warp. Cooldown avoids
+     * fighting manual exploration on every 1.5s poll. Same-channel free-roam
+     * is allowed — we only warp when the hard VC room key changes.
+     */
+    maybeAutoWarpMe(me) {
+      if (!this.player) return;
+      // Left Discord entirely, or only soft-text activity — clear hard-VC tracker
+      // so the next real voice join warps again.
+      if (!me || me.soft) {
+        this._lastMeRoomKey = null;
+        return;
+      }
+
+      const roomKey = me.roomKey;
+      if (!roomKey || roomKey === this._lastMeRoomKey) return;
+      this._lastMeRoomKey = roomKey;
+
+      const now = this.time?.now ?? Date.now();
+      if (now < (this._autoWarpCooldownUntil || 0)) return;
+      this._autoWarpCooldownUntil = now + 2500;
+
+      this.warpPlayerToRoom(roomKey, me.displayName);
+    }
+
+    findFloorForRoomKey(roomKey) {
+      if (!roomKey) return null;
+      if (this.floors.has(roomKey)) return this.floors.get(roomKey);
+      for (const f of this.floors.values()) {
+        if (f.roomKey === roomKey || f.id === roomKey) return f;
+      }
+      return null;
+    }
+
+    warpPlayerToRoom(roomKey, displayName = '') {
+      const floor = this.findFloorForRoomKey(roomKey);
+      if (!floor || !this.player) return false;
+
+      this.standUp();
+      // Prefer a registered door that leads to this floor
+      const door = (this.doors || []).find((d) => {
+        const f = this.floors.get(d.floorId);
+        return d.floorId === floor.id
+          || d.floorId === roomKey
+          || f?.roomKey === roomKey
+          || f?.id === roomKey;
       });
+      const outdoorX = door?.outdoorX ?? door?.x
+        ?? Phaser.Math.Clamp((floor.minX + floor.maxX) / 2, 40, (this.mapWidth || W) - 40);
+
+      const alreadyHere = this.indoors
+        && (this.indoors.floorId === floor.id || this.floors.get(this.indoors.floorId)?.roomKey === roomKey);
+
+      if (!alreadyHere) {
+        if (this.indoors) this.leaveBuilding();
+        this.enterFloor(floor.id, outdoorX, false);
+      }
+
+      // Park near a free presence slot so you stand with the crowd
+      const slots = this.roomSlots.get(roomKey) || this.roomSlots.get(floor.roomKey) || [];
+      const free = slots.find((s) => !s.takenBy) || slots[0];
+      if (free) {
+        this.player.x = Phaser.Math.Clamp(free.x, floor.minX, floor.maxX);
+      } else {
+        this.player.x = Phaser.Math.Clamp(
+          (floor.minX + floor.maxX) / 2,
+          floor.minX,
+          floor.maxX,
+        );
+      }
+      this.player.y = floor.floorY;
+      this.player.setVelocityX(0);
+      this.enterCooldown = 320;
+
+      const label = floor.label || displayName || 'voice';
+      this.setEnterHint(IS_TOUCH
+        ? `Joined ${shortLabel(label, 18)} · ▼ leave`
+        : `Joined ${shortLabel(label, 22)} · walk around · ↓ leave`);
+      if (this.roomEl) this.roomEl.textContent = floor.label || 'voice';
+      return true;
     }
 
     spawnDecorNpcs() {
