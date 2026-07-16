@@ -1,5 +1,5 @@
 /**
- * Browser: ?mode=demo or ?demo=1 — 4-NPC read-only spectator (Phase 4.1 scaffold).
+ * Browser: ?mode=demo or ?demo=1 — curated 8-NPC read-only spectator.
  * Load immediately after npc-roster.js.
  *
  * Banner appears briefly at the top, then slides away so Feed / HQ toggles stay usable.
@@ -16,7 +16,10 @@
 
   const DISMISS_KEY = 'denizen_public_demo_banner_dismissed';
   const SHOW_MS = 5500;
-  const defaultFolders = ['abby', 'alex', 'lucy', 'bouncer'];
+  const defaultFolders = [
+    'abby', 'alex', 'lucy', 'bouncer',
+    'conference_man', 'josh', 'jenny', 'roki',
+  ];
   const raw = params.get('demo_npcs') || params.get('npcs') || '';
   const folders = raw
     ? raw.split(/[,;|]+/).map((s) => s.trim().toLowerCase()).filter(Boolean)

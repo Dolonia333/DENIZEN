@@ -1,11 +1,14 @@
 'use strict';
 
 /**
- * Public hosted demo (?mode=demo) — reduced NPC set, read-only spectator mode.
+ * Public hosted demo (?mode=demo) — curated busy-floor roster, read-only spectator mode.
  * @see docs/ROADMAP.md §4.1
  */
 
-const DEFAULT_PUBLIC_DEMO_FOLDERS = ['abby', 'alex', 'lucy', 'bouncer'];
+const DEFAULT_PUBLIC_DEMO_FOLDERS = [
+  'abby', 'alex', 'lucy', 'bouncer',
+  'conference_man', 'josh', 'jenny', 'roki',
+];
 
 function parseFolderList(raw) {
   if (!raw || !String(raw).trim()) return [...DEFAULT_PUBLIC_DEMO_FOLDERS];

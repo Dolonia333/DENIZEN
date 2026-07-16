@@ -1,5 +1,12 @@
 node_modules
 .git
 .env
-*.md
+.env.*
+!.env.example
 tests/
+reports/
+out/
+tmp/
+.npc-worktrees/
+**/__pycache__/
+*.log

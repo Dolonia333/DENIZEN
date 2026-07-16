@@ -41,6 +41,7 @@
     "smoke:phone": "node scripts/phone-ui-probe.mjs",
     "smoke:spine": "node scripts/smoke-spine-e2e.js",
     "drain:mesh": "node scripts/drain-mesh-queue.js",
+    "release:source": "node scripts/build-reproducible-release.mjs",
     "smoke:all": "npm run smoke:self-heal && npm run smoke:nas && npm run smoke:mesh && npm run smoke:mesh-jobs && npm run smoke:desktop && npm run smoke:desktop-release && npm run smoke:desktop-updates && npm run smoke:credits && npm run smoke:hardware && npm run smoke:onboarding && npm run smoke:mcp && npm run smoke:phone && npm run smoke:crm && npm run smoke:spine && npm run drain:mesh"
   },
   "repository": {

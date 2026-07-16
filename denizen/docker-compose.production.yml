@@ -1,29 +1,25 @@
-# Denizen app server on Synology NAS (co-located with Supabase).
-# Deploy: py infra/deploy-denizen-to-nas.py (from repo root on your PC)
 services:
   denizen:
     image: denizen-server:latest
     container_name: denizen-server
-    restart: unless-stopped
-    # Host networking lets the container reach Kong/Postgres on 127.0.0.1 (same NAS).
     network_mode: host
+    restart: unless-stopped
     env_file:
-      - .env
-    volumes:
-      - ./desktop:/app/desktop
-      - ./data:/app/data
-      - ./layouts:/app/layouts
+      - .env.production
     environment:
       NODE_ENV: production
-      PORT: "8888"
-      # Passthrough — full config lives in .env (see .env.production.template)
-      DENIZEN_ECONOMY_MODE: "false"
-      DENIZEN_COFOUNDER_LLM: "true"
-      DENIZEN_REAL_WORK_MODE: "true"
-      # WSL/Kali nmap patrol is Windows-only; container mode uses TCP probes on NAS.
-      BOUNCER_PATROL: "container"
-      # Route NPC research to visible browser on mesh desktop (LM Studio GPU PC).
-      DENIZEN_MESH_BROWSER: "1"
-      DENIZEN_MESH_BROWSER_HOST: "192.168.1.232"
-      DENIZEN_HOST_IP: "192.168.1.232"
-      BOUNCER_INVESTIGATION_URL: "http://192.168.1.232:8890"
+      PORT: ${PORT:-8888}
+    volumes:
+      - ./data:/app/data
+      - ./layouts:/app/layouts
+      - ./desktop:/app/desktop
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:'+(process.env.PORT||8888)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
