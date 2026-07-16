@@ -1,0 +1,135 @@
+{
+  "$schema": "denizen-harness config v1",
+  "meta": {
+    "name": "Denizen Harness",
+    "version": "1.0.0",
+    "tagline": "One control plane for every brain, skill, mentor, and mesh call."
+  },
+  "tiers": {
+    "fast": {
+      "env": "LM_STUDIO_FAST_MODEL",
+      "fallback_patterns": [
+        "gemma",
+        "e2b",
+        "3b",
+        "1b",
+        "mini",
+        "8b"
+      ],
+      "exclude_patterns": [
+        "14b",
+        "27b",
+        "32b"
+      ]
+    },
+    "main": {
+      "env": "LM_STUDIO_MODEL",
+      "fallback_env": "LM_STUDIO_HEAVY_MODEL"
+    },
+    "heavy": {
+      "env": "LM_STUDIO_HEAVY_MODEL",
+      "fallback_env": "LM_STUDIO_MODEL",
+      "fallback_patterns": [
+        "27b",
+        "32b",
+        "14b",
+        "ministral",
+        "qwen"
+      ]
+    },
+    "reasoning": {
+      "env": "LM_STUDIO_REASONING_MODEL",
+      "fallback_env": "LM_STUDIO_HEAVY_MODEL",
+      "enable_thinking": true
+    }
+  },
+  "defaults": {
+    "tier": "main",
+    "kind": "chat",
+    "max_tokens": 512,
+    "timeout_ms": 120000
+  },
+  "loops": {
+    "think": {
+      "tier": "main",
+      "kind": "decision",
+      "schema": "npc_decision_v1"
+    },
+    "chat": {
+      "tier": "main",
+      "kind": "chat"
+    },
+    "presence": {
+      "tier": "fast",
+      "kind": "presence"
+    },
+    "director": {
+      "tier": "heavy",
+      "kind": "decision"
+    },
+    "code": {
+      "tier": "heavy",
+      "kind": "code"
+    },
+    "skill_args": {
+      "tier": "fast",
+      "kind": "decision"
+    }
+  },
+  "npc_tiers": {
+    "comment": "Per-NPC tier policy (A+ plan P0.2). kinds pins a tier for that kind; min_tier raises whatever the callsite resolved (hard NPCs never answered by a smaller tier); max_tier caps ambient-only NPCs so they never burn the big model.",
+    "map": {
+      "abby": {
+        "min_tier": "main",
+        "kinds": {
+          "think": "heavy",
+          "director": "heavy",
+          "decision": "heavy"
+        }
+      },
+      "bob": {
+        "min_tier": "main"
+      },
+      "grok": {
+        "min_tier": "main",
+        "kinds": {
+          "reasoning": "heavy"
+        }
+      },
+      "claude": {
+        "min_tier": "main",
+        "kinds": {
+          "reasoning": "heavy"
+        }
+      },
+      "edward": {
+        "min_tier": "main"
+      },
+      "bouncer": {
+        "max_tier": "fast"
+      },
+      "roki": {
+        "max_tier": "fast",
+        "kinds": {
+          "chat": "main"
+        }
+      },
+      "lucy": {
+        "kinds": {
+          "presence": "fast",
+          "chat": "main"
+        }
+      }
+    }
+  },
+  "learning": {
+    "inject_skill_results": true,
+    "inject_mentor_lessons": true,
+    "wake_on_inject": true
+  },
+  "openclaw": {
+    "gateway_default": false,
+    "skill_fallback_default": false,
+    "note": "OpenClaw is legacy I/O only. Jelly is tools; this harness is the nervous system."
+  }
+}

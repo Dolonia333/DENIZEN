@@ -992,9 +992,9 @@ function _broadcastConnectionUpdate(connection, { event, sessionIds = [] } = {})
   }
 }
 
-function _broadcastToOffice(officeId, payload) {
+function _broadcastToOffice(officeId, payload, opts = {}) {
   if (!officeId || !payload) return;
-  officeRegistry.broadcastAgent(_agentClients(), payload, { officeId });
+  officeRegistry.broadcastAgent(_agentClients(), payload, { officeId, ...opts });
 }
 
 function _mpPresenceKey(ws) {
@@ -3182,6 +3182,28 @@ async function runNpcSkill(npcName, skill, skillParams = {}, opts = {}) {
   }
   return jelly.runSkill(npcName, skill, skillParams, { broadcast, identityId, ownerProfile });
 }
+
+// ── Denizen Harness: single control plane (inference + loops + Jelly tools + learning)
+const { createDenizenHarness } = require('./src/denizen-harness');
+const denizenHarness = createDenizenHarness({
+  denizenRoot: __dirname,
+  npcBrains,
+  jelly,
+  runNpcSkill,
+  cofounderAgent,
+  worldState,
+  lmStudioRouter,
+  log,
+});
+// Hot paths: brains queue + cofounder director → harness.complete()
+try { npcBrains.setDenizenHarness?.(denizenHarness); } catch (_) {}
+try { cofounderAgent.denizenHarness = denizenHarness; } catch (_) {}
+console.log(
+  `[denizen-harness] ${denizenHarness.version} ready — `
+  + `${denizenHarness.listSkills().length} skills, `
+  + `${denizenHarness.listNpcs().length} NPCs bound, `
+  + 'brains+cofounder wired',
+);
 
 npcMcpGateway.configure({
   runNpcSkill,
@@ -9528,6 +9550,58 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     }
   }
 
+  // --- Denizen Harness control plane ---
+  if ((urlPath === '/api/harness' || urlPath === '/api/harness/status') && req.method === 'GET') {
+    (async () => {
+      try {
+        const body = await denizenHarness.status();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(body));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    })();
+    return;
+  }
+  if (urlPath === '/api/harness/skills' && req.method === 'GET') {
+    try {
+      const skills = denizenHarness.listSkills();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, count: skills.length, skills }));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    }
+    return;
+  }
+  if (urlPath === '/api/harness/complete' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => { body += c; if (body.length > 200_000) req.destroy(); });
+    req.on('end', async () => {
+      try {
+        const parsed = body ? JSON.parse(body) : {};
+        // Operator/debug only — not a public unauthenticated agent loop.
+        const result = await denizenHarness.complete({
+          tier: parsed.tier,
+          kind: parsed.kind || 'chat',
+          npc: parsed.npc || null,
+          systemPrompt: parsed.systemPrompt || parsed.system_prompt || '',
+          messages: Array.isArray(parsed.messages) ? parsed.messages : [{ role: 'user', content: String(parsed.prompt || parsed.text || 'ping') }],
+          max_tokens: parsed.max_tokens || 128,
+          model: parsed.model || null,
+          enableThinking: parsed.enableThinking === true,
+        });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    });
+    return;
+  }
+
   // --- Office health (one-shot diagnostic the client polls every few seconds) ---
   // Reports: WS clients connected, LM Studio reachability, which providers
   // are configured (names only — never keys), recent provider errors, and
@@ -9600,7 +9674,74 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
             lmStudioPool: lmStudioRouter.isEnabled()
               ? lmStudioRouter.buildStatus(npcBrains.getQueueDepth?.() || 0)
               : null,
+            // A+ plan P0.2 — tier truth: if the MAIN pin isn't among the
+            // loaded models, fail LOUD here instead of silently answering
+            // hard questions with the 2B fast model.
+            issues: (() => {
+              const issues = [];
+              try {
+                const pool = lmStudioRouter.isEnabled()
+                  ? lmStudioRouter.buildStatus(npcBrains.getQueueDepth?.() || 0)
+                  : null;
+                const loaded = [];
+                for (const n of pool?.nodes || []) {
+                  for (const m of n.models || []) loaded.push(String(m).toLowerCase());
+                }
+                const mainPin = String(process.env.LM_STUDIO_MODEL || '').trim().toLowerCase();
+                if (mainPin && loaded.length
+                    && !loaded.some((m) => m.includes(mainPin) || mainPin.includes(m))) {
+                  issues.push('main_model_unloaded');
+                }
+                if (!lmStudioStatus?.reachable) issues.push('inference_unreachable');
+                if (npcBrains._demoMode) issues.push('demo_mode');
+                const cfStatus = cofounderAgent?.buildDirectorHealth?.();
+                if (cfStatus?.offline) issues.push('director_offline');
+              } catch (_) {}
+              return issues;
+            })(),
+            // Exact director state for the office banner (WS can race; HTTP is truth).
+            director: (() => {
+              try {
+                return cofounderAgent?.buildDirectorHealth?.() || null;
+              } catch (_) {
+                return null;
+              }
+            })(),
             inference: inferenceMetrics.buildMetrics(),
+            intelligenceLoop: (() => {
+              try {
+                return require('./src/intelligence-loop-health').buildHealth();
+              } catch (err) {
+                return { ok: false, error: err?.message || String(err) };
+              }
+            })(),
+            harness: (() => {
+              try {
+                const stats = global._npcStats || {};
+                const providerOk = stats.providerOk || 0;
+                const harnessComplete = stats.harnessComplete || 0;
+                return {
+                  version: denizenHarness?.version || null,
+                  skills: denizenHarness?.listSkills?.()?.length ?? null,
+                  npcs: denizenHarness?.listNpcs?.()?.length ?? null,
+                  // A+ scorecard: harnessComplete / providerOk ≥ 0.95
+                  providerOk,
+                  harnessComplete,
+                  harnessRate: providerOk > 0
+                    ? Number((harnessComplete / providerOk).toFixed(4))
+                    : null,
+                  npcTiers: denizenHarness?.config?.npc_tiers?.map
+                    ? Object.keys(denizenHarness.config.npc_tiers.map).length
+                    : 0,
+                  bound: {
+                    jelly: !!jelly,
+                    brains: !!npcBrains,
+                  },
+                };
+              } catch (err) {
+                return { ok: false, error: err?.message || String(err) };
+              }
+            })(),
             publicDemo: {
               enabled: process.env.DENIZEN_PUBLIC_DEMO === 'true',
               trimBrains: process.env.DENIZEN_PUBLIC_DEMO_TRIM_BRAINS === 'true',
@@ -10572,11 +10713,12 @@ agentWss.on('connection', (ws) => {
                 room: result.pose.room,
               };
             }
+            // Don't echo pose back to the sender — that spawns a second "me".
             _broadcastToOffice(officeId, {
               type: 'player_pose',
               office_id: officeId,
               ...result.pose,
-            });
+            }, { excludeWs: ws, excludePresenceKey: presenceKey });
           }
         }
       } else if (msg.type === 'npc_poses') {
@@ -12467,19 +12609,27 @@ server.listen(PORT, () => {
     log.info('Patrol', `daily brief scheduler started (${BOUNCER_DAILY_BRIEF_MS}ms)`);
   }
 
-  // Grok mentor drainer — answer pending grok-consult-queue rows via Grok CLI
+  // Grok mentor drainer — answer pending grok-consult-queue rows (CLI or telemetry)
   // and inject lessons into local NPC memory (P4 measurable mentor loop).
-  const GROK_DRAINER_MS = Math.max(60_000, Number(process.env.GROK_MENTOR_DRAINER_MS) || 10 * 60_000);
+  const GROK_DRAINER_MS = Math.max(60_000, Number(process.env.GROK_MENTOR_DRAINER_MS) || 5 * 60_000);
   if (!IS_RELAY_ONLY && process.env.GROK_MENTOR_DRAINER !== '0') {
     let grokDrainer = null;
     try { grokDrainer = require('./src/grok-mentor-drainer'); } catch (_) {}
     if (grokDrainer?.drainConsultQueue) {
       const _runGrokMentorDrainer = async () => {
         try {
-          const summary = await grokDrainer.drainConsultQueue({ run: true, limit: 3 });
+          const summary = await grokDrainer.drainConsultQueue({ run: true, limit: 10 });
           if (summary.processed > 0) {
             log.info('Mentor', `Grok drainer mentored ${summary.processed} NPC(s)`);
           }
+          // Backfill answered consults that never wrote MEMORY.md
+          try {
+            const mem = require('./src/npc-memory-inject');
+            const bf = mem.backfillAnsweredConsults({ limit: 25 });
+            if (bf.injected > 0) {
+              log.info('Mentor', `Backfilled ${bf.injected} consult lesson(s) into MEMORY.md`);
+            }
+          } catch (_) {}
         } catch (err) {
           log.warn('Mentor', `Grok drainer failed: ${err?.message || String(err)}`);
         }
@@ -12487,7 +12637,57 @@ server.listen(PORT, () => {
       const _grokDrainerTimer = setInterval(_runGrokMentorDrainer, GROK_DRAINER_MS);
       _grokDrainerTimer.unref?.();
       setTimeout(_runGrokMentorDrainer, 45_000).unref?.();
-      log.info('Mentor', `Grok mentor drainer started (${GROK_DRAINER_MS}ms, limit 3/run)`);
+      log.info('Mentor', `Grok mentor drainer started (${GROK_DRAINER_MS}ms, limit 6/run)`);
+    }
+
+    // Mentor dialogue drainer — unstick Grok↔Claude sessions left in awaiting_peers.
+    let dialogueDrainer = null;
+    try { dialogueDrainer = require('./src/mentor-dialogue-drainer'); } catch (_) {}
+    if (dialogueDrainer?.drainMentorDialogues) {
+      const DIALOGUE_MS = Math.max(60_000, Number(process.env.MENTOR_DIALOGUE_DRAINER_MS) || 7 * 60_000);
+      const _runDialogueDrainer = async () => {
+        try {
+          const summary = await dialogueDrainer.drainMentorDialogues({ run: true, limit: 5 });
+          if (summary.finalized > 0 || summary.processed > 0) {
+            log.info('Mentor', `Dialogue drainer processed=${summary.processed} finalized=${summary.finalized}`);
+          }
+        } catch (err) {
+          log.warn('Mentor', `Dialogue drainer failed: ${err?.message || String(err)}`);
+        }
+      };
+      const _dialogueTimer = setInterval(_runDialogueDrainer, DIALOGUE_MS);
+      _dialogueTimer.unref?.();
+      setTimeout(_runDialogueDrainer, 55_000).unref?.();
+      log.info('Mentor', `Mentor dialogue drainer started (${DIALOGUE_MS}ms)`);
+    }
+
+    // Live telemetry job — refresh grok-telemetry-latest.json (no canned facts).
+    if (process.env.GROK_TELEMETRY_JOB !== '0') {
+      const pathMod = require('path');
+      const { spawn } = require('child_process');
+      const TEL_JOB_MS = Math.max(120_000, Number(process.env.GROK_TELEMETRY_JOB_MS) || 10 * 60_000);
+      const jobPy = pathMod.join(__dirname, 'infra', 'grok-mesh-telemetry-job.py');
+      const _runTelemetryJob = () => {
+        try {
+          const py = process.env.PYTHON || process.env.PYTHON_PATH || 'py';
+          const child = spawn(py, [jobPy, '--force'], {
+            cwd: __dirname,
+            env: { ...process.env, GROK_AGENT: '1' },
+            windowsHide: true,
+          });
+          child.on('error', (err) => log.warn('Telemetry', `job spawn: ${err?.message || err}`));
+          child.on('close', (code) => {
+            if (code !== 0) log.warn('Telemetry', `mesh job exit ${code}`);
+            else log.info('Telemetry', 'mesh job refreshed live facts');
+          });
+        } catch (err) {
+          log.warn('Telemetry', `job failed: ${err?.message || err}`);
+        }
+      };
+      const _telTimer = setInterval(_runTelemetryJob, TEL_JOB_MS);
+      _telTimer.unref?.();
+      setTimeout(_runTelemetryJob, 70_000).unref?.();
+      log.info('Telemetry', `Grok mesh telemetry job scheduled (${TEL_JOB_MS}ms)`);
     }
   }
 });

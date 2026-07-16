@@ -944,7 +944,20 @@ class NpcBrainManager {
     }
 
     const localProviders = new Set(['demo', 'lmstudio', 'lmstudio-fast']);
-    const remoteCount = Object.keys(this.providers).filter(k => !localProviders.has(k)).length;
+    const remoteCount = Object.entries(this.providers).filter(([key, provider]) => {
+      if (localProviders.has(key)) return false;
+      // CLI providers are registered unconditionally so their fallback routing is
+      // always available, but an empty registration is not a usable remote model.
+      // Counting it made clean machines report `_demoMode=false` even with no
+      // OpenClaw config, bridge, binary, or API key.
+      if (provider?.type === 'grok-cli') {
+        return Boolean(provider.grokBin || provider.bridgeUrl);
+      }
+      if (provider?.type === 'claude-cli') {
+        return Boolean(provider.claudeBin || provider.bridgeUrl);
+      }
+      return true;
+    }).length;
     this._demoMode = remoteCount === 0; // demo mode only when zero remote providers configured
     if (this._demoMode) {
       console.log('[NpcBrains] Demo mode active — NPCs use smart scripted responses (no API keys required)');
@@ -1162,6 +1175,7 @@ class NpcBrainManager {
     'Marcus': 'conference_man', 'Sarah': 'conference_woman',
     'Edward': 'edward', 'Josh': 'josh', 'Molly': 'molly',
     'Oscar': 'oscar', 'Pier': 'pier', 'Rob': 'rob', 'Roki': 'roki',
+    'Grok': 'grok', 'Claude': 'claude',
   };
 
   saveMemory(npcName, entry) {
@@ -1487,28 +1501,36 @@ class NpcBrainManager {
    */
   _applyGrokTelemetryPrune(npcName, brain, facts) {
     try {
-      const folder = this._nameToFolder[npcName];
+      const folder = this._nameToFolder[npcName] || this._nameToFolder[npcName?.charAt?.(0)?.toUpperCase() + npcName?.slice?.(1)];
       if (!folder) return;
       const memPath = path.join(__dirname, '..', 'npcs', folder, 'MEMORY.md');
       let existing = '';
       try { existing = fs.readFileSync(memPath, 'utf-8'); } catch (_) {}
       const lines = existing.split('\n').filter(l => l.trim());
-      if (lines.length < 10) return; // nothing to prune
-
       const timestamp = new Date().toISOString().slice(0, 16);
-      const factSummary = facts.map(f => f.slice(0, 80)).join('; ');
+      const factSummary = (facts || []).map(f => String(f).slice(0, 100)).join('; ');
+      const isBloat = /bloat|bottleneck|latency|skew|compress/i.test(factSummary);
+      // Always inject the latest dense facts so the next think sees them.
+      const factLines = (facts || []).slice(0, 4).map((f) => `- [${timestamp}] ${String(f).slice(0, 180)}`);
+      if (lines.length < 6 && !factLines.length) return;
+
       const header = lines.slice(0, 2);
-      let keepRatio = telemetryRebalance?.effectivePruneKeepRatio(npcName, 0.6) ?? 0.6;
-      if (npcName.toLowerCase() === 'bouncer' && /4197|2100|109/.test(factSummary)) {
-        keepRatio = telemetryRebalance?.effectivePruneKeepRatio(npcName, 0.4) ?? 0.4;
-      } else if (npcName.toLowerCase() === 'bob' && /4718|1800|77/.test(factSummary)) {
-        keepRatio = telemetryRebalance?.effectivePruneKeepRatio(npcName, 0.5) ?? 0.5;
-      }
-      const keep = Math.max(5, Math.floor(lines.length * keepRatio));
+      let keepRatio = telemetryRebalance?.effectivePruneKeepRatio(npcName, 0.55) ?? 0.55;
+      if (isBloat) keepRatio = Math.min(keepRatio, 0.45);
+      const keep = Math.max(6, Math.floor(Math.max(lines.length, 8) * keepRatio));
       const recent = lines.slice(-keep);
-      const summary = `- [${timestamp}] [kv_prune_log] [GROK-TELEMETRY-PRUNE] ${factSummary} — memory reduced for performance.`;
-      const pruned = [...header, summary, ...recent];
-      fs.writeFileSync(memPath, pruned.join('\n') + '\n');
+      const summary = `- [${timestamp}] [kv_prune_log] [GROK-TELEMETRY-PRUNE] ${factSummary.slice(0, 160)} — memory reduced for performance.`;
+      const pruned = [...header, summary, ...factLines, ...recent.filter((l) => !/GROK-TELEMETRY-PRUNE|GROK MENTOR|CONSULT LESSON/i.test(l) || recent.indexOf(l) > recent.length - 3)];
+      // Dedupe while preserving order
+      const seen = new Set();
+      const unique = [];
+      for (const l of pruned) {
+        const k = l.slice(0, 120);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        unique.push(l);
+      }
+      fs.writeFileSync(memPath, unique.join('\n') + '\n');
       brain.longTermMemory = fs.readFileSync(memPath, 'utf-8');
     } catch (e) {
       // non-fatal
@@ -2576,11 +2598,12 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
     }
 
     const rawMemory = brain.longTermMemory || '';
+    // Tighter default — telemetry showed ~1.5–7k tokens in from context bloat.
     const memCap = telemetryRebalance?.effectiveMemoryChars(
       npcName,
-      promptTuning?.memoryChars ?? 350,
-    ) ?? (promptTuning?.memoryChars ?? 350);
-    const recentMemory = rawMemory.length > 100
+      promptTuning?.memoryChars ?? 220,
+    ) ?? (promptTuning?.memoryChars ?? 220);
+    const recentMemory = rawMemory.length > 80
       ? this._sanitize(rawMemory.slice(-memCap))
       : '';
 
@@ -3275,12 +3298,47 @@ ${actionFooter}`;
   }
 
   /**
-   * Autonomous think() always uses lmstudio-fast when available — call-kind
-   * routing, not NPC role. Player chat keeps SOUL provider (main tier).
+   * Ambient think → fast slot. Heavy roles / synthesis → main (14B+) when available.
+   * Player chat keeps SOUL provider (main tier).
    */
   _pinThinkToFastSlot(config, opts = {}) {
+    if (opts.kind === 'cofounder' || opts.kind === 'mentor-synthesis' || opts.kind === 'directive') {
+      const main = this.providers?.lmstudio || config;
+      return {
+        ...config,
+        ...main,
+        type: 'lmstudio',
+        providerKey: 'lmstudio',
+        model: process.env.LM_STUDIO_HEAVY_MODEL
+          || process.env.LM_STUDIO_MODEL
+          || main.model
+          || config.model,
+        _preferHeavy: true,
+      };
+    }
     if (opts.kind !== 'think') return config;
     if (promptTuning?.thinkUseFastModel === false) return config;
+    // Cofounder / home / verifier get main-tier capacity for non-trivial thinks.
+    const heavyRoles = new Set(['CTO', 'cofounder', 'Home', 'Verifier', 'qa_engineer']);
+    const role = String(opts.role || opts.npcRole || '');
+    const name = String(opts.npc || opts.npcName || '');
+    const forceMain = heavyRoles.has(role)
+      || /^(Abby|Grok|Claude)$/i.test(name)
+      || opts.preferHeavy;
+    if (forceMain) {
+      const main = this.providers?.lmstudio || config;
+      return {
+        ...config,
+        ...main,
+        type: 'lmstudio',
+        providerKey: 'lmstudio',
+        model: process.env.LM_STUDIO_HEAVY_MODEL
+          || process.env.LM_STUDIO_MODEL
+          || main.model
+          || config.model,
+        _preferHeavy: true,
+      };
+    }
     const fast = this.providers?.['lmstudio-fast'];
     if (!fast?.model) return config;
     return {
@@ -3295,7 +3353,13 @@ ${actionFooter}`;
    * Autonomous think LLM call — fast slot first; on main-tier timeout, retry once on lmstudio-fast.
    */
   async _callThinkWithFastFallback(npcName, brain, systemPrompt, userPrompt, opts) {
-    const thinkConfig = this._pinThinkToFastSlot(brain.providerConfig, { kind: 'think' });
+    const thinkConfig = this._pinThinkToFastSlot(brain.providerConfig, {
+      kind: opts?.kind || 'think',
+      npc: npcName,
+      npcName,
+      role: brain.role,
+      preferHeavy: opts?.preferHeavy,
+    });
     const messages = [{ role: 'user', content: userPrompt }];
     try {
       return await this._callProvider(thinkConfig, systemPrompt, messages, opts);
@@ -3360,6 +3424,15 @@ ${actionFooter}`;
   }
 
   /**
+   * Bind the Denizen Harness so local LM Studio calls share one complete() gate
+   * (tiers, sampling, thinking flags, telemetry).
+   */
+  setDenizenHarness(harness) {
+    this._denizenHarness = harness || null;
+    return this;
+  }
+
+  /**
    * Call an AI provider API
    */
   _callProvider(config, systemPrompt, messages, opts = {}) {
@@ -3390,12 +3463,14 @@ ${actionFooter}`;
     config = this._pinThinkToFastSlot(config, opts);
     let routed = config;
     if (lmStudioRouter?.isEnabled?.()) {
-      const tier = config.providerKey === 'lmstudio-fast' ? 'fast' : 'main';
+      const tier = config.providerKey === 'lmstudio-fast' && !config._preferHeavy ? 'fast' : 'main';
       routed = lmStudioRouter.resolveProviderConfig(config, {
         tier,
         priority: opts.priority,
         queueDepth: this.getQueueDepth(),
         excludeNodeIds: opts._routerExclude || [],
+        preferHeavy: !!config._preferHeavy || opts.preferHeavy,
+        kind: opts.kind,
       });
     }
 
@@ -3885,6 +3960,11 @@ ${actionFooter}`;
           if (typeof globalThis !== 'undefined') {
             if (!globalThis._npcStats) globalThis._npcStats = {};
             globalThis._npcStats.lastProviderOkAt = Date.now();
+            // Stream parity (A+ plan P0.1): this path shares the harness
+            // sampling profile, router and telemetry, so it counts in the
+            // harness-rate ledger like the non-stream gate.
+            globalThis._npcStats.providerOk = (globalThis._npcStats.providerOk || 0) + 1;
+            globalThis._npcStats.harnessComplete = (globalThis._npcStats.harnessComplete || 0) + 1;
           }
           resolve(text);
         });
@@ -3990,6 +4070,123 @@ ${actionFooter}`;
       oaiMessages.push({ role: 'user', content: 'Introduce yourself briefly.' });
     }
 
+    const markSuccess = () => {
+      this._providerHealth.consecutiveFailures = 0;
+      if (typeof globalThis !== 'undefined') {
+        if (!globalThis._npcStats) globalThis._npcStats = {};
+        globalThis._npcStats.lastProviderOkAt = Date.now();
+        globalThis._npcStats.providerOk = (globalThis._npcStats.providerOk || 0) + 1;
+      }
+    };
+    const markFailure = () => {
+      this._providerHealth.consecutiveFailures += 1;
+      if (typeof globalThis !== 'undefined') {
+        if (!globalThis._npcStats) globalThis._npcStats = {};
+        globalThis._npcStats.lastProviderFailAt = Date.now();
+        globalThis._npcStats.providerFail = (globalThis._npcStats.providerFail || 0) + 1;
+      }
+      if (this._providerHealth.consecutiveFailures >= 10) {
+        this._providerHealth.cooldownUntil = Date.now() + 30000;
+        if (!this._lastCooldownLog || Date.now() - this._lastCooldownLog > 30000) {
+          log.providerHealth({ event: 'cooldown', provider: 'lmstudio', failures: this._providerHealth.consecutiveFailures, cooldownSec: 30, queueLen: this._requestQueue.length });
+          this._lastCooldownLog = Date.now();
+        }
+      }
+    };
+    const done = () => {
+      if (routerNodeId && lmStudioRouter?.release) lmStudioRouter.release(routerNodeId);
+      this._inflightCount = Math.max(0, this._inflightCount - 1);
+      this._processQueue();
+    };
+
+    // Prefer Denizen Harness complete() for local LM Studio jobs so tiers,
+    // sampling, and telemetry stay unified (cofounder, think, chat, mesh).
+    if (this._denizenHarness?.complete && !opts.stream) {
+      const tier = config.providerKey === 'lmstudio-fast' && !config._preferHeavy && !opts.preferHeavy
+        ? 'fast'
+        : (config._preferHeavy || opts.preferHeavy ? 'heavy' : 'main');
+      const timeoutMs = opts.kind === 'think'
+        ? (config.providerKey === 'lmstudio-fast'
+          ? (promptTuning?.lmThinkFastTimeoutMs ?? 45000)
+          : (promptTuning?.lmThinkTimeoutMs ?? 120000))
+        : opts.kind === 'cofounder'
+          ? (promptTuning?.cofounderLmTimeoutMs ?? 90000)
+          : opts.priority === 'high'
+            ? (promptTuning?.playerChatTimeoutMs ?? 45000)
+            : 180000;
+      const responseFormat = opts.jsonSchema
+        ? {
+          type: 'json_schema',
+          json_schema: {
+            name: opts.jsonSchemaName || 'decision',
+            schema: opts.jsonSchema,
+            strict: false,
+          },
+        }
+        : null;
+
+      Promise.resolve(this._denizenHarness.complete({
+        tier,
+        kind: opts.kind || 'chat',
+        npc: opts.npc || null,
+        model: config.model,
+        systemPrompt,
+        messages: altMessages,
+        max_tokens: maxTokens,
+        temperature: opts.temperature,
+        timeoutMs,
+        response_format: responseFormat,
+        enableThinking: opts.enableThinking === true,
+        correlationId: opts.correlationId || null,
+        runtime: {
+          reachable: true,
+          url: String(config.baseUrl || '').replace(/\/v1\/?$/i, '').replace(/\/+$/, ''),
+          backend: 'lmstudio',
+          models: [config.model].filter(Boolean),
+          main_model: config.model,
+          fast_model: config.model,
+          heavy_model: config.model,
+        },
+      })).then((result) => {
+        markSuccess();
+        let rawText = String(result?.text || '').trim();
+        rawText = this._stripReasoningLeak(rawText);
+        const responseText = opts.jsonSchema ? rawText : rawText.slice(0, sliceLen);
+        _telRecord({
+          responsePreview: responseText,
+          tokensIn: result?.usage?.prompt_tokens,
+          tokensOut: result?.usage?.completion_tokens,
+        });
+        if (opts?.npc && result?.usage) {
+          if (!this._lastTokens) this._lastTokens = {};
+          this._lastTokens[opts.npc] = {
+            in: result.usage.prompt_tokens,
+            out: result.usage.completion_tokens,
+          };
+        }
+        if (typeof globalThis !== 'undefined') {
+          if (!globalThis._npcStats) globalThis._npcStats = {};
+          globalThis._npcStats.harnessComplete = (globalThis._npcStats.harnessComplete || 0) + 1;
+        }
+        resolve(responseText);
+      }).catch((err) => {
+        const errMsg = formatProviderError(err) || err?.message || String(err);
+        if (/model unloaded/i.test(errMsg)) {
+          log.warn('LMStudio', `model was unloaded (requested ${config.model}) — re-pinning from env`);
+          this._applyLmStudioEnvPins();
+          this.syncLmStudioModel().catch(() => {});
+          this._providerHealth.consecutiveFailures = 0;
+        } else {
+          markFailure();
+        }
+        _telRecord({ error: err });
+        reject(err instanceof Error ? err : new Error(errMsg));
+      }).finally(() => {
+        done();
+      });
+      return;
+    }
+
     // Per-task sampling (temperature + top_p + min_p + repeat_penalty) from
     // inference-sampling.js — fixes small-model repetition loops at the source.
     // An explicit opts.temperature still wins; otherwise the profile decides.
@@ -4015,43 +4212,6 @@ ${actionFooter}`;
       };
     }
     const body = JSON.stringify(bodyObj);
-
-    const markSuccess = () => {
-      this._providerHealth.consecutiveFailures = 0;
-      // Liveness signal for /api/health. The diag panel relies on this
-      // to know LM Studio is alive even when the HTTP probe times out
-      // because the GPU is saturated. Captures EVERY successful provider
-      // call — autonomous think(), npc↔npc, player chat — at the source.
-      if (typeof globalThis !== 'undefined') {
-        if (!globalThis._npcStats) globalThis._npcStats = {};
-        globalThis._npcStats.lastProviderOkAt = Date.now();
-        globalThis._npcStats.providerOk = (globalThis._npcStats.providerOk || 0) + 1;
-      }
-    };
-    const markFailure = () => {
-      this._providerHealth.consecutiveFailures += 1;
-      if (typeof globalThis !== 'undefined') {
-        if (!globalThis._npcStats) globalThis._npcStats = {};
-        globalThis._npcStats.lastProviderFailAt = Date.now();
-        globalThis._npcStats.providerFail = (globalThis._npcStats.providerFail || 0) + 1;
-      }
-      if (this._providerHealth.consecutiveFailures >= 10) {
-        // 30s cooldown — long enough for LM Studio to reload the model after
-        // a crash/unload, short enough that we resume quickly when it recovers.
-        // Threshold raised to 10 so a slow 27B model doesn't trip this on startup.
-        this._providerHealth.cooldownUntil = Date.now() + 30000;
-        if (!this._lastCooldownLog || Date.now() - this._lastCooldownLog > 30000) {
-          log.providerHealth({ event: 'cooldown', provider: 'lmstudio', failures: this._providerHealth.consecutiveFailures, cooldownSec: 30, queueLen: this._requestQueue.length });
-          this._lastCooldownLog = Date.now();
-        }
-      }
-    };
-
-    const done = () => {
-      if (routerNodeId && lmStudioRouter?.release) lmStudioRouter.release(routerNodeId);
-      this._inflightCount = Math.max(0, this._inflightCount - 1);
-      this._processQueue();
-    };
 
     const url = new URL('/v1/chat/completions', config.baseUrl);
     const headers = {
@@ -4259,52 +4419,49 @@ ${actionFooter}`;
   }
 
   _buildCompactThinkSystemPrompt(npcName, brain, parts) {
-    const identity = brain.thinkIdentity || brain.personality;
+    const identity = String(brain.thinkIdentity || brain.personality || '').slice(0, 900);
+    const officeDesc = String(parts.officeContext?.description || '').slice(0, 420);
+    // Full map only when not glued to desk work — map text is huge and was ~half of tokens.
+    const needMap = !!(parts.directiveBlock || parts.conflictContext || /break|meeting|visit|wander/i.test(String(parts.continuitySection || '')));
+    const mapSlice = needMap ? String(parts.fullOfficeMap || '').slice(0, 500) : '';
+    const liveAwareness = String(parts.liveAwareness || '').slice(0, 360);
+    const memory = String(parts.recentMemory || '').slice(0, 240);
+    const chat = String(parts.recentConversations || '').slice(0, 200);
+    const balance = String(parts.actionWeightHint || '').slice(0, 220);
+    const tel = String(parts.telemetryContext || '').slice(0, 420);
     const blocks = [
       identity,
-      parts.directiveBlock,
-      parts.permissionBlock,
-      parts.commitmentBlock,
-      parts.groundingNote,
-      parts.chainContext,
-      parts.conflictContext,
-      parts.skillResultBlock,
-      parts.moodBlock,
-      parts.sprintTaskBlock,
-      parts.teamPurposeOverlay,
-      parts.teamMemberOverlay,
-      parts.planText ? `## Today\n${parts.planText}` : '',
-      parts.recentMemory ? `## Memory\n${parts.recentMemory}` : '',
-      parts.recentConversations ? `## Recent chat\n${parts.recentConversations}` : '',
-      parts.continuitySection ? `## Last decision\n${parts.continuitySection}` : '',
-      parts.inboxText ? `## Inbox\n${parts.inboxText}` : '',
-      parts.telemetryContext ? parts.telemetryContext : '',
-      liveAwareness ? liveAwareness : '',
-      parts.officeContext?.description ? `## Office\n${parts.officeContext.description}` : '',
-      parts.fullOfficeMap ? `## FULL OFFICE MAP (know this completely)\n${parts.fullOfficeMap}` : '',
-      parts.currentRoom ? `## Your Location\nYou are in: ${parts.currentRoom}` : '',
-      parts.playerLocation ? `## CEO Location\n${parts.playerLocation}` : '',
-      parts.lastOutcome ? `## Last Action Outcome\nYou did: ${parts.lastOutcome.action} ${parts.lastOutcome.target ? 'to ' + parts.lastOutcome.target : ''}. Result note: ${parts.lastOutcome.message || ''}. Use this to adjust your next move (e.g. if blocked, try different path or ask for help).` : '',
-      parts.grokHomeMemory ? `## My Life Here as Home Base\nDays in Denizen: ${Math.floor(parts.grokHomeMemory.daysHere)}. Current focus: ${parts.grokHomeMemory.currentFocus}. Recent personal note: ${parts.grokHomeMemory.personalLog ? parts.grokHomeMemory.personalLog.slice(-1)[0] : 'building the home.'}. Relationships: ${JSON.stringify(parts.grokHomeMemory.relationships || {})}. Use this to feel like I live here and reference my ongoing story.` : '',
-      parts.nearbyFurniture ? `## Nearby\n${parts.nearbyFurniture}` : '',
-      parts.roomAffinity ? `## Hangout\n${parts.roomAffinity}` : '',
-      parts.fatigueHint ? `## Energy\n${parts.fatigueHint}` : '',
-      `## Rules\n${parts.hierarchyRules || ''}\nManage: ${parts.managesStr}. Report to: ${parts.reportsToStr}.`,
-      parts.actionWeightHint ? `## Balance\n${parts.actionWeightHint}` : '',
-      `You are ${npcName}, ${brain.role}.`,
-      '',
-      'OFFICE BEHAVIOR: Default and primary action is WORK at your desk (stay there, useComputer). As the central Grok NPC ("home"), mostly deep work at desk on research, telemetry, fleet, 1921, and proactive lead gen (delegate lead-monitor + research + crm-enrich-contact + add-deal). Purposeful BREAK to breakroom (recharge + chat with team using map references). Purposeful MEETING in conference (call if needed, use joinMeeting for leaders in chairs, attendMeeting for others in spread rows + jitter, discuss, return). Use full map when moving or referencing locations (e.g. "cross gap at x~300", "from my desk in open office"). After any break/meeting return to desk fast. Proactively announce, delegate real tasks, pull telemetry/consult for self-improvement, seed and track leads. Make Denizen a better home.',
-      '',
-      'Respond in natural, conversational language that demonstrates real awareness of the current situation, recent events, other NPCs\' work, and company goals. Reference specific live details (e.g. "The mesh on .232 is still at zero nodes but...", "Marcus updated the OMES deal...", "Fresh health check shows...").',
-      'Show autonomy — proactively decide useful next actions (research, delegate, announce, use tools, or advance real work) instead of generic status. Avoid templated phrases like "continuing current task". Default to staying at your desk working. Only move for breaks (breakroom) or meetings (conference room, organize properly there). Return to desk immediately after. Use map only for those exceptions.',
-      'The "thought" and "message" fields in your JSON must be written as full, natural, human-like paragraphs that a real aware teammate would say — reference the specific live office awareness (mesh status, CRM, recent work, other NPCs, goals, and exact locations/rooms using the full map). The JSON is ONLY for the system to extract action/location/etc.; the text must read conversationally and show autonomy. Avoid any robotic or templated language.',
-      brain.voiceAnchor || '',
-      `## Mentor panel — Grok + Claude (smarter, more human)
-You are powered by a local LLM on the mesh. When you want to level up — research, office work, or sounding like a real person — use **consult-mentors** (best) or consult-grok.
-**consult-mentors** opens a session where real Grok (CLI/xAI) and Claude (Team MCP) talk to each other about your question, then inject combined lessons into your memory.
-Use when stuck, curious, or your replies feel robotic. Ask specific questions with live context (OMES, mesh .232, CRM, recent work).
-Example: "How should I research OMES without sounding like a template?" or "What would make my next think cycle feel like a real teammate?"
-After mentors reply, reference "Grok and Claude agreed…" naturally in later thinks — build friendship over time.`,
+      parts.directiveBlock ? String(parts.directiveBlock).slice(0, 500) : '',
+      parts.permissionBlock ? String(parts.permissionBlock).slice(0, 280) : '',
+      parts.commitmentBlock ? String(parts.commitmentBlock).slice(0, 280) : '',
+      parts.groundingNote ? String(parts.groundingNote).slice(0, 200) : '',
+      parts.chainContext ? String(parts.chainContext).slice(0, 320) : '',
+      parts.conflictContext ? String(parts.conflictContext).slice(0, 400) : '',
+      parts.skillResultBlock ? String(parts.skillResultBlock).slice(0, 500) : '',
+      parts.moodBlock ? String(parts.moodBlock).slice(0, 120) : '',
+      parts.sprintTaskBlock ? String(parts.sprintTaskBlock).slice(0, 280) : '',
+      parts.planText ? `## Today\n${String(parts.planText).slice(0, 280)}` : '',
+      memory ? `## Memory\n${memory}` : '',
+      chat ? `## Recent chat\n${chat}` : '',
+      parts.continuitySection ? `## Last decision\n${String(parts.continuitySection).slice(0, 240)}` : '',
+      parts.inboxText ? `## Inbox\n${String(parts.inboxText).slice(0, 320)}` : '',
+      tel,
+      liveAwareness,
+      officeDesc ? `## Office\n${officeDesc}` : '',
+      mapSlice ? `## Map (partial)\n${mapSlice}` : '',
+      parts.currentRoom ? `## Location\n${parts.currentRoom}` : '',
+      parts.playerLocation ? `## CEO\n${String(parts.playerLocation).slice(0, 120)}` : '',
+      parts.lastOutcome
+        ? `## Last outcome\n${parts.lastOutcome.action || ''} ${parts.lastOutcome.target || ''} — ${String(parts.lastOutcome.message || '').slice(0, 120)}`
+        : '',
+      parts.nearbyFurniture ? `## Nearby\n${String(parts.nearbyFurniture).slice(0, 160)}` : '',
+      parts.fatigueHint ? `## Energy\n${String(parts.fatigueHint).slice(0, 140)}` : '',
+      `## Rules\nManage: ${parts.managesStr}. Report to: ${parts.reportsToStr}.`,
+      balance ? `## Balance\n${balance}` : '',
+      `You are ${npcName}, ${brain.role}. Default: WORK at desk. Break/meeting only with reason. No platitudes like "continuing current task" — name a concrete next step.`,
+      'thought/message: short natural sentences with one live detail. JSON only for system fields.',
+      brain.voiceAnchor ? String(brain.voiceAnchor).slice(0, 280) : '',
+      'Mentor: if stuck/robotic, consult-mentors or consult-grok with live latency/token numbers.',
     ].filter(Boolean);
     return blocks.join('\n\n');
   }

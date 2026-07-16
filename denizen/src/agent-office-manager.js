@@ -23,6 +23,12 @@ class AgentOfficeManager {
     this._tabId = `tab-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     this._isThinkLeader = false;
     this._thinkLeaderTimer = null;
+    this._simHostKnown = false;
+    this._isSimHost = false;
+    this._simHostSessionId = null;
+    this._presenceKey = null;
+    this._lastPoseSentAt = 0;
+    this._lastNpcPosesAt = 0;
     this._loadOfficeConfig();
 
     // Agent registry: npcKey -> { role, name, status, currentTask, assignedDesk }
@@ -151,7 +157,14 @@ class AgentOfficeManager {
     const assigned = [...this.agents.values()].filter((a) => a.assignedDesk).length;
     console.log(`[AgentManager] Furniture ready — ${assigned} desk assignments`);
 
-    if (this._demoMode) return;
+    // Scripted investor/tour cutscene freezes AI — skip seating + ambient.
+    // Public live demo (?demo=1) does NOT set _demoMode and needs a busy floor.
+    if (this._demoMode) {
+      this.scene.time.delayedCall(1200, () => {
+        if (!this._ambientLifeStarted) this._startAmbientOfficeLife(true);
+      });
+      return;
+    }
 
     this.scene.time.delayedCall(800, () => {
       if (this._initialBehaviorsStarted) return;
@@ -312,8 +325,13 @@ class AgentOfficeManager {
     };
   }
 
-  /** One browser tab runs think loops — extra tabs were tripling LM Studio load. */
+  /** One browser tab runs think loops — extra tabs were tripling LM Studio load.
+   *  Also requires office sim-host (server-elected) when multiplayer is active. */
   _refreshThinkLeader() {
+    if (this._simHostKnown && !this._isSimHost) {
+      this._isThinkLeader = false;
+      return false;
+    }
     const key = 'denizen-think-leader';
     let leader = null;
     try {
@@ -334,48 +352,68 @@ class AgentOfficeManager {
     return this._isThinkLeader;
   }
 
+  _isMultiplayerSpectator() {
+    try {
+      if (globalThis.DenizenPublicDemo?.active) return true;
+      const q = new URLSearchParams(window.location.search);
+      if (q.get('mode') === 'demo' || q.get('demo') === '1') return true;
+      if (q.get('spectate') === '1') return true;
+    } catch (_) {}
+    return false;
+  }
+
+  _canInventNpcMotion() {
+    // Until server tells us who the host is, keep local motion (solo / first paint).
+    if (!this._simHostKnown) return true;
+    return !!this._isSimHost;
+  }
+
   /**
    * Start initial agent behaviors — role-based startup + autonomous AI thinking
    */
   _startInitialBehaviors() {
     this._behaviorWarmupUntil = Date.now() + PLAY_WARMUP_MS;
     this._deskEnforceDisabled = true;
-    this.scene.time.delayedCall(PLAY_WARMUP_MS, () => {
+    // Keep desk snap-back soft longer so the floor can breathe on first paint.
+    this.scene.time.delayedCall(PLAY_WARMUP_MS + 60000, () => {
       this._deskEnforceDisabled = false;
     });
-    if (this._demoMode) return;
+    if (this._demoMode) {
+      this._startAmbientOfficeLife(true);
+      return;
+    }
 
-    // Role-based startup behaviors (existing — NPCs settle into the office)
+    // Everyone begins the day correctly seated at their assigned workstation.
+    // Ambient routines release them gradually after the office has visibly
+    // settled, which makes every later walk read as intentional.
     this.agents.forEach((agent, npcKey) => {
-      switch (agent.role) {
-        case 'cofounder':
-          if (agent.assignedDesk) {
-            // Teleport CTO directly to her private office desk — no walking across office
-            this.actions.teleportToDesk(npcKey, agent.assignedDesk);
-            agent.status = 'working';
-            this.scene.time.delayedCall(5000, () => {
-              this.actions.speak(npcKey, 'Good morning team!');
-            });
+      if (agent.role === 'cofounder' && agent.assignedDesk) {
+        // CTO anchors the private office
+        this.actions.teleportToDesk(npcKey, agent.assignedDesk);
+        agent.status = 'working';
+        this.scene.time.delayedCall(5000, () => {
+          this.actions.speak(npcKey, 'Good morning team!');
+        });
+        return;
+      }
+      if (agent.assignedDesk) {
+        this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
+        agent.status = 'working';
+      } else {
+        // A roster entry without a usable chair must not remain frozen in the
+        // boot hold forever; release only that NPC onto normal floor movement.
+        const sprite = this.actions._getNpc?.(npcKey);
+        if (sprite?.ai) {
+          if (sprite._bootHidden) {
+            sprite._bootHidden = false;
+            sprite.setVisible?.(true);
           }
-          break;
-        case 'desk_worker':
-        case 'stock_trader':
-        case 'researcher':
-        case 'qa_engineer':
-        case 'devops':
-        case 'designer':
-        case 'data_engineer':
-        case 'it_support':
-        case 'security':
-        case 'project_mgr':
-        case 'product_mgr':
-        case 'intern':
-        case 'receptionist':
-          if (agent.assignedDesk) {
-            this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
-            agent.status = 'working';
-          }
-          break;
+          sprite.ai.mode = 'wander';
+          sprite.ai.taskState = null;
+          sprite.ai.taskTarget = null;
+          sprite.ai.nextWanderAt = 0;
+        }
+        agent.status = 'wandering';
       }
     });
 
@@ -505,7 +543,21 @@ class AgentOfficeManager {
       // Light office used to freeze everyone at desks. Keep ambient walks/breaks
       // so the office still feels alive; only LLM think bursts stay off.
       this._startAmbientOfficeLife(true);
-      console.log('[AgentManager] Light office — LLM thinks paused; ambient walks on. DenizenSetLightOffice(false) for full sim.');
+      this._startIdleBehaviors();
+      this.scene.time.addEvent({
+        delay: 45000,
+        loop: true,
+        callback: () => this._tickSocialMovementAndTalk(),
+      });
+      this.scene.time.delayedCall(PLAY_WARMUP_MS, () => {
+        this._tickRoleRoutines();
+        this.scene.time.addEvent({
+          delay: 45000,
+          loop: true,
+          callback: () => this._tickRoleRoutines(),
+        });
+      });
+      console.log('[AgentManager] Light office — LLM thinks paused; lively ambient floor on. DenizenSetLightOffice(false) for full sim.');
       return;
     }
 
@@ -538,30 +590,30 @@ class AgentOfficeManager {
 
     // Per-role ambient routines — defer first tick until behavior warmup ends
     // (was 60s from load ≈ 67s wall clock; felt like another freeze).
-    this.scene.time.delayedCall(PLAY_WARMUP_MS, () => {
+    this.scene.time.delayedCall(Math.min(25000, PLAY_WARMUP_MS), () => {
       this._tickRoleRoutines();
       this.scene.time.addEvent({
-        delay: 60000,
+        delay: 40000,
         loop: true,
         callback: () => this._tickRoleRoutines(),
       });
     });
 
-    // Desk enforcement — disabled during PLAY_WARMUP_MS; then every 2 min.
-    this.scene.time.delayedCall(PLAY_WARMUP_MS, () => {
+    // Soft desk enforcement — rarer so ambient walks aren't constantly cancelled.
+    this.scene.time.delayedCall(PLAY_WARMUP_MS + 60000, () => {
       this._forceReturnToDesks();
       this.scene.time.addEvent({
-        delay: 120000,
+        delay: 180000,
         loop: true,
         callback: () => this._forceReturnToDesks(),
       });
     });
 
-    // #8 — Reception visitor spawn. Every 5 minutes a conference_* NPC
+    // #8 — Reception visitor spawn. Every ~3 minutes a conference_* NPC
     // walks to the reception area and stands (as if a visitor arrived),
     // giving Lucy a reason to greet them.
     this.scene.time.addEvent({
-      delay: PLAY_WARMUP_MS,
+      delay: Math.max(45000, PLAY_WARMUP_MS - 30000),
       loop: true,
       callback: () => this._spawnReceptionVisitor(),
     });
@@ -575,10 +627,9 @@ class AgentOfficeManager {
       });
     });
 
-    // Limited social/movement: only occasional for breaks or when idle too long.
-    // NPCs should mostly stay at desks. This tick is light now.
+    // Floor traffic: breaks, coffee, hallway visits — every ~50s so the office stays lively.
     this.scene.time.addEvent({
-      delay: 120000,
+      delay: 50000,
       loop: true,
       callback: () => this._tickSocialMovementAndTalk(),
     });
@@ -609,50 +660,77 @@ class AgentOfficeManager {
    */
   _startAmbientOfficeLife(light = false) {
     if (this._ambientLifeStarted) return;
+    // Non-sim-host clients must not invent ambient walkers.
+    if (this._simHostKnown && !this._isSimHost) return;
     this._ambientLifeStarted = true;
     const perf = (typeof window.DenizenDeviceProfile?.lightPerf === 'function')
       ? window.DenizenDeviceProfile.lightPerf()
       : null;
-    // Light-render profile (phone / weak HW): fewer walkers so pathfinding
-    // and depth-sort stay cheap. Distinct from lightOffice (LLM think gate).
+    // Keep a lively floor: more concurrent walkers, shorter gap between releases.
+    // Light-render profile (phone) still throttles a bit for pathfinding cost.
     const initial = (perf?.light && perf.ambientInitial != null)
-      ? perf.ambientInitial
-      : (light ? 4 : 3);
+      ? Math.max(1, Math.min(perf.ambientInitial, 2))
+      : 2;
     const batch = (perf?.light && perf.ambientBatch != null)
-      ? perf.ambientBatch
+      ? Math.max(1, Math.min(perf.ambientBatch, 2))
       : (light ? 2 : 1);
     const delay = (perf?.light && perf.ambientDelayMs != null)
-      ? perf.ambientDelayMs
-      : (light ? 15000 : 26000);
-    this.scene.time.delayedCall(7000, () => this._ambientReleaseWalkers(initial));
+      ? Math.max(perf.ambientDelayMs, 16000)
+      : (light ? 18000 : 24000);
+    // Hold the opening tableau long enough for every assigned NPC to be seen
+    // seated correctly before the first purposeful trip begins.
+    this.scene.time.delayedCall(9000, () => this._ambientReleaseWalkers(initial));
     this.scene.time.addEvent({
       delay,
       loop: true,
       callback: () => this._ambientReleaseWalkers(batch),
     });
+    // Coordinated social errand: one coworker asks another to bring coffee,
+    // the runner fetches it, delivers it at the requester's desk, gets a
+    // response, and both resume work.
+    this.scene.time.delayedCall(50000, () => this._tickAmbientCoffeeFavor());
+    this.scene.time.addEvent({
+      delay: 95000,
+      loop: true,
+      callback: () => this._tickAmbientCoffeeFavor(),
+    });
   }
 
   _ambientReleaseWalkers(count = 1) {
     if (!this.agents || !this.actions) return;
+    if (this._simHostKnown && !this._isSimHost) return;
     const busy = new Set([
       'task_override', 'tour_guide', 'engaging', 'securing', 'honeypot',
-      'reporting', 'ceo_conversation',
+      'reporting', 'ceo_conversation', 'meeting',
     ]);
-    const keys = [];
+    // Prefer people currently glued to desks so the floor actually changes.
+    const deskKeys = [];
+    const freeKeys = [];
     this.agents.forEach((agent, npcKey) => {
       if (!agent || busy.has(agent.status)) return;
-      // Skip agents with no sprite (light-perf NPC cap).
       if (!this.actions._getNpc?.(npcKey)) return;
-      keys.push(npcKey);
+      if (agent.status === 'working' || this._isAtAssignedDesk(npcKey, agent)) {
+        deskKeys.push(npcKey);
+      } else {
+        freeKeys.push(npcKey);
+      }
     });
-    if (!keys.length) return;
-    for (let i = keys.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const tmp = keys[i];
-      keys[i] = keys[j];
-      keys[j] = tmp;
-    }
-    const pick = keys.slice(0, Math.min(Math.max(1, count), keys.length));
+    const shuffle = (arr) => {
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+      return arr;
+    };
+    // Prefer desk-bound NPCs so we actually stand people up, not re-shuffle walkers.
+    const ordered = deskKeys.length
+      ? shuffle(deskKeys).concat(shuffle(freeKeys))
+      : shuffle(freeKeys);
+    if (!ordered.length) return;
+    const pick = ordered.slice(0, Math.min(Math.max(1, count), ordered.length));
+    const rooms = ['open_office', 'reception', 'breakroom', 'conference', 'storage'];
     pick.forEach((npcKey) => {
       const agent = this.agents.get(npcKey);
       if (!agent || busy.has(agent.status)) return;
@@ -665,14 +743,21 @@ class AgentOfficeManager {
         sprite.ai._sitSnap = null;
         sprite.ai.nextWanderAt = 0;
       }
+      // Block desk-enforce from yanking them mid-stroll.
+      if (sprite) {
+        sprite._purposefulWalkUntil = Date.now() + 45000;
+      }
       const roll = Math.random();
       try {
-        if (roll < 0.4 && typeof this.actions.goToBreakroom === 'function') {
+        if (roll < 0.28 && typeof this.actions.goToBreakroom === 'function') {
           agent.status = 'break';
           this.actions.goToBreakroom(npcKey);
-        } else if (roll < 0.65 && typeof this.actions.goToRoom === 'function') {
+        } else if (roll < 0.45 && typeof this.actions.goToCoffee === 'function') {
+          agent.status = 'break';
+          this.actions.goToCoffee(npcKey);
+        } else if (roll < 0.7 && typeof this.actions.goToRoom === 'function') {
           agent.status = 'wandering';
-          this.actions.goToRoom(npcKey, Math.random() < 0.5 ? 'open_office' : 'reception');
+          this.actions.goToRoom(npcKey, rooms[Math.floor(Math.random() * rooms.length)]);
         } else if (typeof this.actions.visitCoworker === 'function') {
           agent.status = 'visiting';
           this.actions.visitCoworker(npcKey);
@@ -682,16 +767,91 @@ class AgentOfficeManager {
       } catch (_) {
         agent.status = 'wandering';
       }
-      const returnMs = 16000 + Math.floor(Math.random() * 16000);
+      // Every purposeful trip has an end: walk back and sit correctly.
+      const returnMs = 26000 + Math.floor(Math.random() * 22000);
       this.scene.time.delayedCall(returnMs, () => {
         const again = this.agents.get(npcKey);
         if (!again || busy.has(again.status)) return;
         if (!again.assignedDesk) return;
         try {
-          this.actions.useComputer(npcKey, again.assignedDesk);
+          // Walk home — never instant (useComputer no longer snaps from afar).
           again.status = 'working';
-        } catch (_) {}
+          this.actions.useComputer(npcKey, again.assignedDesk, { instant: false });
+        } catch (_) {
+          again.status = 'wandering';
+        }
       });
+    });
+  }
+
+  _tickAmbientCoffeeFavor() {
+    if (this._ambientCoffeeFavorActive) return;
+    if (this._simHostKnown && !this._isSimHost) return;
+    const blocked = new Set([
+      'task_override', 'tour_guide', 'engaging', 'securing', 'honeypot',
+      'reporting', 'ceo_conversation', 'meeting', 'talking', 'collaborating',
+    ]);
+    const candidates = [];
+    this.agents.forEach((agent, npcKey) => {
+      if (!agent?.assignedDesk || blocked.has(agent.status)) return;
+      if (!this.actions._getNpc?.(npcKey)) return;
+      if (!this._isAtAssignedDesk(npcKey, agent)) return;
+      candidates.push({ npcKey, agent });
+    });
+    if (candidates.length < 2) return;
+
+    const requesterIndex = Math.floor(Math.random() * candidates.length);
+    const requester = candidates[requesterIndex];
+    const runners = candidates.filter((_, i) => i !== requesterIndex);
+    const runner = runners[Math.floor(Math.random() * runners.length)];
+    this._ambientCoffeeFavorActive = true;
+    requester.agent.status = 'talking';
+    runner.agent.status = 'talking';
+
+    const requestLines = [
+      `Hey ${runner.agent.name}, if you're getting coffee, could you bring me one too?`,
+      `${runner.agent.name}, would you mind grabbing me a coffee while you're up?`,
+      `Quick favor, ${runner.agent.name} — could you bring me a coffee?`,
+    ];
+    const acceptLines = ['Sure thing.', 'Of course.', 'Yep, I have got you.', 'No problem.'];
+    const deliveryLines = ['Here you go.', 'Coffee delivery.', 'Got one for you.', 'One coffee, as requested.'];
+    const thanksLines = ['Thank you!', 'Perfect, thanks.', 'You are the best. Thank you.', 'Thanks, I needed that.'];
+    const pick = (lines) => lines[Math.floor(Math.random() * lines.length)];
+
+    this.actions.speak(requester.npcKey, pick(requestLines));
+    this.scene.time.delayedCall(1800, () => {
+      this.actions.speak(runner.npcKey, pick(acceptLines));
+      this.actions.standUp(runner.npcKey);
+      runner.agent.status = 'coffee_run';
+      const sprite = this.actions._getNpc?.(runner.npcKey);
+      if (sprite) sprite._purposefulWalkUntil = Date.now() + 50000;
+      this.actions.goToCoffee?.(runner.npcKey) || this.actions.goToBreakroom?.(runner.npcKey);
+    });
+
+    this.scene.time.delayedCall(11500, () => {
+      if (blocked.has(runner.agent.status)) return;
+      runner.agent.status = 'delivering_coffee';
+      this.actions.visit?.(runner.npcKey, requester.npcKey);
+    });
+    this.scene.time.delayedCall(16500, () => {
+      this.actions.speak(runner.npcKey, pick(deliveryLines));
+    });
+    this.scene.time.delayedCall(18500, () => {
+      this.actions.speak(requester.npcKey, pick(thanksLines));
+    });
+    this.scene.time.delayedCall(22000, () => {
+      try {
+        this.actions.useComputer(runner.npcKey, runner.agent.assignedDesk, { instant: false });
+        runner.agent.status = 'working';
+        this.actions.useComputer(requester.npcKey, requester.agent.assignedDesk, { instant: false });
+        requester.agent.status = 'working';
+      } finally {
+        this._ambientCoffeeFavorActive = false;
+      }
+    });
+    // Safety release if navigation is interrupted by another office event.
+    this.scene.time.delayedCall(45000, () => {
+      this._ambientCoffeeFavorActive = false;
     });
   }
 
@@ -941,19 +1101,17 @@ class AgentOfficeManager {
 
       if (isSec && securityBusy.has(agent.status)) return;
 
-      // Only interrupt benign statuses — don't break meetings/reports.
-      // IMPORTANT: if 'working' and at desk, skip ambient pull to respect desk priority.
+      // Lucy / Bouncer should leave desks often — they sell "live office" more than coders.
       const interruptible = !agent.status
-        || ['idle','wandering','break','visiting','reading'].indexOf(agent.status) !== -1;
+        || ['idle', 'wandering', 'break', 'visiting', 'reading', 'working', 'receptionist_patrol', 'patrolling']
+          .indexOf(agent.status) !== -1;
       if (!interruptible) return;
 
-      // Skip if working at assigned desk (desk-first priority)
-      if (agent.status === 'working' && this._isAtAssignedDesk(npcKey, agent)) return;
-
       if (isRecept) {
-        // Alternate between sitting at reception desk and standing to greet.
         const variant = Math.random();
         this.actions.standUp(npcKey);
+        const sprite = this.actions._getNpc?.(npcKey);
+        if (sprite) sprite._purposefulWalkUntil = Date.now() + 35000;
         if (variant < 0.5) {
           this.actions.goToRoom(npcKey, 'reception');
           agent.status = 'receptionist_patrol';
@@ -961,25 +1119,23 @@ class AgentOfficeManager {
             this.actions.speak(npcKey, 'Let me know if you need anything.');
           });
         } else {
-          this.actions.goToRoom(npcKey, 'reception');
+          this.actions.goToRoom(npcKey, Math.random() < 0.5 ? 'reception' : 'open_office');
           agent.status = 'receptionist_patrol';
           this.scene.time.delayedCall(2500, () => {
             this.actions.emote(npcKey, 'wave');
           });
         }
-        this.scene.time.delayedCall(14000, () => {
-          if (agent.assignedDesk) {
+        // Often stay on feet at reception instead of sitting forever
+        this.scene.time.delayedCall(20000, () => {
+          if (agent.status !== 'receptionist_patrol') return;
+          if (Math.random() < 0.45 && agent.assignedDesk) {
             this.actions.useComputer(npcKey, agent.assignedDesk);
             agent.status = 'working';
+          } else {
+            agent.status = 'wandering';
           }
         });
       } else if (isSec) {
-        // SECURITY behaviour. Priority order:
-        //   1. Active robber → confront it (top priority).
-        //   2. Player loitering in a restricted room (manager_office /
-        //      storage) for >30s → walk over with a polite challenge.
-        //   3. Otherwise run the ambient patrol so the office still
-        //      sees a guard moving around.
         const robbers = this.scene._robberCtrl?.getActiveRobbers?.() || [];
         const RESTRICTED = ['manager_office', 'storage'];
         const playerInRestricted = this._lastPlayerRoom && RESTRICTED.indexOf(this._lastPlayerRoom) !== -1;
@@ -995,21 +1151,30 @@ class AgentOfficeManager {
           this._lastLoiterCheckAt = Date.now();
           this._challengePlayerLoiter(npcKey, agent, this._lastPlayerRoom);
         } else {
-          // Ambient patrol loop only if not working at desk.
-          if (agent.status === 'working' && this._isAtAssignedDesk(npcKey, agent)) return;
           this.actions.standUp(npcKey);
+          const sprite = this.actions._getNpc?.(npcKey);
+          if (sprite) sprite._purposefulWalkUntil = Date.now() + 40000;
           agent.status = 'patrolling';
           this.actions.goToRoom(npcKey, 'reception');
           this.scene.time.delayedCall(6000, () => {
             this.actions.goToRoom(npcKey, 'open_office');
           });
           this.scene.time.delayedCall(14000, () => {
-            this.actions.goToRoom(npcKey, 'reception');
+            this.actions.goToRoom(npcKey, Math.random() < 0.5 ? 'reception' : 'breakroom');
           });
-          this.scene.time.delayedCall(22000, () => {
-            if (agent.assignedDesk) {
+          this.scene.time.delayedCall(28000, () => {
+            if (agent.status !== 'patrolling') return;
+            // Bouncer stays mobile more often than he sits
+            if (Math.random() < 0.35 && agent.assignedDesk) {
               this.actions.useComputer(npcKey, agent.assignedDesk);
               agent.status = 'working';
+            } else {
+              agent.status = 'wandering';
+              const sp = this.actions._getNpc?.(npcKey);
+              if (sp?.ai) {
+                sp.ai.mode = 'wander';
+                sp.ai.nextWanderAt = 0;
+              }
             }
           });
         }
@@ -1018,72 +1183,116 @@ class AgentOfficeManager {
   }
 
   /**
-   * Occasional movement for breaks or meetings only.
-   * NPCs should mostly be at desks working. This triggers light social only rarely.
-   * Break goes to breakroom, meeting gathers in conference like real meeting.
+   * Floor traffic — pull people off desks for coffee, breakroom, visits, meetings.
+   * Used to skip anyone "working" (almost everyone) so the office looked dead.
    */
   _tickSocialMovementAndTalk() {
     if (!this.agents) return;
+    if (this._simHostKnown && !this._isSimHost) return;
 
-    const busyStatuses = new Set(['task_override', 'tour_guide', 'engaging', 'securing', 'honeypot', 'reporting', 'ceo_conversation']);
+    const busyStatuses = new Set([
+      'task_override', 'tour_guide', 'engaging', 'securing', 'honeypot',
+      'reporting', 'ceo_conversation', 'meeting',
+    ]);
     const candidates = [];
     this.agents.forEach((agent, npcKey) => {
       if (!agent || busyStatuses.has(agent.status)) return;
-      if (agent.status === 'working') return;
-      if (this._isAtAssignedDesk(npcKey, agent)) return;
-      if (this.actions._sittingNpcs?.has(npcKey)) return;
       const sprite = this.actions._getNpc(npcKey);
-      if (sprite && sprite.ai) candidates.push({ key: npcKey, agent, sprite });
+      if (!sprite?.ai) return;
+      candidates.push({ key: npcKey, agent, sprite });
     });
     if (candidates.length < 1) return;
 
-    // Only trigger for breaks (to breakroom) or meetings (to conference) rarely.
-    // Purposeful only — desk is default.
-    const shouldBreakOrMeeting = Math.random() < 0.12;
-    if (!shouldBreakOrMeeting) return;
+    // Fire often enough to keep motion visible.
+    if (Math.random() > 0.72) return;
 
-    const npc = candidates[Math.floor(Math.random() * candidates.length)];
-    const isManager = ['cofounder', 'project_mgr', 'product_mgr'].includes(npc.agent.role);
-
-    if (Math.random() < 0.6 || !isManager) {
-      npc.agent.status = 'break';
-      this.actions.standUp(npc.key);
-      this.actions.goToBreakroom(npc.key);
-      this.scene.time.delayedCall(12000, () => {
-        if (npc.agent.assignedDesk) {
-          this.actions.useComputer(npc.key, npc.agent.assignedDesk);
-          npc.agent.status = 'working';
-        }
-      });
-    } else {
-      npc.agent.status = 'meeting';
-      this.actions.standUp(npc.key);
-      this.actions.joinMeeting(npc.key);
-
-      const toPull = candidates.filter((c) => {
-        if (c.key === npc.key) return false;
-        if (busyStatuses.has(c.agent.status)) return false;
-        if (c.agent.status === 'working') return false;
-        if (this._isAtAssignedDesk(c.key, c.agent)) return false;
-        return true;
-      }).slice(0, 3);
-      toPull.forEach((p, i) => {
-        p.agent.status = 'meeting';
-        this.scene.time.delayedCall(1000 + i * 500, () => {
-          this.actions.standUp(p.key);
-          const pIsLeader = ['cofounder', 'project_mgr', 'product_mgr'].includes(p.agent.role);
-          if (pIsLeader) this.actions.joinMeeting(p.key);
-          else this.actions.attendMeeting(p.key);
-        });
-      });
-      this.scene.time.delayedCall(35000, () => {
-        [npc, ...toPull].forEach((p) => {
-          if (!p.agent.assignedDesk) return;
-          this.actions.useComputer(p.key, p.agent.assignedDesk);
-          p.agent.status = 'working';
-        });
-      });
+    // Prefer seated workers so desks actually empty out sometimes.
+    const seated = candidates.filter((c) =>
+      c.agent.status === 'working' || this._isAtAssignedDesk(c.key, c.agent)
+      || this.actions._sittingNpcs?.has(c.key));
+    const pool = seated.length ? seated : candidates;
+    const howMany = Math.min(pool.length, 1 + Math.floor(Math.random() * 2));
+    const pick = [];
+    const used = new Set();
+    while (pick.length < howMany && used.size < pool.length) {
+      const c = pool[Math.floor(Math.random() * pool.length)];
+      if (used.has(c.key)) continue;
+      used.add(c.key);
+      pick.push(c);
     }
+
+    const isManager = (role) => ['cofounder', 'project_mgr', 'product_mgr'].includes(role);
+    const leader = pick.find((p) => isManager(p.agent.role));
+
+    if (leader && Math.random() < 0.28 && pick.length >= 1) {
+      // Small meeting wave
+      const attendees = pick.slice(0, Math.min(3, pick.length));
+      attendees.forEach((p, i) => {
+        p.agent.status = 'meeting';
+        this.scene.time.delayedCall(i * 400, () => {
+          try { this.actions.standUp(p.key); } catch (_) {}
+          if (p.sprite) p.sprite._purposefulWalkUntil = Date.now() + 50000;
+          if (isManager(p.agent.role)) this.actions.joinMeeting?.(p.key);
+          else this.actions.attendMeeting?.(p.key) || this.actions.goToRoom?.(p.key, 'conference');
+        });
+      });
+      this.scene.time.delayedCall(40000, () => {
+        attendees.forEach((p) => {
+          if (!p.agent.assignedDesk) return;
+          if (busyStatuses.has(p.agent.status) && p.agent.status !== 'meeting') return;
+          try {
+            this.actions.useComputer(p.key, p.agent.assignedDesk);
+            p.agent.status = 'working';
+          } catch (_) {}
+        });
+      });
+      return;
+    }
+
+    pick.forEach((npc, i) => {
+      this.scene.time.delayedCall(i * 350, () => {
+        const roll = Math.random();
+        try { this.actions.standUp(npc.key); } catch (_) {}
+        if (npc.sprite) {
+          npc.sprite._purposefulWalkUntil = Date.now() + 45000;
+          if (npc.sprite.ai) {
+            npc.sprite.ai.mode = 'wander';
+            npc.sprite.ai.taskState = null;
+            npc.sprite.ai.nextWanderAt = 0;
+          }
+        }
+        if (roll < 0.35) {
+          npc.agent.status = 'break';
+          this.actions.goToBreakroom?.(npc.key);
+        } else if (roll < 0.55) {
+          npc.agent.status = 'break';
+          this.actions.goToCoffee?.(npc.key);
+        } else if (roll < 0.8) {
+          npc.agent.status = 'wandering';
+          const rooms = ['open_office', 'reception', 'breakroom', 'conference'];
+          this.actions.goToRoom?.(npc.key, rooms[Math.floor(Math.random() * rooms.length)]);
+        } else {
+          npc.agent.status = 'visiting';
+          this.actions.visitCoworker?.(npc.key);
+        }
+        this.scene.time.delayedCall(28000 + Math.random() * 22000, () => {
+          if (busyStatuses.has(npc.agent.status)) return;
+          if (['security', 'receptionist', 'intern'].includes(npc.agent.role)) {
+            npc.agent.status = 'wandering';
+            return;
+          }
+          if (!npc.agent.assignedDesk) return;
+          if (Math.random() < 0.3) {
+            npc.agent.status = 'wandering';
+            return;
+          }
+          try {
+            this.actions.useComputer(npc.key, npc.agent.assignedDesk);
+            npc.agent.status = 'working';
+          } catch (_) {}
+        });
+      });
+    });
   }
 
   _isAtAssignedDesk(npcKey, agent, px = 48) {
@@ -1109,64 +1318,10 @@ class AgentOfficeManager {
   }
 
   _forceReturnToDesks() {
-    if (this._behaviorWarmupUntil && Date.now() < this._behaviorWarmupUntil) return;
-    if (this._deskEnforceDisabled) return;
-    if (!this.agents) return;
-    const exemptStatuses = new Set([
-      'break', 'meeting', 'patrolling', 'engaging', 'securing', 'honeypot',
-      'tour_guide', 'reporting', 'ceo_conversation', 'task_override',
-    ]);
-    const mobileRoles = new Set(['security', 'receptionist']);
-    const toSeat = [];
-
-    this.agents.forEach((agent, npcKey) => {
-      if (!agent?.assignedDesk) return;
-      const status = agent.status || '';
-      if (exemptStatuses.has(status)) return;
-      if (mobileRoles.has(agent.role) && ['patrolling', 'tour_guide'].includes(status)) return;
-
-      const sprite = this.actions._getNpc(npcKey);
-      const desk = this._deskAnchorFor(agent, npcKey);
-      if (!sprite?.ai || !desk) return;
-
-      if (this.actions.isSeatedAtDesk(npcKey, agent.assignedDesk)) {
-        if (status !== 'working') agent.status = 'working';
-        return;
-      }
-
-      // Don't teleport NPCs that are deliberately walking somewhere (breakroom,
-      // coffee, a meeting, any walkTo). Yanking them mid-journey — or the
-      // instant they arrive — is the "walk off then snap back to desk" glitch.
-      // The explicit trip window survives the mode/waypoint flicker between
-      // path segments; the follower check is a belt-and-suspenders backup.
-      const follower = sprite._pathFollower;
-      const onTrip = (sprite._purposefulWalkUntil && Date.now() < sprite._purposefulWalkUntil)
-        || (follower && Array.isArray(follower.waypoints) && follower.waypoints.length > 0);
-      if (onTrip) return;
-
-      const distToDesk = Math.hypot(sprite.x - desk.x, sprite.y - desk.y);
-      if (distToDesk > 48 || sprite.ai.mode === 'wander' || status === 'idle' || status === 'wandering' || status === 'visiting') {
-        toSeat.push({ agent, npcKey });
-      }
-    });
-
-    if (!toSeat.length) return;
-
-    // Spread snaps across frames so 18 NPCs don't hitch the main thread in one tick.
-    const batch = toSeat.slice(0, 3);
-    const rest = toSeat.slice(3);
-    batch.forEach(({ agent, npcKey }) => {
-      agent.status = 'working';
-      this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
-    });
-    if (rest.length) {
-      this.scene.time.delayedCall(120, () => {
-        rest.forEach(({ agent, npcKey }) => {
-          agent.status = 'working';
-          this.actions.useComputer(npcKey, agent.assignedDesk, { instant: true });
-        });
-      });
-    }
+    // Desk "enforce" used to teleport people home (instant:true) — looked like
+    // they vanished mid-walk and respawned at chairs. Leave the floor alone;
+    // ambient / idle loops already send some people to sit by walking.
+    return;
   }
 
   /**
@@ -1780,26 +1935,12 @@ class AgentOfficeManager {
       dot.setPosition(npc.x, npc.y - 56);
       dot.setVisible(true);
 
-      // Task label — only show if NPC has an active task
+      // Task scraps were tiny gray floaters that looked like random noise
+      // over desks. Thoughts/speech bubbles already carry status — hide these.
       let label = this._taskLabels.get(npcKey);
-      if (agent._taskLabel) {
-        if (!label) {
-          label = this.scene.add.text(0, 0, '', {
-            fontSize: '6px',
-            fontFamily: 'monospace',
-            color: '#94a3b8',
-            backgroundColor: '#0f172a80',
-            padding: { x: 2, y: 1 },
-          });
-          label.setDepth(9998);
-          label.setOrigin(0.5, 1);
-          this._taskLabels.set(npcKey, label);
-        }
-        label.setText(agent._taskLabel.slice(0, 25));
-        label.setPosition(npc.x, npc.y - 58);
-        label.setVisible(true);
-      } else if (label) {
-        label.setVisible(false);
+      if (label) {
+        try { label.destroy(); } catch (_) {}
+        this._taskLabels.delete(npcKey);
       }
     });
   }
@@ -2093,6 +2234,14 @@ class AgentOfficeManager {
     // Show thought bubble briefly
     if (thought) {
       this.actions.think(npcKey, thought);
+    }
+
+    // Non-sim-host: speech/status only — locomotion comes from host npc_poses.
+    if (this._simHostKnown && !this._isSimHost) {
+      if (message) this.actions.speak(npcKey, message);
+      if (action === 'work') agent.status = 'working';
+      else if (action === 'talk') agent.status = 'talking';
+      return;
     }
 
     // Helper: find target NPC key
@@ -2551,7 +2700,17 @@ class AgentOfficeManager {
     }
   }
 
-  // ---- WebSocket Connection ----
+  _visitorRegisterPayload(extra = {}) {
+    const spectator = this._isMultiplayerSpectator();
+    return {
+      type: 'visitor_register',
+      is_ceo: true,
+      interactive: !spectator,
+      spectator,
+      demo: spectator,
+      ...extra,
+    };
+  }
 
   connect() {
     if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
@@ -2577,11 +2736,12 @@ class AgentOfficeManager {
         if (sess?.getSessionId?.()) {
           sess.registerWebSocket(existing);
         } else {
-          this._send({ type: 'visitor_register', is_ceo: true });
+          this._send(this._visitorRegisterPayload());
         }
         this._loadOfficeConfig();
         this._sendClientProfile();
         this._sendOfficeState();
+        this._syncDirectorHealthFromHttp();
       };
       existing.onclose = () => {
         this.connected = false;
@@ -2598,9 +2758,12 @@ class AgentOfficeManager {
         if (sess?.getSessionId?.()) {
           sess.registerWebSocket(existing);
         } else {
-          this._send({ type: 'visitor_register', is_ceo: true });
+          this._send(this._visitorRegisterPayload());
         }
         this._sendOfficeState();
+        // Early chat WS already connected before our onmessage existed —
+        // pull director health over HTTP so the offline banner cannot miss.
+        this._syncDirectorHealthFromHttp();
       }
       console.log('[AgentManager] Reusing early chat WebSocket');
       return;
@@ -2634,12 +2797,15 @@ class AgentOfficeManager {
       if (sess?.getSessionId?.()) {
         sess.registerWebSocket(this.ws);
       } else {
-        this._send({ type: 'visitor_register', is_ceo: true });
+        this._send(this._visitorRegisterPayload());
       }
 
       this._loadOfficeConfig();
       this._sendClientProfile();
       this._sendOfficeState();
+      // Belt-and-suspenders: HTTP health is authoritative if the connect-time
+      // director_health WS frame was lost in the onmessage race.
+      this._syncDirectorHealthFromHttp();
 
       globalThis.DenizenAgentManager = this;
       globalThis.DenizenReportFriction = (npcName, context, error) => {
@@ -2766,7 +2932,37 @@ class AgentOfficeManager {
         globalThis.DenizenVisitorSession?.applyOfficeRegistration?.(msg);
         window.__DenizenOfficeId = msg.office_id || window.__DenizenOfficeId;
         window.__DenizenIsOperatorOffice = !!msg.is_operator_office;
+        if (msg.presence_key) {
+          const prev = this._presenceKey || window.__DenizenPresenceKey;
+          if (prev && prev !== msg.presence_key) {
+            window.__DenizenPresenceGhosts = [
+              ...(window.__DenizenPresenceGhosts || []),
+              prev,
+            ].slice(-8);
+            this.scene?.removeRemotePlayer?.(prev);
+          }
+          this._presenceKey = msg.presence_key;
+          window.__DenizenPresenceKey = msg.presence_key;
+          // Drop any remote sprite that is actually us (pose echo / key upgrade).
+          this.scene?.removeRemotePlayer?.(msg.presence_key);
+          this.scene?.purgeSelfRemotePlayers?.();
+        }
         console.log('[AgentManager] Office registered:', msg.office_id, msg.is_operator_office ? '(operator)' : '');
+        break;
+      case 'players_snapshot':
+        this._handlePlayersSnapshot(msg);
+        break;
+      case 'player_pose':
+        this._handlePlayerPose(msg);
+        break;
+      case 'player_left':
+        this.scene?.removeRemotePlayer?.(msg.sessionId);
+        break;
+      case 'sim_host':
+        this._handleSimHost(msg);
+        break;
+      case 'npc_poses':
+        this._handleNpcPoses(msg);
         break;
       case 'office_bus_message':
         globalThis.DenizenVisitorHandoffUI?.showIncoming?.(msg);
@@ -3127,6 +3323,13 @@ class AgentOfficeManager {
             });
           }
         }
+        break;
+      }
+      case 'director_health': {
+        // A+ plan P0.3 — the operator must never watch a silently-degraded
+        // office. When the cofounder falls into the demo think loop or hits
+        // 3+ consecutive errors, pin a banner; remove it on recovery.
+        this._updateDirectorBanner(msg);
         break;
       }
       case 'npc_email_arrived': {
@@ -4293,6 +4496,25 @@ class AgentOfficeManager {
     if (!this.connected) return;
     this._sendClientProfile();
 
+    // Non-sim-host clients must not compete for world state positions.
+    if (this._simHostKnown && !this._isSimHost) {
+      // Still report player idle for Lucy awareness.
+      const playerOnly = this.scene?.player;
+      if (playerOnly && typeof playerOnly.x === 'number') {
+        const roomInfo = this.actions.getRoom ? this.actions.getRoom(playerOnly.x, playerOnly.y) : null;
+        this._send({
+          type: 'player_idle',
+          idleMs: 0,
+          position: {
+            x: Math.round(playerOnly.x),
+            y: Math.round(playerOnly.y),
+            room: roomInfo?.key || null,
+          },
+        });
+      }
+      return;
+    }
+
     const agentList = [];
     this.agents.forEach((agent, npcKey) => {
       const npc = this.actions._getNpc(npcKey);
@@ -4397,8 +4619,131 @@ class AgentOfficeManager {
   /**
    * Update (called from scene update loop)
    */
-  update() {
+  update(delta) {
     this.actions.update();
+    this._tickPlayerPose(delta);
+    this._tickNpcPoses(delta);
+  }
+
+  _handlePlayersSnapshot(msg) {
+    if (msg.selfSessionId) {
+      const prev = this._presenceKey || window.__DenizenPresenceKey;
+      if (prev && prev !== msg.selfSessionId) {
+        window.__DenizenPresenceGhosts = [
+          ...(window.__DenizenPresenceGhosts || []),
+          prev,
+        ].slice(-8);
+        this.scene?.removeRemotePlayer?.(prev);
+      }
+      this._presenceKey = msg.selfSessionId;
+      window.__DenizenPresenceKey = msg.selfSessionId;
+      this.scene?.removeRemotePlayer?.(msg.selfSessionId);
+      // Recompute host after key upgrade (anon→sess); sim_host may have arrived first.
+      if (this._simHostSessionId) {
+        this._isSimHost = this._presenceKey === this._simHostSessionId;
+        window.__DenizenIsSimHost = this._isSimHost;
+      }
+    }
+    // Snapshot is authoritative — wipe remotes then re-add peers only.
+    this.scene?.applyRemotePlayersSnapshot?.(msg.players || []);
+    this.scene?.purgeSelfRemotePlayers?.();
+  }
+
+  _handlePlayerPose(msg) {
+    const selfKey = this._presenceKey || window.__DenizenPresenceKey;
+    const sid = String(msg?.sessionId || '').trim();
+    if (selfKey && sid === selfKey) {
+      this.scene?.removeRemotePlayer?.(sid);
+      return;
+    }
+    const ghosts = window.__DenizenPresenceGhosts;
+    if (Array.isArray(ghosts) && ghosts.includes(sid)) {
+      this.scene?.removeRemotePlayer?.(sid);
+      return;
+    }
+    this.scene?.upsertRemotePlayer?.(msg);
+  }
+
+  _handleSimHost(msg) {
+    const selfKey = this._presenceKey || window.__DenizenPresenceKey;
+    this._simHostSessionId = msg.sessionId || null;
+    // No elected host (spectators-only office, brief gap) — keep inventing locally
+    // so NPCs don't freeze while waiting for the next election.
+    if (!msg.sessionId) {
+      this._simHostKnown = false;
+      this._isSimHost = true;
+      window.__DenizenIsSimHost = true;
+      console.log('[AgentManager] sim host: none — local invent');
+      return;
+    }
+    this._simHostKnown = true;
+    this._isSimHost = !!(selfKey && selfKey === msg.sessionId);
+    window.__DenizenIsSimHost = this._isSimHost;
+    console.log('[AgentManager] sim host:', msg.sessionId, this._isSimHost ? '(me)' : '');
+    // Public demo + full office both need ambient floor traffic when we become sim host.
+    if (this._isSimHost && !this._ambientLifeStarted) {
+      this._startAmbientOfficeLife(!!this._demoMode || this._isLightOffice());
+    }
+  }
+
+  _handleNpcPoses(msg) {
+    if (this._isSimHost) return;
+    if (!Array.isArray(msg.npcs)) return;
+    this.scene?.applyNpcPoses?.(msg.npcs);
+  }
+
+  _tickPlayerPose() {
+    if (!this.connected) return;
+    const player = this.scene?.player;
+    if (!player || typeof player.x !== 'number') return;
+    const now = Date.now();
+    const moving = !!(player.body && (Math.abs(player.body.velocity.x) > 4 || Math.abs(player.body.velocity.y) > 4));
+    const interval = moving ? 90 : 480;
+    if (this._lastPoseSentAt && (now - this._lastPoseSentAt) < interval) return;
+    this._lastPoseSentAt = now;
+
+    const facing = this.scene.facing || 'down';
+    const roomInfo = this.actions.getRoom ? this.actions.getRoom(player.x, player.y) : null;
+    const spectator = this._isMultiplayerSpectator();
+    const displayName = globalThis.DenizenVisitorSession?.getDisplayName?.()
+      || window.__DenizenVisitorDisplayName
+      || (spectator ? 'Demo guest' : 'Guest');
+
+    this._send({
+      type: 'player_pose',
+      x: Math.round(player.x),
+      y: Math.round(player.y),
+      facing,
+      anim: moving ? 'walk' : 'idle',
+      room: roomInfo?.key || null,
+      displayName,
+      interactive: !spectator,
+      spectator,
+      demo: spectator,
+    });
+  }
+
+  _tickNpcPoses() {
+    if (!this.connected || !this._isSimHost) return;
+    const now = Date.now();
+    // ~10 Hz — enough for smooth velocity follow without flooding the WS.
+    if (this._lastNpcPosesAt && (now - this._lastNpcPosesAt) < 100) return;
+    this._lastNpcPosesAt = now;
+    const npcs = [];
+    (this.scene?.npcs || []).forEach((npc) => {
+      const key = npc?.texture?.key;
+      if (!key) return;
+      npcs.push({
+        key,
+        x: Math.round(npc.x),
+        y: Math.round(npc.y),
+        facing: npc.ai?.facing || 'down',
+        anim: (npc.body && (Math.abs(npc.body.velocity.x) + Math.abs(npc.body.velocity.y) > 8)) ? 'walk' : 'idle',
+        taskState: npc.ai?.taskState || null,
+      });
+    });
+    if (!npcs.length) return;
+    this._send({ type: 'npc_poses', npcs });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -4408,9 +4753,10 @@ class AgentOfficeManager {
   _startIdleBehaviors() {
     let stagger = 0;
     this.agents.forEach((agent, npcKey) => {
-      const delay = stagger + 120000 + Math.random() * 120000;
+      // Start ambient fidgets sooner so the office isn't silent for 2–4 min.
+      const delay = stagger + 18000 + Math.random() * 25000;
       this.scene.time.delayedCall(delay, () => this._tickIdleBehavior(npcKey));
-      stagger += 3000;
+      stagger += 1500;
     });
   }
 
@@ -4442,12 +4788,54 @@ class AgentOfficeManager {
       return;
     }
 
-    // Desk workers at their chair: in-place idle only, never coffee runs.
+    // Desk workers: sometimes stand up and walk — not only thought bubbles.
     if (agent.status === 'working' && this._isAtAssignedDesk(npcKey, agent)) {
-      if (Math.random() < 0.4) {
+      const leaveRoll = Math.random();
+      if (leaveRoll < 0.32) {
+        try { this.actions.standUp(npcKey); } catch (_) {}
+        const sprite = this.actions._getNpc?.(npcKey);
+        if (sprite) {
+          sprite._purposefulWalkUntil = Date.now() + 40000;
+          if (sprite.ai) {
+            sprite.ai.mode = 'wander';
+            sprite.ai.taskState = null;
+            sprite.ai.nextWanderAt = 0;
+          }
+        }
+        if (leaveRoll < 0.12) {
+          agent.status = 'break';
+          this.actions.goToCoffee?.(npcKey);
+        } else if (leaveRoll < 0.22) {
+          agent.status = 'break';
+          this.actions.goToBreakroom?.(npcKey);
+        } else {
+          agent.status = 'wandering';
+          const rooms = ['open_office', 'reception', 'breakroom'];
+          this.actions.goToRoom?.(npcKey, rooms[Math.floor(Math.random() * rooms.length)]);
+        }
+        this.scene.time.delayedCall(40000 + Math.random() * 30000, () => {
+          const again = this.agents.get(npcKey);
+          if (!again || RESTRICTED_STATUSES.has(again.status)) return;
+          // Finish the cycle by walking back to the assigned chair.
+          if (again.assignedDesk) {
+            try {
+              again.status = 'working';
+              this.actions.useComputer(npcKey, again.assignedDesk, { instant: false });
+            } catch (_) {
+              again.status = 'wandering';
+            }
+          } else {
+            again.status = 'wandering';
+            const sp = this.actions._getNpc?.(npcKey);
+            if (sp?.ai) {
+              sp.ai.mode = 'wander';
+              sp.ai.nextWanderAt = 0;
+            }
+          }
+        });
+      } else if (Math.random() < 0.5) {
         let phrase;
         if (npcKey === 'xp_grok') {
-          // Special thoughtful idles for Grok to feel more "real" as home base
           const grokThoughts = [
             '*monitoring telemetry for the fleet*',
             'Reflecting on how to make the locals smarter today.',
@@ -4462,7 +4850,8 @@ class AgentOfficeManager {
         }
         this.actions.think(npcKey, phrase);
       }
-      this.scene.time.delayedCall(45000 + Math.random() * 45000, () => this._tickIdleBehavior(npcKey));
+      // Tighter idle loop so people leave desks more often (was 45–90s).
+      this.scene.time.delayedCall(22000 + Math.random() * 28000, () => this._tickIdleBehavior(npcKey));
       return;
     }
 
@@ -4471,25 +4860,28 @@ class AgentOfficeManager {
     const phrase = phrasePool[Math.floor(Math.random() * phrasePool.length)];
 
     const roll = Math.random();
-    if (roll < 0.02 && agent.assignedDesk && agent.status !== 'working') {
-      // Very rare coffee run — desk workers return quickly. Tightened for desk priority.
-      this.actions.goToCoffee(npcKey);
+    if (roll < 0.28) {
       agent.status = 'break';
-      this.scene.time.delayedCall(8000, () => {
+      this.actions.goToCoffee?.(npcKey) || this.actions.goToBreakroom?.(npcKey);
+      const sprite = this.actions._getNpc?.(npcKey);
+      if (sprite) sprite._purposefulWalkUntil = Date.now() + 35000;
+      this.scene.time.delayedCall(18000, () => {
         if (agent.assignedDesk) {
           this.actions.useComputer(npcKey, agent.assignedDesk);
           agent.status = 'working';
+        } else {
+          agent.status = 'wandering';
         }
       });
-    } else if (roll < 0.45) {
+    } else if (roll < 0.5) {
       this.actions.think(npcKey, '*stretches*');
-    } else if (roll < 0.70) {
+    } else if (roll < 0.72) {
       this.actions.emote(npcKey, '...');
     } else {
       this.actions.think(npcKey, phrase);
     }
 
-    this.scene.time.delayedCall(45000 + Math.random() * 45000, () => this._tickIdleBehavior(npcKey));
+    this.scene.time.delayedCall(22000 + Math.random() * 28000, () => this._tickIdleBehavior(npcKey));
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -4498,7 +4890,7 @@ class AgentOfficeManager {
 
   _startAmbientChatter() {
     this._ambientChatActive = false; // mutex — prevents overlapping chatter sessions
-    this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+    this.scene.time.delayedCall(45000 + Math.random() * 40000, () => this._tickAmbientChatter());
   }
 
   _tickAmbientChatter() {
@@ -4515,13 +4907,13 @@ class AgentOfficeManager {
     const freeAgents = [];
     this.agents.forEach((agent, npcKey) => {
       if (RESTRICTED_STATUSES.has(agent.status)) return;
-      if (agent.status === 'working') return;
-      if (this._isAtAssignedDesk(npcKey, agent)) return;
+      if (!this.actions._getNpc?.(npcKey)) return;
       freeAgents.push({ npcKey, agent });
     });
 
     if (freeAgents.length < 2) {
-      this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+      this._ambientReleaseWalkers(2);
+      this.scene.time.delayedCall(50000 + Math.random() * 40000, () => this._tickAmbientChatter());
       return;
     }
 
@@ -4535,7 +4927,7 @@ class AgentOfficeManager {
 
     const responderSprite = this.actions._getNpc(responderKey);
     if (!responderSprite) {
-      this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+      this.scene.time.delayedCall(55000 + Math.random() * 45000, () => this._tickAmbientChatter());
       return;
     }
 
@@ -4601,7 +4993,7 @@ class AgentOfficeManager {
       this._ambientChatActive = false; // release mutex
     });
 
-    this.scene.time.delayedCall(150000 + Math.random() * 90000, () => this._tickAmbientChatter());
+    this.scene.time.delayedCall(55000 + Math.random() * 45000, () => this._tickAmbientChatter());
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -4807,6 +5199,73 @@ class AgentOfficeManager {
     if (h >= 10 && h < 14) return 'midday';
     if (h >= 14 && h < 18) return 'afternoon';
     return 'evening';
+  }
+
+  /**
+   * "Director offline" banner (A+ plan P0.3). Shown when the cofounder is
+   * running the scripted demo think loop or has hit 3+ consecutive LLM
+   * errors — i.e. whenever what the operator is watching is NOT the real
+   * director. DOM (not Phaser) so it survives scene churn and stays fixed.
+   */
+  _updateDirectorBanner(health = {}) {
+    const ID = 'denizen-director-offline-banner';
+    let el = document.getElementById(ID);
+    if (!health.offline) {
+      if (el) el.remove();
+      return;
+    }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = ID;
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      el.style.cssText = [
+        'position:fixed', 'top:10px', 'left:50%', 'transform:translateX(-50%)',
+        'z-index:99999', 'padding:8px 16px', 'border-radius:8px',
+        'background:#7f1d1d', 'color:#fecaca', 'border:1px solid #ef4444',
+        'font:600 13px system-ui,sans-serif', 'pointer-events:none',
+        'box-shadow:0 4px 16px rgba(0,0,0,0.4)',
+      ].join(';');
+      document.body.appendChild(el);
+    }
+    el.textContent = health.demoLoop
+      ? '⚠ Director offline — Abby is running the scripted demo loop (LM Studio unreachable)'
+      : `⚠ Director degraded — ${health.consecutiveErrors || 3}+ consecutive think errors`;
+  }
+
+  /**
+   * HTTP fallback for director_health (WS connect race + reused early chat socket).
+   * Uses GET /api/health → body.director from buildDirectorHealth().
+   */
+  async _syncDirectorHealthFromHttp() {
+    try {
+      const res = await fetch('/api/health', { credentials: 'same-origin' });
+      if (!res.ok) return;
+      const body = await res.json();
+      if (body?.director && typeof body.director === 'object') {
+        this._updateDirectorBanner(body.director);
+        return;
+      }
+      // Older server without director block — derive from issues list.
+      const issues = Array.isArray(body?.issues) ? body.issues : [];
+      if (issues.includes('director_offline')) {
+        this._updateDirectorBanner({
+          offline: true,
+          demoLoop: !!body?.demoMode || issues.includes('demo_mode'),
+          consecutiveErrors: 3,
+        });
+      } else {
+        this._updateDirectorBanner({ offline: false });
+      }
+    } catch (_) { /* offline / boot race — WS path may still land */ }
+    // Periodic re-sync while the office is open (covers demo-loop entry mid-session
+    // if a transition broadcast was missed).
+    if (!this._directorHealthPollTimer) {
+      this._directorHealthPollTimer = setInterval(() => {
+        if (document.visibilityState === 'hidden') return;
+        this._syncDirectorHealthFromHttp();
+      }, 20000);
+    }
   }
 
   /**

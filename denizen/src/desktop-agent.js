@@ -201,7 +201,22 @@ async function executeAction(action) {
 // LM Studio vision API call (same as computer-use-agent)
 // ---------------------------------------------------------------------------
 
-function _callVisionModel(messages, systemPrompt, { baseUrl, model, apiKey }) {
+async function _callVisionModel(messages, systemPrompt, { baseUrl, model, apiKey }) {
+  // Harness parity (A+ plan P0.1): resolve host + model + sampling through
+  // the harness so desktop-agent shares tier truth with everything else.
+  // The local POST stays only for vision-message payloads (image parts).
+  let sampling = { temperature: 0.2 };
+  try {
+    const { getActiveHarness } = require('./denizen-harness');
+    const h = getActiveHarness?.();
+    if (h) {
+      const runtime = await h.probeInference({ timeoutMs: 2500 }).catch(() => null);
+      if (runtime?.url) baseUrl = baseUrl || runtime.url;
+      const m = h.resolveTier('heavy', runtime);
+      if (m && !model) model = m;
+      sampling = h.modules?.inference?.samplingFor?.({ kind: 'code', temperature: 0.2 }) || sampling;
+    }
+  } catch (_) { /* pre-harness boot — keep caller-provided config */ }
   return new Promise((resolve, reject) => {
     const oaiMessages = [
       { role: 'system', content: systemPrompt },
@@ -213,7 +228,7 @@ function _callVisionModel(messages, systemPrompt, { baseUrl, model, apiKey }) {
       model,
       messages: oaiMessages,
       max_tokens: 300,
-      temperature: 0.2,
+      ...sampling,
     });
 
     const url = new URL('/v1/chat/completions', baseUrl);

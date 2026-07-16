@@ -179,7 +179,7 @@ const KIMI_TOOLS = [
 
 // Shared OpenAI-compatible POST — used by Kimi, LM Studio, and any future
 // provider that speaks the OpenAI chat-completions API.
-function _postOpenAICompat(apiKey, messages, systemPrompt, { baseUrl, model, http = false } = {}) {
+function _postOpenAICompat(apiKey, messages, systemPrompt, { baseUrl, model, http = false, sampling = null } = {}) {
   const url = new URL('/v1/chat/completions', baseUrl);
   const isHttp = http || url.protocol === 'http:';
   const transport = isHttp ? require('http') : https;
@@ -188,6 +188,7 @@ function _postOpenAICompat(apiKey, messages, systemPrompt, { baseUrl, model, htt
   const body = JSON.stringify({
     model,
     max_tokens: 1024,
+    ...(sampling && typeof sampling === 'object' ? sampling : {}),
     messages: [{ role: 'system', content: systemPrompt }, ...messages],
     tools: KIMI_TOOLS,
     tool_choice: 'auto',
@@ -223,11 +224,35 @@ function _postKimi(apiKey, messages, systemPrompt, baseUrl = 'https://api.moonsh
   return _postOpenAICompat(apiKey, messages, systemPrompt, { baseUrl, model: 'kimi-k2' });
 }
 
-function _postLmStudio(messages, systemPrompt, { baseUrl = 'http://localhost:1234', model } = {}) {
+async function _postLmStudio(messages, systemPrompt, { baseUrl = 'http://localhost:1234', model } = {}) {
+  // Harness parity (A+ plan P0.1): host URL, model tier, and sampling are
+  // resolved by the harness — this module keeps its own POST only because
+  // the harness gate doesn't speak OpenAI tool-calls yet. No tier or
+  // sampling decision is made locally anymore.
+  let resolvedBase = baseUrl;
+  let resolvedModel = model;
+  let sampling = null;
+  try {
+    const { getActiveHarness } = require('./denizen-harness');
+    const h = getActiveHarness?.();
+    if (h) {
+      const runtime = await h.probeInference({ timeoutMs: 2500 }).catch(() => null);
+      if (runtime?.url) resolvedBase = runtime.url;
+      // Computer-use plans multi-step tool sequences — heavy-tier work.
+      const m = h.resolveTier('heavy', runtime);
+      if (m) resolvedModel = model || m;
+      sampling = h.modules?.inference?.samplingFor?.({ kind: 'code' }) || null;
+    }
+  } catch (_) { /* harness not constructed yet — env fallback below */ }
   return _postOpenAICompat(
     process.env.LM_STUDIO_API_KEY || 'lm-studio',
     messages, systemPrompt,
-    { baseUrl, model: model || process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning', http: true }
+    {
+      baseUrl: resolvedBase,
+      model: resolvedModel || process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning',
+      http: true,
+      sampling,
+    }
   );
 }
 

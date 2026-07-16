@@ -20,13 +20,17 @@ try { promptTuning = require('./prompt-tuning'); } catch (_) {}
 
 class CofounderAgent {
   constructor() {
-    this.model = process.env.LM_STUDIO_MODEL || 'mistralai/ministral-3-14b-reasoning';
+    this.model = process.env.LM_STUDIO_HEAVY_MODEL
+      || process.env.LM_STUDIO_MODEL
+      || 'qwen/qwen3.6-27b';
     let routerUrl = null;
     try { routerUrl = require('./lm-studio-router').defaultHostUrl?.(); } catch (_) {}
     this.baseUrl = process.env.LM_STUDIO_URL
       || process.env.LM_STUDIO_BASE_URL
       || routerUrl
       || 'http://localhost:1234';
+    /** @type {import('./denizen-harness').createDenizenHarness extends Function ? object : object|null} */
+    this.denizenHarness = null;
     this.wsClients = new Set();
 
     // Office state (updated by game client)
@@ -213,6 +217,10 @@ YOUR JOB — create a LIVING office:
    * Cycles through realistic work scenarios so the office looks alive.
    */
   _startDemoLoop() {
+    // Entering the scripted loop is a director-offline state — tell every
+    // client right away (P0.3: never silent).
+    this._usingDemoLoop = true;
+    this._broadcastDirectorHealth?.();
     const scripts = [
       // Abby checks in with Alex
       [{ action: 'speakTo', agentId: 'Abby', params: { target: 'Alex', text: 'How\'s the sprint going?' } }],
@@ -428,36 +436,73 @@ YOUR JOB — create a LIVING office:
         this._startDemoLoop();
       }
     }
+    // A+ plan P0.3: the director is never silently degraded — push the
+    // current health state to every client after each think attempt.
+    this._broadcastDirectorHealth();
+  }
+
+  /**
+   * Director health for /api/health issues + the office "director offline"
+   * banner (A+ plan P0.3). Offline means the operator would be watching a
+   * fake office: demo think loop active, or 3+ consecutive think errors.
+   */
+  buildDirectorHealth() {
+    const consecutiveErrors = this._consecutiveErrors || 0;
+    const demoLoop = !!this._usingDemoLoop;
+    return {
+      offline: demoLoop || consecutiveErrors >= 3,
+      demoLoop,
+      consecutiveErrors,
+    };
+  }
+
+  _broadcastDirectorHealth() {
+    const health = this.buildDirectorHealth();
+    if (this._lastDirectorHealthOffline === health.offline
+        && this._lastDirectorHealthDemo === health.demoLoop) {
+      return; // only broadcast transitions — no spam
+    }
+    this._lastDirectorHealthOffline = health.offline;
+    this._lastDirectorHealthDemo = health.demoLoop;
+    try {
+      this._broadcast({ type: 'director_health', ...health });
+    } catch (_) {}
   }
 
   /**
    * Call LM Studio local API (OpenAI-compatible)
+   * Prefers brains queue → harness.complete() so director shares tiers/sampling
+   * with every other office LLM call.
    * @param {Array<{role:string,content:string}>} messages full thread incl. this turn's user msg
    */
   _callLmStudio(messages) {
-    // Route through NpcBrainManager's queue so all LM Studio requests are sequential
+    const history = promptBudget?.enforceAlternation
+      ? promptBudget.enforceAlternation(messages)
+      : messages;
+
+    // Route through NpcBrainManager's queue so all LM Studio requests are sequential.
+    // When harness is bound on brains, _dispatchOneFromQueue uses complete().
     if (this.npcBrains) {
-      // Office dispatcher outputs JSON commands — fast tier is enough and avoids
-      // 180s timeouts on ministral-14b-reasoning under mesh load.
-      const fast = this.npcBrains.providers?.['lmstudio-fast'];
+      // Director commands are structured JSON — main/heavy tier (not tiny FAST).
+      // On dual-load Gemma+Qwen, MAIN=HEAVY=Qwen; preferHeavy keeps quality.
       const main = this.npcBrains.providers?.lmstudio;
-      const picked = fast || main;
+      const heavy = this.npcBrains.providers?.['lmstudio-heavy'] || main;
+      const picked = heavy || main;
       const liveModel = picked?.model || this.model;
       const liveBase = picked?.baseUrl || this.baseUrl;
       const config = {
         baseUrl: liveBase,
         model: liveModel,
         type: 'lmstudio',
-        providerKey: fast ? 'lmstudio-fast' : 'lmstudio',
+        providerKey: 'lmstudio',
+        _preferHeavy: true,
       };
-      const history = promptBudget?.enforceAlternation
-        ? promptBudget.enforceAlternation(messages)
-        : messages;
       return this.npcBrains._callLocal(config, this._getSystemPrompt(), history, {
         maxTokens: 1024,
         sliceLen: 4000,
         npc: 'Abby',
         kind: 'cofounder',
+        preferHeavy: true,
         provider: config.providerKey,
         conversationMsgs: history.length,
       }).then(text => {
@@ -466,14 +511,30 @@ YOUR JOB — create a LIVING office:
       });
     }
 
-    // Fallback if npcBrains not attached yet
+    // Fallback: harness.complete() without queue (early boot)
+    const harness = this.denizenHarness
+      || (() => { try { return require('./denizen-harness').getActiveHarness?.(); } catch (_) { return null; } })();
+    if (harness?.complete) {
+      return harness.complete({
+        tier: 'heavy',
+        kind: 'decision',
+        npc: 'Abby',
+        systemPrompt: this._getSystemPrompt(),
+        messages: history,
+        max_tokens: 1024,
+        model: this.model,
+      }).then((r) => {
+        const text = String(r?.text || '');
+        console.log('[CofounderAgent] harness.complete responded:', text.slice(0, 80));
+        return text;
+      });
+    }
+
+    // Last resort raw HTTP
     return new Promise((resolve, reject) => {
-      const alt = promptBudget?.enforceAlternation
-        ? promptBudget.enforceAlternation(messages)
-        : messages;
       const oaiMessages = [
         { role: 'system', content: this._getSystemPrompt() },
-        ...alt,
+        ...history,
       ];
 
       const body = JSON.stringify({
@@ -728,6 +789,30 @@ YOUR JOB — create a LIVING office:
   addClient(ws) {
     this.wsClients.add(ws);
     console.log(`[CofounderAgent] Client connected (${this.wsClients.size} total)`);
+    // Push current director health to this socket only. Delay a tick so the
+    // browser has attached `onmessage` (classic race: server upgrade fires
+    // before the client's handler is wired after `new WebSocket()`).
+    // force: always send (offline OR healthy) so reconnect clears a stale banner.
+    this._sendDirectorHealthToClient(ws, { delayMs: 100, force: true });
+  }
+
+  /**
+   * @param {import('ws').WebSocket} ws
+   * @param {{ delayMs?: number, force?: boolean }} [opts]
+   */
+  _sendDirectorHealthToClient(ws, opts = {}) {
+    const delayMs = Number(opts.delayMs) || 0;
+    const send = () => {
+      try {
+        if (!ws || ws.readyState !== 1) return;
+        const health = this.buildDirectorHealth();
+        // force=true on connect; otherwise only push when offline (legacy callers).
+        if (!opts.force && !health.offline) return;
+        ws.send(JSON.stringify({ type: 'director_health', ...health, ts: Date.now() }));
+      } catch (_) {}
+    };
+    if (delayMs > 0) setTimeout(send, delayMs);
+    else send();
   }
 
   /**
