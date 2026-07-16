@@ -184,6 +184,56 @@ async function resolveUpdatedByLabel(identityId) {
   return row?.display_name || row?.email || null;
 }
 
+/**
+ * Resolve actor for CRM audit (Angela, Zion, teammates).
+ */
+async function resolveCrmActor(access, sessionId) {
+  const identityId = access?.session?.identity_id || null;
+  let displayName = access?.session?.display_name || null;
+  let email = null;
+  let role = null;
+  let accountId = null;
+
+  if (identityId && denizenDb.enabled) {
+    const rows = await denizenDb._get(
+      `denizen_user_identities?select=display_name,email&id=eq.${encodeURIComponent(identityId)}&limit=1`,
+    ).catch(() => []);
+    if (rows?.[0]) {
+      displayName = rows[0].display_name || displayName;
+      email = rows[0].email || null;
+    }
+  }
+
+  try {
+    const account = await teamAuth.getTeamAccountForSession(sessionId);
+    if (account) {
+      email = account.email || email;
+      displayName = account.display_name || displayName;
+      role = account.role || null;
+      accountId = account.id || null;
+    }
+  } catch (_) { /* optional */ }
+
+  if (!role && access) {
+    try {
+      const approval = await teamAuth.canApproveSkillsForSession(sessionId, {
+        isCeoPrincipal: !!access.session?.metadata?.is_ceo_principal,
+      });
+      role = approval.role || role;
+    } catch (_) { /* optional */ }
+  }
+
+  return {
+    user: displayName || email || 'Team member',
+    displayName: displayName || null,
+    email: email || null,
+    role: role || null,
+    identityId,
+    accountId,
+    source: 'workspace_save',
+  };
+}
+
 async function loadWorkspacePayload(orgId, access, pullSpine = true) {
   const row = await crmStore.getWorkspace(orgId);
   let state = row?.state || {};
@@ -225,6 +275,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'GET /api/crm/session',
           'GET|PUT /api/crm/workspace',
           'GET /api/crm/workspace/stream',
+          'GET /api/crm/audit',
+          'POST /api/crm/govcon-enable',
           'POST /api/crm/assist',
           'POST /api/crm/event',
           'POST /api/crm/send-email',
@@ -237,6 +289,85 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         ],
       });
       return true;
+    }
+
+    // Recent per-user CRM audit (who changed what)
+    if (path === '/api/crm/audit' && req.method === 'GET') {
+      try {
+        const body = {};
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const row = await crmStore.getWorkspace(orgId);
+        const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') || 40)));
+        const filterUser = String(url.searchParams.get('user') || '').trim().toLowerCase();
+        let audit = Array.isArray(row?.state?.auditLog) ? row.state.auditLog : [];
+        if (filterUser) {
+          audit = audit.filter((e) => {
+            const blob = `${e.user || ''} ${e.email || ''}`.toLowerCase();
+            return blob.includes(filterUser);
+          });
+        }
+        json(res, 200, {
+          ok: true,
+          org_id: orgId,
+          industry: row?.state?.industryConfig?.id || null,
+          count: audit.length,
+          entries: audit.slice(0, limit),
+        });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    // Switch org CRM to Government Contracting capture mode (Angela / 1921)
+    if (path === '/api/crm/govcon-enable' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req, 32 * 1024);
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const actor = await resolveCrmActor(access, sessionId);
+        // members+ can enable for their org; owners/admins preferred for team invite later
+        const existing = await crmStore.getWorkspace(orgId);
+        const { applyGovconPreset } = require('./denizen-crm-audit-diff');
+        const next = applyGovconPreset(existing?.state || {}, {
+          user: actor.user,
+          email: actor.email,
+          role: actor.role,
+          source: 'govcon_enable_api',
+        });
+        const saved = await crmStore.upsertWorkspace(
+          orgId,
+          next,
+          access.session?.identity_id || null,
+          { actor, skipAudit: true }, // preset already audited
+        );
+        json(res, 200, {
+          ok: true,
+          org_id: orgId,
+          industry: 'govcon',
+          message: 'CRM switched to Government Contracting capture mode (NAICS, vehicles, set-asides, PoP, solicitations).',
+          updated_at: saved?.updated_at || null,
+          actor: { user: actor.user, email: actor.email, role: actor.role },
+        });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
     }
 
     if (path === '/api/crm/session' && req.method === 'GET') {
@@ -1018,7 +1149,12 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         const state = crmStore.sanitizeState(body.state || body);
         const identityId = access.session?.identity_id || null;
         const ifUpdatedAt = body.if_updated_at || body.ifUpdatedAt || null;
-        const saved = await crmStore.upsertWorkspace(orgId, state, identityId, { ifUpdatedAt });
+        const actor = await resolveCrmActor(access, sessionId);
+        const saved = await crmStore.upsertWorkspace(orgId, state, identityId, {
+          ifUpdatedAt,
+          actor,
+          actorName: actor.user,
+        });
 
         if (saved?.conflict) {
           json(res, 409, {
@@ -1035,7 +1171,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           return true;
         }
 
-        const updatedByName = await resolveUpdatedByLabel(saved?.updated_by || identityId);
+        const updatedByName = actor.user
+          || (await resolveUpdatedByLabel(saved?.updated_by || identityId));
         json(res, 200, {
           ok: true,
           org_id: orgId,
@@ -1044,6 +1181,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           schema_version: saved?.schema_version || crmStore.SCHEMA_VERSION,
           updated_at: saved?.updated_at || new Date().toISOString(),
           updated_by_name: updatedByName,
+          updated_by_email: actor.email || null,
+          updated_by_role: actor.role || null,
         });
         return true;
       }

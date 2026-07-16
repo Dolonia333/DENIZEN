@@ -5,6 +5,7 @@ const crmSpine = require('./denizen-crm-spine');
 const { applyServerAutomations } = require('./denizen-crm-automations');
 const { syncPortalTokenIndex } = require('./denizen-crm-portal');
 const { emitCrmWebhooks } = require('./denizen-crm-webhooks');
+const { applyAuditToState } = require('./denizen-crm-audit-diff');
 
 const SCHEMA_VERSION = 1;
 
@@ -117,6 +118,19 @@ async function upsertWorkspace(orgId, state, identityId, opts = {}) {
   if (!opts.skipAutomations) {
     const auto = await applyServerAutomations(clean, existing?.state || {});
     if (auto.changed) clean = sanitizeState(auto.state);
+  }
+
+  // Per-user audit (who created/updated/deleted CRM records)
+  if (!opts.skipAudit) {
+    const actor = {
+      ...(opts.actor && typeof opts.actor === 'object' ? opts.actor : {}),
+      identityId: identityId || opts.actor?.identityId || null,
+    };
+    if (!actor.user && !actor.displayName) {
+      actor.user = opts.actorName || 'Team member';
+    }
+    const audited = applyAuditToState(existing?.state || {}, clean, actor);
+    clean = sanitizeState(audited.state);
   }
 
   if (ifUpdatedAt && existing?.updated_at && existing.updated_at !== ifUpdatedAt) {
