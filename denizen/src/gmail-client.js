@@ -199,4 +199,132 @@ function listDrafts({ limit = 25, sentFilter = null } = {}) {
 
 function mode() { return _resolveMode(); }
 
-module.exports = { createDraft, sendDraft, listDrafts, mode, _DRAFT_FILE: DRAFT_FILE };
+function isReal() {
+  return _resolveMode() === 'real' && !!_gmail;
+}
+
+/**
+ * List message ids matching a Gmail search query (requires gmail.readonly or broader).
+ * @param {{ q?: string, maxResults?: number }} opts
+ * @returns {Promise<{ ok: boolean, mode: string, messages?: {id,threadId}[], error?: string }>}
+ */
+async function listMessages({ q = 'in:inbox', maxResults = 25 } = {}) {
+  const m = _resolveMode();
+  if (m !== 'real' || !_gmail) {
+    return { ok: false, mode: m || 'local', error: 'gmail_not_configured', messages: [] };
+  }
+  try {
+    const res = await _gmail.users.messages.list({
+      userId: 'me',
+      q: String(q || 'in:inbox'),
+      maxResults: Math.max(1, Math.min(100, Number(maxResults) || 25)),
+    });
+    const messages = (res.data.messages || []).map((row) => ({
+      id: row.id,
+      threadId: row.threadId || null,
+    }));
+    return { ok: true, mode: 'real', messages };
+  } catch (err) {
+    return {
+      ok: false,
+      mode: 'real',
+      error: err?.message || String(err),
+      messages: [],
+      scopeHint: 'OAuth may need https://www.googleapis.com/auth/gmail.readonly',
+    };
+  }
+}
+
+/**
+ * Fetch one message (headers + plain/html body snippet).
+ * @param {string} id
+ */
+async function getMessage(id) {
+  if (!id) throw new Error('getMessage: id required');
+  const m = _resolveMode();
+  if (m !== 'real' || !_gmail) {
+    return { ok: false, mode: m || 'local', error: 'gmail_not_configured' };
+  }
+  try {
+    const res = await _gmail.users.messages.get({
+      userId: 'me',
+      id: String(id),
+      format: 'full',
+    });
+    const msg = res.data || {};
+    const headers = {};
+    for (const h of msg.payload?.headers || []) {
+      if (h?.name) headers[String(h.name).toLowerCase()] = h.value || '';
+    }
+    const body = _extractBody(msg.payload);
+    return {
+      ok: true,
+      mode: 'real',
+      id: msg.id,
+      threadId: msg.threadId || null,
+      snippet: msg.snippet || '',
+      internalDate: msg.internalDate ? Number(msg.internalDate) : null,
+      labelIds: msg.labelIds || [],
+      from: headers.from || '',
+      to: headers.to || '',
+      cc: headers.cc || '',
+      subject: headers.subject || '',
+      date: headers.date || '',
+      messageId: headers['message-id'] || null,
+      bodyText: body.text || '',
+      bodyHtml: body.html || '',
+    };
+  } catch (err) {
+    return { ok: false, mode: 'real', error: err?.message || String(err) };
+  }
+}
+
+function _extractBody(payload) {
+  const out = { text: '', html: '' };
+  if (!payload) return out;
+
+  function walk(part) {
+    if (!part) return;
+    const mime = String(part.mimeType || '');
+    const data = part.body?.data;
+    if (data && (mime === 'text/plain' || mime === 'text/html')) {
+      const decoded = Buffer.from(String(data).replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+      if (mime === 'text/plain' && !out.text) out.text = decoded;
+      if (mime === 'text/html' && !out.html) out.html = decoded;
+    }
+    if (Array.isArray(part.parts)) {
+      for (const p of part.parts) walk(p);
+    }
+  }
+  walk(payload);
+  if (!out.text && out.html) {
+    out.text = out.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  return out;
+}
+
+/** Parse "Name <email@x.com>" → { name, email } */
+function parseAddress(raw) {
+  const s = String(raw || '').trim();
+  const m = s.match(/^(.*?)\s*<([^>]+)>$/);
+  if (m) {
+    return {
+      name: m[1].replace(/^["']|["']$/g, '').trim() || null,
+      email: m[2].trim().toLowerCase(),
+    };
+  }
+  if (s.includes('@')) return { name: null, email: s.toLowerCase() };
+  return { name: s || null, email: null };
+}
+
+module.exports = {
+  createDraft,
+  sendDraft,
+  listDrafts,
+  mode,
+  isReal,
+  listMessages,
+  getMessage,
+  parseAddress,
+  _DRAFT_FILE: DRAFT_FILE,
+};

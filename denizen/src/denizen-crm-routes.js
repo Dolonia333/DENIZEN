@@ -277,6 +277,9 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'GET /api/crm/workspace/stream',
           'GET /api/crm/audit',
           'POST /api/crm/govcon-enable',
+          'GET /api/crm/email-inbound/status',
+          'POST /api/crm/email-inbound/poll',
+          'POST /api/crm/email-inbound',
           'POST /api/crm/assist',
           'POST /api/crm/event',
           'POST /api/crm/send-email',
@@ -323,6 +326,117 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
       } catch (err) {
         const status = err?.code === 'DENIED' ? 401 : 500;
         json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    // Gmail → CRM: status / poll / manual inject (Angela → Zion inbox)
+    if (path === '/api/crm/email-inbound/status' && req.method === 'GET') {
+      try {
+        const inbound = require('./denizen-crm-email-inbound');
+        json(res, 200, inbound.getInboundStatus());
+        return true;
+      } catch (err) {
+        json(res, 500, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    if (path === '/api/crm/email-inbound/poll' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req, 32 * 1024).catch(() => ({}));
+        const sessionId = sessionIdFrom(req, body, url);
+        // Allow service secret for automation, or logged-in CRM session
+        const secret = String(req.headers['x-denizen-secret'] || body.secret || '').trim();
+        const expected = String(process.env.DENIZEN_EMAIL_SECRET || process.env.DENIZEN_BRIDGE_SECRET || '').trim();
+        let allowed = false;
+        if (expected && secret && secret === expected) allowed = true;
+        if (!allowed && sessionId) {
+          try {
+            await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+            allowed = true;
+          } catch (_) { /* not session */ }
+        }
+        if (!allowed && !expected) {
+          // dev: allow when no secret configured and session present fails → still require session in prod
+          if (!sessionId) {
+            json(res, 401, { ok: false, error: 'Login or X-Denizen-Secret required' });
+            return true;
+          }
+        }
+        if (!allowed && expected && !secret) {
+          json(res, 401, { ok: false, error: 'Login or X-Denizen-Secret required' });
+          return true;
+        }
+        const inbound = require('./denizen-crm-email-inbound');
+        const result = await inbound.pollGmailInbound({
+          orgId: body.org_id || body.orgId || null,
+          orgSlug: body.org_slug || body.orgSlug || null,
+          broadcast: broadcastToOffice || null,
+        });
+        json(res, result.ok ? 200 : 502, result);
+        return true;
+      } catch (err) {
+        json(res, 500, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    if (path === '/api/crm/email-inbound' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req, 512 * 1024);
+        const secret = String(req.headers['x-denizen-secret'] || body.secret || '').trim();
+        const expected = String(process.env.DENIZEN_EMAIL_SECRET || process.env.DENIZEN_BRIDGE_SECRET || '').trim();
+        if (expected && secret !== expected) {
+          // also allow CRM session
+          const sessionId = sessionIdFrom(req, body, url);
+          if (sessionId) {
+            try {
+              await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+            } catch (_) {
+              json(res, 401, { ok: false, error: 'invalid secret or session' });
+              return true;
+            }
+          } else {
+            json(res, 401, { ok: false, error: 'invalid secret' });
+            return true;
+          }
+        }
+        const inbound = require('./denizen-crm-email-inbound');
+        const msg = {
+          id: body.gmailId || body.id || `manual_${Date.now()}`,
+          threadId: body.threadId || null,
+          from: body.from || body.fromEmail || '',
+          to: body.to || body.toEmail || '',
+          subject: body.subject || '(no subject)',
+          bodyText: body.body || body.bodyText || body.text || '',
+          snippet: body.snippet || '',
+          internalDate: body.internalDate || Date.now(),
+          messageId: body.messageId || null,
+          date: body.date || null,
+        };
+        const result = await inbound.ingestInboundEmail(msg, {
+          orgId: body.org_id || body.orgId || null,
+          orgSlug: body.org_slug || body.orgSlug || null,
+          force: true,
+          source: body.source || 'api_inject',
+          fromEmail: body.fromEmail || null,
+          fromName: body.fromName || null,
+        });
+        if (result.ok && !result.skipped && typeof broadcastToOffice === 'function') {
+          broadcastToOffice(result.orgId, {
+            type: 'crm_event',
+            kind: 'email-inbound',
+            npcName: 'Lucy',
+            title: result.subject,
+            from: result.contactName,
+            at: new Date().toISOString(),
+          });
+        }
+        json(res, result.ok ? 200 : 400, result);
+        return true;
+      } catch (err) {
+        json(res, 500, { ok: false, error: err?.message || String(err) });
         return true;
       }
     }

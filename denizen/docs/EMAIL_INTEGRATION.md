@@ -6,6 +6,7 @@
 |----------|------------------|
 | **Operator (CEO)** | n8n Gmail → `POST /api/email-inbound` → Lucy drafts → Gmail or `data/email-drafts.json` |
 | **Visitor** | Identity email at login; optional outbound via Resend (`RESEND_API_KEY`); `GET /api/visitor/email/status` |
+| **CRM inbound (Angela → Zion)** | Gmail poll → Meridian CRM (`/api/crm/email-inbound/*`) when OAuth has `gmail.readonly` |
 | **Not yet** | Visitor self-serve Gmail OAuth / connect-my-inbox UI |
 
 Lucy's routing requires `### email_style` in `npcs/lucy/SOUL.md` (or legacy `## Email Style` header).
@@ -67,6 +68,35 @@ Place an OAuth2 token JSON at `data/gmail-oauth.json` (or set
 present and `googleapis` is installed, it routes drafts through the
 real API; otherwise it keeps using local-drafts. No code change needed
 to flip modes.
+
+### 1b. CRM inbox watch (Angela → your Gmail → Meridian)
+
+Denizen can **read** allowlisted senders from the CEO Gmail and file them
+into CRM (contact, emailLog, note, audit).
+
+```bash
+# .env / .env.production
+GMAIL_INBOUND=1
+GMAIL_INBOUND_FROM=vzion253@gmail.com,angelavanzandt1921@gmail.com
+GMAIL_INBOUND_ORG_SLUG=zion
+GMAIL_INBOUND_POLL_MS=300000   # scheduler already polls every 5m with CRM
+```
+
+OAuth token **must** include inbox read:
+
+```text
+https://www.googleapis.com/auth/gmail.readonly
+```
+
+(Compose-only tokens cannot list messages.)
+
+| API | Purpose |
+|-----|---------|
+| `GET /api/crm/email-inbound/status` | Config + last poll |
+| `POST /api/crm/email-inbound/poll` | Force poll now (session or `X-Denizen-Secret`) |
+| `POST /api/crm/email-inbound` | Manual inject `{ from, subject, body }` |
+
+Also: CRM scheduler auto-polls every 5 minutes when enabled.
 
 ### 2. Wire the n8n workflow
 

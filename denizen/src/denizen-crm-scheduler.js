@@ -338,6 +338,24 @@ function startCrmScheduler(deps = {}) {
         }
       }
 
+      // Gmail → CRM: Angela (and other allowlisted) mail into Meridian
+      try {
+        const inbound = require('./denizen-crm-email-inbound');
+        if (inbound.inboundEnabled()) {
+          const poll = await inbound.pollGmailInbound({
+            orgId: oid,
+            broadcast: broadcastToOffice,
+          });
+          if (poll.filed > 0) {
+            log.info?.('[CrmScheduler] gmail inbound filed', poll.filed);
+          } else if (poll.reason && poll.reason !== 'inbound_disabled') {
+            log.warn?.('[CrmScheduler] gmail inbound', poll.reason || poll.error);
+          }
+        }
+      } catch (mailErr) {
+        log.warn?.('[CrmScheduler] gmail inbound', mailErr?.message || mailErr);
+      }
+
     } catch (err) {
 
       log.warn?.('[CrmScheduler]', err?.message || err);
