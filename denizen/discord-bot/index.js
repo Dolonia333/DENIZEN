@@ -112,11 +112,11 @@ attachGateway(client, {
     audit.attach(c);
 
     console.log(`[discord-bot] logged in as ${c.user.tag}`);
-    console.log(`[discord-bot] Spaces + modules · prefix=\`${PREFIX}\` · officeForward=${FORWARD_OFFICE ? 'on' : 'off'}`);
+    console.log(`[discord-bot] Spaces + Bleed-parity · prefix=\`${PREFIX}\` · officeForward=${FORWARD_OFFICE ? 'on' : 'off'}`);
     if (GUILD_FILTER) console.log(`[discord-bot] guild filter: ${GUILD_FILTER}`);
     const guilds = [...c.guilds.cache.values()];
     console.log(`[discord-bot] in ${guilds.length} guild(s): ${guilds.map((g) => g.name).join(', ') || '(none)'}`);
-    console.log('[discord-bot] try `/help` or `/start` · `/avatar` · `/hangout` · map at /discord-map/');
+    console.log('[discord-bot] /help · /start · /avatar · /hangout · security · tickets · voicemaster · music');
 
     if (SMOKE) {
       console.log('[discord-bot] smoke ok — token works');
@@ -131,6 +131,10 @@ attachGateway(client, {
     }).catch((err) => {
       console.warn('[discord-bot] slash sync failed:', err.message || err);
     });
+
+    // Background workers (levels counters, social polls)
+    try { hooks._community?.startCounterLoop?.(c); } catch (_) {}
+    try { hooks._integrations?.startWorkers?.(c); } catch (_) {}
 
     if (DUMP) printSnapshot('dump');
     if (DUMP_INTERVAL_MS > 0) setInterval(() => printSnapshot('interval'), DUMP_INTERVAL_MS);

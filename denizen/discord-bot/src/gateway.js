@@ -230,6 +230,11 @@ function attachGateway(client, handlers = {}) {
     runAll(handlers.hooks?.onMemberRemove, member);
   });
 
+  client.on('guildMemberUpdate', (oldMember, newMember) => {
+    if (!allowGuild(newMember.guild.id)) return;
+    runAll(handlers.hooks?.onGuildMemberUpdate, oldMember, newMember);
+  });
+
   client.on('messageReactionAdd', (reaction, user) => {
     runAll(handlers.hooks?.onReactionAdd, reaction, user);
   });

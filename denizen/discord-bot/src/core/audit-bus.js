@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Normalized audit-log event bus (GuildAuditLogEntryCreate + fallbacks).
+ * Normalized audit-log event bus for antinuke + logging.
  */
 
 const { AuditLogEvent } = require('discord.js');
@@ -10,9 +10,14 @@ const ACTION_MAP = {
   [AuditLogEvent.MemberBanAdd]: 'ban',
   [AuditLogEvent.MemberKick]: 'kick',
   [AuditLogEvent.ChannelDelete]: 'channelDelete',
+  [AuditLogEvent.ChannelCreate]: 'channelCreate',
   [AuditLogEvent.RoleDelete]: 'roleDelete',
+  [AuditLogEvent.RoleCreate]: 'roleCreate',
   [AuditLogEvent.WebhookDelete]: 'webhook',
+  [AuditLogEvent.WebhookCreate]: 'webhookCreate',
   [AuditLogEvent.EmojiDelete]: 'emojiDelete',
+  [AuditLogEvent.BotAdd]: 'botadd',
+  [AuditLogEvent.GuildUpdate]: 'guildUpdate',
   [AuditLogEvent.MemberRoleUpdate]: 'memberRoleUpdate',
 };
 
@@ -35,12 +40,14 @@ class AuditBus {
     }
   }
 
-  /**
-   * Attach to discord.js client.
-   */
   attach(client) {
     client.on('guildAuditLogEntryCreate', (entry, guild) => {
-      const kind = ACTION_MAP[entry.action] || `action_${entry.action}`;
+      let kind = ACTION_MAP[entry.action] || `action_${entry.action}`;
+      // Vanity / guild settings change
+      if (kind === 'guildUpdate') {
+        const changes = entry.changes || [];
+        if (changes.some((c) => c.key === 'vanity_url_code')) kind = 'vanity';
+      }
       this.emit({
         kind,
         action: entry.action,

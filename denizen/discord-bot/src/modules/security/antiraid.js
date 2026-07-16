@@ -5,7 +5,6 @@ const { canRunCommand, isWhitelisted } = require('../../core/permissions');
 
 function createAntiraid(deps) {
   const { config, hub } = deps;
-  /** guildId -> join timestamps */
   const joins = new Map();
 
   function joinBucket(guildId) {
@@ -36,11 +35,17 @@ function createAntiraid(deps) {
     hub.emit('security.raid', { guildId: guild.id, state: true, reason });
     const cfg = config.get(guild.id);
     if (cfg.security.antiraid.massjoin.lock) await lockGuild(guild);
-    const logId = cfg.security.logChannelId;
+    const logId = cfg.security.logChannelId || cfg.logging?.channelId;
     if (logId) {
       const ch = await guild.channels.fetch(logId).catch(() => null);
       if (ch?.isTextBased?.()) await ch.send(`🚨 **Raid state ON** — ${reason}`).catch(() => {});
     }
+  }
+
+  async function applyAction(member, action, reason) {
+    if (action === 'ban') await member.ban({ reason }).catch(() => {});
+    else if (action === 'timeout') await member.timeout(60 * 60 * 1000, reason).catch(() => {});
+    else await member.kick(reason).catch(() => {});
   }
 
   async function onMemberAdd(member) {
@@ -48,29 +53,26 @@ function createAntiraid(deps) {
     const cfg = config.get(guild.id);
     if (!cfg.security.enabled || !cfg.security.antiraid.enabled) return;
     if (isWhitelisted(cfg.security.antiraid.whitelist, member.id)) return;
+    if (member.user.bot) return;
 
     const ar = cfg.security.antiraid;
 
-    if (ar.avatar.enabled && !member.user.avatar) {
-      const action = ar.avatar.action || 'kick';
-      if (action === 'ban') await member.ban({ reason: 'Antiraid: no avatar' }).catch(() => {});
-      else await member.kick('Antiraid: no avatar').catch(() => {});
+    if (ar.avatar?.enabled && !member.user.avatar) {
+      await applyAction(member, ar.avatar.action || 'kick', 'Antiraid: default avatar');
       hub.emit('security.antiraid', { guildId: guild.id, type: 'avatar', userId: member.id });
       return;
     }
 
-    if (ar.age.enabled) {
+    if (ar.age?.enabled) {
       const ageDays = (Date.now() - member.user.createdTimestamp) / 86400000;
       if (ageDays < (ar.age.minDays || 7)) {
-        const action = ar.age.action || 'kick';
-        if (action === 'ban') await member.ban({ reason: 'Antiraid: account too new' }).catch(() => {});
-        else await member.kick('Antiraid: account too new').catch(() => {});
+        await applyAction(member, ar.age.action || 'kick', 'Antiraid: account too new');
         hub.emit('security.antiraid', { guildId: guild.id, type: 'age', userId: member.id });
         return;
       }
     }
 
-    if (ar.massjoin.enabled) {
+    if (ar.massjoin?.enabled) {
       const now = Date.now();
       const windowMs = ar.massjoin.windowMs || 10_000;
       const arr = joinBucket(guild.id);
@@ -79,17 +81,13 @@ function createAntiraid(deps) {
       if (arr.length >= (ar.massjoin.threshold || 5)) {
         if (!ar.raidState) await enterRaidState(guild, `mass join (${arr.length} in ${windowMs}ms)`);
         if (ar.massjoin.punish) {
-          const action = ar.massjoin.action || 'kick';
-          if (action === 'ban') await member.ban({ reason: 'Antiraid massjoin' }).catch(() => {});
-          else await member.kick('Antiraid massjoin').catch(() => {});
+          await applyAction(member, ar.massjoin.action || 'kick', 'Antiraid massjoin');
         }
       }
     }
 
-    if (ar.raidState && ar.massjoin.punish) {
-      const action = ar.massjoin.action || 'kick';
-      if (action === 'ban') await member.ban({ reason: 'Joining during raid state' }).catch(() => {});
-      else await member.kick('Joining during raid state').catch(() => {});
+    if (ar.raidState && ar.massjoin?.punish) {
+      await applyAction(member, ar.massjoin.action || 'kick', 'Joining during raid state');
     }
   }
 
@@ -100,22 +98,25 @@ function createAntiraid(deps) {
       module: 'security',
       ownerOnly: true,
       options: [
-        { name: 'action', description: 'on|off|status|unlock|massjoin', type: 3, required: true },
-        { name: 'threshold', description: 'Mass-join threshold', type: 4, required: false },
+        { name: 'action', description: 'on|off|status|unlock|massjoin|avatar|age|whitelist', type: 3, required: true },
+        { name: 'threshold', description: 'Mass-join threshold or min age days', type: 4, required: false },
+        { name: 'value', description: 'on|off|kick|ban or user', type: 3, required: false },
       ],
       async run(ctx) {
         if (!canRunCommand(ctx, { ownerOnly: true }).ok) return ctx.reply('Owner only.');
         const action = (ctx.getString?.('action') || ctx.args?.[0] || 'status').toLowerCase();
+        const value = (ctx.getString?.('value') || ctx.args?.[1] || '').toLowerCase();
+        const th = ctx.getInteger?.('threshold');
+
         if (action === 'on') {
           config.update(ctx.guild.id, (c) => {
             c.security.enabled = true;
             c.security.antiraid.enabled = true;
             c.security.antiraid.massjoin.enabled = true;
-            const th = ctx.getInteger?.('threshold');
             if (th) c.security.antiraid.massjoin.threshold = th;
             return c;
           });
-          return ctx.reply('Antiraid **enabled** (massjoin on).');
+          return ctx.reply('Antiraid **enabled** (massjoin on). Configure avatar/age with ,antiraid avatar on|off');
         }
         if (action === 'off') {
           config.update(ctx.guild.id, (c) => {
@@ -131,10 +132,56 @@ function createAntiraid(deps) {
           hub.emit('security.raid', { guildId: ctx.guild.id, state: false });
           return ctx.reply('Raid state **cleared**, channels unlocked.');
         }
+        if (action === 'massjoin') {
+          const on = value !== 'off';
+          config.update(ctx.guild.id, (c) => {
+            c.security.antiraid.massjoin.enabled = on;
+            if (th) c.security.antiraid.massjoin.threshold = th;
+            if (['kick', 'ban', 'timeout'].includes(value)) c.security.antiraid.massjoin.action = value;
+            return c;
+          });
+          return ctx.reply(`Massjoin filter **${on ? 'on' : 'off'}**.`);
+        }
+        if (action === 'avatar') {
+          const on = value !== 'off';
+          config.update(ctx.guild.id, (c) => {
+            c.security.antiraid.avatar.enabled = on;
+            if (['kick', 'ban', 'timeout'].includes(value)) c.security.antiraid.avatar.action = value;
+            return c;
+          });
+          return ctx.reply(`Default-avatar filter **${on ? 'on' : 'off'}**.`);
+        }
+        if (action === 'age') {
+          const on = value !== 'off';
+          config.update(ctx.guild.id, (c) => {
+            c.security.antiraid.age.enabled = on;
+            if (th) c.security.antiraid.age.minDays = th;
+            if (['kick', 'ban', 'timeout'].includes(value)) c.security.antiraid.age.action = value;
+            return c;
+          });
+          const a = config.get(ctx.guild.id).security.antiraid.age;
+          return ctx.reply(`Account-age filter **${on ? 'on' : 'off'}** (min ${a.minDays}d).`);
+        }
+        if (action === 'whitelist') {
+          const user = ctx.getUser?.('value') || ctx.message?.mentions?.users?.first?.();
+          const id = user?.id || ctx.args?.[1];
+          if (!id) return ctx.reply('Usage: ,antiraid whitelist @user');
+          const uid = String(id).replace(/[<@!>]/g, '');
+          config.update(ctx.guild.id, (c) => {
+            const list = c.security.antiraid.whitelist || [];
+            if (list.includes(uid)) c.security.antiraid.whitelist = list.filter((x) => x !== uid);
+            else { list.push(uid); c.security.antiraid.whitelist = list; }
+            return c;
+          });
+          return ctx.reply(`Toggled antiraid whitelist for <@${uid}>.`);
+        }
         const cfg = config.get(ctx.guild.id).security.antiraid;
-        return ctx.reply(
-          `Antiraid: ${cfg.enabled ? 'on' : 'off'} · raidState=${cfg.raidState} · massjoin th=${cfg.massjoin.threshold}`,
-        );
+        return ctx.reply([
+          `**Antiraid** ${cfg.enabled ? 'ON' : 'OFF'} · raidState=${cfg.raidState}`,
+          `massjoin=${cfg.massjoin.enabled} th=${cfg.massjoin.threshold} action=${cfg.massjoin.action}`,
+          `avatar=${cfg.avatar.enabled} age=${cfg.age.enabled} minDays=${cfg.age.minDays}`,
+          `whitelist=${(cfg.whitelist || []).length}`,
+        ].join('\n'));
       },
     });
 
@@ -189,9 +236,29 @@ function createAntiraid(deps) {
         return ctx.reply(`${action}ned ${n}/${targets.length} joins in the last ${durRaw}.`);
       },
     });
+
+    registry.register({
+      name: 'lockdown',
+      description: 'Lock or unlock all channels (raid tool)',
+      module: 'security',
+      ownerOnly: true,
+      options: [{ name: 'action', description: 'on|off', type: 3, required: true }],
+      async run(ctx) {
+        if (!canRunCommand(ctx, { ownerOnly: true }).ok) return ctx.reply('Owner only.');
+        const action = (ctx.getString?.('action') || ctx.args?.[0] || 'on').toLowerCase();
+        if (action === 'off' || action === 'unlock') {
+          await unlockGuild(ctx.guild);
+          config.update(ctx.guild.id, (c) => { c.security.antiraid.raidState = false; return c; });
+          return ctx.reply('Server **unlocked**.');
+        }
+        await lockGuild(ctx.guild);
+        config.update(ctx.guild.id, (c) => { c.security.antiraid.raidState = true; return c; });
+        return ctx.reply('Server **locked down** (send/connect denied for @everyone).');
+      },
+    });
   }
 
-  return { onMemberAdd, register, unlockGuild };
+  return { onMemberAdd, register, unlockGuild, lockGuild };
 }
 
 function parseDurationMs(raw) {
@@ -203,4 +270,4 @@ function parseDurationMs(raw) {
   return n * unit;
 }
 
-module.exports = { createAntiraid };
+module.exports = { createAntiraid, parseDurationMs };
