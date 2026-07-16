@@ -1,0 +1,31 @@
+# Lavalink audio node for Denizen Discord bot music.
+# https://github.com/lavalink-devs/Lavalink
+#
+# From denizen/discord-bot:
+#   docker compose -f docker-compose.lavalink.yml up -d
+#
+# On NAS (Synology Docker / container manager), deploy this stack on the same
+# host as denizen-server (network_mode host or publish 2333).
+
+services:
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    container_name: denizen-lavalink
+    restart: unless-stopped
+    # Host network so bot sidecar on same machine can use 127.0.0.1:2333
+    # (matches denizen-server production compose style on Synology).
+    network_mode: host
+    environment:
+      _JAVA_OPTIONS: "-Xmx512M"
+    volumes:
+      - ./lavalink/application.yml:/opt/Lavalink/application.yml:ro
+      - lavalink-logs:/opt/Lavalink/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:2333/version || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  lavalink-logs:
