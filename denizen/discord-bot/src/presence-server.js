@@ -12,12 +12,42 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 
-function createPresenceServer({ tracker, guildId = '', port = 5180, applicationId = '' }) {
+function createPresenceServer({
+  tracker,
+  guildId = '',
+  port = 5180,
+  applicationId = '',
+  config = null,
+} = {}) {
   let avatarApi = null;
   try {
     avatarApi = require(path.join(__dirname, '../../src/discord-avatar'));
   } catch (err) {
     console.warn('[presence] avatar module unavailable:', err.message || err);
+  }
+
+  function spacesBranding(forGuildId) {
+    const envPlan = String(process.env.DENIZEN_SPACES_PLAN || 'free').toLowerCase();
+    const envRemove = /^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_SPACES_REMOVE_BRANDING || ''));
+    let plan = envPlan;
+    let removeBranding = envRemove;
+    if (config && forGuildId) {
+      try {
+        const sp = config.get(forGuildId)?.spaces || {};
+        if (sp.plan) plan = String(sp.plan).toLowerCase();
+        if (sp.removeBranding != null) removeBranding = !!sp.removeBranding;
+      } catch (_) { /* ignore */ }
+    }
+    if (plan === 'community' || plan === 'pro' || plan === 'paid') removeBranding = true;
+    return {
+      plan: plan || 'free',
+      removeBranding: !!removeBranding,
+      watermark: !removeBranding,
+      productName: 'Denizen Spaces',
+      upgradeHint: removeBranding
+        ? null
+        : 'Community plan removes branding — set DENIZEN_SPACES_REMOVE_BRANDING=1 or guild spaces.plan',
+    };
   }
 
   const invitePermissions = 68608; // View Channels + Send Messages + Read Message History
@@ -146,28 +176,56 @@ function createPresenceServer({ tracker, guildId = '', port = 5180, applicationI
               avatar.rev = av.rev || 1;
             } catch (_) { /* ignore */ }
           }
+          const soft = room.type === 'text' || room.type === 'forum';
+          const muted = !!(m?.muted);
+          const deafened = !!(m?.deafened);
+          const live = !soft && !muted && !deafened && !m?.suppressed;
           people.push({
             userId,
             displayName: m?.displayName || userId.slice(0, 8),
             channelId: room.id,
             channelName: room.name,
             channelType: room.type,
-            soft: room.type === 'text' || room.type === 'forum',
+            soft,
+            // Map social indicators
+            muted,
+            deafened,
+            streaming: !!(m?.streaming),
+            video: !!(m?.video),
+            suppressed: !!(m?.suppressed),
+            live: soft ? false : live,
+            // Soft social: recent text
+            textSnippet: soft ? (m?.textSnippet || null) : null,
+            lastTextAt: m?.lastTextAt || null,
             avatar,
           });
         }
       }
 
+      const gid = snap?.guildId || qGuild || null;
+      const brand = spacesBranding(gid);
+      const publicBase = String(
+        process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '',
+      ).replace(/\/$/, '');
+      const sharePath = gid
+        ? `/discord-map/?guildId=${encodeURIComponent(gid)}&view=public`
+        : '/discord-map/?view=public';
       const body = {
         ok: true,
         ts: Date.now(),
-        guildId: snap?.guildId || qGuild || null,
+        guildId: gid,
         guildName: snap?.name || null,
         categories: snap?.categories || [],
         rooms,
         people,
         members: snap?.members || [],
         events: avatarApi ? avatarApi.getActiveEvents() : [],
+        branding: brand,
+        share: {
+          path: sharePath,
+          url: publicBase ? `${publicBase}${sharePath}` : sharePath,
+          readOnly: true,
+        },
       };
 
       res.writeHead(200, {
@@ -204,9 +262,11 @@ async function handleAvatar(req, res, url, avatarApi) {
   const parts = url.pathname.split('/').filter(Boolean); // avatar | catalog | :id
 
   if (parts[0] === 'avatar' && parts[1] === 'catalog' && req.method === 'GET') {
+    const plan = avatarApi.resolvePlan(url.searchParams.get('plan') || process.env.DENIZEN_SPACES_PLAN);
     const unlocks = avatarApi.resolveUnlocks({});
+    const cat = avatarApi.publicCatalogForPlan(plan, unlocks, {});
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-    res.end(JSON.stringify({ ok: true, ...avatarApi.publicCatalog(unlocks) }));
+    res.end(JSON.stringify({ ok: true, plan, ...cat }));
     return;
   }
 

@@ -56,6 +56,45 @@ describe('TrackerEngine', () => {
     assert.equal(tracker.getOccupantCount('g1', 'vc2'), 0);
   });
 
+  it('tracks mute flags without channel change', () => {
+    const tracker = new TrackerEngine({ log: { join: () => {}, leave: () => {}, move: () => {}, text: () => {}, expire: () => {} } });
+    tracker.applyVoice({
+      kind: 'join', guildId: 'g1', userId: 'u1', displayName: 'Ada',
+      fromChannelId: null, toChannelId: 'vc1',
+      toChannel: { id: 'vc1', name: 'Lounge', type: 'voice' },
+      muted: false,
+    });
+    tracker.applyVoiceFlags({
+      guildId: 'g1', userId: 'u1', displayName: 'Ada', channelId: 'vc1',
+      muted: true, deafened: false, streaming: true, video: false,
+    });
+    const snap = tracker.snapshot('g1');
+    const m = snap.members.find((x) => x.userId === 'u1');
+    assert.equal(m.muted, true);
+    assert.equal(m.streaming, true);
+    assert.equal(m.live, false);
+  });
+
+  it('hangout leaderboard accumulates VC time', () => {
+    const tracker = new TrackerEngine({ log: { join: () => {}, leave: () => {}, move: () => {}, text: () => {}, expire: () => {} } });
+    const t0 = Date.now() - 120_000;
+    tracker.applyVoice({
+      kind: 'join', guildId: 'g1', userId: 'u1', displayName: 'Ada',
+      fromChannelId: null, toChannelId: 'vc1',
+      toChannel: { id: 'vc1', name: 'Lounge', type: 'voice' },
+      now: t0,
+    });
+    tracker.applyVoice({
+      kind: 'leave', guildId: 'g1', userId: 'u1', displayName: 'Ada',
+      fromChannelId: 'vc1', toChannelId: null,
+      fromChannel: { id: 'vc1', name: 'Lounge', type: 'voice' },
+      now: t0 + 120_000,
+    });
+    const board = tracker.hangoutLeaderboard('g1');
+    assert.ok(board.rows.length >= 1);
+    assert.ok(board.rows[0].minutes >= 1);
+  });
+
   it('soft text presence expires on tick', () => {
     const logs = [];
     const tracker = new TrackerEngine({

@@ -102,4 +102,88 @@ describe('discord-avatar', () => {
     // resolveUnlocks uses real now — just ensure API shape
     assert.ok(Array.isArray(unlocks));
   });
+
+  it('boosters unlock golden headsets; non-boosters do not', () => {
+    const free = api.resolveUnlocks({});
+    assert.ok(!free.includes('role:booster'));
+    const boost = api.resolveUnlocks({ isBooster: true });
+    assert.ok(boost.includes('role:booster'));
+    const hats = api.filterByUnlock(api.HAT_SETS, free).map((h) => h.id);
+    assert.ok(!hats.includes('headsets'));
+    const boostHats = api.filterByUnlock(api.HAT_SETS, boost).map((h) => h.id);
+    assert.ok(boostHats.includes('headsets'));
+  });
+
+  it('applyBoosterGoldenHeadset equips headsets + gold tint', () => {
+    const base = api.defaultAvatar('booster1');
+    const { avatar, applied, note } = api.applyBoosterGoldenHeadset(base, { isBooster: true });
+    assert.equal(applied, true);
+    assert.match(note, /golden headset/i);
+    assert.equal(avatar.hat.set, 'headsets');
+    assert.equal(avatar.hat.source, 'role:booster');
+    assert.equal(avatar.tint.hat, api.BOOSTER_GOLD || api.BOOSTER_HEADSET_GOLD);
+    assert.equal(avatar.mode, 'layers');
+    assert.ok(avatar.unlocks.includes('role:booster'));
+  });
+
+  it('applyRoleCosmetics detects premiumSince as booster', () => {
+    const member = {
+      premiumSince: new Date(),
+      permissions: { has: () => false },
+      roles: { cache: new Map() },
+    };
+    const { avatar, roles, applied } = api.applyRoleCosmetics(api.defaultAvatar('x'), member);
+    assert.equal(roles.isBooster, true);
+    assert.equal(applied, true);
+    assert.equal(avatar.hat.set, 'headsets');
+  });
+
+  it('bakeSheet includes golden headset layers', async () => {
+    const { avatar } = api.applyBoosterGoldenHeadset(
+      { mode: 'layers', body: 'light', hair: { set: 'short', index: 0 }, outfit: { set: 'shirt', index: 0 } },
+      { isBooster: true },
+    );
+    const buf = await api.bakeSheet(avatar);
+    assert.ok(buf.length > 500);
+  });
+
+  it('free plan forces premade — strips hair/clothes/hats', () => {
+    const gated = api.enforceAvatarPlan({
+      mode: 'layers',
+      body: 'dark',
+      hair: { set: 'long', index: 5 },
+      outfit: { set: 'outfits', index: 9 },
+      hat: { set: 'hats', index: 2 },
+      tint: { hair: '#ff0000', clothes: '#00ff00' },
+      premade: 'npc_f3',
+    }, 'u1', { plan: 'free' });
+    assert.equal(gated.avatar.mode, 'premade');
+    assert.equal(gated.avatar.premade, 'npc_f3');
+    assert.equal(gated.avatar.body, 'dark'); // free skin tone kept
+    assert.equal(gated.avatar.hat.set, 'none');
+    assert.equal(gated.features.free, true);
+    assert.ok(gated.locked.includes('layers'));
+  });
+
+  it('paid plan allows layers and clothes', () => {
+    const gated = api.enforceAvatarPlan({
+      mode: 'layers',
+      body: 'dark',
+      hair: { set: 'long', index: 5 },
+      outfit: { set: 'outfits', index: 9 },
+      premade: 'npc_m1',
+    }, 'u2', { plan: 'community' });
+    assert.equal(gated.avatar.mode, 'layers');
+    assert.equal(gated.avatar.outfit.index, 9);
+    assert.equal(gated.features.clothes, true);
+    assert.equal(gated.features.hairStyle, true);
+  });
+
+  it('free catalog hides hair/outfit options', () => {
+    const cat = api.publicCatalogForPlan('free', []);
+    assert.equal(cat.hairSets.length, 0);
+    assert.equal(cat.outfitSets.length, 0);
+    assert.ok(cat.premades.length >= 30);
+    assert.ok(cat.monetization.paid.includes('clothes'));
+  });
 });

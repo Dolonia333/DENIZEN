@@ -30,8 +30,18 @@ const OUTFIT_SETS = [
 const HAT_SETS = [
   { id: 'none', label: 'None', count: 0 },
   { id: 'hats', label: 'Hats', count: 50, file: 'hats.png' },
-  { id: 'headsets', label: 'Headsets', count: 50, file: 'headsets.png', unlock: 'perk:headset' },
+  // Server boosters only — rendered with gold tint (see role-cosmetics / bake tint.hat)
+  {
+    id: 'headsets',
+    label: 'Golden headset (Booster)',
+    count: 50,
+    file: 'headsets.png',
+    unlock: 'role:booster',
+  },
 ];
+
+/** Hex used when baking booster golden headsets */
+const BOOSTER_HEADSET_GOLD = '#f0c14a';
 
 const TINTS = [
   { id: null, label: 'Natural' },
@@ -41,6 +51,7 @@ const TINTS = [
   { id: '#a8e8b4', label: 'Mint' },
   { id: '#e8e0a8', label: 'Gold' },
   { id: '#c4a8e8', label: 'Violet' },
+  { id: '#f0c14a', label: 'Booster gold', unlock: 'role:booster' },
   { id: '#ff6b4a', label: 'Ember', unlock: 'event:halloween' },
   { id: '#7ec8ff', label: 'Frost', unlock: 'event:winter' },
 ];
@@ -68,11 +79,11 @@ function getActiveEvents(now = new Date()) {
 }
 
 function baseUnlocks() {
-  return ['base', 'perk:headset'];
+  return ['base'];
 }
 
 /**
- * @param {{ isMod?: boolean, extra?: string[] }} [opts]
+ * @param {{ isMod?: boolean, isBooster?: boolean, extra?: string[] }} [opts]
  */
 function resolveUnlocks(opts = {}) {
   const set = new Set([...baseUnlocks(), ...(opts.extra || [])]);
@@ -80,6 +91,8 @@ function resolveUnlocks(opts = {}) {
     for (const u of ev.unlocks) set.add(u);
   }
   if (opts.isMod) set.add('role:mod');
+  // Discord server boost → golden headsets unlock
+  if (opts.isBooster) set.add('role:booster');
   return [...set];
 }
 
@@ -108,8 +121,8 @@ function defaultAvatar(userId = '') {
     eyes: h % 8,
     outfit: { set: 'outfits', index: h % 16 },
     pants: { index: h % 12 },
-    hat: { set: 'none', index: 0 },
-    tint: { hair: null, clothes: null },
+    hat: { set: 'none', index: 0, source: null },
+    tint: { hair: null, clothes: null, hat: null, source: null },
     unlocks: [],
     rev: 1,
     updatedAt: new Date().toISOString(),
@@ -134,9 +147,16 @@ function normalizeAvatar(raw, userId = '') {
 
   const hatSet = HAT_SETS.find((h) => h.id === raw.hat?.set) || HAT_SETS[0];
   const hatIndex = clampInt(raw.hat?.index, 0, Math.max(0, hatSet.count - 1));
+  const hatSource = ['manual', 'role', 'auto', 'role:booster'].includes(raw.hat?.source)
+    ? raw.hat.source
+    : null;
 
   const tintHair = normalizeTint(raw.tint?.hair);
   const tintClothes = normalizeTint(raw.tint?.clothes);
+  const tintHat = normalizeTint(raw.tint?.hat);
+  const tintSource = ['manual', 'discord', 'role', 'auto'].includes(raw.tint?.source)
+    ? raw.tint.source
+    : null;
 
   return {
     v: 1,
@@ -148,8 +168,8 @@ function normalizeAvatar(raw, userId = '') {
     eyes: clampInt(raw.eyes ?? base.eyes, 0, 49),
     outfit: { set: outfitSet.id, index: outfitIndex },
     pants: { index: clampInt(raw.pants?.index ?? base.pants.index, 0, 49) },
-    hat: { set: hatSet.id, index: hatIndex },
-    tint: { hair: tintHair, clothes: tintClothes },
+    hat: { set: hatSet.id, index: hatIndex, source: hatSource },
+    tint: { hair: tintHair, clothes: tintClothes, hat: tintHat, source: tintSource },
     unlocks: Array.isArray(raw.unlocks) ? raw.unlocks.map(String) : [],
     rev: clampInt(raw.rev ?? 1, 1, 1e9),
     updatedAt: raw.updatedAt || new Date().toISOString(),
@@ -236,6 +256,7 @@ function clientAvatar(avatar, userId) {
 }
 
 module.exports = {
+  BOOSTER_HEADSET_GOLD,
   BODIES,
   HAIR_SETS,
   OUTFIT_SETS,
