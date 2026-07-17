@@ -4460,15 +4460,16 @@
       this._playerSel = null;
     }
 
-    /** Player pointer only — no feet selection box. */
+    /** Soft green pointer above the name tag (not on top of it). */
     updatePlayerUiChrome() {
       if (!this.player?.active) return;
       if (!this._playerPointer?.active) return;
-      const bob = Math.sin((this.time?.now || 0) / 280) * 2.5;
-      // Sit above head, clear of the "you" name tag
+      // Name tag sits ~32px above feet; keep pointer well clear of it and enter hints
+      const bob = Math.sin((this.time?.now || 0) / 320) * 2;
       this._playerPointer
         .setVisible(true)
-        .setPosition(this.player.x, this.player.y - 44 + bob);
+        .setPosition(this.player.x, this.player.y - 56 + bob)
+        .setAlpha(0.9);
     }
 
     /**
@@ -6105,7 +6106,8 @@
           }
         }
       }
-      this.playerTag.setPosition(this.player.x, this.player.y - 34);
+      // Keep "you" close to head; pointer floats higher so they don't stack
+      this.playerTag.setPosition(this.player.x, this.player.y - 28);
       this.updatePlayerUiChrome();
 
       // Zone label + contextual hints
