@@ -4269,11 +4269,10 @@
             const [a, b] = best;
             a.sprite.setFlipX(a.sprite.x > b.sprite.x);
             b.sprite.setFlipX(b.sprite.x > a.sprite.x);
-            this.playAmbientPose(a, 'wave', { force: true, emoteOpts: { bubble: true, bubbleKey: 'uiBubbleBlue' } });
-            this.showChatBubble(a.sprite, 'uiBubbleBlue');
+            // Emote only — full chat-bubble+emote stacks looked cluttered
+            this.playAmbientPose(a, 'wave', { force: true });
             this.time.delayedCall(220, () => {
               this.playAmbientPose(b, Math.random() < 0.5 ? 'wave' : 'snicker', { force: true });
-              this.showChatBubble(b.sprite, 'uiBubbleGreen');
             });
             break;
           }
@@ -4390,126 +4389,91 @@
       const label = String(guildName || 'Discord').slice(0, 22);
       const ch = meta.channelCount != null ? meta.channelCount : (this.floors?.size || 0);
       const cats = meta.categoryCount != null ? meta.categoryCount : (this.buildings?.length || 0);
-      const pad = 8;
+      const pad = 10;
       const D = 500;
 
-      // —— Top-left community panel (Pixel Spaces panel + tabs) ——
-      const panelKey = this.textures.exists('uiPanelBlueBg') ? 'uiPanelBlueBg'
-        : (this.textures.exists('uiPanelBlue') ? 'uiPanelBlue' : null);
-      if (panelKey) {
-        this._hudPanel = this.add.image(pad, pad, panelKey)
-          .setOrigin(0, 0).setScrollFactor(0).setDepth(D)
-          .setDisplaySize(196, 78).setAlpha(0.96);
-      } else {
-        this._hudPanel = this.add.rectangle(pad + 98, pad + 39, 196, 78, 0x1e293b, 0.9)
-          .setScrollFactor(0).setDepth(D);
-      }
-      if (this.textures.exists('uiTabBlue')) {
-        this.add.image(pad + 4, pad - 2, 'uiTabBlue')
-          .setOrigin(0, 0).setScrollFactor(0).setDepth(D + 1)
-          .setDisplaySize(72, 16).setAlpha(0.95);
-      }
-      this.add.text(pad + 12, pad + 4, label, {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '11px', fontStyle: 'bold', color: '#f8fafc',
-      }).setScrollFactor(0).setDepth(D + 2).setResolution(2);
-      this._hudSub = this.add.text(pad + 12, pad + 22, `${cats} blocks · ${ch} rooms`, {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '10px', color: '#cbd5e1',
-      }).setScrollFactor(0).setDepth(D + 2).setResolution(2);
-
-      // Population + person emote (pack icons)
-      if (this.textures.exists('iconPopulation')) {
-        this.add.image(pad + 14, pad + 48, 'iconPopulation')
-          .setScale(SCALE).setScrollFactor(0).setDepth(D + 2).setOrigin(0.5);
-      }
+      // Clean HUD: soft dark glass (no stretched pixel panels — those look "wired")
+      // Pixel icons stay at native SCALE so they stay crisp.
+      this.add.rectangle(pad + 88, pad + 28, 176, 56, 0x0f172a, 0.82)
+        .setScrollFactor(0).setDepth(D).setStrokeStyle(1, 0x334155, 0.9);
       if (this.textures.exists('uiPerson')) {
-        this.add.image(pad + 176, pad + 18, 'uiPerson')
-          .setScale(SCALE).setScrollFactor(0).setDepth(D + 2);
+        this.add.image(pad + 14, pad + 16, 'uiPerson')
+          .setScale(SCALE).setScrollFactor(0).setDepth(D + 1).setOrigin(0.5);
       }
+      this.add.text(pad + 28, pad + 8, label, {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '12px', fontStyle: 'bold', color: '#f8fafc',
+      }).setScrollFactor(0).setDepth(D + 1).setResolution(2);
+      this._hudSub = this.add.text(pad + 28, pad + 24, `${cats} blocks · ${ch} rooms`, {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '10px', color: '#94a3b8',
+      }).setScrollFactor(0).setDepth(D + 1).setResolution(2);
 
-      // Mini need legend bars (how Pixel Spaces status UI is meant to read)
+      // Compact need row — icon + bar only (native pixel scale)
       this._hudNeedRows = [];
       const needDefs = [
-        { icon: 'statusHunger', color: 'Orange', label: 'food' },
-        { icon: 'statusEnergy', color: 'Green', label: 'rest' },
-        { icon: 'statusComfort1', color: 'Blue', label: 'social' },
+        { icon: 'statusHunger', color: 'Orange' },
+        { icon: 'statusEnergy', color: 'Green' },
+        { icon: 'statusComfort1', color: 'Blue' },
       ];
       needDefs.forEach((nd, i) => {
-        const x0 = pad + 28 + i * 54;
-        const y0 = pad + 48;
+        const x0 = pad + 18 + i * 52;
+        const y0 = pad + 44;
         if (this.textures.exists(nd.icon)) {
           this.add.image(x0, y0, nd.icon)
-            .setScale(SCALE * 0.9).setScrollFactor(0).setDepth(D + 2).setOrigin(0.5);
+            .setScale(SCALE).setScrollFactor(0).setDepth(D + 1).setOrigin(0.5);
         }
         const barKey = progressBarKey(nd.color, 0.6);
-        const bar = this.add.image(x0 + 18, y0, this.textures.exists(barKey) ? barKey : 'barEmpty')
-          .setScale(SCALE * 0.85).setScrollFactor(0).setDepth(D + 2).setOrigin(0, 0.5);
-        this._hudNeedRows.push({ color: nd.color, bar, kind: nd.label });
+        const bar = this.add.image(
+          x0 + 12, y0,
+          this.textures.exists(barKey) ? barKey : 'barEmpty',
+        ).setScale(SCALE).setScrollFactor(0).setDepth(D + 1).setOrigin(0, 0.5);
+        this._hudNeedRows.push({ color: nd.color, bar });
       });
 
-      // —— Day XP / clock panel (top-right) ——
-      if (this.textures.exists('uiPanelYellow')) {
-        this.add.image(W - pad, pad, 'uiPanelYellow')
-          .setOrigin(1, 0).setScrollFactor(0).setDepth(D)
-          .setDisplaySize(148, 56).setAlpha(0.94);
-      }
-      this._clockText = this.add.text(W - pad - 12, pad + 8, '', {
+      // Clock — simple text chip (no stretched yellow panel)
+      this._clockText = this.add.text(W - pad, pad + 8, '', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '11px',
         fontStyle: 'bold',
-        color: '#1e293b',
-      }).setOrigin(1, 0).setScrollFactor(0).setDepth(D + 2).setResolution(2);
-      this._xpBar = this.add.image(W - pad - 12, pad + 36, this.textures.exists('xpBar0') ? 'xpBar0' : 'barEmpty')
-        .setOrigin(1, 0.5).setScale(SCALE).setScrollFactor(0).setDepth(D + 2);
+        color: '#fef3c7',
+        backgroundColor: '#0f172acc',
+        padding: { x: 8, y: 5 },
+      }).setOrigin(1, 0).setScrollFactor(0).setDepth(D + 1).setResolution(2);
+      this._xpBar = this.add.image(W - pad, pad + 36, this.textures.exists('xpBar0') ? 'xpBar0' : 'barEmpty')
+        .setOrigin(1, 0.5).setScale(SCALE).setScrollFactor(0).setDepth(D + 1);
 
-      // —— Event log on grey panel (bottom) ——
-      if (this.textures.exists('uiPanelGreyBg')) {
-        this._eventLogBg = this.add.image(W / 2, H - 8, 'uiPanelGreyBg')
-          .setOrigin(0.5, 1).setScrollFactor(0).setDepth(D)
-          .setDisplaySize(W - 20, 36).setAlpha(0.92);
-      } else {
-        this._eventLogBg = this.add.rectangle(W / 2, H - 18, W - 24, 28, 0x0f172a, 0.72)
-          .setScrollFactor(0).setDepth(D).setOrigin(0.5);
-      }
-      if (this.textures.exists('iconMail')) {
-        this.add.image(22, H - 22, 'iconMail')
-          .setScale(SCALE * 0.9).setScrollFactor(0).setDepth(D + 2).setOrigin(0.5);
-      }
-      this._eventLogText = this.add.text(36, H - 28, 'Block life starting…', {
+      // Event strip — thin glass bar
+      this._eventLogBg = this.add.rectangle(W / 2, H - 16, W - 28, 24, 0x0f172a, 0.75)
+        .setScrollFactor(0).setDepth(D).setOrigin(0.5);
+      this._eventLogText = this.add.text(pad + 8, H - 23, '', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '11px',
-        color: '#e2e8f0',
-      }).setScrollFactor(0).setDepth(D + 2).setResolution(2);
+        color: '#cbd5e1',
+      }).setScrollFactor(0).setDepth(D + 1).setResolution(2);
 
-      // Player selection pointer (pack “NPC selection arrow”) + feet ring
+      // Player: soft bobbing pointer only (selection frames look like broken boxes when scaled)
       if (this.textures.exists('pointerGreen')) {
         this._playerPointer = this.add.image(0, 0, 'pointerGreen')
           .setScale(SCALE).setDepth(48).setOrigin(0.5, 1).setVisible(false);
       }
-      if (this.textures.exists('selGreen1')) {
-        this._playerSel = this.add.image(0, 0, 'selGreen1')
-          .setScale(SCALE * 0.9).setDepth(40).setOrigin(0.5, 0.5).setAlpha(0.85).setVisible(false);
-      }
+      this._playerSel = null;
     }
 
-    /** Keep player pointer + selection ring planted (pack UI). */
+    /** Player pointer only — no feet selection box. */
     updatePlayerUiChrome() {
       if (!this.player?.active) return;
-      const px = this.player.x;
-      const py = this.player.y;
-      const bob = Math.sin((this.time?.now || 0) / 280) * 3;
-      if (this._playerPointer?.active) {
-        this._playerPointer.setVisible(true).setPosition(px, py - 40 + bob);
-      }
-      if (this._playerSel?.active) {
-        this._playerSel.setVisible(true).setPosition(px, py + 2);
-      }
+      if (!this._playerPointer?.active) return;
+      const bob = Math.sin((this.time?.now || 0) / 280) * 2.5;
+      // Sit above head, clear of the "you" name tag
+      this._playerPointer
+        .setVisible(true)
+        .setPosition(this.player.x, this.player.y - 44 + bob);
     }
 
     /**
-     * Life-sim chrome: status need icon over resident (Pixel Spaces design).
-     * Shows the dominant need / mood face above name tags.
+     * Life-sim chrome: one small status icon beside the name (not a stack of tags).
+     * Only show when a need is pressured — calm faces stay clean.
      */
     syncResidentChrome(entry) {
       if (!entry?.sprite?.active || !entry.resident) return;
@@ -4518,28 +4482,40 @@
       const sx = sp.x;
       const sy = sp.y;
       const depth = (sp.depth || 36) + 3;
+
+      // Hide the noisy text activity line — status icon replaces it
+      if (entry.jobTag?.active) entry.jobTag.setVisible(false);
+
+      const n = r.needs || {};
+      const stressed = !r.alive
+        || (n.hunger ?? 0) > 0.65
+        || (n.energy ?? 1) < 0.35
+        || (n.social ?? 0) > 0.78
+        || (r.mood ?? 1) < 0.4;
       const iconKey = statusIconForResident(r);
-      if (!this.textures.exists(iconKey)) return;
+
+      if (!stressed || !this.textures.exists(iconKey)) {
+        if (entry.needIcon?.active) entry.needIcon.setVisible(false);
+        return;
+      }
+      // Sit just left of name tag, not on top of it
+      const ix = sx - 14;
+      const iy = sy - 38;
       if (!entry.needIcon || !entry.needIcon.active) {
-        entry.needIcon = this.add.image(sx + 12, sy - 42, iconKey)
-          .setScale(SCALE * 0.95).setDepth(depth).setOrigin(0.5, 1);
+        entry.needIcon = this.add.image(ix, iy, iconKey)
+          .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
       } else {
         if (entry.needIcon.texture?.key !== iconKey) entry.needIcon.setTexture(iconKey);
-        entry.needIcon.setPosition(sx + 12, sy - 42).setVisible(true);
-      }
-      // Hide text job tag clutter when we have icon (keep activity text light)
-      if (entry.jobTag?.active) {
-        entry.jobTag.setAlpha(0.85);
+        entry.needIcon.setPosition(ix, iy).setVisible(true);
       }
     }
 
     /** Refresh HUD need bars from average resident needs + day XP. */
     refreshHudNeeds() {
       if (!this.blockLife || !this._hudNeedRows?.length) return;
-      const alive = this.blockLife.residents.filter((r) => r.alive);
+      const alive = this.blockLife.residents.filter((x) => x.alive);
       if (!alive.length) return;
       const avg = (fn) => alive.reduce((s, r) => s + fn(r), 0) / alive.length;
-      // food bar = 1 - hunger pressure; rest = energy; social = 1 - social need
       const food = 1 - avg((r) => r.needs?.hunger ?? 0.5);
       const rest = avg((r) => r.needs?.energy ?? 0.5);
       const social = 1 - avg((r) => r.needs?.social ?? 0.5);
@@ -4685,7 +4661,6 @@
         const food = this.nearestFoodFor(entry.actor);
         if (!food) continue;
         entry.resident.activity = 'eat';
-        entry.jobTag?.setText('eating');
         this.actorEatFood(entry.actor, food, () => {
           if (entry.resident) {
             entry.resident.needs.hunger = Math.max(0, entry.resident.needs.hunger - 0.5);
@@ -4818,11 +4793,12 @@
         }
 
         const act = r.activity || window.BlockLife.getActivity(r, hour);
-        const actLabel = (window.BlockLife.activityLabel
-          ? window.BlockLife.activityLabel(act)
-          : act);
-        // Community status only — no job/work tags
-        entry.jobTag?.setText(actLabel);
+        // Activity is shown via status icons, not a second text line (looked "wired")
+        if (entry.jobTag) {
+          entry.jobTag.setVisible(false);
+          entry.jobTag.setText('');
+        }
+        void act;
 
         // Normalize scale (kids slightly smaller only)
         const wantScale = SCALE * (r.stage === 'child' ? 0.88 : (r.stage === 'elder' ? 0.97 : 1));
@@ -4841,8 +4817,8 @@
           actor.sprite.x = actor.seat?.x ?? actor.sprite.x;
           actor.sprite.y = actor.seatedY;
         }
-        entry.tag?.setPosition(entry.sprite.x, entry.sprite.y - 36);
-        entry.jobTag?.setPosition(entry.sprite.x, entry.sprite.y - 48);
+        // Name only, slightly closer to head (no activity line above)
+        entry.tag?.setPosition(entry.sprite.x, entry.sprite.y - 32);
         r.x = entry.sprite.x;
         r.y = entry.sprite.y;
         // Pixel Spaces need icon over head (hunger/energy/mood)
