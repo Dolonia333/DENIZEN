@@ -59,6 +59,13 @@ block you walk down, one building per Discord category, every room designed
       wall opening
 - [x] Block Park at the end of the street (replaces the scaled-tree "green
       box"): trees, bushes, lamppost, umbrella snack table, sittable benches
+- [x] Real street: concrete sidewalk + curb + asphalt road with dashed
+      centerline, storm drains, manholes (was sidewalk over bare dirt)
+- [x] Background layers locked vertically (scrollFactor sf,1) — no more
+      floating skyline blocks / drifting horizons in open zones
+- [x] HUD safe-area layout (layoutHud): ENVELOP crops the design edges on
+      16:9 hosts — panels/clock now inset to the visible rect, re-laid on
+      resize and zoom changes; event strip hidden until it has content
 - [ ] Section palette shifts along the block
 
 ### Stage 2 — NPC life — done

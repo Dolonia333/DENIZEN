@@ -1529,6 +1529,7 @@
       this.outdoorZoom = IS_TOUCH && narrow ? 0.98 : 1.1;
       this.indoorZoom = IS_TOUCH && narrow ? 1.38 : 1.55;
       this.cameras.main.setZoom(this.outdoorZoom);
+      this.layoutHud?.();
       this.cameras.main.setDeadzone(narrow ? 40 : 70, narrow ? 24 : 36);
 
       this.playerTag = this.add.text(0, 0, 'you', {
@@ -2293,7 +2294,7 @@
 
       // Horizon haze
       this.add.rectangle(W / 2, this.groundY - 28, W * 3, 56, 0xe8f6fc, 0.35)
-        .setScrollFactor(0.15)
+        .setScrollFactor(0.15, 1)
         .setDepth(-170);
 
       // Soft sun
@@ -2346,7 +2347,7 @@
           .setTint(0xb8c4d8)
           .setAlpha(0.55)
           .setDepth(-100)
-          .setScrollFactor(0.28);
+          .setScrollFactor(0.28, 1);
       });
 
       // Mid mountains — denser around/behind buildings
@@ -2362,11 +2363,11 @@
           .setTint(0xaebccf)
           .setAlpha(0.58 + (i % 3) * 0.03)
           .setDepth(-90 - (i % 2))
-          .setScrollFactor(0.4);
+          .setScrollFactor(0.4, 1);
       });
 
       // Soft rolling hills peek between buildings (fills empty cyan bands)
-      const hills = this.add.graphics().setDepth(-84).setScrollFactor(0.52);
+      const hills = this.add.graphics().setDepth(-84).setScrollFactor(0.52, 1);
       const drawHill = (cx, baseY, w, h, color, alpha) => {
         hills.fillStyle(color, alpha);
         hills.fillEllipse(cx, baseY, w, h);
@@ -2379,7 +2380,7 @@
 
     buildDistantSkyline() {
       // Soft city silhouettes far left / between / right of HQ
-      const g = this.add.graphics().setDepth(-95).setScrollFactor(0.32).setAlpha(0.4);
+      const g = this.add.graphics().setDepth(-95).setScrollFactor(0.32, 1).setAlpha(0.4);
       const base = this.groundY - 8;
       const blocks = [
         [8, 36], [28, 58], [48, 44], [70, 72], [92, 40],
@@ -2399,11 +2400,11 @@
 
       // Distant pack houses (faint scenery, not competing with HQ)
       this.add.image(18, this.groundY - 1, 'houseBeige')
-        .setScale(1.15).setOrigin(0.5, 1).setDepth(-86).setAlpha(0.55).setScrollFactor(0.48);
+        .setScale(1.15).setOrigin(0.5, 1).setDepth(-86).setAlpha(0.55).setScrollFactor(0.48, 1);
       this.add.image(860, this.groundY - 1, 'houseRed')
-        .setScale(0.95).setOrigin(0.5, 1).setDepth(-86).setAlpha(0.5).setScrollFactor(0.5);
+        .setScale(0.95).setOrigin(0.5, 1).setDepth(-86).setAlpha(0.5).setScrollFactor(0.5, 1);
       this.add.image(820, this.groundY - 1, 'tree')
-        .setScale(1.8).setOrigin(0.5, 1).setDepth(-85).setAlpha(0.7).setScrollFactor(0.55);
+        .setScale(1.8).setOrigin(0.5, 1).setDepth(-85).setAlpha(0.7).setScrollFactor(0.55, 1);
     }
 
     /**
@@ -2450,19 +2451,19 @@
           this.add.image(x, this.groundY - 6, mKeys[Math.floor(mr() * mKeys.length)])
             .setScale(0.95 + mr() * 0.45).setOrigin(0.5, 1)
             .setTint(0xb8c4d8).setAlpha(0.55)
-            .setDepth(-100).setScrollFactor(0.28);
+            .setDepth(-100).setScrollFactor(0.28, 1);
         }
         for (let x = 940; x < need(0.4); x += 130 + mr() * 90) {
           this.add.image(x, this.groundY - 4, mKeys[Math.floor(mr() * mKeys.length)])
             .setScale(1.05 + mr() * 0.4).setOrigin(0.5, 1)
             .setTint(0xaebccf)
             .setAlpha(0.58 + mr() * 0.06)
-            .setDepth(-90 - (Math.floor(mr() * 2))).setScrollFactor(0.4);
+            .setDepth(-90 - (Math.floor(mr() * 2))).setScrollFactor(0.4, 1);
         }
       }
 
       // Skyline blocks with lit windows (sf 0.32)
-      const sk = this.add.graphics().setDepth(-95).setScrollFactor(0.32).setAlpha(0.4);
+      const sk = this.add.graphics().setDepth(-95).setScrollFactor(0.32, 1).setAlpha(0.4);
       const sr = rng(0x5c11e);
       const base = this.groundY - 8;
       for (let x = 920; x < need(0.32); x += 90 + sr() * 160) {
@@ -2477,7 +2478,7 @@
       }
 
       // Rolling hills (sf 0.52) — fill the band between buildings
-      const hg = this.add.graphics().setDepth(-84).setScrollFactor(0.52);
+      const hg = this.add.graphics().setDepth(-84).setScrollFactor(0.52, 1);
       const hr = rng(0x8111);
       for (let x = 950; x < need(0.52); x += 170 + hr() * 140) {
         hg.fillStyle([0x6a8a6e, 0x5e7e62, 0x628666][Math.floor(hr() * 3)], 0.4 + hr() * 0.15);
@@ -2503,53 +2504,85 @@
       const top = this.groundY;
       const width = (this.mapWidth || W) + 160;
 
-      // Thick sidewalk slab (keeps buildings from looking like they float)
-      g.fillStyle(0x6e6578, 1);
-      g.fillRect(-50, top - 2, width, 22);
-      g.fillStyle(0x8a8294, 1);
-      g.fillRect(-50, top - 2, width, 5);
-      g.fillStyle(0x4a4254, 1);
-      g.fillRect(-50, top + 16, width, 4);
-
+      // ---- Concrete sidewalk (the walk line) ----
+      g.fillStyle(0x9aa1ab, 1);
+      g.fillRect(-50, top - 2, width, 16);
+      g.fillStyle(0xb4bac2, 1);
+      g.fillRect(-50, top - 2, width, 3);
       // Sidewalk tile seams
-      g.lineStyle(1, 0x3a3444, 0.45);
+      g.lineStyle(1, 0x6b727c, 0.6);
       for (let tx = -40; tx < (this.mapWidth || W) + 60; tx += 28) {
-        g.lineBetween(tx, top - 1, tx, top + 18);
+        g.lineBetween(tx, top - 1, tx, top + 13);
       }
+      // Curb face
+      g.fillStyle(0x767d87, 1);
+      g.fillRect(-50, top + 14, width, 4);
+      g.fillStyle(0x4c525a, 1);
+      g.fillRect(-50, top + 18, width, 2);
 
-      // Grass fringe on top of slab
+      // Grass fringe behind the sidewalk at the building line
       g.fillStyle(0x4fa85a, 1);
       g.fillRect(-50, top - 7, width, 6);
       g.fillStyle(0x6bc86e, 1);
       g.fillRect(-50, top - 7, width, 2);
 
-      // Continuous earth under slab → fills camera bottom
+      // ---- Asphalt road below the curb — makes the street read as a street
+      const roadTop = top + 20;
+      const roadH = 40;
+      g.fillStyle(0x363a41, 1);
+      g.fillRect(-50, roadTop, width, roadH);
+      // Subtle wear strips where tires run
+      g.fillStyle(0x2e3238, 1);
+      g.fillRect(-50, roadTop + 8, width, 6);
+      g.fillRect(-50, roadTop + 26, width, 6);
+      // Dashed yellow center line
+      g.fillStyle(0xd8b13c, 0.95);
+      for (let dx = -40; dx < (this.mapWidth || W) + 60; dx += 46) {
+        g.fillRect(dx, roadTop + roadH / 2 - 1, 22, 3);
+      }
+      // Storm drains along the curb + occasional manhole covers
+      for (let sx = 90; sx < (this.mapWidth || W); sx += 210) {
+        g.fillStyle(0x1c1f24, 1);
+        g.fillRect(sx, roadTop + 1, 24, 4);
+        g.fillStyle(0x0e1013, 1);
+        for (let s = 2; s < 22; s += 5) g.fillRect(sx + s, roadTop + 2, 2, 2);
+      }
+      for (let mx = 180; mx < (this.mapWidth || W); mx += 470) {
+        g.fillStyle(0x23262c, 1);
+        g.fillEllipse(mx, roadTop + roadH / 2 + 8, 18, 7);
+        g.lineStyle(1, 0x14161a, 0.9);
+        g.strokeEllipse(mx, roadTop + roadH / 2 + 8, 18, 7);
+      }
+      // Road edge line at the bottom
+      g.fillStyle(0x24272d, 1);
+      g.fillRect(-50, roadTop + roadH - 2, width, 2);
+
+      // Continuous earth under the road → fills camera bottom
       const layers = [
-        [0x5a4058, 24],
-        [0x4a344a, 28],
-        [0x3a283a, 34],
-        [0x2a1c2c, 44],
-        [0x1c121e, 140],
+        [0x4a3a34, 26],
+        [0x3a2c28, 34],
+        [0x2a1f1c, 46],
+        [0x1a1210, 140],
       ];
-      let y = top + 20;
+      let y = roadTop + roadH;
       layers.forEach(([c, h]) => {
         g.fillStyle(c, 1);
         g.fillRect(-50, y, width, h);
         y += h;
       });
 
-      // Soft strata strokes
-      g.lineStyle(2, 0x120a12, 0.28);
-      for (let ly = top + 40; ly < top + 210; ly += 16) {
+      // Soft strata strokes in the earth
+      g.lineStyle(2, 0x110a08, 0.28);
+      for (let ly = roadTop + roadH + 12; ly < roadTop + roadH + 160; ly += 16) {
         g.lineBetween(-40, ly, W + 80, ly + 2);
       }
 
       // Dirt pebbles
-      g.fillStyle(0x7a6080, 0.25);
+      g.fillStyle(0x6a5548, 0.3);
       for (let i = 0; i < 55; i += 1) {
         g.fillRect(
           -10 + (i * 41) % (W + 20),
-          top + 28 + (i * 17) % 150,
+          roadTop + roadH + 8 + (i * 17) % 130,
           2 + (i % 3),
           2,
         );
@@ -2829,7 +2862,7 @@
     /** Underground dirt slice with roots/pebbles beneath a building. */
     drawFoundation(g, left, bw) {
       const top = this.groundY;
-      const depthPx = 26;
+      const depthPx = 20; // stop at the road top — dirt over asphalt reads wrong
       g.fillStyle(0x6b4a2f, 1);
       g.fillRect(left + 2, top, bw - 4, depthPx);
       g.fillStyle(0x54381f, 1);
@@ -4861,25 +4894,26 @@
       const label = String(guildName || 'Discord').slice(0, 22);
       const ch = meta.channelCount != null ? meta.channelCount : (this.floors?.size || 0);
       const cats = meta.categoryCount != null ? meta.categoryCount : (this.buildings?.length || 0);
-      const pad = 10;
       const D = 500;
 
-      // Clean HUD: soft dark glass (no stretched pixel panels — those look "wired")
-      // Pixel icons stay at native SCALE so they stay crisp.
-      this.add.rectangle(pad + 88, pad + 28, 176, 56, 0x0f172a, 0.82)
-        .setScrollFactor(0).setDepth(D).setStrokeStyle(1, 0x334155, 0.9);
+      // HUD lives in containers positioned by layoutHud() inside the SAFE
+      // visible rect — ENVELOP scaling crops the design edges on wide/tall
+      // hosts, so anything anchored to raw W/H falls half off-screen.
+      const leftKids = [];
+      leftKids.push(this.add.rectangle(88, 28, 176, 56, 0x0f172a, 0.82)
+        .setStrokeStyle(1, 0x334155, 0.9));
       if (this.textures.exists('uiPerson')) {
-        this.add.image(pad + 14, pad + 16, 'uiPerson')
-          .setScale(SCALE).setScrollFactor(0).setDepth(D + 1).setOrigin(0.5);
+        leftKids.push(this.add.image(14, 16, 'uiPerson').setScale(SCALE).setOrigin(0.5));
       }
-      this.add.text(pad + 28, pad + 8, label, {
+      leftKids.push(this.add.text(28, 8, label, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '12px', fontStyle: 'bold', color: '#f8fafc',
-      }).setScrollFactor(0).setDepth(D + 1).setResolution(2);
-      this._hudSub = this.add.text(pad + 28, pad + 24, `${cats} blocks · ${ch} rooms`, {
+      }).setResolution(2));
+      this._hudSub = this.add.text(28, 24, `${cats} blocks · ${ch} rooms`, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '10px', color: '#94a3b8',
-      }).setScrollFactor(0).setDepth(D + 1).setResolution(2);
+      }).setResolution(2);
+      leftKids.push(this._hudSub);
 
       // Compact need row — icon + bar only (native pixel scale)
       this._hudNeedRows = [];
@@ -4889,40 +4923,47 @@
         { icon: 'statusComfort1', color: 'Blue' },
       ];
       needDefs.forEach((nd, i) => {
-        const x0 = pad + 18 + i * 52;
-        const y0 = pad + 44;
+        const x0 = 18 + i * 52;
+        const y0 = 44;
         if (this.textures.exists(nd.icon)) {
-          this.add.image(x0, y0, nd.icon)
-            .setScale(SCALE).setScrollFactor(0).setDepth(D + 1).setOrigin(0.5);
+          leftKids.push(this.add.image(x0, y0, nd.icon).setScale(SCALE).setOrigin(0.5));
         }
         const barKey = progressBarKey(nd.color, 0.6);
         const bar = this.add.image(
           x0 + 12, y0,
           this.textures.exists(barKey) ? barKey : 'barEmpty',
-        ).setScale(SCALE).setScrollFactor(0).setDepth(D + 1).setOrigin(0, 0.5);
+        ).setScale(SCALE).setOrigin(0, 0.5);
+        leftKids.push(bar);
         this._hudNeedRows.push({ color: nd.color, bar });
       });
+      this._hudLeft = this.add.container(0, 0, leftKids)
+        .setScrollFactor(0).setDepth(D);
 
-      // Clock — simple text chip (no stretched yellow panel)
-      this._clockText = this.add.text(W - pad, pad + 8, '', {
+      // Clock + XP — right-anchored container
+      this._clockText = this.add.text(0, 0, '', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '11px',
         fontStyle: 'bold',
         color: '#fef3c7',
         backgroundColor: '#0f172acc',
         padding: { x: 8, y: 5 },
-      }).setOrigin(1, 0).setScrollFactor(0).setDepth(D + 1).setResolution(2);
-      this._xpBar = this.add.image(W - pad, pad + 36, this.textures.exists('xpBar0') ? 'xpBar0' : 'barEmpty')
-        .setOrigin(1, 0.5).setScale(SCALE).setScrollFactor(0).setDepth(D + 1);
+      }).setOrigin(1, 0).setResolution(2);
+      this._xpBar = this.add.image(0, 28, this.textures.exists('xpBar0') ? 'xpBar0' : 'barEmpty')
+        .setOrigin(1, 0.5).setScale(SCALE);
+      this._hudRight = this.add.container(0, 0, [this._clockText, this._xpBar])
+        .setScrollFactor(0).setDepth(D + 1);
 
-      // Event strip — thin glass bar
+      // Event strip — thin glass bar (positioned + sized by layoutHud)
       this._eventLogBg = this.add.rectangle(W / 2, H - 16, W - 28, 24, 0x0f172a, 0.75)
-        .setScrollFactor(0).setDepth(D).setOrigin(0.5);
-      this._eventLogText = this.add.text(pad + 8, H - 23, '', {
+        .setScrollFactor(0).setDepth(D).setOrigin(0.5).setVisible(false);
+      this._eventLogText = this.add.text(18, H - 23, '', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '11px',
         color: '#cbd5e1',
       }).setScrollFactor(0).setDepth(D + 1).setResolution(2);
+
+      this.layoutHud();
+      this.scale.on('resize', () => this.layoutHud());
 
       // Player: soft bobbing pointer only (selection frames look like broken boxes when scaled)
       if (this.textures.exists('pointerGreen')) {
@@ -4930,6 +4971,31 @@
           .setScale(SCALE).setDepth(48).setOrigin(0.5, 1).setVisible(false);
       }
       this._playerSel = null;
+    }
+
+    /**
+     * Position HUD containers inside the SAFE visible rect. ENVELOP scaling
+     * covers the host and crops the design's edges when aspect ratios differ
+     * (a 16:9 phone crops ~230px total off the 980px design width), and the
+     * camera zoom crops further — compute both and inset the HUD.
+     */
+    layoutHud() {
+      if (!this._hudLeft) return;
+      const pw = this.scale?.parentSize?.width || window.innerWidth || W;
+      const ph = this.scale?.parentSize?.height || window.innerHeight || H;
+      const cover = Math.max(pw / W, ph / H) || 1;
+      const z = this.cameras?.main?.zoom || 1;
+      const visW = Math.min(W, pw / cover) / z;
+      const visH = Math.min(H, ph / cover) / z;
+      const ix = Math.max(0, (W - visW) / 2) + 10;
+      const iy = Math.max(0, (H - visH) / 2) + 10;
+      this._hudLeft.setPosition(ix, iy);
+      if (this._hudRight) this._hudRight.setPosition(W - ix, iy);
+      if (this._eventLogBg) {
+        this._eventLogBg.setPosition(W / 2, H - iy - 6);
+        this._eventLogBg.width = Math.max(120, visW - 28);
+      }
+      if (this._eventLogText) this._eventLogText.setPosition(ix + 8, H - iy - 13);
     }
 
     /** Soft green pointer above the name tag (not on top of it). */
@@ -5206,6 +5272,8 @@
       const line = String(text || '').slice(0, 72);
       this._eventLogText.setText(line);
       this._eventLogText.setAlpha(1);
+      if (this._eventLogBg) this._eventLogBg.setVisible(line.length > 0);
+      this._eventLogText.setVisible(line.length > 0);
       this.tweens.add({
         targets: this._eventLogText,
         alpha: 0.55,
@@ -6137,6 +6205,7 @@
       this.player.setDepth(44);
       this.playerTag.setDepth(45);
       this.cameras.main.setZoom(this.indoorZoom);
+      this.layoutHud?.();
       this.cameras.main.setDeadzone(36, 18);
       this.refreshCameraBounds();
       this.cameras.main.centerOn(this.player.x, this.player.y);
@@ -6154,6 +6223,7 @@
       this.player.setDepth(45);
       this.playerTag.setDepth(46);
       this.cameras.main.setZoom(this.outdoorZoom);
+      this.layoutHud?.();
       const narrow = window.innerWidth < 640;
       this.cameras.main.setDeadzone(narrow ? 40 : 70, narrow ? 24 : 36);
       this.refreshCameraBounds();
