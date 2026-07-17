@@ -161,7 +161,15 @@
     roofVents2: `${INF}/Roof_vents_2.png`,
     treeRoof1: `${BG}/Tree_rooftop_1.png`,
     treeRoof2: `${BG}/Tree_rooftop_2.png`,
+    treeRoofAutumn1: `${BG}/Tree_rooftop_autumn_1.png`,
+    treeRoofAutumn2: `${BG}/Tree_rooftop_autumn_2.png`,
     craneRoof: `${BG}/Crane_rooftop.png`,
+    // Roof family 1 = tall gable shingles · family 2 = low flat cap (Pixel Spaces)
+    // Snow piles layer on top of either family.
+    roofSnowC1: `${INF}/Roof_snowpile_connecting_1.png`,
+    roofSnowC2: `${INF}/Roof_snowpile_connecting_2.png`,
+    roofSnowC3: `${INF}/Roof_snowpile_connecting_3.png`,
+    roofSnowE: `${INF}/Roof_snowpile_end.png`,
     stairs: `${INF}/Stairs.png`,
     light1: `${PACK}/Furniture/Light_1.png`,
     light2: `${PACK}/Furniture/Light_2.png`,
@@ -495,6 +503,7 @@
     fossilFish: `${EXP}/Archaeology/Individual Assets/Fossil_fish.png`,
 
     // ---- Roof sprite caps (city-block facade grammar; theme-colored) ----
+    // Gable (Roof_1) — tall shingles
     roofRedC: `${INF}/Roof_1_red_connecting.png`, roofRedE: `${INF}/Roof_1_red_end.png`,
     roofBlueC: `${INF}/Roof_1_blue_connecting.png`, roofBlueE: `${INF}/Roof_1_blue_end.png`,
     roofGreenC: `${INF}/Roof_1_green_connecting.png`, roofGreenE: `${INF}/Roof_1_green_end.png`,
@@ -502,6 +511,14 @@
     roofPurpleC: `${INF}/Roof_1_purple_connecting.png`, roofPurpleE: `${INF}/Roof_1_purple_end.png`,
     roofBlackC: `${INF}/Roof_1_black_connecting.png`, roofBlackE: `${INF}/Roof_1_black_end.png`,
     roofYellowC: `${INF}/Roof_1_yellow_connecting.png`, roofYellowE: `${INF}/Roof_1_yellow_end.png`,
+    // Flat / low (Roof_2) — modern slab look
+    roof2RedC: `${INF}/Roof_2_red_connecting.png`, roof2RedE: `${INF}/Roof_2_red_end.png`,
+    roof2BlueC: `${INF}/Roof_2_blue_connecting.png`, roof2BlueE: `${INF}/Roof_2_blue_end.png`,
+    roof2GreenC: `${INF}/Roof_2_green_connecting.png`, roof2GreenE: `${INF}/Roof_2_green_end.png`,
+    roof2OrangeC: `${INF}/Roof_2_orange_connecting.png`, roof2OrangeE: `${INF}/Roof_2_orange_end.png`,
+    roof2PurpleC: `${INF}/Roof_2_purple_connecting.png`, roof2PurpleE: `${INF}/Roof_2_purple_end.png`,
+    roof2GreyC: `${INF}/Roof_2_grey_connecting.png`, roof2GreyE: `${INF}/Roof_2_grey_end.png`,
+    roof2YellowC: `${INF}/Roof_2_yellow_connecting.png`, roof2YellowE: `${INF}/Roof_2_yellow_end.png`,
 
     // ---- Pixel Spaces UI (official pack layout — Tiny Tower / life-sim chrome) ----
     // Pack ref: https://netherzapdos.itch.io/pixel-spaces  → UI expansion
@@ -1771,10 +1788,13 @@
       g.lineStyle(3, cfg.outline, 1);
       g.strokeRect(left, top, bw, bh);
 
-      // Real roof sprites (CITY_POLISH_PLAN building grammar #1): a run of
-      // connecting shingle tiles capped by end pieces, color-matched to the
-      // theme — replaces the old painted rectangle.
-      this.drawRoofCap(left, top, bw, cfg.roofKey || 'roofRedC');
+      // Real roof sprites — gable / flat / snow by theme (see pickRoofSpec)
+      const roofSpec = cfg.roofSpec || this.pickRoofSpec({
+        theme: cfg.theme || cfg.title?.text || '',
+        roofKey: cfg.roofKey,
+      }, left);
+      this.drawRoofCap(left, top, bw, roofSpec);
+      cfg._roofStyle = roofSpec.style || 'gable';
 
       // Dirt foundation slice under the building (grammar #2) — the store
       // reference shows an underground band with roots below every room
@@ -1872,8 +1892,7 @@
           toFloorId: roofId,
           radius: 36,
         });
-        this.furn('roofVents1', padX + roomW * 0.45, roofY, 22);
-        this.furn('treeRoof2', padX + roomW * 0.72, roofY, 22);
+        this.decorateRooftop(roofMin, roofMax, roofY, cfg._roofStyle || 'gable', left);
         this._sceneMinY = Math.min(this._sceneMinY ?? 0, roofY - 100);
       }
 
@@ -2022,6 +2041,8 @@
         strip: { text: `${categoryLabel} · ↑ enter`, color: kit.stripStyle.color, bg: kit.stripStyle.bg },
         doorKind: kit.doorKind,
         stairsDx: kit.stairsDx,
+        roofKey: kit.roofKey,
+        theme, // drives gable vs flat vs snow in pickRoofSpec
         rooms,
       });
 
@@ -2445,24 +2466,176 @@
       }
     }
 
-    /** Roof cap from shingle sprites: end + connecting run + end. */
-    drawRoofCap(left, top, bw, roofKey) {
-      const connKey = this.textures.exists(roofKey) ? roofKey : 'roofRedC';
+    /**
+     * Roof cap from Pixel Spaces infrastructure tiles.
+     * @param {string|object} roofSpec
+     *   - string: legacy connecting key e.g. 'roofRedC'
+     *   - { style: 'gable'|'flat'|'snow', color: 'red'|'blue'|... }
+     * Pack has two families: Roof_1 (tall gable) and Roof_2 (low flat).
+     * Snow piles layer over either for winter / cold themes.
+     */
+    drawRoofCap(left, top, bw, roofSpec = 'roofRedC') {
+      let style = 'gable';
+      let color = 'red';
+      let connKey = 'roofRedC';
+
+      if (typeof roofSpec === 'string') {
+        connKey = this.textures.exists(roofSpec) ? roofSpec : 'roofRedC';
+        // Infer style/color from key: roof2BlueC → flat/blue, roofRedC → gable/red
+        if (/^roof2/i.test(connKey)) style = 'flat';
+        const m = connKey.match(/roof2?([A-Z][a-z]+)/);
+        if (m) color = m[1].toLowerCase();
+        if (roofSpec === 'snow' || /snow/i.test(roofSpec)) style = 'snow';
+      } else if (roofSpec && typeof roofSpec === 'object') {
+        style = roofSpec.style || 'gable';
+        color = String(roofSpec.color || 'red').toLowerCase();
+        const cap = color.charAt(0).toUpperCase() + color.slice(1);
+        if (style === 'flat') {
+          connKey = this.textures.exists(`roof2${cap}C`) ? `roof2${cap}C` : 'roof2GreyC';
+        } else {
+          connKey = this.textures.exists(`roof${cap}C`) ? `roof${cap}C` : 'roofRedC';
+        }
+      }
+
+      const isFlat = style === 'flat' || /^roof2/i.test(connKey);
       const endKey = connKey.replace(/C$/, 'E');
-      const y = top + 2;
-      const tileW = 16 * SCALE; // Roof_1 connecting is 16x8
-      const endW = 26 * SCALE;  // end piece 26x17
+      // Roof_1 end 26×17, connecting 16×8 · Roof_2 end 9×5, connecting 16×4
+      const tileW = 16 * SCALE;
+      const endW = (isFlat ? 9 : 26) * SCALE;
+      const y = top + (isFlat ? 4 : 2);
+      const overhang = isFlat ? 2 : 6;
+      const depth = 21;
+
       if (this.textures.exists(endKey)) {
-        this.add.image(left - 6, y, endKey).setOrigin(0, 1).setDepth(21).setScale(SCALE);
-        this.add.image(left + bw + 6, y, endKey).setOrigin(1, 1).setDepth(21).setScale(SCALE).setFlipX(true);
+        this.add.image(left - overhang, y, endKey)
+          .setOrigin(0, 1).setDepth(depth).setScale(SCALE);
+        this.add.image(left + bw + overhang, y, endKey)
+          .setOrigin(1, 1).setDepth(depth).setScale(SCALE).setFlipX(true);
       }
-      const runL = left - 6 + endW - 6;
-      const runR = left + bw + 6 - endW + 6;
-      for (let x = runL; x < runR; x += tileW) {
-        const img = this.add.image(x, y, connKey).setOrigin(0, 1).setDepth(20.5).setScale(SCALE);
-        // Clamp the last tile so the run never overshoots the right end cap.
-        if (x + tileW > runR) img.setDisplaySize(runR - x, 8 * SCALE);
+
+      const runL = left - overhang + endW - (isFlat ? 2 : 6);
+      const runR = left + bw + overhang - endW + (isFlat ? 2 : 6);
+      for (let x = runL; x < runR - 2; x += tileW) {
+        // Never stretch the last tile (looks broken) — skip if it won't fit
+        if (x + tileW * 0.35 > runR) break;
+        this.add.image(x, y, connKey)
+          .setOrigin(0, 1).setDepth(depth - 0.5).setScale(SCALE);
       }
+
+      // Snow overlay for snow style or winter themes
+      if (style === 'snow' || (typeof roofSpec === 'object' && roofSpec.snow)) {
+        this.drawRoofSnow(left, top, bw, y);
+      }
+
+      return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
+    }
+
+    /** Layer snow piles along a roof line (Pixel Spaces snowpile tiles). */
+    drawRoofSnow(left, top, bw, roofY) {
+      const y = (roofY != null ? roofY : top + 2) - 2;
+      const tiles = ['roofSnowC1', 'roofSnowC2', 'roofSnowC3'].filter((k) => this.textures.exists(k));
+      if (!tiles.length) return;
+      const tileW = 16 * SCALE;
+      let i = 0;
+      for (let x = left + 8; x < left + bw - 16; x += tileW + 2) {
+        const key = tiles[i % tiles.length];
+        this.add.image(x, y, key)
+          .setOrigin(0, 1).setDepth(22).setScale(SCALE).setAlpha(0.95);
+        i += 1;
+      }
+      if (this.textures.exists('roofSnowE')) {
+        this.add.image(left + 2, y, 'roofSnowE')
+          .setOrigin(0, 1).setDepth(22).setScale(SCALE);
+        this.add.image(left + bw - 2, y, 'roofSnowE')
+          .setOrigin(1, 1).setDepth(22).setScale(SCALE).setFlipX(true);
+      }
+    }
+
+    /**
+     * Walkable deck props — vary by roof style / seed so each building feels different.
+     * style: gable | flat | snow | garden | utility
+     */
+    decorateRooftop(roofMin, roofMax, roofY, style = 'gable', seed = 0) {
+      const mid = (roofMin + roofMax) / 2;
+      const span = Math.max(40, roofMax - roofMin);
+      const s = hashSeed(String(seed) + style + Math.floor(roofMin));
+
+      // Soft deck planks already drawn by markRooftopDeck
+      if (style === 'utility' || style === 'flat') {
+        if (this.textures.exists('roofVents1')) {
+          this.furn('roofVents1', roofMin + span * 0.25, roofY, 22);
+        }
+        if (this.textures.exists('roofVents2')) {
+          this.furn('roofVents2', roofMin + span * 0.7, roofY, 22);
+        }
+        if (span > 120 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
+          this.furn('craneRoof', mid + 20, roofY, 21);
+        }
+      } else if (style === 'garden' || style === 'gable') {
+        const treeA = (s % 2 === 0) ? 'treeRoof1' : 'treeRoof2';
+        const treeB = (s % 3 === 0) ? 'treeRoofAutumn1' : 'treeRoofAutumn2';
+        if (this.textures.exists(treeA)) this.furn(treeA, roofMin + span * 0.3, roofY, 22);
+        if (span > 90 && this.textures.exists('roofVents1')) {
+          this.furn('roofVents1', mid, roofY, 22);
+        }
+        if (span > 110 && this.textures.exists(treeB)) {
+          this.furn(treeB, roofMin + span * 0.75, roofY, 22);
+        }
+      } else if (style === 'snow') {
+        if (this.textures.exists('roofVents2')) this.furn('roofVents2', mid - 10, roofY, 22);
+        // Extra snow blobs on the deck surface
+        if (this.textures.exists('roofSnowC2')) {
+          this.add.image(roofMin + 20, roofY - 1, 'roofSnowC2')
+            .setOrigin(0.5, 1).setDepth(22).setScale(SCALE);
+          this.add.image(roofMax - 24, roofY - 1, 'roofSnowC3')
+            .setOrigin(0.5, 1).setDepth(22).setScale(SCALE);
+        }
+      } else {
+        // default mix
+        if (this.textures.exists('roofVents1')) this.furn('roofVents1', mid - 18, roofY, 22);
+        if (this.textures.exists('treeRoof2')) this.furn('treeRoof2', mid + 22, roofY, 22);
+      }
+    }
+
+    /** Pick a roof style/color for a building from theme + seed. */
+    pickRoofSpec(themeOrPal, seed = 0) {
+      const s = typeof seed === 'number' ? seed : hashSeed(String(seed));
+      // Theme-driven defaults
+      const theme = String(themeOrPal?.theme || themeOrPal || '').toLowerCase();
+      if (theme.includes('winter') || theme.includes('snow')) {
+        return { style: 'snow', color: 'blue', snow: true };
+      }
+      if (theme.includes('hospital') || theme.includes('museum') || theme.includes('office')) {
+        return { style: 'flat', color: s % 2 ? 'grey' : 'blue' };
+      }
+      if (theme.includes('police') || theme.includes('fire')) {
+        return { style: 'flat', color: theme.includes('fire') ? 'red' : 'black' };
+      }
+      if (theme.includes('cafe') || theme.includes('gamer')) {
+        return { style: 'gable', color: theme.includes('cafe') ? 'orange' : 'purple' };
+      }
+      if (theme.includes('halloween')) {
+        return { style: 'gable', color: 'black' };
+      }
+      // From palette roofKey if present
+      if (themeOrPal?.roofKey) {
+        const k = themeOrPal.roofKey;
+        if (/^roof2/i.test(k)) {
+          const m = k.match(/roof2([A-Z][a-z]+)/);
+          return { style: 'flat', color: (m?.[1] || 'Grey').toLowerCase() };
+        }
+        const m = k.match(/roof([A-Z][a-z]+)/);
+        const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow', 'black'];
+        // Cycle style by seed: gable / flat / garden gable
+        const styles = ['gable', 'gable', 'flat', 'garden'];
+        return {
+          style: styles[s % styles.length],
+          color: (m?.[1] || colors[s % colors.length]).toLowerCase(),
+        };
+      }
+      const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow', 'black', 'grey'];
+      const styles = ['gable', 'flat', 'garden', 'utility', 'gable'];
+      return { style: styles[s % styles.length], color: colors[s % colors.length] };
     }
 
     /** Underground dirt slice with roots/pebbles beneath a building. */
@@ -2544,7 +2717,7 @@
       g.lineStyle(3, 0x1a1f4a, 1);
       g.strokeRect(left, top, bw, bh);
       // Real shingle roof + dirt foundation (same grammar as themed shells)
-      this.drawRoofCap(left, top, bw, 'roofBlueC');
+      this.drawRoofCap(left, top, bw, this.pickRoofSpec({ theme: 'voice', roofKey: 'roofBlueC' }, left));
       this.drawFoundation(g, left, bw);
 
       this.buildingTitle(left + bw / 2, top - 22, title, {
@@ -2642,7 +2815,8 @@
       g.fillRect(left + bw - 14, top, 14, bh);
       g.lineStyle(3, pal.stroke, 1);
       g.strokeRect(left, top, bw, bh);
-      this.drawRoofCap(left, top, bw, pal.roofKey || 'roofGreenC');
+      const textRoof = this.pickRoofSpec({ theme: title || 'text', roofKey: pal.roofKey }, left + paletteIndex * 17);
+      this.drawRoofCap(left, top, bw, textRoof);
       this.drawFoundation(g, left, bw);
 
       this.buildingTitle(left + bw / 2, top - 22, shortLabel(title, 22), {
@@ -2742,9 +2916,7 @@
           toFloorId: roofId,
           radius: 36,
         });
-        this.furn('roofVents1', padX + roomW * 0.55, roofY, 22);
-        this.furn('treeRoof1', padX + roomW * 1.2, roofY, 22);
-        this.furn('roofVents2', padX + roomW * 1.7, roofY, 22);
+        this.decorateRooftop(roofMin, roofMax, roofY, textRoof.style || 'gable', left);
         this._sceneMinY = Math.min(this._sceneMinY ?? 0, roofY - 100);
       }
       if (channels[2] && channels[3]) {
