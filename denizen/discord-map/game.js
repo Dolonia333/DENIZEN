@@ -5,6 +5,13 @@
   const IA = `${FULL}/Individual Assets`;
   const EXP = `${FULL}/Expansions`;
   const PACKS_EXTRA = './PacksExtra';
+  // Official UI pack folders (https://netherzapdos.itch.io/pixel-spaces)
+  const UI_ROOT = `${FULL}/UI`;
+  const UI_BTN = `${UI_ROOT}/Buttons, Sliders, Panels, Frames, Selection`;
+  const UI_EMOTE = `${UI_ROOT}/Emotes`;
+  const UI_BUBBLE = `${UI_ROOT}/Chat Bubbles`;
+  const UI_ICON = `${UI_ROOT}/Icons`;
+  const UI_CURSOR = `${UI_ROOT}/Cursor`;
   const W = 980;
   const H = 420;
   const SCALE = 2;
@@ -496,38 +503,156 @@
     roofBlackC: `${INF}/Roof_1_black_connecting.png`, roofBlackE: `${INF}/Roof_1_black_end.png`,
     roofYellowC: `${INF}/Roof_1_yellow_connecting.png`, roofYellowE: `${INF}/Roof_1_yellow_end.png`,
 
-    // ---- UI expansion (plaques, bubbles, emotes, HUD) ----
-    uiTabBlue: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_blue_tab.png`,
-    uiTabGreen: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_green_tab.png`,
-    uiTabGrey: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_grey_tab.png`,
-    uiTabRed: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_red_tab.png`,
-    uiTabPurple: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_purple_tab.png`,
-    uiTabYellow: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_yellow_tab.png`,
-    uiPanelBlue: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_blue.png`,
-    uiButtonBlueLong: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long.png`,
-    uiStar: `${FULL}/UI/Emotes/Star.png`,
-    uiPerson: `${FULL}/UI/Emotes/Person.png`,
-    uiBubbleWhite: `${FULL}/UI/Chat Bubbles/ChatBubble_white.png`,
-    uiBubbleBlue: `${FULL}/UI/Chat Bubbles/ChatBubble_blue.png`,
-    uiBubbleGrey: `${FULL}/UI/Chat Bubbles/ChatBubble_grey.png`,
-    uiBubbleGreen: `${FULL}/UI/Chat Bubbles/ChatBubble_green.png`,
-    emoteHeart: `${FULL}/UI/Emotes/Heart_green.png`,
-    emoteQuestion: `${FULL}/UI/Emotes/Question.png`,
-    emoteExclaim: `${FULL}/UI/Emotes/Exclamation_yellow.png`,
-    emoteFire: `${FULL}/UI/Emotes/Fire.png`,
-    emoteGaming: `${FULL}/UI/Emotes/Gaming.png`,
-    emoteMoney: `${FULL}/UI/Emotes/Money.png`,
-    emoteMedical: `${FULL}/UI/Emotes/Medical_cross.png`,
-    // Presence status (UI expansion) — happiness scale maps mute/deaf/live
-    statusHappy0: `${FULL}/UI/Icons/Status_happiness_0.png`, // dead / deaf
-    statusHappy1: `${FULL}/UI/Icons/Status_happiness_1.png`, // sad / muted
-    statusHappy2: `${FULL}/UI/Icons/Status_happiness_2.png`, // neutral
-    statusHappy3: `${FULL}/UI/Icons/Status_happiness_3.png`, // ok
-    statusHappy4: `${FULL}/UI/Icons/Status_happiness_4.png`, // happy / open mic
-    pointerGreen: `${FULL}/UI/Icons/Pointer_green.png`,
-    pointerGrey: `${FULL}/UI/Icons/Pointer_grey.png`,
-    pointerBlue: `${FULL}/UI/Icons/Pointer_blue.png`,
-    boostIcon: `${FULL}/UI/Icons/Boost.png`,
+    // ---- Pixel Spaces UI (official pack layout — Tiny Tower / life-sim chrome) ----
+    // Pack ref: https://netherzapdos.itch.io/pixel-spaces  → UI expansion
+    // Designed for: panels/tabs, status needs, chat bubbles, selection pointers,
+    // progress/XP bars, emotes over NPCs — not plain HTML text.
+    //
+    // Panels & tabs (room plaques + HUD)
+    uiTabBlue: `${UI_BTN}/Panel_blue_tab.png`,
+    uiTabGreen: `${UI_BTN}/Panel_green_tab.png`,
+    uiTabGrey: `${UI_BTN}/Panel_grey_tab.png`,
+    uiTabRed: `${UI_BTN}/Panel_red_tab.png`,
+    uiTabPurple: `${UI_BTN}/Panel_purple_tab.png`,
+    uiTabYellow: `${UI_BTN}/Panel_yellow_tab.png`,
+    uiTabOrange: `${UI_BTN}/Panel_orange_tab.png`,
+    uiTabWhite: `${UI_BTN}/Panel_white_tab.png`,
+    uiPanelBlue: `${UI_BTN}/Panel_blue.png`,
+    uiPanelGreen: `${UI_BTN}/Panel_green.png`,
+    uiPanelGrey: `${UI_BTN}/Panel_grey.png`,
+    uiPanelPurple: `${UI_BTN}/Panel_purple.png`,
+    uiPanelYellow: `${UI_BTN}/Panel_yellow.png`,
+    uiPanelOrange: `${UI_BTN}/Panel_orange.png`,
+    uiPanelRed: `${UI_BTN}/Panel_red.png`,
+    uiPanelWhite: `${UI_BTN}/Panel_white.png`,
+    uiPanelBlueBg: `${UI_BTN}/Panel_blue_background.png`,
+    uiPanelGreyBg: `${UI_BTN}/Panel_grey_background.png`,
+    uiPanelShadow: `${UI_BTN}/Panel_shadow.png`,
+    // Buttons
+    uiButtonBlue: `${UI_BTN}/Button_blue.png`,
+    uiButtonBlueLong: `${UI_BTN}/Button_blue_long.png`,
+    uiButtonGreen: `${UI_BTN}/Button_green.png`,
+    uiButtonGreenLong: `${UI_BTN}/Button_green_long.png`,
+    uiButtonGrey: `${UI_BTN}/Button_grey.png`,
+    uiButtonYellow: `${UI_BTN}/Button_yellow.png`,
+    // Frames
+    uiFrameBlue: `${UI_BTN}/Frame_blue.png`,
+    uiFrameGreen: `${UI_BTN}/Frame_green.png`,
+    uiFrameGrey: `${UI_BTN}/Frame_grey.png`,
+    // Area selection rings (under feet when focused)
+    selGreen1: `${UI_BTN}/Selection_green_1.png`,
+    selGreen2: `${UI_BTN}/Selection_green_2.png`,
+    selWhite1: `${UI_BTN}/Selection_white_1.png`,
+    // Emotes (float above characters)
+    uiStar: `${UI_EMOTE}/Star.png`,
+    uiPerson: `${UI_EMOTE}/Person.png`,
+    emoteHeart: `${UI_EMOTE}/Heart_green.png`,
+    emoteQuestion: `${UI_EMOTE}/Question.png`,
+    emoteExclaim: `${UI_EMOTE}/Exclamation_yellow.png`,
+    emoteExclaimRed: `${UI_EMOTE}/Exclamation_red.png`,
+    emoteFire: `${UI_EMOTE}/Fire.png`,
+    emoteGaming: `${UI_EMOTE}/Gaming.png`,
+    emoteMoney: `${UI_EMOTE}/Money.png`,
+    emoteMedical: `${UI_EMOTE}/Medical_cross.png`,
+    emoteThumbsUp: `${UI_EMOTE}/Thumbs_up.png`,
+    emoteThumbsDown: `${UI_EMOTE}/Thumbs_down.png`,
+    emoteThumbsGold: `${UI_EMOTE}/Thumbs_golden.png`,
+    emotePresent: `${UI_EMOTE}/Present.png`,
+    emoteSnowflake: `${UI_EMOTE}/Snowflake.png`,
+    emoteShovel: `${UI_EMOTE}/Shovel.png`,
+    emoteCurrency: `${UI_EMOTE}/Currency.png`,
+    // Chat bubbles (speech — pack designed for dialogue/needs)
+    uiBubbleWhite: `${UI_BUBBLE}/ChatBubble_white.png`,
+    uiBubbleBlue: `${UI_BUBBLE}/ChatBubble_blue.png`,
+    uiBubbleGrey: `${UI_BUBBLE}/ChatBubble_grey.png`,
+    uiBubbleGreen: `${UI_BUBBLE}/ChatBubble_green.png`,
+    uiBubbleYellow: `${UI_BUBBLE}/ChatBubble_yellow.png`,
+    uiBubbleOrange: `${UI_BUBBLE}/ChatBubble_orange.png`,
+    uiBubblePurple: `${UI_BUBBLE}/ChatBubble_purple.png`,
+    uiBubbleRed: `${UI_BUBBLE}/ChatBubble_red.png`,
+    uiBubbleXmas: `${UI_BUBBLE}/ChatBubble_xmas.png`,
+    uiBubbleShadow: `${UI_BUBBLE}/ChatBubble_shadow.png`,
+    // Status needs (Pixel Spaces life-sim icons)
+    statusHappy0: `${UI_ICON}/Status_happiness_0.png`,
+    statusHappy1: `${UI_ICON}/Status_happiness_1.png`,
+    statusHappy2: `${UI_ICON}/Status_happiness_2.png`,
+    statusHappy3: `${UI_ICON}/Status_happiness_3.png`,
+    statusHappy4: `${UI_ICON}/Status_happiness_4.png`,
+    statusHunger: `${UI_ICON}/Status_hunger.png`,
+    statusThirst: `${UI_ICON}/Status_thirst.png`,
+    statusEnergy: `${UI_ICON}/Status_energy.png`,
+    statusHygiene: `${UI_ICON}/Status_hygiene.png`,
+    statusComfort0: `${UI_ICON}/Status_comfort_0.png`,
+    statusComfort1: `${UI_ICON}/Status_comfort_1.png`,
+    statusComfort2: `${UI_ICON}/Status_comfort_2.png`,
+    statusCold: `${UI_ICON}/Status_cold.png`,
+    // Selection pointers (player / open-mic / focus)
+    pointerGreen: `${UI_ICON}/Pointer_green.png`,
+    pointerGrey: `${UI_ICON}/Pointer_grey.png`,
+    pointerBlue: `${UI_ICON}/Pointer_blue.png`,
+    pointerYellow: `${UI_ICON}/Pointer_yellow.png`,
+    pointerOrange: `${UI_ICON}/Pointer_orange.png`,
+    pointerPurple: `${UI_ICON}/Pointer_purple.png`,
+    pointerRed: `${UI_ICON}/Pointer_red.png`,
+    pointerWhite: `${UI_ICON}/Pointer_white.png`,
+    // HUD icons
+    boostIcon: `${UI_ICON}/Boost.png`,
+    boostOffIcon: `${UI_ICON}/Boost_off.png`,
+    iconPopulation: `${UI_ICON}/Population.png`,
+    iconGear: `${UI_ICON}/Gear.png`,
+    iconMail: `${UI_ICON}/Mail.png`,
+    iconCheck: `${UI_ICON}/Check.png`,
+    iconCross: `${UI_ICON}/Cross.png`,
+    iconPlus: `${UI_ICON}/Plus.png`,
+    iconMinus: `${UI_ICON}/Minus.png`,
+    iconClose: `${UI_ICON}/Close.png`,
+    iconCurrency: `${UI_ICON}/Currency.png`,
+    iconClipboard: `${UI_ICON}/Clipboard.png`,
+    iconPackage: `${UI_ICON}/Package.png`,
+    iconHammer: `${UI_ICON}/Hammer.png`,
+    iconGame: `${UI_ICON}/Game_controller.png`,
+    iconArrowUp: `${UI_ICON}/Arrow_up.png`,
+    iconArrowDown: `${UI_ICON}/Arrow_down.png`,
+    iconArrowLeft: `${UI_ICON}/Arrow_left.png`,
+    iconArrowRight: `${UI_ICON}/Arrow_right.png`,
+    // Progress bars (needs 0 empty → 5 full) — green = energy/mood, orange = hunger, blue = social
+    barEmpty: `${UI_ICON}/Progress_bar_0.png`,
+    barEmptyClear: `${UI_ICON}/Progress_bar_0_transparent.png`,
+    barGreen1: `${UI_ICON}/Progress_bar_green_1.png`,
+    barGreen2: `${UI_ICON}/Progress_bar_green_2.png`,
+    barGreen3: `${UI_ICON}/Progress_bar_green_3.png`,
+    barGreen4: `${UI_ICON}/Progress_bar_green_4.png`,
+    barGreen5: `${UI_ICON}/Progress_bar_green_5.png`,
+    barOrange1: `${UI_ICON}/Progress_bar_orange_1.png`,
+    barOrange2: `${UI_ICON}/Progress_bar_orange_2.png`,
+    barOrange3: `${UI_ICON}/Progress_bar_orange_3.png`,
+    barOrange4: `${UI_ICON}/Progress_bar_orange_4.png`,
+    barOrange5: `${UI_ICON}/Progress_bar_orange_5.png`,
+    barBlue1: `${UI_ICON}/Progress_bar_blue_1.png`,
+    barBlue2: `${UI_ICON}/Progress_bar_blue_2.png`,
+    barBlue3: `${UI_ICON}/Progress_bar_blue_3.png`,
+    barBlue4: `${UI_ICON}/Progress_bar_blue_4.png`,
+    barBlue5: `${UI_ICON}/Progress_bar_blue_5.png`,
+    barPurple1: `${UI_ICON}/Progress_bar_purple_1.png`,
+    barPurple2: `${UI_ICON}/Progress_bar_purple_2.png`,
+    barPurple3: `${UI_ICON}/Progress_bar_purple_3.png`,
+    barPurple4: `${UI_ICON}/Progress_bar_purple_4.png`,
+    barPurple5: `${UI_ICON}/Progress_bar_purple_5.png`,
+    // XP bar (day progress / community vibe)
+    xpBar0: `${UI_ICON}/XP_bar_0.png`,
+    xpBar1: `${UI_ICON}/XP_bar_1.png`,
+    xpBar2: `${UI_ICON}/XP_bar_2.png`,
+    xpBar3: `${UI_ICON}/XP_bar_3.png`,
+    xpBar4: `${UI_ICON}/XP_bar_4.png`,
+    xpBar5: `${UI_ICON}/XP_bar_5.png`,
+    xpBar6: `${UI_ICON}/XP_bar_6.png`,
+    xpBar7: `${UI_ICON}/XP_bar_7.png`,
+    xpBar8: `${UI_ICON}/XP_bar_8.png`,
+    // Cursors (optional desktop chrome)
+    cursor1: `${UI_CURSOR}/cursor_1.png`,
+    cursor1Pressed: `${UI_CURSOR}/cursor_1_pressed.png`,
+    cursor2: `${UI_CURSOR}/cursor_2.png`,
+    cursor2Pressed: `${UI_CURSOR}/cursor_2_pressed.png`,
 
     // ---- Pixel Platter food (NPCs walk to these sprites and eat them) ----
     foodBurger: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Burger.png`,
@@ -604,6 +729,71 @@
   ];
   // Readable at room scale; still smaller than furniture
   const FOOD_SCALE = 1.35;
+
+  /** Map 0..1 need fill → progress bar key (1 empty-ish … 5 full). */
+  function progressBarKey(color, amount01) {
+    const a = Math.max(0, Math.min(1, amount01));
+    const lvl = a <= 0.05 ? 0 : Math.min(5, Math.max(1, Math.ceil(a * 5)));
+    if (lvl === 0) return 'barEmpty';
+    return `bar${color}${lvl}`;
+  }
+
+  /** Map 0..1 day hour fraction → XP bar frame 0–8. */
+  function xpBarKey(amount01) {
+    const a = Math.max(0, Math.min(1, amount01));
+    const lvl = Math.min(8, Math.round(a * 8));
+    return `xpBar${lvl}`;
+  }
+
+  /**
+   * Dominant Pixel Spaces status icon for a resident (life-sim style).
+   * Pack ships Happiness 0–4, Hunger, Energy, Thirst, Hygiene, Comfort.
+   */
+  function statusIconForResident(r) {
+    if (!r?.alive) return 'statusHappy0';
+    const n = r.needs || {};
+    // High hunger = show hunger icon; low energy = energy; high social need = comfort
+    if ((n.hunger ?? 0) > 0.72) return 'statusHunger';
+    if ((n.energy ?? 1) < 0.28) return 'statusEnergy';
+    if ((n.social ?? 0) > 0.75) return 'statusComfort0';
+    if ((n.fun ?? 0) > 0.8) return 'statusComfort1';
+    const mood = r.mood != null ? r.mood : 0.55;
+    if (mood < 0.25) return 'statusHappy0';
+    if (mood < 0.4) return 'statusHappy1';
+    if (mood < 0.55) return 'statusHappy2';
+    if (mood < 0.75) return 'statusHappy3';
+    return 'statusHappy4';
+  }
+
+  /** Emote texture for a pose / life event (full pack). */
+  function emoteKeyForPose(pose) {
+    const map = {
+      wave: 'emoteHeart',
+      shrug: 'emoteQuestion',
+      snicker: 'emoteThumbsUp',
+      eat: 'statusHunger',
+      eatSit: 'statusHunger',
+      jump: 'emoteFire',
+      hurt: 'emoteExclaimRed',
+      sit: 'statusComfort2',
+      lie: 'statusEnergy',
+      sleep: 'statusEnergy',
+      social: 'emoteHeart',
+      play: 'emoteGaming',
+      hang: 'emoteThumbsUp',
+      visit: 'uiPerson',
+      stroll: 'emoteThumbsGold',
+      chill: 'statusComfort1',
+      home: 'statusComfort2',
+      work: 'emoteMoney', // legacy
+    };
+    return map[pose] || 'emoteHeart';
+  }
+
+  const CHAT_BUBBLE_KEYS = [
+    'uiBubbleWhite', 'uiBubbleBlue', 'uiBubbleGreen', 'uiBubbleYellow',
+    'uiBubbleOrange', 'uiBubblePurple', 'uiBubbleRed', 'uiBubbleGrey',
+  ];
 
   // 30 pre-made NPC sheets (15 male + 15 female), 16x32 frames, 14 anim rows
   // (row 0 = walk, row 1 = idle). Real characters replace the old 2-sprite crowd.
@@ -3431,22 +3621,51 @@
       }
     }
 
-    showEmote(sprite, pose) {
+    /**
+     * Float a Pixel Spaces emote (or optional chat-bubble) above a sprite.
+     * Matches pack design: emotes for feelings, bubbles for talk.
+     */
+    showEmote(sprite, pose, opts = {}) {
       if (!sprite?.active) return;
-      const map = {
-        wave: 'emoteHeart', shrug: 'emoteQuestion', snicker: 'emoteExclaim',
-        eat: 'uiStar', eatSit: 'uiStar', jump: 'emoteFire', hurt: 'emoteExclaim',
-        sit: 'emoteHeart', lie: 'statusHappy2',
-      };
-      const key = map[pose] || 'emoteHeart';
+      const depth = (sprite.depth || 30) + 6;
+      // Optional speech bubble behind the icon
+      if (opts.bubble) {
+        const bKey = opts.bubbleKey
+          || CHAT_BUBBLE_KEYS[Math.floor(Math.random() * CHAT_BUBBLE_KEYS.length)];
+        if (this.textures.exists(bKey)) {
+          const bubble = this.add.image(sprite.x, sprite.y - 36, bKey)
+            .setScale(SCALE * 1.15)
+            .setDepth(depth)
+            .setOrigin(0.5, 1);
+          if (this.textures.exists('uiBubbleShadow')) {
+            const sh = this.add.image(sprite.x + 2, sprite.y - 34, 'uiBubbleShadow')
+              .setScale(SCALE * 1.15).setDepth(depth - 1).setOrigin(0.5, 1).setAlpha(0.45);
+            this.tweens.add({
+              targets: sh, y: sh.y - 14, alpha: 0, duration: 900, ease: 'Cubic.easeOut',
+              onComplete: () => { try { sh.destroy(); } catch (_) { /* ignore */ } },
+            });
+          }
+          this.tweens.add({
+            targets: bubble, y: bubble.y - 14, alpha: 0, duration: 900, ease: 'Cubic.easeOut',
+            onComplete: () => { try { bubble.destroy(); } catch (_) { /* ignore */ } },
+          });
+        }
+      }
+      const key = opts.emoteKey || emoteKeyForPose(pose);
       if (!this.textures.exists(key)) return;
-      const e = this.add.image(sprite.x, sprite.y - 32, key)
-        .setScale(SCALE * 1.1)
-        .setDepth((sprite.depth || 30) + 5);
+      const e = this.add.image(sprite.x, sprite.y - (opts.bubble ? 48 : 34), key)
+        .setScale(SCALE * (opts.scale || 1.15))
+        .setDepth(depth + 1)
+        .setOrigin(0.5, 1);
       this.tweens.add({
-        targets: e, y: e.y - 16, alpha: 0, duration: 700, ease: 'Cubic.easeOut',
+        targets: e, y: e.y - 18, alpha: 0, duration: 800, ease: 'Cubic.easeOut',
         onComplete: () => { try { e.destroy(); } catch (_) { /* ignore */ } },
       });
+    }
+
+    /** Brief chat bubble (no text) for social beats — pack-accurate. */
+    showChatBubble(sprite, colorKey = 'uiBubbleWhite') {
+      this.showEmote(sprite, 'social', { bubble: true, bubbleKey: colorKey, emoteKey: 'emoteHeart' });
     }
 
     playAmbientPose(actor, pose, opts = {}) {
@@ -4050,8 +4269,12 @@
             const [a, b] = best;
             a.sprite.setFlipX(a.sprite.x > b.sprite.x);
             b.sprite.setFlipX(b.sprite.x > a.sprite.x);
-            this.playAmbientPose(a, 'wave', { force: true });
-            this.time.delayedCall(220, () => this.playAmbientPose(b, Math.random() < 0.5 ? 'wave' : 'snicker', { force: true }));
+            this.playAmbientPose(a, 'wave', { force: true, emoteOpts: { bubble: true, bubbleKey: 'uiBubbleBlue' } });
+            this.showChatBubble(a.sprite, 'uiBubbleBlue');
+            this.time.delayedCall(220, () => {
+              this.playAmbientPose(b, Math.random() < 0.5 ? 'wave' : 'snicker', { force: true });
+              this.showChatBubble(b.sprite, 'uiBubbleGreen');
+            });
             break;
           }
         }
@@ -4168,45 +4391,168 @@
       const ch = meta.channelCount != null ? meta.channelCount : (this.floors?.size || 0);
       const cats = meta.categoryCount != null ? meta.categoryCount : (this.buildings?.length || 0);
       const pad = 8;
-      if (this.textures.exists('uiPanelBlue')) {
-        this.add.image(pad, pad, 'uiPanelBlue')
-          .setOrigin(0, 0).setScrollFactor(0).setDepth(500)
-          .setDisplaySize(168, 52).setAlpha(0.94);
+      const D = 500;
+
+      // —— Top-left community panel (Pixel Spaces panel + tabs) ——
+      const panelKey = this.textures.exists('uiPanelBlueBg') ? 'uiPanelBlueBg'
+        : (this.textures.exists('uiPanelBlue') ? 'uiPanelBlue' : null);
+      if (panelKey) {
+        this._hudPanel = this.add.image(pad, pad, panelKey)
+          .setOrigin(0, 0).setScrollFactor(0).setDepth(D)
+          .setDisplaySize(196, 78).setAlpha(0.96);
       } else {
-        this.add.rectangle(pad + 84, pad + 26, 168, 52, 0x1e293b, 0.88)
-          .setScrollFactor(0).setDepth(500);
+        this._hudPanel = this.add.rectangle(pad + 98, pad + 39, 196, 78, 0x1e293b, 0.9)
+          .setScrollFactor(0).setDepth(D);
       }
-      this.add.text(pad + 12, pad + 8, label, {
+      if (this.textures.exists('uiTabBlue')) {
+        this.add.image(pad + 4, pad - 2, 'uiTabBlue')
+          .setOrigin(0, 0).setScrollFactor(0).setDepth(D + 1)
+          .setDisplaySize(72, 16).setAlpha(0.95);
+      }
+      this.add.text(pad + 12, pad + 4, label, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '12px', fontStyle: 'bold', color: '#f8fafc',
-      }).setScrollFactor(0).setDepth(501).setResolution(2);
-      this._hudSub = this.add.text(pad + 12, pad + 28, `${cats} blocks · ${ch} rooms`, {
+        fontSize: '11px', fontStyle: 'bold', color: '#f8fafc',
+      }).setScrollFactor(0).setDepth(D + 2).setResolution(2);
+      this._hudSub = this.add.text(pad + 12, pad + 22, `${cats} blocks · ${ch} rooms`, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '10px', color: '#cbd5e1',
-      }).setScrollFactor(0).setDepth(501).setResolution(2);
+      }).setScrollFactor(0).setDepth(D + 2).setResolution(2);
+
+      // Population + person emote (pack icons)
+      if (this.textures.exists('iconPopulation')) {
+        this.add.image(pad + 14, pad + 48, 'iconPopulation')
+          .setScale(SCALE).setScrollFactor(0).setDepth(D + 2).setOrigin(0.5);
+      }
       if (this.textures.exists('uiPerson')) {
-        this.add.image(pad + 148, pad + 26, 'uiPerson')
-          .setScale(SCALE).setScrollFactor(0).setDepth(501);
+        this.add.image(pad + 176, pad + 18, 'uiPerson')
+          .setScale(SCALE).setScrollFactor(0).setDepth(D + 2);
       }
 
-      // Life event strip (bottom)
-      this._eventLogBg = this.add.rectangle(W / 2, H - 18, W - 24, 28, 0x0f172a, 0.72)
-        .setScrollFactor(0).setDepth(500).setOrigin(0.5);
-      this._eventLogText = this.add.text(16, H - 26, 'Block life starting…', {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '11px',
-        color: '#e2e8f0',
-      }).setScrollFactor(0).setDepth(501).setResolution(2);
+      // Mini need legend bars (how Pixel Spaces status UI is meant to read)
+      this._hudNeedRows = [];
+      const needDefs = [
+        { icon: 'statusHunger', color: 'Orange', label: 'food' },
+        { icon: 'statusEnergy', color: 'Green', label: 'rest' },
+        { icon: 'statusComfort1', color: 'Blue', label: 'social' },
+      ];
+      needDefs.forEach((nd, i) => {
+        const x0 = pad + 28 + i * 54;
+        const y0 = pad + 48;
+        if (this.textures.exists(nd.icon)) {
+          this.add.image(x0, y0, nd.icon)
+            .setScale(SCALE * 0.9).setScrollFactor(0).setDepth(D + 2).setOrigin(0.5);
+        }
+        const barKey = progressBarKey(nd.color, 0.6);
+        const bar = this.add.image(x0 + 18, y0, this.textures.exists(barKey) ? barKey : 'barEmpty')
+          .setScale(SCALE * 0.85).setScrollFactor(0).setDepth(D + 2).setOrigin(0, 0.5);
+        this._hudNeedRows.push({ color: nd.color, bar, kind: nd.label });
+      });
 
-      // Clock / day-night readout
-      this._clockText = this.add.text(W - 12, 12, '', {
+      // —— Day XP / clock panel (top-right) ——
+      if (this.textures.exists('uiPanelYellow')) {
+        this.add.image(W - pad, pad, 'uiPanelYellow')
+          .setOrigin(1, 0).setScrollFactor(0).setDepth(D)
+          .setDisplaySize(148, 56).setAlpha(0.94);
+      }
+      this._clockText = this.add.text(W - pad - 12, pad + 8, '', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '11px',
         fontStyle: 'bold',
-        color: '#fef3c7',
-        backgroundColor: '#1e293bcc',
-        padding: { x: 8, y: 4 },
-      }).setOrigin(1, 0).setScrollFactor(0).setDepth(501).setResolution(2);
+        color: '#1e293b',
+      }).setOrigin(1, 0).setScrollFactor(0).setDepth(D + 2).setResolution(2);
+      this._xpBar = this.add.image(W - pad - 12, pad + 36, this.textures.exists('xpBar0') ? 'xpBar0' : 'barEmpty')
+        .setOrigin(1, 0.5).setScale(SCALE).setScrollFactor(0).setDepth(D + 2);
+
+      // —— Event log on grey panel (bottom) ——
+      if (this.textures.exists('uiPanelGreyBg')) {
+        this._eventLogBg = this.add.image(W / 2, H - 8, 'uiPanelGreyBg')
+          .setOrigin(0.5, 1).setScrollFactor(0).setDepth(D)
+          .setDisplaySize(W - 20, 36).setAlpha(0.92);
+      } else {
+        this._eventLogBg = this.add.rectangle(W / 2, H - 18, W - 24, 28, 0x0f172a, 0.72)
+          .setScrollFactor(0).setDepth(D).setOrigin(0.5);
+      }
+      if (this.textures.exists('iconMail')) {
+        this.add.image(22, H - 22, 'iconMail')
+          .setScale(SCALE * 0.9).setScrollFactor(0).setDepth(D + 2).setOrigin(0.5);
+      }
+      this._eventLogText = this.add.text(36, H - 28, 'Block life starting…', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '11px',
+        color: '#e2e8f0',
+      }).setScrollFactor(0).setDepth(D + 2).setResolution(2);
+
+      // Player selection pointer (pack “NPC selection arrow”) + feet ring
+      if (this.textures.exists('pointerGreen')) {
+        this._playerPointer = this.add.image(0, 0, 'pointerGreen')
+          .setScale(SCALE).setDepth(48).setOrigin(0.5, 1).setVisible(false);
+      }
+      if (this.textures.exists('selGreen1')) {
+        this._playerSel = this.add.image(0, 0, 'selGreen1')
+          .setScale(SCALE * 0.9).setDepth(40).setOrigin(0.5, 0.5).setAlpha(0.85).setVisible(false);
+      }
+    }
+
+    /** Keep player pointer + selection ring planted (pack UI). */
+    updatePlayerUiChrome() {
+      if (!this.player?.active) return;
+      const px = this.player.x;
+      const py = this.player.y;
+      const bob = Math.sin((this.time?.now || 0) / 280) * 3;
+      if (this._playerPointer?.active) {
+        this._playerPointer.setVisible(true).setPosition(px, py - 40 + bob);
+      }
+      if (this._playerSel?.active) {
+        this._playerSel.setVisible(true).setPosition(px, py + 2);
+      }
+    }
+
+    /**
+     * Life-sim chrome: status need icon over resident (Pixel Spaces design).
+     * Shows the dominant need / mood face above name tags.
+     */
+    syncResidentChrome(entry) {
+      if (!entry?.sprite?.active || !entry.resident) return;
+      const r = entry.resident;
+      const sp = entry.sprite;
+      const sx = sp.x;
+      const sy = sp.y;
+      const depth = (sp.depth || 36) + 3;
+      const iconKey = statusIconForResident(r);
+      if (!this.textures.exists(iconKey)) return;
+      if (!entry.needIcon || !entry.needIcon.active) {
+        entry.needIcon = this.add.image(sx + 12, sy - 42, iconKey)
+          .setScale(SCALE * 0.95).setDepth(depth).setOrigin(0.5, 1);
+      } else {
+        if (entry.needIcon.texture?.key !== iconKey) entry.needIcon.setTexture(iconKey);
+        entry.needIcon.setPosition(sx + 12, sy - 42).setVisible(true);
+      }
+      // Hide text job tag clutter when we have icon (keep activity text light)
+      if (entry.jobTag?.active) {
+        entry.jobTag.setAlpha(0.85);
+      }
+    }
+
+    /** Refresh HUD need bars from average resident needs + day XP. */
+    refreshHudNeeds() {
+      if (!this.blockLife || !this._hudNeedRows?.length) return;
+      const alive = this.blockLife.residents.filter((r) => r.alive);
+      if (!alive.length) return;
+      const avg = (fn) => alive.reduce((s, r) => s + fn(r), 0) / alive.length;
+      // food bar = 1 - hunger pressure; rest = energy; social = 1 - social need
+      const food = 1 - avg((r) => r.needs?.hunger ?? 0.5);
+      const rest = avg((r) => r.needs?.energy ?? 0.5);
+      const social = 1 - avg((r) => r.needs?.social ?? 0.5);
+      const vals = [food, rest, social];
+      this._hudNeedRows.forEach((row, i) => {
+        const key = progressBarKey(row.color, vals[i] ?? 0.5);
+        if (row.bar?.active && this.textures.exists(key)) row.bar.setTexture(key);
+      });
+      if (this._xpBar?.active) {
+        const dayFrac = ((this.blockLife.hour || 0) + 1) / 24;
+        const xk = xpBarKey(dayFrac);
+        if (this.textures.exists(xk)) this._xpBar.setTexture(xk);
+      }
     }
 
     // ——— Block life sim (named residents, needs, relationships, day/night) ———
@@ -4447,8 +4793,9 @@
       if (this._hudSub && this.blockLife) {
         const alive = this.blockLife.residents.filter((r) => r.alive).length;
         const couples = this.blockLife.residents.filter((r) => r.alive && r.partnerId).length / 2;
-        this._hudSub.setText(`${alive} residents · ${Math.floor(couples)} couples · day ${this.blockLife.day}`);
+        this._hudSub.setText(`${alive} neighbors · ${Math.floor(couples)} couples · day ${this.blockLife.day}`);
       }
+      this.refreshHudNeeds();
     }
 
     driveResidents() {
@@ -4498,6 +4845,8 @@
         entry.jobTag?.setPosition(entry.sprite.x, entry.sprite.y - 48);
         r.x = entry.sprite.x;
         r.y = entry.sprite.y;
+        // Pixel Spaces need icon over head (hunger/energy/mood)
+        this.syncResidentChrome(entry);
 
         // Don't interrupt mid-walk / mid-nav / mid-pose / seated
         if (!actor || this.time.now < (actor.busyUntil || 0) || actor.state === 'walk'
@@ -5781,6 +6130,7 @@
         }
       }
       this.playerTag.setPosition(this.player.x, this.player.y - 34);
+      this.updatePlayerUiChrome();
 
       // Zone label + contextual hints
       let zone = 'lobby';
