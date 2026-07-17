@@ -4,6 +4,7 @@
   const FULL = './PixelSpacesFull';
   const IA = `${FULL}/Individual Assets`;
   const EXP = `${FULL}/Expansions`;
+  const PACKS_EXTRA = './PacksExtra';
   const W = 980;
   const H = 420;
   const SCALE = 2;
@@ -131,6 +132,12 @@
     houseBeige: `${BG}/House_small_beige.png`,
     houseBlue: `${BG}/House_small_blue.png`,
     houseGreen: `${BG}/House_small_green.png`,
+    housePurple: `${BG}/House_small_purple.png`,
+    houseYellow: `${BG}/House_small_yellow.png`,
+    shopBlue: `${BG}/Shop_blue.png`,
+    shopRed: `${BG}/Shop_red.png`,
+    bush: `${BG}/Bush.png`,
+    bushBerry: `${BG}/Bush_berry.png`,
     // Infrastructure (interaction anchors — keep intact)
     // Pack "closed" doors are edge-on 5px slivers (read as open/side). We keep
     // the open swing sprite from the pack and generate a real front-facing
@@ -479,7 +486,124 @@
     stoneTablet: `${EXP}/Archaeology/Individual Assets/StoneTablet_grey.png`,
     potteryAncient: `${EXP}/Archaeology/Individual Assets/Pottery_ancient_1.png`,
     fossilFish: `${EXP}/Archaeology/Individual Assets/Fossil_fish.png`,
+
+    // ---- Roof sprite caps (city-block facade grammar; theme-colored) ----
+    roofRedC: `${INF}/Roof_1_red_connecting.png`, roofRedE: `${INF}/Roof_1_red_end.png`,
+    roofBlueC: `${INF}/Roof_1_blue_connecting.png`, roofBlueE: `${INF}/Roof_1_blue_end.png`,
+    roofGreenC: `${INF}/Roof_1_green_connecting.png`, roofGreenE: `${INF}/Roof_1_green_end.png`,
+    roofOrangeC: `${INF}/Roof_1_orange_connecting.png`, roofOrangeE: `${INF}/Roof_1_orange_end.png`,
+    roofPurpleC: `${INF}/Roof_1_purple_connecting.png`, roofPurpleE: `${INF}/Roof_1_purple_end.png`,
+    roofBlackC: `${INF}/Roof_1_black_connecting.png`, roofBlackE: `${INF}/Roof_1_black_end.png`,
+    roofYellowC: `${INF}/Roof_1_yellow_connecting.png`, roofYellowE: `${INF}/Roof_1_yellow_end.png`,
+
+    // ---- UI expansion (plaques, bubbles, emotes, HUD) ----
+    uiTabBlue: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_blue_tab.png`,
+    uiTabGreen: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_green_tab.png`,
+    uiTabGrey: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_grey_tab.png`,
+    uiTabRed: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_red_tab.png`,
+    uiTabPurple: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_purple_tab.png`,
+    uiTabYellow: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_yellow_tab.png`,
+    uiPanelBlue: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Panel_blue.png`,
+    uiButtonBlueLong: `${FULL}/UI/Buttons, Sliders, Panels, Frames, Selection/Button_blue_long.png`,
+    uiStar: `${FULL}/UI/Emotes/Star.png`,
+    uiPerson: `${FULL}/UI/Emotes/Person.png`,
+    uiBubbleWhite: `${FULL}/UI/Chat Bubbles/ChatBubble_white.png`,
+    uiBubbleBlue: `${FULL}/UI/Chat Bubbles/ChatBubble_blue.png`,
+    uiBubbleGrey: `${FULL}/UI/Chat Bubbles/ChatBubble_grey.png`,
+    uiBubbleGreen: `${FULL}/UI/Chat Bubbles/ChatBubble_green.png`,
+    emoteHeart: `${FULL}/UI/Emotes/Heart_green.png`,
+    emoteQuestion: `${FULL}/UI/Emotes/Question.png`,
+    emoteExclaim: `${FULL}/UI/Emotes/Exclamation_yellow.png`,
+    emoteFire: `${FULL}/UI/Emotes/Fire.png`,
+    emoteGaming: `${FULL}/UI/Emotes/Gaming.png`,
+    emoteMoney: `${FULL}/UI/Emotes/Money.png`,
+    emoteMedical: `${FULL}/UI/Emotes/Medical_cross.png`,
+    // Presence status (UI expansion) — happiness scale maps mute/deaf/live
+    statusHappy0: `${FULL}/UI/Icons/Status_happiness_0.png`, // dead / deaf
+    statusHappy1: `${FULL}/UI/Icons/Status_happiness_1.png`, // sad / muted
+    statusHappy2: `${FULL}/UI/Icons/Status_happiness_2.png`, // neutral
+    statusHappy3: `${FULL}/UI/Icons/Status_happiness_3.png`, // ok
+    statusHappy4: `${FULL}/UI/Icons/Status_happiness_4.png`, // happy / open mic
+    pointerGreen: `${FULL}/UI/Icons/Pointer_green.png`,
+    pointerGrey: `${FULL}/UI/Icons/Pointer_grey.png`,
+    pointerBlue: `${FULL}/UI/Icons/Pointer_blue.png`,
+    boostIcon: `${FULL}/UI/Icons/Boost.png`,
+
+    // ---- Pixel Platter food (NPCs walk to these sprites and eat them) ----
+    foodBurger: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Burger.png`,
+    foodPizza: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Pizza.png`,
+    foodFries: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/French_fries.png`,
+    foodHotdog: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Hotdog_mustard.png`,
+    foodHotdogPlain: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Hotdog.png`,
+    foodCake: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Cake_red_velvet.png`,
+    foodTiramisu: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Tiramisu.png`,
+    foodPie: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Pie_pumpkin.png`,
+    foodMacarons: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Macarons.png`,
+    foodIceCream: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/IceCream_sandwich.png`,
+    foodSoda: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Soda.png`,
+    foodCreme: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Creme_brulee.png`,
+    foodApple: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_apple.png`,
+    foodBanana: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_banana.png`,
+    foodStrawberry: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_strawberry.png`,
+    foodCherry: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_cherry.png`,
+    foodGrapes: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_grapes.png`,
+    foodKiwi: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_kiwi.png`,
+    foodLemon: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_lemon.png`,
+    foodOrange: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_orange.png`,
+    foodPear: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_pear.png`,
+    foodRaspberry: `${PACKS_EXTRA}/PixelPlatter/Pixel Platter/Fruit_raspberry.png`,
   };
+
+  // Pets — Paws & Whiskers free packs (NON-COMMERCIAL).
+  // Sheet 1024×64 = 32×32 cells · 8 dirs × 4 frames on row 0 (walk).
+  // Frame 3 mirrors frame 1 → cycle 0→1→2→1. Dir: 0=S 1=SE 2=E 3=NE 4=N 5=NW 6=W 7=SW
+  // Art feet sit ~6px above cell bottom → use PET_FOOT_ORIGIN_Y so they plant on groundY.
+  const PET_FRAME = 32;
+  const PET_DIRS = 8;
+  const PET_WALK_LEN = 4;
+  const PET_FOOT_ORIGIN_Y = 26 / 32; // opaque feet ~y25
+  // Smaller than NPCs (SCALE=2)
+  const PET_SCALE_DOG = 1.55;
+  const PET_SCALE_CAT = 1.22;
+  // Advance walk frame every N world-pixels moved (distance-driven = looks like walking)
+  const PET_PX_PER_STEP = 5;
+  const PET_SHEETS = [
+    { key: 'petCat', path: `${PACKS_EXTRA}/Cats/Cat_1_spritesheet_free.png`, scale: PET_SCALE_CAT },
+    { key: 'petDog', path: `${PACKS_EXTRA}/Dogs/GoldenRetriever_spritesheet_free.png`, scale: PET_SCALE_DOG },
+  ];
+  /** Street travel → E/W side profiles (most readable walk). */
+  function petDirFromDelta(dx, dy) {
+    if (dx === 0 && dy === 0) return 2;
+    const ax = Math.abs(dx);
+    const ay = Math.abs(dy);
+    if (ax >= ay * 0.5) return dx > 0 ? 2 : 6; // E / W
+    if (ay > ax) return dy > 0 ? 0 : 4;
+    if (dx > 0 && dy > 0) return 1;
+    if (dx > 0 && dy < 0) return 3;
+    if (dx < 0 && dy < 0) return 5;
+    return 7;
+  }
+  function petScaleFor(key) {
+    return key === 'petCat' ? PET_SCALE_CAT : PET_SCALE_DOG;
+  }
+  /** Walk frame indices for a direction: 0,1,2,1 loop. */
+  function petWalkFrames(dir) {
+    const base = (dir % PET_DIRS) * PET_WALK_LEN;
+    return [base, base + 1, base + 2, base + 1];
+  }
+  function petIdleFrame(dir) {
+    return (dir % PET_DIRS) * PET_WALK_LEN;
+  }
+
+  const FOOD_KEYS = [
+    'foodBurger', 'foodPizza', 'foodFries', 'foodHotdog', 'foodHotdogPlain',
+    'foodCake', 'foodTiramisu', 'foodPie', 'foodMacarons', 'foodIceCream',
+    'foodSoda', 'foodCreme',
+    'foodApple', 'foodBanana', 'foodStrawberry', 'foodCherry', 'foodGrapes',
+    'foodKiwi', 'foodLemon', 'foodOrange', 'foodPear', 'foodRaspberry',
+  ];
+  // Readable at room scale; still smaller than furniture
+  const FOOD_SCALE = 1.35;
 
   // 30 pre-made NPC sheets (15 male + 15 female), 16x32 frames, 14 anim rows
   // (row 0 = walk, row 1 = idle). Real characters replace the old 2-sprite crowd.
@@ -499,6 +623,39 @@
   // plants the character on the ground line.
   const NPC_FOOT_ORIGIN_Y = 24 / 32;
 
+  /**
+   * Full Pixel Spaces premade NPC row map (8 cols × 14 rows, 32×32).
+   * Real frame counts skip the trailing label cell on each row.
+   * durationMs ≈ (frames / fps) * (repeat+1) * 1000 — used for pose holds.
+   */
+  // Snappier fps + more repeats so poses read clearly at 2× scale
+  const NPC_POSE_DEFS = {
+    // Calmer fps so poses read clean (not twitchy)
+    walk: { row: 0, frames: 4, fps: 7, repeat: -1, loop: true },
+    idle: { row: 1, frames: 3, fps: 2, repeat: -1, loop: true },
+    jump: { row: 2, frames: 2, fps: 8, repeat: 0 },
+    sit: { row: 3, frames: 3, fps: 10, repeat: 0 },
+    sitIdle: { row: 4, frames: 3, fps: 2, repeat: -1, loop: true },
+    sitFinish: { row: 5, frames: 3, fps: 11, repeat: 0 },
+    lie: { row: 6, frames: 6, fps: 10, repeat: 0 },
+    lieIdle: { row: 6, frames: 1, fps: 1, repeat: -1, loop: true, frameOffset: 5 },
+    lieFinish: { row: 7, frames: 6, fps: 11, repeat: 0 },
+    eat: { row: 8, frames: 2, fps: 6, repeat: 4 },
+    eatSit: { row: 9, frames: 2, fps: 6, repeat: 4 },
+    hurt: { row: 10, frames: 3, fps: 8, repeat: 0 },
+    shrug: { row: 11, frames: 7, fps: 9, repeat: 0 },
+    snicker: { row: 12, frames: 2, fps: 6, repeat: 2 },
+    wave: { row: 13, frames: 4, fps: 8, repeat: 1 },
+  };
+  const NPC_ONE_SHOT_POSES = ['jump', 'sit', 'sitFinish', 'lie', 'lieFinish', 'eat', 'eatSit', 'hurt', 'shrug', 'snicker', 'wave'];
+  function poseDurationMs(pose) {
+    const d = NPC_POSE_DEFS[pose];
+    if (!d) return 600;
+    if (d.loop || d.repeat < 0) return 900;
+    const plays = (d.repeat || 0) + 1;
+    return Math.ceil((d.frames / Math.max(1, d.fps)) * plays * 1000) + 60;
+  }
+
   // Distinct saturated wall color per room + warm floor strip — the #1 reference
   // signature. Rooms used to all be near-white beige.
   // ——— Interactable furniture ———
@@ -508,27 +665,35 @@
   // above the floor line (screen px at SCALE 2), used to park the player
   // sprite on top of the furniture. Registration happens automatically in
   // furn(), so every couch/stool/bed across every kit and theme works.
+  // surfaceH = how far above floorY the sit/lie contact point is (screen px at SCALE 2).
+  // Tuned for Pixel Spaces chibi frames (foot origin) so butts land on cushions, not float.
   const SEAT_INFO = {
-    couchBlue: 10, couchGreen: 10, couchRed: 10, couchGrey: 10, couchYellow: 10, couchDark: 10,
-    couchSmall: 10, couchSmallG: 10, couchSmallR: 10, couchSmallY: 10, couchSmallGr: 10,
-    stoolBlue: 12, stoolRed: 12, stoolYellow: 12, stoolGreen: 12, stool: 12, stoolB: 12,
-    officechairBlue: 12, officechairRed: 12, officechairPurple: 12, officechairOrange: 12,
-    throneRed: 12, throneBlue: 12, throneGreen: 12, thronePurple: 12, throneYellow: 12,
-    waitChairSolo: 12, waitChairSoloRed: 12, waitChairs: 12, waitChairsRed: 12,
-    chairHalloween: 12, benchWood: 10,
+    couchBlue: 7, couchGreen: 7, couchRed: 7, couchGrey: 7, couchYellow: 7, couchDark: 7,
+    couchSmall: 7, couchSmallG: 7, couchSmallR: 7, couchSmallY: 7, couchSmallGr: 7,
+    stoolBlue: 9, stoolRed: 9, stoolYellow: 9, stoolGreen: 9, stool: 9, stoolB: 9,
+    officechairBlue: 8, officechairRed: 8, officechairPurple: 8, officechairOrange: 8,
+    throneRed: 9, throneBlue: 9, throneGreen: 9, thronePurple: 9, throneYellow: 9,
+    waitChairSolo: 8, waitChairSoloRed: 8, waitChairs: 8, waitChairsRed: 8,
+    chairHalloween: 8, benchWood: 6,
   };
   const BED_INFO = {
-    bed: 12, bedBlue: 12, bedGreen: 12,
-    bedHosp: 12, bunkBottom: 12, tableSurgery: 14, coffin: 12,
+    // Lie frames already include mattress height — keep close to floor plank
+    bed: 4, bedBlue: 4, bedGreen: 4,
+    bedHosp: 5, bunkBottom: 4, tableSurgery: 8, coffin: 3,
   };
 
   /** Floor hosts that surface props (laptop etc.) can sit on — height = top above floor. */
   const SURFACE_HOSTS = {
-    desk: 14, desk2: 14, coffee: 10, counter: 14, counterEnd: 14,
-    tableLong: 14, deskOffice: 14, policeDesk: 14, filecabinet: 0,
+    desk: 14, desk2: 14, coffee: 10, coffee2: 10, counter: 14, counterEnd: 14,
+    tableLong: 14, tableMed2: 12, deskOffice: 14, policeDesk: 14, filecabinet: 0,
   };
   /** Props that must sit ON a surface host (not float mid-air). */
   const SURFACE_PROPS = new Set(['laptop', 'books', 'books2', 'radio', 'paperStack', 'paperStack2']);
+  /** Tables/counters that get Pixel Platter food dressing. */
+  const FOOD_HOST_KEYS = new Set([
+    'coffee', 'coffee2', 'counter', 'counterEnd', 'tableLong', 'tableMed2',
+    'desk', 'desk2', 'deskOffice', 'policeDesk',
+  ]);
 
   const ROOM_WALL_COLORS = [
     0x2f6f9e, 0xd9862b, 0x3f9e57, 0xc0433d, 0x7d54ad,
@@ -546,42 +711,52 @@
   // Kits use layout "slots" left→right after the climb door band (~0.22+).
   // Groups stay together (desk+laptop+chair). Sparse > cluttered.
   const KITS = {
-    lounge: [
-      { key: ['couchBlue', 'couchGreen', 'couchRed', 'couchYellow'], xf: 0.42, depth: 23, sit: true },
-      { key: 'coffee', xf: 0.58, depth: 24, near: 'couch' },
-      { key: ['lamp', 'lamp2', 'lamp3'], xf: 0.72, depth: 22 },
-      { key: ['floraFern', 'floraSnake', 'floraAloe'], xf: 0.88, depth: 24 },
-    ],
     library: [
-      { key: 'bookshelf', xf: 0.36, depth: 22 },
-      { key: 'bookshelf2', xf: 0.52, depth: 22 },
-      { key: ['couchSmall', 'couchSmallGr'], xf: 0.72, depth: 23, sit: true },
-      { key: ['floraBonsai', 'floraSucculent'], xf: 0.9, depth: 24 },
+      { key: 'bookshelf', xf: 0.34, depth: 22 },
+      { key: 'bookshelf2', xf: 0.48, depth: 22 },
+      { key: ['couchSmall', 'couchSmallGr'], xf: 0.68, depth: 23, sit: true },
+      { key: 'coffee', xf: 0.82, depth: 24 },
+      { key: ['floraBonsai', 'floraSucculent'], xf: 0.94, depth: 24 },
+      { key: 'clipboard', xf: 0.55, depth: 21, wall: true },
     ],
     office: [
-      { key: ['desk', 'desk2'], xf: 0.42, depth: 22 },
-      { key: 'laptop', xf: 0.42, depth: 24, onSurface: true },
-      { key: ['officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange'], xf: 0.58, depth: 23, sit: true },
-      { key: 'shelfMedium', xf: 0.8, depth: 22 },
+      { key: ['desk', 'desk2'], xf: 0.40, depth: 22 },
+      { key: 'laptop', xf: 0.40, depth: 24, onSurface: true },
+      { key: ['officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange'], xf: 0.56, depth: 23, sit: true },
+      { key: 'shelfMedium', xf: 0.78, depth: 22 },
       { key: ['floraSucculent', 'flora'], xf: 0.92, depth: 24 },
+      { key: 'clipboard', xf: 0.72, depth: 21, wall: true },
     ],
     cafe: [
-      { key: 'counter', xf: 0.38, depth: 22 },
-      { key: 'counterEnd', xf: 0.52, depth: 22 },
-      { key: ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], xf: 0.66, depth: 23, sit: true },
-      { key: ['potRed', 'potYellow'], xf: 0.88, depth: 24 },
+      { key: 'counter', xf: 0.36, depth: 22 },
+      { key: 'counterEnd', xf: 0.50, depth: 22 },
+      { key: ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], xf: 0.64, depth: 23, sit: true },
+      { key: ['stoolBlue', 'stoolGreen'], xf: 0.76, depth: 23, sit: true },
+      { key: ['potRed', 'potYellow'], xf: 0.90, depth: 24 },
+      { key: 'food', xf: 0.43, depth: 25, onSurface: true, food: true },
     ],
     kitchen: [
-      { key: 'fridge', xf: 0.34, depth: 22 },
-      { key: 'counter', xf: 0.52, depth: 22 },
-      { key: 'oven', xf: 0.68, depth: 22 },
-      { key: 'sink', xf: 0.84, depth: 22 },
+      { key: 'fridge', xf: 0.32, depth: 22 },
+      { key: 'counter', xf: 0.50, depth: 22 },
+      { key: 'oven', xf: 0.66, depth: 22 },
+      { key: 'sink', xf: 0.82, depth: 22 },
+      { key: 'food', xf: 0.50, depth: 25, onSurface: true, food: true },
+      { key: ['floraAloe', 'floraSnake'], xf: 0.94, depth: 24 },
+    ],
+    lounge: [
+      { key: ['couchBlue', 'couchGreen', 'couchRed', 'couchYellow'], xf: 0.40, depth: 23, sit: true },
+      { key: 'coffee', xf: 0.56, depth: 24, near: 'couch' },
+      { key: ['lamp', 'lamp2', 'lamp3'], xf: 0.70, depth: 22 },
+      { key: ['floraFern', 'floraSnake', 'floraAloe'], xf: 0.86, depth: 24 },
+      { key: 'food', xf: 0.56, depth: 25, onSurface: true, food: true },
+      { key: 'clipboard', xf: 0.48, depth: 21, wall: true },
     ],
     reception: [
-      { key: 'tableLong', xf: 0.44, depth: 22 },
-      { key: 'clipboard', xf: 0.62, depth: 24, wall: true },
-      { key: ['couchSmall', 'couchSmallY'], xf: 0.8, depth: 23, sit: true },
+      { key: 'tableLong', xf: 0.42, depth: 22 },
+      { key: 'clipboard', xf: 0.58, depth: 24, wall: true },
+      { key: ['couchSmall', 'couchSmallY'], xf: 0.76, depth: 23, sit: true },
       { key: ['floraRose', 'floraFern'], xf: 0.92, depth: 24 },
+      { key: 'food', xf: 0.42, depth: 25, onSurface: true, food: true },
     ],
     cozy: [
       { key: ['bedBlue', 'bedGreen', 'bed'], xf: 0.44, depth: 23, sit: true, bed: true },
@@ -632,6 +807,7 @@
       wall: 0xd88a5a, side: 0xb06a40, outline: 0x4a2410, roof: 0xc07048, band: 0x8a4e2c,
       signKey: 'cafeSign', signScale: SCALE,
       stripStyle: { color: '#ffe8d0', bg: '#6a3a1a' },
+      roofKey: 'roofOrangeC', plaqueKey: 'uiTabYellow',
       // Elevator lane is the shared left strip (dx 14-58, shaft at 36).
       // Layout logic: dining sets read as table-flanked-by-seats pairs,
       // greenery bookends the right wall, food service runs left-of-center.
@@ -677,6 +853,7 @@
       wall: 0x2a2a3e, side: 0x1c1c2c, outline: 0x0c0c16, roof: 0x3c3c58, band: 0x14142a,
       title: { color: '#c8f8ff', bg: '#1c1c2c' },
       stripStyle: { color: '#c8f8ff', bg: '#14142a' },
+      roofKey: 'roofPurpleC', plaqueKey: 'uiTabPurple',
       // Elevator lane left (shaft at 36). Layout logic: battlestation desk
       // cluster (PC + desk + monitor + mic + throne) center-left, trophy
       // shelf mid-right, second throne facing the mounted TV on the right.
@@ -721,6 +898,7 @@
       wall: 0xe8ecf2, side: 0xc0c8d4, outline: 0x2a3444, roof: 0xd8e0ea, band: 0x9aa8ba,
       signKey: 'hospSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#ffffff', bg: '#c0392b' },
+      roofKey: 'roofBlueC', plaqueKey: 'uiTabBlue',
       // Elevator lane left (shaft at 36). Layout logic: supply storage sits
       // by the lane, the operating table + light are the room's centerpiece
       // with the saline drip at its head, records computer against the far
@@ -756,6 +934,7 @@
       wall: 0xd8c8a8, side: 0xb8a888, outline: 0x3a2e1c, roof: 0xc8b896, band: 0x8a7a5a,
       title: { color: '#3a2e1c', bg: '#f0e4c8' },
       stripStyle: { color: '#f8f0d8', bg: '#5a4a30' },
+      roofKey: 'roofYellowC', plaqueKey: 'uiTabYellow',
       // Elevator lane left (shaft at 36). Layout logic: the space wing hangs
       // the solar system in orbit order left→right with exhibit cases below;
       // the fossil hall centers the triceratops on its platform between
@@ -796,6 +975,7 @@
       wall: 0x5a7a9a, side: 0x42607e, outline: 0x14202e, roof: 0x4a6a8a, band: 0x2a4058,
       signKey: 'policeSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#d8e8f8', bg: '#1a2a3a' },
+      roofKey: 'roofBlackC', plaqueKey: 'uiTabBlue',
       // Elevator lane left (shaft at 36). Layout logic: booking room reads
       // left→right as records cabinet, officer desk with paperwork under
       // the duty clipboard/portrait, then the holding cell (bars over the
@@ -831,6 +1011,7 @@
       wall: 0xc84a3a, side: 0xa03828, outline: 0x3a0e08, roof: 0xb04030, band: 0x701e14,
       signKey: 'fireSign', signScale: SCALE * 0.85,
       stripStyle: { color: '#ffe0d0', bg: '#701e14' },
+      roofKey: 'roofRedC', plaqueKey: 'uiTabRed',
       doorKind: 'door',
       // Climb door on the left lane (dx ~36). Rooms are too small for elev
       // shafts — a compact door marks inter-floor travel instead.
@@ -868,6 +1049,7 @@
       wall: 0x4a3458, side: 0x362442, outline: 0x140a1c, roof: 0x3a2848, band: 0x241432,
       title: { color: '#ffb858', bg: '#241432' },
       stripStyle: { color: '#ffb858', bg: '#140a1c' },
+      roofKey: 'roofBlackC', plaqueKey: 'uiTabPurple',
       // Elevator lane left (shaft at 36; the cobweb stays in the top-left
       // corner above it). Layout logic: attic = coffin flanked by a grave
       // candle, then mummy / ghost-lamp / skeleton spaced down the room;
@@ -945,6 +1127,11 @@
       Object.entries(ASSETS).forEach(([k, p]) => this.load.image(k, p));
       // 30 pre-made NPC sheets (16x32 frames): row 0 walk, row 1 idle.
       NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
+      // Street pets — 32x32 frames (Paws & Whiskers free packs).
+      PET_SHEETS.forEach((p) => this.load.spritesheet(p.key, p.path, {
+        frameWidth: PET_FRAME,
+        frameHeight: PET_FRAME,
+      }));
       // Missing-asset diagnostics so a bad path shows in console instead of silently vanishing.
       this.load.on('loaderror', (file) => console.warn('[map] asset failed:', file.key, file.src));
     }
@@ -1020,6 +1207,10 @@
       this._themeRR = 0; // round-robin index for THEME_ROTATION_POOL
       this._missingAssets = new Set();
       this.seats = []; // interactable seats/beds, auto-registered by furn()
+      this.foods = []; // interactable food { x, floorY, floorId, key, radius, sprite }
+      this.foodHosts = []; // tables/counters that can hold food { x, floorY, floorId, key, surfaceH }
+      this.ambientActors = []; // { sprite, sheet, roomKey, busyUntil }
+      this.pets = [];
       this.autoDoors = []; // entrance door sprites that open on approach
       this.elevatorDoors = []; // per-floor elevator shaft doors {x, floorId, img}
       this.seated = null; // { seat, prevDepth } while sitting/lying
@@ -1038,17 +1229,27 @@
       this.buildDistantSkyline();
       this.makeAnims();
 
-      this.bootstrapLayout().then(() => {
+      this.bootstrapLayout().then((layoutMeta) => {
         this.flushDecorNpcQueue();
+        this.seedFoodOnAllTables();
         this.spawnDecorNpcs();
+        this.spawnPets();
+        this.startBlockLife(layoutMeta);
+        this.startAmbientLoop();
         this.startPresenceLoop();
         this.setupPlayer();
+        this.buildHud(layoutMeta?.guildName || 'Discord', layoutMeta);
         this.cameras.main.fadeIn(500, 126, 200, 232);
       }).catch(() => {
         this.drawGround();
         this.drawEmptyBuilding(20, this.groundY, 'Discord');
+        this.seedFoodOnAllTables();
         this.setupPlayer();
+        this.spawnPets();
+        this.startBlockLife({ guildName: 'Discord' });
+        this.startAmbientLoop();
         this.startPresenceLoop();
+        this.buildHud('Discord');
       });
     }
 
@@ -1108,6 +1309,25 @@
         this.keyE = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
       } catch (_) {
         this.keyE = null;
+      }
+
+      // Emote hotkeys so every sheet row is demo-able on the player
+      // 1 jump · 2 wave · 3 shrug · 4 snicker · 5 eat · 6 hurt · F8 cycle all
+      this._emoteCycle = 0;
+      try {
+        const KeyCodes = Phaser.Input.Keyboard.KeyCodes;
+        this.emoteKeys = {
+          jump: this.input.keyboard.addKey(KeyCodes.ONE),
+          wave: this.input.keyboard.addKey(KeyCodes.TWO),
+          shrug: this.input.keyboard.addKey(KeyCodes.THREE),
+          snicker: this.input.keyboard.addKey(KeyCodes.FOUR),
+          eat: this.input.keyboard.addKey(KeyCodes.FIVE),
+          hurt: this.input.keyboard.addKey(KeyCodes.SIX),
+          cycle: this.input.keyboard.addKey(KeyCodes.F8),
+          gallery: this.input.keyboard.addKey(KeyCodes.F9),
+        };
+      } catch (_) {
+        this.emoteKeys = null;
       }
 
       const mw = this.mapWidth || W;
@@ -1172,7 +1392,7 @@
         this.drawGround();
         this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
         this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
-        return;
+        return { guildName, channelCount: 0, categoryCount: 0 };
       }
 
       const categoriesMeta = new Map((data.categories || []).map((c) => [c.id, c]));
@@ -1197,6 +1417,13 @@
       catList.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
       let plainIdx = 0;
+      const STREET_GAP = 58;
+      const advanceStreet = (fromX, bw, seedTag) => {
+        const gapStart = fromX + bw;
+        this.placeStreetFiller(gapStart, STREET_GAP, hashSeed(seedTag + gapStart));
+        return gapStart + STREET_GAP;
+      };
+
       for (const cat of catList) {
         const voiceChans = cat.channels.filter((c) => c.type === 'voice' || c.type === 'stage');
         const decision = this.pickTheme(cat);
@@ -1206,17 +1433,17 @@
           const bw = 290;
           this.drawVoiceBuilding(x, this.groundY, voiceChans, cat.name);
           this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: cat.name });
-          x += bw + 36;
+          x = advanceStreet(x, bw, `voice-${cat.id}`);
           continue;
         }
 
         if (decision.kind === 'zone') {
           if (decision.theme === 'winterzone') {
             this.drawWinterPark(x, this.groundY, cat);
-            x += 480 + 60;
+            x = advanceStreet(x, 480, `winter-${cat.id}`);
           } else {
             this.drawDigSite(x, this.groundY, cat);
-            x += 640 + 60;
+            x = advanceStreet(x, 640, `dig-${cat.id}`);
           }
           continue;
         }
@@ -1229,7 +1456,7 @@
             const suffix = total > MAX_ROOMS ? ` ${Math.floor(i / MAX_ROOMS) + 1}` : '';
             const b = this.buildGenericBuilding(decision.theme, x, `${cat.name}${suffix}`, chunk);
             this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: cat.name });
-            x += b.bw + 20;
+            x = advanceStreet(x, b.bw, `theme-${cat.id}-${i}`);
           }
           continue;
         }
@@ -1245,7 +1472,7 @@
           this.drawTextBuilding(x, this.groundY, title, chunk, textPalettes[plainIdx % textPalettes.length]);
           plainIdx += 1;
           this.buildings.push({ left: x, right: x + bw, kind: 'text', channels: chunk, label: title });
-          x += bw + 20;
+          x = advanceStreet(x, bw, `plain-${cat.id}-${i}`);
         }
       }
 
@@ -1253,6 +1480,41 @@
       this.drawGround();
       this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
       this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
+      return {
+        guildName,
+        channelCount: rooms.length,
+        categoryCount: catList.length,
+      };
+    }
+
+    /**
+     * Street rhythm between buildings: background house/shop + bench + tree
+     * so the block reads as a city strip, not empty cyan gaps.
+     */
+    placeStreetFiller(left, gapW, seed) {
+      if (gapW < 36) return;
+      const gy = this.groundY;
+      const mid = left + gapW / 2;
+      const houses = ['houseBeige', 'houseBlue', 'houseGreen', 'houseRed', 'housePurple', 'houseYellow', 'shopBlue', 'shopRed']
+        .filter((k) => this.textures.exists(k));
+      if (houses.length) {
+        const hk = seededPick(seed, houses, 1);
+        this.add.image(mid - 10, gy - 1, hk)
+          .setScale(1.35 + (seed % 3) * 0.08)
+          .setOrigin(0.5, 1)
+          .setDepth(17)
+          .setAlpha(0.92);
+      }
+      if (this.textures.exists('benchWood') && seed % 3 !== 0) {
+        this.furn('benchWood', mid + 18, gy, 19);
+      }
+      if (this.textures.exists('tree') && seed % 2 === 0) {
+        this.add.image(mid + (seed % 2 ? 28 : -28), gy - 1, 'tree')
+          .setScale(1.5).setOrigin(0.5, 1).setDepth(16);
+      }
+      if (this.textures.exists('bush') && seed % 4 === 1) {
+        this.add.image(mid - 22, gy - 1, 'bush').setScale(SCALE).setOrigin(0.5, 1).setDepth(16);
+      }
     }
 
     /** Decide a building theme (or special outdoor zone) for one category. */
@@ -1301,17 +1563,22 @@
       g.lineStyle(3, cfg.outline, 1);
       g.strokeRect(left, top, bw, bh);
 
-      g.fillStyle(cfg.roof, 1);
-      g.fillRect(left - 6, top - 10, bw + 12, 12);
-      g.lineStyle(3, cfg.outline, 1);
-      g.strokeRect(left - 6, top - 10, bw + 12, 12);
+      // Real roof sprites (CITY_POLISH_PLAN building grammar #1): a run of
+      // connecting shingle tiles capped by end pieces, color-matched to the
+      // theme — replaces the old painted rectangle.
+      this.drawRoofCap(left, top, bw, cfg.roofKey || 'roofRedC');
+
+      // Dirt foundation slice under the building (grammar #2) — the store
+      // reference shows an underground band with roots below every room
+      // stack; grounds the facade so it doesn't float on the sidewalk.
+      this.drawFoundation(g, left, bw);
 
       if (cfg.signKey) {
-        this.add.image(left + bw / 2, top - 12, cfg.signKey)
+        this.add.image(left + bw / 2, top - 14, cfg.signKey)
           .setScale(cfg.signScale || SCALE).setOrigin(0.5, 1).setDepth(28);
       }
       if (cfg.title) {
-        this.buildingTitle(left + bw / 2, top - (cfg.signKey ? 0 : 22), shortLabel(cfg.title.text, 22), {
+        this.buildingTitle(left + bw / 2, top - (cfg.signKey ? 0 : 26), shortLabel(cfg.title.text, 22), {
           color: cfg.title.color, bg: cfg.title.bg,
         });
       }
@@ -1327,7 +1594,7 @@
             this.addRoomSlots(room.roomKey, room.slots.map((dx) => [padX + dx, floorY - 1]));
           }
         });
-        this.channelBadge(padX + 4, y0 + 4, shortLabel(room.label, 16));
+        this.roomPlaque(padX + 4, y0 + 4, shortLabel(room.label, 14), room.roomKey, cfg.plaqueKey);
         floorDefs.push({
           id: room.id,
           roomKey: room.roomKey,
@@ -1500,11 +1767,23 @@
           const [, key, dx] = it;
           const x = x0 + dx;
           if (Math.abs(x - clearX) < clearR) return;
-          this.decorNpcQueue.push([key, x, floorY]);
+          this.decorNpcQueue.push([key, x, floorY, floorId]);
         } else if (kind === 'glow') {
           const [, color, alpha] = it;
           const glow = this.add.rectangle(x0 + roomW / 2, y0 + room.h / 2, roomW - 16, room.h - 12, color, alpha).setDepth(21);
           this.tweens.add({ targets: glow, alpha: alpha + 0.08, duration: 1700, yoyo: true, repeat: -1 });
+        }
+      });
+
+      // Pixel Platter food on every table/counter host (theme rooms).
+      hosts.forEach((h, i) => {
+        if (!FOOD_HOST_KEYS.has(h.key)) return;
+        const fk = seededPick(seed, FOOD_KEYS, i * 11 + 3);
+        this.placeFood(fk, h.x + ((i % 2) ? 4 : -4), floorY - h.surfaceH, 25, FOOD_SCALE, floorId);
+        // Second snack on wider counters/tables
+        if (h.key === 'tableLong' || h.key === 'counter' || h.key === 'counterEnd') {
+          const fk2 = seededPick(seed, FOOD_KEYS, i * 11 + 9);
+          this.placeFood(fk2, h.x + 8, floorY - h.surfaceH, 25, FOOD_SCALE, floorId);
         }
       });
     }
@@ -1663,11 +1942,25 @@
      * character across reloads, while different rooms get different faces.
      */
     flushDecorNpcQueue() {
-      for (const [seed, x, floorY] of this.decorNpcQueue) {
+      for (const entry of this.decorNpcQueue) {
+        const [seed, x, floorY, roomKey] = entry;
         const sheet = this.npcSheetFor(seed);
-        this.spawnChar(x, floorY, sheet, `${sheet}_idle`, null, 31);
+        this.spawnChar(x, floorY, sheet, `${sheet}_idle`, null, 31, {
+          roomKey: roomKey || null,
+          mode: 'life',
+        });
       }
       this.decorNpcQueue = [];
+      // Kick indoor staff into activity quickly
+      this.time.delayedCall(300, () => {
+        for (const a of this.ambientActors || []) {
+          if (a.roomKey && a.mode !== 'stroll') {
+            a.nextThink = 0;
+            a.busyUntil = 0;
+          }
+        }
+        this.tickAmbient();
+      });
     }
 
     buildSky() {
@@ -1887,6 +2180,104 @@
       }).setOrigin(0, 0).setDepth(depth).setResolution(Math.max(2, window.devicePixelRatio || 2));
     }
 
+    /**
+     * Store-style room plaque (CITY_POLISH_PLAN room grammar #1): a UI-pack
+     * panel tab with the channel name, plus up to 3 stars that light up as
+     * live members occupy the room (updated from applyPresence).
+     */
+    roomPlaque(x, y, label, roomKey, tabKey = 'uiTabGrey') {
+      const useTab = this.textures.exists(tabKey) ? tabKey : (this.textures.exists('uiTabGrey') ? 'uiTabGrey' : null);
+      const parts = { stars: [] };
+      const text = this.add.text(x + 8, y + 3, label, {
+        fontFamily: 'Segoe UI, Tahoma, sans-serif',
+        fontSize: '11px',
+        fontStyle: 'bold',
+        color: '#f8fafc',
+      }).setOrigin(0, 0).setDepth(28).setResolution(Math.max(2, window.devicePixelRatio || 2));
+      const w = Math.max(46, text.width + 16);
+      if (useTab) {
+        // Panel tab is 23x12 — stretch to fit the name like the store plaques.
+        parts.tab = this.add.image(x, y, useTab)
+          .setOrigin(0, 0).setDepth(27)
+          .setDisplaySize(w, 22);
+      } else {
+        const bg = this.add.graphics().setDepth(27);
+        bg.fillStyle(0x1e293b, 0.92);
+        bg.fillRoundedRect(x, y, w, 22, 4);
+        parts.tab = bg;
+      }
+      text.setDepth(28);
+      parts.text = text;
+      // Occupancy stars sit just right of the tab; start unlit.
+      for (let i = 0; i < 3; i += 1) {
+        const star = this.add.image(x + w + 6 + i * 15, y + 11, 'uiStar')
+          .setScale(SCALE).setDepth(28).setAlpha(0.25);
+        parts.stars.push(star);
+      }
+      if (roomKey) {
+        if (!this._roomPlaques) this._roomPlaques = new Map();
+        this._roomPlaques.set(roomKey, parts);
+      }
+      return parts;
+    }
+
+    /** Light up plaque stars to match live occupancy (0–3+). */
+    updatePlaqueStars() {
+      if (!this._roomPlaques) return;
+      const counts = new Map();
+      for (const p of this.livePeople?.values() || []) {
+        counts.set(p.roomKey, (counts.get(p.roomKey) || 0) + 1);
+      }
+      for (const [roomKey, parts] of this._roomPlaques) {
+        const n = counts.get(roomKey) || 0;
+        parts.stars.forEach((s, i) => {
+          const lit = i < n;
+          if (s.alpha !== (lit ? 1 : 0.25)) s.setAlpha(lit ? 1 : 0.25);
+        });
+      }
+    }
+
+    /** Roof cap from shingle sprites: end + connecting run + end. */
+    drawRoofCap(left, top, bw, roofKey) {
+      const connKey = this.textures.exists(roofKey) ? roofKey : 'roofRedC';
+      const endKey = connKey.replace(/C$/, 'E');
+      const y = top + 2;
+      const tileW = 16 * SCALE; // Roof_1 connecting is 16x8
+      const endW = 26 * SCALE;  // end piece 26x17
+      if (this.textures.exists(endKey)) {
+        this.add.image(left - 6, y, endKey).setOrigin(0, 1).setDepth(21).setScale(SCALE);
+        this.add.image(left + bw + 6, y, endKey).setOrigin(1, 1).setDepth(21).setScale(SCALE).setFlipX(true);
+      }
+      const runL = left - 6 + endW - 6;
+      const runR = left + bw + 6 - endW + 6;
+      for (let x = runL; x < runR; x += tileW) {
+        const img = this.add.image(x, y, connKey).setOrigin(0, 1).setDepth(20.5).setScale(SCALE);
+        // Clamp the last tile so the run never overshoots the right end cap.
+        if (x + tileW > runR) img.setDisplaySize(runR - x, 8 * SCALE);
+      }
+    }
+
+    /** Underground dirt slice with roots/pebbles beneath a building. */
+    drawFoundation(g, left, bw) {
+      const top = this.groundY;
+      const depthPx = 26;
+      g.fillStyle(0x6b4a2f, 1);
+      g.fillRect(left + 2, top, bw - 4, depthPx);
+      g.fillStyle(0x54381f, 1);
+      g.fillRect(left + 2, top + depthPx - 7, bw - 4, 7);
+      // roots + pebbles
+      g.lineStyle(2, 0x3f2a15, 0.9);
+      for (let i = 0; i < Math.floor(bw / 46); i += 1) {
+        const rx = left + 16 + i * 46 + ((i * 13) % 9);
+        g.lineBetween(rx, top + 3, rx - 5, top + 13);
+        g.lineBetween(rx - 5, top + 13, rx + 2, top + 20);
+      }
+      g.fillStyle(0x8a6a44, 0.9);
+      for (let i = 0; i < Math.floor(bw / 24); i += 1) {
+        g.fillRect(left + 8 + i * 24 + ((i * 7) % 11), top + 6 + ((i * 5) % 14), 3, 2);
+      }
+    }
+
     buildingTitle(x, y, label, { color = '#ffffff', bg = '#222222', depth = 28 } = {}) {
       return this.add.text(x, y, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
@@ -1944,14 +2335,9 @@
       g.fillRect(left + bw - 14, top, 14, bh);
       g.lineStyle(3, 0x1a1f4a, 1);
       g.strokeRect(left, top, bw, bh);
-      g.fillStyle(0x7289da, 1);
-      g.fillRect(left - 6, top - 10, bw + 12, 12);
-      g.lineStyle(3, 0x1a1f4a, 1);
-      g.strokeRect(left - 6, top - 10, bw + 12, 12);
-      g.fillStyle(0x4a5bd3, 1);
-      g.fillRect(left - 8, top - 18, bw + 16, 8);
-      g.lineStyle(2, 0x1a1f4a, 1);
-      g.strokeRect(left - 8, top - 18, bw + 16, 8);
+      // Real shingle roof + dirt foundation (same grammar as themed shells)
+      this.drawRoofCap(left, top, bw, 'roofBlueC');
+      this.drawFoundation(g, left, bw);
 
       this.buildingTitle(left + bw / 2, top - 22, title, {
         color: '#eef0ff', bg: '#3c45c0',
@@ -1991,7 +2377,7 @@
         });
 
         if (!isPlaceholder) {
-          this.channelBadge(x0 + 4, y0 + 4, shortLabel(label, cols === 1 ? 20 : 14));
+          this.roomPlaque(x0 + 4, y0 + 4, shortLabel(label, cols === 1 ? 18 : 12), roomKey, 'uiTabBlue');
           this.registerFloor({
             id: roomKey,
             roomKey,
@@ -2021,9 +2407,9 @@
 
     drawTextBuilding(left, groundY, title, channels, paletteIndex = 0) {
       const palettes = [
-        { shell: 0x45b866, side: 0x2f8f4a, roof: 0x359a52, stroke: 0x12301a, titleBg: '#b8f0c8', titleFg: '#102818', lintel: 0x2a5534 },
-        { shell: 0x3db4a8, side: 0x2a8f86, roof: 0x45c4b8, stroke: 0x0f3530, titleBg: '#b8f0ea', titleFg: '#0a2824', lintel: 0x2a5548 },
-        { shell: 0xe8943a, side: 0xc47a2a, roof: 0xf0a850, stroke: 0x4a3010, titleBg: '#ffe8c8', titleFg: '#3a2208', lintel: 0x553822 },
+        { shell: 0x45b866, side: 0x2f8f4a, roof: 0x359a52, stroke: 0x12301a, titleBg: '#b8f0c8', titleFg: '#102818', lintel: 0x2a5534, roofKey: 'roofGreenC', plaqueKey: 'uiTabGreen' },
+        { shell: 0x3db4a8, side: 0x2a8f86, roof: 0x45c4b8, stroke: 0x0f3530, titleBg: '#b8f0ea', titleFg: '#0a2824', lintel: 0x2a5548, roofKey: 'roofBlueC', plaqueKey: 'uiTabBlue' },
+        { shell: 0xe8943a, side: 0xc47a2a, roof: 0xf0a850, stroke: 0x4a3010, titleBg: '#ffe8c8', titleFg: '#3a2208', lintel: 0x553822, roofKey: 'roofOrangeC', plaqueKey: 'uiTabYellow' },
       ];
       const pal = palettes[paletteIndex % palettes.length];
       const fills = [0xead9b8, 0xe8dcc4, 0xe4eaf0, 0xf0e0c0];
@@ -2048,10 +2434,8 @@
       g.fillRect(left + bw - 14, top, 14, bh);
       g.lineStyle(3, pal.stroke, 1);
       g.strokeRect(left, top, bw, bh);
-      g.fillStyle(pal.roof, 1);
-      g.fillRect(left - 6, top - 10, bw + 12, 12);
-      g.lineStyle(3, pal.stroke, 1);
-      g.strokeRect(left - 6, top - 10, bw + 12, 12);
+      this.drawRoofCap(left, top, bw, pal.roofKey || 'roofGreenC');
+      this.drawFoundation(g, left, bw);
 
       this.buildingTitle(left + bw / 2, top - 22, shortLabel(title, 22), {
         color: pal.titleFg, bg: pal.titleBg,
@@ -2076,7 +2460,7 @@
           });
           this.addRoomSlots(roomKey, this.slotPointsForRoom(slot.x, slot.w, floor, 3));
         });
-        this.channelBadge(slot.x + 4, slot.y + 4, shortLabel(label, 16));
+        this.roomPlaque(slot.x + 4, slot.y + 4, shortLabel(label, 14), roomKey, pal.plaqueKey || 'uiTabGreen');
         this.registerFloor({
           id: roomKey,
           roomKey,
@@ -2308,17 +2692,174 @@
       }
       if (SEAT_INFO[key] != null) {
         this.seats.push({
-          x, floorY, floorId, surfaceH: SEAT_INFO[key], kind: 'seat', key, radius: 16,
+          x, floorY, floorId, surfaceH: SEAT_INFO[key], kind: 'seat', key, radius: 22,
         });
       } else if (BED_INFO[key] != null) {
         this.seats.push({
-          x, floorY, floorId, surfaceH: BED_INFO[key], kind: 'bed', key, radius: 22,
+          x, floorY, floorId, surfaceH: BED_INFO[key], kind: 'bed', key, radius: 28,
+        });
+      }
+      if (FOOD_HOST_KEYS.has(key) && SURFACE_HOSTS[key] != null) {
+        if (!this.foodHosts) this.foodHosts = [];
+        this.foodHosts.push({
+          x, floorY, floorId, key, surfaceH: SURFACE_HOSTS[key],
         });
       }
       return this.add.image(x, floorY, key)
         .setScale(scale)
         .setOrigin(0.5, 1)
         .setDepth(depth);
+    }
+
+    /** Place Pixel Platter food as an interactable snack (NPCs + E to eat). */
+    placeFood(key, x, floorY, depth = 25, scale = FOOD_SCALE, floorId = null) {
+      if (!key || !this.textures.exists(key)) {
+        this._missingAssets?.add?.(key || 'food');
+        return null;
+      }
+      const sprite = this.add.image(x, floorY, key)
+        .setScale(scale)
+        .setOrigin(0.5, 1)
+        .setDepth(depth);
+      this.foods.push({
+        x, floorY, floorId, key, radius: 22, sprite, baseY: floorY, baseScale: scale,
+      });
+      return sprite;
+    }
+
+    /** Put real food sprites on every table/counter that still looks empty. */
+    seedFoodOnAllTables() {
+      const hosts = this.foodHosts || [];
+      if (!hosts.length) {
+        console.info('[map] no food hosts (tables/counters) to dress');
+        return;
+      }
+      let seeded = 0;
+      hosts.forEach((h, i) => {
+        const plateY = h.floorY - (h.surfaceH || 12);
+        const has = (this.foods || []).some((f) => (
+          Math.abs(f.x - h.x) < 20
+          && Math.abs((f.floorY || 0) - plateY) < 14
+        ));
+        if (has) return;
+        const n = (h.key === 'tableLong' || h.key === 'counter' || h.key === 'counterEnd') ? 2 : 1;
+        for (let k = 0; k < n; k += 1) {
+          const fk = seededPick(hashSeed(`${h.x}:${h.key}`), FOOD_KEYS, i * 13 + k * 5);
+          this.placeFood(
+            fk,
+            h.x + (k === 0 ? -5 : 7),
+            plateY,
+            25,
+            FOOD_SCALE,
+            h.floorId || null,
+          );
+          seeded += 1;
+        }
+      });
+      console.info(`[map] food sprites: ${this.foods.length} total (seeded +${seeded} on tables)`);
+    }
+
+    nearestFoodFor(actor) {
+      if (!actor?.sprite) return null;
+      let best = null;
+      let bestD = 1e9;
+      const ax = actor.sprite.x;
+      const ay = actor.floorY ?? actor.sprite.y;
+      for (const f of this.foods || []) {
+        if (!f.sprite?.active) continue;
+        const sameRoom = f.floorId && actor.roomKey && f.floorId === actor.roomKey ? 0 : 90;
+        const d = Math.abs(f.x - ax) + Math.abs((f.floorY || ay) - ay) * 0.4 + sameRoom;
+        if (d < bestD) { bestD = d; best = f; }
+      }
+      return best;
+    }
+
+    /**
+     * Walk to a real Pixel Platter plate and eat it (eat pose + food bob).
+     */
+    actorEatFood(actor, food, onDone) {
+      if (!actor?.sprite?.active || !food) {
+        if (typeof onDone === 'function') onDone();
+        return;
+      }
+      const eatHere = () => {
+        if (!actor?.sprite?.active) return;
+        if (!actor.seated) {
+          actor.sprite.x = food.x;
+          const fl = (food.floorId && this.getFloor(food.floorId))
+            || this.findFloorAt(food.x, actor.floorY ?? actor.sprite.y);
+          if (fl) {
+            actor.floorY = fl.floorY;
+            actor.sprite.y = fl.floorY;
+            actor.roomKey = fl.roomKey || fl.id || actor.roomKey;
+          }
+        }
+        const pose = actor.seated ? 'eatSit' : 'eat';
+        actor.state = 'eat';
+        this.setActorBounce(actor, false);
+        try { this.showEmote(actor.sprite, 'eat'); } catch (_) { /* ignore */ }
+        this.playSheetPose(actor.sprite, actor.sheet, pose, {
+          onDone: () => {
+            if (!actor.sprite?.active) return;
+            if (actor.seated) {
+              this.playSheetPose(
+                actor.sprite,
+                actor.sheet,
+                actor.seat?.kind === 'bed' ? 'lieIdle' : 'sitIdle',
+              );
+              actor.state = 'sit';
+            } else {
+              this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+              actor.state = 'idle';
+            }
+            if (typeof onDone === 'function') onDone();
+          },
+        });
+        if (food.sprite?.active) {
+          const baseY = food.baseY != null ? food.baseY : food.sprite.y;
+          const baseSc = food.baseScale != null ? food.baseScale : food.sprite.scaleX;
+          try { this.tweens.killTweensOf(food.sprite); } catch (_) { /* ignore */ }
+          food.sprite.y = baseY;
+          food.sprite.setScale(baseSc);
+          this.tweens.add({
+            targets: food.sprite,
+            y: baseY - 7,
+            scaleX: baseSc * 1.15,
+            scaleY: baseSc * 1.15,
+            duration: 160,
+            yoyo: true,
+            repeat: 5,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+              if (food.sprite?.active) {
+                food.sprite.y = baseY;
+                food.sprite.setScale(baseSc);
+              }
+            },
+          });
+        }
+        actor.busyUntil = this.time.now + poseDurationMs(pose) + 400;
+      };
+
+      const dist = Math.abs(actor.sprite.x - food.x);
+      const foodFloor = food.floorId ? this.getFloor(food.floorId) : null;
+      const targetY = foodFloor?.floorY
+        ?? (this.findFloorAt(food.x, food.floorY)?.floorY)
+        ?? actor.floorY
+        ?? actor.sprite.y;
+      const sameBand = Math.abs((actor.floorY ?? actor.sprite.y) - targetY) < 28;
+      if (dist > 14 || !sameBand) {
+        this.actorNavigateTo(
+          actor,
+          food.x,
+          targetY,
+          eatHere,
+          20,
+          food.floorId || foodFloor?.id || null,
+        );
+      } else {
+        eatHere();
+      }
     }
 
     /**
@@ -2424,7 +2965,12 @@
       const floorItems = [];
       const surfaceItems = [];
       const wallItems = [];
+      const foodItems = [];
       kit.forEach((item, idx) => {
+        if (item.food || item.key === 'food') {
+          foodItems.push({ item, key: seededPick(seed, FOOD_KEYS, idx * 9 + 2) });
+          return;
+        }
         const key = Array.isArray(item.key) ? seededPick(seed, item.key, idx * 7 + 1) : item.key;
         if (item.wall) wallItems.push({ item, key });
         else if (item.onSurface || SURFACE_PROPS.has(key) || item.offY) surfaceItems.push({ item, key });
@@ -2461,6 +3007,16 @@
           .sort((a, b) => Math.abs(a.x - (slotX + item.xf * slotW)) - Math.abs(b.x - (slotX + item.xf * slotW)))[0];
         if (!host) return;
         this.furn(key, host.x, floorY - host.surfaceH, item.depth || 24, sc, roomKey);
+      });
+
+      // Food on tables/counters (Pixel Platter)
+      foodItems.forEach(({ item, key }, fi) => {
+        const host = placed
+          .filter((p) => p.surfaceH > 0 && FOOD_HOST_KEYS.has(p.key))
+          .sort((a, b) => Math.abs(a.x - (slotX + item.xf * slotW)) - Math.abs(b.x - (slotX + item.xf * slotW)))[0]
+          || placed.find((p) => p.surfaceH > 0);
+        if (!host) return;
+        this.placeFood(key, host.x + (fi % 2 ? 3 : -3), floorY - host.surfaceH, item.depth || 25, FOOD_SCALE, roomKey);
       });
 
       wallItems.forEach(({ item, key }) => {
@@ -2545,64 +3101,234 @@
     }
 
     makeAnims() {
-      // Each NPC sheet is an 8-col x 14-row grid of 32x32 cells (frame index =
-      // row*8+col). Row 0 = MOVE (4 real frames, cols 0-3, then a "MOVE" text
-      // label drawn in col4 — NOT a 5th frame). Row 1 = IDLE (only 3 real
-      // frames, cols 0-2; col3 holds the "IDLE" label). Including a label
-      // column in the loop flashed the sheet's own text captions in-game.
+      // Build every pose from NPC_POSE_DEFS for each premade sheet.
+      // frame = row * 8 + col; never include the trailing label cell.
       NPC_SHEETS.forEach((n) => {
-        if (this.anims.exists(`${n.key}_walk`)) return;
         if (!this.textures.exists(n.key)) return;
-        this.anims.create({
-          key: `${n.key}_walk`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: 0, end: 3 }),
-          frameRate: 8,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: `${n.key}_idle`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: NPC_COLS, end: NPC_COLS + 2 }),
-          frameRate: 2,
-          repeat: -1,
-        });
-        // Interaction poses — the sheets ship full SIT/LIE rows we now use:
-        // row 3 SIT (3f, sink into the seat), row 4 SIT IDLE (3f loop),
-        // row 5 SIT FINISH (3f, stand back up), row 6 LIE DOWN (6f),
-        // row 7 LIE FINISH (6f, get back up). frame = row * NPC_COLS + col.
-        const row = (r) => r * NPC_COLS;
-        this.anims.create({
-          key: `${n.key}_sit`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(3), end: row(3) + 2 }),
-          frameRate: 10,
-        });
-        this.anims.create({
-          key: `${n.key}_sitIdle`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(4), end: row(4) + 2 }),
-          frameRate: 2,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: `${n.key}_sitFinish`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(5), end: row(5) + 2 }),
-          frameRate: 12,
-        });
-        this.anims.create({
-          key: `${n.key}_lie`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(6), end: row(6) + 5 }),
-          frameRate: 10,
-        });
-        this.anims.create({
-          key: `${n.key}_lieIdle`,
-          frames: [{ key: n.key, frame: row(6) + 5 }],
-          frameRate: 1,
-          repeat: -1,
-        });
-        this.anims.create({
-          key: `${n.key}_lieFinish`,
-          frames: this.anims.generateFrameNumbers(n.key, { start: row(7), end: row(7) + 5 }),
-          frameRate: 12,
+        Object.entries(NPC_POSE_DEFS).forEach(([pose, def]) => {
+          const key = `${n.key}_${pose}`;
+          if (this.anims.exists(key)) return;
+          const base = def.row * NPC_COLS + (def.frameOffset || 0);
+          const start = base;
+          const end = base + Math.max(0, def.frames - 1);
+          let frames;
+          if (def.frames === 1) {
+            frames = [{ key: n.key, frame: start }];
+          } else {
+            frames = this.anims.generateFrameNumbers(n.key, { start, end });
+          }
+          if (!frames || !frames.length) return;
+          this.anims.create({
+            key,
+            frames,
+            frameRate: def.fps || 8,
+            repeat: def.repeat != null ? def.repeat : 0,
+          });
         });
       });
+      // Slice each pet cell into its own canvas texture so setTexture always swaps art.
+      // (Spritesheet setFrame was effectively a no-op / too subtle in practice.)
+      this.buildPetCellTextures();
+    }
+
+    /**
+     * Cut 32×32 cells out of pet sheets into `petDog_c0` … `petDog_c31` (row0 walk).
+     * This guarantees frame swaps are visible even if spritesheet frame indexing fails.
+     */
+    buildPetCellTextures() {
+      PET_SHEETS.forEach((p) => {
+        if (!this.textures.exists(p.key)) return;
+        let src;
+        try {
+          src = this.textures.get(p.key).getSourceImage();
+        } catch (_) {
+          return;
+        }
+        if (!src) return;
+        // Only need row 0 (32 cells) for walk/idle of free pack
+        for (let i = 0; i < 32; i += 1) {
+          const cellKey = `${p.key}_c${i}`;
+          if (this.textures.exists(cellKey)) continue;
+          const col = i % 32;
+          const row = Math.floor(i / 32);
+          const canvas = document.createElement('canvas');
+          canvas.width = PET_FRAME;
+          canvas.height = PET_FRAME;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(
+            src,
+            col * PET_FRAME,
+            row * PET_FRAME,
+            PET_FRAME,
+            PET_FRAME,
+            0,
+            0,
+            PET_FRAME,
+            PET_FRAME,
+          );
+          this.textures.addCanvas(cellKey, canvas);
+          try {
+            this.textures.get(cellKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
+          } catch (_) { /* ignore */ }
+        }
+      });
+    }
+
+    /** Show a specific cell of a pet sheet via dedicated canvas texture. */
+    setPetCell(sprite, petKey, cellIndex) {
+      if (!sprite?.active) return;
+      const cellKey = `${petKey}_c${cellIndex}`;
+      if (!this.textures.exists(cellKey)) {
+        // Fallback to spritesheet frame
+        try { sprite.setTexture(petKey, cellIndex); } catch (_) { /* ignore */ }
+        return;
+      }
+      if (sprite.texture?.key !== cellKey) {
+        sprite.setTexture(cellKey);
+      }
+    }
+
+    /**
+     * Time-based walk: while moving, hard-swap walk cells every ~90ms.
+     * Uses SE/SW dirs (1/7) for horizontal travel — clearest leg motion on street.
+     */
+    petStep(sprite, petKey, dx, dy, groundY) {
+      if (!sprite?.active) return;
+      const moving = Math.abs(dx) > 0.15 || Math.abs(dy) > 0.15;
+      // Prefer 3/4 views for left/right — more obvious leg cycles than pure E/W
+      let d;
+      if (Math.abs(dx) >= Math.abs(dy)) d = dx >= 0 ? 1 : 7; // SE / SW
+      else d = dy >= 0 ? 0 : 4; // S / N
+      if (sprite._petDir !== d) {
+        sprite._petDir = d;
+        sprite._petStep = 0;
+      }
+      sprite.setFlipX(false);
+      sprite._petKey = petKey;
+      sprite._petMoving = moving;
+
+      if (groundY != null) {
+        // Plant feet; tiny hop on odd steps sells the walk
+        const hop = moving && (sprite._petStep % 2 === 1) ? 1.2 : 0;
+        sprite.y = groundY - hop;
+      }
+
+      const cycle = petWalkFrames(d);
+      if (!moving) {
+        this.setPetCell(sprite, petKey, cycle[0]);
+        return;
+      }
+      // Time-based advance (not only distance) so legs always pump while gliding
+      const now = this.time.now;
+      if (!sprite._petNextStepAt) sprite._petNextStepAt = now;
+      if (now >= sprite._petNextStepAt) {
+        sprite._petStep = ((sprite._petStep || 0) + 1) % cycle.length;
+        sprite._petNextStepAt = now + 90; // ~11 fps walk
+      }
+      this.setPetCell(sprite, petKey, cycle[sprite._petStep || 0]);
+    }
+
+    /**
+     * Patrol: ALWAYS cycle walk cells on a timer while the patrol tween runs.
+     * Uses dir0 (front) walk frames — clearest leg motion in the free pack.
+     * Facing is flipped for left/right (free pack side views barely animate).
+     */
+    startPetPatrol(sprite, petKey, x0, x1, dur, groundY) {
+      sprite._petStep = 0;
+      sprite._petDir = 0; // front-facing walk cycle (most obvious legs)
+      sprite._petPatrolling = true;
+      sprite.setFlipX(false);
+      this.setPetCell(sprite, petKey, petWalkFrames(0)[0]);
+      sprite.y = groundY;
+
+      // Hard timer — does not depend on tween dx (that was stuck on one frame)
+      const ticker = this.time.addEvent({
+        delay: 110,
+        loop: true,
+        callback: () => {
+          if (!sprite.active) {
+            try { ticker.remove(false); } catch (_) { /* ignore */ }
+            return;
+          }
+          if (!sprite._petPatrolling) {
+            this.setPetCell(sprite, petKey, petWalkFrames(0)[0]);
+            sprite.y = groundY;
+            return;
+          }
+          const cycle = petWalkFrames(0); // 0,1,2,1 — real leg change on free pack
+          sprite._petStep = ((sprite._petStep || 0) + 1) % cycle.length;
+          this.setPetCell(sprite, petKey, cycle[sprite._petStep]);
+          const hop = (sprite._petStep % 2) ? 1.5 : 0;
+          sprite.y = groundY - hop;
+        },
+      });
+      sprite._petTicker = ticker;
+
+      this.tweens.add({
+        targets: sprite,
+        x: x1,
+        duration: dur,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Linear',
+        onYoyo: () => { sprite.setFlipX(true); },
+        onRepeat: () => { sprite.setFlipX(false); },
+        onUpdate: () => {
+          // keep planted even if something else moves y
+          if (sprite.active && !sprite._petPatrolling) sprite.y = groundY;
+        },
+      });
+    }
+
+    /**
+     * Play a named pose on any sprite using a sheet key.
+     * Uses duration-based completion (reliable) instead of only animationcomplete.
+     */
+    playSheetPose(sprite, sheet, pose, opts = {}) {
+      if (!sprite?.active || !sheet || !pose) return false;
+      const key = `${sheet}_${pose}`;
+      if (!this.anims.exists(key)) {
+        // Lazy-create if sheet was loaded late
+        if (this.textures.exists(sheet) && NPC_POSE_DEFS[pose] && !sheet.startsWith('pet')) {
+          const def = NPC_POSE_DEFS[pose];
+          const base = def.row * NPC_COLS + (def.frameOffset || 0);
+          const frames = def.frames === 1
+            ? [{ key: sheet, frame: base }]
+            : this.anims.generateFrameNumbers(sheet, { start: base, end: base + def.frames - 1 });
+          if (frames?.length) {
+            this.anims.create({
+              key, frames, frameRate: def.fps || 8,
+              repeat: def.repeat != null ? def.repeat : 0,
+            });
+          }
+        }
+        if (!this.anims.exists(key)) return false;
+      }
+      try {
+        // Don't stop+restart looping walk/idle every frame — only switch keys
+        const cur = sprite.anims.currentAnim?.key;
+        if (cur === key && NPC_POSE_DEFS[pose]?.loop) return true;
+        sprite.anims.play(key, false);
+      } catch (_) {
+        return false;
+      }
+      const def = NPC_POSE_DEFS[pose];
+      const dur = opts.holdMs != null ? opts.holdMs : poseDurationMs(pose);
+      const token = (sprite._poseToken = (sprite._poseToken || 0) + 1);
+      if (sprite === this.player) {
+        this._playerPose = pose;
+        // Only hold the update() walk/idle driver for one-shot poses
+        if (!def?.loop) this._poseHoldUntil = this.time.now + dur;
+        else this._poseHoldUntil = 0;
+      }
+      if (typeof opts.onDone === 'function' && !def?.loop) {
+        this.time.delayedCall(dur, () => {
+          if (!sprite?.active || sprite._poseToken !== token) return;
+          opts.onDone();
+        });
+      }
+      return true;
     }
 
     /** Deterministic NPC sheet key for a user/seed, spread across all 30. */
@@ -2612,20 +3338,16 @@
       return list[hashSeed(seedStr) % list.length].key;
     }
 
-    spawnChar(x, y, sheet, idle, label, depth = 30) {
+    spawnChar(x, y, sheet, idle, label, depth = 30, opts = {}) {
       const sp = this.add.sprite(x, y, sheet, 0)
         .setScale(SCALE)
         .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
         .setDepth(depth);
-      sp.anims.play(idle);
-      this.tweens.add({
-        targets: sp,
-        y: y - 1.5,
-        duration: 700 + Math.random() * 500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
+      // idle arg may be full key `npc_m1_idle` or pose name
+      const poseName = (idle && idle.includes('_'))
+        ? idle.slice(sheet.length + 1)
+        : (idle || 'idle');
+      this.playSheetPose(sp, sheet, poseName);
       if (label) {
         this.add.text(x, y - 22, label, {
           fontFamily: 'Segoe UI, Tahoma, sans-serif',
@@ -2636,7 +3358,1374 @@
           padding: { x: 4, y: 2 },
         }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(3);
       }
+      this.registerAmbient(sp, sheet, {
+        roomKey: opts.roomKey || null,
+        mode: opts.mode || 'idle',
+        homeX: x,
+        homeY: y,
+        floorY: y,
+        depth,
+      });
       return sp;
+    }
+
+    registerAmbient(sprite, sheet, opts = {}) {
+      if (!sprite || !sheet) return null;
+      const actor = {
+        sprite,
+        sheet,
+        roomKey: opts.roomKey || null,
+        busyUntil: 0,
+        mode: opts.mode || 'idle', // idle | stroll | life
+        homeX: opts.homeX != null ? opts.homeX : sprite.x,
+        homeY: opts.homeY != null ? opts.homeY : sprite.y,
+        floorY: opts.floorY != null ? opts.floorY : sprite.y,
+        depth: opts.depth != null ? opts.depth : sprite.depth,
+        state: 'idle', // idle | walk | sit | eat | social
+        seated: false,
+        seat: null,
+        nextThink: 0,
+        bounceTween: null,
+      };
+      // No idle bob for life residents — it fights sit/lie placement and looks floaty.
+      // Tiny bob only for anonymous street extras.
+      if (actor.mode !== 'stroll' && actor.mode !== 'life') {
+        actor.bounceTween = this.tweens.add({
+          targets: sprite,
+          y: actor.floorY - 0.8,
+          duration: 1100 + Math.random() * 400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
+      }
+      this.ambientActors.push(actor);
+      return actor;
+    }
+
+    dropAmbient(sprite) {
+      if (!sprite || !this.ambientActors) return;
+      const a = this.ambientActors.find((x) => x.sprite === sprite);
+      if (a?.bounceTween) {
+        try { a.bounceTween.stop(); } catch (_) { /* ignore */ }
+      }
+      this.ambientActors = this.ambientActors.filter((x) => x.sprite !== sprite);
+    }
+
+    setActorBounce(actor, on) {
+      if (!actor) return;
+      if (on) {
+        if (actor.bounceTween) return;
+        actor.bounceTween = this.tweens.add({
+          targets: actor.sprite,
+          y: (actor.floorY || actor.sprite.y) - 1.2,
+          duration: 900 + Math.random() * 400,
+          yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        });
+      } else if (actor.bounceTween) {
+        try { actor.bounceTween.stop(); } catch (_) { /* ignore */ }
+        actor.bounceTween = null;
+        if (actor.sprite?.active && actor.floorY != null && !actor.seated) {
+          actor.sprite.y = actor.floorY;
+        }
+      }
+    }
+
+    showEmote(sprite, pose) {
+      if (!sprite?.active) return;
+      const map = {
+        wave: 'emoteHeart', shrug: 'emoteQuestion', snicker: 'emoteExclaim',
+        eat: 'uiStar', eatSit: 'uiStar', jump: 'emoteFire', hurt: 'emoteExclaim',
+        sit: 'emoteHeart', lie: 'statusHappy2',
+      };
+      const key = map[pose] || 'emoteHeart';
+      if (!this.textures.exists(key)) return;
+      const e = this.add.image(sprite.x, sprite.y - 32, key)
+        .setScale(SCALE * 1.1)
+        .setDepth((sprite.depth || 30) + 5);
+      this.tweens.add({
+        targets: e, y: e.y - 16, alpha: 0, duration: 700, ease: 'Cubic.easeOut',
+        onComplete: () => { try { e.destroy(); } catch (_) { /* ignore */ } },
+      });
+    }
+
+    playAmbientPose(actor, pose, opts = {}) {
+      if (!actor?.sprite?.active || !actor.sheet) return false;
+      if (this.time.now < (actor.busyUntil || 0) && !opts.force) return false;
+      const hold = opts.holdMs != null ? opts.holdMs : poseDurationMs(pose);
+      actor.busyUntil = this.time.now + hold + 60;
+      actor.state = pose;
+      if (opts.emote !== false) this.showEmote(actor.sprite, pose);
+      const resume = opts.resume
+        || (actor.seated ? (actor.seat?.kind === 'bed' ? 'lieIdle' : 'sitIdle') : 'idle');
+      return this.playSheetPose(actor.sprite, actor.sheet, pose, {
+        holdMs: hold,
+        onDone: () => {
+          if (!actor.sprite?.active) return;
+          if (typeof opts.onDone === 'function') {
+            opts.onDone();
+            return;
+          }
+          this.playSheetPose(actor.sprite, actor.sheet, resume);
+          actor.state = actor.seated ? 'sit' : 'idle';
+          if (!actor.seated) this.setActorBounce(actor, true);
+        },
+      });
+    }
+
+    /** Floor under a world point, or null if on the outdoor street. */
+    findFloorAt(x, y) {
+      let best = null;
+      let bestD = 28;
+      for (const f of this.floors?.values?.() || []) {
+        if (f.isRoof) continue;
+        if (x < (f.minX ?? 0) - 12 || x > (f.maxX ?? 0) + 12) continue;
+        const d = Math.abs((f.floorY ?? 0) - y);
+        if (d <= bestD) {
+          bestD = d;
+          best = f;
+        }
+      }
+      return best;
+    }
+
+    isOutdoorY(y) {
+      return Math.abs((y ?? 0) - this.groundY) <= 22;
+    }
+
+    /** Door that leads into a given floor id / roomKey (street entrances). */
+    findDoorForFloor(floorId) {
+      if (!floorId) return null;
+      const doors = this.doors || [];
+      let d = doors.find((x) => x.floorId === floorId);
+      if (d) return d;
+      // Some floors use roomKey as id
+      for (const f of this.floors?.values?.() || []) {
+        if ((f.id === floorId || f.roomKey === floorId) && f.id) {
+          d = doors.find((x) => x.floorId === f.id || x.floorId === f.roomKey);
+          if (d) return d;
+        }
+      }
+      return null;
+    }
+
+    /** Stair linking two floors (either direction). */
+    findStairBetween(fromId, toId) {
+      if (!fromId || !toId) return null;
+      return (this.stairs || []).find((s) => (
+        (s.fromFloorId === fromId && s.toFloorId === toId)
+        || (s.toFloorId === fromId && s.fromFloorId === toId)
+      )) || null;
+    }
+
+    /** Floor record by id or roomKey. */
+    getFloor(id) {
+      if (!id || !this.floors) return null;
+      return this.floors.get(id) || [...this.floors.values()].find((f) => f.roomKey === id) || null;
+    }
+
+    /**
+     * Graph edges between outdoor (`__out`) and indoor floors.
+     * Same rules as the player: street doors, stairs, horizontal passages.
+     */
+    buildNavEdges() {
+      const edges = []; // { from, to, x, kind: 'door'|'stair'|'passage' }
+      for (const d of this.doors || []) {
+        const fl = this.getFloor(d.floorId);
+        if (!fl) continue;
+        edges.push({ from: '__out', to: fl.id, x: d.outdoorX ?? d.x, kind: 'door', door: d });
+        edges.push({ from: fl.id, to: '__out', x: d.x, kind: 'door', door: d });
+      }
+      for (const s of this.stairs || []) {
+        edges.push({ from: s.fromFloorId, to: s.toFloorId, x: s.x, kind: 'stair' });
+        edges.push({ from: s.toFloorId, to: s.fromFloorId, x: s.x, kind: 'stair' });
+      }
+      for (const p of this.passages || []) {
+        edges.push({ from: p.fromFloorId, to: p.toFloorId, x: p.x, kind: 'passage' });
+        edges.push({ from: p.toFloorId, to: p.fromFloorId, x: p.x, kind: 'passage' });
+      }
+      return edges;
+    }
+
+    /**
+     * BFS route: outdoor + floors via doors/stairs/passages.
+     * Returns node ids from start to goal (inclusive), or null.
+     */
+    findNavNodePath(startId, goalId) {
+      if (startId === goalId) return [startId];
+      const edges = this.buildNavEdges();
+      const adj = new Map();
+      for (const e of edges) {
+        if (!adj.has(e.from)) adj.set(e.from, []);
+        adj.get(e.from).push(e);
+      }
+      const q = [startId];
+      const prev = new Map([[startId, null]]);
+      const prevEdge = new Map();
+      while (q.length) {
+        const cur = q.shift();
+        for (const e of adj.get(cur) || []) {
+          if (prev.has(e.to)) continue;
+          prev.set(e.to, cur);
+          prevEdge.set(e.to, e);
+          if (e.to === goalId) {
+            const nodes = [goalId];
+            const used = [];
+            let n = goalId;
+            while (n !== startId) {
+              used.push(prevEdge.get(n));
+              n = prev.get(n);
+              nodes.push(n);
+            }
+            nodes.reverse();
+            used.reverse();
+            return { nodes, edges: used };
+          }
+          q.push(e.to);
+        }
+      }
+      return null;
+    }
+
+    clampToFloor(x, floor) {
+      if (!floor) return x;
+      return Phaser.Math.Clamp(x, (floor.minX ?? x) + 4, (floor.maxX ?? x) - 4);
+    }
+
+    /**
+     * Build grounded waypoints so NPCs never walk at the wrong height in open air.
+     * Player rules: street at groundY; enter via door; change floors via stairs/passages.
+     */
+    planActorPath(fromX, fromY, toX, toY, toFloorId = null) {
+      const gy = this.groundY;
+      let fromF = this.findFloorAt(fromX, fromY);
+      // Prefer actor's known room if feet are near that floor line
+      if (!fromF && toFloorId) {
+        /* keep outdoor */
+      }
+      let toF = toFloorId ? this.getFloor(toFloorId) : this.findFloorAt(toX, toY);
+      // Explicit outdoor target
+      if (this.isOutdoorY(toY) && !toFloorId) toF = null;
+      // If target coords are clearly on a floor, prefer that
+      if (!toF && !this.isOutdoorY(toY)) {
+        toF = this.findFloorAt(toX, toY);
+      }
+
+      const fromOut = !fromF || this.isOutdoorY(fromY);
+      const toOut = !toF;
+      const startId = fromOut ? '__out' : fromF.id;
+      const goalId = toOut ? '__out' : toF.id;
+
+      // Same outdoor strip
+      if (fromOut && toOut) {
+        return [{ x: toX, y: gy, roomKey: null }];
+      }
+
+      // Already on same indoor floor
+      if (!fromOut && !toOut && fromF.id === toF.id) {
+        return [{
+          x: this.clampToFloor(toX, toF),
+          y: toF.floorY,
+          roomKey: toF.roomKey || toF.id,
+        }];
+      }
+
+      const route = this.findNavNodePath(startId, goalId);
+      if (!route) {
+        // Fallback: if indoor→outdoor with no door graph, still don't float —
+        // walk to current x then only warp at that x (never mid-street at indoor Y)
+        if (!fromOut && toOut) {
+          return [
+            { x: fromX, y: fromF.floorY, roomKey: fromF.roomKey || fromF.id },
+            { x: fromX, y: gy, roomKey: null, warp: true },
+            { x: toX, y: gy, roomKey: null },
+          ];
+        }
+        if (fromOut && !toOut) {
+          // Walk to building x at street, then door warp
+          const anyDoor = (this.doors || []).find((d) => this.getFloor(d.floorId)) || (this.doors || [])[0];
+          if (anyDoor) {
+            const df = this.getFloor(anyDoor.floorId) || toF;
+            return [
+              { x: anyDoor.outdoorX ?? anyDoor.x, y: gy, roomKey: null },
+              {
+                x: this.clampToFloor(anyDoor.x, df),
+                y: df.floorY,
+                roomKey: df.roomKey || df.id,
+                warp: true,
+              },
+              {
+                x: this.clampToFloor(toX, toF),
+                y: toF.floorY,
+                roomKey: toF.roomKey || toF.id,
+                warp: df.id !== toF.id,
+              },
+            ];
+          }
+        }
+        return [{
+          x: toX,
+          y: toOut ? gy : (toF?.floorY ?? toY),
+          roomKey: toOut ? null : (toF?.roomKey || toF?.id || null),
+          warp: true,
+        }];
+      }
+
+      const path = [];
+      let curX = fromX;
+      let curY = fromOut ? gy : fromF.floorY;
+      let curRoom = fromOut ? null : (fromF.roomKey || fromF.id);
+      let curNode = startId;
+
+      for (let i = 0; i < route.edges.length; i += 1) {
+        const e = route.edges[i];
+        const nextNode = e.to;
+        const nextFloor = nextNode === '__out' ? null : this.getFloor(nextNode);
+        const nextY = nextNode === '__out' ? gy : nextFloor.floorY;
+        const nextRoom = nextNode === '__out' ? null : (nextFloor.roomKey || nextFloor.id);
+
+        if (e.kind === 'door') {
+          if (curNode === '__out') {
+            // Street → walk to door, then enter
+            path.push({ x: e.door.outdoorX ?? e.door.x, y: gy, roomKey: null });
+            path.push({
+              x: this.clampToFloor(e.door.x, nextFloor),
+              y: nextY,
+              roomKey: nextRoom,
+              warp: true,
+            });
+            curX = this.clampToFloor(e.door.x, nextFloor);
+          } else {
+            // Indoor → walk to door, then exit to street
+            const curFloor = this.getFloor(curNode);
+            path.push({
+              x: this.clampToFloor(e.door.x, curFloor),
+              y: curY,
+              roomKey: curRoom,
+            });
+            path.push({
+              x: e.door.outdoorX ?? e.door.x,
+              y: gy,
+              roomKey: null,
+              warp: true,
+            });
+            curX = e.door.outdoorX ?? e.door.x;
+          }
+        } else if (e.kind === 'stair') {
+          // Walk to shaft on current floor, warp to other floor at same x
+          path.push({ x: e.x, y: curY, roomKey: curRoom });
+          path.push({ x: e.x, y: nextY, roomKey: nextRoom, warp: true });
+          curX = e.x;
+        } else if (e.kind === 'passage') {
+          // Horizontal room link — walk to doorway, step through
+          path.push({ x: e.x, y: curY, roomKey: curRoom });
+          if (Math.abs(curY - nextY) > 4) {
+            path.push({ x: e.x, y: nextY, roomKey: nextRoom, warp: true });
+          } else {
+            // Same height: cross a few px into the next room
+            const into = nextFloor
+              ? this.clampToFloor(e.x + (nextFloor.minX > e.x ? 10 : -10), nextFloor)
+              : e.x;
+            path.push({ x: into, y: nextY, roomKey: nextRoom });
+          }
+          curX = e.x;
+        }
+
+        curY = nextY;
+        curRoom = nextRoom;
+        curNode = nextNode;
+      }
+
+      // Final walk to target on goal floor / street
+      if (toOut) {
+        path.push({ x: toX, y: gy, roomKey: null });
+      } else {
+        path.push({
+          x: this.clampToFloor(toX, toF),
+          y: toF.floorY,
+          roomKey: toF.roomKey || toF.id,
+        });
+      }
+      return path;
+    }
+
+    /**
+     * Walk along planned waypoints (doors/stairs/passages).
+     * Y only changes on warp steps (door enter / stair climb) — never mid-air slides.
+     */
+    actorNavigateTo(actor, toX, toY, onArrive, speed = 22, toFloorId = null) {
+      if (!actor?.sprite?.active) return;
+      try { this.tweens.killTweensOf(actor.sprite); } catch (_) { /* ignore */ }
+      this.setActorBounce(actor, false);
+      actor.seated = false;
+      actor.seat = null;
+      actor.seatedY = null;
+      const fromX = actor.sprite.x;
+      const fromY = actor.floorY != null ? actor.floorY : actor.sprite.y;
+      const path = this.planActorPath(fromX, fromY, toX, toY, toFloorId);
+      actor._navQueue = path;
+      actor._navOnArrive = onArrive;
+      actor._navSpeed = speed;
+      actor.state = 'walk';
+      actor.busyUntil = this.time.now + 400;
+      this._runNextNavStep(actor);
+    }
+
+    _runNextNavStep(actor) {
+      if (!actor?.sprite?.active) return;
+      const q = actor._navQueue || [];
+      if (!q.length) {
+        actor.state = 'idle';
+        actor._navQueue = null;
+        // Stay locked to current floor line
+        if (actor.floorY != null) actor.sprite.y = actor.floorY;
+        this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+        if (typeof actor._navOnArrive === 'function') {
+          const cb = actor._navOnArrive;
+          actor._navOnArrive = null;
+          cb();
+        }
+        return;
+      }
+      const step = q.shift();
+      actor._navQueue = q;
+
+      // Warp = door enter / stair climb: Y change only at shaft/door x (like the player)
+      if (step.warp) {
+        actor.sprite.x = step.x;
+        actor.sprite.y = step.y;
+        actor.floorY = step.y;
+        actor.roomKey = step.roomKey ?? null;
+        actor.seated = false;
+        actor.seatedY = null;
+        actor.state = 'walk';
+        this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+        actor.busyUntil = this.time.now + 200;
+        this.time.delayedCall(140, () => this._runNextNavStep(actor));
+        return;
+      }
+
+      // Horizontal walk on current floor line only. If path Y differs, walk
+      // to step.x first, then warp Y there (same rule as doors/stairs).
+      const segY = step.y;
+      const curY = actor.floorY != null ? actor.floorY : actor.sprite.y;
+      if (Math.abs(curY - segY) > 6) {
+        this.actorWalkTo(actor, step.x, () => {
+          actor.sprite.x = step.x;
+          actor.sprite.y = segY;
+          actor.floorY = segY;
+          actor.roomKey = step.roomKey ?? actor.roomKey;
+          actor.busyUntil = this.time.now + 160;
+          this.time.delayedCall(120, () => this._runNextNavStep(actor));
+        }, actor._navSpeed || 22);
+        return;
+      }
+      this.actorWalkTo(actor, step.x, () => {
+        actor.floorY = segY;
+        actor.sprite.y = segY;
+        actor.roomKey = step.roomKey ?? actor.roomKey;
+        this._runNextNavStep(actor);
+      }, actor._navSpeed || 22);
+    }
+
+    /** Walk on a single floor line (same Y). Prefer actorNavigateTo for multi-floor. */
+    actorWalkTo(actor, x, onArrive, speed = 24) {
+      if (!actor?.sprite?.active) return;
+      try { this.tweens.killTweensOf(actor.sprite); } catch (_) { /* ignore */ }
+      this.setActorBounce(actor, false);
+      actor.seated = false;
+      actor.seat = null;
+      actor.seatedY = null;
+      actor.state = 'walk';
+      // Street extras always use groundY; life actors use their floorY
+      let fy = actor.floorY != null ? actor.floorY : actor.sprite.y;
+      if (actor.mode !== 'life' || actor.roomKey == null) {
+        // Outdoor / street crowd
+        if (this.isOutdoorY(fy) || actor.mode === 'stroll' || !actor.roomKey) {
+          fy = this.groundY;
+        }
+      }
+      actor.floorY = fy;
+      actor.sprite.y = fy;
+      actor.sprite.setFlipX(x < actor.sprite.x);
+      this.playSheetPose(actor.sprite, actor.sheet, 'walk');
+      const dist = Math.abs(x - actor.sprite.x);
+      const spd = Math.max(16, Math.min(26, speed));
+      const dur = Math.max(900, Math.round((dist / spd) * 1000));
+      actor.busyUntil = this.time.now + dur + 100;
+      this.tweens.add({
+        targets: actor.sprite,
+        x,
+        duration: dur,
+        ease: 'Sine.easeInOut',
+        onUpdate: () => {
+          if (actor.sprite?.active) actor.sprite.y = fy;
+        },
+        onComplete: () => {
+          if (!actor.sprite?.active) return;
+          actor.sprite.x = x;
+          actor.sprite.y = fy;
+          if (typeof onArrive === 'function') onArrive();
+          else {
+            this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+            actor.state = 'idle';
+            if (actor.mode !== 'life') this.setActorBounce(actor, true);
+          }
+        },
+      });
+    }
+
+    /**
+     * Sit / lie on furniture with locked contact point.
+     * seat.floorY = room floor plank; surfaceH = cushion height above it.
+     */
+    actorSitOn(actor, seat) {
+      if (!actor?.sprite || !seat) return;
+      this.setActorBounce(actor, false);
+      try { this.tweens.killTweensOf(actor.sprite); } catch (_) { /* ignore */ }
+
+      const isBed = seat.kind === 'bed';
+      const surface = Math.max(3, Math.min(14, seat.surfaceH != null ? seat.surfaceH : (isBed ? 4 : 8)));
+      // Snap to same room floor as the furniture, then park on the seat top
+      actor.floorY = seat.floorY;
+      actor.roomKey = seat.floorId || actor.roomKey;
+      const sitY = seat.floorY - surface;
+
+      actor.seated = true;
+      actor.seat = seat;
+      actor.seatedY = sitY;
+      actor.state = 'sit';
+      actor.sprite.x = seat.x;
+      actor.sprite.y = sitY;
+      // In front of furniture so they don't clip under cushions
+      actor.sprite.setDepth(Math.max(actor.depth || 30, 32) + (isBed ? 0 : 2));
+
+      const start = isBed ? 'lie' : 'sit';
+      const idle = isBed ? 'lieIdle' : 'sitIdle';
+      this.playSheetPose(actor.sprite, actor.sheet, start, {
+        onDone: () => {
+          if (!actor.sprite?.active || !actor.seated) return;
+          // Re-lock after pose (some frames shift vertical feel)
+          actor.sprite.x = seat.x;
+          actor.sprite.y = sitY;
+          this.playSheetPose(actor.sprite, actor.sheet, idle);
+          actor.state = 'sit';
+          const sitMs = 7000 + Math.random() * 6000;
+          actor.busyUntil = this.time.now + sitMs;
+          this.time.delayedCall(sitMs, () => {
+            if (!actor.sprite?.active || !actor.seated) return;
+            const food = (this.foods || []).find((f) => (
+              Math.abs(f.x - actor.sprite.x) < 48
+              && (!f.floorId || f.floorId === actor.roomKey || f.floorId === seat.floorId)
+            ));
+            if (food && !isBed && Math.random() < 0.55) {
+              this.actorEatFood(actor, food, () => {
+                if (!actor.seated) return;
+                actor.sprite.y = sitY;
+                this.playSheetPose(actor.sprite, actor.sheet, idle);
+                this.time.delayedCall(2500, () => this.actorStandUp(actor));
+              });
+            } else {
+              this.actorStandUp(actor);
+            }
+          });
+        },
+      });
+      // Hold busy through the sit intro
+      actor.busyUntil = this.time.now + poseDurationMs(start) + 80;
+    }
+
+    actorStandUp(actor) {
+      if (!actor?.sprite?.active) return;
+      const wasBed = actor.seat?.kind === 'bed';
+      const fin = wasBed ? 'lieFinish' : 'sitFinish';
+      const floorY = actor.floorY != null ? actor.floorY : actor.sprite.y;
+      actor.seated = false;
+      actor.seat = null;
+      actor.seatedY = null;
+      actor.sprite.y = floorY;
+      actor.sprite.setDepth(actor.depth || 30);
+      this.playSheetPose(actor.sprite, actor.sheet, fin, {
+        onDone: () => {
+          if (!actor.sprite?.active) return;
+          actor.sprite.y = floorY;
+          this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+          actor.state = 'idle';
+          // Life residents: rest before next path (no bounce)
+          actor.busyUntil = this.time.now + 2200 + Math.random() * 2500;
+          if (actor.mode !== 'life') {
+            this.setActorBounce(actor, true);
+            this.time.delayedCall(2500 + Math.random() * 2000, () => {
+              if (actor.sprite?.active && Math.random() < 0.45) this.actorPickWander(actor);
+            });
+          }
+        },
+      });
+      actor.busyUntil = this.time.now + poseDurationMs(fin) + 80;
+    }
+
+    actorPickWander(actor) {
+      if (!actor?.sprite?.active || actor.seated) return;
+      // Prefer seat → food → home offset
+      const seats = (this.seats || []).filter((s) => {
+        if (actor.roomKey && s.floorId && s.floorId !== actor.roomKey) return false;
+        if (!actor.roomKey && s.floorId) {
+          // street NPCs: only outdoor-ish seats (bench) near ground
+          return Math.abs((s.floorY || 0) - (actor.floorY || this.groundY)) < 12;
+        }
+        return Math.abs((s.floorY || 0) - (actor.floorY || 0)) < 14;
+      });
+      const foods = (this.foods || []).filter((f) => {
+        if (actor.roomKey && f.floorId && f.floorId !== actor.roomKey) return false;
+        return Math.abs((f.floorY || 0) - (actor.floorY || 0)) < 40;
+      });
+
+      const roll = Math.random();
+      if (seats.length && roll < 0.42) {
+        const seat = seats[Math.floor(Math.random() * seats.length)];
+        this.actorWalkTo(actor, seat.x, () => this.actorSitOn(actor, seat));
+        return;
+      }
+      if (foods.length && roll < 0.72) {
+        const food = foods[Math.floor(Math.random() * foods.length)];
+        this.actorEatFood(actor, food, () => {
+          actor.state = 'idle';
+          if (actor.mode !== 'life') this.setActorBounce(actor, true);
+        });
+        return;
+      }
+      // Pace near home (smaller steps = calmer pacing)
+      const span = actor.roomKey ? 36 : 55;
+      const tx = Phaser.Math.Clamp(
+        actor.homeX + (Math.random() * 2 - 1) * span,
+        actor.homeX - span,
+        actor.homeX + span,
+      );
+      this.actorWalkTo(actor, tx, () => {
+        const pose = ['wave', 'shrug', 'snicker', 'jump'][Math.floor(Math.random() * 4)];
+        this.playAmbientPose(actor, pose, { force: true });
+        actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 2000);
+      }, 22);
+    }
+
+    startAmbientLoop() {
+      if (this._ambientTimer) return;
+      this._ambientPoseIdx = 0;
+      this._ambientActorIdx = 0;
+      // Slower brain tick — fewer simultaneous movers
+      this._ambientTimer = this.time.addEvent({
+        delay: 1100,
+        loop: true,
+        callback: () => this.tickAmbient(),
+      });
+      this.time.delayedCall(500, () => this.tickAmbient());
+    }
+
+    tickAmbient() {
+      const now = this.time.now;
+      const actors = (this.ambientActors || []).filter((a) => a.sprite?.active);
+      if (!actors.length) return;
+
+      // Social: pair waves in same room (less frantic)
+      if (Math.random() < 0.28) {
+        const byRoom = new Map();
+        for (const a of actors) {
+          if (!a.roomKey || a.seated || a.state === 'walk') continue;
+          if (now < a.busyUntil) continue;
+          if (!byRoom.has(a.roomKey)) byRoom.set(a.roomKey, []);
+          byRoom.get(a.roomKey).push(a);
+        }
+        for (const group of byRoom.values()) {
+          if (group.length < 2) continue;
+          // pick closest pair
+          let best = null;
+          let bestD = 80;
+          for (let i = 0; i < group.length; i += 1) {
+            for (let j = i + 1; j < group.length; j += 1) {
+              const d = Math.abs(group[i].sprite.x - group[j].sprite.x);
+              if (d < bestD) { bestD = d; best = [group[i], group[j]]; }
+            }
+          }
+          if (best) {
+            const [a, b] = best;
+            a.sprite.setFlipX(a.sprite.x > b.sprite.x);
+            b.sprite.setFlipX(b.sprite.x > a.sprite.x);
+            this.playAmbientPose(a, 'wave', { force: true });
+            this.time.delayedCall(220, () => this.playAmbientPose(b, Math.random() < 0.5 ? 'wave' : 'snicker', { force: true }));
+            break;
+          }
+        }
+      }
+
+      // Drive 1–2 free actors per tick (was 2–4 — felt like a stampede)
+      const free = actors.filter((a) => now >= (a.busyUntil || 0) && a.state !== 'walk');
+      const n = Math.min(free.length, 1 + (Math.random() < 0.35 ? 1 : 0));
+      for (let k = 0; k < n; k += 1) {
+        const actor = free[(this._ambientActorIdx + k) % free.length];
+        if (!actor) break;
+        this.thinkActor(actor);
+      }
+      this._ambientActorIdx += Math.max(1, n);
+    }
+
+    /** Per-NPC decision: wander / sit / eat / emote. */
+    thinkActor(actor) {
+      if (!actor?.sprite?.active) return;
+      if (actor.mode === 'stroll') {
+        // Strollers briefly wave mid-pace (rarer)
+        if (Math.random() < 0.1) {
+          this.playSheetPose(actor.sprite, actor.sheet, 'wave');
+          actor.busyUntil = this.time.now + poseDurationMs('wave');
+          this.time.delayedCall(poseDurationMs('wave'), () => {
+            if (actor.sprite?.active) this.playSheetPose(actor.sprite, actor.sheet, 'walk');
+          });
+        }
+        return;
+      }
+      if (actor.seated) {
+        // Occasional seated emote
+        if (Math.random() < 0.22) {
+          this.playAmbientPose(actor, Math.random() < 0.5 ? 'snicker' : 'shrug', {
+            force: true,
+            resume: actor.seat?.kind === 'bed' ? 'lieIdle' : 'sitIdle',
+          });
+        }
+        return;
+      }
+      const roll = Math.random();
+      // More idle emotes, fewer walks — calmer street
+      if (roll < 0.32) {
+        this.actorPickWander(actor);
+      } else if (roll < 0.72) {
+        const poses = ['wave', 'shrug', 'snicker', 'jump'];
+        this.playAmbientPose(actor, poses[this._ambientPoseIdx % poses.length], { force: true });
+        this._ambientPoseIdx += 1;
+        actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 1400);
+      } else {
+        // Just chill — extend idle so they don't act next tick
+        actor.busyUntil = this.time.now + 2000 + Math.random() * 2500;
+      }
+    }
+
+    spawnPets() {
+      const mw = this.mapWidth || W;
+      const gy = this.groundY;
+      this.pets = [];
+
+      // In front of buildings; feet planted via PET_FOOT_ORIGIN_Y
+      const PET_DEPTH = 38;
+      const hasDog = this.textures.exists('petDog');
+      const hasCat = this.textures.exists('petCat');
+      if (!hasDog && !hasCat) {
+        console.warn('[map] pets missing textures — PacksExtra/Cats|Dogs not loaded');
+        this.time.delayedCall(800, () => {
+          if (this.textures.exists('petDog') || this.textures.exists('petCat')) this.spawnPets();
+        });
+        return;
+      }
+
+      // Ensure cells exist even if makeAnims ran before textures were ready
+      this.buildPetCellTextures();
+
+      const makePet = (key, x, y, depth = PET_DEPTH) => {
+        // Start on a sliced cell texture (not the full sheet)
+        const startCell = `${key}_c${petWalkFrames(1)[0]}`;
+        const texKey = this.textures.exists(startCell) ? startCell : key;
+        const sp = this.add.sprite(x, y, texKey)
+          .setScale(petScaleFor(key))
+          .setOrigin(0.5, PET_FOOT_ORIGIN_Y)
+          .setDepth(depth);
+        sp._petStep = 0;
+        sp._petDir = 1;
+        sp._petMoving = false;
+        sp._petKey = key;
+        return sp;
+      };
+
+      const addPatrol = (key, x0, x1, dur) => {
+        if (!this.textures.exists(key)) return null;
+        const sp = makePet(key, x0, gy, PET_DEPTH);
+        this.startPetPatrol(sp, key, x0, x1, dur, gy);
+        this.pets.push({ sprite: sp, kind: key });
+        return sp;
+      };
+
+      // Dogs larger, cats smaller — near spawn
+      if (hasDog) {
+        addPatrol('petDog', 180, Math.min(460, mw - 50), 10000);
+        if (mw > 700) addPatrol('petDog', mw * 0.5, mw * 0.78, 12000);
+      }
+      if (hasCat) {
+        addPatrol('petCat', 280, Math.min(520, mw - 40), 11000);
+        // Extra ground cat (no couch dependency) — always walking on street
+        if (mw > 500) addPatrol('petCat', mw * 0.35, mw * 0.55, 11500);
+      }
+      console.info(`[map] pets walking n=${this.pets.length} cellsBuilt=${this.textures.exists('petDog_c0')}`);
+    }
+
+    buildHud(guildName = 'Discord', meta = {}) {
+      const label = String(guildName || 'Discord').slice(0, 22);
+      const ch = meta.channelCount != null ? meta.channelCount : (this.floors?.size || 0);
+      const cats = meta.categoryCount != null ? meta.categoryCount : (this.buildings?.length || 0);
+      const pad = 8;
+      if (this.textures.exists('uiPanelBlue')) {
+        this.add.image(pad, pad, 'uiPanelBlue')
+          .setOrigin(0, 0).setScrollFactor(0).setDepth(500)
+          .setDisplaySize(168, 52).setAlpha(0.94);
+      } else {
+        this.add.rectangle(pad + 84, pad + 26, 168, 52, 0x1e293b, 0.88)
+          .setScrollFactor(0).setDepth(500);
+      }
+      this.add.text(pad + 12, pad + 8, label, {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '12px', fontStyle: 'bold', color: '#f8fafc',
+      }).setScrollFactor(0).setDepth(501).setResolution(2);
+      this._hudSub = this.add.text(pad + 12, pad + 28, `${cats} blocks · ${ch} rooms`, {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '10px', color: '#cbd5e1',
+      }).setScrollFactor(0).setDepth(501).setResolution(2);
+      if (this.textures.exists('uiPerson')) {
+        this.add.image(pad + 148, pad + 26, 'uiPerson')
+          .setScale(SCALE).setScrollFactor(0).setDepth(501);
+      }
+
+      // Life event strip (bottom)
+      this._eventLogBg = this.add.rectangle(W / 2, H - 18, W - 24, 28, 0x0f172a, 0.72)
+        .setScrollFactor(0).setDepth(500).setOrigin(0.5);
+      this._eventLogText = this.add.text(16, H - 26, 'Block life starting…', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '11px',
+        color: '#e2e8f0',
+      }).setScrollFactor(0).setDepth(501).setResolution(2);
+
+      // Clock / day-night readout
+      this._clockText = this.add.text(W - 12, 12, '', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '11px',
+        fontStyle: 'bold',
+        color: '#fef3c7',
+        backgroundColor: '#1e293bcc',
+        padding: { x: 8, y: 4 },
+      }).setOrigin(1, 0).setScrollFactor(0).setDepth(501).setResolution(2);
+    }
+
+    // ——— Block life sim (named residents, needs, relationships, day/night) ———
+
+    startBlockLife(layoutMeta = {}) {
+      if (typeof window.BlockLife === 'undefined' || !window.BlockLife.createWorld) {
+        console.warn('[map] block-life.js not loaded — residents disabled');
+        return;
+      }
+      const sheets = NPC_SHEETS.filter((n) => this.textures.exists(n.key)).map((n) => n.key);
+      const roomKeys = [...(this.floors?.keys?.() || [])].filter((k) => !String(k).includes('placeholder') && !String(k).includes('roof'));
+      const buildings = this.buildings || [];
+      this.blockLife = window.BlockLife.createWorld({
+        guildId: layoutMeta.guildId || 'local',
+        guildName: layoutMeta.guildName || 'Discord',
+        sheetKeys: sheets,
+        buildingCount: Math.max(1, buildings.length || 3),
+        roomKeys,
+      });
+
+      // Day/night overlay (full camera)
+      this._nightOverlay = this.add.rectangle(W / 2, H / 2, W * 4, H * 4, 0x0b1220, 0)
+        .setScrollFactor(0)
+        .setDepth(90)
+        .setOrigin(0.5);
+
+      this.lifeSprites = new Map(); // residentId -> { sprite, tag, actor }
+      this.spawnBlockResidents();
+      this.bindHouseholdPets();
+      this.applyDayNightVisuals();
+
+      this._lifeTick = this.time.addEvent({
+        delay: 500,
+        loop: true,
+        callback: () => this.tickBlockLife(0.5),
+      });
+      this.time.delayedCall(400, () => this.tickBlockLife(0.5));
+    }
+
+    spawnBlockResidents() {
+      if (!this.blockLife) return;
+      const gy = this.groundY;
+      const buildings = this.buildings || [];
+      const depth = 36;
+
+      this.blockLife.residents.forEach((r, i) => {
+        if (!r.alive || !r.sheet || !this.textures.exists(r.sheet)) return;
+        const b = buildings[r.homeBuilding % Math.max(1, buildings.length)];
+        const homeX = b
+          ? (b.left + b.right) / 2 + ((i % 5) - 2) * 18
+          : 160 + i * 40;
+        // Prefer a floor in their home building if we can find one
+        let spawnY = gy;
+        let roomKey = r.homeRoom;
+        if (b) {
+          const floors = [...(this.floors?.values?.() || [])].filter((f) => (
+            f.floorY != null && f.minX >= b.left - 20 && f.maxX <= b.right + 20 && !f.isRoof
+          ));
+          if (floors.length) {
+            const fl = floors[i % floors.length];
+            spawnY = fl.floorY;
+            roomKey = fl.roomKey || fl.id || roomKey;
+            r.homeRoom = roomKey;
+          }
+        }
+        r.x = homeX;
+        r.y = spawnY;
+
+        // Children only slightly smaller; adults full size (SCALE=2)
+        const scaleMul = r.stage === 'child' ? 0.88 : (r.stage === 'elder' ? 0.97 : 1);
+        const sp = this.add.sprite(homeX, spawnY, r.sheet, 0)
+          .setScale(SCALE * scaleMul)
+          .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
+          .setDepth(depth);
+        this.playSheetPose(sp, r.sheet, 'idle');
+
+        const tag = this.add.text(homeX, spawnY - 36, r.name, {
+          fontFamily: 'Segoe UI, system-ui, sans-serif',
+          fontSize: '10px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          backgroundColor: r.stage === 'child' ? '#7c3aed' : (r.partnerId ? '#be185d' : '#0f766e'),
+          padding: { x: 4, y: 2 },
+        }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(2);
+
+        const jobTag = this.add.text(homeX, spawnY - 48, r.jobLabel, {
+          fontFamily: 'Segoe UI, system-ui, sans-serif',
+          fontSize: '8px',
+          color: '#cbd5e1',
+          backgroundColor: '#0f172acc',
+          padding: { x: 3, y: 1 },
+        }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(2).setAlpha(0.85);
+
+        const actor = this.registerAmbient(sp, r.sheet, {
+          roomKey: roomKey || null,
+          mode: 'life',
+          homeX,
+          homeY: spawnY,
+          floorY: spawnY,
+          depth,
+        });
+        actor.residentId = r.id;
+
+        this.lifeSprites.set(r.id, { sprite: sp, tag, jobTag, actor, resident: r });
+      });
+      console.info(`[map] block life: ${this.lifeSprites.size} residents day=${this.blockLife.day} hour=${this.blockLife.hour}`);
+
+      // Force everyone to try a seat shortly after spawn so sit/lie is visible
+      this.time.delayedCall(1200, () => this.forceResidentsUseFurniture());
+      this.time.delayedCall(5000, () => this.forceResidentsUseFurniture());
+      // Demo: send a few hungry neighbors to real food plates
+      this.time.delayedCall(2800, () => this.forceResidentsEatFood());
+      this.time.delayedCall(12000, () => this.forceResidentsEatFood());
+    }
+
+    /** Send free residents to actual Pixel Platter food sprites. */
+    forceResidentsEatFood() {
+      if (!this.lifeSprites || !(this.foods || []).length) {
+        console.info('[map] no food sprites for residents to eat');
+        return;
+      }
+      let n = 0;
+      const list = [...this.lifeSprites.values()].filter((e) => (
+        e.actor?.sprite?.active && e.resident?.alive
+        && !e.actor.seated && e.actor.state !== 'walk' && !e.actor._navQueue?.length
+        && this.time.now >= (e.actor.busyUntil || 0)
+      ));
+      // Up to 4 at a time so the block feels like mealtime
+      for (const entry of list.slice(0, 4)) {
+        const food = this.nearestFoodFor(entry.actor);
+        if (!food) continue;
+        entry.resident.activity = 'eat';
+        entry.jobTag?.setText('eating');
+        this.actorEatFood(entry.actor, food, () => {
+          if (entry.resident) {
+            entry.resident.needs.hunger = Math.max(0, entry.resident.needs.hunger - 0.5);
+          }
+        });
+        n += 1;
+      }
+      console.info(`[map] sent ${n} residents to eat real food (${this.foods.length} plates)`);
+    }
+
+    /** Sit/lie residents on nearest valid furniture (debug + UX). */
+    forceResidentsUseFurniture() {
+      if (!this.lifeSprites) return;
+      let seated = 0;
+      this.lifeSprites.forEach((entry) => {
+        const actor = entry.actor;
+        const r = entry.resident;
+        if (!actor?.sprite?.active || !r?.alive || actor.seated) return;
+        if (actor.state === 'walk' || actor._navQueue?.length) return;
+        // Same floor only — never Y-teleport onto furniture from another story
+        const candidates = (this.seats || []).filter((s) => {
+          const yOk = Math.abs((s.floorY || 0) - (actor.floorY || 0)) <= 14;
+          const idOk = !s.floorId || !actor.roomKey || s.floorId === actor.roomKey;
+          return yOk && idOk;
+        }).sort((a, b) => Math.abs(a.x - actor.sprite.x) - Math.abs(b.x - actor.sprite.x));
+        const seat = candidates[0];
+        if (!seat) return;
+        if (Math.abs(seat.x - actor.sprite.x) < 8) {
+          this.actorSitOn(actor, seat);
+          seated += 1;
+        } else if (Math.abs(seat.x - actor.sprite.x) < 120) {
+          this.actorWalkTo(actor, seat.x, () => {
+            this.actorSitOn(actor, seat);
+          }, 20);
+          seated += 1;
+        }
+      });
+      console.info(`[map] force seat attempts ~${seated}`);
+    }
+
+    bindHouseholdPets() {
+      // Tag first dog/cat sprites as owned by first pet owners for flavor
+      if (!this.blockLife?.pets?.length || !this.pets?.length) return;
+      this.blockLife.pets.forEach((p, i) => {
+        const spriteEntry = this.pets[i];
+        if (spriteEntry?.sprite) {
+          spriteEntry.ownerId = p.ownerId;
+          spriteEntry.petName = p.name;
+        }
+      });
+    }
+
+    applyDayNightVisuals() {
+      if (!this.blockLife || !this._nightOverlay) return;
+      const dl = window.BlockLife.daylight(this.blockLife.hour);
+      // night alpha 0 at full day, ~0.55 at night
+      const nightA = Math.max(0, Math.min(0.58, 1 - dl));
+      this._nightOverlay.setFillStyle(0x0b1220, nightA);
+      if (this._clockText) {
+        const h = this.blockLife.hour;
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = ((h + 11) % 12) + 1;
+        const phase = window.BlockLife.isNight(h) ? '🌙' : (h < 9 || h >= 17 ? '🌤' : '☀️');
+        this._clockText.setText(`Day ${this.blockLife.day} · ${h12}:00 ${ampm} ${phase}`);
+      }
+    }
+
+    pushLifeEvent(text) {
+      if (!this._eventLogText) return;
+      const line = String(text || '').slice(0, 72);
+      this._eventLogText.setText(line);
+      this._eventLogText.setAlpha(1);
+      this.tweens.add({
+        targets: this._eventLogText,
+        alpha: 0.55,
+        delay: 4000,
+        duration: 800,
+      });
+    }
+
+    tickBlockLife(dtSec) {
+      if (!this.blockLife || typeof window.BlockLife === 'undefined') return;
+
+      // Nearby pairs for social graph
+      const nearby = [];
+      const list = [...this.lifeSprites.values()].filter((e) => e.sprite?.active && e.resident?.alive);
+      for (let i = 0; i < list.length; i += 1) {
+        for (let j = i + 1; j < list.length; j += 1) {
+          const a = list[i];
+          const b = list[j];
+          if (Math.abs(a.sprite.x - b.sprite.x) < 55 && Math.abs(a.sprite.y - b.sprite.y) < 40) {
+            nearby.push([a.resident.id, b.resident.id]);
+          }
+        }
+      }
+
+      window.BlockLife.tick(this.blockLife, dtSec, {
+        nearbyPairs: nearby,
+        onEvent: (e) => this.pushLifeEvent(e),
+      });
+      this.applyDayNightVisuals();
+      this.driveResidents();
+
+      // Update HUD subline with live count
+      if (this._hudSub && this.blockLife) {
+        const alive = this.blockLife.residents.filter((r) => r.alive).length;
+        const couples = this.blockLife.residents.filter((r) => r.alive && r.partnerId).length / 2;
+        this._hudSub.setText(`${alive} residents · ${Math.floor(couples)} couples · day ${this.blockLife.day}`);
+      }
+    }
+
+    driveResidents() {
+      if (!this.blockLife) return;
+      const gy = this.groundY;
+      const buildings = this.buildings || [];
+      const hour = this.blockLife.hour;
+
+      this.lifeSprites.forEach((entry, id) => {
+        const r = this.blockLife.residents.find((x) => x.id === id);
+        if (!r || !entry.sprite?.active) return;
+
+        if (!r.alive) {
+          // Death: lie down and fade
+          this.playSheetPose(entry.sprite, r.sheet, 'lieIdle');
+          entry.sprite.setAlpha(0.45);
+          entry.tag?.setText(`${r.name} †`);
+          entry.jobTag?.setText('remembered');
+          return;
+        }
+
+        const act = r.activity || window.BlockLife.getActivity(r, hour);
+        const actLabel = (window.BlockLife.activityLabel
+          ? window.BlockLife.activityLabel(act)
+          : act);
+        // Community status only — no job/work tags
+        entry.jobTag?.setText(actLabel);
+
+        // Normalize scale (kids slightly smaller only)
+        const wantScale = SCALE * (r.stage === 'child' ? 0.88 : (r.stage === 'elder' ? 0.97 : 1));
+        if (Math.abs(entry.sprite.scaleX - wantScale) > 0.02) entry.sprite.setScale(wantScale);
+
+        // Needs-driven community overrides (still no work)
+        let goal = act;
+        if (r.needs.hunger > 0.75) goal = 'eat';
+        else if (r.needs.energy < 0.25) goal = 'sleep';
+        else if (r.needs.social > 0.75) goal = 'social';
+        else if (r.needs.fun > 0.8) goal = 'play';
+
+        const actor = entry.actor;
+        // Lock seated NPCs to the cushion so bounce/path never lifts them
+        if (actor?.seated && actor.seatedY != null) {
+          actor.sprite.x = actor.seat?.x ?? actor.sprite.x;
+          actor.sprite.y = actor.seatedY;
+        }
+        entry.tag?.setPosition(entry.sprite.x, entry.sprite.y - 36);
+        entry.jobTag?.setPosition(entry.sprite.x, entry.sprite.y - 48);
+        r.x = entry.sprite.x;
+        r.y = entry.sprite.y;
+
+        // Don't interrupt mid-walk / mid-nav / mid-pose / seated
+        if (!actor || this.time.now < (actor.busyUntil || 0) || actor.state === 'walk'
+          || actor.seated || actor._navQueue?.length) {
+          return;
+        }
+
+        // Target by community activity — never a workplace grind
+        let targetX = actor.homeX;
+        let targetY = actor.homeY || actor.floorY || gy;
+        let targetFloorId = null;
+        const b = buildings[r.homeBuilding % Math.max(1, buildings.length)];
+        const pickFloorInBuilding = (building, salt = 0) => {
+          if (!building) return null;
+          const floors = [...(this.floors?.values?.() || [])].filter((f) => (
+            f.floorY != null && f.minX >= building.left - 20 && f.maxX <= building.right + 20 && !f.isRoof
+          ));
+          if (!floors.length) return null;
+          return floors[(hashSeed(r.id) + salt) % floors.length];
+        };
+
+        if (goal === 'eat') {
+          // Always go to a real food sprite on a table — not empty air
+          const food = this.nearestFoodFor(actor);
+          if (food) {
+            entry._nextPathAt = this.time.now + 6000 + (hashSeed(r.id) % 2000);
+            this.actorEatFood(actor, food, () => {
+              r.needs.hunger = Math.max(0, r.needs.hunger - 0.45);
+              this.residentArrive(entry, r, 'hang');
+            });
+            return;
+          }
+          // Fallback if map has no plates yet
+          if (b) {
+            const fl = pickFloorInBuilding(b, 1);
+            if (fl) {
+              targetX = this.clampToFloor((fl.minX + fl.maxX) / 2, fl);
+              targetY = fl.floorY;
+              targetFloorId = fl.id;
+            }
+          }
+        } else if (goal === 'sleep' || goal === 'home' || goal === 'chill') {
+          targetX = actor.homeX;
+          targetY = actor.homeY || actor.floorY || gy;
+          if (r.homeRoom) targetFloorId = r.homeRoom;
+          else {
+            const hf = this.findFloorAt(targetX, targetY);
+            if (hf) targetFloorId = hf.id;
+          }
+        } else if (goal === 'stroll') {
+          // Leisure walk along the street
+          targetX = 120 + (hashSeed(r.id + String(hour)) % Math.max(80, (this.mapWidth || W) - 240));
+          targetY = gy;
+          targetFloorId = null;
+        } else if (goal === 'visit') {
+          // Drop in on another building / neighbor
+          const otherB = buildings.length
+            ? buildings[(r.homeBuilding + 1 + (hashSeed(r.id + 'v') % Math.max(1, buildings.length - 1))) % buildings.length]
+            : b;
+          const fl = pickFloorInBuilding(otherB || b, hour);
+          if (fl) {
+            targetX = this.clampToFloor(fl.minX + 24 + (hashSeed(r.id) % 40), fl);
+            targetY = fl.floorY;
+            targetFloorId = fl.id;
+          } else {
+            targetX = (this.mapWidth || W) * 0.4 + (hashSeed(r.id) % 100);
+            targetY = gy;
+          }
+        } else if (goal === 'hang' || goal === 'social' || goal === 'play') {
+          // Community hang spots: street plaza or a shared room
+          if ((hashSeed(r.id + String(hour)) % 100) < 45 && b) {
+            const fl = pickFloorInBuilding(b, hour + 3);
+            if (fl) {
+              targetX = this.clampToFloor((fl.minX + fl.maxX) / 2 + ((hashSeed(r.id) % 30) - 15), fl);
+              targetY = fl.floorY;
+              targetFloorId = fl.id;
+            }
+          } else {
+            // Outdoor hang strip
+            targetX = (this.mapWidth || W) * 0.28 + (hashSeed(r.id + String(Math.floor(hour / 2))) % 160);
+            targetY = gy;
+            targetFloorId = null;
+          }
+        } else if (goal === 'follow' && r.parentIds?.length) {
+          const parent = this.lifeSprites.get(r.parentIds[0]);
+          if (parent?.sprite) {
+            targetX = parent.sprite.x - 14;
+            targetY = parent.actor?.floorY ?? parent.sprite.y;
+            targetFloorId = parent.actor?.roomKey || null;
+          }
+        }
+
+        // Throttle: only re-path every few seconds per resident
+        if (entry._nextPathAt && this.time.now < entry._nextPathAt) return;
+        entry._nextPathAt = this.time.now + 4500 + (hashSeed(r.id) % 2000);
+
+        const distX = Math.abs(entry.sprite.x - targetX);
+        const distY = Math.abs((actor.floorY ?? entry.sprite.y) - targetY);
+        const needsMove = distX > 16 || distY > 12;
+        if (needsMove && goal !== 'sleep') {
+          // Door/stair/passage path — never free-slide Y in open air
+          this.actorNavigateTo(actor, targetX, targetY, () => {
+            this.residentArrive(entry, r, goal);
+          }, 22, targetFloorId);
+        } else if (needsMove && goal === 'sleep') {
+          // Go home via doors, then lie down
+          this.actorNavigateTo(actor, targetX, targetY, () => {
+            this.residentArrive(entry, r, goal);
+          }, 20, targetFloorId);
+        } else {
+          this.residentArrive(entry, r, goal);
+        }
+      });
+    }
+
+    residentArrive(entry, r, goal) {
+      const actor = entry.actor;
+      if (!actor?.sprite?.active) return;
+      // Prefer real furniture on this floor
+      const sameFloorSeat = (kind) => (this.seats || []).find((s) => {
+        if (kind && s.kind !== kind) return false;
+        const yOk = Math.abs((s.floorY || 0) - (actor.floorY || 0)) <= 16;
+        const idOk = !s.floorId || !actor.roomKey || s.floorId === actor.roomKey;
+        const near = Math.abs(s.x - actor.sprite.x) < 90;
+        return yOk && idOk && near;
+      });
+
+      if (goal === 'sleep') {
+        const bed = sameFloorSeat('bed')
+          || (this.seats || []).find((s) => (
+            s.kind === 'bed'
+            && Math.abs(s.x - actor.homeX) < 100
+            && Math.abs((s.floorY || 0) - (actor.floorY || 0)) <= 16
+          ));
+        if (bed) {
+          // Same-floor walk only — never Y-snap onto a bed
+          if (Math.abs(bed.x - actor.sprite.x) > 10) {
+            this.actorWalkTo(actor, bed.x, () => this.actorSitOn(actor, bed), 20);
+          } else {
+            this.actorSitOn(actor, bed);
+          }
+        } else {
+          // Floor nap — stay on floorY, play lie, lock seatedY
+          this.setActorBounce(actor, false);
+          const sitY = (actor.floorY || actor.sprite.y);
+          actor.seated = true;
+          actor.seatedY = sitY;
+          actor.sprite.y = sitY;
+          this.playSheetPose(actor.sprite, actor.sheet, 'lie', {
+            onDone: () => {
+              if (!actor.seated) return;
+              actor.sprite.y = sitY;
+              this.playSheetPose(actor.sprite, actor.sheet, 'lieIdle');
+            },
+          });
+          actor.busyUntil = this.time.now + 10000;
+        }
+        r.needs.energy = Math.min(1, r.needs.energy + 0.15);
+        return;
+      }
+      if (goal === 'eat') {
+        const food = this.nearestFoodFor(actor)
+          || (this.foods || []).find((f) => Math.abs(f.x - actor.sprite.x) < 50);
+        if (food) {
+          this.actorEatFood(actor, food, () => {
+            r.needs.hunger = Math.max(0, r.needs.hunger - 0.45);
+          });
+        } else {
+          // No plate found — still play eat so it isn't silent
+          this.playSheetPose(actor.sprite, actor.sheet, 'eat', {
+            onDone: () => this.playSheetPose(actor.sprite, actor.sheet, 'idle'),
+          });
+          actor.busyUntil = this.time.now + poseDurationMs('eat') + 200;
+          r.needs.hunger = Math.max(0, r.needs.hunger - 0.25);
+        }
+        return;
+      }
+      // Community hang / visit / chill / stroll — sit, wave, snack vibes
+      if (goal === 'hang' || goal === 'visit' || goal === 'chill' || goal === 'stroll'
+        || goal === 'social' || goal === 'play' || goal === 'home') {
+        const seat = sameFloorSeat('seat');
+        const wantSit = seat && (goal === 'chill' || goal === 'home' || Math.random() < 0.55);
+        if (wantSit) {
+          this.actorSitOn(actor, seat);
+        } else {
+          const pose = goal === 'play'
+            ? 'jump'
+            : (['wave', 'snicker', 'shrug'][Math.floor(Math.random() * 3)]);
+          this.playSheetPose(actor.sprite, actor.sheet, pose, {
+            onDone: () => this.playSheetPose(actor.sprite, actor.sheet, 'idle'),
+          });
+          actor.busyUntil = this.time.now + 1800 + Math.random() * 1200;
+        }
+        if (r.partnerId && (goal === 'social' || goal === 'hang')) {
+          const p = this.lifeSprites.get(r.partnerId);
+          if (p?.sprite && Math.abs(p.sprite.x - actor.sprite.x) < 70) {
+            if (seat && !actor.seated) this.actorSitOn(actor, seat);
+            r.needs.social = Math.max(0, r.needs.social - 0.1);
+          }
+        }
+        r.needs.fun = Math.max(0, (r.needs.fun || 0.5) - 0.05);
+        r.needs.social = Math.max(0, r.needs.social - 0.04);
+        return;
+      }
+      // Fallback community idle
+      if (goal === 'idle' || goal === 'follow') {
+        this.playSheetPose(actor.sprite, actor.sheet, Math.random() < 0.5 ? 'wave' : 'idle', {
+          onDone: () => this.playSheetPose(actor.sprite, actor.sheet, 'idle'),
+        });
+        actor.busyUntil = this.time.now + 1600;
+        if (r.partnerId) {
+          const p = this.lifeSprites.get(r.partnerId);
+          if (p?.sprite && Math.abs(p.sprite.x - actor.sprite.x) < 70) {
+            const seat = sameFloorSeat('seat');
+            if (seat) this.actorSitOn(actor, seat);
+          }
+        }
+        return;
+      }
+      if (goal === 'home') {
+        const seat = sameFloorSeat('seat') || sameFloorSeat('bed');
+        if (seat) this.actorSitOn(actor, seat);
+        else {
+          this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+          actor.busyUntil = this.time.now + 4000;
+          actor.state = 'idle';
+        }
+      }
     }
 
     addRoomSlots(roomKey, points) {
@@ -2716,6 +4805,11 @@
           displayName: String(p.displayName || 'member').slice(0, 16),
           roomKey,
           soft: !!p.soft || (p.channelType !== 'voice' && p.channelType !== 'stage'),
+          muted: !!p.muted,
+          deafened: !!p.deafened,
+          live: !!p.live,
+          textSnippet: p.textSnippet ? String(p.textSnippet).slice(0, 40) : null,
+          boosted: !!p.boosted || !!p.premium,
         });
       }
 
@@ -2723,33 +4817,189 @@
       for (const [userId, live] of [...this.livePeople.entries()]) {
         if (!want.has(userId)) {
           this.releaseSlot(live.roomKey, userId);
+          this.destroyLiveChrome(live);
+          this.dropAmbient(live.sprite);
           live.sprite?.destroy();
           live.tag?.destroy();
           this.livePeople.delete(userId);
         }
       }
 
-      // Spawn / move
+      // Spawn / walk / refresh
       for (const [userId, person] of want) {
         const existing = this.livePeople.get(userId);
         if (existing && existing.roomKey !== person.roomKey) {
+          // Walk to the new room instead of teleport despawn
           this.releaseSlot(existing.roomKey, userId);
-          existing.sprite?.destroy();
-          existing.tag?.destroy();
-          this.livePeople.delete(userId);
+          const slot = this.claimSlot(person.roomKey, userId);
+          this.walkLivePerson(existing, person, slot);
+          continue;
         }
         if (!this.livePeople.has(userId)) {
           this.spawnLivePerson(person);
         } else {
           const live = this.livePeople.get(userId);
-          if (live.tag && live.tag.text !== person.displayName && live.tag.text !== `${person.displayName} (you)`) {
           const isMe = ME_DISCORD_ID && String(person.userId) === ME_DISCORD_ID;
-          live.tag.setText(isMe ? `${person.displayName} (you)` : person.displayName);
-          live.tag.setBackgroundColor(isMe ? '#16a34a' : (person.soft ? '#334155' : '#5865f2'));
-        }
+          if (live.tag) {
+            const wantName = isMe ? `${person.displayName} (you)` : person.displayName;
+            if (live.tag.text !== wantName) live.tag.setText(wantName);
+            live.tag.setBackgroundColor(isMe ? '#16a34a' : (person.soft ? '#334155' : '#5865f2'));
+          }
+          live.soft = person.soft;
           live.sprite.setAlpha(person.soft ? 0.72 : 1);
+          this.syncLiveChrome(live, person);
         }
       }
+      this.updatePlaqueStars();
+    }
+
+    destroyLiveChrome(live) {
+      if (!live) return;
+      for (const k of ['statusIcon', 'pointer', 'bubble', 'bubbleText', 'boostIcon']) {
+        try { live[k]?.destroy?.(); } catch (_) { /* ignore */ }
+        live[k] = null;
+      }
+    }
+
+    /** Status icons + open-mic pointer + soft-text chat bubbles. */
+    syncLiveChrome(live, person) {
+      if (!live?.sprite?.active) return;
+      const depth = (live.sprite.depth || 30) + 2;
+      const sx = live.sprite.x;
+      const sy = live.sprite.y;
+
+      // Happiness status: deaf → 0, mute → 1, soft → 2, default → 3, live open mic → 4
+      let statusKey = 'statusHappy3';
+      if (person.deafened) statusKey = 'statusHappy0';
+      else if (person.muted) statusKey = 'statusHappy1';
+      else if (person.soft) statusKey = 'statusHappy2';
+      else if (person.live) statusKey = 'statusHappy4';
+
+      if (this.textures.exists(statusKey)) {
+        if (!live.statusIcon || !live.statusIcon.active) {
+          live.statusIcon = this.add.image(sx + 10, sy - 28, statusKey)
+            .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
+        } else if (live.statusIcon.texture?.key !== statusKey) {
+          live.statusIcon.setTexture(statusKey);
+        }
+        live.statusIcon.setPosition(sx + 10, sy - 28).setVisible(true);
+      }
+
+      // Green pointer bob for open-mic
+      const showPtr = !person.soft && person.live && this.textures.exists('pointerGreen');
+      if (showPtr) {
+        if (!live.pointer || !live.pointer.active) {
+          live.pointer = this.add.image(sx, sy - 46, 'pointerGreen')
+            .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
+          this.tweens.add({
+            targets: live.pointer, y: sy - 52, duration: 500,
+            yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+          });
+        } else {
+          live.pointer.setVisible(true);
+          live.pointer.x = sx;
+        }
+      } else if (live.pointer) {
+        live.pointer.setVisible(false);
+      }
+
+      // Soft text → chat bubble
+      if (person.soft && person.textSnippet && this.textures.exists('uiBubbleWhite')) {
+        const snip = person.textSnippet;
+        if (!live.bubble || !live.bubble.active) {
+          live.bubble = this.add.image(sx, sy - 54, 'uiBubbleWhite')
+            .setScale(SCALE * 1.4).setDepth(depth + 1).setOrigin(0.5, 1);
+          live.bubbleText = this.add.text(sx, sy - 62, snip, {
+            fontFamily: 'Segoe UI, system-ui, sans-serif',
+            fontSize: '9px', color: '#1e293b', wordWrap: { width: 72 },
+          }).setOrigin(0.5, 1).setDepth(depth + 2).setResolution(2);
+        } else {
+          live.bubble.setPosition(sx, sy - 54).setVisible(true);
+          if (live.bubbleText) {
+            live.bubbleText.setText(snip).setPosition(sx, sy - 62).setVisible(true);
+          }
+        }
+      } else {
+        if (live.bubble) live.bubble.setVisible(false);
+        if (live.bubbleText) live.bubbleText.setVisible(false);
+      }
+
+      if (person.boosted && this.textures.exists('boostIcon')) {
+        if (!live.boostIcon || !live.boostIcon.active) {
+          live.boostIcon = this.add.image(sx - 12, sy - 28, 'boostIcon')
+            .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
+        } else {
+          live.boostIcon.setPosition(sx - 12, sy - 28).setVisible(true);
+        }
+      } else if (live.boostIcon) {
+        live.boostIcon.setVisible(false);
+      }
+    }
+
+    layoutLiveChrome(live) {
+      if (!live?.sprite?.active) return;
+      const sx = live.sprite.x;
+      const sy = live.sprite.y;
+      if (live.statusIcon?.active) live.statusIcon.setPosition(sx + 10, sy - 28);
+      if (live.pointer?.active && live.pointer.visible) live.pointer.x = sx;
+      if (live.bubble?.active && live.bubble.visible) {
+        live.bubble.setPosition(sx, sy - 54);
+        if (live.bubbleText) live.bubbleText.setPosition(sx, sy - 62);
+      }
+      if (live.boostIcon?.active && live.boostIcon.visible) live.boostIcon.setPosition(sx - 12, sy - 28);
+      if (live.tag?.active) live.tag.setPosition(sx, sy - 40);
+    }
+
+    /** Smooth walk from current pose into a new room slot. */
+    walkLivePerson(live, person, slot) {
+      const sprite = live.sprite;
+      const tag = live.tag;
+      const sheet = live.sheet || this.npcSheetFor(String(person.userId));
+      live.roomKey = person.roomKey;
+      live.soft = person.soft;
+      live.sheet = sheet;
+      if (live.actor) live.actor.roomKey = person.roomKey;
+
+      try {
+        this.tweens.killTweensOf(sprite);
+        if (tag) this.tweens.killTweensOf(tag);
+      } catch (_) { /* ignore */ }
+
+      sprite.setFlipX(slot.x < sprite.x);
+      this.playSheetPose(sprite, sheet, 'walk');
+      sprite.setAlpha(person.soft ? 0.72 : 1);
+
+      const dist = Phaser.Math.Distance.Between(sprite.x, sprite.y, slot.x, slot.y);
+      // Presence moves: ~30–35px/s, never a zip
+      const dur = Phaser.Math.Clamp(Math.round(dist * 28), 900, 4200);
+
+      this.tweens.add({
+        targets: sprite,
+        x: slot.x,
+        y: slot.y,
+        duration: dur,
+        ease: 'Sine.easeInOut',
+        onUpdate: () => this.layoutLiveChrome(live),
+        onComplete: () => {
+          if (!sprite.active) return;
+          this.playSheetPose(sprite, sheet, 'idle');
+          this.tweens.add({
+            targets: sprite, y: slot.y - 1.5,
+            duration: 700 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+            onUpdate: () => this.layoutLiveChrome(live),
+          });
+          if (tag) {
+            tag.setPosition(slot.x, slot.y - 40);
+            this.tweens.add({
+              targets: tag, y: slot.y - 41.5,
+              duration: 700 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+            });
+          }
+          if (live.actor) this.playAmbientPose(live.actor, 'wave');
+          this.syncLiveChrome(live, person);
+        },
+      });
+      this.syncLiveChrome(live, person);
     }
 
     spawnLivePerson(person) {
@@ -2757,7 +5007,6 @@
       const isMe = ME_DISCORD_ID && String(person.userId) === ME_DISCORD_ID;
       // Each real Discord user gets a distinct-but-stable avatar from the 30 sheets.
       const sheet = isMe ? this.playerSheet : this.npcSheetFor(String(person.userId));
-      const idle = `${sheet}_idle`;
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
       const label = isMe ? `${person.displayName} (you)` : person.displayName;
@@ -2767,7 +5016,7 @@
         .setOrigin(0.5, NPC_FOOT_ORIGIN_Y)
         .setDepth(depth)
         .setAlpha(0);
-      sprite.anims.play(idle);
+      this.playSheetPose(sprite, sheet, 'idle');
 
       const tag = this.add.text(slot.x, slot.y - 40, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
@@ -2784,56 +5033,119 @@
         duration: 280,
         ease: 'Sine.easeOut',
       });
-      this.tweens.add({
-        targets: sprite,
-        y: slot.y - 1.5,
-        duration: 700 + Math.random() * 400,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
+
+      const actor = this.registerAmbient(sprite, sheet, {
+        roomKey: person.roomKey,
+        mode: 'life',
+        homeX: slot.x,
+        homeY: slot.y,
+        floorY: slot.y,
+        depth,
       });
-      this.tweens.add({
-        targets: tag,
-        y: slot.y - 41.5,
-        duration: 700 + Math.random() * 400,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
+      // Keep nameplate + status icons glued while they bounce / walk
+      this.time.addEvent({
+        delay: 50,
+        loop: true,
+        callback: () => {
+          const live = this.livePeople.get(String(person.userId));
+          if (!live?.sprite?.active) return;
+          this.layoutLiveChrome(live);
+        },
+      });
+      // Wave at others already in the room (join greeting).
+      const others = [...this.livePeople.values()].filter((p) => (
+        p.roomKey === person.roomKey && p.sprite?.active
+      ));
+      if (others.length && actor) {
+        const other = others[0];
+        sprite.setFlipX(sprite.x > other.sprite.x);
+        other.sprite.setFlipX(other.sprite.x > sprite.x);
+        this.time.delayedCall(200, () => this.playAmbientPose(actor, 'wave', { force: true }));
+        if (other.actor) {
+          this.time.delayedCall(450, () => this.playAmbientPose(other.actor, 'wave', { force: true }));
+        } else if (other.sheet) {
+          this.time.delayedCall(450, () => this.playSheetPose(other.sprite, other.sheet, 'wave'));
+        }
+      }
+      // Discord members also use the life brain (pace / sit / emote in room)
+      this.time.delayedCall(900 + Math.random() * 800, () => {
+        if (actor?.sprite?.active) this.actorPickWander(actor);
       });
 
-      this.livePeople.set(person.userId, {
+      const live = {
         sprite,
         tag,
+        sheet,
         roomKey: person.roomKey,
         soft: person.soft,
-      });
+        actor,
+      };
+      this.livePeople.set(person.userId, live);
+      this.syncLiveChrome(live, person);
     }
 
     spawnDecorNpcs() {
       const mw = this.mapWidth || W;
+      const gy = this.groundY;
       const avail = NPC_SHEETS.filter((n) => this.textures.exists(n.key) && n.key !== this.playerSheet);
       if (!avail.length) return;
-      // A lively street: idle bystanders + a couple of strollers, all distinct
-      // sprites, seeded by position so the crowd is stable across reloads.
-      const idleSpots = [24, 96, mw * 0.42, mw - 60, mw - 150].filter((x) => x > 0 && x < mw);
-      idleSpots.forEach((x, i) => {
-        const sheet = avail[(hashSeed('idle' + i + Math.round(x)) % avail.length)].key;
-        const sp = this.spawnChar(x, this.groundY, sheet, `${sheet}_idle`, null, 40);
+
+      // Lighter street cast (block-life residents fill the world)
+      const lifeSpots = [
+        80, mw * 0.4, mw * 0.65, mw - 120,
+      ].filter((x) => x > 20 && x < mw - 20);
+
+      lifeSpots.forEach((x, i) => {
+        const sheet = avail[(hashSeed(`life${i}${Math.round(x)}`) % avail.length)].key;
+        const sp = this.spawnChar(x, gy, sheet, `${sheet}_idle`, null, 40, { mode: 'life' });
         if (i % 2 === 0) sp.setFlipX(true);
+        // Stagger first actions so the street "wakes up" gently
+        this.time.delayedCall(800 + i * 550, () => {
+          const actor = this.ambientActors.find((a) => a.sprite === sp);
+          if (!actor) return;
+          actor.busyUntil = this.time.now + 400;
+          if (i % 3 === 0) this.playAmbientPose(actor, 'wave', { force: true });
+          else if (i % 3 === 1) this.actorPickWander(actor);
+          // else stay idle a bit longer
+        });
       });
-      // Two strollers pacing different stretches of the street.
-      const strollers = mw > 500 ? [[mw * 0.55, mw * 0.68, 4200], [mw * 0.2, mw * 0.34, 5200]] : [];
+
+      // Strollers — slow casual pace
+      const strollers = mw > 400
+        ? [
+          [mw * 0.12, mw * 0.32, 10000],
+          [mw * 0.35, mw * 0.55, 11000],
+          [mw * 0.58, mw * 0.78, 10500],
+        ]
+        : [[40, mw - 40, 10000]];
       strollers.forEach(([x0, x1, dur], i) => {
-        const sheet = avail[(hashSeed('walk' + i) % avail.length)].key;
-        const walker = this.spawnChar(x0, this.groundY, sheet, `${sheet}_walk`, null, 40);
+        const sheet = avail[(hashSeed(`walk${i}`) % avail.length)].key;
+        const walker = this.spawnChar(x0, gy, sheet, `${sheet}_walk`, null, 40, { mode: 'stroll' });
         this.tweens.add({
           targets: walker,
           x: x1,
           duration: dur,
           yoyo: true,
           repeat: -1,
-          onYoyo: () => walker.setFlipX(true),
-          onRepeat: () => walker.setFlipX(false),
+          ease: 'Sine.easeInOut',
+          onYoyo: () => {
+            walker.setFlipX(true);
+            if (Math.random() < 0.25) {
+              this.playSheetPose(walker, sheet, 'wave');
+              this.time.delayedCall(poseDurationMs('wave'), () => {
+                if (walker.active) this.playSheetPose(walker, sheet, 'walk');
+              });
+            }
+          },
+          onRepeat: () => {
+            walker.setFlipX(false);
+            if (Math.random() < 0.2) {
+              this.playSheetPose(walker, sheet, 'snicker');
+              this.time.delayedCall(poseDurationMs('snicker'), () => {
+                if (walker.active) this.playSheetPose(walker, sheet, 'walk');
+              });
+            }
+          },
         });
       });
     }
@@ -3039,18 +5351,28 @@
     }
 
     nearbySeat() {
-      if (!this.indoors || this.seated) return null;
+      if (this.seated || !this.player) return null;
       const px = this.player.x;
-      const cur = this.indoors.floorId;
+      const py = this.player.y;
+      const cur = this.indoors?.floorId || null;
+      const floor = cur ? this.floors.get(cur) : null;
+      const playerFloorY = floor?.floorY ?? this.groundY - 1;
       let best = null;
       let bestD = 999;
       for (const s of this.seats || []) {
-        if (s.floorId && s.floorId !== cur) continue;
-        // If no floorId, match by floorY
-        const floor = this.floors.get(cur);
-        if (!s.floorId && floor && Math.abs((s.floorY || 0) - floor.floorY) > 8) continue;
+        // Same room (by floor id / roomKey) OR same floor line (Y match)
+        if (this.indoors) {
+          const sameId = s.floorId && (s.floorId === cur || s.floorId === floor?.roomKey);
+          const sameY = Math.abs((s.floorY || 0) - playerFloorY) <= 14;
+          if (s.floorId && !sameId && !sameY) continue;
+          if (!s.floorId && !sameY) continue;
+        } else {
+          // Outside: only outdoor seats (benches) near street ground
+          if (s.floorId) continue;
+          if (Math.abs((s.floorY || 0) - (this.groundY)) > 14) continue;
+        }
         const dist = Math.abs(px - s.x);
-        const r = s.radius || 16;
+        const r = s.radius || 22;
         if (dist <= r && dist < bestD) {
           best = s;
           bestD = dist;
@@ -3059,26 +5381,141 @@
       return best;
     }
 
+    nearbyFood() {
+      if (!this.indoors) return null;
+      const px = this.player.x;
+      const cur = this.indoors.floorId;
+      const floor = this.floors.get(cur);
+      let best = null;
+      let bestD = 999;
+      for (const f of this.foods || []) {
+        if (f.floorId && f.floorId !== cur) continue;
+        if (!f.floorId && floor && Math.abs((f.floorY || 0) - floor.floorY) > 24) continue;
+        const dist = Math.abs(px - f.x);
+        if (dist <= (f.radius || 20) && dist < bestD) {
+          best = f;
+          bestD = dist;
+        }
+      }
+      return best;
+    }
+
+    /**
+     * F9 — full animation gallery: a demo NPC cycles every sheet pose so you
+     * can audit walk/idle/sit/lie/eat/wave/etc. without hunting furniture.
+     */
+    toggleAnimGallery() {
+      if (this._gallery) {
+        try {
+          this._gallery.timer?.remove?.(false);
+          this._gallery.sprite?.destroy?.();
+          this._gallery.label?.destroy?.();
+          this._gallery.panel?.destroy?.();
+        } catch (_) { /* ignore */ }
+        this._gallery = null;
+        this.setEnterHint('anim gallery off');
+        return;
+      }
+      const sheet = this.playerSheet || this.npcSheetFor('gallery');
+      const poses = Object.keys(NPC_POSE_DEFS);
+      const cam = this.cameras.main;
+      const panel = this.add.rectangle(0, 0, 200, 72, 0x0f172a, 0.82)
+        .setScrollFactor(0).setDepth(600).setOrigin(0, 0);
+      panel.setPosition(12, (cam.height || H) - 84);
+      const label = this.add.text(24, (cam.height || H) - 72, '', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '12px',
+        color: '#f8fafc',
+        wordWrap: { width: 170 },
+      }).setScrollFactor(0).setDepth(601).setResolution(2);
+      const sprite = this.add.sprite(100, (cam.height || H) - 16, sheet, 0)
+        .setScale(SCALE * 1.4)
+        .setOrigin(0.5, 1)
+        .setScrollFactor(0)
+        .setDepth(602);
+      let idx = 0;
+      const playNext = () => {
+        const pose = poses[idx % poses.length];
+        idx += 1;
+        label.setText(`F9 gallery · ${pose}\n${idx}/${poses.length} · press F9 to close`);
+        this.playSheetPose(sprite, sheet, pose, {
+          onDone: () => {
+            if (!this._gallery) return;
+            // brief hold on loop poses
+            this.time.delayedCall(NPC_POSE_DEFS[pose]?.loop ? 900 : 120, playNext);
+          },
+        });
+        // loop poses need manual advance
+        if (NPC_POSE_DEFS[pose]?.loop) {
+          this.time.delayedCall(1100, () => {
+            if (this._gallery) playNext();
+          });
+        }
+      };
+      this._gallery = { sprite, label, panel, timer: null };
+      playNext();
+      this.setEnterHint('anim gallery ON · F9 close');
+    }
+
+    /** Player one-shot emote (hotkeys + ambient demo). */
+    playerPose(pose) {
+      if (!this.player || !this.playerSheet) return false;
+      // Sitting variants
+      let p = pose;
+      if (this.seated) {
+        if (pose === 'eat') p = 'eatSit';
+        if (pose === 'sit' || pose === 'lie') return false;
+      }
+      this.showEmote(this.player, p);
+      return this.playSheetPose(this.player, this.playerSheet, p, {
+        onDone: () => {
+          if (!this.player?.active) return;
+          if (this.seated) {
+            const idle = this.seated.seat.kind === 'bed' ? 'lieIdle' : 'sitIdle';
+            this.playSheetPose(this.player, this.playerSheet, idle);
+          } else {
+            this.playSheetPose(this.player, this.playerSheet, 'idle');
+          }
+        },
+      });
+    }
+
+    tryEat(food) {
+      if (!food || !this.player || !this.playerSheet) return;
+      if (this.time.now < (this._poseHoldUntil || 0)) return;
+      const pose = this.seated ? 'eatSit' : 'eat';
+      this.playerPose(pose);
+      if (food.sprite?.active) {
+        this.tweens.add({
+          targets: food.sprite, y: food.sprite.y - 4,
+          yoyo: true, duration: 180, repeat: 4,
+        });
+      }
+      this.setEnterHint(IS_TOUCH ? 'nom nom…' : 'eating…');
+    }
+
     sitOn(seat) {
       if (!seat || !this.player || this.seated) return;
-      this.seated = { seat, prevDepth: this.player.depth };
+      const isBed = seat.kind === 'bed';
+      const surface = Math.max(3, Math.min(14, seat.surfaceH != null ? seat.surfaceH : (isBed ? 4 : 8)));
+      const sitY = seat.floorY - surface;
+      this.seated = { seat, prevDepth: this.player.depth, seatedY: sitY };
       this.player.setVelocityX(0);
       this.player.x = seat.x;
-      this.player.y = seat.floorY - (seat.surfaceH || 10);
+      this.player.y = sitY;
       this.player.setDepth(44);
-      // Play the sheet's real SIT (row 3) / LIE DOWN (row 6) animation, then
-      // settle into the matching idle loop (SIT IDLE row 4 / held lie frame).
-      const isBed = seat.kind === 'bed';
-      const startKey = `${this.playerSheet}_${isBed ? 'lie' : 'sit'}`;
-      const idleKey = `${this.playerSheet}_${isBed ? 'lieIdle' : 'sitIdle'}`;
-      if (this.anims.exists(startKey)) {
-        this.player.anims.play(startKey, true);
-        this.player.once(`animationcomplete-${startKey}`, () => {
-          if (this.seated && this.anims.exists(idleKey)) this.player.anims.play(idleKey, true);
-        });
-      } else {
-        this.player.anims.play(`${this.playerSheet}_idle`, true);
-      }
+      const start = isBed ? 'lie' : 'sit';
+      const idle = isBed ? 'lieIdle' : 'sitIdle';
+      this._poseHoldUntil = 0;
+      const ok = this.playSheetPose(this.player, this.playerSheet, start, {
+        onDone: () => {
+          if (!this.seated || !this.player?.active) return;
+          this.player.x = seat.x;
+          this.player.y = sitY;
+          this.playSheetPose(this.player, this.playerSheet, idle);
+        },
+      });
+      if (!ok) this.playSheetPose(this.player, this.playerSheet, 'idle');
       const tag = isBed ? 'lying down' : 'sitting';
       this.setEnterHint(IS_TOUCH ? `${tag} · ▼ stand` : `${tag} · ↓ / E stand`);
     }
@@ -3091,13 +5528,12 @@
       else this.player.y = this.groundY - 1;
       if (this.seated.prevDepth != null) this.player.setDepth(this.seated.prevDepth);
       this.seated = null;
-      // SIT FINISH (row 5) / LIE FINISH (row 7) — briefly hold off the
-      // walk/idle animation switcher in update() so the get-up plays out.
-      const finKey = `${this.playerSheet}_${isBed ? 'lieFinish' : 'sitFinish'}`;
-      if (this.anims.exists(finKey)) {
-        this.player.anims.play(finKey, true);
-        this._poseHoldUntil = this.time.now + (isBed ? 480 : 260);
-      }
+      const fin = isBed ? 'lieFinish' : 'sitFinish';
+      this.playSheetPose(this.player, this.playerSheet, fin, {
+        onDone: () => {
+          if (this.player?.active) this.playSheetPose(this.player, this.playerSheet, 'idle');
+        },
+      });
     }
 
     tryEnterExit() {
@@ -3111,14 +5547,30 @@
         || Phaser.Input.Keyboard.JustDown(this.wasd.down)
         || (touch && touch.consumeExit());
 
-      // Stand from sit/lie
-      if (this.seated && (down || ePressed || up)) {
-        this.standUp();
-        this.enterCooldown = 180;
-        return;
+      // Seated: E near food = eat; down/up = stand
+      if (this.seated) {
+        if (ePressed) {
+          const food = this.nearbyFood();
+          if (food) {
+            this.tryEat(food);
+            this.enterCooldown = 400;
+            return;
+          }
+        }
+        if (down || ePressed || up) {
+          this.standUp();
+          this.enterCooldown = 180;
+          return;
+        }
       }
 
       if (!this.indoors) {
+        // Outdoor bench sit
+        if ((ePressed || up) && this.nearbySeat()) {
+          this.sitOn(this.nearbySeat());
+          this.enterCooldown = 220;
+          return;
+        }
         if (up) {
           const door = this.nearbyDoor();
           if (door) {
@@ -3143,12 +5595,28 @@
         return;
       }
 
-      // Sit / lie on nearby furniture
+      // Sit / lie, or eat food on tables (↑ prefers seat; E prefers closer interactable)
       if ((ePressed || up) && !stairs) {
         const seat = this.nearbySeat();
+        const food = this.nearbyFood();
+        if (up && seat) {
+          this.sitOn(seat);
+          this.enterCooldown = 220;
+          return;
+        }
+        if (ePressed && food && (!seat || Math.abs(food.x - this.player.x) < Math.abs(seat.x - this.player.x) - 2)) {
+          this.tryEat(food);
+          this.enterCooldown = 400;
+          return;
+        }
         if (seat) {
           this.sitOn(seat);
           this.enterCooldown = 220;
+          return;
+        }
+        if (ePressed && food) {
+          this.tryEat(food);
+          this.enterCooldown = 400;
           return;
         }
       }
@@ -3226,6 +5694,27 @@
       if (!this.player?.body) return;
       if (this.enterCooldown > 0) this.enterCooldown -= this.game.loop.delta;
 
+      // Emote hotkeys (checked here so JustDown is reliable)
+      if (this.emoteKeys) {
+        const ek = this.emoteKeys;
+        const JD = Phaser.Input.Keyboard.JustDown;
+        if (JD(ek.jump)) this.playerPose('jump');
+        else if (JD(ek.wave)) this.playerPose('wave');
+        else if (JD(ek.shrug)) this.playerPose('shrug');
+        else if (JD(ek.snicker)) this.playerPose('snicker');
+        else if (JD(ek.eat)) this.playerPose('eat');
+        else if (JD(ek.hurt)) this.playerPose('hurt');
+        else if (JD(ek.cycle)) {
+          const order = ['jump', 'wave', 'shrug', 'snicker', 'eat', 'hurt', 'sit', 'lie'];
+          const pose = order[this._emoteCycle % order.length];
+          this._emoteCycle += 1;
+          this.playerPose(pose);
+          this.setEnterHint(`anim: ${pose}  (F8 next · keys 1-6 · F9 gallery)`);
+        } else if (ek.gallery && JD(ek.gallery)) {
+          this.toggleAnimGallery();
+        }
+      }
+
       this.tryEnterExit();
       this.updateElevatorProximity();
       this.updateAutoDoors();
@@ -3241,7 +5730,9 @@
       if (this.seated) {
         this.player.setVelocityX(0);
         this.player.x = this.seated.seat.x;
-        this.player.y = this.seated.seat.floorY - (this.seated.seat.surfaceH || 10);
+        this.player.y = this.seated.seatedY != null
+          ? this.seated.seatedY
+          : this.seated.seat.floorY - (this.seated.seat.surfaceH || 8);
         // Animation is owned by sitOn() (sit/lie intro → seated idle loop).
       } else if (this.indoors) {
         const floor = this.floors.get(this.indoors.floorId);
@@ -3269,12 +5760,24 @@
         this.player.y = this.groundY - 1;
       }
 
+      // Only drive walk/idle when not mid one-shot pose (wave/eat/jump/…)
       if (!this.seated && this.time.now >= (this._poseHoldUntil || 0)) {
         if (vx) {
-          this.player.anims.play(`${this.playerSheet}_walk`, true);
           this.player.setFlipX(vx < 0);
+          const cur = this.player.anims.currentAnim?.key;
+          if (cur !== `${this.playerSheet}_walk`) {
+            this.playSheetPose(this.player, this.playerSheet, 'walk');
+            // walk is looping — don't hold forever
+            this._poseHoldUntil = 0;
+            this._playerPose = 'walk';
+          }
         } else {
-          this.player.anims.play(`${this.playerSheet}_idle`, true);
+          const cur = this.player.anims.currentAnim?.key;
+          if (cur !== `${this.playerSheet}_idle`) {
+            this.playSheetPose(this.player, this.playerSheet, 'idle');
+            this._poseHoldUntil = 0;
+            this._playerPose = 'idle';
+          }
         }
       }
       this.playerTag.setPosition(this.player.x, this.player.y - 34);
@@ -3283,7 +5786,10 @@
       let zone = 'lobby';
       if (this.seated) {
         zone = this.seated.seat.kind === 'bed' ? 'lying down' : 'sitting';
-        this.setEnterHint(IS_TOUCH ? '▼ stand up' : '↓ / E stand up');
+        const food = this.nearbyFood();
+        this.setEnterHint(food
+          ? (IS_TOUCH ? 'E eat · ▼ stand' : 'E eat · ↓ stand up')
+          : (IS_TOUCH ? '▼ stand up' : '↓ / E stand up'));
       } else if (this.indoors) {
         const floor = this.floors.get(this.indoors.floorId);
         zone = floor?.isRoof ? 'Rooftop' : (floor?.label || this.indoors.floorId);
@@ -3291,6 +5797,7 @@
         if (n) zone = `${zone} (${n})`;
         const doorHint = this.nearbyStairs();
         const seat = this.nearbySeat();
+        const food = this.nearbyFood();
         const passage = this.nearbyPassage();
         if (doorHint?.dir === 'up') {
           const dest = this.floors.get(doorHint.targetFloorId);
@@ -3305,6 +5812,8 @@
             : (floor?.isRoof ? '↓ climb inside' : '↓ climb down · or leave'));
         } else if (passage) {
           this.setEnterHint(IS_TOUCH ? '◀ ▶ next room' : '← → walk through doorway');
+        } else if (food && (!seat || Math.abs(food.x - this.player.x) <= Math.abs(seat.x - this.player.x))) {
+          this.setEnterHint(IS_TOUCH ? 'E eat' : 'E eat snack');
         } else if (seat) {
           this.setEnterHint(IS_TOUCH
             ? (seat.kind === 'bed' ? '▲ lie down' : '▲ sit')

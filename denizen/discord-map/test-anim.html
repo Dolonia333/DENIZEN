@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" /><title>anim-verify</title></head>
+<body>
+  <div id="map-title"></div><div id="room-label"></div><div id="enter-hint"></div>
+  <div id="presence-status" data-ok="0"></div><div id="game-host"></div>
+  <script>
+    const MOCK = {
+      ok: true, guildId: 'g1', guildName: 'Anim Realm',
+      categories: [{ id: 'c-gen', name: 'General', position: 1 }, { id: 'c-vc', name: 'Voice', position: 0 }],
+      rooms: [
+        { id: 'vc1', name: 'lounge', type: 'voice', categoryId: 'c-vc', categoryName: 'Voice', occupantCount: 0, occupants: [] },
+        { id: 't1', name: 'general', type: 'text', categoryId: 'c-gen', categoryName: 'General', occupantCount: 0, occupants: [] },
+        { id: 't2', name: 'random', type: 'text', categoryId: 'c-gen', categoryName: 'General', occupantCount: 0, occupants: [] },
+      ],
+      people: [
+        { userId: '1001', displayName: 'Alice', channelId: 'vc1', channelType: 'voice', channelName: 'lounge', soft: false },
+        { userId: '1002', displayName: 'Bob', channelId: 'vc1', channelType: 'voice', channelName: 'lounge', soft: false },
+        { userId: '1003', displayName: 'Cara', channelId: 't1', channelType: 'text', channelName: 'general', soft: true },
+        { userId: '1004', displayName: 'Dan', channelId: 't2', channelType: 'text', channelName: 'random', soft: true },
+      ],
+      members: [], ts: Date.now(),
+    };
+    const of = window.fetch.bind(window);
+    window.fetch = async (u, o) => (String(u).includes('/presence')
+      ? new Response(JSON.stringify(MOCK), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      : of(u, o));
+  </script>
+  <script src="./mobile-touch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+  <script>
+    const OG = Phaser.Game;
+    Phaser.Game = function (...a) { const g = new OG(...a); window.__g = g; return g; };
+    Phaser.Game.prototype = OG.prototype;
+  </script>
+  <script src="./block-life.js?v=life1"></script>
+  <script src="./game.js?v=life1"></script>
+</body></html>
