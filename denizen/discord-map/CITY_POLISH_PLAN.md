@@ -53,6 +53,12 @@ block you walk down, one building per Discord category, every room designed
       ~0.6 alpha, extendBackdrop repeats match originals, billboards muted
 - [x] Phaser vendored locally (phaser.min.js) — CDN outage no longer kills
       the map
+- [x] No door on rooftops — climb up/down works without a leaf standing on
+      the deck (stairs interaction unchanged)
+- [x] Room-to-room passages show a real side-view door leaf in the shared
+      wall opening
+- [x] Block Park at the end of the street (replaces the scaled-tree "green
+      box"): trees, bushes, lamppost, umbrella snack table, sittable benches
 - [ ] Section palette shifts along the block
 
 ### Stage 2 — NPC life — done

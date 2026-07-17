@@ -1522,7 +1522,9 @@
       this.player.body.setSize(12, 8).setOffset(10, 16);
       this.refreshCameraBounds();
       // Snappier follow so upper floors / roof don't leave the camera behind.
-      this.cameras.main.startFollow(this.player, true, 0.18, 0.22);
+      // __NO_FOLLOW: test-harness hook (test-shot.html) — lets headless
+      // screenshot sweeps pin the camera without follow fighting back.
+      if (!window.__NO_FOLLOW) this.cameras.main.startFollow(this.player, true, 0.18, 0.22);
       const narrow = window.innerWidth < 640;
       this.outdoorZoom = IS_TOUCH && narrow ? 0.98 : 1.1;
       this.indoorZoom = IS_TOUCH && narrow ? 1.38 : 1.55;
@@ -1622,11 +1624,10 @@
         // has street doors + rooms to walk into while presence is down.
         this.drawDemoLayout(x, this.groundY, guildName);
         x += 620;
-        this.mapWidth = Math.max(W, x + 100);
+        this.mapWidth = Math.max(W, x + 340);
         this.drawGround();
         this.extendBackdrop();
-        this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
-        this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
+        this.drawEndPark(this.mapWidth - 320);
         return { guildName, channelCount: 0, categoryCount: 0 };
       }
 
@@ -1711,11 +1712,10 @@
         }
       }
 
-      this.mapWidth = Math.max(W, x + 100);
+      this.mapWidth = Math.max(W, x + 340);
       this.drawGround();
         this.extendBackdrop();
-      this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
-      this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
+      this.drawEndPark(this.mapWidth - 320);
       return {
         guildName,
         channelCount: rooms.length,
@@ -2112,6 +2112,39 @@
     }
 
     /** Outdoor winter park — no building shell, an open themed zone. */
+    /**
+     * End-of-block pocket park — an outdoor hangout that closes the street
+     * (replaces the old giant scaled tree that read as a green box).
+     */
+    drawEndPark(left) {
+      const gy = this.groundY;
+      const g = this.add.graphics().setDepth(9);
+      g.fillStyle(0x9ad17c, 0.35);
+      g.fillEllipse(left + 150, gy - 2, 320, 16);
+
+      this.add.image(left + 18, gy - 1, 'tree').setScale(1.6).setOrigin(0.5, 1).setDepth(18);
+      this.add.image(left + 286, gy - 1, 'tree').setScale(1.4).setOrigin(0.5, 1).setDepth(18);
+      if (this.textures.exists('bush')) {
+        this.add.image(left + 52, gy - 1, 'bush').setScale(SCALE).setOrigin(0.5, 1).setDepth(17);
+        this.add.image(left + 254, gy - 1, 'bush').setScale(SCALE).setOrigin(0.5, 1).setDepth(17);
+      }
+      if (this.textures.exists('lampPostW')) this.furn('lampPostW', left + 76, gy, 18);
+
+      // Picnic cluster: umbrella over a snack table, sittable benches both sides
+      if (this.textures.exists('umbrellaRed')) {
+        this.add.image(left + 150, gy - 1, 'umbrellaRed').setScale(SCALE).setOrigin(0.5, 1).setDepth(19);
+      }
+      this.furn('table', left + 150, gy, 20);
+      this.placeFood('foodBurger', left + 143, gy - 26, 25, FOOD_SCALE, null);
+      this.placeFood('foodSoda', left + 158, gy - 26, 25, FOOD_SCALE, null);
+      this.furn('benchWood', left + 104, gy, 20);
+      this.furn('benchWood', left + 196, gy, 20);
+
+      this.stripLabel(left + 150, gy - 74, '🌳 Block Park · outdoor hangout', {
+        color: '#14301a', bg: '#e2f4d8',
+      });
+    }
+
     drawWinterPark(left, groundY, cat) {
       const g = this.add.graphics().setDepth(9);
       g.fillStyle(0xf0f6fc, 0.9);
@@ -3450,17 +3483,20 @@
       const leafW = 14 * sc;
 
       // Prefer the climb-lane x (empty left strip). Only nudge if it would
-      // clip the walkable bounds. Roof decks get extra inset so the leaf
-      // stays inside the shell, clear of the gable end-cap overhang.
+      // clip the walkable bounds.
       const edgePad = floor.isRoof ? leafW / 2 + 10 : leafW / 2;
       let cx = preferredX;
       if (floor.minX != null) cx = Math.max(cx, floor.minX + edgePad);
       if (floor.maxX != null) cx = Math.min(cx, floor.maxX - edgePad);
 
+      // Rooftops get NO door — a door leaf standing on the deck reads wrong.
+      // You just climb up through the opening; the stairs interaction at the
+      // lane (↑) still works because it's driven by registerStairs, not this.
+      if (floor.isRoof) return cx;
+
       // Same baseline as furniture: origin bottom on floor.floorY.
-      // Tiny lift (2px) so the leaf rests on the wood plank, not sunk into
-      // it. Roof decks: no lift — the leaf sits flush ON the deck line.
-      const doorBottomY = floor.floorY - (floor.isRoof ? 0 : 2);
+      // Tiny lift (2px) so the leaf rests on the wood plank, not sunk into it.
+      const doorBottomY = floor.floorY - 2;
       // Left hinge so the swing opens into the room (to the right).
       const hingeX = Math.round(cx - leafW / 2);
       const leaf = this.add.image(hingeX, doorBottomY, 'doorFrontClosed')
@@ -3638,9 +3674,10 @@
 
     /** Visual doorway gap between side-by-side rooms (horizontal passage). */
     markPassageDoorway(x, floorY, roomH) {
+      this.ensureFrontDoorTextures();
       const g = this.add.graphics().setDepth(20.8);
-      const doorH = Math.min(40, roomH - 12);
-      const doorW = 10;
+      const doorH = Math.min(44, roomH - 8);
+      const doorW = 12;
       const top = floorY - doorH;
       // Dark opening in the shared wall
       g.fillStyle(0x0c0a08, 0.85);
@@ -3651,6 +3688,16 @@
       g.fillRect(x + doorW / 2, top, 2, doorH);
       g.fillStyle(0x3a2e22, 1);
       g.fillRect(x - doorW / 2 - 1, top - 3, doorW + 2, 3);
+      // Side-view door leaf: the front-door art squished to read edge-on,
+      // hinged against the left jamb like it's swung open into the room —
+      // makes the room-to-room crossing an actual visible door.
+      if (this.textures.exists('doorFrontClosed')) {
+        this.add.image(x - doorW / 2 - 1, floorY - 1, 'doorFrontClosed')
+          .setOrigin(1, 1)
+          .setScale(SCALE * 0.3, (doorH - 2) / 22)
+          .setDepth(20.9)
+          .setAlpha(0.95);
+      }
     }
 
     /** Rooftop floor strip + rail so the roof reads as a walkable place. */

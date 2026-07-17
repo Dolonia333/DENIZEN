@@ -52,18 +52,15 @@
     const OG = Phaser.Game;
     Phaser.Game = function (...a) { const g = new OG(...a); window.__g = g; return g; };
     Phaser.Game.prototype = OG.prototype;
-    // Camera pin: ?cam=1400 — teleport the PLAYER there (the scene keeps a
-    // lerped startFollow, so moving the camera alone gets overridden) and
-    // hard-set scroll as well for good measure.
+    // Camera pin: ?cam=1400 — __NO_FOLLOW disables the scene's startFollow
+    // (game.js test hook) so a plain setScroll holds for the screenshot.
     const camX = Number(new URLSearchParams(location.search).get('cam') || 'NaN');
     if (!Number.isNaN(camX)) {
+      window.__NO_FOLLOW = true;
       setInterval(() => {
         try {
           const sc = window.__g && window.__g.scene.scenes[0];
-          if (!sc || !sc.player || (sc.load && sc.load.progress < 1)) return;
-          sc.player.x = camX + 440;
-          sc.player.y = sc.groundY;
-          if (sc.player.body) { sc.player.body.reset(camX + 440, sc.groundY); }
+          if (!sc || !sc.cameras || (sc.load && sc.load.progress < 1)) return;
           sc.cameras.main.setScroll(camX, sc.cameras.main.scrollY);
         } catch (_) {}
       }, 300);
