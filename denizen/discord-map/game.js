@@ -502,6 +502,14 @@
     potteryAncient: `${EXP}/Archaeology/Individual Assets/Pottery_ancient_1.png`,
     fossilFish: `${EXP}/Archaeology/Individual Assets/Fossil_fish.png`,
 
+    // ---- Street + sky dressing (previously unused pack assets) ----
+    billboard1: `${BG}/Billboard_1.png`,
+    billboard2: `${BG}/Billboard_2.png`,
+    billboard3: `${BG}/Billboard_3.png`,
+    blimpBlue: `${BG}/Blimp_blue.png`,
+    blimpRed: `${BG}/Blimp_red.png`,
+    fireHydrant: `${EXP}/Fire Station/Individual Assets/FireHydrant.png`,
+
     // ---- Roof sprite caps (city-block facade grammar; theme-colored) ----
     // Gable (Roof_1) — tall shingles
     roofRedC: `${INF}/Roof_1_red_connecting.png`, roofRedE: `${INF}/Roof_1_red_end.png`,
@@ -1467,6 +1475,7 @@
         this.cameras.main.fadeIn(500, 126, 200, 232);
       }).catch(() => {
         this.drawGround();
+        this.extendBackdrop();
         this.drawEmptyBuilding(20, this.groundY, 'Discord');
         this.seedFoodOnAllTables();
         this.setupPlayer();
@@ -1615,6 +1624,7 @@
         x += 620;
         this.mapWidth = Math.max(W, x + 100);
         this.drawGround();
+        this.extendBackdrop();
         this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
         this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
         return { guildName, channelCount: 0, categoryCount: 0 };
@@ -1703,6 +1713,7 @@
 
       this.mapWidth = Math.max(W, x + 100);
       this.drawGround();
+        this.extendBackdrop();
       this.add.image(this.mapWidth - 70, this.groundY - 1, 'tree').setScale(2.8).setOrigin(0.5, 1).setDepth(18);
       this.add.image(this.mapWidth - 30, this.groundY - 1, 'pot').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
       return {
@@ -1739,6 +1750,19 @@
       }
       if (this.textures.exists('bush') && seed % 4 === 1) {
         this.add.image(mid - 22, gy - 1, 'bush').setScale(SCALE).setOrigin(0.5, 1).setDepth(16);
+      }
+      // Street furniture rhythm: lamppost / hydrant / rooftop billboard
+      if (this.textures.exists('lampPostW') && seed % 3 === 1) {
+        this.add.image(left + 10, gy - 1, 'lampPostW').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
+      }
+      if (this.textures.exists('fireHydrant') && seed % 5 === 2) {
+        this.add.image(mid + 44, gy - 1, 'fireHydrant').setScale(SCALE).setOrigin(0.5, 1).setDepth(18);
+      }
+      const bbKeys = ['billboard1', 'billboard2', 'billboard3'].filter((k) => this.textures.exists(k));
+      if (bbKeys.length && seed % 4 === 3) {
+        // Billboard rides above the filler house like the pack's street scenes.
+        this.add.image(mid - 10, gy - 64, seededPick(seed, bbKeys, 3))
+          .setScale(SCALE).setOrigin(0.5, 1).setDepth(16).setAlpha(0.95);
       }
     }
 
@@ -1822,7 +1846,7 @@
             this.addRoomSlots(room.roomKey, room.slots.map((dx) => [padX + dx, floorY - 1]));
           }
         });
-        this.roomPlaque(padX + 4, y0 + 4, shortLabel(room.label, 14), room.roomKey, cfg.plaqueKey);
+        this.roomPlaque(padX + 4, y0 + 4, shortLabel(room.label, 14), room.roomKey, cfg.plaqueKey, { maxW: roomW ? roomW - 12 : 170 });
         floorDefs.push({
           id: room.id,
           roomKey: room.roomKey,
@@ -1848,6 +1872,16 @@
       this.placeEntrance(g, doorX2, this.groundY, cfg.doorKind2 || 'door', cfg.side, 26);
       this.registerDoor({ x: doorX, floorId: lowest.id, radius: 18 });
       this.registerDoor({ x: doorX2, floorId: lowest.id, radius: 18 });
+
+      // Storefront: lit windows flanking the centered prompt so the ground
+      // band reads as a lobby instead of dead shell.
+      const winY = this.groundY - doorStrip + 12;
+      [left + bw * 0.3, left + bw * 0.7].forEach((wx) => {
+        if (!this.textures.exists('windowSq')) return;
+        g.fillStyle(0xfff3c0, 0.25);
+        g.fillRect(wx - 11, winY - 1, 22, 20);
+        this.add.image(wx, winY, 'windowSq').setOrigin(0.5, 0).setDepth(25).setScale(SCALE);
+      });
 
       for (let i = floorDefs.length - 1; i > 0; i -= 1) {
         // Prefer theme stairsDx; fall back to left climb lane (not room center).
@@ -2323,6 +2357,96 @@
         .setScale(1.8).setOrigin(0.5, 1).setDepth(-85).setAlpha(0.7).setScrollFactor(0.55);
     }
 
+    /**
+     * The hand-tuned sky/mountain/skyline layers only cover parallax space
+     * for the first ~900px of camera scroll. Long guilds (and the winter/dig
+     * zones at the far end) scrolled past them into bare cyan. Repeat seeded
+     * scenery across each layer's full parallax range, and float the unused
+     * pack blimps/billboards for extra life.
+     */
+    extendBackdrop() {
+      if (this._backdropExtended) return;
+      this._backdropExtended = true;
+      const maxScroll = Math.max(0, (this.mapWidth || W) - W * 0.8);
+      if (maxScroll < 400) return;
+      const need = (sf) => maxScroll * sf + W + 100;
+      const rng = (seed) => {
+        let s = seed >>> 0;
+        return () => {
+          s = (s * 1664525 + 1013904223) >>> 0;
+          return s / 4294967296;
+        };
+      };
+
+      // Clouds (sf ~0.15) — drift like the intro set
+      const cr = rng(0xc10d5);
+      for (let x = 950; x < need(0.18); x += 200 + cr() * 220) {
+        const key = cr() < 0.5 ? 'cloud' : 'cloudSm';
+        if (!this.textures.exists(key)) break;
+        const sf = 0.12 + cr() * 0.1;
+        const c = this.add.image(x, 22 + cr() * 60, key)
+          .setScale(1.8 + cr() * 1.4).setAlpha(0.9)
+          .setDepth(-125).setScrollFactor(sf);
+        this.tweens.add({
+          targets: c, x: `+=${20 + cr() * 40}`,
+          duration: 15000 + cr() * 12000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        });
+      }
+
+      // Far + mid mountain ridges (sf 0.28 / 0.4)
+      const mr = rng(0x307a1);
+      const mKeys = ['mountainL', 'mountainM', 'mountainS'].filter((k) => this.textures.exists(k));
+      if (mKeys.length) {
+        for (let x = 980; x < need(0.28); x += 110 + mr() * 60) {
+          this.add.image(x, this.groundY - 4, mKeys[Math.floor(mr() * mKeys.length)])
+            .setScale(0.95 + mr() * 0.45).setOrigin(0.5, 1)
+            .setTint(0xb8c4d8).setAlpha(0.55)
+            .setDepth(-100).setScrollFactor(0.28);
+        }
+        for (let x = 940; x < need(0.4); x += 130 + mr() * 90) {
+          this.add.image(x, this.groundY - 4, mKeys[Math.floor(mr() * mKeys.length)])
+            .setScale(1.05 + mr() * 0.4).setOrigin(0.5, 1)
+            .setAlpha(0.8 + mr() * 0.1)
+            .setDepth(-90 - (Math.floor(mr() * 2))).setScrollFactor(0.4);
+        }
+      }
+
+      // Skyline blocks with lit windows (sf 0.32)
+      const sk = this.add.graphics().setDepth(-95).setScrollFactor(0.32).setAlpha(0.4);
+      const sr = rng(0x5c11e);
+      const base = this.groundY - 8;
+      for (let x = 920; x < need(0.32); x += 90 + sr() * 160) {
+        const h = 36 + sr() * 40;
+        sk.fillStyle(sr() < 0.5 ? 0x8a6a78 : 0x9a8070, 1);
+        sk.fillRect(x, base - h, 18, h);
+        sk.fillStyle(0xffe6a0, 0.25);
+        for (let wy = base - h + 6; wy < base - 8; wy += 10) {
+          sk.fillRect(x + 4, wy, 3, 3);
+          sk.fillRect(x + 10, wy, 3, 3);
+        }
+      }
+
+      // Rolling hills (sf 0.52) — fill the band between buildings
+      const hg = this.add.graphics().setDepth(-84).setScrollFactor(0.52);
+      const hr = rng(0x8111);
+      for (let x = 950; x < need(0.52); x += 170 + hr() * 140) {
+        hg.fillStyle([0x6a8a6e, 0x5e7e62, 0x628666][Math.floor(hr() * 3)], 0.4 + hr() * 0.15);
+        hg.fillEllipse(x, this.groundY + 8, 110 + hr() * 60, 36 + hr() * 14);
+      }
+
+      // Pack blimps cruising above the block (sf 0.25)
+      ['blimpBlue', 'blimpRed'].forEach((bk, i) => {
+        if (!this.textures.exists(bk)) return;
+        const bx = 500 + i * Math.max(700, maxScroll * 0.25 * 0.5);
+        const b = this.add.image(bx, 40 + i * 26, bk)
+          .setScale(SCALE).setDepth(-120).setScrollFactor(0.25);
+        this.tweens.add({
+          targets: b, x: `+=${120 + i * 60}`,
+          duration: 26000 + i * 9000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        });
+      });
+    }
+
     /** Solid terrain under the walk line — continuous earth, not a floating slab. */
     drawGround() {
       const g = this.add.graphics().setDepth(8);
@@ -2414,35 +2538,45 @@
      * panel tab with the channel name, plus up to 3 stars that light up as
      * live members occupy the room (updated from applyPresence).
      */
-    roomPlaque(x, y, label, roomKey, tabKey = 'uiTabGrey') {
+    roomPlaque(x, y, label, roomKey, tabKey = 'uiTabGrey', opts = {}) {
       const useTab = this.textures.exists(tabKey) ? tabKey : (this.textures.exists('uiTabGrey') ? 'uiTabGrey' : null);
       const parts = { stars: [] };
-      const text = this.add.text(x + 8, y + 3, label, {
+      const text = this.add.text(x + 8, y + 4, label, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
-        fontSize: '11px',
+        fontSize: '10px',
         fontStyle: 'bold',
         color: '#f8fafc',
       }).setOrigin(0, 0).setDepth(28).setResolution(Math.max(2, window.devicePixelRatio || 2));
-      const w = Math.max(46, text.width + 16);
+      // Stars live INSIDE the tab (right end) so they never collide with wall
+      // decor. Truncate the name rather than growing past maxW.
+      const starsW = 3 * 12 + 4;
+      const maxW = opts.maxW || 170;
+      let name = String(label);
+      while (name.length > 3 && text.width + 16 + starsW > maxW) {
+        name = `${name.slice(0, -2)}…`;
+        text.setText(name);
+      }
+      const w = Math.max(56, text.width + 16 + starsW);
       if (useTab) {
         // Panel tab is 23x12 — stretch to fit the name like the store plaques.
         parts.tab = this.add.image(x, y, useTab)
           .setOrigin(0, 0).setDepth(27)
-          .setDisplaySize(w, 22);
+          .setDisplaySize(w, 20);
       } else {
         const bg = this.add.graphics().setDepth(27);
         bg.fillStyle(0x1e293b, 0.92);
-        bg.fillRoundedRect(x, y, w, 22, 4);
+        bg.fillRoundedRect(x, y, w, 20, 4);
         parts.tab = bg;
       }
       text.setDepth(28);
       parts.text = text;
-      // Occupancy stars sit just right of the tab; start unlit.
+      const starX0 = x + w - starsW;
       for (let i = 0; i < 3; i += 1) {
-        const star = this.add.image(x + w + 6 + i * 15, y + 11, 'uiStar')
-          .setScale(SCALE).setDepth(28).setAlpha(0.25);
+        const star = this.add.image(starX0 + 6 + i * 12, y + 10, 'uiStar')
+          .setScale(SCALE * 0.85).setDepth(28).setAlpha(0.22);
         parts.stars.push(star);
       }
+      parts.width = w;
       if (roomKey) {
         if (!this._roomPlaques) this._roomPlaques = new Map();
         this._roomPlaques.set(roomKey, parts);
@@ -2701,7 +2835,9 @@
       const minRoomH = 84;
       const doorStrip = 54;
       const totalRoomsHeight = rows * minRoomH + (rows - 1) * gap;
-      const bh = Math.max(320, totalRoomsHeight + doorStrip + 32);
+      // Content-driven height — a 1-2 channel guild gets a snug clubhouse,
+      // not a tower of empty placeholder rooms.
+      const bh = totalRoomsHeight + doorStrip + 32;
       const top = groundY - bh;
       this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 30);
       const title = channels.length === 1
@@ -2724,7 +2860,7 @@
         color: '#eef0ff', bg: '#3c45c0',
       });
 
-      const rowCount = Math.max(rows, 3);
+      const rowCount = rows;
       const innerTop = top + 12;
       const innerH = bh - doorStrip - 16;
       const rawRoomH = Math.max(48, Math.floor((innerH - (rowCount - 1) * gap) / rowCount));
@@ -2758,7 +2894,7 @@
         });
 
         if (!isPlaceholder) {
-          this.roomPlaque(x0 + 4, y0 + 4, shortLabel(label, cols === 1 ? 18 : 12), roomKey, 'uiTabBlue');
+          this.roomPlaque(x0 + 4, y0 + 4, shortLabel(label, cols === 1 ? 18 : 12), roomKey, 'uiTabBlue', { maxW: roomW - 12 });
           this.registerFloor({
             id: roomKey,
             roomKey,
@@ -2781,6 +2917,13 @@
       if (cols === 2 && channels.length > 1) {
         this.placeEntrance(g, left + bw - 48, groundY, 'door', 0x3c45c0, 26);
       }
+      const vWinY = groundY - doorStrip + 12;
+      [left + bw * 0.3, left + bw * 0.7].forEach((wx) => {
+        if (!this.textures.exists('windowCircle')) return;
+        g.fillStyle(0xfff3c0, 0.25);
+        g.fillRect(wx - 10, vWinY - 1, 20, 20);
+        this.add.image(wx, vWinY, 'windowCircle').setOrigin(0.5, 0).setDepth(25).setScale(SCALE);
+      });
       this.stripLabel(left + bw / 2, groundY - doorStrip + 6, `${shortLabel(guildName, 14)} · VC · ↑ enter`, {
         color: '#eef0ff', bg: '#2b3190',
       });
@@ -2793,19 +2936,22 @@
         { shell: 0xe8943a, side: 0xc47a2a, roof: 0xf0a850, stroke: 0x4a3010, titleBg: '#ffe8c8', titleFg: '#3a2208', lintel: 0x553822, roofKey: 'roofOrangeC', plaqueKey: 'uiTabYellow' },
       ];
       const pal = palettes[paletteIndex % palettes.length];
-      const fills = [0xead9b8, 0xe8dcc4, 0xe4eaf0, 0xf0e0c0];
       const g = this.add.graphics().setDepth(20);
       const bw = 290;
-      const bh = 228;
+      const gap = 6;
+      const doorStrip = 54;
+      const roomH = 82;
+      const padX = left + 16;
+      const innerW = bw - 32;
+      const roomW = (innerW - gap) / 2;
+
+      // Dynamic grid: 2 rooms per row, odd last room spans full width — the
+      // shell hugs the rooms so there are no dead wall slabs.
+      const chans = channels.slice(0, 4);
+      const rows = Math.max(1, Math.ceil(chans.length / 2));
+      const bh = 12 + rows * roomH + (rows - 1) * gap + doorStrip + 6;
       const top = groundY - bh;
       this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 30);
-      const gap = 6;
-      const roomW = (bw - 32 - gap) / 2;
-      const doorStrip = 54;
-      const upperH = 74;
-      const lowerTop = top + 94;
-      const lowerH = bh - (lowerTop - top) - doorStrip;
-      const padX = left + 16;
 
       g.fillStyle(0x000000, 0.22);
       g.fillRect(left + 8, groundY - 6, bw, 10);
@@ -2823,14 +2969,19 @@
         color: pal.titleFg, bg: pal.titleBg,
       });
 
-      const grid = [
-        { x: padX, y: top + 12, w: roomW, h: upperH },
-        { x: padX + roomW + gap, y: top + 12, w: roomW, h: upperH },
-        { x: padX, y: lowerTop, w: roomW, h: lowerH },
-        { x: padX + roomW + gap, y: lowerTop, w: roomW, h: lowerH },
-      ];
+      const grid = chans.map((ch, idx) => {
+        const row = Math.floor(idx / 2);
+        const col = idx % 2;
+        const isLastOdd = idx === chans.length - 1 && chans.length % 2 === 1;
+        return {
+          x: isLastOdd ? padX : padX + col * (roomW + gap),
+          y: top + 12 + row * (roomH + gap),
+          w: isLastOdd ? innerW : roomW,
+          h: roomH,
+        };
+      });
 
-      channels.slice(0, 4).forEach((ch, idx) => {
+      chans.forEach((ch, idx) => {
         const slot = grid[idx];
         const roomKey = chKey(ch.id);
         const label = channelLabel(ch);
@@ -2842,7 +2993,7 @@
           });
           this.addRoomSlots(roomKey, this.slotPointsForRoom(slot.x, slot.w, floor, 3));
         });
-        this.roomPlaque(slot.x + 4, slot.y + 4, shortLabel(label, 14), roomKey, pal.plaqueKey || 'uiTabGreen');
+        this.roomPlaque(slot.x + 4, slot.y + 4, shortLabel(label, 14), roomKey, pal.plaqueKey || 'uiTabGreen', { maxW: slot.w - 12 });
         this.registerFloor({
           id: roomKey,
           roomKey,
@@ -2853,48 +3004,84 @@
         });
       });
 
-      // Two street DOORS (not elevators) — half-width rooms can't fit elev shafts.
-      const firstKey = channels[0] ? chKey(channels[0].id) : null;
-      const doorX = left + 40;
-      const doorX2 = left + bw - 44;
-      if (firstKey) {
+      // Street-level storefront dressing between the doors: lit windows and
+      // planters so the ground band reads as a lobby, not dead shell.
+      const lobbyY = groundY - 2;
+      const winY = groundY - doorStrip + 12;
+      // Two lit windows flank the centered enter-prompt (0.5 stays clear).
+      [left + bw * 0.3, left + bw * 0.7].forEach((wx) => {
+        if (!this.textures.exists('windowSq')) return;
+        g.fillStyle(0xfff3c0, 0.28);
+        g.fillRect(wx - 11, winY - 1, 22, 20);
+        this.add.image(wx, winY, 'windowSq').setOrigin(0.5, 0).setDepth(25).setScale(SCALE);
+      });
+      if (this.textures.exists('floraFern')) {
+        this.add.image(left + bw * 0.24, lobbyY, 'floraFern').setOrigin(0.5, 1).setDepth(25).setScale(SCALE);
+      }
+
+      // Grid-driven wiring: street doors enter the BOTTOM row, stairs link
+      // vertical stacks in the clear left lane (right lane when both rows are
+      // full pairs), passages join side-by-side rooms, roof off the top row.
+      const rowRooms = [];
+      chans.forEach((ch, idx) => {
+        const r = Math.floor(idx / 2);
+        (rowRooms[r] ||= []).push({ ch, key: chKey(ch.id), slot: grid[idx] });
+      });
+      const bottomRow = rowRooms[rows - 1] || [];
+      if (bottomRow[0]) {
+        const doorX = left + 40;
         this.placeEntrance(g, doorX, groundY, 'door', pal.lintel, 26);
-        this.registerDoor({ x: doorX, floorId: firstKey, radius: 18, kind: 'door' });
+        this.registerDoor({ x: doorX, floorId: bottomRow[0].key, radius: 18, kind: 'door' });
       }
-      if (channels[1]) {
+      if (bottomRow[1]) {
+        const doorX2 = left + bw - 44;
         this.placeEntrance(g, doorX2, groundY, 'door', pal.lintel, 26);
-        this.registerDoor({ x: doorX2, floorId: chKey(channels[1].id), radius: 18, kind: 'door' });
+        this.registerDoor({ x: doorX2, floorId: bottomRow[1].key, radius: 18, kind: 'door' });
       }
-      // Climb DOORS in each stack's clear left strip + walkable rooftop.
-      let leftClimbX = padX + Math.max(20, roomW * 0.2);
-      let rightClimbX = padX + roomW + gap + Math.max(20, roomW * 0.2);
-      if (channels[0] && channels[2]) {
-        leftClimbX = this.markClimbDoor(leftClimbX, chKey(channels[0].id)) || leftClimbX;
-        this.markClimbDoor(leftClimbX, chKey(channels[2].id));
+
+      let leftLaneX = padX + Math.max(20, roomW * 0.2);
+      const rightLaneX = padX + roomW + gap + Math.max(20, roomW * 0.2);
+      for (let r = 0; r + 1 < rows; r += 1) {
+        const upper = rowRooms[r];
+        const lower = rowRooms[r + 1];
+        if (!upper?.[0] || !lower?.[0]) continue;
+        leftLaneX = this.markClimbDoor(leftLaneX, upper[0].key) || leftLaneX;
+        this.markClimbDoor(leftLaneX, lower[0].key);
         this.registerStairs({
-          x: leftClimbX,
-          fromFloorId: chKey(channels[2].id),
-          toFloorId: chKey(channels[0].id),
+          x: leftLaneX,
+          fromFloorId: lower[0].key,
+          toFloorId: upper[0].key,
           radius: 28,
         });
+        if (upper[1] && lower[1]) {
+          const rx = this.markClimbDoor(rightLaneX, upper[1].key) || rightLaneX;
+          this.markClimbDoor(rx, lower[1].key);
+          this.registerStairs({
+            x: rx,
+            fromFloorId: lower[1].key,
+            toFloorId: upper[1].key,
+            radius: 28,
+          });
+        }
       }
-      if (channels[1] && channels[3]) {
-        rightClimbX = this.markClimbDoor(rightClimbX, chKey(channels[1].id)) || rightClimbX;
-        this.markClimbDoor(rightClimbX, chKey(channels[3].id));
-        this.registerStairs({
-          x: rightClimbX,
-          fromFloorId: chKey(channels[3].id),
-          toFloorId: chKey(channels[1].id),
-          radius: 28,
-        });
-      }
-      // Rooftop access from top-left room (channel 0) — ↑ at climb door.
-      if (channels[0]) {
-        const topKey = chKey(channels[0].id);
+      rowRooms.forEach((row) => {
+        if (row.length === 2) {
+          this.registerPassage({
+            fromFloorId: row[0].key,
+            toFloorId: row[1].key,
+            x: padX + roomW + gap / 2,
+            radius: 14,
+          });
+        }
+      });
+
+      // Rooftop deck off the top row's left room.
+      const topRoom = rowRooms[0]?.[0];
+      if (topRoom) {
         const roofId = `roof_${left}`;
         const roofY = top + 8;
         const roofMin = padX + 10;
-        const roofMax = padX + roomW * 2 + gap - 10;
+        const roofMax = padX + innerW - 10;
         this.registerFloor({
           id: roofId,
           roomKey: roofId,
@@ -2905,35 +3092,19 @@
           isRoof: true,
         });
         this.markRooftopDeck(roofMin, roofMax, roofY);
-        // Ensure top room has a climb door if it wasn't part of a 0↔2 pair.
-        if (!channels[2]) {
-          leftClimbX = this.markClimbDoor(leftClimbX, topKey) || leftClimbX;
+        // Single-row buildings have no stairs yet — give the top room a lane.
+        if (rows === 1) {
+          leftLaneX = this.markClimbDoor(leftLaneX, topRoom.key) || leftLaneX;
         }
-        this.markClimbDoor(leftClimbX, roofId);
+        this.markClimbDoor(leftLaneX, roofId);
         this.registerStairs({
-          x: leftClimbX,
-          fromFloorId: topKey,
+          x: leftLaneX,
+          fromFloorId: topRoom.key,
           toFloorId: roofId,
           radius: 36,
         });
         this.decorateRooftop(roofMin, roofMax, roofY, textRoof.style || 'gable', left);
         this._sceneMinY = Math.min(this._sceneMinY ?? 0, roofY - 100);
-      }
-      if (channels[2] && channels[3]) {
-        this.registerPassage({
-          fromFloorId: chKey(channels[2].id),
-          toFloorId: chKey(channels[3].id),
-          x: padX + roomW + gap / 2,
-          radius: 14,
-        });
-      }
-      if (channels[0] && channels[1]) {
-        this.registerPassage({
-          fromFloorId: chKey(channels[0].id),
-          toFloorId: chKey(channels[1].id),
-          x: padX + roomW + gap / 2,
-          radius: 14,
-        });
       }
 
       this.stripLabel(left + bw / 2, groundY - doorStrip + 6, 'Text · ↑ enter', {
@@ -3399,24 +3570,27 @@
         this.placeFood(key, host.x + (fi % 2 ? 3 : -3), floorY - host.surfaceH, item.depth || 25, FOOD_SCALE, roomKey);
       });
 
+      // Room plaque owns the top-left band: wide rooms push wall decor right
+      // of it; narrow rooms drop decor a band lower instead.
+      const plaqueGuard = slotW < 160 ? 0 : Math.min(slotW * 0.55, 178);
+      const wallBandY = slotY + (slotW < 160 ? 28 : 8);
       wallItems.forEach(({ item, key }) => {
         const x = Phaser.Math.Clamp(
           slotX + Math.max(0.35, item.xf) * slotW,
-          leftBound + 8,
+          Math.max(leftBound + 8, slotX + plaqueGuard),
           rightBound - 8,
         );
-        this.wallDecor(key, x, slotY + 8, item.depth || 21, SCALE * (item.scaleMul || 1));
+        this.wallDecor(key, x, wallBandY, item.depth || 21, SCALE * (item.scaleMul || 1));
       });
 
       // One piece of wall decor max — window OR curtain, never both
       if (slotH >= 72 && usable > 50) {
-        const wallTop = slotY + 8;
-        const wallX = leftBound + usable * 0.55;
+        const wallX = Math.max(leftBound + usable * 0.55, slotX + plaqueGuard + 14);
         if (seed % 2 === 0) {
           const winKey = seededPick(seed, ['windowSq', 'windowCircle', 'windowGlass', 'windowSmall'], 11);
-          this.wallDecor(winKey, wallX, wallTop, 21);
+          this.wallDecor(winKey, wallX, wallBandY, 21);
         } else {
-          this.wallDecor('clipboard', wallX, wallTop + 2, 21);
+          this.wallDecor('clipboard', wallX, wallBandY + 2, 21);
         }
       }
     }
@@ -5401,14 +5575,15 @@
       const sx = live.sprite.x;
       const sy = live.sprite.y;
 
-      // Happiness status: deaf → 0, mute → 1, soft → 2, default → 3, live open mic → 4
-      let statusKey = 'statusHappy3';
+      // Happiness status is a VOICE-state signal (deaf/mute/live). Text
+      // members get no face — the permanent blue "meh" face read as noise.
+      let statusKey = null;
       if (person.deafened) statusKey = 'statusHappy0';
       else if (person.muted) statusKey = 'statusHappy1';
-      else if (person.soft) statusKey = 'statusHappy2';
       else if (person.live) statusKey = 'statusHappy4';
+      else if (!person.soft) statusKey = 'statusHappy3';
 
-      if (this.textures.exists(statusKey)) {
+      if (statusKey && this.textures.exists(statusKey)) {
         if (!live.statusIcon || !live.statusIcon.active) {
           live.statusIcon = this.add.image(sx + 10, sy - 28, statusKey)
             .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
@@ -5416,6 +5591,8 @@
           live.statusIcon.setTexture(statusKey);
         }
         live.statusIcon.setPosition(sx + 10, sy - 28).setVisible(true);
+      } else if (live.statusIcon) {
+        live.statusIcon.setVisible(false);
       }
 
       // Green pointer bob for open-mic
@@ -5798,16 +5975,32 @@
       return best;
     }
 
-    nearbyStairs() {
+    /**
+     * Climb / roof stairs near the player.
+     * @param {'up'|'down'|null} preferDir - when both exist at the same shaft
+     *   (top room: down to lower floor AND up to roof), return the matching dir.
+     *   Previously the first registered stair won and blocked roof access.
+     */
+    nearbyStairs(preferDir = null) {
       if (!this.indoors) return null;
       const px = this.player.x;
       const cur = this.indoors.floorId;
-      for (const s of this.stairs) {
-        if (Math.abs(px - s.x) > s.radius) continue;
-        if (s.fromFloorId === cur) return { ...s, targetFloorId: s.toFloorId, dir: 'up' };
-        if (s.toFloorId === cur) return { ...s, targetFloorId: s.fromFloorId, dir: 'down' };
+      let up = null;
+      let down = null;
+      for (const s of this.stairs || []) {
+        const reach = (s.radius || 28) + 8; // slightly generous so climb doors are easy to hit
+        if (Math.abs(px - s.x) > reach) continue;
+        if (s.fromFloorId === cur && !up) {
+          up = { ...s, targetFloorId: s.toFloorId, dir: 'up' };
+        }
+        if (s.toFloorId === cur && !down) {
+          down = { ...s, targetFloorId: s.fromFloorId, dir: 'down' };
+        }
       }
-      return null;
+      if (preferDir === 'up') return up;
+      if (preferDir === 'down') return down;
+      // Default: prefer up (roof / higher floors) when both available
+      return up || down;
     }
 
     nearbyPassage() {
@@ -6138,21 +6331,24 @@
         return;
       }
 
-      // Prefer climb door / stairs over sit when standing on the climb lane
-      const stairs = this.nearbyStairs();
-      if (up && stairs && stairs.dir === 'up') {
-        this.goToFloor(stairs.targetFloorId, true);
+      // Prefer climb door / stairs over sit when standing on the climb lane.
+      // Pass preferDir so top-floor rooms can both go DOWN (lower) and UP (roof).
+      const stairsUp = this.nearbyStairs('up');
+      const stairsDown = this.nearbyStairs('down');
+      if (up && stairsUp) {
+        this.goToFloor(stairsUp.targetFloorId, true);
         this.enterCooldown = 280;
         return;
       }
-      if (down && stairs && stairs.dir === 'down') {
-        this.goToFloor(stairs.targetFloorId, true);
+      if (down && stairsDown) {
+        this.goToFloor(stairsDown.targetFloorId, true);
         this.enterCooldown = 280;
         return;
       }
 
       // Sit / lie, or eat food on tables (↑ prefers seat; E prefers closer interactable)
-      if ((ePressed || up) && !stairs) {
+      // Don't steal ↑ when a climb-up is available a few px away
+      if ((ePressed || up) && !stairsUp) {
         const seat = this.nearbySeat();
         const food = this.nearbyFood();
         if (up && seat) {
@@ -6437,5 +6633,15 @@
     }
   }
 
-  requestAnimationFrame(() => requestAnimationFrame(bootPhaser));
+  // Double-rAF lets the flex layout settle before measuring #game-host, but
+  // rAF never fires in occluded/backgrounded tabs — fall back to a timer so
+  // the game still boots there.
+  let booted = false;
+  const bootOnce = () => {
+    if (booted) return;
+    booted = true;
+    bootPhaser();
+  };
+  requestAnimationFrame(() => requestAnimationFrame(bootOnce));
+  setTimeout(bootOnce, 400);
 })();

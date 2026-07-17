@@ -4,7 +4,11 @@
     {
       "name": "denizen",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["--no-warnings", "--env-file=.env", "server.js"],
+      "runtimeArgs": [
+        "--no-warnings",
+        "--env-file=.env",
+        "server.js"
+      ],
       "cwd": "denizen",
       "port": 8080,
       "autoPort": false,
@@ -13,18 +17,40 @@
     {
       "name": "pixel-map",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "serve", "-l", "5179", "."],
+      "runtimeArgs": [
+        "--yes",
+        "serve",
+        "-l",
+        "5179",
+        "."
+      ],
       "cwd": "discord pixel game",
       "port": 5179
     },
     {
       "name": "crm",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "cwd": "denizen/crm/vendor",
       "port": 8090,
       "autoPort": false,
       "waitForPort": 30000
+    },
+    {
+      "name": "discord-map",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes",
+        "serve",
+        "-l",
+        "5191",
+        "."
+      ],
+      "cwd": "denizen/discord-map",
+      "port": 5191
     }
   ]
 }

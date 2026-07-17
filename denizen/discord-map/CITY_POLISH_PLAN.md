@@ -31,8 +31,16 @@ block you walk down, one building per Discord category, every room designed
 - [x] Roof sprite caps on themed buildings
 - [x] Dirt foundation under themed buildings
 - [x] UI panel-tab room plaques + star occupancy (`updatePlaqueStars` from presence)
-- [x] Street filler between buildings (`placeStreetFiller`)
-- [ ] Roof caps on plain voice/text office-park buildings (still painted rects)
+- [x] Plaque stars INSIDE the tab (2026-07-17 — no more wall-decor collisions)
+- [x] Street filler between buildings (`placeStreetFiller` + lamppost/hydrant/billboards)
+- [x] Roof caps on plain voice/text buildings
+- [x] Text building dynamic grid — odd last room spans full width, no dead slabs
+- [x] Voice building content-driven height — no empty placeholder rooms
+- [x] Storefront ground bands: lit windows flank the enter prompt (all shells)
+- [x] Backdrop extended across full world width (`extendBackdrop`: clouds,
+      ridges, skyline, hills, pack blimps) — zones no longer sit in bare cyan
+- [x] Status happiness faces only for voice members (text members were all
+      wearing the blue "meh" face)
 - [ ] Section palette shifts along the block
 
 ### Stage 2 — NPC life — done
