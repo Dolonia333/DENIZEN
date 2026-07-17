@@ -812,6 +812,14 @@
   // sprite above the floor; anchor at the feet instead so origin (0.5, this)
   // plants the character on the ground line.
   const NPC_FOOT_ORIGIN_Y = 24 / 32;
+  /**
+   * Sit/lie art sits higher in the 32px cell than walk/idle (opaque bottom
+   * ~y19–20 for sitIdle vs ~y23 for idle). With foot origin at y24, that
+   * lifts the butt ~5 texture px × SCALE above the world origin — looks like
+   * floating above the cushion. Add this lift when parking on seats/beds.
+   */
+  const SIT_CONTACT_LIFT = 9;  // (24 - 19.5) * SCALE ≈ 9
+  const LIE_CONTACT_LIFT = 5;  // lieIdle bottom ~y21
 
   /**
    * Full Pixel Spaces premade NPC row map (8 cols × 14 rows, 32×32).
@@ -824,12 +832,13 @@
     walk: { row: 0, frames: 4, fps: 7, repeat: -1, loop: true },
     idle: { row: 1, frames: 3, fps: 2, repeat: -1, loop: true },
     jump: { row: 2, frames: 2, fps: 8, repeat: 0 },
-    sit: { row: 3, frames: 3, fps: 10, repeat: 0 },
-    sitIdle: { row: 4, frames: 3, fps: 2, repeat: -1, loop: true },
-    sitFinish: { row: 5, frames: 3, fps: 11, repeat: 0 },
-    lie: { row: 6, frames: 6, fps: 10, repeat: 0 },
+    // Sit: slower settle so the lower-in-seat frames read as planting
+    sit: { row: 3, frames: 3, fps: 7, repeat: 0 },
+    sitIdle: { row: 4, frames: 3, fps: 1.6, repeat: -1, loop: true },
+    sitFinish: { row: 5, frames: 3, fps: 8, repeat: 0 },
+    lie: { row: 6, frames: 6, fps: 8, repeat: 0 },
     lieIdle: { row: 6, frames: 1, fps: 1, repeat: -1, loop: true, frameOffset: 5 },
-    lieFinish: { row: 7, frames: 6, fps: 11, repeat: 0 },
+    lieFinish: { row: 7, frames: 6, fps: 9, repeat: 0 },
     eat: { row: 8, frames: 2, fps: 6, repeat: 4 },
     eatSit: { row: 9, frames: 2, fps: 6, repeat: 4 },
     hurt: { row: 10, frames: 3, fps: 8, repeat: 0 },
@@ -837,6 +846,16 @@
     snicker: { row: 12, frames: 2, fps: 6, repeat: 2 },
     wave: { row: 13, frames: 4, fps: 8, repeat: 1 },
   };
+
+  /** World Y for parked sit/lie contact (cushion/mattress). */
+  function seatContactY(seat) {
+    const isBed = seat?.kind === 'bed';
+    const surface = Math.max(2, Math.min(14, seat?.surfaceH != null
+      ? seat.surfaceH
+      : (isBed ? 4 : 7)));
+    const lift = isBed ? LIE_CONTACT_LIFT : SIT_CONTACT_LIFT;
+    return (seat.floorY ?? 0) - surface + lift;
+  }
   const NPC_ONE_SHOT_POSES = ['jump', 'sit', 'sitFinish', 'lie', 'lieFinish', 'eat', 'eatSit', 'hurt', 'shrug', 'snicker', 'wave'];
   function poseDurationMs(pose) {
     const d = NPC_POSE_DEFS[pose];
@@ -855,21 +874,20 @@
   // above the floor line (screen px at SCALE 2), used to park the player
   // sprite on top of the furniture. Registration happens automatically in
   // furn(), so every couch/stool/bed across every kit and theme works.
-  // surfaceH = how far above floorY the sit/lie contact point is (screen px at SCALE 2).
-  // Tuned for Pixel Spaces chibi frames (foot origin) so butts land on cushions, not float.
+  // surfaceH = cushion/seat-top height above floor plank (screen px at SCALE 2).
+  // Final park Y also adds SIT_CONTACT_LIFT / LIE_CONTACT_LIFT (sheet padding).
   const SEAT_INFO = {
-    couchBlue: 7, couchGreen: 7, couchRed: 7, couchGrey: 7, couchYellow: 7, couchDark: 7,
-    couchSmall: 7, couchSmallG: 7, couchSmallR: 7, couchSmallY: 7, couchSmallGr: 7,
-    stoolBlue: 9, stoolRed: 9, stoolYellow: 9, stoolGreen: 9, stool: 9, stoolB: 9,
-    officechairBlue: 8, officechairRed: 8, officechairPurple: 8, officechairOrange: 8,
-    throneRed: 9, throneBlue: 9, throneGreen: 9, thronePurple: 9, throneYellow: 9,
-    waitChairSolo: 8, waitChairSoloRed: 8, waitChairs: 8, waitChairsRed: 8,
-    chairHalloween: 8, benchWood: 6,
+    couchBlue: 6, couchGreen: 6, couchRed: 6, couchGrey: 6, couchYellow: 6, couchDark: 6,
+    couchSmall: 6, couchSmallG: 6, couchSmallR: 6, couchSmallY: 6, couchSmallGr: 6,
+    stoolBlue: 8, stoolRed: 8, stoolYellow: 8, stoolGreen: 8, stool: 8, stoolB: 8,
+    officechairBlue: 7, officechairRed: 7, officechairPurple: 7, officechairOrange: 7,
+    throneRed: 8, throneBlue: 8, throneGreen: 8, thronePurple: 8, throneYellow: 8,
+    waitChairSolo: 7, waitChairSoloRed: 7, waitChairs: 7, waitChairsRed: 7,
+    chairHalloween: 7, benchWood: 5,
   };
   const BED_INFO = {
-    // Lie frames already include mattress height — keep close to floor plank
-    bed: 4, bedBlue: 4, bedGreen: 4,
-    bedHosp: 5, bunkBottom: 4, tableSurgery: 8, coffin: 3,
+    bed: 3, bedBlue: 3, bedGreen: 3,
+    bedHosp: 4, bunkBottom: 3, tableSurgery: 6, coffin: 2,
   };
 
   /** Floor hosts that surface props (laptop etc.) can sit on — height = top above floor. */
@@ -4096,7 +4114,8 @@
 
     /**
      * Sit / lie on furniture with locked contact point.
-     * seat.floorY = room floor plank; surfaceH = cushion height above it.
+     * Sit frames plant higher in the cell than walk/idle — use seatContactY()
+     * and ease down from standing so it doesn't pop or float.
      */
     actorSitOn(actor, seat) {
       if (!actor?.sprite || !seat) return;
@@ -4104,29 +4123,38 @@
       try { this.tweens.killTweensOf(actor.sprite); } catch (_) { /* ignore */ }
 
       const isBed = seat.kind === 'bed';
-      const surface = Math.max(3, Math.min(14, seat.surfaceH != null ? seat.surfaceH : (isBed ? 4 : 8)));
-      // Snap to same room floor as the furniture, then park on the seat top
       actor.floorY = seat.floorY;
       actor.roomKey = seat.floorId || actor.roomKey;
-      const sitY = seat.floorY - surface;
+      const fromY = actor.sprite.y;
+      const sitY = seatContactY(seat);
 
       actor.seated = true;
       actor.seat = seat;
       actor.seatedY = sitY;
       actor.state = 'sit';
       actor.sprite.x = seat.x;
-      actor.sprite.y = sitY;
-      // In front of furniture so they don't clip under cushions
+      // Start at standing height, ease onto cushion with the sit frames
+      actor.sprite.y = fromY;
       actor.sprite.setDepth(Math.max(actor.depth || 30, 32) + (isBed ? 0 : 2));
 
       const start = isBed ? 'lie' : 'sit';
       const idle = isBed ? 'lieIdle' : 'sitIdle';
+      const settleMs = Math.max(280, poseDurationMs(start) - 40);
+      this.tweens.add({
+        targets: actor.sprite,
+        y: sitY,
+        duration: settleMs,
+        ease: 'Sine.easeInOut',
+        onUpdate: () => {
+          if (actor.sprite?.active) actor.sprite.x = seat.x;
+        },
+      });
       this.playSheetPose(actor.sprite, actor.sheet, start, {
         onDone: () => {
           if (!actor.sprite?.active || !actor.seated) return;
-          // Re-lock after pose (some frames shift vertical feel)
           actor.sprite.x = seat.x;
           actor.sprite.y = sitY;
+          actor.seatedY = sitY;
           this.playSheetPose(actor.sprite, actor.sheet, idle);
           actor.state = 'sit';
           const sitMs = 7000 + Math.random() * 6000;
@@ -4150,7 +4178,6 @@
           });
         },
       });
-      // Hold busy through the sit intro
       actor.busyUntil = this.time.now + poseDurationMs(start) + 80;
     }
 
@@ -4159,18 +4186,25 @@
       const wasBed = actor.seat?.kind === 'bed';
       const fin = wasBed ? 'lieFinish' : 'sitFinish';
       const floorY = actor.floorY != null ? actor.floorY : actor.sprite.y;
+      const fromY = actor.sprite.y;
       actor.seated = false;
       actor.seat = null;
       actor.seatedY = null;
-      actor.sprite.y = floorY;
       actor.sprite.setDepth(actor.depth || 30);
+      // Rise with finish frames (don't hard-snap to floor)
+      try { this.tweens.killTweensOf(actor.sprite); } catch (_) { /* ignore */ }
+      this.tweens.add({
+        targets: actor.sprite,
+        y: floorY,
+        duration: Math.max(260, poseDurationMs(fin) - 40),
+        ease: 'Sine.easeOut',
+      });
       this.playSheetPose(actor.sprite, actor.sheet, fin, {
         onDone: () => {
           if (!actor.sprite?.active) return;
           actor.sprite.y = floorY;
           this.playSheetPose(actor.sprite, actor.sheet, 'idle');
           actor.state = 'idle';
-          // Life residents: rest before next path (no bounce)
           actor.busyUntil = this.time.now + 2200 + Math.random() * 2500;
           if (actor.mode !== 'life') {
             this.setActorBounce(actor, true);
@@ -4181,6 +4215,7 @@
         },
       });
       actor.busyUntil = this.time.now + poseDurationMs(fin) + 80;
+      void fromY;
     }
 
     actorPickWander(actor) {
@@ -5823,25 +5858,40 @@
     sitOn(seat) {
       if (!seat || !this.player || this.seated) return;
       const isBed = seat.kind === 'bed';
-      const surface = Math.max(3, Math.min(14, seat.surfaceH != null ? seat.surfaceH : (isBed ? 4 : 8)));
-      const sitY = seat.floorY - surface;
+      const sitY = seatContactY(seat);
+      const fromY = this.player.y;
       this.seated = { seat, prevDepth: this.player.depth, seatedY: sitY };
       this.player.setVelocityX(0);
       this.player.x = seat.x;
-      this.player.y = sitY;
       this.player.setDepth(44);
       const start = isBed ? 'lie' : 'sit';
       const idle = isBed ? 'lieIdle' : 'sitIdle';
       this._poseHoldUntil = 0;
+      // Ease onto the cushion while sit frames play (fixes float / pop)
+      try { this.tweens.killTweensOf(this.player); } catch (_) { /* ignore */ }
+      this.player.y = fromY;
+      this.tweens.add({
+        targets: this.player,
+        y: sitY,
+        duration: Math.max(280, poseDurationMs(start) - 40),
+        ease: 'Sine.easeInOut',
+        onUpdate: () => {
+          if (this.player?.active) this.player.x = seat.x;
+        },
+      });
       const ok = this.playSheetPose(this.player, this.playerSheet, start, {
         onDone: () => {
           if (!this.seated || !this.player?.active) return;
           this.player.x = seat.x;
           this.player.y = sitY;
+          this.seated.seatedY = sitY;
           this.playSheetPose(this.player, this.playerSheet, idle);
         },
       });
-      if (!ok) this.playSheetPose(this.player, this.playerSheet, 'idle');
+      if (!ok) {
+        this.player.y = sitY;
+        this.playSheetPose(this.player, this.playerSheet, 'idle');
+      }
       const tag = isBed ? 'lying down' : 'sitting';
       this.setEnterHint(IS_TOUCH ? `${tag} · ▼ stand` : `${tag} · ↓ / E stand`);
     }
@@ -5850,14 +5900,22 @@
       if (!this.seated) return;
       const isBed = this.seated.seat.kind === 'bed';
       const floor = this.indoors ? this.floors.get(this.indoors.floorId) : null;
-      if (floor) this.player.y = floor.floorY;
-      else this.player.y = this.groundY - 1;
+      const targetY = floor ? floor.floorY : (this.groundY - 1);
       if (this.seated.prevDepth != null) this.player.setDepth(this.seated.prevDepth);
       this.seated = null;
       const fin = isBed ? 'lieFinish' : 'sitFinish';
+      try { this.tweens.killTweensOf(this.player); } catch (_) { /* ignore */ }
+      this.tweens.add({
+        targets: this.player,
+        y: targetY,
+        duration: Math.max(260, poseDurationMs(fin) - 40),
+        ease: 'Sine.easeOut',
+      });
       this.playSheetPose(this.player, this.playerSheet, fin, {
         onDone: () => {
-          if (this.player?.active) this.playSheetPose(this.player, this.playerSheet, 'idle');
+          if (!this.player?.active) return;
+          this.player.y = targetY;
+          this.playSheetPose(this.player, this.playerSheet, 'idle');
         },
       });
     }
