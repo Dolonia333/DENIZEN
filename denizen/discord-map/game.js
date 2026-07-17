@@ -1762,7 +1762,7 @@
       if (bbKeys.length && seed % 4 === 3) {
         // Billboard rides above the filler house like the pack's street scenes.
         this.add.image(mid - 10, gy - 64, seededPick(seed, bbKeys, 3))
-          .setScale(SCALE).setOrigin(0.5, 1).setDepth(16).setAlpha(0.95);
+          .setScale(SCALE).setOrigin(0.5, 1).setDepth(16).setAlpha(0.85);
       }
     }
 
@@ -1953,9 +1953,11 @@
       const seed = hashSeed(room.roomKey || room.id || '');
       const floorId = room.roomKey || room.id || null;
       const pick = (key, idx) => (Array.isArray(key) ? seededPick(seed, key, idx * 13 + 5) : key);
-      // Theme stairs lane — skip floor items that land inside it
-      const clearX = x0 + (room.stairsDx != null ? room.stairsDx : roomW * 0.14);
-      const clearR = 26;
+      // Climb-door lane — skip floor items that land inside it. Fallback
+      // matches markClimbDoor's prefer x so the band is centered on the
+      // actual door; clearR = leaf halfW (14·SCALE/2) + ~18px breathing room.
+      const clearX = x0 + (room.stairsDx != null ? room.stairsDx : Math.max(22, roomW * 0.18));
+      const clearR = (14 * SCALE) / 2 + 18;
       const placed = []; // { x, halfW }
       const hosts = []; // surface hosts for dy props
 
@@ -1979,12 +1981,12 @@
         const sc = (scRaw || 1) * SCALE;
         let x = x0 + dx;
         const hw = halfW(k, sc);
-        if (Math.abs(x - clearX) < clearR) return;
+        if (Math.abs(x - clearX) < clearR + hw) return;
         if (x < x0 + 10 + hw || x > x0 + roomW - 10 - hw) return;
         // Nudge right then left to clear overlaps
         let placedOk = false;
         for (let t = 0; t < 8; t += 1) {
-          if (!collides(x, hw) && Math.abs(x - clearX) >= clearR) {
+          if (!collides(x, hw) && Math.abs(x - clearX) >= clearR + hw) {
             placedOk = true;
             break;
           }
@@ -2019,11 +2021,24 @@
         this.furn(k, base.x, floorY - dy, 24, sc, floorId);
       });
 
+      // Wall decor occupancy — the room plaque tab (x0 + 4, depth 27) owns
+      // the top-left band; skip — never stack — 'w' items that would overlap
+      // it or a previously placed wall item. Plaque width is estimated (the
+      // plaque is drawn after this runs).
+      const plaqueW = Math.min(roomW - 12, 112);
+      const placedWall = [{ x: x0 + 4 + plaqueW / 2, halfW: plaqueW / 2 }];
+      const wallFree = (x, hw) => !placedWall.some((p) => Math.abs(p.x - x) < p.halfW + hw + 6);
+
       (room.items || []).forEach((it, idx) => {
         const kind = it[0];
         if (kind === 'w') {
           const [, key, dx, dyTop, sc] = it;
-          this.wallDecor(pick(key, idx), x0 + dx, y0 + dyTop, 22, (sc || 1) * SCALE);
+          const k = pick(key, idx);
+          const wsc = (sc || 1) * SCALE;
+          const hw = halfW(k, wsc);
+          if (!wallFree(x0 + dx, hw)) return; // skip rather than stack
+          this.wallDecor(k, x0 + dx, y0 + dyTop, 22, wsc);
+          placedWall.push({ x: x0 + dx, halfW: hw });
         } else if (kind === 'npc') {
           const [, key, dx] = it;
           const x = x0 + dx;
@@ -2311,7 +2326,8 @@
         this.add.image(x, this.groundY - 4, key)
           .setScale(sc)
           .setOrigin(0.5, 1)
-          .setAlpha(0.82 + (i % 3) * 0.04)
+          .setTint(0xaebccf)
+          .setAlpha(0.58 + (i % 3) * 0.03)
           .setDepth(-90 - (i % 2))
           .setScrollFactor(0.4);
       });
@@ -2398,7 +2414,7 @@
       const mKeys = ['mountainL', 'mountainM', 'mountainS'].filter((k) => this.textures.exists(k));
       if (mKeys.length) {
         for (let x = 980; x < need(0.28); x += 110 + mr() * 60) {
-          this.add.image(x, this.groundY - 4, mKeys[Math.floor(mr() * mKeys.length)])
+          this.add.image(x, this.groundY - 6, mKeys[Math.floor(mr() * mKeys.length)])
             .setScale(0.95 + mr() * 0.45).setOrigin(0.5, 1)
             .setTint(0xb8c4d8).setAlpha(0.55)
             .setDepth(-100).setScrollFactor(0.28);
@@ -2406,7 +2422,8 @@
         for (let x = 940; x < need(0.4); x += 130 + mr() * 90) {
           this.add.image(x, this.groundY - 4, mKeys[Math.floor(mr() * mKeys.length)])
             .setScale(1.05 + mr() * 0.4).setOrigin(0.5, 1)
-            .setAlpha(0.8 + mr() * 0.1)
+            .setTint(0xaebccf)
+            .setAlpha(0.58 + mr() * 0.06)
             .setDepth(-90 - (Math.floor(mr() * 2))).setScrollFactor(0.4);
         }
       }
@@ -2619,7 +2636,7 @@
         if (/^roof2/i.test(connKey)) style = 'flat';
         const m = connKey.match(/roof2?([A-Z][a-z]+)/);
         if (m) color = m[1].toLowerCase();
-        if (roofSpec === 'snow' || /snow/i.test(roofSpec)) style = 'snow';
+        if (roofSpec === 'snow') style = 'snow';
       } else if (roofSpec && typeof roofSpec === 'object') {
         style = roofSpec.style || 'gable';
         color = String(roofSpec.color || 'red').toLowerCase();
@@ -2649,11 +2666,18 @@
 
       const runL = left - overhang + endW - (isFlat ? 2 : 6);
       const runR = left + bw + overhang - endW + (isFlat ? 2 : 6);
-      for (let x = runL; x < runR - 2; x += tileW) {
-        // Never stretch the last tile (looks broken) — skip if it won't fit
-        if (x + tileW * 0.35 > runR) break;
+      let lastX = runL;
+      for (let x = runL; x + tileW <= runR; x += tileW) {
         this.add.image(x, y, connKey)
           .setOrigin(0, 1).setDepth(depth - 0.5).setScale(SCALE);
+        lastX = x + tileW;
+      }
+      // Close the remaining gap with one right-aligned tile — overlapping an
+      // identical shingle pattern is invisible; overshooting the end cap or
+      // leaving bare shell both read as a broken roof.
+      if (runR - lastX > 2) {
+        this.add.image(runR - tileW, y, connKey)
+          .setOrigin(0, 1).setDepth(depth - 0.6).setScale(SCALE);
       }
 
       // Snow overlay for snow style or winter themes
@@ -2706,15 +2730,8 @@
           this.furn('craneRoof', mid + 20, roofY, 21);
         }
       } else if (style === 'garden' || style === 'gable') {
-        const treeA = (s % 2 === 0) ? 'treeRoof1' : 'treeRoof2';
-        const treeB = (s % 3 === 0) ? 'treeRoofAutumn1' : 'treeRoofAutumn2';
-        if (this.textures.exists(treeA)) this.furn(treeA, roofMin + span * 0.3, roofY, 22);
-        if (span > 90 && this.textures.exists('roofVents1')) {
-          this.furn('roofVents1', mid, roofY, 22);
-        }
-        if (span > 110 && this.textures.exists(treeB)) {
-          this.furn(treeB, roofMin + span * 0.75, roofY, 22);
-        }
+        // Pitched shingles: no deck props on the cap — trees and white vent
+        // boxes standing on the ridge read as a broken roof. Keep it clean.
       } else if (style === 'snow') {
         if (this.textures.exists('roofVents2')) this.furn('roofVents2', mid - 10, roofY, 22);
         // Extra snow blobs on the deck surface
@@ -2725,9 +2742,11 @@
             .setOrigin(0.5, 1).setDepth(22).setScale(SCALE);
         }
       } else {
-        // default mix
+        // default mix — utility props only, never trees on a roof
         if (this.textures.exists('roofVents1')) this.furn('roofVents1', mid - 18, roofY, 22);
-        if (this.textures.exists('treeRoof2')) this.furn('treeRoof2', mid + 22, roofY, 22);
+        if (span > 120 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
+          this.furn('craneRoof', mid + 26, roofY, 21);
+        }
       }
     }
 
@@ -2736,7 +2755,9 @@
       const s = typeof seed === 'number' ? seed : hashSeed(String(seed));
       // Theme-driven defaults
       const theme = String(themeOrPal?.theme || themeOrPal || '').toLowerCase();
-      if (theme.includes('winter') || theme.includes('snow')) {
+      // Snow roofs only when the caller explicitly opts in (winter zone) —
+      // never inferred from arbitrary titles (a "snow" channel name is not winter).
+      if (themeOrPal?.snow === true || theme === 'winterzone') {
         return { style: 'snow', color: 'blue', snow: true };
       }
       if (theme.includes('hospital') || theme.includes('museum') || theme.includes('office')) {
@@ -3429,14 +3450,17 @@
       const leafW = 14 * sc;
 
       // Prefer the climb-lane x (empty left strip). Only nudge if it would
-      // clip the walkable bounds.
+      // clip the walkable bounds. Roof decks get extra inset so the leaf
+      // stays inside the shell, clear of the gable end-cap overhang.
+      const edgePad = floor.isRoof ? leafW / 2 + 10 : leafW / 2;
       let cx = preferredX;
-      if (floor.minX != null) cx = Math.max(cx, floor.minX + leafW / 2);
-      if (floor.maxX != null) cx = Math.min(cx, floor.maxX - leafW / 2);
+      if (floor.minX != null) cx = Math.max(cx, floor.minX + edgePad);
+      if (floor.maxX != null) cx = Math.min(cx, floor.maxX - edgePad);
 
       // Same baseline as furniture: origin bottom on floor.floorY.
-      // Tiny lift (2px) so the leaf rests on the wood plank, not sunk into it.
-      const doorBottomY = floor.floorY - 2;
+      // Tiny lift (2px) so the leaf rests on the wood plank, not sunk into
+      // it. Roof decks: no lift — the leaf sits flush ON the deck line.
+      const doorBottomY = floor.floorY - (floor.isRoof ? 0 : 2);
       // Left hinge so the swing opens into the room (to the right).
       const hingeX = Math.round(cx - leafW / 2);
       const leaf = this.add.image(hingeX, doorBottomY, 'doorFrontClosed')
@@ -3496,8 +3520,12 @@
       if (slotW < 110) kit = kit.slice(0, Math.min(3, kit.length));
       else if (slotW < 140) kit = kit.slice(0, Math.min(4, kit.length));
 
-      const clearLeft = slotX + Math.max(28, slotW * 0.22); // climb door zone
-      const leftBound = clearLeft + 6;
+      // Climb-door lane: the interior leaf (14×SCALE wide) is centered on
+      // laneX ≈ slotX + max(20, slotW*0.2) (drawTextBuilding lane math), so
+      // furniture must start well clear of the leaf's right edge — not 6px.
+      const doorLaneRight = slotX + Math.max(20, slotW * 0.2) + (14 * SCALE) / 2;
+      const clearLeft = Math.max(slotX + Math.max(28, slotW * 0.22), doorLaneRight);
+      const leftBound = clearLeft + 20;
       const rightBound = slotX + slotW - 10;
       const usable = Math.max(40, rightBound - leftBound);
       const placed = [];
@@ -3574,23 +3602,36 @@
       // of it; narrow rooms drop decor a band lower instead.
       const plaqueGuard = slotW < 160 ? 0 : Math.min(slotW * 0.55, 178);
       const wallBandY = slotY + (slotW < 160 ? 28 : 8);
+      // Wall decor keeps its own occupancy list (the floor `collides` check
+      // doesn't apply up here). Seed it with the plaque zone so nothing
+      // straddles the tab, then skip — never stack — overlapping items.
+      const wallPlaced = plaqueGuard > 0
+        ? [{ x: slotX + plaqueGuard / 2, halfW: plaqueGuard / 2 }]
+        : [];
+      const wallFree = (x, hw) => !wallPlaced.some((p) => Math.abs(p.x - x) < p.halfW + hw + 6);
       wallItems.forEach(({ item, key }) => {
+        const sc = SCALE * (item.scaleMul || 1);
+        const hw = halfW(key, sc);
         const x = Phaser.Math.Clamp(
           slotX + Math.max(0.35, item.xf) * slotW,
-          Math.max(leftBound + 8, slotX + plaqueGuard),
+          Math.max(leftBound + 8, slotX + plaqueGuard + (plaqueGuard > 0 ? hw + 8 : 0)),
           rightBound - 8,
         );
-        this.wallDecor(key, x, wallBandY, item.depth || 21, SCALE * (item.scaleMul || 1));
+        if (!wallFree(x, hw)) return; // skip rather than stack
+        this.wallDecor(key, x, wallBandY, item.depth || 21, sc);
+        wallPlaced.push({ x, halfW: hw });
       });
 
-      // One piece of wall decor max — window OR curtain, never both
+      // One extra piece of wall decor max — window OR clipboard — and only
+      // where it clears the plaque and any kit wall item already placed.
       if (slotH >= 72 && usable > 50) {
-        const wallX = Math.max(leftBound + usable * 0.55, slotX + plaqueGuard + 14);
-        if (seed % 2 === 0) {
-          const winKey = seededPick(seed, ['windowSq', 'windowCircle', 'windowGlass', 'windowSmall'], 11);
-          this.wallDecor(winKey, wallX, wallBandY, 21);
-        } else {
-          this.wallDecor('clipboard', wallX, wallBandY + 2, 21);
+        const extraKey = seed % 2 === 0
+          ? seededPick(seed, ['windowSq', 'windowCircle', 'windowGlass', 'windowSmall'], 11)
+          : 'clipboard';
+        const ehw = halfW(extraKey, SCALE);
+        const wallX = Math.max(leftBound + usable * 0.55, slotX + plaqueGuard + (plaqueGuard > 0 ? ehw + 8 : 14));
+        if (wallFree(wallX, ehw)) {
+          this.wallDecor(extraKey, wallX, wallBandY + (seed % 2 === 0 ? 0 : 2), 21);
         }
       }
     }
@@ -3614,7 +3655,9 @@
 
     /** Rooftop floor strip + rail so the roof reads as a walkable place. */
     markRooftopDeck(minX, maxX, floorY) {
-      const g = this.add.graphics().setDepth(19);
+      // In front of the shell (20) and roof cap tiles (20.5/21) — at 19 the
+      // deck hid behind the facade, leaving the roof door floating in the sky.
+      const g = this.add.graphics().setDepth(21.2);
       const w = maxX - minX;
       // Deck plank
       g.fillStyle(0x5a4a38, 1);
@@ -3628,15 +3671,16 @@
         g.fillStyle(0x3a342c, 1);
         g.fillRect(x, floorY - 16, 2, 12);
       }
-      // Small "ROOF" tag near left climb
-      this.add.text(minX + 18, floorY - 28, 'ROOF', {
+      // Small "ROOF" tag — flush on the deck line at the right end, clear
+      // of the left-lane climb door.
+      this.add.text(maxX - 4, floorY - 3, 'ROOF', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '9px',
         fontStyle: 'bold',
         color: '#f8fafc',
         backgroundColor: '#0f172a',
         padding: { x: 4, y: 1 },
-      }).setOrigin(0, 1).setDepth(28).setResolution(2).setAlpha(0.85);
+      }).setOrigin(1, 1).setDepth(28).setResolution(2).setAlpha(0.85);
     }
 
     cutawayRoom(g, x, y, w, h, fill, decorate) {

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8" /><title>shot-verify</title></head>
+<body>
+  <div id="map-title"></div><div id="room-label"></div><div id="enter-hint"></div>
+  <div id="presence-status" data-ok="0"></div><div id="game-host" style="width:1280px;height:620px"></div>
+  <script>
+    // Same all-themes mock as test-anim.html, plus ?cam=<worldX> camera pin
+    // for headless screenshot sweeps.
+    const CATS = [
+      ['c-vc', 'Voice Lounge'], ['c-gen', 'General'], ['c-cafe', 'Cafe Corner'],
+      ['c-game', 'Gaming Den'], ['c-help', 'Support Desk'], ['c-art', 'Art Gallery'],
+      ['c-mod', 'Mod Office'], ['c-alert', 'Fire Alerts'], ['c-meme', 'Meme Vault'],
+      ['c-snow', 'Winter Fest'], ['c-dig', 'Research Lab'],
+    ];
+    const ROOM_NAMES = {
+      'c-vc': [['vc1', 'lounge', 'voice'], ['vc2', 'music', 'voice']],
+      'c-gen': [['t1', 'general', 'text'], ['t2', 'random', 'text'], ['t3', 'intros', 'text']],
+      'c-cafe': [['t4', 'coffee-chat', 'text'], ['t5', 'recipes', 'text']],
+      'c-game': [['t6', 'lfg', 'text'], ['t7', 'clips', 'text']],
+      'c-help': [['t8', 'questions', 'text'], ['t9', 'tickets', 'text']],
+      'c-art': [['t10', 'showcase', 'text'], ['t11', 'wips', 'text']],
+      'c-mod': [['t12', 'reports', 'text'], ['t13', 'staff-chat', 'text']],
+      'c-alert': [['t14', 'incidents', 'text']],
+      'c-meme': [['t15', 'dank', 'text'], ['t16', 'cursed', 'text']],
+      'c-snow': [['t17', 'snowball', 'text']],
+      'c-dig': [['t18', 'findings', 'text']],
+    };
+    const MOCK = {
+      ok: true, guildId: 'g1', guildName: 'Anim Realm',
+      categories: CATS.map(([id, name], i) => ({ id, name, position: i })),
+      rooms: CATS.flatMap(([cid, cname]) => (ROOM_NAMES[cid] || []).map(([id, name, type]) => (
+        { id, name, type, categoryId: cid, categoryName: cname, occupantCount: 0, occupants: [] }
+      ))),
+      people: [
+        { userId: '1001', displayName: 'Alice', channelId: 'vc1', channelType: 'voice', channelName: 'lounge', soft: false },
+        { userId: '1002', displayName: 'Bob', channelId: 'vc1', channelType: 'voice', channelName: 'lounge', soft: false },
+        { userId: '1003', displayName: 'Cara', channelId: 't1', channelType: 'text', channelName: 'general', soft: true },
+        { userId: '1004', displayName: 'Dan', channelId: 't6', channelType: 'text', channelName: 'lfg', soft: true },
+        { userId: '1005', displayName: 'Eve', channelId: 't4', channelType: 'text', channelName: 'coffee-chat', soft: true },
+        { userId: '1006', displayName: 'Fox', channelId: 't10', channelType: 'text', channelName: 'showcase', soft: true },
+      ],
+      members: [], ts: Date.now(),
+    };
+    const of = window.fetch.bind(window);
+    window.fetch = async (u, o) => (String(u).includes('/presence')
+      ? new Response(JSON.stringify(MOCK), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      : of(u, o));
+  </script>
+  <script src="./mobile-touch.js"></script>
+  <script src="./phaser.min.js"></script>
+  <script>
+    const OG = Phaser.Game;
+    Phaser.Game = function (...a) { const g = new OG(...a); window.__g = g; return g; };
+    Phaser.Game.prototype = OG.prototype;
+    // Camera pin: ?cam=1400 — teleport the PLAYER there (the scene keeps a
+    // lerped startFollow, so moving the camera alone gets overridden) and
+    // hard-set scroll as well for good measure.
+    const camX = Number(new URLSearchParams(location.search).get('cam') || 'NaN');
+    if (!Number.isNaN(camX)) {
+      setInterval(() => {
+        try {
+          const sc = window.__g && window.__g.scene.scenes[0];
+          if (!sc || !sc.player || (sc.load && sc.load.progress < 1)) return;
+          sc.player.x = camX + 440;
+          sc.player.y = sc.groundY;
+          if (sc.player.body) { sc.player.body.reset(camX + 440, sc.groundY); }
+          sc.cameras.main.setScroll(camX, sc.cameras.main.scrollY);
+        } catch (_) {}
+      }, 300);
+    }
+  </script>
+  <script src="./block-life.js?v=shot1"></script>
+  <script src="./game.js?v=shot1"></script>
+</body></html>

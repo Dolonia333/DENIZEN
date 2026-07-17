@@ -41,6 +41,18 @@ block you walk down, one building per Discord category, every room designed
       ridges, skyline, hills, pack blimps) — zones no longer sit in bare cyan
 - [x] Status happiness faces only for voice members (text members were all
       wearing the blue "meh" face)
+- [x] Roof cleanup (2026-07-17): no trees/vent boxes on pitched gables (white
+      blobs read as broken roofs); snow style only by explicit opt-in, never
+      seeded from titles; ridge tiles never overshoot the end caps; rooftop
+      deck drawn in front of the shell so the ROOF door sits on planks
+- [x] Wall decor collision: occupancy list per room (kit items + seeded extra
+      + plaque zone) — skip, never stack
+- [x] Door clearance: furniture bands start past the climb-door leaf edge
+      (+~20px) in both decorateRoom and themed recipes (edge-aware lane skip)
+- [x] Atmospheric perspective: mid mountains/ridges tinted blue-grey at
+      ~0.6 alpha, extendBackdrop repeats match originals, billboards muted
+- [x] Phaser vendored locally (phaser.min.js) — CDN outage no longer kills
+      the map
 - [ ] Section palette shifts along the block
 
 ### Stage 2 — NPC life — done
