@@ -170,7 +170,7 @@ class CommandRegistry {
       return true;
     }
     if (guildPlans && ctx.guild?.id && guildPlans.isPremiumModule(cmd.module)) {
-      const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => true);
+      const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => false);
       if (!allowed) {
         const upgrade = process.env.DISCORD_UPGRADE_URL || '';
         await ctx.reply(
@@ -233,7 +233,7 @@ class CommandRegistry {
       return true;
     }
     if (guildPlans && ctx.guild?.id && guildPlans.isPremiumModule(cmd.module)) {
-      const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => true);
+      const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => false);
       if (!allowed) {
         const upgrade = process.env.DISCORD_UPGRADE_URL || '';
         await ctx.reply(

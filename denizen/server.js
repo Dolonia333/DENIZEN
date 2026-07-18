@@ -7234,8 +7234,9 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));
       } catch (err) {
+        console.error(`[billing] checkout endpoint error: ${err?.message || err}`);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+        res.end(JSON.stringify({ ok: false, error: 'internal_error' }));
       }
     })();
     return;
@@ -7259,12 +7260,20 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         const billing = require('./src/denizen-guild-billing');
         const sig = req.headers['stripe-signature'] || '';
         const result = await billing.handleGuildBillingWebhook(rawBody, sig);
-        const status = result.error === 'bad_signature' ? 400 : 200;
+        // Permanent client errors (bad payload) → 4xx so Stripe stops retrying.
+        // Transient failures (e.g. DB write failed) → 5xx so Stripe DOES retry
+        // and a lapsed webhook doesn't silently lose a paid entitlement.
+        let status = 200;
+        if (!result.ok) {
+          const permanent = new Set(['bad_signature', 'invalid_json']);
+          status = permanent.has(result.error) ? 400 : 500;
+        }
         res.writeHead(status, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));
       } catch (err) {
+        console.error(`[billing] webhook endpoint error: ${err?.message || err}`);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+        res.end(JSON.stringify({ ok: false, error: 'internal_error' }));
       }
     })();
     return;

@@ -50,11 +50,19 @@ function headers(extra = {}) {
   };
 }
 
+const GRACE_STATUSES = new Set(['past_due', 'unpaid']);
+
 function normalize(row) {
   if (!row) return { ...FREE_PLAN };
   const plan = PLAN_RANK[row.plan] != null ? row.plan : 'free';
   const status = String(row.status || 'active');
-  const active = plan !== 'free' && ACTIVE_STATUSES.has(status);
+  let active = plan !== 'free' && ACTIVE_STATUSES.has(status);
+  // Grace window: a paying guild that's past_due/unpaid keeps premium until its
+  // already-paid period actually lapses, rather than being cut off instantly.
+  if (!active && plan !== 'free' && GRACE_STATUSES.has(status) && row.current_period_end) {
+    const end = Date.parse(row.current_period_end);
+    if (Number.isFinite(end) && end > Date.now()) active = true;
+  }
   return { ...row, plan, status, active, free: plan === 'free' };
 }
 
@@ -151,6 +159,25 @@ function invalidate(guildId) {
   cache.delete(String(guildId || '').trim());
 }
 
+/**
+ * Find a guild_id by its Stripe subscription id (indexed). Used by webhook
+ * handlers as a fallback when the event carries no guild_id metadata, so a
+ * cancellation/update can't silently no-op and leave a guild entitled.
+ */
+async function findGuildBySubscription(subscriptionId) {
+  const sub = String(subscriptionId || '').trim();
+  if (!sub || !dbConfigured()) return null;
+  const url = `${SUPABASE_URL}/rest/v1/${TABLE}?stripe_subscription_id=eq.${encodeURIComponent(sub)}&select=guild_id&limit=1`;
+  try {
+    const res = await fetch(url, { headers: headers() });
+    if (!res.ok) return null;
+    const rows = await res.json().catch(() => []);
+    return Array.isArray(rows) && rows.length ? rows[0].guild_id : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 module.exports = {
   PREMIUM_MODULES,
   PLAN_RANK,
@@ -160,5 +187,6 @@ module.exports = {
   isModuleAllowed,
   isPremiumModule,
   setGuildPlanFromStripe,
+  findGuildBySubscription,
   invalidate,
 };

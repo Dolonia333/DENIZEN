@@ -23,10 +23,18 @@ create index if not exists denizen_guild_plans_customer_idx
   on public.denizen_guild_plans (stripe_customer_id)
   where stripe_customer_id is not null;
 
-create index if not exists denizen_guild_plans_subscription_idx
+-- UNIQUE (not just indexed): one Stripe subscription maps to exactly one guild,
+-- so a replayed/misrouted event can't silently entitle a second guild. Partial
+-- so the many free rows (null subscription) are unaffected.
+create unique index if not exists denizen_guild_plans_subscription_uidx
   on public.denizen_guild_plans (stripe_subscription_id)
   where stripe_subscription_id is not null;
 
 -- Server-side only: the bot and app reach this via the service role key;
 -- no anon/authenticated client should read or write guild billing rows.
 alter table public.denizen_guild_plans enable row level security;
+
+-- Register so the migration runner's skip-logic doesn't re-run this every deploy.
+insert into public.denizen_schema_migrations (version, name)
+values ('20260718000001', 'discord_guild_plans')
+on conflict (version) do nothing;

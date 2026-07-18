@@ -110,28 +110,48 @@ async function createGuildSubscriptionCheckout({ guildId, plan, discordUserId } 
     const session = await stripeRequest('POST', '/checkout/sessions', params);
     return { ok: true, url: session.url, id: session.id };
   } catch (err) {
-    return { ok: false, error: err?.message || 'stripe_error' };
+    // Log the detailed Stripe error server-side; return a generic code so raw
+    // Stripe/internal messages aren't reflected to callers.
+    console.error(`[guild-billing] checkout create failed for guild ${gid}: ${err?.message || err}`);
+    return { ok: false, error: 'checkout_failed' };
   }
 }
 
-function verifyStripeSignature(rawBody, signatureHeader, secret) {
+// Reject events whose timestamp is outside this window (seconds). Mirrors the
+// default tolerance in Stripe's own constructEvent — without it, a captured
+// (body, signature) pair replays forever.
+const STRIPE_SIG_TOLERANCE_SEC = 300;
+
+function verifyStripeSignature(rawBody, signatureHeader, secret, nowSec = Math.floor(Date.now() / 1000)) {
   // Fail closed: a missing secret or header is never treated as "verified".
   if (!secret || !signatureHeader) return false;
-  const parts = String(signatureHeader).split(',').reduce((acc, part) => {
-    const [k, v] = part.split('=');
-    if (k && v) acc[k.trim()] = v.trim();
-    return acc;
-  }, {});
-  const ts = parts.t;
-  const sig = parts.v1;
-  if (!ts || !sig) return false;
-  const payload = `${ts}.${rawBody}`;
-  const expected = crypto.createHmac('sha256', secret).update(payload, 'utf8').digest('hex');
-  try {
-    return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'));
-  } catch {
-    return false;
+  let ts = null;
+  const sigs = [];
+  for (const part of String(signatureHeader).split(',')) {
+    const idx = part.indexOf('=');
+    if (idx === -1) continue;
+    const k = part.slice(0, idx).trim();
+    const v = part.slice(idx + 1).trim();
+    if (k === 't') ts = v;
+    else if (k === 'v1' && v) sigs.push(v); // Stripe sends multiple v1 during secret rotation
   }
+  if (!ts || !sigs.length) return false;
+
+  // Replay defense: a stale timestamp is rejected even with a valid HMAC.
+  const tsNum = Number(ts);
+  if (!Number.isFinite(tsNum) || Math.abs(nowSec - tsNum) > STRIPE_SIG_TOLERANCE_SEC) return false;
+
+  const expected = crypto.createHmac('sha256', secret).update(`${ts}.${rawBody}`, 'utf8').digest('hex');
+  const expectedBuf = Buffer.from(expected, 'hex');
+  // Accept if ANY provided v1 matches — matches Stripe's verifier and survives
+  // signing-secret rotation (when both old and new signatures are sent).
+  for (const sig of sigs) {
+    try {
+      const sigBuf = Buffer.from(sig, 'hex');
+      if (sigBuf.length === expectedBuf.length && crypto.timingSafeEqual(sigBuf, expectedBuf)) return true;
+    } catch { /* try next signature */ }
+  }
+  return false;
 }
 
 /**
@@ -174,44 +194,63 @@ async function handleGuildBillingWebhook(rawBody, signatureHeader) {
 
       if (subId) {
         const sub = await stripeRequest('GET', `/subscriptions/${encodeURIComponent(subId)}`);
-        const priceId = sub?.items?.data?.[0]?.price?.id;
+        const item = sub?.items?.data?.[0];
+        const priceId = item?.price?.id;
+        const plan = planForPrice(priceId);
         patch.status = mapStatus(sub?.status);
         patch.price_id = priceId || undefined;
-        patch.plan = planForPrice(priceId) || undefined;
-        patch.current_period_end = unixToIso(sub?.current_period_end);
+        patch.plan = plan || undefined;
+        // current_period_end moved to the subscription item in newer Stripe API
+        // versions; fall back to the top-level field for older ones.
+        patch.current_period_end = unixToIso(item?.current_period_end ?? sub?.current_period_end);
+        if (!plan) {
+          console.error(`[guild-billing] guild ${guildId}: active subscription ${subId} maps to no known plan (price ${priceId}). Check STRIPE_PRICE_PRO / STRIPE_PRICE_ULTRA.`);
+        }
       }
 
-      await guildPlans.setGuildPlanFromStripe(patch);
+      const stored = await guildPlans.setGuildPlanFromStripe(patch);
+      if (stored === null && guildPlans.dbConfigured()) return { ok: false, error: 'persist_failed' };
       return { ok: true, handled: type };
     }
 
     if (type === 'customer.subscription.updated') {
-      const guildId = obj.metadata?.guild_id;
+      // Resolve the guild by metadata, or fall back to the indexed subscription id.
+      let guildId = obj.metadata?.guild_id;
+      if (!guildId) guildId = await guildPlans.findGuildBySubscription(obj.id);
       if (!guildId) return { ok: true, ignored: type };
 
-      const priceId = obj.items?.data?.[0]?.price?.id;
-      await guildPlans.setGuildPlanFromStripe({
+      const item = obj.items?.data?.[0];
+      const priceId = item?.price?.id;
+      const plan = planForPrice(priceId);
+      const patch = {
         guild_id: String(guildId),
         status: mapStatus(obj.status),
-        plan: planForPrice(priceId) || undefined,
         price_id: priceId || undefined,
         stripe_customer_id: obj.customer || undefined,
         stripe_subscription_id: obj.id || undefined,
-        current_period_end: unixToIso(obj.current_period_end),
-      });
+        current_period_end: unixToIso(item?.current_period_end ?? obj.current_period_end),
+      };
+      // A known-but-non-premium price should actively demote (not leave a stale
+      // premium tier); an unknown price is logged and left untouched.
+      if (plan) patch.plan = plan;
+      else if (priceId) console.error(`[guild-billing] guild ${guildId}: subscription ${obj.id} updated to unrecognized price ${priceId}; plan left unchanged.`);
+      const stored = await guildPlans.setGuildPlanFromStripe(patch);
+      if (stored === null && guildPlans.dbConfigured()) return { ok: false, error: 'persist_failed' };
       return { ok: true, handled: type };
     }
 
     if (type === 'customer.subscription.deleted') {
-      const guildId = obj.metadata?.guild_id;
+      let guildId = obj.metadata?.guild_id;
+      if (!guildId) guildId = await guildPlans.findGuildBySubscription(obj.id);
       if (!guildId) return { ok: true, ignored: type };
 
-      await guildPlans.setGuildPlanFromStripe({
+      const stored = await guildPlans.setGuildPlanFromStripe({
         guild_id: String(guildId),
         plan: 'free',
         status: 'canceled',
         stripe_subscription_id: obj.id || undefined,
       });
+      if (stored === null && guildPlans.dbConfigured()) return { ok: false, error: 'persist_failed' };
       return { ok: true, handled: type };
     }
 
