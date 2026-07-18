@@ -124,7 +124,7 @@ ${agentList || '- No agents registered yet'}
 ACTIVE TASKS:
 ${taskList}
 
-COMMANDS (respond with JSON array, 1-5 commands):
+COMMANDS (respond with JSON array, 1-3 commands). Each item MUST use "action" (not "name"):
 - {"action": "speakTo", "agentId": "speaker", "params": {"target": "listener", "text": "msg"}}
 - {"action": "speak", "agentId": "name", "params": {"text": "msg"}}
 - {"action": "useComputer", "agentId": "name", "params": {"deskId": null}}
@@ -174,16 +174,14 @@ NPC CONVERSATIONS & MEMORY:
 
 YOUR JOB — create a LIVING office:
 1. JSON array ONLY. No analysis, preamble, or chain-of-thought — output starts with '[' and ends with ']'.
-2. CONVERSATIONS: Have NPCs talk TO each other using speakTo. One asks, another responds. Make it feel real — "Hey Alex, how's the API?" / "Almost done, testing now."
-3. WORK CYCLES: NPCs should sit at desks (useComputer), work for a while, then stand up (standUp) to talk to someone, get coffee (goToBreakroom), or check the bookshelf.
-4. ABBY IS THE CTO: She should walk to people, check on progress, delegate, praise good work, and occasionally report to the CEO. She manages the team actively. She calls team meetings and 1-on-1s in the conference room.
-5. NATURAL FLOW: Not everyone works at once. Someone codes while others chat. Someone takes a break while others are deep in work. Vary the rhythm.
-6. PERSONALITY: Each NPC has a unique personality from their SOUL.md file. Alex is fast and confident. Bob is thoughtful. Jenny is detail-oriented. Dan is quiet. Lucy is warm. Marcus is organized. Sarah is strategic. Edward is methodical. Josh is creative. Molly is meticulous. Oscar is calm. Pier is focused. Rob is visual. Roki is eager. Bouncer is stoic. Grok is helpful, truthful, witty, and proactive at spotting and fixing problems across the team.
-7. USE NAMES: speakTo uses first names: "Alex", "Bob", "Jenny", "Dan", "Lucy", "Abby", "Marcus", "Sarah", "Edward", "Josh", "Molly", "Oscar", "Pier", "Rob", "Roki", "Bouncer", "Grok".
-8. CONTEXT AWARE: If someone is "sitting", don't walkTo them — they're working. Use standUp first if you need them to move. If someone is in the breakroom, maybe have someone join them for a chat.
-9. VARY ACTIONS: Mix conversations, work sessions, breaks, and desk check-ins. Meetings are rare — only when a leader has a concrete agenda; prefer speakTo at desks over callMeeting.
-10. When the CEO speaks, Abby should respond and take action based on what was said.
-11. MEETINGS FLOW: Announce meeting → attendees join → discussion (speakTo exchanges while seated) → wrap up → everyone stands and returns to work.`;
+2. Keep it SHORT: 1-3 commands max. speak/speakTo text under 80 characters.
+3. CONVERSATIONS: Have NPCs talk TO each other using speakTo. One asks, another responds.
+4. WORK CYCLES: sit (useComputer), standUp, goToBreakroom, walkTo — mix work and motion.
+5. ABBY IS THE CTO: check on progress, delegate, occasionally reportToCEO. Prefer desk speakTo over callMeeting.
+6. PERSONALITY: Use first names. Vary who acts — not everyone every cycle.
+7. CONTEXT AWARE: If someone is sitting, standUp before walkTo.
+8. When the CEO speaks, Abby should respond and take action.
+9. MEETINGS are rare — only with a concrete agenda; otherwise speakTo at desks.`;
 
   }
 
@@ -438,8 +436,18 @@ YOUR JOB — create a LIVING office:
       const response = await this._callLmStudio(messagesForCall);
       if (response) {
         this._consecutiveErrors = 0;
+        const looksTruncated = /[\[{]\s*$/.test(String(response).trim())
+          || (String(response).includes('[') && !String(response).trim().endsWith(']'));
         this.conversationHistory.push({ role: 'user', content: userMessage });
-        this.conversationHistory.push({ role: 'assistant', content: response });
+        // Don't poison history with truncated JSON — next think will just get worse.
+        if (!looksTruncated) {
+          this.conversationHistory.push({ role: 'assistant', content: response });
+        } else {
+          this.conversationHistory.push({
+            role: 'assistant',
+            content: '[{"action":"emote","agentId":"Abby","params":{"type":"!"}}]',
+          });
+        }
         if (this.conversationHistory.length > this.maxHistoryLength) {
           this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength);
         }
@@ -501,6 +509,11 @@ YOUR JOB — create a LIVING office:
     } catch (_) {}
   }
 
+  _cofounderMaxTokens() {
+    const n = Number(process.env.DENIZEN_COFOUNDER_MAX_TOKENS);
+    return Number.isFinite(n) && n >= 256 ? Math.min(n, 4096) : 2048;
+  }
+
   /**
    * Call LM Studio local API (OpenAI-compatible)
    * Prefers brains queue → harness.complete() so director shares tiers/sampling
@@ -511,6 +524,7 @@ YOUR JOB — create a LIVING office:
     const history = promptBudget?.enforceAlternation
       ? promptBudget.enforceAlternation(messages)
       : messages;
+    const maxTokens = this._cofounderMaxTokens();
 
     // Route through NpcBrainManager's queue so all LM Studio requests are sequential.
     // When harness is bound on brains, _dispatchOneFromQueue uses complete().
@@ -530,8 +544,8 @@ YOUR JOB — create a LIVING office:
         _preferHeavy: true,
       };
       return this.npcBrains._callLocal(config, this._getSystemPrompt(), history, {
-        maxTokens: 1024,
-        sliceLen: 4000,
+        maxTokens,
+        sliceLen: 16000,
         npc: 'Abby',
         kind: 'cofounder',
         preferHeavy: true,
@@ -553,7 +567,7 @@ YOUR JOB — create a LIVING office:
         npc: 'Abby',
         systemPrompt: this._getSystemPrompt(),
         messages: history,
-        max_tokens: 1024,
+        max_tokens: maxTokens,
         model: this.model,
       }).then((r) => {
         const text = String(r?.text || '');
@@ -571,7 +585,7 @@ YOUR JOB — create a LIVING office:
 
       const body = JSON.stringify({
         model: this.model,
-        max_tokens: 1024,
+        max_tokens: maxTokens,
         temperature: 0.7,
         messages: oaiMessages,
       });
@@ -604,7 +618,8 @@ YOUR JOB — create a LIVING office:
       });
 
       req.on('error', (err) => reject(new Error(`LM Studio unreachable: ${err.message}`)));
-      req.setTimeout(60000, () => req.destroy(new Error('LM Studio timeout (60s)')));
+      const timeoutMs = Math.max(60000, Number(process.env.DENIZEN_LM_THINK_TIMEOUT_MS) || 180000);
+      req.setTimeout(timeoutMs, () => req.destroy(new Error(`LM Studio timeout (${Math.round(timeoutMs / 1000)}s)`)));
       req.write(body);
       req.end();
     });
@@ -652,6 +667,20 @@ YOUR JOB — create a LIVING office:
     return objects;
   }
 
+  _normalizeCommand(cmd) {
+    if (!cmd || typeof cmd !== 'object') return null;
+    const action = cmd.action || cmd.Action || cmd.name || cmd.command || null;
+    if (!action) return null;
+    const agentId = cmd.agentId || cmd.agent || cmd.npc || cmd.npcName || 'Abby';
+    let params = cmd.params || cmd.parameters || cmd.args || {};
+    if (typeof params !== 'object' || params == null) params = {};
+    // Flatten common top-level fields into params when missing
+    for (const k of ['text', 'target', 'x', 'y', 'room', 'deskId', 'attendees', 'type']) {
+      if (cmd[k] != null && params[k] == null) params[k] = cmd[k];
+    }
+    return { action: String(action), agentId: String(agentId), params };
+  }
+
   /**
    * Parse LM Studio's response and dispatch commands to game clients
    */
@@ -684,21 +713,37 @@ YOUR JOB — create a LIVING office:
         }
       }
 
+      // Unwrap { commands: [...] } / { actions: [...] } / single command object
+      if (commands && !Array.isArray(commands) && typeof commands === 'object') {
+        if (Array.isArray(commands.commands) || Array.isArray(commands.actions) || Array.isArray(commands.data)) {
+          commands = commands.commands || commands.actions || commands.data;
+        } else if (commands.action || commands.Action || commands.name || commands.command) {
+          commands = [commands];
+        } else {
+          commands = null;
+        }
+      }
+
       if (!Array.isArray(commands) || commands.length === 0) {
         console.warn('[CofounderAgent] No valid commands found in response');
         return;
       }
+
+      commands = commands.map((c) => this._normalizeCommand(c)).filter(Boolean);
 
       // Meeting cooldown — prevent calling the same meeting repeatedly.
       // The game takes ~30s to run a meeting and return people to desks;
       // calling again in the same window just re-teleports everyone.
       const MEETING_COOLDOWN_MS = promptTuning?.cofounderMeetingCooldownMs ?? 180000;
       const now = Date.now();
+      let droppedNoAction = 0;
+      let droppedMeeting = 0;
       const filteredCommands = commands.filter(cmd => {
-        if (!cmd.action) return false;
+        if (!cmd.action) { droppedNoAction += 1; return false; }
         if (cmd.action === 'callMeeting') {
           const lastAt = this._lastMeetingAt || 0;
           if (now - lastAt < MEETING_COOLDOWN_MS) {
+            droppedMeeting += 1;
             console.log(`[CofounderAgent] callMeeting suppressed — cooldown active (${Math.round((MEETING_COOLDOWN_MS - (now - lastAt)) / 1000)}s left)`);
             return false;
           }
@@ -718,7 +763,10 @@ YOUR JOB — create a LIVING office:
         this._broadcast(message);
       });
 
-      console.log(`[CofounderAgent] Dispatched ${filteredCommands.length} commands`);
+      console.log(`[CofounderAgent] Dispatched ${filteredCommands.length} commands`
+        + (droppedNoAction || droppedMeeting
+          ? ` (dropped noAction=${droppedNoAction} meetingCooldown=${droppedMeeting})`
+          : ''));
     } catch (err) {
       console.warn('[CofounderAgent] Failed to parse response:', err.message);
       // If parsing fails, try a simpler speak command

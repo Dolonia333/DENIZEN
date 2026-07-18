@@ -137,15 +137,16 @@ class SecurityMonitorServer {
 
   /** Check an HTTP request for suspicious patterns (call from server.js) */
   checkHttpRequest(req) {
-    const { isLocalOrLoopback } = require('./src/security-ip');
+    const { isLocalOrLoopback, isPrivateLan } = require('./src/security-ip');
     const ip = req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
     const url = req.url || '';
     const method = req.method || 'GET';
     const ua = req.headers?.['user-agent'] || '';
     const body = req._body || ''; // if body was captured
 
-    // Rate limiting — skip loopback (::1) so local dev/game traffic doesn't spawn robbers
-    if (!isLocalOrLoopback(ip)) {
+    // Rate limiting — skip loopback + private LAN so local/office traffic
+    // (WS reconnect storms, health polls) does not trip brute_force.
+    if (!isLocalOrLoopback(ip) && !isPrivateLan(ip)) {
       this._trackRequest(ip);
       const reqCount = this._getRequestCount(ip, 60000);
       if (reqCount > this.config.apiRateLimit) {

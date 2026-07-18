@@ -29,8 +29,17 @@ describe('security-ip', () => {
     assert.equal(securityIp.isInternalThreatSource('192.168.1.232', { force: true }), false);
   });
 
+  it('treats RFC1918 LAN as internal without DENIZEN_HOST_IP', () => {
+    delete process.env.DENIZEN_HOST_IP;
+    assert.equal(securityIp.isPrivateLan('192.168.1.232'), true);
+    assert.equal(securityIp.isInternalThreatSource('192.168.1.232'), true);
+    assert.equal(securityIp.isInternalThreatSource('10.0.0.5'), true);
+    assert.equal(securityIp.isInternalThreatSource('172.16.4.1'), true);
+  });
+
   it('allows external IPs', () => {
     process.env.DENIZEN_HOST_IP = '192.168.1.232';
     assert.equal(securityIp.isInternalThreatSource('203.0.113.50'), false);
+    assert.equal(securityIp.isInternalThreatSource('8.8.8.8'), false);
   });
 });

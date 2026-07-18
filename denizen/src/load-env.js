@@ -14,7 +14,18 @@ const ENV_PATH = path.join(ROOT, '.env');
 const ENV_PRODUCTION_PATH = path.join(ROOT, '.env.production');
 let loaded = false;
 
-function parseAndApply(filePath) {
+/** Keys that .env / .env.production may override even if Docker already set them. */
+const FORCE_FROM_FILE = new Set([
+  'DENIZEN_MAX_WS_CLIENTS',
+  'DENIZEN_COFOUNDER_MAX_TOKENS',
+  'DENIZEN_LM_THINK_TIMEOUT_MS',
+  'LM_STUDIO_MODEL',
+  'LM_STUDIO_HEAVY_MODEL',
+  'LM_STUDIO_FAST_MODEL',
+  'DISCORD_OAUTH_REDIRECT_URI',
+]);
+
+function parseAndApply(filePath, { force = false } = {}) {
   let text;
   try {
     text = fs.readFileSync(filePath, 'utf-8');
@@ -30,8 +41,9 @@ function parseAndApply(filePath) {
     const key = trimmed.slice(0, eq).trim();
     if (!key) continue;
     const cur = process.env[key];
-    // Skip only when already set to a non-empty value.
-    if (cur !== undefined && String(cur).trim() !== '') continue;
+    const mayForce = force && FORCE_FROM_FILE.has(key);
+    // Skip only when already set to a non-empty value (unless forced).
+    if (!mayForce && cur !== undefined && String(cur).trim() !== '') continue;
     let val = trimmed.slice(eq + 1).trim();
     if (
       (val.startsWith('"') && val.endsWith('"'))
@@ -48,11 +60,11 @@ function parseAndApply(filePath) {
 function loadEnv() {
   if (loaded) return;
   loaded = true;
-  // Base local defaults, then production pins (production fills empties).
+  // Base local defaults, then production pins (production can force selected keys).
   parseAndApply(ENV_PATH);
-  parseAndApply(ENV_PRODUCTION_PATH);
+  parseAndApply(ENV_PRODUCTION_PATH, { force: true });
   // Optional explicit override file for NAS one-offs
-  parseAndApply(path.join(ROOT, '.env.local'));
+  parseAndApply(path.join(ROOT, '.env.local'), { force: true });
 }
 
 loadEnv();
