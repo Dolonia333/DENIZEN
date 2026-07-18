@@ -23,6 +23,49 @@ const { createHangoutModule } = require('./hangout');
 const { createDataFarm } = require('./data-farm');
 const { createChatControls } = require('../chat');
 
+// Entitlement source of truth (shared with command gating). Best-effort: if it
+// can't load, premium hooks run ungated rather than the bot failing to boot.
+const guildPlans = (() => {
+  try { return require('../../../src/denizen-guild-plans.js'); }
+  catch (_) { return null; }
+})();
+
+/** Pull a guild id out of whatever event args a hook receives. */
+function extractGuildId(args) {
+  for (const a of args) {
+    if (!a || typeof a !== 'object') continue;
+    if (typeof a.guildId === 'string' && a.guildId) return a.guildId;       // interaction, audit evt
+    if (a.guild && a.guild.id) return a.guild.id;                           // member, message, state
+    if (a.message && a.message.guild && a.message.guild.id) return a.message.guild.id; // reaction
+  }
+  return null;
+}
+
+/**
+ * Wrap a PREMIUM module's event hook so it only runs for guilds with an active
+ * plan. Without this, passive protection (antinuke audit sweeps, antiraid join
+ * checks, community listeners) ran for every guild regardless of payment —
+ * command gating alone left the paid value fully available for free.
+ *
+ * Free modules, an unrecognized module, or a missing entitlement module pass
+ * through untouched. No guild context (DM) → runs. Fails closed (skips) on an
+ * entitlement error, consistent with command-registry gating.
+ */
+function gatedHook(moduleName, fn) {
+  if (typeof fn !== 'function') return fn;
+  if (!guildPlans || !guildPlans.isPremiumModule(moduleName)) return fn;
+  return async (...args) => {
+    const gid = extractGuildId(args);
+    if (gid) {
+      let allowed = false;
+      try { allowed = await guildPlans.isModuleAllowed(gid, moduleName); }
+      catch (_) { allowed = false; }
+      if (!allowed) return undefined; // premium inactive for this guild → skip
+    }
+    return fn(...args);
+  };
+}
+
 function loadModules(deps) {
   const hooks = {
     onAudit: [],
@@ -40,11 +83,11 @@ function loadModules(deps) {
 
   const antinuke = createAntinuke(deps);
   antinuke.register(deps.registry);
-  hooks.onAudit.push(antinuke.onAudit);
+  hooks.onAudit.push(gatedHook('security', antinuke.onAudit));
 
   const antiraid = createAntiraid(deps);
   antiraid.register(deps.registry);
-  hooks.onMemberAdd.push(antiraid.onMemberAdd);
+  hooks.onMemberAdd.push(gatedHook('security', antiraid.onMemberAdd));
 
   const fake = createFakePerms(deps);
   fake.register(deps.registry);
@@ -64,12 +107,12 @@ function loadModules(deps) {
 
   const community = createCommunity(deps);
   community.register(deps.registry);
-  hooks.onMemberAdd.push(community.onMemberAdd);
-  hooks.onMemberRemove.push(community.onMemberRemove);
-  hooks.onMessage.push(community.onMessage);
-  hooks.onReactionAdd.push(community.onReactionAdd);
-  hooks.onGuildMemberUpdate.push(community.onGuildMemberUpdate);
-  hooks.onInteraction.push(community.onInteraction);
+  hooks.onMemberAdd.push(gatedHook('community', community.onMemberAdd));
+  hooks.onMemberRemove.push(gatedHook('community', community.onMemberRemove));
+  hooks.onMessage.push(gatedHook('community', community.onMessage));
+  hooks.onReactionAdd.push(gatedHook('community', community.onReactionAdd));
+  hooks.onGuildMemberUpdate.push(gatedHook('community', community.onGuildMemberUpdate));
+  hooks.onInteraction.push(gatedHook('community', community.onInteraction));
 
   // Logging after community so ,log embeds/toggles win as the logging module
   const logging = createLogging(deps);
@@ -110,7 +153,7 @@ function loadModules(deps) {
 
   const avatar = createAvatarModule(deps);
   avatar.register(deps.registry);
-  hooks.onInteraction.push(avatar.onInteraction);
+  hooks.onInteraction.push(gatedHook('avatar', avatar.onInteraction));
 
   const hangout = createHangoutModule(deps);
   hangout.register(deps.registry);
@@ -327,4 +370,4 @@ function loadModules(deps) {
   };
 }
 
-module.exports = { loadModules };
+module.exports = { loadModules, _gatedHook: gatedHook, _extractGuildId: extractGuildId };

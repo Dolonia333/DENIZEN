@@ -54,6 +54,17 @@ One row per guild. Migration: `supabase/migrations/20260718000001_discord_guild_
 
 ## 3. How gating works
 
+Premium is enforced in **two** places, both off `guildPlans.isModuleAllowed`:
+
+1. **Command dispatch** (`command-registry.js`) — a premium command in an
+   unentitled guild is refused with an upgrade prompt.
+2. **Event hooks** (`load-modules.js` `gatedHook`) — premium modules' *passive*
+   listeners (antinuke audit sweeps, antiraid join checks, community
+   message/reaction/member listeners, avatar component interactions) are
+   wrapped so they only run for an entitled guild. Without this, the paid
+   protection ran for everyone regardless of payment. Free-module hooks are
+   never wrapped (no per-event DB cost); DMs (no guild) always run.
+
 At command dispatch the bot asks the entitlement module:
 
 ```js
