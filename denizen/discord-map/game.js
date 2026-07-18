@@ -753,7 +753,7 @@
     'foodKiwi', 'foodLemon', 'foodOrange', 'foodPear', 'foodRaspberry',
   ];
   // Readable at room scale; still smaller than furniture
-  const FOOD_SCALE = 1.35;
+  const FOOD_SCALE = 1.0; // native pixel size — 1.35 read as oversized props
 
   /** Map 0..1 need fill → progress bar key (1 empty-ish … 5 full). */
   function progressBarKey(color, amount01) {
@@ -3404,7 +3404,7 @@
       const ax = actor.sprite.x;
       const ay = actor.floorY ?? actor.sprite.y;
       for (const f of this.foods || []) {
-        if (!f.sprite?.active) continue;
+        if (!f.sprite?.active || f.eaten || f.eating) continue;
         const sameRoom = f.floorId && actor.roomKey && f.floorId === actor.roomKey ? 0 : 90;
         const d = Math.abs(f.x - ax) + Math.abs((f.floorY || ay) - ay) * 0.4 + sameRoom;
         if (d < bestD) { bestD = d; best = f; }
@@ -3415,6 +3415,49 @@
     /**
      * Walk to a real Pixel Platter plate and eat it (eat pose + food bob).
      */
+    /**
+     * Bite sequence on a food sprite: shrink in steps, vanish on the last
+     * bite, respawn ~45-65s later. Returns the meal duration in ms. A food
+     * already being eaten just returns the duration (no double-shrink).
+     */
+    eatFoodBites(food, bites = 3, biteMs = 650) {
+      const total = bites * biteMs;
+      if (!food?.sprite?.active || food.eating || food.eaten) return total;
+      food.eating = true;
+      const baseY = food.baseY != null ? food.baseY : food.sprite.y;
+      const baseSc = food.baseScale != null ? food.baseScale : food.sprite.scaleX;
+      try { this.tweens.killTweensOf(food.sprite); } catch (_) { /* ignore */ }
+      food.sprite.y = baseY;
+      food.sprite.setScale(baseSc);
+      for (let b = 1; b <= bites; b += 1) {
+        this.time.delayedCall(biteMs * b, () => {
+          if (!food.sprite?.active) return;
+          if (b < bites) {
+            const s = baseSc * (1 - (b / bites) * 0.6);
+            food.sprite.setScale(s);
+            this.tweens.add({
+              targets: food.sprite,
+              scaleX: s * 0.82,
+              duration: 90,
+              yoyo: true,
+              ease: 'Sine.easeInOut',
+            });
+          } else {
+            food.sprite.setVisible(false);
+            food.eaten = true;
+            this.time.delayedCall(45000 + Math.random() * 20000, () => {
+              if (!food.sprite?.active) return;
+              food.sprite.setVisible(true).setScale(baseSc);
+              food.sprite.y = baseY;
+              food.eaten = false;
+              food.eating = false;
+            });
+          }
+        });
+      }
+      return total;
+    }
+
     actorEatFood(actor, food, onDone) {
       if (!actor?.sprite?.active || !food) {
         if (typeof onDone === 'function') onDone();
@@ -3423,7 +3466,9 @@
       const eatHere = () => {
         if (!actor?.sprite?.active) return;
         if (!actor.seated) {
-          actor.sprite.x = food.x;
+          // Stand BESIDE the plate (not on it) and face it.
+          const side = actor.sprite.x <= food.x ? -1 : 1;
+          actor.sprite.x = food.x + side * 13;
           const fl = (food.floorId && this.getFloor(food.floorId))
             || this.findFloorAt(food.x, actor.floorY ?? actor.sprite.y);
           if (fl) {
@@ -3432,11 +3477,16 @@
             actor.roomKey = fl.roomKey || fl.id || actor.roomKey;
           }
         }
+        actor.sprite.setFlipX(food.x < actor.sprite.x);
         const pose = actor.seated ? 'eatSit' : 'eat';
         actor.state = 'eat';
         this.setActorBounce(actor, false);
         try { this.showEmote(actor.sprite, 'eat'); } catch (_) { /* ignore */ }
+        // The food shrinks bite by bite and vanishes; the chew loop holds
+        // for the whole meal instead of one 2-frame nibble.
+        const mealMs = this.eatFoodBites(food);
         this.playSheetPose(actor.sprite, actor.sheet, pose, {
+          holdMs: mealMs,
           onDone: () => {
             if (!actor.sprite?.active) return;
             if (actor.seated) {
@@ -3453,30 +3503,7 @@
             if (typeof onDone === 'function') onDone();
           },
         });
-        if (food.sprite?.active) {
-          const baseY = food.baseY != null ? food.baseY : food.sprite.y;
-          const baseSc = food.baseScale != null ? food.baseScale : food.sprite.scaleX;
-          try { this.tweens.killTweensOf(food.sprite); } catch (_) { /* ignore */ }
-          food.sprite.y = baseY;
-          food.sprite.setScale(baseSc);
-          this.tweens.add({
-            targets: food.sprite,
-            y: baseY - 7,
-            scaleX: baseSc * 1.15,
-            scaleY: baseSc * 1.15,
-            duration: 160,
-            yoyo: true,
-            repeat: 5,
-            ease: 'Sine.easeInOut',
-            onComplete: () => {
-              if (food.sprite?.active) {
-                food.sprite.y = baseY;
-                food.sprite.setScale(baseSc);
-              }
-            },
-          });
-        }
-        actor.busyUntil = this.time.now + poseDurationMs(pose) + 400;
+        actor.busyUntil = this.time.now + mealMs + 400;
       };
 
       const dist = Math.abs(actor.sprite.x - food.x);
@@ -6276,6 +6303,7 @@
       let best = null;
       let bestD = 999;
       for (const f of this.foods || []) {
+        if (f.eaten) continue;
         if (f.floorId && f.floorId !== cur) continue;
         if (!f.floorId && floor && Math.abs((f.floorY || 0) - floor.floorY) > 24) continue;
         const dist = Math.abs(px - f.x);
@@ -6370,14 +6398,12 @@
     tryEat(food) {
       if (!food || !this.player || !this.playerSheet) return;
       if (this.time.now < (this._poseHoldUntil || 0)) return;
+      if (food.eaten) return;
       const pose = this.seated ? 'eatSit' : 'eat';
+      // Face the plate and chew while it shrinks bite by bite.
+      this.player.setFlipX(food.x < this.player.x);
+      this.eatFoodBites(food, 3, 600);
       this.playerPose(pose);
-      if (food.sprite?.active) {
-        this.tweens.add({
-          targets: food.sprite, y: food.sprite.y - 4,
-          yoyo: true, duration: 180, repeat: 4,
-        });
-      }
       this.setEnterHint(IS_TOUCH ? 'nom nom…' : 'eating…');
     }
 
