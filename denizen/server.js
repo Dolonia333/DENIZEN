@@ -7220,6 +7220,56 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
+  // --- Discord bot premium subscriptions (guild-scoped plans) ---
+  if (urlPath === '/api/discord/billing/checkout' && req.method === 'POST') {
+    (async () => {
+      try {
+        const payload = await _readJsonBody(req, 8 * 1024);
+        const billing = require('./src/denizen-guild-billing');
+        const result = await billing.createGuildSubscriptionCheckout({
+          guildId: String(payload.guildId || payload.guild_id || '').trim(),
+          plan: String(payload.plan || 'pro').trim().toLowerCase(),
+          discordUserId: payload.discordUserId || payload.discord_user_id || null,
+        });
+        res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    })();
+    return;
+  }
+
+  if (urlPath === '/api/discord/billing/webhook' && req.method === 'POST') {
+    (async () => {
+      try {
+        // Stripe HMAC needs the exact raw bytes — do NOT parse before verifying.
+        const rawBody = await new Promise((resolve, reject) => {
+          const chunks = [];
+          let size = 0;
+          req.on('data', (c) => {
+            size += c.length;
+            if (size > 512 * 1024) { reject(new Error('body_too_large')); req.destroy(); return; }
+            chunks.push(c);
+          });
+          req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+          req.on('error', reject);
+        });
+        const billing = require('./src/denizen-guild-billing');
+        const sig = req.headers['stripe-signature'] || '';
+        const result = await billing.handleGuildBillingWebhook(rawBody, sig);
+        const status = result.error === 'bad_signature' ? 400 : 200;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      }
+    })();
+    return;
+  }
+
   // --- Assistant profile: persistent user/project memory + autonomy policy ---
   if (urlPath === '/api/assistant-profile' && req.method === 'GET') {
     res.writeHead(200, { 'Content-Type': 'application/json' });

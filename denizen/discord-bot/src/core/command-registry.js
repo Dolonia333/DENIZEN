@@ -4,6 +4,12 @@
  * Slash + prefix (,) command registry.
  */
 
+let guildPlans = null;
+try {
+  // eslint-disable-next-line global-require
+  guildPlans = require('../../../src/denizen-guild-plans.js');
+} catch (_) { guildPlans = null; }
+
 class CommandRegistry {
   constructor(opts = {}) {
     this.prefix = opts.prefix || ',';
@@ -163,6 +169,17 @@ class CommandRegistry {
       await ctx.reply(`Slow down — try again in ${Math.ceil(waitMs / 1000)}s.`);
       return true;
     }
+    if (guildPlans && ctx.guild?.id && guildPlans.isPremiumModule(cmd.module)) {
+      const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => true);
+      if (!allowed) {
+        const upgrade = process.env.DISCORD_UPGRADE_URL || '';
+        await ctx.reply(
+          `🔒 \`${cmd.module}\` commands need a Denizen premium plan for this server.` +
+          (upgrade ? ` Upgrade: ${upgrade}` : ''),
+        );
+        return true;
+      }
+    }
     await cmd.run(ctx);
     return true;
   }
@@ -214,6 +231,17 @@ class CommandRegistry {
     if (waitMs > 0) {
       await ctx.reply(`Slow down — try again in ${Math.ceil(waitMs / 1000)}s.`);
       return true;
+    }
+    if (guildPlans && ctx.guild?.id && guildPlans.isPremiumModule(cmd.module)) {
+      const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => true);
+      if (!allowed) {
+        const upgrade = process.env.DISCORD_UPGRADE_URL || '';
+        await ctx.reply(
+          `🔒 \`${cmd.module}\` commands need a Denizen premium plan for this server.` +
+          (upgrade ? ` Upgrade: ${upgrade}` : ''),
+        );
+        return true;
+      }
     }
     await cmd.run(ctx);
     return true;
