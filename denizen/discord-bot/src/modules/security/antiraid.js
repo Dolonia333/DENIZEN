@@ -43,9 +43,12 @@ function createAntiraid(deps) {
   }
 
   async function applyAction(member, action, reason) {
-    if (action === 'ban') await member.ban({ reason }).catch(() => {});
-    else if (action === 'timeout') await member.timeout(60 * 60 * 1000, reason).catch(() => {});
-    else await member.kick(reason).catch(() => {});
+    const fail = (err) => console.error(
+      `[antiraid] ${action} failed for ${member?.user?.tag || member?.id} in ${member?.guild?.id}: ${err?.message || err}`,
+    );
+    if (action === 'ban') await member.ban({ reason }).catch(fail);
+    else if (action === 'timeout') await member.timeout(60 * 60 * 1000, reason).catch(fail);
+    else await member.kick(reason).catch(fail);
   }
 
   async function onMemberAdd(member) {
@@ -201,7 +204,8 @@ function createAntiraid(deps) {
           .slice(0, amount);
         let n = 0;
         for (const m of sorted) {
-          await m.ban({ reason: `recentban by ${ctx.user.tag}` }).then(() => { n += 1; }).catch(() => {});
+          await m.ban({ reason: `recentban by ${ctx.user.tag}` }).then(() => { n += 1; })
+            .catch((err) => console.error(`[antiraid] recentban failed for ${m.user?.tag}: ${err?.message || err}`));
         }
         return ctx.reply(`Banned ${n}/${sorted.length} recent joins.`);
       },
@@ -231,7 +235,9 @@ function createAntiraid(deps) {
             if (action === 'kick') await m.kick(`raid cleanup by ${ctx.user.tag}`);
             else await m.ban({ reason: `raid cleanup by ${ctx.user.tag}` });
             n += 1;
-          } catch (_) {}
+          } catch (err) {
+            console.error(`[antiraid] raid-cleanup ${action} failed for ${m.user?.tag}: ${err?.message || err}`);
+          }
         }
         return ctx.reply(`${action}ned ${n}/${targets.length} joins in the last ${durRaw}.`);
       },

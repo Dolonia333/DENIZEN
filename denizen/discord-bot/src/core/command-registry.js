@@ -10,6 +10,27 @@ class CommandRegistry {
     /** @type {Map<string, object>} */
     this.commands = new Map();
     this._client = null;
+    /** @type {Map<string, number>} user+command → last-run ts (spam guard) */
+    this._cooldowns = new Map();
+  }
+
+  /**
+   * Per-user per-command cooldown (default 2s, override via def.cooldownMs).
+   * Returns remaining ms when throttled, 0 when clear.
+   */
+  checkCooldown(cmd, userId) {
+    const windowMs = Number(cmd.cooldownMs) > 0 ? Number(cmd.cooldownMs) : 2000;
+    const key = `${userId}:${cmd.name || 'cmd'}`;
+    const now = Date.now();
+    const last = this._cooldowns.get(key) || 0;
+    if (now - last < windowMs) return windowMs - (now - last);
+    this._cooldowns.set(key, now);
+    if (this._cooldowns.size > 5000) {
+      for (const [k, t] of this._cooldowns) {
+        if (now - t > 60_000) this._cooldowns.delete(k);
+      }
+    }
+    return 0;
   }
 
   /**
@@ -40,6 +61,8 @@ class CommandRegistry {
       fakePerm: def.fakePerm || null,
       ownerOnly: !!def.ownerOnly,
       run: def.run,
+      cooldownMs: def.cooldownMs,
+      name: def.name,
     };
     this.commands.set(def.name.toLowerCase(), entry);
     for (const a of entry.aliases) {
@@ -135,6 +158,11 @@ class CommandRegistry {
         return interaction.reply(payload);
       },
     };
+    const waitMs = this.checkCooldown(cmd, ctx.user?.id || 'anon');
+    if (waitMs > 0) {
+      await ctx.reply(`Slow down — try again in ${Math.ceil(waitMs / 1000)}s.`);
+      return true;
+    }
     await cmd.run(ctx);
     return true;
   }
@@ -182,6 +210,11 @@ class CommandRegistry {
       getBoolean: () => null,
       reply: async (content) => message.reply(typeof content === 'string' ? content : content),
     };
+    const waitMs = this.checkCooldown(cmd, ctx.user?.id || 'anon');
+    if (waitMs > 0) {
+      await ctx.reply(`Slow down — try again in ${Math.ceil(waitMs / 1000)}s.`);
+      return true;
+    }
     await cmd.run(ctx);
     return true;
   }

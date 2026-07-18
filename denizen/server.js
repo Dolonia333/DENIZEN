@@ -7122,7 +7122,8 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
 
   // --- Discord bot → office presence (VC join/leave/move) ---
   // Auth: DISCORD_BRIDGE_SECRET via x-denizen-secret (or body.secret).
-  // When secret unset, endpoint is open (local/dev only).
+  // Unset secret only stays open for loopback callers (the bot sidecar runs
+  // in the same container); remote posts without a configured secret are 401.
   if (urlPath === '/api/discord/presence' && req.method === 'POST') {
     (async () => {
       try {
@@ -7130,9 +7131,24 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         const expected = String(process.env.DISCORD_BRIDGE_SECRET || '').trim();
         if (expected) {
           const got = String(payload.secret || req.headers['x-denizen-secret'] || '');
-          if (got !== expected) {
+          const a = Buffer.from(got);
+          const b = Buffer.from(expected);
+          const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+          if (!ok) {
             res.writeHead(401, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'bad or missing secret' }));
+            return;
+          }
+        } else {
+          const remote = String(req.socket?.remoteAddress || '');
+          const isLoopback = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+          if (!isLoopback) {
+            if (!global.__bridgeOpenWarned) {
+              global.__bridgeOpenWarned = true;
+              console.warn('[discord-bridge] rejected remote POST /api/discord/presence — set DISCORD_BRIDGE_SECRET to allow non-local bridge callers');
+            }
+            res.writeHead(401, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'bridge secret not configured' }));
             return;
           }
         }

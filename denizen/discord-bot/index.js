@@ -34,6 +34,16 @@ const PRESENCE_PORT = Number(process.env.DISCORD_PRESENCE_PORT) || 5180;
 const SMOKE = process.argv.includes('--smoke');
 const DUMP = process.argv.includes('--dump');
 
+// Last-resort handlers: a stray rejection in one module must not take the
+// whole sidecar (and every guild's moderation) down silently. The parent
+// server restarts us on real exits; log loudly and stay up on soft faults.
+process.on('uncaughtException', (err) => {
+  console.error('[discord-bot] uncaughtException:', err?.stack || err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('[discord-bot] unhandledRejection:', err?.stack || err);
+});
+
 if (!TOKEN) {
   console.error('[discord-bot] DISCORD_BOT_TOKEN missing (set in denizen/.env)');
   process.exit(1);
