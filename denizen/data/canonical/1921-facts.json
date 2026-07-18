@@ -1,0 +1,47 @@
+{
+  "subject": "1921",
+  "source": "data/business-model.json + operator-confirmed SAM.gov fields",
+  "updated": "2026-06-24",
+  "entity": {
+    "legal_name": "1921 Holding Co., LLC",
+    "technology_dba": "Dolonia Data Tech Solutions",
+    "uei": "YMP7Z9T1WVX5",
+    "cage_code": "9T6Y5",
+    "location": "Oklahoma City, OK",
+    "hubzone": true
+  },
+  "certifications": ["WOSB", "MBE", "WBE", "SDB", "AABE"],
+  "leadership": {
+    "holding_ceo": "Angela Van Zandt",
+    "technology_ceo": "Zion Van Zandt",
+    "engineering_director": "Dr. Ed Van Zandt"
+  },
+  "strategic_posture": {
+    "status": "[IN-PROGRESS]",
+    "summary": "Federal/state prime pursuing joint modernization and cyber pursuits — not passive capital."
+  },
+  "active_pursuits": [
+    {
+      "id": "omes-ev00000919",
+      "name": "OMES EV00000919",
+      "status": "[IN-PROGRESS]",
+      "deadline": "2026-10-01",
+      "partner": "RM Cyber",
+      "provenance": "business-model.json active_opportunities"
+    }
+  ],
+  "joint_pursuit_areas": [
+    "Government modernization",
+    "Workforce technology (I.W.I.N.)",
+    "Rural innovation (SmartContainer — partnership-only)",
+    "Healthcare systems",
+    "Smart infrastructure",
+    "AI-enabled operations (DENIZEN + cyber posture)"
+  ],
+  "not_claiming": [
+    "NOT seeking passive capital",
+    "Teaming agreement with RM Cyber not yet executed — confirm before submission",
+    "Confirm SAM.gov registrations before any gov submission"
+  ],
+  "restraint_surface": "SmartContainer: no deployment until manufacturing and implementation partners secured."
+}

@@ -103,3 +103,51 @@ denizen/reports/
 
 # runtime chat uploads + telemetry state
 denizen/data/uploads/
+
+# ── Repo cleanup 2026-07-18: runtime state, logs, one-off tooling, dup tree ──
+
+# Big parallel working copy of the app (experimental landing-page tree, not the
+# deployed app — the NAS serves denizen/). Do not track.
+denizen-landing-page-interactive/
+
+# NPC/agent runtime telemetry + learning state — regenerated on the NAS each run.
+# (denizen/data/canonical/ stays TRACKED — it's real reference content.)
+denizen/data/autonomy-backlog.jsonl
+denizen/data/harness-learning.jsonl
+denizen/data/mentor-dialogue.jsonl
+denizen/data/mentor-lessons-applied.jsonl
+denizen/data/nas-friction.jsonl
+denizen/data/skill-metrics.jsonl
+denizen/data/grok-consult-queue.jsonl
+denizen/data/grok-mentor-bootstrap-answer.txt
+denizen/data/grok-telemetry-latest.json
+denizen/data/daily-plan.json
+denizen/data/friction-metrics.json
+denizen/data/npc-directives.json
+denizen/data/roki-paper-account.json
+denizen/data/telemetry-rebalance-standing.json
+denizen/data/fleet-telemetry/
+
+# One-off / throwaway infra scripts, deploy logs, and drafts
+infra/_*
+infra/hotfix-*.py
+infra/deploy-log*.txt
+infra/probe-*.py
+infra/connect-robinhood-local.py
+infra/patch-discord-bot-nas-env.py
+infra/reset-team-password-nas.py
+infra/.pr-body-*.md
+
+# Editor / tool local config
+.vscode/
+.grok/
+
+# Local screenshots / scratch images
+denizen-local-office.png
+
+# Accidental shell-redirect junk
+{r}
+{rt}
+{remote}
+{remote_tar}
+.claude/scheduled_tasks.lock
