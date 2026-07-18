@@ -4055,7 +4055,9 @@
       walkersEl?.remove();
     } else if (walkersEl && stage && 'IntersectionObserver' in window) {
       // On very small screens drop to a single walker
-      if (isNarrow()) {
+      let narrow = false;
+      try { narrow = window.matchMedia('(max-width: 640px)').matches; } catch (_) { /* older browsers */ }
+      if (narrow) {
         walkersEl.querySelectorAll('.walker-b, .walker-c').forEach((n) => n.remove());
       }
       const walkIo = new IntersectionObserver((entries) => {
