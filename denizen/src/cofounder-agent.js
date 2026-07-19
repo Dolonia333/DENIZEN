@@ -529,11 +529,10 @@ YOUR JOB — create a LIVING office:
     // Route through NpcBrainManager's queue so all LM Studio requests are sequential.
     // When harness is bound on brains, _dispatchOneFromQueue uses complete().
     if (this.npcBrains) {
-      // Director commands are structured JSON — main/heavy tier (not tiny FAST).
-      // On dual-load Gemma+Qwen, MAIN=HEAVY=Qwen; preferHeavy keeps quality.
+      // Director commands are structured JSON — main tier (not tiny FAST).
+      // Routed through main tier instead of heavy.
       const main = this.npcBrains.providers?.lmstudio;
-      const heavy = this.npcBrains.providers?.['lmstudio-heavy'] || main;
-      const picked = heavy || main;
+      const picked = main;
       const liveModel = picked?.model || this.model;
       const liveBase = picked?.baseUrl || this.baseUrl;
       const config = {
@@ -541,14 +540,14 @@ YOUR JOB — create a LIVING office:
         model: liveModel,
         type: 'lmstudio',
         providerKey: 'lmstudio',
-        _preferHeavy: true,
+        _preferHeavy: false,
       };
       return this.npcBrains._callLocal(config, this._getSystemPrompt(), history, {
         maxTokens,
         sliceLen: 16000,
         npc: 'Abby',
         kind: 'cofounder',
-        preferHeavy: true,
+        preferHeavy: false,
         provider: config.providerKey,
         conversationMsgs: history.length,
       }).then(text => {
