@@ -114,6 +114,7 @@ Foot plant: `NPC_FOOT_ORIGIN_Y` — art isn’t flush to cell bottom; adjust if 
 ### Hospital ward roles
 
 - Staff art: `HOSP_NURSE_SHEETS` / `HOSP_SURGEON_SHEETS` under `PixelSpacesFull/Expansions/Hospital/NPCs/` (via `npcSheetFor('hospital-nurse…')`).
+- Sheets are **160×96 (5×3 of 32×32)** — MOVE / IDLE / JUMP only. `poseDefsForSheet` / `sheetColCount` map sit/lie/emotes onto those rows so staff never sample the premade 8×14 grid.
 - Recipe NPCs carry `{ role: 'patient'|'nurse'|'surgeon', bedDx|attendDx, side }`. Patients `lieIdle` on `bedHosp`; nurses/surgeons park at bedside offsets and **never** sit on beds.
 - Live Discord members in hospital-themed channels claim empty (or ambient) beds via `assignLiveHospitalPatient`; leave frees the bed and restores the ambient patient.
 

@@ -969,7 +969,10 @@
     NPC_SHEETS.push({ key: `npc_m${i}`, path: `${PACK}/NPCs/Male/NPC ${i}.png` });
     NPC_SHEETS.push({ key: `npc_f${i}`, path: `${PACK}/NPCs/Female/NPC ${i}.png` });
   }
-  /** Hospital expansion staff — same 8×14 / 32×32 grid as premades. */
+  /**
+   * Hospital expansion staff — 160×96 sheets (5 cols × 3 rows of 32×32):
+   * row 0 MOVE (4 frames), row 1 IDLE (3), row 2 JUMP (2). Not the premade 8×14 grid.
+   */
   const HOSP_NURSE_SHEETS = [
     { key: 'hospNurseBlueF1', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_1.png` },
     { key: 'hospNurseBlueF2', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_2.png` },
@@ -985,10 +988,49 @@
     { key: 'hospSurgeonF2', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_2.png` },
   ];
   const HOSP_NPC_SHEETS = [...HOSP_NURSE_SHEETS, ...HOSP_SURGEON_SHEETS];
-  // Sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
+  // Premade sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
   // loading at half-width used to slice each character in two down the middle.
   const NPC_FRAME = { w: 32, h: 32 };
   const NPC_COLS = 8;
+  const HOSP_COLS = 5;
+  const HOSP_SHEET_KEY_RE = /^hosp(Nurse|Surgeon)/i;
+  function isHospNpcSheet(key) {
+    return HOSP_SHEET_KEY_RE.test(String(key || ''));
+  }
+  /** Native hospital poses (MOVE / IDLE / JUMP). */
+  const HOSP_POSE_DEFS = {
+    walk: { row: 0, frames: 4, fps: 6, repeat: -1, loop: true },
+    idle: { row: 1, frames: 3, fps: 1.4, repeat: -1, loop: true },
+    jump: { row: 2, frames: 2, fps: 7, repeat: 0 },
+  };
+  /** Pose map for a sheet — hospital staff never index past the 5×3 grid. */
+  function poseDefsForSheet(sheet) {
+    if (!isHospNpcSheet(sheet)) return NPC_POSE_DEFS;
+    const defs = { ...HOSP_POSE_DEFS };
+    Object.keys(NPC_POSE_DEFS).forEach((pose) => {
+      if (defs[pose]) return;
+      if (pose === 'wave' || pose === 'shrug' || pose === 'snicker' || pose === 'hurt') {
+        defs[pose] = { row: 2, frames: 2, fps: 7, repeat: 0 };
+      } else if (pose === 'sitIdle' || pose === 'lieIdle') {
+        defs[pose] = { row: 1, frames: 3, fps: 1.4, repeat: -1, loop: true };
+      } else {
+        // sit / lie / eat one-shots → hold idle frame (no invalid rows)
+        defs[pose] = { row: 1, frames: 1, fps: 1, repeat: 0 };
+      }
+    });
+    return defs;
+  }
+  function sheetColCount(sheet) {
+    return isHospNpcSheet(sheet) ? HOSP_COLS : NPC_COLS;
+  }
+  /**
+   * Right-side street door center X — clear of the 14px side-face strip and
+   * the double-door frame (~56px @ SCALE 2).
+   */
+  function streetDoorRightX(left, bw) {
+    const halfFrame = Math.ceil((25 * SCALE) / 2) + 6;
+    return left + bw - 14 - 6 - halfFrame;
+  }
   // The character art itself only fills roughly y9-23 of each 32-tall cell
   // (walk/idle rows) — the frame has ~9px of transparent padding below the
   // feet. Anchoring at the frame's true bottom (origin.y = 1) floats the
@@ -2088,7 +2130,7 @@
 
       const lowest = floorDefs[floorDefs.length - 1];
       const doorX = left + 42;
-      const doorX2 = left + bw - 48;
+      const doorX2 = streetDoorRightX(left, bw);
       const doorKind = cfg.doorKind || cfg.doorFamily || cfg.theme || 'wood';
       this.placeEntrance(g, doorX, this.groundY, doorKind, cfg.side, 26);
       this.placeEntrance(g, doorX2, this.groundY, cfg.doorKind2 || doorKind, cfg.side, 26);
@@ -3181,20 +3223,36 @@
       // Roof_1 end 26×17, connecting 16×8 · Roof_2 end 9×5, connecting 16×4
       const tileW = 16 * SCALE;
       const endW = (isFlat ? 9 : 26) * SCALE;
-      // Flat: sit on the shell lip. Gable: lift so the ridge clears the
-      // walkable deck rail (deck floor ≈ top+8, rail top ≈ top-10).
-      const y = top + (isFlat ? 4 : -12);
-      const overhang = isFlat ? 2 : 6;
+      // Flat: sit on the shell lip with a thicker cap. Gable: lift so the
+      // ridge clears the walkable deck rail (deck floor ≈ top+8, rail ≈ top-10).
+      const y = top + (isFlat ? 2 : -12);
+      const overhang = isFlat ? 8 : 6;
       // Behind titles (~28) / ROOF tag (28); above shell (20). Deck is 21.2 —
       // gable ridge must still clear it on screen via `y`, not depth fights.
       const endDepth = isFlat ? 21 : 20.8;
       const connDepth = isFlat ? 20.5 : 20.6;
+      // Flat pack tiles are only 4–5px tall — boost scaleY so the parapet reads.
+      const flatSy = isFlat ? SCALE * 1.9 : SCALE;
+      const flatEndSy = isFlat ? SCALE * 1.75 : SCALE;
+
+      if (isFlat) {
+        // Parapet / fascia under the flat cap so roofs don't read as a hairline.
+        const fascia = this.add.graphics().setDepth(connDepth - 0.25);
+        const fx = left - overhang - 1;
+        const fw = bw + overhang * 2 + 2;
+        fascia.fillStyle(0x1a222c, 1);
+        fascia.fillRect(fx, y - 1, fw, 7);
+        fascia.fillStyle(0x4a5868, 1);
+        fascia.fillRect(fx + 1, y - 4, fw - 2, 3);
+        fascia.fillStyle(0x6a7888, 0.55);
+        fascia.fillRect(fx + 2, y - 5, fw - 4, 1);
+      }
 
       if (this.textures.exists(endKey)) {
         this.add.image(left - overhang, y, endKey)
-          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
+          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatEndSy);
         this.add.image(left + bw + overhang, y, endKey)
-          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
+          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatEndSy).setFlipX(true);
       }
 
       if (!this.textures.exists(connKey)) {
@@ -3208,20 +3266,20 @@
       let lastX = runL;
       for (let x = runL; x + tileW <= runR + 0.5; x += tileW) {
         this.add.image(x, y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
+          .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE, flatSy);
         lastX = x + tileW;
       }
       // Close any leftover span — identical shingles hide the overlap.
       if (runR - lastX > 1) {
         this.add.image(Math.max(runL, runR - tileW), y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE);
+          .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE, flatSy);
       }
       // Always plant one mid-span tile on wide buildings so a failed loop
       // math can't leave a hollow center between the eaves.
       if (bw >= 120 && runR - runL > tileW * 2) {
         const midX = (runL + runR) / 2 - tileW / 2;
         this.add.image(midX, y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth - 0.1).setScale(SCALE);
+          .setOrigin(0, 1).setDepth(connDepth - 0.1).setScale(SCALE, flatSy);
       }
 
       // Snow overlay for snow style or winter themes
@@ -3264,13 +3322,17 @@
 
       // Soft deck planks already drawn by markRooftopDeck
       if (style === 'utility' || style === 'flat') {
+        // Flat roofs always get HVAC so the deck doesn't look empty.
         if (this.textures.exists('roofVents1')) {
-          this.furn('roofVents1', roofMin + span * 0.25, roofY, 22);
+          this.furn('roofVents1', roofMin + span * 0.22, roofY, 22);
         }
         if (this.textures.exists('roofVents2')) {
-          this.furn('roofVents2', roofMin + span * 0.7, roofY, 22);
+          this.furn('roofVents2', roofMin + span * 0.62, roofY, 22);
         }
-        if (span > 120 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
+        if (span > 100 && this.textures.exists('roofVents1')) {
+          this.furn('roofVents1', roofMin + span * 0.88, roofY, 22, SCALE * 0.9);
+        }
+        if (span > 140 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
           this.furn('craneRoof', mid + 20, roofY, 21);
         }
       } else if (style === 'garden' || style === 'gable') {
@@ -3288,6 +3350,7 @@
       } else {
         // default mix — utility props only, never trees on a roof
         if (this.textures.exists('roofVents1')) this.furn('roofVents1', mid - 18, roofY, 22);
+        if (this.textures.exists('roofVents2')) this.furn('roofVents2', mid + 28, roofY, 22);
         if (span > 120 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
           this.furn('craneRoof', mid + 26, roofY, 21);
         }
@@ -3477,13 +3540,13 @@
           this.registerDoor({ x: left + 42, floorId: roomKey, radius: 18 });
         }
         if (cols === 2 && idx === 1 && !isPlaceholder) {
-          this.registerDoor({ x: left + bw - 48, floorId: roomKey, radius: 18 });
+          this.registerDoor({ x: streetDoorRightX(left, bw), floorId: roomKey, radius: 18 });
         }
       }
 
       this.placeEntrance(g, left + 42, groundY, 'door', 0x3c45c0, 26);
       if (cols === 2 && channels.length > 1) {
-        this.placeEntrance(g, left + bw - 48, groundY, 'door', 0x3c45c0, 26);
+        this.placeEntrance(g, streetDoorRightX(left, bw), groundY, 'door', 0x3c45c0, 26);
       }
       const vWinY = groundY - doorStrip + 12;
       [left + bw * 0.3, left + bw * 0.7].forEach((wx) => {
@@ -3607,7 +3670,7 @@
         this.registerDoor({ x: doorX, floorId: bottomRow[0].key, radius: 18, kind: 'door' });
       }
       if (bottomRow[1]) {
-        const doorX2 = left + bw - 44;
+        const doorX2 = streetDoorRightX(left, bw);
         this.placeEntrance(g, doorX2, groundY, 'door', pal.lintel, 26);
         this.registerDoor({ x: doorX2, floorId: bottomRow[1].key, radius: 18, kind: 'door' });
       }
@@ -4279,14 +4342,24 @@
     }
 
     /** Visual doorway gap between side-by-side rooms (horizontal passage). */
-    markPassageDoorway(x, floorY, roomH) {
+    markPassageDoorway(x, floorY, roomH, doorKind = 'wood') {
       this.ensureFrontDoorTextures();
-      const g = this.add.graphics().setDepth(20.8);
-      const doorH = Math.min(44, roomH - 8);
-      const doorW = 12;
+      const fam = doorFamilyFor(doorKind);
+      let sideKey = fam.sideKey;
+      if (!this.textures.exists(sideKey)) {
+        sideKey = this.textures.exists('doorClosed') ? 'doorClosed' : 'doorFrontClosed';
+      }
+      const src = doorTexSize(this, sideKey);
+      const sc = SCALE;
+      const leafH = src.h * sc;
+      const leafW = Math.max(8, src.w * sc);
+      // Opening sized to the native side leaf — no vertical squash.
+      const doorH = Math.min(Math.max(leafH + 6, 40), Math.max(36, roomH - 6));
+      const doorW = Math.max(10, Math.min(14, leafW + 4));
       const top = floorY - doorH;
+      const g = this.add.graphics().setDepth(20.8);
       // Dark opening in the shared wall
-      g.fillStyle(0x0c0a08, 0.85);
+      g.fillStyle(0x0c0a08, 0.88);
       g.fillRect(x - doorW / 2, top, doorW, doorH);
       // Thin jambs
       g.fillStyle(0x2a2218, 1);
@@ -4294,14 +4367,16 @@
       g.fillRect(x + doorW / 2, top, 2, doorH);
       g.fillStyle(0x3a2e22, 1);
       g.fillRect(x - doorW / 2 - 1, top - 3, doorW + 2, 3);
-      // Side-view door leaf: pack closed sliver when available, else canvas
-      const sideKey = this.textures.exists('doorClosed') ? 'doorClosed' : 'doorFrontClosed';
+      // Threshold
+      g.fillStyle(0x2c2118, 1);
+      g.fillRect(x - doorW / 2 - 1, floorY - 2, doorW + 2, 2);
+      // Side-view door leaf at native pack scale (edge-on closed strip)
       if (this.textures.exists(sideKey)) {
         this.add.image(x - doorW / 2 - 1, floorY - 1, sideKey)
           .setOrigin(1, 1)
-          .setScale(SCALE * (sideKey === 'doorClosed' ? 1.1 : 0.3), (doorH - 2) / 22)
+          .setScale(sc, sc)
           .setDepth(20.9)
-          .setAlpha(0.95);
+          .setAlpha(0.98);
       }
     }
 
@@ -4351,14 +4426,15 @@
     }
 
     makeAnims() {
-      // Build every pose from NPC_POSE_DEFS for each premade + hospital staff sheet.
-      // frame = row * 8 + col; never include the trailing label cell.
+      // Premades: 8×14 pose grid. Hospital staff: 5×3 (walk/idle/jump + aliases).
       [...NPC_SHEETS, ...HOSP_NPC_SHEETS].forEach((n) => {
         if (!this.textures.exists(n.key)) return;
-        Object.entries(NPC_POSE_DEFS).forEach(([pose, def]) => {
+        const cols = sheetColCount(n.key);
+        const poseDefs = poseDefsForSheet(n.key);
+        Object.entries(poseDefs).forEach(([pose, def]) => {
           const key = `${n.key}_${pose}`;
           if (this.anims.exists(key)) return;
-          const base = def.row * NPC_COLS + (def.frameOffset || 0);
+          const base = def.row * cols + (def.frameOffset || 0);
           const start = base;
           const end = base + Math.max(0, def.frames - 1);
           let frames;
@@ -4560,11 +4636,13 @@
     playSheetPose(sprite, sheet, pose, opts = {}) {
       if (!sprite?.active || !sheet || !pose) return false;
       const key = `${sheet}_${pose}`;
+      const poseDefs = poseDefsForSheet(sheet);
+      const cols = sheetColCount(sheet);
       if (!this.anims.exists(key)) {
         // Lazy-create if sheet was loaded late
-        if (this.textures.exists(sheet) && NPC_POSE_DEFS[pose] && !sheet.startsWith('pet')) {
-          const def = NPC_POSE_DEFS[pose];
-          const base = def.row * NPC_COLS + (def.frameOffset || 0);
+        if (this.textures.exists(sheet) && poseDefs[pose] && !sheet.startsWith('pet')) {
+          const def = poseDefs[pose];
+          const base = def.row * cols + (def.frameOffset || 0);
           const frames = def.frames === 1
             ? [{ key: sheet, frame: base }]
             : this.anims.generateFrameNumbers(sheet, { start: base, end: base + def.frames - 1 });
@@ -4580,12 +4658,12 @@
       try {
         // Don't stop+restart looping walk/idle every frame — only switch keys
         const cur = sprite.anims.currentAnim?.key;
-        if (cur === key && NPC_POSE_DEFS[pose]?.loop) return true;
+        if (cur === key && poseDefs[pose]?.loop) return true;
         sprite.anims.play(key, false);
       } catch (_) {
         return false;
       }
-      const def = NPC_POSE_DEFS[pose];
+      const def = poseDefs[pose];
       const dur = opts.holdMs != null ? opts.holdMs : poseDurationMs(pose);
       const token = (sprite._poseToken = (sprite._poseToken || 0) + 1);
       if (sprite === this.player) {
@@ -7024,7 +7102,7 @@
       const floorY = from?.floorY || to?.floorY;
       if (floorY != null) {
         // Approximate room height from floorY spacing is unknown; use 48px opening.
-        this.markPassageDoorway(def.x, floorY, 52);
+        this.markPassageDoorway(def.x, floorY, 52, def.doorKind || 'wood');
       }
     }
 
