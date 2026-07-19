@@ -200,6 +200,15 @@ function defaultGuildConfig() {
       hourUtc: 18,
       lastPostedWeek: null,
     },
+    economy: {
+      enabled: true,
+      claimAmount: 50,
+      msgRewardMin: 1,
+      msgRewardMax: 3,
+      msgCooldownMs: 60_000,
+      maxWager: 250,
+      duelCooldownMs: 60_000,
+    },
   };
 }
 

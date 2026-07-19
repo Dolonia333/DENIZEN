@@ -59,6 +59,8 @@ function spacesHelpEmbed(opts = {}) {
       { name: 'Look', value: `\`${p}avatar\` · Boost → golden headset`, inline: true },
       { name: 'Pet', value: `\`${p}pet buy\` · gift · equip · Pro grants ×3`, inline: true },
       { name: 'Live', value: 'React in chat to emote on the map · `,eat pizza` (and other foods)', inline: true },
+      { name: 'Credits', value: `\`${p}claim\` · \`${p}balance\` · \`${p}pay @user\` · \`${p}credits lb\``, inline: true },
+      { name: 'Duels', value: `\`${p}duel @user [wager]\` · Accept/Attack/Guard/Feint · shows on map`, inline: true },
       { name: 'Chat', value: `\`@Denizen <question>\`\nStaff: \`${p}chat on\``, inline: true },
     ],
     footerExtra: 'start here',
