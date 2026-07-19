@@ -264,9 +264,10 @@ function createPresenceServer({
           const publicBase = String(
             process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '',
           ).replace(/\/$/, '');
+          // Team-code gated maps — share the connect URL (not an ungated public view).
           const sharePath = gid
-            ? `/discord-map/?guildId=${encodeURIComponent(gid)}&view=public`
-            : '/discord-map/?view=public';
+            ? `/discord-map/?guildId=${encodeURIComponent(gid)}`
+            : '/discord-map/';
           const body = {
             ok: true,
             ts: Date.now(),
@@ -283,7 +284,7 @@ function createPresenceServer({
             share: {
               path: sharePath,
               url: publicBase ? `${publicBase}${sharePath}` : sharePath,
-              readOnly: true,
+              requiresTeamCode: true,
             },
           };
 

@@ -37,6 +37,8 @@ const visitorAccess = require('./src/visitor-access');
 const sessionAuth = require('./src/visitor-session-auth');
 const sessionCookie = require('./src/visitor-session-cookie');
 const teamAuth = require('./src/denizen-team-auth');
+const guildOrg = require('./src/denizen-guild-org');
+const mapAccess = require('./src/denizen-map-access');
 const userIdentity = require('./src/denizen-user-identity');
 const userPosition = require('./src/denizen-user-position.js');
 const invitePlatform = require('./src/denizen-invite-platform.js');
@@ -7085,6 +7087,150 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
+  // Discord Spaces — map access status (team-code gate)
+  if (urlPath === '/api/discord/map/access' && req.method === 'GET') {
+    (async () => {
+      const guildId = mapAccess.extractGuildId(req);
+      const status = await guildOrg.getAccessStatus(guildId);
+      const grantTok = mapAccess.extractMapGrant(req);
+      let unlocked = false;
+      if (grantTok && guildId) {
+        const payload = sessionAuth.verifyMapGrant(grantTok);
+        unlocked = !!(payload && String(payload.guild_id) === String(guildId));
+      }
+      if (!unlocked && guildId && status.linked && status.org_id) {
+        const sessionId = String(req.headers['x-session-id'] || '').trim();
+        if (sessionId) {
+          const gate = await mapAccess.assertMapAccess(req, { guildId });
+          unlocked = !!gate.ok && gate.reason === 'team_session';
+        }
+      }
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+        'Access-Control-Allow-Origin': '*',
+      });
+      res.end(JSON.stringify({ ...status, unlocked }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  // Unlock a guild map with the owner's Denizen team code → map_grant
+  if (urlPath === '/api/discord/map/unlock' && req.method === 'POST') {
+    (async () => {
+      const payload = await _readJsonBody(req, 8 * 1024);
+      const result = await mapAccess.unlockWithTeamCode(
+        payload.guildId || payload.guild_id,
+        payload.teamCode || payload.team_code,
+      );
+      const status = result.ok ? 200 : (result.code === 'BAD_INPUT' ? 400 : 403);
+      res.writeHead(status, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+        'Access-Control-Allow-Origin': '*',
+      });
+      res.end(JSON.stringify(result));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  // Bot owner (bridge secret): reveal team code for a linked guild
+  if (urlPath === '/api/discord/map/mapcode' && req.method === 'GET') {
+    (async () => {
+      const expected = String(process.env.DISCORD_BRIDGE_SECRET || '').trim();
+      if (expected) {
+        const got = String(req.headers['x-denizen-secret'] || '');
+        const a = Buffer.from(got);
+        const b = Buffer.from(expected);
+        const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+        if (!ok) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'bad or missing secret' }));
+          return;
+        }
+      } else {
+        const remote = String(req.socket?.remoteAddress || '');
+        const isLoopback = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+        if (!isLoopback) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'bridge secret not configured' }));
+          return;
+        }
+      }
+      const guildId = mapAccess.extractGuildId(req);
+      if (!guildId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'guild_id_required' }));
+        return;
+      }
+      const link = await guildOrg.getLinkForGuild(guildId);
+      if (!link?.org) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'setup_required', code: 'SETUP_REQUIRED' }));
+        return;
+      }
+      const teamCode = await guildOrg.getTeamCodeForGuild(guildId);
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({
+        ok: true,
+        guild_id: guildId,
+        org_id: link.org.id,
+        org_slug: link.org.slug || null,
+        org_display_name: link.org.display_name || link.org.slug || null,
+        team_code: teamCode,
+      }));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
+  // Bot owner: bind Discord guild → Denizen org via team code
+  if (urlPath === '/api/discord/map/teamlink' && req.method === 'POST') {
+    (async () => {
+      const payload = await _readJsonBody(req, 8 * 1024);
+      const expected = String(process.env.DISCORD_BRIDGE_SECRET || '').trim();
+      if (expected) {
+        const got = String(payload.secret || req.headers['x-denizen-secret'] || '');
+        const a = Buffer.from(got);
+        const b = Buffer.from(expected);
+        const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+        if (!ok) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'bad or missing secret' }));
+          return;
+        }
+      } else {
+        const remote = String(req.socket?.remoteAddress || '');
+        const isLoopback = remote === '127.0.0.1' || remote === '::1' || remote === '::ffff:127.0.0.1';
+        if (!isLoopback) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'bridge secret not configured' }));
+          return;
+        }
+      }
+      const result = await guildOrg.linkGuild(
+        payload.guildId || payload.guild_id,
+        payload.teamCode || payload.team_code,
+        { createdByDiscordUserId: payload.discordUserId || payload.discord_user_id || null },
+      );
+      const status = result.ok ? 200 : (result.code === 'BAD_INPUT' ? 400 : result.code === 'DENIED' ? 403 : 500);
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(result));
+    })().catch((err) => {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+    });
+    return;
+  }
+
   // Discord pixel map — proxy guild list + VC presence from discord-bot sidecar.
   if (
     (urlPath === '/api/discord/map/presence'
@@ -7094,6 +7240,26 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   ) {
     (async () => {
       try {
+        // Presence (and invite for a specific guild) require team-code unlock when gated.
+        if (urlPath === '/api/discord/map/presence') {
+          const gate = await mapAccess.assertMapAccess(req);
+          if (!gate.ok) {
+            res.writeHead(gate.status || 403, {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store',
+              'Access-Control-Allow-Origin': '*',
+            });
+            res.end(JSON.stringify({
+              ok: false,
+              error: gate.error,
+              code: gate.code,
+              message: gate.message,
+              guild_id: gate.guild_id || null,
+              org_display_name: gate.org_display_name || null,
+            }));
+            return;
+          }
+        }
         const botPort = Number(process.env.DISCORD_PRESENCE_PORT) || 5180;
         const qs = (req.url || '').includes('?') ? (req.url || '').slice((req.url || '').indexOf('?')) : '';
         const pathPart = urlPath === '/api/discord/map/guilds'
@@ -7104,12 +7270,26 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         const upstream = `http://127.0.0.1:${botPort}${pathPart}${qs}`;
         const r = await fetch(upstream, { signal: AbortSignal.timeout(8000) });
         const body = await r.text();
+        // Strip public ungated map hints from presence payloads for linked guilds.
+        let outBody = body;
+        if (urlPath === '/api/discord/map/presence') {
+          try {
+            const data = JSON.parse(body);
+            if (data && typeof data === 'object') {
+              if (data.mapUrl && String(data.mapUrl).includes('view=public')) {
+                data.mapUrl = String(data.mapUrl).replace(/([?&])view=public&?/, '$1').replace(/[?&]$/, '');
+              }
+              if (data.publicMapUrl) delete data.publicMapUrl;
+              outBody = JSON.stringify(data);
+            }
+          } catch (_) { /* keep upstream body */ }
+        }
         res.writeHead(r.status, {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-store',
           'Access-Control-Allow-Origin': '*',
         });
-        res.end(body);
+        res.end(outBody);
       } catch (err) {
         res.writeHead(502, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({

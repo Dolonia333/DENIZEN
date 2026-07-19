@@ -37,11 +37,14 @@
 Denizen Spaces is a **live pixel map of a Discord server**:
 
 1. Invite the bot  
-2. Open `/discord-map/`  
-3. Join a **voice channel** (or chat in text) → appear in that room  
-4. React in chat or `,eat pizza` → organic emotes / snack sprites on the map  
-5. `/avatar` → customize look (free vs paid cosmetics)  
-6. Optional: boost for golden headset · OAuth so the map knows “you” · `,pet buy` for a companion  
+2. **Owner:** `,teamlink <Denizen team code>` then `,mapcode` (share the code with members)  
+3. **Members:** `,signup` (Discord → Denizen account) → open the map → enter the **team code**  
+4. Join a **voice channel** (or chat in text) → appear in that room  
+5. React in chat or `,eat pizza` → organic emotes / snack sprites on the map  
+6. `/avatar` → customize look (free vs paid cosmetics)  
+7. Optional: boost for golden headset · `,pet buy` for a companion  
+
+**Signup vs map unlock:** `,signup` creates a Denizen website profile linked to Discord. It does **not** unlock another server’s map — the owner’s team code does.
 
 | Layer | Role |
 |-------|------|
@@ -164,10 +167,28 @@ Same map-first flow; also `rooms`, `who`, `status`.
 | URL | Use |
 |-----|-----|
 | `/discord-map/` | Full connect + closet |
-| `/discord-map/?guildId=ID` | Preselect guild |
-| `/discord-map/?view=public&guildId=ID` | **Public read-only** share / OBS |
+| `/discord-map/?guildId=ID` | Preselect guild (still needs team code when linked) |
+
+Ungated `?view=public` share links are **disabled** for linked guilds — presence requires a `map_grant` from the team code unlock.
+
+### Owner / member flow
+
+| Who | Commands |
+|-----|----------|
+| Owner (Manage Server) | `,teamlink <code>` · `,mapcode` |
+| Member | `,signup` · `,map` · enter team code on `/discord-map/` |
 
 Set `DENIZEN_PUBLIC_URL` so help and hangout embeds use absolute links.
+
+### HTTP (map gate)
+
+| Endpoint | Role |
+|----------|------|
+| `GET /api/discord/map/access?guildId=` | `{ linked, gated, setup_required, unlocked }` |
+| `POST /api/discord/map/unlock` | `{ guildId, teamCode }` → `{ map_grant }` |
+| `POST /api/discord/map/teamlink` | Bot bridge: bind guild → org |
+| `GET /api/discord/map/mapcode` | Bot bridge: reveal team code |
+| `GET /api/discord/map/presence` | Proxied presence — **403** without grant when gated |
 
 ---
 
@@ -258,7 +279,7 @@ Env `DENIZEN_SPACES_PLAN` remains a global override for branding/closet when not
 - Auto-warp linked user (`me=` / OAuth) into hard VC  
 - Custom avatars from baked sheets  
 - Mobile touch controls  
-- Public `?view=public` mode  
+- Team-code gate (owner `,teamlink` / members unlock with code)  
 - **Discord reactions + `,eat`** → NPC poses and held Pixel Platter food (see [Map actions](#map-actions-organic-emotes--eat))  
 
 ### Map HUD (Pixel Spaces UI — organic, not permanent chrome)
@@ -397,7 +418,7 @@ Tagged `module: 'logging'` — **not** premium. Hooks always run; configure comm
 | **Elevators / doors** | Theme elevators open on proximity; door enter step on floor change |
 | **Section atmosphere** | Per-section palette tint on plain building shells |
 | **No permanent head chrome** | Status faces / mic pointer / boost badge removed from live members |
-| **Public map link** | `?view=public&guildId=` + copy button |
+| **Team-code map gate** | Owner `,teamlink` · members enter code on `/discord-map/` |
 | **Watermark** | Free plan only; paid removes |
 | **Weekly hangout** | VC minutes leaderboard embed + map link |
 | **Smooth moves** | Street path when changing rooms |

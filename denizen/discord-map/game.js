@@ -91,6 +91,19 @@
     return arr[(seed + salt) % arr.length];
   }
 
+  const MAP_GRANT = (() => {
+    try {
+      const q = new URLSearchParams(window.location.search).get('map_grant');
+      if (q) return String(q).trim();
+    } catch (_) { /* ignore */ }
+    try {
+      const stored = JSON.parse(localStorage.getItem('denizen-discord-map') || '{}');
+      return String(stored.mapGrant || stored.map_grant || '').trim();
+    } catch (_) {
+      return '';
+    }
+  })();
+
   const PRESENCE_URL = (() => {
     const pageGuildId = (() => {
       try {
@@ -99,11 +112,14 @@
         return '';
       }
     })();
-    const withGuild = (raw) => {
+    const withAuth = (raw) => {
       try {
         const u = new URL(raw, location.origin);
         if (pageGuildId && !u.searchParams.get('guildId')) {
           u.searchParams.set('guildId', pageGuildId);
+        }
+        if (MAP_GRANT && !u.searchParams.get('map_grant')) {
+          u.searchParams.set('map_grant', MAP_GRANT);
         }
         return u.toString();
       } catch (_) {
@@ -112,28 +128,34 @@
     };
     try {
       const q = new URLSearchParams(window.location.search).get('presence');
-      if (q) return withGuild(q);
+      if (q) return withAuth(q);
     } catch (_) { /* ignore */ }
     try {
       const stored = JSON.parse(localStorage.getItem('denizen-discord-map') || '{}');
-      if (stored.presenceUrlResolved) return withGuild(stored.presenceUrlResolved);
+      if (stored.presenceUrlResolved) return withAuth(stored.presenceUrlResolved);
       if (stored.presenceUrl) {
         const gid = pageGuildId || stored.guildId;
         try {
           const u = new URL(stored.presenceUrl);
           if (!u.pathname || u.pathname === '/') u.pathname = '/presence';
           if (gid) u.searchParams.set('guildId', gid);
-          return u.toString();
+          return withAuth(u.toString());
         } catch (_) {
-          return stored.presenceUrl;
+          return withAuth(stored.presenceUrl);
         }
       }
     } catch (_) { /* ignore */ }
     // Prefer the Denizen server proxy (works even when the bot presence
     // sidecar on :5180 is down / EADDRINUSE). Bot direct URL is a fallback.
-    return withGuild(`${location.origin}/api/discord/map/presence`);
+    return withAuth(`${location.origin}/api/discord/map/presence`);
   })();
   const PRESENCE_POLL_MS = 1500;
+
+  function presenceFetchInit() {
+    const headers = {};
+    if (MAP_GRANT) headers['x-map-grant'] = MAP_GRANT;
+    return { cache: 'no-store', headers };
+  }
 
   const ME_DISCORD_ID = (() => {
     try {
@@ -1741,7 +1763,7 @@
       for (let attempt = 0; attempt < 5; attempt += 1) {
         for (const url of tryUrls) {
           try {
-            const res = await fetch(url, { cache: 'no-store' });
+            const res = await fetch(url, presenceFetchInit());
             if (res.ok) {
               data = await res.json();
               if (Array.isArray(data.rooms) && data.rooms.length) break;
@@ -6104,8 +6126,19 @@
     startPresenceLoop() {
       const tick = async () => {
         try {
-          const res = await fetch(PRESENCE_URL, { cache: 'no-store' });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const res = await fetch(PRESENCE_URL, presenceFetchInit());
+          if (!res.ok) {
+            if (res.status === 403) {
+              let msg = 'team code required';
+              try {
+                const errBody = await res.json();
+                if (errBody?.code === 'SETUP_REQUIRED') msg = 'owner must ,teamlink';
+                else if (errBody?.message) msg = String(errBody.message).slice(0, 48);
+              } catch (_) { /* ignore */ }
+              throw new Error(msg);
+            }
+            throw new Error(`HTTP ${res.status}`);
+          }
           const data = await res.json();
           this.applyPresence(data);
           const voiceN = (data.people || []).filter((p) => p.channelType === 'voice' || p.channelType === 'stage').length;
