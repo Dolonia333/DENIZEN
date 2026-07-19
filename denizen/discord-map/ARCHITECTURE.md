@@ -114,8 +114,17 @@ Foot plant: `NPC_FOOT_ORIGIN_Y` — art isn’t flush to cell bottom; adjust if 
 ### Hospital ward roles
 
 - Staff art: `HOSP_NURSE_SHEETS` / `HOSP_SURGEON_SHEETS` under `PixelSpacesFull/Expansions/Hospital/NPCs/` (via `npcSheetFor('hospital-nurse…')`).
-- Recipe NPCs carry `{ role: 'patient'|'nurse'|'surgeon', bedDx|attendDx, side }`. Patients `lieIdle` on `bedHosp`; nurses/surgeons park at bedside offsets and **never** sit on beds.
-- Live Discord members in hospital-themed channels claim empty (or ambient) beds via `assignLiveHospitalPatient`; leave frees the bed and restores the ambient patient.
+- Sheets are **160×96 (5×3 of 32×32)** — MOVE / IDLE / JUMP only. `poseDefsForSheet` / `sheetColCount` map sit/lie/emotes onto those rows so staff never sample the premade 8×14 grid.
+- Recipe 0 = **OR theater**: patient on `tableSurgery` (`onSurgery: true`) with lead/assist/scrub surgeons + circulating/anes nurses acting around the table.
+- Recipe 1 = **ward**: beds, bedside nurses, rounding surgeon, desk nurse, waiting chair.
+- Recipe NPCs carry `{ role: 'patient'|'nurse'|'surgeon', bedDx|attendDx, side, onSurgery?, station? }`. Patients `lieIdle` on `bedHosp` or OR table; nurses/surgeons park at offsets and **never** sit on beds.
+- Live Discord members in hospital-themed channels claim empty (or ambient) beds via `assignLiveHospitalPatient`; leave frees the bed and restores the ambient patient. OR tables are ambient-only (not live-claimable).
+
+### Room customization (`,room`)
+
+- Config: `spaces.rooms[channelId]` + `spaces.categories[categoryId]` in guild JSON.
+- Presence exposes `roomOverrides` / `categoryOverrides` (and `rooms[].map`).
+- Map hooks: `pickTheme`, `categoryDisplayName`, `roomDisplayLabel`, `roomWallColor`, `decorateRoom` kit, themed recipe fills.
 
 ### Street ambient (anonymous)
 

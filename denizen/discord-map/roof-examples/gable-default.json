@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "name": "gable-default",
+  "family": "Roof_1",
+  "style": "gable",
+  "scale": 2,
+  "note": "Dual shingle courses: ridge-aligned top + lower fill. Ends seated on shell (yEndOffset 1). Roof_1 end ridge is cols 15–25 (8px tall).",
+  "parametric": {
+    "overhang": 6,
+    "yEndOffset": 1,
+    "endSrcW": 26,
+    "endSrcH": 17,
+    "connSrcH": 8,
+    "ridgeInset": 15,
+    "lowerInset": 10,
+    "connStep": 15,
+    "endDepth": 21.0,
+    "connDepth": 20.5
+  },
+  "pieces": []
+}

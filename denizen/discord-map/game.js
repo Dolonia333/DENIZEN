@@ -405,10 +405,14 @@
     bedHosp: `${EXP}/Hospital/Individual Assets/Bed_hospital_front.png`,
     salineStand: `${EXP}/Hospital/Individual Assets/Saline_stand.png`,
     tableSurgery: `${EXP}/Hospital/Individual Assets/Table_surgery.png`,
+    tableSteel: `${EXP}/Hospital/Individual Assets/Table_stainless_steel.png`,
     lightSurgery: `${EXP}/Hospital/Individual Assets/Light_surgery_white.png`,
+    lightSurgeryBlack: `${EXP}/Hospital/Individual Assets/Light_surgery_black.png`,
     storageMed: `${EXP}/Hospital/Individual Assets/Storage_medical_white.png`,
     computerMed: `${EXP}/Hospital/Individual Assets/Computer_medical_white.png`,
     monitorMedWall: `${EXP}/Hospital/Individual Assets/Monitor_medical_mounted_white.png`,
+    monitorMed: `${EXP}/Hospital/Individual Assets/Monitor_medical_white.png`,
+    monitorMedBlack: `${EXP}/Hospital/Individual Assets/Monitor_medical_black.png`,
     posterMed: `${EXP}/Hospital/Individual Assets/Poster_medical.png`,
 
     triceratops: `${EXP}/Museum/Individual Assets/Skeleton_triceratops.png`,
@@ -969,26 +973,76 @@
     NPC_SHEETS.push({ key: `npc_m${i}`, path: `${PACK}/NPCs/Male/NPC ${i}.png` });
     NPC_SHEETS.push({ key: `npc_f${i}`, path: `${PACK}/NPCs/Female/NPC ${i}.png` });
   }
-  /** Hospital expansion staff — same 8×14 / 32×32 grid as premades. */
+  /**
+   * Hospital expansion staff — 160×96 sheets (5 cols × 3 rows of 32×32):
+   * row 0 MOVE (4 frames), row 1 IDLE (3), row 2 JUMP (2). Not the premade 8×14 grid.
+   */
   const HOSP_NURSE_SHEETS = [
     { key: 'hospNurseBlueF1', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_1.png` },
     { key: 'hospNurseBlueF2', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_2.png` },
+    { key: 'hospNurseBlueF3', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_3.png` },
     { key: 'hospNurseBlueM1', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_male_1.png` },
+    { key: 'hospNurseBlueM2', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_male_2.png` },
+    { key: 'hospNurseBlueM3', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_male_3.png` },
     { key: 'hospNurseGreenF1', path: `${EXP}/Hospital/NPCs/npc_nurse_green_female_1.png` },
+    { key: 'hospNurseGreenF2', path: `${EXP}/Hospital/NPCs/npc_nurse_green_female_2.png` },
+    { key: 'hospNurseGreenF3', path: `${EXP}/Hospital/NPCs/npc_nurse_green_female_3.png` },
     { key: 'hospNurseGreenM1', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_1.png` },
     { key: 'hospNurseGreenM2', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_2.png` },
+    { key: 'hospNurseGreenM3', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_3.png` },
   ];
   const HOSP_SURGEON_SHEETS = [
     { key: 'hospSurgeonM1', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_1.png` },
     { key: 'hospSurgeonM2', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_2.png` },
+    { key: 'hospSurgeonM3', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_3.png` },
     { key: 'hospSurgeonF1', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_1.png` },
     { key: 'hospSurgeonF2', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_2.png` },
+    { key: 'hospSurgeonF3', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_3.png` },
   ];
   const HOSP_NPC_SHEETS = [...HOSP_NURSE_SHEETS, ...HOSP_SURGEON_SHEETS];
-  // Sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
+  // Premade sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
   // loading at half-width used to slice each character in two down the middle.
   const NPC_FRAME = { w: 32, h: 32 };
   const NPC_COLS = 8;
+  const HOSP_COLS = 5;
+  const HOSP_SHEET_KEY_RE = /^hosp(Nurse|Surgeon)/i;
+  function isHospNpcSheet(key) {
+    return HOSP_SHEET_KEY_RE.test(String(key || ''));
+  }
+  /** Native hospital poses (MOVE / IDLE / JUMP). */
+  const HOSP_POSE_DEFS = {
+    walk: { row: 0, frames: 4, fps: 6, repeat: -1, loop: true },
+    idle: { row: 1, frames: 3, fps: 1.4, repeat: -1, loop: true },
+    jump: { row: 2, frames: 2, fps: 7, repeat: 0 },
+  };
+  /** Pose map for a sheet — hospital staff never index past the 5×3 grid. */
+  function poseDefsForSheet(sheet) {
+    if (!isHospNpcSheet(sheet)) return NPC_POSE_DEFS;
+    const defs = { ...HOSP_POSE_DEFS };
+    Object.keys(NPC_POSE_DEFS).forEach((pose) => {
+      if (defs[pose]) return;
+      if (pose === 'wave' || pose === 'shrug' || pose === 'snicker' || pose === 'hurt') {
+        defs[pose] = { row: 2, frames: 2, fps: 7, repeat: 0 };
+      } else if (pose === 'sitIdle' || pose === 'lieIdle') {
+        defs[pose] = { row: 1, frames: 3, fps: 1.4, repeat: -1, loop: true };
+      } else {
+        // sit / lie / eat one-shots → hold idle frame (no invalid rows)
+        defs[pose] = { row: 1, frames: 1, fps: 1, repeat: 0 };
+      }
+    });
+    return defs;
+  }
+  function sheetColCount(sheet) {
+    return isHospNpcSheet(sheet) ? HOSP_COLS : NPC_COLS;
+  }
+  /**
+   * Right-side street door center X — clear of the 14px side-face strip and
+   * the double-door frame (~56px @ SCALE 2).
+   */
+  function streetDoorRightX(left, bw) {
+    const halfFrame = Math.ceil((25 * SCALE) / 2) + 6;
+    return left + bw - 14 - 6 - halfFrame;
+  }
   // The character art itself only fills roughly y9-23 of each 32-tall cell
   // (walk/idle rows) — the frame has ~9px of transparent padding below the
   // feet. Anchoring at the frame's true bottom (origin.y = 1) floats the
@@ -1077,6 +1131,7 @@
   const SURFACE_HOSTS = {
     desk: 14, desk2: 14, coffee: 10, coffee2: 10, counter: 14, counterEnd: 14,
     tableLong: 14, tableMed2: 12, deskOffice: 14, policeDesk: 14, filecabinet: 0,
+    tableSteel: 8, tableSurgery: 6,
   };
   /** Props that must sit ON a surface host (not float mid-air). */
   const SURFACE_PROPS = new Set(['laptop', 'books', 'books2', 'radio', 'paperStack', 'paperStack2']);
@@ -1091,6 +1146,12 @@
     0xc99a22, 0x2f9e93, 0xc4577e, 0x4560c0, 0xb5642f,
     0x4a8fb0, 0x8a5a3c, 0x5b9e6a, 0x9e4d6e, 0x6a5aa0,
   ];
+  /** Named wall colors for `,room color` overrides. */
+  const ROOM_COLOR_BY_NAME = {
+    blue: 0x2f6f9e, teal: 0x2f9e93, green: 0x3f9e57, mint: 0x5b9e6a,
+    orange: 0xd9862b, red: 0xc0433d, pink: 0xc4577e, purple: 0x7d54ad,
+    lavender: 0x6a5aa0, yellow: 0xc99a22, brown: 0x8a5a3c, slate: 0x4560c0,
+  };
   const ROOM_FLOOR_STRIP = 0x7a5a3c; // warm wood baseboard
 
   // Channel-name -> themed furniture kit. Each kit is a set of {key,xf(0-1),depth,
@@ -1293,39 +1354,80 @@
       wall: 0xe8ecf2, side: 0xc0c8d4, outline: 0x2a3444, roof: 0xd8e0ea, band: 0x9aa8ba,
       signKey: 'hospSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#ffffff', bg: '#c0392b' },
+      title: { color: '#ffffff', bg: '#c0392b' },
       roofKey: 'roofBlueC', plaqueKey: 'uiTabBlue',
       doorFamily: 'grey',
       climbMode: 'elev',
-      // Elevator lane left (shaft at 36). OR: surgeon stands at the table.
-      // Ward: patients in beds + nurses at bedside (not sitting on mattresses).
+      // Elevator lane left (shaft at 36).
+      // Recipe 0 = OR theater (patient on table + scrub team).
+      // Recipe 1 = ward (beds, nurses, rounds doctor, waiting).
       stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0xdaf0ea, slots: [90, 185],
+          // Operating theater — fixed surgery table (never CT) + full scrub cast.
+          h: 98, fill: 0xc8e8e0, slots: [88, 220],
           items: [
-            ['w', 'lightSurgery', 130, 2],
-            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 185, 6], ['w', 'posterMed', 240, 6],
-            ['f', ['storageMed', 'storageMedBlack'], 70, 1, 0],
-            ['f', ['tableSurgery', 'ctScanner'], 130, 1, 0], ['f', 'salineStand', 160, 1, 0],
-            ['npc', 'hospital-surgeon', 102, { role: 'surgeon', attendDx: 130, side: 'left' }],
-            ['f', ['computerMed', 'computerMedBlack'], 215, 1, 0],
+            ['glow', 0x7ad0c0, 0.11],
+            ['w', ['lightSurgery', 'lightSurgeryBlack'], 150, 2],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 108, 6],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 192, 6],
+            ['w', 'posterMed', 240, 8],
+            ['f', ['storageMed', 'storageMedBlack'], 72, 1, 0],
+            ['f', 'salineStand', 100, 1, 0],
+            // Patient on the table; scrub team rings the OR bed.
+            ['f', 'tableSurgery', 150, 1, 0],
+            ['npc', 'hospital-or-patient', 150, {
+              role: 'patient', bedDx: 150, onSurgery: true, bedKey: 'tableSurgery',
+            }],
+            ['npc', 'hospital-surgeon-lead', 122, {
+              role: 'surgeon', attendDx: 150, side: 'left', onSurgery: true, station: 'lead',
+            }],
+            ['npc', 'hospital-surgeon-assist', 178, {
+              role: 'surgeon', attendDx: 150, side: 'right', onSurgery: true, station: 'assist',
+            }],
+            ['npc', 'hospital-surgeon-scrub', 150, {
+              role: 'surgeon', attendDx: 150, side: 'left', onSurgery: true, station: 'scrub',
+              standOffset: 40,
+            }],
+            ['npc', 'hospital-nurse-or-a', 104, {
+              role: 'nurse', attendDx: 150, side: 'left', onSurgery: true, station: 'anes',
+              standOffset: 48,
+            }],
+            ['npc', 'hospital-nurse-or-b', 196, {
+              role: 'nurse', attendDx: 150, side: 'right', onSurgery: true, station: 'circ',
+              standOffset: 46,
+            }],
+            ['f', 'tableSteel', 204, 1, 0],
+            ['f', 'salineStand', 228, 1, 0],
+            ['f', ['monitorMed', 'monitorMedBlack'], 204, 1, 8],
+            ['f', ['computerMed', 'computerMedBlack'], 248, 1, 0],
           ],
         }),
         () => ({
-          h: 102, fill: 0xe8f4f0, slots: [110, 170, 232],
+          // Patient ward — beds, bedside nurses, rounding surgeon, waiting area.
+          h: 108, fill: 0xe8f4f0, slots: [110, 170, 232],
           items: [
-            ['glow', 0xc8f0e0, 0.08],
-            ['w', 'hospLogo', 160, 6], ['w', 'posterMed', 82, 8],
+            ['glow', 0xc8f0e0, 0.09],
+            ['w', 'hospLogo', 160, 6],
+            ['w', 'posterMed', 78, 8],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 200, 6],
             ['f', 'bedHosp', 78, 1, 0],
             ['npc', 'hospital-patient-a', 78, { role: 'patient', bedDx: 78 }],
             ['npc', 'hospital-nurse-a', 56, { role: 'nurse', attendDx: 78, side: 'left' }],
-            ['f', 'salineStand', 105, 1, 0],
-            ['f', 'bedHosp', 138, 1, 0],
-            ['npc', 'hospital-patient-b', 138, { role: 'patient', bedDx: 138 }],
-            ['npc', 'hospital-nurse-b', 160, { role: 'nurse', attendDx: 138, side: 'right' }],
-            ['f', ['computerMed', 'computerMedBlack'], 205, 1, 0],
-            ['f', ['storageMed', 'storageMedBlack'], 238, 1, 0],
-            ['f', 'floraFernFull', 118, 1, 0],
+            ['f', 'salineStand', 102, 1, 0],
+            ['f', 'bedHosp', 148, 1, 0],
+            ['npc', 'hospital-patient-b', 148, { role: 'patient', bedDx: 148 }],
+            ['npc', 'hospital-nurse-b', 170, { role: 'nurse', attendDx: 148, side: 'right' }],
+            ['npc', 'hospital-surgeon-rounds', 126, {
+              role: 'surgeon', attendDx: 148, side: 'left', station: 'rounds',
+            }],
+            ['f', 'salineStand', 176, 1, 0],
+            ['f', ['computerMed', 'computerMedBlack'], 210, 1, 0],
+            ['f', ['storageMed', 'storageMedBlack'], 240, 1, 0],
+            ['f', ['waitChairSolo', 'waitChairSoloRed'], 252, 1, 0],
+            ['npc', 'hospital-nurse-desk', 228, {
+              role: 'nurse', attendDx: 210, side: 'right', station: 'desk', standOffset: 18,
+            }],
           ],
         }),
       ],
@@ -1525,6 +1627,14 @@
     [/winter|xmas|christmas|holiday|snow/i, 'winterzone'],
     [/dig|archaeo|fossil|excavat|research|\blab\b/i, 'digzone'],
   ];
+
+  // Operating-theater chatter so the scrub team reads as a live team, not props.
+  const OR_CHATTER = {
+    surgeon: ['Scalpel.', 'Clamp, please.', 'Suction here.', 'Steady…', 'Good exposure.',
+      'Retractor.', 'Almost there.', 'Nice and clean.', 'Hold that.', 'Closing up.'],
+    nurse: ['BP holding.', 'Sats look good.', 'Sponge count clear.', 'Passing suture.',
+      'Vitals stable.', 'Two units ready.', 'More saline?', 'Charting it now.'],
+  };
 
   class ExampleMapScene extends Phaser.Scene {
     constructor() {
@@ -1823,9 +1933,22 @@
       }
       this._layoutFromDemo = false;
       this._layoutFp = (data.rooms || [])
-        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}`)
+        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}:${JSON.stringify(r.map || {})}`)
         .sort()
         .join('|');
+      // Per-guild room/category map overrides from `,room` bot commands.
+      this.roomOverrides = {};
+      this.categoryOverrides = {};
+      const ro = data.roomOverrides && typeof data.roomOverrides === 'object' ? data.roomOverrides : {};
+      const co = data.categoryOverrides && typeof data.categoryOverrides === 'object'
+        ? data.categoryOverrides : {};
+      Object.assign(this.roomOverrides, ro);
+      Object.assign(this.categoryOverrides, co);
+      for (const r of rooms) {
+        if (r.map && typeof r.map === 'object') {
+          this.roomOverrides[String(r.id)] = { ...(this.roomOverrides[String(r.id)] || {}), ...r.map };
+        }
+      }
 
       const categoriesMeta = new Map((data.categories || []).map((c) => [c.id, c]));
       const byCat = new Map();
@@ -1864,12 +1987,13 @@
       for (const cat of catList) {
         const voiceChans = cat.channels.filter((c) => c.type === 'voice' || c.type === 'stage');
         const decision = this.pickTheme(cat);
+        const catLabel = this.categoryDisplayName(cat);
 
         if (decision.kind === 'voice') {
           if (!voiceChans.length) continue;
           const bw = 290;
-          this.drawVoiceBuilding(x, this.groundY, voiceChans, cat.name);
-          this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: cat.name });
+          this.drawVoiceBuilding(x, this.groundY, voiceChans, catLabel);
+          this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: catLabel });
           paintSection(x, bw);
           x = advanceStreet(x, bw, `voice-${cat.id}`);
           continue;
@@ -1877,11 +2001,11 @@
 
         if (decision.kind === 'zone') {
           if (decision.theme === 'winterzone') {
-            this.drawWinterPark(x, this.groundY, cat);
+            this.drawWinterPark(x, this.groundY, { ...cat, name: catLabel });
             paintSection(x, 480);
             x = advanceStreet(x, 480, `winter-${cat.id}`);
           } else {
-            this.drawDigSite(x, this.groundY, cat);
+            this.drawDigSite(x, this.groundY, { ...cat, name: catLabel });
             paintSection(x, 640);
             x = advanceStreet(x, 640, `dig-${cat.id}`);
           }
@@ -1894,8 +2018,8 @@
           for (let i = 0; i < total; i += MAX_ROOMS) {
             const chunk = cat.channels.slice(i, i + MAX_ROOMS);
             const suffix = total > MAX_ROOMS ? ` ${Math.floor(i / MAX_ROOMS) + 1}` : '';
-            const b = this.buildGenericBuilding(decision.theme, x, `${cat.name}${suffix}`, chunk);
-            this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: cat.name });
+            const b = this.buildGenericBuilding(decision.theme, x, `${catLabel}${suffix}`, chunk);
+            this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: catLabel });
             paintSection(x, b.bw);
             x = advanceStreet(x, b.bw, `theme-${cat.id}-${i}`);
           }
@@ -1908,7 +2032,7 @@
           const chunk = cat.channels.slice(i, i + perBuilding);
           const bw = 290;
           const suffix = cat.channels.length > perBuilding ? ` · pt ${Math.floor(i / perBuilding) + 1}` : '';
-          const title = `${cat.name}${suffix}`;
+          const title = `${catLabel}${suffix}`;
           this.drawTextBuilding(x, this.groundY, title, chunk, plainIdx % 5);
           plainIdx += 1;
           this.buildings.push({ left: x, right: x + bw, kind: 'text', channels: chunk, label: title });
@@ -1986,6 +2110,23 @@
 
     /** Decide a building theme (or special outdoor zone) for one category. */
     pickTheme(cat) {
+      // Admin override from `,room theme` (category or any channel in it).
+      const catOv = this.categoryOverrides?.[String(cat.id)] || null;
+      let forceTheme = catOv?.theme || null;
+      if (!forceTheme) {
+        for (const ch of cat.channels || []) {
+          const ro = this.roomOverrides?.[String(ch.id)];
+          if (ro?.theme) { forceTheme = ro.theme; break; }
+        }
+      }
+      if (forceTheme) {
+        const t = String(forceTheme).toLowerCase();
+        if (t === 'voice') return { kind: 'voice' };
+        if (t === 'winterzone' || t === 'digzone') return { kind: 'zone', theme: t };
+        if (t === 'plain') return { kind: 'plain' };
+        if (THEME_KITS[t]) return { kind: 'themed', theme: t };
+      }
+
       const name = String(cat.name || '').toLowerCase();
       const channels = cat.channels;
       const allVoice = channels.length > 0 && channels.every((c) => c.type === 'voice' || c.type === 'stage');
@@ -1999,6 +2140,20 @@
       const pick = THEME_ROTATION_POOL[this._themeRR % THEME_ROTATION_POOL.length];
       this._themeRR += 1;
       return pick === 'plain' ? { kind: 'plain' } : { kind: 'themed', theme: pick };
+    }
+
+    /** Display name for a category building (`,room title` override). */
+    categoryDisplayName(cat) {
+      const ov = this.categoryOverrides?.[String(cat?.id)];
+      if (ov?.title) return String(ov.title);
+      return cat?.name || 'channels';
+    }
+
+    /** Room plaque / channel label with optional `,room name` override. */
+    roomDisplayLabel(ch) {
+      const ov = this.roomOverrides?.[String(ch?.id)];
+      if (ov?.label) return String(ov.label);
+      return channelLabel(ch);
     }
 
     /**
@@ -2088,7 +2243,7 @@
 
       const lowest = floorDefs[floorDefs.length - 1];
       const doorX = left + 42;
-      const doorX2 = left + bw - 48;
+      const doorX2 = streetDoorRightX(left, bw);
       const doorKind = cfg.doorKind || cfg.doorFamily || cfg.theme || 'wood';
       this.placeEntrance(g, doorX, this.groundY, doorKind, cfg.side, 26);
       this.placeEntrance(g, doorX2, this.groundY, cfg.doorKind2 || doorKind, cfg.side, 26);
@@ -2298,12 +2453,19 @@
       const kit = THEME_KITS[theme];
       const rooms = channels.map((ch, i) => {
         const recipe = kit.recipes[i % kit.recipes.length]();
+        const ov = this.roomOverrides?.[String(ch.id)];
+        let fill = recipe.fill;
+        if (ov?.color) {
+          const raw = String(ov.color).trim().toLowerCase().replace(/^#/, '');
+          if (ROOM_COLOR_BY_NAME[raw] != null) fill = ROOM_COLOR_BY_NAME[raw];
+          else if (/^[0-9a-f]{6}$/i.test(raw)) fill = parseInt(raw, 16);
+        }
         return {
           id: chKey(ch.id),
           roomKey: chKey(ch.id),
-          label: channelLabel(ch),
+          label: this.roomDisplayLabel(ch),
           h: recipe.h,
-          fill: recipe.fill,
+          fill,
           slots: recipe.slots,
           items: recipe.items,
           bars: recipe.bars,
@@ -2314,13 +2476,16 @@
         if (!this.hospitalRoomKeys) this.hospitalRoomKeys = new Set();
         channels.forEach((ch) => this.hospitalRoomKeys.add(chKey(ch.id)));
       }
+      const stripText = theme === 'hospital'
+        ? `${shortLabel(displayChannelName(categoryLabel), 18)} · Hospital`
+        : shortLabel(displayChannelName(categoryLabel), 28);
       const b = this.drawThemeBuilding({
         left,
         bw: kit.bw,
         wall: kit.wall, side: kit.side, outline: kit.outline, roof: kit.roof, band: kit.band,
         signKey: kit.signKey, signScale: kit.signScale,
-        title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title.color, bg: kit.title.bg },
-        strip: { text: shortLabel(displayChannelName(categoryLabel), 28), color: kit.stripStyle.color, bg: kit.stripStyle.bg },
+        title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title?.color, bg: kit.title?.bg },
+        strip: { text: stripText, color: kit.stripStyle.color, bg: kit.stripStyle.bg },
         doorKind: kit.doorFamily || kit.doorKind || theme || 'wood',
         climbMode: kit.climbMode || 'door',
         stairsDx: kit.stairsDx,
@@ -2513,10 +2678,14 @@
           if (!actor?.sprite?.active) continue;
           const role = actor.role;
           if (role === 'patient') {
+            const onSurgery = !!(actor.hospOpts?.onSurgery || actor.hospOpts?.bedKey === 'tableSurgery');
             const bed = this.findHospitalBedNear(
               actor.roomKey,
               actor.hospOpts?.bedWorldX ?? actor.sprite.x,
-              { allowSurgery: false },
+              {
+                allowSurgery: onSurgery,
+                preferKey: onSurgery ? 'tableSurgery' : 'bedHosp',
+              },
             );
             if (bed && !bed.claimedBy) {
               bed.claimedBy = 'ambient';
@@ -2551,14 +2720,19 @@
       });
     }
 
-    /** Hospital beds in a room. Patients use bedHosp only; staff may attend surgery tables. */
+    /** Hospital beds in a room. Patients use bedHosp; OR patients use tableSurgery. */
     findHospitalBedNear(roomKey, worldX, opts = {}) {
       const allowSurgery = opts.allowSurgery !== false;
-      const beds = (this.seats || []).filter((s) => (
+      const preferKey = opts.preferKey || null;
+      let beds = (this.seats || []).filter((s) => (
         s.kind === 'bed'
         && (s.key === 'bedHosp' || (allowSurgery && s.key === 'tableSurgery'))
         && (!roomKey || !s.floorId || s.floorId === roomKey)
       ));
+      if (preferKey) {
+        const preferred = beds.filter((s) => s.key === preferKey);
+        if (preferred.length) beds = preferred;
+      }
       if (!beds.length) return null;
       if (worldX == null) return beds.find((b) => !b.claimedBy) || beds[0];
       return beds.slice().sort((a, b) => Math.abs(a.x - worldX) - Math.abs(b.x - worldX))[0];
@@ -2589,19 +2763,55 @@
     parkHospitalStaff(actor) {
       if (!actor?.sprite?.active) return;
       const opts = actor.hospOpts || {};
-      const targetX = opts.attendWorldX != null ? opts.attendWorldX : actor.sprite.x;
-      const bed = this.findHospitalBedNear(actor.roomKey, targetX);
       const side = opts.side === 'right' ? 1 : -1;
-      const offset = actor.role === 'surgeon' ? 28 : 22;
+
+      // Desk / charting nurses stand by the computer — not a bedside post.
+      if (opts.station === 'desk') {
+        const standX = opts.attendWorldX != null ? opts.attendWorldX : actor.sprite.x;
+        actor.sprite.x = standX;
+        actor.sprite.y = actor.floorY;
+        actor.homeX = standX;
+        actor.attendBed = null;
+        actor.sprite.setFlipX(side > 0);
+        this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+        actor.state = 'idle';
+        actor.busyUntil = this.time.now + 4000 + Math.random() * 3000;
+        return;
+      }
+
+      const targetX = opts.attendWorldX != null ? opts.attendWorldX : actor.sprite.x;
+      const bed = this.findHospitalBedNear(actor.roomKey, targetX, {
+        allowSurgery: true,
+        preferKey: opts.onSurgery || opts.bedKey === 'tableSurgery' ? 'tableSurgery' : null,
+      });
+      // Auto-space attendants along each side of the bed so they never stack
+      // on top of each other (each NPC ~32px wide at SCALE 2). The slot is
+      // assigned once per actor+bed and reused across re-parks so the OR cast
+      // keeps stable, legible positions instead of piling on the same spot.
+      let offset;
+      if (bed) {
+        bed._sideSlots = bed._sideSlots || { '-1': 0, '1': 0 };
+        if (actor._bedSlot == null || actor._bedSlotBed !== bed) {
+          actor._bedSlot = bed._sideSlots[side];
+          actor._bedSlotBed = bed;
+          bed._sideSlots[side] += 1;
+        }
+        offset = 26 + actor._bedSlot * 36; // 36px apart → clear of the sprite
+      } else {
+        offset = opts.standOffset != null
+          ? opts.standOffset
+          : (actor.role === 'surgeon' ? 28 : 22);
+      }
       const standX = (bed ? bed.x : targetX) + side * offset;
       actor.sprite.x = standX;
       actor.sprite.y = actor.floorY;
       actor.homeX = standX;
       actor.attendBed = bed || null;
-      actor.sprite.setFlipX(side > 0); // face toward the bed
+      actor.sprite.setFlipX(side > 0); // face toward the bed/table
       this.playSheetPose(actor.sprite, actor.sheet, 'idle');
       actor.state = 'idle';
-      actor.busyUntil = this.time.now + 4000 + Math.random() * 3000;
+      const busyBase = (opts.onSurgery || bed?.key === 'tableSurgery') ? 2200 : 4000;
+      actor.busyUntil = this.time.now + busyBase + Math.random() * 2800;
     }
 
     displaceAmbientPatient(bed) {
@@ -3142,25 +3352,52 @@
 
     /**
      * Roof cap from Pixel Spaces infrastructure tiles.
-     * @param {string|object} roofSpec
-     *   - string: legacy connecting key e.g. 'roofRedC'
-     *   - { style: 'gable'|'flat'|'snow', color: 'red'|'blue'|... }
-     * Pack has two families: Roof_1 (tall gable) and Roof_2 (low flat).
-     * Snow piles layer over either for winter / cold themes.
-     *
-     * Gable connecting tiles are short (8px). Walkable rooftop decks sit near
-     * `top+8` with a rail up to ~`top-10`, which used to bury the ridge and
-     * leave only the tall end eaves — the “broken roof” look. Gable ridges
-     * are lifted above the deck and drawn just behind building titles.
+     * Roof_1 end (26×17) has ~9px transparent pad under its ridge band; the
+     * connecting tile (16×8) must be lifted by that pad so ridge heights match.
+     * Without the lift, ends float as two spikes with a low disconnected bar.
      */
+    /**
+     * Roof packing knobs (see roof-examples/ + tools/roof-composer.html).
+     * Roof_1 end is 26×17: slope cols 0–14, flat ridge cols 15–25 (exactly 8px
+     * tall — same as connecting). Ridge align = lift connecting by 9 art px.
+     */
+    roofRecipeFor(style) {
+      if (style === 'flat') {
+        return {
+          overhang: 6,
+          yEndOffset: 2,
+          endSrcW: 9,
+          endSrcH: 5,
+          connSrcH: 4,
+          endDepth: 21.1,
+          connDepth: 20.6,
+        };
+      }
+      return {
+        overhang: 6,
+        // Sit eaves on the shell lip (was -12 — floated a clear sky gap).
+        yEndOffset: 1,
+        endSrcW: 26,
+        endSrcH: 17,
+        connSrcH: 8,
+        // Ridge starts at art col 15 on the end tile.
+        ridgeInset: 15,
+        // Lower shingle course inset so the triangular eaves stay readable.
+        lowerInset: 10,
+        connStep: 15,
+        endDepth: 21.0,
+        connDepth: 20.5,
+      };
+    }
+
     drawRoofCap(left, top, bw, roofSpec = 'roofRedC') {
       let style = 'gable';
       let color = 'red';
       let connKey = 'roofRedC';
+      let customPieces = null;
 
       if (typeof roofSpec === 'string') {
         connKey = this.textures.exists(roofSpec) ? roofSpec : 'roofRedC';
-        // Infer style/color from key: roof2BlueC → flat/blue, roofRedC → gable/red
         if (/^roof2/i.test(connKey)) style = 'flat';
         const m = connKey.match(/roof2?([A-Z][a-z]+)/);
         if (m) color = m[1].toLowerCase();
@@ -3174,62 +3411,98 @@
         } else {
           connKey = this.textures.exists(`roof${cap}C`) ? `roof${cap}C` : 'roofRedC';
         }
+        if (Array.isArray(roofSpec.pieces) && roofSpec.pieces.length) {
+          customPieces = roofSpec.pieces;
+        }
       }
 
       const isFlat = style === 'flat' || /^roof2/i.test(connKey);
       const endKey = connKey.replace(/C$/, 'E');
-      // Roof_1 end 26×17, connecting 16×8 · Roof_2 end 9×5, connecting 16×4
+      const recipe = (typeof roofSpec === 'object' && roofSpec.parametric)
+        ? { ...this.roofRecipeFor(isFlat ? 'flat' : 'gable'), ...roofSpec.parametric }
+        : this.roofRecipeFor(isFlat ? 'flat' : 'gable');
+
       const tileW = 16 * SCALE;
-      const endW = (isFlat ? 9 : 26) * SCALE;
-      // Flat: sit on the shell lip. Gable: lift so the ridge clears the
-      // walkable deck rail (deck floor ≈ top+8, rail top ≈ top-10).
-      const y = top + (isFlat ? 4 : -12);
-      const overhang = isFlat ? 2 : 6;
-      // Behind titles (~28) / ROOF tag (28); above shell (20). Deck is 21.2 —
-      // gable ridge must still clear it on screen via `y`, not depth fights.
-      const endDepth = isFlat ? 21 : 20.8;
-      const connDepth = isFlat ? 20.5 : 20.6;
+      const endW = (recipe.endSrcW || (isFlat ? 9 : 26)) * SCALE;
+      const yEnd = top + recipe.yEndOffset;
+      const ridgePad = (recipe.endSrcH - recipe.connSrcH) * SCALE;
+      const yRidge = yEnd - ridgePad;
+      // Lower course top meets ridge bottom (closes the 1px sky slit).
+      const yLower = yEnd - SCALE;
+      const overhang = recipe.overhang;
+      const endDepth = recipe.endDepth;
+      const connDepth = recipe.connDepth;
+      const step = Math.max(8, (recipe.connStep || 15) * SCALE);
 
-      if (this.textures.exists(endKey)) {
-        this.add.image(left - overhang, y, endKey)
-          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
-        this.add.image(left + bw + overhang, y, endKey)
-          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
+      const placeRun = (y, runL, runR, depth) => {
+        if (!this.textures.exists(connKey) || runR - runL < tileW * 0.5) return;
+        for (let x = runL; x <= runR - tileW; x += step) {
+          this.add.image(x, y, connKey)
+            .setOrigin(0, 1).setDepth(depth).setScale(SCALE);
+        }
+        this.add.image(runR - tileW, y, connKey)
+          .setOrigin(0, 1).setDepth(depth - 0.04).setScale(SCALE);
+      };
+
+      if (customPieces) {
+        for (const p of customPieces) {
+          const kind = p.kind === 'end' ? endKey : (p.kind === 'connecting' ? connKey : null);
+          const key = p.key || kind;
+          if (!key || !this.textures.exists(key)) continue;
+          const img = this.add.image(
+            left + Number(p.x) * SCALE,
+            top + Number(p.y) * SCALE,
+            key,
+          ).setOrigin(0, 1)
+            .setDepth(p.kind === 'end' ? endDepth : connDepth)
+            .setScale(SCALE);
+          if (p.flipX) img.setFlipX(true);
+        }
+      } else if (isFlat) {
+        // Flat: fascia + single cap run between end pieces.
+        const fascia = this.add.graphics().setDepth(connDepth - 0.25);
+        const fx = left - overhang - 1;
+        const fw = bw + overhang * 2 + 2;
+        fascia.fillStyle(0x1a222c, 1);
+        fascia.fillRect(fx, yEnd - 1, fw, 6);
+        fascia.fillStyle(0x4a5868, 1);
+        fascia.fillRect(fx + 1, yEnd - 4, fw - 2, 3);
+        const flatSy = SCALE * 1.6;
+        placeRun(yEnd, left - overhang + endW - 2, left + bw + overhang - endW + 2, connDepth);
+        if (this.textures.exists(endKey)) {
+          this.add.image(left - overhang, yEnd, endKey)
+            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatSy * 0.95);
+          this.add.image(left + bw + overhang, yEnd, endKey)
+            .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatSy * 0.95).setFlipX(true);
+        }
+      } else {
+        // Gable: dual shingle courses fill the hollow middle, ends on top.
+        // Roof_1 connecting is only the 8px ridge strip — one run left a
+        // see-through gap under the peak. Lower course closes it; ends keep
+        // the classic sloped eaves.
+        const spanL = left - overhang;
+        const spanR = left + bw + overhang;
+        const lowerInset = (recipe.lowerInset || 10) * SCALE;
+        const ridgeInset = (recipe.ridgeInset || 15) * SCALE;
+        placeRun(yLower, spanL + lowerInset, spanR - lowerInset, connDepth - 0.1);
+        placeRun(yRidge, spanL + ridgeInset, spanR - ridgeInset, connDepth);
+        if (this.textures.exists(endKey)) {
+          this.add.image(spanL, yEnd, endKey)
+            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
+          this.add.image(spanR, yEnd, endKey)
+            .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
+        }
       }
 
-      if (!this.textures.exists(connKey)) {
-        return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
-      }
-
-      // Overlap ends by a few px so the ridge never gaps at the joint.
-      const join = isFlat ? 2 : 8;
-      const runL = left - overhang + endW - join;
-      const runR = left + bw + overhang - endW + join;
-      let lastX = runL;
-      for (let x = runL; x + tileW <= runR + 0.5; x += tileW) {
-        this.add.image(x, y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
-        lastX = x + tileW;
-      }
-      // Close any leftover span — identical shingles hide the overlap.
-      if (runR - lastX > 1) {
-        this.add.image(Math.max(runL, runR - tileW), y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE);
-      }
-      // Always plant one mid-span tile on wide buildings so a failed loop
-      // math can't leave a hollow center between the eaves.
-      if (bw >= 120 && runR - runL > tileW * 2) {
-        const midX = (runL + runR) / 2 - tileW / 2;
-        this.add.image(midX, y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth - 0.1).setScale(SCALE);
-      }
-
-      // Snow overlay for snow style or winter themes
       if (style === 'snow' || (typeof roofSpec === 'object' && roofSpec.snow)) {
-        this.drawRoofSnow(left, top, bw, y);
+        this.drawRoofSnow(left, top, bw, yRidge);
       }
 
-      return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
+      return {
+        style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'),
+        color,
+        y: yRidge,
+      };
     }
 
     /** Layer snow piles along a roof line (Pixel Spaces snowpile tiles). */
@@ -3264,13 +3537,17 @@
 
       // Soft deck planks already drawn by markRooftopDeck
       if (style === 'utility' || style === 'flat') {
+        // Flat roofs always get HVAC so the deck doesn't look empty.
         if (this.textures.exists('roofVents1')) {
-          this.furn('roofVents1', roofMin + span * 0.25, roofY, 22);
+          this.furn('roofVents1', roofMin + span * 0.22, roofY, 22);
         }
         if (this.textures.exists('roofVents2')) {
-          this.furn('roofVents2', roofMin + span * 0.7, roofY, 22);
+          this.furn('roofVents2', roofMin + span * 0.62, roofY, 22);
         }
-        if (span > 120 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
+        if (span > 100 && this.textures.exists('roofVents1')) {
+          this.furn('roofVents1', roofMin + span * 0.88, roofY, 22, SCALE * 0.9);
+        }
+        if (span > 140 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
           this.furn('craneRoof', mid + 20, roofY, 21);
         }
       } else if (style === 'garden' || style === 'gable') {
@@ -3288,6 +3565,7 @@
       } else {
         // default mix — utility props only, never trees on a roof
         if (this.textures.exists('roofVents1')) this.furn('roofVents1', mid - 18, roofY, 22);
+        if (this.textures.exists('roofVents2')) this.furn('roofVents2', mid + 28, roofY, 22);
         if (span > 120 && this.textures.exists('craneRoof') && (s % 3 === 0)) {
           this.furn('craneRoof', mid + 26, roofY, 21);
         }
@@ -3444,8 +3722,8 @@
           ? top + bh - doorStrip - y0
           : roomH - 4;
         const roomKey = isPlaceholder ? `vc_placeholder_${idx}` : chKey(channels[idx].id);
-        const label = isPlaceholder ? '' : channelLabel(channels[idx]);
-        const fill = isPlaceholder ? 0xc2c6e6 : this.roomWallColor(roomKey);
+        const label = isPlaceholder ? '' : this.roomDisplayLabel(channels[idx]);
+        const fill = isPlaceholder ? 0xc2c6e6 : this.roomWallColor(roomKey, channels[idx]?.id);
 
         this.cutawayRoom(g, x0, y0, roomW, h, fill, () => {
           if (!isPlaceholder) {
@@ -3477,14 +3755,56 @@
           this.registerDoor({ x: left + 42, floorId: roomKey, radius: 18 });
         }
         if (cols === 2 && idx === 1 && !isPlaceholder) {
-          this.registerDoor({ x: left + bw - 48, floorId: roomKey, radius: 18 });
+          this.registerDoor({ x: streetDoorRightX(left, bw), floorId: roomKey, radius: 18 });
         }
       }
 
       this.placeEntrance(g, left + 42, groundY, 'door', 0x3c45c0, 26);
       if (cols === 2 && channels.length > 1) {
-        this.placeEntrance(g, left + bw - 48, groundY, 'door', 0x3c45c0, 26);
+        this.placeEntrance(g, streetDoorRightX(left, bw), groundY, 'door', 0x3c45c0, 26);
       }
+
+      // Side-by-side VC rooms need a walkable middle doorway (same as text buildings).
+      if (cols === 2) {
+        for (let r = 0; r < rows; r += 1) {
+          const leftIdx = r * 2;
+          const rightIdx = leftIdx + 1;
+          if (rightIdx >= channels.length) continue;
+          const leftKey = chKey(channels[leftIdx].id);
+          const rightKey = chKey(channels[rightIdx].id);
+          const leftFloor = this.floors.get(leftKey);
+          const rightFloor = this.floors.get(rightKey);
+          if (!leftFloor || !rightFloor) continue;
+          this.registerPassage({
+            fromFloorId: leftKey,
+            toFloorId: rightKey,
+            x: left + 16 + roomW + gap / 2,
+            radius: 18,
+            roomH,
+            doorKind: 'wood',
+          });
+        }
+        // Vertical climbs between stacked VC rows (left & right columns)
+        for (let r = 0; r + 1 < rows; r += 1) {
+          for (const col of [0, 1]) {
+            const upperIdx = r * 2 + col;
+            const lowerIdx = (r + 1) * 2 + col;
+            if (upperIdx >= channels.length || lowerIdx >= channels.length) continue;
+            const upperKey = chKey(channels[upperIdx].id);
+            const lowerKey = chKey(channels[lowerIdx].id);
+            const laneX = left + 16 + col * (roomW + gap) + Math.max(22, roomW * 0.18);
+            this.markClimbDoor(laneX, upperKey);
+            this.markClimbDoor(laneX, lowerKey);
+            this.registerStairs({
+              x: laneX,
+              fromFloorId: lowerKey,
+              toFloorId: upperKey,
+              radius: 28,
+            });
+          }
+        }
+      }
+
       const vWinY = groundY - doorStrip + 12;
       [left + bw * 0.3, left + bw * 0.7].forEach((wx) => {
         if (!this.textures.exists('windowCircle')) return;
@@ -3554,8 +3874,8 @@
       chans.forEach((ch, idx) => {
         const slot = grid[idx];
         const roomKey = chKey(ch.id);
-        const label = channelLabel(ch);
-        this.cutawayRoom(g, slot.x, slot.y, slot.w, slot.h, this.roomWallColor(roomKey), () => {
+        const label = this.roomDisplayLabel(ch);
+        this.cutawayRoom(g, slot.x, slot.y, slot.w, slot.h, this.roomWallColor(roomKey, ch.id), () => {
           const floor = slot.y + slot.h - 2;
           this.decorateRoom(ch, slot.x, slot.y, slot.w, slot.h, floor, {
             clearXf: 0.14,
@@ -3607,7 +3927,7 @@
         this.registerDoor({ x: doorX, floorId: bottomRow[0].key, radius: 18, kind: 'door' });
       }
       if (bottomRow[1]) {
-        const doorX2 = left + bw - 44;
+        const doorX2 = streetDoorRightX(left, bw);
         this.placeEntrance(g, doorX2, groundY, 'door', pal.lintel, 26);
         this.registerDoor({ x: doorX2, floorId: bottomRow[1].key, radius: 18, kind: 'door' });
       }
@@ -3643,7 +3963,9 @@
             fromFloorId: row[0].key,
             toFloorId: row[1].key,
             x: padX + roomW + gap / 2,
-            radius: 14,
+            radius: 18,
+            roomH,
+            doorKind: 'wood',
           });
         }
       });
@@ -4036,13 +4358,42 @@
         const sc = SCALE;
         const src = doorTexSize(this, 'elevClosed');
         const leafW = src.w * sc;
-        const edgePad = floor.isRoof ? leafW / 2 + 10 : leafW / 2;
+        const leafH = src.h * sc;
+        const jamb = 3;
+        const lintelH = 4;
+        const frameW = leafW + jamb * 2;
+        const frameH = leafH + 4;
+        const edgePad = floor.isRoof ? frameW / 2 + 10 : frameW / 2 + 4;
         let cx = preferredX;
         if (floor.minX != null) cx = Math.max(cx, floor.minX + edgePad);
         if (floor.maxX != null) cx = Math.min(cx, floor.maxX - edgePad);
+        // Keep elevators in the left climb lane — never clamp into the right wall.
+        if (floor.minX != null && floor.maxX != null) {
+          const mid = (floor.minX + floor.maxX) / 2;
+          if (preferredX <= mid + 8) {
+            cx = Math.min(cx, mid - edgePad);
+          }
+        }
         if (floor.isRoof) return cx;
 
         const doorBottomY = floor.floorY - 2;
+        const fx = Math.round(cx - frameW / 2);
+        const fy = Math.round(doorBottomY - frameH);
+
+        // Shaft alcove so the elev reads as built-in cabin, not a floating slab.
+        const g = this.add.graphics().setDepth(21.2);
+        g.fillStyle(0x1e2830, 1);
+        g.fillRect(fx - 2, fy - lintelH, frameW + 4, lintelH);
+        g.fillStyle(0x0a0c10, 1);
+        g.fillRect(fx, fy, frameW, frameH);
+        g.fillStyle(0x3a4550, 1);
+        g.fillRect(fx, fy, jamb, frameH);
+        g.fillRect(fx + frameW - jamb, fy, jamb, frameH);
+        g.fillStyle(0x2a3038, 1);
+        g.fillRect(fx - 1, doorBottomY - 2, frameW + 2, 2);
+        g.lineStyle(1, 0x0a0806, 0.9);
+        g.strokeRect(fx, fy, frameW, frameH);
+
         const img = this.add.image(cx, doorBottomY, 'elevClosed')
           .setOrigin(0.5, 1)
           .setScale(sc)
@@ -4141,8 +4492,17 @@
         .setDepth(depth);
     }
 
-    /** Wall color for a room, deterministic per channel id. */
-    roomWallColor(roomKey) {
+    /** Wall color for a room — `,room color` override, else deterministic. */
+    roomWallColor(roomKey, channelId = null) {
+      const id = channelId != null
+        ? String(channelId)
+        : String(roomKey || '').replace(/^ch_/, '');
+      const ov = this.roomOverrides?.[id];
+      if (ov?.color) {
+        const raw = String(ov.color).trim().toLowerCase().replace(/^#/, '');
+        if (ROOM_COLOR_BY_NAME[raw] != null) return ROOM_COLOR_BY_NAME[raw];
+        if (/^[0-9a-f]{6}$/i.test(raw)) return parseInt(raw, 16);
+      }
       return ROOM_WALL_COLORS[hashSeed(roomKey) % ROOM_WALL_COLORS.length];
     }
 
@@ -4155,7 +4515,8 @@
     decorateRoom(ch, slotX, slotY, slotW, slotH, floorY, opts = {}) {
       const roomKey = opts.roomKey || chKey(ch.id);
       const seed = hashSeed(roomKey);
-      const kitName = kitForChannel(ch.name, ch.type, seed);
+      const ov = this.roomOverrides?.[String(ch.id)];
+      const kitName = (ov?.kit && KITS[ov.kit]) ? ov.kit : kitForChannel(ch.name, ch.type, seed);
       let kit = KITS[kitName] || KITS.lounge;
       // Tiny rooms: drop the last 1–2 props so nothing crams.
       if (slotW < 110) kit = kit.slice(0, Math.min(3, kit.length));
@@ -4278,30 +4639,44 @@
       }
     }
 
-    /** Visual doorway gap between side-by-side rooms (horizontal passage). */
-    markPassageDoorway(x, floorY, roomH) {
+    /** Side-profile doorway between left/right rooms (horizontal passage).
+     *  Uses pack Door_*_closed edge-on leaf — NOT a front-facing double. */
+    markPassageDoorway(x, floorY, roomH, doorKind = 'wood') {
       this.ensureFrontDoorTextures();
-      const g = this.add.graphics().setDepth(20.8);
-      const doorH = Math.min(44, roomH - 8);
-      const doorW = 12;
+      const fam = doorFamilyFor(doorKind);
+      let sideKey = fam.sideKey;
+      if (!this.textures.exists(sideKey)) {
+        sideKey = this.textures.exists('doorClosed') ? 'doorClosed' : 'doorFrontClosed';
+      }
+      const sc = SCALE;
+      const src = doorTexSize(this, sideKey);
+      // Native leaf size — side strips are ~5×22 → ~10×44 at SCALE 2.
+      const leafW = Math.max(6, src.w * sc);
+      const leafH = src.h * sc;
+      // Narrow recess in the shared wall; height matches the leaf, not the room.
+      const doorW = Math.max(10, leafW + 4);
+      const doorH = Math.min(Math.max(leafH + 4, 42), Math.max(40, (roomH || 82) - 16));
       const top = floorY - doorH;
-      // Dark opening in the shared wall
-      g.fillStyle(0x0c0a08, 0.85);
+
+      const g = this.add.graphics().setDepth(20.8);
+      // Soft wall opening (narrow — not a black shaft)
+      g.fillStyle(0x0c0a08, 0.75);
       g.fillRect(x - doorW / 2, top, doorW, doorH);
-      // Thin jambs
+      // Jambs + lintel
       g.fillStyle(0x2a2218, 1);
       g.fillRect(x - doorW / 2 - 2, top, 2, doorH);
       g.fillRect(x + doorW / 2, top, 2, doorH);
       g.fillStyle(0x3a2e22, 1);
       g.fillRect(x - doorW / 2 - 1, top - 3, doorW + 2, 3);
-      // Side-view door leaf: pack closed sliver when available, else canvas
-      const sideKey = this.textures.exists('doorClosed') ? 'doorClosed' : 'doorFrontClosed';
+      g.fillStyle(0x2c2118, 1);
+      g.fillRect(x - doorW / 2 - 1, floorY - 2, doorW + 2, 2);
+
+      // Edge-on closed leaf at native pack scale (side profile)
       if (this.textures.exists(sideKey)) {
-        this.add.image(x - doorW / 2 - 1, floorY - 1, sideKey)
-          .setOrigin(1, 1)
-          .setScale(SCALE * (sideKey === 'doorClosed' ? 1.1 : 0.3), (doorH - 2) / 22)
-          .setDepth(20.9)
-          .setAlpha(0.95);
+        this.add.image(x - 1, floorY - 1, sideKey)
+          .setOrigin(0.5, 1)
+          .setScale(sc, sc)
+          .setDepth(20.9);
       }
     }
 
@@ -4351,14 +4726,15 @@
     }
 
     makeAnims() {
-      // Build every pose from NPC_POSE_DEFS for each premade + hospital staff sheet.
-      // frame = row * 8 + col; never include the trailing label cell.
+      // Premades: 8×14 pose grid. Hospital staff: 5×3 (walk/idle/jump + aliases).
       [...NPC_SHEETS, ...HOSP_NPC_SHEETS].forEach((n) => {
         if (!this.textures.exists(n.key)) return;
-        Object.entries(NPC_POSE_DEFS).forEach(([pose, def]) => {
+        const cols = sheetColCount(n.key);
+        const poseDefs = poseDefsForSheet(n.key);
+        Object.entries(poseDefs).forEach(([pose, def]) => {
           const key = `${n.key}_${pose}`;
           if (this.anims.exists(key)) return;
-          const base = def.row * NPC_COLS + (def.frameOffset || 0);
+          const base = def.row * cols + (def.frameOffset || 0);
           const start = base;
           const end = base + Math.max(0, def.frames - 1);
           let frames;
@@ -4560,11 +4936,13 @@
     playSheetPose(sprite, sheet, pose, opts = {}) {
       if (!sprite?.active || !sheet || !pose) return false;
       const key = `${sheet}_${pose}`;
+      const poseDefs = poseDefsForSheet(sheet);
+      const cols = sheetColCount(sheet);
       if (!this.anims.exists(key)) {
         // Lazy-create if sheet was loaded late
-        if (this.textures.exists(sheet) && NPC_POSE_DEFS[pose] && !sheet.startsWith('pet')) {
-          const def = NPC_POSE_DEFS[pose];
-          const base = def.row * NPC_COLS + (def.frameOffset || 0);
+        if (this.textures.exists(sheet) && poseDefs[pose] && !sheet.startsWith('pet')) {
+          const def = poseDefs[pose];
+          const base = def.row * cols + (def.frameOffset || 0);
           const frames = def.frames === 1
             ? [{ key: sheet, frame: base }]
             : this.anims.generateFrameNumbers(sheet, { start: base, end: base + def.frames - 1 });
@@ -4580,12 +4958,12 @@
       try {
         // Don't stop+restart looping walk/idle every frame — only switch keys
         const cur = sprite.anims.currentAnim?.key;
-        if (cur === key && NPC_POSE_DEFS[pose]?.loop) return true;
+        if (cur === key && poseDefs[pose]?.loop) return true;
         sprite.anims.play(key, false);
       } catch (_) {
         return false;
       }
-      const def = NPC_POSE_DEFS[pose];
+      const def = poseDefs[pose];
       const dur = opts.holdMs != null ? opts.holdMs : poseDurationMs(pose);
       const token = (sprite._poseToken = (sprite._poseToken || 0) + 1);
       if (sprite === this.player) {
@@ -4856,6 +5234,29 @@
     /** Brief chat bubble (no text) for social beats — pack-accurate. */
     showChatBubble(sprite, colorKey = 'uiBubbleWhite') {
       this.showEmote(sprite, 'social', { bubble: true, bubbleKey: colorKey, emoteKey: 'emoteHeart' });
+    }
+
+    /**
+     * Brief text speech bubble over an ambient NPC's head (operation chatter,
+     * etc.). One bubble per actor at a time; auto-fades. Anchored where the
+     * actor stands (hospital staff are mostly parked, so it tracks fine).
+     */
+    actorSay(actor, text) {
+      if (!actor?.sprite?.active || !text) return;
+      if (actor._sayObj) { try { actor._sayObj.destroy(); } catch (_) { /* gone */ } actor._sayObj = null; }
+      const sp = actor.sprite;
+      const label = this.add.text(sp.x, sp.y - 42, String(text), {
+        fontFamily: 'Segoe UI, Tahoma, sans-serif',
+        fontSize: '9px',
+        color: '#123038',
+        backgroundColor: '#eef6f2',
+        padding: { x: 4, y: 2 },
+      }).setOrigin(0.5, 1).setDepth(62).setResolution(3);
+      actor._sayObj = label;
+      this.tweens.add({
+        targets: label, y: label.y - 5, alpha: 0, delay: 1500, duration: 550,
+        onComplete: () => { try { label.destroy(); } catch (_) { /* gone */ } if (actor._sayObj === label) actor._sayObj = null; },
+      });
     }
 
     playAmbientPose(actor, pose, opts = {}) {
@@ -5512,14 +5913,57 @@
       if (!actor?.sprite?.active) return;
       if (actor._displaced) return;
 
-      // Hospital staff: stay at bedside, rare emote, occasional short check of saline/monitor
+      // Hospital staff: bedside ward care, or scrub-team "operation" loop in the OR.
       if (actor.role === 'nurse' || actor.role === 'surgeon') {
         if (actor.seated) {
           this.actorStandUp(actor);
           this.parkHospitalStaff(actor);
           return;
         }
+        const atOr = !!(actor.hospOpts?.onSurgery || actor.attendBed?.key === 'tableSurgery');
         const roll = Math.random();
+        if (atOr) {
+          // Occasional operation chatter so the team reads as talking to each other.
+          if (Math.random() < 0.4) {
+            const lines = OR_CHATTER[actor.role] || OR_CHATTER.surgeon;
+            this.actorSay(actor, lines[Math.floor(Math.random() * lines.length)]);
+          }
+          // Operating theater: keep the scrub team busy around the patient.
+          if (roll < 0.34) {
+            // Lean / gesture over the table (jump≈reach on hospital sheets)
+            this.playAmbientPose(actor, Math.random() < 0.55 ? 'jump' : 'wave');
+            actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 1800);
+          } else if (roll < 0.55 && actor.attendBed) {
+            const bedX = actor.attendBed.x;
+            const closer = bedX + (actor.sprite.x < bedX ? -10 : 10);
+            const returnX = actor.homeX;
+            this.actorWalkTo(actor, closer, () => {
+              this.playAmbientPose(actor, 'jump');
+              this.time.delayedCall(700 + Math.random() * 500, () => {
+                if (!actor.sprite?.active || actor._displaced) return;
+                this.actorWalkTo(actor, returnX, () => this.parkHospitalStaff(actor), 14);
+              });
+            }, 14);
+          } else if (roll < 0.68 && actor.attendBed) {
+            // Nurse checks saline / instruments, then returns
+            const peekX = actor.attendBed.x + (Math.random() < 0.5 ? -42 : 42);
+            const returnX = actor.homeX;
+            this.actorWalkTo(actor, peekX, () => {
+              this.time.delayedCall(600 + Math.random() * 700, () => {
+                if (!actor.sprite?.active || actor._displaced) return;
+                this.actorWalkTo(actor, returnX, () => this.parkHospitalStaff(actor), 14);
+              });
+            }, 14);
+          } else {
+            if (actor.homeX != null && Math.abs(actor.sprite.x - actor.homeX) > 6) {
+              actor.sprite.x = actor.homeX;
+              actor.sprite.y = actor.floorY;
+              this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+            }
+            actor.busyUntil = this.time.now + 1600 + Math.random() * 2200;
+          }
+          return;
+        }
         if (roll < 0.12) {
           this.playAmbientPose(actor, Math.random() < 0.55 ? 'wave' : 'shrug');
           actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 2200);
@@ -7006,25 +7450,29 @@
 
     registerPassage(def) {
       if (!this.passages) this.passages = [];
-      const radius = def.radius || 14;
+      const radius = def.radius || 18;
       this.passages.push({
         x: def.x,
         fromFloorId: def.fromFloorId,
         toFloorId: def.toFloorId,
         radius,
       });
-      // Each room's walkable minX/maxX stops a few px short of the shared
-      // wall, so the passage trigger point (sitting in that gap) was never
-      // actually reachable — extend each room's bound toward the passage.
-      const from = this.floors.get(def.fromFloorId);
-      const to = this.floors.get(def.toFloorId);
-      if (from) from.maxX = Math.max(from.maxX, def.x + radius + 4);
-      if (to) to.minX = Math.min(to.minX, def.x - radius - 4);
-      // Draw a doorway so the horizontal transition is obvious
-      const floorY = from?.floorY || to?.floorY;
+      // Walkable bounds stop short of the shared wall — extend both rooms so
+      // the doorway trigger is reachable. Don't assume from=left / to=right.
+      const a = this.floors.get(def.fromFloorId);
+      const b = this.floors.get(def.toFloorId);
+      if (a && b) {
+        const leftFloor = (a.minX + a.maxX) <= (b.minX + b.maxX) ? a : b;
+        const rightFloor = leftFloor === a ? b : a;
+        leftFloor.maxX = Math.max(leftFloor.maxX, def.x + radius + 10);
+        rightFloor.minX = Math.min(rightFloor.minX, def.x - radius - 10);
+      } else {
+        if (a) a.maxX = Math.max(a.maxX, def.x + radius + 10);
+        if (b) b.minX = Math.min(b.minX, def.x - radius - 10);
+      }
+      const floorY = a?.floorY ?? b?.floorY;
       if (floorY != null) {
-        // Approximate room height from floorY spacing is unknown; use 48px opening.
-        this.markPassageDoorway(def.x, floorY, 52);
+        this.markPassageDoorway(def.x, floorY, def.roomH || 82, def.doorKind || 'wood');
       }
     }
 
@@ -7135,6 +7583,47 @@
         if (p.toFloorId === cur) return { ...p, targetFloorId: p.fromFloorId };
       }
       return null;
+    }
+
+    /**
+     * Cross a left↔right doorway only when walking toward the other room.
+     * The old "any velocity past the seam" check ping-ponged floorIds every
+     * frame and felt like getting stuck in the door.
+     */
+    tryCrossPassage(vx) {
+      if (!this.indoors || !this.player || this._floorTween) return false;
+      if (this.time.now < (this._passageCoolUntil || 0)) return false;
+      const curId = this.indoors.floorId;
+      const px = this.player.x;
+      for (const p of this.passages || []) {
+        if (curId !== p.fromFloorId && curId !== p.toFloorId) continue;
+        if (Math.abs(px - p.x) > p.radius) continue;
+
+        const fromF = this.floors.get(p.fromFloorId);
+        const toF = this.floors.get(p.toFloorId);
+        if (!fromF || !toF) continue;
+        const fromIsLeft = (fromF.minX + fromF.maxX) <= (toF.minX + toF.maxX);
+        const leftId = fromIsLeft ? p.fromFloorId : p.toFloorId;
+        const rightId = fromIsLeft ? p.toFloorId : p.fromFloorId;
+        const leftF = fromIsLeft ? fromF : toF;
+        const rightF = fromIsLeft ? toF : fromF;
+
+        let nextId = null;
+        if (vx > 0 && curId === leftId && px >= p.x - 6) nextId = rightId;
+        if (vx < 0 && curId === rightId && px <= p.x + 6) nextId = leftId;
+        if (!nextId) continue;
+
+        const next = nextId === rightId ? rightF : leftF;
+        this.indoors.floorId = nextId;
+        this.player.y = next.floorY;
+        this.player.x = p.x + (vx > 0 ? 14 : -14);
+        this.player.x = Phaser.Math.Clamp(this.player.x, next.minX, next.maxX);
+        this.player.setDepth(next.isRoof ? 46 : 44);
+        this._passageCoolUntil = this.time.now + 220;
+        this.playEnterStep?.();
+        return true;
+      }
+      return false;
     }
 
     /** Brief open pulse on nearby climb/street doors when changing floors. */
@@ -7708,19 +8197,8 @@
         const floor = this.floors.get(this.indoors.floorId);
         if (floor && !this._floorTween) {
           this.player.y = floor.floorY;
-          // Horizontal room-to-room: walk into the doorway gap
-          const passage = this.nearbyPassage();
-          if (passage && ((vx > 0 && this.player.x > passage.x - 3) || (vx < 0 && this.player.x < passage.x + 3))) {
-            const next = this.floors.get(passage.targetFloorId);
-            if (next && next.floorY != null) {
-              // Soft handoff into the neighbor room
-              this.indoors.floorId = passage.targetFloorId;
-              this.player.y = next.floorY;
-              // Nudge past the door so you don't immediately bounce back
-              this.player.x = passage.x + (vx > 0 ? 10 : -10);
-              this.player.x = Phaser.Math.Clamp(this.player.x, next.minX, next.maxX);
-            }
-          }
+          // Horizontal room-to-room — direction-aware so we don't bounce in the door
+          this.tryCrossPassage(vx);
           const cur = this.floors.get(this.indoors.floorId);
           if (cur) {
             this.player.x = Phaser.Math.Clamp(this.player.x, cur.minX, cur.maxX);

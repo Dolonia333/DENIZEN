@@ -261,6 +261,19 @@ function createPresenceServer({
             ms: r.ms,
           }));
           const brand = spacesBranding(gid);
+          let roomOverrides = {};
+          let categoryOverrides = {};
+          if (config && gid) {
+            try {
+              const sp = config.get(gid)?.spaces || {};
+              roomOverrides = sp.rooms && typeof sp.rooms === 'object' ? sp.rooms : {};
+              categoryOverrides = sp.categories && typeof sp.categories === 'object' ? sp.categories : {};
+            } catch (_) { /* ignore */ }
+          }
+          const roomsWithMap = (rooms || []).map((r) => {
+            const ov = roomOverrides[String(r.id)] || null;
+            return ov ? { ...r, map: ov } : r;
+          });
           const publicBase = String(
             process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '',
           ).replace(/\/$/, '');
@@ -274,7 +287,9 @@ function createPresenceServer({
             guildId: gid,
             guildName: snap?.name || null,
             categories: snap?.categories || [],
-            rooms,
+            rooms: roomsWithMap,
+            roomOverrides,
+            categoryOverrides,
             people,
             members: snap?.members || [],
             hangoutTop,

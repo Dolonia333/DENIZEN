@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "name": "gable-red-example",
+  "family": "Roof_1",
+  "color": "red",
+  "style": "gable",
+  "scale": 2,
+  "buildingWidth": 180,
+  "note": "Visual match for gable-red-example.png (dual course + seated eaves).",
+  "parametric": {
+    "overhang": 6,
+    "yEndOffset": 1,
+    "endSrcW": 26,
+    "endSrcH": 17,
+    "connSrcH": 8,
+    "ridgeInset": 15,
+    "lowerInset": 10,
+    "connStep": 15,
+    "endDepth": 21.0,
+    "connDepth": 20.5
+  },
+  "pieces": []
+}

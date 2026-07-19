@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "name": "flat-default",
+  "family": "Roof_2",
+  "style": "flat",
+  "scale": 2,
+  "note": "Flat parapet with fascia + connecting run between end caps.",
+  "parametric": {
+    "overhang": 6,
+    "yEndOffset": 2,
+    "endSrcW": 9,
+    "endSrcH": 5,
+    "connSrcH": 4,
+    "endDepth": 21.1,
+    "connDepth": 20.6
+  },
+  "pieces": []
+}

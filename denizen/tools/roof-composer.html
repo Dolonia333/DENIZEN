@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Roof Composer — Denizen</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --line: #334155;
+    --txt: #e2e8f0;
+    --accent: #4a9eff;
+    --sel: #22c55e;
+    --warn: #f59e0b;
+    --muted: #64748b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--txt); font: 13px/1.4 "Segoe UI", system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; overflow: hidden; }
+  header {
+    flex: 0 0 auto; padding: 10px 14px; background: var(--panel);
+    border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center;
+  }
+  header h1 { margin: 0; font-size: 15px; color: var(--accent); font-weight: 600; }
+  header .hint { color: var(--muted); font-size: 12px; flex: 1; min-width: 180px; }
+  select, button, input[type="number"], input[type="text"] {
+    background: #0b1220; color: var(--txt); border: 1px solid var(--line);
+    border-radius: 5px; padding: 5px 9px; font: inherit;
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.active { border-color: var(--sel); color: var(--sel); }
+  button.danger:hover { border-color: #ef4444; color: #fca5a5; }
+  label { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .wrap { flex: 1; min-height: 0; display: flex; }
+  .palette {
+    width: 220px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line);
+    padding: 12px; overflow: auto; display: flex; flex-direction: column; gap: 10px;
+  }
+  .palette h2, aside h2 {
+    margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8;
+  }
+  .swatch {
+    display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--line);
+    border-radius: 8px; background: #0b1220; cursor: grab; user-select: none;
+  }
+  .swatch:hover, .swatch.selected { border-color: var(--accent); }
+  .swatch canvas { image-rendering: pixelated; background:
+    repeating-conic-gradient(#1a2030 0% 25%, #141a28 0% 50%) 50%/8px 8px; border-radius: 4px; }
+  .swatch .meta { display: flex; flex-direction: column; gap: 2px; }
+  .swatch .meta strong { font-size: 12px; }
+  .swatch .meta span { color: var(--muted); font-size: 11px; }
+  .stage-wrap {
+    flex: 1; min-width: 0; position: relative; overflow: auto;
+    background:
+      radial-gradient(ellipse at 30% 0%, rgba(74,158,255,.08), transparent 50%),
+      repeating-conic-gradient(#1a2030 0% 25%, #141a28 0% 50%) 50%/24px 24px;
+  }
+  #stage {
+    display: block; image-rendering: pixelated; cursor: crosshair;
+    margin: 24px; box-shadow: 0 0 0 1px var(--line); background: #1a2233;
+  }
+  aside {
+    width: 300px; flex-shrink: 0; background: var(--panel); border-left: 1px solid var(--line);
+    padding: 14px; overflow: auto;
+  }
+  .row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid #243049; }
+  .row .k { color: #94a3b8; }
+  .row .v { color: var(--sel); font-family: "Courier New", monospace; font-weight: 700; }
+  textarea {
+    width: 100%; height: 160px; background: #060a13; color: #7ee787; border: 1px solid var(--line);
+    border-radius: 4px; font-family: "Courier New", monospace; font-size: 11px; resize: vertical; padding: 8px;
+  }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .toolbar button { flex: 1 1 auto; min-width: 70px; }
+  .pill {
+    display: inline-block; background: #0b1220; border: 1px solid var(--line);
+    border-radius: 99px; padding: 2px 8px; font-size: 11px; margin: 2px;
+  }
+  kbd {
+    background: #0b1220; border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 4px; padding: 1px 5px; font-size: 11px;
+  }
+  .cut-hint { color: var(--warn); font-size: 11px; margin-top: 4px; display: none; }
+  .cut-hint.on { display: block; }
+  .status { color: var(--muted); font-size: 11px; margin-top: 8px; min-height: 1.2em; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Roof Composer</h1>
+  <span class="hint">Drag tiles onto the building, cut a region, export a PNG + recipe JSON for <code>drawRoofCap</code>.</span>
+  <label>Family
+    <select id="family">
+      <option value="1">Roof_1 (gable)</option>
+      <option value="2">Roof_2 (flat)</option>
+    </select>
+  </label>
+  <label>Color
+    <select id="color"></select>
+  </label>
+  <label>Zoom
+    <input id="zoom" type="range" min="2" max="10" value="4" style="width:110px" />
+    <span id="zoomval">4×</span>
+  </label>
+  <label>Width
+    <input id="bw" type="number" min="48" max="400" value="160" style="width:64px" />
+  </label>
+  <label><input type="checkbox" id="snap" checked /> Snap</label>
+  <label><input type="checkbox" id="grid" checked /> Grid</label>
+  <button id="loadCurrent" title="Place tiles like current game.js">Load code layout</button>
+  <button id="clearAll" class="danger">Clear</button>
+</header>
+
+<div class="wrap">
+  <div class="palette">
+    <h2>Tiles</h2>
+    <div id="swatches"></div>
+    <p style="color:var(--muted);font-size:11px;margin:4px 0 0">
+      Click a swatch then click the canvas to stamp, or drag the swatch onto the stage.
+      Hold <kbd>Alt</kbd> while placing to flip X (right eave).
+    </p>
+  </div>
+
+  <div class="stage-wrap" id="stageWrap">
+    <canvas id="stage" width="640" height="320"></canvas>
+  </div>
+
+  <aside>
+    <h2>Tools</h2>
+    <div class="toolbar">
+      <button id="toolMove" class="active">Move</button>
+      <button id="toolCut">Cut</button>
+      <button id="toolDelete" class="danger">Delete</button>
+    </div>
+    <p class="cut-hint" id="cutHint">Cut mode: drag a box on the canvas to crop a new piece from the composite roof.</p>
+
+    <h2>Selection</h2>
+    <div class="row"><span class="k">piece</span><span class="v" id="s-name">–</span></div>
+    <div class="row"><span class="k">x, y</span><span class="v" id="s-xy">–</span></div>
+    <div class="row"><span class="k">size</span><span class="v" id="s-wh">–</span></div>
+    <div class="row"><span class="k">flipX</span><span class="v" id="s-flip">–</span></div>
+    <div class="toolbar">
+      <button id="flipSel">Flip X</button>
+      <button id="dupSel">Duplicate</button>
+      <button id="bringFront">Front</button>
+      <button id="sendBack">Back</button>
+    </div>
+
+    <h2>Export</h2>
+    <div class="toolbar">
+      <button id="exportPng" class="primary">PNG example</button>
+      <button id="exportJson">JSON recipe</button>
+      <button id="copyJson">Copy JSON</button>
+    </div>
+    <textarea id="recipe" readonly placeholder="recipe appears here…"></textarea>
+    <div class="status" id="status"></div>
+
+    <h2>Keys</h2>
+    <div>
+      <span class="pill"><kbd>V</kbd> move</span>
+      <span class="pill"><kbd>C</kbd> cut</span>
+      <span class="pill"><kbd>Del</kbd> delete</span>
+      <span class="pill"><kbd>←↑→↓</kbd> nudge</span>
+      <span class="pill"><kbd>F</kbd> flip</span>
+      <span class="pill"><kbd>D</kbd> duplicate</span>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const INF = '../discord-map/PixelSpaces/Infrastructure';
+  const COLORS_1 = ['red', 'blue', 'green', 'orange', 'purple', 'black', 'yellow'];
+  const COLORS_2 = ['red', 'blue', 'green', 'orange', 'purple', 'grey', 'yellow'];
+  const SCALE = 2; // matches game.js SCALE for exported world coords
+
+  const $ = (id) => document.getElementById(id);
+  const stage = $('stage');
+  const ctx = stage.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const state = {
+    zoom: 4,
+    bw: 160,          // building width in world px (pre-zoom canvas units use world px)
+    tool: 'move',     // move | cut | delete
+    selectedTile: 'end',
+    pieces: [],       // { id, kind, x, y, flipX, img, w, h, crop? }
+    selectedId: null,
+    images: {},       // kind -> HTMLImageElement
+    drag: null,       // piece drag or cut drag
+    stampFlip: false,
+    nextId: 1,
+  };
+
+  // World layout constants (same spirit as drawRoofCap)
+  const PAD = 48; // canvas padding around building
+  const WALL_H = 72;
+  const ROOF_ROOM_Y = PAD + 40; // building top (deck lip)
+
+  function family() { return $('family').value; }
+  function color() { return $('color').value; }
+  function snapOn() { return $('snap').checked; }
+  function gridOn() { return $('grid').checked; }
+
+  function setStatus(msg) {
+    $('status').textContent = msg || '';
+  }
+
+  function fillColors() {
+    const list = family() === '2' ? COLORS_2 : COLORS_1;
+    const prev = color();
+    $('color').innerHTML = list.map((c) => `<option value="${c}">${c}</option>`).join('');
+    if (list.includes(prev)) $('color').value = prev;
+  }
+
+  function tilePaths() {
+    const f = family();
+    const c = color();
+    if (f === '2') {
+      return {
+        end: `${INF}/Roof_2_${c}_end.png`,
+        connecting: `${INF}/Roof_2_${c}_connecting.png`,
+      };
+    }
+    return {
+      end: `${INF}/Roof_1_${c}_end.png`,
+      connecting: `${INF}/Roof_1_${c}_connecting.png`,
+      snow1: `${INF}/Roof_snowpile_connecting_1.png`,
+      snow2: `${INF}/Roof_snowpile_connecting_2.png`,
+      snow3: `${INF}/Roof_snowpile_connecting_3.png`,
+      snowE: `${INF}/Roof_snowpile_end.png`,
+    };
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error(src));
+      im.src = src + '?v=' + Date.now();
+    });
+  }
+
+  async function reloadTiles() {
+    const paths = tilePaths();
+    const imgs = {};
+    for (const [kind, src] of Object.entries(paths)) {
+      try {
+        imgs[kind] = await loadImage(src);
+      } catch (e) {
+        console.warn('missing', src);
+      }
+    }
+    state.images = imgs;
+    renderSwatches();
+    redraw();
+    setStatus(`Loaded Roof_${family()} ${color()}`);
+  }
+
+  function renderSwatches() {
+    const box = $('swatches');
+    box.innerHTML = '';
+    const order = Object.keys(state.images);
+    for (const kind of order) {
+      const im = state.images[kind];
+      const el = document.createElement('div');
+      el.className = 'swatch' + (state.selectedTile === kind ? ' selected' : '');
+      el.draggable = true;
+      el.dataset.kind = kind;
+      const cv = document.createElement('canvas');
+      const z = 3;
+      cv.width = im.width * z;
+      cv.height = im.height * z;
+      const c = cv.getContext('2d');
+      c.imageSmoothingEnabled = false;
+      c.drawImage(im, 0, 0, cv.width, cv.height);
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      meta.innerHTML = `<strong>${kind}</strong><span>${im.width}×${im.height}</span>`;
+      el.appendChild(cv);
+      el.appendChild(meta);
+      el.addEventListener('click', () => {
+        state.selectedTile = kind;
+        renderSwatches();
+      });
+      el.addEventListener('dragstart', (ev) => {
+        state.selectedTile = kind;
+        ev.dataTransfer.setData('text/plain', kind);
+        ev.dataTransfer.effectAllowed = 'copy';
+      });
+      box.appendChild(el);
+    }
+  }
+
+  function worldW() { return PAD * 2 + state.bw + 24; }
+  function worldH() { return PAD * 2 + WALL_H + 80; }
+
+  function resizeStage() {
+    const z = state.zoom;
+    stage.width = worldW() * z;
+    stage.height = worldH() * z;
+  }
+
+  function canvasToWorld(cx, cy) {
+    return { x: cx / state.zoom, y: cy / state.zoom };
+  }
+
+  function snap(v) {
+    return snapOn() ? Math.round(v) : v;
+  }
+
+  function pieceAt(wx, wy) {
+    for (let i = state.pieces.length - 1; i >= 0; i--) {
+      const p = state.pieces[i];
+      const left = p.x;
+      const top = p.y - p.h; // origin bottom-left like Phaser setOrigin(0,1)
+      if (wx >= left && wx < left + p.w && wy >= top && wy < top + p.h) return p;
+    }
+    return null;
+  }
+
+  function selected() {
+    return state.pieces.find((p) => p.id === state.selectedId) || null;
+  }
+
+  function updateSelUI() {
+    const p = selected();
+    if (!p) {
+      $('s-name').textContent = '–';
+      $('s-xy').textContent = '–';
+      $('s-wh').textContent = '–';
+      $('s-flip').textContent = '–';
+      return;
+    }
+    $('s-name').textContent = p.kind + (p.cut ? ' (cut)' : '');
+    $('s-xy').textContent = `${p.x.toFixed(1)}, ${p.y.toFixed(1)}`;
+    $('s-wh').textContent = `${p.w}×${p.h}`;
+    $('s-flip').textContent = p.flipX ? 'true' : 'false';
+  }
+
+  function makePiece(kind, x, y, flipX = false, crop = null) {
+    const im = crop ? crop.img : state.images[kind];
+    if (!im) return null;
+    const w = crop ? crop.w : im.width;
+    const h = crop ? crop.h : im.height;
+    return {
+      id: state.nextId++,
+      kind,
+      x: snap(x),
+      y: snap(y),
+      flipX: !!flipX,
+      w,
+      h,
+      img: im,
+      cut: !!crop,
+      crop: crop ? { sx: crop.sx, sy: crop.sy, sw: crop.sw, sh: crop.sh } : null,
+    };
+  }
+
+  function addPiece(kind, x, y, flipX = false) {
+    const p = makePiece(kind, x, y, flipX);
+    if (!p) return;
+    state.pieces.push(p);
+    state.selectedId = p.id;
+    redraw();
+    updateSelUI();
+    refreshRecipe();
+  }
+
+  function buildingLeft() { return PAD + 12; }
+  function buildingTop() { return ROOF_ROOM_Y; }
+
+  /** Match current drawRoofCap placement so you can edit from reality. */
+  function loadCodeLayout() {
+    state.pieces = [];
+    const isFlat = family() === '2';
+    const endIm = state.images.end;
+    const connIm = state.images.connecting;
+    if (!endIm || !connIm) {
+      setStatus('Tiles not loaded');
+      return;
+    }
+    const left = buildingLeft();
+    const top = buildingTop();
+    const bw = state.bw;
+    const overhang = isFlat ? 4 : 6;
+    const endSrcH = endIm.height;
+    const connSrcH = connIm.height;
+    const yEnd = top + (isFlat ? 1 : -12);
+    const ridgePad = (endSrcH - connSrcH); // in unscaled art px; we place in art-ish world = SCALE later
+    // Composer world units ≈ game world / SCALE (art pixels). Game uses setScale(SCALE=2).
+    // Store pieces in art-pixel space relative to shell, same numbers game uses before *SCALE
+    // Actually game positions are in world px with SCALE applied to sprite size but x,y are already world.
+    // Here canvas world = 1 unit per art pixel for easier pixel nudging. Export multiplies by SCALE.
+    const yConn = yEnd - ridgePad;
+    const tileW = 16;
+    const ridgeInset = isFlat ? 2 : 14;
+    const runL = left - overhang + ridgeInset;
+    const runR = left + bw + overhang - ridgeInset;
+    const step = Math.max(8, tileW - 2);
+
+    for (let x = runL; x < runR; x += step) {
+      addSilent('connecting', x, yConn, false);
+    }
+    addSilent('connecting', runR - tileW, yConn, false);
+    if (runR - runL > tileW) {
+      for (let x = runL + step / 2; x < runR - tileW / 2; x += step) {
+        addSilent('connecting', x, yConn, false);
+      }
+      addSilent('connecting', (runL + runR) / 2 - tileW / 2, yConn, false);
+    }
+    addSilent('end', left - overhang, yEnd, false);
+    addSilent('end', left + bw + overhang, yEnd, true);
+    state.selectedId = state.pieces[state.pieces.length - 1]?.id ?? null;
+    redraw();
+    updateSelUI();
+    refreshRecipe();
+    setStatus('Loaded current game.js layout — drag/cut until it looks right');
+  }
+
+  function addSilent(kind, x, y, flipX) {
+    const p = makePiece(kind, x, y, flipX);
+    if (p) state.pieces.push(p);
+  }
+
+  function drawBuildingUnderlay() {
+    const z = state.zoom;
+    const left = buildingLeft();
+    const top = buildingTop();
+    const bw = state.bw;
+    // wall
+    ctx.fillStyle = '#3d4f6f';
+    ctx.fillRect(left * z, top * z, bw * z, WALL_H * z);
+    // lip
+    ctx.fillStyle = '#2a3548';
+    ctx.fillRect((left - 2) * z, (top - 2) * z, (bw + 4) * z, 3 * z);
+    // windows
+    ctx.fillStyle = '#1a2438';
+    for (let i = 0; i < Math.floor(bw / 28); i++) {
+      ctx.fillRect((left + 10 + i * 28) * z, (top + 18) * z, 14 * z, 18 * z);
+    }
+    // baseline guide
+    ctx.strokeStyle = 'rgba(74,158,255,0.45)';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo((left - 20) * z, top * z);
+    ctx.lineTo((left + bw + 20) * z, top * z);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawPiece(p, highlight) {
+    const z = state.zoom;
+    const dx = p.x * z;
+    const dy = p.y * z;
+    ctx.save();
+    if (p.flipX) {
+      ctx.translate(dx + p.w * z, dy);
+      ctx.scale(-1, 1);
+      if (p.cut && p.crop) {
+        ctx.drawImage(p.img, p.crop.sx, p.crop.sy, p.crop.sw, p.crop.sh, 0, -p.h * z, p.w * z, p.h * z);
+      } else {
+        ctx.drawImage(p.img, 0, -p.h * z, p.w * z, p.h * z);
+      }
+    } else {
+      if (p.cut && p.crop) {
+        ctx.drawImage(p.img, p.crop.sx, p.crop.sy, p.crop.sw, p.crop.sh, dx, dy - p.h * z, p.w * z, p.h * z);
+      } else {
+        ctx.drawImage(p.img, dx, dy - p.h * z, p.w * z, p.h * z);
+      }
+    }
+    ctx.restore();
+    if (highlight) {
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(p.x * z + 0.5, (p.y - p.h) * z + 0.5, p.w * z - 1, p.h * z - 1);
+    }
+  }
+
+  function drawGrid() {
+    if (!gridOn()) return;
+    const z = state.zoom;
+    ctx.strokeStyle = 'rgba(148,163,184,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= worldW(); x += 8) {
+      ctx.moveTo(x * z, 0);
+      ctx.lineTo(x * z, worldH() * z);
+    }
+    for (let y = 0; y <= worldH(); y += 8) {
+      ctx.moveTo(0, y * z);
+      ctx.lineTo(worldW() * z, y * z);
+    }
+    ctx.stroke();
+  }
+
+  function redraw() {
+    resizeStage();
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, stage.width, stage.height);
+    drawGrid();
+    drawBuildingUnderlay();
+    for (const p of state.pieces) drawPiece(p, p.id === state.selectedId);
+    if (state.drag && state.drag.mode === 'cut') {
+      const { x0, y0, x1, y1 } = state.drag;
+      const z = state.zoom;
+      const left = Math.min(x0, x1) * z;
+      const top = Math.min(y0, y1) * z;
+      const w = Math.abs(x1 - x0) * z;
+      const h = Math.abs(y1 - y0) * z;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.fillStyle = 'rgba(245,158,11,0.15)';
+      ctx.fillRect(left, top, w, h);
+      ctx.strokeRect(left, top, w, h);
+    }
+  }
+
+  function buildRecipe() {
+    const left = buildingLeft();
+    const top = buildingTop();
+    return {
+      version: 1,
+      family: `Roof_${family()}`,
+      color: color(),
+      style: family() === '2' ? 'flat' : 'gable',
+      scale: SCALE,
+      buildingWidth: state.bw,
+      buildingLeftArt: left,
+      buildingTopArt: top,
+      note: 'x/y are art-pixel coords with origin at piece bottom-left (Phaser setOrigin(0,1)). Multiply by scale for game world.',
+      pieces: state.pieces.map((p) => ({
+        kind: p.kind,
+        x: +(p.x - left).toFixed(2),
+        y: +(p.y - top).toFixed(2),
+        flipX: !!p.flipX,
+        w: p.w,
+        h: p.h,
+        cut: p.cut || false,
+        crop: p.crop || null,
+      })),
+    };
+  }
+
+  function refreshRecipe() {
+    $('recipe').value = JSON.stringify(buildRecipe(), null, 2);
+  }
+
+  function exportPng() {
+    // flatten without grid/selection
+    const z = state.zoom;
+    const out = document.createElement('canvas');
+    out.width = stage.width;
+    out.height = stage.height;
+    const octx = out.getContext('2d');
+    octx.imageSmoothingEnabled = false;
+    // checker
+    octx.fillStyle = '#141a28';
+    octx.fillRect(0, 0, out.width, out.height);
+    // reuse draw into temp by swapping
+    const bak = state.selectedId;
+    state.selectedId = null;
+    // manual draw
+    const savePieces = state.pieces.slice();
+    // Draw using main ctx path via offscreen copy of redraw logic
+    octx.save();
+    // building
+    const left = buildingLeft();
+    const top = buildingTop();
+    const bw = state.bw;
+    octx.fillStyle = '#3d4f6f';
+    octx.fillRect(left * z, top * z, bw * z, WALL_H * z);
+    octx.fillStyle = '#2a3548';
+    octx.fillRect((left - 2) * z, (top - 2) * z, (bw + 4) * z, 3 * z);
+    for (const p of savePieces) {
+      const dx = p.x * z;
+      const dy = p.y * z;
+      octx.save();
+      if (p.flipX) {
+        octx.translate(dx + p.w * z, dy);
+        octx.scale(-1, 1);
+        if (p.cut && p.crop) octx.drawImage(p.img, p.crop.sx, p.crop.sy, p.crop.sw, p.crop.sh, 0, -p.h * z, p.w * z, p.h * z);
+        else octx.drawImage(p.img, 0, -p.h * z, p.w * z, p.h * z);
+      } else if (p.cut && p.crop) {
+        octx.drawImage(p.img, p.crop.sx, p.crop.sy, p.crop.sw, p.crop.sh, dx, dy - p.h * z, p.w * z, p.h * z);
+      } else {
+        octx.drawImage(p.img, dx, dy - p.h * z, p.w * z, p.h * z);
+      }
+      octx.restore();
+    }
+    octx.restore();
+    state.selectedId = bak;
+    const a = document.createElement('a');
+    a.download = `roof-example_${family()}_${color()}_${state.bw}.png`;
+    a.href = out.toDataURL('image/png');
+    a.click();
+    setStatus('Downloaded PNG example');
+  }
+
+  function exportJson() {
+    refreshRecipe();
+    const blob = new Blob([$('recipe').value], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.download = `roof-example_${family()}_${color()}_${state.bw}.json`;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    setStatus('Downloaded JSON recipe');
+  }
+
+  function copyJson() {
+    refreshRecipe();
+    navigator.clipboard.writeText($('recipe').value).then(
+      () => setStatus('Copied recipe JSON'),
+      () => setStatus('Copy failed — select the textarea'),
+    );
+  }
+
+  function setTool(t) {
+    state.tool = t;
+    $('toolMove').classList.toggle('active', t === 'move');
+    $('toolCut').classList.toggle('active', t === 'cut');
+    $('toolDelete').classList.toggle('active', t === 'delete');
+    $('cutHint').classList.toggle('on', t === 'cut');
+    stage.style.cursor = t === 'cut' ? 'crosshair' : 'default';
+  }
+
+  function cutFromCanvas(x0, y0, x1, y1) {
+    const left = Math.min(x0, x1);
+    const top = Math.min(y0, y1);
+    const right = Math.max(x0, x1);
+    const bottom = Math.max(y0, y1);
+    const sw = Math.round(right - left);
+    const sh = Math.round(bottom - top);
+    if (sw < 2 || sh < 2) {
+      setStatus('Cut too small');
+      return;
+    }
+    // Rasterize current roof composite into an offscreen buffer at 1:1 art
+    const buf = document.createElement('canvas');
+    buf.width = worldW();
+    buf.height = worldH();
+    const bctx = buf.getContext('2d');
+    bctx.imageSmoothingEnabled = false;
+    for (const p of state.pieces) {
+      const dx = p.x;
+      const dy = p.y;
+      bctx.save();
+      if (p.flipX) {
+        bctx.translate(dx + p.w, dy);
+        bctx.scale(-1, 1);
+        if (p.cut && p.crop) bctx.drawImage(p.img, p.crop.sx, p.crop.sy, p.crop.sw, p.crop.sh, 0, -p.h, p.w, p.h);
+        else bctx.drawImage(p.img, 0, -p.h, p.w, p.h);
+      } else if (p.cut && p.crop) {
+        bctx.drawImage(p.img, p.crop.sx, p.crop.sy, p.crop.sw, p.crop.sh, dx, dy - p.h, p.w, p.h);
+      } else {
+        bctx.drawImage(p.img, dx, dy - p.h, p.w, p.h);
+      }
+      bctx.restore();
+    }
+    const sx = Math.round(left);
+    const sy = Math.round(top);
+    const slice = document.createElement('canvas');
+    slice.width = sw;
+    slice.height = sh;
+    const sctx = slice.getContext('2d');
+    sctx.imageSmoothingEnabled = false;
+    sctx.drawImage(buf, sx, sy, sw, sh, 0, 0, sw, sh);
+    const im = new Image();
+    im.onload = () => {
+      const p = {
+        id: state.nextId++,
+        kind: 'cut',
+        x: snap(sx),
+        y: snap(sy + sh), // bottom origin
+        flipX: false,
+        w: sw,
+        h: sh,
+        img: im,
+        cut: true,
+        crop: null,
+      };
+      state.pieces.push(p);
+      state.selectedId = p.id;
+      setTool('move');
+      redraw();
+      updateSelUI();
+      refreshRecipe();
+      setStatus(`Cut ${sw}×${sh} piece — drag it where you want`);
+    };
+    im.src = slice.toDataURL('image/png');
+  }
+
+  // --- events ---
+  stage.addEventListener('mousedown', (ev) => {
+    const rect = stage.getBoundingClientRect();
+    const { x, y } = canvasToWorld(ev.clientX - rect.left, ev.clientY - rect.top);
+    state.stampFlip = ev.altKey;
+
+    if (state.tool === 'cut') {
+      state.drag = { mode: 'cut', x0: x, y0: y, x1: x, y1: y };
+      return;
+    }
+
+    const hit = pieceAt(x, y);
+    if (state.tool === 'delete') {
+      if (hit) {
+        state.pieces = state.pieces.filter((p) => p.id !== hit.id);
+        if (state.selectedId === hit.id) state.selectedId = null;
+        redraw();
+        updateSelUI();
+        refreshRecipe();
+      }
+      return;
+    }
+
+    if (hit) {
+      state.selectedId = hit.id;
+      state.drag = {
+        mode: 'move',
+        id: hit.id,
+        ox: x - hit.x,
+        oy: y - hit.y,
+      };
+      updateSelUI();
+      redraw();
+      return;
+    }
+
+    // stamp selected tile
+    if (state.selectedTile && state.images[state.selectedTile]) {
+      const im = state.images[state.selectedTile];
+      addPiece(state.selectedTile, x, y + im.height / 2, state.stampFlip);
+      // Better: place with bottom at click
+      const p = state.pieces[state.pieces.length - 1];
+      if (p) {
+        p.x = snap(x);
+        p.y = snap(y);
+        redraw();
+        updateSelUI();
+        refreshRecipe();
+      }
+    } else {
+      state.selectedId = null;
+      updateSelUI();
+      redraw();
+    }
+  });
+
+  stage.addEventListener('mousemove', (ev) => {
+    if (!state.drag) return;
+    const rect = stage.getBoundingClientRect();
+    const { x, y } = canvasToWorld(ev.clientX - rect.left, ev.clientY - rect.top);
+    if (state.drag.mode === 'cut') {
+      state.drag.x1 = x;
+      state.drag.y1 = y;
+      redraw();
+      return;
+    }
+    if (state.drag.mode === 'move') {
+      const p = state.pieces.find((q) => q.id === state.drag.id);
+      if (!p) return;
+      p.x = snap(x - state.drag.ox);
+      p.y = snap(y - state.drag.oy);
+      updateSelUI();
+      redraw();
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!state.drag) return;
+    if (state.drag.mode === 'cut') {
+      const { x0, y0, x1, y1 } = state.drag;
+      state.drag = null;
+      cutFromCanvas(x0, y0, x1, y1);
+      return;
+    }
+    state.drag = null;
+    refreshRecipe();
+  });
+
+  stageWrapDrop();
+  function stageWrapDrop() {
+    const wrap = $('stageWrap');
+    wrap.addEventListener('dragover', (ev) => { ev.preventDefault(); });
+    wrap.addEventListener('drop', (ev) => {
+      ev.preventDefault();
+      const kind = ev.dataTransfer.getData('text/plain') || state.selectedTile;
+      if (!kind || !state.images[kind]) return;
+      const rect = stage.getBoundingClientRect();
+      const { x, y } = canvasToWorld(ev.clientX - rect.left, ev.clientY - rect.top);
+      addPiece(kind, x, y, ev.altKey);
+      const p = state.pieces[state.pieces.length - 1];
+      if (p) { p.x = snap(x); p.y = snap(y); redraw(); updateSelUI(); refreshRecipe(); }
+    });
+  }
+
+  window.addEventListener('keydown', (ev) => {
+    if (ev.target.matches('input, textarea, select')) return;
+    const p = selected();
+    if (ev.key === 'v' || ev.key === 'V') setTool('move');
+    if (ev.key === 'c' || ev.key === 'C') setTool('cut');
+    if (ev.key === 'Delete' || ev.key === 'Backspace') {
+      if (p) {
+        state.pieces = state.pieces.filter((q) => q.id !== p.id);
+        state.selectedId = null;
+        redraw(); updateSelUI(); refreshRecipe();
+      }
+    }
+    if (ev.key === 'f' || ev.key === 'F') {
+      if (p) { p.flipX = !p.flipX; redraw(); updateSelUI(); refreshRecipe(); }
+    }
+    if (ev.key === 'd' || ev.key === 'D') {
+      if (p) {
+        const n = { ...p, id: state.nextId++, x: p.x + 4, y: p.y + 4 };
+        state.pieces.push(n);
+        state.selectedId = n.id;
+        redraw(); updateSelUI(); refreshRecipe();
+      }
+    }
+    if (p && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(ev.key)) {
+      ev.preventDefault();
+      const step = ev.shiftKey ? 4 : 1;
+      if (ev.key === 'ArrowLeft') p.x -= step;
+      if (ev.key === 'ArrowRight') p.x += step;
+      if (ev.key === 'ArrowUp') p.y -= step;
+      if (ev.key === 'ArrowDown') p.y += step;
+      redraw(); updateSelUI(); refreshRecipe();
+    }
+  });
+
+  $('family').addEventListener('change', async () => { fillColors(); await reloadTiles(); });
+  $('color').addEventListener('change', () => reloadTiles());
+  $('zoom').addEventListener('input', () => {
+    state.zoom = +$('zoom').value;
+    $('zoomval').textContent = state.zoom + '×';
+    redraw();
+  });
+  $('bw').addEventListener('change', () => {
+    state.bw = Math.max(48, +$('bw').value || 160);
+    redraw();
+    refreshRecipe();
+  });
+  $('grid').addEventListener('change', redraw);
+  $('snap').addEventListener('change', () => {});
+  $('loadCurrent').addEventListener('click', loadCodeLayout);
+  $('clearAll').addEventListener('click', () => {
+    state.pieces = [];
+    state.selectedId = null;
+    redraw(); updateSelUI(); refreshRecipe();
+  });
+  $('toolMove').addEventListener('click', () => setTool('move'));
+  $('toolCut').addEventListener('click', () => setTool('cut'));
+  $('toolDelete').addEventListener('click', () => setTool('delete'));
+  $('flipSel').addEventListener('click', () => {
+    const p = selected();
+    if (p) { p.flipX = !p.flipX; redraw(); updateSelUI(); refreshRecipe(); }
+  });
+  $('dupSel').addEventListener('click', () => {
+    const p = selected();
+    if (!p) return;
+    const n = { ...p, id: state.nextId++, x: p.x + 4, y: p.y + 4, crop: p.crop ? { ...p.crop } : null };
+    state.pieces.push(n);
+    state.selectedId = n.id;
+    redraw(); updateSelUI(); refreshRecipe();
+  });
+  $('bringFront').addEventListener('click', () => {
+    const p = selected();
+    if (!p) return;
+    state.pieces = state.pieces.filter((q) => q.id !== p.id).concat([p]);
+    redraw();
+  });
+  $('sendBack').addEventListener('click', () => {
+    const p = selected();
+    if (!p) return;
+    state.pieces = [p].concat(state.pieces.filter((q) => q.id !== p.id));
+    redraw();
+  });
+  $('exportPng').addEventListener('click', exportPng);
+  $('exportJson').addEventListener('click', exportJson);
+  $('copyJson').addEventListener('click', copyJson);
+
+  // boot
+  fillColors();
+  reloadTiles().then(() => {
+    loadCodeLayout();
+    setStatus('Ready — drag / cut the roof, then export a PNG + JSON example');
+  });
+})();
+</script>
+</body>
+</html>

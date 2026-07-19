@@ -22,8 +22,13 @@ const { createDenizenAccount } = require('./denizen');
 const { createAvatarModule } = require('./avatar');
 const { createHangoutModule } = require('./hangout');
 const { createDataFarm } = require('./data-farm');
+const { createEconomy } = require('./economy');
+const { createPvp } = require('./pvp');
+const { createShop } = require('./shop');
+const { createMinigames } = require('./minigames');
 const { createChatControls } = require('../chat');
 const { canRunCommand } = require('../core/permissions');
+const { WalletStore } = require('../core/wallet-store');
 
 // Entitlement source of truth (shared with command gating). Best-effort: if it
 // can't load, premium hooks run ungated rather than the bot failing to boot.
@@ -174,6 +179,23 @@ function loadModules(deps) {
 
   const hangout = createHangoutModule(deps);
   hangout.register(deps.registry);
+
+  // Credits wallet + button PVP duels (shared WalletStore)
+  deps.wallet = deps.wallet || new WalletStore();
+  const economy = createEconomy(deps);
+  economy.register(deps.registry);
+  hooks.onMessage.push(economy.onMessage);
+
+  const pvp = createPvp(deps);
+  pvp.register(deps.registry);
+  hooks.onInteraction.push(pvp.onInteraction);
+
+  const shop = createShop(deps);
+  shop.register(deps.registry);
+
+  const minigames = createMinigames(deps);
+  minigames.register(deps.registry);
+  hooks.onInteraction.push(minigames.onInteraction);
 
   // Discord data farm — harvest guild chats into learning lake (privacy-aware)
   const dataFarm = createDataFarm(deps);

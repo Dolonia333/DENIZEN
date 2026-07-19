@@ -95,6 +95,18 @@ const REACTION_BY_TOKEN = {
   '❤️': { kind: 'emote', pose: 'wave' },
   '❤': { kind: 'emote', pose: 'wave' },
   '♥️': { kind: 'emote', pose: 'wave' },
+  // PVP / duel
+  fight: { kind: 'emote', pose: 'hurt' },
+  attack: { kind: 'emote', pose: 'hurt' },
+  crossed_swords: { kind: 'emote', pose: 'hurt' },
+  '⚔️': { kind: 'emote', pose: 'hurt' },
+  punch: { kind: 'emote', pose: 'hurt' },
+  guard: { kind: 'emote', pose: 'shrug' },
+  shield: { kind: 'emote', pose: 'shrug' },
+  '🛡️': { kind: 'emote', pose: 'shrug' },
+  feint: { kind: 'emote', pose: 'jump' },
+  win: { kind: 'emote', pose: 'wave' },
+  lose: { kind: 'emote', pose: 'hurt' },
   // Food shortcuts
   pizza: { kind: 'eat', pose: 'eat', food: 'foodPizza' },
   '🍕': { kind: 'eat', pose: 'eat', food: 'foodPizza' },
