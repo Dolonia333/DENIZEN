@@ -128,6 +128,9 @@ function canRunCommand(ctx, cmd) {
       ManageRoles: 'manage_roles',
       ManageMessages: 'manage_messages',
       ModerateMembers: 'moderate_members',
+      ManageWebhooks: 'manage_webhooks',
+      ManageNicknames: 'manage_nicknames',
+      ViewAuditLog: 'view_audit_log',
     };
     const fake = mapped[cmd.permission] || mapped[String(cmd.permission)];
     if (fake && hasFakePerm(cfg, member, fake)) return { ok: true };

@@ -22,6 +22,7 @@ const { createAvatarModule } = require('./avatar');
 const { createHangoutModule } = require('./hangout');
 const { createDataFarm } = require('./data-farm');
 const { createChatControls } = require('../chat');
+const { canRunCommand } = require('../core/permissions');
 
 // Entitlement source of truth (shared with command gating). Best-effort: if it
 // can't load, premium hooks run ungated rather than the bot failing to boot.
@@ -188,9 +189,18 @@ function loadModules(deps) {
     BRAND,
     securityDashboardEmbed,
   } = require('../core/ui-kit');
-  const prefix = deps.registry.prefix || ',';
+  const defaultPrefix = deps.registry.prefix || ',';
+
+  function guildPrefix(guildId) {
+    if (guildId && deps.config?.get) {
+      const p = deps.config.get(guildId).prefix;
+      if (typeof p === 'string' && p.length) return p;
+    }
+    return defaultPrefix;
+  }
 
   function topicEmbed(topic, guildId, by) {
+    const prefix = guildPrefix(guildId);
     if (topic === 'spaces' || topic === 'avatar' || topic === 'hangout') {
       return helpCopy.spacesHelpEmbed({ prefix, guildId });
     }
@@ -243,8 +253,8 @@ function loadModules(deps) {
         title: 'Community 💎',
         description: 'Premium module — levels, roles, starboard, giveaways.',
         fields: [
-          { name: 'Levels', value: `\`${prefix}levels rank\` · lb · rewards`, inline: true },
-          { name: 'Roles', value: 'reactionrole · buttonrole · vanity', inline: true },
+          { name: 'Levels', value: `\`${prefix}levels rank\` · lb · reward`, inline: true },
+          { name: 'Roles', value: 'reactionrole · buttonrole · vanityrole', inline: true },
           { name: 'Fun', value: 'starboard · giveaway · blacktea', inline: true },
         ],
       });
@@ -268,12 +278,101 @@ function loadModules(deps) {
     async run(ctx) {
       const t = Date.now();
       const ms = Date.now() - t;
+      const p = guildPrefix(ctx.guild?.id);
       await ctx.reply({
         embeds: [successEmbed(
           'Pong',
-          `**${ms}ms** round-trip · WS **${Math.round(ctx.client.ws.ping)}ms**\n_Denizen Spaces · \`${prefix}help\`_`,
+          `**${ms}ms** round-trip · WS **${Math.round(ctx.client.ws.ping)}ms**\n_Denizen Spaces · \`${p}help\`_`,
         )],
       });
+    },
+  });
+
+  deps.registry.register({
+    name: 'prefix',
+    description: 'View or set the server command prefix (Manage Server to change)',
+    module: 'core',
+    options: [
+      {
+        type: 3,
+        name: 'action',
+        description: 'view | set | remove',
+        required: false,
+        choices: [
+          { name: 'View current prefix', value: 'view' },
+          { name: 'Set a new prefix', value: 'set' },
+          { name: 'Reset to default (,)', value: 'remove' },
+        ],
+      },
+      {
+        type: 3,
+        name: 'prefix',
+        description: 'New prefix (1–5 characters)',
+        required: false,
+      },
+    ],
+    async run(ctx) {
+      if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+      const current = guildPrefix(ctx.guild.id);
+      const actionRaw = (ctx.getString?.('action') || ctx.args?.[0] || 'view').toLowerCase();
+      const valueOpt = ctx.getString?.('prefix');
+
+      // ,prefix !  OR  ,prefix set !  OR  /prefix action:set prefix:!
+      let action = actionRaw;
+      let next = valueOpt;
+      if (['view', 'show', 'get', 'current'].includes(actionRaw)) {
+        action = 'view';
+      } else if (['remove', 'reset', 'clear', 'default'].includes(actionRaw)) {
+        action = 'remove';
+      } else if (actionRaw === 'set') {
+        action = 'set';
+        next = valueOpt || ctx.args?.[1];
+      } else if (actionRaw && actionRaw !== 'view') {
+        // First token is the new prefix itself (,prefix !)
+        action = 'set';
+        next = valueOpt || ctx.args?.[0] || actionRaw;
+      } else {
+        action = 'view';
+      }
+
+      if (action === 'view') {
+        return ctx.reply(
+          `Server prefix is \`${current}\` — try \`${current}help\`.\n`
+          + `Change it: \`${current}prefix set !\` · Reset: \`${current}prefix remove\``,
+        );
+      }
+
+      if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) {
+        return ctx.reply('Need **Manage Server** to change the prefix.');
+      }
+
+      if (action === 'remove') {
+        deps.config.update(ctx.guild.id, (c) => {
+          c.prefix = defaultPrefix;
+          return c;
+        });
+        return ctx.reply(`Prefix reset to \`${defaultPrefix}\`.`);
+      }
+
+      const candidate = String(next || '').trim();
+      if (!candidate) {
+        return ctx.reply(`Usage: \`${current}prefix set <prefix>\` (1–5 characters)`);
+      }
+      if (candidate.length > 5) {
+        return ctx.reply('Prefix must be 1–5 characters.');
+      }
+      if (/\s/.test(candidate)) {
+        return ctx.reply('Prefix cannot contain spaces.');
+      }
+      if (candidate.startsWith('/')) {
+        return ctx.reply('Prefix cannot start with `/` (reserved for slash commands).');
+      }
+
+      deps.config.update(ctx.guild.id, (c) => {
+        c.prefix = candidate;
+        return c;
+      });
+      return ctx.reply(`Prefix set to \`${candidate}\` — example: \`${candidate}help\`.`);
     },
   });
 
@@ -302,6 +401,7 @@ function loadModules(deps) {
     async run(ctx) {
       const topic = (ctx.getString?.('topic') || ctx.args?.[0] || 'hub').toLowerCase();
       const guildId = ctx.guild?.id;
+      const prefix = guildPrefix(guildId);
       const by = new Map();
       for (const cmd of deps.registry.list()) {
         if (!by.has(cmd.module)) by.set(cmd.module, []);
@@ -353,7 +453,7 @@ function loadModules(deps) {
       const guildId = ctx.guild?.id;
       await ctx.reply({
         embeds: [helpCopy.spacesHelpEmbed({
-          prefix,
+          prefix: guildPrefix(guildId),
           guildId,
           title: 'Enter Denizen Spaces',
         })],

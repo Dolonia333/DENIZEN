@@ -22,8 +22,9 @@ Plans are **per guild**, not per user. One paying server = one subscription.
 | Module | What it covers |
 |--------|----------------|
 | `security` | antinuke + antiraid (both register under `security`) |
-| `avatar` | cosmetics (hair, clothes, hats…) — **not** pets for everyone |
 | `community` | community features |
+
+**Avatar** is a **free module** with **paid cosmetics**: `/avatar` + `,skin` work on free servers; hair/clothes/hats need a Pro/Community plan (enforced in `plan-gates.js`, not `PREMIUM_MODULES`). Pets stay separate entitlements.
 
 **Companion pets (per member, per server):**
 
@@ -43,7 +44,7 @@ Plans are **per guild**, not per user. One paying server = one subscription.
 | Watermark | Branding removed | Buy / gift / Pro grant |
 | Boost golden headset | Same | |
 
-**Free modules** (never gated, never touch the DB): `moderation`, `music`, `tickets`, `automod`, `voicemaster`, `misc` (includes `,eat` + map reaction hook), `logging`, `core`.
+**Free modules** (never gated, never touch the DB): `moderation`, `music`, `tickets`, `automod`, `voicemaster`, `misc` (includes `,eat` + map reaction hook), `logging`, `core`, `avatar` (closet UI + free skins; paid layers via plan-gates), `hangout`.
 
 Map social (reactions → emotes, `,eat` snacks) is **free for anyone on the map** — not a premium module.
 

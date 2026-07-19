@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0c0e12" />
+  <title>Commands — Denizen Spaces</title>
+  <meta name="description" content="Denizen Discord bot commands — free and premium, by category. Copy and paste ready." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --card: #15181f;
+      --card-hover: #1a1e27;
+      --edge: rgba(255,255,255,0.07);
+      --text: #e8eaef;
+      --muted: #8b93a7;
+      --dim: #6b7385;
+      --lime: #a3e635;
+      --cyan: #6ec8f0;
+      --amber: #f59e0b;
+      --rose: #fb7185;
+      --star: #fbbf24;
+      --display: "Syne", system-ui, sans-serif;
+      --sans: "IBM Plex Sans", system-ui, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { color: var(--lime); }
+    code { font-family: var(--mono); }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+    .topnav {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--text);
+    }
+    .brand span { color: var(--lime); }
+    .topnav nav { display: flex; gap: 14px; }
+    .topnav nav a { color: var(--muted); font-size: 0.88rem; font-weight: 500; }
+    .topnav nav a:hover { color: var(--text); }
+
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .page-head h1 {
+      font-family: var(--display);
+      font-weight: 800;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      letter-spacing: -0.03em;
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lede {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 34rem;
+      line-height: 1.45;
+    }
+    .lede code { color: var(--lime); font-size: 0.88rem; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .field {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .field label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: lowercase;
+      letter-spacing: 0.04em;
+      font-weight: 500;
+    }
+    .search-wrap { flex: 1 1 220px; min-width: min(220px, 100%); }
+    .search-wrap .ico {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .search, .prefix-input {
+      appearance: none;
+      border: 1px solid var(--edge);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 0.92rem;
+      font-family: var(--sans);
+      outline: none;
+      width: 100%;
+    }
+    .search { padding-left: 38px; }
+    .search:focus, .prefix-input:focus {
+      border-color: rgba(163, 230, 53, 0.4);
+    }
+    .prefix-field { flex: 0 0 auto; }
+    .prefix-input {
+      width: 4.5rem;
+      text-align: center;
+      font-family: var(--mono);
+      font-weight: 500;
+      color: var(--lime);
+    }
+    .prefix-hint {
+      font-size: 0.72rem;
+      color: var(--dim);
+      max-width: 14rem;
+      line-height: 1.3;
+    }
+
+    .tiers {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tier {
+      appearance: none;
+      border: 1px solid var(--edge);
+      background: var(--card);
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-family: var(--sans);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tier:hover { color: var(--text); }
+    .tier.active {
+      color: var(--text);
+      background: #1e232d;
+      border-color: rgba(255,255,255,0.16);
+    }
+    .tier.active.free { border-color: rgba(163, 230, 53, 0.35); }
+    .tier.active.premium { border-color: rgba(245, 158, 11, 0.4); }
+    .tier .count {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+    }
+
+    .cat-rail {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 12px;
+      margin-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.15) transparent;
+    }
+    .cat {
+      appearance: none;
+      flex: 0 0 auto;
+      border: 1px solid var(--edge);
+      background: var(--card);
+      color: var(--muted);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      font-family: var(--sans);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .cat svg { width: 16px; height: 16px; opacity: 0.75; flex-shrink: 0; }
+    .cat:hover { color: var(--text); background: var(--card-hover); }
+    .cat.active {
+      color: var(--text);
+      background: #22262f;
+      border-color: rgba(255,255,255,0.14);
+    }
+    .cat .n {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      min-width: 1.4rem;
+      text-align: center;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.07);
+      color: var(--muted);
+    }
+    .cat.active .n { background: rgba(163, 230, 53, 0.15); color: var(--lime); }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin: 0 0 16px;
+    }
+    .note strong { color: var(--cyan); font-weight: 600; }
+
+    .section { margin-top: 8px; margin-bottom: 28px; }
+    .section h2 {
+      font-family: var(--display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section .sub {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin: 0 0 14px;
+    }
+    .gem {
+      font-size: 0.68rem;
+      color: var(--cyan);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .plan-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 0 0 16px;
+      padding: 14px;
+      border: 1px solid var(--edge);
+      border-radius: 12px;
+      background: var(--card);
+    }
+    @media (max-width: 640px) {
+      .plan-split { grid-template-columns: 1fr; }
+    }
+    .plan-col h3 {
+      margin: 0 0 8px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .plan-col.free h3 { color: var(--lime); }
+    .plan-col.paid h3 { color: var(--amber); }
+    .plan-col ul { margin: 0; padding: 0; list-style: none; }
+    .plan-col li {
+      font-size: 0.84rem;
+      color: #d5dde8;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--edge);
+      line-height: 1.35;
+    }
+    .plan-col li:last-child { border-bottom: 0; }
+    .plan-col code { font-size: 0.78rem; color: var(--lime); }
+    .plan-col.paid code { color: var(--amber); }
+    .plan-col .detail {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      margin-top: 2px;
+    }
+
+    /* Bleed-style cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--edge);
+      border-radius: 12px;
+      padding: 16px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 168px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .card:hover {
+      background: var(--card-hover);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    .star {
+      flex-shrink: 0;
+      color: var(--star);
+      width: 14px;
+      height: 14px;
+    }
+    .cmd-name {
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--text);
+      word-break: break-word;
+    }
+    .copy-btn {
+      appearance: none;
+      flex-shrink: 0;
+      border: none;
+      background: transparent;
+      color: var(--dim);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      transition: color 0.12s, background 0.12s;
+    }
+    .copy-btn:hover {
+      color: var(--lime);
+      background: rgba(163, 230, 53, 0.08);
+    }
+    .copy-btn.copied { color: var(--lime); }
+    .copy-btn svg { width: 16px; height: 16px; }
+    .card-desc {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+    .meta-block { margin-top: auto; }
+    .meta-label {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
+      color: var(--dim);
+      margin: 0 0 6px;
+    }
+    .meta-block + .meta-block { margin-top: 12px; }
+    .meta-none {
+      color: var(--dim);
+      font-size: 0.82rem;
+    }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pill {
+      font-size: 0.72rem;
+      font-family: var(--mono);
+      font-style: italic;
+      color: #c4cad6;
+      background: #1c212b;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 3px 8px;
+    }
+    .pill.perm {
+      font-style: normal;
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 0.7rem;
+      letter-spacing: 0.01em;
+      color: #e2e8f0;
+      background: #252a35;
+      border-radius: 8px;
+      padding: 4px 9px;
+    }
+    .pill.perm.paid {
+      color: var(--amber);
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.25);
+    }
+    .pill.perm.free {
+      color: var(--lime);
+      background: rgba(163, 230, 53, 0.1);
+      border-color: rgba(163, 230, 53, 0.25);
+    }
+    .pill.perm.owner {
+      color: var(--rose);
+      background: rgba(251, 113, 133, 0.1);
+      border-color: rgba(251, 113, 133, 0.25);
+    }
+
+    .empty {
+      padding: 48px 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .err {
+      padding: 20px;
+      border: 1px solid rgba(251, 113, 133, 0.35);
+      color: var(--rose);
+      border-radius: 10px;
+    }
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--edge);
+      color: var(--muted);
+      font-size: 0.8rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e2430;
+      border: 1px solid rgba(163, 230, 53, 0.35);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 50;
+      font-family: var(--mono);
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topnav">
+      <a class="brand" href="/">Denizen <span>Spaces</span></a>
+      <nav>
+        <a href="/discord-map/">Map</a>
+        <a href="/discord-commands/">Commands</a>
+        <a href="/">Home</a>
+      </nav>
+    </div>
+
+    <div class="page-head">
+      <div>
+        <h1>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 17l6-6 4 4 6-6"/><path d="M14 7h6v6"/>
+          </svg>
+          Commands
+        </h1>
+        <p class="lede">
+          Browse by category, copy a command, paste in Discord.
+          Change the server prefix with <code id="lede-prefix-cmd">,prefix set</code>.
+        </p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="field search-wrap">
+        <label for="q">search</label>
+        <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <input id="q" class="search" type="search" placeholder="Find a command…" autocomplete="off" />
+      </div>
+      <div class="field prefix-field">
+        <label for="prefix">prefix</label>
+        <input id="prefix" class="prefix-input" type="text" maxlength="5" spellcheck="false" aria-describedby="prefix-hint" />
+      </div>
+      <p class="prefix-hint" id="prefix-hint">Preview &amp; copy use this. In Discord: Manage Server → <span id="hint-cmd">,prefix set !</span></p>
+    </div>
+
+    <div class="tiers" role="tablist" aria-label="Plan">
+      <button type="button" class="tier free active" data-tier="free" id="tier-free">
+        Free <span class="count" id="free-count">—</span>
+      </button>
+      <button type="button" class="tier premium" data-tier="premium" id="tier-premium">
+        Premium <span class="count" id="premium-count">—</span>
+      </button>
+    </div>
+
+    <div id="cats" class="cat-rail" role="tablist" aria-label="Categories"></div>
+    <p id="tier-note" class="note" hidden></p>
+
+    <div id="catalog"></div>
+
+    <footer>
+      <span id="generated">Generated from the live command registry</span>
+      <span>In Discord: <code>/help</code> · <code id="foot-help">,help</code></span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const COPY_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
+    const CHECK_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>`;
+    const STAR_ICON = `<svg class="star" viewBox="0 0 24 24" fill="currentColor" aria-label="Premium"><path d="M12 2l2.9 6.9L22 9.2l-5 4.6 1.5 7.2L12 17.8 5.5 21l1.5-7.2-5-4.6 7.1-.3L12 2z"/></svg>`;
+
+    const ICONS = {
+      all: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+      core: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>',
+      denizen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/></svg>',
+      avatar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a6 6 0 0112 0v2"/></svg>',
+      hangout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+      canvas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>',
+      chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 01-4 4H7l-4 4V7a4 4 0 014-4h10a4 4 0 014 4z"/></svg>',
+      music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+      tickets: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 002-2V5a2 2 0 012-2h10a2 2 0 012 2v2a2 2 0 002 2v6a2 2 0 00-2 2v2a2 2 0 01-2 2H7a2 2 0 01-2-2v-2a2 2 0 00-2-2z"/></svg>',
+      voicemaster: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8"/></svg>',
+      moderation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4l6 6-9 9H5v-6l9-9z"/></svg>',
+      automod: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+      logging: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
+      security: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>',
+      community: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>',
+      integrations: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
+      misc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+      sense: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+    };
+
+    const PREFIX_KEY = 'denizen.commands.prefix';
+    const state = {
+      data: null,
+      tier: 'free',
+      module: 'all',
+      q: '',
+      prefix: localStorage.getItem(PREFIX_KEY) || ',',
+    };
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function normalizePrefix(raw) {
+      let p = String(raw ?? '').slice(0, 5);
+      if (!p) p = ',';
+      return p;
+    }
+
+    function withPrefix(name) {
+      return `${state.prefix}${name}`;
+    }
+
+    function applyPrefixLabels() {
+      const p = state.prefix;
+      document.getElementById('lede-prefix-cmd').textContent = `${p}prefix set`;
+      document.getElementById('hint-cmd').textContent = `${p}prefix set !`;
+      document.getElementById('foot-help').textContent = `${p}help`;
+      const input = document.getElementById('prefix');
+      if (input && document.activeElement !== input) input.value = p;
+    }
+
+    function moduleTier(mod) {
+      if (!mod) return 'free';
+      if (mod.badgeKind === 'premium' || mod.premium) return 'premium';
+      return 'free';
+    }
+
+    function modulesForTier(tier) {
+      return (state.data?.modules || []).filter((m) => moduleTier(m) === tier);
+    }
+
+    function commandsInTier(tier) {
+      const ids = new Set(modulesForTier(tier).map((m) => m.id));
+      return (state.data?.commands || []).filter((c) => ids.has(c.module));
+    }
+
+    function matches(cmd, q, moduleId, tier) {
+      const ids = new Set(modulesForTier(tier).map((m) => m.id));
+      if (!ids.has(cmd.module)) return false;
+      if (moduleId !== 'all' && cmd.module !== moduleId) return false;
+      if (!q) return true;
+      const hay = [
+        cmd.name, cmd.description, cmd.module, cmd.moduleLabel,
+        ...(cmd.aliases || []),
+        ...(cmd.options || []).map((o) => o.name),
+        cmd.access?.label,
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
+    }
+
+    function showToast(text) {
+      const el = document.getElementById('toast');
+      el.textContent = text;
+      el.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove('show'), 1600);
+    }
+
+    async function copyText(text, btn) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      showToast(`Copied ${text}`);
+      if (btn) {
+        btn.classList.add('copied');
+        btn.innerHTML = CHECK_ICON;
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = COPY_ICON;
+        }, 1200);
+      }
+    }
+
+    function permissionPills(cmd) {
+      const pills = [];
+      if (cmd.plan === 'paid' || cmd.premium) {
+        pills.push(`<span class="pill perm paid">Paid</span>`);
+      } else if (cmd.plan === 'free') {
+        pills.push(`<span class="pill perm free">Free</span>`);
+      } else if (cmd.plan === 'mixed') {
+        pills.push(`<span class="pill perm free">Free + paid</span>`);
+      }
+      const access = cmd.access;
+      if (access?.kind === 'owner') {
+        pills.push(`<span class="pill perm owner">Server owner</span>`);
+      } else if (access?.kind === 'fakeperm') {
+        pills.push(`<span class="pill perm">${escapeHtml(access.label)}</span>`);
+      } else if (access?.kind && access.kind !== 'everyone' && access.label) {
+        pills.push(`<span class="pill perm">${escapeHtml(access.label)}</span>`);
+      }
+      if (!cmd.slash) {
+        pills.push(`<span class="pill perm">Comma only</span>`);
+      }
+      if (!pills.length) return `<span class="meta-none">none</span>`;
+      return `<div class="pills">${pills.join('')}</div>`;
+    }
+
+    function argumentPills(cmd) {
+      const opts = cmd.options || [];
+      if (!opts.length) return `<span class="meta-none">none</span>`;
+      return `<div class="pills">${opts.map((o) =>
+        `<span class="pill">${escapeHtml(o.name)}${o.required ? '' : '?'}</span>`
+      ).join('')}</div>`;
+    }
+
+    function renderCats() {
+      const cats = document.getElementById('cats');
+      const mods = modulesForTier(state.tier);
+      const total = commandsInTier(state.tier).length;
+      if (!mods.some((m) => m.id === state.module) && state.module !== 'all') {
+        state.module = 'all';
+      }
+      const items = [
+        { id: 'all', label: 'all', count: total, icon: ICONS.all },
+        ...mods.map((m) => ({
+          id: m.id,
+          label: m.label.toLowerCase(),
+          count: m.count,
+          icon: ICONS[m.id] || ICONS.misc,
+        })),
+      ];
+      cats.innerHTML = items.map((m) => {
+        const active = state.module === m.id ? ' active' : '';
+        return `<button type="button" class="cat${active}" data-module="${escapeHtml(m.id)}">
+          ${m.icon}<span>${escapeHtml(m.label)}</span><span class="n">${m.count}</span>
+        </button>`;
+      }).join('');
+      cats.querySelectorAll('.cat').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.module = btn.getAttribute('data-module') || 'all';
+          render();
+        });
+      });
+    }
+
+    function cardHtml(c) {
+      const starred = !!(c.premium || c.plan === 'paid');
+      const title = withPrefix(c.name);
+      const copyPayload = title;
+      return `<article class="card" data-cmd="${escapeHtml(c.name)}">
+        <div class="card-top">
+          <div>
+            <div class="card-title-row">
+              ${starred ? STAR_ICON : ''}
+              <span class="cmd-name">${escapeHtml(title)}</span>
+            </div>
+            <p class="card-desc">${escapeHtml(c.description)}</p>
+          </div>
+          <button type="button" class="copy-btn" data-copy="${escapeHtml(copyPayload)}" title="Copy ${escapeHtml(title)}" aria-label="Copy ${escapeHtml(title)}">
+            ${COPY_ICON}
+          </button>
+        </div>
+        <div class="meta-block">
+          <p class="meta-label">arguments</p>
+          ${argumentPills(c)}
+        </div>
+        <div class="meta-block">
+          <p class="meta-label">permissions</p>
+          ${permissionPills(c)}
+        </div>
+      </article>`;
+    }
+
+    function render() {
+      if (!state.data) return;
+      applyPrefixLabels();
+
+      const freeN = commandsInTier('free').length;
+      const premN = commandsInTier('premium').length;
+      document.getElementById('free-count').textContent = String(freeN);
+      document.getElementById('premium-count').textContent = String(premN);
+
+      document.querySelectorAll('.tier').forEach((btn) => {
+        btn.classList.toggle('active', btn.getAttribute('data-tier') === state.tier);
+      });
+
+      renderCats();
+
+      const note = document.getElementById('tier-note');
+      if (state.tier === 'premium') {
+        note.hidden = false;
+        note.innerHTML = 'These need an active <strong>Denizen Pro</strong> plan for the server.';
+      } else {
+        note.hidden = true;
+      }
+
+      const q = state.q.trim().toLowerCase();
+      const filtered = state.data.commands.filter((c) => matches(c, q, state.module, state.tier));
+      const root = document.getElementById('catalog');
+
+      if (!filtered.length) {
+        root.innerHTML = `<div class="empty">No commands in this category.</div>`;
+        return;
+      }
+
+      const byModule = new Map();
+      for (const c of filtered) {
+        if (!byModule.has(c.module)) byModule.set(c.module, []);
+        byModule.get(c.module).push(c);
+      }
+      const order = modulesForTier(state.tier).map((m) => m.id);
+      const keys = state.module === 'all'
+        ? [...byModule.keys()].sort((a, b) => order.indexOf(a) - order.indexOf(b))
+        : [state.module].filter((k) => byModule.has(k));
+
+      root.innerHTML = keys.map((mod) => {
+        const cmds = byModule.get(mod);
+        const meta = state.data.modules.find((m) => m.id === mod) || { label: mod };
+        const gem = meta.badgeKind === 'mixed'
+          ? `<span class="gem">${escapeHtml(meta.badge || 'Free + paid')}</span>`
+          : '';
+
+        let planSplitHtml = '';
+        if (mod === 'avatar' && meta.planSplit) {
+          const rewrite = (cmd) => String(cmd || '').replace(/,/g, state.prefix);
+          const freeItems = (meta.planSplit.free || []).map((row) =>
+            `<li><code>${escapeHtml(rewrite(row.cmd))}</code><span class="detail">${escapeHtml(row.detail)}</span></li>`).join('');
+          const paidItems = (meta.planSplit.paid || []).map((row) =>
+            `<li><code>${escapeHtml(rewrite(row.cmd))}</code><span class="detail">${escapeHtml(row.detail)}</span></li>`).join('');
+          planSplitHtml = `<div class="plan-split" aria-label="Avatar free versus paid">
+            <div class="plan-col free"><h3>Free</h3><ul>${freeItems}</ul></div>
+            <div class="plan-col paid"><h3>Paid</h3><ul>${paidItems}</ul></div>
+          </div>`;
+        }
+
+        return `<section class="section">
+          <h2>${escapeHtml(meta.label)} ${gem}</h2>
+          <p class="sub">${cmds.length} command${cmds.length === 1 ? '' : 's'}</p>
+          ${planSplitHtml}
+          <div class="grid">${cmds.map(cardHtml).join('')}</div>
+        </section>`;
+      }).join('');
+
+      root.querySelectorAll('.copy-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          copyText(btn.getAttribute('data-copy') || '', btn);
+        });
+      });
+    }
+
+    document.querySelectorAll('.tier').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.tier = btn.getAttribute('data-tier') || 'free';
+        state.module = 'all';
+        render();
+      });
+    });
+
+    document.getElementById('q').addEventListener('input', (e) => {
+      state.q = e.target.value || '';
+      render();
+    });
+
+    const prefixInput = document.getElementById('prefix');
+    prefixInput.value = state.prefix;
+    prefixInput.addEventListener('input', (e) => {
+      state.prefix = normalizePrefix(e.target.value);
+      localStorage.setItem(PREFIX_KEY, state.prefix);
+      render();
+    });
+    prefixInput.addEventListener('blur', () => {
+      state.prefix = normalizePrefix(state.prefix);
+      prefixInput.value = state.prefix;
+      localStorage.setItem(PREFIX_KEY, state.prefix);
+      render();
+    });
+
+    applyPrefixLabels();
+
+    fetch('./commands.json', { cache: 'no-store' })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        state.data = data;
+        if (!localStorage.getItem(PREFIX_KEY) && data.prefix) {
+          state.prefix = normalizePrefix(data.prefix);
+          prefixInput.value = state.prefix;
+        }
+        const g = document.getElementById('generated');
+        if (data.generatedAt) {
+          g.textContent = `Updated ${new Date(data.generatedAt).toLocaleString()}`;
+        }
+        render();
+      })
+      .catch((err) => {
+        document.getElementById('catalog').innerHTML =
+          `<div class="err">Could not load commands.json (${escapeHtml(err.message)})</div>`;
+      });
+  </script>
+</body>
+</html>

@@ -28,9 +28,15 @@ const CACHE_TTL_MS = 60_000;
 
 // Module names (as registered via `module:` in each command) that require a
 // paid plan. antinuke + antiraid both register under 'security'.
-const PREMIUM_MODULES = new Set(['security', 'avatar', 'community']);
+const PREMIUM_MODULES = new Set(['security', 'community']);
 const PLAN_RANK = { free: 0, pro: 1, ultra: 2 };
 const ACTIVE_STATUSES = new Set(['active', 'trialing']);
+
+/**
+ * Avatar is NOT a premium *module* — free servers get premade + skin (+ closet UI).
+ * Hair/clothes/hats are enforced inside the avatar plan gates (paid cosmetics).
+ * Pets use separate entitlements. Security + community still require an active plan.
+ */
 
 const FREE_PLAN = Object.freeze({ plan: 'free', status: 'active', active: false, free: true });
 

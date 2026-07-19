@@ -149,6 +149,7 @@ function createMisc(deps) {
       description: 'Challenge someone to tic-tac-toe',
       aliases: ['ttt'],
       module: 'misc',
+      public: true,
       async run(ctx) {
         const foe = ctx.getUser?.('user') || ctx.message?.mentions?.users?.first?.();
         if (!foe || foe.bot) return ctx.reply('Mention an opponent.');
@@ -166,6 +167,7 @@ function createMisc(deps) {
       name: 'blacktea',
       description: 'Word chain game (type a word starting with last letter)',
       module: 'misc',
+      public: true,
       async run(ctx) {
         const action = (ctx.args?.[0] || 'start').toLowerCase();
         const key = ctx.channel.id;
@@ -285,39 +287,68 @@ function createMisc(deps) {
 
     registry.register({
       name: 'afk',
-      description: 'Set an AFK message (shown when mentioned)',
+      description: 'Set an AFK message (shown when someone mentions you)',
       module: 'misc',
+      options: [
+        {
+          name: 'reason',
+          description: 'Custom message shown when you are pinged (e.g. back in 20)',
+          type: 3,
+          required: true,
+        },
+      ],
       async run(ctx) {
-        const reason = ctx.args?.join(' ') || 'AFK';
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        // Prefix: `,afk back in 20` → all args. Slash: `/afk reason:back in 20`.
+        const fromArgs = (ctx.args || []).join(' ').trim();
+        const fromOpt = String(ctx.getString?.('reason') || '').trim();
+        const reason = (ctx.source === 'prefix' ? (fromArgs || fromOpt) : (fromOpt || fromArgs)) || 'AFK';
         config.update(ctx.guild.id, (c) => {
           c.misc = c.misc || {};
           c.misc.afk = c.misc.afk || {};
           c.misc.afk[ctx.user.id] = { reason, ts: Date.now() };
           return c;
         });
+        if (reason === 'AFK' && ctx.source === 'prefix' && !fromArgs) {
+          return ctx.reply(
+            'AFK set: AFK\n_Add a message: `,afk back in 20` — that text is what people see when they ping you._',
+          );
+        }
         return ctx.reply(`AFK set: ${reason}`);
       },
     });
   }
 
+  function isAfkSetCommand(message) {
+    const prefix = config.get(message.guild.id).prefix || ',';
+    if (!message.content.startsWith(prefix)) return false;
+    const name = message.content.slice(prefix.length).trim().split(/\s+/)[0]?.toLowerCase();
+    return name === 'afk';
+  }
+
   async function onMessage(message) {
     if (!message.guild || message.author.bot) return;
-    // AFK mention
+    // AFK mention — show the user's custom reason (not a hardcoded "AFK")
     const afkMap = config.get(message.guild.id).misc?.afk || {};
     for (const [id] of message.mentions.users) {
       if (afkMap[id]) {
         const a = afkMap[id];
+        const why = String(a.reason || 'AFK').trim() || 'AFK';
         await message.channel.send(
-          `💤 <@${id}> is AFK: ${a.reason} (<t:${Math.floor(a.ts / 1000)}:R>)`,
+          `💤 <@${id}> is AFK: ${why} (<t:${Math.floor(a.ts / 1000)}:R>)`,
         ).catch(() => {});
       }
     }
-    // Clear own AFK
-    if (afkMap[message.author.id]) {
+    // Clear own AFK — but not on the `,afk` / `/afk` set command itself
+    // (prefix handler + hooks both see the same messageCreate; clearing here
+    // used to wipe AFK immediately after it was set).
+    if (afkMap[message.author.id] && !isAfkSetCommand(message)) {
+      const previous = afkMap[message.author.id];
       config.update(message.guild.id, (c) => {
         if (c.misc?.afk) delete c.misc.afk[message.author.id];
         return c;
       });
+      await notifyAfkCleared(message, previous);
     }
     // Blacktea
     const game = blacktea.get(message.channel.id);
@@ -330,6 +361,22 @@ function createMisc(deps) {
         await message.react('✅').catch(() => {});
       }
     }
+  }
+
+  /** DM first (private); if DMs are closed, short-lived channel reply. */
+  async function notifyAfkCleared(message, previous) {
+    const why = String(previous?.reason || '').trim();
+    const text = why && why !== 'AFK'
+      ? `Welcome back — AFK removed (was: ${why}).`
+      : 'Welcome back — AFK removed.';
+    const dmOk = await message.author.send({ content: text }).then(() => true).catch(() => false);
+    if (dmOk) return;
+    const sent = await message.reply({ content: text }).catch(() => null);
+    if (!sent) return;
+    const ms = Number(process.env.DISCORD_PREFIX_DELETE_MS) || 8_000;
+    setTimeout(() => {
+      Promise.resolve(sent.delete?.()).catch(() => {});
+    }, ms);
   }
 
   /** Ungated: Discord reactions → organic map emotes / eat for anyone on the map. */

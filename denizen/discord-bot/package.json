@@ -11,7 +11,8 @@
     "dump": "node --env-file=../.env index.js --dump",
     "test": "node --test test/*.test.js",
     "test:tracker": "node --test test/tracker.test.js",
-    "test:core": "node --test test/core.test.js"
+    "test:core": "node --test test/core.test.js",
+    "export:commands": "node scripts/export-commands-catalog.js"
   },
   "engines": {
     "node": ">=20"

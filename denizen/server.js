@@ -10692,6 +10692,41 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
+  // Discord bot public command catalog (Bleed-style)
+  if (urlPath === '/discord/commands' || urlPath === '/discord/commands/') {
+    res.writeHead(302, { Location: '/discord-commands/' });
+    res.end();
+    return;
+  }
+  if (urlPath === '/discord-commands' || urlPath.startsWith('/discord-commands/')) {
+    const CMD_ROOT = path.join(ROOT, 'discord-commands');
+    let rel = urlPath.replace(/^\/discord-commands\/?/, '') || 'index.html';
+    if (rel.endsWith('/')) rel += 'index.html';
+    const filePath = path.resolve(CMD_ROOT, rel);
+    const inside = path.relative(CMD_ROOT, filePath);
+    if (inside.startsWith('..') || path.isAbsolute(inside) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.end('Not found');
+        return;
+      }
+      const ext = path.extname(filePath).toLowerCase();
+      const headers = { 'Content-Type': MIME[ext] || 'application/octet-stream' };
+      if (['.html', '.js', '.json'].includes(ext)) {
+        headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+        headers.Pragma = 'no-cache';
+      }
+      res.writeHead(200, headers);
+      res.end(data);
+    });
+    return;
+  }
+
   // Deal Weaver CRM — Vite SPA served at /crm/ (phone app embeds this route)
   if (urlPath === '/crm' || urlPath.startsWith('/crm/')) {
     let crmRel = urlPath.replace(/^\/crm\/?/, '') || 'index.html';

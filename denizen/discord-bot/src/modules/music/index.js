@@ -13,6 +13,7 @@
 
 const { GatewayDispatchEvents } = require('discord.js');
 const { LavalinkClient, filterPreset } = require('../../music/lavalink-client');
+const { canRunCommand } = require('../../core/permissions');
 const {
   musicNowPlayingEmbed,
   musicControlRows,
@@ -44,6 +45,29 @@ function createMusic(deps) {
       });
     }
     return queues.get(guildId);
+  }
+
+  /**
+   * DJ / control gate: Manage Server, configured DJ role, or same VC as the bot.
+   * Play stays open so anyone can queue; destructive controls need this.
+   */
+  function canControlMusic(ctx) {
+    if (!ctx?.guild) return false;
+    if (canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return true;
+    const djRoleId = config.get(ctx.guild.id).music?.djRoleId;
+    if (djRoleId && ctx.member?.roles?.cache?.has?.(djRoleId)) return true;
+    const queue = q(ctx.guild.id);
+    const voice = ctx.member?.voice?.channel;
+    if (!queue.voiceChannelId) return true; // nothing playing yet
+    if (voice?.id === queue.voiceChannelId) return true;
+    return false;
+  }
+
+  function denyDj(ctx) {
+    return ctx.reply({
+      content: 'Join the listening voice channel, or ask staff for the DJ role / Manage Server.',
+      ephemeral: true,
+    }).catch(() => ctx.reply('Join the listening VC (or need DJ role / Manage Server).'));
   }
 
   /** Auto-connect to local defaults unless explicitly disabled. */
@@ -367,6 +391,7 @@ function createMusic(deps) {
       description: 'Play / queue a track (YouTube URL or search via Lavalink)',
       aliases: ['p'],
       module: 'music',
+      public: true,
       options: [{ name: 'query', description: 'Song URL or search', type: 3, required: true }],
       async run(ctx) {
         const query = ctx.getString?.('query') || ctx.args?.join(' ');
@@ -432,6 +457,7 @@ function createMusic(deps) {
       description: 'Post the interactive music player panel',
       aliases: ['panel', 'now'],
       module: 'music',
+      public: true,
       async run(ctx) {
         const msg = await postOrUpdatePanel(ctx.channel, ctx.guild.id);
         return ctx.reply({
@@ -446,6 +472,7 @@ function createMusic(deps) {
       description: 'Show music queue',
       aliases: ['q'],
       module: 'music',
+      public: true,
       async run(ctx) {
         const queue = q(ctx.guild.id);
         if (!queue.playing && !queue.tracks.length) {
@@ -476,7 +503,9 @@ function createMusic(deps) {
       description: 'Skip current track',
       aliases: ['s'],
       module: 'music',
+      public: true,
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const queue = q(ctx.guild.id);
         if (!queue.playing) return ctx.reply('Nothing playing.');
         const skipped = queue.playing;
@@ -502,7 +531,9 @@ function createMusic(deps) {
       name: 'stop',
       description: 'Stop playback and clear queue',
       module: 'music',
+      public: true,
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const queue = q(ctx.guild.id);
         queue.tracks = [];
         queue.playing = null;
@@ -517,7 +548,9 @@ function createMusic(deps) {
       name: 'pause',
       description: 'Pause / resume',
       module: 'music',
+      public: true,
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const queue = q(ctx.guild.id);
         queue.paused = !queue.paused;
         try {
@@ -532,8 +565,10 @@ function createMusic(deps) {
       name: 'volume',
       description: 'Set volume 1-100',
       module: 'music',
+      public: true,
       options: [{ name: 'level', description: '1-100', type: 4, required: true }],
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const n = ctx.getInteger?.('level') || Number(ctx.args?.[0]);
         if (!n || n < 1 || n > 100) return ctx.reply('Volume 1–100.');
         q(ctx.guild.id).volume = n;
@@ -549,6 +584,7 @@ function createMusic(deps) {
       description: 'Now playing',
       aliases: ['nowplaying'],
       module: 'music',
+      public: true,
       async run(ctx) {
         const track = q(ctx.guild.id).playing;
         if (!track) return ctx.reply('Nothing playing.');
@@ -560,7 +596,9 @@ function createMusic(deps) {
       name: 'shuffle',
       description: 'Shuffle the queue',
       module: 'music',
+      public: true,
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const queue = q(ctx.guild.id);
         for (let i = queue.tracks.length - 1; i > 0; i -= 1) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -574,8 +612,10 @@ function createMusic(deps) {
       name: 'remove',
       description: 'Remove a track from the queue by index',
       module: 'music',
+      public: true,
       options: [{ name: 'index', description: '1-based index', type: 4, required: true }],
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const idx = (ctx.getInteger?.('index') || Number(ctx.args?.[0]) || 0) - 1;
         const queue = q(ctx.guild.id);
         if (idx < 0 || idx >= queue.tracks.length) return ctx.reply('Invalid index.');
@@ -588,7 +628,9 @@ function createMusic(deps) {
       name: 'loop',
       description: 'Toggle loop mode: off|track|queue',
       module: 'music',
+      public: true,
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const mode = (ctx.args?.[0] || 'track').toLowerCase();
         if (!['off', 'track', 'queue'].includes(mode)) return ctx.reply('Usage: ,loop off|track|queue');
         q(ctx.guild.id).loop = mode;
@@ -600,7 +642,9 @@ function createMusic(deps) {
       name: 'filter',
       description: 'Set Lavalink filter preset',
       module: 'music',
+      public: true,
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const name = (ctx.args?.[0] || 'list').toLowerCase();
         const presets = ['none', 'bassboost', 'nightcore', 'vaporwave', 'soft', '8d'];
         if (name === 'list') return ctx.reply(`Filters: ${presets.join(', ')}`);
@@ -619,11 +663,46 @@ function createMusic(deps) {
       description: 'Clear upcoming tracks (keep current)',
       aliases: ['cq'],
       module: 'music',
+      public: true,
       async run(ctx) {
+        if (!canControlMusic(ctx)) return denyDj(ctx);
         const queue = q(ctx.guild.id);
         const n = queue.tracks.length;
         queue.tracks = [];
         return ctx.reply(`Cleared **${n}** upcoming tracks.`);
+      },
+    });
+
+    registry.register({
+      name: 'djrole',
+      description: 'Set or clear the music DJ role (Manage Server)',
+      aliases: ['dj'],
+      module: 'music',
+      options: [
+        { name: 'role', description: 'DJ role (omit to clear)', type: 8, required: false },
+      ],
+      async run(ctx) {
+        if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) {
+          return ctx.reply('Need **Manage Server** to set the DJ role.');
+        }
+        const role = ctx.getRole?.('role') || ctx.message?.mentions?.roles?.first?.();
+        const clear = ['clear', 'off', 'none', 'remove'].includes(
+          String(ctx.args?.[0] || '').toLowerCase(),
+        );
+        if (clear) {
+          config.update(ctx.guild.id, (c) => { c.music.djRoleId = null; return c; });
+          return ctx.reply('DJ role cleared — listeners in the bot VC (or Manage Server) can control.');
+        }
+        if (!role) {
+          const cur = config.get(ctx.guild.id).music?.djRoleId;
+          return ctx.reply(
+            cur
+              ? `DJ role is <@&${cur}>. Clear with \`,djrole clear\` or set with \`,djrole @role\`.`
+              : 'No DJ role set. Usage: `,djrole @role`',
+          );
+        }
+        config.update(ctx.guild.id, (c) => { c.music.djRoleId = role.id; return c; });
+        return ctx.reply(`DJ role → ${role} — they can skip/stop/volume without joining VC.`);
       },
     });
 
@@ -633,6 +712,9 @@ function createMusic(deps) {
       aliases: ['ll'],
       module: 'music',
       async run(ctx) {
+        if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) {
+          return ctx.reply('Need **Manage Server** to view Lavalink status.');
+        }
         if (!hasLavalinkEnv()) {
           return ctx.reply({
             embeds: [infoEmbed('Lavalink disabled', `\`LAVALINK_DISABLE\` is set.\n\n${musicSetupHelp()}`)],
@@ -684,13 +766,16 @@ function createMusic(deps) {
     const voice = member?.voice?.channel;
     const botCh = queue.voiceChannelId;
 
-    // Anyone in the same VC (or staff) can control
+    // Anyone in the same VC, DJ role, or Manage Server can control
+    const djRoleId = config.get(interaction.guild.id).music?.djRoleId;
+    const hasDj = djRoleId && member?.roles?.cache?.has?.(djRoleId);
     const allowed = !botCh
       || voice?.id === botCh
-      || member?.permissions?.has?.('ManageGuild');
+      || member?.permissions?.has?.('ManageGuild')
+      || hasDj;
     if (!allowed) {
       await interaction.reply({
-        embeds: [dangerEmbed('Denied', 'Join the listening voice channel to use the player.')],
+        embeds: [dangerEmbed('Denied', 'Join the listening voice channel (or need DJ role / Manage Server).')],
         ephemeral: true,
       }).catch(() => {});
       return true;
