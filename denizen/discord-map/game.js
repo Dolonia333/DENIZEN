@@ -3763,6 +3763,48 @@
       if (cols === 2 && channels.length > 1) {
         this.placeEntrance(g, streetDoorRightX(left, bw), groundY, 'door', 0x3c45c0, 26);
       }
+
+      // Side-by-side VC rooms need a walkable middle doorway (same as text buildings).
+      if (cols === 2) {
+        for (let r = 0; r < rows; r += 1) {
+          const leftIdx = r * 2;
+          const rightIdx = leftIdx + 1;
+          if (rightIdx >= channels.length) continue;
+          const leftKey = chKey(channels[leftIdx].id);
+          const rightKey = chKey(channels[rightIdx].id);
+          const leftFloor = this.floors.get(leftKey);
+          const rightFloor = this.floors.get(rightKey);
+          if (!leftFloor || !rightFloor) continue;
+          this.registerPassage({
+            fromFloorId: leftKey,
+            toFloorId: rightKey,
+            x: left + 16 + roomW + gap / 2,
+            radius: 18,
+            roomH,
+            doorKind: 'wood',
+          });
+        }
+        // Vertical climbs between stacked VC rows (left & right columns)
+        for (let r = 0; r + 1 < rows; r += 1) {
+          for (const col of [0, 1]) {
+            const upperIdx = r * 2 + col;
+            const lowerIdx = (r + 1) * 2 + col;
+            if (upperIdx >= channels.length || lowerIdx >= channels.length) continue;
+            const upperKey = chKey(channels[upperIdx].id);
+            const lowerKey = chKey(channels[lowerIdx].id);
+            const laneX = left + 16 + col * (roomW + gap) + Math.max(22, roomW * 0.18);
+            this.markClimbDoor(laneX, upperKey);
+            this.markClimbDoor(laneX, lowerKey);
+            this.registerStairs({
+              x: laneX,
+              fromFloorId: lowerKey,
+              toFloorId: upperKey,
+              radius: 28,
+            });
+          }
+        }
+      }
+
       const vWinY = groundY - doorStrip + 12;
       [left + bw * 0.3, left + bw * 0.7].forEach((wx) => {
         if (!this.textures.exists('windowCircle')) return;
@@ -3921,7 +3963,7 @@
             fromFloorId: row[0].key,
             toFloorId: row[1].key,
             x: padX + roomW + gap / 2,
-            radius: 14,
+            radius: 18,
             roomH,
             doorKind: 'wood',
           });
@@ -7408,22 +7450,27 @@
 
     registerPassage(def) {
       if (!this.passages) this.passages = [];
-      const radius = def.radius || 14;
+      const radius = def.radius || 18;
       this.passages.push({
         x: def.x,
         fromFloorId: def.fromFloorId,
         toFloorId: def.toFloorId,
         radius,
       });
-      // Each room's walkable minX/maxX stops a few px short of the shared
-      // wall, so the passage trigger point (sitting in that gap) was never
-      // actually reachable — extend each room's bound toward the passage.
-      const from = this.floors.get(def.fromFloorId);
-      const to = this.floors.get(def.toFloorId);
-      if (from) from.maxX = Math.max(from.maxX, def.x + radius + 4);
-      if (to) to.minX = Math.min(to.minX, def.x - radius - 4);
-      // Draw a doorway so the horizontal transition is obvious
-      const floorY = from?.floorY || to?.floorY;
+      // Walkable bounds stop short of the shared wall — extend both rooms so
+      // the doorway trigger is reachable. Don't assume from=left / to=right.
+      const a = this.floors.get(def.fromFloorId);
+      const b = this.floors.get(def.toFloorId);
+      if (a && b) {
+        const leftFloor = (a.minX + a.maxX) <= (b.minX + b.maxX) ? a : b;
+        const rightFloor = leftFloor === a ? b : a;
+        leftFloor.maxX = Math.max(leftFloor.maxX, def.x + radius + 10);
+        rightFloor.minX = Math.min(rightFloor.minX, def.x - radius - 10);
+      } else {
+        if (a) a.maxX = Math.max(a.maxX, def.x + radius + 10);
+        if (b) b.minX = Math.min(b.minX, def.x - radius - 10);
+      }
+      const floorY = a?.floorY ?? b?.floorY;
       if (floorY != null) {
         this.markPassageDoorway(def.x, floorY, def.roomH || 82, def.doorKind || 'wood');
       }
@@ -7536,6 +7583,47 @@
         if (p.toFloorId === cur) return { ...p, targetFloorId: p.fromFloorId };
       }
       return null;
+    }
+
+    /**
+     * Cross a left↔right doorway only when walking toward the other room.
+     * The old "any velocity past the seam" check ping-ponged floorIds every
+     * frame and felt like getting stuck in the door.
+     */
+    tryCrossPassage(vx) {
+      if (!this.indoors || !this.player || this._floorTween) return false;
+      if (this.time.now < (this._passageCoolUntil || 0)) return false;
+      const curId = this.indoors.floorId;
+      const px = this.player.x;
+      for (const p of this.passages || []) {
+        if (curId !== p.fromFloorId && curId !== p.toFloorId) continue;
+        if (Math.abs(px - p.x) > p.radius) continue;
+
+        const fromF = this.floors.get(p.fromFloorId);
+        const toF = this.floors.get(p.toFloorId);
+        if (!fromF || !toF) continue;
+        const fromIsLeft = (fromF.minX + fromF.maxX) <= (toF.minX + toF.maxX);
+        const leftId = fromIsLeft ? p.fromFloorId : p.toFloorId;
+        const rightId = fromIsLeft ? p.toFloorId : p.fromFloorId;
+        const leftF = fromIsLeft ? fromF : toF;
+        const rightF = fromIsLeft ? toF : fromF;
+
+        let nextId = null;
+        if (vx > 0 && curId === leftId && px >= p.x - 6) nextId = rightId;
+        if (vx < 0 && curId === rightId && px <= p.x + 6) nextId = leftId;
+        if (!nextId) continue;
+
+        const next = nextId === rightId ? rightF : leftF;
+        this.indoors.floorId = nextId;
+        this.player.y = next.floorY;
+        this.player.x = p.x + (vx > 0 ? 14 : -14);
+        this.player.x = Phaser.Math.Clamp(this.player.x, next.minX, next.maxX);
+        this.player.setDepth(next.isRoof ? 46 : 44);
+        this._passageCoolUntil = this.time.now + 220;
+        this.playEnterStep?.();
+        return true;
+      }
+      return false;
     }
 
     /** Brief open pulse on nearby climb/street doors when changing floors. */
@@ -8109,19 +8197,8 @@
         const floor = this.floors.get(this.indoors.floorId);
         if (floor && !this._floorTween) {
           this.player.y = floor.floorY;
-          // Horizontal room-to-room: walk into the doorway gap
-          const passage = this.nearbyPassage();
-          if (passage && ((vx > 0 && this.player.x > passage.x - 3) || (vx < 0 && this.player.x < passage.x + 3))) {
-            const next = this.floors.get(passage.targetFloorId);
-            if (next && next.floorY != null) {
-              // Soft handoff into the neighbor room
-              this.indoors.floorId = passage.targetFloorId;
-              this.player.y = next.floorY;
-              // Nudge past the door so you don't immediately bounce back
-              this.player.x = passage.x + (vx > 0 ? 10 : -10);
-              this.player.x = Phaser.Math.Clamp(this.player.x, next.minX, next.maxX);
-            }
-          }
+          // Horizontal room-to-room — direction-aware so we don't bounce in the door
+          this.tryCrossPassage(vx);
           const cur = this.floors.get(this.indoors.floorId);
           if (cur) {
             this.player.x = Phaser.Math.Clamp(this.player.x, cur.minX, cur.maxX);
