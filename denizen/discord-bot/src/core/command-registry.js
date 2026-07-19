@@ -42,13 +42,20 @@ function privateRepliesEnabled() {
 
 /**
  * Resolve whether a reply should be private (slash ephemeral / prefix auto-delete).
- * Explicit `ephemeral` on the payload wins; then `cmd.public`; then global default.
+ * Explicit `ephemeral` on the payload wins; then `cmd.public`; then module allowlist;
+ * then global default (DISCORD_PRIVATE_REPLIES).
+ *
+ * Game modules stay channel-visible so duel boards / shop panels aren't deleted
+ * after ~8s (prefix "ephemeral" cleanup) — that made Credits feel broken.
  */
+const PUBLIC_MODULES = new Set(['economy', 'pvp', 'shop', 'music']);
+
 function resolvePrivateReply(cmd, content) {
   if (content && typeof content === 'object' && Object.prototype.hasOwnProperty.call(content, 'ephemeral')) {
     return !!content.ephemeral;
   }
   if (cmd?.public) return false;
+  if (cmd?.module && PUBLIC_MODULES.has(String(cmd.module))) return false;
   return privateRepliesEnabled();
 }
 

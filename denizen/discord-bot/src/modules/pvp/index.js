@@ -425,6 +425,7 @@ function createPvp(deps) {
       description: 'Challenge someone to a Credits duel',
       module: 'pvp',
       priority: 5, // high-traffic — keep slash even if budget gets tight
+      public: true,
       options: [
         { type: 6, name: 'user', description: 'Opponent (omit for leaderboard with wager unused)', required: false },
         { type: 4, name: 'wager', description: 'Credits each side puts in', required: false },
@@ -528,6 +529,7 @@ function createPvp(deps) {
       // Rare/emergency action — always reachable via `,forfeit`, but doesn't
       // need to eat slash-command budget from the 100-cap.
       slash: false,
+      public: true,
       async run(ctx) {
         if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
         const matchId = byUser.get(ctx.user.id);

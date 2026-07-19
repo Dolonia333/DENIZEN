@@ -105,6 +105,11 @@ describe('core foundation', () => {
       assert.equal(resolvePrivateReply({ public: true }, 'Now playing'), false);
       assert.equal(resolvePrivateReply({ public: true }, { content: 'x', ephemeral: true }), true);
       assert.equal(resolvePrivateReply({}, { content: 'x', ephemeral: false }), false);
+      // Game loops must stay in-channel — otherwise prefix cleanup deletes duel/shop boards ~8s later.
+      assert.equal(resolvePrivateReply({ module: 'economy' }, 'Balance'), false);
+      assert.equal(resolvePrivateReply({ module: 'pvp' }, 'Duel'), false);
+      assert.equal(resolvePrivateReply({ module: 'shop' }, 'Shop'), false);
+      assert.equal(resolvePrivateReply({ module: 'music' }, 'Queue'), false);
     } finally {
       if (prev === undefined) delete process.env.DISCORD_PRIVATE_REPLIES;
       else process.env.DISCORD_PRIVATE_REPLIES = prev;

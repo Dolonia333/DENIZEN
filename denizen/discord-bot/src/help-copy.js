@@ -62,7 +62,7 @@ function spacesHelpEmbed(opts = {}) {
       { name: 'Credits', value: `\`${p}claim\` · \`${p}balance\` · \`${p}pay @user\` · \`${p}credits lb\` · \`${p}history\``, inline: true },
       { name: 'Duels', value: `\`${p}duel @user [wager]\` · \`${p}duel lb\` · \`${p}forfeit\` · Accept/Attack/Guard/Feint`, inline: true },
       { name: 'Shop', value: `\`${p}shop\` · \`${p}buy <item>\` · \`${p}inv\` · \`${p}redeem <code>\``, inline: true },
-      { name: 'Game', value: 'Earn Credits → wager them in Duels → spend in the Shop.', inline: false },
+      { name: 'Game', value: 'Earn Credits → wager in Duels → spend in the Shop. Replies stay in chat so you can follow the fight.', inline: false },
       { name: 'Chat', value: `\`@Denizen <question>\`\nStaff: \`${p}chat on\``, inline: true },
     ],
     footerExtra: 'start here',

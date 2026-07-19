@@ -88,7 +88,7 @@ function shopEmbed() {
   return baseEmbed({
     color: BRAND.primary,
     title: '🛒 Credits shop',
-    description: lines.join('\n\n'),
+    description: `${lines.join('\n\n')}\n\n**Next:** \`,buy <itemId>\` · \`,balance\` · \`,inv\``,
     footerExtra: 'shop · ,buy <itemId>',
   });
 }
@@ -155,6 +155,7 @@ function createShop(deps) {
       name: 'shop',
       description: 'Browse the Credits shop',
       module: 'shop',
+      public: true,
       async run(ctx) {
         if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
         if (!shopEnabled(ctx.guild.id)) return ctx.reply('Credits are disabled here.');
@@ -166,6 +167,7 @@ function createShop(deps) {
       name: 'buy',
       description: 'Buy an item from the Credits shop',
       module: 'shop',
+      public: true,
       options: [
         { type: 3, name: 'item', description: 'Item id, e.g. title_rookie', required: true },
       ],
@@ -218,6 +220,7 @@ function createShop(deps) {
       description: 'View your Credits shop inventory',
       module: 'shop',
       aliases: ['inventory'],
+      public: true,
       options: [
         { type: 6, name: 'user', description: 'Whose inventory to check', required: false },
       ],

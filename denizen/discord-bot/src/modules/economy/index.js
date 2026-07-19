@@ -73,6 +73,7 @@ function createEconomy(deps) {
       module: 'economy',
       aliases: ['bal', 'wallet'],
       priority: 5, // high-traffic — keep slash even if budget gets tight
+      public: true,
       options: [
         { type: 6, name: 'user', description: 'Whose balance to check', required: false },
       ],
@@ -86,6 +87,11 @@ function createEconomy(deps) {
         const fields = [
           { name: 'Balance', value: formatCredits(bal), inline: true },
           { name: 'Duels', value: `${stats.wins}W / ${stats.losses}L`, inline: true },
+          {
+            name: 'Next',
+            value: '`,claim` daily · `,duel @user [wager]` · `,shop` · `,history`',
+            inline: false,
+          },
         ];
         if (held) {
           fields.push({
@@ -97,7 +103,7 @@ function createEconomy(deps) {
         return ctx.reply({
           embeds: [infoEmbed(
             target.id === ctx.user.id ? 'Your wallet' : `${target.username}'s wallet`,
-            held ? 'This account is on PVP hold.' : 'Earn with `,claim`, chat, and `,duel`.',
+            held ? 'This account is on PVP hold.' : 'Credits stay in this channel — play from here.',
             fields,
           )],
         });
@@ -109,6 +115,7 @@ function createEconomy(deps) {
       description: 'Claim your daily Credits',
       module: 'economy',
       priority: 5, // high-traffic — keep slash even if budget gets tight
+      public: true,
       async run(ctx) {
         if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
         const cfg = ecoCfg(ctx.guild.id);
@@ -125,7 +132,7 @@ function createEconomy(deps) {
         return ctx.reply({
           embeds: [successEmbed(
             'Daily claim',
-            `+${cfg.claimAmount} credits. Balance: ${formatCredits(bal)}`,
+            `+${cfg.claimAmount} credits. Balance: ${formatCredits(bal)}\n**Next:** \`,duel @user\` or \`,shop\``,
           )],
         });
       },
@@ -135,6 +142,7 @@ function createEconomy(deps) {
       name: 'pay',
       description: 'Send Credits to another member',
       module: 'economy',
+      public: true,
       options: [
         { type: 6, name: 'user', description: 'Recipient', required: true },
         { type: 4, name: 'amount', description: 'Amount', required: true },
@@ -169,6 +177,7 @@ function createEconomy(deps) {
       name: 'credits',
       description: 'Credits admin + leaderboard (lb | give | take | hold | unhold)',
       module: 'economy',
+      public: true,
       options: [
         {
           type: 3,
@@ -373,6 +382,7 @@ function createEconomy(deps) {
       name: 'redeem',
       description: 'Redeem a Credits code',
       module: 'economy',
+      public: true,
       options: [
         { type: 3, name: 'code', description: 'Your redeem code', required: true },
       ],
@@ -397,6 +407,7 @@ function createEconomy(deps) {
       description: 'Show your recent Credits history',
       module: 'economy',
       slash: false, // lower-traffic than claim/balance/duel/shop — prefix-only keeps slash budget free
+      public: true,
       options: [
         {
           type: 3,
