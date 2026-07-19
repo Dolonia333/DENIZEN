@@ -57,6 +57,36 @@ function verifyAccessGrant(grant) {
   return payload;
 }
 
+/** Map grants last longer — people leave Spaces open in a tab. */
+const MAP_GRANT_TTL_MS = 12 * 60 * 60 * 1000;
+
+function createMapGrant({
+  guildId,
+  orgId = null,
+  orgSlug = null,
+  accessMethod = 'team_code',
+} = {}) {
+  const gid = String(guildId || '').trim();
+  if (!gid) throw new Error('guildId required for map grant');
+  const payload = {
+    typ: 'map_grant',
+    guild_id: gid,
+    org_id: orgId || null,
+    org_slug: orgSlug || null,
+    access_method: accessMethod,
+    exp: Date.now() + MAP_GRANT_TTL_MS,
+    jti: crypto.randomBytes(8).toString('hex'),
+  };
+  return signPayload(payload);
+}
+
+function verifyMapGrant(grant) {
+  const payload = verifySignedToken(grant);
+  if (!payload || payload.typ !== 'map_grant') return null;
+  if (!payload.guild_id) return null;
+  return payload;
+}
+
 function createCeoGrant() {
   const payload = {
     typ: 'ceo_grant',
@@ -108,6 +138,8 @@ function extractSessionAuth(req, body = {}) {
 module.exports = {
   createAccessGrant,
   verifyAccessGrant,
+  createMapGrant,
+  verifyMapGrant,
   createCeoGrant,
   verifyCeoGrant,
   createSessionToken,
@@ -115,4 +147,5 @@ module.exports = {
   verifySessionToken,
   extractSessionAuth,
   GRANT_TTL_MS,
+  MAP_GRANT_TTL_MS,
 };

@@ -42,9 +42,12 @@ describe('UI kit', () => {
     assert.equal(emb.data.title, 'Denizen Spaces');
     assert.ok((emb.data.description || '').length < 120);
     const names = (emb.data.fields || []).map((f) => f.name);
-    assert.deepEqual(names.slice(0, 4), ['Map', 'Look', 'Pet', 'Live']);
+    assert.deepEqual(names.slice(0, 4), ['Map', 'Owner', 'Look', 'Pet']);
     assert.match(emb.data.fields[0].value, /guildId=99/);
+    assert.doesNotMatch(emb.data.fields[0].value, /view=public/);
+    assert.match(emb.data.fields[1].value, /teamlink/);
     const intro = spacesIntro({ guildId: '99' });
     assert.ok(intro.split('\n').length <= 2);
+    assert.match(intro, /team code/i);
   });
 });

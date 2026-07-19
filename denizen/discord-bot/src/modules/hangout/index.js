@@ -25,7 +25,7 @@ function createHangoutModule(deps) {
       : ['_No voice hangouts logged this week yet (need 30s+ in VC)._'];
 
     const share = publicUrl()
-      ? `${publicUrl()}/discord-map/?guildId=${encodeURIComponent(guild.id)}&view=public`
+      ? `${publicUrl()}/discord-map/?guildId=${encodeURIComponent(guild.id)}`
       : null;
 
     return {
