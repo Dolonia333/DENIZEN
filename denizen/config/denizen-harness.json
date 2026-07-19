@@ -83,8 +83,8 @@
         "min_tier": "main",
         "kinds": {
           "think": "heavy",
-          "director": "heavy",
-          "decision": "heavy"
+          "director": "main",
+          "decision": "main"
         }
       },
       "bob": {

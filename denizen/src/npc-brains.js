@@ -3428,7 +3428,20 @@ ${actionFooter}`;
    * Player chat keeps SOUL provider (main tier).
    */
   _pinThinkToFastSlot(config, opts = {}) {
-    if (opts.kind === 'cofounder' || opts.kind === 'mentor-synthesis' || opts.kind === 'directive') {
+    if (opts.kind === 'cofounder') {
+      const main = this.providers?.lmstudio || config;
+      return {
+        ...config,
+        ...main,
+        type: 'lmstudio',
+        providerKey: 'lmstudio',
+        model: process.env.LM_STUDIO_MODEL
+          || main.model
+          || config.model,
+        _preferHeavy: false,
+      };
+    }
+    if (opts.kind === 'mentor-synthesis' || opts.kind === 'directive') {
       const main = this.providers?.lmstudio || config;
       return {
         ...config,
