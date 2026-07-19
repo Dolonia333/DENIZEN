@@ -2,23 +2,14 @@
 
 /**
  * Bridge security / raid / room events onto tracker snapshots for Discord canvas.
+ * Prefer enriching /presence payloads over console spam.
  */
 
 function createCanvasBridge(deps) {
   const { tracker, hub } = deps;
 
   function attach() {
-    hub.on('security.antinuke', (evt) => {
-      console.log('[canvas] antinuke', evt.payload);
-    });
-    hub.on('security.raid', (evt) => {
-      console.log('[canvas] raid', evt.payload);
-    });
-    hub.on('security.antiraid', (evt) => {
-      console.log('[canvas] antiraid', evt.payload);
-    });
     hub.on('*', (evt) => {
-      // Keep last events discoverable via tracker helper
       if (!tracker._canvasEvents) tracker._canvasEvents = [];
       tracker._canvasEvents.push({ type: evt.type, payload: evt.payload, ts: evt.ts });
       if (tracker._canvasEvents.length > 100) tracker._canvasEvents.shift();

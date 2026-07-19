@@ -3636,53 +3636,65 @@ class OfficeScene extends Phaser.Scene {
     if (selfKey) this.removeRemotePlayer(selfKey);
     ghosts.forEach((g) => this.removeRemotePlayer(g));
 
-    // Same display name near local avatar = second "me"
     const myName = (globalThis.DenizenVisitorSession?.getDisplayName?.()
       || window.__DenizenVisitorDisplayName
       || '').trim().toLowerCase();
-    if (!myName || !this.player) return;
+    if (!this.player) return;
+
+    const isPlaceholderName = (n) => {
+      const s = String(n || '').trim().toLowerCase();
+      return !s || s === 'guest' || s === 'demo guest' || s === 'demoguest';
+    };
+
     [...this._remotePlayers.keys()].forEach((id) => {
       const entry = this._remotePlayers.get(id);
       if (!entry) return;
       const n = String(entry.displayName || '').trim().toLowerCase();
-      if (!n || n !== myName) return;
       const dx = (entry.targetX || entry.sprite?.x || 0) - this.player.x;
       const dy = (entry.targetY || entry.sprite?.y || 0) - this.player.y;
-      // Wide radius — pose lag can leave the ghost a step behind.
-      if ((dx * dx + dy * dy) < (220 * 220)) this.removeRemotePlayer(id);
+      const dist2 = dx * dx + dy * dy;
+      // Placeholder "Guest" next to you is always a self-echo — remove it.
+      if (isPlaceholderName(n) && dist2 < (720 * 720)) {
+        this.removeRemotePlayer(id);
+        return;
+      }
+      // Same display name near local avatar = second "me"
+      if (myName && n && n === myName && dist2 < (400 * 400)) {
+        this.removeRemotePlayer(id);
+      }
     });
+  }
+
+  /** True when this pose is our own presence echoing back as a remote. */
+  _isSelfEchoPose(pose) {
+    const id = String(pose?.sessionId || '').trim();
+    if (!id) return true;
+    const selfKey = window.__DenizenPresenceKey || this._agentManager?._presenceKey;
+    if (selfKey && id === selfKey) return true;
+    const ghosts = window.__DenizenPresenceGhosts;
+    if (Array.isArray(ghosts) && ghosts.includes(id)) return true;
+
+    const myName = (globalThis.DenizenVisitorSession?.getDisplayName?.()
+      || window.__DenizenVisitorDisplayName
+      || '').trim().toLowerCase();
+    const poseName = String(pose.displayName || '').trim().toLowerCase();
+    const isPlaceholder = !poseName || poseName === 'guest' || poseName === 'demo guest' || poseName === 'demoguest';
+    if (!this.player) return isPlaceholder;
+    const dx = (Number(pose.x) || 0) - this.player.x;
+    const dy = (Number(pose.y) || 0) - this.player.y;
+    const dist2 = dx * dx + dy * dy;
+    if (isPlaceholder && dist2 < (720 * 720)) return true;
+    if (myName && poseName && myName === poseName && dist2 < (400 * 400)) return true;
+    return false;
   }
 
   upsertRemotePlayer(pose) {
     this._ensureRemotePlayers();
     const id = String(pose?.sessionId || '').trim();
     if (!id) return;
-    const selfKey = window.__DenizenPresenceKey || this._agentManager?._presenceKey;
-    // Critical: early return used to leave an already-spawned self ghost alive.
-    if (selfKey && id === selfKey) {
+    if (this._isSelfEchoPose(pose)) {
       this.removeRemotePlayer(id);
       return;
-    }
-    // Also drop ghost keys we used before sess: upgrade.
-    const ghosts = window.__DenizenPresenceGhosts;
-    if (Array.isArray(ghosts) && ghosts.includes(id)) {
-      this.removeRemotePlayer(id);
-      return;
-    }
-
-    // Same display name glued to local player = echo of me (stale anon pose).
-    const myName = (globalThis.DenizenVisitorSession?.getDisplayName?.()
-      || window.__DenizenVisitorDisplayName
-      || '').trim().toLowerCase();
-    const poseName = String(pose.displayName || '').trim().toLowerCase();
-    if (myName && poseName && myName === poseName && this.player) {
-      const dx = (Number(pose.x) || 0) - this.player.x;
-      const dy = (Number(pose.y) || 0) - this.player.y;
-      // Match laggy poses + near-field doubles.
-      if ((dx * dx + dy * dy) < (220 * 220)) {
-        this.removeRemotePlayer(id);
-        return;
-      }
     }
 
     let entry = this._remotePlayers.get(id);
@@ -3691,6 +3703,7 @@ class OfficeScene extends Phaser.Scene {
     const facing = pose.facing || 'down';
     const anim = pose.anim || 'idle';
     const name = String(pose.displayName || 'Guest').slice(0, 24);
+
 
     if (!entry) {
       if (!this.textures.exists('dolo')) return;
@@ -3759,16 +3772,14 @@ class OfficeScene extends Phaser.Scene {
 
   applyRemotePlayersSnapshot(players = []) {
     this._ensureRemotePlayers();
-    const selfKey = window.__DenizenPresenceKey || this._agentManager?._presenceKey;
-    const ghosts = Array.isArray(window.__DenizenPresenceGhosts)
-      ? new Set(window.__DenizenPresenceGhosts)
-      : new Set();
     const keep = new Set();
     (players || []).forEach((p) => {
       const id = String(p.sessionId || '').trim();
       if (!id) return;
-      if (selfKey && id === selfKey) return;
-      if (ghosts.has(id)) return;
+      if (this._isSelfEchoPose(p)) {
+        this.removeRemotePlayer(id);
+        return;
+      }
       keep.add(id);
       this.upsertRemotePlayer(p);
     });
@@ -3790,10 +3801,10 @@ class OfficeScene extends Phaser.Scene {
 
   _updateRemotePlayers(delta) {
     if (!this._remotePlayers || this._remotePlayers.size === 0) return;
-    // Periodic self-scrub (anon→sess lag, pose echo) — keep rare to save CPU.
+    // Scrub self-echo often — Guest doubles stick to the player while walking.
     this._selfPurgeAt = this._selfPurgeAt || 0;
     const now = this.time?.now || Date.now();
-    if (now - this._selfPurgeAt > 2500) {
+    if (now - this._selfPurgeAt > 400) {
       this._selfPurgeAt = now;
       this.purgeSelfRemotePlayers();
       if (!this._remotePlayers.size) return;

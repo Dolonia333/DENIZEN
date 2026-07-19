@@ -6,8 +6,9 @@
  * @see https://github.com/lavalink-devs/Lavalink
  *
  * Env:
- *   LAVALINK_HOST / LAVALINK_PORT / LAVALINK_PASSWORD
+ *   LAVALINK_HOST / LAVALINK_PORT / LAVALINK_PASSWORD (defaults: 127.0.0.1:2333 / youshallnotpass)
  *   or LAVALINK_URL=http://host:2333
+ *   LAVALINK_DISABLE=1 — skip auto-connect
  */
 
 const { GatewayDispatchEvents } = require('discord.js');
@@ -45,14 +46,24 @@ function createMusic(deps) {
     return queues.get(guildId);
   }
 
+  /** Auto-connect to local defaults unless explicitly disabled. */
   function hasLavalinkEnv() {
-    return !!(
-      process.env.LAVALINK_HOST
-      || process.env.LAVALINK_URL
-      || process.env.LAVALINK_PORT
-      || process.env.LAVALINK_PASSWORD
-      || /^(1|true|yes)$/i.test(String(process.env.LAVALINK_AUTO || ''))
-    );
+    if (/^(1|true|yes)$/i.test(String(process.env.LAVALINK_DISABLE || ''))) return false;
+    return true;
+  }
+
+  function musicSetupHelp() {
+    return [
+      'Start Lavalink (required for reliable YouTube/search playback):',
+      '```',
+      'cd denizen/discord-bot',
+      'docker compose -f docker-compose.lavalink.yml up -d',
+      '```',
+      'Defaults: `127.0.0.1:2333` · password `youshallnotpass`',
+      'Optional: `LAVALINK_HOST` · `LAVALINK_PASSWORD` · `LAVALINK_URL`',
+      'Disable auto-connect: `LAVALINK_DISABLE=1`',
+      'Status: `,lavalink`',
+    ].join('\n');
   }
 
   function ensureLavalink() {
@@ -74,6 +85,7 @@ function createMusic(deps) {
     });
     try {
       lavalink.connect();
+      console.log(`[music] Lavalink connecting → ${lavalink.httpBase}`);
     } catch (err) {
       console.warn('[music] lavalink connect failed:', err.message);
     }
@@ -110,18 +122,21 @@ function createMusic(deps) {
     });
   }
 
+  /**
+   * Resolve a playable track. Returns null when nothing can actually play
+   * (never invents a silent title-only "queued" stub).
+   */
   async function resolveTrack(query) {
     const ll = ensureLavalink();
-    if (ll?.ready || ll) {
+    if (ll) {
       try {
-        // Wait briefly for session
-        for (let i = 0; i < 20 && ll && !ll.ready; i += 1) {
+        for (let i = 0; i < 30 && !ll.ready; i += 1) {
           await new Promise((r) => setTimeout(r, 100));
         }
-        if (ll?.ready) {
+        if (ll.ready) {
           const { tracks } = await ll.loadTracks(query);
           const track = tracks[0];
-          if (track) {
+          if (track?.encoded) {
             return {
               title: track.info?.title || query,
               uri: track.info?.uri || query,
@@ -157,15 +172,9 @@ function createMusic(deps) {
           };
         }
       }
-    } catch (_) { /* not installed */ }
+    } catch (_) { /* not installed / YouTube blocked */ }
 
-    return {
-      title: query.slice(0, 120),
-      uri: query,
-      author: '',
-      length: 0,
-      source: 'queued',
-    };
+    return null;
   }
 
   async function joinBotVoice(guild, voiceChannel) {
@@ -369,6 +378,20 @@ function createMusic(deps) {
         config.update(ctx.guild.id, (c) => { c.music.enabled = true; return c; });
 
         const track = await resolveTrack(query);
+        if (!track) {
+          const ll = ensureLavalink();
+          const why = !hasLavalinkEnv()
+            ? 'Lavalink auto-connect is disabled (`LAVALINK_DISABLE`).'
+            : !ll
+              ? 'Bot user not ready yet — try again in a moment.'
+              : !ll.ready
+                ? 'Lavalink node is not reachable / session not ready.'
+                : 'No matching track from Lavalink or play-dl.';
+          return ctx.reply({
+            embeds: [dangerEmbed('Cannot play', `${why}\n\n${musicSetupHelp()}`)],
+          });
+        }
+
         const queue = q(ctx.guild.id);
         queue.textChannelId = ctx.channel.id;
         queue.voiceChannelId = voice.id;
@@ -392,9 +415,7 @@ function createMusic(deps) {
                 `**${track.title}**`,
                 `\`${result.error || 'unknown'}\``,
                 '',
-                'Start Lavalink: `docker compose -f docker-compose.lavalink.yml up -d`',
-                'Env: `LAVALINK_HOST` · `LAVALINK_PASSWORD`',
-                'https://github.com/lavalink-devs/Lavalink',
+                musicSetupHelp(),
               ].join('\n'),
             )],
           });
@@ -612,31 +633,43 @@ function createMusic(deps) {
       aliases: ['ll'],
       module: 'music',
       async run(ctx) {
+        if (!hasLavalinkEnv()) {
+          return ctx.reply({
+            embeds: [infoEmbed('Lavalink disabled', `\`LAVALINK_DISABLE\` is set.\n\n${musicSetupHelp()}`)],
+          });
+        }
         const ll = ensureLavalink();
         if (!ll) {
-          return ctx.reply(
-            [
-              '**Lavalink not configured.**',
-              '```',
-              'cd denizen/discord-bot',
-              'docker compose -f docker-compose.lavalink.yml up -d',
-              '```',
-              'Then set env: `LAVALINK_HOST=127.0.0.1` `LAVALINK_PORT=2333` `LAVALINK_PASSWORD=youshallnotpass`',
-              'https://github.com/lavalink-devs/Lavalink',
-            ].join('\n'),
-          );
+          return ctx.reply({
+            embeds: [dangerEmbed('Lavalink', `Bot not ready yet.\n\n${musicSetupHelp()}`)],
+          });
         }
         let stats = null;
         try { stats = await ll.stats(); } catch (err) {
-          return ctx.reply(`Node configured but REST failed: ${err.message}\nready=${ll.ready} session=${ll.sessionId || '—'}`);
+          return ctx.reply({
+            embeds: [dangerEmbed(
+              'Lavalink unreachable',
+              [
+                `\`${err.message}\``,
+                `ready=${ll.ready} · session=${ll.sessionId || '—'} · ${ll.httpBase}`,
+                '',
+                musicSetupHelp(),
+              ].join('\n'),
+            )],
+          });
         }
-        return ctx.reply(
-          [
-            `**Lavalink** ready=${ll.ready} session=\`${ll.sessionId || '—'}\``,
-            `HTTP: ${ll.httpBase}`,
-            stats ? `Players: ${stats.players} · Playing: ${stats.playingPlayers} · Uptime: ${Math.round((stats.uptime || 0) / 1000)}s` : '',
-          ].filter(Boolean).join('\n'),
-        );
+        return ctx.reply({
+          embeds: [successEmbed(
+            'Lavalink',
+            [
+              `ready=**${ll.ready}** · session=\`${ll.sessionId || '—'}\``,
+              `HTTP: ${ll.httpBase}`,
+              stats
+                ? `Players: **${stats.players}** · Playing: **${stats.playingPlayers}** · Uptime: ${Math.round((stats.uptime || 0) / 1000)}s`
+                : '',
+            ].filter(Boolean).join('\n'),
+          )],
+        });
       },
     });
   }
@@ -751,6 +784,33 @@ function createMusic(deps) {
     onInteraction,
     postOrUpdatePanel,
     refreshPanel,
+    async clearOrphanPlayers() {
+      const ll = ensureLavalink();
+      if (!ll) return 0;
+      // Wait briefly for session handshake
+      for (let i = 0; i < 20 && !ll.sessionId; i += 1) {
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      if (!ll.sessionId) return 0;
+      try {
+        const n = await ll.destroyAllPlayers();
+        if (n > 0) console.log(`[music] cleared ${n} orphan Lavalink player(s)`);
+        queues.clear();
+        return n;
+      } catch (err) {
+        console.warn('[music] orphan clear failed:', err.message || err);
+        return 0;
+      }
+    },
+    async shutdown() {
+      try {
+        if (lavalink) {
+          await lavalink.destroyAllPlayers().catch(() => {});
+          lavalink.close();
+        }
+      } catch (_) {}
+      queues.clear();
+    },
   };
 }
 

@@ -108,6 +108,15 @@ async function getGuildPlan(guildId) {
   return { ...FREE_PLAN };
 }
 
+/** Sync peek at cache (no fetch). Used by presence hot path. */
+function peekGuildPlan(guildId) {
+  const gid = String(guildId || '').trim();
+  if (!gid) return { ...FREE_PLAN };
+  const hit = cache.get(gid);
+  if (!hit) return null;
+  return normalize(hit.row);
+}
+
 function isPremiumModule(moduleName) {
   return PREMIUM_MODULES.has(String(moduleName || '').toLowerCase());
 }
@@ -184,6 +193,7 @@ module.exports = {
   FREE_PLAN,
   dbConfigured,
   getGuildPlan,
+  peekGuildPlan,
   isModuleAllowed,
   isPremiumModule,
   setGuildPlanFromStripe,

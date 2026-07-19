@@ -54,13 +54,23 @@ function extractGuildId(args) {
 function gatedHook(moduleName, fn) {
   if (typeof fn !== 'function') return fn;
   if (!guildPlans || !guildPlans.isPremiumModule(moduleName)) return fn;
+  /** @type {Set<string>} guildIds already notified this process */
+  const noticed = gatedHook._noticed || (gatedHook._noticed = new Set());
   return async (...args) => {
     const gid = extractGuildId(args);
     if (gid) {
       let allowed = false;
       try { allowed = await guildPlans.isModuleAllowed(gid, moduleName); }
       catch (_) { allowed = false; }
-      if (!allowed) return undefined; // premium inactive for this guild → skip
+      if (!allowed) {
+        // One-time staff-facing log so silent skips aren't mysterious
+        const key = `${gid}:${moduleName}`;
+        if (!noticed.has(key)) {
+          noticed.add(key);
+          console.warn(`[premium] skipping ${moduleName} hooks for guild ${gid} (no active plan)`);
+        }
+        return undefined;
+      }
     }
     return fn(...args);
   };
@@ -143,6 +153,7 @@ function loadModules(deps) {
   const misc = createMisc(deps);
   misc.register(deps.registry);
   if (misc.onMessage) hooks.onMessage.push(misc.onMessage);
+  if (misc.onReactionAdd) hooks.onReactionAdd.push(misc.onReactionAdd);
 
   const canvas = createCanvasBridge(deps);
   canvas.attach();
@@ -181,16 +192,7 @@ function loadModules(deps) {
 
   function topicEmbed(topic, guildId, by) {
     if (topic === 'spaces' || topic === 'avatar' || topic === 'hangout') {
-      return baseEmbed({
-        color: BRAND.primary,
-        title: 'Spaces map & identity',
-        description: helpCopy.spacesIntro({ prefix, guildId }),
-        fields: [
-          { name: 'Avatar', value: `\`${prefix}avatar\` · boost → golden headset`, inline: true },
-          { name: 'Hangout', value: `\`/hangout setup\` · weekly VC board`, inline: true },
-          { name: 'Map', value: helpCopy.mapUrl(guildId), inline: false },
-        ],
-      });
+      return helpCopy.spacesHelpEmbed({ prefix, guildId });
     }
     if (topic === 'music') {
       return baseEmbed({
@@ -219,7 +221,9 @@ function loadModules(deps) {
     }
     if (topic === 'security') {
       const s = deps.config.get(guildId || '0')?.security || {};
-      return securityDashboardEmbed(s);
+      const emb = securityDashboardEmbed(s);
+      emb.setFooter({ text: 'Denizen Spaces · security is a premium module' });
+      return emb;
     }
     if (topic === 'mods') {
       return baseEmbed({
@@ -228,7 +232,7 @@ function loadModules(deps) {
         description: 'Case-logged staff tools + automod.',
         fields: [
           { name: 'Setup', value: `\`${prefix}setup\` · \`${prefix}setupmute\` · \`${prefix}log on\``, inline: false },
-          { name: 'Actions', value: 'ban · softban · kick · timeout · warn · jail · mute · purge', inline: false },
+          { name: 'Actions', value: 'ban · softban · kick · timeout · warn · jail · mute · imagemute · reactionmute · purge', inline: false },
           { name: 'Automod', value: `\`${prefix}automod on\` · snipe · reactionsnipe`, inline: false },
         ],
       });
@@ -236,7 +240,8 @@ function loadModules(deps) {
     if (topic === 'community') {
       return baseEmbed({
         color: BRAND.success,
-        title: 'Community',
+        title: 'Community 💎',
+        description: 'Premium module — levels, roles, starboard, giveaways.',
         fields: [
           { name: 'Levels', value: `\`${prefix}levels rank\` · lb · rewards`, inline: true },
           { name: 'Roles', value: 'reactionrole · buttonrole · vanity', inline: true },
@@ -347,15 +352,10 @@ function loadModules(deps) {
     async run(ctx) {
       const guildId = ctx.guild?.id;
       await ctx.reply({
-        embeds: [baseEmbed({
-          color: BRAND.primary,
+        embeds: [helpCopy.spacesHelpEmbed({
+          prefix,
+          guildId,
           title: 'Enter Denizen Spaces',
-          description: helpCopy.spacesIntro({ prefix, guildId }),
-          fields: [
-            { name: 'Open map', value: helpCopy.mapUrl(guildId) || '/discord-map/', inline: false },
-            { name: 'Customize', value: `\`${prefix}avatar\` — closet + boost headset`, inline: true },
-            { name: 'Music', value: `\`${prefix}player\` — interactive panel`, inline: true },
-          ],
         })],
       });
     },

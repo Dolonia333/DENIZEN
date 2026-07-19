@@ -11,7 +11,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Category | Document | Status | Description |
 |----------|----------|--------|-------------|
 | Overview | [TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md) | new/local | **Start here (engineers)** — whole-platform architecture, subsystems, data model, API surface, deploy |
-| Overview | [PRODUCT_MANUAL.md](PRODUCT_MANUAL.md) | new/local | **Start here (users)** — getting started, NPCs, phone, MCP connect, CRM, compute, troubleshooting |
+| Overview | [PRODUCT_MANUAL.md](PRODUCT_MANUAL.md) | new/local | **Start here (users)** — landing→demo, office, NPCs, phone, MCP, CRM, compute |
 | Overview | [PRD.md](PRD.md) | new/local | **Start here (product)** — vision, personas, goals, functional requirements, metrics, risks, roadmap |
 | Overview | [CURRENT_IMPLEMENTATION_STATUS.md](CURRENT_IMPLEMENTATION_STATUS.md) | new/local | **Current truth / gap inventory** — verified implemented, conditional, partial, missing, tests, and live deployment state |
 | Getting Started | [SETUP.md](SETUP.md) | on GitHub | End-to-end local setup and runtime prerequisites |
@@ -32,7 +32,10 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Intelligence/Data | [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) | on GitHub | Data model and storage schema definitions |
 | Intelligence/Data | [INTELLIGENCE_SPINE.md](INTELLIGENCE_SPINE.md) | new/local | Facts → outcomes → predictions loop, v1.1/v1.2 spine, APIs |
 | Intelligence/Data | [MIROFISH_PREDICTION.md](MIROFISH_PREDICTION.md) | new/local | MiroFish HTTP integration, heuristic fallback, sync endpoints |
-| Integrations | [OPENCLAW_INTEGRATION.md](OPENCLAW_INTEGRATION.md) | on GitHub | OpenClaw bridge integration and event routing |
+| Integrations | [DISCORD_BOT_AND_SPACES.md](DISCORD_BOT_AND_SPACES.md) | new/local | Discord bot + Spaces — presence, react/`,eat`, music (Lavalink), Last.fm, free `,log`, avatar, hangout |
+| Integrations | [DISCORD_PAID_TIER.md](DISCORD_PAID_TIER.md) | new/local | Guild Pro/Ultra Stripe, pet entitlements, module gates (premium: security/avatar/community) |
+| Integrations | [DISCORD_SPACES_POLISH_PLAN.md](DISCORD_SPACES_POLISH_PLAN.md) | new/local | Map polish phases — elevators, bubbles, doors, Phase G map social shipped |
+| Operations | [OPS_LIVE_STACK.md](OPS_LIVE_STACK.md) | new/local | Live NAS Discord / CRM / Dolonia ops map |
 | Integrations | [EMAIL_INTEGRATION.md](EMAIL_INTEGRATION.md) | on GitHub | Lucy inbound/outbound email workflow and guardrails |
 | Integrations | [ROBINHOOD_LIVE.md](ROBINHOOD_LIVE.md) | on GitHub | Robinhood live integration behavior and constraints |
 | Strategy | [A_PLUS_PLAN.md](A_PLUS_PLAN.md) | new/local | Raise every pillar to A+ — phases, metrics, anti-goals, S1 backlog |
@@ -74,7 +77,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 | Operations | [TESTING.md](TESTING.md) | new/local | Test pyramid, smoke scripts, pre-deploy checklist |
 | Operations | [RUNTIME_DATA.md](RUNTIME_DATA.md) | new/local | Runtime-mutated data/reports map, PII handling, cleanup/reset guidance |
 | NPCs/AI | [CAPABILITY_PROPOSALS.md](CAPABILITY_PROPOSALS.md) | on GitHub | NPC capability request and approval workflow |
-| World/Assets | [SFX.md](SFX.md) | on GitHub | Sound effects catalog and playback hooks |
+| World/Assets | [SFX.md](SFX.md) | on GitHub | Office SFX + **landing Buzz beep-beep** (Web Audio) |
 | Session Notes | [SESSION_2026-06-05.md](SESSION_2026-06-05.md) | new/local | Session log for Jelly migration and model tuning |
 
 ## Documentation Gaps Closed In This Pass (2026-06-08)

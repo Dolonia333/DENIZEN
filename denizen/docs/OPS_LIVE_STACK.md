@@ -2,7 +2,7 @@
 
 **Branch:** `feature/discord-bot-and-app`  
 **Repo:** https://github.com/Dolonia333/DENIZEN  
-**Last aligned:** 2026-07-16  
+**Last aligned:** 2026-07-18  
 
 This is the operator map for everything shipped in the Discord / CRM / Dolonia data push.  
 Runtime lives on the **Synology NAS**; source of truth for product code is **GitHub**.
@@ -46,11 +46,16 @@ Default NAS paths:
 
 ### Discord
 
-- Multipurpose bot (mod, tickets, VM, music, Spaces)
+- Multipurpose bot (mod, tickets, VM, music, Spaces) — single command registry, auto slash sync on ready
+- **Spaces map social** — chat reactions → map emotes; `,eat [food]` → Pixel Platter sprite + chew (free)
+- **Music** — Lavalink v4 (`denizen-lavalink`); defaults `127.0.0.1:2333`; set `LAVALINK_DISABLE=1` to skip
+- **Last.fm** — `,lastfm` / WhoKnows when `LASTFM_API_KEY` set
+- **Logging** — `,log` is free (`module: logging`), not community-gated
 - **Conversation sense** — learns how people talk (styles); `,sense` / `,voice`
 - **Open chat** — `,chat on` in a channel (no @)
 - **@Denizen / DM** — LM replies (uses `LM_STUDIO_REMOTE_URLS` mesh)
 - Code: `discord-bot/`, `src/denizen-conversation-sense.js`, `src/denizen-discord-farm.js`
+- Docs: `docs/DISCORD_BOT_AND_SPACES.md`, `docs/DISCORD_PAID_TIER.md`
 
 ### Dolonia data company (Denizen = product #1)
 
@@ -131,6 +136,10 @@ LM_STUDIO_REMOTE_URLS=http://192.168.1.232:1234
 # Discord
 DISCORD_BOT_TOKEN=...
 DENIZEN_DISCORD_BOT=auto
+# Optional music / Last.fm
+# LAVALINK_HOST=127.0.0.1
+# LAVALINK_PASSWORD=youshallnotpass
+# LASTFM_API_KEY=...
 
 # Conversation / Dolonia
 DISCORD_FARM=1
@@ -165,6 +174,8 @@ Then re-check health URLs above. Runtime DB rows and n8n workflows are **not** r
 - Server Gmail OAuth may still be `local` mode — **n8n** is the production mail reader.
 - Prefer **one** active Angela→CRM n8n workflow (duplicates possible if setup re-run).
 - Branch not merged to `master` unless you open a PR.
+- Discord Twitter/Spotify notify still not built; music needs Lavalink container; Last.fm needs `LASTFM_API_KEY`.
+- See `docs/DISCORD_BOT_AND_SPACES.md` §16 for the full Discord Gaps table.
 
 ---
 

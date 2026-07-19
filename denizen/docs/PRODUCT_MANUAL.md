@@ -23,8 +23,13 @@ persona ("soul"), memory, and goals.
 
 ## 2. Getting started
 
+### Landing → live demo
+1. Open `/` (or `/landing`) — city hero with **Buzz** the lobby phone.
+2. Press **B** or click Buzz for a high *beep beep*, then the live office demo (`/office?demo=1`).
+3. Gold **Buzz** nameplate stays on the landing phone; the in-office corner phone FAB does not show that plate.
+
 ### Open the Office
-1. Go to your Denizen URL (e.g. `https://denizen.dolonia.cloud`).
+1. Go to your Denizen URL (e.g. `https://denizen.dolonia.cloud`) or local `http://localhost:8080`.
 2. The office loads. Move with **WASD/arrows**; click an NPC to talk.
 3. On phone/tablet, the touch controls and the **Denizen OS phone** (📱 button)
    appear automatically.

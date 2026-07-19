@@ -11,6 +11,7 @@
  *   LAVALINK_PASSWORD (default youshallnotpass)
  *   LAVALINK_URL  (optional full http base, e.g. http://192.168.1.237:2333)
  *   LAVALINK_SECURE=1 for wss/https
+ *   LAVALINK_DISABLE=1 to skip music node auto-connect
  */
 
 const WebSocket = require('ws');
@@ -46,8 +47,10 @@ class LavalinkClient {
     this._voice = new Map();
   }
 
+  /** True unless LAVALINK_DISABLE — defaults target 127.0.0.1:2333. */
   static isConfigured() {
-    return !!(process.env.LAVALINK_HOST || process.env.LAVALINK_URL || process.env.LAVALINK_PORT);
+    if (/^(1|true|yes)$/i.test(String(process.env.LAVALINK_DISABLE || ''))) return false;
+    return true;
   }
 
   on(fn) {
@@ -257,6 +260,27 @@ class LavalinkClient {
     if (!this.sessionId) return null;
     this._voice.delete(guildId);
     return this._rest('DELETE', `/v4/sessions/${this.sessionId}/players/${guildId}`);
+  }
+
+  async listPlayers() {
+    if (!this.sessionId) return [];
+    try {
+      const data = await this._rest('GET', `/v4/sessions/${this.sessionId}/players`);
+      return Array.isArray(data) ? data : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  async destroyAllPlayers() {
+    const players = await this.listPlayers();
+    for (const p of players) {
+      const gid = p.guildId || p.guild_id;
+      if (gid) {
+        try { await this.destroy(gid); } catch (_) {}
+      }
+    }
+    return players.length;
   }
 
   async stats() {

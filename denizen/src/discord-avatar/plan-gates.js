@@ -14,12 +14,15 @@
  *   - Hats
  *   - Headsets
  *
+ * Companion pets are per-user entitlements (buy / gift / Pro grant), not a guild plan flag.
+ *
  * Exception: server boosters still get golden headset on free (Discord boost perk).
  */
 
 const catalog = require('./catalog');
 
 const PAID_PLANS = new Set(['community', 'pro', 'paid', 'premium']);
+const PET_KINDS = new Set(['cat', 'dog']);
 
 /** Free skin tones only (no seasonal bodies). */
 const FREE_SKIN_TONES = ['light', 'white', 'lightdark', 'dark'];
@@ -64,10 +67,11 @@ function planFeatures(plan, { isBooster = false } = {}) {
     headsets: paid || isBooster, // boosters always
     layersMode: paid, // full custom layers
     premiumTints: paid,
-    // Marketing copy
+    // Pets: use denizen-guild-pets entitlements, not guild plan
+    companionPet: false,
     upgradeHint: paid
       ? null
-      : 'Upgrade to Community to unlock hair, clothes, masks, hats & headsets.',
+      : 'Upgrade for hair, clothes, masks, hats & headsets. Pets are bought per member (`/pet buy`) or granted by Pro staff.',
   };
 }
 
@@ -134,6 +138,13 @@ function enforceAvatarPlan(avatar, userId = '', opts = {}) {
     }
   }
 
+  // Companion pet: keep equipped look in avatar JSON; entitlement is enforced
+  // at command + presence time (per guild user), not via guild Pro.
+  {
+    const kind = PET_KINDS.has(av.pet?.kind) ? av.pet.kind : null;
+    av.pet = { kind, enabled: !!(av.pet?.enabled && kind) };
+  }
+
   av = catalog.normalizeAvatar(av, userId);
   return {
     avatar: av,
@@ -157,8 +168,9 @@ function publicCatalogForPlan(plan, unlocks = [], { isBooster = false } = {}) {
       freeSkinTones: FREE_SKIN_TONES,
       monetization: {
         free: ['premade', 'skin_tones'],
-        paid: ['hair', 'hair_color', 'clothes', 'masks', 'hats', 'headsets'],
+        paid: ['hair', 'hair_color', 'clothes', 'masks', 'hats', 'headsets', 'companion_pet'],
       },
+      pets: ['cat', 'dog'],
     };
   }
 
@@ -174,9 +186,10 @@ function publicCatalogForPlan(plan, unlocks = [], { isBooster = false } = {}) {
       : base.hatSets.filter((h) => h.id === 'none'),
     tints: base.tints.filter((t) => t.id == null), // natural only
     freeSkinTones: FREE_SKIN_TONES,
+    pets: [], // locked
     monetization: {
       free: ['premade', 'skin_tones'],
-      paid: ['hair', 'hair_color', 'clothes', 'masks', 'hats', 'headsets'],
+      paid: ['hair', 'hair_color', 'clothes', 'masks', 'hats', 'headsets', 'companion_pet'],
       upgradeHint: features.upgradeHint,
     },
   };
@@ -189,7 +202,7 @@ function upgradeMessage(features) {
   if (features.paid) return null;
   return [
     '**Free plan:** choose a **premade** character (many skin tones in the cast).',
-    '**Community plan unlocks:** hair, hair color, clothes, masks, hats & headsets.',
+    '**Paid plan unlocks:** a **pet that follows you** on the map, plus hair, clothes, masks, hats & headsets.',
     features.upgradeHint || '',
     '_Server boosters still get a **golden headset** on free._',
   ].filter(Boolean).join('\n');
@@ -197,6 +210,7 @@ function upgradeMessage(features) {
 
 module.exports = {
   PAID_PLANS,
+  PET_KINDS,
   FREE_SKIN_TONES,
   resolvePlan,
   isPaidPlan,

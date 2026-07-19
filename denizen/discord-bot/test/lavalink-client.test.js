@@ -12,14 +12,14 @@ describe('Lavalink client helpers', () => {
     assert.ok(filterPreset('8d').rotation);
   });
 
-  it('isConfigured reflects env', () => {
-    const prev = process.env.LAVALINK_HOST;
-    delete process.env.LAVALINK_HOST;
-    delete process.env.LAVALINK_URL;
-    // may still be true if PORT set in env — just call without assert on global
-    const cfg = LavalinkClient.isConfigured();
-    assert.equal(typeof cfg, 'boolean');
-    if (prev !== undefined) process.env.LAVALINK_HOST = prev;
+  it('isConfigured is true by default, false when disabled', () => {
+    const prev = process.env.LAVALINK_DISABLE;
+    delete process.env.LAVALINK_DISABLE;
+    assert.equal(LavalinkClient.isConfigured(), true);
+    process.env.LAVALINK_DISABLE = '1';
+    assert.equal(LavalinkClient.isConfigured(), false);
+    if (prev !== undefined) process.env.LAVALINK_DISABLE = prev;
+    else delete process.env.LAVALINK_DISABLE;
   });
 
   it('builds default http base', () => {

@@ -188,6 +188,13 @@ function defaultGuildConfig() {
       /** Min ms between open-chat replies per channel */
       cooldownMs: 8000,
     },
+    hangout: {
+      enabled: false,
+      channelId: null,
+      weekday: 0,
+      hourUtc: 18,
+      lastPostedWeek: null,
+    },
   };
 }
 
@@ -214,6 +221,17 @@ class ConfigStore {
         cfg = deepMerge(defaultGuildConfig(), parsed);
       } catch (err) {
         console.warn('[config-store] corrupt config', id, err.message);
+        try {
+          const quarantine = `${file}.corrupt.${Date.now()}`;
+          fs.renameSync(file, quarantine);
+          console.warn('[config-store] quarantined corrupt file →', quarantine);
+        } catch (qErr) {
+          console.warn('[config-store] quarantine failed:', qErr.message);
+        }
+        // Refuse to overwrite until an explicit set/update after recovery —
+        // mark so set() still works for intentional repair.
+        cfg = defaultGuildConfig();
+        cfg.__recoveredFromCorrupt = true;
       }
     }
     this.cache.set(id, cfg);
@@ -223,7 +241,12 @@ class ConfigStore {
   set(guildId, cfg) {
     const id = String(guildId);
     this.cache.set(id, cfg);
-    fs.writeFileSync(this._file(id), JSON.stringify(cfg, null, 2), 'utf8');
+    const file = this._file(id);
+    const tmp = `${file}.${process.pid}.tmp`;
+    const payload = { ...cfg };
+    delete payload.__recoveredFromCorrupt;
+    fs.writeFileSync(tmp, JSON.stringify(payload, null, 2), 'utf8');
+    fs.renameSync(tmp, file);
     return cfg;
   }
 

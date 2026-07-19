@@ -1038,7 +1038,12 @@ function _mpSendOfficeSync(ws, office) {
     ws._denizenPresenceKeyMigrated = null;
   }
   const players = officeRegistry.listPlayersInOffice(officeId)
-    .filter((p) => p.sessionId !== presenceKey);
+    .filter((p) => {
+      if (p.sessionId === presenceKey) return false;
+      const ghosts = ws._denizenPresenceGhosts;
+      if (Array.isArray(ghosts) && ghosts.includes(p.sessionId)) return false;
+      return true;
+    });
   const hostResult = officeRegistry.ensureSimHost(officeId, _agentClients(), presenceKey);
   try {
     ws.send(JSON.stringify({
@@ -7242,6 +7247,27 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
+  if (urlPath === '/api/discord/billing/pet-checkout' && req.method === 'POST') {
+    (async () => {
+      try {
+        const payload = await _readJsonBody(req, 8 * 1024);
+        const billing = require('./src/denizen-guild-billing');
+        const result = await billing.createPetCheckout({
+          guildId: String(payload.guildId || payload.guild_id || '').trim(),
+          discordUserId: payload.discordUserId || payload.discord_user_id || null,
+          giftToUserId: payload.giftToUserId || payload.gift_to_user_id || null,
+        });
+        res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        console.error(`[billing] pet-checkout endpoint error: ${err?.message || err}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'internal_error' }));
+      }
+    })();
+    return;
+  }
+
   if (urlPath === '/api/discord/billing/webhook' && req.method === 'POST') {
     (async () => {
       try {
@@ -10851,6 +10877,25 @@ agentWss.on('connection', (ws) => {
   console.log(`[CofounderAgent] WS client connected (${cofounderAgent.wsClients.size + 1} total)`);
   cofounderAgent.addClient(ws);
 
+  // Keepalive — Cloudflare / reverse proxies often kill idle sockets (browser 1006).
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
+
+  if (!agentWss._denizenHeartbeat) {
+    agentWss._denizenHeartbeat = setInterval(() => {
+      for (const client of agentWss.clients) {
+        if (client.readyState !== 1) continue;
+        if (client.isAlive === false) {
+          try { client.terminate(); } catch (_) {}
+          continue;
+        }
+        client.isAlive = false;
+        try { client.ping(); } catch (_) {}
+      }
+    }, 25000);
+    agentWss._denizenHeartbeat.unref?.();
+  }
+
   if (agentWsRelay.isFollowerRole()) {
     agentWsRelay.fetchPrimaryWorldSnapshot()
       .then((snapshot) => {
@@ -12615,8 +12660,17 @@ server.on('upgrade', (req, socket, head) => {
 
   if (wsPath === '/agent-ws') {
     if (agentWss.clients.size >= MAX_WS_CLIENTS) {
-      socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n');
-      socket.destroy();
+      try {
+        socket.write(
+          'HTTP/1.1 503 Service Unavailable\r\n'
+          + 'Connection: close\r\n'
+          + 'Content-Type: text/plain\r\n'
+          + 'Content-Length: 18\r\n'
+          + '\r\n'
+          + 'server at capacity',
+        );
+      } catch (_) {}
+      try { socket.destroy(); } catch (_) {}
       return;
     }
     agentWss.handleUpgrade(req, socket, head, (ws) => {
@@ -13067,7 +13121,10 @@ server.listen(PORT, () => {
       const jobPy = pathMod.join(__dirname, 'infra', 'grok-mesh-telemetry-job.py');
       const _runTelemetryJob = () => {
         try {
-          const py = process.env.PYTHON || process.env.PYTHON_PATH || 'py';
+          const py = process.env.DENIZEN_PYTHON_BIN
+            || process.env.PYTHON
+            || process.env.PYTHON_PATH
+            || (process.platform === 'win32' ? 'py' : 'python3');
           const child = spawn(py, [jobPy, '--force'], {
             cwd: __dirname,
             env: { ...process.env, GROK_AGENT: '1' },

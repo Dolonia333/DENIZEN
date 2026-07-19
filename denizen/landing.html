@@ -1499,11 +1499,6 @@
       background: #fde68a;
       border-color: #f59e0b;
     }
-    .hero-buzz.is-ringing .landing-buzz-tag {
-      background: #f59e0b;
-      color: #0b1220;
-      border-color: #020617;
-    }
     @keyframes landing-buzz-shake {
       0%, 100% { transform: translateY(0) rotate(0deg); }
       15% { transform: translateY(-8px) rotate(-7deg); }
@@ -4080,27 +4075,39 @@
     let buzzing = false;
     let buzzTimer = null;
 
+    /** High-pitch beep beep — clean lobby chirp before entering demo. */
     function playBuzzTone() {
-      if (!soundOn) return;
       const ctx = ensureAudio();
       if (!ctx) return;
-      try {
-        if (ctx.state === 'suspended') ctx.resume();
-        const now = ctx.currentTime;
-        [0, 0.14].forEach((offset) => {
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = 'square';
-          o.frequency.value = 880;
-          g.gain.setValueAtTime(0.0001, now + offset);
-          g.gain.exponentialRampToValueAtTime(0.08, now + offset + 0.01);
-          g.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.1);
-          o.connect(g);
-          g.connect(ctx.destination);
-          o.start(now + offset);
-          o.stop(now + offset + 0.12);
-        });
-      } catch (_) { /* ignore */ }
+
+      const start = () => {
+        try {
+          const now = ctx.currentTime;
+          // Two sharp high beeps (no low door-buzzer)
+          [
+            { t: 0, freq: 1760 },
+            { t: 0.13, freq: 2093 },
+          ].forEach(({ t, freq }) => {
+            const o = ctx.createOscillator();
+            const g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.value = freq;
+            g.gain.setValueAtTime(0.0001, now + t);
+            g.gain.exponentialRampToValueAtTime(0.12, now + t + 0.006);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.075);
+            o.connect(g);
+            g.connect(ctx.destination);
+            o.start(now + t);
+            o.stop(now + t + 0.09);
+          });
+        } catch (_) { /* ignore */ }
+      };
+
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(start).catch(() => { try { start(); } catch (_) {} });
+      } else {
+        start();
+      }
     }
 
     function resolveBuzzHref() {
@@ -4134,9 +4141,11 @@
       if (buzzBubble) buzzBubble.textContent = 'Buzz buzz — coming through…';
 
       playBuzzTone();
-      try { navigator.vibrate?.([40, 50, 40]); } catch (_) {}
+      try { navigator.vibrate?.([40, 50, 40, 50, 40]); } catch (_) {}
 
       clearTimeout(buzzTimer);
+      // High beep-beep finishes by ~0.25s; short hold then go
+      const holdMs = reduceMotion ? 280 : 520;
       buzzTimer = setTimeout(() => {
         buzz.classList.remove('is-ringing');
         if (buzzBubble) buzzBubble.textContent = idleBubble;
@@ -4144,7 +4153,7 @@
         if (thenGo) {
           window.location.assign(resolveBuzzHref());
         }
-      }, reduceMotion ? 350 : BUZZ_MS);
+      }, holdMs);
     }
 
     if (buzz) {

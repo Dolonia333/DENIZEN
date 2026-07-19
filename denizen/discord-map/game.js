@@ -21,16 +21,58 @@
     return `ch_${String(channelId || '').trim()}`;
   }
 
+  /** Full Discord channel label (emoji preserved) for tooltips / zone HUD. */
   function channelLabel(ch) {
-    const name = String(ch?.name || 'channel').slice(0, 22);
+    const name = String(ch?.name || 'channel');
     const type = String(ch?.type || '').toLowerCase();
     if (type === 'voice' || type === 'stage') return `🔊 ${name}`;
     return `#${name}`;
   }
 
-  function shortLabel(text, max = 18) {
+  /** Strip decorative emoji/symbols so facade plaques stay readable. */
+  function displayChannelName(raw) {
+    let s = String(raw || '');
+    try {
+      s = s.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}]/gu, '');
+      s = s.replace(/[^\p{L}\p{N}\s\-_.]/gu, '');
+    } catch (_) {
+      s = s.replace(/[^\w\s\-_.]/g, '');
+    }
+    s = s.replace(/\s+/g, ' ').trim();
+    s = s.replace(/^[\s\-_.]+|[\s\-_.]+$/g, '').trim();
+    return s || 'channel';
+  }
+
+  /** Short plaque text from a channel or from an existing channelLabel string. */
+  function plaqueChannelLabel(chOrLabel) {
+    if (chOrLabel && typeof chOrLabel === 'object') {
+      const type = String(chOrLabel.type || '').toLowerCase();
+      const clean = displayChannelName(chOrLabel.name);
+      if (type === 'voice' || type === 'stage') return clean;
+      return `#${clean}`;
+    }
+    let s = String(chOrLabel || '');
+    const voice = /^🔊/.test(s);
+    if (voice) s = s.replace(/^🔊\s*/, '');
+    if (s.startsWith('#')) s = s.slice(1);
+    const clean = displayChannelName(s);
+    return voice ? clean : `#${clean}`;
+  }
+
+  function graphemes(text) {
     const s = String(text || '');
-    return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+    try {
+      if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+        return [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(s)].map((x) => x.segment);
+      }
+    } catch (_) { /* ignore */ }
+    return Array.from(s);
+  }
+
+  function shortLabel(text, max = 18) {
+    const chars = graphemes(text);
+    if (chars.length <= max) return chars.join('');
+    return `${chars.slice(0, Math.max(1, max - 1)).join('')}…`;
   }
 
   /** Deterministic string hash — same channel id always yields the same seed,
@@ -50,15 +92,33 @@
   }
 
   const PRESENCE_URL = (() => {
+    const pageGuildId = (() => {
+      try {
+        return String(new URLSearchParams(window.location.search).get('guildId') || '').trim();
+      } catch (_) {
+        return '';
+      }
+    })();
+    const withGuild = (raw) => {
+      try {
+        const u = new URL(raw, location.origin);
+        if (pageGuildId && !u.searchParams.get('guildId')) {
+          u.searchParams.set('guildId', pageGuildId);
+        }
+        return u.toString();
+      } catch (_) {
+        return raw;
+      }
+    };
     try {
       const q = new URLSearchParams(window.location.search).get('presence');
-      if (q) return q;
+      if (q) return withGuild(q);
     } catch (_) { /* ignore */ }
     try {
       const stored = JSON.parse(localStorage.getItem('denizen-discord-map') || '{}');
-      if (stored.presenceUrlResolved) return stored.presenceUrlResolved;
+      if (stored.presenceUrlResolved) return withGuild(stored.presenceUrlResolved);
       if (stored.presenceUrl) {
-        const gid = stored.guildId;
+        const gid = pageGuildId || stored.guildId;
         try {
           const u = new URL(stored.presenceUrl);
           if (!u.pathname || u.pathname === '/') u.pathname = '/presence';
@@ -71,7 +131,7 @@
     } catch (_) { /* ignore */ }
     // Prefer the Denizen server proxy (works even when the bot presence
     // sidecar on :5180 is down / EADDRINUSE). Bot direct URL is a fallback.
-    return `${location.origin}/api/discord/map/presence`;
+    return withGuild(`${location.origin}/api/discord/map/presence`);
   })();
   const PRESENCE_POLL_MS = 1500;
 
@@ -146,14 +206,19 @@
     bush: `${BG}/Bush.png`,
     bushBerry: `${BG}/Bush_berry.png`,
     // Infrastructure (interaction anchors — keep intact)
-    // Pack "closed" doors are edge-on 5px slivers (read as open/side). We keep
-    // the open swing sprite from the pack and generate a real front-facing
-    // closed door texture at runtime (see ensureFrontDoorTextures).
+    // Pack *_closed.png are edge-on 3–6px slivers (side view). Front-facing
+    // closed art is *_double.png (25×22). *_opened.png is the ajar leaf.
+    // Runtime canvas doorFrontClosed remains a fallback if pack keys miss.
     door: `${INF}/Door_wood_opened.png`,
     doorClosed: `${INF}/Door_wood_closed.png`,
     doorOpen: `${INF}/Door_wood_opened.png`,
+    doorWoodDouble: `${INF}/Door_wood_double.png`,
     doorGlass: `${INF}/Door_glass_closed.png`,
     doorGlassOpen: `${INF}/Door_glass_opened.png`,
+    doorGlassDouble: `${INF}/Door_glass_double.png`,
+    doorGreyOpen: `${INF}/Door_grey_opened.png`,
+    doorGreyDouble: `${INF}/Door_grey_double.png`,
+    doorGreyClosed: `${INF}/Door_grey_closed.png`,
     elevClosed: `${INF}/Elevator_closed.png`,
     elevOpen: `${INF}/Elevator_opened.png`,
     elevSlightly: `${INF}/Elevator_slightlyOpened.png`,
@@ -755,6 +820,61 @@
   // Readable at room scale; still smaller than furniture
   const FOOD_SCALE = 1.0; // native pixel size — 1.35 read as oversized props
 
+  /** Soft atmospheric tint per street section (category stretch). */
+  const SECTION_ATMOS = [
+    { fog: 0x7ec8e8, alpha: 0.045 },
+    { fog: 0x9ab8c8, alpha: 0.05 },
+    { fog: 0xb8a090, alpha: 0.04 },
+    { fog: 0x88b098, alpha: 0.048 },
+    { fog: 0xa898c0, alpha: 0.042 },
+  ];
+
+  /**
+   * Pixel Spaces door family → texture keys.
+   * Street uses doubles (true closed front). Climb uses ajar opened leaf + frame.
+   * @param {string} [kindOrTheme]
+   * @returns {{ family: string, closedKey: string, openKey: string, sideKey: string }}
+   */
+  function doorFamilyFor(kindOrTheme) {
+    const raw = String(kindOrTheme || 'wood').toLowerCase();
+    let family = 'wood';
+    if (
+      raw === 'grey' || raw === 'gray' || raw === 'hospital' || raw === 'police'
+      || raw === 'fire' || raw === 'office' || raw.includes('grey') || raw.includes('gray')
+    ) {
+      family = 'grey';
+    } else if (
+      raw === 'glass' || raw === 'gamer' || raw === 'museum' || raw.includes('glass')
+    ) {
+      family = 'glass';
+    }
+    // Explicit wood / cafe / halloween / default "door"
+    if (
+      raw === 'wood' || raw === 'door' || raw === 'cafe' || raw === 'halloween'
+      || raw === 'dooropen' || raw === 'doorwooddouble'
+    ) {
+      family = 'wood';
+    }
+    if (family === 'glass') {
+      return { family, closedKey: 'doorGlassDouble', openKey: 'doorGlassOpen', sideKey: 'doorGlass' };
+    }
+    if (family === 'grey') {
+      return { family, closedKey: 'doorGreyDouble', openKey: 'doorGreyOpen', sideKey: 'doorGreyClosed' };
+    }
+    return { family: 'wood', closedKey: 'doorWoodDouble', openKey: 'doorOpen', sideKey: 'doorClosed' };
+  }
+
+  /** Native source size for a door texture (fallback matches old canvas leaf). */
+  function doorTexSize(scene, key) {
+    try {
+      if (key && scene?.textures?.exists?.(key)) {
+        const fr = scene.textures.get(key).get();
+        if (fr?.width && fr?.height) return { w: fr.width, h: fr.height };
+      }
+    } catch (_) { /* ignore */ }
+    return { w: 14, h: 22 };
+  }
+
   /** Map 0..1 need fill → progress bar key (1 empty-ish … 5 full). */
   function progressBarKey(color, amount01) {
     const a = Math.max(0, Math.min(1, amount01));
@@ -854,22 +974,22 @@
   // Snappier fps + more repeats so poses read clearly at 2× scale
   const NPC_POSE_DEFS = {
     // Calmer fps so poses read clean (not twitchy)
-    walk: { row: 0, frames: 4, fps: 7, repeat: -1, loop: true },
-    idle: { row: 1, frames: 3, fps: 2, repeat: -1, loop: true },
-    jump: { row: 2, frames: 2, fps: 8, repeat: 0 },
+    walk: { row: 0, frames: 4, fps: 6, repeat: -1, loop: true },
+    idle: { row: 1, frames: 3, fps: 1.4, repeat: -1, loop: true },
+    jump: { row: 2, frames: 2, fps: 7, repeat: 0 },
     // Sit: slower settle so the lower-in-seat frames read as planting
-    sit: { row: 3, frames: 3, fps: 7, repeat: 0 },
-    sitIdle: { row: 4, frames: 3, fps: 1.6, repeat: -1, loop: true },
-    sitFinish: { row: 5, frames: 3, fps: 8, repeat: 0 },
-    lie: { row: 6, frames: 6, fps: 8, repeat: 0 },
+    sit: { row: 3, frames: 3, fps: 6, repeat: 0 },
+    sitIdle: { row: 4, frames: 3, fps: 1.4, repeat: -1, loop: true },
+    sitFinish: { row: 5, frames: 3, fps: 7, repeat: 0 },
+    lie: { row: 6, frames: 6, fps: 7, repeat: 0 },
     lieIdle: { row: 6, frames: 1, fps: 1, repeat: -1, loop: true, frameOffset: 5 },
-    lieFinish: { row: 7, frames: 6, fps: 9, repeat: 0 },
-    eat: { row: 8, frames: 2, fps: 6, repeat: 4 },
-    eatSit: { row: 9, frames: 2, fps: 6, repeat: 4 },
-    hurt: { row: 10, frames: 3, fps: 8, repeat: 0 },
-    shrug: { row: 11, frames: 7, fps: 9, repeat: 0 },
-    snicker: { row: 12, frames: 2, fps: 6, repeat: 2 },
-    wave: { row: 13, frames: 4, fps: 8, repeat: 1 },
+    lieFinish: { row: 7, frames: 6, fps: 8, repeat: 0 },
+    eat: { row: 8, frames: 2, fps: 5, repeat: 6 },
+    eatSit: { row: 9, frames: 2, fps: 5, repeat: 6 },
+    hurt: { row: 10, frames: 3, fps: 7, repeat: 0 },
+    shrug: { row: 11, frames: 7, fps: 8, repeat: 0 },
+    snicker: { row: 12, frames: 2, fps: 5, repeat: 3 },
+    wave: { row: 13, frames: 4, fps: 7, repeat: 1 },
   };
 
   /** World Y for parked sit/lie contact (cushion/mattress). */
@@ -1041,6 +1161,8 @@
       signKey: 'cafeSign', signScale: SCALE,
       stripStyle: { color: '#ffe8d0', bg: '#6a3a1a' },
       roofKey: 'roofOrangeC', plaqueKey: 'uiTabYellow',
+      doorFamily: 'wood',
+      climbMode: 'door',
       // Elevator lane is the shared left strip (dx 14-58, shaft at 36).
       // Layout logic: dining sets read as table-flanked-by-seats pairs,
       // greenery bookends the right wall, food service runs left-of-center.
@@ -1087,6 +1209,8 @@
       title: { color: '#c8f8ff', bg: '#1c1c2c' },
       stripStyle: { color: '#c8f8ff', bg: '#14142a' },
       roofKey: 'roofPurpleC', plaqueKey: 'uiTabPurple',
+      doorFamily: 'glass',
+      climbMode: 'elev',
       // Elevator lane left (shaft at 36). Layout logic: battlestation desk
       // cluster (PC + desk + monitor + mic + throne) center-left, trophy
       // shelf mid-right, second throne facing the mounted TV on the right.
@@ -1132,6 +1256,8 @@
       signKey: 'hospSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#ffffff', bg: '#c0392b' },
       roofKey: 'roofBlueC', plaqueKey: 'uiTabBlue',
+      doorFamily: 'grey',
+      climbMode: 'elev',
       // Elevator lane left (shaft at 36). Layout logic: supply storage sits
       // by the lane, the operating table + light are the room's centerpiece
       // with the saline drip at its head, records computer against the far
@@ -1168,6 +1294,8 @@
       title: { color: '#3a2e1c', bg: '#f0e4c8' },
       stripStyle: { color: '#f8f0d8', bg: '#5a4a30' },
       roofKey: 'roofYellowC', plaqueKey: 'uiTabYellow',
+      doorFamily: 'glass',
+      climbMode: 'elev',
       // Elevator lane left (shaft at 36). Layout logic: the space wing hangs
       // the solar system in orbit order left→right with exhibit cases below;
       // the fossil hall centers the triceratops on its platform between
@@ -1209,6 +1337,8 @@
       signKey: 'policeSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#d8e8f8', bg: '#1a2a3a' },
       roofKey: 'roofBlackC', plaqueKey: 'uiTabBlue',
+      doorFamily: 'grey',
+      climbMode: 'elev',
       // Elevator lane left (shaft at 36). Layout logic: booking room reads
       // left→right as records cabinet, officer desk with paperwork under
       // the duty clipboard/portrait, then the holding cell (bars over the
@@ -1245,7 +1375,8 @@
       signKey: 'fireSign', signScale: SCALE * 0.85,
       stripStyle: { color: '#ffe0d0', bg: '#701e14' },
       roofKey: 'roofRedC', plaqueKey: 'uiTabRed',
-      doorKind: 'door',
+      doorFamily: 'grey',
+      climbMode: 'door',
       // Climb door on the left lane (dx ~36). Rooms are too small for elev
       // shafts — a compact door marks inter-floor travel instead.
       stairsDx: 36,
@@ -1283,6 +1414,8 @@
       title: { color: '#ffb858', bg: '#241432' },
       stripStyle: { color: '#ffb858', bg: '#140a1c' },
       roofKey: 'roofBlackC', plaqueKey: 'uiTabPurple',
+      doorFamily: 'wood',
+      climbMode: 'door',
       // Elevator lane left (shaft at 36; the cobweb stays in the top-left
       // corner above it). Layout logic: attic = coffin flanked by a grave
       // candle, then mummy / ghost-lamp / skeleton spaced down the room;
@@ -1444,6 +1577,7 @@
       this.foodHosts = []; // tables/counters that can hold food { x, floorY, floorId, key, surfaceH }
       this.ambientActors = []; // { sprite, sheet, roomKey, busyUntil }
       this.pets = [];
+      this.companionPets = new Map();
       this.autoDoors = []; // entrance door sprites that open on approach
       this.elevatorDoors = []; // per-floor elevator shaft doors {x, floorId, img}
       this.seated = null; // { seat, prevDepth } while sitting/lying
@@ -1461,13 +1595,13 @@
       this.buildFarMountains();
       this.buildDistantSkyline();
       this.makeAnims();
+      this.verifyMapSocialAssets();
 
       this.bootstrapLayout().then((layoutMeta) => {
         this.flushDecorNpcQueue();
         this.seedFoodOnAllTables();
-        this.spawnDecorNpcs();
-        this.spawnPets();
-        this.startBlockLife(layoutMeta);
+        this.buildPetCellTextures();
+        // BlockLife neighbors + street decor roamers disabled — Discord presence only.
         this.startAmbientLoop();
         this.startPresenceLoop();
         this.setupPlayer();
@@ -1479,8 +1613,7 @@
         this.drawEmptyBuilding(20, this.groundY, 'Discord');
         this.seedFoodOnAllTables();
         this.setupPlayer();
-        this.spawnPets();
-        this.startBlockLife({ guildName: 'Discord' });
+        this.buildPetCellTextures();
         this.startAmbientLoop();
         this.startPresenceLoop();
         this.buildHud('Discord');
@@ -1597,16 +1730,26 @@
       const tryUrls = [PRESENCE_URL];
       // Local fallback if proxy is 502 and the bot sidecar is actually up.
       if (/localhost|127\.0\.0\.1/.test(location.hostname)) {
-        tryUrls.push('http://127.0.0.1:5180/presence');
-      }
-      for (const url of tryUrls) {
+        const local = new URL('http://127.0.0.1:5180/presence');
         try {
-          const res = await fetch(url, { cache: 'no-store' });
-          if (res.ok) {
-            data = await res.json();
-            break;
-          }
-        } catch (_) { /* try next */ }
+          const gid = new URL(PRESENCE_URL, location.origin).searchParams.get('guildId');
+          if (gid) local.searchParams.set('guildId', gid);
+        } catch (_) { /* ignore */ }
+        tryUrls.push(local.toString());
+      }
+      // Retry a few times so a brief bot/proxy blip doesn't lock us on demo city.
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        for (const url of tryUrls) {
+          try {
+            const res = await fetch(url, { cache: 'no-store' });
+            if (res.ok) {
+              data = await res.json();
+              if (Array.isArray(data.rooms) && data.rooms.length) break;
+            }
+          } catch (_) { /* try next */ }
+        }
+        if (Array.isArray(data.rooms) && data.rooms.length) break;
+        await new Promise((r) => setTimeout(r, 1200));
       }
 
       const rooms = (Array.isArray(data.rooms) ? data.rooms : [])
@@ -1623,6 +1766,8 @@
       if (!rooms.length) {
         // Offline demo layout so the map isn't a blank blue box — still
         // has street doors + rooms to walk into while presence is down.
+        this._layoutFromDemo = true;
+        this._layoutFp = '';
         this.drawDemoLayout(x, this.groundY, guildName);
         x += 620;
         this.mapWidth = Math.max(W, x + 340);
@@ -1631,6 +1776,11 @@
         this.drawEndPark(this.mapWidth - 320);
         return { guildName, channelCount: 0, categoryCount: 0 };
       }
+      this._layoutFromDemo = false;
+      this._layoutFp = (data.rooms || [])
+        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}`)
+        .sort()
+        .join('|');
 
       const categoriesMeta = new Map((data.categories || []).map((c) => [c.id, c]));
       const byCat = new Map();
@@ -1654,11 +1804,16 @@
       catList.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 
       let plainIdx = 0;
+      let sectionIdx = 0;
       const STREET_GAP = 58;
       const advanceStreet = (fromX, bw, seedTag) => {
         const gapStart = fromX + bw;
         this.placeStreetFiller(gapStart, STREET_GAP, hashSeed(seedTag + gapStart));
         return gapStart + STREET_GAP;
+      };
+      const paintSection = (left, bw) => {
+        this.applySectionAtmos(left, bw, sectionIdx);
+        sectionIdx += 1;
       };
 
       for (const cat of catList) {
@@ -1670,6 +1825,7 @@
           const bw = 290;
           this.drawVoiceBuilding(x, this.groundY, voiceChans, cat.name);
           this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: cat.name });
+          paintSection(x, bw);
           x = advanceStreet(x, bw, `voice-${cat.id}`);
           continue;
         }
@@ -1677,9 +1833,11 @@
         if (decision.kind === 'zone') {
           if (decision.theme === 'winterzone') {
             this.drawWinterPark(x, this.groundY, cat);
+            paintSection(x, 480);
             x = advanceStreet(x, 480, `winter-${cat.id}`);
           } else {
             this.drawDigSite(x, this.groundY, cat);
+            paintSection(x, 640);
             x = advanceStreet(x, 640, `dig-${cat.id}`);
           }
           continue;
@@ -1693,6 +1851,7 @@
             const suffix = total > MAX_ROOMS ? ` ${Math.floor(i / MAX_ROOMS) + 1}` : '';
             const b = this.buildGenericBuilding(decision.theme, x, `${cat.name}${suffix}`, chunk);
             this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: cat.name });
+            paintSection(x, b.bw);
             x = advanceStreet(x, b.bw, `theme-${cat.id}-${i}`);
           }
           continue;
@@ -1700,15 +1859,15 @@
 
         // Plain: the original per-channel office-park building, chunked at 4.
         const perBuilding = 4;
-        const textPalettes = [0, 1, 2];
         for (let i = 0; i < cat.channels.length; i += perBuilding) {
           const chunk = cat.channels.slice(i, i + perBuilding);
           const bw = 290;
           const suffix = cat.channels.length > perBuilding ? ` · pt ${Math.floor(i / perBuilding) + 1}` : '';
           const title = `${cat.name}${suffix}`;
-          this.drawTextBuilding(x, this.groundY, title, chunk, textPalettes[plainIdx % textPalettes.length]);
+          this.drawTextBuilding(x, this.groundY, title, chunk, plainIdx % 5);
           plainIdx += 1;
           this.buildings.push({ left: x, right: x + bw, kind: 'text', channels: chunk, label: title });
+          paintSection(x, bw);
           x = advanceStreet(x, bw, `plain-${cat.id}-${i}`);
         }
       }
@@ -1722,6 +1881,19 @@
         channelCount: rooms.length,
         categoryCount: catList.length,
       };
+    }
+
+    /**
+     * Soft atmospheric wash per building stretch — sections read distinct along the block.
+     */
+    applySectionAtmos(left, bw, sectionIdx = 0) {
+      const a = SECTION_ATMOS[sectionIdx % SECTION_ATMOS.length];
+      if (!a) return;
+      const top = Math.min(0, this._sceneMinY ?? 0) - 20;
+      const h = (this.groundY || 318) - top + 24;
+      const g = this.add.graphics().setDepth(12);
+      g.fillStyle(a.fog, a.alpha);
+      g.fillRect(left - 6, top, bw + 12, h);
     }
 
     /**
@@ -1831,7 +2003,7 @@
           .setScale(cfg.signScale || SCALE).setOrigin(0.5, 1).setDepth(28);
       }
       if (cfg.title) {
-        this.buildingTitle(left + bw / 2, top - (cfg.signKey ? 0 : 26), shortLabel(cfg.title.text, 22), {
+        this.buildingTitle(left + bw / 2, top - (cfg.signKey ? 0 : 26), shortLabel(displayChannelName(cfg.title.text), 22), {
           color: cfg.title.color, bg: cfg.title.bg,
         });
       }
@@ -1847,7 +2019,10 @@
             this.addRoomSlots(room.roomKey, room.slots.map((dx) => [padX + dx, floorY - 1]));
           }
         });
-        this.roomPlaque(padX + 4, y0 + 4, shortLabel(room.label, 14), room.roomKey, cfg.plaqueKey, { maxW: roomW ? roomW - 12 : 170 });
+        this.roomPlaque(padX + 4, y0 + 4, plaqueChannelLabel(room.label), room.roomKey, cfg.plaqueKey, {
+          maxW: roomW ? roomW - 12 : 170,
+          fullLabel: room.label,
+        });
         floorDefs.push({
           id: room.id,
           roomKey: room.roomKey,
@@ -1869,8 +2044,9 @@
       const lowest = floorDefs[floorDefs.length - 1];
       const doorX = left + 42;
       const doorX2 = left + bw - 48;
-      this.placeEntrance(g, doorX, this.groundY, cfg.doorKind || 'door', cfg.side, 26);
-      this.placeEntrance(g, doorX2, this.groundY, cfg.doorKind2 || 'door', cfg.side, 26);
+      const doorKind = cfg.doorKind || cfg.doorFamily || cfg.theme || 'wood';
+      this.placeEntrance(g, doorX, this.groundY, doorKind, cfg.side, 26);
+      this.placeEntrance(g, doorX2, this.groundY, cfg.doorKind2 || doorKind, cfg.side, 26);
       this.registerDoor({ x: doorX, floorId: lowest.id, radius: 18 });
       this.registerDoor({ x: doorX2, floorId: lowest.id, radius: 18 });
 
@@ -1890,8 +2066,10 @@
         const prefer = cfg.stairsDx != null
           ? padX + cfg.stairsDx
           : padX + Math.max(22, roomW * 0.18);
-        const sx = this.markClimbDoor(prefer, floorDefs[i].id) || prefer;
-        this.markClimbDoor(prefer, floorDefs[i - 1].id);
+        const doorKind = cfg.doorKind || cfg.doorFamily || cfg.theme || 'wood';
+        const climbMode = cfg.climbMode || 'door';
+        const sx = this.markClimbDoor(prefer, floorDefs[i].id, doorKind, climbMode) || prefer;
+        this.markClimbDoor(prefer, floorDefs[i - 1].id, doorKind, climbMode);
         this.registerStairs({
           x: sx, fromFloorId: floorDefs[i].id, toFloorId: floorDefs[i - 1].id, radius: 32,
         });
@@ -1918,9 +2096,11 @@
         this.markRooftopDeck(roofMin, roofMax, roofY);
         // Single-floor buildings need a climb door on the only room; multi-floor
         // already got one in the loop above — only add the roof-side door.
+        const doorKind = cfg.doorKind || cfg.doorFamily || cfg.theme || 'wood';
+        const climbMode = cfg.climbMode || 'door';
         let sx = prefer;
-        if (floorDefs.length === 1) sx = this.markClimbDoor(prefer, topFloor.id) || prefer;
-        this.markClimbDoor(prefer, roofId);
+        if (floorDefs.length === 1) sx = this.markClimbDoor(prefer, topFloor.id, doorKind, climbMode) || prefer;
+        this.markClimbDoor(prefer, roofId, doorKind, climbMode);
         this.registerStairs({
           x: sx,
           fromFloorId: topFloor.id,
@@ -1956,9 +2136,9 @@
       const pick = (key, idx) => (Array.isArray(key) ? seededPick(seed, key, idx * 13 + 5) : key);
       // Climb-door lane — skip floor items that land inside it. Fallback
       // matches markClimbDoor's prefer x so the band is centered on the
-      // actual door; clearR = leaf halfW (14·SCALE/2) + ~18px breathing room.
+      // actual door; clearR = ajar leaf halfW + frame + breathing room.
       const clearX = x0 + (room.stairsDx != null ? room.stairsDx : Math.max(22, roomW * 0.18));
-      const clearR = (14 * SCALE) / 2 + 18;
+      const clearR = (13 * SCALE) / 2 + 22;
       const placed = []; // { x, halfW }
       const hosts = []; // surface hosts for dy props
 
@@ -2088,8 +2268,9 @@
         wall: kit.wall, side: kit.side, outline: kit.outline, roof: kit.roof, band: kit.band,
         signKey: kit.signKey, signScale: kit.signScale,
         title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title.color, bg: kit.title.bg },
-        strip: { text: `${categoryLabel} · ↑ enter`, color: kit.stripStyle.color, bg: kit.stripStyle.bg },
-        doorKind: kit.doorKind,
+        strip: { text: shortLabel(displayChannelName(categoryLabel), 28), color: kit.stripStyle.color, bg: kit.stripStyle.bg },
+        doorKind: kit.doorFamily || kit.doorKind || theme || 'wood',
+        climbMode: kit.climbMode || 'door',
         stairsDx: kit.stairsDx,
         roofKey: kit.roofKey,
         theme, // drives gable vs flat vs snow in pickRoofSpec
@@ -2263,15 +2444,23 @@
         });
       }
       this.decorNpcQueue = [];
-      // Kick indoor staff into activity quickly
-      this.time.delayedCall(300, () => {
-        for (const a of this.ambientActors || []) {
-          if (a.roomKey && a.mode !== 'stroll') {
-            a.nextThink = 0;
-            a.busyUntil = 0;
+      // Seat room staff on nearby furniture — static decor, not street roamers.
+      this.time.delayedCall(200, () => {
+        for (const actor of this.ambientActors || []) {
+          if (!actor.roomKey || actor.seated || actor.mode === 'stroll') continue;
+          actor.staySeated = true;
+          const candidates = (this.seats || []).filter((s) => {
+            const yOk = Math.abs((s.floorY || 0) - (actor.floorY || 0)) <= 14;
+            const idOk = !s.floorId || s.floorId === actor.roomKey;
+            return yOk && idOk;
+          }).sort((a, b) => Math.abs(a.x - actor.sprite.x) - Math.abs(b.x - actor.sprite.x));
+          const seat = candidates[0];
+          if (seat) this.actorSitOn(actor, seat);
+          else {
+            actor.mode = 'idle';
+            actor.busyUntil = Number.MAX_SAFE_INTEGER / 4;
           }
         }
-        this.tickAmbient();
       });
     }
 
@@ -2617,54 +2806,103 @@
     }
 
     /**
-     * Store-style room plaque (CITY_POLISH_PLAN room grammar #1): a UI-pack
-     * panel tab with the channel name, plus up to 3 stars that light up as
-     * live members occupy the room (updated from applyPresence).
+     * Store-style room plaque: cleaned two-line channel name + occupancy stars.
+     * Hover / in-room shows the full Discord name (emoji preserved).
      */
     roomPlaque(x, y, label, roomKey, tabKey = 'uiTabGrey', opts = {}) {
       const useTab = this.textures.exists(tabKey) ? tabKey : (this.textures.exists('uiTabGrey') ? 'uiTabGrey' : null);
       const parts = { stars: [] };
-      const text = this.add.text(x + 8, y + 4, label, {
+      const fullLabel = opts.fullLabel || String(label || '');
+      const display = plaqueChannelLabel(opts.fullLabel || label);
+      const starsW = 3 * 12 + 4;
+      const maxW = opts.maxW || 170;
+      const textMax = Math.max(48, maxW - 16 - starsW);
+      const text = this.add.text(x + 8, y + 3, display, {
         fontFamily: 'Segoe UI, Tahoma, sans-serif',
         fontSize: '10px',
         fontStyle: 'bold',
         color: '#f8fafc',
+        wordWrap: { width: textMax },
       }).setOrigin(0, 0).setDepth(28).setResolution(Math.max(2, window.devicePixelRatio || 2));
-      // Stars live INSIDE the tab (right end) so they never collide with wall
-      // decor. Truncate the name rather than growing past maxW.
-      const starsW = 3 * 12 + 4;
-      const maxW = opts.maxW || 170;
-      let name = String(label);
-      while (name.length > 3 && text.width + 16 + starsW > maxW) {
-        name = `${name.slice(0, -2)}…`;
-        text.setText(name);
-      }
-      const w = Math.max(56, text.width + 16 + starsW);
+      const h = Math.max(20, Math.min(36, Math.ceil(text.height) + 6));
+      const w = Math.max(56, Math.min(maxW, Math.ceil(text.width) + 16 + starsW));
       if (useTab) {
-        // Panel tab is 23x12 — stretch to fit the name like the store plaques.
         parts.tab = this.add.image(x, y, useTab)
           .setOrigin(0, 0).setDepth(27)
-          .setDisplaySize(w, 20);
+          .setDisplaySize(w, h);
       } else {
         const bg = this.add.graphics().setDepth(27);
         bg.fillStyle(0x1e293b, 0.92);
-        bg.fillRoundedRect(x, y, w, 20, 4);
+        bg.fillRoundedRect(x, y, w, h, 4);
         parts.tab = bg;
       }
       text.setDepth(28);
       parts.text = text;
+      parts.fullLabel = fullLabel;
+      parts.displayLabel = display;
+      parts.height = h;
+      const starY = y + Math.floor(h / 2);
       const starX0 = x + w - starsW;
       for (let i = 0; i < 3; i += 1) {
-        const star = this.add.image(starX0 + 6 + i * 12, y + 10, 'uiStar')
+        const star = this.add.image(starX0 + 6 + i * 12, starY, 'uiStar')
           .setScale(SCALE * 0.85).setDepth(28).setAlpha(0.22);
         parts.stars.push(star);
       }
       parts.width = w;
+      // Hit area for hover tooltip
+      const zone = this.add.zone(x, y, w, h).setOrigin(0, 0).setDepth(29).setInteractive();
+      zone.on('pointerover', () => this.showChannelTooltip(x + w / 2, y - 4, fullLabel));
+      zone.on('pointerout', () => this.hideChannelTooltip());
+      parts.zone = zone;
       if (roomKey) {
         if (!this._roomPlaques) this._roomPlaques = new Map();
         this._roomPlaques.set(roomKey, parts);
       }
       return parts;
+    }
+
+    showChannelTooltip(x, y, fullLabel) {
+      const t = String(fullLabel || '').trim();
+      if (!t) return;
+      if (!this._channelTooltip || !this._channelTooltip.active) {
+        this._channelTooltip = this.add.text(x, y, t, {
+          fontFamily: 'Segoe UI, Tahoma, sans-serif',
+          fontSize: '12px',
+          fontStyle: 'bold',
+          color: '#f8fafc',
+          backgroundColor: '#0f172aee',
+          padding: { x: 10, y: 5 },
+          wordWrap: { width: 260 },
+        }).setOrigin(0.5, 1).setDepth(120).setResolution(Math.max(2, window.devicePixelRatio || 2));
+      } else {
+        this._channelTooltip.setText(t).setPosition(x, y).setVisible(true);
+      }
+      this._channelTooltip.setAlpha(1);
+    }
+
+    hideChannelTooltip() {
+      if (this._channelTooltip?.active) this._channelTooltip.setVisible(false);
+    }
+
+    /** When standing in a room, prefer full Discord channel name in the tooltip. */
+    syncInRoomChannelTooltip() {
+      if (!this.indoors) {
+        if (this._channelTooltipFloor) {
+          this._channelTooltipFloor = null;
+          this.hideChannelTooltip();
+        }
+        return;
+      }
+      const floor = this.floors?.get(this.indoors.floorId);
+      const roomKey = floor?.roomKey;
+      const parts = roomKey && this._roomPlaques?.get(roomKey);
+      const full = parts?.fullLabel || floor?.label;
+      if (!full) return;
+      if (this._channelTooltipFloor === roomKey && this._channelTooltip?.visible) return;
+      this._channelTooltipFloor = roomKey;
+      const px = this.player?.x || 0;
+      const py = (floor?.floorY || this.player?.y || 0) - 48;
+      this.showChannelTooltip(px, py, full);
     }
 
     /** Light up plaque stars to match live occupancy (0–3+). */
@@ -2928,7 +3166,7 @@
       const top = groundY - bh;
       this._sceneMinY = Math.min(this._sceneMinY ?? 0, top - 30);
       const title = channels.length === 1
-        ? shortLabel(channelLabel(channels[0]), 24)
+        ? shortLabel(plaqueChannelLabel(channels[0]), 24)
         : 'Voice Channels';
 
       g.fillStyle(0x000000, 0.22);
@@ -2981,7 +3219,10 @@
         });
 
         if (!isPlaceholder) {
-          this.roomPlaque(x0 + 4, y0 + 4, shortLabel(label, cols === 1 ? 18 : 12), roomKey, 'uiTabBlue', { maxW: roomW - 12 });
+          this.roomPlaque(x0 + 4, y0 + 4, plaqueChannelLabel(label), roomKey, 'uiTabBlue', {
+            maxW: roomW - 12,
+            fullLabel: label,
+          });
           this.registerFloor({
             id: roomKey,
             roomKey,
@@ -3011,7 +3252,7 @@
         g.fillRect(wx - 10, vWinY - 1, 20, 20);
         this.add.image(wx, vWinY, 'windowCircle').setOrigin(0.5, 0).setDepth(25).setScale(SCALE);
       });
-      this.stripLabel(left + bw / 2, groundY - doorStrip + 6, `${shortLabel(guildName, 14)} · VC · ↑ enter`, {
+      this.stripLabel(left + bw / 2, groundY - doorStrip + 6, `${shortLabel(displayChannelName(guildName), 18)} · VC`, {
         color: '#eef0ff', bg: '#2b3190',
       });
     }
@@ -3021,6 +3262,8 @@
         { shell: 0x45b866, side: 0x2f8f4a, roof: 0x359a52, stroke: 0x12301a, titleBg: '#b8f0c8', titleFg: '#102818', lintel: 0x2a5534, roofKey: 'roofGreenC', plaqueKey: 'uiTabGreen' },
         { shell: 0x3db4a8, side: 0x2a8f86, roof: 0x45c4b8, stroke: 0x0f3530, titleBg: '#b8f0ea', titleFg: '#0a2824', lintel: 0x2a5548, roofKey: 'roofBlueC', plaqueKey: 'uiTabBlue' },
         { shell: 0xe8943a, side: 0xc47a2a, roof: 0xf0a850, stroke: 0x4a3010, titleBg: '#ffe8c8', titleFg: '#3a2208', lintel: 0x553822, roofKey: 'roofOrangeC', plaqueKey: 'uiTabYellow' },
+        { shell: 0x6a7ec8, side: 0x4a5aa0, roof: 0x7a8ed8, stroke: 0x1a2040, titleBg: '#d8e0ff', titleFg: '#141828', lintel: 0x2a3458, roofKey: 'roofPurpleC', plaqueKey: 'uiTabPurple' },
+        { shell: 0xc86a6a, side: 0xa04848, roof: 0xd88080, stroke: 0x401818, titleBg: '#ffd8d8', titleFg: '#281010', lintel: 0x553030, roofKey: 'roofRedC', plaqueKey: 'uiTabRed' },
       ];
       const pal = palettes[paletteIndex % palettes.length];
       const g = this.add.graphics().setDepth(20);
@@ -3052,7 +3295,7 @@
       this.drawRoofCap(left, top, bw, textRoof);
       this.drawFoundation(g, left, bw);
 
-      this.buildingTitle(left + bw / 2, top - 22, shortLabel(title, 22), {
+      this.buildingTitle(left + bw / 2, top - 22, shortLabel(displayChannelName(title), 22), {
         color: pal.titleFg, bg: pal.titleBg,
       });
 
@@ -3080,7 +3323,10 @@
           });
           this.addRoomSlots(roomKey, this.slotPointsForRoom(slot.x, slot.w, floor, 3));
         });
-        this.roomPlaque(slot.x + 4, slot.y + 4, shortLabel(label, 14), roomKey, pal.plaqueKey || 'uiTabGreen', { maxW: slot.w - 12 });
+        this.roomPlaque(slot.x + 4, slot.y + 4, plaqueChannelLabel(label), roomKey, pal.plaqueKey || 'uiTabGreen', {
+          maxW: slot.w - 12,
+          fullLabel: label,
+        });
         this.registerFloor({
           id: roomKey,
           roomKey,
@@ -3194,7 +3440,7 @@
         this._sceneMinY = Math.min(this._sceneMinY ?? 0, roofY - 100);
       }
 
-      this.stripLabel(left + bw / 2, groundY - doorStrip + 6, 'Text · ↑ enter', {
+      this.stripLabel(left + bw / 2, groundY - doorStrip + 6, 'Text channels', {
         color: '#e8ffe8', bg: '#1e4a2a',
       });
     }
@@ -3252,18 +3498,22 @@
       });
     }
 
-    placeEntrance(g, cx, groundY, kind = 'door', lintelColor = 0x2a5534, depth = 26) {
-      // Integer SCALE=2 on a 14×22 leaf → 28×44. With a 3px lintel + frame
-      // pad the whole assembly is ≤50px and stays inside the 54px door-strip
-      // under the first-floor cutaway (no overlap into rooms above).
+    placeEntrance(g, cx, groundY, kind = 'wood', lintelColor = 0x2a5534, depth = 26) {
+      // Street storefront: pack *_double.png (25×22) as closed front-facing leaf.
+      // On approach, texture-swap to *_opened.png (no squash of the double).
       this.ensureFrontDoorTextures();
-      const scale = SCALE; // 2 — keep pixel-art crisp
-      const srcW = 14;
-      const srcH = 22;
-      const leafW = srcW * scale;
-      const leafH = srcH * scale;
-      const jamb = 2;
-      const lintelH = 3;
+      const fam = doorFamilyFor(kind);
+      let closedKey = fam.closedKey;
+      let openKey = fam.openKey;
+      if (!this.textures.exists(closedKey)) closedKey = 'doorFrontClosed';
+      if (!this.textures.exists(openKey)) openKey = closedKey;
+
+      const scale = SCALE;
+      const src = doorTexSize(this, closedKey);
+      const leafW = src.w * scale;
+      const leafH = src.h * scale;
+      const jamb = 3;
+      const lintelH = 4;
       const frameW = leafW + jamb * 2;
       const frameH = leafH + 2;
       const fx = Math.round(cx - frameW / 2);
@@ -3271,9 +3521,9 @@
 
       // Lintel
       g.fillStyle(lintelColor, 1);
-      g.fillRect(fx - 1, fy - lintelH, frameW + 2, lintelH);
+      g.fillRect(fx - 2, fy - lintelH, frameW + 4, lintelH);
       g.lineStyle(1, 0x0a0806, 1);
-      g.strokeRect(fx - 1, fy - lintelH, frameW + 2, lintelH);
+      g.strokeRect(fx - 2, fy - lintelH, frameW + 4, lintelH);
 
       // Dark recess
       g.fillStyle(0x0c0a08, 1);
@@ -3289,35 +3539,38 @@
 
       // Threshold
       g.fillStyle(0x2c2118, 1);
-      g.fillRect(fx - 1, groundY - 2, frameW + 2, 2);
+      g.fillRect(fx - 2, groundY - 2, frameW + 4, 2);
       g.fillStyle(0x000000, 0.22);
       g.fillRect(fx, groundY, frameW, 1);
 
       g.lineStyle(1, 0x0a0806, 1);
       g.strokeRect(fx, fy, frameW, frameH);
 
-      // Leaf — left hinge, sits on ground
+      // Leaf — left hinge, sits on ground (pack double when available)
       const hingeX = fx + jamb;
-      const leaf = this.add.image(hingeX, groundY - 1, 'doorFrontClosed')
+      const leaf = this.add.image(hingeX, groundY - 1, closedKey)
         .setOrigin(0, 1)
         .setScale(scale, scale)
         .setDepth(depth);
       this.autoDoors.push({
         x: cx,
-        kind: 'door',
+        kind: fam.family,
         mode: 'swing',
         indoor: false,
         leaf,
+        closedKey,
+        openKey,
+        swapTexture: closedKey !== openKey && closedKey !== 'doorFrontClosed',
         baseScale: scale,
-        openScaleX: scale * 0.18,
-        openRadius: 24,
-        closeRadius: 34,
+        openScaleX: scale * 0.22,
+        openRadius: 28,
+        closeRadius: 40,
         isOpen: false,
         animating: false,
       });
       return {
         fx, fy, frameW, frameH, dw: leafW, dh: leafH,
-        sprite: leaf, kind: 'door',
+        sprite: leaf, kind: fam.family,
       };
     }
 
@@ -3528,38 +3781,87 @@
     }
 
     /**
-     * Inter-floor climb door — leaf only, no frame.
-     * Sits in the climb lane on the room's floor plank (same baseline as
-     * furniture), not jammed into the left border or floating mid-wall.
+     * Inter-floor climb — framed pack door OR Pixel Spaces elevator (theme climbMode).
      * @returns {number} door center x (use for stairs / interaction)
      */
-    markClimbDoor(preferredX, floorId) {
+    markClimbDoor(preferredX, floorId, doorKind = 'wood', climbMode = 'door') {
       const floor = this.floors.get(floorId);
       if (!floor) return preferredX;
+
+      const useElev = climbMode === 'elev'
+        && this.textures.exists('elevClosed')
+        && this.textures.exists('elevOpen');
+
+      if (useElev) {
+        const sc = SCALE;
+        const src = doorTexSize(this, 'elevClosed');
+        const leafW = src.w * sc;
+        const edgePad = floor.isRoof ? leafW / 2 + 10 : leafW / 2;
+        let cx = preferredX;
+        if (floor.minX != null) cx = Math.max(cx, floor.minX + edgePad);
+        if (floor.maxX != null) cx = Math.min(cx, floor.maxX - edgePad);
+        if (floor.isRoof) return cx;
+
+        const doorBottomY = floor.floorY - 2;
+        const img = this.add.image(cx, doorBottomY, 'elevClosed')
+          .setOrigin(0.5, 1)
+          .setScale(sc)
+          .setDepth(21.5);
+        if (!this.elevatorDoors) this.elevatorDoors = [];
+        this.elevatorDoors.push({
+          x: cx,
+          interactX: preferredX,
+          floorId,
+          img,
+          closedKey: 'elevClosed',
+          openKey: this.textures.exists('elevOpen') ? 'elevOpen' : 'elevClosed',
+          slightKey: this.textures.exists('elevSlightly') ? 'elevSlightly' : null,
+          isOpen: false,
+          openRadius: 26,
+          closeRadius: 38,
+        });
+        return cx;
+      }
+
       this.ensureFrontDoorTextures();
+      const fam = doorFamilyFor(doorKind);
+      let openKey = fam.openKey;
+      if (!this.textures.exists(openKey)) openKey = 'doorFrontClosed';
 
-      // Door art is 14×22; scale 2 = 28×44 — fits short cutaway rooms.
       const sc = SCALE;
-      const leafW = 14 * sc;
+      const src = doorTexSize(this, openKey);
+      const leafW = src.w * sc;
+      const leafH = src.h * sc;
+      const jamb = 2;
+      const lintelH = 3;
+      const frameW = leafW + jamb * 2;
+      const frameH = leafH + 2;
 
-      // Prefer the climb-lane x (empty left strip). Only nudge if it would
-      // clip the walkable bounds.
-      const edgePad = floor.isRoof ? leafW / 2 + 10 : leafW / 2;
+      const edgePad = floor.isRoof ? frameW / 2 + 10 : frameW / 2;
       let cx = preferredX;
       if (floor.minX != null) cx = Math.max(cx, floor.minX + edgePad);
       if (floor.maxX != null) cx = Math.min(cx, floor.maxX - edgePad);
-
-      // Rooftops get NO door — a door leaf standing on the deck reads wrong.
-      // You just climb up through the opening; the stairs interaction at the
-      // lane (↑) still works because it's driven by registerStairs, not this.
       if (floor.isRoof) return cx;
 
-      // Same baseline as furniture: origin bottom on floor.floorY.
-      // Tiny lift (2px) so the leaf rests on the wood plank, not sunk into it.
       const doorBottomY = floor.floorY - 2;
-      // Left hinge so the swing opens into the room (to the right).
-      const hingeX = Math.round(cx - leafW / 2);
-      const leaf = this.add.image(hingeX, doorBottomY, 'doorFrontClosed')
+      const fx = Math.round(cx - frameW / 2);
+      const fy = Math.round(doorBottomY - frameH);
+
+      const g = this.add.graphics().setDepth(21.2);
+      g.fillStyle(0x3a2e22, 1);
+      g.fillRect(fx - 1, fy - lintelH, frameW + 2, lintelH);
+      g.fillStyle(0x0c0a08, 1);
+      g.fillRect(fx, fy, frameW, frameH);
+      g.fillStyle(0x4a3a2a, 1);
+      g.fillRect(fx, fy, jamb, frameH);
+      g.fillRect(fx + frameW - jamb, fy, jamb, frameH);
+      g.fillStyle(0x1a1510, 1);
+      g.fillRect(fx + jamb, fy + 1, frameW - jamb * 2, frameH - 2);
+      g.lineStyle(1, 0x0a0806, 0.9);
+      g.strokeRect(fx, fy, frameW, frameH);
+
+      const hingeX = fx + jamb;
+      const leaf = this.add.image(hingeX, doorBottomY, openKey)
         .setOrigin(0, 1)
         .setScale(sc, sc)
         .setDepth(21.5);
@@ -3567,11 +3869,14 @@
       this.autoDoors.push({
         x: cx,
         interactX: preferredX,
-        kind: 'door',
+        kind: fam.family,
         mode: 'swing',
         indoor: true,
         floorId,
         leaf,
+        closedKey: openKey,
+        openKey,
+        swapTexture: false,
         baseScale: sc,
         openScaleX: sc * 0.18,
         openRadius: 24,
@@ -3616,11 +3921,12 @@
       if (slotW < 110) kit = kit.slice(0, Math.min(3, kit.length));
       else if (slotW < 140) kit = kit.slice(0, Math.min(4, kit.length));
 
-      // Climb-door lane: the interior leaf (14×SCALE wide) is centered on
-      // laneX ≈ slotX + max(20, slotW*0.2) (drawTextBuilding lane math), so
-      // furniture must start well clear of the leaf's right edge — not 6px.
-      const doorLaneRight = slotX + Math.max(20, slotW * 0.2) + (14 * SCALE) / 2;
-      const clearLeft = Math.max(slotX + Math.max(28, slotW * 0.22), doorLaneRight);
+      // Climb-door lane: ajar pack leaf (~13×SCALE) + frame jambs — furniture
+      // must start clear of the frame's right edge.
+      const climbLeafW = 13 * SCALE;
+      const climbFramePad = 6;
+      const doorLaneRight = slotX + Math.max(20, slotW * 0.2) + climbLeafW / 2 + climbFramePad;
+      const clearLeft = Math.max(slotX + Math.max(30, slotW * 0.24), doorLaneRight);
       const leftBound = clearLeft + 20;
       const rightBound = slotX + slotW - 10;
       const usable = Math.max(40, rightBound - leftBound);
@@ -3748,13 +4054,12 @@
       g.fillRect(x + doorW / 2, top, 2, doorH);
       g.fillStyle(0x3a2e22, 1);
       g.fillRect(x - doorW / 2 - 1, top - 3, doorW + 2, 3);
-      // Side-view door leaf: the front-door art squished to read edge-on,
-      // hinged against the left jamb like it's swung open into the room —
-      // makes the room-to-room crossing an actual visible door.
-      if (this.textures.exists('doorFrontClosed')) {
-        this.add.image(x - doorW / 2 - 1, floorY - 1, 'doorFrontClosed')
+      // Side-view door leaf: pack closed sliver when available, else canvas
+      const sideKey = this.textures.exists('doorClosed') ? 'doorClosed' : 'doorFrontClosed';
+      if (this.textures.exists(sideKey)) {
+        this.add.image(x - doorW / 2 - 1, floorY - 1, sideKey)
           .setOrigin(1, 1)
-          .setScale(SCALE * 0.3, (doorH - 2) / 22)
+          .setScale(SCALE * (sideKey === 'doorClosed' ? 1.1 : 0.3), (doorH - 2) / 22)
           .setDepth(20.9)
           .setAlpha(0.95);
       }
@@ -3834,6 +4139,28 @@
       // Slice each pet cell into its own canvas texture so setTexture always swaps art.
       // (Spritesheet setFrame was effectively a no-op / too subtle in practice.)
       this.buildPetCellTextures();
+    }
+
+    /**
+     * Assert Pixel Platter foods + emote/eat poses load — logs missing keys once.
+     */
+    verifyMapSocialAssets() {
+      const missingFood = FOOD_KEYS.filter((k) => !this.textures.exists(k));
+      if (missingFood.length) {
+        console.warn('[map] missing food textures:', missingFood.join(', '));
+        missingFood.forEach((k) => this._missingAssets?.add?.(k));
+      }
+      const socialPoses = ['wave', 'shrug', 'snicker', 'jump', 'hurt', 'eat', 'eatSit'];
+      const sheets = NPC_SHEETS.filter((n) => this.textures.exists(n.key));
+      if (!sheets.length) {
+        console.warn('[map] no NPC sheets loaded — reaction emotes/eat poses unavailable');
+        return;
+      }
+      const sample = sheets[0].key;
+      const missingPoses = socialPoses.filter((pose) => !this.anims.exists(`${sample}_${pose}`));
+      if (missingPoses.length) {
+        console.warn('[map] missing NPC pose anims on', sample, ':', missingPoses.join(', '));
+      }
     }
 
     /**
@@ -4041,6 +4368,104 @@
       const list = NPC_SHEETS.filter((n) => this.textures.exists(n.key));
       if (!list.length) return NPC_SHEETS[0].key;
       return list[hashSeed(seedStr) % list.length].key;
+    }
+
+    /** Register pose anims for a dynamically loaded custom avatar sheet. */
+    registerSheetAnims(sheetKey) {
+      if (!sheetKey || !this.textures.exists(sheetKey)) return;
+      Object.entries(NPC_POSE_DEFS).forEach(([pose, def]) => {
+        const key = `${sheetKey}_${pose}`;
+        if (this.anims.exists(key)) return;
+        const base = def.row * NPC_COLS + (def.frameOffset || 0);
+        const start = base;
+        const end = base + Math.max(0, def.frames - 1);
+        let frames;
+        if (def.frames === 1) {
+          frames = [{ key: sheetKey, frame: start }];
+        } else {
+          frames = this.anims.generateFrameNumbers(sheetKey, { start, end });
+        }
+        if (!frames || !frames.length) return;
+        this.anims.create({
+          key,
+          frames,
+          frameRate: def.fps || 8,
+          repeat: def.repeat != null ? def.repeat : 0,
+        });
+      });
+    }
+
+    /**
+     * Load a baked Discord closet sheet (256×448 / 32×32 cells). Falls back to null on 404.
+     * @returns {Promise<string|null>} texture key
+     */
+    ensureCustomSheet(userId, sheetUrl, rev) {
+      if (!sheetUrl || !userId) return Promise.resolve(null);
+      const key = `custom_${userId}_v${rev || 1}`;
+      if (this.textures.exists(key)) {
+        this.registerSheetAnims(key);
+        return Promise.resolve(key);
+      }
+      if (!this._sheetLoading) this._sheetLoading = new Map();
+      if (this._sheetLoading.has(key)) return this._sheetLoading.get(key);
+
+      const url = /^https?:\/\//i.test(sheetUrl)
+        ? sheetUrl
+        : `${location.origin}${sheetUrl.startsWith('/') ? '' : '/'}${sheetUrl}`;
+
+      const promise = new Promise((resolve) => {
+        let settled = false;
+        const done = (val) => {
+          if (settled) return;
+          settled = true;
+          this._sheetLoading.delete(key);
+          resolve(val);
+        };
+        try {
+          this.load.spritesheet(key, url, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h });
+          this.load.once(`filecomplete-spritesheet-${key}`, () => {
+            try {
+              if (this.textures.exists(key)) {
+                this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
+                this.registerSheetAnims(key);
+                done(key);
+                return;
+              }
+            } catch (_) { /* fall through */ }
+            done(null);
+          });
+          this.load.once(Phaser.Loader.Events.FILE_LOAD_ERROR, (file) => {
+            if (file?.key === key) done(null);
+          });
+          this.load.start();
+          // Safety timeout if neither event fires
+          setTimeout(() => done(this.textures.exists(key) ? key : null), 8000);
+        } catch (_) {
+          done(null);
+        }
+      });
+      this._sheetLoading.set(key, promise);
+      return promise;
+    }
+
+    applyLiveSheet(live, sheetKey, pose = 'idle') {
+      if (!live?.sprite?.active || !sheetKey || !this.textures.exists(sheetKey)) return;
+      if (live.sheet === sheetKey) return;
+      live.sheet = sheetKey;
+      if (live.actor) live.actor.sheet = sheetKey;
+      try {
+        live.sprite.setTexture(sheetKey, 0);
+        this.playSheetPose(live.sprite, sheetKey, pose);
+      } catch (_) { /* ignore */ }
+    }
+
+    maybeUpgradeLiveSheet(live, person) {
+      const sheetUrl = person?.sheetUrl || person?.avatar?.sheetUrl;
+      if (!sheetUrl || !live) return;
+      const rev = person.avatarRev || person?.avatar?.rev || 1;
+      this.ensureCustomSheet(person.userId, sheetUrl, rev).then((key) => {
+        if (key) this.applyLiveSheet(live, key, 'idle');
+      });
     }
 
     spawnChar(x, y, sheet, idle, label, depth = 30, opts = {}) {
@@ -4654,10 +5079,14 @@
           actor.seatedY = sitY;
           this.playSheetPose(actor.sprite, actor.sheet, idle);
           actor.state = 'sit';
+          if (actor.staySeated) {
+            actor.busyUntil = Number.MAX_SAFE_INTEGER / 4;
+            return;
+          }
           const sitMs = 7000 + Math.random() * 6000;
           actor.busyUntil = this.time.now + sitMs;
           this.time.delayedCall(sitMs, () => {
-            if (!actor.sprite?.active || !actor.seated) return;
+            if (!actor.sprite?.active || !actor.seated || actor.staySeated) return;
             const food = (this.foods || []).find((f) => (
               Math.abs(f.x - actor.sprite.x) < 48
               && (!f.floorId || f.floorId === actor.roomKey || f.floorId === seat.floorId)
@@ -4763,9 +5192,9 @@
       if (this._ambientTimer) return;
       this._ambientPoseIdx = 0;
       this._ambientActorIdx = 0;
-      // Slower brain tick — fewer simultaneous movers
+      // Slower brain tick — fewer simultaneous movers / less emote spam
       this._ambientTimer = this.time.addEvent({
-        delay: 1100,
+        delay: 1700,
         loop: true,
         callback: () => this.tickAmbient(),
       });
@@ -4778,7 +5207,7 @@
       if (!actors.length) return;
 
       // Social: pair waves in same room (less frantic)
-      if (Math.random() < 0.28) {
+      if (Math.random() < 0.14) {
         const byRoom = new Map();
         for (const a of actors) {
           if (!a.roomKey || a.seated || a.state === 'walk') continue;
@@ -4801,10 +5230,10 @@
             const [a, b] = best;
             a.sprite.setFlipX(a.sprite.x > b.sprite.x);
             b.sprite.setFlipX(b.sprite.x > a.sprite.x);
-            // Emote only — full chat-bubble+emote stacks looked cluttered
-            this.playAmbientPose(a, 'wave', { force: true });
-            this.time.delayedCall(220, () => {
-              this.playAmbientPose(b, Math.random() < 0.5 ? 'wave' : 'snicker', { force: true });
+            // Respect busyUntil — no force (cuts wave spam)
+            this.playAmbientPose(a, 'wave');
+            this.time.delayedCall(280, () => {
+              this.playAmbientPose(b, Math.random() < 0.5 ? 'wave' : 'snicker');
             });
             break;
           }
@@ -4825,6 +5254,14 @@
     /** Per-NPC decision: wander / sit / eat / emote. */
     thinkActor(actor) {
       if (!actor?.sprite?.active) return;
+      if (actor.staySeated) {
+        if (actor.seated && Math.random() < 0.08) {
+          this.playAmbientPose(actor, Math.random() < 0.5 ? 'snicker' : 'shrug', {
+            resume: actor.seat?.kind === 'bed' ? 'lieIdle' : 'sitIdle',
+          });
+        }
+        return;
+      }
       if (actor.mode === 'stroll') {
         // Strollers briefly wave mid-pace (rarer)
         if (Math.random() < 0.1) {
@@ -4838,9 +5275,8 @@
       }
       if (actor.seated) {
         // Occasional seated emote
-        if (Math.random() < 0.22) {
+        if (Math.random() < 0.12) {
           this.playAmbientPose(actor, Math.random() < 0.5 ? 'snicker' : 'shrug', {
-            force: true,
             resume: actor.seat?.kind === 'bed' ? 'lieIdle' : 'sitIdle',
           });
         }
@@ -4848,73 +5284,100 @@
       }
       const roll = Math.random();
       // More idle emotes, fewer walks — calmer street
-      if (roll < 0.32) {
+      if (roll < 0.28) {
         this.actorPickWander(actor);
-      } else if (roll < 0.72) {
+      } else if (roll < 0.48) {
         const poses = ['wave', 'shrug', 'snicker', 'jump'];
-        this.playAmbientPose(actor, poses[this._ambientPoseIdx % poses.length], { force: true });
+        this.playAmbientPose(actor, poses[this._ambientPoseIdx % poses.length]);
         this._ambientPoseIdx += 1;
-        actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 1400);
+        actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 2200);
       } else {
         // Just chill — extend idle so they don't act next tick
-        actor.busyUntil = this.time.now + 2000 + Math.random() * 2500;
+        actor.busyUntil = this.time.now + 2800 + Math.random() * 3200;
       }
     }
 
+    /** Street pets removed — paid companions only (see syncCompanionPets). */
     spawnPets() {
-      const mw = this.mapWidth || W;
-      const gy = this.groundY;
       this.pets = [];
-
-      // In front of buildings; feet planted via PET_FOOT_ORIGIN_Y
-      const PET_DEPTH = 38;
-      const hasDog = this.textures.exists('petDog');
-      const hasCat = this.textures.exists('petCat');
-      if (!hasDog && !hasCat) {
-        console.warn('[map] pets missing textures — PacksExtra/Cats|Dogs not loaded');
-        this.time.delayedCall(800, () => {
-          if (this.textures.exists('petDog') || this.textures.exists('petCat')) this.spawnPets();
-        });
-        return;
-      }
-
-      // Ensure cells exist even if makeAnims ran before textures were ready
       this.buildPetCellTextures();
+    }
 
-      const makePet = (key, x, y, depth = PET_DEPTH) => {
-        // Start on a sliced cell texture (not the full sheet)
-        const startCell = `${key}_c${petWalkFrames(1)[0]}`;
-        const texKey = this.textures.exists(startCell) ? startCell : key;
-        const sp = this.add.sprite(x, y, texKey)
-          .setScale(petScaleFor(key))
-          .setOrigin(0.5, PET_FOOT_ORIGIN_Y)
-          .setDepth(depth);
-        sp._petStep = 0;
-        sp._petDir = 1;
-        sp._petMoving = false;
-        sp._petKey = key;
-        return sp;
-      };
-
-      const addPatrol = (key, x0, x1, dur) => {
-        if (!this.textures.exists(key)) return null;
-        const sp = makePet(key, x0, gy, PET_DEPTH);
-        this.startPetPatrol(sp, key, x0, x1, dur, gy);
-        this.pets.push({ sprite: sp, kind: key });
-        return sp;
-      };
-
-      // Dogs larger, cats smaller — near spawn
-      if (hasDog) {
-        addPatrol('petDog', 180, Math.min(460, mw - 50), 10000);
-        if (mw > 700) addPatrol('petDog', mw * 0.5, mw * 0.78, 12000);
+    syncCompanionPets(wantPeople) {
+      if (!this.companionPets) this.companionPets = new Map();
+      const want = new Map();
+      for (const p of wantPeople || []) {
+        const kind = p.pet?.kind === 'cat' ? 'petCat' : (p.pet?.kind === 'dog' ? 'petDog' : null);
+        if (!kind) continue;
+        if (!this.textures.exists(kind) && !this.textures.exists(`${kind}_c0`)) continue;
+        want.set(String(p.userId), kind);
       }
-      if (hasCat) {
-        addPatrol('petCat', 280, Math.min(520, mw - 40), 11000);
-        // Extra ground cat (no couch dependency) — always walking on street
-        if (mw > 500) addPatrol('petCat', mw * 0.35, mw * 0.55, 11500);
+
+      for (const [userId, entry] of [...this.companionPets.entries()]) {
+        if (!want.has(userId)) {
+          try { entry.sprite?.destroy?.(); } catch (_) { /* ignore */ }
+          this.companionPets.delete(userId);
+        }
       }
-      console.info(`[map] pets walking n=${this.pets.length} cellsBuilt=${this.textures.exists('petDog_c0')}`);
+
+      for (const [userId, kind] of want) {
+        let entry = this.companionPets.get(userId);
+        const owner = this.livePeople?.get(userId);
+        if (!owner?.sprite?.active) {
+          if (entry) {
+            try { entry.sprite?.destroy?.(); } catch (_) { /* ignore */ }
+            this.companionPets.delete(userId);
+          }
+          continue;
+        }
+        if (!entry || entry.kind !== kind) {
+          if (entry?.sprite) {
+            try { entry.sprite.destroy(); } catch (_) { /* ignore */ }
+          }
+          this.buildPetCellTextures();
+          const startCell = `${kind}_c${petWalkFrames(1)[0]}`;
+          const texKey = this.textures.exists(startCell) ? startCell : kind;
+          const ox = owner.sprite.x - 18;
+          const oy = owner.sprite.y;
+          const sp = this.add.sprite(ox, oy, texKey)
+            .setScale(petScaleFor(kind))
+            .setOrigin(0.5, PET_FOOT_ORIGIN_Y)
+            .setDepth((owner.sprite.depth || 30) - 1);
+          sp._petStep = 0;
+          sp._petDir = 1;
+          sp._petKey = kind;
+          entry = { sprite: sp, kind };
+          this.companionPets.set(userId, entry);
+        }
+        this.followCompanionPet(entry, owner);
+      }
+    }
+
+    followCompanionPet(entry, ownerLive) {
+      const sp = entry?.sprite;
+      const owner = ownerLive?.sprite;
+      if (!sp?.active || !owner?.active) return;
+      const behind = owner.flipX ? 22 : -22;
+      const tx = owner.x + behind;
+      const ty = owner.y;
+      const dx = tx - sp.x;
+      const dy = ty - sp.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 2) {
+        const step = Math.min(dist, 3.2);
+        sp.x += (dx / dist) * step;
+        sp.y += (dy / dist) * step;
+        const dir = petDirFromDelta(dx, dy);
+        sp._petDir = dir;
+        sp._petStep = ((sp._petStep || 0) + 1) % PET_WALK_LEN;
+        const frames = petWalkFrames(dir);
+        const cell = `${entry.kind}_c${frames[sp._petStep]}`;
+        if (this.textures.exists(cell)) sp.setTexture(cell);
+      } else {
+        const idle = `${entry.kind}_c${petIdleFrame(sp._petDir || 1)}`;
+        if (this.textures.exists(idle)) sp.setTexture(idle);
+      }
+      sp.setDepth((owner.depth || 30) - 1);
     }
 
     buildHud(guildName = 'Discord', meta = {}) {
@@ -4927,7 +5390,7 @@
       // visible rect — ENVELOP scaling crops the design edges on wide/tall
       // hosts, so anything anchored to raw W/H falls half off-screen.
       const leftKids = [];
-      leftKids.push(this.add.rectangle(88, 28, 176, 56, 0x0f172a, 0.82)
+      leftKids.push(this.add.rectangle(88, 20, 176, 40, 0x0f172a, 0.82)
         .setStrokeStyle(1, 0x334155, 0.9));
       if (this.textures.exists('uiPerson')) {
         leftKids.push(this.add.image(14, 16, 'uiPerson').setScale(SCALE).setOrigin(0.5));
@@ -4941,43 +5404,21 @@
         fontSize: '10px', color: '#94a3b8',
       }).setResolution(2);
       leftKids.push(this._hudSub);
-
-      // Compact need row — icon + bar only (native pixel scale)
       this._hudNeedRows = [];
-      const needDefs = [
-        { icon: 'statusHunger', color: 'Orange' },
-        { icon: 'statusEnergy', color: 'Green' },
-        { icon: 'statusComfort1', color: 'Blue' },
-      ];
-      needDefs.forEach((nd, i) => {
-        const x0 = 18 + i * 52;
-        const y0 = 44;
-        if (this.textures.exists(nd.icon)) {
-          leftKids.push(this.add.image(x0, y0, nd.icon).setScale(SCALE).setOrigin(0.5));
-        }
-        const barKey = progressBarKey(nd.color, 0.6);
-        const bar = this.add.image(
-          x0 + 12, y0,
-          this.textures.exists(barKey) ? barKey : 'barEmpty',
-        ).setScale(SCALE).setOrigin(0, 0.5);
-        leftKids.push(bar);
-        this._hudNeedRows.push({ color: nd.color, bar });
-      });
       this._hudLeft = this.add.container(0, 0, leftKids)
         .setScrollFactor(0).setDepth(D);
 
-      // Clock + XP — right-anchored container
+      // Right slot reserved (no fake day clock / XP)
       this._clockText = this.add.text(0, 0, '', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '11px',
         fontStyle: 'bold',
-        color: '#fef3c7',
+        color: '#e2e8f0',
         backgroundColor: '#0f172acc',
         padding: { x: 8, y: 5 },
-      }).setOrigin(1, 0).setResolution(2);
-      this._xpBar = this.add.image(0, 28, this.textures.exists('xpBar0') ? 'xpBar0' : 'barEmpty')
-        .setOrigin(1, 0.5).setScale(SCALE);
-      this._hudRight = this.add.container(0, 0, [this._clockText, this._xpBar])
+      }).setOrigin(1, 0).setResolution(2).setVisible(false);
+      this._xpBar = null;
+      this._hudRight = this.add.container(0, 0, [this._clockText])
         .setScrollFactor(0).setDepth(D + 1);
 
       // Event strip — thin glass bar (positioned + sized by layoutHud)
@@ -5100,6 +5541,8 @@
     // ——— Block life sim (named residents, needs, relationships, day/night) ———
 
     startBlockLife(layoutMeta = {}) {
+      // Fake named neighbors (Mira/Pax/…) disabled — Discord-first map.
+      return;
       if (typeof window.BlockLife === 'undefined' || !window.BlockLife.createWorld) {
         console.warn('[map] block-life.js not loaded — residents disabled');
         return;
@@ -5135,6 +5578,7 @@
     }
 
     spawnBlockResidents() {
+      return; // fake cast disabled
       if (!this.blockLife) return;
       const gy = this.groundY;
       const buildings = this.buildings || [];
@@ -5268,15 +5712,7 @@
     }
 
     bindHouseholdPets() {
-      // Tag first dog/cat sprites as owned by first pet owners for flavor
-      if (!this.blockLife?.pets?.length || !this.pets?.length) return;
-      this.blockLife.pets.forEach((p, i) => {
-        const spriteEntry = this.pets[i];
-        if (spriteEntry?.sprite) {
-          spriteEntry.ownerId = p.ownerId;
-          spriteEntry.petName = p.name;
-        }
-      });
+      // Ambient street pets removed; companions attach via presence.
     }
 
     applyDayNightVisuals() {
@@ -5332,12 +5768,7 @@
       this.applyDayNightVisuals();
       this.driveResidents();
 
-      // Update HUD subline with live count
-      if (this._hudSub && this.blockLife) {
-        const alive = this.blockLife.residents.filter((r) => r.alive).length;
-        const couples = this.blockLife.residents.filter((r) => r.alive && r.partnerId).length / 2;
-        this._hudSub.setText(`${alive} neighbors · ${Math.floor(couples)} couples · day ${this.blockLife.day}`);
-      }
+      // HUD stays Discord-centric (blocks · rooms) — do not overwrite with fake neighbors.
       this.refreshHudNeeds();
     }
 
@@ -5689,6 +6120,39 @@
     }
 
     applyPresence(data) {
+      const rooms = Array.isArray(data.rooms) ? data.rooms : [];
+      // Recover from demo/empty bootstrap once real Discord rooms arrive.
+      if (this._layoutFromDemo && rooms.length) {
+        this._layoutFromDemo = false;
+        try {
+          if (!sessionStorage.getItem('denizen-layout-recovered')) {
+            sessionStorage.setItem('denizen-layout-recovered', '1');
+            location.reload();
+            return;
+          }
+        } catch (_) {
+          location.reload();
+          return;
+        }
+      }
+      const fp = rooms
+        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}`)
+        .sort()
+        .join('|');
+      if (fp && this._layoutFp && fp !== this._layoutFp && rooms.length) {
+        // Channel layout drifted (create/rename/delete) — soft reload once.
+        this._layoutFp = fp;
+        try {
+          if (!sessionStorage.getItem(`denizen-layout-fp-${fp.slice(0, 24)}`)) {
+            sessionStorage.setItem(`denizen-layout-fp-${fp.slice(0, 24)}`, '1');
+            location.reload();
+            return;
+          }
+        } catch (_) { /* continue with people sync */ }
+      } else if (fp && !this._layoutFp) {
+        this._layoutFp = fp;
+      }
+
       const want = new Map();
       for (const p of data.people || []) {
         const roomKey = this.resolveRoomKey(p);
@@ -5703,6 +6167,18 @@
           live: !!p.live,
           textSnippet: p.textSnippet ? String(p.textSnippet).slice(0, 40) : null,
           boosted: !!p.boosted || !!p.premium,
+          streaming: !!p.streaming,
+          video: !!p.video,
+          sheetUrl: p.avatar?.sheetUrl || p.sheetUrl || null,
+          avatarRev: p.avatar?.rev || p.avatarRev || 1,
+          avatar: p.avatar || null,
+          pet: p.pet?.kind ? { kind: p.pet.kind } : null,
+          action: p.action && p.action.ts ? {
+            kind: String(p.action.kind || ''),
+            pose: p.action.pose ? String(p.action.pose) : undefined,
+            food: p.action.food ? String(p.action.food) : undefined,
+            ts: Number(p.action.ts),
+          } : null,
         });
       }
 
@@ -5740,110 +6216,207 @@
           }
           live.soft = person.soft;
           live.sprite.setAlpha(person.soft ? 0.72 : 1);
+          this.maybeUpgradeLiveSheet(live, person);
           this.syncLiveChrome(live, person);
         }
       }
       this.updatePlaqueStars();
+      this.syncCompanionPets([...want.values()]);
     }
 
     destroyLiveChrome(live) {
       if (!live) return;
-      for (const k of ['statusIcon', 'pointer', 'bubble', 'bubbleText', 'boostIcon']) {
+      for (const k of ['statusIcon', 'pointer', 'bubble', 'bubbleShadow', 'bubbleText', 'boostIcon', 'heldFood']) {
         try { live[k]?.destroy?.(); } catch (_) { /* ignore */ }
         live[k] = null;
       }
     }
 
-    /** Status icons + open-mic pointer + soft-text chat bubbles. */
+    /** Stable pack chat-bubble color per Discord user. */
+    bubbleKeyForUser(userId) {
+      const keys = CHAT_BUBBLE_KEYS.filter((k) => this.textures.exists(k));
+      if (!keys.length) return 'uiBubbleWhite';
+      const h = hashSeed(String(userId || '0'));
+      return keys[h % keys.length];
+    }
+
+    /**
+     * Soft-text chat bubbles only — no permanent status faces / mic pointer / boost badge.
+     * Emotes + held food are ephemeral (showEmote / playPresenceAction).
+     */
     syncLiveChrome(live, person) {
       if (!live?.sprite?.active) return;
       const depth = (live.sprite.depth || 30) + 2;
       const sx = live.sprite.x;
       const sy = live.sprite.y;
 
-      // Happiness status is a VOICE-state signal (deaf/mute/live). Text
-      // members get no face — the permanent blue "meh" face read as noise.
-      let statusKey = null;
-      if (person.deafened) statusKey = 'statusHappy0';
-      else if (person.muted) statusKey = 'statusHappy1';
-      else if (person.live) statusKey = 'statusHappy4';
-      else if (!person.soft) statusKey = 'statusHappy3';
-
-      if (statusKey && this.textures.exists(statusKey)) {
-        if (!live.statusIcon || !live.statusIcon.active) {
-          live.statusIcon = this.add.image(sx + 10, sy - 28, statusKey)
-            .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
-        } else if (live.statusIcon.texture?.key !== statusKey) {
-          live.statusIcon.setTexture(statusKey);
-        }
-        live.statusIcon.setPosition(sx + 10, sy - 28).setVisible(true);
-      } else if (live.statusIcon) {
-        live.statusIcon.setVisible(false);
+      // Tear down legacy permanent chrome if still present
+      if (live.statusIcon) {
+        try { live.statusIcon.destroy(); } catch (_) { /* ignore */ }
+        live.statusIcon = null;
+      }
+      if (live.pointer) {
+        try { this.tweens.killTweensOf(live.pointer); live.pointer.destroy(); } catch (_) { /* ignore */ }
+        live.pointer = null;
+      }
+      if (live.boostIcon) {
+        try { live.boostIcon.destroy(); } catch (_) { /* ignore */ }
+        live.boostIcon = null;
       }
 
-      // Green pointer bob for open-mic
-      const showPtr = !person.soft && person.live && this.textures.exists('pointerGreen');
-      if (showPtr) {
-        if (!live.pointer || !live.pointer.active) {
-          live.pointer = this.add.image(sx, sy - 46, 'pointerGreen')
-            .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
-          this.tweens.add({
-            targets: live.pointer, y: sy - 52, duration: 500,
-            yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-          });
-        } else {
-          live.pointer.setVisible(true);
-          live.pointer.x = sx;
-        }
-      } else if (live.pointer) {
-        live.pointer.setVisible(false);
-      }
-
-      // Soft text → chat bubble
-      if (person.soft && person.textSnippet && this.textures.exists('uiBubbleWhite')) {
+      // Soft text → pack chat bubble behind caption (stable color per user)
+      if (person.soft && person.textSnippet) {
         const snip = person.textSnippet;
-        if (!live.bubble || !live.bubble.active) {
-          live.bubble = this.add.image(sx, sy - 54, 'uiBubbleWhite')
-            .setScale(SCALE * 1.4).setDepth(depth + 1).setOrigin(0.5, 1);
-          live.bubbleText = this.add.text(sx, sy - 62, snip, {
-            fontFamily: 'Segoe UI, system-ui, sans-serif',
-            fontSize: '9px', color: '#1e293b', wordWrap: { width: 72 },
-          }).setOrigin(0.5, 1).setDepth(depth + 2).setResolution(2);
-        } else {
-          live.bubble.setPosition(sx, sy - 54).setVisible(true);
-          if (live.bubbleText) {
-            live.bubbleText.setText(snip).setPosition(sx, sy - 62).setVisible(true);
+        const bubbleKey = this.bubbleKeyForUser(person.userId);
+        if (this.textures.exists(bubbleKey) || this.textures.exists('uiBubbleWhite')) {
+          const key = this.textures.exists(bubbleKey) ? bubbleKey : 'uiBubbleWhite';
+          const depthB = depth + 1;
+          if (!live.bubble || !live.bubble.active) {
+            if (this.textures.exists('uiBubbleShadow')) {
+              live.bubbleShadow = this.add.image(sx + 2, sy - 52, 'uiBubbleShadow')
+                .setScale(SCALE * 1.35).setDepth(depthB - 1).setOrigin(0.5, 1).setAlpha(0.4);
+            }
+            live.bubble = this.add.image(sx, sy - 54, key)
+              .setScale(SCALE * 1.45).setDepth(depthB).setOrigin(0.5, 1);
+            live.bubbleText = this.add.text(sx, sy - 64, snip, {
+              fontFamily: 'Segoe UI, system-ui, sans-serif',
+              fontSize: '9px', color: '#1e293b', wordWrap: { width: 78 },
+            }).setOrigin(0.5, 1).setDepth(depthB + 1).setResolution(2);
+            live._bubbleSnippet = snip;
+          } else {
+            if (live.bubble.texture?.key !== key) live.bubble.setTexture(key);
+            live.bubble.setPosition(sx, sy - 54).setVisible(true);
+            if (live.bubbleShadow?.active) {
+              live.bubbleShadow.setPosition(sx + 2, sy - 52).setVisible(true);
+            }
+            if (live.bubbleText) {
+              live.bubbleText.setText(snip).setPosition(sx, sy - 64).setVisible(true);
+            }
+            // Pop when snippet changes
+            if (snip !== live._bubbleSnippet) {
+              live._bubbleSnippet = snip;
+              live.bubble.setScale(SCALE * 1.2);
+              this.tweens.add({
+                targets: live.bubble,
+                scaleX: SCALE * 1.45,
+                scaleY: SCALE * 1.45,
+                duration: 160,
+                ease: 'Back.easeOut',
+              });
+            }
           }
         }
       } else {
         if (live.bubble) live.bubble.setVisible(false);
+        if (live.bubbleShadow) live.bubbleShadow.setVisible(false);
         if (live.bubbleText) live.bubbleText.setVisible(false);
       }
 
-      if (person.boosted && this.textures.exists('boostIcon')) {
-        if (!live.boostIcon || !live.boostIcon.active) {
-          live.boostIcon = this.add.image(sx - 12, sy - 28, 'boostIcon')
-            .setScale(SCALE).setDepth(depth).setOrigin(0.5, 1);
-        } else {
-          live.boostIcon.setPosition(sx - 12, sy - 28).setVisible(true);
-        }
-      } else if (live.boostIcon) {
-        live.boostIcon.setVisible(false);
+      if (live.heldFood?.active) {
+        live.heldFood.setPosition(sx + 10, sy - 18).setDepth(depth + 3);
       }
+
+      this.playPresenceAction(live, person);
     }
 
     layoutLiveChrome(live) {
       if (!live?.sprite?.active) return;
       const sx = live.sprite.x;
       const sy = live.sprite.y;
-      if (live.statusIcon?.active) live.statusIcon.setPosition(sx + 10, sy - 28);
-      if (live.pointer?.active && live.pointer.visible) live.pointer.x = sx;
       if (live.bubble?.active && live.bubble.visible) {
         live.bubble.setPosition(sx, sy - 54);
-        if (live.bubbleText) live.bubbleText.setPosition(sx, sy - 62);
+        if (live.bubbleShadow?.active) live.bubbleShadow.setPosition(sx + 2, sy - 52);
+        if (live.bubbleText) live.bubbleText.setPosition(sx, sy - 64);
       }
-      if (live.boostIcon?.active && live.boostIcon.visible) live.boostIcon.setPosition(sx - 12, sy - 28);
+      if (live.heldFood?.active) {
+        live.heldFood.setPosition(sx + 10, sy - 18);
+      }
       if (live.tag?.active) live.tag.setPosition(sx, sy - 40);
+    }
+
+    /** Play Discord-driven emote/eat once per action timestamp. */
+    playPresenceAction(live, person) {
+      const action = person?.action;
+      if (!action?.ts || !live?.sprite?.active) return;
+      const ts = Number(action.ts);
+      if (!Number.isFinite(ts) || ts === live.lastActionTs) return;
+      live.lastActionTs = ts;
+
+      const kind = String(action.kind || '');
+      if (kind === 'emote') {
+        const pose = String(action.pose || 'wave');
+        if (live.actor) this.playAmbientPose(live.actor, pose, { force: true });
+        else if (live.sheet) {
+          this.playSheetPose(live.sprite, live.sheet, pose);
+          this.showEmote(live.sprite, pose);
+        }
+        return;
+      }
+
+      if (kind === 'eat') {
+        const foodKey = this.resolveFoodTextureKey(action.food);
+        this.spawnHeldFood(live, foodKey);
+        const pose = live.actor?.seated ? 'eatSit' : 'eat';
+        const clearMs = poseDurationMs(pose) + 80;
+        if (live.actor) {
+          const match = (this.foods || []).find((f) => (
+            f.key === foodKey
+            && !f.eaten
+            && Math.abs((f.floorY || 0) - (live.actor.floorY || live.sprite.y)) <= 20
+            && Math.abs(f.x - live.sprite.x) < 120
+          ));
+          if (match) {
+            this.actorEatFood(live.actor, match, () => this.clearHeldFood(live));
+          } else {
+            this.playAmbientPose(live.actor, pose, { force: true });
+            this.time.delayedCall(clearMs, () => this.clearHeldFood(live));
+          }
+        } else if (live.sheet) {
+          this.playSheetPose(live.sprite, live.sheet, pose, {
+            onDone: () => this.clearHeldFood(live),
+          });
+          this.showEmote(live.sprite, 'eat');
+        }
+      }
+    }
+
+    resolveFoodTextureKey(raw) {
+      const s = String(raw || '').trim();
+      if (s && this.textures.exists(s)) return s;
+      const aliases = {
+        burger: 'foodBurger', pizza: 'foodPizza', fries: 'foodFries',
+        hotdog: 'foodHotdog', cake: 'foodCake', tiramisu: 'foodTiramisu',
+        pie: 'foodPie', macarons: 'foodMacarons', icecream: 'foodIceCream',
+        soda: 'foodSoda', creme: 'foodCreme', apple: 'foodApple',
+        banana: 'foodBanana', strawberry: 'foodStrawberry', cherry: 'foodCherry',
+        grapes: 'foodGrapes', kiwi: 'foodKiwi', lemon: 'foodLemon',
+        orange: 'foodOrange', pear: 'foodPear', raspberry: 'foodRaspberry',
+      };
+      const key = aliases[s.toLowerCase()] || (
+        s && !s.startsWith('food')
+          ? `food${s.charAt(0).toUpperCase()}${s.slice(1)}`
+          : s
+      );
+      if (key && this.textures.exists(key)) return key;
+      return this.textures.exists('foodBurger')
+        ? 'foodBurger'
+        : (FOOD_KEYS.find((k) => this.textures.exists(k)) || 'foodBurger');
+    }
+
+    spawnHeldFood(live, foodKey) {
+      this.clearHeldFood(live);
+      if (!live?.sprite?.active || !this.textures.exists(foodKey)) return;
+      const depth = (live.sprite.depth || 30) + 3;
+      live.heldFood = this.add.image(live.sprite.x + 10, live.sprite.y - 18, foodKey)
+        .setScale(FOOD_SCALE * 0.85)
+        .setDepth(depth)
+        .setOrigin(0.5, 1);
+    }
+
+    clearHeldFood(live) {
+      if (!live) return;
+      try { live.heldFood?.destroy?.(); } catch (_) { /* ignore */ }
+      live.heldFood = null;
     }
 
     /** Smooth walk from current pose into a new room slot. */
@@ -5855,6 +6428,7 @@
       live.soft = person.soft;
       live.sheet = sheet;
       if (live.actor) live.actor.roomKey = person.roomKey;
+      this.maybeUpgradeLiveSheet(live, person);
 
       try {
         this.tweens.killTweensOf(sprite);
@@ -5878,7 +6452,8 @@
         onUpdate: () => this.layoutLiveChrome(live),
         onComplete: () => {
           if (!sprite.active) return;
-          this.playSheetPose(sprite, sheet, 'idle');
+          const useSheet = live.sheet || sheet;
+          this.playSheetPose(sprite, useSheet, 'idle');
           this.tweens.add({
             targets: sprite, y: slot.y - 1.5,
             duration: 700 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
@@ -5902,6 +6477,7 @@
       const slot = this.claimSlot(person.roomKey, person.userId);
       const isMe = ME_DISCORD_ID && String(person.userId) === ME_DISCORD_ID;
       // Each real Discord user gets a distinct-but-stable avatar from the 30 sheets.
+      // Custom closet sheetUrl (if any) upgrades asynchronously after spawn.
       const sheet = isMe ? this.playerSheet : this.npcSheetFor(String(person.userId));
       const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
       const depth = voiceRoom ? 34 : 30;
@@ -5975,12 +6551,17 @@
         roomKey: person.roomKey,
         soft: person.soft,
         actor,
+        lastActionTs: null,
+        heldFood: null,
       };
       this.livePeople.set(person.userId, live);
+      this.maybeUpgradeLiveSheet(live, person);
       this.syncLiveChrome(live, person);
     }
 
     spawnDecorNpcs() {
+      // Anonymous street roamers disabled — only Discord presence + room staff.
+      return;
       const mw = this.mapWidth || W;
       const gy = this.groundY;
       const avail = NPC_SHEETS.filter((n) => this.textures.exists(n.key) && n.key !== this.playerSheet);
@@ -6109,6 +6690,7 @@
       this._floorTween = true;
       this.standUp();
       if (viaClimb) this.animateElevatorAt(this.player.x, fromId);
+      this.playEnterStep();
 
       const destX = Phaser.Math.Clamp(this.player.x, floor.minX, floor.maxX);
       const cam = this.cameras.main;
@@ -6216,6 +6798,51 @@
           if (far || leftFloor || wentInside) this.setSwingDoorOpen(d, false);
         });
       }
+      for (const e of this.elevatorDoors || []) {
+        if (!e?.img?.active) continue;
+        if (Math.abs(e.x - x) > 22) continue;
+        if (floorId != null && e.floorId && e.floorId !== floorId) continue;
+        e.isOpen = true;
+        const openKey = e.openKey || 'elevOpen';
+        if (this.textures.exists(openKey)) {
+          try { e.img.setTexture(openKey); } catch (_) { /* ignore */ }
+        }
+        this.time.delayedCall(420, () => {
+          if (!e.img?.active) return;
+          const far = !this.player || Math.abs(this.player.x - e.x) > (e.closeRadius || 36);
+          const leftFloor = !(this.indoors && this.indoors.floorId === e.floorId);
+          if (far || leftFloor) {
+            e.isOpen = false;
+            const ck = e.closedKey || 'elevClosed';
+            if (this.textures.exists(ck)) {
+              try { e.img.setTexture(ck); } catch (_) { /* ignore */ }
+            }
+          }
+        });
+      }
+    }
+
+    /** Short jump pose when stepping through a door / elevator. */
+    playEnterStep() {
+      if (!this.player?.active) return;
+      try { this.playerPose('jump'); } catch (_) { /* ignore */ }
+      const baseY = this.player.y;
+      this.tweens.add({
+        targets: this.player,
+        y: baseY - 6,
+        duration: 90,
+        yoyo: true,
+        ease: 'Sine.easeOut',
+        onComplete: () => {
+          if (!this.player?.active) return;
+          if (this.indoors) {
+            const fl = this.floors.get(this.indoors.floorId);
+            if (fl) this.player.y = fl.floorY;
+          } else {
+            this.player.y = this.groundY - 1;
+          }
+        },
+      });
     }
 
     enterFloor(floorId, fromOutdoorX = null, viaElev = false) {
@@ -6224,6 +6851,7 @@
       if (!floor) return;
       const outdoorX = fromOutdoorX != null ? fromOutdoorX : this.player.x;
       if (viaElev) this.animateElevatorAt(outdoorX);
+      this.playEnterStep();
       this.indoors = { floorId, outdoorX };
       const spawnX = Phaser.Math.Clamp(this.player.x, floor.minX, floor.maxX);
       // Fade in through the street door
@@ -6245,6 +6873,7 @@
       this.standUp();
       const outX = this.indoors.outdoorX;
       this.indoors = null;
+      this.playEnterStep();
       this.player.setAlpha(0.25);
       this.player.setPosition(outX, this.groundY - 1);
       this.player.setDepth(45);
@@ -6573,20 +7202,60 @@
     }
 
     updateElevatorProximity() {
-      // Climb doors are swing-mode autoDoors — handled in updateAutoDoors.
+      if (!this.player) return;
+      const px = this.player.x;
+      const curFloor = this.indoors?.floorId || null;
+      for (const e of this.elevatorDoors || []) {
+        if (!e?.img?.active) continue;
+        const onFloor = !!curFloor && curFloor === e.floorId;
+        const dist = Math.min(
+          Math.abs(px - e.x),
+          e.interactX != null ? Math.abs(px - e.interactX) : 999,
+        );
+        let wantOpen = e.isOpen;
+        if (!onFloor) wantOpen = false;
+        else if (dist < (e.openRadius || 26)) wantOpen = true;
+        else if (dist > (e.closeRadius || 38)) wantOpen = false;
+        if (wantOpen === e.isOpen) continue;
+        e.isOpen = wantOpen;
+        const key = wantOpen
+          ? (e.openKey || 'elevOpen')
+          : (e.closedKey || 'elevClosed');
+        if (this.textures.exists(key)) {
+          try { e.img.setTexture(key); } catch (_) { /* ignore */ }
+        }
+      }
     }
 
     /**
-     * Front door leaf swings on a left hinge (scaleX). Same art open/closed.
+     * Front door: pack doubles texture-swap to opened; climb doors scaleX swing.
      */
     setSwingDoorOpen(d, open) {
       if (!d?.leaf || d.isOpen === open) return;
       d.isOpen = open;
       const base = d.baseScale != null ? d.baseScale : SCALE;
-      const openSx = d.openScaleX != null ? d.openScaleX : base * 0.18;
-      const targetSx = open ? openSx : base;
       try { this.tweens.killTweensOf(d.leaf); } catch (_) { /* ignore */ }
       d.animating = true;
+
+      if (d.swapTexture && d.closedKey && d.openKey) {
+        const key = open ? d.openKey : d.closedKey;
+        if (this.textures.exists(key)) {
+          try { d.leaf.setTexture(key); } catch (_) { /* ignore */ }
+        }
+        // Keep scale full — opened leaf is already narrower pack art
+        this.tweens.add({
+          targets: d.leaf,
+          scaleX: base,
+          scaleY: base,
+          duration: open ? 120 : 140,
+          ease: open ? 'Cubic.easeOut' : 'Cubic.easeIn',
+          onComplete: () => { d.animating = false; },
+        });
+        return;
+      }
+
+      const openSx = d.openScaleX != null ? d.openScaleX : base * 0.18;
+      const targetSx = open ? openSx : base;
       this.tweens.add({
         targets: d.leaf,
         scaleX: targetSx,
@@ -6657,6 +7326,14 @@
       this.tryEnterExit();
       this.updateElevatorProximity();
       this.updateAutoDoors();
+
+      // Keep paid companion pets glued to their owners between presence polls
+      if (this.companionPets?.size) {
+        for (const [userId, entry] of this.companionPets) {
+          const owner = this.livePeople?.get(userId);
+          if (owner) this.followCompanionPet(entry, owner);
+        }
+      }
 
       let vx = 0;
       const touch = touchInput();
@@ -6764,13 +7441,20 @@
         }
       } else {
         const x = this.player.x;
-        if (this.nearbyDoor()) this.setEnterHint(IS_TOUCH ? '▲ enter building' : '↑ / W enter building');
-        else {
+        const door = this.nearbyDoor();
+        if (door) {
+          const b = (this.buildings || []).find((bd) => x >= bd.left - 10 && x <= bd.right + 10);
+          const names = b
+            ? (b.channels || []).slice(0, 2).map((c) => channelLabel(c)).join(' · ')
+            : '';
+          zone = names || b?.label || b?.kind || 'door';
+          this.setEnterHint(IS_TOUCH ? '▲ enter' : '↑ / W enter');
+        } else {
           const b = (this.buildings || []).find((bd) => x >= bd.left - 10 && x <= bd.right + 10);
           if (b) {
             const names = (b.channels || []).slice(0, 2).map((c) => channelLabel(c)).join(' · ');
             zone = names || b.label || b.kind;
-            this.setEnterHint(IS_TOUCH ? 'Walk to door · ▲ enter' : 'Walk to a door · ↑ enter');
+            this.setEnterHint('');
           } else if (x > (this.mapWidth || W) - 120) {
             zone = 'AFK · park';
             this.setEnterHint('');
@@ -6780,6 +7464,7 @@
         }
       }
       if (this.roomEl) this.roomEl.textContent = zone;
+      this.syncInRoomChannelTooltip();
     }
   }
 

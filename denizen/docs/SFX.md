@@ -8,6 +8,8 @@ Source: [`src/sfx.js`](../src/sfx.js).
 Map: [`data/sfx-map.json`](../data/sfx-map.json).
 Audio drop folder: [`assets/audio/`](../assets/audio/).
 
+**Also:** marketing landing Buzz enter cue — see [Landing Buzz (Web Audio)](#landing-buzz-web-audio) below.
+
 ## What it does
 
 On boot, the SFX module fetches `/data/sfx-map.json`, then listens to
@@ -126,8 +128,21 @@ share the same presence gate but are otherwise independent:
 All three respect `zionPresent`. Toggling presence off cuts everything
 at once (voice in-flight, ambient, future event sounds).
 
+## Landing Buzz (Web Audio)
+
+Marketing page: [`landing.html`](../landing.html) (served at `/`, `/home`, `/landing`).
+
+| Cue | Behavior |
+|-----|----------|
+| **B** key or click hero Buzz phone | High-pitch *beep beep* (Web Audio sine ~1760 / ~2093 Hz), then navigate to `/office?demo=1` |
+| Sound toggle | Corner control; B / pad / Lucy gesture auto-unmutes |
+| Gold **Buzz** plate | Shown on the **landing** hero phone; **hidden** on the in-office corner FAB (`denizen-phone-ui.js`) so it does not cover the keypad when the phone peeks from the side |
+
+Implementation lives inline in `landing.html` (`playBuzzTone` / `ringBuzz`) — not `src/sfx.js`.
+
 ## Cross-references
 
 - [VOICE.md](VOICE.md) — the TTS layer using the same presence gate
 - [WORLD-STATE.md](WORLD-STATE.md) — the events SFX listens to
 - [ARCHITECTURE.md](ARCHITECTURE.md) — overall topology
+- [PRODUCT_MANUAL.md](PRODUCT_MANUAL.md) — landing → demo entry

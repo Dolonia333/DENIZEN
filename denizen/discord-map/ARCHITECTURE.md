@@ -13,15 +13,17 @@ Browser  →  /discord-map/play.html
          →  game.js        (Phaser.Game → MapScene)
          →  PNG textures under PixelSpaces* / PacksExtra
 
-Optional: Denizen server /api/discord/map/presence  (who is in VC)
+Optional: Denizen server /api/discord/map/presence
+         → people[] (VC/text + action) → live sprites / poses / held food
 ```
 
 | Layer | File | Role |
 |-------|------|------|
 | Shell | `play.html` | Loads Phaser, cache-bust query on scripts |
 | Data sim | `block-life.js` | Residents, needs, schedule, relationships (no Phaser) |
-| View + AI glue | `game.js` | Build city, place art, path NPCs, drive life goals |
+| View + AI glue | `game.js` | Build city, place art, path NPCs, drive life goals, Discord presence |
 | Touch | `mobile-touch.js` | On-screen controls |
+| Bot bridge | `discord-bot` | `setMapAction` → `people[].action` (reactions, `,eat`) |
 
 ---
 
@@ -32,6 +34,15 @@ Optional: Denizen server /api/discord/map/presence  (who is in VC)
 - Indoors: `this.floors` Map of `{ id, roomKey, floorY, minX, maxX, isRoof? }`.
 - Player enters via **doors** (`registerDoor`), climbs via **stairs** (`registerStairs`), rooms via **passages** (`registerPassage`).
 - Furniture/NPCs use **bottom origin** (`setOrigin(0.5, 1)` or `NPC_FOOT_ORIGIN_Y`) so feet sit on `floorY`.
+
+| Helper | Role |
+|--------|------|
+| `registerDoor` | Logic only — occupancy / enter radius |
+| `placeEntrance` | Street storefront: pack `*_double` closed leaf + frame; open → texture swap to `*_opened` |
+| `markClimbDoor` | Indoor climb: lintel/jamb frame + ajar pack leaf; swing scaleX |
+| `doorFamilyFor` | Theme → wood / glass / grey texture keys |
+
+Touch points: search `placeEntrance`, `markClimbDoor`, `doorFamilyFor`, `Door_wood_double` in `game.js`.
 
 ### Pathing (why NPCs no longer walk on air)
 
@@ -138,8 +149,10 @@ Foot plant: `NPC_FOOT_ORIGIN_Y` — art isn’t flush to cell bottom; adjust if 
 | `nearestFoodFor(actor)` | Pick plate for AI |
 | `actorEatFood(actor, food)` | Navigate to plate → `eat` pose → bob sprite |
 | `forceResidentsEatFood()` | Demo meal shortly after spawn |
+| `spawnHeldFood` / `playPresenceAction` | Discord `,eat` / food reaction — temporary held sprite |
 
-**Improving food:** add more keys to ASSETS + FOOD_KEYS; place via kits `{ key: 'food', food: true }`; tweak `FOOD_SCALE`.
+**Improving food:** add more keys to ASSETS + FOOD_KEYS; place via kits `{ key: 'food', food: true }`; tweak `FOOD_SCALE`.  
+**Discord food catalog:** `discord-bot/src/map-actions.js` aliases (`pizza` → `foodPizza`) must stay in sync with `FOOD_KEYS`.
 
 ---
 
@@ -167,7 +180,20 @@ Foot plant: `NPC_FOOT_ORIGIN_Y` — art isn’t flush to cell bottom; adjust if 
 Loaded under ASSETS (`emoteHeart`, `emoteFire`, …).  
 `showEmote(sprite, pose)` pops a short-lived image above the character.
 
+**Live Discord members:** no permanent `statusIcon` / mic `pointer` / `boostIcon` overhead. Soft-text bubbles stay; reaction/eat feedback is pose + fade emote + optional held food (`syncLiveChrome` → `playPresenceAction`).
+
+**Discord → map action channel**
+
+| Piece | Role |
+|-------|------|
+| `tracker.setMapAction` | ~5s TTL `{ kind, pose?, food?, ts }` |
+| `people[].action` | Presence payload when not expired |
+| `live.lastActionTs` | Dedupe so each `ts` plays once |
+| `verifyMapSocialAssets()` | Warn if `FOOD_KEYS` textures or social poses missing at load |
+
 **Unused emotes / chat bubbles / icons** are listed in `SPRITE_INVENTORY.md` — wire more into `showEmote` map and ambient social beats.
+
+Product reference: [`../docs/DISCORD_BOT_AND_SPACES.md`](../docs/DISCORD_BOT_AND_SPACES.md).
 
 ---
 
@@ -192,6 +218,7 @@ ASSETS
 NPC_POSE_DEFS
 playSheetPose
 furn placeFood seedFoodOnAllTables actorEatFood
+playPresenceAction spawnHeldFood syncLiveChrome verifyMapSocialAssets
 planActorPath actorNavigateTo driveResidents
 registerFloor registerDoor registerStairs registerPassage
 decorateRoom KITS FOOD_KEYS PET_
@@ -205,12 +232,14 @@ decorateRoom KITS FOOD_KEYS PET_
 node --check discord-map/game.js
 node --check discord-map/block-life.js
 node discord-map/scripts/inventory-sprites.mjs
+cd discord-bot && npm test   # map-actions + tracker mapAction
 # optional: Playwright against localhost or NAS play.html
 ```
 
 Console markers:
 
 - `[map] food sprites: N total…`
+- `[map] missing food textures:` / `[map] missing NPC pose anims` (from `verifyMapSocialAssets`)
 - `[map] block life: N residents…`
 - `[map] sent N residents to eat real food…`
 - `[map] pets walking…`

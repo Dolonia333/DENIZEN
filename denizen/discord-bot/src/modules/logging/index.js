@@ -161,7 +161,7 @@ function createLogging(deps) {
       name: 'log',
       description: 'Configure server event logging (embeds + toggles)',
       aliases: ['logging'],
-      module: 'community',
+      module: 'logging',
       permission: 'ManageGuild',
       options: [
         { name: 'action', description: 'on|off|status|event|ignore|embeds', type: 3, required: true },

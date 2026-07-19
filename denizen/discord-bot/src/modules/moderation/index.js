@@ -222,6 +222,30 @@ function createModeration(deps) {
       if (!rid) throw new Error('Run /setupmute first');
       await member.roles.remove(rid, reason);
     });
+    modAction('imagemute', 'moderate_members', async (ctx, member, user, reason) => {
+      if (!member) throw new Error('Member not in server');
+      const rid = config.get(ctx.guild.id).moderation.imageMuteRoleId;
+      if (!rid) throw new Error('Run /setupmute first');
+      await member.roles.add(rid, reason);
+    }, { description: 'Block image/embed uploads via Image Muted role' });
+    modAction('unimagemute', 'moderate_members', async (ctx, member, user, reason) => {
+      if (!member) throw new Error('Member not in server');
+      const rid = config.get(ctx.guild.id).moderation.imageMuteRoleId;
+      if (!rid) throw new Error('Run /setupmute first');
+      await member.roles.remove(rid, reason);
+    }, { description: 'Remove Image Muted role' });
+    modAction('reactionmute', 'moderate_members', async (ctx, member, user, reason) => {
+      if (!member) throw new Error('Member not in server');
+      const rid = config.get(ctx.guild.id).moderation.reactionMuteRoleId;
+      if (!rid) throw new Error('Run /setupmute first');
+      await member.roles.add(rid, reason);
+    }, { description: 'Block reactions via Reaction Muted role' });
+    modAction('unreactionmute', 'moderate_members', async (ctx, member, user, reason) => {
+      if (!member) throw new Error('Member not in server');
+      const rid = config.get(ctx.guild.id).moderation.reactionMuteRoleId;
+      if (!rid) throw new Error('Run /setupmute first');
+      await member.roles.remove(rid, reason);
+    }, { description: 'Remove Reaction Muted role' });
 
     registry.register({
       name: 'purge',

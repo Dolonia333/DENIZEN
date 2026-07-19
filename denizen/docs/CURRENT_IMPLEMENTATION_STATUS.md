@@ -70,7 +70,7 @@ Primary evidence for the office behavior:
 | Multiplayer/spectator synchronization | **Conditional** | Simulation-host ownership and spectator behavior exist | Correctness depends on server connection and host election; non-host clients intentionally do not invent movement. |
 | Voice and audio | **Conditional** | TTS/STT and proximity/listen modes are represented in code/docs | Requires browser support and configured providers; not every deployment has every provider enabled. |
 | CRM | **Implemented / Conditional** | Dedicated CRM project, routes, tests, UI, vendor build | External sync and provider-specific functions need credentials and services. |
-| Discord map and bot | **Implemented / Conditional** | Separate map and bot surfaces exist | Live Discord behavior requires bot credentials and gateway connectivity. |
+| Discord map and bot | **Implemented / Conditional** | Map + bot; react/`,eat`; Lavalink music; Last.fm when keyed; `,log` free; pets gated | Needs bot token, gateway, optional Lavalink/`LASTFM_API_KEY`. See `docs/DISCORD_BOT_AND_SPACES.md`. |
 | Desktop/compute mesh | **Conditional** | Desktop and mesh scripts, onboarding and smoke commands exist | Requires enrolled nodes, NAS/network reachability, and runtime configuration. |
 | MCP gateway and companion | **Conditional** | Gateway/companion modules, tests, and documentation exist | Tokens, scopes, provider connections, and external clients must be configured. |
 | Supabase persistence | **Conditional** | Migrations, auth/data integrations, and tests exist | A running/configured Supabase deployment is required. |

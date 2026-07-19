@@ -145,4 +145,44 @@ describe('TrackerEngine', () => {
     assert.equal(snap.rooms[0].occupantCount, 1);
     assert.deepEqual(snap.members[0].userId, 'u1');
   });
+
+  it('setMapAction exposes people action until TTL', () => {
+    const tracker = new TrackerEngine({
+      log: { join: () => {}, leave: () => {}, move: () => {}, text: () => {}, expire: () => {} },
+    });
+    tracker.applyVoice({
+      kind: 'join', guildId: 'g1', userId: 'u1', displayName: 'Ada',
+      fromChannelId: null, toChannelId: 'vc1',
+      toChannel: { id: 'vc1', name: 'Lounge', type: 'voice' },
+    });
+    assert.equal(tracker.isOnMap('g1', 'u1'), true);
+    tracker.setMapAction('g1', 'u1', { kind: 'emote', pose: 'wave' }, 5000);
+    const snap = tracker.snapshot('g1');
+    const m = snap.members.find((x) => x.userId === 'u1');
+    assert.equal(m.action.kind, 'emote');
+    assert.equal(m.action.pose, 'wave');
+    assert.ok(m.action.ts);
+
+    tracker.setMapAction('g1', 'u1', { kind: 'eat', pose: 'eat', food: 'foodPizza' }, 5000);
+    const snap2 = tracker.snapshot('g1');
+    assert.equal(snap2.members[0].action.kind, 'eat');
+    assert.equal(snap2.members[0].action.food, 'foodPizza');
+  });
+
+  it('isOnMap false after voice leave', () => {
+    const tracker = new TrackerEngine({
+      log: { join: () => {}, leave: () => {}, move: () => {}, text: () => {}, expire: () => {} },
+    });
+    tracker.applyVoice({
+      kind: 'join', guildId: 'g1', userId: 'u1', displayName: 'Ada',
+      fromChannelId: null, toChannelId: 'vc1',
+      toChannel: { id: 'vc1', name: 'Lounge', type: 'voice' },
+    });
+    tracker.applyVoice({
+      kind: 'leave', guildId: 'g1', userId: 'u1', displayName: 'Ada',
+      fromChannelId: 'vc1', toChannelId: null,
+      fromChannel: { id: 'vc1', name: 'Lounge', type: 'voice' },
+    });
+    assert.equal(tracker.isOnMap('g1', 'u1'), false);
+  });
 });

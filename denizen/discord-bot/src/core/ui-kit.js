@@ -201,21 +201,23 @@ function ticketOpenRows(hasForms) {
 function helpHubEmbed(prefix = ',') {
   return baseEmbed({
     color: BRAND.primary,
-    title: 'Denizen Spaces command hub',
+    title: 'Denizen Spaces',
     description: [
-      'A full community stack **plus** the pixel map & AI office.',
+      '**Start here:** live pixel map of this Discord + your closet avatar.',
+      `\`${prefix}start\` · \`${prefix}avatar\` · \`${prefix}hangout\``,
       '',
-      'Pick a topic below — or type a slash command.',
+      'Staff tools below (Bleed-parity). **Premium** = security · community · avatar layers.',
     ].join('\n'),
     fields: [
-      { name: '♪ Music', value: `\`${prefix}play\` · player panel`, inline: true },
+      { name: '🗺 Spaces map', value: `\`${prefix}start\` · map & closet`, inline: true },
+      { name: '♪ Music', value: `\`${prefix}play\` · \`${prefix}player\``, inline: true },
       { name: '🎫 Tickets', value: `\`${prefix}tickets panel\``, inline: true },
       { name: '🎙️ VoiceMaster', value: `\`${prefix}vm setup\``, inline: true },
-      { name: '🛡 Security', value: `\`${prefix}help security\``, inline: true },
+      { name: '🛡 Security 💎', value: `\`${prefix}help security\` · premium`, inline: true },
       { name: '⚔ Moderation', value: `\`${prefix}help mods\``, inline: true },
-      { name: '🗺 Spaces map', value: `\`${prefix}start\``, inline: true },
+      { name: 'Community 💎', value: `\`${prefix}help community\` · premium`, inline: true },
     ],
-    footerExtra: 'better than a command dump',
+    footerExtra: '💎 = Denizen premium plan',
   });
 }
 
@@ -227,11 +229,11 @@ function helpHubRows() {
         .setPlaceholder('Browse help topics…')
         .addOptions(
           { label: 'Spaces map & avatar', value: 'spaces', description: 'Pixel map, closet, hangout' },
-          { label: 'Music player', value: 'music', description: 'Play, panel, filters' },
+          { label: 'Music player', value: 'music', description: 'Play, panel, filters — needs Lavalink' },
           { label: 'Tickets & support', value: 'tickets' },
-          { label: 'Security (antinuke/raid)', value: 'security' },
+          { label: 'Security 💎 (antinuke/raid)', value: 'security', description: 'Premium module' },
           { label: 'Moderation & automod', value: 'mods' },
-          { label: 'Community & levels', value: 'community' },
+          { label: 'Community 💎 & levels', value: 'community', description: 'Premium module' },
           { label: 'All modules', value: 'all' },
         ),
     ),

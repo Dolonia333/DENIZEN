@@ -188,7 +188,6 @@
       + '<span class="dzp-fab-buzz-pad">'
       + '<i></i><i></i><i></i><i></i><i></i><i></i>'
       + '</span>'
-      + '<span class="dzp-fab-buzz-tag">Buzz</span>'
       + '</span>'
       + '</span>'
     );
@@ -908,22 +907,7 @@
         border: 1px solid #020617;
       }
       #${FAB_ID} .dzp-fab-buzz-tag {
-        position: absolute;
-        right: -8px;
-        bottom: 10px;
-        font-family: "Syne", "Segoe UI", system-ui, sans-serif;
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: #fde68a;
-        background: #0b1220;
-        border: 2px solid #f59e0b;
-        border-radius: 4px;
-        padding: 1px 5px;
-        box-shadow: 2px 2px 0 #020617;
-        white-space: nowrap;
-        z-index: 2;
+        display: none !important;
       }
       /* Bubble + polish when corner peeks / hover / open */
       html.denizen-corner-hud-open #${FAB_ID} .dzp-fab-buzz-stage,

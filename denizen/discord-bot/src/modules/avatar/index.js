@@ -12,106 +12,168 @@ const {
   ButtonBuilder,
   ButtonStyle,
   AttachmentBuilder,
-  EmbedBuilder,
 } = require('discord.js');
+const { baseEmbed, BRAND, brandFooter } = require('../../core/ui-kit');
 
 const avatarApi = require(path.join(__dirname, '../../../../src/discord-avatar'));
 
-const drafts = new Map(); // userId -> avatar draft
-
-function unlocksFor(member) {
-  return avatarApi.detectRoles(member).unlocks;
-}
-
-function planFor(member, guildId) {
+function createAvatarModule(deps = {}) {
+  const { config } = deps;
+  let guildPlans = null;
   try {
-    // Prefer guild Spaces plan from config store if injected later
-    const envPlan = process.env.DENIZEN_SPACES_PLAN;
-    return avatarApi.resolvePlan(envPlan || 'free');
-  } catch (_) {
-    return 'free';
+    guildPlans = require(path.join(__dirname, '../../../../src/denizen-guild-plans.js'));
+  } catch (_) { guildPlans = null; }
+  let guildPets = null;
+  try {
+    guildPets = require(path.join(__dirname, '../../../../src/denizen-guild-pets.js'));
+  } catch (_) { guildPets = null; }
+  let guildBilling = null;
+  try {
+    guildBilling = require(path.join(__dirname, '../../../../src/denizen-guild-billing.js'));
+  } catch (_) { guildBilling = null; }
+
+  const drafts = new Map(); // userId -> avatar draft
+
+  function unlocksFor(member) {
+    return avatarApi.detectRoles(member).unlocks;
   }
-}
 
-function featuresFor(member) {
-  const roles = avatarApi.detectRoles(member);
-  return avatarApi.planFeatures(planFor(member), { isBooster: roles.isBooster });
-}
+  function planFor(member, guildId) {
+    try {
+      const gid = guildId || member?.guild?.id;
+      if (gid && config) {
+        const sp = config.get(gid)?.spaces?.plan;
+        if (sp) return avatarApi.resolvePlan(sp);
+      }
+      if (gid && guildPlans?.peekGuildPlan) {
+        const peeked = guildPlans.peekGuildPlan(gid);
+        if (peeked?.plan && peeked.plan !== 'free') return avatarApi.resolvePlan(peeked.plan);
+        if (peeked?.active) return avatarApi.resolvePlan(peeked.plan || 'pro');
+      }
+      const envPlan = process.env.DENIZEN_SPACES_PLAN;
+      return avatarApi.resolvePlan(envPlan || 'free');
+    } catch (_) {
+      return 'free';
+    }
+  }
 
-/**
- * Load saved look, enforce free/paid plan, apply booster headset if eligible.
- */
-function getDraft(userId, member) {
-  if (!drafts.has(userId)) {
-    const store = avatarApi.getAvatarStore();
-    const saved = store.get(userId);
+  function featuresFor(member, guildId) {
     const roles = avatarApi.detectRoles(member);
+    return avatarApi.planFeatures(planFor(member, guildId), { isBooster: roles.isBooster });
+  }
+
+  function upgradeUrl() {
+    return String(process.env.DISCORD_UPGRADE_URL || '').trim();
+  }
+
+  function petLockedReply() {
+    const u = upgradeUrl();
+    return [
+      '🐾 **You need a pet entitlement in this server.**',
+      '• Buy: `,pet buy` (or gift someone with `,pet buy @user`)',
+      '• Ask staff: Pro servers get **3 free grants** — `,pet grant @member`',
+      u ? `Server Pro upgrade: ${u}` : null,
+    ].filter(Boolean).join('\n');
+  }
+
+  function canManagePetGrants(member) {
+    try {
+      return !!(member?.permissions?.has?.('ManageGuild') || member?.permissions?.has?.('Administrator'));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function userHasPet(guildId, userId) {
+    if (!guildPets?.hasPetEntitlement) return false;
+    return guildPets.hasPetEntitlement(guildId, userId);
+  }
+
+  async function savePet(userId, member, pet) {
+    const store = avatarApi.getAvatarStore();
     const plan = planFor(member);
-    let { avatar } = avatarApi.enforceAvatarPlan(saved, userId, {
-      plan,
-      isBooster: roles.isBooster,
-    });
-    const role = avatarApi.applyRoleCosmetics(avatar, member);
-    avatar = role.avatar;
-    avatar = avatarApi.enforceAvatarPlan(avatar, userId, {
+    const roles = avatarApi.detectRoles(member);
+    let av = store.get(userId);
+    av = { ...av, pet };
+    const gated = avatarApi.enforceAvatarPlan(av, userId, {
       plan,
       isBooster: roles.isBooster,
     }).avatar;
-    if (roles.isBooster) {
-      avatar = avatarApi.applyBoosterGoldenHeadset(avatar, { isBooster: true }).avatar;
-    }
-    avatar._roleSummary = role.summary;
-    avatar._plan = plan;
-    drafts.set(userId, avatar);
+    return avatarApi.ensureBaked(store, userId, gated, {
+      plan,
+      isBooster: roles.isBooster,
+      member,
+    });
   }
-  return drafts.get(userId);
-}
 
-function setDraft(userId, avatar, member = null) {
-  const roles = member ? avatarApi.detectRoles(member) : { isBooster: false };
-  const plan = planFor(member);
-  let av = avatarApi.normalizeAvatar(avatar, userId);
-  av = avatarApi.enforceAvatarPlan(av, userId, {
-    plan,
-    isBooster: roles.isBooster,
-  }).avatar;
-  if (member) {
-    const { avatar: next, summary } = avatarApi.applyRoleCosmetics(av, member);
-    av = next;
-    av._roleSummary = summary;
+  /**
+   * Load saved look, enforce free/paid plan, apply booster headset if eligible.
+   */
+  function getDraft(userId, member) {
+    if (!drafts.has(userId)) {
+      const store = avatarApi.getAvatarStore();
+      const saved = store.get(userId);
+      const roles = avatarApi.detectRoles(member);
+      const plan = planFor(member);
+      let { avatar } = avatarApi.enforceAvatarPlan(saved, userId, {
+        plan,
+        isBooster: roles.isBooster,
+      });
+      const role = avatarApi.applyRoleCosmetics(avatar, member);
+      avatar = role.avatar;
+      avatar = avatarApi.enforceAvatarPlan(avatar, userId, {
+        plan,
+        isBooster: roles.isBooster,
+      }).avatar;
+      if (roles.isBooster) {
+        avatar = avatarApi.applyBoosterGoldenHeadset(avatar, { isBooster: true }).avatar;
+      }
+      avatar._roleSummary = role.summary;
+      avatar._plan = plan;
+      drafts.set(userId, avatar);
+    }
+    return drafts.get(userId);
+  }
+
+  function setDraft(userId, avatar, member = null) {
+    const roles = member ? avatarApi.detectRoles(member) : { isBooster: false };
+    const plan = planFor(member);
+    let av = avatarApi.normalizeAvatar(avatar, userId);
     av = avatarApi.enforceAvatarPlan(av, userId, {
       plan,
       isBooster: roles.isBooster,
     }).avatar;
-    if (roles.isBooster) {
-      av = avatarApi.applyBoosterGoldenHeadset(av, { isBooster: true }).avatar;
+    if (member) {
+      const { avatar: next, summary } = avatarApi.applyRoleCosmetics(av, member);
+      av = next;
+      av._roleSummary = summary;
     }
+    av._plan = plan;
+    drafts.set(userId, av);
+    return av;
   }
-  av._plan = plan;
-  drafts.set(userId, av);
-  return av;
-}
 
-function summarize(av) {
-  if (av.mode === 'premade') {
-    return `Premade **${av.premade}**`
-      + (av.tint?.clothes ? ` · tint ${av.tint.clothes}` : '');
+  function summarize(av) {
+    if (av.mode === 'premade') {
+      return `Premade **${av.premade}**`
+        + (av.tint?.clothes ? ` · tint ${av.tint.clothes}` : '');
+    }
+    const bits = [
+      `body **${av.body}**`,
+      `hair **${av.hair.set}#${av.hair.index}**`,
+      `outfit **${av.outfit.set}#${av.outfit.index}**`,
+    ];
+    if (av.hat?.set === 'headsets') {
+      bits.push('🎧 **golden headset** (Booster)');
+    } else if (av.hat?.set && av.hat.set !== 'none') {
+      bits.push(`hat **${av.hat.set}#${av.hat.index}**`);
+    }
+    if (av.tint?.hair) bits.push(`hair tint ${av.tint.hair}`);
+    if (av.tint?.clothes) bits.push(`clothes tint ${av.tint.clothes}`);
+    if (av.tint?.hat) bits.push(`hat tint ${av.tint.hat}`);
+    if (av.pet?.enabled && av.pet?.kind) bits.push(`🐾 **${av.pet.kind}**`);
+    return bits.join(' · ');
   }
-  const bits = [
-    `body **${av.body}**`,
-    `hair **${av.hair.set}#${av.hair.index}**`,
-    `outfit **${av.outfit.set}#${av.outfit.index}**`,
-  ];
-  if (av.hat?.set === 'headsets') {
-    bits.push('🎧 **golden headset** (Booster)');
-  } else if (av.hat?.set && av.hat.set !== 'none') {
-    bits.push(`hat **${av.hat.set}#${av.hat.index}**`);
-  }
-  if (av.tint?.hair) bits.push(`hair tint ${av.tint.hair}`);
-  if (av.tint?.clothes) bits.push(`clothes tint ${av.tint.clothes}`);
-  if (av.tint?.hat) bits.push(`hat tint ${av.tint.hat}`);
-  return bits.join(' · ');
-}
 
 async function buildPreviewAttachment(userId, av) {
   const buf = await avatarApi.bakePreview(av, 4);
@@ -199,24 +261,26 @@ function selectMenus(userId, av, unlocks, features) {
 
 function buttonRow(userId, features) {
   const uid = String(userId);
-  const row = new ActionRowBuilder().addComponents(
+  // Discord hard limit: 5 buttons per row. Always: Save · Randomize · Reset.
+  const buttons = [
     new ButtonBuilder().setCustomId(`avatar:save:${uid}`).setLabel('Save').setStyle(ButtonStyle.Success),
     new ButtonBuilder().setCustomId(`avatar:random:${uid}`).setLabel('Randomize').setStyle(ButtonStyle.Primary),
-  );
-  if (features.clothes) {
-    row.addComponents(
+  ];
+  // Prefer outfit over tint when both would overflow (max 5 with Reset).
+  if (features.clothes && buttons.length < 4) {
+    buttons.push(
       new ButtonBuilder().setCustomId(`avatar:outfit:${uid}`).setLabel('Next outfit').setStyle(ButtonStyle.Secondary),
     );
   }
-  if (features.hairColor || features.premiumTints) {
-    row.addComponents(
-      new ButtonBuilder().setCustomId(`avatar:tint:${uid}`).setLabel('Hair/clothes color').setStyle(ButtonStyle.Secondary),
+  if ((features.hairColor || features.premiumTints) && buttons.length < 4) {
+    buttons.push(
+      new ButtonBuilder().setCustomId(`avatar:tint:${uid}`).setLabel('Colors').setStyle(ButtonStyle.Secondary),
     );
   }
-  row.addComponents(
+  buttons.push(
     new ButtonBuilder().setCustomId(`avatar:reset:${uid}`).setLabel('Reset').setStyle(ButtonStyle.Danger),
   );
-  return row;
+  return new ActionRowBuilder().addComponents(...buttons.slice(0, 5));
 }
 
 async function closetPayload(userId, member, av) {
@@ -224,34 +288,34 @@ async function closetPayload(userId, member, av) {
   const unlocks = roles.unlocks;
   const features = featuresFor(member);
   const events = avatarApi.getActiveEvents();
-  const eventLine = events.length
-    ? `Events: ${events.map((e) => e.label).join(', ')}`
-    : 'No seasonal events right now';
-  const planLine = features.paid
-    ? `**${features.plan} plan** — hair, clothes, masks, hats unlocked.`
-    : [
-      '**Free plan:** premade characters + skin tones only.',
-      '**Paid:** hair, hair color, clothes, masks, hats & headsets.',
-    ].join('\n');
-  const roleLine = roles.isBooster
-    ? '**Server booster** — golden headset included on free.'
-    : 'Boost this server for a **golden headset** (free perk).';
+  const planValue = features.paid
+    ? `**${features.plan}** — hair, clothes, hats unlocked`
+    : '**Free** — premades + skin tones · Paid unlocks closet layers';
+  const boostValue = roles.isBooster
+    ? 'Golden headset included'
+    : 'Boost this server for a golden headset';
+  const eventsValue = events.length
+    ? events.map((e) => e.label).join(', ')
+    : 'None';
+
+  const color = roles.isBooster ? BRAND.warn : (features.paid ? BRAND.success : BRAND.primary);
   const file = await buildPreviewAttachment(userId, av);
-  const embed = new EmbedBuilder()
-    .setColor(roles.isBooster ? 0xf0c14a : (features.paid ? 0x3dd68c : 0x5865f2))
-    .setTitle('Discord Spaces — Avatar closet')
-    .setDescription([
+  const embed = baseEmbed({
+    color,
+    title: 'Avatar closet',
+    description: [
       summarize(av),
       '',
-      planLine,
-      roleLine,
-      eventLine,
       '_Save to apply on the pixel map._',
-    ].join('\n'))
-    .setImage(`attachment://avatar-${userId}.png`)
-    .setFooter({
-      text: `rev ${av.rev || 1} · ${features.plan} · ${roles.labels.join('/') || 'member'}`,
-    });
+    ].join('\n'),
+    image: `attachment://avatar-${userId}.png`,
+    fields: [
+      { name: 'Plan', value: planValue, inline: true },
+      { name: 'Boost', value: boostValue, inline: true },
+      { name: 'Events', value: eventsValue, inline: true },
+    ],
+    footer: brandFooter(`rev ${av.rev || 1} · ${features.plan} · ${roles.labels.join('/') || 'member'}`),
+  });
 
   const components = [
     ...selectMenus(userId, av, unlocks, features),
@@ -265,10 +329,189 @@ async function closetPayload(userId, member, av) {
   };
 }
 
-function createAvatarModule() {
   const store = avatarApi.getAvatarStore();
 
   function register(registry) {
+    registry.register({
+      name: 'pet',
+      description: 'Companion pet for this server — buy, gift, equip, or staff grant',
+      aliases: ['companion'],
+      module: 'avatar',
+      options: [
+        {
+          type: 3,
+          name: 'action',
+          description: 'cat | dog | off | status | buy | gift | grant | revoke',
+          required: false,
+        },
+        {
+          type: 6,
+          name: 'user',
+          description: 'Member for gift / grant / revoke / buy-for',
+          required: false,
+        },
+      ],
+      async run(ctx) {
+        const guildId = ctx.guild?.id;
+        if (!guildId) {
+          return ctx.reply({ content: 'Pets are per-server — use this in a guild.', ephemeral: true });
+        }
+
+        const action = String(
+          ctx.getString?.('action') || ctx.args?.[0] || 'status',
+        ).toLowerCase();
+        const mention = ctx.getUser?.('user')
+          || ctx.message?.mentions?.users?.first?.()
+          || null;
+
+        // --- buy ---
+        if (action === 'buy') {
+          if (!guildBilling?.createPetCheckout) {
+            return ctx.reply({ content: 'Pet checkout is not configured yet.', ephemeral: true });
+          }
+          const beneficiary = mention?.id || ctx.user.id;
+          const result = await guildBilling.createPetCheckout({
+            guildId,
+            discordUserId: ctx.user.id,
+            giftToUserId: beneficiary !== ctx.user.id ? beneficiary : null,
+          });
+          if (!result.ok || !result.url) {
+            const hint = result.error === 'pet_price_not_configured'
+              ? 'Ask the host to set `STRIPE_PRICE_PET`.'
+              : `Could not start checkout (${result.error || 'error'}).`;
+            return ctx.reply({ content: hint, ephemeral: true });
+          }
+          const forWho = beneficiary === ctx.user.id ? 'yourself' : `<@${beneficiary}>`;
+          return ctx.reply({
+            content: `Checkout for a pet in **this server** (for ${forWho}):\n${result.url}`,
+            ephemeral: true,
+          });
+        }
+
+        // --- gift (transfer entitlement) ---
+        if (action === 'gift') {
+          if (!mention) {
+            return ctx.reply({ content: 'Usage: `,pet gift @member`', ephemeral: true });
+          }
+          if (!guildPets?.giftPet) {
+            return ctx.reply({ content: 'Pet entitlements unavailable.', ephemeral: true });
+          }
+          const result = await guildPets.giftPet({
+            guildId,
+            fromUserId: ctx.user.id,
+            toUserId: mention.id,
+          });
+          if (!result.ok) {
+            const msg = {
+              no_entitlement: 'You do not have a pet entitlement to gift in this server.',
+              target_has_pet: 'They already have a pet here.',
+              self_gift: 'You already own it.',
+            }[result.error] || `Gift failed (${result.error}).`;
+            return ctx.reply({ content: msg, ephemeral: true });
+          }
+          await savePet(ctx.user.id, ctx.member, { kind: null, enabled: false });
+          drafts.delete(ctx.user.id);
+          return ctx.reply(`Gifted your pet entitlement to <@${mention.id}> in this server.`);
+        }
+
+        // --- grant (Pro pool) ---
+        if (action === 'grant') {
+          if (!canManagePetGrants(ctx.member)) {
+            return ctx.reply({ content: 'Need **Manage Server** to grant Pro pets.', ephemeral: true });
+          }
+          if (!mention) {
+            const rem = guildPets?.getGrantRemaining
+              ? await guildPets.getGrantRemaining(guildId)
+              : '?';
+            return ctx.reply({
+              content: `Usage: \`,pet grant @member\`\nFree Pro grants left: **${rem}/3**`,
+              ephemeral: true,
+            });
+          }
+          const result = await guildPets.assignProGrant({
+            guildId,
+            granterId: ctx.user.id,
+            toUserId: mention.id,
+          });
+          if (!result.ok) {
+            const msg = {
+              guild_not_pro: 'This server needs an active **Pro** plan for free pet grants.',
+              target_has_pet: 'They already have a pet here.',
+              no_grants_left: 'No Pro pet grants left (3/3 used). Revoke one with `,pet revoke @user`.',
+            }[result.error] || `Grant failed (${result.error}).`;
+            return ctx.reply({ content: msg, ephemeral: true });
+          }
+          return ctx.reply(
+            `Granted a Pro pet to <@${mention.id}>. They can \`,pet cat\` or \`,pet dog\`. Grants left: **${result.remaining}/3**.`,
+          );
+        }
+
+        // --- revoke ---
+        if (action === 'revoke') {
+          if (!canManagePetGrants(ctx.member)) {
+            return ctx.reply({ content: 'Need **Manage Server** to revoke Pro grants.', ephemeral: true });
+          }
+          if (!mention) {
+            return ctx.reply({ content: 'Usage: `,pet revoke @member`', ephemeral: true });
+          }
+          const result = await guildPets.revokeProGrant({
+            guildId,
+            userId: mention.id,
+          });
+          if (!result.ok) {
+            const msg = {
+              no_entitlement: 'They have no pet entitlement.',
+              not_pro_grant: 'That pet was purchased/gifted — only Pro grants can be revoked.',
+            }[result.error] || `Revoke failed (${result.error}).`;
+            return ctx.reply({ content: msg, ephemeral: true });
+          }
+          await savePet(mention.id, mention, { kind: null, enabled: false }).catch(() => {});
+          return ctx.reply(`Revoked Pro pet grant from <@${mention.id}>. Grants left: **${result.remaining}/3**.`);
+        }
+
+        const entitled = await userHasPet(guildId, ctx.user.id);
+
+        if (action === 'status' || action === 'show') {
+          const rem = guildPets?.getGrantRemaining && canManagePetGrants(ctx.member)
+            ? await guildPets.getGrantRemaining(guildId)
+            : null;
+          const av = store.get(ctx.user.id);
+          const pet = av.pet || { kind: null, enabled: false };
+          const lines = [
+            entitled
+              ? (pet.enabled && pet.kind
+                ? `🐾 Equipped **${pet.kind}** — follows you on the map in VC.`
+                : 'You have a pet entitlement — `,pet cat` or `,pet dog` to equip.')
+              : petLockedReply(),
+          ];
+          if (rem != null) lines.push(`Staff: Pro grants remaining **${rem}/3**.`);
+          return ctx.reply({ content: lines.join('\n'), ephemeral: !entitled });
+        }
+
+        if (!entitled) {
+          return ctx.reply({ content: petLockedReply(), ephemeral: true });
+        }
+
+        if (action === 'off' || action === 'none' || action === 'disable') {
+          await savePet(ctx.user.id, ctx.member, { kind: null, enabled: false });
+          drafts.delete(ctx.user.id);
+          return ctx.reply('Companion pet disabled (you still keep the entitlement).');
+        }
+
+        if (action === 'cat' || action === 'dog') {
+          await savePet(ctx.user.id, ctx.member, { kind: action, enabled: true });
+          drafts.delete(ctx.user.id);
+          return ctx.reply(
+            `🐾 Equipped a **${action}**! Join a voice channel and open the Spaces map — it'll follow you.`,
+          );
+        }
+
+        return ctx.reply(
+          'Usage: `,pet cat|dog|off|status` · `,pet buy` · `,pet gift @user` · `,pet grant @user` · `,pet revoke @user`',
+        );
+      },
+    });
+
     registry.register({
       name: 'avatar',
       description: 'Pixel map look — closet, skin, hair, clothes (boosters get golden headset)',

@@ -414,8 +414,8 @@ def main() -> int:
         f"Analysis complete. events={data.get('entries_analyzed')} "
         f"facts={len(facts)} source={data.get('source')}"
     )
-    data["generatedAt"] = data.get("generatedAt") or utcnow_iso()
-    data["jobRanAt"] = utcnow_iso()
+    data["generatedAt"] = utcnow_iso()
+    data["jobRanAt"] = data["generatedAt"]
 
     queue_path = DATA_DIR / "grok-consult-queue.jsonl"
     data, success_facts = audit_remediation(data, queue_path)

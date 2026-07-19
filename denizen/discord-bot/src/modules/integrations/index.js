@@ -1,10 +1,24 @@
 'use strict';
 
 /**
- * Platform integrations — Last.fm live + social notify stubs that activate with keys.
+ * Platform integrations — Last.fm live API + social notify (YouTube live; Twitter/Spotify reserved).
+ *
+ * Env:
+ *   LASTFM_API_KEY — https://www.last.fm/api/account/create
+ *   YOUTUBE_API_KEY — YouTube Data API for upload polls
+ *   FORTNITE_API_KEY — fortnite-api.com
  */
 
 const { canRunCommand } = require('../../core/permissions');
+const { infoEmbed, dangerEmbed, baseEmbed, BRAND } = require('../../core/ui-kit');
+
+function lastfmSetupHelp() {
+  return [
+    'Get an API key: https://www.last.fm/api/account/create',
+    'Set `LASTFM_API_KEY` on the bot host, then restart.',
+    'Link your account: `,lastfm set <username>`',
+  ].join('\n');
+}
 
 function createIntegrations(deps) {
   const { config, hub } = deps;
@@ -51,30 +65,37 @@ function createIntegrations(deps) {
           return ctx.reply('Need Manage Guild.');
         }
         const action = (ctx.args?.[0] || 'status').toLowerCase();
-        const keys = {
-          twitter: !!process.env.TWITTER_BEARER_TOKEN,
-          youtube: !!process.env.YOUTUBE_API_KEY,
-          fortnite: !!process.env.FORTNITE_API_KEY,
-          lastfm: !!process.env.LASTFM_API_KEY,
-          spotify: !!(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET),
-        };
         if (action === 'bind') {
           const platform = (ctx.args?.[1] || '').toLowerCase();
           const handle = ctx.args?.[2];
           if (!platform || !handle) {
-            return ctx.reply('Usage: ,social bind youtube|twitter <handle>  (posts to this channel)');
+            return ctx.reply('Usage: `,social bind youtube <channelId>` (Twitter notify is not available yet)');
+          }
+          if (platform === 'twitter' || platform === 'x') {
+            return ctx.reply(
+              'Twitter/X notify is **not available yet** — bind accepted nowhere. Use `,social bind youtube <channelId>` for live polls.',
+            );
+          }
+          if (platform === 'spotify') {
+            return ctx.reply('Spotify notify is **not available yet**. Keys are reserved for a future release.');
+          }
+          if (platform !== 'youtube') {
+            return ctx.reply('Supported bind today: **youtube**. Twitter/Spotify are not live.');
+          }
+          if (!process.env.YOUTUBE_API_KEY) {
+            return ctx.reply('Set `YOUTUBE_API_KEY` before binding YouTube.');
           }
           config.update(ctx.guild.id, (c) => {
             c.integrations.notify = c.integrations.notify || [];
             c.integrations.notify.push({
-              platform,
+              platform: 'youtube',
               handle,
               channelId: ctx.channel.id,
               lastId: null,
             });
             return c;
           });
-          return ctx.reply(`Bound **${platform}/${handle}** → ${ctx.channel}. Polling when API keys present.`);
+          return ctx.reply(`Bound **youtube/${handle}** → ${ctx.channel}. Polling every ~15m.`);
         }
         if (action === 'list') {
           const list = config.get(ctx.guild.id).integrations.notify || [];
@@ -82,8 +103,19 @@ function createIntegrations(deps) {
             ? list.map((n, i) => `${i + 1}. ${n.platform}/${n.handle} → <#${n.channelId}>`).join('\n')
             : 'No binds. `,social bind youtube <channelId>`');
         }
-        const lines = Object.entries(keys).map(([k, v]) => `${v ? '✅' : '❌'} ${k}`);
-        return ctx.reply(`**Integration keys**\n${lines.join('\n')}\n\`,social bind|list\``);
+        const live = {
+          youtube: !!process.env.YOUTUBE_API_KEY,
+          lastfm: !!process.env.LASTFM_API_KEY,
+          fortnite: !!process.env.FORTNITE_API_KEY,
+        };
+        const lines = [
+          `${live.youtube ? '✅' : '❌'} youtube — live poll when keyed + bound`,
+          `${live.lastfm ? '✅' : '❌'} lastfm — \`,lastfm\` / WhoKnows`,
+          `${live.fortnite ? '✅' : '❌'} fortnite — \`,fortnite\``,
+          '⏳ twitter — not available yet (no poller)',
+          '⏳ spotify — not available yet',
+        ];
+        return ctx.reply(`**Integrations**\n${lines.join('\n')}\n\`,social bind youtube <id>\` · \`,social list\``);
       },
     });
 
@@ -115,7 +147,15 @@ function createIntegrations(deps) {
             c.integrations.lastfm.users[ctx.user.id] = username;
             return c;
           });
-          return ctx.reply(`Last.fm linked: **${username}**`);
+          const keyed = !!process.env.LASTFM_API_KEY;
+          return ctx.reply({
+            embeds: [infoEmbed(
+              'Last.fm linked',
+              keyed
+                ? `Linked as **${username}**. Try \`,lastfm\` / \`,npfm\`.`
+                : `Linked as **${username}**.\n\n_API key still missing — scrobbles won’t load until you set it:_\n${lastfmSetupHelp()}`,
+            )],
+          });
         }
         if (action === 'remove') {
           config.update(ctx.guild.id, (c) => {
@@ -124,13 +164,26 @@ function createIntegrations(deps) {
           });
           return ctx.reply('Last.fm unlinked.');
         }
+
+        // collage is a deep-link only — no API key required
+        const needsKey = !['collage', 'chart'].includes(action);
+        if (needsKey && !process.env.LASTFM_API_KEY) {
+          return ctx.reply({
+            embeds: [dangerEmbed('Last.fm not configured', lastfmSetupHelp())],
+          });
+        }
+
         const stored = config.get(ctx.guild.id).integrations.lastfm?.users?.[ctx.user.id];
         const mentioned = ctx.message?.mentions?.users?.first?.();
         const otherStored = mentioned
           ? config.get(ctx.guild.id).integrations.lastfm?.users?.[mentioned.id]
           : null;
+        const actionIsVerb = [
+          'np', 'artists', 'tracks', 'recent', 'top', 'collage', 'chart',
+          'plays', 'playcount', 'whoknows', 'wk',
+        ].includes(action);
         const username = ctx.getString?.('username')
-          || (['np', 'artists', 'tracks', 'recent', 'top'].includes(action) ? null : action)
+          || (actionIsVerb ? null : action)
           || otherStored
           || stored;
         if (!username) return ctx.reply('Set username first: `,lastfm set <name>`');
@@ -140,28 +193,39 @@ function createIntegrations(deps) {
             const data = await lastfmTop(username, 'user.gettopartists');
             const list = data?.topartists?.artist || [];
             if (!list.length) return ctx.reply('No top artists.');
-            return ctx.reply(
-              `**Top artists (7d)** for **${username}**\n${list.map((a, i) => `${i + 1}. ${a.name} (${a.playcount})`).join('\n')}`,
-            );
+            return ctx.reply({
+              embeds: [baseEmbed({
+                color: BRAND.primary,
+                title: `Top artists (7d) · ${username}`,
+                description: list.map((a, i) => `\`${i + 1}.\` **${a.name}** — ${a.playcount} plays`).join('\n'),
+              })],
+            });
           }
           if (action === 'tracks') {
             const data = await lastfmTop(username, 'user.gettoptracks');
             const list = data?.toptracks?.track || [];
             if (!list.length) return ctx.reply('No top tracks.');
-            return ctx.reply(
-              `**Top tracks (7d)** for **${username}**\n${list.map((t, i) => `${i + 1}. ${t.name} — ${t.artist?.name || t.artist} (${t.playcount})`).join('\n')}`,
-            );
+            return ctx.reply({
+              embeds: [baseEmbed({
+                color: BRAND.primary,
+                title: `Top tracks (7d) · ${username}`,
+                description: list.map((t, i) => `\`${i + 1}.\` **${t.name}** — ${t.artist?.name || t.artist} (${t.playcount})`).join('\n'),
+              })],
+            });
           }
           if (action === 'recent') {
             const key = process.env.LASTFM_API_KEY;
-            if (!key) throw new Error('LASTFM_API_KEY not set');
             const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(username)}&api_key=${key}&format=json&limit=5`;
             const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
             const data = await r.json();
             const list = data?.recenttracks?.track || [];
-            return ctx.reply(
-              `**Recent** for **${username}**\n${list.map((t) => `• ${t.name} — ${t.artist?.['#text'] || t.artist}`).join('\n')}`,
-            );
+            return ctx.reply({
+              embeds: [baseEmbed({
+                color: BRAND.info,
+                title: `Recent · ${username}`,
+                description: list.map((t) => `• **${t.name}** — ${t.artist?.['#text'] || t.artist}`).join('\n') || '_none_',
+              })],
+            });
           }
           if (action === 'collage' || action === 'chart') {
             // Third-party collage services (no API key required for link)
@@ -172,40 +236,91 @@ function createIntegrations(deps) {
           }
           if (action === 'plays' || action === 'playcount') {
             const key = process.env.LASTFM_API_KEY;
-            if (!key) throw new Error('LASTFM_API_KEY not set');
             const url = `https://ws.audioscrobbler.com/2.0/?method=user.getinfo&user=${encodeURIComponent(username)}&api_key=${key}&format=json`;
             const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
             const data = await r.json();
             const u = data?.user;
             if (!u) return ctx.reply('User not found.');
-            return ctx.reply(
-              `**${u.name}** — ${u.playcount} scrobbles · ${u.artist_count} artists · registered <t:${u.registered?.unixtime || 0}:D>`,
-            );
+            return ctx.reply({
+              embeds: [baseEmbed({
+                color: BRAND.primary,
+                title: u.name,
+                description: `**${u.playcount}** scrobbles · **${u.artist_count}** artists`,
+                footerExtra: u.registered?.unixtime
+                  ? `registered · ${new Date(Number(u.registered.unixtime) * 1000).toISOString().slice(0, 10)}`
+                  : 'Last.fm',
+              })],
+            });
           }
           if (action === 'whoknows' || action === 'wk') {
-            const artist = ctx.args?.slice(1).join(' ') || ctx.args?.slice(0).join(' ');
-            if (!artist || artist === 'whoknows' || artist === 'wk') {
-              return ctx.reply('Usage: ,lastfm whoknows <artist> (needs LASTFM_API_KEY; shows your plays)');
+            const artist = (ctx.args || [])
+              .filter((a, i) => !(i === 0 && /^(whoknows|wk)$/i.test(a)))
+              .join(' ')
+              .trim();
+            if (!artist) {
+              return ctx.reply('Usage: `,lastfm whoknows <artist>` — guild leaderboard of linked Last.fm users');
             }
             const key = process.env.LASTFM_API_KEY;
-            if (!key) throw new Error('LASTFM_API_KEY not set');
-            const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(artist)}&username=${encodeURIComponent(username)}&api_key=${key}&format=json`;
-            const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-            const data = await r.json();
-            const plays = data?.artist?.stats?.userplaycount;
-            return ctx.reply(
-              plays != null
-                ? `**${username}** has **${plays}** plays of **${data.artist.name}**`
-                : `No play data for **${artist}**.`,
-            );
+            const linked = config.get(ctx.guild.id).integrations.lastfm?.users || {};
+            const entries = Object.entries(linked);
+            if (!entries.length) {
+              return ctx.reply('No linked Last.fm users yet. `,lastfm set <username>`');
+            }
+            const rows = [];
+            await Promise.all(entries.map(async ([discordId, lfmUser]) => {
+              try {
+                const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=${encodeURIComponent(artist)}&username=${encodeURIComponent(lfmUser)}&api_key=${key}&format=json`;
+                const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+                const data = await r.json();
+                const plays = Number(data?.artist?.stats?.userplaycount || 0);
+                const name = data?.artist?.name || artist;
+                if (plays > 0) {
+                  rows.push({ discordId, lfmUser, plays, name });
+                }
+              } catch (_) { /* skip user */ }
+            }));
+            rows.sort((a, b) => b.plays - a.plays);
+            if (!rows.length) {
+              return ctx.reply(`Nobody in this server has plays of **${artist}** (among linked Last.fm users).`);
+            }
+            const label = rows[0].name || artist;
+            const lines = rows.slice(0, 15).map((r, i) => {
+              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `\`${i + 1}.\``;
+              return `${medal} <@${r.discordId}> (**${r.lfmUser}**) — **${r.plays}** plays`;
+            });
+            return ctx.reply({
+              embeds: [baseEmbed({
+                color: BRAND.primary,
+                title: `WhoKnows — ${label}`,
+                description: lines.join('\n'),
+              })],
+            });
           }
           const t = await lastfmNowPlaying(username);
-          const status = t.now ? '🎵 Now playing' : '🎧 Last played';
-          return ctx.reply(
-            `${status} for **${username}**\n**${t.name}** — ${t.artist}${t.album ? ` (${t.album})` : ''}${t.url ? `\n${t.url}` : ''}`,
-          );
+          return ctx.reply({
+            embeds: [baseEmbed({
+              color: BRAND.primary,
+              author: { name: t.now ? '♪ Now playing' : '♪ Last played' },
+              title: t.name.slice(0, 200),
+              url: t.url && String(t.url).startsWith('http') ? t.url : undefined,
+              description: [
+                `**${t.artist}**`,
+                t.album ? `_${t.album}_` : null,
+              ].filter(Boolean).join('\n'),
+              thumbnail: t.image || undefined,
+              footerExtra: username,
+            })],
+          });
         } catch (err) {
-          return ctx.reply(`Last.fm error: ${err.message}`);
+          const msg = String(err.message || err);
+          if (/LASTFM_API_KEY/i.test(msg)) {
+            return ctx.reply({
+              embeds: [dangerEmbed('Last.fm not configured', lastfmSetupHelp())],
+            });
+          }
+          return ctx.reply({
+            embeds: [dangerEmbed('Last.fm error', msg)],
+          });
         }
       },
     });
