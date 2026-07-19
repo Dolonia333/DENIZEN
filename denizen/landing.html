@@ -338,11 +338,23 @@
     #boot .skip {
       position: absolute;
       bottom: 24px;
-      font-size: 10px;
-      color: #475569;
+      font-size: 12px;
+      color: #94a3b8;
       letter-spacing: 0.15em;
       opacity: 0;
       animation: boot-line 0.3s 1.2s forwards;
+      padding: 14px 20px;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #boot .skip::before {
+      content: "";
+      position: absolute;
+      inset: 0;
     }
     @keyframes boot-line {
       from { opacity: 0; transform: translateY(6px); }
@@ -3412,8 +3424,11 @@
     // because DENIZEN never appeared (boot hid at 2.4s while title fades in at 2.55s).
     try { sessionStorage.removeItem('denizen-landing-boot'); } catch (_) {}
     startGlobe({ animate: !reduceMotion });
-    // 4s: one full globe turn (~2.4s) + DENIZEN title (starts 2.55s) before fade-out
-    setTimeout(skipBoot, reduceMotion ? 1600 : 4000);
+    // 4s: one full globe turn (~2.4s) + DENIZEN title (starts 2.55s) before fade-out.
+    // Shorter on small screens so mobile visitors reach the page faster.
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const bootMs = reduceMotion ? 1600 : (isMobile ? 2600 : 4000);
+    setTimeout(skipBoot, bootMs);
     boot?.addEventListener('click', skipBoot);
 
     // ── split slider (follows cursor over the compare stage) ──
