@@ -128,7 +128,8 @@ function tierForKind(kind, loopConfig = {}) {
   const k = String(kind || 'chat').toLowerCase();
   if (loopConfig[k]?.tier) return loopConfig[k].tier;
   if (k === 'presence' || k === 'idle' || k === 'ambient') return 'fast';
-  if (k === 'code' || k === 'coding-agent' || k === 'director') return 'heavy';
+  if (k === 'code' || k === 'coding-agent') return 'heavy';
+  if (k === 'director') return 'main';
   if (k === 'think' || k === 'decision' || k === 'reasoning') return 'main';
   if (k === 'skill_args' || k === 'skill-args') return 'fast';
   return 'main';

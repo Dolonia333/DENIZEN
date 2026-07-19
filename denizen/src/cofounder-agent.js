@@ -562,7 +562,7 @@ YOUR JOB — create a LIVING office:
       || (() => { try { return require('./denizen-harness').getActiveHarness?.(); } catch (_) { return null; } })();
     if (harness?.complete) {
       return harness.complete({
-        tier: 'heavy',
+        tier: 'main',
         kind: 'decision',
         npc: 'Abby',
         systemPrompt: this._getSystemPrompt(),
