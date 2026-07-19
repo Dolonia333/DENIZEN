@@ -155,6 +155,8 @@
     // buried under a long scroll of utility apps / old localStorage layouts).
     { id: 'discordmap', tabler: 'brand-discord', icon: '🗺️', label: 'Discord', type: 'navigate', url: '/discord-map/', c: ['#5865f2', '#3c45c0'],
       available: () => true },
+    { id: 'discordcmds', tabler: 'terminal-2', icon: '⌨️', label: 'Commands', type: 'navigate', url: '/discord-commands/', c: ['#a3e635', '#4d7c0f'],
+      available: () => true },
     { id: 'crm', tabler: 'address-book', icon: '📇', label: 'CRM', type: 'navigate', url: '/crm/', c: ['#f0b429', '#b45309'],
       available: () => true },
     { id: 'market', tabler: 'chart-line', icon: '📈', label: 'Roki Market', type: 'panel', panel: '#denizen-market-panel',
@@ -246,8 +248,8 @@
   const MAX_DOCK_APPS = 4;
   const DEFAULT_DOCK_IDS = ['chat', 'voice', 'workflow', 'profile'];
   /** Prefer these near the top of the home grid (first page / less scroll). */
-  const PRIORITY_GRID_IDS = ['discordmap', 'crm', 'tour', 'npcteam', 'market', 'station', 'compute'];
-  const LAYOUT_VERSION = 2;
+  const PRIORITY_GRID_IDS = ['discordmap', 'discordcmds', 'crm', 'tour', 'npcteam', 'market', 'station', 'compute'];
+  const LAYOUT_VERSION = 3;
   const FOLDER_PREFIX = 'folder:';
   const OFFICE_GUIDE_STEPS = [
     {

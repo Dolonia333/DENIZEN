@@ -314,17 +314,21 @@ function createCommunity(deps) {
       name: 'levels',
       description: 'Toggle leveling / rank / rewards / leaderboard',
       module: 'community',
+      options: [
+        { name: 'action', description: 'rank|lb|reward|on|off|…', type: 3, required: false },
+        { name: 'value', description: 'Level number or extra args', type: 3, required: false },
+      ],
       async run(ctx) {
-        const action = (ctx.args?.[0] || 'rank').toLowerCase();
+        const action = (ctx.getString?.('action') || ctx.args?.[0] || 'rank').toLowerCase();
         if (action === 'on' || action === 'off') {
           if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
           config.update(ctx.guild.id, (c) => { c.community.levels.enabled = action === 'on'; return c; });
           return ctx.reply(`Levels ${action}.`);
         }
-        if (action === 'reward') {
+        if (action === 'reward' || action === 'rewards') {
           if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');
-          const level = Number(ctx.args?.[1]);
-          const role = ctx.message?.mentions?.roles?.first?.();
+          const level = Number(ctx.getString?.('value') || ctx.args?.[1]);
+          const role = ctx.message?.mentions?.roles?.first?.() || ctx.interaction?.options?.getRole?.('role');
           if (!level || !role) return ctx.reply('Usage: ,levels reward <level> @role');
           config.update(ctx.guild.id, (c) => {
             c.community.levels.rewards = c.community.levels.rewards || [];
@@ -515,6 +519,7 @@ function createCommunity(deps) {
     registry.register({
       name: 'vanityrole',
       description: 'Role for members with server vanity in status',
+      aliases: ['vanity'],
       module: 'community',
       permission: 'ManageRoles',
       async run(ctx) {
@@ -542,6 +547,7 @@ function createCommunity(deps) {
       name: 'giveaway',
       description: 'Start a simple giveaway',
       module: 'community',
+      public: true,
       permission: 'ManageGuild',
       async run(ctx) {
         if (!canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return ctx.reply('Need Manage Guild.');

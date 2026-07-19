@@ -969,6 +969,22 @@
     NPC_SHEETS.push({ key: `npc_m${i}`, path: `${PACK}/NPCs/Male/NPC ${i}.png` });
     NPC_SHEETS.push({ key: `npc_f${i}`, path: `${PACK}/NPCs/Female/NPC ${i}.png` });
   }
+  /** Hospital expansion staff — same 8×14 / 32×32 grid as premades. */
+  const HOSP_NURSE_SHEETS = [
+    { key: 'hospNurseBlueF1', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_1.png` },
+    { key: 'hospNurseBlueF2', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_2.png` },
+    { key: 'hospNurseBlueM1', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_male_1.png` },
+    { key: 'hospNurseGreenF1', path: `${EXP}/Hospital/NPCs/npc_nurse_green_female_1.png` },
+    { key: 'hospNurseGreenM1', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_1.png` },
+    { key: 'hospNurseGreenM2', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_2.png` },
+  ];
+  const HOSP_SURGEON_SHEETS = [
+    { key: 'hospSurgeonM1', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_1.png` },
+    { key: 'hospSurgeonM2', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_2.png` },
+    { key: 'hospSurgeonF1', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_1.png` },
+    { key: 'hospSurgeonF2', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_2.png` },
+  ];
+  const HOSP_NPC_SHEETS = [...HOSP_NURSE_SHEETS, ...HOSP_SURGEON_SHEETS];
   // Sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
   // loading at half-width used to slice each character in two down the middle.
   const NPC_FRAME = { w: 32, h: 32 };
@@ -1280,10 +1296,8 @@
       roofKey: 'roofBlueC', plaqueKey: 'uiTabBlue',
       doorFamily: 'grey',
       climbMode: 'elev',
-      // Elevator lane left (shaft at 36). Layout logic: supply storage sits
-      // by the lane, the operating table + light are the room's centerpiece
-      // with the saline drip at its head, records computer against the far
-      // wall; the ward runs bed → drip → bed with the nurse making rounds.
+      // Elevator lane left (shaft at 36). OR: surgeon stands at the table.
+      // Ward: patients in beds + nurses at bedside (not sitting on mattresses).
       stairsDx: 36,
       recipes: [
         () => ({
@@ -1293,7 +1307,8 @@
             ['w', ['monitorMedWall', 'monitorMedWallBlack'], 185, 6], ['w', 'posterMed', 240, 6],
             ['f', ['storageMed', 'storageMedBlack'], 70, 1, 0],
             ['f', ['tableSurgery', 'ctScanner'], 130, 1, 0], ['f', 'salineStand', 160, 1, 0],
-            ['npc', 'hospital-surgeon', 102], ['f', ['computerMed', 'computerMedBlack'], 215, 1, 0],
+            ['npc', 'hospital-surgeon', 102, { role: 'surgeon', attendDx: 130, side: 'left' }],
+            ['f', ['computerMed', 'computerMedBlack'], 215, 1, 0],
           ],
         }),
         () => ({
@@ -1301,8 +1316,13 @@
           items: [
             ['glow', 0xc8f0e0, 0.08],
             ['w', 'hospLogo', 160, 6], ['w', 'posterMed', 82, 8],
-            ['f', 'bedHosp', 78, 1, 0], ['f', 'salineStand', 105, 1, 0], ['f', 'bedHosp', 138, 1, 0],
-            ['npc', 'hospital-nurse', 172],
+            ['f', 'bedHosp', 78, 1, 0],
+            ['npc', 'hospital-patient-a', 78, { role: 'patient', bedDx: 78 }],
+            ['npc', 'hospital-nurse-a', 56, { role: 'nurse', attendDx: 78, side: 'left' }],
+            ['f', 'salineStand', 105, 1, 0],
+            ['f', 'bedHosp', 138, 1, 0],
+            ['npc', 'hospital-patient-b', 138, { role: 'patient', bedDx: 138 }],
+            ['npc', 'hospital-nurse-b', 160, { role: 'nurse', attendDx: 138, side: 'right' }],
             ['f', ['computerMed', 'computerMedBlack'], 205, 1, 0],
             ['f', ['storageMed', 'storageMedBlack'], 238, 1, 0],
             ['f', 'floraFernFull', 118, 1, 0],
@@ -1515,6 +1535,7 @@
       Object.entries(ASSETS).forEach(([k, p]) => this.load.image(k, p));
       // 30 pre-made NPC sheets (16x32 frames): row 0 walk, row 1 idle.
       NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
+      HOSP_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       // Street pets — 32x32 frames (Paws & Whiskers free packs).
       PET_SHEETS.forEach((p) => this.load.spritesheet(p.key, p.path, {
         frameWidth: PET_FRAME,
@@ -1591,7 +1612,8 @@
       this.enterCooldown = 0;
       this._sitting = null; // { x, floorY, kind } while seated/lying
       this._sceneMinY = 0; // tallest building's roof, tracked as buildings draw
-      this.decorNpcQueue = []; // [sheetKey, x, floorY] queued by themed rooms, flushed after layout
+      this.decorNpcQueue = []; // [seed, x, floorY, roomKey, opts?] queued by themed rooms
+      this.hospitalRoomKeys = new Set(); // ch_* rooms built with THEME_KITS.hospital
       this._themeRR = 0; // round-robin index for THEME_ROTATION_POOL
       this._missingAssets = new Set();
       this.seats = []; // interactable seats/beds, auto-registered by furn()
@@ -1623,7 +1645,8 @@
         this.flushDecorNpcQueue();
         this.seedFoodOnAllTables();
         this.buildPetCellTextures();
-        // BlockLife neighbors + street decor roamers disabled — Discord presence only.
+        // Anonymous sidewalk cast only — BlockLife named residents stay off (Discord presence wins).
+        this.spawnDecorNpcs();
         this.startAmbientLoop();
         this.startPresenceLoop();
         this.setupPlayer();
@@ -2243,10 +2266,13 @@
           this.wallDecor(k, x0 + dx, y0 + dyTop, 22, wsc);
           placedWall.push({ x: x0 + dx, halfW: hw });
         } else if (kind === 'npc') {
-          const [, key, dx] = it;
+          const [, key, dx, opts] = it;
           const x = x0 + dx;
           if (Math.abs(x - clearX) < clearR) return;
-          this.decorNpcQueue.push([key, x, floorY, floorId]);
+          const roleOpts = opts && typeof opts === 'object' ? { ...opts } : null;
+          if (roleOpts?.bedDx != null) roleOpts.bedWorldX = x0 + roleOpts.bedDx;
+          if (roleOpts?.attendDx != null) roleOpts.attendWorldX = x0 + roleOpts.attendDx;
+          this.decorNpcQueue.push([key, x, floorY, floorId, roleOpts]);
         } else if (kind === 'glow') {
           const [, color, alpha] = it;
           const glow = this.add.rectangle(x0 + roomW / 2, y0 + room.h / 2, roomW - 16, room.h - 12, color, alpha).setDepth(21);
@@ -2284,6 +2310,10 @@
           stairsDx: kit.stairsDx,
         };
       });
+      if (theme === 'hospital') {
+        if (!this.hospitalRoomKeys) this.hospitalRoomKeys = new Set();
+        channels.forEach((ch) => this.hospitalRoomKeys.add(chKey(ch.id)));
+      }
       const b = this.drawThemeBuilding({
         left,
         bw: kit.bw,
@@ -2450,31 +2480,66 @@
     }
 
     /**
-     * Spawn every queued themed-room "staff member" using the same full-body
-     * 30-character NPC_SHEETS cast as the player and street crowd (proper
-     * walk/idle anims, no mismatched art style). Each queue entry carries a
-     * seed string (not a sprite key) so the same room always gets the same
-     * character across reloads, while different rooms get different faces.
+     * Spawn every queued themed-room "staff member". Hospital recipes carry
+     * role opts so nurses stand at bedside and patients lie in beds — they
+     * must not all grab the nearest mattress via staySeated.
      */
     flushDecorNpcQueue() {
+      const spawned = [];
       for (const entry of this.decorNpcQueue) {
-        const [seed, x, floorY, roomKey] = entry;
+        const [seed, x, floorY, roomKey, opts] = entry;
         const sheet = this.npcSheetFor(seed);
-        this.spawnChar(x, floorY, sheet, `${sheet}_idle`, null, 31, {
+        const sp = this.spawnChar(x, floorY, sheet, `${sheet}_idle`, null, 31, {
           roomKey: roomKey || null,
           mode: 'life',
         });
+        const actor = (this.ambientActors || []).find((a) => a.sprite === sp);
+        if (actor) {
+          actor.role = opts?.role || null;
+          actor.hospOpts = opts || null;
+          actor.seedKey = seed;
+          if (actor.role === 'patient') actor.staySeated = true;
+          if (actor.role === 'nurse' || actor.role === 'surgeon') {
+            actor.staySeated = false;
+            actor.mode = 'life';
+          }
+          spawned.push(actor);
+        }
       }
       this.decorNpcQueue = [];
-      // Seat room staff on nearby furniture — static decor, not street roamers.
-      this.time.delayedCall(200, () => {
-        for (const actor of this.ambientActors || []) {
-          if (!actor.roomKey || actor.seated || actor.mode === 'stroll') continue;
+
+      this.time.delayedCall(220, () => {
+        for (const actor of spawned) {
+          if (!actor?.sprite?.active) continue;
+          const role = actor.role;
+          if (role === 'patient') {
+            const bed = this.findHospitalBedNear(
+              actor.roomKey,
+              actor.hospOpts?.bedWorldX ?? actor.sprite.x,
+              { allowSurgery: false },
+            );
+            if (bed && !bed.claimedBy) {
+              bed.claimedBy = 'ambient';
+              bed.ambientPatient = actor;
+              actor.staySeated = true;
+              this.actorSitOn(actor, bed);
+            } else {
+              actor.mode = 'idle';
+              actor.busyUntil = Number.MAX_SAFE_INTEGER / 4;
+            }
+            continue;
+          }
+          if (role === 'nurse' || role === 'surgeon') {
+            this.parkHospitalStaff(actor);
+            continue;
+          }
+          // Legacy themed staff (cafe etc.): seat on nearest non-bed furniture
           actor.staySeated = true;
           const candidates = (this.seats || []).filter((s) => {
+            if (s.kind === 'bed') return false;
             const yOk = Math.abs((s.floorY || 0) - (actor.floorY || 0)) <= 14;
             const idOk = !s.floorId || s.floorId === actor.roomKey;
-            return yOk && idOk;
+            return yOk && idOk && !s.claimedBy;
           }).sort((a, b) => Math.abs(a.x - actor.sprite.x) - Math.abs(b.x - actor.sprite.x));
           const seat = candidates[0];
           if (seat) this.actorSitOn(actor, seat);
@@ -2484,6 +2549,138 @@
           }
         }
       });
+    }
+
+    /** Hospital beds in a room. Patients use bedHosp only; staff may attend surgery tables. */
+    findHospitalBedNear(roomKey, worldX, opts = {}) {
+      const allowSurgery = opts.allowSurgery !== false;
+      const beds = (this.seats || []).filter((s) => (
+        s.kind === 'bed'
+        && (s.key === 'bedHosp' || (allowSurgery && s.key === 'tableSurgery'))
+        && (!roomKey || !s.floorId || s.floorId === roomKey)
+      ));
+      if (!beds.length) return null;
+      if (worldX == null) return beds.find((b) => !b.claimedBy) || beds[0];
+      return beds.slice().sort((a, b) => Math.abs(a.x - worldX) - Math.abs(b.x - worldX))[0];
+    }
+
+    findEmptyHospitalBed(roomKey) {
+      return (this.seats || []).find((s) => (
+        s.kind === 'bed'
+        && s.key === 'bedHosp'
+        && (!roomKey || !s.floorId || s.floorId === roomKey)
+        && !s.claimedBy
+      )) || null;
+    }
+
+    /** Prefer free bedHosp; otherwise displace an ambient patient. */
+    findClaimableHospitalBed(roomKey) {
+      const beds = (this.seats || []).filter((s) => (
+        s.kind === 'bed'
+        && s.key === 'bedHosp'
+        && (!roomKey || !s.floorId || s.floorId === roomKey)
+      ));
+      const empty = beds.find((s) => !s.claimedBy);
+      if (empty) return empty;
+      return beds.find((s) => s.claimedBy === 'ambient') || null;
+    }
+
+    /** Stand nurse/surgeon beside bed or surgery table; never lie on it. */
+    parkHospitalStaff(actor) {
+      if (!actor?.sprite?.active) return;
+      const opts = actor.hospOpts || {};
+      const targetX = opts.attendWorldX != null ? opts.attendWorldX : actor.sprite.x;
+      const bed = this.findHospitalBedNear(actor.roomKey, targetX);
+      const side = opts.side === 'right' ? 1 : -1;
+      const offset = actor.role === 'surgeon' ? 28 : 22;
+      const standX = (bed ? bed.x : targetX) + side * offset;
+      actor.sprite.x = standX;
+      actor.sprite.y = actor.floorY;
+      actor.homeX = standX;
+      actor.attendBed = bed || null;
+      actor.sprite.setFlipX(side > 0); // face toward the bed
+      this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+      actor.state = 'idle';
+      actor.busyUntil = this.time.now + 4000 + Math.random() * 3000;
+    }
+
+    displaceAmbientPatient(bed) {
+      if (!bed) return;
+      const actor = bed.ambientPatient
+        || (this.ambientActors || []).find((a) => a.role === 'patient' && a.seat === bed);
+      if (!actor?.sprite) return;
+      try { this.tweens.killTweensOf(actor.sprite); } catch (_) { /* ignore */ }
+      actor.sprite.setVisible(false);
+      actor.seated = false;
+      actor.seat = null;
+      actor._displaced = true;
+      bed.ambientPatient = actor;
+    }
+
+    restoreAmbientPatient(bed) {
+      if (!bed) return;
+      const actor = bed.ambientPatient;
+      bed.claimedBy = null;
+      if (!actor?.sprite) {
+        bed.ambientPatient = null;
+        return;
+      }
+      actor.sprite.setVisible(true);
+      actor._displaced = false;
+      actor.staySeated = true;
+      bed.claimedBy = 'ambient';
+      this.actorSitOn(actor, bed);
+    }
+
+    /**
+     * Put a live Discord member in an empty hospital bed (lieIdle).
+     * Returns the seat or null if none free.
+     */
+    assignLiveHospitalPatient(live, person) {
+      if (!live?.sprite || !person?.roomKey) return null;
+      if (!this.hospitalRoomKeys?.has(person.roomKey)) return null;
+      if (live.hospitalBed && String(live.hospitalBed.claimedBy) === String(person.userId)) {
+        return live.hospitalBed;
+      }
+      const bed = this.findClaimableHospitalBed(person.roomKey);
+      if (!bed) return null;
+      this.displaceAmbientPatient(bed);
+      bed.claimedBy = person.userId;
+      live.userId = person.userId;
+      live.hospitalBed = bed;
+      try { this.tweens.killTweensOf(live.sprite); } catch (_) { /* ignore */ }
+      if (live.tag) {
+        try { this.tweens.killTweensOf(live.tag); } catch (_) { /* ignore */ }
+      }
+      if (live.actor) {
+        live.actor.role = 'patient';
+        live.actor.staySeated = true;
+        live.actor.hospitalLive = true;
+        this.actorSitOn(live.actor, bed);
+      } else {
+        live.sprite.x = bed.x;
+        live.sprite.y = seatContactY(bed);
+        this.playSheetPose(live.sprite, live.sheet, 'lieIdle');
+      }
+      if (live.tag) {
+        live.tag.x = bed.x;
+        live.tag.y = bed.floorY - 36;
+      }
+      return bed;
+    }
+
+    releaseLiveHospitalBed(live) {
+      const bed = live?.hospitalBed;
+      if (!bed) return;
+      if (bed.claimedBy === live?.userId || String(bed.claimedBy) === String(live?.userId)) {
+        this.restoreAmbientPatient(bed);
+      }
+      live.hospitalBed = null;
+      if (live.actor) {
+        live.actor.staySeated = false;
+        live.actor.hospitalLive = false;
+        if (live.actor.role === 'patient') live.actor.role = null;
+      }
     }
 
     buildSky() {
@@ -2950,6 +3147,11 @@
      *   - { style: 'gable'|'flat'|'snow', color: 'red'|'blue'|... }
      * Pack has two families: Roof_1 (tall gable) and Roof_2 (low flat).
      * Snow piles layer over either for winter / cold themes.
+     *
+     * Gable connecting tiles are short (8px). Walkable rooftop decks sit near
+     * `top+8` with a rail up to ~`top-10`, which used to bury the ridge and
+     * leave only the tall end eaves — the “broken roof” look. Gable ridges
+     * are lifted above the deck and drawn just behind building titles.
      */
     drawRoofCap(left, top, bw, roofSpec = 'roofRedC') {
       let style = 'gable';
@@ -2979,31 +3181,47 @@
       // Roof_1 end 26×17, connecting 16×8 · Roof_2 end 9×5, connecting 16×4
       const tileW = 16 * SCALE;
       const endW = (isFlat ? 9 : 26) * SCALE;
-      const y = top + (isFlat ? 4 : 2);
+      // Flat: sit on the shell lip. Gable: lift so the ridge clears the
+      // walkable deck rail (deck floor ≈ top+8, rail top ≈ top-10).
+      const y = top + (isFlat ? 4 : -12);
       const overhang = isFlat ? 2 : 6;
-      const depth = 21;
+      // Behind titles (~28) / ROOF tag (28); above shell (20). Deck is 21.2 —
+      // gable ridge must still clear it on screen via `y`, not depth fights.
+      const endDepth = isFlat ? 21 : 20.8;
+      const connDepth = isFlat ? 20.5 : 20.6;
 
       if (this.textures.exists(endKey)) {
         this.add.image(left - overhang, y, endKey)
-          .setOrigin(0, 1).setDepth(depth).setScale(SCALE);
+          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
         this.add.image(left + bw + overhang, y, endKey)
-          .setOrigin(1, 1).setDepth(depth).setScale(SCALE).setFlipX(true);
+          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
       }
 
-      const runL = left - overhang + endW - (isFlat ? 2 : 6);
-      const runR = left + bw + overhang - endW + (isFlat ? 2 : 6);
+      if (!this.textures.exists(connKey)) {
+        return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
+      }
+
+      // Overlap ends by a few px so the ridge never gaps at the joint.
+      const join = isFlat ? 2 : 8;
+      const runL = left - overhang + endW - join;
+      const runR = left + bw + overhang - endW + join;
       let lastX = runL;
-      for (let x = runL; x + tileW <= runR; x += tileW) {
+      for (let x = runL; x + tileW <= runR + 0.5; x += tileW) {
         this.add.image(x, y, connKey)
-          .setOrigin(0, 1).setDepth(depth - 0.5).setScale(SCALE);
+          .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
         lastX = x + tileW;
       }
-      // Close the remaining gap with one right-aligned tile — overlapping an
-      // identical shingle pattern is invisible; overshooting the end cap or
-      // leaving bare shell both read as a broken roof.
-      if (runR - lastX > 2) {
-        this.add.image(runR - tileW, y, connKey)
-          .setOrigin(0, 1).setDepth(depth - 0.6).setScale(SCALE);
+      // Close any leftover span — identical shingles hide the overlap.
+      if (runR - lastX > 1) {
+        this.add.image(Math.max(runL, runR - tileW), y, connKey)
+          .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE);
+      }
+      // Always plant one mid-span tile on wide buildings so a failed loop
+      // math can't leave a hollow center between the eaves.
+      if (bw >= 120 && runR - runL > tileW * 2) {
+        const midX = (runL + runR) / 2 - tileW / 2;
+        this.add.image(midX, y, connKey)
+          .setOrigin(0, 1).setDepth(connDepth - 0.1).setScale(SCALE);
       }
 
       // Snow overlay for snow style or winter themes
@@ -4133,9 +4351,9 @@
     }
 
     makeAnims() {
-      // Build every pose from NPC_POSE_DEFS for each premade sheet.
+      // Build every pose from NPC_POSE_DEFS for each premade + hospital staff sheet.
       // frame = row * 8 + col; never include the trailing label cell.
-      NPC_SHEETS.forEach((n) => {
+      [...NPC_SHEETS, ...HOSP_NPC_SHEETS].forEach((n) => {
         if (!this.textures.exists(n.key)) return;
         Object.entries(NPC_POSE_DEFS).forEach(([pose, def]) => {
           const key = `${n.key}_${pose}`;
@@ -4387,9 +4605,19 @@
 
     /** Deterministic NPC sheet key for a user/seed, spread across all 30. */
     npcSheetFor(seedStr) {
+      const s = String(seedStr || '');
+      if (/hospital-nurse|hosp-nurse|^nurse/i.test(s)) {
+        const list = HOSP_NURSE_SHEETS.filter((n) => this.textures.exists(n.key));
+        if (list.length) return list[hashSeed(s) % list.length].key;
+      }
+      if (/hospital-surgeon|hosp-surgeon|^surgeon/i.test(s)) {
+        const list = HOSP_SURGEON_SHEETS.filter((n) => this.textures.exists(n.key));
+        if (list.length) return list[hashSeed(s) % list.length].key;
+      }
+      // Patients and everyone else use premade civilians
       const list = NPC_SHEETS.filter((n) => this.textures.exists(n.key));
       if (!list.length) return NPC_SHEETS[0].key;
-      return list[hashSeed(seedStr) % list.length].key;
+      return list[hashSeed(s) % list.length].key;
     }
 
     /** Register pose anims for a dynamically loaded custom avatar sheet. */
@@ -5168,8 +5396,14 @@
 
     actorPickWander(actor) {
       if (!actor?.sprite?.active || actor.seated) return;
+      if (actor.role === 'nurse' || actor.role === 'surgeon') {
+        this.parkHospitalStaff(actor);
+        return;
+      }
+      if (actor.staySeated || actor.hospitalLive) return;
       // Prefer seat → food → home offset
       const seats = (this.seats || []).filter((s) => {
+        if (s.kind === 'bed') return false; // beds are assigned by hospital roles / live claim
         if (actor.roomKey && s.floorId && s.floorId !== actor.roomKey) return false;
         if (!actor.roomKey && s.floorId) {
           // street NPCs: only outdoor-ish seats (bench) near ground
@@ -5276,6 +5510,43 @@
     /** Per-NPC decision: wander / sit / eat / emote. */
     thinkActor(actor) {
       if (!actor?.sprite?.active) return;
+      if (actor._displaced) return;
+
+      // Hospital staff: stay at bedside, rare emote, occasional short check of saline/monitor
+      if (actor.role === 'nurse' || actor.role === 'surgeon') {
+        if (actor.seated) {
+          this.actorStandUp(actor);
+          this.parkHospitalStaff(actor);
+          return;
+        }
+        const roll = Math.random();
+        if (roll < 0.12) {
+          this.playAmbientPose(actor, Math.random() < 0.55 ? 'wave' : 'shrug');
+          actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 2200);
+        } else if (roll < 0.22 && actor.attendBed) {
+          // Brief walk to check equipment then return to bedside
+          const peekX = (actor.attendBed?.x || actor.homeX) + (Math.random() < 0.5 ? -36 : 36);
+          const returnX = actor.homeX;
+          this.actorWalkTo(actor, peekX, () => {
+            this.time.delayedCall(900 + Math.random() * 800, () => {
+              if (!actor.sprite?.active || actor._displaced) return;
+              this.actorWalkTo(actor, returnX, () => {
+                this.parkHospitalStaff(actor);
+              }, 16);
+            });
+          }, 16);
+        } else {
+          // Re-anchor at bedside if they drifted
+          if (actor.homeX != null && Math.abs(actor.sprite.x - actor.homeX) > 8) {
+            actor.sprite.x = actor.homeX;
+            actor.sprite.y = actor.floorY;
+            this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+          }
+          actor.busyUntil = this.time.now + 3500 + Math.random() * 4000;
+        }
+        return;
+      }
+
       if (actor.staySeated) {
         if (actor.seated && Math.random() < 0.08) {
           this.playAmbientPose(actor, Math.random() < 0.5 ? 'snicker' : 'shrug', {
@@ -6218,6 +6489,7 @@
       // Despawn people who left
       for (const [userId, live] of [...this.livePeople.entries()]) {
         if (!want.has(userId)) {
+          this.releaseLiveHospitalBed(live);
           this.releaseSlot(live.roomKey, userId);
           this.destroyLiveChrome(live);
           this.dropAmbient(live.sprite);
@@ -6231,7 +6503,8 @@
       for (const [userId, person] of want) {
         const existing = this.livePeople.get(userId);
         if (existing && existing.roomKey !== person.roomKey) {
-          // Walk to the new room instead of teleport despawn
+          // Pop into the new room (no mid-air float across floors)
+          this.releaseLiveHospitalBed(existing);
           this.releaseSlot(existing.roomKey, userId);
           const slot = this.claimSlot(person.roomKey, userId);
           this.walkLivePerson(existing, person, slot);
@@ -6452,15 +6725,33 @@
       live.heldFood = null;
     }
 
-    /** Smooth walk from current pose into a new room slot. */
+    /**
+     * Room change: fade out, snap to the new slot, fade in, then idle-float there.
+     * (Never tween X/Y across floors — that reads as floating through the air.)
+     */
     walkLivePerson(live, person, slot) {
       const sprite = live.sprite;
       const tag = live.tag;
       const sheet = live.sheet || this.npcSheetFor(String(person.userId));
+      const voiceRoom = person.roomKey && person.roomKey.startsWith('ch_') && person.soft === false;
+      const depth = voiceRoom ? 34 : 30;
+      const targetAlpha = person.soft ? 0.72 : 1;
+
       live.roomKey = person.roomKey;
       live.soft = person.soft;
       live.sheet = sheet;
-      if (live.actor) live.actor.roomKey = person.roomKey;
+      live.userId = person.userId;
+      if (live.actor) {
+        live.actor.roomKey = person.roomKey;
+        live.actor.staySeated = false;
+        live.actor.seated = false;
+        live.actor.seat = null;
+        live.actor.homeX = slot.x;
+        live.actor.homeY = slot.y;
+        live.actor.floorY = slot.y;
+        live.actor.depth = depth;
+        this.setActorBounce(live.actor, false);
+      }
       this.maybeUpgradeLiveSheet(live, person);
 
       try {
@@ -6468,39 +6759,63 @@
         if (tag) this.tweens.killTweensOf(tag);
       } catch (_) { /* ignore */ }
 
-      sprite.setFlipX(slot.x < sprite.x);
-      this.playSheetPose(sprite, sheet, 'walk');
-      sprite.setAlpha(person.soft ? 0.72 : 1);
+      const finishArrive = () => {
+        if (!sprite?.active) return;
+        sprite.setDepth(depth);
+        if (tag) tag.setDepth(depth + 1);
 
-      const dist = Phaser.Math.Distance.Between(sprite.x, sprite.y, slot.x, slot.y);
-      // Presence moves: ~30–35px/s, never a zip
-      const dur = Phaser.Math.Clamp(Math.round(dist * 28), 900, 4200);
+        // Hospital channel: claim a bed and lie instead of standing in a walk slot
+        if (this.assignLiveHospitalPatient(live, person)) {
+          if (live.actor) {
+            live.actor.homeX = live.hospitalBed.x;
+            live.actor.floorY = live.hospitalBed.floorY;
+          }
+          this.syncLiveChrome(live, person);
+          return;
+        }
 
-      this.tweens.add({
-        targets: sprite,
-        x: slot.x,
-        y: slot.y,
-        duration: dur,
-        ease: 'Sine.easeInOut',
-        onUpdate: () => this.layoutLiveChrome(live),
-        onComplete: () => {
-          if (!sprite.active) return;
-          const useSheet = live.sheet || sheet;
-          this.playSheetPose(sprite, useSheet, 'idle');
+        sprite.setPosition(slot.x, slot.y);
+        if (tag) tag.setPosition(slot.x, slot.y - 40);
+        const useSheet = live.sheet || sheet;
+        this.playSheetPose(sprite, useSheet, 'idle');
+        this.tweens.add({
+          targets: sprite, y: slot.y - 1.5,
+          duration: 700 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+          onUpdate: () => this.layoutLiveChrome(live),
+        });
+        if (tag) {
           this.tweens.add({
-            targets: sprite, y: slot.y - 1.5,
+            targets: tag, y: slot.y - 41.5,
             duration: 700 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-            onUpdate: () => this.layoutLiveChrome(live),
           });
+        }
+        if (live.actor) this.playAmbientPose(live.actor, 'wave');
+        this.syncLiveChrome(live, person);
+      };
+
+      // Brief fade-out at the old spot, then pop at the new floor and fade in
+      this.tweens.add({
+        targets: [sprite, tag].filter(Boolean),
+        alpha: 0,
+        duration: 140,
+        ease: 'Sine.easeIn',
+        onComplete: () => {
+          if (!sprite?.active) return;
+          sprite.setPosition(slot.x, slot.y);
+          sprite.setDepth(depth);
+          this.playSheetPose(sprite, sheet, 'idle');
           if (tag) {
             tag.setPosition(slot.x, slot.y - 40);
-            this.tweens.add({
-              targets: tag, y: slot.y - 41.5,
-              duration: 700 + Math.random() * 400, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-            });
+            tag.setDepth(depth + 1);
           }
-          if (live.actor) this.playAmbientPose(live.actor, 'wave');
-          this.syncLiveChrome(live, person);
+          this.layoutLiveChrome(live);
+          this.tweens.add({
+            targets: [sprite, tag].filter(Boolean),
+            alpha: targetAlpha,
+            duration: 220,
+            ease: 'Sine.easeOut',
+            onComplete: finishArrive,
+          });
         },
       });
       this.syncLiveChrome(live, person);
@@ -6572,10 +6887,6 @@
           this.time.delayedCall(450, () => this.playSheetPose(other.sprite, other.sheet, 'wave'));
         }
       }
-      // Discord members also use the life brain (pace / sit / emote in room)
-      this.time.delayedCall(900 + Math.random() * 800, () => {
-        if (actor?.sprite?.active) this.actorPickWander(actor);
-      });
 
       const live = {
         sprite,
@@ -6584,25 +6895,36 @@
         roomKey: person.roomKey,
         soft: person.soft,
         actor,
+        userId: person.userId,
         lastActionTs: null,
         heldFood: null,
       };
       this.livePeople.set(person.userId, live);
       this.maybeUpgradeLiveSheet(live, person);
       this.syncLiveChrome(live, person);
+
+      // Hospital channel members claim empty beds and lie; otherwise wander
+      const bed = this.assignLiveHospitalPatient(live, person);
+      if (bed && actor) {
+        actor.homeX = bed.x;
+        actor.floorY = bed.floorY;
+      } else {
+        this.time.delayedCall(900 + Math.random() * 800, () => {
+          if (actor?.sprite?.active && !actor.staySeated) this.actorPickWander(actor);
+        });
+      }
     }
 
+    /** Anonymous sidewalk roamers + curb strollers (no BlockLife names). */
     spawnDecorNpcs() {
-      // Anonymous street roamers disabled — only Discord presence + room staff.
-      return;
       const mw = this.mapWidth || W;
       const gy = this.groundY;
       const avail = NPC_SHEETS.filter((n) => this.textures.exists(n.key) && n.key !== this.playerSheet);
       if (!avail.length) return;
 
-      // Lighter street cast (block-life residents fill the world)
+      // Light cast so presence-heavy servers don’t feel crowded (3 life + 2 strollers).
       const lifeSpots = [
-        80, mw * 0.4, mw * 0.65, mw - 120,
+        80, mw * 0.45, mw - 120,
       ].filter((x) => x > 20 && x < mw - 20);
 
       lifeSpots.forEach((x, i) => {
@@ -6620,14 +6942,13 @@
         });
       });
 
-      // Strollers — slow casual pace
+      // Strollers — slow casual pace along the curb
       const strollers = mw > 400
         ? [
-          [mw * 0.12, mw * 0.32, 10000],
-          [mw * 0.35, mw * 0.55, 11000],
-          [mw * 0.58, mw * 0.78, 10500],
+          [mw * 0.15, mw * 0.38, 11000],
+          [mw * 0.55, mw * 0.82, 12000],
         ]
-        : [[40, mw - 40, 10000]];
+        : [[40, Math.max(80, mw - 40), 10000]];
       strollers.forEach(([x0, x1, dur], i) => {
         const sheet = avail[(hashSeed(`walk${i}`) % avail.length)].key;
         const walker = this.spawnChar(x0, gy, sheet, `${sheet}_walk`, null, 40, { mode: 'stroll' });

@@ -16,6 +16,12 @@ function createCanvasBridge(deps) {
     });
   }
 
+  function guildEvents(guildId) {
+    return (tracker._canvasEvents || []).filter(
+      (e) => !guildId || !e.payload?.guildId || e.payload.guildId === guildId,
+    );
+  }
+
   function register(registry) {
     registry.register({
       name: 'canvasevents',
@@ -23,7 +29,8 @@ function createCanvasBridge(deps) {
       aliases: ['cevents'],
       module: 'canvas',
       async run(ctx) {
-        const events = tracker._canvasEvents || [];
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        const events = guildEvents(ctx.guild.id);
         if (!events.length) return ctx.reply('No canvas events yet.');
         const lines = events.slice(-15).map((e) => `• ${e.type} @ ${new Date(e.ts).toISOString()}`);
         return ctx.reply(lines.join('\n'));
@@ -33,14 +40,16 @@ function createCanvasBridge(deps) {
     registry.register({
       name: 'roomsnapshot',
       description: 'Dump tracker room snapshot for this guild',
+      aliases: ['rooms'],
       module: 'canvas',
       async run(ctx) {
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
         const snap = tracker.snapshot(ctx.guild.id);
         const rooms = (snap.rooms || [])
           .filter((r) => r.occupantCount > 0)
           .map((r) => `${r.type === 'voice' ? r.name : '#' + r.name}: ${r.occupantCount}`)
           .join('\n');
-        const sec = (tracker._canvasEvents || []).filter((e) => e.type.startsWith('security')).slice(-5);
+        const sec = guildEvents(ctx.guild.id).filter((e) => String(e.type).startsWith('security')).slice(-5);
         return ctx.reply(
           `**Rooms**\n${rooms || '(empty)'}\n**Recent security**\n${sec.map((e) => e.type).join(', ') || '(none)'}`,
         );

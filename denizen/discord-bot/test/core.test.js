@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { ConfigStore } = require('../src/core/config-store');
-const { CommandRegistry } = require('../src/core/command-registry');
+const { CommandRegistry, bindPrefixOptionGetters } = require('../src/core/command-registry');
 const { canRunCommand, addFakePerm, hasFakePerm } = require('../src/core/permissions');
 
 describe('core foundation', () => {
@@ -38,5 +38,76 @@ describe('core foundation', () => {
       { fakePerm: 'ban_members' },
     );
     assert.equal(ok.ok, true);
+  });
+
+  it('prefix getString maps action to first token (not full remainder)', () => {
+    const fp = {
+      options: [
+        { name: 'action', type: 3, required: true },
+        { name: 'role', type: 8, required: false },
+        { name: 'permission', type: 3, required: false },
+      ],
+    };
+    const g = bindPrefixOptionGetters(fp, ['harden', '<@&99>'], {});
+    assert.equal(g.getString('action'), 'harden');
+    assert.equal(g.getString('permission'), null);
+
+    const add = bindPrefixOptionGetters(fp, ['add', '<@&99>', 'ban_members'], {});
+    assert.equal(add.getString('action'), 'add');
+    assert.equal(add.getString('permission'), 'ban_members');
+  });
+
+  it('prefix getString keeps freeform query / reason tails', () => {
+    const play = { options: [{ name: 'query', type: 3, required: true }] };
+    const g = bindPrefixOptionGetters(play, ['never', 'gonna', 'give'], {});
+    assert.equal(g.getString('query'), 'never gonna give');
+
+    const tickets = {
+      options: [
+        { name: 'action', type: 3, required: true },
+        { name: 'reason', type: 3, required: false },
+      ],
+    };
+    const t = bindPrefixOptionGetters(tickets, ['form', 'Label', '|', 'desc', '|', 'Q1?'], {});
+    assert.equal(t.getString('action'), 'form');
+    assert.equal(t.getString('reason'), 'Label | desc | Q1?');
+  });
+
+  it('prefix getString drops mention tokens from last-string tails', () => {
+    const levels = {
+      options: [
+        { name: 'action', type: 3, required: false },
+        { name: 'value', type: 3, required: false },
+      ],
+    };
+    const g = bindPrefixOptionGetters(levels, ['reward', '5', '<@&42>'], {});
+    assert.equal(g.getString('action'), 'reward');
+    assert.equal(g.getString('value'), '5');
+  });
+
+  it('prefix getInteger respects named amount option', () => {
+    const purge = {
+      options: [
+        { name: 'amount', type: 4, required: true },
+        { name: 'user', type: 6, required: false },
+      ],
+    };
+    const g = bindPrefixOptionGetters(purge, ['25', '<@1>'], {});
+    assert.equal(g.getInteger('amount'), 25);
+  });
+
+  it('private replies default on; public commands and explicit ephemeral win', () => {
+    const { resolvePrivateReply } = require('../src/core/command-registry');
+    const prev = process.env.DISCORD_PRIVATE_REPLIES;
+    process.env.DISCORD_PRIVATE_REPLIES = '1';
+    try {
+      assert.equal(resolvePrivateReply({ public: false }, 'Pong'), true);
+      assert.equal(resolvePrivateReply({ public: true }, 'Now playing'), false);
+      assert.equal(resolvePrivateReply({ public: true }, { content: 'x', ephemeral: true }), true);
+      assert.equal(resolvePrivateReply({}, { content: 'x', ephemeral: false }), false);
+    } finally {
+      if (prev === undefined) delete process.env.DISCORD_PRIVATE_REPLIES;
+      else process.env.DISCORD_PRIVATE_REPLIES = prev;
+    }
   });
 });

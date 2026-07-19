@@ -314,7 +314,8 @@ Default prefix: `,` · also slash where registered.
 
 | Command | Description |
 |---------|-------------|
-| `/help` · `,help` | Spaces-first help; topics avatar / hangout / mods / all |
+| `/help` · `,help` | Spaces-first help; topics avatar / hangout / mods / all · links to public catalog |
+| **Public catalog** | `/discord-commands/` (alias `/discord/commands`) — searchable full list (Bleed-style) |
 | `/start` · `,spaces` | Onboarding (map → VC → avatar → boost) |
 | `/ping` | Latency + pointer to help |
 
@@ -471,6 +472,8 @@ Also: root `discord pixel game/` prototype with Free + Full packs.
 | `DISCORD_GUILD_ID` | Single-guild filter |
 | `DISCORD_PRESENCE_PORT` | Default `5180` |
 | `DISCORD_PREFIX` | Default `,` |
+| `DISCORD_PRIVATE_REPLIES` | `1` (default) = slash replies only visible to the invoker; prefix replies auto-delete after a few seconds. Set `0` for always-public replies |
+| `DISCORD_PREFIX_DELETE_MS` | How long prefix private replies stay visible before delete (default `8000`) |
 | `DENIZEN_DISCORD_BOT` | `auto` or `off` (sidecar) |
 | `DISCORD_FORWARD_OFFICE` | `1` = VC → Denizen office |
 | `DISCORD_BRIDGE_SECRET` | Office presence auth |

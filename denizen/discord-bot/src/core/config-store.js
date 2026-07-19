@@ -158,6 +158,7 @@ function defaultGuildConfig() {
     music: {
       enabled: false,
       volume: 80,
+      djRoleId: null,
     },
     integrations: {
       notify: [],

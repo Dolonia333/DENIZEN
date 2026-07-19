@@ -35,6 +35,28 @@ function createTickets(deps) {
     return config.get(guildId).tickets;
   }
 
+  /** Support role, Manage Guild, or Administrator. */
+  function isTicketStaff(ctx) {
+    if (!ctx?.guild) return false;
+    if (canRunCommand(ctx, { permission: 'Administrator' }).ok) return true;
+    if (canRunCommand(ctx, { permission: 'ManageGuild' }).ok) return true;
+    const supportRoleId = ticketCfg(ctx.guild.id).supportRoleId;
+    if (supportRoleId && ctx.member?.roles?.cache?.has?.(supportRoleId)) return true;
+    return false;
+  }
+
+  function isTicketOpener(ctx) {
+    const open = ticketCfg(ctx.guild.id).open?.[ctx.channel?.id];
+    return !!(open && open.userId === ctx.user?.id);
+  }
+
+  function denyStaff(ctx) {
+    return ctx.reply({
+      content: 'Staff only — need the support role, Manage Server, or Administrator.',
+      ephemeral: true,
+    }).catch(() => ctx.reply('Staff only — need the support role or Manage Server.'));
+  }
+
   async function openTicket(guild, user, reason = 'Support', option = null) {
     const cfg = ticketCfg(guild.id);
     if (!cfg.enabled) throw new Error('Tickets disabled — run ,tickets setup');
@@ -265,7 +287,7 @@ function createTickets(deps) {
 
         if (action === 'support') {
           if (!canRunCommand(ctx, { permission: 'Administrator' }).ok) return ctx.reply('Need Administrator.');
-          const role = ctx.message?.mentions?.roles?.first?.();
+          const role = ctx.getRole?.('role') || ctx.message?.mentions?.roles?.first?.();
           if (!role) return ctx.reply('Usage: ,tickets support @role');
           config.update(ctx.guild.id, (c) => { c.tickets.supportRoleId = role.id; return c; });
           return ctx.reply(`Support role → ${role}`);
@@ -369,6 +391,7 @@ function createTickets(deps) {
         }
 
         if (action === 'note') {
+          if (!isTicketStaff(ctx)) return denyStaff(ctx);
           const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open || open.closed) return ctx.reply('Not an open ticket.');
           const text = ctx.getString?.('reason') || ctx.args?.slice(1).join(' ');
@@ -386,6 +409,7 @@ function createTickets(deps) {
         }
 
         if (action === 'notes') {
+          if (!isTicketStaff(ctx)) return denyStaff(ctx);
           const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open) return ctx.reply('Not a ticket channel.');
           const notes = open.notes || [];
@@ -398,9 +422,19 @@ function createTickets(deps) {
         }
 
         if (action === 'close' || action === 'archive') {
+          if (!isTicketStaff(ctx) && !isTicketOpener(ctx)) {
+            return ctx.reply({
+              content: 'Only the ticket opener or staff can close this ticket.',
+              ephemeral: true,
+            }).catch(() => ctx.reply('Only the ticket opener or staff can close this ticket.'));
+          }
           try {
-            await closeTicket(ctx.guild, ctx.channel, ctx.user, { archive: action === 'archive' });
-            if (action === 'archive') return ctx.reply('Ticket archived.');
+            if (action === 'archive') {
+              await closeTicket(ctx.guild, ctx.channel, ctx.user, { archive: true });
+              return ctx.reply('Ticket archived.');
+            }
+            await ctx.reply('Closing ticket…');
+            await closeTicket(ctx.guild, ctx.channel, ctx.user, { archive: false });
           } catch (err) {
             return ctx.reply(err.message);
           }
@@ -408,6 +442,7 @@ function createTickets(deps) {
         }
 
         if (action === 'reopen') {
+          if (!isTicketStaff(ctx)) return denyStaff(ctx);
           const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (open?.closed) {
             config.update(ctx.guild.id, (c) => {
@@ -425,7 +460,7 @@ function createTickets(deps) {
             return ctx.reply(`Reopened ticket for <@${open.userId}>.`);
           }
           // Reopen by creating new ticket from last closed for a user
-          const user = ctx.message?.mentions?.users?.first?.();
+          const user = ctx.message?.mentions?.users?.first?.() || ctx.getUser?.('user');
           if (!user) return ctx.reply('Usage: ,tickets reopen (in archived channel) or ,tickets reopen @user');
           const closed = Object.values(ticketCfg(ctx.guild.id).closed || {})
             .filter((t) => t.userId === user.id)
@@ -439,6 +474,7 @@ function createTickets(deps) {
         }
 
         if (action === 'claim') {
+          if (!isTicketStaff(ctx)) return denyStaff(ctx);
           const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open || open.closed) return ctx.reply('Not an open ticket.');
           config.update(ctx.guild.id, (c) => {
@@ -450,6 +486,7 @@ function createTickets(deps) {
         }
 
         if (action === 'unclaim') {
+          if (!isTicketStaff(ctx)) return denyStaff(ctx);
           const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open) return ctx.reply('Not a ticket.');
           config.update(ctx.guild.id, (c) => {
@@ -460,9 +497,10 @@ function createTickets(deps) {
         }
 
         if (action === 'adduser' || action === 'removeuser') {
+          if (!isTicketStaff(ctx)) return denyStaff(ctx);
           const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open) return ctx.reply('Not a ticket channel.');
-          const user = ctx.message?.mentions?.users?.first?.();
+          const user = ctx.message?.mentions?.users?.first?.() || ctx.getUser?.('user');
           if (!user) return ctx.reply(`Usage: ,tickets ${action} @user`);
           if (action === 'adduser') {
             await ctx.channel.permissionOverwrites.edit(user.id, {
@@ -478,6 +516,7 @@ function createTickets(deps) {
         }
 
         if (action === 'rename') {
+          if (!isTicketStaff(ctx)) return denyStaff(ctx);
           const open = ticketCfg(ctx.guild.id).open[ctx.channel.id];
           if (!open) return ctx.reply('Not a ticket channel.');
           const name = ctx.args?.slice(1).join('-').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 90);
@@ -558,6 +597,23 @@ function createTickets(deps) {
         return true;
       }
       if (interaction.customId === 'denizen_ticket_close') {
+        const btnCtx = {
+          guild: interaction.guild,
+          member: interaction.member,
+          user: interaction.user,
+          channel: interaction.channel,
+          config,
+        };
+        const open = ticketCfg(interaction.guild.id).open?.[interaction.channel.id];
+        const staff = isTicketStaff(btnCtx);
+        const opener = open && open.userId === interaction.user.id;
+        if (!staff && !opener) {
+          await interaction.reply({
+            embeds: [dangerEmbed('Denied', 'Only the ticket opener or staff can close.')],
+            ephemeral: true,
+          }).catch(() => {});
+          return true;
+        }
         try {
           await interaction.reply({
             embeds: [infoEmbed('Closing', 'Saving transcript…')],
@@ -573,6 +629,19 @@ function createTickets(deps) {
         return true;
       }
       if (interaction.customId === 'denizen_ticket_claim') {
+        if (!isTicketStaff({
+          guild: interaction.guild,
+          member: interaction.member,
+          user: interaction.user,
+          channel: interaction.channel,
+          config,
+        })) {
+          await interaction.reply({
+            embeds: [dangerEmbed('Denied', 'Staff only — need the support role or Manage Server.')],
+            ephemeral: true,
+          }).catch(() => {});
+          return true;
+        }
         config.update(interaction.guild.id, (c) => {
           if (c.tickets.open[interaction.channel.id]) {
             c.tickets.open[interaction.channel.id].claimedBy = interaction.user.id;
@@ -586,6 +655,19 @@ function createTickets(deps) {
         return true;
       }
       if (interaction.customId === 'denizen_ticket_note') {
+        if (!isTicketStaff({
+          guild: interaction.guild,
+          member: interaction.member,
+          user: interaction.user,
+          channel: interaction.channel,
+          config,
+        })) {
+          await interaction.reply({
+            embeds: [dangerEmbed('Denied', 'Staff only — need the support role or Manage Server.')],
+            ephemeral: true,
+          }).catch(() => {});
+          return true;
+        }
         const modal = new ModalBuilder()
           .setCustomId('denizen_ticket_modal_note')
           .setTitle('Staff note');

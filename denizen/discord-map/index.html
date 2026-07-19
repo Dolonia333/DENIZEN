@@ -103,7 +103,7 @@
       flex: 1;
     }
     .tabs { display: flex; gap: 6px; }
-    .tabs button, .btn {
+    .tabs button, .tabs a.tab-link, .btn {
       appearance: none;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
@@ -113,10 +113,18 @@
       font-size: 0.8rem;
       font-weight: 650;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .tabs button.active {
       background: var(--accent);
       border-color: transparent;
+    }
+    .tabs a.tab-link:hover {
+      border-color: var(--accent);
+      color: #c9d4ff;
     }
     .btn:disabled { opacity: 0.45; cursor: default; }
     .btn.primary {
@@ -340,7 +348,8 @@
         flex: 1 1 100%;
         justify-content: stretch;
       }
-      .tabs button {
+      .tabs button,
+      .tabs a.tab-link {
         flex: 1;
         min-height: 44px;
         font-size: 0.85rem;
@@ -377,6 +386,7 @@
       <div class="tabs">
         <button type="button" id="tab-connect" class="active">Connect</button>
         <button type="button" id="tab-map">Map</button>
+        <a class="tab-link" href="/discord-commands/" id="tab-commands">Commands</a>
       </div>
     </header>
 
@@ -391,6 +401,12 @@
           <span id="statusText">Looking for servers…</span>
         </div>
         <button type="button" class="btn primary block" id="btnOpenMap" disabled>Open map</button>
+      </div>
+
+      <div class="card">
+        <h2>Bot commands</h2>
+        <p>Full list with copy buttons — paste into Discord. Change your server prefix with <code>,prefix set</code>.</p>
+        <a class="btn primary block" href="/discord-commands/">Open commands</a>
       </div>
 
       <div class="card" id="accountCard">

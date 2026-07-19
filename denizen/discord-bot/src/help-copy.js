@@ -21,6 +21,13 @@ function mapUrl(guildId) {
   return base ? `${base}${path}` : path;
 }
 
+/** Public Bleed-style command catalog. */
+function commandsUrl() {
+  const base = publicBase();
+  const path = '/discord-commands/';
+  return base ? `${base}${path}` : path;
+}
+
 /**
  * Two-line intro for places that still need plain text.
  * @param {{ prefix?: string, guildId?: string }} [opts]
@@ -40,12 +47,14 @@ function spacesIntro(opts = {}) {
 function spacesHelpEmbed(opts = {}) {
   const p = opts.prefix || process.env.DISCORD_PREFIX || ',';
   const map = mapUrl(opts.guildId) || '/discord-map/';
+  const cmds = commandsUrl();
   return baseEmbed({
     color: BRAND.primary,
     title: opts.title || 'Denizen Spaces',
     description: 'Live pixel map of this server — walk buildings, meet people in VC.',
     fields: [
       { name: 'Map', value: `${map}\n\`${p}signup\` · team code from admin · \`${p}map\``, inline: false },
+      { name: 'Commands', value: cmds, inline: false },
       { name: 'Owner', value: `\`${p}teamlink <code>\` · \`${p}mapcode\``, inline: true },
       { name: 'Look', value: `\`${p}avatar\` · Boost → golden headset`, inline: true },
       { name: 'Pet', value: `\`${p}pet buy\` · gift · equip · Pro grants ×3`, inline: true },
@@ -79,6 +88,7 @@ function mapFooter(guildId) {
 
 module.exports = {
   mapUrl,
+  commandsUrl,
   spacesIntro,
   spacesHelpEmbed,
   mentionHelp,

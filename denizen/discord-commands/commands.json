@@ -1,0 +1,2791 @@
+{
+  "generatedAt": "2026-07-19T02:17:45.128Z",
+  "prefix": ",",
+  "count": 95,
+  "modules": [
+    {
+      "id": "core",
+      "label": "Getting started",
+      "order": 10,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 4
+    },
+    {
+      "id": "denizen",
+      "label": "Account",
+      "order": 20,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 3
+    },
+    {
+      "id": "avatar",
+      "label": "Avatar & pets",
+      "order": 30,
+      "premium": false,
+      "badge": "Free + paid",
+      "badgeKind": "mixed",
+      "count": 5,
+      "planSplit": {
+        "free": [
+          {
+            "cmd": "/avatar",
+            "detail": "Premade looks, edit, show, random"
+          },
+          {
+            "cmd": ",skin",
+            "detail": "Basic skin tones"
+          },
+          {
+            "cmd": "Boost",
+            "detail": "Golden headset (Discord boost)"
+          }
+        ],
+        "paid": [
+          {
+            "cmd": ",hair / ,clothes",
+            "detail": "Custom layers & full closet"
+          },
+          {
+            "cmd": ",pet buy",
+            "detail": "Companion pet (checkout or Pro grant)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hangout",
+      "label": "Hangout",
+      "order": 40,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 1
+    },
+    {
+      "id": "canvas",
+      "label": "Spaces canvas",
+      "order": 50,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 2
+    },
+    {
+      "id": "chat",
+      "label": "Chat",
+      "order": 60,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 1
+    },
+    {
+      "id": "music",
+      "label": "Music",
+      "order": 70,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 15
+    },
+    {
+      "id": "tickets",
+      "label": "Tickets",
+      "order": 80,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 1
+    },
+    {
+      "id": "voicemaster",
+      "label": "VoiceMaster",
+      "order": 90,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 1
+    },
+    {
+      "id": "moderation",
+      "label": "Moderation",
+      "order": 100,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 22
+    },
+    {
+      "id": "automod",
+      "label": "Automod",
+      "order": 110,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 4
+    },
+    {
+      "id": "logging",
+      "label": "Logging",
+      "order": 120,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 1
+    },
+    {
+      "id": "security",
+      "label": "Security",
+      "order": 130,
+      "premium": true,
+      "badge": "Premium",
+      "badgeKind": "premium",
+      "count": 7
+    },
+    {
+      "id": "community",
+      "label": "Community",
+      "order": 140,
+      "premium": true,
+      "badge": "Premium",
+      "badgeKind": "premium",
+      "count": 12
+    },
+    {
+      "id": "integrations",
+      "label": "Integrations",
+      "order": 150,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 4
+    },
+    {
+      "id": "misc",
+      "label": "Utility",
+      "order": 160,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 11
+    },
+    {
+      "id": "sense",
+      "label": "Sense",
+      "order": 170,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 1
+    }
+  ],
+  "commands": [
+    {
+      "name": "help",
+      "description": "Interactive Denizen Spaces command hub",
+      "aliases": [],
+      "module": "core",
+      "moduleLabel": "Getting started",
+      "moduleOrder": 10,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "topic",
+          "description": "spaces | music | tickets | mods | security | all",
+          "type": 3,
+          "required": false,
+          "summary": "topic?"
+        }
+      ]
+    },
+    {
+      "name": "ping",
+      "description": "Check bot latency",
+      "aliases": [],
+      "module": "core",
+      "moduleLabel": "Getting started",
+      "moduleOrder": 10,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "prefix",
+      "description": "View or set the server command prefix (Manage Server to change)",
+      "aliases": [],
+      "module": "core",
+      "moduleLabel": "Getting started",
+      "moduleOrder": 10,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "view | set | remove",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        },
+        {
+          "name": "prefix",
+          "description": "New prefix (1–5 characters)",
+          "type": 3,
+          "required": false,
+          "summary": "prefix?"
+        }
+      ]
+    },
+    {
+      "name": "start",
+      "description": "Get started with the Discord Spaces map",
+      "aliases": [
+        "maphelp",
+        "spaces"
+      ],
+      "module": "core",
+      "moduleLabel": "Getting started",
+      "moduleOrder": 10,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "denizen",
+      "description": "Create or open your Denizen Discord map profile",
+      "aliases": [],
+      "module": "denizen",
+      "moduleLabel": "Account",
+      "moduleOrder": 20,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "signup, link, or map",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        }
+      ]
+    },
+    {
+      "name": "link",
+      "description": "Link Discord to an existing Denizen profile",
+      "aliases": [],
+      "module": "denizen",
+      "moduleLabel": "Account",
+      "moduleOrder": 20,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "signup",
+      "description": "Create a Denizen account with your Discord profile",
+      "aliases": [
+        "join",
+        "account"
+      ],
+      "module": "denizen",
+      "moduleLabel": "Account",
+      "moduleOrder": 20,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "avatar",
+      "description": "Pixel map look — closet, skin, hair, clothes (boosters get golden headset)",
+      "aliases": [
+        "closet",
+        "look"
+      ],
+      "module": "avatar",
+      "moduleLabel": "Avatar & pets",
+      "moduleOrder": 30,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": "mixed",
+      "planLabel": "Free + paid",
+      "planDetail": "Free: premade + skin · Paid: full closet",
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "edit",
+          "description": "Open the closet UI (preview + Save to map)",
+          "type": 1,
+          "required": false,
+          "summary": "edit?"
+        },
+        {
+          "name": "random",
+          "description": "Randomize look and save to the map",
+          "type": 1,
+          "required": false,
+          "summary": "random?"
+        },
+        {
+          "name": "show",
+          "description": "Preview your look or @someone’s",
+          "type": 1,
+          "required": false,
+          "summary": "show?"
+        },
+        {
+          "name": "reset",
+          "description": "Back to default premade character",
+          "type": 1,
+          "required": false,
+          "summary": "reset?"
+        },
+        {
+          "name": "save",
+          "description": "Save draft to the live map",
+          "type": 1,
+          "required": false,
+          "summary": "save?"
+        }
+      ]
+    },
+    {
+      "name": "clothes",
+      "description": "Set outfit (Community plan): ,clothes 7",
+      "aliases": [],
+      "module": "avatar",
+      "moduleLabel": "Avatar & pets",
+      "moduleOrder": 30,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": "paid",
+      "planLabel": "Paid",
+      "planDetail": "Needs Community / Pro plan",
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "hair",
+      "description": "Set hair (Community plan): ,hair short 3",
+      "aliases": [],
+      "module": "avatar",
+      "moduleLabel": "Avatar & pets",
+      "moduleOrder": 30,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": "paid",
+      "planLabel": "Paid",
+      "planDetail": "Needs Community / Pro plan",
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "pet",
+      "description": "Companion pet for this server — buy, gift, equip, or staff grant",
+      "aliases": [
+        "companion"
+      ],
+      "module": "avatar",
+      "moduleLabel": "Avatar & pets",
+      "moduleOrder": 30,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": "paid",
+      "planLabel": "Paid",
+      "planDetail": "One-time pet purchase or Pro grant",
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "cat | dog | off | status | buy | gift | grant | revoke",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        },
+        {
+          "name": "user",
+          "description": "Member for gift / grant / revoke / buy-for",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        }
+      ]
+    },
+    {
+      "name": "skin",
+      "description": "Set free skin tone (light|white|lightdark|dark)",
+      "aliases": [],
+      "module": "avatar",
+      "moduleLabel": "Avatar & pets",
+      "moduleOrder": 30,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": "free",
+      "planLabel": "Free",
+      "planDetail": "Basic skin tones",
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "hangout",
+      "description": "Who hung out — weekly VC minutes recap for your community",
+      "aliases": [],
+      "module": "hangout",
+      "moduleLabel": "Hangout",
+      "moduleOrder": 40,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "setup",
+          "description": "Choose the channel for weekly “who hung out” posts",
+          "type": 1,
+          "required": false,
+          "summary": "setup?"
+        },
+        {
+          "name": "enable",
+          "description": "Turn on auto weekly posts (default Mon 17:00 UTC)",
+          "type": 1,
+          "required": false,
+          "summary": "enable?"
+        },
+        {
+          "name": "disable",
+          "description": "Turn off automatic weekly posts",
+          "type": 1,
+          "required": false,
+          "summary": "disable?"
+        },
+        {
+          "name": "report",
+          "description": "Post this week’s top voice hangers now",
+          "type": 1,
+          "required": false,
+          "summary": "report?"
+        },
+        {
+          "name": "status",
+          "description": "Settings + who’s leading this week",
+          "type": 1,
+          "required": false,
+          "summary": "status?"
+        }
+      ]
+    },
+    {
+      "name": "canvasevents",
+      "description": "Show recent security/canvas events",
+      "aliases": [
+        "cevents"
+      ],
+      "module": "canvas",
+      "moduleLabel": "Spaces canvas",
+      "moduleOrder": 50,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "roomsnapshot",
+      "description": "Dump tracker room snapshot for this guild",
+      "aliases": [
+        "rooms"
+      ],
+      "module": "canvas",
+      "moduleLabel": "Spaces canvas",
+      "moduleOrder": 50,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "chat",
+      "description": "Open-channel chat mode (reply without @mention)",
+      "aliases": [
+        "openchat",
+        "talk"
+      ],
+      "module": "chat",
+      "moduleLabel": "Chat",
+      "moduleOrder": 60,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "on|off|status",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        }
+      ]
+    },
+    {
+      "name": "clearqueue",
+      "description": "Clear upcoming tracks (keep current)",
+      "aliases": [
+        "cq"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "djrole",
+      "description": "Set or clear the music DJ role (Manage Server)",
+      "aliases": [
+        "dj"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "role",
+          "description": "DJ role (omit to clear)",
+          "type": 8,
+          "required": false,
+          "summary": "role?"
+        }
+      ]
+    },
+    {
+      "name": "filter",
+      "description": "Set Lavalink filter preset",
+      "aliases": [],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "lavalink",
+      "description": "Lavalink node status / help",
+      "aliases": [
+        "ll"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "loop",
+      "description": "Toggle loop mode: off|track|queue",
+      "aliases": [],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "np",
+      "description": "Now playing",
+      "aliases": [
+        "nowplaying"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "pause",
+      "description": "Pause / resume",
+      "aliases": [],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "play",
+      "description": "Play / queue a track (YouTube URL or search via Lavalink)",
+      "aliases": [
+        "p"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "query",
+          "description": "Song URL or search",
+          "type": 3,
+          "required": true,
+          "summary": "query"
+        }
+      ]
+    },
+    {
+      "name": "player",
+      "description": "Post the interactive music player panel",
+      "aliases": [
+        "panel",
+        "now"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "queue",
+      "description": "Show music queue",
+      "aliases": [
+        "q"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "remove",
+      "description": "Remove a track from the queue by index",
+      "aliases": [],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "index",
+          "description": "1-based index",
+          "type": 4,
+          "required": true,
+          "summary": "index"
+        }
+      ]
+    },
+    {
+      "name": "shuffle",
+      "description": "Shuffle the queue",
+      "aliases": [],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "skip",
+      "description": "Skip current track",
+      "aliases": [
+        "s"
+      ],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "stop",
+      "description": "Stop playback and clear queue",
+      "aliases": [],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "volume",
+      "description": "Set volume 1-100",
+      "aliases": [],
+      "module": "music",
+      "moduleLabel": "Music",
+      "moduleOrder": 70,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "level",
+          "description": "1-100",
+          "type": 4,
+          "required": true,
+          "summary": "level"
+        }
+      ]
+    },
+    {
+      "name": "tickets",
+      "description": "Ticket system — panels, forms, claim, notes, reopen, SLA",
+      "aliases": [
+        "ticket",
+        "tix"
+      ],
+      "module": "tickets",
+      "moduleLabel": "Tickets",
+      "moduleOrder": 80,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "setup|panel|close|claim|note|reopen|list|…",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "reason",
+          "description": "Open reason / note text",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "voicemaster",
+      "description": "VoiceMaster join-to-create + controls",
+      "aliases": [
+        "vm"
+      ],
+      "module": "voicemaster",
+      "moduleLabel": "VoiceMaster",
+      "moduleOrder": 90,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "setup|off|status|lock|unlock|name|limit|claim|transfer|bitrate",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "value",
+          "description": "name / limit / bitrate / user",
+          "type": 3,
+          "required": false,
+          "summary": "value?"
+        }
+      ]
+    },
+    {
+      "name": "ban",
+      "description": "ban a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "ban members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "imagemute",
+      "description": "Block image/embed uploads via Image Muted role",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "jail",
+      "description": "jail a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "kick",
+      "description": "kick a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "kick members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "modlog",
+      "description": "Set moderation case log channel",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Administrator"
+      },
+      "options": []
+    },
+    {
+      "name": "mute",
+      "description": "mute a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "nick",
+      "description": "Change a member nickname",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "manage nicknames"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "nickname",
+          "description": "New nick (empty to reset)",
+          "type": 3,
+          "required": false,
+          "summary": "nickname?"
+        }
+      ]
+    },
+    {
+      "name": "purge",
+      "description": "Bulk delete messages (1–100)",
+      "aliases": [
+        "clear",
+        "prune"
+      ],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "manage messages"
+      },
+      "options": [
+        {
+          "name": "amount",
+          "description": "1-100",
+          "type": 4,
+          "required": true,
+          "summary": "amount"
+        },
+        {
+          "name": "user",
+          "description": "Only from this user",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        }
+      ]
+    },
+    {
+      "name": "reactionmute",
+      "description": "Block reactions via Reaction Muted role",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "role",
+      "description": "Add or remove a role from a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "manage roles"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "add|remove",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "role",
+          "description": "Role",
+          "type": 8,
+          "required": true,
+          "summary": "role"
+        }
+      ]
+    },
+    {
+      "name": "setup",
+      "description": "Create jail role, jail channel, and case log",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Administrator"
+      },
+      "options": []
+    },
+    {
+      "name": "setupmute",
+      "description": "Create mute roles",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Administrator"
+      },
+      "options": []
+    },
+    {
+      "name": "softban",
+      "description": "softban a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "ban members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "timeout",
+      "description": "timeout a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        },
+        {
+          "name": "duration",
+          "description": "e.g. 10m 1h 1d",
+          "type": 3,
+          "required": false,
+          "summary": "duration?"
+        }
+      ]
+    },
+    {
+      "name": "unban",
+      "description": "unban a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "ban members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "unimagemute",
+      "description": "Remove Image Muted role",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "unjail",
+      "description": "unjail a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "unmute",
+      "description": "unmute a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "unreactionmute",
+      "description": "Remove Reaction Muted role",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "untimeout",
+      "description": "untimeout a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "warn",
+      "description": "warn a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "reason",
+          "description": "Reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        }
+      ]
+    },
+    {
+      "name": "warnings",
+      "description": "List warnings for a member",
+      "aliases": [],
+      "module": "moderation",
+      "moduleLabel": "Moderation",
+      "moduleOrder": 100,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "fakeperm",
+        "label": "moderate members"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Target",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        }
+      ]
+    },
+    {
+      "name": "automod",
+      "description": "Configure automod filters",
+      "aliases": [],
+      "module": "automod",
+      "moduleLabel": "Automod",
+      "moduleOrder": 110,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "on|off|status|invites|links|spam|caps|mentions|zalgo|words|action|immune",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "value",
+          "description": "on|off|word|delete|timeout|warn",
+          "type": 3,
+          "required": false,
+          "summary": "value?"
+        }
+      ]
+    },
+    {
+      "name": "editsnipe",
+      "description": "Show last edited message in channel",
+      "aliases": [],
+      "module": "automod",
+      "moduleLabel": "Automod",
+      "moduleOrder": 110,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "reactionsnipe",
+      "description": "Show last removed reaction in channel",
+      "aliases": [
+        "rsnipe"
+      ],
+      "module": "automod",
+      "moduleLabel": "Automod",
+      "moduleOrder": 110,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "snipe",
+      "description": "Show deleted message(s) in channel",
+      "aliases": [],
+      "module": "automod",
+      "moduleLabel": "Automod",
+      "moduleOrder": 110,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "index",
+          "description": "1-10 history index",
+          "type": 4,
+          "required": false,
+          "summary": "index?"
+        }
+      ]
+    },
+    {
+      "name": "log",
+      "description": "Configure server event logging (embeds + toggles)",
+      "aliases": [
+        "logging"
+      ],
+      "module": "logging",
+      "moduleLabel": "Logging",
+      "moduleOrder": 120,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "on|off|status|event|ignore|embeds",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "value",
+          "description": "event name or on/off",
+          "type": 3,
+          "required": false,
+          "summary": "value?"
+        }
+      ]
+    },
+    {
+      "name": "antinuke",
+      "description": "Configure antinuke (owner/admin)",
+      "aliases": [],
+      "module": "security",
+      "moduleLabel": "Security",
+      "moduleOrder": 130,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "on|off|status|config|list|whitelist|admin|module",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "module",
+          "description": "ban|kick|channel|role|webhook|emoji|botadd|vanity",
+          "type": 3,
+          "required": false,
+          "summary": "module?"
+        },
+        {
+          "name": "value",
+          "description": "on|off or user id / threshold",
+          "type": 3,
+          "required": false,
+          "summary": "value?"
+        },
+        {
+          "name": "threshold",
+          "description": "Action threshold",
+          "type": 4,
+          "required": false,
+          "summary": "threshold?"
+        },
+        {
+          "name": "punishment",
+          "description": "timeout|kick|ban|stripstaff",
+          "type": 3,
+          "required": false,
+          "summary": "punishment?"
+        }
+      ]
+    },
+    {
+      "name": "antiraid",
+      "description": "Configure antiraid / join gate",
+      "aliases": [],
+      "module": "security",
+      "moduleLabel": "Security",
+      "moduleOrder": 130,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "owner",
+        "label": "Server owner"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "on|off|status|unlock|massjoin|avatar|age|whitelist",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "threshold",
+          "description": "Mass-join threshold or min age days",
+          "type": 4,
+          "required": false,
+          "summary": "threshold?"
+        },
+        {
+          "name": "value",
+          "description": "on|off|kick|ban or user",
+          "type": 3,
+          "required": false,
+          "summary": "value?"
+        }
+      ]
+    },
+    {
+      "name": "fakepermissions",
+      "description": "Fake perms + strip Discord danger perms (Bleed force bot-mod)",
+      "aliases": [
+        "fakeperms",
+        "fp"
+      ],
+      "module": "security",
+      "moduleLabel": "Security",
+      "moduleOrder": 130,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "owner",
+        "label": "Server owner"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "add|remove|list|reset|strip|restore|force|harden|template",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "role",
+          "description": "Target role",
+          "type": 8,
+          "required": false,
+          "summary": "role?"
+        },
+        {
+          "name": "permission",
+          "description": "Fake permission flag",
+          "type": 3,
+          "required": false,
+          "summary": "permission?"
+        }
+      ]
+    },
+    {
+      "name": "lockdown",
+      "description": "Lock or unlock all channels (raid tool)",
+      "aliases": [],
+      "module": "security",
+      "moduleLabel": "Security",
+      "moduleOrder": 130,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "owner",
+        "label": "Server owner"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "on|off",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        }
+      ]
+    },
+    {
+      "name": "raid",
+      "description": "Ban/kick members who joined within a duration (e.g. 2h)",
+      "aliases": [],
+      "module": "security",
+      "moduleLabel": "Security",
+      "moduleOrder": 130,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "owner",
+        "label": "Server owner"
+      },
+      "options": [
+        {
+          "name": "duration",
+          "description": "Window like 2h, 30m, 1d",
+          "type": 3,
+          "required": true,
+          "summary": "duration"
+        },
+        {
+          "name": "action",
+          "description": "ban or kick",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        }
+      ]
+    },
+    {
+      "name": "recentban",
+      "description": "Ban the N most recent joins (cleanup)",
+      "aliases": [],
+      "module": "security",
+      "moduleLabel": "Security",
+      "moduleOrder": 130,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "owner",
+        "label": "Server owner"
+      },
+      "options": [
+        {
+          "name": "amount",
+          "description": "How many recent members",
+          "type": 4,
+          "required": true,
+          "summary": "amount"
+        }
+      ]
+    },
+    {
+      "name": "security",
+      "description": "Enable security suite / doctor / status",
+      "aliases": [],
+      "module": "security",
+      "moduleLabel": "Security",
+      "moduleOrder": 130,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "owner",
+        "label": "Server owner"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "enable|disable|doctor|status|full",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        }
+      ]
+    },
+    {
+      "name": "autoresponder",
+      "description": "Add an autoresponder trigger",
+      "aliases": [
+        "ar"
+      ],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "boosterrole",
+      "description": "Auto-role for server boosters",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Roles"
+      },
+      "options": []
+    },
+    {
+      "name": "bump",
+      "description": "Disboard bump reminder on/off",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "buttonrole",
+      "description": "Post a button that grants a role",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Roles"
+      },
+      "options": []
+    },
+    {
+      "name": "counter",
+      "description": "Create a member-count voice channel",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Channels"
+      },
+      "options": []
+    },
+    {
+      "name": "giveaway",
+      "description": "Start a simple giveaway",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": true,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "goodbye",
+      "description": "Configure goodbye messages",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "levels",
+      "description": "Toggle leveling / rank / rewards / leaderboard",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "rank|lb|reward|on|off|…",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        },
+        {
+          "name": "value",
+          "description": "Level number or extra args",
+          "type": 3,
+          "required": false,
+          "summary": "value?"
+        }
+      ]
+    },
+    {
+      "name": "reactionrole",
+      "description": "Bind emoji reaction → role on a message",
+      "aliases": [
+        "rr"
+      ],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Roles"
+      },
+      "options": []
+    },
+    {
+      "name": "starboard",
+      "description": "Configure starboard",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "vanityrole",
+      "description": "Role for members with server vanity in status",
+      "aliases": [
+        "vanity"
+      ],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Roles"
+      },
+      "options": []
+    },
+    {
+      "name": "welcome",
+      "description": "Configure welcome messages ({user} {server} {memberCount})",
+      "aliases": [],
+      "module": "community",
+      "moduleLabel": "Community",
+      "moduleOrder": 140,
+      "slash": true,
+      "public": false,
+      "premium": true,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "on|off|channel|message|test",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        },
+        {
+          "name": "value",
+          "description": "channel or message text",
+          "type": 3,
+          "required": false,
+          "summary": "value?"
+        }
+      ]
+    },
+    {
+      "name": "fortnite",
+      "description": "Fortnite shop snapshot (requires FORTNITE_API_KEY)",
+      "aliases": [],
+      "module": "integrations",
+      "moduleLabel": "Integrations",
+      "moduleOrder": 150,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "lastfm",
+      "description": "Last.fm now playing / tops / set username",
+      "aliases": [
+        "fm",
+        "npfm"
+      ],
+      "module": "integrations",
+      "moduleLabel": "Integrations",
+      "moduleOrder": 150,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "set|np|remove|artists|tracks|recent",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        },
+        {
+          "name": "username",
+          "description": "Last.fm username",
+          "type": 3,
+          "required": false,
+          "summary": "username?"
+        }
+      ]
+    },
+    {
+      "name": "social",
+      "description": "Social notification status / bind channel",
+      "aliases": [],
+      "module": "integrations",
+      "moduleLabel": "Integrations",
+      "moduleOrder": 150,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "youtube",
+      "description": "Bind YouTube channel notifications (needs YOUTUBE_API_KEY)",
+      "aliases": [],
+      "module": "integrations",
+      "moduleLabel": "Integrations",
+      "moduleOrder": 150,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "afk",
+      "description": "Set an AFK message (shown when someone mentions you)",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "reason",
+          "description": "Custom message shown when you are pinged (e.g. back in 20)",
+          "type": 3,
+          "required": true,
+          "summary": "reason"
+        }
+      ]
+    },
+    {
+      "name": "alias",
+      "description": "Create a command alias",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "blacktea",
+      "description": "Word chain game (type a word starting with last letter)",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "define",
+      "description": "Dictionary definition (Free Dictionary API)",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "eat",
+      "description": "Snack on the Spaces map (Pixel Platter sprite + chew pose)",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "food",
+          "description": "Food to eat (random if omitted)",
+          "type": 3,
+          "required": false,
+          "summary": "food?"
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "description": "Image utilities: avatar, server icon, reverse search link",
+      "aliases": [
+        "img"
+      ],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "tictactoe",
+      "description": "Challenge someone to tic-tac-toe",
+      "aliases": [
+        "ttt"
+      ],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "translate",
+      "description": "Translate text (LibreTranslate or MyMemory free API)",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "text",
+          "description": "Text",
+          "type": 3,
+          "required": true,
+          "summary": "text"
+        },
+        {
+          "name": "to",
+          "description": "Target language code (en, es, fr…)",
+          "type": 3,
+          "required": false,
+          "summary": "to?"
+        }
+      ]
+    },
+    {
+      "name": "tts",
+      "description": "Text to speech (Discord TTS or speak in VC if possible)",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "text",
+          "description": "Text to speak",
+          "type": 3,
+          "required": true,
+          "summary": "text"
+        }
+      ]
+    },
+    {
+      "name": "urban",
+      "description": "Urban Dictionary lookup",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "webhook",
+      "description": "Send a message as a webhook name",
+      "aliases": [],
+      "module": "misc",
+      "moduleLabel": "Utility",
+      "moduleOrder": 160,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Webhooks"
+      },
+      "options": []
+    },
+    {
+      "name": "sense",
+      "description": "How Denizen learns conversation styles for better replies",
+      "aliases": [
+        "voice",
+        "learn",
+        "farm",
+        "datafarm",
+        "harvest"
+      ],
+      "module": "sense",
+      "moduleLabel": "Sense",
+      "moduleOrder": 170,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "status|on|off|types|me|allow|deny|topics",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        }
+      ]
+    }
+  ]
+}

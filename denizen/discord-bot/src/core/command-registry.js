@@ -10,6 +10,102 @@ try {
   guildPlans = require('../../../src/denizen-guild-plans.js');
 } catch (_) { guildPlans = null; }
 
+/** Discord ApplicationCommandOptionType.String */
+const OPT_STRING = 3;
+/** Discord ApplicationCommandOptionType.Integer */
+const OPT_INTEGER = 4;
+/** Discord ApplicationCommandOptionType.Boolean */
+const OPT_BOOLEAN = 5;
+
+const MENTION_TOKEN = /^<(@!?|@&|#)\d+>$/;
+
+/** Default: slash replies are invoker-only. Set DISCORD_PRIVATE_REPLIES=0 to disable. */
+function privateRepliesEnabled() {
+  return String(process.env.DISCORD_PRIVATE_REPLIES || '1').trim() !== '0';
+}
+
+/**
+ * Resolve whether a reply should be private (slash ephemeral / prefix auto-delete).
+ * Explicit `ephemeral` on the payload wins; then `cmd.public`; then global default.
+ */
+function resolvePrivateReply(cmd, content) {
+  if (content && typeof content === 'object' && Object.prototype.hasOwnProperty.call(content, 'ephemeral')) {
+    return !!content.ephemeral;
+  }
+  if (cmd?.public) return false;
+  return privateRepliesEnabled();
+}
+
+/** Prefix replies can't be ephemeral — delete after a short window instead. */
+function schedulePrefixCleanup(message, sent, ms) {
+  const delay = Number.isFinite(ms) && ms > 0 ? ms : 8_000;
+  setTimeout(() => {
+    Promise.resolve(sent?.delete?.()).catch(() => {});
+    Promise.resolve(message?.delete?.()).catch(() => {});
+  }, delay);
+}
+
+/**
+ * Prefix parsers that respect slash option order.
+ * Fixes `,fp harden @Mod` / `,tickets form …` where getString('action') used to
+ * return the entire remainder ("harden <@&…>") instead of the first token.
+ *
+ * @param {{ options?: object[] }} cmd
+ * @param {string[]} parts args after the command name
+ * @param {import('discord.js').Message} message
+ */
+function bindPrefixOptionGetters(cmd, parts, message) {
+  const opts = Array.isArray(cmd?.options) ? cmd.options : [];
+  const indexByName = new Map(opts.map((o, i) => [o.name, i]));
+
+  function stringIndices() {
+    return opts.map((o, i) => (o.type === OPT_STRING ? i : -1)).filter((i) => i >= 0);
+  }
+
+  function restFrom(idx) {
+    // Drop pure mention tokens so `,levels reward 5 @role` → value "5", not "5 <@&…>"
+    const tokens = parts.slice(idx).filter((t) => !MENTION_TOKEN.test(t));
+    return tokens.join(' ') || null;
+  }
+
+  return {
+    getString(name) {
+      if (!opts.length) return parts.join(' ') || null;
+      if (!name) return parts.join(' ') || null;
+      const idx = indexByName.get(name);
+      if (idx == null) return parts.join(' ') || null;
+      const strIdxs = stringIndices();
+      const isLastString = strIdxs.length > 0 && strIdxs[strIdxs.length - 1] === idx;
+      if (isLastString) return restFrom(idx);
+      return parts[idx] ?? null;
+    },
+    getInteger(name) {
+      const idx = name != null && indexByName.has(name) ? indexByName.get(name) : 0;
+      const n = Number(parts[idx]);
+      return Number.isFinite(n) ? n : null;
+    },
+    getBoolean(name) {
+      const idx = name != null && indexByName.has(name) ? indexByName.get(name) : 0;
+      const v = String(parts[idx] || '').toLowerCase();
+      if (['1', 'true', 'yes', 'on'].includes(v)) return true;
+      if (['0', 'false', 'no', 'off'].includes(v)) return false;
+      return null;
+    },
+    getUser() {
+      return message.mentions?.users?.first?.() || null;
+    },
+    getMember() {
+      return message.mentions?.members?.first?.() || null;
+    },
+    getChannel() {
+      return message.mentions?.channels?.first?.() || null;
+    },
+    getRole() {
+      return message.mentions?.roles?.first?.() || null;
+    },
+  };
+}
+
 class CommandRegistry {
   constructor(opts = {}) {
     this.prefix = opts.prefix || ',';
@@ -55,6 +151,7 @@ class CommandRegistry {
    *   aliases?: string[],
    *   module?: string,
    *   slash?: boolean,
+   *   public?: boolean,
    *   options?: object[],
    *   permission?: string,
    *   fakePerm?: string,
@@ -71,6 +168,7 @@ class CommandRegistry {
       aliases: def.aliases || [],
       module: def.module || 'core',
       slash: def.slash !== false,
+      public: !!def.public,
       options: def.options || [],
       permission: def.permission || null,
       fakePerm: def.fakePerm || null,
@@ -165,8 +263,12 @@ class CommandRegistry {
       getChannel: (n) => interaction.options.getChannel(n),
       getInteger: (n) => interaction.options.getInteger(n),
       getBoolean: (n) => interaction.options.getBoolean(n),
+      getRole: (n) => interaction.options.getRole(n),
       reply: async (content) => {
-        const payload = typeof content === 'string' ? { content } : content;
+        const privateReply = resolvePrivateReply(cmd, content);
+        const payload = typeof content === 'string'
+          ? { content, ephemeral: privateReply }
+          : { ...content, ephemeral: privateReply };
         if (interaction.deferred || interaction.replied) {
           return interaction.followUp(payload);
         }
@@ -216,9 +318,12 @@ class CommandRegistry {
       config: ctxExtras.config,
     }, cmd);
     if (!gate.ok) {
-      await message.reply(`Denied: ${gate.reason}`);
+      const denied = await message.reply(`Denied: ${gate.reason}`).catch(() => null);
+      schedulePrefixCleanup(message, denied, Number(process.env.DISCORD_PREFIX_DELETE_MS) || 8_000);
       return true;
     }
+    const getters = bindPrefixOptionGetters(cmd, parts, message);
+    const prefixDeleteMs = Number(process.env.DISCORD_PREFIX_DELETE_MS) || 8_000;
     const ctx = {
       ...ctxExtras,
       source: 'prefix',
@@ -229,16 +334,21 @@ class CommandRegistry {
       channel: message.channel,
       client: message.client,
       args: parts,
-      getString: () => parts.join(' ') || null,
-      getUser: () => message.mentions.users.first() || null,
-      getMember: () => message.mentions.members?.first() || null,
-      getChannel: () => message.mentions.channels.first() || null,
-      getInteger: () => {
-        const n = Number(parts[0]);
-        return Number.isFinite(n) ? n : null;
+      getString: getters.getString,
+      getUser: getters.getUser,
+      getMember: getters.getMember,
+      getChannel: getters.getChannel,
+      getInteger: getters.getInteger,
+      getBoolean: getters.getBoolean,
+      getRole: getters.getRole,
+      reply: async (content) => {
+        const privateReply = resolvePrivateReply(cmd, content);
+        const payload = typeof content === 'string' ? { content } : { ...content };
+        delete payload.ephemeral; // message.reply does not support ephemeral
+        const sent = await message.reply(payload);
+        if (privateReply) schedulePrefixCleanup(message, sent, prefixDeleteMs);
+        return sent;
       },
-      getBoolean: () => null,
-      reply: async (content) => message.reply(typeof content === 'string' ? content : content),
     };
     const waitMs = this.checkCooldown(cmd, ctx.user?.id || 'anon');
     if (waitMs > 0) {
@@ -262,4 +372,9 @@ class CommandRegistry {
   }
 }
 
-module.exports = { CommandRegistry };
+module.exports = {
+  CommandRegistry,
+  bindPrefixOptionGetters,
+  resolvePrivateReply,
+  privateRepliesEnabled,
+};

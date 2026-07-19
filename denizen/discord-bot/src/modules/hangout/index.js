@@ -7,6 +7,7 @@
 
 const { ChannelType } = require('discord.js');
 const { isoWeekKey } = require('../../tracker');
+const { canRunCommand } = require('../../core/permissions');
 
 function createHangoutModule(deps) {
   const { config, tracker, registry, client } = deps;
@@ -147,6 +148,14 @@ function createHangoutModule(deps) {
           || 'status';
         const guild = ctx.guild;
         if (!guild) return ctx.reply('Guild only.');
+
+        const needsAdmin = ['setup', 'enable', 'disable', 'report'].includes(sub);
+        if (needsAdmin && !canRunCommand(ctx, { permission: 'ManageGuild' }).ok) {
+          return ctx.reply({
+            content: 'Need **Manage Server** to change hangout settings or post reports.',
+            ephemeral: true,
+          });
+        }
 
         if (sub === 'setup') {
           const ch = ctx.getChannel?.('channel')

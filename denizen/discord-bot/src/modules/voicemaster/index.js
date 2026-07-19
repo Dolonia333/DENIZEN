@@ -105,7 +105,8 @@ function createVoiceMaster(deps) {
       description: 'VoiceMaster join-to-create + controls',
       aliases: ['vm'],
       module: 'voicemaster',
-      permission: 'ManageChannels',
+      // No blanket ManageChannels — owners must control their temp VC.
+      // setup/off still check ManageChannels inside run().
       options: [
         { name: 'action', description: 'setup|off|status|lock|unlock|name|limit|claim|transfer|bitrate', type: 3, required: true },
         { name: 'value', description: 'name / limit / bitrate / user', type: 3, required: false },
@@ -225,11 +226,12 @@ function createVoiceMaster(deps) {
           return ctx.reply(`Ownership transferred to <@${user.id}>.`);
         }
         if (action === 'delete') {
-          await voice.delete('VoiceMaster owner delete').catch(() => {});
+          await ctx.reply('Temp channel deleted.');
           config.update(ctx.guild.id, (c) => {
             delete c.voicemaster.tempChannels[voice.id];
             return c;
           });
+          await voice.delete('VoiceMaster owner delete').catch(() => {});
           return;
         }
         if (action === 'kick' || action === 'reject') {

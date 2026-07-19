@@ -260,16 +260,22 @@ function createModeration(deps) {
       async run(ctx) {
         const gate = canRunCommand(ctx, { fakePerm: 'manage_messages' });
         if (!gate.ok) return ctx.reply(`Denied: ${gate.reason}`);
-        const amount = ctx.getInteger?.('amount') || Number(ctx.args?.[0]) || 0;
-        if (amount < 1 || amount > 100) return ctx.reply('Amount 1–100.');
+        const amount = ctx.getInteger?.('amount') ?? Number(ctx.args?.[0]) ?? 0;
+        if (!Number.isFinite(amount) || amount < 1 || amount > 100) {
+          return ctx.reply('Amount 1–100.');
+        }
         const user = ctx.getUser?.('user') || ctx.message?.mentions?.users?.first?.();
         const fetched = await ctx.channel.messages.fetch({ limit: 100 });
         let list = [...fetched.values()].filter((m) => Date.now() - m.createdTimestamp < 14 * 86400000);
+        // Drop the invoking prefix message before slicing so `,purge 10` deletes 10
+        // (not 9 after excluding the command).
+        if (ctx.message) list = list.filter((m) => m.id !== ctx.message.id);
         if (user) list = list.filter((m) => m.author.id === user.id);
         list = list.slice(0, amount);
-        if (ctx.message) list = list.filter((m) => m.id !== ctx.message.id);
+        if (!list.length) return ctx.reply('No messages to purge (need messages under 14 days old).');
         const deleted = await ctx.channel.bulkDelete(list, true).catch(() => null);
-        const n = deleted?.size || 0;
+        if (!deleted) return ctx.reply('Purge failed — check bot Manage Messages + channel perms.');
+        const n = deleted.size || 0;
         await logCase(ctx.guild, config, {
           action: 'purge',
           targetId: user?.id || ctx.channel.id,

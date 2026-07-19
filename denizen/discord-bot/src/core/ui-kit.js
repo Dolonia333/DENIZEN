@@ -199,6 +199,11 @@ function ticketOpenRows(hasForms) {
 }
 
 function helpHubEmbed(prefix = ',') {
+  let commandsLink = '/discord-commands/';
+  try {
+    // eslint-disable-next-line global-require
+    commandsLink = require('../help-copy').commandsUrl();
+  } catch (_) { /* keep relative */ }
   return baseEmbed({
     color: BRAND.primary,
     title: 'Denizen Spaces',
@@ -206,7 +211,9 @@ function helpHubEmbed(prefix = ',') {
       '**Start here:** live pixel map of this Discord + your closet avatar.',
       `\`${prefix}start\` · \`${prefix}avatar\` · \`${prefix}hangout\``,
       '',
-      'Staff tools below (Bleed-parity). **Premium** = security · community · avatar layers.',
+      `**Full list:** ${commandsLink}`,
+      '',
+      'Staff tools below (Bleed-parity). **Premium** = security · community. Avatar layers need Pro (premade + skin are free).',
     ].join('\n'),
     fields: [
       { name: '🗺 Spaces map', value: `\`${prefix}start\` · map & closet`, inline: true },
