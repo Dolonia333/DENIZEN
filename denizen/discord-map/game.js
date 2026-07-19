@@ -3391,99 +3391,68 @@
       // Roof_1 end 26×17, connecting 16×8 · Roof_2 end 9×5, connecting 16×4
       const tileW = 16 * SCALE;
       const endW = (isFlat ? 9 : 26) * SCALE;
-      // Flat: sit on the shell lip with a thicker cap. Gable: lift so the
-      // ridge clears the walkable deck rail (deck floor ≈ top+8, rail ≈ top-10).
+      // Flat: sit on shell lip. Gable: lift so ridge clears walkable deck rail.
       const y = top + (isFlat ? 2 : -12);
-      const overhang = isFlat ? 8 : 6;
-      // Behind titles (~28) / ROOF tag (28); above shell (20). Deck is 21.2 —
-      // gable ridge must still clear it on screen via `y`, not depth fights.
-      const endDepth = isFlat ? 21 : 20.8;
-      const connDepth = isFlat ? 20.5 : 20.6;
-      // Flat pack tiles are only 4–5px tall — boost scaleY so the parapet reads.
-      const flatSy = isFlat ? SCALE * 1.9 : SCALE;
-      const flatEndSy = isFlat ? SCALE * 1.75 : SCALE;
+      const overhang = isFlat ? 6 : 6;
+      const endDepth = isFlat ? 21 : 20.9;
+      const connDepth = isFlat ? 20.5 : 20.55;
+      // Flat tiles are tiny — slight height boost so parapets read.
+      const flatSy = isFlat ? SCALE * 1.6 : SCALE;
+      const flatEndSy = isFlat ? SCALE * 1.5 : SCALE;
 
       if (isFlat) {
-        // Parapet / fascia under the flat cap so roofs don't read as a hairline.
         const fascia = this.add.graphics().setDepth(connDepth - 0.25);
         const fx = left - overhang - 1;
         const fw = bw + overhang * 2 + 2;
         fascia.fillStyle(0x1a222c, 1);
-        fascia.fillRect(fx, y - 1, fw, 7);
+        fascia.fillRect(fx, y - 1, fw, 6);
         fascia.fillStyle(0x4a5868, 1);
         fascia.fillRect(fx + 1, y - 4, fw - 2, 3);
-        fascia.fillStyle(0x6a7888, 0.55);
-        fascia.fillRect(fx + 2, y - 5, fw - 4, 1);
-
-        // Small flat end caps + a continuous cap-tile run between them.
-        if (this.textures.exists(endKey)) {
-          this.add.image(left - overhang, y, endKey)
-            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatEndSy);
-          this.add.image(left + bw + overhang, y, endKey)
-            .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatEndSy).setFlipX(true);
-        }
-        if (this.textures.exists(connKey)) {
-          const join = 2;
-          const runL = left - overhang + endW - join;
-          const runR = left + bw + overhang - endW + join;
-          let lastX = runL;
-          for (let x = runL; x + tileW <= runR + 0.5; x += tileW) {
-            this.add.image(x, y, connKey).setOrigin(0, 1).setDepth(connDepth).setScale(SCALE, flatSy);
-            lastX = x + tileW;
-          }
-          if (runR - lastX > 1) {
-            this.add.image(Math.max(runL, runR - tileW), y, connKey)
-              .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE, flatSy);
-          }
-        }
-        return { style: 'flat', color, y };
       }
 
-      // ── Gable / shingle roof: a SOLID continuous shingled band spanning the
-      // full building width. The old assembly used two triangular end pieces
-      // angled OUTWARD with a short center ridge, which left a see-through gap
-      // in the middle (sky showing behind the title) — the "holes". Instead,
-      // lay two overlapping shingle courses edge-to-edge over a solid roof
-      // body, same shingle art, no gaps. ──
-      const spanL = left - overhang;
-      const spanR = left + bw + overhang;
-      const spanW = spanR - spanL;
-      const rowH = 8 * SCALE;   // Roof_1 connecting native height ×SCALE
-      const rows = 2;           // two layered courses → a taller, solid cap
-      const capTop = y - rows * rowH;
-
-      // Solid roof body behind the shingles so no sky peeks between tiles.
-      const body = this.add.graphics().setDepth(connDepth - 0.3);
-      body.fillStyle(0x141b24, 1);
-      body.fillRect(spanL - SCALE, capTop, spanW + SCALE * 2, (y - capTop) + 3 * SCALE);
-
+      // Full-width connecting run FIRST so the ridge never gaps in the middle
+      // (old path started after the end caps and could leave a hollow center).
       if (this.textures.exists(connKey)) {
-        const step = tileW - SCALE; // 1px overlap so courses read as one surface
-        for (let r = 0; r < rows; r += 1) {
-          const ry = y - r * rowH;
-          for (let x = spanL; x < spanR; x += step) {
-            this.add.image(x, ry, connKey)
-              .setOrigin(0, 1).setDepth(connDepth + r * 0.05).setScale(SCALE, SCALE);
+        const spanL = left - overhang + (isFlat ? endW - 2 : 4);
+        const spanR = left + bw + overhang - (isFlat ? endW - 2 : 4);
+        const step = tileW - (isFlat ? 0 : 2); // 1px tile overlap on gables
+        let lastX = spanL;
+        for (let x = spanL; x + tileW <= spanR + 0.5; x += step) {
+          this.add.image(x, y, connKey)
+            .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE, flatSy);
+          lastX = x + tileW;
+        }
+        if (spanR - lastX > 1) {
+          this.add.image(Math.max(spanL, spanR - tileW), y, connKey)
+            .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE, flatSy);
+        }
+        // Extra mid fill on wide shells — belt-and-suspenders against hollow centers.
+        if (bw >= 100) {
+          const midX = (spanL + spanR) / 2 - tileW / 2;
+          this.add.image(midX, y, connKey)
+            .setOrigin(0, 1).setDepth(connDepth - 0.08).setScale(SCALE, flatSy);
+          if (bw >= 200) {
+            this.add.image(midX - tileW, y, connKey)
+              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE, flatSy);
+            this.add.image(midX + tileW, y, connKey)
+              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE, flatSy);
           }
-          // guarantee the far-right eave is covered flush
-          this.add.image(spanR - tileW, ry, connKey)
-            .setOrigin(0, 1).setDepth(connDepth + r * 0.05 + 0.02).setScale(SCALE, SCALE);
         }
       }
 
-      // Crisp dark eave line under the shingles + a faint ridge highlight.
-      const eave = this.add.graphics().setDepth(connDepth + 0.2);
-      eave.fillStyle(0x0d1420, 1);
-      eave.fillRect(spanL - SCALE, y - SCALE, spanW + SCALE * 2, 2 * SCALE);
-      eave.fillStyle(0xffffff, 0.07);
-      eave.fillRect(spanL, capTop - SCALE, spanW, SCALE);
+      // Pack end caps on top — triangular eaves for gables / small ends for flat.
+      if (this.textures.exists(endKey)) {
+        this.add.image(left - overhang, y, endKey)
+          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatEndSy);
+        this.add.image(left + bw + overhang, y, endKey)
+          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatEndSy).setFlipX(true);
+      }
 
-      // Snow overlay for snow style or winter themes
       if (style === 'snow' || (typeof roofSpec === 'object' && roofSpec.snow)) {
         this.drawRoofSnow(left, top, bw, y);
       }
 
-      return { style: style === 'snow' ? 'snow' : 'gable', color, y };
+      return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
     }
 
     /** Layer snow piles along a roof line (Pixel Spaces snowpile tiles). */
@@ -4578,54 +4547,42 @@
       }
     }
 
-    /** Visual doorway between side-by-side rooms (horizontal passage).
-     *  Uses a framed front-facing leaf — NOT the edge-on closed sliver, which
-     *  read as a tall black void when stretched into the shared wall. */
+    /** Side-profile doorway between left/right rooms (horizontal passage).
+     *  Uses pack Door_*_closed edge-on leaf — NOT a front-facing double. */
     markPassageDoorway(x, floorY, roomH, doorKind = 'wood') {
       this.ensureFrontDoorTextures();
       const fam = doorFamilyFor(doorKind);
-      // Compact ajar leaf reads as an open doorway in the shared wall.
-      let leafKey = fam.openKey;
-      if (!this.textures.exists(leafKey)) leafKey = fam.closedKey;
-      if (!this.textures.exists(leafKey)) leafKey = 'doorFrontClosed';
-
+      let sideKey = fam.sideKey;
+      if (!this.textures.exists(sideKey)) {
+        sideKey = this.textures.exists('doorClosed') ? 'doorClosed' : 'doorFrontClosed';
+      }
       const sc = SCALE;
-      const src = doorTexSize(this, leafKey);
-      const leafW = src.w * sc;
+      const src = doorTexSize(this, sideKey);
+      // Native leaf size — side strips are ~5×22 → ~10×44 at SCALE 2.
+      const leafW = Math.max(6, src.w * sc);
       const leafH = src.h * sc;
-      const jamb = 2;
-      const lintelH = 3;
-      // Opening hugs the leaf — never stretch into a floor-to-ceiling shaft.
-      const frameW = Math.max(18, leafW + jamb * 2);
-      const frameH = Math.min(Math.max(leafH + 4, 44), Math.max(40, (roomH || 52) - 12));
-      const fx = Math.round(x - frameW / 2);
-      const fy = Math.round(floorY - frameH);
+      // Narrow recess in the shared wall; height matches the leaf, not the room.
+      const doorW = Math.max(10, leafW + 4);
+      const doorH = Math.min(Math.max(leafH + 4, 42), Math.max(40, (roomH || 82) - 16));
+      const top = floorY - doorH;
 
       const g = this.add.graphics().setDepth(20.8);
-      // Soft wall recess (not a solid black slab)
-      g.fillStyle(0x1a1510, 0.5);
-      g.fillRect(fx - 2, fy - lintelH - 1, frameW + 4, frameH + lintelH + 2);
-      // Lintel
-      g.fillStyle(0x3a2e22, 1);
-      g.fillRect(fx - 1, fy - lintelH, frameW + 2, lintelH);
-      // Dark opening + jambs
-      g.fillStyle(0x0c0a08, 1);
-      g.fillRect(fx, fy, frameW, frameH);
-      g.fillStyle(0x4a3a2a, 1);
-      g.fillRect(fx, fy, jamb, frameH);
-      g.fillRect(fx + frameW - jamb, fy, jamb, frameH);
+      // Soft wall opening (narrow — not a black shaft)
+      g.fillStyle(0x0c0a08, 0.75);
+      g.fillRect(x - doorW / 2, top, doorW, doorH);
+      // Jambs + lintel
       g.fillStyle(0x2a2218, 1);
-      g.fillRect(fx + jamb, fy + 1, frameW - jamb * 2, 3);
-      // Threshold
+      g.fillRect(x - doorW / 2 - 2, top, 2, doorH);
+      g.fillRect(x + doorW / 2, top, 2, doorH);
+      g.fillStyle(0x3a2e22, 1);
+      g.fillRect(x - doorW / 2 - 1, top - 3, doorW + 2, 3);
       g.fillStyle(0x2c2118, 1);
-      g.fillRect(fx - 1, floorY - 2, frameW + 2, 2);
-      g.lineStyle(1, 0x0a0806, 0.85);
-      g.strokeRect(fx, fy, frameW, frameH);
+      g.fillRect(x - doorW / 2 - 1, floorY - 2, doorW + 2, 2);
 
-      // Front-facing leaf at native pack scale
-      if (this.textures.exists(leafKey)) {
-        this.add.image(fx + jamb, floorY - 1, leafKey)
-          .setOrigin(0, 1)
+      // Edge-on closed leaf at native pack scale (side profile)
+      if (this.textures.exists(sideKey)) {
+        this.add.image(x - 1, floorY - 1, sideKey)
+          .setOrigin(0.5, 1)
           .setScale(sc, sc)
           .setDepth(20.9);
       }
