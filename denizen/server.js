@@ -10986,11 +10986,10 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     res.writeHead(302, { Location: '/desktop/download.html' });
     res.end();
     return;
+  }
   // LLM usage dashboard alias
   if (urlPath === '/llm-usage' || urlPath === '/llm-usage/') {
     urlPath = '/llm-usage.html';
-  }
-
   }
   // Marketing landing page — root and welcome aliases
   if (urlPath === '/' || urlPath === '/home' || urlPath === '/landing' || urlPath === '/welcome'
