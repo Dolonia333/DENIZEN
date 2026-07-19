@@ -3335,48 +3335,76 @@
         fascia.fillRect(fx + 1, y - 4, fw - 2, 3);
         fascia.fillStyle(0x6a7888, 0.55);
         fascia.fillRect(fx + 2, y - 5, fw - 4, 1);
+
+        // Small flat end caps + a continuous cap-tile run between them.
+        if (this.textures.exists(endKey)) {
+          this.add.image(left - overhang, y, endKey)
+            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatEndSy);
+          this.add.image(left + bw + overhang, y, endKey)
+            .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatEndSy).setFlipX(true);
+        }
+        if (this.textures.exists(connKey)) {
+          const join = 2;
+          const runL = left - overhang + endW - join;
+          const runR = left + bw + overhang - endW + join;
+          let lastX = runL;
+          for (let x = runL; x + tileW <= runR + 0.5; x += tileW) {
+            this.add.image(x, y, connKey).setOrigin(0, 1).setDepth(connDepth).setScale(SCALE, flatSy);
+            lastX = x + tileW;
+          }
+          if (runR - lastX > 1) {
+            this.add.image(Math.max(runL, runR - tileW), y, connKey)
+              .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE, flatSy);
+          }
+        }
+        return { style: 'flat', color, y };
       }
 
-      if (this.textures.exists(endKey)) {
-        this.add.image(left - overhang, y, endKey)
-          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatEndSy);
-        this.add.image(left + bw + overhang, y, endKey)
-          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatEndSy).setFlipX(true);
+      // ── Gable / shingle roof: a SOLID continuous shingled band spanning the
+      // full building width. The old assembly used two triangular end pieces
+      // angled OUTWARD with a short center ridge, which left a see-through gap
+      // in the middle (sky showing behind the title) — the "holes". Instead,
+      // lay two overlapping shingle courses edge-to-edge over a solid roof
+      // body, same shingle art, no gaps. ──
+      const spanL = left - overhang;
+      const spanR = left + bw + overhang;
+      const spanW = spanR - spanL;
+      const rowH = 8 * SCALE;   // Roof_1 connecting native height ×SCALE
+      const rows = 2;           // two layered courses → a taller, solid cap
+      const capTop = y - rows * rowH;
+
+      // Solid roof body behind the shingles so no sky peeks between tiles.
+      const body = this.add.graphics().setDepth(connDepth - 0.3);
+      body.fillStyle(0x141b24, 1);
+      body.fillRect(spanL - SCALE, capTop, spanW + SCALE * 2, (y - capTop) + 3 * SCALE);
+
+      if (this.textures.exists(connKey)) {
+        const step = tileW - SCALE; // 1px overlap so courses read as one surface
+        for (let r = 0; r < rows; r += 1) {
+          const ry = y - r * rowH;
+          for (let x = spanL; x < spanR; x += step) {
+            this.add.image(x, ry, connKey)
+              .setOrigin(0, 1).setDepth(connDepth + r * 0.05).setScale(SCALE, SCALE);
+          }
+          // guarantee the far-right eave is covered flush
+          this.add.image(spanR - tileW, ry, connKey)
+            .setOrigin(0, 1).setDepth(connDepth + r * 0.05 + 0.02).setScale(SCALE, SCALE);
+        }
       }
 
-      if (!this.textures.exists(connKey)) {
-        return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
-      }
-
-      // Overlap ends by a few px so the ridge never gaps at the joint.
-      const join = isFlat ? 2 : 8;
-      const runL = left - overhang + endW - join;
-      const runR = left + bw + overhang - endW + join;
-      let lastX = runL;
-      for (let x = runL; x + tileW <= runR + 0.5; x += tileW) {
-        this.add.image(x, y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE, flatSy);
-        lastX = x + tileW;
-      }
-      // Close any leftover span — identical shingles hide the overlap.
-      if (runR - lastX > 1) {
-        this.add.image(Math.max(runL, runR - tileW), y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE, flatSy);
-      }
-      // Always plant one mid-span tile on wide buildings so a failed loop
-      // math can't leave a hollow center between the eaves.
-      if (bw >= 120 && runR - runL > tileW * 2) {
-        const midX = (runL + runR) / 2 - tileW / 2;
-        this.add.image(midX, y, connKey)
-          .setOrigin(0, 1).setDepth(connDepth - 0.1).setScale(SCALE, flatSy);
-      }
+      // Crisp dark eave line under the shingles + a faint ridge highlight.
+      const eave = this.add.graphics().setDepth(connDepth + 0.2);
+      eave.fillStyle(0x0d1420, 1);
+      eave.fillRect(spanL - SCALE, y - SCALE, spanW + SCALE * 2, 2 * SCALE);
+      eave.fillStyle(0xffffff, 0.07);
+      eave.fillRect(spanL, capTop - SCALE, spanW, SCALE);
 
       // Snow overlay for snow style or winter themes
       if (style === 'snow' || (typeof roofSpec === 'object' && roofSpec.snow)) {
         this.drawRoofSnow(left, top, bw, y);
       }
 
-      return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
+      return { style: style === 'snow' ? 'snow' : 'gable', color, y };
     }
 
     /** Layer snow piles along a roof line (Pixel Spaces snowpile tiles). */
