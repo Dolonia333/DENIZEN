@@ -41,10 +41,9 @@ block you walk down, one building per Discord category, every room designed
       ridges, skyline, hills, pack blimps) — zones no longer sit in bare cyan
 - [x] Status happiness faces only for voice members (text members were all
       wearing the blue "meh" face)
-- [x] Roof cleanup (2026-07-17): no trees/vent boxes on pitched gables (white
-      blobs read as broken roofs); snow style only by explicit opt-in, never
-      seeded from titles; ridge tiles never overshoot the end caps; rooftop
-      deck drawn in front of the shell so the ROOF door sits on planks
+- [x] Roof ridge fix (2026-07-18): gable connecting tiles were buried under the
+      walkable deck rail — only end eaves showed. Lift ridge above the deck and
+      tighten end↔connector joints so pitched roofs read as one continuous cap.
 - [x] Wall decor collision: occupancy list per room (kit items + seeded extra
       + plaque zone) — skip, never stack
 - [x] Door clearance: furniture bands start past the climb-door leaf edge
@@ -84,6 +83,8 @@ block you walk down, one building per Discord category, every room designed
 - [x] Ambient eat near food spots
 - [x] UI emotes above heads on pose
 - [x] Chat bubble sprites behind soft-text speech (assets ready; not wired to presence text)
+- [x] Hospital ward cast (2026-07-18): expansion nurse/surgeon sheets, patients in beds, staff attend bedside; Discord members in hospital channels claim beds
+- [x] Anonymous street cast (2026-07-18): `spawnDecorNpcs` sidewalk life + curb strollers (BlockLife residents still off)
 
 ### Stage 3 — Food + pets — done
 - [x] Pixel Platter on cafe/kitchen/lounge surfaces + theme table hosts

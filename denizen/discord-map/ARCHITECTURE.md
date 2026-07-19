@@ -111,6 +111,17 @@ NPC sheets are **not** single-frame PNGs in ASSETS alone — see `NPC_SHEETS` + 
 
 Foot plant: `NPC_FOOT_ORIGIN_Y` — art isn’t flush to cell bottom; adjust if characters float.
 
+### Hospital ward roles
+
+- Staff art: `HOSP_NURSE_SHEETS` / `HOSP_SURGEON_SHEETS` under `PixelSpacesFull/Expansions/Hospital/NPCs/` (via `npcSheetFor('hospital-nurse…')`).
+- Recipe NPCs carry `{ role: 'patient'|'nurse'|'surgeon', bedDx|attendDx, side }`. Patients `lieIdle` on `bedHosp`; nurses/surgeons park at bedside offsets and **never** sit on beds.
+- Live Discord members in hospital-themed channels claim empty (or ambient) beds via `assignLiveHospitalPatient`; leave frees the bed and restores the ambient patient.
+
+### Street ambient (anonymous)
+
+- `spawnDecorNpcs()` after layout bootstrap: ~3 sidewalk `life` roamers (`actorPickWander`) + ~2 curb `stroll` yoyo walkers.
+- BlockLife named residents stay off so they don’t collide with Discord presence.
+
 ---
 
 ## 5. Furniture placement
