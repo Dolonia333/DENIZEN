@@ -3356,10 +3356,41 @@
      * connecting tile (16×8) must be lifted by that pad so ridge heights match.
      * Without the lift, ends float as two spikes with a low disconnected bar.
      */
+    /**
+     * Hand-authored roof packing (see roof-examples/*.json + tools/roof-composer.html).
+     * Edit visually in the composer, export JSON, bake parametric/pieces here.
+     */
+    roofRecipeFor(style) {
+      // Baked from denizen/discord-map/roof-examples/{gable,flat}-default.json
+      if (style === 'flat') {
+        return {
+          overhang: 4,
+          yEndOffset: 1,
+          ridgeInset: 2,
+          connStep: 14,
+          endSrcH: 5,
+          connSrcH: 4,
+          endDepth: 21.1,
+          connDepth: 20.6,
+        };
+      }
+      return {
+        overhang: 6,
+        yEndOffset: -12,
+        ridgeInset: 14, // Roof_1 end: slope cols 0–13, ridge 14–25
+        connStep: 14,   // single pass, slight overlap — no mid double-fill
+        endSrcH: 17,
+        connSrcH: 8,
+        endDepth: 21.0,
+        connDepth: 20.5,
+      };
+    }
+
     drawRoofCap(left, top, bw, roofSpec = 'roofRedC') {
       let style = 'gable';
       let color = 'red';
       let connKey = 'roofRedC';
+      let customPieces = null;
 
       if (typeof roofSpec === 'string') {
         connKey = this.textures.exists(roofSpec) ? roofSpec : 'roofRedC';
@@ -3376,57 +3407,65 @@
         } else {
           connKey = this.textures.exists(`roof${cap}C`) ? `roof${cap}C` : 'roofRedC';
         }
+        // Absolute piece list from Roof Composer export (art px relative to shell).
+        if (Array.isArray(roofSpec.pieces) && roofSpec.pieces.length) {
+          customPieces = roofSpec.pieces;
+        }
       }
 
       const isFlat = style === 'flat' || /^roof2/i.test(connKey);
       const endKey = connKey.replace(/C$/, 'E');
-      // Native pack sizes (unscaled)
-      const endSrcH = isFlat ? 5 : 17;
-      const connSrcH = isFlat ? 4 : 8;
+      const recipe = (typeof roofSpec === 'object' && roofSpec.parametric)
+        ? { ...this.roofRecipeFor(isFlat ? 'flat' : 'gable'), ...roofSpec.parametric }
+        : this.roofRecipeFor(isFlat ? 'flat' : 'gable');
+
       const tileW = 16 * SCALE;
-      // Flat sits on the shell lip; gable lifts so the ridge clears the deck rail.
-      const yEnd = top + (isFlat ? 1 : -12);
+      const yEnd = top + recipe.yEndOffset;
       // Lift connecting so its ridge band lines up with the end's ridge band.
-      const ridgePad = (endSrcH - connSrcH) * SCALE; // Roof_1: 9×SCALE, Roof_2: 1×SCALE
+      const ridgePad = (recipe.endSrcH - recipe.connSrcH) * SCALE;
       const yConn = yEnd - ridgePad;
-      const overhang = isFlat ? 4 : 6;
-      const endDepth = isFlat ? 21.1 : 21.0;
-      const connDepth = isFlat ? 20.6 : 20.5;
+      const overhang = recipe.overhang;
+      const endDepth = recipe.endDepth;
+      const connDepth = recipe.connDepth;
 
-      // Connecting run first (behind ends), ridge-aligned and packed solid.
-      if (this.textures.exists(connKey)) {
-        // Roof_1 end: slope is cols 0–13, flat ridge cols 14–25. Start the
-        // connecting run at the ridge so it fills the whole span between eaves.
-        const ridgeInset = isFlat ? 2 * SCALE : 14 * SCALE;
-        const runL = left - overhang + ridgeInset;
-        const runR = left + bw + overhang - ridgeInset;
-        const step = Math.max(8, tileW - 2); // 1–2px overlap, no gaps
-        // Primary packed run
-        for (let x = runL; x < runR; x += step) {
-          this.add.image(x, yConn, connKey)
-            .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
+      // Composer absolute pieces win when provided (drag/drop / cut export).
+      if (customPieces) {
+        for (const p of customPieces) {
+          const kind = p.kind === 'end' ? endKey : (p.kind === 'connecting' ? connKey : null);
+          const key = p.key || kind;
+          if (!key || !this.textures.exists(key)) continue;
+          // Composer exports bottom-left origin even when flipped.
+          const img = this.add.image(
+            left + Number(p.x) * SCALE,
+            top + Number(p.y) * SCALE,
+            key,
+          ).setOrigin(0, 1)
+            .setDepth(p.kind === 'end' ? endDepth : connDepth)
+            .setScale(SCALE);
+          if (p.flipX) img.setFlipX(true);
         }
-        // Flush the right eave — loop math can leave a slit
-        this.add.image(runR - tileW, yConn, connKey)
-          .setOrigin(0, 1).setDepth(connDepth - 0.04).setScale(SCALE);
-        // Half-step second pass fills any remaining centre seams on wide shells
-        if (runR - runL > tileW) {
-          for (let x = runL + step / 2; x < runR - tileW / 2; x += step) {
+      } else {
+        // Parametric pack from roof-examples — connecting first, then ends.
+        if (this.textures.exists(connKey)) {
+          const ridgeInset = recipe.ridgeInset * SCALE;
+          const runL = left - overhang + ridgeInset;
+          const runR = left + bw + overhang - ridgeInset;
+          const step = Math.max(8, recipe.connStep * SCALE);
+          for (let x = runL; x <= runR - tileW; x += step) {
             this.add.image(x, yConn, connKey)
-              .setOrigin(0, 1).setDepth(connDepth - 0.08).setScale(SCALE);
+              .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
           }
-          // Explicit mid cap
-          this.add.image((runL + runR) / 2 - tileW / 2, yConn, connKey)
-            .setOrigin(0, 1).setDepth(connDepth - 0.1).setScale(SCALE);
+          // Flush right eave so loop math never leaves a slit.
+          this.add.image(runR - tileW, yConn, connKey)
+            .setOrigin(0, 1).setDepth(connDepth - 0.04).setScale(SCALE);
         }
-      }
 
-      // End caps on top — triangular eaves (gable) or short parapet ends (flat).
-      if (this.textures.exists(endKey)) {
-        this.add.image(left - overhang, yEnd, endKey)
-          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
-        this.add.image(left + bw + overhang, yEnd, endKey)
-          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
+        if (this.textures.exists(endKey)) {
+          this.add.image(left - overhang, yEnd, endKey)
+            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
+          this.add.image(left + bw + overhang, yEnd, endKey)
+            .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
+        }
       }
 
       if (style === 'snow' || (typeof roofSpec === 'object' && roofSpec.snow)) {

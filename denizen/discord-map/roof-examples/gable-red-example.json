@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "name": "gable-red-example",
+  "family": "Roof_1",
+  "color": "red",
+  "style": "gable",
+  "scale": 2,
+  "buildingWidth": 160,
+  "note": "Visual match for gable-red-example.png — baked parametric is what drawRoofCap uses by default.",
+  "parametric": {
+    "overhang": 6,
+    "yEndOffset": -12,
+    "ridgeInset": 14,
+    "connStep": 14,
+    "endSrcH": 17,
+    "connSrcH": 8,
+    "endDepth": 21,
+    "connDepth": 20.5
+  },
+  "pieces": [
+    {
+      "kind": "connecting",
+      "x": 8,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 22,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 36,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 50,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 64,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 78,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 92,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 106,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 120,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 134,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "connecting",
+      "x": 136,
+      "y": -21,
+      "flipX": false,
+      "w": 16,
+      "h": 8
+    },
+    {
+      "kind": "end",
+      "x": -6,
+      "y": -12,
+      "flipX": false,
+      "w": 26,
+      "h": 17
+    },
+    {
+      "kind": "end",
+      "x": 140,
+      "y": -12,
+      "flipX": true,
+      "w": 26,
+      "h": 17
+    }
+  ]
+}

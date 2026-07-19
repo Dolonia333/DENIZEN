@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "name": "flat-default",
+  "family": "Roof_2",
+  "style": "flat",
+  "scale": 2,
+  "note": "Hand layout for flat/institutional roofs. Edit via denizen/tools/roof-composer.html.",
+  "parametric": {
+    "overhang": 4,
+    "yEndOffset": 1,
+    "ridgeInset": 2,
+    "connStep": 14,
+    "endSrcH": 5,
+    "connSrcH": 4,
+    "endDepth": 21.1,
+    "connDepth": 20.6
+  },
+  "pieces": []
+}
