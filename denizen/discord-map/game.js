@@ -405,10 +405,14 @@
     bedHosp: `${EXP}/Hospital/Individual Assets/Bed_hospital_front.png`,
     salineStand: `${EXP}/Hospital/Individual Assets/Saline_stand.png`,
     tableSurgery: `${EXP}/Hospital/Individual Assets/Table_surgery.png`,
+    tableSteel: `${EXP}/Hospital/Individual Assets/Table_stainless_steel.png`,
     lightSurgery: `${EXP}/Hospital/Individual Assets/Light_surgery_white.png`,
+    lightSurgeryBlack: `${EXP}/Hospital/Individual Assets/Light_surgery_black.png`,
     storageMed: `${EXP}/Hospital/Individual Assets/Storage_medical_white.png`,
     computerMed: `${EXP}/Hospital/Individual Assets/Computer_medical_white.png`,
     monitorMedWall: `${EXP}/Hospital/Individual Assets/Monitor_medical_mounted_white.png`,
+    monitorMed: `${EXP}/Hospital/Individual Assets/Monitor_medical_white.png`,
+    monitorMedBlack: `${EXP}/Hospital/Individual Assets/Monitor_medical_black.png`,
     posterMed: `${EXP}/Hospital/Individual Assets/Poster_medical.png`,
 
     triceratops: `${EXP}/Museum/Individual Assets/Skeleton_triceratops.png`,
@@ -976,16 +980,24 @@
   const HOSP_NURSE_SHEETS = [
     { key: 'hospNurseBlueF1', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_1.png` },
     { key: 'hospNurseBlueF2', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_2.png` },
+    { key: 'hospNurseBlueF3', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_female_3.png` },
     { key: 'hospNurseBlueM1', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_male_1.png` },
+    { key: 'hospNurseBlueM2', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_male_2.png` },
+    { key: 'hospNurseBlueM3', path: `${EXP}/Hospital/NPCs/npc_nurse_blue_male_3.png` },
     { key: 'hospNurseGreenF1', path: `${EXP}/Hospital/NPCs/npc_nurse_green_female_1.png` },
+    { key: 'hospNurseGreenF2', path: `${EXP}/Hospital/NPCs/npc_nurse_green_female_2.png` },
+    { key: 'hospNurseGreenF3', path: `${EXP}/Hospital/NPCs/npc_nurse_green_female_3.png` },
     { key: 'hospNurseGreenM1', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_1.png` },
     { key: 'hospNurseGreenM2', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_2.png` },
+    { key: 'hospNurseGreenM3', path: `${EXP}/Hospital/NPCs/npc_nurse_green_male_3.png` },
   ];
   const HOSP_SURGEON_SHEETS = [
     { key: 'hospSurgeonM1', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_1.png` },
     { key: 'hospSurgeonM2', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_2.png` },
+    { key: 'hospSurgeonM3', path: `${EXP}/Hospital/NPCs/npc_surgeon_male_3.png` },
     { key: 'hospSurgeonF1', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_1.png` },
     { key: 'hospSurgeonF2', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_2.png` },
+    { key: 'hospSurgeonF3', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_3.png` },
   ];
   const HOSP_NPC_SHEETS = [...HOSP_NURSE_SHEETS, ...HOSP_SURGEON_SHEETS];
   // Premade sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
@@ -1119,6 +1131,7 @@
   const SURFACE_HOSTS = {
     desk: 14, desk2: 14, coffee: 10, coffee2: 10, counter: 14, counterEnd: 14,
     tableLong: 14, tableMed2: 12, deskOffice: 14, policeDesk: 14, filecabinet: 0,
+    tableSteel: 8, tableSurgery: 6,
   };
   /** Props that must sit ON a surface host (not float mid-air). */
   const SURFACE_PROPS = new Set(['laptop', 'books', 'books2', 'radio', 'paperStack', 'paperStack2']);
@@ -1335,39 +1348,80 @@
       wall: 0xe8ecf2, side: 0xc0c8d4, outline: 0x2a3444, roof: 0xd8e0ea, band: 0x9aa8ba,
       signKey: 'hospSign', signScale: SCALE * 0.9,
       stripStyle: { color: '#ffffff', bg: '#c0392b' },
+      title: { color: '#ffffff', bg: '#c0392b' },
       roofKey: 'roofBlueC', plaqueKey: 'uiTabBlue',
       doorFamily: 'grey',
       climbMode: 'elev',
-      // Elevator lane left (shaft at 36). OR: surgeon stands at the table.
-      // Ward: patients in beds + nurses at bedside (not sitting on mattresses).
+      // Elevator lane left (shaft at 36).
+      // Recipe 0 = OR theater (patient on table + scrub team).
+      // Recipe 1 = ward (beds, nurses, rounds doctor, waiting).
       stairsDx: 36,
       recipes: [
         () => ({
-          h: 84, fill: 0xdaf0ea, slots: [90, 185],
+          // Operating theater — fixed surgery table (never CT) + full scrub cast.
+          h: 98, fill: 0xc8e8e0, slots: [88, 220],
           items: [
-            ['w', 'lightSurgery', 130, 2],
-            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 185, 6], ['w', 'posterMed', 240, 6],
-            ['f', ['storageMed', 'storageMedBlack'], 70, 1, 0],
-            ['f', ['tableSurgery', 'ctScanner'], 130, 1, 0], ['f', 'salineStand', 160, 1, 0],
-            ['npc', 'hospital-surgeon', 102, { role: 'surgeon', attendDx: 130, side: 'left' }],
-            ['f', ['computerMed', 'computerMedBlack'], 215, 1, 0],
+            ['glow', 0x7ad0c0, 0.11],
+            ['w', ['lightSurgery', 'lightSurgeryBlack'], 150, 2],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 108, 6],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 192, 6],
+            ['w', 'posterMed', 240, 8],
+            ['f', ['storageMed', 'storageMedBlack'], 72, 1, 0],
+            ['f', 'salineStand', 100, 1, 0],
+            // Patient on the table; scrub team rings the OR bed.
+            ['f', 'tableSurgery', 150, 1, 0],
+            ['npc', 'hospital-or-patient', 150, {
+              role: 'patient', bedDx: 150, onSurgery: true, bedKey: 'tableSurgery',
+            }],
+            ['npc', 'hospital-surgeon-lead', 122, {
+              role: 'surgeon', attendDx: 150, side: 'left', onSurgery: true, station: 'lead',
+            }],
+            ['npc', 'hospital-surgeon-assist', 178, {
+              role: 'surgeon', attendDx: 150, side: 'right', onSurgery: true, station: 'assist',
+            }],
+            ['npc', 'hospital-surgeon-scrub', 150, {
+              role: 'surgeon', attendDx: 150, side: 'left', onSurgery: true, station: 'scrub',
+              standOffset: 40,
+            }],
+            ['npc', 'hospital-nurse-or-a', 104, {
+              role: 'nurse', attendDx: 150, side: 'left', onSurgery: true, station: 'anes',
+              standOffset: 48,
+            }],
+            ['npc', 'hospital-nurse-or-b', 196, {
+              role: 'nurse', attendDx: 150, side: 'right', onSurgery: true, station: 'circ',
+              standOffset: 46,
+            }],
+            ['f', 'tableSteel', 204, 1, 0],
+            ['f', 'salineStand', 228, 1, 0],
+            ['f', ['monitorMed', 'monitorMedBlack'], 204, 1, 8],
+            ['f', ['computerMed', 'computerMedBlack'], 248, 1, 0],
           ],
         }),
         () => ({
-          h: 102, fill: 0xe8f4f0, slots: [110, 170, 232],
+          // Patient ward — beds, bedside nurses, rounding surgeon, waiting area.
+          h: 108, fill: 0xe8f4f0, slots: [110, 170, 232],
           items: [
-            ['glow', 0xc8f0e0, 0.08],
-            ['w', 'hospLogo', 160, 6], ['w', 'posterMed', 82, 8],
+            ['glow', 0xc8f0e0, 0.09],
+            ['w', 'hospLogo', 160, 6],
+            ['w', 'posterMed', 78, 8],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 200, 6],
             ['f', 'bedHosp', 78, 1, 0],
             ['npc', 'hospital-patient-a', 78, { role: 'patient', bedDx: 78 }],
             ['npc', 'hospital-nurse-a', 56, { role: 'nurse', attendDx: 78, side: 'left' }],
-            ['f', 'salineStand', 105, 1, 0],
-            ['f', 'bedHosp', 138, 1, 0],
-            ['npc', 'hospital-patient-b', 138, { role: 'patient', bedDx: 138 }],
-            ['npc', 'hospital-nurse-b', 160, { role: 'nurse', attendDx: 138, side: 'right' }],
-            ['f', ['computerMed', 'computerMedBlack'], 205, 1, 0],
-            ['f', ['storageMed', 'storageMedBlack'], 238, 1, 0],
-            ['f', 'floraFernFull', 118, 1, 0],
+            ['f', 'salineStand', 102, 1, 0],
+            ['f', 'bedHosp', 148, 1, 0],
+            ['npc', 'hospital-patient-b', 148, { role: 'patient', bedDx: 148 }],
+            ['npc', 'hospital-nurse-b', 170, { role: 'nurse', attendDx: 148, side: 'right' }],
+            ['npc', 'hospital-surgeon-rounds', 126, {
+              role: 'surgeon', attendDx: 148, side: 'left', station: 'rounds',
+            }],
+            ['f', 'salineStand', 176, 1, 0],
+            ['f', ['computerMed', 'computerMedBlack'], 210, 1, 0],
+            ['f', ['storageMed', 'storageMedBlack'], 240, 1, 0],
+            ['f', ['waitChairSolo', 'waitChairSoloRed'], 252, 1, 0],
+            ['npc', 'hospital-nurse-desk', 228, {
+              role: 'nurse', attendDx: 210, side: 'right', station: 'desk', standOffset: 18,
+            }],
           ],
         }),
       ],
@@ -2356,13 +2410,16 @@
         if (!this.hospitalRoomKeys) this.hospitalRoomKeys = new Set();
         channels.forEach((ch) => this.hospitalRoomKeys.add(chKey(ch.id)));
       }
+      const stripText = theme === 'hospital'
+        ? `${shortLabel(displayChannelName(categoryLabel), 18)} · Hospital`
+        : shortLabel(displayChannelName(categoryLabel), 28);
       const b = this.drawThemeBuilding({
         left,
         bw: kit.bw,
         wall: kit.wall, side: kit.side, outline: kit.outline, roof: kit.roof, band: kit.band,
         signKey: kit.signKey, signScale: kit.signScale,
-        title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title.color, bg: kit.title.bg },
-        strip: { text: shortLabel(displayChannelName(categoryLabel), 28), color: kit.stripStyle.color, bg: kit.stripStyle.bg },
+        title: kit.signKey ? undefined : { text: categoryLabel, color: kit.title?.color, bg: kit.title?.bg },
+        strip: { text: stripText, color: kit.stripStyle.color, bg: kit.stripStyle.bg },
         doorKind: kit.doorFamily || kit.doorKind || theme || 'wood',
         climbMode: kit.climbMode || 'door',
         stairsDx: kit.stairsDx,
@@ -2555,10 +2612,14 @@
           if (!actor?.sprite?.active) continue;
           const role = actor.role;
           if (role === 'patient') {
+            const onSurgery = !!(actor.hospOpts?.onSurgery || actor.hospOpts?.bedKey === 'tableSurgery');
             const bed = this.findHospitalBedNear(
               actor.roomKey,
               actor.hospOpts?.bedWorldX ?? actor.sprite.x,
-              { allowSurgery: false },
+              {
+                allowSurgery: onSurgery,
+                preferKey: onSurgery ? 'tableSurgery' : 'bedHosp',
+              },
             );
             if (bed && !bed.claimedBy) {
               bed.claimedBy = 'ambient';
@@ -2593,14 +2654,19 @@
       });
     }
 
-    /** Hospital beds in a room. Patients use bedHosp only; staff may attend surgery tables. */
+    /** Hospital beds in a room. Patients use bedHosp; OR patients use tableSurgery. */
     findHospitalBedNear(roomKey, worldX, opts = {}) {
       const allowSurgery = opts.allowSurgery !== false;
-      const beds = (this.seats || []).filter((s) => (
+      const preferKey = opts.preferKey || null;
+      let beds = (this.seats || []).filter((s) => (
         s.kind === 'bed'
         && (s.key === 'bedHosp' || (allowSurgery && s.key === 'tableSurgery'))
         && (!roomKey || !s.floorId || s.floorId === roomKey)
       ));
+      if (preferKey) {
+        const preferred = beds.filter((s) => s.key === preferKey);
+        if (preferred.length) beds = preferred;
+      }
       if (!beds.length) return null;
       if (worldX == null) return beds.find((b) => !b.claimedBy) || beds[0];
       return beds.slice().sort((a, b) => Math.abs(a.x - worldX) - Math.abs(b.x - worldX))[0];
@@ -2631,19 +2697,42 @@
     parkHospitalStaff(actor) {
       if (!actor?.sprite?.active) return;
       const opts = actor.hospOpts || {};
-      const targetX = opts.attendWorldX != null ? opts.attendWorldX : actor.sprite.x;
-      const bed = this.findHospitalBedNear(actor.roomKey, targetX);
       const side = opts.side === 'right' ? 1 : -1;
-      const offset = actor.role === 'surgeon' ? 28 : 22;
+
+      // Desk / charting nurses stand by the computer — not a bedside post.
+      if (opts.station === 'desk') {
+        const standX = opts.attendWorldX != null ? opts.attendWorldX : actor.sprite.x;
+        actor.sprite.x = standX;
+        actor.sprite.y = actor.floorY;
+        actor.homeX = standX;
+        actor.attendBed = null;
+        actor.sprite.setFlipX(side > 0);
+        this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+        actor.state = 'idle';
+        actor.busyUntil = this.time.now + 4000 + Math.random() * 3000;
+        return;
+      }
+
+      const targetX = opts.attendWorldX != null ? opts.attendWorldX : actor.sprite.x;
+      const bed = this.findHospitalBedNear(actor.roomKey, targetX, {
+        allowSurgery: true,
+        preferKey: opts.onSurgery || opts.bedKey === 'tableSurgery' ? 'tableSurgery' : null,
+      });
+      let offset = opts.standOffset != null
+        ? opts.standOffset
+        : (actor.role === 'surgeon' ? 28 : 22);
+      // Third scrub surgeon stands farther at the table foot.
+      if (opts.station === 'scrub' && opts.standOffset == null) offset = 40;
       const standX = (bed ? bed.x : targetX) + side * offset;
       actor.sprite.x = standX;
       actor.sprite.y = actor.floorY;
       actor.homeX = standX;
       actor.attendBed = bed || null;
-      actor.sprite.setFlipX(side > 0); // face toward the bed
+      actor.sprite.setFlipX(side > 0); // face toward the bed/table
       this.playSheetPose(actor.sprite, actor.sheet, 'idle');
       actor.state = 'idle';
-      actor.busyUntil = this.time.now + 4000 + Math.random() * 3000;
+      const busyBase = (opts.onSurgery || bed?.key === 'tableSurgery') ? 2200 : 4000;
+      actor.busyUntil = this.time.now + busyBase + Math.random() * 2800;
     }
 
     displaceAmbientPatient(bed) {
@@ -5590,14 +5679,52 @@
       if (!actor?.sprite?.active) return;
       if (actor._displaced) return;
 
-      // Hospital staff: stay at bedside, rare emote, occasional short check of saline/monitor
+      // Hospital staff: bedside ward care, or scrub-team "operation" loop in the OR.
       if (actor.role === 'nurse' || actor.role === 'surgeon') {
         if (actor.seated) {
           this.actorStandUp(actor);
           this.parkHospitalStaff(actor);
           return;
         }
+        const atOr = !!(actor.hospOpts?.onSurgery || actor.attendBed?.key === 'tableSurgery');
         const roll = Math.random();
+        if (atOr) {
+          // Operating theater: keep the scrub team busy around the patient.
+          if (roll < 0.34) {
+            // Lean / gesture over the table (jump≈reach on hospital sheets)
+            this.playAmbientPose(actor, Math.random() < 0.55 ? 'jump' : 'wave');
+            actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 1800);
+          } else if (roll < 0.55 && actor.attendBed) {
+            const bedX = actor.attendBed.x;
+            const closer = bedX + (actor.sprite.x < bedX ? -10 : 10);
+            const returnX = actor.homeX;
+            this.actorWalkTo(actor, closer, () => {
+              this.playAmbientPose(actor, 'jump');
+              this.time.delayedCall(700 + Math.random() * 500, () => {
+                if (!actor.sprite?.active || actor._displaced) return;
+                this.actorWalkTo(actor, returnX, () => this.parkHospitalStaff(actor), 14);
+              });
+            }, 14);
+          } else if (roll < 0.68 && actor.attendBed) {
+            // Nurse checks saline / instruments, then returns
+            const peekX = actor.attendBed.x + (Math.random() < 0.5 ? -42 : 42);
+            const returnX = actor.homeX;
+            this.actorWalkTo(actor, peekX, () => {
+              this.time.delayedCall(600 + Math.random() * 700, () => {
+                if (!actor.sprite?.active || actor._displaced) return;
+                this.actorWalkTo(actor, returnX, () => this.parkHospitalStaff(actor), 14);
+              });
+            }, 14);
+          } else {
+            if (actor.homeX != null && Math.abs(actor.sprite.x - actor.homeX) > 6) {
+              actor.sprite.x = actor.homeX;
+              actor.sprite.y = actor.floorY;
+              this.playSheetPose(actor.sprite, actor.sheet, 'idle');
+            }
+            actor.busyUntil = this.time.now + 1600 + Math.random() * 2200;
+          }
+          return;
+        }
         if (roll < 0.12) {
           this.playAmbientPose(actor, Math.random() < 0.55 ? 'wave' : 'shrug');
           actor.busyUntil = Math.max(actor.busyUntil || 0, this.time.now + 2200);
