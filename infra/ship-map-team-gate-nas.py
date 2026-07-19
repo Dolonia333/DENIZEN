@@ -44,11 +44,14 @@ MIGRATION = DENIZEN / "supabase/migrations/20260719000001_discord_guild_orgs.sql
 
 
 def run(c, cmd, timeout=180):
-    print("$", cmd[:160], flush=True)
+    shown = cmd
+    if "PGPASSWORD=" in shown:
+        shown = "psql … (password redacted)"
+    print("$", shown[:160], flush=True)
     _, o, e = c.exec_command(cmd, timeout=timeout)
     out = (o.read() + e.read()).decode("utf-8", errors="replace")
     safe = out.encode("ascii", errors="replace").decode("ascii")
-    if safe.strip():
+    if safe.strip() and "PASSWORD" not in safe.upper():
         print(safe.rstrip()[-2500:], flush=True)
     return out, o.channel.recv_exit_status()
 
@@ -67,12 +70,18 @@ def main() -> int:
               password=PWD, look_for_keys=False, allow_agent=False)
 
     # --- migration ---
-    _, env_out = run(c, "grep '^POSTGRES_PASSWORD=' /volume1/docker/supabase-project/.env | head -1")
-    pg_pass = env_out.strip().split("=", 1)[-1].strip()
+    _, o, e = c.exec_command(
+        "grep '^POSTGRES_PASSWORD=' /volume1/docker/supabase-project/.env | head -1",
+        timeout=30,
+    )
+    env_out = (o.read() + e.read()).decode("utf-8", errors="replace")
+    o.channel.recv_exit_status()
+    pg_pass = env_out.strip().split("=", 1)[-1].strip() if "=" in env_out else ""
     if not pg_pass:
         print("POSTGRES_PASSWORD not found on NAS")
         c.close()
         return 1
+    print("POSTGRES_PASSWORD: set", flush=True)
 
     remote_sql = f"{REMOTE}/migrations/{MIGRATION.name}"
     run(c, f"mkdir -p '{REMOTE}/migrations'")
@@ -92,12 +101,20 @@ def main() -> int:
     if "20260719000001" in out:
         print("migration already applied")
     else:
-        run(
-            c,
+        # Avoid echoing SQL + password via noisy run(); capture only status
+        print("applying migration 20260719000001…", flush=True)
+        cmd = (
             f"cat '{remote_sql}' | {DOCKER} exec -i -e PGPASSWORD='{pg_pass}' supabase-db "
-            f"psql -v ON_ERROR_STOP=1 -U postgres -d postgres",
-            timeout=120,
+            f"psql -v ON_ERROR_STOP=1 -U postgres -d postgres -q"
         )
+        _, o2, e2 = c.exec_command(cmd, timeout=120)
+        mig_out = (o2.read() + e2.read()).decode("utf-8", errors="replace")
+        code = o2.channel.recv_exit_status()
+        if code != 0:
+            print("migration FAILED:", mig_out[-800:].encode("ascii", errors="replace").decode("ascii"))
+            c.close()
+            return code
+        print("migration applied")
 
     # --- hot-copy runtime files ---
     with tempfile.TemporaryDirectory() as td:
