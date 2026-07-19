@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-19T02:17:45.128Z",
+  "generatedAt": "2026-07-19T05:57:39.320Z",
   "prefix": ",",
-  "count": 95,
+  "count": 130,
   "modules": [
     {
       "id": "core",
@@ -19,7 +19,7 @@
       "premium": false,
       "badge": null,
       "badgeKind": null,
-      "count": 3
+      "count": 7
     },
     {
       "id": "avatar",
@@ -181,6 +181,51 @@
       "badge": null,
       "badgeKind": null,
       "count": 1
+    },
+    {
+      "id": "economy",
+      "label": "economy",
+      "order": 500,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 10
+    },
+    {
+      "id": "shop",
+      "label": "shop",
+      "order": 500,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 3
+    },
+    {
+      "id": "minigames",
+      "label": "minigames",
+      "order": 500,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 2
+    },
+    {
+      "id": "pvp",
+      "label": "pvp",
+      "order": 500,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 2
+    },
+    {
+      "id": "slots",
+      "label": "slots",
+      "order": 500,
+      "premium": false,
+      "badge": null,
+      "badgeKind": null,
+      "count": 14
     }
   ],
   "commands": [
@@ -204,7 +249,7 @@
       "options": [
         {
           "name": "topic",
-          "description": "spaces | music | tickets | mods | security | all",
+          "description": "spaces | music | tickets | slots | mods | security | all",
           "type": 3,
           "required": false,
           "summary": "topic?"
@@ -333,12 +378,96 @@
       "options": []
     },
     {
+      "name": "map",
+      "description": "Open this server’s Denizen Spaces map (needs team code)",
+      "aliases": [
+        "spacesmap",
+        "openmap"
+      ],
+      "module": "denizen",
+      "moduleLabel": "Account",
+      "moduleOrder": 20,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "mapcode",
+      "description": "Show this server’s team code + map URL (Manage Server)",
+      "aliases": [
+        "teamcode"
+      ],
+      "module": "denizen",
+      "moduleLabel": "Account",
+      "moduleOrder": 20,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "room",
+      "description": "Customize a Spaces map room (theme, color, furniture, name)",
+      "aliases": [
+        "maproom",
+        "spacesroom"
+      ],
+      "module": "denizen",
+      "moduleLabel": "Account",
+      "moduleOrder": 20,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
       "name": "signup",
       "description": "Create a Denizen account with your Discord profile",
       "aliases": [
         "join",
         "account"
       ],
+      "module": "denizen",
+      "moduleLabel": "Account",
+      "moduleOrder": 20,
+      "slash": true,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "teamlink",
+      "description": "Link this Discord server to a Denizen team (Manage Server)",
+      "aliases": [],
       "module": "denizen",
       "moduleLabel": "Account",
       "moduleOrder": 20,
@@ -2786,6 +2915,824 @@
           "summary": "action?"
         }
       ]
+    },
+    {
+      "name": "balance",
+      "description": "Check your Credits balance",
+      "aliases": [
+        "bal",
+        "wallet"
+      ],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Whose balance to check",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        }
+      ]
+    },
+    {
+      "name": "buy",
+      "description": "Buy an item from the Credits shop",
+      "aliases": [],
+      "module": "shop",
+      "moduleLabel": "shop",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "item",
+          "description": "Item id, e.g. title_rookie",
+          "type": 3,
+          "required": true,
+          "summary": "item"
+        }
+      ]
+    },
+    {
+      "name": "claim",
+      "description": "Claim your daily Credits",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "coinflip",
+      "description": "Challenge someone to a coinflip (optional wager)",
+      "aliases": [
+        "flip",
+        "cf"
+      ],
+      "module": "minigames",
+      "moduleLabel": "minigames",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Opponent (omit for open challenge)",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        },
+        {
+          "name": "wager",
+          "description": "Credits each side puts in",
+          "type": 4,
+          "required": false,
+          "summary": "wager?"
+        },
+        {
+          "name": "mode",
+          "description": "open = anyone can accept",
+          "type": 3,
+          "required": false,
+          "summary": "mode?"
+        }
+      ]
+    },
+    {
+      "name": "createredeem",
+      "description": "Create a Credits redeem code (staff)",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": [
+        {
+          "name": "amount",
+          "description": "Credits the code grants",
+          "type": 4,
+          "required": true,
+          "summary": "amount"
+        },
+        {
+          "name": "maxuses",
+          "description": "Max redemptions (default 1)",
+          "type": 4,
+          "required": false,
+          "summary": "maxuses?"
+        },
+        {
+          "name": "code",
+          "description": "Custom code (auto-generated if omitted)",
+          "type": 3,
+          "required": false,
+          "summary": "code?"
+        }
+      ]
+    },
+    {
+      "name": "credits",
+      "description": "Credits admin + leaderboard (lb | give | take | hold | warn | blacklist | audit)",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "lb | give | take | hold | unhold | warn | blacklist | audit",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        },
+        {
+          "name": "user",
+          "description": "Target user",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        },
+        {
+          "name": "amount",
+          "description": "Amount or hold hours",
+          "type": 4,
+          "required": false,
+          "summary": "amount?"
+        },
+        {
+          "name": "reason",
+          "description": "Warn/blacklist reason",
+          "type": 3,
+          "required": false,
+          "summary": "reason?"
+        },
+        {
+          "name": "channel",
+          "description": "Audit log channel",
+          "type": 7,
+          "required": false,
+          "summary": "channel?"
+        }
+      ]
+    },
+    {
+      "name": "deleteredeem",
+      "description": "Delete a Credits redeem code (staff)",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": [
+        {
+          "name": "code",
+          "description": "Code to delete",
+          "type": 3,
+          "required": true,
+          "summary": "code"
+        }
+      ]
+    },
+    {
+      "name": "duel",
+      "description": "Challenge someone to a Credits duel",
+      "aliases": [],
+      "module": "pvp",
+      "moduleLabel": "pvp",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Opponent (omit for leaderboard with wager unused)",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        },
+        {
+          "name": "wager",
+          "description": "Credits each side puts in",
+          "type": 4,
+          "required": false,
+          "summary": "wager?"
+        },
+        {
+          "name": "action",
+          "description": "lb = leaderboard · open = open challenge board",
+          "type": 3,
+          "required": false,
+          "summary": "action?"
+        }
+      ]
+    },
+    {
+      "name": "forfeit",
+      "description": "Forfeit your active duel",
+      "aliases": [],
+      "module": "pvp",
+      "moduleLabel": "pvp",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "history",
+      "description": "Show your recent Credits history",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "type",
+          "description": "credits | duels",
+          "type": 3,
+          "required": false,
+          "summary": "type?"
+        }
+      ]
+    },
+    {
+      "name": "inv",
+      "description": "View your Credits shop inventory",
+      "aliases": [
+        "inventory"
+      ],
+      "module": "shop",
+      "moduleLabel": "shop",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Whose inventory to check",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        }
+      ]
+    },
+    {
+      "name": "myslot",
+      "description": "View your seller slot",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "pay",
+      "description": "Send Credits to another member",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Recipient",
+          "type": 6,
+          "required": true,
+          "summary": "user"
+        },
+        {
+          "name": "amount",
+          "description": "Amount",
+          "type": 4,
+          "required": true,
+          "summary": "amount"
+        }
+      ]
+    },
+    {
+      "name": "redeem",
+      "description": "Redeem a Credits code",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "code",
+          "description": "Your redeem code",
+          "type": 3,
+          "required": true,
+          "summary": "code"
+        }
+      ]
+    },
+    {
+      "name": "redeems",
+      "description": "List active Credits redeem codes (staff)",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "discord",
+        "label": "Manage Guild"
+      },
+      "options": []
+    },
+    {
+      "name": "rps",
+      "description": "Rock paper scissors duel (optional wager)",
+      "aliases": [],
+      "module": "minigames",
+      "moduleLabel": "minigames",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Opponent (omit for open challenge)",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        },
+        {
+          "name": "wager",
+          "description": "Credits each side puts in",
+          "type": 4,
+          "required": false,
+          "summary": "wager?"
+        },
+        {
+          "name": "mode",
+          "description": "open = anyone can accept",
+          "type": 3,
+          "required": false,
+          "summary": "mode?"
+        }
+      ]
+    },
+    {
+      "name": "screate",
+      "description": "Create a seller slot (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "sextend",
+      "description": "Extend a slot (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "shold",
+      "description": "Hold a slot channel (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "shop",
+      "description": "Browse the Credits shop",
+      "aliases": [],
+      "module": "shop",
+      "moduleLabel": "shop",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "slotcreateredeem",
+      "description": "Create a slot redeem code (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "slotinfo",
+      "description": "Slot info (yours or staff: @user / #channel)",
+      "aliases": [
+        "sinfo"
+      ],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "slotnuke",
+      "description": "Purge messages in a slot channel",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "slotping",
+      "description": "Ping @here or @everyone from your slot",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "type",
+          "description": "here or everyone",
+          "type": 3,
+          "required": false,
+          "summary": "type?"
+        }
+      ]
+    },
+    {
+      "name": "slotredeem",
+      "description": "Redeem a slot code",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "code",
+          "description": "Redeem code",
+          "type": 3,
+          "required": true,
+          "summary": "code"
+        }
+      ]
+    },
+    {
+      "name": "slots",
+      "description": "Seller slots — setup, create, renew, ping, redeems, tickets",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": true,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "action",
+          "description": "setup|create|renew|list|info|ping|leaderboard|…",
+          "type": 3,
+          "required": true,
+          "summary": "action"
+        }
+      ]
+    },
+    {
+      "name": "srenew",
+      "description": "Renew a slot (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "srevoke",
+      "description": "Revoke a slot (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "stats",
+      "description": "Your Credits / duel stats with progress bars",
+      "aliases": [],
+      "module": "economy",
+      "moduleLabel": "economy",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": true,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": [
+        {
+          "name": "user",
+          "description": "Whose stats",
+          "type": 6,
+          "required": false,
+          "summary": "user?"
+        }
+      ]
+    },
+    {
+      "name": "stransfer",
+      "description": "Transfer slot ownership (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
+    },
+    {
+      "name": "sunhold",
+      "description": "Release a held slot (staff)",
+      "aliases": [],
+      "module": "slots",
+      "moduleLabel": "slots",
+      "moduleOrder": 500,
+      "slash": false,
+      "public": false,
+      "premium": false,
+      "plan": null,
+      "planLabel": null,
+      "planDetail": null,
+      "access": {
+        "kind": "everyone",
+        "label": "Everyone"
+      },
+      "options": []
     }
   ]
 }
