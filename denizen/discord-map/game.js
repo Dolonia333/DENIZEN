@@ -3383,9 +3383,7 @@
       // Native pack sizes (unscaled)
       const endSrcH = isFlat ? 5 : 17;
       const connSrcH = isFlat ? 4 : 8;
-      const endSrcW = isFlat ? 9 : 26;
       const tileW = 16 * SCALE;
-      const endW = endSrcW * SCALE;
       // Flat sits on the shell lip; gable lifts so the ridge clears the deck rail.
       const yEnd = top + (isFlat ? 1 : -12);
       // Lift connecting so its ridge band lines up with the end's ridge band.
@@ -3395,33 +3393,31 @@
       const endDepth = isFlat ? 21.1 : 21.0;
       const connDepth = isFlat ? 20.6 : 20.5;
 
-      // Connecting run first (behind ends), ridge-aligned.
+      // Connecting run first (behind ends), ridge-aligned and packed solid.
       if (this.textures.exists(connKey)) {
-        const join = isFlat ? 2 : 10; // overlap into the end's ridge block
-        const runL = left - overhang + endW - join;
-        const runR = left + bw + overhang - endW + join;
-        const step = tileW - (isFlat ? 0 : 1);
-        let lastX = runL;
-        for (let x = runL; x + tileW <= runR + 0.5; x += step) {
+        // Roof_1 end: slope is cols 0–13, flat ridge cols 14–25. Start the
+        // connecting run at the ridge so it fills the whole span between eaves.
+        const ridgeInset = isFlat ? 2 * SCALE : 14 * SCALE;
+        const runL = left - overhang + ridgeInset;
+        const runR = left + bw + overhang - ridgeInset;
+        const step = Math.max(8, tileW - 2); // 1–2px overlap, no gaps
+        // Primary packed run
+        for (let x = runL; x < runR; x += step) {
           this.add.image(x, yConn, connKey)
             .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
-          lastX = x + tileW;
         }
-        if (runR - lastX > 1) {
-          this.add.image(Math.max(runL, runR - tileW), yConn, connKey)
-            .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE);
-        }
-        // Mid fills so wide roofs never hollow-out between eaves.
-        if (bw >= 120 && runR - runL > tileW) {
-          const midX = (runL + runR) / 2 - tileW / 2;
-          this.add.image(midX, yConn, connKey)
-            .setOrigin(0, 1).setDepth(connDepth - 0.08).setScale(SCALE);
-          if (bw >= 220) {
-            this.add.image(midX - tileW, yConn, connKey)
-              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE);
-            this.add.image(midX + tileW, yConn, connKey)
-              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE);
+        // Flush the right eave — loop math can leave a slit
+        this.add.image(runR - tileW, yConn, connKey)
+          .setOrigin(0, 1).setDepth(connDepth - 0.04).setScale(SCALE);
+        // Half-step second pass fills any remaining centre seams on wide shells
+        if (runR - runL > tileW) {
+          for (let x = runL + step / 2; x < runR - tileW / 2; x += step) {
+            this.add.image(x, yConn, connKey)
+              .setOrigin(0, 1).setDepth(connDepth - 0.08).setScale(SCALE);
           }
+          // Explicit mid cap
+          this.add.image((runL + runR) / 2 - tileW / 2, yConn, connKey)
+            .setOrigin(0, 1).setDepth(connDepth - 0.1).setScale(SCALE);
         }
       }
 
