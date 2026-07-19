@@ -181,6 +181,7 @@ const hardwareMonitor  = require('./src/denizen-hardware-monitor');
 const fleetRegistry    = require('./src/denizen-fleet-registry');
 const lmStudioRouter   = require('./src/lm-studio-router');
 const inferenceMetrics = require('./src/denizen-inference-metrics');
+const usageTracker      = require('./src/inference-usage-tracker');
 const denizenFederation = require('./src/denizen-federation');
 const { createWorldPubsub } = require('./src/denizen-world-pubsub');
 const agentWsRelay = require('./src/denizen-agent-ws-relay');
@@ -6561,6 +6562,13 @@ const server = http.createServer((req, res) => {
   //     failed. High repair/fail rate = the current model is not very
   //     model-friendly (consider structured output or a stronger model). ---
   if (urlPath === '/api/telemetry/parse-health' && req.method === 'GET') {
+
+  // --- Per-model LLM usage dashboard: no auth required for local dashboard. ---
+  if (urlPath === '/api/llm/usage' && req.method === 'GET') {
+    usageTracker.handleApiRequest(req, res);
+    return;
+  }
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(npcBrains.getDecisionParseStats()));
     return;
@@ -10274,6 +10282,18 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
               }
             })(),
             inference: inferenceMetrics.buildMetrics(),
+            usageSummary: (() => {
+              try {
+                const usage = usageTracker.buildStats({ hours: 24 }).stats;
+                return {
+                  total: usage.total,
+                  byModel: usage.byModel,
+                  byTier: usage.byTier,
+                };
+              } catch (err) {
+                return { ok: false, error: err?.message || String(err) };
+              }
+            })(),
             intelligenceLoop: (() => {
               try {
                 return require('./src/intelligence-loop-health').buildHealth();
@@ -10967,6 +10987,11 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     res.writeHead(302, { Location: '/desktop/download.html' });
     res.end();
     return;
+  // LLM usage dashboard alias
+  if (urlPath === '/llm-usage' || urlPath === '/llm-usage/') {
+    urlPath = '/llm-usage.html';
+  }
+
   }
   // Marketing landing page — root and welcome aliases
   if (urlPath === '/' || urlPath === '/home' || urlPath === '/landing' || urlPath === '/welcome'

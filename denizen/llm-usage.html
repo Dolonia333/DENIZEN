@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Denizen LLM Usage</title>
+  <style>
+    :root { --bg: #0f172a; --panel: #1e293b; --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --ok: #22c55e; --fail: #ef4444; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 24px; background: var(--bg); color: var(--text); }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    .subtitle { color: var(--muted); margin-bottom: 24px; }
+    .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 24px; flex-wrap: wrap; }
+    select, button { background: var(--panel); color: var(--text); border: 1px solid #334155; border-radius: 6px; padding: 8px 12px; font-size: 14px; }
+    button { cursor: pointer; }
+    button:hover { border-color: var(--accent); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .card { background: var(--panel); border-radius: 8px; padding: 16px; }
+    .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .card .value { font-size: 22px; font-weight: 600; }
+    .ok { color: var(--ok); }
+    .fail { color: var(--fail); }
+    table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 8px; overflow: hidden; margin-bottom: 32px; font-size: 14px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #334155; }
+    th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    tr:last-child td { border-bottom: none; }
+    .error { background: var(--panel); color: var(--fail); padding: 16px; border-radius: 8px; }
+    .empty { color: var(--muted); padding: 16px; }
+    .recent { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    .recent td { padding: 8px 12px; }
+  </style>
+</head>
+<body>
+  <h1>LLM Usage Dashboard</h1>
+  <div class="subtitle">Per-model inference tracker for the Denizen runtime.</div>
+
+  <div class="controls">
+    <label for="hours">Window:</label>
+    <select id="hours">
+      <option value="1">Last hour</option>
+      <option value="6">Last 6 hours</option>
+      <option value="24" selected>Last 24 hours</option>
+      <option value="168">Last 7 days</option>
+    </select>
+    <button id="refresh">Refresh</button>
+    <span id="status" class="subtitle"></span>
+  </div>
+
+  <div class="grid" id="summary">
+    <div class="card"><div class="label">Requests</div><div class="value" id="total-count">-</div></div>
+    <div class="card"><div class="label">Success</div><div class="value ok" id="total-ok">-</div></div>
+    <div class="card"><div class="label">Failed</div><div class="value fail" id="total-fail">-</div></div>
+    <div class="card"><div class="label">Tokens</div><div class="value" id="total-tokens">-</div></div>
+    <div class="card"><div class="label">Avg Latency</div><div class="value" id="total-latency">-</div></div>
+  </div>
+
+  <h2>By Model</h2>
+  <div id="model-table-wrap"><div class="empty">Loading...</div></div>
+
+  <h2>By Tier</h2>
+  <div id="tier-table-wrap"><div class="empty">Loading...</div></div>
+
+  <h2>By Backend</h2>
+  <div id="backend-table-wrap"><div class="empty">Loading...</div></div>
+
+  <h2>Recent Requests</h2>
+  <div id="recent-table-wrap"><div class="empty">Loading...</div></div>
+
+  <script>
+    const fmt = (n) => Number(n).toLocaleString();
+    const fmtMs = (n) => `${fmt(n)} ms`;
+
+    async function load() {
+      const hours = document.getElementById('hours').value;
+      const status = document.getElementById('status');
+      status.textContent = 'Loading...';
+      try {
+        const res = await fetch(`/api/llm/usage?hours=${hours}&recent=100`);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Unknown error');
+        render(data.stats);
+        status.textContent = `Updated ${new Date().toLocaleTimeString()} (${data.window.hours}h window)`;
+      } catch (err) {
+        status.textContent = '';
+        document.getElementById('model-table-wrap').innerHTML = `<div class="error">Failed to load usage: ${err.message}</div>`;
+      }
+    }
+
+    function render(stats) {
+      const total = stats.total || {};
+      document.getElementById('total-count').textContent = fmt(total.count || 0);
+      document.getElementById('total-ok').textContent = fmt(total.ok || 0);
+      document.getElementById('total-fail').textContent = fmt(total.fail || 0);
+      document.getElementById('total-tokens').textContent = fmt(total.tokens || 0);
+      document.getElementById('total-latency').textContent = fmtMs(total.avgLatencyMs || 0);
+
+      renderBucketTable('model-table-wrap', stats.byModel, 'Model');
+      renderBucketTable('tier-table-wrap', stats.byTier, 'Tier');
+      renderBucketTable('backend-table-wrap', stats.byBackend, 'Backend');
+      renderRecent('recent-table-wrap', stats.recent || []);
+    }
+
+    function renderBucketTable(id, buckets, keyLabel) {
+      const wrap = document.getElementById(id);
+      const entries = Object.entries(buckets || {}).sort((a, b) => (b[1].count || 0) - (a[1].count || 0));
+      if (!entries.length) { wrap.innerHTML = '<div class="empty">No data</div>'; return; }
+      wrap.innerHTML = `
+        <table>
+          <thead>
+            <tr><th>${keyLabel}</th><th>Requests</th><th>Ok</th><th>Fail</th><th>Tokens</th><th>Avg Latency</th></tr>
+          </thead>
+          <tbody>
+            ${entries.map(([k, v]) => `
+              <tr>
+                <td>${k}</td>
+                <td>${fmt(v.count || 0)}</td>
+                <td class="ok">${fmt(v.ok || 0)}</td>
+                <td class="fail">${fmt(v.fail || 0)}</td>
+                <td>${fmt(v.tokens || 0)}</td>
+                <td>${fmtMs(v.avgLatencyMs || 0)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    function renderRecent(id, recent) {
+      const wrap = document.getElementById(id);
+      if (!recent.length) { wrap.innerHTML = '<div class="empty">No recent requests</div>'; return; }
+      wrap.innerHTML = `
+        <table class="recent">
+          <thead>
+            <tr><th>Time</th><th>Kind</th><th>Tier</th><th>Model</th><th>Backend</th><th>Ok</th><th>Latency</th><th>Tokens</th><th>Error</th></tr>
+          </thead>
+          <tbody>
+            ${recent.slice().reverse().map(r => `
+              <tr>
+                <td>${r.iso ? new Date(r.iso).toLocaleTimeString() : '-'}</td>
+                <td>${r.kind || '-'}</td>
+                <td>${r.tier || '-'}</td>
+                <td>${r.model || '-'}</td>
+                <td>${r.backend || '-'}</td>
+                <td class="${r.ok ? 'ok' : 'fail'}">${r.ok ? 'ok' : 'fail'}</td>
+                <td>${fmtMs(r.latencyMs || 0)}</td>
+                <td>${fmt(r.totalTokens || 0)}</td>
+                <td>${r.error ? r.error.slice(0, 60) : ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    document.getElementById('refresh').addEventListener('click', load);
+    document.getElementById('hours').addEventListener('change', load);
+    load();
+    setInterval(load, 30000);
+  </script>
+</body>
+</html>

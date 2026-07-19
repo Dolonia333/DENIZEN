@@ -1,4 +1,5 @@
 'use strict';
+const usageTracker = require('./inference-usage-tracker');
 
 const { normalizeBaseUrl, probeLmStudioEndpoint, parseModelList } = require('./lm-studio-probe');
 
@@ -380,7 +381,7 @@ async function runInferenceRpcJob(payload = {}) {
   const tier = tierRaw === 'fast'
     ? 'fast'
     : (tierRaw === 'heavy' || tierRaw === 'reasoning' ? 'heavy' : 'main');
-  const result = await chatCompletion({
+  const result = await wrappedChatCompletion({
     tier,
     model: safe.model || null,
     systemPrompt: safe.system_prompt || safe.systemPrompt || '',
@@ -400,6 +401,8 @@ async function runInferenceRpcJob(payload = {}) {
   };
 }
 
+const wrappedChatCompletion = usageTracker.wrapChatCompletion(chatCompletion);
+
 module.exports = {
   resolveBackendPreference,
   defaultOllamaUrl,
@@ -408,7 +411,7 @@ module.exports = {
   probeOllamaEndpoint,
   probeInferenceRuntime,
   resolveRuntimeModel,
-  chatCompletion,
+  chatCompletion: wrappedChatCompletion,
   runInferenceRpcJob,
   buildChatMessages,
   extractChatText,
