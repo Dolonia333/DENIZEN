@@ -7,6 +7,8 @@
 const { canRunCommand } = require('../../core/permissions');
 
 function createDenizenAccount(deps) {
+  const config = deps.config;
+
   function publicUrl() {
     return String(
       process.env.DENIZEN_PUBLIC_URL
@@ -320,6 +322,251 @@ function createDenizenAccount(deps) {
             ephemeral: true,
           });
         }
+      },
+    });
+
+    const THEME_CHOICES = [
+      'plain', 'cafe', 'gamer', 'hospital', 'museum', 'police', 'fire', 'halloween',
+      'voice', 'winterzone', 'digzone',
+    ];
+    const KIT_CHOICES = [
+      'library', 'office', 'cafe', 'kitchen', 'reception', 'lounge', 'cozy', 'gallery',
+    ];
+    const COLOR_CHOICES = [
+      'blue', 'teal', 'green', 'mint', 'orange', 'red', 'pink', 'purple', 'lavender', 'yellow', 'brown', 'slate',
+    ];
+
+    function resolveChannel(ctx, ref) {
+      const guild = ctx.guild;
+      if (!guild || !ref) return null;
+      const raw = String(ref).trim();
+      const mention = raw.match(/^<#(\d+)>$/);
+      const id = mention ? mention[1] : (/^\d{16,22}$/.test(raw) ? raw : null);
+      if (id) {
+        return guild.channels?.cache?.get(id)
+          || guild.channels?.cache?.find((c) => String(c.id) === id)
+          || null;
+      }
+      const name = raw.replace(/^#/, '').toLowerCase();
+      const list = guild.channels?.cache;
+      if (!list) return null;
+      return list.find((c) => String(c.name || '').toLowerCase() === name)
+        || list.find((c) => String(c.name || '').toLowerCase().includes(name))
+        || null;
+    }
+
+    function formatOverride(ov) {
+      if (!ov || !Object.keys(ov).length) return '(defaults)';
+      return Object.entries(ov).map(([k, v]) => `${k}=${v}`).join(', ');
+    }
+
+    registry.register({
+      name: 'room',
+      description: 'Customize a Spaces map room (theme, color, furniture, name)',
+      aliases: ['maproom', 'spacesroom'],
+      module: 'denizen',
+      async run(ctx) {
+        if (!ctx.guild?.id) {
+          return ctx.reply({ content: 'Use this in a Discord server.', ephemeral: true });
+        }
+        if (!hasManageServer(ctx)) {
+          return ctx.reply({
+            content: 'Need **Manage Server** to customize map rooms.',
+            ephemeral: true,
+          });
+        }
+        if (!config?.update) {
+          return ctx.reply({ content: 'Config store unavailable.', ephemeral: true });
+        }
+
+        const args = [...(ctx.args || [])];
+        const action = String(args[0] || '').toLowerCase();
+        const help = [
+          '**Customize Spaces map rooms** (Manage Server)',
+          '`,room show #channel`',
+          '`,room theme #channel <plain|cafe|hospital|museum|police|fire|gamer|halloween|voice>`',
+          '`,room color #channel <blue|teal|green|mint|orange|red|pink|purple|lavender|yellow|brown|slate>`',
+          '`,room kit #channel <library|office|cafe|kitchen|reception|lounge|cozy|gallery>`',
+          '`,room name #channel Custom plaque text`',
+          '`,room title #channel Building Title`  (category building name)',
+          '`,room clear #channel`',
+          'Hard-refresh the map after changes.',
+        ].join('\n');
+
+        if (!action || action === 'help') {
+          return ctx.reply({ content: help, ephemeral: true });
+        }
+
+        // `,room #channel` → show
+        let field = action;
+        let chRef = args[1];
+        let rest = args.slice(2);
+        if (action.startsWith('<#') || action.startsWith('#') || /^\d{16,22}$/.test(action)) {
+          field = 'show';
+          chRef = action;
+          rest = args.slice(1);
+        }
+
+        const ch = resolveChannel(ctx, chRef);
+        if (!ch) {
+          return ctx.reply({
+            content: `Channel not found. Usage:\n${help}`,
+            ephemeral: true,
+          });
+        }
+
+        const channelId = String(ch.id);
+        const categoryId = ch.parentId ? String(ch.parentId) : null;
+        const gid = ctx.guild.id;
+
+        if (field === 'show') {
+          const sp = config.get(gid)?.spaces || {};
+          const roomOv = sp.rooms?.[channelId] || {};
+          const catOv = categoryId ? (sp.categories?.[categoryId] || {}) : {};
+          return ctx.reply({
+            content: [
+              `**Map room** #${ch.name}`,
+              `Room overrides: ${formatOverride(roomOv)}`,
+              categoryId ? `Category overrides: ${formatOverride(catOv)}` : 'No category',
+              `Map: ${mapUrl(gid)}`,
+            ].join('\n'),
+            ephemeral: true,
+          });
+        }
+
+        if (field === 'clear') {
+          config.update(gid, (c) => {
+            c.spaces = c.spaces || {};
+            c.spaces.rooms = c.spaces.rooms || {};
+            c.spaces.categories = c.spaces.categories || {};
+            delete c.spaces.rooms[channelId];
+            if (categoryId && c.spaces.categories[categoryId]) {
+              // Keep category title/theme unless `--all`
+              if (String(rest[0] || '').toLowerCase() === 'all') {
+                delete c.spaces.categories[categoryId];
+              }
+            }
+            return c;
+          });
+          return ctx.reply({
+            content: `Cleared room overrides for #${ch.name}. Hard-refresh the map.`,
+            ephemeral: true,
+          });
+        }
+
+        const value = rest.join(' ').trim();
+        if (!value && field !== 'clear') {
+          return ctx.reply({ content: `Missing value.\n${help}`, ephemeral: true });
+        }
+
+        if (field === 'theme') {
+          const theme = value.toLowerCase().replace(/\s+/g, '');
+          if (!THEME_CHOICES.includes(theme)) {
+            return ctx.reply({
+              content: `Unknown theme \`${theme}\`.\nChoose: ${THEME_CHOICES.join(', ')}`,
+              ephemeral: true,
+            });
+          }
+          config.update(gid, (c) => {
+            c.spaces = c.spaces || {};
+            c.spaces.rooms = c.spaces.rooms || {};
+            c.spaces.categories = c.spaces.categories || {};
+            c.spaces.rooms[channelId] = { ...(c.spaces.rooms[channelId] || {}), theme };
+            if (categoryId) {
+              c.spaces.categories[categoryId] = {
+                ...(c.spaces.categories[categoryId] || {}),
+                theme,
+              };
+            }
+            return c;
+          });
+          return ctx.reply({
+            content: [
+              `Set **theme=${theme}** for #${ch.name}${categoryId ? ' (and its category building)' : ''}.`,
+              'Hard-refresh the Spaces map to see it.',
+            ].join('\n'),
+            ephemeral: true,
+          });
+        }
+
+        if (field === 'color') {
+          const color = value.toLowerCase().replace(/^#/, '');
+          if (!COLOR_CHOICES.includes(color) && !/^[0-9a-f]{6}$/i.test(color)) {
+            return ctx.reply({
+              content: `Unknown color. Choose: ${COLOR_CHOICES.join(', ')} — or a hex like \`c8f0e0\`.`,
+              ephemeral: true,
+            });
+          }
+          config.update(gid, (c) => {
+            c.spaces = c.spaces || {};
+            c.spaces.rooms = c.spaces.rooms || {};
+            c.spaces.rooms[channelId] = { ...(c.spaces.rooms[channelId] || {}), color };
+            return c;
+          });
+          return ctx.reply({
+            content: `Set **color=${color}** for #${ch.name}. Hard-refresh the map.`,
+            ephemeral: true,
+          });
+        }
+
+        if (field === 'kit') {
+          const kit = value.toLowerCase().replace(/\s+/g, '');
+          if (!KIT_CHOICES.includes(kit)) {
+            return ctx.reply({
+              content: `Unknown kit \`${kit}\`.\nChoose: ${KIT_CHOICES.join(', ')}`,
+              ephemeral: true,
+            });
+          }
+          config.update(gid, (c) => {
+            c.spaces = c.spaces || {};
+            c.spaces.rooms = c.spaces.rooms || {};
+            c.spaces.rooms[channelId] = { ...(c.spaces.rooms[channelId] || {}), kit };
+            return c;
+          });
+          return ctx.reply({
+            content: `Set **kit=${kit}** for #${ch.name}. Hard-refresh the map.`,
+            ephemeral: true,
+          });
+        }
+
+        if (field === 'name' || field === 'label') {
+          const label = value.slice(0, 40);
+          config.update(gid, (c) => {
+            c.spaces = c.spaces || {};
+            c.spaces.rooms = c.spaces.rooms || {};
+            c.spaces.rooms[channelId] = { ...(c.spaces.rooms[channelId] || {}), label };
+            return c;
+          });
+          return ctx.reply({
+            content: `Set plaque **name="${label}"** for #${ch.name}. Hard-refresh the map.`,
+            ephemeral: true,
+          });
+        }
+
+        if (field === 'title' || field === 'sign') {
+          if (!categoryId) {
+            return ctx.reply({
+              content: `#${ch.name} has no Discord category — put it under a category to set a building title.`,
+              ephemeral: true,
+            });
+          }
+          const title = value.slice(0, 40);
+          config.update(gid, (c) => {
+            c.spaces = c.spaces || {};
+            c.spaces.categories = c.spaces.categories || {};
+            c.spaces.categories[categoryId] = {
+              ...(c.spaces.categories[categoryId] || {}),
+              title,
+            };
+            return c;
+          });
+          return ctx.reply({
+            content: `Set building **title="${title}"** for #${ch.name}'s category. Hard-refresh the map.`,
+            ephemeral: true,
+          });
+        }
+
+        return ctx.reply({ content: help, ephemeral: true });
       },
     });
   }

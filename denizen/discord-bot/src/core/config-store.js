@@ -168,6 +168,10 @@ function defaultGuildConfig() {
     spaces: {
       plan: 'free',
       removeBranding: false,
+      /** channelId → { theme?, color?, kit?, label? } */
+      rooms: {},
+      /** categoryId → { theme?, title? } — category theme forces the building shell */
+      categories: {},
     },
     misc: {
       tts: true,

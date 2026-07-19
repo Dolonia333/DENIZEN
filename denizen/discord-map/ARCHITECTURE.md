@@ -120,6 +120,12 @@ Foot plant: `NPC_FOOT_ORIGIN_Y` — art isn’t flush to cell bottom; adjust if 
 - Recipe NPCs carry `{ role: 'patient'|'nurse'|'surgeon', bedDx|attendDx, side, onSurgery?, station? }`. Patients `lieIdle` on `bedHosp` or OR table; nurses/surgeons park at offsets and **never** sit on beds.
 - Live Discord members in hospital-themed channels claim empty (or ambient) beds via `assignLiveHospitalPatient`; leave frees the bed and restores the ambient patient. OR tables are ambient-only (not live-claimable).
 
+### Room customization (`,room`)
+
+- Config: `spaces.rooms[channelId]` + `spaces.categories[categoryId]` in guild JSON.
+- Presence exposes `roomOverrides` / `categoryOverrides` (and `rooms[].map`).
+- Map hooks: `pickTheme`, `categoryDisplayName`, `roomDisplayLabel`, `roomWallColor`, `decorateRoom` kit, themed recipe fills.
+
 ### Street ambient (anonymous)
 
 - `spawnDecorNpcs()` after layout bootstrap: ~3 sidewalk `life` roamers (`actorPickWander`) + ~2 curb `stroll` yoyo walkers.

@@ -55,7 +55,7 @@ function spacesHelpEmbed(opts = {}) {
     fields: [
       { name: 'Map', value: `${map}\n\`${p}signup\` · team code from admin · \`${p}map\``, inline: false },
       { name: 'Commands', value: cmds, inline: false },
-      { name: 'Owner', value: `\`${p}teamlink <code>\` · \`${p}mapcode\``, inline: true },
+      { name: 'Owner', value: `\`${p}teamlink <code>\` · \`${p}mapcode\` · \`${p}room\``, inline: true },
       { name: 'Look', value: `\`${p}avatar\` · Boost → golden headset`, inline: true },
       { name: 'Pet', value: `\`${p}pet buy\` · gift · equip · Pro grants ×3`, inline: true },
       { name: 'Live', value: 'React in chat to emote on the map · `,eat pizza` (and other foods)', inline: true },

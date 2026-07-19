@@ -1146,6 +1146,12 @@
     0xc99a22, 0x2f9e93, 0xc4577e, 0x4560c0, 0xb5642f,
     0x4a8fb0, 0x8a5a3c, 0x5b9e6a, 0x9e4d6e, 0x6a5aa0,
   ];
+  /** Named wall colors for `,room color` overrides. */
+  const ROOM_COLOR_BY_NAME = {
+    blue: 0x2f6f9e, teal: 0x2f9e93, green: 0x3f9e57, mint: 0x5b9e6a,
+    orange: 0xd9862b, red: 0xc0433d, pink: 0xc4577e, purple: 0x7d54ad,
+    lavender: 0x6a5aa0, yellow: 0xc99a22, brown: 0x8a5a3c, slate: 0x4560c0,
+  };
   const ROOM_FLOOR_STRIP = 0x7a5a3c; // warm wood baseboard
 
   // Channel-name -> themed furniture kit. Each kit is a set of {key,xf(0-1),depth,
@@ -1927,9 +1933,22 @@
       }
       this._layoutFromDemo = false;
       this._layoutFp = (data.rooms || [])
-        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}`)
+        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}:${JSON.stringify(r.map || {})}`)
         .sort()
         .join('|');
+      // Per-guild room/category map overrides from `,room` bot commands.
+      this.roomOverrides = {};
+      this.categoryOverrides = {};
+      const ro = data.roomOverrides && typeof data.roomOverrides === 'object' ? data.roomOverrides : {};
+      const co = data.categoryOverrides && typeof data.categoryOverrides === 'object'
+        ? data.categoryOverrides : {};
+      Object.assign(this.roomOverrides, ro);
+      Object.assign(this.categoryOverrides, co);
+      for (const r of rooms) {
+        if (r.map && typeof r.map === 'object') {
+          this.roomOverrides[String(r.id)] = { ...(this.roomOverrides[String(r.id)] || {}), ...r.map };
+        }
+      }
 
       const categoriesMeta = new Map((data.categories || []).map((c) => [c.id, c]));
       const byCat = new Map();
@@ -1968,12 +1987,13 @@
       for (const cat of catList) {
         const voiceChans = cat.channels.filter((c) => c.type === 'voice' || c.type === 'stage');
         const decision = this.pickTheme(cat);
+        const catLabel = this.categoryDisplayName(cat);
 
         if (decision.kind === 'voice') {
           if (!voiceChans.length) continue;
           const bw = 290;
-          this.drawVoiceBuilding(x, this.groundY, voiceChans, cat.name);
-          this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: cat.name });
+          this.drawVoiceBuilding(x, this.groundY, voiceChans, catLabel);
+          this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: catLabel });
           paintSection(x, bw);
           x = advanceStreet(x, bw, `voice-${cat.id}`);
           continue;
@@ -1981,11 +2001,11 @@
 
         if (decision.kind === 'zone') {
           if (decision.theme === 'winterzone') {
-            this.drawWinterPark(x, this.groundY, cat);
+            this.drawWinterPark(x, this.groundY, { ...cat, name: catLabel });
             paintSection(x, 480);
             x = advanceStreet(x, 480, `winter-${cat.id}`);
           } else {
-            this.drawDigSite(x, this.groundY, cat);
+            this.drawDigSite(x, this.groundY, { ...cat, name: catLabel });
             paintSection(x, 640);
             x = advanceStreet(x, 640, `dig-${cat.id}`);
           }
@@ -1998,8 +2018,8 @@
           for (let i = 0; i < total; i += MAX_ROOMS) {
             const chunk = cat.channels.slice(i, i + MAX_ROOMS);
             const suffix = total > MAX_ROOMS ? ` ${Math.floor(i / MAX_ROOMS) + 1}` : '';
-            const b = this.buildGenericBuilding(decision.theme, x, `${cat.name}${suffix}`, chunk);
-            this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: cat.name });
+            const b = this.buildGenericBuilding(decision.theme, x, `${catLabel}${suffix}`, chunk);
+            this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: catLabel });
             paintSection(x, b.bw);
             x = advanceStreet(x, b.bw, `theme-${cat.id}-${i}`);
           }
@@ -2012,7 +2032,7 @@
           const chunk = cat.channels.slice(i, i + perBuilding);
           const bw = 290;
           const suffix = cat.channels.length > perBuilding ? ` · pt ${Math.floor(i / perBuilding) + 1}` : '';
-          const title = `${cat.name}${suffix}`;
+          const title = `${catLabel}${suffix}`;
           this.drawTextBuilding(x, this.groundY, title, chunk, plainIdx % 5);
           plainIdx += 1;
           this.buildings.push({ left: x, right: x + bw, kind: 'text', channels: chunk, label: title });
@@ -2090,6 +2110,23 @@
 
     /** Decide a building theme (or special outdoor zone) for one category. */
     pickTheme(cat) {
+      // Admin override from `,room theme` (category or any channel in it).
+      const catOv = this.categoryOverrides?.[String(cat.id)] || null;
+      let forceTheme = catOv?.theme || null;
+      if (!forceTheme) {
+        for (const ch of cat.channels || []) {
+          const ro = this.roomOverrides?.[String(ch.id)];
+          if (ro?.theme) { forceTheme = ro.theme; break; }
+        }
+      }
+      if (forceTheme) {
+        const t = String(forceTheme).toLowerCase();
+        if (t === 'voice') return { kind: 'voice' };
+        if (t === 'winterzone' || t === 'digzone') return { kind: 'zone', theme: t };
+        if (t === 'plain') return { kind: 'plain' };
+        if (THEME_KITS[t]) return { kind: 'themed', theme: t };
+      }
+
       const name = String(cat.name || '').toLowerCase();
       const channels = cat.channels;
       const allVoice = channels.length > 0 && channels.every((c) => c.type === 'voice' || c.type === 'stage');
@@ -2103,6 +2140,20 @@
       const pick = THEME_ROTATION_POOL[this._themeRR % THEME_ROTATION_POOL.length];
       this._themeRR += 1;
       return pick === 'plain' ? { kind: 'plain' } : { kind: 'themed', theme: pick };
+    }
+
+    /** Display name for a category building (`,room title` override). */
+    categoryDisplayName(cat) {
+      const ov = this.categoryOverrides?.[String(cat?.id)];
+      if (ov?.title) return String(ov.title);
+      return cat?.name || 'channels';
+    }
+
+    /** Room plaque / channel label with optional `,room name` override. */
+    roomDisplayLabel(ch) {
+      const ov = this.roomOverrides?.[String(ch?.id)];
+      if (ov?.label) return String(ov.label);
+      return channelLabel(ch);
     }
 
     /**
@@ -2402,12 +2453,19 @@
       const kit = THEME_KITS[theme];
       const rooms = channels.map((ch, i) => {
         const recipe = kit.recipes[i % kit.recipes.length]();
+        const ov = this.roomOverrides?.[String(ch.id)];
+        let fill = recipe.fill;
+        if (ov?.color) {
+          const raw = String(ov.color).trim().toLowerCase().replace(/^#/, '');
+          if (ROOM_COLOR_BY_NAME[raw] != null) fill = ROOM_COLOR_BY_NAME[raw];
+          else if (/^[0-9a-f]{6}$/i.test(raw)) fill = parseInt(raw, 16);
+        }
         return {
           id: chKey(ch.id),
           roomKey: chKey(ch.id),
-          label: channelLabel(ch),
+          label: this.roomDisplayLabel(ch),
           h: recipe.h,
-          fill: recipe.fill,
+          fill,
           slots: recipe.slots,
           items: recipe.items,
           bars: recipe.bars,
@@ -3645,8 +3703,8 @@
           ? top + bh - doorStrip - y0
           : roomH - 4;
         const roomKey = isPlaceholder ? `vc_placeholder_${idx}` : chKey(channels[idx].id);
-        const label = isPlaceholder ? '' : channelLabel(channels[idx]);
-        const fill = isPlaceholder ? 0xc2c6e6 : this.roomWallColor(roomKey);
+        const label = isPlaceholder ? '' : this.roomDisplayLabel(channels[idx]);
+        const fill = isPlaceholder ? 0xc2c6e6 : this.roomWallColor(roomKey, channels[idx]?.id);
 
         this.cutawayRoom(g, x0, y0, roomW, h, fill, () => {
           if (!isPlaceholder) {
@@ -3755,8 +3813,8 @@
       chans.forEach((ch, idx) => {
         const slot = grid[idx];
         const roomKey = chKey(ch.id);
-        const label = channelLabel(ch);
-        this.cutawayRoom(g, slot.x, slot.y, slot.w, slot.h, this.roomWallColor(roomKey), () => {
+        const label = this.roomDisplayLabel(ch);
+        this.cutawayRoom(g, slot.x, slot.y, slot.w, slot.h, this.roomWallColor(roomKey, ch.id), () => {
           const floor = slot.y + slot.h - 2;
           this.decorateRoom(ch, slot.x, slot.y, slot.w, slot.h, floor, {
             clearXf: 0.14,
@@ -3845,6 +3903,8 @@
             toFloorId: row[1].key,
             x: padX + roomW + gap / 2,
             radius: 14,
+            roomH,
+            doorKind: 'wood',
           });
         }
       });
@@ -4237,13 +4297,42 @@
         const sc = SCALE;
         const src = doorTexSize(this, 'elevClosed');
         const leafW = src.w * sc;
-        const edgePad = floor.isRoof ? leafW / 2 + 10 : leafW / 2;
+        const leafH = src.h * sc;
+        const jamb = 3;
+        const lintelH = 4;
+        const frameW = leafW + jamb * 2;
+        const frameH = leafH + 4;
+        const edgePad = floor.isRoof ? frameW / 2 + 10 : frameW / 2 + 4;
         let cx = preferredX;
         if (floor.minX != null) cx = Math.max(cx, floor.minX + edgePad);
         if (floor.maxX != null) cx = Math.min(cx, floor.maxX - edgePad);
+        // Keep elevators in the left climb lane — never clamp into the right wall.
+        if (floor.minX != null && floor.maxX != null) {
+          const mid = (floor.minX + floor.maxX) / 2;
+          if (preferredX <= mid + 8) {
+            cx = Math.min(cx, mid - edgePad);
+          }
+        }
         if (floor.isRoof) return cx;
 
         const doorBottomY = floor.floorY - 2;
+        const fx = Math.round(cx - frameW / 2);
+        const fy = Math.round(doorBottomY - frameH);
+
+        // Shaft alcove so the elev reads as built-in cabin, not a floating slab.
+        const g = this.add.graphics().setDepth(21.2);
+        g.fillStyle(0x1e2830, 1);
+        g.fillRect(fx - 2, fy - lintelH, frameW + 4, lintelH);
+        g.fillStyle(0x0a0c10, 1);
+        g.fillRect(fx, fy, frameW, frameH);
+        g.fillStyle(0x3a4550, 1);
+        g.fillRect(fx, fy, jamb, frameH);
+        g.fillRect(fx + frameW - jamb, fy, jamb, frameH);
+        g.fillStyle(0x2a3038, 1);
+        g.fillRect(fx - 1, doorBottomY - 2, frameW + 2, 2);
+        g.lineStyle(1, 0x0a0806, 0.9);
+        g.strokeRect(fx, fy, frameW, frameH);
+
         const img = this.add.image(cx, doorBottomY, 'elevClosed')
           .setOrigin(0.5, 1)
           .setScale(sc)
@@ -4342,8 +4431,17 @@
         .setDepth(depth);
     }
 
-    /** Wall color for a room, deterministic per channel id. */
-    roomWallColor(roomKey) {
+    /** Wall color for a room — `,room color` override, else deterministic. */
+    roomWallColor(roomKey, channelId = null) {
+      const id = channelId != null
+        ? String(channelId)
+        : String(roomKey || '').replace(/^ch_/, '');
+      const ov = this.roomOverrides?.[id];
+      if (ov?.color) {
+        const raw = String(ov.color).trim().toLowerCase().replace(/^#/, '');
+        if (ROOM_COLOR_BY_NAME[raw] != null) return ROOM_COLOR_BY_NAME[raw];
+        if (/^[0-9a-f]{6}$/i.test(raw)) return parseInt(raw, 16);
+      }
       return ROOM_WALL_COLORS[hashSeed(roomKey) % ROOM_WALL_COLORS.length];
     }
 
@@ -4356,7 +4454,8 @@
     decorateRoom(ch, slotX, slotY, slotW, slotH, floorY, opts = {}) {
       const roomKey = opts.roomKey || chKey(ch.id);
       const seed = hashSeed(roomKey);
-      const kitName = kitForChannel(ch.name, ch.type, seed);
+      const ov = this.roomOverrides?.[String(ch.id)];
+      const kitName = (ov?.kit && KITS[ov.kit]) ? ov.kit : kitForChannel(ch.name, ch.type, seed);
       let kit = KITS[kitName] || KITS.lounge;
       // Tiny rooms: drop the last 1–2 props so nothing crams.
       if (slotW < 110) kit = kit.slice(0, Math.min(3, kit.length));
@@ -4479,42 +4578,56 @@
       }
     }
 
-    /** Visual doorway gap between side-by-side rooms (horizontal passage). */
+    /** Visual doorway between side-by-side rooms (horizontal passage).
+     *  Uses a framed front-facing leaf — NOT the edge-on closed sliver, which
+     *  read as a tall black void when stretched into the shared wall. */
     markPassageDoorway(x, floorY, roomH, doorKind = 'wood') {
       this.ensureFrontDoorTextures();
       const fam = doorFamilyFor(doorKind);
-      let sideKey = fam.sideKey;
-      if (!this.textures.exists(sideKey)) {
-        sideKey = this.textures.exists('doorClosed') ? 'doorClosed' : 'doorFrontClosed';
-      }
-      const src = doorTexSize(this, sideKey);
+      // Compact ajar leaf reads as an open doorway in the shared wall.
+      let leafKey = fam.openKey;
+      if (!this.textures.exists(leafKey)) leafKey = fam.closedKey;
+      if (!this.textures.exists(leafKey)) leafKey = 'doorFrontClosed';
+
       const sc = SCALE;
+      const src = doorTexSize(this, leafKey);
+      const leafW = src.w * sc;
       const leafH = src.h * sc;
-      const leafW = Math.max(8, src.w * sc);
-      // Opening sized to the native side leaf — no vertical squash.
-      const doorH = Math.min(Math.max(leafH + 6, 40), Math.max(36, roomH - 6));
-      const doorW = Math.max(10, Math.min(14, leafW + 4));
-      const top = floorY - doorH;
+      const jamb = 2;
+      const lintelH = 3;
+      // Opening hugs the leaf — never stretch into a floor-to-ceiling shaft.
+      const frameW = Math.max(18, leafW + jamb * 2);
+      const frameH = Math.min(Math.max(leafH + 4, 44), Math.max(40, (roomH || 52) - 12));
+      const fx = Math.round(x - frameW / 2);
+      const fy = Math.round(floorY - frameH);
+
       const g = this.add.graphics().setDepth(20.8);
-      // Dark opening in the shared wall
-      g.fillStyle(0x0c0a08, 0.88);
-      g.fillRect(x - doorW / 2, top, doorW, doorH);
-      // Thin jambs
-      g.fillStyle(0x2a2218, 1);
-      g.fillRect(x - doorW / 2 - 2, top, 2, doorH);
-      g.fillRect(x + doorW / 2, top, 2, doorH);
+      // Soft wall recess (not a solid black slab)
+      g.fillStyle(0x1a1510, 0.5);
+      g.fillRect(fx - 2, fy - lintelH - 1, frameW + 4, frameH + lintelH + 2);
+      // Lintel
       g.fillStyle(0x3a2e22, 1);
-      g.fillRect(x - doorW / 2 - 1, top - 3, doorW + 2, 3);
+      g.fillRect(fx - 1, fy - lintelH, frameW + 2, lintelH);
+      // Dark opening + jambs
+      g.fillStyle(0x0c0a08, 1);
+      g.fillRect(fx, fy, frameW, frameH);
+      g.fillStyle(0x4a3a2a, 1);
+      g.fillRect(fx, fy, jamb, frameH);
+      g.fillRect(fx + frameW - jamb, fy, jamb, frameH);
+      g.fillStyle(0x2a2218, 1);
+      g.fillRect(fx + jamb, fy + 1, frameW - jamb * 2, 3);
       // Threshold
       g.fillStyle(0x2c2118, 1);
-      g.fillRect(x - doorW / 2 - 1, floorY - 2, doorW + 2, 2);
-      // Side-view door leaf at native pack scale (edge-on closed strip)
-      if (this.textures.exists(sideKey)) {
-        this.add.image(x - doorW / 2 - 1, floorY - 1, sideKey)
-          .setOrigin(1, 1)
+      g.fillRect(fx - 1, floorY - 2, frameW + 2, 2);
+      g.lineStyle(1, 0x0a0806, 0.85);
+      g.strokeRect(fx, fy, frameW, frameH);
+
+      // Front-facing leaf at native pack scale
+      if (this.textures.exists(leafKey)) {
+        this.add.image(fx + jamb, floorY - 1, leafKey)
+          .setOrigin(0, 1)
           .setScale(sc, sc)
-          .setDepth(20.9)
-          .setAlpha(0.98);
+          .setDepth(20.9);
       }
     }
 
@@ -7305,8 +7418,7 @@
       // Draw a doorway so the horizontal transition is obvious
       const floorY = from?.floorY || to?.floorY;
       if (floorY != null) {
-        // Approximate room height from floorY spacing is unknown; use 48px opening.
-        this.markPassageDoorway(def.x, floorY, 52, def.doorKind || 'wood');
+        this.markPassageDoorway(def.x, floorY, def.roomH || 82, def.doorKind || 'wood');
       }
     }
 
