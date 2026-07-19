@@ -27,7 +27,7 @@ const SLASH_COMMAND_CAP = 100;
  * outright, freeing budget for everything else without touching per-command
  * `slash` flags.
  */
-const SLASH_TRIM_MODULES = ['economy', 'pvp', 'shop'];
+const SLASH_TRIM_MODULES = ['economy', 'pvp', 'shop', 'minigames'];
 
 function slashTrimEnabled() {
   return String(process.env.DISCORD_SLASH_TRIM || '0').trim() === '1';
@@ -48,7 +48,7 @@ function privateRepliesEnabled() {
  * Game modules stay channel-visible so duel boards / shop panels aren't deleted
  * after ~8s (prefix "ephemeral" cleanup) — that made Credits feel broken.
  */
-const PUBLIC_MODULES = new Set(['economy', 'pvp', 'shop', 'music']);
+const PUBLIC_MODULES = new Set(['economy', 'pvp', 'shop', 'music', 'minigames']);
 
 function resolvePrivateReply(cmd, content) {
   if (content && typeof content === 'object' && Object.prototype.hasOwnProperty.call(content, 'ephemeral')) {

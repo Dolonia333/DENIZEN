@@ -110,6 +110,7 @@ describe('core foundation', () => {
       assert.equal(resolvePrivateReply({ module: 'pvp' }, 'Duel'), false);
       assert.equal(resolvePrivateReply({ module: 'shop' }, 'Shop'), false);
       assert.equal(resolvePrivateReply({ module: 'music' }, 'Queue'), false);
+      assert.equal(resolvePrivateReply({ module: 'minigames' }, 'Flip'), false);
     } finally {
       if (prev === undefined) delete process.env.DISCORD_PRIVATE_REPLIES;
       else process.env.DISCORD_PRIVATE_REPLIES = prev;

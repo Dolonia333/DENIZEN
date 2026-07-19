@@ -61,7 +61,7 @@ function hpLine(userId, hp, max = HP_MAX) {
 }
 
 function createPvp(deps) {
-  const { config, tracker } = deps;
+  const { config, tracker, client } = deps;
   const wallet = deps.wallet || new WalletStore();
   deps.wallet = wallet;
 
@@ -119,6 +119,7 @@ function createPvp(deps) {
       enabled: c.enabled !== false,
       maxWager: Number(c.maxWager ?? 250),
       duelCooldownMs: Number(c.duelCooldownMs ?? 60_000),
+      dmNotify: c.dmNotify !== false,
     };
   }
 
@@ -129,7 +130,7 @@ function createPvp(deps) {
   function clearUser(match) {
     if (!match) return;
     byUser.delete(match.challengerId);
-    byUser.delete(match.opponentId);
+    if (match.opponentId) byUser.delete(match.opponentId);
   }
 
   function mapPose(guildId, userId, pose, ttlMs = 4500) {
@@ -308,6 +309,19 @@ function createPvp(deps) {
         });
       }
     } catch (_) { /* ignore */ }
+
+    const cfg = ecoCfg(match.guildId);
+    if (cfg.dmNotify && client && match.opponentId) {
+      const dmLine = opts.forfeit
+        ? `<@${winnerId}> wins — <@${loserId}> forfeited.${pot > 0 ? ` Pot: **${pot}** credits.` : ''}`
+        : `<@${winnerId}> won the duel${pot > 0 ? ` and took **${pot}** credits` : ''}!`;
+      for (const playerId of [match.challengerId, match.opponentId]) {
+        try {
+          const user = await client.users.fetch(playerId);
+          await user.send(dmLine);
+        } catch (_) { /* ignore */ }
+      }
+    }
   }
 
   async function resolveIfReady(match) {
@@ -381,19 +395,27 @@ function createPvp(deps) {
   }
 
   /** Builds + registers a pending challenge match; returns the match and its reply payload. */
-  function createPendingMatch({ guildId, channelId, challengerId, opponentId, wager, duelCooldownMs }) {
+  function createPendingMatch({
+    guildId, channelId, challengerId, opponentId, wager, duelCooldownMs, open = false,
+  }) {
     const matchId = newMatchId();
+    const isOpen = !!open;
+    const oppId = opponentId || null;
+    const hp = { [challengerId]: HP_MAX };
+    if (oppId) hp[oppId] = HP_MAX;
+
     const match = {
       id: matchId,
       guildId,
       channelId,
       challengerId,
-      opponentId,
+      opponentId: oppId,
+      open: isOpen,
       wager,
       pot: wager * 2,
       status: 'pending',
       escrowed: false,
-      hp: { [challengerId]: HP_MAX, [opponentId]: HP_MAX },
+      hp,
       picks: {},
       round: 1,
       duelCooldownMs,
@@ -402,21 +424,102 @@ function createPvp(deps) {
     };
     matches.set(matchId, match);
     byUser.set(challengerId, matchId);
-    byUser.set(opponentId, matchId);
+    if (oppId) byUser.set(oppId, matchId);
     armIdleTimer(matchId);
 
+    const lines = isOpen
+      ? [
+        `<@${challengerId}> posted an open duel!`,
+        wager > 0 ? `Wager: **${wager}** credits each (pot **${wager * 2}**)` : 'Friendly duel — no wager.',
+        'Anyone can Accept (except the challenger). Expires in 90s.',
+      ]
+      : [
+        `<@${challengerId}> challenged <@${oppId}>!`,
+        wager > 0 ? `Wager: **${wager}** credits each (pot **${wager * 2}**)` : 'Friendly duel — no wager.',
+        'Opponent: Accept or Decline. Expires in 90s.',
+      ];
+
     const payload = {
-      embeds: [infoEmbed(
-        'Duel challenge',
-        [
-          `<@${challengerId}> challenged <@${opponentId}>!`,
-          wager > 0 ? `Wager: **${wager}** credits each (pot **${wager * 2}**)` : 'Friendly duel — no wager.',
-          'Opponent: Accept or Decline. Expires in 90s.',
-        ].join('\n'),
-      )],
+      embeds: [infoEmbed('Duel challenge', lines.join('\n'))],
       components: [challengeRow(matchId)],
     };
     return { match, payload };
+  }
+
+  function parseWager(ctx, cfg) {
+    const wagerRaw = ctx.getInteger?.('wager')
+      ?? ctx.args?.find((a) => /^\d+$/.test(String(a)));
+    let wager = Math.floor(Number(wagerRaw) || 0);
+    if (!Number.isFinite(wager) || wager < 0) wager = 0;
+    if (wager > cfg.maxWager) return { error: `Max wager is **${cfg.maxWager}** credits.` };
+    return { wager };
+  }
+
+  async function postChallenge(ctx, cfg, { challengerId, opponentId, open, wager }) {
+    if (wallet.isBlacklisted?.(ctx.guild.id, challengerId)) {
+      return ctx.reply('You cannot duel here.');
+    }
+    if (opponentId && wallet.isBlacklisted?.(ctx.guild.id, opponentId)) {
+      return ctx.reply('That user cannot duel.');
+    }
+
+    if (wallet.isHeld(ctx.guild.id, challengerId)) {
+      return ctx.reply('You are on PVP hold.');
+    }
+    if (opponentId && wallet.isHeld(ctx.guild.id, opponentId)) {
+      return ctx.reply('That user is on PVP hold.');
+    }
+
+    const cdA = wallet.duelCooldownRemaining(ctx.guild.id, challengerId);
+    if (cdA > 0) {
+      return ctx.reply(`You are on duel cooldown (<t:${Math.ceil((Date.now() + cdA) / 1000)}:R>).`);
+    }
+    if (opponentId) {
+      const cdB = wallet.duelCooldownRemaining(ctx.guild.id, opponentId);
+      if (cdB > 0) return ctx.reply('That user is on duel cooldown.');
+    }
+
+    if (byUser.has(challengerId)) {
+      return ctx.reply('You are already in a duel.');
+    }
+    if (opponentId && byUser.has(opponentId)) {
+      return ctx.reply('That user is already in a duel.');
+    }
+
+    if (wager > 0) {
+      if (wallet.getBalance(ctx.guild.id, challengerId) < wager) {
+        return ctx.reply('You cannot cover that wager. Check `,balance`.');
+      }
+      if (opponentId && wallet.getBalance(ctx.guild.id, opponentId) < wager) {
+        return ctx.reply('They cannot cover that wager.');
+      }
+    }
+
+    const { match, payload } = createPendingMatch({
+      guildId: ctx.guild.id,
+      channelId: ctx.channel?.id,
+      challengerId,
+      opponentId,
+      open,
+      wager,
+      duelCooldownMs: cfg.duelCooldownMs,
+    });
+    const msg = await ctx.reply(payload);
+    if (msg && typeof msg.edit === 'function') {
+      match.message = msg;
+    } else if (ctx.interaction?.fetchReply) {
+      match.message = await ctx.interaction.fetchReply().catch(() => null);
+    } else if (ctx.message) {
+      match.message = msg;
+    }
+
+    if (!open && opponentId && cfg.dmNotify && client) {
+      try {
+        const user = await client.users.fetch(opponentId);
+        await user.send(`You were challenged to a duel in **${ctx.guild.name}**.`);
+      } catch (_) { /* ignore */ }
+    }
+    return msg;
   }
 
   function register(registry) {
@@ -432,9 +535,12 @@ function createPvp(deps) {
         {
           type: 3,
           name: 'action',
-          description: 'lb = leaderboard',
+          description: 'lb = leaderboard · open = open challenge board',
           required: false,
-          choices: [{ name: 'lb', value: 'lb' }],
+          choices: [
+            { name: 'lb', value: 'lb' },
+            { name: 'open', value: 'open' },
+          ],
         },
       ],
       async run(ctx) {
@@ -445,12 +551,46 @@ function createPvp(deps) {
         const sub = String(
           ctx.getString?.('action') || ctx.args?.[0] || '',
         ).toLowerCase();
+
         if (sub === 'lb' || sub === 'leaderboard') {
+          const mode = String(ctx.args?.[1] || '').toLowerCase();
+          if (mode === 'weekly' || mode === 'week') {
+            const top = wallet.topWeeklyWins?.(ctx.guild.id, 10) || [];
+            if (!top.length) return ctx.reply('No weekly duel wins yet — fight with `,duel`.');
+            const lines = top.map((row, i) => {
+              const medal = MEDALS[i] || `**${i + 1}.**`;
+              return `${medal} <@${row.userId}> — **${row.wins}** wins this week`;
+            });
+            return ctx.reply({
+              embeds: [baseEmbed({
+                color: BRAND.danger,
+                title: 'Weekly duel wins',
+                description: lines.join('\n'),
+                footerExtra: 'pvp · weekly',
+              })],
+            });
+          }
+          if ((mode === 'streak' || mode === 'streaks') && typeof wallet.topStreaks === 'function') {
+            const top = wallet.topStreaks(ctx.guild.id, 10);
+            if (!top.length) return ctx.reply('No streaks yet.');
+            const lines = top.map((row, i) => {
+              const medal = MEDALS[i] || `**${i + 1}.**`;
+              return `${medal} <@${row.userId}> — 🔥 ${row.streak} (best ${row.bestStreak})`;
+            });
+            return ctx.reply({
+              embeds: [baseEmbed({
+                color: BRAND.danger,
+                title: 'Duel streak leaderboard',
+                description: lines.join('\n'),
+                footerExtra: 'pvp · streaks',
+              })],
+            });
+          }
           const top = wallet.topDuelists(ctx.guild.id, 10);
           if (!top.length) return ctx.reply('No duel stats yet — `,duel @user` to start.');
           const lines = top.map((row, i) => {
             const medal = MEDALS[i] || `**${i + 1}.**`;
-            return `${medal} <@${row.userId}> — ${row.wins}W / ${row.losses}L`;
+            return `${medal} <@${row.userId}> — ${row.wins}W / ${row.losses}L · ${row.forfeits || 0}F`;
           });
           return ctx.reply({
             embeds: [baseEmbed({
@@ -462,63 +602,32 @@ function createPvp(deps) {
           });
         }
 
+        if (sub === 'open') {
+          const wagerResult = parseWager(ctx, cfg);
+          if (wagerResult.error) return ctx.reply(wagerResult.error);
+          return postChallenge(ctx, cfg, {
+            challengerId: ctx.user.id,
+            opponentId: null,
+            open: true,
+            wager: wagerResult.wager,
+          });
+        }
+
         const opponent = ctx.getUser?.('user') || ctx.message?.mentions?.users?.first?.();
         if (!opponent || opponent.bot) {
-          return ctx.reply('Usage: `,duel @user [wager]` · `,duel lb`');
+          return ctx.reply('Usage: `,duel @user [wager]` · `,duel open [wager]` · `,duel lb [weekly|streak]`');
         }
         if (opponent.id === ctx.user.id) return ctx.reply('You cannot duel yourself.');
 
-        const wagerRaw = ctx.getInteger?.('wager')
-          ?? ctx.args?.find((a) => /^\d+$/.test(String(a)));
-        let wager = Math.floor(Number(wagerRaw) || 0);
-        if (!Number.isFinite(wager) || wager < 0) wager = 0;
-        if (wager > cfg.maxWager) {
-          return ctx.reply(`Max wager is **${cfg.maxWager}** credits.`);
-        }
+        const wagerResult = parseWager(ctx, cfg);
+        if (wagerResult.error) return ctx.reply(wagerResult.error);
 
-        if (wallet.isHeld(ctx.guild.id, ctx.user.id)) {
-          return ctx.reply('You are on PVP hold.');
-        }
-        if (wallet.isHeld(ctx.guild.id, opponent.id)) {
-          return ctx.reply('That user is on PVP hold.');
-        }
-
-        const cdA = wallet.duelCooldownRemaining(ctx.guild.id, ctx.user.id);
-        const cdB = wallet.duelCooldownRemaining(ctx.guild.id, opponent.id);
-        if (cdA > 0) return ctx.reply(`You are on duel cooldown (<t:${Math.ceil((Date.now() + cdA) / 1000)}:R>).`);
-        if (cdB > 0) return ctx.reply('That user is on duel cooldown.');
-
-        if (byUser.has(ctx.user.id) || byUser.has(opponent.id)) {
-          return ctx.reply('One of you is already in a duel.');
-        }
-
-        if (wager > 0) {
-          if (wallet.getBalance(ctx.guild.id, ctx.user.id) < wager) {
-            return ctx.reply('You cannot cover that wager. Check `,balance`.');
-          }
-          if (wallet.getBalance(ctx.guild.id, opponent.id) < wager) {
-            return ctx.reply('They cannot cover that wager.');
-          }
-        }
-
-        const { match, payload } = createPendingMatch({
-          guildId: ctx.guild.id,
-          channelId: ctx.channel?.id,
+        return postChallenge(ctx, cfg, {
           challengerId: ctx.user.id,
           opponentId: opponent.id,
-          wager,
-          duelCooldownMs: cfg.duelCooldownMs,
+          open: false,
+          wager: wagerResult.wager,
         });
-        const msg = await ctx.reply(payload);
-        if (msg && typeof msg.edit === 'function') {
-          match.message = msg;
-        } else if (ctx.interaction?.fetchReply) {
-          match.message = await ctx.interaction.fetchReply().catch(() => null);
-        } else if (ctx.message) {
-          // Prefix path sometimes returns void — grab the latest bot reply in-channel next tick
-          match.message = msg;
-        }
-        return msg;
       },
     });
 
@@ -626,9 +735,36 @@ function createPvp(deps) {
     const uid = interaction.user.id;
 
     if (action === 'accept') {
-      if (uid !== match.opponentId) {
+      if (uid === match.challengerId) {
+        await interaction.reply({ content: 'You cannot accept your own challenge.', ephemeral: true }).catch(() => {});
+        return;
+      }
+      if (!match.open && uid !== match.opponentId) {
         await interaction.reply({ content: 'Only the challenged user can accept.', ephemeral: true }).catch(() => {});
         return;
+      }
+      if (match.open && !match.opponentId) {
+        if (byUser.has(uid)) {
+          await interaction.reply({ content: 'You already have an active duel.', ephemeral: true }).catch(() => {});
+          return;
+        }
+        if (wallet.isBlacklisted?.(match.guildId, uid)) {
+          await interaction.reply({ content: 'You cannot duel here.', ephemeral: true }).catch(() => {});
+          return;
+        }
+        const cdB = wallet.duelCooldownRemaining(match.guildId, uid);
+        if (cdB > 0) {
+          await interaction.reply({ content: 'You are on duel cooldown.', ephemeral: true }).catch(() => {});
+          return;
+        }
+        if (match.wager > 0 && wallet.getBalance(match.guildId, uid) < match.wager) {
+          await interaction.reply({ content: "You can't cover that wager.", ephemeral: true }).catch(() => {});
+          return;
+        }
+        match.opponentId = uid;
+        match.open = false;
+        match.hp[uid] = HP_MAX;
+        byUser.set(uid, match.id);
       }
       if (match.status !== 'pending') {
         await interaction.reply({ content: 'Already started.', ephemeral: true }).catch(() => {});
@@ -675,7 +811,12 @@ function createPvp(deps) {
     }
 
     if (action === 'decline') {
-      if (uid !== match.opponentId && uid !== match.challengerId) {
+      if (match.open) {
+        if (uid !== match.challengerId) {
+          await interaction.reply({ content: 'Only the challenger can cancel an open challenge.', ephemeral: true }).catch(() => {});
+          return;
+        }
+      } else if (uid !== match.opponentId && uid !== match.challengerId) {
         await interaction.reply({ content: 'Not your duel.', ephemeral: true }).catch(() => {});
         return;
       }
@@ -687,8 +828,10 @@ function createPvp(deps) {
       if (match.idleTimer) clearTimeout(match.idleTimer);
       clearUser(match);
       matches.delete(match.id);
+      const label = match.open ? 'Cancelled' : 'Declined';
+      const verb = match.open ? 'cancelled' : 'declined';
       await interaction.update({
-        embeds: [dangerEmbed('Declined', `<@${uid}> declined the duel.`)],
+        embeds: [dangerEmbed(label, `<@${uid}> ${verb} the duel.`)],
         components: [],
       }).catch(() => {});
       return;

@@ -208,6 +208,10 @@ function defaultGuildConfig() {
       msgCooldownMs: 60_000,
       maxWager: 250,
       duelCooldownMs: 60_000,
+      /** Discord channel ID for Credits/duel audit embeds (null = off). */
+      auditChannelId: null,
+      /** DM users on pay / duel challenge / economy warn. */
+      dmNotify: true,
     },
   };
 }

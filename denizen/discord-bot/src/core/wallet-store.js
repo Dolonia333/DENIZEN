@@ -26,6 +26,9 @@ function emptyGuild() {
     weekKey: null,
     weeklyDuelWins: {},
     chatDrip: {},
+    // SlotBot-style moderation for Credits abuse.
+    blacklist: {},
+    warns: {},
   };
 }
 
@@ -59,6 +62,16 @@ function historyMatchesType(entry, type) {
   return entry.type === t;
 }
 
+function historyInvolvesUser(entry, userId) {
+  const uid = String(userId);
+  if (!entry || !uid) return false;
+  if (entry.userId === uid || entry.from === uid || entry.to === uid) return true;
+  if (entry.a === uid || entry.b === uid) return true;
+  if (entry.winnerId === uid || entry.loserId === uid) return true;
+  if (entry.by === uid) return true;
+  return false;
+}
+
 class WalletStore {
   constructor(opts = {}) {
     this.dir = opts.dir || process.env.DISCORD_CREDITS_DIR || DEFAULT_DIR;
@@ -90,6 +103,8 @@ class WalletStore {
         data.weekKey = typeof data.weekKey === 'string' ? data.weekKey : null;
         data.weeklyDuelWins = data.weeklyDuelWins || {};
         data.chatDrip = data.chatDrip || {};
+        data.blacklist = data.blacklist || {};
+        data.warns = data.warns || {};
       } catch (err) {
         console.warn('[wallet-store] corrupt', id, err.message);
         data = emptyGuild();
@@ -268,15 +283,27 @@ class WalletStore {
       wins: Number(s?.wins || 0),
       losses: Number(s?.losses || 0),
       forfeits: Number(s?.forfeits || 0),
+      streak: Number(s?.streak || 0),
+      bestStreak: Number(s?.bestStreak || 0),
     };
+  }
+
+  _ensureDuelStats(data, userId) {
+    const uid = String(userId);
+    data.duelStats[uid] = data.duelStats[uid] || {
+      wins: 0, losses: 0, forfeits: 0, streak: 0, bestStreak: 0,
+    };
+    data.duelStats[uid].streak = Number(data.duelStats[uid].streak || 0);
+    data.duelStats[uid].bestStreak = Number(data.duelStats[uid].bestStreak || 0);
+    return data.duelStats[uid];
   }
 
   recordDuelResult(guildId, winnerId, loserId, opts = {}) {
     const data = this.load(guildId);
     const w = String(winnerId);
     const l = String(loserId);
-    data.duelStats[w] = data.duelStats[w] || { wins: 0, losses: 0, forfeits: 0 };
-    data.duelStats[l] = data.duelStats[l] || { wins: 0, losses: 0, forfeits: 0 };
+    this._ensureDuelStats(data, w);
+    this._ensureDuelStats(data, l);
     data.duelStats[w].wins += 1;
     if (opts.forfeit) data.duelStats[l].forfeits += 1;
     else data.duelStats[l].losses += 1;
@@ -288,6 +315,28 @@ class WalletStore {
       forfeit: !!opts.forfeit,
     });
     this.save(guildId);
+  }
+
+  /** Persistent win streak — preferred by PvP over in-memory Map. */
+  addWinStreak(guildId, userId) {
+    const data = this.load(guildId);
+    const s = this._ensureDuelStats(data, userId);
+    s.streak = Number(s.streak || 0) + 1;
+    s.bestStreak = Math.max(Number(s.bestStreak || 0), s.streak);
+    this.save(guildId);
+    return s.streak;
+  }
+
+  breakStreak(guildId, userId) {
+    const data = this.load(guildId);
+    const s = this._ensureDuelStats(data, userId);
+    s.streak = 0;
+    this.save(guildId);
+    return 0;
+  }
+
+  getStreak(guildId, userId) {
+    return Number(this.getDuelStats(guildId, userId).streak || 0);
   }
 
   topBalances(guildId, limit = 10) {
@@ -306,9 +355,113 @@ class WalletStore {
         wins: Number(s.wins || 0),
         losses: Number(s.losses || 0),
         forfeits: Number(s.forfeits || 0),
+        streak: Number(s.streak || 0),
+        bestStreak: Number(s.bestStreak || 0),
       }))
       .sort((a, b) => b.wins - a.wins || a.losses - b.losses)
       .slice(0, limit);
+  }
+
+  topWeeklyWins(guildId, limit = 10) {
+    this.ensureWeeklyReset(guildId);
+    const data = this.load(guildId);
+    return Object.entries(data.weeklyDuelWins || {})
+      .map(([userId, wins]) => ({ userId, wins: Number(wins) || 0 }))
+      .filter((r) => r.wins > 0)
+      .sort((a, b) => b.wins - a.wins)
+      .slice(0, limit);
+  }
+
+  topStreaks(guildId, limit = 10) {
+    const data = this.load(guildId);
+    return Object.entries(data.duelStats)
+      .map(([userId, s]) => ({
+        userId,
+        streak: Number(s.streak || 0),
+        bestStreak: Number(s.bestStreak || 0),
+      }))
+      .filter((r) => r.bestStreak > 0 || r.streak > 0)
+      .sort((a, b) => b.bestStreak - a.bestStreak || b.streak - a.streak)
+      .slice(0, limit);
+  }
+
+  // ---------------------------------------------------------------------
+  // Credits blacklist + warnings (SlotBot-style abuse tools)
+  // ---------------------------------------------------------------------
+
+  isBlacklisted(guildId, userId) {
+    return !!this.load(guildId).blacklist?.[String(userId)];
+  }
+
+  getBlacklistEntry(guildId, userId) {
+    return this.load(guildId).blacklist?.[String(userId)] || null;
+  }
+
+  setBlacklist(guildId, userId, opts = {}) {
+    const data = this.load(guildId);
+    data.blacklist = data.blacklist || {};
+    const uid = String(userId);
+    data.blacklist[uid] = {
+      at: Date.now(),
+      by: String(opts.by || ''),
+      reason: String(opts.reason || 'Credits abuse').slice(0, 200),
+    };
+    this._pushHistory(data, {
+      type: 'blacklist',
+      userId: uid,
+      by: data.blacklist[uid].by,
+      reason: data.blacklist[uid].reason,
+    });
+    this.save(guildId);
+    return data.blacklist[uid];
+  }
+
+  clearBlacklist(guildId, userId, opts = {}) {
+    const data = this.load(guildId);
+    const uid = String(userId);
+    if (!data.blacklist?.[uid]) return { ok: false, error: 'Not blacklisted.' };
+    delete data.blacklist[uid];
+    this._pushHistory(data, { type: 'unblacklist', userId: uid, by: String(opts.by || '') });
+    this.save(guildId);
+    return { ok: true };
+  }
+
+  addWarn(guildId, userId, opts = {}) {
+    const data = this.load(guildId);
+    data.warns = data.warns || {};
+    const uid = String(userId);
+    data.warns[uid] = data.warns[uid] || [];
+    const entry = {
+      at: Date.now(),
+      by: String(opts.by || ''),
+      reason: String(opts.reason || 'No reason').slice(0, 200),
+    };
+    data.warns[uid].unshift(entry);
+    if (data.warns[uid].length > 25) data.warns[uid].length = 25;
+    this._pushHistory(data, {
+      type: 'warn',
+      userId: uid,
+      by: entry.by,
+      reason: entry.reason,
+      count: data.warns[uid].length,
+    });
+    this.save(guildId);
+    return { entry, count: data.warns[uid].length };
+  }
+
+  getWarns(guildId, userId) {
+    return Array.isArray(this.load(guildId).warns?.[String(userId)])
+      ? this.load(guildId).warns[String(userId)]
+      : [];
+  }
+
+  clearWarns(guildId, userId) {
+    const data = this.load(guildId);
+    const uid = String(userId);
+    const prev = (data.warns || {})[uid] || [];
+    if (data.warns) delete data.warns[uid];
+    this.save(guildId);
+    return { ok: true, cleared: prev.length };
   }
 
   _pushHistory(data, entry) {
@@ -318,14 +471,19 @@ class WalletStore {
   }
 
   /**
-   * Recent history, newest first. `opts.type`: 'credits' (everything non-duel)
-   * or 'duels' (duel/escrow entries only); omit for everything.
+   * Recent history, newest first.
+   * `opts.type`: 'credits' | 'duels'
+   * `opts.userId`: only entries involving that user
    */
   getHistory(guildId, opts = {}) {
     const data = this.load(guildId);
     const limit = Math.max(1, Math.min(HISTORY_MAX, Math.floor(Number(opts.limit) || 15)));
     const all = Array.isArray(data.history) ? data.history : [];
-    const filtered = opts.type ? all.filter((h) => historyMatchesType(h, opts.type)) : all;
+    let filtered = opts.type ? all.filter((h) => historyMatchesType(h, opts.type)) : all;
+    if (opts.userId) {
+      const uid = String(opts.userId);
+      filtered = filtered.filter((h) => historyInvolvesUser(h, uid));
+    }
     return filtered.slice(0, limit);
   }
 

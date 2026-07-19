@@ -24,6 +24,7 @@ const { createDataFarm } = require('./data-farm');
 const { createEconomy } = require('./economy');
 const { createPvp } = require('./pvp');
 const { createShop } = require('./shop');
+const { createMinigames } = require('./minigames');
 const { createChatControls } = require('../chat');
 const { canRunCommand } = require('../core/permissions');
 const { WalletStore } = require('../core/wallet-store');
@@ -186,6 +187,10 @@ function loadModules(deps) {
 
   const shop = createShop(deps);
   shop.register(deps.registry);
+
+  const minigames = createMinigames(deps);
+  minigames.register(deps.registry);
+  hooks.onInteraction.push(minigames.onInteraction);
 
   // Discord data farm — harvest guild chats into learning lake (privacy-aware)
   const dataFarm = createDataFarm(deps);
