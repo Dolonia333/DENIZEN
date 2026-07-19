@@ -59,18 +59,9 @@ async function assertMapAccess(req, { guildId = null, body = {} } = {}) {
   if (!guildOrg.dbReady()) return { ok: true, reason: 'db_open' };
 
   const status = await guildOrg.getAccessStatus(gid);
-  if (status.setup_required) {
-    return {
-      ok: false,
-      status: 403,
-      error: 'setup_required',
-      code: 'SETUP_REQUIRED',
-      message: status.message,
-      guild_id: gid,
-    };
-  }
-  if (!status.linked) {
-    return { ok: true, reason: 'ungated' };
+  // Unlinked guilds stay open until the owner opts in with `,teamlink`.
+  if (!status.linked || !status.gated) {
+    return { ok: true, reason: status.linked ? 'ungated' : 'not_linked' };
   }
 
   const grantTok = extractMapGrant(req, body);

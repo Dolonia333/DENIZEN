@@ -161,13 +161,15 @@ async function getAccessStatus(guildId) {
   }
   const link = await getLinkForGuild(gid);
   if (!link?.org) {
+    // Not linked yet → leave the map open (backward compatible).
+    // Owner opt-in via `,teamlink` turns on the team-code gate.
     return {
       ok: true,
       guild_id: gid,
       linked: false,
-      gated: true,
-      setup_required: true,
-      message: 'Ask the server owner to link this Discord with `,teamlink <team code>`.',
+      gated: false,
+      setup_required: false,
+      message: 'Owner can lock this map with `,teamlink <team code>`.',
     };
   }
   return {

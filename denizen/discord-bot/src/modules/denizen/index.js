@@ -92,10 +92,12 @@ function createDenizenAccount(deps) {
       if (data.setup_required || !data.linked) {
         return ctx.reply({
           content: [
-            '**Map not set up yet**',
-            'Ask a server admin to run `,teamlink <Denizen team code>`.',
+            `**Discord Spaces map**`,
+            url,
             '',
-            'Meanwhile you can `,signup` for a Denizen account.',
+            'Map is open. Join a voice channel to appear.',
+            'Admins can lock it to a Denizen team with `,teamlink <team code>`.',
+            'Create an account anytime: `,signup`',
           ].join('\n'),
           ephemeral: true,
         });
