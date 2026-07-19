@@ -653,10 +653,14 @@
       card.hidden = false;
       const name = access.org_display_name ? ` for ${access.org_display_name}` : '';
       if (access.setup_required) {
-        $('teamCodeBlurb').innerHTML = 'This Discord isn’t linked to a Denizen team yet. Ask an admin to run <code>,teamlink &lt;team code&gt;</code> in the server.';
+        // Soft notice only — unlinked maps stay open after the gate fix.
+        $('teamCodeBlurb').innerHTML = access.message
+          || 'Owner can lock this map with <code>,teamlink &lt;team code&gt;</code>.';
         $('teamCodeInput').disabled = true;
         $('btnUnlockMap').disabled = true;
-        $('teamCodeStatus').textContent = access.message || 'Setup required';
+        $('teamCodeStatus').textContent = '';
+        card.hidden = true;
+        return;
       } else {
         $('teamCodeBlurb').innerHTML = `Enter the Denizen team code${name} to open this server’s map. Get it from the server owner (<code>,mapcode</code>).`;
         $('teamCodeInput').disabled = false;
