@@ -1622,6 +1622,14 @@
     [/dig|archaeo|fossil|excavat|research|\blab\b/i, 'digzone'],
   ];
 
+  // Operating-theater chatter so the scrub team reads as a live team, not props.
+  const OR_CHATTER = {
+    surgeon: ['Scalpel.', 'Clamp, please.', 'Suction here.', 'Steady…', 'Good exposure.',
+      'Retractor.', 'Almost there.', 'Nice and clean.', 'Hold that.', 'Closing up.'],
+    nurse: ['BP holding.', 'Sats look good.', 'Sponge count clear.', 'Passing suture.',
+      'Vitals stable.', 'Two units ready.', 'More saline?', 'Charting it now.'],
+  };
+
   class ExampleMapScene extends Phaser.Scene {
     constructor() {
       super('example');
@@ -2718,11 +2726,24 @@
         allowSurgery: true,
         preferKey: opts.onSurgery || opts.bedKey === 'tableSurgery' ? 'tableSurgery' : null,
       });
-      let offset = opts.standOffset != null
-        ? opts.standOffset
-        : (actor.role === 'surgeon' ? 28 : 22);
-      // Third scrub surgeon stands farther at the table foot.
-      if (opts.station === 'scrub' && opts.standOffset == null) offset = 40;
+      // Auto-space attendants along each side of the bed so they never stack
+      // on top of each other (each NPC ~32px wide at SCALE 2). The slot is
+      // assigned once per actor+bed and reused across re-parks so the OR cast
+      // keeps stable, legible positions instead of piling on the same spot.
+      let offset;
+      if (bed) {
+        bed._sideSlots = bed._sideSlots || { '-1': 0, '1': 0 };
+        if (actor._bedSlot == null || actor._bedSlotBed !== bed) {
+          actor._bedSlot = bed._sideSlots[side];
+          actor._bedSlotBed = bed;
+          bed._sideSlots[side] += 1;
+        }
+        offset = 26 + actor._bedSlot * 36; // 36px apart → clear of the sprite
+      } else {
+        offset = opts.standOffset != null
+          ? opts.standOffset
+          : (actor.role === 'surgeon' ? 28 : 22);
+      }
       const standX = (bed ? bed.x : targetX) + side * offset;
       actor.sprite.x = standX;
       actor.sprite.y = actor.floorY;
@@ -5053,6 +5074,29 @@
       this.showEmote(sprite, 'social', { bubble: true, bubbleKey: colorKey, emoteKey: 'emoteHeart' });
     }
 
+    /**
+     * Brief text speech bubble over an ambient NPC's head (operation chatter,
+     * etc.). One bubble per actor at a time; auto-fades. Anchored where the
+     * actor stands (hospital staff are mostly parked, so it tracks fine).
+     */
+    actorSay(actor, text) {
+      if (!actor?.sprite?.active || !text) return;
+      if (actor._sayObj) { try { actor._sayObj.destroy(); } catch (_) { /* gone */ } actor._sayObj = null; }
+      const sp = actor.sprite;
+      const label = this.add.text(sp.x, sp.y - 42, String(text), {
+        fontFamily: 'Segoe UI, Tahoma, sans-serif',
+        fontSize: '9px',
+        color: '#123038',
+        backgroundColor: '#eef6f2',
+        padding: { x: 4, y: 2 },
+      }).setOrigin(0.5, 1).setDepth(62).setResolution(3);
+      actor._sayObj = label;
+      this.tweens.add({
+        targets: label, y: label.y - 5, alpha: 0, delay: 1500, duration: 550,
+        onComplete: () => { try { label.destroy(); } catch (_) { /* gone */ } if (actor._sayObj === label) actor._sayObj = null; },
+      });
+    }
+
     playAmbientPose(actor, pose, opts = {}) {
       if (!actor?.sprite?.active || !actor.sheet) return false;
       if (this.time.now < (actor.busyUntil || 0) && !opts.force) return false;
@@ -5717,6 +5761,11 @@
         const atOr = !!(actor.hospOpts?.onSurgery || actor.attendBed?.key === 'tableSurgery');
         const roll = Math.random();
         if (atOr) {
+          // Occasional operation chatter so the team reads as talking to each other.
+          if (Math.random() < 0.4) {
+            const lines = OR_CHATTER[actor.role] || OR_CHATTER.surgeon;
+            this.actorSay(actor, lines[Math.floor(Math.random() * lines.length)]);
+          }
           // Operating theater: keep the scrub team busy around the patient.
           if (roll < 0.34) {
             // Lean / gesture over the table (jump≈reach on hospital sheets)
