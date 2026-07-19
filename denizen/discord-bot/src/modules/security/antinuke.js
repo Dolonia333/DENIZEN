@@ -22,11 +22,56 @@ const KIND_TO_MODULE = {
 };
 
 function createAntinuke(deps) {
-  const { config, hub } = deps;
+  const { config, hub, client } = deps;
   /** per-module windows: guildId -> executorId -> kind -> timestamps */
   const moduleWindows = new Map();
   /** guildId -> recent destructive actions for restore */
   const recentDamage = new Map();
+  /** channelId -> snapshot taken on delete (before audit arrives) */
+  const channelSnapshots = new Map();
+  /** roleId -> snapshot */
+  const roleSnapshots = new Map();
+
+  if (client) {
+    client.on('channelDelete', (ch) => {
+      try {
+        channelSnapshots.set(ch.id, {
+          name: ch.name,
+          type: ch.type,
+          parentId: ch.parentId,
+          topic: ch.topic,
+          nsfw: ch.nsfw,
+          rateLimitPerUser: ch.rateLimitPerUser,
+          position: ch.rawPosition ?? ch.position,
+          _overwrites: [...(ch.permissionOverwrites?.cache?.values() || [])].map((o) => ({
+            id: o.id,
+            type: o.type,
+            allow: o.allow?.bitfield ?? o.allow,
+            deny: o.deny?.bitfield ?? o.deny,
+          })),
+        });
+        if (channelSnapshots.size > 200) {
+          const first = channelSnapshots.keys().next().value;
+          channelSnapshots.delete(first);
+        }
+      } catch (_) { /* ignore */ }
+    });
+    client.on('roleDelete', (role) => {
+      try {
+        roleSnapshots.set(role.id, {
+          name: role.name,
+          color: role.color,
+          permissions: role.permissions?.bitfield ?? role.permissions,
+          hoist: role.hoist,
+          mentionable: role.mentionable,
+        });
+        if (roleSnapshots.size > 200) {
+          const first = roleSnapshots.keys().next().value;
+          roleSnapshots.delete(first);
+        }
+      } catch (_) { /* ignore */ }
+    });
+  }
 
   function canConfigure(guild, userId) {
     if (isGuildOwner(guild, userId)) return true;
@@ -50,31 +95,96 @@ function createAntinuke(deps) {
     while (arr.length > 50) arr.shift();
   }
 
-  async function tryRestore(guild, kind, entry) {
-    if (!entry) return null;
+  async function tryRestore(guild, kind, entry, targetId) {
+    if (!entry && !targetId) return null;
     try {
       if (kind === 'channelDelete' || kind === 'channelCreate') {
-        // Only restore deletes
         if (kind !== 'channelDelete') return null;
-        const name = entry.target?.name || entry.changes?.find((c) => c.key === 'name')?.old || 'restored-channel';
-        const type = entry.target?.type ?? 0;
-        const parentId = entry.target?.parentId || null;
+        const snap = channelSnapshots.get(targetId || entry?.targetId) || null;
+        const name = snap?.name
+          || entry?.target?.name
+          || entry?.changes?.find((c) => c.key === 'name')?.old
+          || 'restored-channel';
+        const type = snap?.type ?? entry?.target?.type ?? 0;
+        const parentId = snap?.parentId
+          || entry?.target?.parentId
+          || entry?.changes?.find((c) => c.key === 'parent_id')?.old
+          || null;
+        const topic = snap?.topic
+          || entry?.target?.topic
+          || entry?.changes?.find((c) => c.key === 'topic')?.old
+          || undefined;
+        const nsfw = snap?.nsfw
+          ?? entry?.target?.nsfw
+          ?? entry?.changes?.find((c) => c.key === 'nsfw')?.old
+          ?? undefined;
+        const rateLimitPerUser = snap?.rateLimitPerUser
+          ?? entry?.target?.rateLimitPerUser
+          ?? entry?.changes?.find((c) => c.key === 'rate_limit_per_user')?.old
+          ?? undefined;
+        const position = snap?.position
+          ?? entry?.target?.rawPosition
+          ?? entry?.target?.position
+          ?? entry?.changes?.find((c) => c.key === 'position')?.old
+          ?? undefined;
+
+        let permissionOverwrites = snap?._overwrites;
+        const ow = entry?.target?.permissionOverwrites;
+        if (!permissionOverwrites?.length && ow?.cache) {
+          permissionOverwrites = [...ow.cache.values()].map((o) => ({
+            id: o.id,
+            type: o.type,
+            allow: o.allow?.bitfield ?? o.allow,
+            deny: o.deny?.bitfield ?? o.deny,
+          }));
+        }
+
         const ch = await guild.channels.create({
           name: String(name).slice(0, 100),
           type,
           parent: parentId || undefined,
+          topic: topic || undefined,
+          nsfw: nsfw != null ? !!nsfw : undefined,
+          rateLimitPerUser: rateLimitPerUser != null ? Number(rateLimitPerUser) : undefined,
+          position: position != null ? Number(position) : undefined,
+          permissionOverwrites: permissionOverwrites?.length ? permissionOverwrites : undefined,
           reason: 'Denizen antinuke auto-restore',
         });
-        return `restored channel ${ch}`;
+        if (targetId) channelSnapshots.delete(targetId);
+        return `restored channel ${ch}${permissionOverwrites?.length ? ` (+${permissionOverwrites.length} overwrites)` : ''}`;
       }
       if (kind === 'roleDelete') {
-        const name = entry.target?.name || 'restored-role';
-        const color = entry.target?.color || 0;
+        const snap = roleSnapshots.get(targetId || entry?.targetId) || null;
+        const name = snap?.name
+          || entry?.target?.name
+          || entry?.changes?.find((c) => c.key === 'name')?.old
+          || 'restored-role';
+        const color = snap?.color
+          ?? entry?.target?.color
+          ?? entry?.changes?.find((c) => c.key === 'color')?.old
+          ?? 0;
+        const permissions = snap?.permissions
+          ?? entry?.target?.permissions?.bitfield
+          ?? entry?.target?.permissions
+          ?? entry?.changes?.find((c) => c.key === 'permissions')?.old
+          ?? undefined;
+        const hoist = snap?.hoist
+          ?? entry?.target?.hoist
+          ?? entry?.changes?.find((c) => c.key === 'hoist')?.old
+          ?? false;
+        const mentionable = snap?.mentionable
+          ?? entry?.target?.mentionable
+          ?? entry?.changes?.find((c) => c.key === 'mentionable')?.old
+          ?? false;
         const role = await guild.roles.create({
           name: String(name).slice(0, 100),
-          colors: { primaryColor: color },
+          colors: { primaryColor: Number(color) || 0 },
+          permissions: permissions != null ? permissions : undefined,
+          hoist: !!hoist,
+          mentionable: !!mentionable,
           reason: 'Denizen antinuke auto-restore',
         });
+        if (targetId) roleSnapshots.delete(targetId);
         return `restored role ${role}`;
       }
     } catch (err) {
@@ -163,7 +273,7 @@ function createAntinuke(deps) {
     // Best-effort auto-restore before punish (channels/roles)
     let restoreNote = '';
     if (cfg.security.antinuke.autoRestore !== false && (kind === 'channelDelete' || kind === 'roleDelete')) {
-      const note = await tryRestore(guild, kind, entry);
+      const note = await tryRestore(guild, kind, entry, evt.targetId);
       if (note) restoreNote = ` · ${note}`;
     }
 
@@ -325,7 +435,7 @@ function createAntinuke(deps) {
           const damage = recentDamage.get(ctx.guild.id) || [];
           const last = [...damage].reverse().find((d) => d.kind === 'channelDelete' || d.kind === 'roleDelete');
           if (!last) return ctx.reply('No recent channel/role deletes to restore.');
-          const note = await tryRestore(ctx.guild, last.kind, last.entry);
+          const note = await tryRestore(ctx.guild, last.kind, last.entry, last.targetId);
           return ctx.reply(note || 'Restore attempted (check server).');
         }
         if (action === 'autorestore') {

@@ -7,6 +7,19 @@
 **Art:** Pixel Spaces by [Netherzapdos](https://netherzapdos.itch.io/pixel-spaces) (base + Full + UI Expansion)  
 **Agent protocol:** Claude implements in small PRs; **Grok steers, reviews, finishes incomplete work**, keeps Claude on track and token-efficient.
 
+### Shipped since original audit (2026-07-18)
+
+| Item | Notes |
+|------|--------|
+| Phase G map social | Reactions + `,eat` → poses / Pixel Platter; permanent head chrome removed |
+| Elevators | Theme climb lanes use elevator art + proximity open/close |
+| Soft chat bubbles | Colored pack bubbles; pop on snippet change |
+| Section atmosphere | `SECTION_ATMOS` palettes on plain shells |
+| Door enter | `playEnterStep` on enter / floor change / leave |
+| Anim tune | Slower walk/idle; longer eat; softer ambient |
+| Door art | Pack doors + open textures; elev themes |
+| Bot music / Last.fm | Real Lavalink + Last.fm API (not stubs) — see [`DISCORD_BOT_AND_SPACES.md`](./DISCORD_BOT_AND_SPACES.md) |
+
 **Reference mockups (pack author):** UI Expansion devlog — build menu, NPC needs panel, furniture shop, tasks menu.  
 **Animation source of truth:** Animation Update (sit / sit idle / sit finish / lie / eat / eat sitting / hurt / shrug / snicker / wave).
 
@@ -305,16 +318,18 @@ Use `PixelSpacesFull/UI/` only (see itch UI Expansion):
 
 ### Phase G — Discord presence personality
 
+> **Shipped (2026-07-18):** permanent mute/open-mic/boost head chrome was **removed**. Organic feedback is Discord **message reactions** + `,eat [food]` → `people[].action` → pose + fade emote + held Pixel Platter sprite. See [`DISCORD_BOT_AND_SPACES.md`](./DISCORD_BOT_AND_SPACES.md).
+
 | Event | Map reaction |
 |-------|--------------|
 | Join VC | wave anim once + chat bubble optional |
-| Mute | sad status icon |
-| Unmute / open mic | happy + pointer |
-| Text soft presence | brief bubble + rare snicker |
+| Chat reaction (wave/shrug/laugh/jump/hurt/heart) | matching NPC pose + brief emote fade |
+| Food reaction or `,eat` | eat/eatSit + held food (or nearest table plate) |
+| Text soft presence | brief bubble (+ caption) |
 | Move channel | walk path to new room slot |
 | Idle long in AFK room | sit or lie if bed nearby |
 
-Bot changes only if presence payload needs new fields; prefer map-side heuristics.
+Bot: `tracker.setMapAction` + ungated misc `onReactionAdd` / `,eat`. Map: `playPresenceAction` + `live.lastActionTs`.
 
 ---
 

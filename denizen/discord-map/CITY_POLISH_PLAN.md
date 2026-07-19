@@ -49,6 +49,9 @@ block you walk down, one building per Discord category, every room designed
       + plaque zone) — skip, never stack
 - [x] Door clearance: furniture bands start past the climb-door leaf edge
       (+~20px) in both decorateRoom and themed recipes (edge-aware lane skip)
+- [x] Pack door art (2026-07-18): street entrances use `Door_*_double.png`
+      (wood/glass/grey by theme); climb doors get indoor frames + ajar
+      `*_opened` leaves; approach swaps street doubles → opened texture
 - [x] Atmospheric perspective: mid mountains/ridges tinted blue-grey at
       ~0.6 alpha, extendBackdrop repeats match originals, billboards muted
 - [x] Phaser vendored locally (phaser.min.js) — CDN outage no longer kills
@@ -66,7 +69,12 @@ block you walk down, one building per Discord category, every room designed
 - [x] HUD safe-area layout (layoutHud): ENVELOP crops the design edges on
       16:9 hosts — panels/clock now inset to the visible rect, re-laid on
       resize and zoom changes; event strip hidden until it has content
-- [ ] Section palette shifts along the block
+- [x] Section palette shifts along the block
+- [x] Elevator doors (2026-07-18): hospital/police/museum/gamer climb
+      lanes use `Elevator_*` pack art; proximity opens/closes
+- [x] Soft-text pack chat bubbles + shadow behind presence captions
+- [x] Jump/step-in on door enter / floor climb / leave
+- [x] Animation tuning: slower walk/idle, longer eat, less ambient wave spam
 
 ### Stage 2 — NPC life — done
 - [x] All 14 anim rows registered in `makeAnims`
@@ -75,7 +83,7 @@ block you walk down, one building per Discord category, every room designed
 - [x] Player sit / lie (pre-existing)
 - [x] Ambient eat near food spots
 - [x] UI emotes above heads on pose
-- [ ] Chat bubble sprites behind soft-text speech (assets ready; not wired to presence text)
+- [x] Chat bubble sprites behind soft-text speech (assets ready; not wired to presence text)
 
 ### Stage 3 — Food + pets — done
 - [x] Pixel Platter on cafe/kitchen/lounge surfaces + theme table hosts
@@ -92,7 +100,7 @@ block you walk down, one building per Discord category, every room designed
 - [ ] Day/night cycle
 - [ ] Weather
 - [ ] NPC street pathing between buildings
-- [ ] Jump on door enter
+- [x] Jump on door enter
 - [ ] hurt anim on rate-limit events
 - [ ] More room recipe variants
 

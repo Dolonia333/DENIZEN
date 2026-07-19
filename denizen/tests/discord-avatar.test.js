@@ -95,6 +95,30 @@ describe('discord-avatar', () => {
     assert.match(c.sheetUrl, /\/api\/discord\/avatar\/99\.png/);
   });
 
+  it('normalize keeps pet field; pets are not guild-plan gated', () => {
+    const freeFeat = api.planFeatures('free');
+    assert.equal(freeFeat.companionPet, false);
+    const paidFeat = api.planFeatures('pro');
+    assert.equal(paidFeat.companionPet, false);
+
+    const withPet = api.normalizeAvatar({
+      mode: 'premade',
+      premade: 'npc_m1',
+      pet: { kind: 'dog', enabled: true },
+    }, 'pet1');
+    assert.equal(withPet.pet.kind, 'dog');
+    assert.equal(withPet.pet.enabled, true);
+
+    // Guild plan no longer strips pets — entitlement is checked elsewhere
+    const kept = api.enforceAvatarPlan(withPet, 'pet1', { plan: 'free' });
+    assert.equal(kept.avatar.pet.kind, 'dog');
+    assert.equal(kept.avatar.pet.enabled, true);
+    assert.ok(!kept.locked.includes('companionPet'));
+
+    const client = api.clientAvatar(kept.avatar, 'pet1');
+    assert.equal(client.pet.kind, 'dog');
+  });
+
   it('seasonal unlocks include halloween in October', () => {
     const events = api.getActiveEvents(new Date(Date.UTC(2026, 9, 15))); // Oct
     assert.ok(events.some((e) => e.id === 'halloween'));

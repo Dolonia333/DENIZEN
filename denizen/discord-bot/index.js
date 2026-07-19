@@ -8,6 +8,7 @@
 
 const { createClient, attachGateway } = require('./src/gateway');
 const { TrackerEngine } = require('./src/tracker');
+const { HangoutStore } = require('./src/hangout-store');
 const { handleBotChat } = require('./src/chat');
 // chat controls registered via loadModules
 const { ConfigStore } = require('./src/core/config-store');
@@ -34,11 +35,11 @@ const PRESENCE_PORT = Number(process.env.DISCORD_PRESENCE_PORT) || 5180;
 const SMOKE = process.argv.includes('--smoke');
 const DUMP = process.argv.includes('--dump');
 
-// Last-resort handlers: a stray rejection in one module must not take the
-// whole sidecar (and every guild's moderation) down silently. The parent
-// server restarts us on real exits; log loudly and stay up on soft faults.
+// Soft module faults stay in try/catch. Fatal process errors exit so the parent
+// sidecar supervisor can restart us with a clean slate.
 process.on('uncaughtException', (err) => {
   console.error('[discord-bot] uncaughtException:', err?.stack || err);
+  process.exit(1);
 });
 process.on('unhandledRejection', (err) => {
   console.error('[discord-bot] unhandledRejection:', err?.stack || err);
@@ -49,7 +50,8 @@ if (!TOKEN) {
   process.exit(1);
 }
 
-const tracker = new TrackerEngine({ textWindowMs: TEXT_WINDOW_MS });
+const hangoutStore = new HangoutStore();
+const tracker = new TrackerEngine({ textWindowMs: TEXT_WINDOW_MS, hangoutStore });
 const config = new ConfigStore();
 const registry = new CommandRegistry({ prefix: PREFIX });
 const audit = new AuditBus();
@@ -57,6 +59,10 @@ const hub = new EventHub();
 const client = createClient();
 
 const hooks = loadModules({ config, registry, hub, tracker, audit, client });
+
+/** @type {ReturnType<typeof createPresenceServer>|null} */
+let presenceServer = null;
+let shuttingDown = false;
 
 audit.on((evt) => {
   for (const fn of hooks.onAudit || []) {
@@ -98,6 +104,24 @@ async function forwardOffice(voiceEvt) {
   }
 }
 
+/** Re-post current VC occupants so office ghosts match Discord after restart. */
+async function reseedOfficeFromTracker(guildId) {
+  if (!FORWARD_OFFICE) return;
+  const snap = tracker.snapshot(guildId);
+  for (const m of snap.members || []) {
+    if (!m.voiceChannelId) continue;
+    const room = (snap.rooms || []).find((r) => r.id === m.voiceChannelId);
+    await forwardOffice({
+      kind: 'join',
+      userId: m.userId,
+      displayName: m.displayName,
+      guildId,
+      toChannelId: m.voiceChannelId,
+      toChannel: room ? { name: room.name } : null,
+    });
+  }
+}
+
 function printSnapshot(label = 'dump') {
   const data = GUILD_FILTER ? tracker.snapshot(GUILD_FILTER) : tracker.snapshot();
   console.log(`[discord-bot] --${label}--`);
@@ -111,6 +135,20 @@ async function runGuardedCommand(runner) {
     console.error('[command]', err.message || err);
   }
 }
+
+async function gracefulShutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`[discord-bot] ${signal} — shutting down`);
+  try { hangoutStore.flushDirty(); } catch (_) {}
+  try { await hooks._music?.shutdown?.(); } catch (_) {}
+  try { await presenceServer?.close?.(); } catch (_) {}
+  try { client.destroy(); } catch (_) {}
+  process.exit(0);
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 let readyFired = false;
 attachGateway(client, {
@@ -145,13 +183,15 @@ attachGateway(client, {
 
     // Background workers (levels counters, social polls)
     try { hooks._community?.startCounterLoop?.(c); } catch (_) {}
+    try { hooks._community?.startGiveawayLoop?.(c); } catch (_) {}
     try { hooks._integrations?.startWorkers?.(c); } catch (_) {}
+    try { hooks._music?.clearOrphanPlayers?.(c); } catch (_) {}
 
     if (DUMP) printSnapshot('dump');
     if (DUMP_INTERVAL_MS > 0) setInterval(() => printSnapshot('interval'), DUMP_INTERVAL_MS);
     setInterval(() => tracker.tick(), 5_000);
 
-    const presence = createPresenceServer({
+    presenceServer = createPresenceServer({
       tracker,
       guildId: GUILD_FILTER,
       port: PRESENCE_PORT,
@@ -160,7 +200,7 @@ attachGateway(client, {
     });
     // Retry loop kept from production hardening — temporary port conflicts
     // must not leave Discord map stuck on "Bot offline" for the whole process.
-    const startPresence = () => presence.listen().catch((err) => {
+    const startPresence = () => presenceServer.listen().catch((err) => {
       console.warn('[discord-bot] presence API failed:', err.message || err);
       let n = 0;
       const keepTrying = setInterval(() => {
@@ -169,7 +209,7 @@ attachGateway(client, {
           clearInterval(keepTrying);
           return;
         }
-        presence.listen().then(() => {
+        presenceServer.listen().then(() => {
           clearInterval(keepTrying);
           console.log('[discord-bot] presence API recovered after delayed retry');
         }).catch(() => { /* keep interval */ });
@@ -181,6 +221,16 @@ attachGateway(client, {
     tracker.seedGuild(guild);
     config.get(guild.id); // ensure file exists
     console.log(`[discord-bot] seeded guild "${guild.name}" — ${guild.channels.cache.size} channels`);
+    reseedOfficeFromTracker(guild.id).catch((err) => {
+      console.warn('[discord-bot] office reseed:', err.message || err);
+    });
+  },
+  onChannelChange(evt) {
+    if (evt.kind === 'delete') {
+      tracker.removeChannel(evt.guildId, evt.channel?.id || evt.raw?.id);
+      return;
+    }
+    tracker.upsertChannel(evt.guildId, evt.channel || evt.raw);
   },
   onVoice(evt) {
     tracker.applyVoice(evt);
@@ -188,6 +238,9 @@ attachGateway(client, {
   },
   onVoiceFlags(evt) {
     tracker.applyVoiceFlags(evt);
+  },
+  onBoostChange(evt) {
+    tracker.setBoosted(evt.guildId, evt.userId, evt.boosted, evt.displayName);
   },
   onTextActivity(evt) {
     tracker.applyTextActivity(evt);
@@ -240,4 +293,4 @@ client.login(TOKEN).catch((err) => {
   process.exit(1);
 });
 
-module.exports = { tracker, client, config, registry, hub };
+module.exports = { tracker, client, config, registry, hub, hangoutStore };

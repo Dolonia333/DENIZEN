@@ -10,6 +10,7 @@ const {
 const { canRunCommand } = require('../../core/permissions');
 const { renderTemplate, sendRendered } = require('../../core/embed-vars');
 const { rankCardEmbed, successEmbed, infoEmbed } = require('../../core/ui-kit');
+const { parseGiveawayArgs } = require('./giveaway-util');
 const fs = require('fs');
 const path = require('path');
 
@@ -578,24 +579,32 @@ function createCommunity(deps) {
           await ctx.channel.send(
             `🎉 **${label}** of **${g.prize}**: ${winners.map((w) => `<@${w.id}>`).join(', ')}!`,
           );
+          if (action === 'end') {
+            config.update(ctx.guild.id, (c) => {
+              const row = (c.community.giveaways || []).find((x) => x.messageId === msgId);
+              if (row) row.ended = true;
+              return c;
+            });
+          }
           return;
         }
-        // ,giveaway [winners] prize...
-        let winners = 1;
-        let prizeParts = ctx.args || [];
-        if (prizeParts[0] && /^\d+$/.test(prizeParts[0])) {
-          winners = Math.min(10, Math.max(1, Number(prizeParts[0])));
-          prizeParts = prizeParts.slice(1);
-        }
+        // ,giveaway [winners] [duration] prize...
+        // duration like 10m, 1h, 1d (optional; default 1h auto-end)
+        const parsed = parseGiveawayArgs(ctx.args || []);
+        const winners = parsed.winners;
+        const durationMs = parsed.durationMs;
+        const prizeParts = parsed.prizeParts;
         const role = ctx.message?.mentions?.roles?.first?.();
         const prize = prizeParts.filter((a) => !a.startsWith('<@&')).join(' ') || 'a prize';
         const req = role ? `\nRequirement: ${role}` : '';
+        const endsAt = Date.now() + durationMs;
+        const endsRel = `<t:${Math.floor(endsAt / 1000)}:R>`;
         const msg = await ctx.channel.send(
-          `🎉 **GIVEAWAY** — ${prize}${req}\nWinners: **${winners}** · React 🎉 to enter!\n_End: \`,giveaway end ${'{id}'}\` · Reroll: \`,giveaway reroll ${'{id}'}\``.replace(/\{id\}/g, '…'),
+          `🎉 **GIVEAWAY** — ${prize}${req}\nWinners: **${winners}** · Ends ${endsRel}\nReact 🎉 to enter!\n_End early: \`,giveaway end …\`_`,
         );
         await msg.react('🎉');
         await msg.edit(
-          `🎉 **GIVEAWAY** — ${prize}${req}\nWinners: **${winners}** · React 🎉 to enter!\n_End: \`,giveaway end ${msg.id}\` · Reroll: \`,giveaway reroll ${msg.id}\``,
+          `🎉 **GIVEAWAY** — ${prize}${req}\nWinners: **${winners}** · Ends ${endsRel}\nReact 🎉 to enter!\n_End: \`,giveaway end ${msg.id}\` · Reroll: \`,giveaway reroll ${msg.id}\``,
         ).catch(() => {});
         config.update(ctx.guild.id, (c) => {
           c.community.giveaways.push({
@@ -605,10 +614,12 @@ function createCommunity(deps) {
             winners,
             roleId: role?.id || null,
             ts: Date.now(),
+            endsAt,
+            ended: false,
           });
           return c;
         });
-        return ctx.reply('Giveaway started.');
+        return ctx.reply(`Giveaway started — auto-ends ${endsRel}.`);
       },
     });
 
@@ -718,6 +729,53 @@ function createCommunity(deps) {
     }, 10 * 60 * 1000).unref?.();
   }
 
+  /** Auto-end giveaways whose endsAt has passed. */
+  function startGiveawayLoop(client) {
+    setInterval(async () => {
+      const now = Date.now();
+      for (const guild of client.guilds.cache.values()) {
+        const list = config.get(guild.id).community.giveaways || [];
+        for (const g of list) {
+          if (g.ended || !g.endsAt || g.endsAt > now) continue;
+          try {
+            const ch = await guild.channels.fetch(g.channelId).catch(() => null);
+            const msg = await ch?.messages?.fetch(g.messageId).catch(() => null);
+            const reaction = msg?.reactions?.cache?.get('🎉');
+            const users = reaction ? await reaction.users.fetch().catch(() => null) : null;
+            let entrants = users ? [...users.values()].filter((u) => !u.bot) : [];
+            if (g.roleId) {
+              const role = guild.roles.cache.get(g.roleId);
+              if (role) entrants = entrants.filter((u) => role.members.has(u.id));
+            }
+            const winners = [];
+            const pool = [...entrants];
+            const n = Math.min(g.winners || 1, pool.length);
+            for (let i = 0; i < n; i += 1) {
+              const idx = Math.floor(Math.random() * pool.length);
+              winners.push(pool.splice(idx, 1)[0]);
+            }
+            if (ch?.isTextBased?.()) {
+              if (winners.length) {
+                await ch.send(
+                  `🎉 **Giveaway ended** — **${g.prize}**: ${winners.map((w) => `<@${w.id}>`).join(', ')}!`,
+                ).catch(() => {});
+              } else {
+                await ch.send(`🎉 **Giveaway ended** — **${g.prize}**: no valid entrants.`).catch(() => {});
+              }
+            }
+            config.update(guild.id, (c) => {
+              const row = (c.community.giveaways || []).find((x) => x.messageId === g.messageId);
+              if (row) row.ended = true;
+              return c;
+            });
+          } catch (err) {
+            console.warn('[giveaway] auto-end:', err.message || err);
+          }
+        }
+      }
+    }, 30_000).unref?.();
+  }
+
   return {
     register,
     onMemberAdd,
@@ -727,6 +785,7 @@ function createCommunity(deps) {
     onGuildMemberUpdate,
     onInteraction,
     startCounterLoop,
+    startGiveawayLoop,
     getXp,
   };
 }

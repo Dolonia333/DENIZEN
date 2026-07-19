@@ -22,12 +22,44 @@ Plans are **per guild**, not per user. One paying server = one subscription.
 | Module | What it covers |
 |--------|----------------|
 | `security` | antinuke + antiraid (both register under `security`) |
-| `avatar` | cosmetics |
+| `avatar` | cosmetics (hair, clothes, hats…) — **not** pets for everyone |
 | `community` | community features |
 
-**Free modules** (never gated, never touch the DB): `moderation`, `music`, `tickets`, `automod`, `voicemaster`, `misc`, `core`.
+**Companion pets (per member, per server):**
+
+| Path | How |
+|------|-----|
+| Buy | Stripe one-time `STRIPE_PRICE_PET` → `,pet buy` · `POST /api/discord/billing/pet-checkout` |
+| Gift | `,pet gift @user` transfers entitlement in that guild |
+| Pro grants | Active Pro/Ultra gets **3 concurrent** free assigns: `,pet grant @user` / `,pet revoke @user` |
+| Storage | `denizen_guild_pet_entitlements` + `metadata.pet_grants_remaining` on guild plan |
+
+**Spaces map paywall (visible):**
+
+| Free | Paid guild (pro / ultra) | Individual pet entitlement |
+|------|--------------------------|----------------------------|
+| Map, VC/text presence, premade looks | Closet layers, no watermark | Cat/dog follows **you** on the map |
+| React / `,eat` map social (free) | Same + paid cosmetics | Works only in that server |
+| Watermark | Branding removed | Buy / gift / Pro grant |
+| Boost golden headset | Same | |
+
+**Free modules** (never gated, never touch the DB): `moderation`, `music`, `tickets`, `automod`, `voicemaster`, `misc` (includes `,eat` + map reaction hook), `logging`, `core`.
+
+Map social (reactions → emotes, `,eat` snacks) is **free for anyone on the map** — not a premium module.
 
 The premium set lives in one place — `PREMIUM_MODULES` in `denizen-guild-plans.js`. Add a module name there to gate it; leave it out to keep it free.
+
+Ship guild subscription **plus** optional per-member pet purchases (per server).
+
+| SKU | What members get | What staff get |
+|-----|------------------|----------------|
+| **Free** | Map, VC/text presence, react/`,eat`, premade looks, skin tones, boost golden headset, watermark | Moderation, music, tickets, voicemaster, **logging** (`,log`) |
+| **Pro** (primary) | Closet layers, no watermark; pets only if bought/gifted/granted | Security + community + **3 pet grants** |
+| **Ultra** | Same Pro features today | Same modules; higher limits later |
+
+**Headline perk:** “Buy a pet that follows you — or get one of three Pro grants from staff.”  
+**Staff headline:** “Antinuke + community tools for the whole server.”  
+**CTA:** `,upgrade` for Pro · `,pet buy` for an individual pet.
 
 ---
 
@@ -91,6 +123,7 @@ const allowed = await guildPlans.isModuleAllowed(guildId, cmd.module);
 | `STRIPE_GUILD_WEBHOOK_SECRET` | Signing secret for the guild-billing webhook endpoint. **Falls back to `STRIPE_WEBHOOK_SECRET`** if unset. |
 | `STRIPE_PRICE_PRO` | Stripe Price id for the Pro plan (checkout uses it as the subscription line item). |
 | `STRIPE_PRICE_ULTRA` | Stripe Price id for the Ultra plan. |
+| `STRIPE_PRICE_PET` | Stripe **one-time** Price id for a per-member pet in a guild. |
 | `DISCORD_UPGRADE_URL` | Public "upgrade this server" link shown when a premium command is denied. |
 | `SUPABASE_URL` | Base URL of the Supabase project (PostgREST endpoint for the plans table). |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service-role key — required to read/write `denizen_guild_plans` under RLS. |

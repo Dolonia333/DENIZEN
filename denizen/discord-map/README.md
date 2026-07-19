@@ -95,9 +95,11 @@ node discord-map/scripts/inventory-sprites.mjs
 | **Food** | All Pixel Platter plates registered; `seedFoodOnAllTables`; `actorEatFood` walks to plate + eat anim + bob |
 | **Pets** | Free cat/dog sheets, distance-driven walk, foot origin on ground |
 | **Sit/lie** | Seat/bed registry, seatedY lock, sitIdle/lieIdle |
+| **Discord map social** | Reactions + `,eat` → `people[].action` → pose + held Pixel Platter food; no permanent head chrome |
+| **Map polish** | Elevators + proximity; soft colored bubbles; section atmos palettes; door enter step; anim tune |
 | **Deploy** | `infra/hotfix-discord-map-nas.py` packs `discord-map/` + bot onto NAS docker |
 
-See **ARCHITECTURE.md** for file-level “how it was done.”
+See **ARCHITECTURE.md** for file-level “how it was done,” including the presence action channel.
 
 ---
 
@@ -107,9 +109,12 @@ See **ARCHITECTURE.md** for file-level “how it was done.”
 2. Run localhost (above).
 3. Use **F8** pose cycle / **F9** anim gallery in-game.
 4. Keys **1–6** on player: jump wave shrug snicker eat hurt.
-5. Edit `NPC_POSE_DEFS` / `furn()` / kits — see ARCHITECTURE.md.
-6. Pull unused art from **SPRITE_INVENTORY.md** / **POLISH_BACKLOG.md**.
-7. PR against `feature/discord-spaces-map-polish` (or stack onto it).
+5. From Discord (with bot + presence): react 👋 / 🍕 or `,eat pizza` while on the map.
+6. Edit `NPC_POSE_DEFS` / `furn()` / kits — see ARCHITECTURE.md.
+7. Pull unused art from **SPRITE_INVENTORY.md** / **POLISH_BACKLOG.md**.
+8. PR against `feature/discord-spaces-map-polish` (or stack onto it).
+
+Canonical bot/Spaces product doc: [`../docs/DISCORD_BOT_AND_SPACES.md`](../docs/DISCORD_BOT_AND_SPACES.md).
 
 ---
 

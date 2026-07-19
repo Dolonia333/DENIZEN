@@ -2,8 +2,10 @@
 
 /**
  * User-facing help copy for slash/prefix and @mention chat.
- * Keep under Discord's 2000-char message limit when fully joined.
+ * Prefer embeds (spacesHelpEmbed) over markdown dumps.
  */
+
+const { baseEmbed, BRAND } = require('./core/ui-kit');
 
 function publicBase() {
   return String(process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '')
@@ -20,89 +22,50 @@ function mapUrl(guildId) {
 }
 
 /**
- * Short intro shown in help + first-touch replies.
+ * Two-line intro for places that still need plain text.
  * @param {{ prefix?: string, guildId?: string }} [opts]
  */
 function spacesIntro(opts = {}) {
-  const p = opts.prefix || process.env.DISCORD_PREFIX || ',';
   const map = mapUrl(opts.guildId);
   return [
-    '**Denizen Spaces** — live pixel map of this Discord',
-    '',
-    '1. Open the map → walk the server as buildings & rooms',
-    `   ${map}`,
-    '2. Join a **voice channel** → you appear there',
-    `3. \`${p}avatar\` or \`/avatar edit\` → pick your look`,
-    '4. **Boost** this server → golden headset on the map',
+    'Live pixel map of this Discord — buildings are your channels.',
+    `Join a **voice channel** to appear · ${map}`,
   ].join('\n');
 }
 
 /**
- * Full help for /help and ,help
- * @param {{ prefix?: string, guildId?: string, modules?: Map<string, string[]> }} opts
+ * Canonical Spaces help embed — @mention help, /help spaces, ,start.
+ * @param {{ prefix?: string, guildId?: string, title?: string }} [opts]
  */
-function fullHelp(opts = {}) {
+function spacesHelpEmbed(opts = {}) {
   const p = opts.prefix || process.env.DISCORD_PREFIX || ',';
-  const parts = [
-    spacesIntro({ prefix: p, guildId: opts.guildId }),
-    '',
-    '**Spaces (start here)**',
-    `• \`${p}avatar\` / \`/avatar\` — **Free:** premade NPCs + skin tones`,
-    '  **Paid:** hair, hair color, clothes, masks, hats, headsets',
-    `• \`${p}skin light\` — free skin tone · \`${p}hair\` / \`${p}clothes\` need Community`,
-    `• **Boost** this server → golden headset (free perk)`,
-    `• \`${p}denizen map\` · \`${p}signup\` · \`${p}link\` — account + map link`,
-    `• \`${p}hangout\` / \`/hangout\` — weekly who hung out (VC minutes)`,
-    `• \`${p}roomsnapshot\` — who’s in which room right now`,
-    '',
-    '**Chat with me**',
-    '• `@Denizen help` · `rooms` · `who` · `status` · or ask anything',
-    '',
-    '**Bleed-parity security** (staff)',
-    `• \`${p}security enable|doctor\` · \`${p}antinuke on\` · modules ban/kick/channel/role/webhook/emoji/botadd/vanity`,
-    `• \`${p}antiraid on\` · avatar · age · massjoin · \`${p}lockdown\` · \`${p}fakepermissions\``,
-    '',
-    '**Moderation** (staff)',
-    `• \`${p}setup\` · ban · softban · kick · timeout · warn · jail · mute · purge · nick · role`,
-    `• \`${p}automod\` · snipe · editsnipe · \`${p}tickets setup|panel|claim|close\``,
-    '',
-    '**Community & fun**',
-    `• \`${p}welcome\` · starboard · levels · reactionrole · buttonrole · boosterrole · vanityrole`,
-    `• \`${p}voicemaster setup\` · \`${p}play\` · \`${p}lastfm set\` · \`${p}log on\``,
-    '',
-    `Prefix is \`${p}\` — most commands also work as **/** slash.`,
-    'Tip: copy the **public map link** from the map Connect page for share/OBS.',
-  ];
-
-  if (opts.modules && opts.modules.size) {
-    parts.push('');
-    parts.push('**All modules**');
-    const lines = [...opts.modules.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([mod, names]) => `• **${mod}**: ${names.slice(0, 12).join(', ')}${names.length > 12 ? '…' : ''}`);
-    parts.push(...lines);
-  }
-
-  return parts.join('\n').slice(0, 1900);
+  const map = mapUrl(opts.guildId) || '/discord-map/';
+  return baseEmbed({
+    color: BRAND.primary,
+    title: opts.title || 'Denizen Spaces',
+    description: 'Live pixel map of this server — walk buildings, meet people in VC.',
+    fields: [
+      { name: 'Map', value: map, inline: false },
+      { name: 'Look', value: `\`${p}avatar\` · Boost → golden headset`, inline: true },
+      { name: 'Pet', value: `\`${p}pet buy\` · gift · equip · Pro grants ×3`, inline: true },
+      { name: 'Live', value: 'React in chat to emote on the map · `,eat pizza` (and other foods)', inline: true },
+      { name: 'Chat', value: `\`@Denizen <question>\`\nStaff: \`${p}chat on\``, inline: true },
+      { name: 'Hangout', value: `\`/hangout\` · \`${p}help\``, inline: true },
+    ],
+    footerExtra: 'start here',
+  });
 }
 
 /**
- * Compact @mention / DM help
+ * @deprecated Prefer spacesHelpEmbed — kept for any string-only callers.
  */
 function mentionHelp(opts = {}) {
   const p = opts.prefix || process.env.DISCORD_PREFIX || ',';
   const map = mapUrl(opts.guildId);
   return [
-    '**Denizen Spaces**',
-    `🗺️ Map: ${map}`,
-    '• Join a **voice channel** to show up',
-    `• \`${p}avatar\` — customize look · **Boost** → golden headset`,
-    '• `rooms` · `who` · `status` — live occupancy',
-    '• Ask me anything after @ — I adapt to how *you* talk',
-    `• \`${p}chat on\` — I talk in this channel without @ (staff)`,
-    `• \`${p}sense\` — how I’m learning styles for better conversations`,
-    `• \`${p}help\` — full command list`,
-    `• \`${p}hangout report\` — weekly VC hangout board (staff setup)`,
+    '**Denizen Spaces** — live pixel map',
+    map,
+    `Join VC · \`${p}avatar\` · \`${p}help\``,
   ].join('\n');
 }
 
@@ -118,7 +81,7 @@ module.exports = {
   publicBase,
   mapUrl,
   spacesIntro,
-  fullHelp,
+  spacesHelpEmbed,
   mentionHelp,
   mapFooter,
 };

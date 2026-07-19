@@ -1,15 +1,53 @@
 'use strict';
 
 const { canRunCommand } = require('../../core/permissions');
+const { resolveFood, FOOD_CHOICES, actionFromReaction } = require('../../map-actions');
 
 /**
  * Fun + utility — aliases, TTS, translate, games, image helpers, web search stub.
+ * Also map social: ,eat + reaction → tracker mapAction.
  */
 function createMisc(deps) {
-  const { config } = deps;
+  const { config, tracker } = deps;
   const blacktea = new Map(); // channelId -> { word, players, scores }
 
   function register(registry) {
+    registry.register({
+      name: 'eat',
+      description: 'Snack on the Spaces map (Pixel Platter sprite + chew pose)',
+      module: 'misc',
+      options: [
+        {
+          type: 3,
+          name: 'food',
+          description: 'Food to eat (random if omitted)',
+          required: false,
+          choices: FOOD_CHOICES,
+        },
+      ],
+      async run(ctx) {
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        const userId = ctx.user?.id;
+        if (!userId) return ctx.reply('Who are you?');
+        if (!tracker?.isOnMap?.(ctx.guild.id, userId)) {
+          return ctx.reply('Join a voice channel (or chat in a text channel) so you appear on the map first.');
+        }
+        const raw = ctx.getString?.('food') || ctx.args?.[0] || '';
+        const resolved = resolveFood(raw);
+        if (!resolved.ok) return ctx.reply(resolved.error);
+        tracker.setMapAction(ctx.guild.id, userId, {
+          kind: 'eat',
+          pose: 'eat',
+          food: resolved.key,
+        });
+        const label = resolved.alias || resolved.key.replace(/^food/, '').toLowerCase();
+        return ctx.reply({
+          content: `Nom nom — **${label}** on the map.`,
+          ephemeral: true,
+        }).catch(() => ctx.reply(`Nom nom — **${label}** on the map.`));
+      },
+    });
+
     registry.register({
       name: 'alias',
       description: 'Create a command alias',
@@ -294,7 +332,22 @@ function createMisc(deps) {
     }
   }
 
-  return { register, onMessage };
+  /** Ungated: Discord reactions → organic map emotes / eat for anyone on the map. */
+  async function onReactionAdd(reaction, user) {
+    if (user?.bot || !tracker?.setMapAction) return;
+    const message = reaction.message?.partial
+      ? await reaction.message.fetch().catch(() => null)
+      : reaction.message;
+    if (!message?.guild) return;
+    const guildId = message.guild.id;
+    const userId = user.id;
+    if (!tracker.isOnMap?.(guildId, userId)) return;
+    const action = actionFromReaction(reaction.emoji);
+    if (!action) return;
+    tracker.setMapAction(guildId, userId, action);
+  }
+
+  return { register, onMessage, onReactionAdd };
 }
 
 module.exports = { createMisc };

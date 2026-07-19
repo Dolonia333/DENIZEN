@@ -25,7 +25,16 @@ class CommandRegistry {
    * Returns remaining ms when throttled, 0 when clear.
    */
   checkCooldown(cmd, userId) {
-    const windowMs = Number(cmd.cooldownMs) > 0 ? Number(cmd.cooldownMs) : 2000;
+    // Explicit 0 disables cooldown (staff workflows). Default 2s; mod modules 500ms.
+    let windowMs;
+    if (cmd.cooldownMs != null && Number.isFinite(Number(cmd.cooldownMs))) {
+      windowMs = Math.max(0, Number(cmd.cooldownMs));
+    } else if (['moderation', 'security', 'automod', 'logging'].includes(cmd.module)) {
+      windowMs = 500;
+    } else {
+      windowMs = 2000;
+    }
+    if (windowMs === 0) return 0;
     const key = `${userId}:${cmd.name || 'cmd'}`;
     const now = Date.now();
     const last = this._cooldowns.get(key) || 0;
@@ -173,10 +182,14 @@ class CommandRegistry {
       const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => false);
       if (!allowed) {
         const upgrade = process.env.DISCORD_UPGRADE_URL || '';
-        await ctx.reply(
-          `🔒 \`${cmd.module}\` commands need a Denizen premium plan for this server.` +
-          (upgrade ? ` Upgrade: ${upgrade}` : ''),
-        );
+        await ctx.reply({
+          content: [
+            `🔒 **${cmd.module}** is a Denizen premium module for this server.`,
+            `\`${cmd.name}\` needs an active plan.`,
+            upgrade ? `Upgrade: ${upgrade}` : 'Ask a server admin to upgrade Denizen Spaces.',
+          ].join('\n'),
+          ephemeral: true,
+        });
         return true;
       }
     }
@@ -236,10 +249,11 @@ class CommandRegistry {
       const allowed = await guildPlans.isModuleAllowed(ctx.guild.id, cmd.module).catch(() => false);
       if (!allowed) {
         const upgrade = process.env.DISCORD_UPGRADE_URL || '';
-        await ctx.reply(
-          `🔒 \`${cmd.module}\` commands need a Denizen premium plan for this server.` +
-          (upgrade ? ` Upgrade: ${upgrade}` : ''),
-        );
+        await ctx.reply([
+          `🔒 **${cmd.module}** is a Denizen premium module for this server.`,
+          `\`${cmd.name}\` needs an active plan.`,
+          upgrade ? `Upgrade: ${upgrade}` : 'Ask a server admin to upgrade Denizen Spaces.',
+        ].join('\n'));
         return true;
       }
     }

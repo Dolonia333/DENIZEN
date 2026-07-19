@@ -10,7 +10,7 @@
  */
 
 const path = require('path');
-const { mentionHelp } = require('./help-copy');
+const { spacesHelpEmbed } = require('./help-copy');
 
 const DEFAULT_LM = 'http://127.0.0.1:1234';
 
@@ -311,19 +311,9 @@ async function handleBotChat(message, ctx) {
 
     if (['help', 'commands', '?'].includes(cmd)) {
       const p = config?.get?.(message.guild?.id)?.prefix || process.env.DISCORD_PREFIX || ',';
-      await message.reply(
-        [
-          mentionHelp({ prefix: p, guildId: message.guild?.id }),
-          '',
-          '**Chat**',
-          '• `@Denizen <question>` — freeform (adapts to how you talk)',
-          '• DM me the same commands',
-          openChat
-            ? '• Open chat **ON** in this channel (no @ needed)'
-            : `• Staff: \`${p}chat on\` — I reply in this channel without @`,
-          `• \`${p}sense\` — how I’m learning conversation styles`,
-        ].join('\n').slice(0, 1900),
-      );
+      await message.reply({
+        embeds: [spacesHelpEmbed({ prefix: p, guildId: message.guild?.id })],
+      });
       return true;
     }
 

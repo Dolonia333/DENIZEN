@@ -123,10 +123,17 @@ function defaultAvatar(userId = '') {
     pants: { index: h % 12 },
     hat: { set: 'none', index: 0, source: null },
     tint: { hair: null, clothes: null, hat: null, source: null },
+    pet: { kind: null, enabled: false },
     unlocks: [],
     rev: 1,
     updatedAt: new Date().toISOString(),
   };
+}
+
+function normalizePet(raw) {
+  const kind = raw?.kind === 'cat' || raw?.kind === 'dog' ? raw.kind : null;
+  const enabled = !!(raw?.enabled && kind);
+  return { kind: enabled ? kind : (kind || null), enabled };
 }
 
 function normalizeAvatar(raw, userId = '') {
@@ -158,6 +165,8 @@ function normalizeAvatar(raw, userId = '') {
     ? raw.tint.source
     : null;
 
+  const pet = normalizePet(raw.pet);
+
   return {
     v: 1,
     mode,
@@ -170,6 +179,7 @@ function normalizeAvatar(raw, userId = '') {
     pants: { index: clampInt(raw.pants?.index ?? base.pants.index, 0, 49) },
     hat: { set: hatSet.id, index: hatIndex, source: hatSource },
     tint: { hair: tintHair, clothes: tintClothes, hat: tintHat, source: tintSource },
+    pet,
     unlocks: Array.isArray(raw.unlocks) ? raw.unlocks.map(String) : [],
     rev: clampInt(raw.rev ?? 1, 1, 1e9),
     updatedAt: raw.updatedAt || new Date().toISOString(),
@@ -250,6 +260,7 @@ function clientAvatar(avatar, userId) {
     pants: a.pants,
     hat: a.hat,
     tint: a.tint,
+    pet: a.pet,
     rev: a.rev,
     sheetUrl: `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${a.rev}`,
   };
@@ -270,6 +281,7 @@ module.exports = {
   filterByUnlock,
   defaultAvatar,
   normalizeAvatar,
+  normalizePet,
   randomAvatar,
   publicCatalog,
   clientAvatar,

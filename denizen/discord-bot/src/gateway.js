@@ -89,6 +89,29 @@ function attachGateway(client, handlers = {}) {
     if (typeof handlers.onGuildSeed === 'function') handlers.onGuildSeed(guild);
   });
 
+  // After resume, re-seed so occupancy matches Discord again.
+  client.on(Events.ShardResume, () => {
+    for (const guild of client.guilds.cache.values()) {
+      if (!allowGuild(guild.id)) continue;
+      if (typeof handlers.onGuildSeed === 'function') handlers.onGuildSeed(guild);
+    }
+  });
+
+  const channelEvt = (channel, kind) => {
+    try {
+      const guildId = channel.guildId || channel.guild?.id;
+      if (!guildId || !allowGuild(guildId)) return;
+      if (typeof handlers.onChannelChange === 'function') {
+        handlers.onChannelChange({ kind, guildId, channel: channelMeta(channel), raw: channel });
+      }
+    } catch (err) {
+      console.error('[gateway] channel event:', err.message || err);
+    }
+  };
+  client.on(Events.ChannelCreate, (ch) => channelEvt(ch, 'create'));
+  client.on(Events.ChannelUpdate, (oldCh, newCh) => channelEvt(newCh || oldCh, 'update'));
+  client.on(Events.ChannelDelete, (ch) => channelEvt(ch, 'delete'));
+
   client.on('voiceStateUpdate', (oldState, newState) => {
     try {
       const guildId = newState.guild?.id || oldState.guild?.id;
@@ -151,6 +174,7 @@ function attachGateway(client, handlers = {}) {
           toChannelId,
           fromChannel: channelMeta(fromCh),
           toChannel: channelMeta(toCh),
+          boosted: !!(member?.premiumSince || member?.premium_since),
           ...voiceFlags,
         });
       }
@@ -232,6 +256,18 @@ function attachGateway(client, handlers = {}) {
 
   client.on('guildMemberUpdate', (oldMember, newMember) => {
     if (!allowGuild(newMember.guild.id)) return;
+    try {
+      const wasBoost = !!(oldMember?.premiumSince || oldMember?.premium_since);
+      const isBoost = !!(newMember?.premiumSince || newMember?.premium_since);
+      if (wasBoost !== isBoost && typeof handlers.onBoostChange === 'function') {
+        handlers.onBoostChange({
+          guildId: newMember.guild.id,
+          userId: newMember.id,
+          displayName: displayNameFrom(newMember, newMember.user, newMember.id),
+          boosted: isBoost,
+        });
+      }
+    } catch (_) { /* ignore */ }
     runAll(handlers.hooks?.onGuildMemberUpdate, oldMember, newMember);
   });
 
@@ -244,16 +280,20 @@ function attachGateway(client, handlers = {}) {
   });
 
   client.on('interactionCreate', async (interaction) => {
-    if (typeof handlers.onInteraction === 'function') {
-      await handlers.onInteraction(interaction);
-    }
-    for (const fn of handlers.hooks?.onInteraction || []) {
-      try {
-        const handled = await fn(interaction);
-        if (handled) return;
-      } catch (err) {
-        console.error('[gateway] interaction hook:', err.message || err);
+    try {
+      if (typeof handlers.onInteraction === 'function') {
+        await handlers.onInteraction(interaction);
       }
+      for (const fn of handlers.hooks?.onInteraction || []) {
+        try {
+          const handled = await fn(interaction);
+          if (handled) return;
+        } catch (err) {
+          console.error('[gateway] interaction hook:', err.message || err);
+        }
+      }
+    } catch (err) {
+      console.error('[gateway] interactionCreate:', err.message || err);
     }
   });
 

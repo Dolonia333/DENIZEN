@@ -28,8 +28,11 @@ class TrackerEngine {
   constructor(opts = {}) {
     this.textWindowMs = opts.textWindowMs ?? DEFAULT_TEXT_WINDOW_MS;
     this.log = opts.log || logger;
+    /** @type {import('./hangout-store').HangoutStore|null} */
+    this.hangoutStore = opts.hangoutStore || null;
     /** @type {Map<string, { channels: Map, members: Map, name: string }>} */
     this.guilds = new Map();
+    this._hangoutFlushAt = 0;
   }
 
   _guild(guildId) {
@@ -85,6 +88,7 @@ class TrackerEngine {
         streaming: false,
         video: false,
         suppressed: false,
+        boosted: false,
         // Soft social
         lastTextAt: null,
         textSnippet: null,
@@ -94,12 +98,79 @@ class TrackerEngine {
         hangoutWeek: isoWeekKey(),
       };
       g.members.set(userId, m);
+      if (this.hangoutStore) this.hangoutStore.hydrateMember(guildId, userId, m);
     } else if (displayName) {
       m.displayName = displayName;
     }
     // Migrate older in-memory rows
     if (m.hangoutMs == null) m.hangoutMs = 0;
     if (!m.hangoutWeek) m.hangoutWeek = isoWeekKey();
+    if (m.boosted == null) m.boosted = false;
+    return m;
+  }
+
+  _persistHangout(guildId, userId, member) {
+    if (!this.hangoutStore || !member) return;
+    this.hangoutStore.record(guildId, userId, {
+      hangoutMs: member.hangoutMs || 0,
+      displayName: member.displayName,
+      hangoutWeek: member.hangoutWeek || isoWeekKey(),
+    });
+  }
+
+  /**
+   * Upsert a channel/category into the live layout (gateway channel CRUD).
+   */
+  upsertChannel(guildId, channel) {
+    if (!guildId || !channel?.id) return null;
+    const t = typeof channel.type === 'string'
+      ? channel.type
+      : roomTypeFromDiscord(channel.type);
+    if (t === 'category') {
+      const g = this._guild(guildId);
+      g.categories.set(channel.id, {
+        id: channel.id,
+        name: channel.name || channel.id,
+        position: typeof channel.position === 'number' ? channel.position : 0,
+      });
+      return g.categories.get(channel.id);
+    }
+    if (t === 'other') return null;
+    return this._ensureChannel(guildId, {
+      id: channel.id,
+      name: channel.name || channel.id,
+      type: t,
+      categoryId: channel.categoryId ?? channel.parentId ?? null,
+      categoryName: channel.categoryName || null,
+    });
+  }
+
+  removeChannel(guildId, channelId) {
+    const g = this.guilds.get(guildId);
+    if (!g || !channelId) return;
+    g.categories.delete(channelId);
+    const room = g.channels.get(channelId);
+    if (room) {
+      for (const userId of room.occupants) {
+        const m = g.members.get(userId);
+        if (m?.voiceChannelId === channelId) {
+          this._creditVoiceTime(m);
+          m.voiceChannelId = null;
+          m.voiceJoinedAt = null;
+          this._persistHangout(guildId, userId, m);
+        }
+        if (m?.textChannelId === channelId) {
+          m.textChannelId = null;
+          m.textUntil = null;
+        }
+      }
+      g.channels.delete(channelId);
+    }
+  }
+
+  setBoosted(guildId, userId, boosted, displayName) {
+    const m = this._ensureMember(guildId, userId, displayName);
+    m.boosted = !!boosted;
     return m;
   }
 
@@ -183,6 +254,7 @@ class TrackerEngine {
       if (!vs.channelId) continue;
       const member = vs.member;
       const displayName = (member?.displayName || member?.user?.username || vs.id).slice(0, 48);
+      const boosted = !!(member?.premiumSince || member?.premium_since);
       this.applyVoice({
         guildId: guild.id,
         userId: vs.id,
@@ -200,7 +272,17 @@ class TrackerEngine {
         streaming: !!vs.streaming,
         video: !!vs.selfVideo,
         suppressed: !!vs.suppress,
+        boosted,
       });
+    }
+
+    // Hydrate hangout totals for members who aren't currently in VC
+    if (this.hangoutStore) {
+      const data = this.hangoutStore.load(guild.id);
+      for (const [userId, row] of Object.entries(data.users || {})) {
+        const m = this._ensureMember(guild.id, userId, row.displayName);
+        this.hangoutStore.hydrateMember(guild.id, userId, m);
+      }
     }
   }
 
@@ -236,6 +318,7 @@ class TrackerEngine {
     // Leaving or moving: bank time on the previous channel
     if (fromRoom && member.voiceChannelId) {
       this._creditVoiceTime(member, now);
+      this._persistHangout(guildId, userId, member);
     }
 
     if (fromRoom) fromRoom.occupants.delete(userId);
@@ -252,6 +335,7 @@ class TrackerEngine {
       member.streaming = false;
       member.video = false;
       member.suppressed = false;
+      this._persistHangout(guildId, userId, member);
     }
 
     // Optional flags on join/move
@@ -260,6 +344,7 @@ class TrackerEngine {
     if (evt.streaming != null) member.streaming = !!evt.streaming;
     if (evt.video != null) member.video = !!evt.video;
     if (evt.suppressed != null) member.suppressed = !!evt.suppressed;
+    if (evt.boosted != null) member.boosted = !!evt.boosted;
 
     // Voice presence supersedes soft text in the same mental model for canvas:
     // still track text separately; counts are per-room occupants sets.
@@ -339,6 +424,7 @@ class TrackerEngine {
         if (member.voiceChannelId && member.voiceJoinedAt) {
           this._creditVoiceTime(member, now);
           member.voiceJoinedAt = now;
+          this._persistHangout(guildId, userId, member);
         }
 
         if (!member.textChannelId || !member.textUntil) continue;
@@ -360,6 +446,13 @@ class TrackerEngine {
         if (member.lastTextAt && now - member.lastTextAt > this.textWindowMs) {
           member.textSnippet = null;
         }
+      }
+    }
+    // Flush dirty hangout files every ~30s
+    if (this.hangoutStore && now - this._hangoutFlushAt > 30_000) {
+      this._hangoutFlushAt = now;
+      try { this.hangoutStore.flushDirty(); } catch (err) {
+        console.warn('[tracker] hangout flush:', err.message || err);
       }
     }
   }
@@ -412,6 +505,41 @@ class TrackerEngine {
   }
 
   /**
+   * True if the member is currently on the map (VC hard presence or soft text window).
+   */
+  isOnMap(guildId, userId) {
+    if (!guildId || !userId) return false;
+    const g = this.guilds.get(guildId);
+    const m = g?.members?.get(userId);
+    if (!m) return false;
+    if (m.voiceChannelId) return true;
+    if (m.textChannelId && m.textUntil && m.textUntil > Date.now()) return true;
+    return false;
+  }
+
+  /**
+   * Ephemeral map emote/eat action (TTL ~5s) broadcast via presence people[].action.
+   * @param {string} guildId
+   * @param {string} userId
+   * @param {{ kind: string, pose?: string, food?: string, ts?: number }} action
+   * @param {number} [ttlMs=5000]
+   */
+  setMapAction(guildId, userId, action, ttlMs = 5000) {
+    if (!guildId || !userId || !action?.kind) return null;
+    const member = this._ensureMember(guildId, userId);
+    const now = Date.now();
+    const ts = Number(action.ts) || now;
+    member.mapAction = {
+      kind: String(action.kind),
+      pose: action.pose ? String(action.pose) : undefined,
+      food: action.food ? String(action.food) : undefined,
+      ts,
+      until: now + Math.max(500, Number(ttlMs) || 5000),
+    };
+    return member.mapAction;
+  }
+
+  /**
    * JSON-ready snapshot for Module 4 canvas pipeline.
    */
   snapshot(guildId) {
@@ -441,8 +569,18 @@ class TrackerEngine {
       });
     }
     const members = [];
+    const now = Date.now();
     for (const [userId, m] of g.members) {
       const live = !!(m.voiceChannelId && !m.muted && !m.deafened && !m.suppressed);
+      let action = null;
+      if (m.mapAction?.until && m.mapAction.until > now) {
+        action = {
+          kind: m.mapAction.kind,
+          pose: m.mapAction.pose || undefined,
+          food: m.mapAction.food || undefined,
+          ts: m.mapAction.ts,
+        };
+      }
       members.push({
         userId,
         displayName: m.displayName,
@@ -455,10 +593,12 @@ class TrackerEngine {
         video: !!m.video,
         suppressed: !!m.suppressed,
         live,
+        boosted: !!m.boosted,
         lastTextAt: m.lastTextAt || null,
         textSnippet: m.textSnippet || null,
         hangoutMs: m.hangoutMs || 0,
         hangoutWeek: m.hangoutWeek || isoWeekKey(),
+        action,
       });
     }
     const categories = [...(g.categories?.values() || [])]

@@ -26,6 +26,32 @@ function createPresenceServer({
     console.warn('[presence] avatar module unavailable:', err.message || err);
   }
 
+  let guildPlans = null;
+  try {
+    guildPlans = require(path.join(__dirname, '../../src/denizen-guild-plans.js'));
+  } catch (_) { guildPlans = null; }
+
+  let guildPets = null;
+  try {
+    guildPets = require(path.join(__dirname, '../../src/denizen-guild-pets.js'));
+  } catch (_) { guildPets = null; }
+
+  function warmGuildPets(gid) {
+    if (!gid || !guildPets?.warmGuildPets) return;
+    guildPets.warmGuildPets(gid);
+  }
+
+  function userAllowsCompanion(gid, userId, entitledSet) {
+    if (!gid || !userId) return false;
+    if (entitledSet?.has(String(userId))) return true;
+    if (guildPets?.peekPetEntitlement?.(gid, userId)) return true;
+    if (avatarApi?.isPaidPlan?.(process.env.DENIZEN_SPACES_PLAN)
+      && /^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_SPACES_ALL_PETS || ''))) {
+      return true;
+    }
+    return false;
+  }
+
   function spacesBranding(forGuildId) {
     const envPlan = String(process.env.DENIZEN_SPACES_PLAN || 'free').toLowerCase();
     const envRemove = /^(1|true|yes|on)$/i.test(String(process.env.DENIZEN_SPACES_REMOVE_BRANDING || ''));
@@ -138,101 +164,139 @@ function createPresenceServer({
     }
 
     if (url.pathname === '/presence' || url.pathname === '/') {
-      const qGuild = String(url.searchParams.get('guildId') || guildId || '').trim();
-      let snap;
-      if (qGuild) {
-        snap = tracker.snapshot(qGuild);
-      } else {
-        const all = tracker.snapshot();
-        snap = Array.isArray(all?.guilds) && all.guilds.length
-          ? all.guilds[0]
-          : all;
-      }
-
-      const rooms = (snap?.rooms || []).map((r) => ({
-        id: r.id,
-        name: r.name,
-        type: r.type,
-        categoryId: r.categoryId || null,
-        categoryName: r.categoryName || null,
-        occupantCount: r.occupantCount,
-        occupants: r.occupants || [],
-      }));
-
-      const memberById = new Map((snap?.members || []).map((m) => [m.userId, m]));
-      const store = avatarApi ? avatarApi.getAvatarStore() : null;
-      const people = [];
-      for (const room of rooms) {
-        for (const userId of room.occupants || []) {
-          const m = memberById.get(userId);
-          let avatar = null;
-          if (store) {
-            try {
-              const av = store.get(userId);
-              avatar = avatarApi.clientAvatar(av, userId);
-              // Prefer local presence URL for baked PNG when custom file exists
-              // Relative URL so browser hits Denizen (or local presence) same-origin
-              avatar.sheetUrl = `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${av.rev || 1}`;
-              avatar.rev = av.rev || 1;
-            } catch (_) { /* ignore */ }
+      (async () => {
+        try {
+          const qGuild = String(url.searchParams.get('guildId') || guildId || '').trim();
+          let snap;
+          if (qGuild) {
+            snap = tracker.snapshot(qGuild);
+          } else {
+            const all = tracker.snapshot();
+            snap = Array.isArray(all?.guilds) && all.guilds.length
+              ? all.guilds[0]
+              : all;
           }
-          const soft = room.type === 'text' || room.type === 'forum';
-          const muted = !!(m?.muted);
-          const deafened = !!(m?.deafened);
-          const live = !soft && !muted && !deafened && !m?.suppressed;
-          people.push({
-            userId,
-            displayName: m?.displayName || userId.slice(0, 8),
-            channelId: room.id,
-            channelName: room.name,
-            channelType: room.type,
-            soft,
-            // Map social indicators
-            muted,
-            deafened,
-            streaming: !!(m?.streaming),
-            video: !!(m?.video),
-            suppressed: !!(m?.suppressed),
-            live: soft ? false : live,
-            // Soft social: recent text
-            textSnippet: soft ? (m?.textSnippet || null) : null,
-            lastTextAt: m?.lastTextAt || null,
-            avatar,
+
+          const rooms = (snap?.rooms || []).map((r) => ({
+            id: r.id,
+            name: r.name,
+            type: r.type,
+            categoryId: r.categoryId || null,
+            categoryName: r.categoryName || null,
+            occupantCount: r.occupantCount,
+            occupants: r.occupants || [],
+          }));
+
+          const memberById = new Map((snap?.members || []).map((m) => [m.userId, m]));
+          const store = avatarApi ? avatarApi.getAvatarStore() : null;
+          const gidEarly = snap?.guildId || qGuild || null;
+          let entitledSet = new Set();
+          if (guildPets?.listEntitlements && gidEarly) {
+            try {
+              const list = await guildPets.listEntitlements(gidEarly);
+              entitledSet = new Set(list.map((r) => String(r.user_id)));
+            } catch (_) { /* fail closed for pets */ }
+          }
+          const people = [];
+          for (const room of rooms) {
+            for (const userId of room.occupants || []) {
+              const m = memberById.get(userId);
+              let avatar = null;
+              let rawAv = null;
+              if (store) {
+                try {
+                  rawAv = store.get(userId);
+                  avatar = avatarApi.clientAvatar(rawAv, userId);
+                  avatar.sheetUrl = `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${rawAv.rev || 1}`;
+                  avatar.rev = rawAv.rev || 1;
+                } catch (_) { /* ignore */ }
+              }
+              const soft = room.type === 'text' || room.type === 'forum';
+              const muted = !!(m?.muted);
+              const deafened = !!(m?.deafened);
+              const live = !soft && !muted && !deafened && !m?.suppressed;
+              let boosted = !!(m?.boosted);
+              if (!boosted && avatar?.unlocks?.includes?.('role:booster')) boosted = true;
+              if (!boosted && avatar?.hat?.source === 'role:booster') boosted = true;
+              let pet = null;
+              if (userAllowsCompanion(gidEarly, userId, entitledSet)) {
+                const p = avatar?.pet || rawAv?.pet;
+                if (p?.enabled && (p.kind === 'cat' || p.kind === 'dog')) {
+                  pet = { kind: p.kind };
+                }
+              }
+              people.push({
+                userId,
+                displayName: m?.displayName || userId.slice(0, 8),
+                channelId: room.id,
+                channelName: room.name,
+                channelType: room.type,
+                soft,
+                muted,
+                deafened,
+                streaming: !!(m?.streaming),
+                video: !!(m?.video),
+                suppressed: !!(m?.suppressed),
+                boosted,
+                premium: boosted,
+                live: soft ? false : live,
+                textSnippet: soft ? (m?.textSnippet || null) : null,
+                lastTextAt: m?.lastTextAt || null,
+                hangoutMs: m?.hangoutMs || 0,
+                pet,
+                avatar,
+                action: m?.action || null,
+              });
+            }
+          }
+
+          const gid = gidEarly;
+          const hangoutBoard = gid && typeof tracker.hangoutLeaderboard === 'function'
+            ? tracker.hangoutLeaderboard(gid, { limit: 5 })
+            : { week: null, rows: [] };
+          const hangoutTop = (hangoutBoard.rows || []).map((r) => ({
+            userId: r.userId,
+            displayName: r.displayName,
+            minutes: r.minutes,
+            ms: r.ms,
+          }));
+          const brand = spacesBranding(gid);
+          const publicBase = String(
+            process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '',
+          ).replace(/\/$/, '');
+          const sharePath = gid
+            ? `/discord-map/?guildId=${encodeURIComponent(gid)}&view=public`
+            : '/discord-map/?view=public';
+          const body = {
+            ok: true,
+            ts: Date.now(),
+            guildId: gid,
+            guildName: snap?.name || null,
+            categories: snap?.categories || [],
+            rooms,
+            people,
+            members: snap?.members || [],
+            hangoutTop,
+            hangoutWeek: hangoutBoard.week || null,
+            events: avatarApi ? avatarApi.getActiveEvents() : [],
+            branding: brand,
+            share: {
+              path: sharePath,
+              url: publicBase ? `${publicBase}${sharePath}` : sharePath,
+              readOnly: true,
+            },
+          };
+
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
           });
+          res.end(JSON.stringify(body));
+        } catch (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
         }
-      }
-
-      const gid = snap?.guildId || qGuild || null;
-      const brand = spacesBranding(gid);
-      const publicBase = String(
-        process.env.DENIZEN_PUBLIC_URL || process.env.DENIZEN_URL || '',
-      ).replace(/\/$/, '');
-      const sharePath = gid
-        ? `/discord-map/?guildId=${encodeURIComponent(gid)}&view=public`
-        : '/discord-map/?view=public';
-      const body = {
-        ok: true,
-        ts: Date.now(),
-        guildId: gid,
-        guildName: snap?.name || null,
-        categories: snap?.categories || [],
-        rooms,
-        people,
-        members: snap?.members || [],
-        events: avatarApi ? avatarApi.getActiveEvents() : [],
-        branding: brand,
-        share: {
-          path: sharePath,
-          url: publicBase ? `${publicBase}${sharePath}` : sharePath,
-          readOnly: true,
-        },
-      };
-
-      res.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store',
-      });
-      res.end(JSON.stringify(body));
+      })();
       return;
     }
 

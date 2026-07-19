@@ -7242,6 +7242,27 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
+  if (urlPath === '/api/discord/billing/pet-checkout' && req.method === 'POST') {
+    (async () => {
+      try {
+        const payload = await _readJsonBody(req, 8 * 1024);
+        const billing = require('./src/denizen-guild-billing');
+        const result = await billing.createPetCheckout({
+          guildId: String(payload.guildId || payload.guild_id || '').trim(),
+          discordUserId: payload.discordUserId || payload.discord_user_id || null,
+          giftToUserId: payload.giftToUserId || payload.gift_to_user_id || null,
+        });
+        res.writeHead(result.ok ? 200 : 400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        console.error(`[billing] pet-checkout endpoint error: ${err?.message || err}`);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'internal_error' }));
+      }
+    })();
+    return;
+  }
+
   if (urlPath === '/api/discord/billing/webhook' && req.method === 'POST') {
     (async () => {
       try {
