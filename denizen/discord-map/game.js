@@ -3352,16 +3352,9 @@
 
     /**
      * Roof cap from Pixel Spaces infrastructure tiles.
-     * @param {string|object} roofSpec
-     *   - string: legacy connecting key e.g. 'roofRedC'
-     *   - { style: 'gable'|'flat'|'snow', color: 'red'|'blue'|... }
-     * Pack has two families: Roof_1 (tall gable) and Roof_2 (low flat).
-     * Snow piles layer over either for winter / cold themes.
-     *
-     * Gable connecting tiles are short (8px). Walkable rooftop decks sit near
-     * `top+8` with a rail up to ~`top-10`, which used to bury the ridge and
-     * leave only the tall end eaves — the “broken roof” look. Gable ridges
-     * are lifted above the deck and drawn just behind building titles.
+     * Roof_1 end (26×17) has ~9px transparent pad under its ridge band; the
+     * connecting tile (16×8) must be lifted by that pad so ridge heights match.
+     * Without the lift, ends float as two spikes with a low disconnected bar.
      */
     drawRoofCap(left, top, bw, roofSpec = 'roofRedC') {
       let style = 'gable';
@@ -3370,7 +3363,6 @@
 
       if (typeof roofSpec === 'string') {
         connKey = this.textures.exists(roofSpec) ? roofSpec : 'roofRedC';
-        // Infer style/color from key: roof2BlueC → flat/blue, roofRedC → gable/red
         if (/^roof2/i.test(connKey)) style = 'flat';
         const m = connKey.match(/roof2?([A-Z][a-z]+)/);
         if (m) color = m[1].toLowerCase();
@@ -3388,71 +3380,65 @@
 
       const isFlat = style === 'flat' || /^roof2/i.test(connKey);
       const endKey = connKey.replace(/C$/, 'E');
-      // Roof_1 end 26×17, connecting 16×8 · Roof_2 end 9×5, connecting 16×4
+      // Native pack sizes (unscaled)
+      const endSrcH = isFlat ? 5 : 17;
+      const connSrcH = isFlat ? 4 : 8;
+      const endSrcW = isFlat ? 9 : 26;
       const tileW = 16 * SCALE;
-      const endW = (isFlat ? 9 : 26) * SCALE;
-      // Flat: sit on shell lip. Gable: lift so ridge clears walkable deck rail.
-      const y = top + (isFlat ? 2 : -12);
-      const overhang = isFlat ? 6 : 6;
-      const endDepth = isFlat ? 21 : 20.9;
-      const connDepth = isFlat ? 20.5 : 20.55;
-      // Flat tiles are tiny — slight height boost so parapets read.
-      const flatSy = isFlat ? SCALE * 1.6 : SCALE;
-      const flatEndSy = isFlat ? SCALE * 1.5 : SCALE;
+      const endW = endSrcW * SCALE;
+      // Flat sits on the shell lip; gable lifts so the ridge clears the deck rail.
+      const yEnd = top + (isFlat ? 1 : -12);
+      // Lift connecting so its ridge band lines up with the end's ridge band.
+      const ridgePad = (endSrcH - connSrcH) * SCALE; // Roof_1: 9×SCALE, Roof_2: 1×SCALE
+      const yConn = yEnd - ridgePad;
+      const overhang = isFlat ? 4 : 6;
+      const endDepth = isFlat ? 21.1 : 21.0;
+      const connDepth = isFlat ? 20.6 : 20.5;
 
-      if (isFlat) {
-        const fascia = this.add.graphics().setDepth(connDepth - 0.25);
-        const fx = left - overhang - 1;
-        const fw = bw + overhang * 2 + 2;
-        fascia.fillStyle(0x1a222c, 1);
-        fascia.fillRect(fx, y - 1, fw, 6);
-        fascia.fillStyle(0x4a5868, 1);
-        fascia.fillRect(fx + 1, y - 4, fw - 2, 3);
-      }
-
-      // Full-width connecting run FIRST so the ridge never gaps in the middle
-      // (old path started after the end caps and could leave a hollow center).
+      // Connecting run first (behind ends), ridge-aligned.
       if (this.textures.exists(connKey)) {
-        const spanL = left - overhang + (isFlat ? endW - 2 : 4);
-        const spanR = left + bw + overhang - (isFlat ? endW - 2 : 4);
-        const step = tileW - (isFlat ? 0 : 2); // 1px tile overlap on gables
-        let lastX = spanL;
-        for (let x = spanL; x + tileW <= spanR + 0.5; x += step) {
-          this.add.image(x, y, connKey)
-            .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE, flatSy);
+        const join = isFlat ? 2 : 10; // overlap into the end's ridge block
+        const runL = left - overhang + endW - join;
+        const runR = left + bw + overhang - endW + join;
+        const step = tileW - (isFlat ? 0 : 1);
+        let lastX = runL;
+        for (let x = runL; x + tileW <= runR + 0.5; x += step) {
+          this.add.image(x, yConn, connKey)
+            .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
           lastX = x + tileW;
         }
-        if (spanR - lastX > 1) {
-          this.add.image(Math.max(spanL, spanR - tileW), y, connKey)
-            .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE, flatSy);
+        if (runR - lastX > 1) {
+          this.add.image(Math.max(runL, runR - tileW), yConn, connKey)
+            .setOrigin(0, 1).setDepth(connDepth - 0.05).setScale(SCALE);
         }
-        // Extra mid fill on wide shells — belt-and-suspenders against hollow centers.
-        if (bw >= 100) {
-          const midX = (spanL + spanR) / 2 - tileW / 2;
-          this.add.image(midX, y, connKey)
-            .setOrigin(0, 1).setDepth(connDepth - 0.08).setScale(SCALE, flatSy);
-          if (bw >= 200) {
-            this.add.image(midX - tileW, y, connKey)
-              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE, flatSy);
-            this.add.image(midX + tileW, y, connKey)
-              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE, flatSy);
+        // Mid fills so wide roofs never hollow-out between eaves.
+        if (bw >= 120 && runR - runL > tileW) {
+          const midX = (runL + runR) / 2 - tileW / 2;
+          this.add.image(midX, yConn, connKey)
+            .setOrigin(0, 1).setDepth(connDepth - 0.08).setScale(SCALE);
+          if (bw >= 220) {
+            this.add.image(midX - tileW, yConn, connKey)
+              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE);
+            this.add.image(midX + tileW, yConn, connKey)
+              .setOrigin(0, 1).setDepth(connDepth - 0.07).setScale(SCALE);
           }
         }
       }
 
-      // Pack end caps on top — triangular eaves for gables / small ends for flat.
+      // End caps on top — triangular eaves (gable) or short parapet ends (flat).
       if (this.textures.exists(endKey)) {
-        this.add.image(left - overhang, y, endKey)
-          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatEndSy);
-        this.add.image(left + bw + overhang, y, endKey)
-          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatEndSy).setFlipX(true);
+        this.add.image(left - overhang, yEnd, endKey)
+          .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
+        this.add.image(left + bw + overhang, yEnd, endKey)
+          .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
       }
 
       if (style === 'snow' || (typeof roofSpec === 'object' && roofSpec.snow)) {
-        this.drawRoofSnow(left, top, bw, y);
+        this.drawRoofSnow(left, top, bw, yConn);
       }
 
-      return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y };
+      // Report the connecting ridge Y — deck / snow / titles orient off this.
+      return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y: yConn };
     }
 
     /** Layer snow piles along a roof line (Pixel Spaces snowpile tiles). */
