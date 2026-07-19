@@ -61,6 +61,9 @@ function ensurePresenceKey(ws) {
     if (removed) {
       ws._denizenPresenceKeyMigrated = { from: prev, to: next, removed };
     }
+    const ghosts = Array.isArray(ws._denizenPresenceGhosts) ? ws._denizenPresenceGhosts : [];
+    if (!ghosts.includes(prev)) ghosts.push(prev);
+    ws._denizenPresenceGhosts = ghosts.slice(-12);
   }
   return next;
 }

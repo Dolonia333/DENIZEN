@@ -4281,7 +4281,10 @@ ${actionFooter}`;
         markSuccess();
         let rawText = String(result?.text || '').trim();
         rawText = this._stripReasoningLeak(rawText);
-        const responseText = opts.jsonSchema ? rawText : rawText.slice(0, sliceLen);
+        // Cofounder JSON arrays must not be sliced mid-object.
+        const responseText = (opts.jsonSchema || opts.kind === 'cofounder')
+          ? rawText
+          : rawText.slice(0, sliceLen);
         _telRecord({
           responsePreview: responseText,
           tokensIn: result?.usage?.prompt_tokens,

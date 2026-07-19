@@ -4650,8 +4650,13 @@ class AgentOfficeManager {
   }
 
   _handlePlayerPose(msg) {
-    const selfKey = this._presenceKey || window.__DenizenPresenceKey;
     const sid = String(msg?.sessionId || '').trim();
+    if (!sid) return;
+    if (this.scene?._isSelfEchoPose?.(msg)) {
+      this.scene?.removeRemotePlayer?.(sid);
+      return;
+    }
+    const selfKey = this._presenceKey || window.__DenizenPresenceKey;
     if (selfKey && sid === selfKey) {
       this.scene?.removeRemotePlayer?.(sid);
       return;
