@@ -23,6 +23,7 @@ const { createHangoutModule } = require('./hangout');
 const { createDataFarm } = require('./data-farm');
 const { createEconomy } = require('./economy');
 const { createPvp } = require('./pvp');
+const { createShop } = require('./shop');
 const { createChatControls } = require('../chat');
 const { canRunCommand } = require('../core/permissions');
 const { WalletStore } = require('../core/wallet-store');
@@ -182,6 +183,9 @@ function loadModules(deps) {
   const pvp = createPvp(deps);
   pvp.register(deps.registry);
   hooks.onInteraction.push(pvp.onInteraction);
+
+  const shop = createShop(deps);
+  shop.register(deps.registry);
 
   // Discord data farm — harvest guild chats into learning lake (privacy-aware)
   const dataFarm = createDataFarm(deps);

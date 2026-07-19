@@ -7,8 +7,10 @@
 const { canRunCommand } = require('../../core/permissions');
 const { successEmbed, infoEmbed, dangerEmbed, baseEmbed, BRAND } = require('../../core/ui-kit');
 const { WalletStore } = require('../../core/wallet-store');
+const { generateRedeemCode, normalizeCode } = require('./redeem-util');
 
 const MEDALS = ['🥇', '🥈', '🥉'];
+const HISTORY_SHOW = 15;
 
 function createEconomy(deps) {
   const { config } = deps;
@@ -38,12 +40,39 @@ function createEconomy(deps) {
     return `**${Number(n).toLocaleString()}** credits`;
   }
 
+  function isStaff(ctx) {
+    return canRunCommand(ctx, { permission: 'ManageGuild' }).ok;
+  }
+
+  function formatHistoryEntry(h) {
+    const when = `<t:${Math.floor((h.ts || Date.now()) / 1000)}:R>`;
+    switch (h.type) {
+      case 'credit':
+        return `${when} · +${h.amount} — ${h.reason || 'credit'}${h.userId ? ` <@${h.userId}>` : ''}`;
+      case 'debit':
+        return `${when} · ${h.amount} — ${h.reason || 'debit'}${h.userId ? ` <@${h.userId}>` : ''}`;
+      case 'transfer':
+        return `${when} · <@${h.from}> → <@${h.to}> **${h.amount}**`;
+      case 'escrow':
+        return `${when} · Wager escrowed — <@${h.a}> vs <@${h.b}> (${h.amount} each)`;
+      case 'duel':
+        return `${when} · Duel — <@${h.winnerId}> beat <@${h.loserId}>${h.wager ? ` for **${h.wager}**` : ''}${h.forfeit ? ' (forfeit)' : ''}`;
+      case 'redeem':
+        return `${when} · <@${h.userId}> redeemed \`${h.code}\` for **${h.amount}**`;
+      case 'redeem_create':
+        return `${when} · Code \`${h.code}\` created for **${h.amount}** (×${h.maxUses})`;
+      default:
+        return `${when} · ${h.type || 'entry'}`;
+    }
+  }
+
   function register(registry) {
     registry.register({
       name: 'balance',
       description: 'Check your Credits balance',
       module: 'economy',
       aliases: ['bal', 'wallet'],
+      priority: 5, // high-traffic — keep slash even if budget gets tight
       options: [
         { type: 6, name: 'user', description: 'Whose balance to check', required: false },
       ],
@@ -79,6 +108,7 @@ function createEconomy(deps) {
       name: 'claim',
       description: 'Claim your daily Credits',
       module: 'economy',
+      priority: 5, // high-traffic — keep slash even if budget gets tight
       async run(ctx) {
         if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
         const cfg = ecoCfg(ctx.guild.id);
@@ -239,6 +269,162 @@ function createEconomy(deps) {
         return ctx.reply('Usage: `,credits lb|give|take|hold|unhold`');
       },
     });
+
+    registry.register({
+      name: 'createredeem',
+      description: 'Create a Credits redeem code (staff)',
+      module: 'economy',
+      permission: 'ManageGuild',
+      slash: false, // staff-only + rare — prefix-only keeps slash budget free
+      options: [
+        { type: 4, name: 'amount', description: 'Credits the code grants', required: true },
+        { type: 4, name: 'maxuses', description: 'Max redemptions (default 1)', required: false },
+        { type: 3, name: 'code', description: 'Custom code (auto-generated if omitted)', required: false },
+      ],
+      async run(ctx) {
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        if (!isStaff(ctx)) return ctx.reply('Need Manage Guild for that.');
+
+        let amountRaw;
+        let maxUsesRaw;
+        let codeRaw;
+        if (ctx.source === 'slash') {
+          amountRaw = ctx.getInteger?.('amount');
+          maxUsesRaw = ctx.getInteger?.('maxuses');
+          codeRaw = ctx.getString?.('code');
+        } else {
+          const args = ctx.args || [];
+          amountRaw = args[0];
+          const hasMaxUses = /^\d+$/.test(args[1] || '');
+          maxUsesRaw = hasMaxUses ? args[1] : undefined;
+          codeRaw = hasMaxUses ? args[2] : args[1];
+        }
+
+        const amount = parseAmount(amountRaw);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          return ctx.reply('Usage: `,createredeem <amount> [maxUses] [code]`');
+        }
+        const maxUses = maxUsesRaw != null ? Math.max(1, parseAmount(maxUsesRaw) || 1) : 1;
+        const code = codeRaw ? normalizeCode(codeRaw) : generateRedeemCode();
+
+        const result = wallet.createRedeem(ctx.guild.id, {
+          amount,
+          maxUses,
+          code,
+          createdBy: ctx.user.id,
+        });
+        if (!result.ok) return ctx.reply(result.error);
+        return ctx.reply({
+          embeds: [successEmbed(
+            'Redeem code created',
+            `Code \`${result.code}\` grants ${formatCredits(amount)} · ${maxUses} use${maxUses === 1 ? '' : 's'}.`,
+          )],
+        });
+      },
+    });
+
+    registry.register({
+      name: 'redeems',
+      description: 'List active Credits redeem codes (staff)',
+      module: 'economy',
+      permission: 'ManageGuild',
+      slash: false, // staff-only + rare — prefix-only keeps slash budget free
+      async run(ctx) {
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        if (!isStaff(ctx)) return ctx.reply('Need Manage Guild for that.');
+        const list = wallet.listRedeems(ctx.guild.id);
+        if (!list.length) return ctx.reply('No redeem codes yet — `,createredeem <amount>`.');
+        const lines = list.slice(0, 20).map((r) =>
+          `\`${r.code}\` — ${r.amount.toLocaleString()} credits · ${r.usesLeft}/${r.maxUses} left`);
+        return ctx.reply({
+          embeds: [baseEmbed({
+            color: BRAND.primary,
+            title: 'Redeem codes',
+            description: lines.join('\n'),
+            footerExtra: 'redeem codes',
+          })],
+        });
+      },
+    });
+
+    registry.register({
+      name: 'deleteredeem',
+      description: 'Delete a Credits redeem code (staff)',
+      module: 'economy',
+      permission: 'ManageGuild',
+      slash: false, // staff-only + rare — prefix-only keeps slash budget free
+      options: [
+        { type: 3, name: 'code', description: 'Code to delete', required: true },
+      ],
+      async run(ctx) {
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        if (!isStaff(ctx)) return ctx.reply('Need Manage Guild for that.');
+        const codeRaw = ctx.source === 'slash' ? ctx.getString?.('code') : ctx.args?.[0];
+        if (!codeRaw) return ctx.reply('Usage: `,deleteredeem <code>`');
+        const result = wallet.deleteRedeem(ctx.guild.id, codeRaw);
+        if (!result.ok) return ctx.reply(result.error);
+        return ctx.reply({
+          embeds: [successEmbed('Redeem code deleted', `Code \`${result.code}\` removed.`)],
+        });
+      },
+    });
+
+    registry.register({
+      name: 'redeem',
+      description: 'Redeem a Credits code',
+      module: 'economy',
+      options: [
+        { type: 3, name: 'code', description: 'Your redeem code', required: true },
+      ],
+      async run(ctx) {
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        if (!ecoCfg(ctx.guild.id).enabled) return ctx.reply('Credits are disabled here.');
+        const codeRaw = ctx.source === 'slash' ? ctx.getString?.('code') : ctx.args?.[0];
+        if (!codeRaw) return ctx.reply('Usage: `,redeem <code>`');
+        const result = wallet.redeemCode(ctx.guild.id, ctx.user.id, codeRaw);
+        if (!result.ok) return ctx.reply({ embeds: [dangerEmbed('Redeem failed', result.error)] });
+        return ctx.reply({
+          embeds: [successEmbed(
+            'Code redeemed',
+            `+${formatCredits(result.amount)} → balance ${formatCredits(result.balance)}.`,
+          )],
+        });
+      },
+    });
+
+    registry.register({
+      name: 'history',
+      description: 'Show your recent Credits history',
+      module: 'economy',
+      slash: false, // lower-traffic than claim/balance/duel/shop — prefix-only keeps slash budget free
+      options: [
+        {
+          type: 3,
+          name: 'type',
+          description: 'credits | duels',
+          required: false,
+          choices: [
+            { name: 'credits', value: 'credits' },
+            { name: 'duels', value: 'duels' },
+          ],
+        },
+      ],
+      async run(ctx) {
+        if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
+        const filterRaw = String(ctx.getString?.('type') || ctx.args?.[0] || '').toLowerCase();
+        const type = ['credits', 'credit', 'duels', 'duel'].includes(filterRaw) ? filterRaw : null;
+        const rows = wallet.getHistory(ctx.guild.id, { type, limit: HISTORY_SHOW });
+        if (!rows.length) return ctx.reply('No history yet — try `,claim` or `,duel`.');
+        return ctx.reply({
+          embeds: [baseEmbed({
+            color: BRAND.primary,
+            title: type ? `History — ${type}` : 'History',
+            description: rows.map(formatHistoryEntry).join('\n'),
+            footerExtra: `last ${rows.length}`,
+          })],
+        });
+      },
+    });
   }
 
   async function onMessage(message) {
@@ -254,7 +440,7 @@ function createEconomy(deps) {
     const span = Math.max(0, cfg.msgRewardMax - cfg.msgRewardMin);
     const gain = cfg.msgRewardMin + Math.floor(Math.random() * (span + 1));
     if (gain > 0) {
-      wallet.add(message.guild.id, message.author.id, gain, { reason: 'chat_drip' });
+      wallet.addChatDrip(message.guild.id, message.author.id, gain);
     }
   }
 

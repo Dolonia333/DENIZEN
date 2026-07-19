@@ -15,8 +15,11 @@ const { WalletStore } = require('../../core/wallet-store');
 
 const HP_MAX = 100;
 const IDLE_MS = 90_000;
+const LOW_HP_THRESHOLD = 30;
+const REMATCH_INFO_TTL_MS = 5 * 60_000;
 const MOVES = ['attack', 'guard', 'feint'];
 const MOVE_LABEL = { attack: 'Attack', guard: 'Guard', feint: 'Feint' };
+const MOVE_EMOJI = { attack: '⚔️', guard: '🛡️', feint: '🌀' };
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 /** Damage dealer deals to target when both picks resolve. */
@@ -51,6 +54,12 @@ function hpBar(hp, max = HP_MAX) {
   return `${'█'.repeat(filled)}${'░'.repeat(10 - filled)} ${hp}/${max}`;
 }
 
+/** HP bar line for a fighter, tagged with a low-HP warning. */
+function hpLine(userId, hp, max = HP_MAX) {
+  const warn = hp > 0 && hp < LOW_HP_THRESHOLD ? ' ⚠️ **low HP!**' : '';
+  return `<@${userId}> ${hpBar(hp, max)}${warn}`;
+}
+
 function createPvp(deps) {
   const { config, tracker } = deps;
   const wallet = deps.wallet || new WalletStore();
@@ -60,6 +69,49 @@ function createPvp(deps) {
   const matches = new Map();
   /** userId -> matchId (one active match per user per process) */
   const byUser = new Map();
+  /** `${guildId}:${userId}` -> current win streak (in-memory fallback) */
+  const streaks = new Map();
+  /** matchId -> rematch context, kept briefly after a duel ends */
+  const rematchInfo = new Map();
+
+  function streakKey(guildId, userId) {
+    return `${guildId}:${userId}`;
+  }
+
+  function getStreak(guildId, userId) {
+    return streaks.get(streakKey(guildId, userId)) || 0;
+  }
+
+  /** Bumps the winner's streak and clears the loser's. Prefers wallet helpers if present. */
+  function bumpWinStreak(guildId, winnerId, loserId) {
+    let winnerStreak;
+    if (typeof wallet.addWinStreak === 'function') {
+      winnerStreak = wallet.addWinStreak(guildId, winnerId);
+    } else {
+      winnerStreak = getStreak(guildId, winnerId) + 1;
+      streaks.set(streakKey(guildId, winnerId), winnerStreak);
+    }
+    if (typeof wallet.breakStreak === 'function') {
+      wallet.breakStreak(guildId, loserId);
+    } else {
+      streaks.set(streakKey(guildId, loserId), 0);
+    }
+    return winnerStreak;
+  }
+
+  function resetStreak(guildId, userId) {
+    if (typeof wallet.breakStreak === 'function') {
+      wallet.breakStreak(guildId, userId);
+    } else {
+      streaks.set(streakKey(guildId, userId), 0);
+    }
+  }
+
+  /** Remembers who can rematch a just-finished duel, for a short window. */
+  function rememberRematch(matchId, info) {
+    rematchInfo.set(matchId, info);
+    setTimeout(() => rematchInfo.delete(matchId), REMATCH_INFO_TTL_MS);
+  }
 
   function ecoCfg(guildId) {
     const c = config.get(guildId).economy || {};
@@ -112,6 +164,16 @@ function createPvp(deps) {
     );
   }
 
+  function rematchRow(matchId) {
+    return new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`duel:rematch:${matchId}`)
+        .setLabel('Rematch')
+        .setEmoji('🔁')
+        .setStyle(ButtonStyle.Primary),
+    );
+  }
+
   function fightRow(matchId, disabled = false) {
     return new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -134,8 +196,8 @@ function createPvp(deps) {
 
   function fightEmbed(match, extra = '') {
     const lines = [
-      `<@${match.challengerId}> ${hpBar(match.hp[match.challengerId])}`,
-      `<@${match.opponentId}> ${hpBar(match.hp[match.opponentId])}`,
+      hpLine(match.challengerId, match.hp[match.challengerId]),
+      hpLine(match.opponentId, match.hp[match.opponentId]),
       '',
       `Pot: **${match.pot}** credits · Round **${match.round}**`,
       'Pick **Attack**, **Guard**, or **Feint** (same time).',
@@ -202,14 +264,30 @@ function createPvp(deps) {
       wager: match.wager,
       forfeit: !!opts.forfeit,
     });
+    try { wallet.addWeeklyWin?.(match.guildId, winnerId); } catch (_) { /* ignore */ }
+    try { wallet.ensureWeeklyReset?.(match.guildId); } catch (_) { /* ignore */ }
     wallet.setDuelCooldown(match.guildId, match.challengerId, match.duelCooldownMs);
     wallet.setDuelCooldown(match.guildId, match.opponentId, match.duelCooldownMs);
     mapPose(match.guildId, winnerId, 'win', 6000);
     mapPose(match.guildId, loserId, 'lose', 6000);
 
-    const desc = opts.forfeit
+    const winnerStreak = bumpWinStreak(match.guildId, winnerId, loserId);
+    const streakLine = winnerStreak >= 2 ? `\n🔥 **${winnerStreak}** win streak!` : '';
+
+    const desc = (opts.forfeit
       ? `<@${loserId}> forfeited. <@${winnerId}> wins **${pot}** credits.`
-      : `<@${winnerId}> wins the duel and takes **${pot}** credits!`;
+      : `<@${winnerId}> wins the duel and takes **${pot}** credits!`)
+      + streakLine
+      + (opts.note ? `\n\n${opts.note}` : '');
+
+    rememberRematch(match.id, {
+      guildId: match.guildId,
+      channelId: match.channelId,
+      challengerId: match.challengerId,
+      opponentId: match.opponentId,
+      wager: match.wager,
+      winnerId,
+    });
 
     clearUser(match);
     matches.delete(match.id);
@@ -226,7 +304,7 @@ function createPvp(deps) {
               inline: false,
             },
           ])],
-          components: [],
+          components: [rematchRow(match.id)],
         });
       }
     } catch (_) { /* ignore */ }
@@ -248,11 +326,17 @@ function createPvp(deps) {
     mapPose(match.guildId, a, aMove);
     mapPose(match.guildId, b, bMove);
 
-    const note = [
-      `<@${a}> played **${MOVE_LABEL[aMove]}**`,
-      `<@${b}> played **${MOVE_LABEL[bMove]}**`,
+    // aDmg is damage taken by a (dealt by b's move); bDmg is damage taken by b (dealt by a's move).
+    const noteLines = [
+      `<@${a}> ${MOVE_EMOJI[aMove]} **${MOVE_LABEL[aMove]}**${result.bDmg > 0 ? ` — dealt **${result.bDmg}** dmg` : ''}`,
+      `<@${b}> ${MOVE_EMOJI[bMove]} **${MOVE_LABEL[bMove]}**${result.aDmg > 0 ? ` — dealt **${result.aDmg}** dmg` : ''}`,
       result.note,
-    ].join('\n');
+    ];
+    const warnings = [];
+    if (match.hp[a] > 0 && match.hp[a] < LOW_HP_THRESHOLD) warnings.push(`<@${a}>`);
+    if (match.hp[b] > 0 && match.hp[b] < LOW_HP_THRESHOLD) warnings.push(`<@${b}>`);
+    if (warnings.length) noteLines.push(`⚠️ ${warnings.join(' & ')} low HP!`);
+    const note = noteLines.join('\n');
 
     if (match.hp[a] <= 0 && match.hp[b] <= 0) {
       // Mutual KO — refund and call draw (no winner stats)
@@ -262,20 +346,30 @@ function createPvp(deps) {
         wallet.refundEscrow(match.guildId, a, b, match.wager, { matchId: match.id, reason: 'draw' });
         match.escrowed = false;
       }
+      resetStreak(match.guildId, a);
+      resetStreak(match.guildId, b);
+      rememberRematch(match.id, {
+        guildId: match.guildId,
+        channelId: match.channelId,
+        challengerId: match.challengerId,
+        opponentId: match.opponentId,
+        wager: match.wager,
+        winnerId: null,
+      });
       clearUser(match);
       matches.delete(match.id);
       await match.message?.edit?.({
         embeds: [infoEmbed('Draw', `${note}\n\nDouble KO — wager refunded.`)],
-        components: [],
+        components: [rematchRow(match.id)],
       }).catch(() => {});
       return;
     }
     if (match.hp[a] <= 0) {
-      await finishMatch(match, b, a);
+      await finishMatch(match, b, a, { note });
       return;
     }
     if (match.hp[b] <= 0) {
-      await finishMatch(match, a, b);
+      await finishMatch(match, a, b, { note });
       return;
     }
 
@@ -286,11 +380,51 @@ function createPvp(deps) {
     }).catch(() => {});
   }
 
+  /** Builds + registers a pending challenge match; returns the match and its reply payload. */
+  function createPendingMatch({ guildId, channelId, challengerId, opponentId, wager, duelCooldownMs }) {
+    const matchId = newMatchId();
+    const match = {
+      id: matchId,
+      guildId,
+      channelId,
+      challengerId,
+      opponentId,
+      wager,
+      pot: wager * 2,
+      status: 'pending',
+      escrowed: false,
+      hp: { [challengerId]: HP_MAX, [opponentId]: HP_MAX },
+      picks: {},
+      round: 1,
+      duelCooldownMs,
+      message: null,
+      idleTimer: null,
+    };
+    matches.set(matchId, match);
+    byUser.set(challengerId, matchId);
+    byUser.set(opponentId, matchId);
+    armIdleTimer(matchId);
+
+    const payload = {
+      embeds: [infoEmbed(
+        'Duel challenge',
+        [
+          `<@${challengerId}> challenged <@${opponentId}>!`,
+          wager > 0 ? `Wager: **${wager}** credits each (pot **${wager * 2}**)` : 'Friendly duel — no wager.',
+          'Opponent: Accept or Decline. Expires in 90s.',
+        ].join('\n'),
+      )],
+      components: [challengeRow(matchId)],
+    };
+    return { match, payload };
+  }
+
   function register(registry) {
     registry.register({
       name: 'duel',
       description: 'Challenge someone to a Credits duel',
       module: 'pvp',
+      priority: 5, // high-traffic — keep slash even if budget gets tight
       options: [
         { type: 6, name: 'user', description: 'Opponent (omit for leaderboard with wager unused)', required: false },
         { type: 4, name: 'wager', description: 'Credits each side puts in', required: false },
@@ -366,40 +500,14 @@ function createPvp(deps) {
           }
         }
 
-        const matchId = newMatchId();
-        const match = {
-          id: matchId,
+        const { match, payload } = createPendingMatch({
           guildId: ctx.guild.id,
           channelId: ctx.channel?.id,
           challengerId: ctx.user.id,
           opponentId: opponent.id,
           wager,
-          pot: wager * 2,
-          status: 'pending',
-          escrowed: false,
-          hp: { [ctx.user.id]: HP_MAX, [opponent.id]: HP_MAX },
-          picks: {},
-          round: 1,
           duelCooldownMs: cfg.duelCooldownMs,
-          message: null,
-          idleTimer: null,
-        };
-        matches.set(matchId, match);
-        byUser.set(ctx.user.id, matchId);
-        byUser.set(opponent.id, matchId);
-        armIdleTimer(matchId);
-
-        const payload = {
-          embeds: [infoEmbed(
-            'Duel challenge',
-            [
-              `<@${ctx.user.id}> challenged <@${opponent.id}>!`,
-              wager > 0 ? `Wager: **${wager}** credits each (pot **${wager * 2}**)` : 'Friendly duel — no wager.',
-              'Opponent: Accept or Decline. Expires in 90s.',
-            ].join('\n'),
-          )],
-          components: [challengeRow(matchId)],
-        };
+        });
         const msg = await ctx.reply(payload);
         if (msg && typeof msg.edit === 'function') {
           match.message = msg;
@@ -417,6 +525,9 @@ function createPvp(deps) {
       name: 'forfeit',
       description: 'Forfeit your active duel',
       module: 'pvp',
+      // Rare/emergency action — always reachable via `,forfeit`, but doesn't
+      // need to eat slash-command budget from the 100-cap.
+      slash: false,
       async run(ctx) {
         if (!ctx.guild?.id) return ctx.reply('Use this in a server.');
         const matchId = byUser.get(ctx.user.id);
@@ -442,6 +553,53 @@ function createPvp(deps) {
     });
   }
 
+  /** Rebuilds a fresh challenge between the same two players, same wager. */
+  async function handleRematch(interaction, oldMatchId) {
+    const info = rematchInfo.get(oldMatchId);
+    const uid = interaction.user.id;
+    if (!info) {
+      await interaction.reply({ content: 'Rematch unavailable — start a new one with `,duel`.', ephemeral: true }).catch(() => {});
+      return;
+    }
+    if (uid !== info.challengerId && uid !== info.opponentId) {
+      await interaction.reply({ content: 'Not your duel.', ephemeral: true }).catch(() => {});
+      return;
+    }
+    // Winner (if any) leads the rematch challenge; draws keep the original challenger.
+    const challengerId = info.winnerId || info.challengerId;
+    const opponentId = challengerId === info.challengerId ? info.opponentId : info.challengerId;
+
+    if (byUser.has(challengerId) || byUser.has(opponentId)) {
+      await interaction.reply({ content: 'One of you is already in a duel.', ephemeral: true }).catch(() => {});
+      return;
+    }
+    if (wallet.isHeld(info.guildId, challengerId) || wallet.isHeld(info.guildId, opponentId)) {
+      await interaction.reply({ content: 'Someone is on PVP hold.', ephemeral: true }).catch(() => {});
+      return;
+    }
+    if (info.wager > 0 && (
+      wallet.getBalance(info.guildId, challengerId) < info.wager
+      || wallet.getBalance(info.guildId, opponentId) < info.wager
+    )) {
+      await interaction.reply({ content: "Someone can't cover that wager anymore.", ephemeral: true }).catch(() => {});
+      return;
+    }
+
+    rematchInfo.delete(oldMatchId);
+    // Rematches bypass duel cooldown once; a fresh cooldown still applies once this one ends.
+    const cfg = ecoCfg(info.guildId);
+    const { match, payload } = createPendingMatch({
+      guildId: info.guildId,
+      channelId: info.channelId,
+      challengerId,
+      opponentId,
+      wager: info.wager,
+      duelCooldownMs: cfg.duelCooldownMs,
+    });
+    match.message = interaction.message;
+    await interaction.update(payload).catch(() => {});
+  }
+
   async function onInteraction(interaction) {
     if (!interaction.isButton?.()) return;
     const id = interaction.customId || '';
@@ -451,6 +609,12 @@ function createPvp(deps) {
     const action = parts[1];
     const matchId = parts[2];
     const move = parts[3];
+
+    if (action === 'rematch') {
+      await handleRematch(interaction, matchId);
+      return;
+    }
+
     const match = matches.get(matchId);
     if (!match) {
       await interaction.reply({ content: 'That duel is over.', ephemeral: true }).catch(() => {});
@@ -498,8 +662,11 @@ function createPvp(deps) {
       armIdleTimer(match.id);
       mapPose(match.guildId, match.challengerId, 'fight');
       mapPose(match.guildId, match.opponentId, 'fight');
+      const startNote = match.wager > 0
+        ? `Fight! Pot: **${match.pot}** credits · both fighters start at ${HP_MAX}/${HP_MAX} HP.`
+        : `Fight! Friendly duel · both fighters start at ${HP_MAX}/${HP_MAX} HP.`;
       await interaction.update({
-        embeds: [fightEmbed(match, 'Fight!')],
+        embeds: [fightEmbed(match, startNote)],
         components: [fightRow(match.id)],
       }).catch(() => {});
       return;
@@ -539,7 +706,7 @@ function createPvp(deps) {
         return;
       }
       if (match.picks[uid]) {
-        await interaction.reply({ content: 'You already locked in this round.', ephemeral: true }).catch(() => {});
+        await interaction.reply({ content: 'Already locked in.', ephemeral: true }).catch(() => {});
         return;
       }
       match.picks[uid] = move;
@@ -549,13 +716,14 @@ function createPvp(deps) {
 
       const bothReady = match.picks[match.challengerId] && match.picks[match.opponentId];
       if (!bothReady) {
+        const otherId = uid === match.challengerId ? match.opponentId : match.challengerId;
         await interaction.reply({
-          content: `Locked **${MOVE_LABEL[move]}**. Waiting for opponent…`,
+          content: `${MOVE_EMOJI[move]} Locked in.`,
           ephemeral: true,
         }).catch(() => {});
-        // Nudge public embed
+        // Nudge public embed without revealing the move.
         await interaction.message.edit({
-          embeds: [fightEmbed(match, `<@${uid}> has locked in…`)],
+          embeds: [fightEmbed(match, `⏳ Waiting on <@${otherId}>…`)],
           components: [fightRow(match.id)],
         }).catch(() => {});
         return;

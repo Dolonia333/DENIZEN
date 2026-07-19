@@ -17,6 +17,22 @@ const OPT_INTEGER = 4;
 /** Discord ApplicationCommandOptionType.Boolean */
 const OPT_BOOLEAN = 5;
 
+/** Hard Discord cap on application (slash) commands per app, per scope. */
+const SLASH_COMMAND_CAP = 100;
+
+/**
+ * Modules whose slash surface is safe to drop first when trimming to the
+ * Discord cap — the prefix (`,`) versions always keep working regardless.
+ * Set DISCORD_SLASH_TRIM=1 to skip slash registration for these modules
+ * outright, freeing budget for everything else without touching per-command
+ * `slash` flags.
+ */
+const SLASH_TRIM_MODULES = ['economy', 'pvp', 'shop'];
+
+function slashTrimEnabled() {
+  return String(process.env.DISCORD_SLASH_TRIM || '0').trim() === '1';
+}
+
 const MENTION_TOKEN = /^<(@!?|@&|#)\d+>$/;
 
 /** Default: slash replies are invoker-only. Set DISCORD_PRIVATE_REPLIES=0 to disable. */
@@ -156,8 +172,16 @@ class CommandRegistry {
    *   permission?: string,
    *   fakePerm?: string,
    *   ownerOnly?: boolean,
+   *   priority?: number,
    *   run: (ctx) => Promise<void>|void
    * }} def
+   *
+   * `slash: false` always keeps a command prefix-only (`,cmd` still works —
+   * slash is opt-in decoration, never a requirement). `priority` (higher = kept
+   * longer) decides who gets bumped first when the slash surface must be
+   * trimmed to Discord's 100-command cap; defaults to 0. Bump `priority` on
+   * high-traffic commands and/or leave it low on rare/staff ones instead of
+   * disabling slash outright when there's still budget.
    */
   register(def) {
     if (!def?.name || typeof def.run !== 'function') {
@@ -168,6 +192,7 @@ class CommandRegistry {
       aliases: def.aliases || [],
       module: def.module || 'core',
       slash: def.slash !== false,
+      priority: Number.isFinite(def.priority) ? Number(def.priority) : 0,
       public: !!def.public,
       options: def.options || [],
       permission: def.permission || null,
@@ -205,19 +230,63 @@ class CommandRegistry {
   }
 
   /**
+   * Build the slash command budget: respects `slash: false` (those always
+   * stay prefix-only), optionally drops whole modules via
+   * DISCORD_SLASH_TRIM=1, and — if what's left still exceeds Discord's
+   * 100-command cap — trims lowest-`priority` commands so the sync call
+   * itself doesn't fail outright (which used to knock out slash for
+   * *everything*, e.g. "Maximum number of application commands reached
+   * (100)"). Prefix (`,cmd`) always works no matter what gets trimmed here.
+   */
+  buildSlashBody() {
+    const trimModules = slashTrimEnabled();
+    const seen = new Set();
+    const candidates = [];
+    const skipped = [];
+    for (const cmd of this.list()) {
+      if (seen.has(cmd.name)) continue;
+      seen.add(cmd.name);
+      if (!cmd.slash) continue; // explicit opt-out — always prefix-only
+      if (trimModules && SLASH_TRIM_MODULES.includes(cmd.module)) {
+        skipped.push({ name: cmd.name, reason: 'DISCORD_SLASH_TRIM module skip' });
+        continue;
+      }
+      candidates.push(cmd);
+    }
+
+    let selected = candidates;
+    if (candidates.length > SLASH_COMMAND_CAP) {
+      // Stable sort: higher priority first, ties keep original (alphabetical) order.
+      const ranked = candidates
+        .map((cmd, idx) => ({ cmd, idx }))
+        .sort((a, b) => (b.cmd.priority - a.cmd.priority) || (a.idx - b.idx));
+      selected = ranked.slice(0, SLASH_COMMAND_CAP).map((r) => r.cmd);
+      for (const r of ranked.slice(SLASH_COMMAND_CAP)) {
+        skipped.push({ name: r.cmd.name, reason: 'over 100-command cap, low priority' });
+      }
+    }
+
+    const body = selected.map((cmd) => ({
+      name: cmd.name.slice(0, 32),
+      description: String(cmd.description || cmd.name).slice(0, 100),
+      options: cmd.options || [],
+    }));
+    return { body, skipped };
+  }
+
+  /**
    * Register slash commands with Discord (guild-scoped if guildIds provided).
+   * Always fits within Discord's 100-command cap so a busy command set can't
+   * cause the entire slash sync to fail — prefix commands are unaffected
+   * either way.
    */
   async syncSlash(client, guildIds = []) {
-    const body = [];
-    const seen = new Set();
-    for (const cmd of this.list()) {
-      if (!cmd.slash || seen.has(cmd.name)) continue;
-      seen.add(cmd.name);
-      body.push({
-        name: cmd.name.slice(0, 32),
-        description: String(cmd.description || cmd.name).slice(0, 100),
-        options: cmd.options || [],
-      });
+    const { body, skipped } = this.buildSlashBody();
+    if (skipped.length) {
+      console.warn(
+        `[discord-bot] slash budget: skipping ${skipped.length} command(s) `
+        + `(prefix still works): ${skipped.map((s) => s.name).join(', ')}`,
+      );
     }
     if (guildIds.length) {
       for (const gid of guildIds) {
@@ -377,4 +446,7 @@ module.exports = {
   bindPrefixOptionGetters,
   resolvePrivateReply,
   privateRepliesEnabled,
+  slashTrimEnabled,
+  SLASH_COMMAND_CAP,
+  SLASH_TRIM_MODULES,
 };
