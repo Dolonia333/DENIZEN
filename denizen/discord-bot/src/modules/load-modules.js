@@ -12,6 +12,7 @@ const { createAutomod } = require('./automod');
 const { createCommunity } = require('./community');
 const { createVoiceMaster } = require('./voicemaster');
 const { createTickets } = require('./tickets');
+const { createSlots } = require('./slots');
 const { createMusic } = require('./music');
 const { createIntegrations } = require('./integrations');
 const { createLogging } = require('./logging');
@@ -144,6 +145,10 @@ function loadModules(deps) {
   tickets.register(deps.registry);
   hooks.onInteraction.push(tickets.onInteraction);
 
+  const slots = createSlots(deps);
+  slots.register(deps.registry);
+  hooks.onInteraction.push(slots.onInteraction);
+
   const music = createMusic(deps);
   music.register(deps.registry);
   if (music.onInteraction) hooks.onInteraction.push(music.onInteraction);
@@ -226,6 +231,31 @@ function loadModules(deps) {
           { name: 'Staff', value: `\`${prefix}tickets setup\` · panel · sla`, inline: false },
           { name: 'Forms', value: `\`${prefix}tickets form Label | desc | Q1?, Q2?\``, inline: false },
           { name: 'Live ticket', value: 'claim · note · archive · reopen', inline: false },
+        ],
+      });
+    }
+    if (topic === 'slots') {
+      return baseEmbed({
+        color: BRAND.primary,
+        title: '🎰 Seller slots',
+        description: 'SlotBot-style seller channels with expiry, pings, holds, and redeem codes.',
+        fields: [
+          { name: 'Setup', value: `\`${prefix}slots setup\` (Administrator)`, inline: false },
+          {
+            name: 'Staff',
+            value: `\`${prefix}screate @user 7 d\` · renew · extend · transfer · revoke · hold · nuke · warn · blacklist`,
+            inline: false,
+          },
+          {
+            name: 'Holders',
+            value: `\`${prefix}myslot\` · \`${prefix}slotping here\` · \`${prefix}slotredeem CODE\``,
+            inline: false,
+          },
+          {
+            name: 'Also',
+            value: `\`${prefix}slots ticket\` panel · \`${prefix}slots createredeem\` · leaderboard · history · announce`,
+            inline: false,
+          },
         ],
       });
     }
@@ -384,13 +414,14 @@ function loadModules(deps) {
       {
         type: 3,
         name: 'topic',
-        description: 'spaces | music | tickets | mods | security | all',
+        description: 'spaces | music | tickets | slots | mods | security | all',
         required: false,
         choices: [
           { name: 'Command hub', value: 'hub' },
           { name: 'Spaces map', value: 'spaces' },
           { name: 'Music player', value: 'music' },
           { name: 'Tickets', value: 'tickets' },
+          { name: 'Seller slots', value: 'slots' },
           { name: 'Moderation', value: 'mods' },
           { name: 'Security', value: 'security' },
           { name: 'Community', value: 'community' },
@@ -467,6 +498,7 @@ function loadModules(deps) {
     _community: community,
     _integrations: integrations,
     _music: music,
+    _slots: slots,
   };
 }
 

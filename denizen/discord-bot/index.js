@@ -186,6 +186,7 @@ attachGateway(client, {
     try { hooks._community?.startGiveawayLoop?.(c); } catch (_) {}
     try { hooks._integrations?.startWorkers?.(c); } catch (_) {}
     try { hooks._music?.clearOrphanPlayers?.(c); } catch (_) {}
+    try { hooks._slots?.startLoops?.(c); } catch (_) {}
 
     if (DUMP) printSnapshot('dump');
     if (DUMP_INTERVAL_MS > 0) setInterval(() => printSnapshot('interval'), DUMP_INTERVAL_MS);

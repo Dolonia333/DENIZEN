@@ -155,6 +155,18 @@ function defaultGuildConfig() {
       closed: {},
       forms: [],
     },
+    slots: {
+      enabled: false,
+      staffRoleId: null,
+      premiumRoleId: null,
+      slotRoleId: null,
+      categoryId1: null,
+      categoryId2: null,
+      logChannelId: null,
+      ticketCategoryId: null,
+      defaultPingCount: 3,
+      pingResetHours: 24,
+    },
     music: {
       enabled: false,
       volume: 80,
