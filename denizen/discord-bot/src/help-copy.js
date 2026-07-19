@@ -16,7 +16,7 @@ function publicBase() {
 function mapUrl(guildId) {
   const base = publicBase();
   const path = guildId
-    ? `/discord-map/?guildId=${encodeURIComponent(guildId)}&view=public`
+    ? `/discord-map/?guildId=${encodeURIComponent(guildId)}`
     : '/discord-map/';
   return base ? `${base}${path}` : path;
 }
@@ -36,7 +36,7 @@ function spacesIntro(opts = {}) {
   const map = mapUrl(opts.guildId);
   return [
     'Live pixel map of this Discord — buildings are your channels.',
-    `Join a **voice channel** to appear · ${map}`,
+    `Ask an admin for the team code · ${map}`,
   ].join('\n');
 }
 
@@ -53,13 +53,13 @@ function spacesHelpEmbed(opts = {}) {
     title: opts.title || 'Denizen Spaces',
     description: 'Live pixel map of this server — walk buildings, meet people in VC.',
     fields: [
-      { name: 'Map', value: map, inline: false },
+      { name: 'Map', value: `${map}\n\`${p}signup\` · team code from admin · \`${p}map\``, inline: false },
       { name: 'Commands', value: cmds, inline: false },
+      { name: 'Owner', value: `\`${p}teamlink <code>\` · \`${p}mapcode\``, inline: true },
       { name: 'Look', value: `\`${p}avatar\` · Boost → golden headset`, inline: true },
       { name: 'Pet', value: `\`${p}pet buy\` · gift · equip · Pro grants ×3`, inline: true },
       { name: 'Live', value: 'React in chat to emote on the map · `,eat pizza` (and other foods)', inline: true },
       { name: 'Chat', value: `\`@Denizen <question>\`\nStaff: \`${p}chat on\``, inline: true },
-      { name: 'Hangout', value: `\`/hangout\` · \`${p}help\``, inline: true },
     ],
     footerExtra: 'start here',
   });
@@ -74,7 +74,7 @@ function mentionHelp(opts = {}) {
   return [
     '**Denizen Spaces** — live pixel map',
     map,
-    `Join VC · \`${p}avatar\` · \`${p}help\``,
+    `Join VC · \`${p}signup\` · \`${p}help\``,
   ].join('\n');
 }
 
@@ -87,7 +87,6 @@ function mapFooter(guildId) {
 }
 
 module.exports = {
-  publicBase,
   mapUrl,
   commandsUrl,
   spacesIntro,

@@ -411,7 +411,7 @@
 
       <div class="card" id="accountCard">
         <h2>Denizen account</h2>
-        <p id="accountBlurb">Link Discord so the map knows which avatar is <strong>you</strong>. Or type <code>,signup</code> in Discord.</p>
+        <p id="accountBlurb">Create your profile with <code>,signup</code> in Discord (or below). Linking marks which avatar is <strong>you</strong> on the map.</p>
         <div id="accountLinked" hidden></div>
         <div class="account-row" id="accountActions">
           <button type="button" class="btn primary" id="btnDiscordSignup">Sign up with Discord</button>
@@ -419,14 +419,24 @@
         </div>
       </div>
 
+      <div class="card" id="teamCodeCard" hidden>
+        <h2>Team code</h2>
+        <p id="teamCodeBlurb">This server’s map is private. Ask the Discord server owner for their Denizen <strong>team code</strong>.</p>
+        <label for="teamCodeInput">Team code</label>
+        <input id="teamCodeInput" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="e.g. 192184" />
+        <div class="account-row" style="margin-top:10px">
+          <button type="button" class="btn primary" id="btnUnlockMap">Unlock map</button>
+        </div>
+        <p id="teamCodeStatus" class="meta" style="margin-top:8px"></p>
+      </div>
+
       <div class="card">
         <h2>Add Denizen to your server</h2>
-        <p>Invite the bot with admin (or Manage Server). It reads your channel list and live voice/text presence — no manual setup.</p>
+        <p>Invite the bot with admin (or Manage Server). Owners link the server with <code>,teamlink &lt;team code&gt;</code>, then share that code so members can open the map.</p>
         <ol class="steps">
           <li>Click <strong>Invite Denizen bot</strong> and pick your Discord server.</li>
-          <li>No extra Discord Developer Portal toggles needed for basic voice + text presence.</li>
-          <li>Hit <strong>Refresh</strong> — your server appears in the list.</li>
-          <li>Tap <strong>Connect</strong>, then join a voice channel to spawn on the map.</li>
+          <li>Owner runs <code>,teamlink</code> with their Denizen team code, then <code>,mapcode</code> to share it.</li>
+          <li>Members: <code>,signup</code>, enter the team code here, join a voice channel.</li>
         </ol>
         <div class="invite-row">
           <button type="button" class="btn primary" id="btnInvite">Invite Denizen bot</button>
@@ -624,19 +634,121 @@
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
 
-    function buildPresenceUrl(baseIn, guildIdIn) {
+    function buildPresenceUrl(baseIn, guildIdIn, mapGrantIn) {
       const base = String(baseIn || $('presenceUrl').value || '').trim().replace(/\/$/, '');
       if (!base) return '';
       const gid = String(guildIdIn != null ? guildIdIn : $('guildId').value || '').trim();
+      const grant = mapGrantIn != null
+        ? String(mapGrantIn || '').trim()
+        : String(loadCfg().mapGrant || '').trim();
       try {
         const u = new URL(base.includes('://') ? base : `http://${base}`);
         if (!u.pathname || u.pathname === '/' || u.pathname === '/guilds') u.pathname = '/presence';
         if (u.pathname.endsWith('/guilds')) u.pathname = u.pathname.replace(/\/guilds$/, '/presence');
         if (gid) u.searchParams.set('guildId', gid);
         else u.searchParams.delete('guildId');
+        if (grant) u.searchParams.set('map_grant', grant);
+        else u.searchParams.delete('map_grant');
         return u.toString();
       } catch {
         return base;
+      }
+    }
+
+    async function fetchMapAccess(guildId, mapGrant) {
+      const gid = String(guildId || '').trim();
+      if (!gid) return { ok: true, gated: false, unlocked: true };
+      const params = new URLSearchParams({ guildId: gid });
+      if (mapGrant) params.set('map_grant', mapGrant);
+      const res = await fetch(`/api/discord/map/access?${params}`, { cache: 'no-store' });
+      return res.json();
+    }
+
+    function showTeamCodeGate(access, guildId) {
+      const card = $('teamCodeCard');
+      card.hidden = false;
+      const name = access.org_display_name ? ` for ${access.org_display_name}` : '';
+      if (access.setup_required) {
+        // Soft notice only — unlinked maps stay open after the gate fix.
+        $('teamCodeBlurb').innerHTML = access.message
+          || 'Owner can lock this map with <code>,teamlink &lt;team code&gt;</code>.';
+        $('teamCodeInput').disabled = true;
+        $('btnUnlockMap').disabled = true;
+        $('teamCodeStatus').textContent = '';
+        card.hidden = true;
+        return;
+      } else {
+        $('teamCodeBlurb').innerHTML = `Enter the Denizen team code${name} to open this server’s map. Get it from the server owner (<code>,mapcode</code>).`;
+        $('teamCodeInput').disabled = false;
+        $('btnUnlockMap').disabled = false;
+        $('teamCodeStatus').textContent = '';
+      }
+      card.dataset.guildId = String(guildId || '');
+    }
+
+    function hideTeamCodeGate() {
+      $('teamCodeCard').hidden = true;
+      $('teamCodeStatus').textContent = '';
+    }
+
+    async function ensureMapUnlocked(guildId) {
+      const gid = String(guildId || loadCfg().guildId || '').trim();
+      if (!gid) return { ok: true };
+      const cfg = loadCfg();
+      let access;
+      try {
+        access = await fetchMapAccess(gid, cfg.mapGrant);
+      } catch (_) {
+        return { ok: true };
+      }
+      if (!access.gated || access.unlocked) {
+        hideTeamCodeGate();
+        return { ok: true, access };
+      }
+      showTeamCodeGate(access, gid);
+      return { ok: false, access };
+    }
+
+    async function unlockWithTeamCode() {
+      const gid = String($('teamCodeCard').dataset.guildId || $('guildId').value || loadCfg().guildId || '').trim();
+      const code = String($('teamCodeInput').value || '').trim();
+      if (!gid) {
+        $('teamCodeStatus').textContent = 'Pick a server first';
+        return false;
+      }
+      if (!code) {
+        $('teamCodeStatus').textContent = 'Enter the team code';
+        return false;
+      }
+      $('teamCodeStatus').textContent = 'Checking…';
+      $('btnUnlockMap').disabled = true;
+      try {
+        const res = await fetch('/api/discord/map/unlock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ guildId: gid, teamCode: code }),
+        });
+        const data = await res.json();
+        if (!data.ok || !data.map_grant) {
+          $('teamCodeStatus').textContent = data.message || data.error || 'Invalid team code';
+          return false;
+        }
+        const cfg = {
+          ...loadCfg(),
+          guildId: gid,
+          mapGrant: data.map_grant,
+          orgDisplayName: data.org_display_name || null,
+        };
+        cfg.presenceUrlResolved = buildPresenceUrl(hostedPresenceBase(), gid, data.map_grant);
+        saveCfg(cfg);
+        hideTeamCodeGate();
+        setStatus(true, `Unlocked · ${data.org_display_name || 'team'}`);
+        return true;
+      } catch (err) {
+        $('teamCodeStatus').textContent = err.message || 'Unlock failed';
+        return false;
+      } finally {
+        $('btnUnlockMap').disabled = false;
       }
     }
 
@@ -723,8 +835,11 @@
 
     async function connectGuild(g) {
       const presenceUrl = hostedPresenceBase();
-      const presenceUrlResolved = buildPresenceUrl(presenceUrl, g.guildId);
+      const prev = loadCfg();
+      const mapGrant = prev.guildId === g.guildId ? (prev.mapGrant || '') : '';
+      const presenceUrlResolved = buildPresenceUrl(presenceUrl, g.guildId, mapGrant);
       const cfg = {
+        ...prev,
         presenceUrl,
         guildId: g.guildId,
         label: g.name || '',
@@ -732,6 +847,7 @@
         channelCount: g.channelCount || 0,
         voiceLive: g.voiceLive || 0,
         presenceUrlResolved,
+        mapGrant,
         connectedAt: Date.now(),
       };
       saveCfg(cfg);
@@ -739,6 +855,15 @@
       $('guildId').value = g.guildId;
       $('label').value = g.name || '';
       updateHero(cfg);
+      setStatus(false, 'Checking access…', true);
+      const unlocked = await ensureMapUnlocked(g.guildId);
+      if (!unlocked.ok) {
+        setStatus(false, unlocked.access?.setup_required
+          ? 'Owner must link with ,teamlink'
+          : 'Enter team code to open map', true);
+        renderGuilds((await fetchGuildsSilent()) || [], g.guildId);
+        return;
+      }
       setStatus(false, 'Checking live presence…', true);
       const ok = await testConnection();
       if (ok) {
@@ -766,23 +891,35 @@
       }
       setStatus(false, 'Testing…', true);
       try {
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const headers = {};
+        const grant = String(loadCfg().mapGrant || '').trim();
+        if (grant) headers['x-map-grant'] = grant;
+        const res = await fetch(url, { cache: 'no-store', headers });
+        if (!res.ok) {
+          if (res.status === 403) {
+            const errBody = await res.json().catch(() => ({}));
+            await ensureMapUnlocked($('guildId').value || loadCfg().guildId);
+            throw new Error(errBody.message || errBody.error || 'Team code required');
+          }
+          throw new Error(`HTTP ${res.status}`);
+        }
         const data = await res.json();
         const rooms = (data.rooms || []).length;
         const people = (data.people || []).length;
         const name = data.guildName || $('label').value || 'guild';
+        const gid = String($('guildId').value || data.guildId || '').trim();
         const cfg = {
           ...loadCfg(),
           presenceUrl: String($('presenceUrl').value || '').trim() || hostedPresenceBase(),
-          guildId: String($('guildId').value || data.guildId || '').trim(),
+          guildId: gid,
           label: String($('label').value || data.guildName || '').trim(),
           guildName: data.guildName || '',
           channelCount: rooms,
           voiceLive: people,
           presenceUrlResolved: buildPresenceUrl(
             String($('presenceUrl').value || '').trim() || hostedPresenceBase(),
-            String($('guildId').value || data.guildId || '').trim(),
+            gid,
+            loadCfg().mapGrant,
           ),
         };
         saveCfg(cfg);
@@ -795,14 +932,26 @@
       }
     }
 
-    function showMap() {
+    async function showMap() {
       const cfg = loadCfg();
-      const presence = cfg.presenceUrlResolved || buildPresenceUrl();
+      const unlocked = await ensureMapUnlocked(cfg.guildId);
+      if (!unlocked.ok) {
+        showConnect();
+        setStatus(false, unlocked.access?.setup_required
+          ? 'Owner must link with ,teamlink'
+          : 'Enter team code to open map', true);
+        return;
+      }
+      const fresh = loadCfg();
+      const presence = fresh.presenceUrlResolved || buildPresenceUrl();
       if (!presence) {
         setStatus(false, 'Connect a server first');
         return;
       }
-      const src = `/discord-map/play.html?presence=${encodeURIComponent(presence)}&v=${Date.now()}${cfg.discordUserId ? `&me=${encodeURIComponent(cfg.discordUserId)}` : ''}`;
+      const grantQ = fresh.mapGrant ? `&map_grant=${encodeURIComponent(fresh.mapGrant)}` : '';
+      const meQ = fresh.discordUserId ? `&me=${encodeURIComponent(fresh.discordUserId)}` : '';
+      const gidQ = fresh.guildId ? `&guildId=${encodeURIComponent(fresh.guildId)}` : '';
+      const src = `/discord-map/play.html?presence=${encodeURIComponent(presence)}&v=${Date.now()}${grantQ}${meQ}${gidQ}`;
       $('mapFrame').src = src;
       $('pane-connect').classList.add('hidden');
       $('pane-map').classList.add('show');
@@ -828,9 +977,22 @@
         setStatus(false, 'Connect a server first');
         return;
       }
-      showMap();
+      void showMap();
     });
-    $('btnOpenMap').addEventListener('click', showMap);
+    $('btnOpenMap').addEventListener('click', () => { void showMap(); });
+    $('btnUnlockMap').addEventListener('click', async () => {
+      const ok = await unlockWithTeamCode();
+      if (ok) {
+        const tested = await testConnection();
+        if (tested) showMap();
+      }
+    });
+    $('teamCodeInput').addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        $('btnUnlockMap').click();
+      }
+    });
     $('btnDiscordSignup').addEventListener('click', () => { location.href = discordConnectUrl('signup'); });
     $('btnDiscordLink').addEventListener('click', () => { location.href = discordConnectUrl('link'); });
     $('btnRefresh').addEventListener('click', () => { void fetchGuilds(); });
@@ -871,10 +1033,23 @@
     void bootstrapFromGrant().then(() => refreshAccountStatus());
     const boot = loadCfg();
     const q = new URLSearchParams(location.search);
-    if (q.get('play') === '1' && boot.presenceUrlResolved) {
-      showMap();
+    const qGuild = String(q.get('guildId') || '').trim();
+    if (qGuild && qGuild !== boot.guildId) {
+      saveCfg({
+        ...boot,
+        guildId: qGuild,
+        presenceUrl: hostedPresenceBase(),
+        presenceUrlResolved: buildPresenceUrl(hostedPresenceBase(), qGuild, boot.mapGrant || ''),
+      });
+      $('guildId').value = qGuild;
+    }
+    if (q.get('play') === '1' && loadCfg().presenceUrlResolved) {
+      void showMap();
     } else {
-      void fetchGuilds();
+      void fetchGuilds().then(async () => {
+        const gid = String(loadCfg().guildId || qGuild || '').trim();
+        if (gid) await ensureMapUnlocked(gid);
+      });
     }
   </script>
 </body>
