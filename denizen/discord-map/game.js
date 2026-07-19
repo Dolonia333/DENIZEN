@@ -3357,17 +3357,16 @@
      * Without the lift, ends float as two spikes with a low disconnected bar.
      */
     /**
-     * Hand-authored roof packing (see roof-examples/*.json + tools/roof-composer.html).
-     * Edit visually in the composer, export JSON, bake parametric/pieces here.
+     * Roof packing knobs (see roof-examples/ + tools/roof-composer.html).
+     * Roof_1 end is 26×17: slope cols 0–14, flat ridge cols 15–25 (exactly 8px
+     * tall — same as connecting). Ridge align = lift connecting by 9 art px.
      */
     roofRecipeFor(style) {
-      // Baked from denizen/discord-map/roof-examples/{gable,flat}-default.json
       if (style === 'flat') {
         return {
-          overhang: 4,
-          yEndOffset: 1,
-          ridgeInset: 2,
-          connStep: 14,
+          overhang: 6,
+          yEndOffset: 2,
+          endSrcW: 9,
           endSrcH: 5,
           connSrcH: 4,
           endDepth: 21.1,
@@ -3376,11 +3375,16 @@
       }
       return {
         overhang: 6,
-        yEndOffset: -12,
-        ridgeInset: 14, // Roof_1 end: slope cols 0–13, ridge 14–25
-        connStep: 14,   // single pass, slight overlap — no mid double-fill
+        // Sit eaves on the shell lip (was -12 — floated a clear sky gap).
+        yEndOffset: 1,
+        endSrcW: 26,
         endSrcH: 17,
         connSrcH: 8,
+        // Ridge starts at art col 15 on the end tile.
+        ridgeInset: 15,
+        // Lower shingle course inset so the triangular eaves stay readable.
+        lowerInset: 10,
+        connStep: 15,
         endDepth: 21.0,
         connDepth: 20.5,
       };
@@ -3407,7 +3411,6 @@
         } else {
           connKey = this.textures.exists(`roof${cap}C`) ? `roof${cap}C` : 'roofRedC';
         }
-        // Absolute piece list from Roof Composer export (art px relative to shell).
         if (Array.isArray(roofSpec.pieces) && roofSpec.pieces.length) {
           customPieces = roofSpec.pieces;
         }
@@ -3420,21 +3423,32 @@
         : this.roofRecipeFor(isFlat ? 'flat' : 'gable');
 
       const tileW = 16 * SCALE;
+      const endW = (recipe.endSrcW || (isFlat ? 9 : 26)) * SCALE;
       const yEnd = top + recipe.yEndOffset;
-      // Lift connecting so its ridge band lines up with the end's ridge band.
       const ridgePad = (recipe.endSrcH - recipe.connSrcH) * SCALE;
-      const yConn = yEnd - ridgePad;
+      const yRidge = yEnd - ridgePad;
+      // Lower course top meets ridge bottom (closes the 1px sky slit).
+      const yLower = yEnd - SCALE;
       const overhang = recipe.overhang;
       const endDepth = recipe.endDepth;
       const connDepth = recipe.connDepth;
+      const step = Math.max(8, (recipe.connStep || 15) * SCALE);
 
-      // Composer absolute pieces win when provided (drag/drop / cut export).
+      const placeRun = (y, runL, runR, depth) => {
+        if (!this.textures.exists(connKey) || runR - runL < tileW * 0.5) return;
+        for (let x = runL; x <= runR - tileW; x += step) {
+          this.add.image(x, y, connKey)
+            .setOrigin(0, 1).setDepth(depth).setScale(SCALE);
+        }
+        this.add.image(runR - tileW, y, connKey)
+          .setOrigin(0, 1).setDepth(depth - 0.04).setScale(SCALE);
+      };
+
       if (customPieces) {
         for (const p of customPieces) {
           const kind = p.kind === 'end' ? endKey : (p.kind === 'connecting' ? connKey : null);
           const key = p.key || kind;
           if (!key || !this.textures.exists(key)) continue;
-          // Composer exports bottom-left origin even when flipped.
           const img = this.add.image(
             left + Number(p.x) * SCALE,
             top + Number(p.y) * SCALE,
@@ -3444,36 +3458,51 @@
             .setScale(SCALE);
           if (p.flipX) img.setFlipX(true);
         }
-      } else {
-        // Parametric pack from roof-examples — connecting first, then ends.
-        if (this.textures.exists(connKey)) {
-          const ridgeInset = recipe.ridgeInset * SCALE;
-          const runL = left - overhang + ridgeInset;
-          const runR = left + bw + overhang - ridgeInset;
-          const step = Math.max(8, recipe.connStep * SCALE);
-          for (let x = runL; x <= runR - tileW; x += step) {
-            this.add.image(x, yConn, connKey)
-              .setOrigin(0, 1).setDepth(connDepth).setScale(SCALE);
-          }
-          // Flush right eave so loop math never leaves a slit.
-          this.add.image(runR - tileW, yConn, connKey)
-            .setOrigin(0, 1).setDepth(connDepth - 0.04).setScale(SCALE);
-        }
-
+      } else if (isFlat) {
+        // Flat: fascia + single cap run between end pieces.
+        const fascia = this.add.graphics().setDepth(connDepth - 0.25);
+        const fx = left - overhang - 1;
+        const fw = bw + overhang * 2 + 2;
+        fascia.fillStyle(0x1a222c, 1);
+        fascia.fillRect(fx, yEnd - 1, fw, 6);
+        fascia.fillStyle(0x4a5868, 1);
+        fascia.fillRect(fx + 1, yEnd - 4, fw - 2, 3);
+        const flatSy = SCALE * 1.6;
+        placeRun(yEnd, left - overhang + endW - 2, left + bw + overhang - endW + 2, connDepth);
         if (this.textures.exists(endKey)) {
           this.add.image(left - overhang, yEnd, endKey)
-            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
+            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE, flatSy * 0.95);
           this.add.image(left + bw + overhang, yEnd, endKey)
+            .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE, flatSy * 0.95).setFlipX(true);
+        }
+      } else {
+        // Gable: dual shingle courses fill the hollow middle, ends on top.
+        // Roof_1 connecting is only the 8px ridge strip — one run left a
+        // see-through gap under the peak. Lower course closes it; ends keep
+        // the classic sloped eaves.
+        const spanL = left - overhang;
+        const spanR = left + bw + overhang;
+        const lowerInset = (recipe.lowerInset || 10) * SCALE;
+        const ridgeInset = (recipe.ridgeInset || 15) * SCALE;
+        placeRun(yLower, spanL + lowerInset, spanR - lowerInset, connDepth - 0.1);
+        placeRun(yRidge, spanL + ridgeInset, spanR - ridgeInset, connDepth);
+        if (this.textures.exists(endKey)) {
+          this.add.image(spanL, yEnd, endKey)
+            .setOrigin(0, 1).setDepth(endDepth).setScale(SCALE);
+          this.add.image(spanR, yEnd, endKey)
             .setOrigin(1, 1).setDepth(endDepth).setScale(SCALE).setFlipX(true);
         }
       }
 
       if (style === 'snow' || (typeof roofSpec === 'object' && roofSpec.snow)) {
-        this.drawRoofSnow(left, top, bw, yConn);
+        this.drawRoofSnow(left, top, bw, yRidge);
       }
 
-      // Report the connecting ridge Y — deck / snow / titles orient off this.
-      return { style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'), color, y: yConn };
+      return {
+        style: isFlat ? 'flat' : (style === 'snow' ? 'snow' : 'gable'),
+        color,
+        y: yRidge,
+      };
     }
 
     /** Layer snow piles along a roof line (Pixel Spaces snowpile tiles). */

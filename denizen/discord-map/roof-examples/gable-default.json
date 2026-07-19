@@ -1,26 +1,21 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "gable-default",
   "family": "Roof_1",
   "style": "gable",
   "scale": 2,
-  "note": "Hand layout for Roof Composer → drawRoofCap. Single connecting pass, ridge-aligned. Open denizen/tools/roof-composer.html to drag/cut and replace this file.",
+  "note": "Dual shingle courses: ridge-aligned top + lower fill. Ends seated on shell (yEndOffset 1). Roof_1 end ridge is cols 15–25 (8px tall).",
   "parametric": {
     "overhang": 6,
-    "yEndOffset": -12,
-    "ridgeInset": 14,
-    "connStep": 14,
+    "yEndOffset": 1,
+    "endSrcW": 26,
     "endSrcH": 17,
     "connSrcH": 8,
+    "ridgeInset": 15,
+    "lowerInset": 10,
+    "connStep": 15,
     "endDepth": 21.0,
     "connDepth": 20.5
   },
-  "howToEdit": [
-    "Serve or open denizen/tools/roof-composer.html (needs the PixelSpaces paths)",
-    "Pick Roof_1 + color → Load code layout",
-    "Drag tiles, use Cut to box-crop a custom mid piece",
-    "Export JSON → replace this file (or paste pieces[] below)",
-    "Ask the agent to bake the new recipe into game.js drawRoofCap"
-  ],
   "pieces": []
 }

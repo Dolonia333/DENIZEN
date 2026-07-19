@@ -1,126 +1,23 @@
 {
-  "version": 1,
+  "version": 2,
   "name": "gable-red-example",
   "family": "Roof_1",
   "color": "red",
   "style": "gable",
   "scale": 2,
-  "buildingWidth": 160,
-  "note": "Visual match for gable-red-example.png — baked parametric is what drawRoofCap uses by default.",
+  "buildingWidth": 180,
+  "note": "Visual match for gable-red-example.png (dual course + seated eaves).",
   "parametric": {
     "overhang": 6,
-    "yEndOffset": -12,
-    "ridgeInset": 14,
-    "connStep": 14,
+    "yEndOffset": 1,
+    "endSrcW": 26,
     "endSrcH": 17,
     "connSrcH": 8,
-    "endDepth": 21,
+    "ridgeInset": 15,
+    "lowerInset": 10,
+    "connStep": 15,
+    "endDepth": 21.0,
     "connDepth": 20.5
   },
-  "pieces": [
-    {
-      "kind": "connecting",
-      "x": 8,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 22,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 36,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 50,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 64,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 78,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 92,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 106,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 120,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 134,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "connecting",
-      "x": 136,
-      "y": -21,
-      "flipX": false,
-      "w": 16,
-      "h": 8
-    },
-    {
-      "kind": "end",
-      "x": -6,
-      "y": -12,
-      "flipX": false,
-      "w": 26,
-      "h": 17
-    },
-    {
-      "kind": "end",
-      "x": 140,
-      "y": -12,
-      "flipX": true,
-      "w": 26,
-      "h": 17
-    }
-  ]
+  "pieces": []
 }
