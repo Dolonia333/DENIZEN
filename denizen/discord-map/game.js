@@ -3836,7 +3836,9 @@
           });
           if (hasLoft) {
             // The loft is a real walkable floor with a ladder — same climb
-            // grammar as themed buildings' storeys/rooftops.
+            // grammar as themed buildings' storeys/rooftops. The ladder uses
+            // the RIGHT lane so it never collides with the building's shared
+            // left elevator/climb lane between stacked rooms.
             const loftId = `${roomKey}__loft`;
             this.registerFloor({
               id: loftId,
@@ -3846,7 +3848,7 @@
               maxX: x0 + roomW - 10,
               label: `${label} · loft`,
             });
-            const laneX = x0 + Math.max(22, roomW * 0.18);
+            const laneX = x0 + roomW - Math.max(26, roomW * 0.14);
             this.markClimbDoor(laneX, roomKey);
             this.markClimbDoor(laneX, loftId);
             this.registerStairs({
@@ -3888,7 +3890,10 @@
             doorKind: 'wood',
           });
         }
-        // Vertical climbs between stacked VC rows (left & right columns)
+        // Vertical travel between stacked VC rows (left & right columns).
+        // Tall towers (3+ storeys) ride Pixel Spaces elevators; short stacks
+        // keep climb doors.
+        const climbMode = rows >= 3 ? 'elev' : 'door';
         for (let r = 0; r + 1 < rows; r += 1) {
           for (const col of [0, 1]) {
             const upperIdx = r * 2 + col;
@@ -3897,15 +3902,37 @@
             const upperKey = chKey(channels[upperIdx].id);
             const lowerKey = chKey(channels[lowerIdx].id);
             const laneX = left + 16 + col * (roomW + gap) + Math.max(22, roomW * 0.18);
-            this.markClimbDoor(laneX, upperKey);
-            this.markClimbDoor(laneX, lowerKey);
+            const sx = this.markClimbDoor(laneX, upperKey, 'wood', climbMode) || laneX;
+            this.markClimbDoor(sx, lowerKey, 'wood', climbMode);
             this.registerStairs({
-              x: laneX,
+              x: sx,
               fromFloorId: lowerKey,
               toFloorId: upperKey,
               radius: 28,
             });
           }
+        }
+      }
+
+      // Single-column stacks previously had NO vertical connection at all —
+      // rooms were sealed boxes. Same shared left lane: elevators once the
+      // tower hits 3+ storeys, climb doors below that.
+      if (cols === 1 && rows >= 2) {
+        const climbMode = rows >= 3 ? 'elev' : 'door';
+        for (let r = 0; r + 1 < rows; r += 1) {
+          if (r + 1 >= channels.length) continue;
+          const upperKey = chKey(channels[r].id);
+          const lowerKey = chKey(channels[r + 1].id);
+          if (!this.floors.get(upperKey) || !this.floors.get(lowerKey)) continue;
+          const laneX = left + 16 + Math.max(22, roomW * 0.18);
+          const sx = this.markClimbDoor(laneX, upperKey, 'wood', climbMode) || laneX;
+          this.markClimbDoor(sx, lowerKey, 'wood', climbMode);
+          this.registerStairs({
+            x: sx,
+            fromFloorId: lowerKey,
+            toFloorId: upperKey,
+            radius: 28,
+          });
         }
       }
 
