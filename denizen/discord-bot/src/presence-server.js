@@ -225,8 +225,15 @@ function createPresenceServer({
                 try {
                   rawAv = store.get(userId);
                   avatar = avatarApi.clientAvatar(rawAv, userId);
-                  avatar.sheetUrl = `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${rawAv.rev || 1}`;
-                  avatar.rev = rawAv.rev || 1;
+                  // Only advertise a custom sheet when one actually exists on
+                  // disk — store.get() manufactures in-memory defaults, and
+                  // the PNG route 404s for those, so an unconditional
+                  // sheetUrl made every default-look occupant a guaranteed
+                  // failing fetch on each map poll.
+                  if (store.hasCustom(userId)) {
+                    avatar.sheetUrl = `/api/discord/avatar/${encodeURIComponent(userId)}.png?v=${rawAv.rev || 1}`;
+                    avatar.rev = rawAv.rev || 1;
+                  }
                 } catch (_) { /* ignore */ }
               }
               const soft = room.type === 'text' || room.type === 'forum';

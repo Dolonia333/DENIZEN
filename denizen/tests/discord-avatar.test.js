@@ -39,7 +39,8 @@ describe('discord-avatar', () => {
       tint: { hair: '#f0f', clothes: 'nope' },
     }, '1');
     assert.equal(av.body, 'light');
-    assert.equal(av.hair.index, 49);
+    // hair_short is a 50x6 variant catalog → indices clamp to 0..299
+    assert.equal(av.hair.index, 299);
     assert.equal(av.outfit.index, 0);
     assert.equal(av.tint.hair, '#ff00ff');
     assert.equal(av.tint.clothes, null);
@@ -151,6 +152,35 @@ describe('discord-avatar', () => {
     // premade to sit the hat on.
     assert.equal(avatar.mode, base.premade ? 'premade' : 'layers');
     assert.ok(avatar.unlocks.includes('role:booster'));
+  });
+
+  it('catalog counts expose full 2D variant ranges and defaults never pick specials', () => {
+    const hats = api.HAT_SETS.find((h) => h.id === 'hats');
+    assert.equal(hats.count, 400); // 50 cols x 8 rows
+    const shortHair = api.HAIR_SETS.find((h) => h.id === 'short');
+    assert.equal(shortHair.count, 300); // 50 x 6
+    const outfits = api.OUTFIT_SETS.find((o) => o.id === 'outfits');
+    assert.equal(outfits.count, 650); // 50 x 13
+    // Ghost/skeleton are opt-in, never a hash default
+    for (let i = 0; i < 200; i += 1) {
+      const av = api.defaultAvatar(`user-${i}`);
+      const meta = api.PREMADES.find((p) => p.id === av.premade);
+      assert.ok(meta && !meta.special, `default premade ${av.premade} must not be special`);
+    }
+  });
+
+  it('bakeSheet: row-variant indices select different art (2D catalog addressing)', async () => {
+    const base = {
+      mode: 'layers', body: 'light',
+      hair: { set: 'short', index: 0 },
+      outfit: { set: 'outfits', index: 0 },
+      pants: { index: 0 }, hat: { set: 'none' },
+    };
+    const a = await api.bakeSheet(base);
+    const b = await api.bakeSheet({ ...base, hat: { set: 'hats', index: 107 } });
+    const c = await api.bakeSheet({ ...base, hat: { set: 'hats', index: 7 } });
+    assert.notDeepEqual(a, b, 'row-2 hat variant must change the bake');
+    assert.notDeepEqual(b, c, 'different hat rows must differ');
   });
 
   it('applyBoosterGoldenHeadset sits headset on a premade base (consistent poses)', () => {

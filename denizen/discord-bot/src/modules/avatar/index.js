@@ -12,6 +12,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   AttachmentBuilder,
+  EmbedBuilder,
 } = require('discord.js');
 const { baseEmbed, BRAND, brandFooter } = require('../../core/ui-kit');
 

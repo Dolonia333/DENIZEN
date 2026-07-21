@@ -15,26 +15,26 @@ const BODIES = [
 
 const HAIR_SETS = [
   { id: 'none', label: 'None', count: 0 },
-  { id: 'short', label: 'Short', count: 50, file: 'hair_short.png' },
-  { id: 'long', label: 'Long', count: 50, file: 'hair_long.png' },
+  { id: 'short', label: 'Short', count: 300, file: 'hair_short.png' }, // 50x6 variants
+  { id: 'long', label: 'Long', count: 300, file: 'hair_long.png' }, // 50x6 variants
   { id: 'unique', label: 'Unique', count: 50, file: 'unique_hairstyles.png' },
 ];
 
 const OUTFIT_SETS = [
-  { id: 'outfits', label: 'Outfits', count: 50, file: 'outfits.png' },
-  { id: 'shirt', label: 'Shirts', count: 50, file: 'shirt.png' },
+  { id: 'outfits', label: 'Outfits', count: 650, file: 'outfits.png' }, // 50x13 variants
+  { id: 'shirt', label: 'Shirts', count: 350, file: 'shirt.png' }, // 50x7 variants
   { id: 'jackets', label: 'Jackets', count: 50, file: 'jackets.png' },
   { id: 'apron', label: 'Aprons', count: 50, file: 'apron.png' },
 ];
 
 const HAT_SETS = [
   { id: 'none', label: 'None', count: 0 },
-  { id: 'hats', label: 'Hats', count: 50, file: 'hats.png' },
+  { id: 'hats', label: 'Hats', count: 400, file: 'hats.png' }, // 50x8 variants
   // Server boosters only — rendered with gold tint (see role-cosmetics / bake tint.hat)
   {
     id: 'headsets',
     label: 'Golden headset (Booster)',
-    count: 50,
+    count: 350, // 50x7 variants
     file: 'headsets.png',
     unlock: 'role:booster',
   },
@@ -120,11 +120,13 @@ function filterByUnlock(items, unlocks) {
 }
 
 function defaultAvatar(userId = '') {
-  // Stable premade from user id hash (matches old map behavior)
+  // Stable premade from user id hash (matches old map behavior).
+  // Specials (ghost/skeleton) are opt-in only — never a random default.
   let h = 0;
   const s = String(userId || 'guest');
   for (let i = 0; i < s.length; i += 1) h = (Math.imul(h, 31) + s.charCodeAt(i)) >>> 0;
-  const premade = PREMADES[h % PREMADES.length];
+  const standard = PREMADES.filter((p) => !p.special);
+  const premade = standard[h % standard.length];
   return {
     v: 1,
     mode: 'premade',
@@ -187,10 +189,10 @@ function normalizeAvatar(raw, userId = '') {
     premade,
     body,
     hair: { set: hairSet.id, index: hairIndex },
-    face: clampInt(raw.face ?? base.face, 0, 49),
-    eyes: clampInt(raw.eyes ?? base.eyes, 0, 49),
+    face: clampInt(raw.face ?? base.face, 0, 149), // faces.png 50x3
+    eyes: clampInt(raw.eyes ?? base.eyes, 0, 99), // eyes.png 50x2
     outfit: { set: outfitSet.id, index: outfitIndex },
-    pants: { index: clampInt(raw.pants?.index ?? base.pants.index, 0, 49) },
+    pants: { index: clampInt(raw.pants?.index ?? base.pants.index, 0, 349) }, // pants.png 50x7
     hat: { set: hatSet.id, index: hatIndex, source: hatSource },
     tint: { hair: tintHair, clothes: tintClothes, hat: tintHat, source: tintSource },
     pet,
@@ -227,7 +229,8 @@ function randomAvatar(userId, unlocks = resolveUnlocks()) {
   const hat = hatPool[Math.floor(Math.random() * hatPool.length)] || HAT_SETS[0];
   const tintPool = filterByUnlock(TINTS, unlocks);
   const tintPick = tintPool[Math.floor(Math.random() * tintPool.length)];
-  const premade = PREMADES[Math.floor(Math.random() * PREMADES.length)];
+  const standardPremades = PREMADES.filter((p) => !p.special);
+  const premade = standardPremades[Math.floor(Math.random() * standardPremades.length)];
   const useLayers = Math.random() > 0.35;
   return normalizeAvatar({
     mode: useLayers ? 'layers' : 'premade',

@@ -108,12 +108,20 @@ class AvatarStore {
 
   writePng(userId, buffer) {
     this._ensureDir();
-    fs.writeFileSync(this.pngPath(userId), buffer);
+    // Atomic write (tmp + rename): plain writeFileSync truncates first, so a
+    // concurrent read (another map viewer) could be served a torn PNG.
+    const dest = this.pngPath(userId);
+    const tmp = `${dest}.tmp-${process.pid}`;
+    fs.writeFileSync(tmp, buffer);
+    fs.renameSync(tmp, dest);
   }
 
   writePreview(userId, buffer) {
     this._ensureDir();
-    fs.writeFileSync(this.previewPath(userId), buffer);
+    const dest = this.previewPath(userId);
+    const tmp = `${dest}.tmp-${process.pid}`;
+    fs.writeFileSync(tmp, buffer);
+    fs.renameSync(tmp, dest);
   }
 
   readPreview(userId) {

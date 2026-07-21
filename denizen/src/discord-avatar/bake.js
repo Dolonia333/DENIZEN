@@ -104,27 +104,25 @@ async function loadBodySheet(bodyId) {
 }
 
 /**
- * Extract a style tile: column = style index, row = anim row (clamped).
- * Sheets are catalogs of variants (50 cols × few rows).
+ * Address one variant cell in an accessory catalog sheet.
+ *
+ * Accessory sheets (Hats/, Hairstyles/, Clothing/, Faces…) are 2D VARIANT
+ * CATALOGS — 50 columns × N rows of distinct styles/colors (hats.png rows are
+ * different hats; hair rows are colors; outfit rows are different outfits),
+ * usually plus a 16px label strip that floor() excludes. They are NOT
+ * animation sheets. A style index picks one cell — col = idx % 50,
+ * row = floor(idx / 50) — and that SAME cell must be stamped on every
+ * animation frame; only the body sheet animates. Mapping pose-row → sheet-row
+ * here is what made characters morph per pose ("won't stay one character").
  */
-function extractTile(sheet, styleIndex, animRow, tileW = FRAME, tileH = FRAME) {
+function catalogTile(sheet, styleIndex, tileW = FRAME, tileH = FRAME) {
   const cols = Math.floor(sheet.bitmap.width / tileW);
   const rows = Math.floor(sheet.bitmap.height / tileH);
   if (cols < 1 || rows < 1) return null;
-  const c = ((styleIndex % cols) + cols) % cols;
-  const r = Math.max(0, Math.min(rows - 1, animRow));
+  const i = Math.max(0, Math.floor(Number(styleIndex) || 0));
+  const c = i % cols;
+  const r = Math.min(rows - 1, Math.floor(i / cols));
   return sheet.clone().crop(c * tileW, r * tileH, tileW, tileH);
-}
-
-/**
- * Map full-body anim row (0-13) → accessory catalog row.
- * Catalogs only cover a subset of rows (walk/idle-ish).
- */
-function mapAnimRow(bodyRow, catalogRows) {
-  if (catalogRows <= 1) return 0;
-  // Prefer early rows (walk/idle) for movement; clamp for sit/lie
-  if (bodyRow < catalogRows) return bodyRow;
-  return catalogRows - 1;
 }
 
 async function bakeLayers(avatar) {
@@ -179,44 +177,31 @@ async function bakeLayers(avatar) {
     } catch (_) { /* optional */ }
   }
 
-  const pantsIdx = avatar.pants?.index ?? 0;
-  const outfitIdx = avatar.outfit?.index ?? 0;
-  const faceIdx = avatar.face ?? 0;
-  const eyesIdx = avatar.eyes ?? 0;
-  const hairIdx = avatar.hair?.index ?? 0;
-  const hatIdx = avatar.hat?.index ?? 0;
+  // Resolve each accessory to ONE fixed catalog cell (see catalogTile), tint
+  // once, then stamp that same tile on every animation frame. Only the body
+  // sheet animates — this is what keeps a customized character looking like
+  // the same character in every pose.
+  const overlays = [];
+  const addOverlay = (sheet, styleIndex, tintHex) => {
+    if (!sheet) return;
+    let tile = catalogTile(sheet, styleIndex);
+    if (!tile) return;
+    if (tintHex) tile = applyTint(tile, tintHex);
+    overlays.push(tile);
+  };
+  addOverlay(pantsSheet, avatar.pants?.index ?? 0, avatar.tint?.clothes);
+  addOverlay(outfitSheet, avatar.outfit?.index ?? 0, avatar.tint?.clothes);
+  addOverlay(faceSheet, avatar.face ?? 0, null);
+  addOverlay(eyesSheet, avatar.eyes ?? 0, null);
+  addOverlay(hairSheet, avatar.hair?.index ?? 0, avatar.tint?.hair);
+  // Booster golden headsets use tint.hat (gold); other hats usually untinted
+  addOverlay(hatSheet, avatar.hat?.index ?? 0, avatar.tint?.hat || null);
 
   for (let row = 0; row < ROWS; row += 1) {
     for (let col = 0; col < COLS; col += 1) {
-      const dx = col * FRAME;
-      const dy = row * FRAME;
-
-      const stamp = (sheet, styleIndex, tintHex) => {
-        if (!sheet) return;
-        const catRows = Math.floor(sheet.bitmap.height / FRAME);
-        const ar = mapAnimRow(row, catRows);
-        let tile = extractTile(sheet, styleIndex, ar);
-        if (!tile) return;
-        if (tintHex) tile = applyTint(tile, tintHex);
-        out.composite(tile, dx, dy);
-      };
-
-      stamp(pantsSheet, pantsIdx, avatar.tint?.clothes);
-      stamp(outfitSheet, outfitIdx, avatar.tint?.clothes);
-      // Faces/eyes only need a few rows (expression); reuse row 0-2
-      if (faceSheet) {
-        const fr = Math.min(row, Math.floor(faceSheet.bitmap.height / FRAME) - 1);
-        const tile = extractTile(faceSheet, faceIdx, Math.max(0, fr));
-        if (tile) out.composite(tile, dx, dy);
+      for (const tile of overlays) {
+        out.composite(tile.clone(), col * FRAME, row * FRAME);
       }
-      if (eyesSheet) {
-        const er = Math.min(row, Math.floor(eyesSheet.bitmap.height / FRAME) - 1);
-        const tile = extractTile(eyesSheet, eyesIdx, Math.max(0, er));
-        if (tile) out.composite(tile, dx, dy);
-      }
-      stamp(hairSheet, hairIdx, avatar.tint?.hair);
-      // Booster golden headsets use tint.hat (gold); other hats usually untinted
-      stamp(hatSheet, hatIdx, avatar.tint?.hat || null);
     }
   }
 
@@ -227,7 +212,7 @@ async function bakeLayers(avatar) {
  * Composite a hat/headset layer onto an already-baked full sheet, per frame.
  * Shared by the premade path so booster headsets can sit on a clean premade
  * character (the layered body/hair/outfit path morphs per pose — see
- * loadBodySheet/mapAnimRow notes — so premades must stay premade and only
+ * loadBodySheet/catalogTile notes — so premades must stay premade and only
  * gain the hat overlay).
  */
 async function compositeHat(out, avatar) {
@@ -240,11 +225,8 @@ async function compositeHat(out, avatar) {
   if (!hatSheet) return out;
   const hatIdx = avatar.hat?.index ?? 0;
   const tintHex = avatar.tint?.hat || null;
-  // Hat sheets are style catalogs — columns AND rows are color/style variants
-  // (headsets.png = 50×7 variants), NOT animation poses. Sample ONE tile and
-  // stamp it on every frame; mapping pose row → sheet row made the hat change
-  // color whenever the character sat down or lay down.
-  let tile = extractTile(hatSheet, hatIdx, 0);
+  // One fixed variant cell stamped on every frame — see catalogTile.
+  let tile = catalogTile(hatSheet, hatIdx);
   if (!tile) return out;
   if (tintHex) tile = applyTint(tile, tintHex);
   for (let row = 0; row < ROWS; row += 1) {
@@ -347,11 +329,18 @@ async function bakePreview(avatar, scale = 4) {
 
 /**
  * Ensure store has baked PNG for user; returns avatar + whether baked.
+ *
+ * Order matters: bake FIRST, then write the PNG, then persist the JSON with
+ * its bumped rev. Persisting JSON before a bake that can throw left a broken
+ * on-disk state (rev advertised with a stale/missing PNG), and bumping rev
+ * before writing the PNG let a presence tick advertise ?v=<new rev> while the
+ * old PNG was still being served.
  */
 async function ensureBaked(store, userId, avatar) {
-  const av = store.set(userId, avatar, { bumpRev: true });
-  const png = await bakeSheet(av);
+  const candidate = catalog.normalizeAvatar(avatar, userId);
+  const png = await bakeSheet(candidate);
   store.writePng(userId, png);
+  const av = store.set(userId, candidate, { bumpRev: true });
   try {
     const prev = await bakePreview(av, 4);
     store.writePreview(userId, prev);

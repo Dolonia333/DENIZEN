@@ -5052,12 +5052,21 @@
     ensureCustomSheet(userId, sheetUrl, rev) {
       if (!sheetUrl || !userId) return Promise.resolve(null);
       const key = `custom_${userId}_v${rev || 1}`;
-      if (this.textures.exists(key)) {
-        this.registerSheetAnims(key);
-        return Promise.resolve(key);
-      }
+      // A bad texture/anim registration must degrade to "no custom sheet",
+      // never throw into applyPresence and take the whole map tick down.
+      try {
+        if (this.textures.exists(key)) {
+          this.registerSheetAnims(key);
+          return Promise.resolve(key);
+        }
+      } catch (_) { return Promise.resolve(null); }
       if (!this._sheetLoading) this._sheetLoading = new Map();
       if (this._sheetLoading.has(key)) return this._sheetLoading.get(key);
+      // Negative cache: a failed load (404 / corrupt PNG) stays failed for a
+      // few minutes instead of re-fetching on every 1.5s presence poll.
+      if (!this._sheetFailedAt) this._sheetFailedAt = new Map();
+      const failedAt = this._sheetFailedAt.get(key);
+      if (failedAt && Date.now() - failedAt < 5 * 60 * 1000) return Promise.resolve(null);
 
       const url = /^https?:\/\//i.test(sheetUrl)
         ? sheetUrl
@@ -5065,15 +5074,23 @@
 
       const promise = new Promise((resolve) => {
         let settled = false;
+        let onComplete = null;
+        let onError = null;
         const done = (val) => {
           if (settled) return;
           settled = true;
           this._sheetLoading.delete(key);
+          // Detach both listeners — a once() that never fires (404) leaks one
+          // stale listener per failed attempt on the persistent LoaderPlugin.
+          try { if (onComplete) this.load.off(`filecomplete-spritesheet-${key}`, onComplete); } catch (_) { /* ignore */ }
+          try { if (onError) this.load.off(Phaser.Loader.Events.FILE_LOAD_ERROR, onError); } catch (_) { /* ignore */ }
+          if (val) this._sheetFailedAt.delete(key);
+          else this._sheetFailedAt.set(key, Date.now());
           resolve(val);
         };
         try {
           this.load.spritesheet(key, url, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h });
-          this.load.once(`filecomplete-spritesheet-${key}`, () => {
+          onComplete = () => {
             try {
               if (this.textures.exists(key)) {
                 this.textures.get(key).setFilter(Phaser.Textures.FilterMode.NEAREST);
@@ -5083,10 +5100,12 @@
               }
             } catch (_) { /* fall through */ }
             done(null);
-          });
-          this.load.once(Phaser.Loader.Events.FILE_LOAD_ERROR, (file) => {
+          };
+          onError = (file) => {
             if (file?.key === key) done(null);
-          });
+          };
+          this.load.once(`filecomplete-spritesheet-${key}`, onComplete);
+          this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, onError);
           this.load.start();
           // Safety timeout if neither event fires
           setTimeout(() => done(this.textures.exists(key) ? key : null), 8000);

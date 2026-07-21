@@ -7097,8 +7097,20 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         res.end(JSON.stringify({ ok: false, error: 'cannot edit another Discord user avatar' }));
         return;
       }
-      const plan = avatarApi.resolvePlan(payload.plan || process.env.DENIZEN_SPACES_PLAN);
-      const av = await avatarApi.ensureBaked(store, userId, payload.avatar || payload, { plan });
+      // Plan is resolved SERVER-SIDE only — a client-supplied payload.plan
+      // let any linked user claim 'pro' and bypass the free-tier gates.
+      const plan = avatarApi.resolvePlan(process.env.DENIZEN_SPACES_PLAN);
+      // Sanitize privileged fields a client must not self-assign: unlocks are
+      // derived (roles/events), and role:booster hat/tint provenance can only
+      // be carried over from the previously stored avatar, never minted here.
+      const prev = store.get(userId);
+      const submitted = payload.avatar || payload;
+      const sanitized = { ...submitted, unlocks: prev?.unlocks || [] };
+      if (sanitized.hat && sanitized.hat.source === 'role:booster'
+        && prev?.hat?.source !== 'role:booster') {
+        sanitized.hat = { ...sanitized.hat, source: 'manual' };
+      }
+      const av = await avatarApi.ensureBaked(store, userId, sanitized, { plan });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         ok: true,
