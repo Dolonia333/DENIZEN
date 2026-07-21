@@ -348,6 +348,50 @@ async function ensureBaked(store, userId, avatar) {
   return av;
 }
 
+// ---- On-demand PNG bake: single-flight per user + small global cap ----
+const _bakeInflight = new Map();
+const _bakeWaiters = [];
+let _bakeActive = 0;
+const BAKE_MAX_CONCURRENT = 2;
+
+async function _withBakeSlot(fn) {
+  while (_bakeActive >= BAKE_MAX_CONCURRENT) {
+    await new Promise((resolve) => { _bakeWaiters.push(resolve); });
+  }
+  _bakeActive += 1;
+  try {
+    return await fn();
+  } finally {
+    _bakeActive -= 1;
+    const next = _bakeWaiters.shift();
+    if (next) next();
+  }
+}
+
+/**
+ * Serve-or-bake the full sheet PNG for a user. Returns null when the user has
+ * no saved look (callers 404). Concurrent requests for the same user share
+ * one bake (single-flight), and at most BAKE_MAX_CONCURRENT bakes run at a
+ * time, so a burst of cold requests after a cache clear can't pin the
+ * single-process server's CPU and starve the map for everyone.
+ */
+async function ensurePngOnDemand(store, userId) {
+  const existing = store.readPng(userId);
+  if (existing) return existing;
+  if (!store.hasCustom(userId)) return null;
+  const inflight = _bakeInflight.get(userId);
+  if (inflight) return inflight;
+  const p = _withBakeSlot(async () => {
+    const again = store.readPng(userId);
+    if (again) return again;
+    const buf = await bakeSheet(store.get(userId));
+    try { store.writePng(userId, buf); } catch (_) { /* serve anyway */ }
+    return buf;
+  }).finally(() => { _bakeInflight.delete(userId); });
+  _bakeInflight.set(userId, p);
+  return p;
+}
+
 module.exports = {
   FRAME,
   COLS,
@@ -358,5 +402,6 @@ module.exports = {
   bakeSheet,
   bakePreview,
   ensureBaked,
+  ensurePngOnDemand,
   applyTint,
 };

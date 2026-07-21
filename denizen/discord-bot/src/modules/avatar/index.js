@@ -670,6 +670,9 @@ async function closetPayload(userId, member, av) {
         const draft = getDraft(ctx.user.id, ctx.member);
         // Free: keep premade look; store preferred skin for paid upgrade
         draft.body = body;
+        // Skin tones only render in the layered look — premade art has its
+        // own baked-in skin. Tell the user when this switches their style.
+        const switchedToLayers = feat.paid && draft.mode !== 'layers';
         if (feat.paid) draft.mode = 'layers';
         const roles = avatarApi.detectRoles(ctx.member);
         const saved = await avatarApi.ensureBaked(store, ctx.user.id, draft, {
@@ -680,7 +683,9 @@ async function closetPayload(userId, member, av) {
         drafts.set(ctx.user.id, saved);
         return ctx.reply(
           feat.paid
-            ? `Skin set to **${body}** and saved.`
+            ? `Skin set to **${body}** and saved.${switchedToLayers
+              ? '\nSwitched your look to **custom layers** so the tone shows — style it with `,hair` / `,clothes`, or `/avatar reset` to go back to a premade.'
+              : ''}`
             : `Skin preference **${body}** saved. Free looks use **premade** NPCs — upgrade for custom layers with this skin.`,
         );
       },

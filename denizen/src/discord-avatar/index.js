@@ -37,6 +37,7 @@ module.exports = {
   AvatarStore,
   bakeSheet: bake.bakeSheet,
   bakePreview: bake.bakePreview,
+  ensurePngOnDemand: bake.ensurePngOnDemand,
   ensureBaked,
   premadePath: bake.premadePath,
   detectRoles: roleCosmetics.detectRoles,

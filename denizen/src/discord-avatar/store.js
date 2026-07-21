@@ -44,20 +44,35 @@ class AvatarStore {
     return path.join(this.dir, `${id}.preview.png`);
   }
 
+  /** mtime of the JSON file, or -1 when it doesn't exist. */
+  _jsonMtime(id) {
+    try {
+      return fs.statSync(this._jsonPath(id)).mtimeMs;
+    } catch (_) {
+      return -1;
+    }
+  }
+
   get(userId) {
     const id = String(userId || '').trim();
     if (!id) return null;
-    if (this._mem.has(id)) return this._mem.get(id);
+    // The web server and the discord-bot sidecar are separate PROCESSES
+    // sharing this directory — each has its own store singleton. Cache
+    // entries carry the JSON mtime and are re-read when the file changed on
+    // disk, so a closet save in one process shows up in the other without a
+    // restart (stale rev here = the map cache-busts to an old sheet).
+    const mtime = this._jsonMtime(id);
+    const hit = this._mem.get(id);
+    if (hit && hit.mtime === mtime) return hit.av;
     try {
-      const p = this._jsonPath(id);
-      if (!fs.existsSync(p)) {
+      if (mtime === -1) {
         const def = catalog.defaultAvatar(id);
-        this._mem.set(id, def);
+        this._mem.set(id, { av: def, mtime });
         return def;
       }
-      const raw = JSON.parse(fs.readFileSync(p, 'utf8'));
+      const raw = JSON.parse(fs.readFileSync(this._jsonPath(id), 'utf8'));
       const av = catalog.normalizeAvatar(raw, id);
-      this._mem.set(id, av);
+      this._mem.set(id, { av, mtime });
       return av;
     } catch (_) {
       return catalog.defaultAvatar(id);
@@ -80,7 +95,7 @@ class AvatarStore {
     next.updatedAt = new Date().toISOString();
     this._ensureDir();
     fs.writeFileSync(this._jsonPath(id), JSON.stringify(next, null, 2), 'utf8');
-    this._mem.set(id, next);
+    this._mem.set(id, { av: next, mtime: this._jsonMtime(id) });
     return next;
   }
 
@@ -149,8 +164,8 @@ class AvatarStore {
       out[id] = catalog.clientAvatar(this.get(id), id);
     }
     // also include mem-only defaults that were touched
-    for (const [id, av] of this._mem) {
-      if (!out[id]) out[id] = catalog.clientAvatar(av, id);
+    for (const [id, entry] of this._mem) {
+      if (!out[id]) out[id] = catalog.clientAvatar(entry.av, id);
     }
     return out;
   }

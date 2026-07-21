@@ -7044,16 +7044,13 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         return;
       }
       if (req.method === 'GET' && asPng) {
-        let buf = store.readPng(userId);
+        // Single-flight + capped concurrency — a burst of cold requests
+        // (e.g. after a cache clear) shares bakes instead of pinning the CPU.
+        const buf = await avatarApi.ensurePngOnDemand(store, userId);
         if (!buf) {
-          if (!store.hasCustom(userId)) {
-            res.writeHead(404, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ ok: false, error: 'custom avatar not found' }));
-            return;
-          }
-          const av = store.get(userId);
-          buf = await avatarApi.bakeSheet(av);
-          try { store.writePng(userId, buf); } catch (_) { /* ignore */ }
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'custom avatar not found' }));
+          return;
         }
         res.writeHead(200, {
           'Content-Type': 'image/png',

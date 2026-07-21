@@ -241,7 +241,9 @@ function createPresenceServer({
               const deafened = !!(m?.deafened);
               const live = !soft && !muted && !deafened && !m?.suppressed;
               let boosted = !!(m?.boosted);
-              if (!boosted && avatar?.unlocks?.includes?.('role:booster')) boosted = true;
+              // unlocks live on the RAW avatar — clientAvatar strips them, so
+              // checking avatar.unlocks here was always false.
+              if (!boosted && rawAv?.unlocks?.includes?.('role:booster')) boosted = true;
               if (!boosted && avatar?.hat?.source === 'role:booster') boosted = true;
               let pet = null;
               if (userAllowsCompanion(gidEarly, userId, entitledSet)) {
@@ -398,17 +400,12 @@ async function handleAvatar(req, res, url, avatarApi) {
   }
 
   if (req.method === 'GET' && asPng) {
-    let buf = store.readPng(userId);
+    // Bake on demand — single-flight per user with a global concurrency cap.
+    const buf = await avatarApi.ensurePngOnDemand(store, userId);
     if (!buf) {
-      if (!store.hasCustom(userId)) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: false, error: 'custom avatar not found' }));
-        return;
-      }
-      // Bake on demand from a stored custom config.
-      const av = store.get(userId);
-      buf = await avatarApi.bakeSheet(av);
-      try { store.writePng(userId, buf); } catch (_) { /* ignore */ }
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'custom avatar not found' }));
+      return;
     }
     res.writeHead(200, {
       'Content-Type': 'image/png',

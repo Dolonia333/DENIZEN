@@ -154,6 +154,37 @@ describe('discord-avatar', () => {
     assert.ok(avatar.unlocks.includes('role:booster'));
   });
 
+  it('store: a write from another process (second store, same dir) is seen without restart', () => {
+    // The web server and bot sidecar each hold their own AvatarStore on the
+    // same directory — simulate with two instances.
+    const storeA = new api.AvatarStore({ dir });
+    const storeB = new api.AvatarStore({ dir });
+    storeA.set('crossproc', { mode: 'premade', premade: 'npc_m3' });
+    assert.equal(storeB.get('crossproc').premade, 'npc_m3'); // first read
+    // "Process A" saves a new look; B's mem cache must invalidate via mtime.
+    const bumped = storeA.set('crossproc', { mode: 'premade', premade: 'npc_f5' });
+    // Ensure mtime actually differs even on coarse filesystem clocks
+    const p = path.join(dir, 'crossproc.json');
+    fs.utimesSync(p, new Date(), new Date(Date.now() + 2000));
+    const seen = storeB.get('crossproc');
+    assert.equal(seen.premade, 'npc_f5');
+    assert.equal(seen.rev, bumped.rev);
+  });
+
+  it('ensurePngOnDemand: single-flight shares one bake, 404s for unsaved users', async () => {
+    const storeX = new api.AvatarStore({ dir });
+    assert.equal(await api.ensurePngOnDemand(storeX, '424242424242'), null); // no saved look
+    storeX.set('777', { mode: 'premade', premade: 'npc_m4' });
+    const [a, b, c] = await Promise.all([
+      api.ensurePngOnDemand(storeX, '777'),
+      api.ensurePngOnDemand(storeX, '777'),
+      api.ensurePngOnDemand(storeX, '777'),
+    ]);
+    assert.ok(Buffer.isBuffer(a) && a.length > 1000);
+    assert.ok(a.equals(b) && b.equals(c), 'concurrent requests share one result');
+    assert.ok(storeX.hasPng('777'), 'png persisted');
+  });
+
   it('catalog counts expose full 2D variant ranges and defaults never pick specials', () => {
     const hats = api.HAT_SETS.find((h) => h.id === 'hats');
     assert.equal(hats.count, 400); // 50 cols x 8 rows
