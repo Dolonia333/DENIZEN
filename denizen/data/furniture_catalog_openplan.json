@@ -14414,603 +14414,1001 @@
       "id": "ac_unit_small",
       "instanceId": "editor_ac_unit_small_1",
       "x": 132,
-      "y": 64
+      "y": 64,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_divider_full",
       "instanceId": "editor_cubicle_divider_full_3",
       "x": 528,
-      "y": 204
+      "y": 204,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_divider_full",
       "instanceId": "editor_cubicle_divider_full_5",
       "x": 532,
-      "y": 352
+      "y": 352,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_6",
       "x": 168,
-      "y": 196
+      "y": 196,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_7",
       "x": 264,
-      "y": 196
+      "y": 196,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_8",
       "x": 496,
-      "y": 204
+      "y": 204,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_9",
       "x": 588,
-      "y": 204
+      "y": 204,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_10",
       "x": 168,
-      "y": 364
+      "y": 364,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_11",
       "x": 268,
-      "y": 364
+      "y": 364,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_12",
       "x": 496,
-      "y": 352
+      "y": 352,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_front",
       "instanceId": "editor_cubicle_desk_front_13",
       "x": 592,
-      "y": 352
+      "y": 352,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_14",
       "x": 496,
-      "y": 288
+      "y": 288,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_15",
       "x": 592,
-      "y": 288
+      "y": 288,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_divider_full",
       "instanceId": "editor_cubicle_divider_full_16",
       "x": 204,
-      "y": 352
+      "y": 352,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_17",
       "x": 168,
-      "y": 288
+      "y": 288,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_18",
       "x": 268,
-      "y": 288
+      "y": 288,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_divider_full",
       "instanceId": "editor_cubicle_divider_full_19",
       "x": 200,
-      "y": 192
+      "y": 192,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_20",
       "x": 588,
-      "y": 140
+      "y": 140,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_21",
       "x": 264,
-      "y": 128
+      "y": 128,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_22",
       "x": 164,
-      "y": 128
+      "y": 128,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk_back",
       "instanceId": "editor_cubicle_desk_back_23",
       "x": 496,
-      "y": 140
+      "y": 140,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "desk_setup_monitors",
       "instanceId": "editor_desk_setup_monitors_25",
       "x": 500,
-      "y": 352
+      "y": 352,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "desk_setup_monitors",
       "instanceId": "editor_desk_setup_monitors_26",
       "x": 596,
-      "y": 352
+      "y": 352,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "desk_setup_laptop_phone",
       "instanceId": "editor_desk_setup_laptop_phone_27",
       "x": 264,
-      "y": 196
+      "y": 196,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "desk_setup_laptop",
       "instanceId": "editor_desk_setup_laptop_28",
-      "x": 508,
-      "y": 204
+      "x": 496,
+      "y": 186,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false,
+      "parentInstanceId": "editor_cubicle_desk_front_8",
+      "parent_offset_y": -18
     },
     {
       "id": "desk_setup_monitors_alt",
       "instanceId": "editor_desk_setup_monitors_alt_29",
       "x": 168,
-      "y": 200
+      "y": 200,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "desk_setup_monitors",
       "instanceId": "editor_desk_setup_monitors_30",
       "x": 272,
-      "y": 364
+      "y": 364,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "desk_setup_laptop",
       "instanceId": "editor_desk_setup_laptop_31",
       "x": 172,
-      "y": 364
+      "y": 364,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "laptop_front_left",
       "instanceId": "editor_laptop_front_left_33",
       "x": 560,
-      "y": 208
+      "y": 208,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "money_small",
       "instanceId": "editor_money_small_34",
       "x": 600,
-      "y": 204
+      "y": 204,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "plant_potted",
       "instanceId": "editor_plant_potted_35",
       "x": 68,
-      "y": 140
+      "y": 140,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "plant_spikey",
       "instanceId": "editor_plant_spikey_36",
       "x": 68,
-      "y": 332
+      "y": 332,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "pop_art_sheet",
       "instanceId": "editor_pop_art_sheet_37",
       "x": 1046,
-      "y": 80
+      "y": 80,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_39",
       "x": 492,
-      "y": 280
+      "y": 280,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_40",
       "x": 496,
-      "y": 136
+      "y": 136,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_41",
       "x": 584,
-      "y": 136
+      "y": 136,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_42",
       "x": 260,
-      "y": 124
+      "y": 124,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_43",
       "x": 164,
-      "y": 124
+      "y": 124,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_44",
       "x": 588,
-      "y": 280
+      "y": 280,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_50",
       "x": 492,
-      "y": 232
+      "y": 232,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_52",
       "x": 164,
-      "y": 396
+      "y": 396,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_orange_back_no_holes",
       "instanceId": "editor_chair_orange_back_no_holes_53",
       "x": 580,
-      "y": 228
+      "y": 228,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_holes",
       "instanceId": "editor_chair_black_back_holes_54",
       "x": 264,
-      "y": 396
+      "y": 396,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front",
       "instanceId": "editor_chair_black_front_55",
       "x": 168,
-      "y": 284
+      "y": 284,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front",
       "instanceId": "editor_chair_black_front_56",
       "x": 264,
-      "y": 284
+      "y": 284,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_holes",
       "instanceId": "editor_chair_black_back_holes_57",
       "x": 596,
-      "y": 392
+      "y": 392,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_holes",
       "instanceId": "editor_chair_black_back_holes_58",
       "x": 496,
-      "y": 384
+      "y": 384,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "right_corner_sofa",
       "instanceId": "editor_right_corner_sofa_59",
       "x": 948,
-      "y": 140
+      "y": 140,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "sofa_2person",
       "instanceId": "editor_sofa_2person_60",
       "x": 1016,
-      "y": 112
+      "y": 112,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "sofa_2person",
       "instanceId": "editor_sofa_2person_61",
       "x": 1076,
-      "y": 112
+      "y": 112,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk",
       "instanceId": "editor_cubicle_desk_63",
       "x": 1188,
-      "y": 124
+      "y": 124,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "desk_setup_monitors",
       "instanceId": "editor_desk_setup_monitors_64",
       "x": 1192,
-      "y": 124
+      "y": 124,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_orange_back_no_holes",
       "instanceId": "editor_chair_orange_back_no_holes_66",
       "x": 1188,
-      "y": 164
+      "y": 164,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "money_large",
       "instanceId": "editor_money_large_67",
       "x": 1216,
-      "y": 256
+      "y": 256,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "money_medium",
       "instanceId": "editor_money_medium_68",
       "x": 1044,
-      "y": 132
+      "y": 132,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "money_small",
       "instanceId": "editor_money_small_69",
       "x": 928,
-      "y": 168
+      "y": 168,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "money_large",
       "instanceId": "editor_money_large_71",
       "x": 1220,
-      "y": 236
+      "y": 236,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "box_desk",
       "instanceId": "editor_box_desk_72",
       "x": 1020,
-      "y": 604
+      "y": 604,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_side_left",
       "instanceId": "editor_chair_black_side_left_73",
       "x": 1084,
-      "y": 580
+      "y": 580,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_side_right",
       "instanceId": "editor_chair_black_side_right_74",
       "x": 956,
-      "y": 584
+      "y": 584,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_75",
       "x": 996,
-      "y": 528
+      "y": 528,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_front_holes",
       "instanceId": "editor_chair_black_front_holes_76",
       "x": 1044,
-      "y": 528
+      "y": 528,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_78",
       "x": 996,
-      "y": 640
+      "y": 640,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_79",
       "x": 1044,
-      "y": 640
+      "y": 640,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "coffee_machine",
       "instanceId": "editor_coffee_machine_80",
-      "x": 464,
-      "y": 548
+      "x": 515,
+      "y": 537,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk",
       "instanceId": "editor_cubicle_desk_81",
       "x": 980,
-      "y": 404
+      "y": 404,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk",
       "instanceId": "editor_cubicle_desk_82",
       "x": 1168,
-      "y": 404
+      "y": 404,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_orange_front_holes",
       "instanceId": "editor_chair_orange_front_holes_83",
       "x": 1168,
-      "y": 368
+      "y": 368,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_orange_front_holes",
       "instanceId": "editor_chair_orange_front_holes_84",
       "x": 980,
-      "y": 368
+      "y": 368,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_87",
       "x": 960,
-      "y": 432
+      "y": 432,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_88",
       "x": 996,
-      "y": 432
+      "y": 432,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_89",
       "x": 1148,
-      "y": 436
+      "y": 436,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_no_holes",
       "instanceId": "editor_chair_black_back_no_holes_90",
       "x": 1188,
-      "y": 436
+      "y": 436,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_side_left",
       "instanceId": "editor_chair_black_side_left_91",
       "x": 1228,
-      "y": 408
+      "y": 408,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "right_corner_sofa",
       "instanceId": "editor_right_corner_sofa_93",
-      "x": 100,
-      "y": 576
+      "x": 72,
+      "y": 577,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "sofa_2person",
       "instanceId": "editor_sofa_2person_94",
-      "x": 150,
-      "y": 620
+      "x": 176,
+      "y": 545,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cert_2",
       "instanceId": "editor_cert_2_95",
-      "x": 172,
-      "y": 504
+      "x": 165,
+      "y": 489,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "waiting_row_4",
       "instanceId": "editor_waiting_row_4_96",
       "x": 712,
-      "y": 548
+      "y": 548,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "water_dispenser",
       "instanceId": "editor_water_dispenser_97",
-      "x": 360,
-      "y": 548
+      "x": 413,
+      "y": 550,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "vending_full",
       "instanceId": "editor_vending_full_98",
-      "x": 416,
-      "y": 548
+      "x": 463,
+      "y": 547,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "trash_can",
       "instanceId": "editor_trash_can_99",
-      "x": 322,
-      "y": 552
+      "x": 257,
+      "y": 553,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "plant_spikey",
       "instanceId": "editor_plant_spikey_101",
-      "x": 62,
-      "y": 500
+      "x": 131,
+      "y": 541,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cubicle_desk",
       "instanceId": "editor_cubicle_desk_102",
-      "x": 172,
-      "y": 616
+      "x": 137,
+      "y": 610,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "bookshelf_short",
       "instanceId": "editor_bookshelf_short_104",
       "x": 308,
-      "y": 108
+      "y": 108,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "bookshelf_short",
       "instanceId": "editor_bookshelf_short_106",
       "x": 812,
-      "y": 552
+      "y": 552,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "bookshelf_short",
       "instanceId": "editor_bookshelf_short_107",
       "x": 808,
-      "y": 124
+      "y": 124,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_holes",
       "instanceId": "editor_chair_black_back_holes_1",
       "x": 168,
-      "y": 224
+      "y": 224,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_holes",
       "instanceId": "editor_chair_black_back_holes_2",
       "x": 264,
-      "y": 224
+      "y": 224,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "chair_black_back_holes",
       "instanceId": "editor_chair_black_back_holes_4",
       "x": 1188,
-      "y": 560
+      "y": 560,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "shelf_wood_dark",
       "instanceId": "north_shelf_1",
       "x": 200,
       "y": 72,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "whiteboard_line_chart",
       "instanceId": "north_wb_line_1",
       "x": 248,
       "y": 88,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "frame_diploma_blue",
       "instanceId": "north_diploma_1",
       "x": 340,
       "y": 72,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "whiteboard_pie_chart",
       "instanceId": "north_wb_pie_1",
       "x": 468,
       "y": 88,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "whiteboard_markers",
       "instanceId": "north_wb_markers_1",
       "x": 540,
       "y": 84,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cert_1",
       "instanceId": "north_cert_1",
       "x": 600,
       "y": 76,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "gold_cert_sheet",
       "instanceId": "north_gold_cert_1",
       "x": 656,
       "y": 80,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "cork_board_sheet",
       "instanceId": "north_cork_1",
       "x": 720,
       "y": 88,
-      "wallMount": true
+      "wallMount": true,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "printer_large_sheet",
       "instanceId": "north_printer_1",
       "x": 700,
-      "y": 140
+      "y": 140,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     },
     {
       "id": "plant_floor_bushy",
       "instanceId": "north_plant_1",
       "x": 952,
-      "y": 124
+      "y": 124,
+      "rotation": 0,
+      "scale": 1,
+      "flipX": false,
+      "flipY": false
     }
   ]
 }
