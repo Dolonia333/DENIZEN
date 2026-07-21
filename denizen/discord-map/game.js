@@ -3713,11 +3713,15 @@
         : Math.floor((bw - 32 - gap) / cols);
       const minRoomH = 84;
       const doorStrip = 54;
-      // Per-row heights: base 84, +14px per occupant beyond the first, cap
-      // 150. In two-column layouts a row is as tall as its busiest room.
-      const desiredH = (ch) => Phaser.Math.Clamp(
-        minRoomH + Math.max(0, occOf(ch) - 1) * 14, minRoomH, 150,
-      );
+      // Single-floor rooms stay snug (84–98px — the size small rooms read
+      // best at). A 6+ crowd earns a real second storey: double-height room
+      // with a loft platform + ladder instead of one stretched box.
+      const LOFT_OCC = 6;
+      const desiredH = (ch) => {
+        const occ = occOf(ch);
+        if (occ >= LOFT_OCC) return 162;
+        return Phaser.Math.Clamp(minRoomH + Math.max(0, occ - 1) * 6, minRoomH, 98);
+      };
       const rowHeights = [];
       for (let r = 0; r < rows; r += 1) {
         let h = minRoomH;
@@ -3777,20 +3781,43 @@
         const label = isPlaceholder ? '' : this.roomDisplayLabel(channels[idx]);
         const fill = isPlaceholder ? 0xc2c6e6 : this.roomWallColor(roomKey, channels[idx]?.id);
 
+        const occ = isPlaceholder ? 0 : occOf(channels[idx]);
+        const hasLoft = !isPlaceholder && occ >= LOFT_OCC;
+        // Loft platform surface — upper storey of a packed room.
+        const loftY = hasLoft ? y0 + Math.floor(h * 0.52) : 0;
+
         this.cutawayRoom(g, x0, y0, roomW, h, fill, () => {
           if (!isPlaceholder) {
             const floor = y0 + h - 2;
-            const occ = occOf(channels[idx]);
+            // Furniture dresses the LOWER storey; the loft stays open deck.
             this.decorateRoom(channels[idx], x0, y0, roomW, h, floor, {
               clearXf: 0.14,
               roomKey: isPlaceholder ? undefined : chKey(channels[idx].id),
               occupants: occ,
             });
-            // Stand slots scale with the crowd so people spread out instead
-            // of piling on the same four spots.
-            this.addRoomSlots(roomKey, this.slotPointsForRoom(
-              x0, roomW, floor, Math.max(4, Math.min(10, occ + 2)),
-            ));
+            if (hasLoft) {
+              // Wood platform band across the full room width (full-width so
+              // anyone wandering at loft height is always standing on it).
+              const pg = this.add.graphics().setDepth(22);
+              pg.fillStyle(0x6b4a2c, 1);
+              pg.fillRect(x0 + 2, loftY - 5, roomW - 4, 7);
+              pg.fillStyle(0x9a7040, 1);
+              pg.fillRect(x0 + 2, loftY - 5, roomW - 4, 2);
+              // Crowd splits across both storeys.
+              const lower = this.slotPointsForRoom(
+                x0, roomW, floor, Math.max(3, Math.ceil((occ + 2) / 2)),
+              );
+              const upper = this.slotPointsForRoom(
+                x0, roomW, loftY - 3, Math.max(3, Math.floor((occ + 2) / 2)),
+              );
+              this.addRoomSlots(roomKey, [...lower, ...upper]);
+            } else {
+              // Stand slots scale with the crowd so people spread out instead
+              // of piling on the same four spots.
+              this.addRoomSlots(roomKey, this.slotPointsForRoom(
+                x0, roomW, floor, Math.max(4, Math.min(8, occ + 2)),
+              ));
+            }
           }
         });
 
@@ -3807,6 +3834,25 @@
             maxX: x0 + roomW - 10,
             label,
           });
+          if (hasLoft) {
+            // The loft is a real walkable floor with a ladder — same climb
+            // grammar as themed buildings' storeys/rooftops.
+            const loftId = `${roomKey}__loft`;
+            this.registerFloor({
+              id: loftId,
+              roomKey: loftId,
+              floorY: loftY - 2,
+              minX: x0 + 10,
+              maxX: x0 + roomW - 10,
+              label: `${label} · loft`,
+            });
+            const laneX = x0 + Math.max(22, roomW * 0.18);
+            this.markClimbDoor(laneX, roomKey);
+            this.markClimbDoor(laneX, loftId);
+            this.registerStairs({
+              x: laneX, fromFloorId: roomKey, toFloorId: loftId, radius: 28,
+            });
+          }
         }
 
         if (idx === 0 && !isPlaceholder) {
