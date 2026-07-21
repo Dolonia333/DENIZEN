@@ -1433,9 +1433,15 @@ class OfficeScene extends Phaser.Scene {
       ? `/api/layout?session_id=${encodeURIComponent(layoutSid)}`
       : '/api/layout';
 
-    const spawnLayoutExtras = (saved) => {
+    const spawnLayoutExtras = (saved, attempt = 0) => {
       const items = saved?.items;
-      if (!Array.isArray(items) || !items.length || !window.DenizenLiveFurniture?.spawn) return;
+      if (!Array.isArray(items) || !items.length) return;
+      // DenizenLiveFurniture is defined by the editor tail closure, which
+      // boots on a retry loop — wait for it instead of dropping NPC items.
+      if (!window.DenizenLiveFurniture?.spawn) {
+        if (attempt < 40) setTimeout(() => spawnLayoutExtras(saved, attempt + 1), 300);
+        return;
+      }
       items.forEach((item) => {
         const placement = item.prefabId
           ? {
@@ -4063,8 +4069,16 @@ startOfficeWhenPhaserReady();
 // ========== DRAG & DROP EDITOR MODE ==========
 // Editor: Ctrl+Shift+E (or Cmd+Shift+E on Mac). Never plain E — that letter is
 // needed for chat / forms / spelling. ?editor=1 still auto-opens the editor.
-(function() {
-  if (typeof Phaser === 'undefined' || !window.game) return;
+(function editorBoot() {
+  // The game boots asynchronously (Phaser CDN + boot function), so this tail
+  // IIFE can parse BEFORE window.game exists. Bailing permanently here left
+  // the map editor AND window.DenizenLiveFurniture undefined whenever the
+  // race lost — which is why NPC-placed furniture never rendered. Retry
+  // until the game is up instead.
+  if (typeof Phaser === 'undefined' || !window.game) {
+    setTimeout(editorBoot, 250);
+    return;
+  }
   const DOUBLE_CLICK_MS = 260;
   const WALL_MULTI_CLICK_MS = 420;
   const WALL_LAYER_ORDER = ['all', 'bands', 'sides', 'joints'];
@@ -7000,11 +7014,38 @@ startOfficeWhenPhaserReady();
     try { obstacle.destroy(); } catch (_) {}
   }
 
+  // NPC placements (POST /api/place-furniture) use the server's whitelist ids
+  // (desk_2x2, office_chair, …) which are NOT catalog object ids — without
+  // this translation every NPC-placed item silently rendered as nothing.
+  // rug/phone_booth/standing_desk have no catalog art; nearest stand-ins.
+  const NPC_PREFAB_ALIASES = {
+    desk_small: 'box_desk',
+    desk_2x2: 'cubicle_desk',
+    office_chair: 'chair_black_back',
+    monitor: 'monitor_dual_sheet',
+    plant_small: 'plant_potted',
+    plant_large: 'plant_floor_leafy',
+    whiteboard: 'whiteboard_1x2',
+    bookshelf: 'bookshelf_short',
+    coffee_machine: 'coffee_machine',
+    water_cooler: 'water_cooler',
+    couch: 'sofa_2person',
+    rug: 'floor_tile_beige',
+    standing_desk: 'cubicle_desk_front',
+    phone_booth: 'shelf_metal_empty',
+    meeting_table: 'table_wood_long',
+  };
+
   function makePlacementSprite(scene, placement) {
     const catalog = getCatalog(scene);
-    const def = catalog?.objects?.[placement.id];
+    let defId = placement.id;
+    let def = catalog?.objects?.[defId];
+    if (!def && NPC_PREFAB_ALIASES[defId]) {
+      defId = NPC_PREFAB_ALIASES[defId];
+      def = catalog?.objects?.[defId];
+    }
     if (!def) return null;
-    const texKey = ensureCatalogTexture(scene, placement.id, def);
+    const texKey = ensureCatalogTexture(scene, defId, def);
     if (!texKey) return null;
 
     const isChild = !!placement.parentInstanceId;

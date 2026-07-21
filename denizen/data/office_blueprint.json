@@ -59,7 +59,7 @@
       "w": 1280,
       "h": 720,
       "tex": "floor_rb_office",
-      "note": "Light grey underlay — GIF main floor"
+      "note": "Full-room underlay"
     },
     {
       "id": "open_office",
@@ -67,26 +67,23 @@
       "y": 64,
       "w": 816,
       "h": 384,
-      "tex": "floor_rb_office",
-      "note": "Main bullpen — light grey grid (ends at center divider x=848)"
+      "tex": "floor_rb_office"
     },
     {
       "id": "manager_office",
-      "x": 848,
+      "x": 880,
       "y": 64,
-      "w": 400,
+      "w": 368,
       "h": 192,
-      "tex": "floor_rb_wood",
-      "note": "Right wing above CEO wall — wood, flush to center divider"
+      "tex": "floor_rb_wood"
     },
     {
       "id": "conference_supply",
-      "x": 848,
+      "x": 880,
       "y": 320,
-      "w": 400,
-      "h": 192,
-      "tex": "floor_rb_wood",
-      "note": "Right wing below CEO wall — same wood (no grey seam)"
+      "w": 368,
+      "h": 128,
+      "tex": "floor_rb_dark"
     },
     {
       "id": "break_room",
@@ -94,8 +91,7 @@
       "y": 512,
       "w": 256,
       "h": 144,
-      "tex": "floor_rb_wood",
-      "note": "Lower suite — wood planks like GIF"
+      "tex": "floor_rb_wood"
     },
     {
       "id": "reception",
@@ -103,16 +99,15 @@
       "y": 512,
       "w": 464,
       "h": 144,
-      "tex": "floor_rb_wood",
-      "note": "Lower suite — wood planks like GIF"
+      "tex": "floor_rb_office"
     },
     {
       "id": "south_east",
-      "x": 848,
+      "x": 880,
       "y": 512,
-      "w": 400,
+      "w": 368,
       "h": 144,
-      "tex": "floor_rb_wood"
+      "tex": "floor_rb_dark"
     }
   ],
   "walls": {
@@ -155,14 +150,20 @@
       {
         "instanceId": "wall_div_v_center",
         "type": "v",
-        "label": "Center divider (manager + conference doors)",
+        "label": "Center divider",
         "x": 848,
         "startY": 64,
         "endY": 656,
         "shadowSide": "right",
         "doorGaps": [
-          [160, 240],
-          [352, 448]
+          [
+            160,
+            240
+          ],
+          [
+            352,
+            448
+          ]
         ]
       },
       {
@@ -173,8 +174,14 @@
         "y": 448,
         "endX": 848,
         "doorGaps": [
-          [288, 384],
-          [560, 656]
+          [
+            288,
+            384
+          ],
+          [
+            560,
+            656
+          ]
         ],
         "face": "brick"
       },
@@ -186,12 +193,15 @@
         "y": 256,
         "endX": 1248,
         "doorGaps": [
-          [1000, 1096]
+          [
+            1000,
+            1096
+          ]
         ]
       }
     ],
     "info": {
-      "purpose": "Hand-editable openplan wall layout. Perimeter = full-width top/bottom bands (continuous trim). Side segments = plain face only.",
+      "purpose": "Openplan walls. Lavender main walls; tan brick on lower-room back wall. No RB T-junction sprites.",
       "tileSize": 32,
       "worldSize": {
         "w": 1280,
@@ -281,11 +291,12 @@
   ],
   "furniture": {
     "catalogFile": "data/furniture_catalog_openplan.json",
-    "placementCount": 89,
+    "placementCount": 99,
     "uniquePrefabIds": [
       "ac_unit_small",
       "bookshelf_short",
       "box_desk",
+      "cert_1",
       "cert_2",
       "chair_black_back_holes",
       "chair_black_back_no_holes",
@@ -296,6 +307,7 @@
       "chair_orange_back_no_holes",
       "chair_orange_front_holes",
       "coffee_machine",
+      "cork_board_sheet",
       "cubicle_desk",
       "cubicle_desk_back",
       "cubicle_desk_front",
@@ -304,19 +316,27 @@
       "desk_setup_laptop_phone",
       "desk_setup_monitors",
       "desk_setup_monitors_alt",
+      "frame_diploma_blue",
+      "gold_cert_sheet",
       "laptop_front_left",
       "money_large",
       "money_medium",
       "money_small",
+      "plant_floor_bushy",
       "plant_potted",
       "plant_spikey",
       "pop_art_sheet",
+      "printer_large_sheet",
       "right_corner_sofa",
+      "shelf_wood_dark",
       "sofa_2person",
       "trash_can",
       "vending_full",
       "waiting_row_4",
-      "water_dispenser"
+      "water_dispenser",
+      "whiteboard_line_chart",
+      "whiteboard_markers",
+      "whiteboard_pie_chart"
     ],
     "placements": [
       {
@@ -772,8 +792,8 @@
       {
         "id": "sofa_2person",
         "instanceId": "editor_sofa_2person_94",
-        "x": 252,
-        "y": 548
+        "x": 150,
+        "y": 620
       },
       {
         "id": "cert_2",
@@ -808,8 +828,8 @@
       {
         "id": "plant_spikey",
         "instanceId": "editor_plant_spikey_101",
-        "x": 212,
-        "y": 532
+        "x": 62,
+        "y": 500
       },
       {
         "id": "cubicle_desk",
@@ -852,6 +872,74 @@
         "instanceId": "editor_chair_black_back_holes_4",
         "x": 1188,
         "y": 560
+      },
+      {
+        "id": "shelf_wood_dark",
+        "instanceId": "north_shelf_1",
+        "x": 200,
+        "y": 72,
+        "wallMount": true
+      },
+      {
+        "id": "whiteboard_line_chart",
+        "instanceId": "north_wb_line_1",
+        "x": 248,
+        "y": 88,
+        "wallMount": true
+      },
+      {
+        "id": "frame_diploma_blue",
+        "instanceId": "north_diploma_1",
+        "x": 340,
+        "y": 72,
+        "wallMount": true
+      },
+      {
+        "id": "whiteboard_pie_chart",
+        "instanceId": "north_wb_pie_1",
+        "x": 468,
+        "y": 88,
+        "wallMount": true
+      },
+      {
+        "id": "whiteboard_markers",
+        "instanceId": "north_wb_markers_1",
+        "x": 540,
+        "y": 84,
+        "wallMount": true
+      },
+      {
+        "id": "cert_1",
+        "instanceId": "north_cert_1",
+        "x": 600,
+        "y": 76,
+        "wallMount": true
+      },
+      {
+        "id": "gold_cert_sheet",
+        "instanceId": "north_gold_cert_1",
+        "x": 656,
+        "y": 80,
+        "wallMount": true
+      },
+      {
+        "id": "cork_board_sheet",
+        "instanceId": "north_cork_1",
+        "x": 720,
+        "y": 88,
+        "wallMount": true
+      },
+      {
+        "id": "printer_large_sheet",
+        "instanceId": "north_printer_1",
+        "x": 700,
+        "y": 140
+      },
+      {
+        "id": "plant_floor_bushy",
+        "instanceId": "north_plant_1",
+        "x": 760,
+        "y": 132
       }
     ]
   },
