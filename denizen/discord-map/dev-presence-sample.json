@@ -1,0 +1,34 @@
+{
+  "ok": true,
+  "ts": 0,
+  "guildId": "dev-fixture",
+  "guildName": "Layout Fixture",
+  "categories": [
+    { "id": "catv", "name": "Voice Lounge", "position": 0 },
+    { "id": "catt", "name": "Text Channels", "position": 1 }
+  ],
+  "rooms": [
+    { "id": "vc-empty", "name": "empty-vc", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 0, "occupants": [] },
+    { "id": "vc-duo", "name": "duo-hangout", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 2, "occupants": ["t1", "t2"] },
+    { "id": "vc-squad", "name": "squad-room", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 4, "occupants": ["t3", "t4", "t5", "t6"] },
+    { "id": "vc-party", "name": "party-vc", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 8, "occupants": ["t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14"] },
+    { "id": "tx-general", "name": "general", "type": "text", "categoryId": "catt", "categoryName": "Text Channels", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-memes", "name": "memes", "type": "text", "categoryId": "catt", "categoryName": "Text Channels", "occupantCount": 0, "occupants": [] }
+  ],
+  "people": [
+    { "userId": "t1", "displayName": "Ava", "channelId": "vc-duo", "channelName": "duo-hangout", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t2", "displayName": "Ben", "channelId": "vc-duo", "channelName": "duo-hangout", "channelType": "voice", "soft": false, "muted": true, "deafened": false, "live": false },
+    { "userId": "t3", "displayName": "Cy", "channelId": "vc-squad", "channelName": "squad-room", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t4", "displayName": "Dee", "channelId": "vc-squad", "channelName": "squad-room", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t5", "displayName": "Eli", "channelId": "vc-squad", "channelName": "squad-room", "channelType": "voice", "soft": false, "muted": true, "deafened": false, "live": false },
+    { "userId": "t6", "displayName": "Fay", "channelId": "vc-squad", "channelName": "squad-room", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t7", "displayName": "Gus", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t8", "displayName": "Hana", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t9", "displayName": "Ivy", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": true, "deafened": false, "live": false },
+    { "userId": "t10", "displayName": "Jax", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t11", "displayName": "Kit", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": false, "deafened": true, "live": false },
+    { "userId": "t12", "displayName": "Lou", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t13", "displayName": "Mia", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
+    { "userId": "t14", "displayName": "Noa", "channelId": "vc-party", "channelName": "party-vc", "channelType": "voice", "soft": false, "muted": true, "deafened": false, "live": false }
+  ]
+}

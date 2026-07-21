@@ -2013,8 +2013,8 @@
 
         if (decision.kind === 'voice') {
           if (!voiceChans.length) continue;
-          const bw = 290;
-          this.drawVoiceBuilding(x, this.groundY, voiceChans, catLabel);
+          const built = this.drawVoiceBuilding(x, this.groundY, voiceChans, catLabel);
+          const bw = built?.bw || 290;
           this.buildings.push({ left: x, right: x + bw, kind: 'voice', channels: voiceChans, label: catLabel });
           paintSection(x, bw);
           x = advanceStreet(x, bw, `voice-${cat.id}`);
@@ -3681,16 +3681,30 @@
     }
 
     slotPointsForRoom(x0, w, floorY, count = 3) {
+      // Spread slots evenly inside the room's walkable band (the old fixed
+      // 28px stride overflowed narrow rooms past their right wall) and fold
+      // big counts into extra depth rows so crowds form loose clusters.
       const pts = [];
+      const perRow = Math.max(3, Math.min(5, Math.ceil(count / 2)));
+      const margin = 22;
+      const span = Math.max(40, w - margin * 2);
       for (let i = 0; i < count; i += 1) {
-        pts.push([x0 + 24 + (i % 3) * Math.max(28, w / 3), floorY - 1 - Math.floor(i / 3) * 4]);
+        const col = i % perRow;
+        const row = Math.floor(i / perRow);
+        const t = perRow === 1 ? 0.5 : col / (perRow - 1);
+        pts.push([x0 + margin + t * span, floorY - 1 - row * 6]);
       }
       return pts;
     }
 
     drawVoiceBuilding(left, groundY, channels, guildName) {
       const g = this.add.graphics().setDepth(20);
-      const bw = 290;
+      const occOf = (ch) => Math.max(0, Number(ch?.occupantCount) || 0);
+      const totalOcc = channels.reduce((n, ch) => n + occOf(ch), 0);
+      // Crowd-driven size: a busy building widens (up to +90px) and each
+      // room's height grows with its own occupants, so a full VC reads as a
+      // big open hangout instead of the same snug box as an empty channel.
+      const bw = 290 + Math.min(90, totalOcc * 8);
       const gap = channels.length > 4 ? 8 : 0;
       const cols = channels.length > 4 ? 2 : 1;
       const rows = Math.ceil(channels.length / cols);
@@ -3699,7 +3713,21 @@
         : Math.floor((bw - 32 - gap) / cols);
       const minRoomH = 84;
       const doorStrip = 54;
-      const totalRoomsHeight = rows * minRoomH + (rows - 1) * gap;
+      // Per-row heights: base 84, +14px per occupant beyond the first, cap
+      // 150. In two-column layouts a row is as tall as its busiest room.
+      const desiredH = (ch) => Phaser.Math.Clamp(
+        minRoomH + Math.max(0, occOf(ch) - 1) * 14, minRoomH, 150,
+      );
+      const rowHeights = [];
+      for (let r = 0; r < rows; r += 1) {
+        let h = minRoomH;
+        for (let c2 = 0; c2 < cols; c2 += 1) {
+          const ch = channels[cols === 1 ? r : r * cols + c2];
+          if (ch) h = Math.max(h, desiredH(ch));
+        }
+        rowHeights.push(h);
+      }
+      const totalRoomsHeight = rowHeights.reduce((a, b) => a + b, 0) + (rows - 1) * gap;
       // Content-driven height — a 1-2 channel guild gets a snug clubhouse,
       // not a tower of empty placeholder rooms.
       const bh = totalRoomsHeight + doorStrip + 32;
@@ -3727,11 +3755,13 @@
 
       const rowCount = rows;
       const innerTop = top + 12;
-      const innerH = bh - doorStrip - 16;
-      const rawRoomH = Math.max(48, Math.floor((innerH - (rowCount - 1) * gap) / rowCount));
-      const roomH = Math.min(rawRoomH, 120);
-      const actualRoomsHeight = rowCount * roomH + (rowCount - 1) * gap;
-      const yBase = innerTop + Math.floor((innerH - actualRoomsHeight) / 2);
+      // Prefix Y offsets from the per-row heights (rooms are no longer uniform).
+      const rowY = [];
+      let rowAcc = innerTop;
+      for (let r = 0; r < rowCount; r += 1) {
+        rowY.push(rowAcc);
+        rowAcc += rowHeights[r] + gap;
+      }
       const totalSlots = rowCount * cols;
 
       for (let idx = 0; idx < totalSlots; idx += 1) {
@@ -3739,10 +3769,10 @@
         const col = cols === 1 ? 0 : idx % cols;
         const row = cols === 1 ? idx : Math.floor(idx / cols);
         const x0 = left + 16 + col * (roomW + gap);
-        const y0 = yBase + row * (roomH + gap);
+        const y0 = rowY[row];
         const h = row === rowCount - 1
           ? top + bh - doorStrip - y0
-          : roomH - 4;
+          : rowHeights[row] - 4;
         const roomKey = isPlaceholder ? `vc_placeholder_${idx}` : chKey(channels[idx].id);
         const label = isPlaceholder ? '' : this.roomDisplayLabel(channels[idx]);
         const fill = isPlaceholder ? 0xc2c6e6 : this.roomWallColor(roomKey, channels[idx]?.id);
@@ -3750,11 +3780,17 @@
         this.cutawayRoom(g, x0, y0, roomW, h, fill, () => {
           if (!isPlaceholder) {
             const floor = y0 + h - 2;
+            const occ = occOf(channels[idx]);
             this.decorateRoom(channels[idx], x0, y0, roomW, h, floor, {
               clearXf: 0.14,
               roomKey: isPlaceholder ? undefined : chKey(channels[idx].id),
+              occupants: occ,
             });
-            this.addRoomSlots(roomKey, this.slotPointsForRoom(x0, roomW, floor, 4));
+            // Stand slots scale with the crowd so people spread out instead
+            // of piling on the same four spots.
+            this.addRoomSlots(roomKey, this.slotPointsForRoom(
+              x0, roomW, floor, Math.max(4, Math.min(10, occ + 2)),
+            ));
           }
         });
 
@@ -3802,7 +3838,7 @@
             toFloorId: rightKey,
             x: left + 16 + roomW + gap / 2,
             radius: 18,
-            roomH,
+            roomH: rowHeights[r],
             doorKind: 'wood',
           });
         }
@@ -3837,6 +3873,8 @@
       this.stripLabel(left + bw / 2, groundY - doorStrip + 6, `${shortLabel(displayChannelName(guildName), 18)} · VC`, {
         color: '#eef0ff', bg: '#2b3190',
       });
+      // Width is occupancy-dependent — the street layout needs it back.
+      return { bw, bh };
     }
 
     drawTextBuilding(left, groundY, title, channels, paletteIndex = 0) {
@@ -3902,8 +3940,12 @@
           this.decorateRoom(ch, slot.x, slot.y, slot.w, slot.h, floor, {
             clearXf: 0.14,
             roomKey,
+            occupants: Math.max(0, Number(ch?.occupantCount) || 0),
           });
-          this.addRoomSlots(roomKey, this.slotPointsForRoom(slot.x, slot.w, floor, 3));
+          this.addRoomSlots(roomKey, this.slotPointsForRoom(
+            slot.x, slot.w, floor,
+            Math.max(3, Math.min(8, (Number(ch?.occupantCount) || 0) + 2)),
+          ));
         });
         this.roomPlaque(slot.x + 4, slot.y + 4, plaqueChannelLabel(label), roomKey, pal.plaqueKey || 'uiTabGreen', {
           maxW: slot.w - 12,
@@ -4580,6 +4622,24 @@
         else if (item.onSurface || SURFACE_PROPS.has(key) || item.offY) surfaceItems.push({ item, key });
         else floorItems.push({ item, key });
       });
+
+      const occupants = Math.max(0, Number(opts.occupants) || 0);
+      // Quiet big rooms get extra dressing so the space doesn't feel bare…
+      if (slotW >= 170 && occupants <= 3) {
+        const lampKey = seededPick(seed, ['lamp', 'lamp2', 'lamp3'], 5);
+        const plantKey = seededPick(seed, ['floraFern', 'floraAloe', 'floraSnake'], 6);
+        floorItems.push({ item: { key: lampKey, xf: 0.30, depth: 22 }, key: lampKey });
+        floorItems.push({ item: { key: plantKey, xf: 0.97, depth: 24 }, key: plantKey });
+      }
+      // …a mid-size crowd gets an extra seat pulled up…
+      if (occupants >= 3 && occupants <= 5 && slotW >= 140) {
+        const seatKey = seededPick(seed, ['stoolRed', 'stoolYellow', 'stoolBlue', 'stoolGreen'], 8);
+        floorItems.push({ item: { key: seatKey, xf: 0.88, depth: 23, sit: true }, key: seatKey });
+      }
+      // …and a packed room clears the floor so people have room to stand.
+      // Surfaces (tables/counters that host food) and wall decor stay.
+      if (occupants >= 6) floorItems.splice(2);
+      else if (occupants >= 4) floorItems.splice(3);
 
       // Evenly pack floor items across the usable band (after climb door).
       const n = floorItems.length || 1;
@@ -6941,8 +7001,18 @@
           return;
         }
       }
+      // Voice-room sizes scale with occupancy (drawVoiceBuilding), so the
+      // layout fingerprint includes a coarse occupancy BUCKET per voice room:
+      // crossing 0 → 1-2 → 3-5 → 6+ triggers the same guarded soft-reload as
+      // a channel rename, growing/shrinking the room. Buckets (not raw
+      // counts) keep single join/leaves from thrashing reloads.
+      const occBucket = (r) => {
+        if (r.type !== 'voice' && r.type !== 'stage') return '';
+        const n = Number(r.occupantCount) || 0;
+        return `:o${n >= 6 ? 3 : n >= 3 ? 2 : n >= 1 ? 1 : 0}`;
+      };
       const fp = rooms
-        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}`)
+        .map((r) => `${r.id}:${r.name}:${r.type}:${r.categoryId || ''}${occBucket(r)}`)
         .sort()
         .join('|');
       if (fp && this._layoutFp && fp !== this._layoutFp && rooms.length) {
