@@ -30,6 +30,10 @@
   const CAP = 9;
   const WHITE = 0xfdfdfd;
   const VOID = 0x1e1e2e;
+  // Wall faces overhang the 64px collision band into the room below so
+  // horizontal walls read ~3 tiles tall like the gallery maps. Purely
+  // visual — characters/furniture y-sort in front of the face.
+  const FACE_OVERHANG = 32;
 
   /** Horizontal back trim — kept for API compat; new style draws caps in drawHWall. */
   function drawTopTrim(scene, cx, topY, width, face) {
@@ -38,10 +42,11 @@
     ];
   }
 
-  /** Doorway end cap — white edge where an H-wall stops at a door gap. */
+  /** Doorway end cap — white edge down the full face where an H-wall stops. */
   function drawEntryCutH(scene, x, y) {
+    const h = BAND_H + FACE_OVERHANG;
     return [
-      scene.add.rectangle(x, y + BAND_H / 2, 3, BAND_H, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH),
+      scene.add.rectangle(x, y + h / 2, 3, h, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH),
     ];
   }
 
@@ -111,15 +116,19 @@
     const objs = [];
     const cx = startX + w / 2;
     const brick = face === 'brick' || face === 'wall_face_brick';
-    // Body: dark void (rooms-as-islands), or brick texture for themed walls
-    if (brick) {
-      objs.push(scene.add.tileSprite(cx, y + BAND_H / 2, w, BAND_H, 'wall_face_brick').setDepth(WALL_FACE_DEPTH));
-    } else {
-      objs.push(scene.add.rectangle(cx, y + BAND_H / 2, w, BAND_H, VOID, 1).setDepth(WALL_FACE_DEPTH));
-    }
-    // White caps on both room-facing edges
+    // Gallery-map anatomy (sampled at 4x from the itch.io example):
+    //   white cap 9px (against the void/outside) → 1px navy line → TALL
+    //   pale wall face the decor hangs on → 2px soft shadow into the floor.
+    // The face overhangs the collision band into the room below — walls
+    // read ~3 tiles tall exactly like the example; y-sorted characters and
+    // furniture (depth ≥ 1.5) draw in front of the face (depth 1.0).
     objs.push(scene.add.rectangle(cx, y + CAP / 2, w, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(cx, y + BAND_H - CAP / 2, w, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+    objs.push(scene.add.rectangle(cx, y + CAP + 0.5, w, 1, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
+    const faceTop = y + CAP + 1;
+    const faceH = (BAND_H - CAP - 1) + FACE_OVERHANG;
+    const fk = brick ? 'wall_face_brick' : 'wall_face';
+    objs.push(scene.add.tileSprite(cx, faceTop + faceH / 2, w, faceH, fk).setDepth(WALL_FACE_DEPTH));
+    objs.push(scene.add.rectangle(cx, faceTop + faceH + 1, w, 2, 0x8b8bab, 0.6).setDepth(WALL_FACE_DEPTH));
     // GIF entryway cuts — dark vertical edge where wall stops at a doorway
     if (cuts?.leftCut) objs.push(...drawEntryCutH(scene, startX + 1, y));
     if (cuts?.rightCut) objs.push(...drawEntryCutH(scene, endX - 1, y));
