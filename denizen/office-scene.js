@@ -458,6 +458,21 @@ class OfficeScene extends Phaser.Scene {
     const height = 720;
     const tileSize = 32;
 
+    // --- Early exit: full LimeZu multi-zone city world (?world=full) ---
+    // Must run before ANY office drawing (floor tileSprites start ~110 lines
+    // down) so the city isn't painted over by the 1280×720 office floor.
+    if (urlParams.get('world') === 'full') {
+      import('./src/full-world.js?v=fw1')
+        .then((m) => m.buildFullWorld(this))
+        .catch((err) => {
+          console.error('[OfficeScene] full-world load failed:', err);
+          this.add.text(24, 24, `Full world failed to load: ${err.message}`, {
+            fontSize: '14px', color: '#fecaca'
+          }).setDepth(9999).setScrollFactor(0);
+        });
+      return;
+    }
+
     // ========================================================
     // Room Builder tile system — floors, wall faces, wall outlines, shadows
     // Based on Room_Builder_Office_32x32.png (512×448, 16×14 tiles)

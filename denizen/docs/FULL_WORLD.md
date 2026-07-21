@@ -115,7 +115,17 @@ Connect zones with `corridors` in the blueprint or `room-builder/arches.png` doo
 | World blueprint JSON | ✅ `data/full-world-blueprint.json` |
 | `?seed=` world generator | 🟡 Office recipes only — not full blueprint yet |
 | Handcrafted `office-scene.js` | ✅ Current default map |
-| Load `?world=full` | 🔴 Not wired — next implementation step |
+| Load `?world=full` | ✅ Wired (July 2026) — `src/full-world.js` |
+
+**Open it:** `/office?demo=1&world=full` (local or denizen.dolonia.cloud). The
+office `create()` early-returns into `src/full-world.js`, which renders all six
+blueprint zones 1:1 at 16px tiles (camera zoom 2): shell rooms via
+RoomTileRenderer (HQ open office, security jail + infirmary), stamped LimeZu
+Home Designs (japanese retreat, news studio — layer1/layer2 examples), a hand
+laid city plaza + avenue (city_terrain/city_props/vehicles/generic_buildings
+crops), and the helipad platform + helicopter from the vehicles sheet. WASD
+moves a LimeZu char (16×32, idle/walk 4-dir); 8 ambient NPCs wander their
+zones; walls/furniture/props are AABB solids with door gaps.
 
 **Try generated office today:**
 
