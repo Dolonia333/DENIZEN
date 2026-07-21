@@ -4013,6 +4013,35 @@ const server = http.createServer((req, res) => {
       }
 
       const officeId = p.office_id || p.officeId || officeRegistry.CEO_OFFICE_ID;
+
+      // Anti-stacking + capacity guard. A leaky automated caller once piled
+      // 649 plants on one tile ('system' is budget-exempt, so the daily
+      // budget never stopped it) — identical prefabs within 12px are dupes,
+      // and a full office rejects further placements outright.
+      const existingLayout = officeLayout.readLayoutSync(ROOT, officeId);
+      const existingItems = Array.isArray(existingLayout?.items) ? existingLayout.items : [];
+      if (existingItems.length >= 250) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: 'office layout is full (250 placed items) — remove something first',
+          itemCount: existingItems.length,
+        }));
+        return;
+      }
+      const dup = existingItems.find((it) => (
+        it.prefabId === prefabId
+        && Math.abs((it.x || 0) - x) <= 12
+        && Math.abs((it.y || 0) - y) <= 12
+      ));
+      if (dup) {
+        res.writeHead(409, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          error: `a ${prefabId} already sits at (${dup.x}, ${dup.y}) — pick a different spot`,
+          existing: dup.instanceId,
+        }));
+        return;
+      }
+
       const instanceId = `npc_${prefabId}_${Date.now()}`;
       const item = { instanceId, prefabId, x, y, placedBy: by, placedAt: Date.now(), reason };
       try {

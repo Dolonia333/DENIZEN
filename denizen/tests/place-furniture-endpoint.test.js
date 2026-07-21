@@ -80,17 +80,37 @@ after(() => {
   try { fs.rmSync(tmpHome, { recursive: true, force: true }); } catch (_) {}
   try { fs.rmSync(cwd, { recursive: true, force: true }); } catch (_) {}
 
-  // Roll back our test placements so we don't pollute the dev layout.
-  const layoutPath = path.join(__dirname, '..', 'layouts', 'office-layout.json');
-  try {
-    const raw = fs.readFileSync(layoutPath, 'utf8');
-    const layout = JSON.parse(raw);
-    if (Array.isArray(layout.items)) {
-      layout.items = layout.items.filter(it => !String(it.placedBy || '').startsWith('TEST_'));
-      fs.writeFileSync(layoutPath, JSON.stringify(layout, null, 2), 'utf8');
-    }
-  } catch (_) { /* best-effort */ }
+  // Roll back our test placements so we don't pollute the dev layout —
+  // by recorded instanceId (covers 'system' placements) AND the TEST_
+  // prefix as a belt-and-braces sweep. Placements persist to the
+  // per-office file (layouts/offices/<id>/office-layout.json); the legacy
+  // layouts/office-layout.json is swept too (the old cleanup only touched
+  // legacy while writes landed per-office, so nothing was ever cleaned).
+  const layoutPaths = [
+    path.join(__dirname, '..', 'layouts', 'office-layout.json'),
+    path.join(__dirname, '..', 'layouts', 'offices', 'ceo-operator', 'office-layout.json'),
+  ];
+  const ours = new Set(placedInstanceIds);
+  for (const layoutPath of layoutPaths) {
+    try {
+      const raw = fs.readFileSync(layoutPath, 'utf8');
+      const layout = JSON.parse(raw);
+      if (Array.isArray(layout.items)) {
+        layout.items = layout.items.filter(it => (
+          !ours.has(it.instanceId)
+          && !String(it.placedBy || '').startsWith('TEST_')
+        ));
+        fs.writeFileSync(layoutPath, JSON.stringify(layout, null, 2), 'utf8');
+      }
+    } catch (_) { /* best-effort */ }
+  }
 });
+
+/** Every successful placement is recorded so after() can scrub it — the old
+ *  cleanup only filtered placedBy TEST_*, so the 'system caller is exempt'
+ *  test leaked 5 plants into the real layout file on EVERY run (505 stacked
+ *  plants over ~100 runs before this was caught). */
+const placedInstanceIds = [];
 
 async function place(by, prefabId, x = 400, y = 300, reason = 'test') {
   const res = await fetch(`${baseUrl}/api/place-furniture`, {
@@ -98,7 +118,11 @@ async function place(by, prefabId, x = 400, y = 300, reason = 'test') {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ by, prefabId, x, y, reason }),
   });
-  return { status: res.status, body: await res.json() };
+  const body = await res.json();
+  if (res.status === 200 && body?.item?.instanceId) {
+    placedInstanceIds.push(body.item.instanceId);
+  }
+  return { status: res.status, body };
 }
 
 describe('/api/place-furniture validation', () => {
@@ -141,11 +165,20 @@ describe('/api/place-furniture daily budget', () => {
   });
 
   it('system caller is exempt', async () => {
-    // 5 placements as 'system' should all succeed.
+    // 5 placements as 'system' should all succeed — spread out, because
+    // identical prefabs within 12px are rejected as duplicates now.
     for (let i = 0; i < 5; i++) {
-      const r = await place('system', 'plant_small', 200 + i, 500);
+      const r = await place('system', 'plant_small', 200 + i * 24, 500);
       assert.equal(r.status, 200);
     }
+  });
+
+  it('rejects stacking an identical prefab within 12px', async () => {
+    const first = await place('system', 'water_cooler', 640, 500);
+    assert.equal(first.status, 200);
+    const dup = await place('system', 'water_cooler', 646, 506);
+    assert.equal(dup.status, 409);
+    assert.match(dup.body.error, /already sits at/);
   });
 });
 
