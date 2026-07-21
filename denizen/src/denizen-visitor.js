@@ -507,7 +507,26 @@ async function getAssistant(sessionId) {
   const rows = await denizenDb._get(
     `denizen_user_assistants?select=npc_key,assistant_name,focus,role_overlay,claimed_at,denizen_npcs(display_name,protected,claimable)&session_id=eq.${encodeURIComponent(sessionId)}`,
   );
-  return _flattenAssistant(rows?.[0]);
+  const direct = _flattenAssistant(rows?.[0]);
+  if (direct) return direct;
+
+  // Re-login often mints a new session while Molly stays on the old one.
+  // Fall back to any claim owned by this identity and migrate it forward.
+  try {
+    const session = await getSession(sessionId);
+    const identityId = session?.identity_id;
+    if (!identityId) return null;
+    let userIdentity = null;
+    try { userIdentity = require('./denizen-user-identity'); } catch (_) { /* optional */ }
+    if (userIdentity?.migrateAssistantsToSession) {
+      await userIdentity.migrateAssistantsToSession(identityId, sessionId);
+      const again = await denizenDb._get(
+        `denizen_user_assistants?select=npc_key,assistant_name,focus,role_overlay,claimed_at,denizen_npcs(display_name,protected,claimable)&session_id=eq.${encodeURIComponent(sessionId)}`,
+      );
+      return _flattenAssistant(again?.[0]);
+    }
+  } catch (_) { /* ignore fallback errors */ }
+  return null;
 }
 
 async function claimAssistant({ sessionId, npcKey, assistantName, focus, roleOverlay } = {}) {

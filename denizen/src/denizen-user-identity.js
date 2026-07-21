@@ -264,6 +264,49 @@ async function changeIdentityPassword(identityId, { currentPassword, newPassword
   return rows?.[0] || identity;
 }
 
+/**
+ * Move claimed assistants from this identity's older sessions onto the new
+ * primary session. Prevents silent chat (no reply) after re-login when Molly
+ * stays claimed on a stale session_id.
+ */
+async function migrateAssistantsToSession(identityId, sessionId) {
+  if (!isEnabled() || !identityId || !sessionId) return { migrated: 0 };
+  try {
+    const already = await denizenDb._getSoft(
+      `denizen_user_assistants?select=id&session_id=eq.${encodeURIComponent(sessionId)}&limit=1`,
+    );
+    if (already?.length) return { migrated: 0, already: true };
+
+    const sessions = await denizenDb._getSoft(
+      `denizen_visitor_sessions?select=id&identity_id=eq.${encodeURIComponent(identityId)}&id=neq.${encodeURIComponent(sessionId)}&order=last_seen_at.desc&limit=20`,
+    );
+    const oldIds = (sessions || []).map((s) => s.id).filter(Boolean);
+    if (!oldIds.length) return { migrated: 0 };
+
+    // Prefer the most recently claimed assistant among old sessions.
+    let claim = null;
+    for (const oldId of oldIds) {
+      const rows = await denizenDb._getSoft(
+        `denizen_user_assistants?select=*&session_id=eq.${encodeURIComponent(oldId)}&limit=1`,
+      );
+      if (rows?.[0]) {
+        claim = rows[0];
+        break;
+      }
+    }
+    if (!claim?.id) return { migrated: 0 };
+
+    await denizenDb._patchSoft(
+      `denizen_user_assistants?id=eq.${encodeURIComponent(claim.id)}`,
+      { session_id: sessionId },
+      { prefer: 'return=minimal' },
+    );
+    return { migrated: 1, npc_key: claim.npc_key || null, from_session_id: claim.session_id };
+  } catch (_) {
+    return { migrated: 0, error: true };
+  }
+}
+
 async function linkSessionToIdentity(identityId, sessionId) {
   if (!isEnabled() || !identityId || !sessionId) return;
   await denizenDb._patchSoft(
@@ -276,6 +319,8 @@ async function linkSessionToIdentity(identityId, sessionId) {
     { primary_session_id: sessionId },
     { prefer: 'return=minimal' },
   );
+  // Keep Molly (etc.) attached when login mints a new visitor session.
+  await migrateAssistantsToSession(identityId, sessionId).catch(() => null);
 }
 
 async function resolveIdentityForSession({
@@ -958,6 +1003,7 @@ module.exports = {
   linkDiscordToIdentity,
   createIdentityFromDiscord,
   linkSessionToIdentity,
+  migrateAssistantsToSession,
   resolveIdentityForSession,
   ensureIdentityForSession,
   markCeoPrincipal,
