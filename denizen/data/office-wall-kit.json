@@ -1,0 +1,144 @@
+{
+  "_doc": "Office wall kit \u2014 cuts LimeZu Room_Builder_Office wall BLOCKS and proves",
+  "colW": 32,
+  "capRowH": 32,
+  "faceRowH": 32,
+  "styles": {
+    "white": {
+      "pieces": {
+        "left": {
+          "cap": "white_left_cap.png",
+          "face": "white_left_face.png",
+          "sheet_rect_cap": [
+            0,
+            352,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            0,
+            384,
+            32,
+            32
+          ]
+        },
+        "mid": {
+          "cap": "white_mid_cap.png",
+          "face": "white_mid_face.png",
+          "sheet_rect_cap": [
+            32,
+            352,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            32,
+            384,
+            32,
+            32
+          ]
+        },
+        "right": {
+          "cap": "white_right_cap.png",
+          "face": "white_right_face.png",
+          "sheet_rect_cap": [
+            64,
+            352,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            64,
+            384,
+            32,
+            32
+          ]
+        },
+        "single": {
+          "cap": "white_single_cap.png",
+          "face": "white_single_face.png",
+          "sheet_rect_cap": [
+            96,
+            352,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            96,
+            384,
+            32,
+            32
+          ]
+        }
+      }
+    },
+    "brick": {
+      "pieces": {
+        "left": {
+          "cap": "brick_left_cap.png",
+          "face": "brick_left_face.png",
+          "sheet_rect_cap": [
+            0,
+            288,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            0,
+            320,
+            32,
+            32
+          ]
+        },
+        "mid": {
+          "cap": "brick_mid_cap.png",
+          "face": "brick_mid_face.png",
+          "sheet_rect_cap": [
+            32,
+            288,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            32,
+            320,
+            32,
+            32
+          ]
+        },
+        "right": {
+          "cap": "brick_right_cap.png",
+          "face": "brick_right_face.png",
+          "sheet_rect_cap": [
+            64,
+            288,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            64,
+            320,
+            32,
+            32
+          ]
+        },
+        "single": {
+          "cap": "brick_single_cap.png",
+          "face": "brick_single_face.png",
+          "sheet_rect_cap": [
+            96,
+            288,
+            32,
+            32
+          ],
+          "sheet_rect_face": [
+            96,
+            320,
+            32,
+            32
+          ]
+        }
+      }
+    }
+  }
+}

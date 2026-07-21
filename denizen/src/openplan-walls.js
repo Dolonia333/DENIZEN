@@ -23,17 +23,59 @@
   const WALL_TRIM_HI_DEPTH = 1.25;
   const WALL_CORNER_TRIM_DEPTH = 1.3;
 
-  // Website-example wall anatomy (sampled from the Modern Office itch.io
-  // gallery maps): walls are a WHITE cap (~9px) on each room-facing edge
-  // with a DARK VOID body between — rooms read as islands. Brick walls
-  // keep a brick body instead of void.
   const CAP = 9;
   const WHITE = 0xfdfdfd;
   const VOID = 0x1e1e2e;
-  // Wall faces overhang the 64px collision band into the room below so
-  // horizontal walls read ~3 tiles tall like the gallery maps. Purely
-  // visual — characters/furniture y-sort in front of the face.
-  const FACE_OVERHANG = 32;
+
+  // ── LimeZu wall BLOCKS (Room_Builder_Office_32x32.png) ────────────────
+  // Walls are 9-slice BLOCKS, not tiles: [left edge][middle...][right edge]
+  // columns whose cap, navy outline, and face are ONE continuous painting.
+  // Composing from rectangles or a tiled 32px strip creates seams — instead
+  // each segment bakes ONE canvas texture from the block columns.
+  // Anatomy per column (64px block): 32px cap row (navy 2 / white 8 /
+  // navy 2 / face start) + 32px face row whose BOTTOM 2px are the block's
+  // closing navy border. The repeatable face region is therefore 30px —
+  // repeating the full row would leak the border into the wall as a line.
+  // Mirrors tools/office-wall-kit.py + data/office-wall-kit.json.
+  // Per-style repeatable face height (adversarial pixel review): white 30
+  // (wallpaper 6-row period, 30 % 6 == 0); brick 24 (8px course rhythm —
+  // 30 duplicated the AO shading line mid-wall and squashed one course).
+  const BLOCK = {
+    white: { y: 352, repeat: 30 },
+    brick: { y: 288, repeat: 24 },
+  };
+  const BLOCK_COLS = { left: 0, mid: 32, right: 64, single: 96 };
+  const CAP_ROW = 32;
+  const FACE_ROW = 32;
+
+  function buildHSegTexture(scene, w, style) {
+    const key = `wallseg_${style}_${Math.round(w)}`;
+    if (scene.textures.exists(key)) return key;
+    const src = scene.textures.get('room_builder')?.getSourceImage();
+    if (!src) return null;
+    const spec = BLOCK[style] || BLOCK.white;
+    const by = spec.y;
+    const repeat = spec.repeat;
+    const texH = CAP_ROW + repeat + FACE_ROW;
+    const t = scene.textures.createCanvas(key, Math.round(w), texH);
+    const ctx = t.context;
+    ctx.imageSmoothingEnabled = false;
+    const n = Math.max(1, Math.ceil(w / T));
+    const drawCol = (sx, dx, colW) => {
+      ctx.drawImage(src, sx, by, colW, CAP_ROW, dx, 0, colW, CAP_ROW);
+      ctx.drawImage(src, sx, by + CAP_ROW, colW, repeat, dx, CAP_ROW, colW, repeat);
+      ctx.drawImage(src, sx, by + CAP_ROW, colW, FACE_ROW, dx, CAP_ROW + repeat, colW, FACE_ROW);
+    };
+    if (n === 1) {
+      drawCol(BLOCK_COLS.single, 0, Math.min(T, w));
+    } else {
+      for (let i = 1; i < n - 1; i++) drawCol(BLOCK_COLS.mid, i * T, T);
+      drawCol(BLOCK_COLS.left, 0, T);
+      drawCol(BLOCK_COLS.right, Math.round(w) - T, T); // flush right, over mid
+    }
+    t.refresh();
+    return key;
+  }
 
   /** Horizontal back trim — kept for API compat; new style draws caps in drawHWall. */
   function drawTopTrim(scene, cx, topY, width, face) {
@@ -114,24 +156,17 @@
     const w = endX - startX;
     if (w <= 0) return [];
     const objs = [];
-    const cx = startX + w / 2;
     const brick = face === 'brick' || face === 'wall_face_brick';
-    // Gallery-map anatomy (sampled at 4x from the itch.io example):
-    //   white cap 9px (against the void/outside) → 1px navy line → TALL
-    //   pale wall face the decor hangs on → 2px soft shadow into the floor.
-    // The face overhangs the collision band into the room below — walls
-    // read ~3 tiles tall exactly like the example; y-sorted characters and
-    // furniture (depth ≥ 1.5) draw in front of the face (depth 1.0).
-    objs.push(scene.add.rectangle(cx, y + CAP / 2, w, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(cx, y + CAP + 0.5, w, 1, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    const faceTop = y + CAP + 1;
-    const faceH = (BAND_H - CAP - 1) + FACE_OVERHANG;
-    const fk = brick ? 'wall_face_brick' : 'wall_face';
-    objs.push(scene.add.tileSprite(cx, faceTop + faceH / 2, w, faceH, fk).setDepth(WALL_FACE_DEPTH));
-    objs.push(scene.add.rectangle(cx, faceTop + faceH + 1, w, 2, 0x8b8bab, 0.6).setDepth(WALL_FACE_DEPTH));
+    // ONE baked image per segment, composed from the official wall block
+    // columns — continuous art, no seams, edge columns close each end
+    // (including the ends created by door gaps).
+    const texKey = buildHSegTexture(scene, w, brick ? 'brick' : 'white');
+    if (texKey) {
+      objs.push(scene.add.image(startX, y, texKey).setOrigin(0, 0).setDepth(WALL_FACE_DEPTH));
+    }
     // GIF entryway cuts — dark vertical edge where wall stops at a doorway
-    if (cuts?.leftCut) objs.push(...drawEntryCutH(scene, startX + 1, y));
-    if (cuts?.rightCut) objs.push(...drawEntryCutH(scene, endX - 1, y));
+    // Door-gap ends need no extra cap: the block's left/right edge columns
+    // already close every segment end with the official outline art.
     const obs = scene.add.rectangle(startX + w / 2, y + T, w, BAND_H, 0x000000, 0);
     scene.physics.add.existing(obs, true);
     obstacles.push(obs);
@@ -171,16 +206,11 @@
     const trimLeft = role === 'tl' || role === 'bl';
     const trimRight = role === 'tr' || role === 'br';
 
-    // Corner block: void body + white caps top/bottom + white column on
-    // the outer edge(s) per role — joins H and V walls seamlessly.
-    objs.push(scene.add.rectangle(x + T / 2, y + BAND_H / 2, T, BAND_H, VOID, 1).setDepth(WALL_FACE_DEPTH));
-    objs.push(scene.add.rectangle(x + T / 2, y + CAP / 2, T, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(x + T / 2, y + BAND_H - CAP / 2, T, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
-    if (trimLeft) {
-      objs.push(scene.add.rectangle(x + 4, y + BAND_H / 2, 8, BAND_H, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
-    }
-    if (trimRight) {
-      objs.push(scene.add.rectangle(x + T - 4, y + BAND_H / 2, 8, BAND_H, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
+    // Corner: the block's single-column wall (both edges baked) — same
+    // continuous art as full segments, joins H and V walls without seams.
+    const cornerKey = buildHSegTexture(scene, T, 'white');
+    if (cornerKey) {
+      objs.push(scene.add.image(x, y, cornerKey).setOrigin(0, 0).setDepth(WALL_FACE_DEPTH));
     }
     const obs = scene.add.rectangle(x + T / 2, y + T, T, BAND_H, 0x000000, 0);
     scene.physics.add.existing(obs, true);
