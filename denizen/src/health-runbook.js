@@ -78,6 +78,23 @@ async function check({ scope = 'full', deps = {} } = {}) {
     if (assigned.length > 0 && !sections.lm_studio?.reachable) issues.push('jobs_assigned_lm_down');
   }
 
+  if (scope === 'ux' || scope === 'full') {
+    try {
+      const selfAdjust = require('./denizen-self-adjust');
+      const status = selfAdjust.getStatus();
+      const aborts = Number(status.stats?.recent_aborts || 0);
+      sections.ux = {
+        assist_timeout_ms: status.timeouts?.assist_timeout_ms,
+        recent_aborts: aborts,
+        last_tick: status.last_tick,
+        last_bump: status.stats?.last_assist_bump || null,
+      };
+      if (aborts >= 3) issues.push('client_assist_aborts');
+    } catch (_) {
+      sections.ux = { unavailable: true };
+    }
+  }
+
   return {
     ok: issues.length === 0,
     scope,
@@ -161,6 +178,21 @@ async function remediate({ action = 'verify', deps = {} } = {}) {
 
   if (action === 'lm-studio-hint') {
     steps.push('LM Studio: verify it is running on port 1234, model loaded, and LM_STUDIO_URL matches');
+  }
+
+  if (action === 'bump-assist-timeout' || action === 'self-adjust-ux') {
+    try {
+      const selfAdjust = require('./denizen-self-adjust');
+      const tick = selfAdjust.tick();
+      const bump = selfAdjust.maybeBumpAssistTimeout({ reason: 'health_runbook' });
+      steps.push(
+        bump?.bumped
+          ? `assist timeout ${bump.from} → ${bump.to}ms`
+          : `assist timeout unchanged (${tick?.timeouts?.assist_timeout_ms || 'n/a'}ms)`,
+      );
+    } catch (err) {
+      steps.push(`self-adjust failed: ${err?.message || err}`);
+    }
   }
 
   const after = await check({ scope: 'full', deps });

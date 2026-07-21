@@ -22,6 +22,9 @@ denizen/data/email-log.json
 denizen/data/gmail-oauth.json
 denizen/data/google-api-keys.json
 denizen/data/llm-telemetry.jsonl
+denizen/data/self-adjust.json
+denizen/data/ux-events.jsonl
+denizen/data/inference-usage.jsonl
 # Robinhood — token and runtime data (never commit)
 denizen/data/robinhood-oauth.json
 denizen/data/trade-suggestions.json
@@ -151,3 +154,5 @@ denizen-local-office.png
 {remote}
 {remote_tar}
 .claude/scheduled_tasks.lock
+denizen/data/lesson-cite-events.jsonl
+denizen/discord-map/baked/_preview.png
