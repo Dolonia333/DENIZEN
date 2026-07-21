@@ -513,38 +513,23 @@ class OfficeScene extends Phaser.Scene {
       t.refresh();
     };
 
-    // Horizontal wall trim — dark navy-blue strip (top of wall)
+    // OFFICIAL Room Builder Office white wall (sheet rows 11-12, sampled):
+    //   y0-2 navy #3a3a50 · y2-10 WHITE top face · y10-12 navy · pale
+    //   lavender face #dbd4e1 with 2px texture stripes · 2px navy base.
+    // The old procedural draws (#c3d0e6 blue face, navy-only trim) never
+    // matched the pack's example offices — these crops are the real art.
+    // wall_cap_official: the 12px top cap (navy+white+navy), tiled by
+    // openplan-walls.js drawTopTrim.
+    cutRBTile('wall_cap_official', 0, 352, 32, 12);
+    // Face tile: face-only column of the white wall block (tile 4,11)
+    cutRBTile('wall_face', 128, 352);
+    cutRBTile('wall_face_v', 128, 352);
+    // Legacy consumers of the old navy trim strip keep a texture
     makeWallTex('wall_trim_h', 32, 32, (ctx, w, h) => {
       ctx.fillStyle = '#3a3a50';
       ctx.fillRect(0, 0, w, h);
-      // Subtle bottom edge highlight
       ctx.fillStyle = '#4a4a62';
       ctx.fillRect(0, h - 2, w, 2);
-    });
-
-    // Wall face tile — lavender/blue-grey surface (body of wall)
-    makeWallTex('wall_face', 32, 32, (ctx, w, h) => {
-      // Base lavender
-      ctx.fillStyle = '#c3d0e6';
-      ctx.fillRect(0, 0, w, h);
-      // Subtle horizontal line texture (like mortar lines)
-      ctx.fillStyle = '#b8c4db';
-      for (let y = 7; y < h; y += 8) {
-        ctx.fillRect(0, y, w, 1);
-      }
-      // Slight vertical variation
-      ctx.fillStyle = '#cddaec';
-      ctx.fillRect(0, 0, w, 2);
-    });
-
-    // Vertical wall face (same color, subtle vertical mortar lines)
-    makeWallTex('wall_face_v', 32, 32, (ctx, w, h) => {
-      ctx.fillStyle = '#c3d0e6';
-      ctx.fillRect(0, 0, w, h);
-      ctx.fillStyle = '#b8c4db';
-      for (let x = 7; x < w; x += 8) {
-        ctx.fillRect(x, 0, 1, h);
-      }
     });
 
     // Zoomed tan brick for lower-room back walls (skip huge white band in RB tile)

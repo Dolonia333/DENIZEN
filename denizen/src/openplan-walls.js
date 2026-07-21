@@ -23,25 +23,25 @@
   const WALL_TRIM_HI_DEPTH = 1.25;
   const WALL_CORNER_TRIM_DEPTH = 1.3;
 
-  /** Horizontal back trim — runs along the top of wall bands (viewed from above). */
+  // Website-example wall anatomy (sampled from the Modern Office itch.io
+  // gallery maps): walls are a WHITE cap (~9px) on each room-facing edge
+  // with a DARK VOID body between — rooms read as islands. Brick walls
+  // keep a brick body instead of void.
+  const CAP = 9;
+  const WHITE = 0xfdfdfd;
+  const VOID = 0x1e1e2e;
+
+  /** Horizontal back trim — kept for API compat; new style draws caps in drawHWall. */
   function drawTopTrim(scene, cx, topY, width, face) {
-    const objs = [];
-    const brick = face === 'brick' || face === 'wall_face_brick';
-    if (brick) {
-      // GIF brick walls: light top band + dark outline
-      objs.push(scene.add.rectangle(cx, topY + TRIM_H / 2, width, TRIM_H, 0xe4e4ec, 1).setDepth(WALL_TRIM_DEPTH));
-      objs.push(scene.add.rectangle(cx, topY + 1, width, 2, 0x2a2a38, 1).setDepth(WALL_TRIM_HI_DEPTH));
-    } else {
-      objs.push(scene.add.rectangle(cx, topY + TRIM_H / 2, width, TRIM_H, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-      objs.push(scene.add.rectangle(cx, topY + TRIM_H - 1, width, 2, TRIM_HI, 1).setDepth(WALL_TRIM_HI_DEPTH));
-    }
-    return objs;
+    return [
+      scene.add.rectangle(cx, topY + CAP / 2, width, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH),
+    ];
   }
 
-  /** GIF entryway cut — dark vertical edge where an H-wall ends at a doorway. */
+  /** Doorway end cap — white edge where an H-wall stops at a door gap. */
   function drawEntryCutH(scene, x, y) {
     return [
-      scene.add.rectangle(x, y + BAND_H / 2, 2, BAND_H, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH),
+      scene.add.rectangle(x, y + BAND_H / 2, 3, BAND_H, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH),
     ];
   }
 
@@ -108,11 +108,18 @@
   function drawHWall(scene, startX, y, endX, obstacles, face, cuts) {
     const w = endX - startX;
     if (w <= 0) return [];
-    const fk = resolveFaceKeys(face);
-    const objs = drawTopTrim(scene, startX + w / 2, y, w, face);
-    const faceH = BAND_H - TRIM_H;
-    objs.push(scene.add.tileSprite(startX + w / 2, y + TRIM_H + faceH / 2, w, faceH, fk.h).setDepth(WALL_FACE_DEPTH));
-    objs.push(scene.add.rectangle(startX + w / 2, y + BAND_H - 1, w, 2, SHADOW, 0.5).setDepth(WALL_SHADOW_DEPTH));
+    const objs = [];
+    const cx = startX + w / 2;
+    const brick = face === 'brick' || face === 'wall_face_brick';
+    // Body: dark void (rooms-as-islands), or brick texture for themed walls
+    if (brick) {
+      objs.push(scene.add.tileSprite(cx, y + BAND_H / 2, w, BAND_H, 'wall_face_brick').setDepth(WALL_FACE_DEPTH));
+    } else {
+      objs.push(scene.add.rectangle(cx, y + BAND_H / 2, w, BAND_H, VOID, 1).setDepth(WALL_FACE_DEPTH));
+    }
+    // White caps on both room-facing edges
+    objs.push(scene.add.rectangle(cx, y + CAP / 2, w, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+    objs.push(scene.add.rectangle(cx, y + BAND_H - CAP / 2, w, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
     // GIF entryway cuts — dark vertical edge where wall stops at a doorway
     if (cuts?.leftCut) objs.push(...drawEntryCutH(scene, startX + 1, y));
     if (cuts?.rightCut) objs.push(...drawEntryCutH(scene, endX - 1, y));
@@ -129,20 +136,19 @@
     const h = y1 - y0;
     if (h <= 0) return [];
     const objs = [];
-    // Symmetrical edges — equal navy trim on both sides, face centered
-    const edgeW = 3;
-    const faceW = T - edgeW * 2;
-    objs.push(scene.add.rectangle(x + edgeW / 2, y0 + h / 2, edgeW, h, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(x + T - edgeW / 2, y0 + h / 2, edgeW, h, TRIM, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.tileSprite(x + T / 2, y0 + h / 2, faceW, h, 'wall_face_v').setDepth(WALL_FACE_DEPTH));
-    const shadowX = (shadowSide || 'right') === 'left' ? x + 1 : x + T - 1;
-    objs.push(scene.add.rectangle(shadowX, y0 + h / 2, 1, h, SHADOW, 0.25).setDepth(WALL_SHADOW_DEPTH));
-    // Doorway end caps — thin dark line across thickness (matches H entry cuts)
+    // Website-example look: white caps on both room-facing sides, dark
+    // void between (wall body). Caps 8px, void fills the rest of T=32.
+    const edgeW = 8;
+    const bodyW = T - edgeW * 2;
+    objs.push(scene.add.rectangle(x + T / 2, y0 + h / 2, bodyW, h, VOID, 1).setDepth(WALL_FACE_DEPTH));
+    objs.push(scene.add.rectangle(x + edgeW / 2, y0 + h / 2, edgeW, h, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+    objs.push(scene.add.rectangle(x + T - edgeW / 2, y0 + h / 2, edgeW, h, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+    // Doorway end caps — white edge across the wall thickness
     if (cuts?.topCut) {
-      objs.push(scene.add.rectangle(x + T / 2, y0 + 1, T, 2, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
+      objs.push(scene.add.rectangle(x + T / 2, y0 + 1.5, T, 3, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
     }
     if (cuts?.bottomCut) {
-      objs.push(scene.add.rectangle(x + T / 2, y1 - 1, T, 2, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
+      objs.push(scene.add.rectangle(x + T / 2, y1 - 1.5, T, 3, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
     }
     const obs = scene.add.rectangle(x + T / 2, y0 + h / 2, T, h, 0x000000, 0);
     scene.physics.add.existing(obs, true);
@@ -156,17 +162,17 @@
     const trimLeft = role === 'tl' || role === 'bl';
     const trimRight = role === 'tr' || role === 'br';
 
-    objs.push(...drawTopTrim(scene, x + T / 2, y, T));
+    // Corner block: void body + white caps top/bottom + white column on
+    // the outer edge(s) per role — joins H and V walls seamlessly.
+    objs.push(scene.add.rectangle(x + T / 2, y + BAND_H / 2, T, BAND_H, VOID, 1).setDepth(WALL_FACE_DEPTH));
+    objs.push(scene.add.rectangle(x + T / 2, y + CAP / 2, T, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+    objs.push(scene.add.rectangle(x + T / 2, y + BAND_H - CAP / 2, T, CAP, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
     if (trimLeft) {
-      objs.push(scene.add.rectangle(x + TRIM_W / 2, y + BAND_H / 2, TRIM_W, BAND_H, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
+      objs.push(scene.add.rectangle(x + 4, y + BAND_H / 2, 8, BAND_H, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
     }
     if (trimRight) {
-      objs.push(scene.add.rectangle(x + T - TRIM_W / 2, y + BAND_H / 2, TRIM_W, BAND_H, TRIM, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
+      objs.push(scene.add.rectangle(x + T - 4, y + BAND_H / 2, 8, BAND_H, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
     }
-
-    const faceH = BAND_H - TRIM_H;
-    objs.push(scene.add.tileSprite(x + T / 2, y + TRIM_H + faceH / 2, T, faceH, 'wall_face').setDepth(WALL_FACE_DEPTH));
-    objs.push(scene.add.rectangle(x + T / 2, y + BAND_H - 1, T, 2, SHADOW, 0.5).setDepth(WALL_SHADOW_DEPTH));
     const obs = scene.add.rectangle(x + T / 2, y + T, T, BAND_H, 0x000000, 0);
     scene.physics.add.existing(obs, true);
     obstacles.push(obs);
