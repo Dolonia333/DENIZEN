@@ -6,7 +6,12 @@
   "categories": [
     { "id": "catv", "name": "Voice Lounge", "position": 0 },
     { "id": "catt", "name": "Text Channels", "position": 1 },
-    { "id": "cath", "name": "halloween hollow", "position": 2 }
+    { "id": "cath", "name": "halloween hollow", "position": 2 },
+    { "id": "cathosp", "name": "support clinic", "position": 3 },
+    { "id": "catpol", "name": "staff hq", "position": 4 },
+    { "id": "catfire", "name": "fire watch", "position": 5 },
+    { "id": "catmus", "name": "art museum", "position": 6 },
+    { "id": "catcafe", "name": "coffee corner", "position": 7 }
   ],
   "rooms": [
     { "id": "vc-empty", "name": "empty-vc", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 0, "occupants": [] },
@@ -18,7 +23,22 @@
     { "id": "tx-crypt", "name": "the-crypt", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] },
     { "id": "tx-seance", "name": "seance-circle", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] },
     { "id": "tx-pumpkin", "name": "pumpkin-cellar", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] },
-    { "id": "tx-parlor", "name": "witch-parlor", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] }
+    { "id": "tx-parlor", "name": "witch-parlor", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-ward", "name": "help-desk", "type": "text", "categoryId": "cathosp", "categoryName": "support clinic", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-triage", "name": "triage", "type": "text", "categoryId": "cathosp", "categoryName": "support clinic", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-imaging", "name": "imaging", "type": "text", "categoryId": "cathosp", "categoryName": "support clinic", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-booking", "name": "mod-log", "type": "text", "categoryId": "catpol", "categoryName": "staff hq", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-cells", "name": "ban-appeals", "type": "text", "categoryId": "catpol", "categoryName": "staff hq", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-frontdesk", "name": "reports", "type": "text", "categoryId": "catpol", "categoryName": "staff hq", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-bunks", "name": "night-shift", "type": "text", "categoryId": "catfire", "categoryName": "fire watch", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-bay", "name": "alerts", "type": "text", "categoryId": "catfire", "categoryName": "fire watch", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-ready", "name": "incidents", "type": "text", "categoryId": "catfire", "categoryName": "fire watch", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-space", "name": "space-wing", "type": "text", "categoryId": "catmus", "categoryName": "art museum", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-fossil", "name": "fossil-hall", "type": "text", "categoryId": "catmus", "categoryName": "art museum", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-dig", "name": "dig-finds", "type": "text", "categoryId": "catmus", "categoryName": "art museum", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-espresso", "name": "espresso-bar", "type": "text", "categoryId": "catcafe", "categoryName": "coffee corner", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-bakery", "name": "bakery", "type": "text", "categoryId": "catcafe", "categoryName": "coffee corner", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-patio", "name": "patio-chat", "type": "text", "categoryId": "catcafe", "categoryName": "coffee corner", "occupantCount": 0, "occupants": [] }
   ],
   "people": [
     { "userId": "t1", "displayName": "Ava", "channelId": "vc-duo", "channelName": "duo-hangout", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },

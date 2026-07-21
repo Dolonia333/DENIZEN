@@ -1060,14 +1060,34 @@
     path: `${EXP}/Halloween/NPCs/npc_ghost_${n}.png`,
   }));
   const GHOST_NPC_KEYS = GHOST_NPC_SHEETS.map((s) => s.key);
+  // Police / Fire / Cafe themed staff — same 160×96 5×3 sheets, all shipped
+  // with the pack but never loaded before (their rooms used generic civilians).
+  const POLICE_NPC_SHEETS = [];
+  const FIRE_NPC_SHEETS = [];
+  const CAFE_NPC_SHEETS = [];
+  for (let n = 1; n <= 3; n += 1) {
+    POLICE_NPC_SHEETS.push(
+      { key: `copNpcM${n}`, path: `${EXP}/Police Station/NPCs/Male/npc_cop_male_${n}.png` },
+      { key: `copNpcF${n}`, path: `${EXP}/Police Station/NPCs/Female/npc_cop_female_${n}.png` },
+    );
+    FIRE_NPC_SHEETS.push(
+      { key: `fireNpcM${n}`, path: `${EXP}/Fire Station/NPCs/Male/npc_firefighter_male_${n}.png` },
+      { key: `fireNpcF${n}`, path: `${EXP}/Fire Station/NPCs/Female/npc_firefighter_female_${n}.png` },
+    );
+    CAFE_NPC_SHEETS.push(
+      { key: `baristaNpcM${n}`, path: `${EXP}/Cafe/Pre-made NPCs/male_npc_barista_${n}.png` },
+      { key: `baristaNpcF${n}`, path: `${EXP}/Cafe/Pre-made NPCs/female_npc_barista_${n}.png` },
+    );
+  }
+  const THEMED_NPC_SHEETS = [...POLICE_NPC_SHEETS, ...FIRE_NPC_SHEETS, ...CAFE_NPC_SHEETS];
   // Premade sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
   // loading at half-width used to slice each character in two down the middle.
   const NPC_FRAME = { w: 32, h: 32 };
   const NPC_COLS = 8;
   const HOSP_COLS = 5;
-  // Ghost NPC sheets share the hospital 5×3 pose grid, so they ride the same
-  // pose defs and column count.
-  const HOSP_SHEET_KEY_RE = /^hosp(Nurse|Surgeon)|^ghostNpc/i;
+  // Ghost/cop/firefighter/barista sheets share the hospital 5×3 pose grid,
+  // so they ride the same pose defs and column count.
+  const HOSP_SHEET_KEY_RE = /^hosp(Nurse|Surgeon)|^ghostNpc|^copNpc|^fireNpc|^baristaNpc/i;
   function isHospNpcSheet(key) {
     return HOSP_SHEET_KEY_RE.test(String(key || ''));
   }
@@ -1423,6 +1443,23 @@
             ['f', 'plantLarge', 248, 1, 0],
           ],
         }),
+        // Recipe 2 = bakery corner: pastry counter with its own barista and a
+        // window table for two.
+        () => ({
+          h: 90, fill: 0xf6e6ce, slots: [82, 140, 214],
+          items: [
+            ['w', ['posterDonut4', 'posterDonut1'], 82, 6],
+            ['w', 'cafeSignBoard', 152, 8],
+            ['w', 'plantHang', 240, 2],
+            ['f', 'counter', 70, 1, 0], ['f', 'counterEnd', 86, 1, 0],
+            ['f', ['pastryWhite', 'pastryYellow', 'pastryBlue'], 74, 1, 26],
+            ['npc', 'cafe-barista-b', 100],
+            ['f', 'stoolB', 142, 1, 0], ['f', 'tableMed2', 166, 1, 0],
+            ['f', ['mug', 'glassJuice'], 166, 1, 22],
+            ['f', 'stool', 190, 1, 0],
+            ['f', 'plantLarge', 246, 1, 0],
+          ],
+        }),
       ],
       outside(scene, left, bw, groundY) {
         const seed = hashSeed(`cafe${left}`);
@@ -1559,7 +1596,27 @@
             }],
           ],
         }),
+        // Recipe 2 = imaging suite: CT scanner bay with a tech at the console.
+        () => ({
+          h: 96, fill: 0xdce8f4, slots: [92, 200, 244],
+          items: [
+            ['glow', 0x9ac0f0, 0.08],
+            ['w', ['monitorMedWall', 'monitorMedWallBlack'], 210, 6],
+            ['w', 'posterMed', 90, 8],
+            ['f', 'salineStand', 100, 1, 0],
+            ['f', 'ctScanner', 150, 1, 0],
+            ['npc', 'hospital-nurse-imaging', 196, {
+              role: 'nurse', attendDx: 150, side: 'right', standOffset: 34,
+            }],
+            ['f', ['computerMed', 'computerMedBlack'], 226, 1, 0],
+            ['f', ['storageMed', 'storageMedBlack'], 252, 1, 0],
+          ],
+        }),
       ],
+      outside(scene, left, bw, groundY) {
+        // A nurse on break by the entrance.
+        scene.decorNpcQueue.push([`hospital-nurse-break-${left}`, left + bw + 28, groundY]);
+      },
     },
     museum: {
       bw: 340,
@@ -1603,7 +1660,28 @@
             ['f', 'statueM', 250, 1, 0],
           ],
         }),
+        // Recipe 2 = archaeology annex: dig-find cases with a docent on duty.
+        () => ({
+          h: 96, fill: 0xe8dcc0, slots: [95, 155, 285],
+          items: [
+            ['w', 'lightFixture', 165, 2],
+            ['w', ['clipboardLong1', 'clipboardLong2'], 260, 8],
+            ['f', 'itemDisplayS', 82, 1, 0],
+            ['f', ['crownDig', 'neolithicMask'], 82, 1, 14],
+            ['f', 'guardRail', 106, 1, 0],
+            ['f', 'itemDisplayM', 138, 1, 0],
+            ['f', ['stoneTablet', 'megalodonTooth'], 138, 1, 15],
+            ['f', 'itemDisplayL', 205, 1, 0],
+            ['f', ['potteryAncient', 'fossilFish'], 205, 1, 15],
+            ['f', 'guardRail', 238, 1, 0],
+            ['npc', 'museum-docent', 268],
+          ],
+        }),
       ],
+      outside(scene, left, bw, groundY) {
+        // Statue flanking the museum entrance.
+        scene.furn('statueM', left - 26, groundY, 18);
+      },
     },
     police: {
       wall: 0x5a7a9a, side: 0x42607e, outline: 0x14202e, roof: 0x4a6a8a, band: 0x2a4058,
@@ -1641,7 +1719,26 @@
             ['f', 'floraFernFull', 246, 1, 0],
           ],
         }),
+        // Recipe 2 = holding cells: barred doors, a guard on watch, and a
+        // detainee (civilian sheet on purpose) waiting it out.
+        () => ({
+          h: 96, fill: 0xa8b0bc, slots: [72, 112],
+          items: [
+            ['w', ['posterWanted2', 'posterWanted'], 72, 8],
+            ['w', 'clipboardWallSmall', 112, 6],
+            ['f', ['waitChairSolo', 'waitChairSoloRed'], 92, 1, 0],
+            ['npc', 'police-cop-guard', 140],
+            ['f', 'prisonDoor', 178, 1, 0],
+            ['npc', 'jail-detainee', 206],
+            ['f', 'prisonDoor', 240, 1, 0],
+          ],
+          bars: true,
+        }),
       ],
+      outside(scene, left, bw, groundY) {
+        // Patrol officer out front of the station.
+        scene.decorNpcQueue.push([`police-cop-patrol-${left}`, left - 26, groundY]);
+      },
     },
     fire: {
       wall: 0xc84a3a, side: 0xa03828, outline: 0x3a0e08, roof: 0xb04030, band: 0x701e14,
@@ -1677,9 +1774,26 @@
             ['npc', 'fire-firefighter', 156], ['f', 'fireExt', 216, 1, 0], ['f', 'boxEmergency', 190, 1, 0],
           ],
         }),
+        // Recipe 2 = ready bay: locker row, gear rack, two crew on standby.
+        () => ({
+          h: 96, fill: 0xe8d8c4, slots: [98, 150, 220],
+          items: [
+            ['glow', 0xffc8a0, 0.06],
+            ['w', 'fireLogo', 85, 6],
+            ['w', ['clipboardLong1', 'portraitFF2'], 152, 6],
+            ['w', ['fireAlarm', 'fireAxe'], 232, 6],
+            ['f', 'locker', 66, 1, 0], ['f', 'locker', 92, 1, 0], ['f', 'locker', 118, 1, 0],
+            ['f', 'rackEquip', 150, 1, 0], ['f', 'helmetFF', 150, 1, 46],
+            ['npc', 'fire-crew-a', 186],
+            ['npc', 'fire-crew-b', 226],
+            ['f', 'fireExt', 252, 1, 0],
+          ],
+        }),
       ],
-      outside(scene, left) {
+      outside(scene, left, bw, groundY) {
         scene.furn('fireHydrant', left - 30, scene.groundY, 19);
+        // A firefighter out by the bay doors.
+        scene.decorNpcQueue.push([`fire-crew-street-${left}`, left + (bw || 290) + 26, groundY || scene.groundY]);
       },
     },
     halloween: {
@@ -1842,6 +1956,7 @@
       NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       HOSP_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       GHOST_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
+      THEMED_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       // Street pets — 32x32 frames (Paws & Whiskers free packs).
       PET_SHEETS.forEach((p) => this.load.spritesheet(p.key, p.path, {
         frameWidth: PET_FRAME,
@@ -5118,7 +5233,7 @@
 
     makeAnims() {
       // Premades: 8×14 pose grid. Hospital staff: 5×3 (walk/idle/jump + aliases).
-      [...NPC_SHEETS, ...HOSP_NPC_SHEETS, ...GHOST_NPC_SHEETS].forEach((n) => {
+      [...NPC_SHEETS, ...HOSP_NPC_SHEETS, ...GHOST_NPC_SHEETS, ...THEMED_NPC_SHEETS].forEach((n) => {
         if (!this.textures.exists(n.key)) return;
         const cols = sheetColCount(n.key);
         const poseDefs = poseDefsForSheet(n.key);
@@ -5375,13 +5490,31 @@
     /** Deterministic NPC sheet key for a user/seed, spread across all 30. */
     npcSheetFor(seedStr) {
       const s = String(seedStr || '');
+      const fromList = (sheets) => {
+        const list = sheets.filter((n) => this.textures.exists(n.key));
+        return list.length ? list[hashSeed(s) % list.length].key : null;
+      };
       if (/hospital-nurse|hosp-nurse|^nurse/i.test(s)) {
-        const list = HOSP_NURSE_SHEETS.filter((n) => this.textures.exists(n.key));
-        if (list.length) return list[hashSeed(s) % list.length].key;
+        const k = fromList(HOSP_NURSE_SHEETS);
+        if (k) return k;
       }
       if (/hospital-surgeon|hosp-surgeon|^surgeon/i.test(s)) {
-        const list = HOSP_SURGEON_SHEETS.filter((n) => this.textures.exists(n.key));
-        if (list.length) return list[hashSeed(s) % list.length].key;
+        const k = fromList(HOSP_SURGEON_SHEETS);
+        if (k) return k;
+      }
+      // Themed staff wear their real pack uniforms ('-detainee'/'-visitor'
+      // style seeds intentionally fall through to civilians).
+      if (/police-cop|^cop-/i.test(s)) {
+        const k = fromList(POLICE_NPC_SHEETS);
+        if (k) return k;
+      }
+      if (/firefighter|^fire-crew/i.test(s)) {
+        const k = fromList(FIRE_NPC_SHEETS);
+        if (k) return k;
+      }
+      if (/barista/i.test(s)) {
+        const k = fromList(CAFE_NPC_SHEETS);
+        if (k) return k;
       }
       // Patients and everyone else use premade civilians
       const list = NPC_SHEETS.filter((n) => this.textures.exists(n.key));
