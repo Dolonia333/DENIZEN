@@ -233,7 +233,7 @@ async function chatCompletion(opts = {}) {
 
   const base = normalizeBaseUrl(runtime.url);
   const stream = typeof opts.onToken === 'function';
-  // Per-task sampling (top_p / min_p / repeat_penalty) — shared profiles.
+  // Per-task sampling (top_p / min_p / repeat_penalty) - shared profiles.
   // Harness may pass a full sampling object; otherwise derive from kind.
   let sampling = { temperature: Number(opts.temperature ?? 0.75) };
   if (opts.sampling && typeof opts.sampling === 'object') {
@@ -266,90 +266,136 @@ async function chatCompletion(opts = {}) {
   if (runtime.backend === 'lmstudio') {
     // Default off for speed; harness enables for R1/reasoning tiers.
     body.enable_thinking = opts.enableThinking === true || opts.reasoning === true;
+    // Heavy/reasoning: short idle TTL so JIT-loaded big models unload and
+    // free VRAM for resident main/fast. Main/fast omit TTL (manual loads).
+    try {
+      const modelMgr = require('./lm-studio-model-manager');
+      const ttl = opts.ttl != null ? Number(opts.ttl) : modelMgr.ttlForTier(opts.tier || 'main');
+      if (ttl && Number.isFinite(ttl) && ttl > 0) body.ttl = Math.floor(ttl);
+    } catch (_) { /* optional */ }
   }
 
   const headers = { 'Content-Type': 'application/json' };
   const apiKey = opts.apiKey || process.env.LM_STUDIO_API_KEY;
-  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
 
   const timeoutMs = Math.max(5000, Number(opts.timeoutMs) || 120_000);
 
-  if (stream) {
-    const res = await fetch(`${base}/v1/chat/completions`, {
+  // Retry helper: transient 400 "terminated"/"cancelled" from LM Studio can
+  // recover on a retry; heavy/reasoning requests fall back to the main model
+  // so the office does not hard-fail when the big model is loading or OOMs.
+  function isRetryableError(err) {
+    const msg = err?.message || String(err);
+    return /terminated|cancelled/i.test(msg) || /timeout/i.test(msg);
+  }
+
+  async function tryCompletion(targetModel, maxTokens) {
+    const attemptBody = { ...body, model: targetModel, max_tokens: maxTokens };
+    if (stream) {
+      const res = await fetch(base + '/v1/chat/completions', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(attemptBody),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw Object.assign(
+          new Error('Inference chat failed (' + res.status + ')' + (detail ? ': ' + detail.slice(0, 160) : '')),
+          { status: res.status, detail },
+        );
+      }
+      const reader = res.body?.getReader?.();
+      if (!reader) {
+        const data = await res.json();
+        const text = extractChatText(data);
+        if (text) opts.onToken(text);
+        return { ok: true, text, model: targetModel, backend: runtime.backend, url: base, usage: data.usage || null, raw: data };
+      }
+      const decoder = new TextDecoder();
+      let full = '';
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop() || '';
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) continue;
+          const payload = trimmed.slice(5).trim();
+          if (payload === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(payload);
+            const delta = parsed?.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              full += delta;
+              opts.onToken(delta);
+            }
+          } catch (_) {}
+        }
+      }
+      const text = full.trim();
+      if (!text) throw new Error('Empty inference stream');
+      return { ok: true, text, model: targetModel, backend: runtime.backend, url: base, usage: null, raw: null };
+    }
+
+    const res = await fetch(base + '/v1/chat/completions', {
       method: 'POST',
       headers,
-      body: JSON.stringify(body),
+      body: JSON.stringify(attemptBody),
       signal: AbortSignal.timeout(timeoutMs),
     });
+
     if (!res.ok) {
       const detail = await res.text().catch(() => '');
-      throw new Error(
-        `Inference chat failed (${res.status})${detail ? `: ${detail.slice(0, 160)}` : ''}`,
+      throw Object.assign(
+        new Error('Inference chat failed (' + res.status + ')' + (detail ? ': ' + detail.slice(0, 160) : '')),
+        { status: res.status, detail },
       );
     }
-    const reader = res.body?.getReader?.();
-    if (!reader) {
-      const data = await res.json();
-      const text = extractChatText(data);
-      if (text) opts.onToken(text);
-      return { ok: true, text, model, backend: runtime.backend, url: base, usage: data.usage || null, raw: data };
-    }
-    const decoder = new TextDecoder();
-    let full = '';
-    let buf = '';
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n');
-      buf = lines.pop() || '';
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
-        const payload = trimmed.slice(5).trim();
-        if (payload === '[DONE]') continue;
-        try {
-          const parsed = JSON.parse(payload);
-          const delta = parsed?.choices?.[0]?.delta?.content || '';
-          if (delta) {
-            full += delta;
-            opts.onToken(delta);
+
+    const data = await res.json();
+    const text = extractChatText(data);
+    if (!text) throw new Error('Empty inference response');
+
+    return {
+      ok: true,
+      text,
+      model: targetModel,
+      backend: runtime.backend,
+      url: base,
+      usage: data.usage || null,
+      raw: data,
+    };
+  }
+
+  let lastError = null;
+  let attemptModel = model;
+  let attemptMaxTokens = body.max_tokens;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await tryCompletion(attemptModel, attemptMaxTokens);
+    } catch (err) {
+      lastError = err;
+      if (attempt === 1 && isRetryableError(err)) {
+        // Heavy/reasoning failure: prefer a fallback main model so the office
+        // keeps running while the big model recovers (loading, OOM, context).
+        if ((opts.tier === 'heavy' || opts.tier === 'reasoning') && (runtime.main_model || runtime.fast_model)) {
+          const fallback = runtime.main_model || runtime.fast_model || model;
+          if (fallback && fallback !== attemptModel) {
+            attemptModel = fallback;
+            attemptMaxTokens = Math.min(attemptMaxTokens, 1024);
           }
-        } catch (_) {}
+        }
+        await new Promise((r) => setTimeout(r, 500));
+        continue;
       }
+      throw err;
     }
-    const text = full.trim();
-    if (!text) throw new Error('Empty inference stream');
-    return { ok: true, text, model, backend: runtime.backend, url: base, usage: null, raw: null };
   }
-
-  const res = await fetch(`${base}/v1/chat/completions`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new Error(
-      `Inference chat failed (${res.status})${detail ? `: ${detail.slice(0, 160)}` : ''}`,
-    );
-  }
-
-  const data = await res.json();
-  const text = extractChatText(data);
-  if (!text) throw new Error('Empty inference response');
-
-  return {
-    ok: true,
-    text,
-    model,
-    backend: runtime.backend,
-    url: base,
-    usage: data.usage || null,
-    raw: data,
-  };
+  throw lastError;
 }
 
 function buildInferenceBlockFromProbe(probe, extra = {}) {

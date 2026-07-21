@@ -742,8 +742,9 @@ export type MyDayResult = {
   ok: boolean;
   error?: string;
   dueTasks?: MyDayItem[];
+  suggestedTasks?: MyDayItem[];
   items?: MyDayItem[];
-  counts?: { notes?: number; dueTasks?: number; overdue?: number; audit?: number; email?: number };
+  counts?: { notes?: number; dueTasks?: number; suggested?: number; overdue?: number; audit?: number; email?: number };
   generatedAt?: string;
 };
 
@@ -758,6 +759,7 @@ export async function fetchMyDay(hours = 168): Promise<MyDayResult> {
     return {
       ok: true,
       dueTasks: data.dueTasks || [],
+      suggestedTasks: data.suggestedTasks || [],
       items: data.items || [],
       counts: data.counts || {},
       generatedAt: data.generatedAt,
@@ -765,6 +767,22 @@ export async function fetchMyDay(hours = 168): Promise<MyDayResult> {
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
+}
+
+export async function acceptSuggestedTask(suggestedId: string | number): Promise<{ ok: boolean; summary?: string; error?: string }> {
+  return executeCrmAssistAction({
+    type: "confirm_suggested_task",
+    label: "Accept suggested task",
+    payload: { suggestedId },
+  });
+}
+
+export async function dismissSuggestedTask(suggestedId: string | number): Promise<{ ok: boolean; summary?: string; error?: string }> {
+  return executeCrmAssistAction({
+    type: "dismiss_suggested_task",
+    label: "Dismiss suggested task",
+    payload: { suggestedId },
+  });
 }
 
 export type VisitorAssistant = { npc_key?: string; display_name?: string; role?: string } | null;

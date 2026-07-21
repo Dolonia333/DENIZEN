@@ -275,6 +275,7 @@ function buildMyDay(state = {}, opts = {}) {
 
   const notes = Array.isArray(state.notes) ? state.notes : [];
   const tasks = Array.isArray(state.tasks) ? state.tasks : [];
+  const suggestedTasks = Array.isArray(state.suggestedTasks) ? state.suggestedTasks : [];
   const audit = Array.isArray(state.auditLog) ? state.auditLog : [];
   const emailLog = Array.isArray(state.emailLog) ? state.emailLog : [];
 
@@ -309,23 +310,42 @@ function buildMyDay(state = {}, opts = {}) {
       author: n.author || null,
     }));
 
-  const dueTasks = tasks
-    .filter((t) => t && !t.done)
-    .filter((t) => {
-      if (!t.due) return true;
-      return String(t.due) <= today || String(t.due) <= new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-    })
-    .sort((a, b) => String(a.due || '9999').localeCompare(String(b.due || '9999')))
+  const pendingSuggested = suggestedTasks
+    .filter((t) => t && !t.done && t.suggested !== false)
     .slice(0, 20)
     .map((t) => ({
-      kind: 'task',
+      kind: 'suggested_task',
       id: t.id,
       title: t.title,
       due: t.due || null,
       overdue: !!(t.due && String(t.due) < today),
       contact: t.contact || null,
       priority: t.priority || null,
+      source: t.source || 'gmail_inbound',
+      gmailId: t.gmailId || null,
+      suggested: true,
     }));
+
+  const dueTasks = [
+    ...pendingSuggested,
+    ...tasks
+      .filter((t) => t && !t.done)
+      .filter((t) => {
+        if (!t.due) return true;
+        return String(t.due) <= today || String(t.due) <= new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      })
+      .sort((a, b) => String(a.due || '9999').localeCompare(String(b.due || '9999')))
+      .slice(0, 20)
+      .map((t) => ({
+        kind: 'task',
+        id: t.id,
+        title: t.title,
+        due: t.due || null,
+        overdue: !!(t.due && String(t.due) < today),
+        contact: t.contact || null,
+        priority: t.priority || null,
+      })),
+  ].slice(0, 24);
 
   const recentAudit = audit
     .filter((e) => {
@@ -370,14 +390,65 @@ function buildMyDay(state = {}, opts = {}) {
     hours,
     dueTasks,
     items,
+    suggestedTasks: pendingSuggested,
     counts: {
       notes: recentNotes.length,
       dueTasks: dueTasks.length,
+      suggested: pendingSuggested.length,
       overdue: dueTasks.filter((t) => t.overdue).length,
       audit: recentAudit.length,
       email: recentEmail.length,
     },
   };
+}
+
+/**
+ * Accept a suggested task into the real tasks list.
+ */
+async function acceptSuggestedTask(orgId, suggestedId, identityId = null) {
+  const crmStore = require('./denizen-crm-store');
+  const row = await crmStore.getWorkspace(orgId);
+  if (!row?.state) return { ok: false, error: 'workspace unavailable' };
+  const state = { ...row.state };
+  const suggested = Array.isArray(state.suggestedTasks) ? [...state.suggestedTasks] : [];
+  const idx = suggested.findIndex((t) => String(t?.id) === String(suggestedId));
+  if (idx < 0) return { ok: false, error: 'suggested task not found' };
+  const [task] = suggested.splice(idx, 1);
+  const accepted = {
+    ...task,
+    suggested: false,
+    status: 'todo',
+    done: false,
+    acceptedAt: new Date().toISOString(),
+  };
+  const tasks = Array.isArray(state.tasks) ? [...state.tasks] : [];
+  tasks.unshift(accepted);
+  state.suggestedTasks = suggested;
+  state.tasks = tasks;
+  const saved = await crmStore.upsertWorkspace(orgId, state, identityId);
+  if (!saved) return { ok: false, error: 'save failed' };
+  return {
+    ok: true,
+    summary: `Accepted task: ${accepted.title}${accepted.due ? ` (due ${accepted.due})` : ''}`,
+    task: accepted,
+  };
+}
+
+/**
+ * Dismiss a suggested task without adding it.
+ */
+async function dismissSuggestedTask(orgId, suggestedId, identityId = null) {
+  const crmStore = require('./denizen-crm-store');
+  const row = await crmStore.getWorkspace(orgId);
+  if (!row?.state) return { ok: false, error: 'workspace unavailable' };
+  const state = { ...row.state };
+  const suggested = Array.isArray(state.suggestedTasks) ? state.suggestedTasks : [];
+  const next = suggested.filter((t) => String(t?.id) !== String(suggestedId));
+  if (next.length === suggested.length) return { ok: false, error: 'suggested task not found' };
+  state.suggestedTasks = next;
+  const saved = await crmStore.upsertWorkspace(orgId, state, identityId);
+  if (!saved) return { ok: false, error: 'save failed' };
+  return { ok: true, summary: 'Dismissed suggested follow-up.' };
 }
 
 module.exports = {
@@ -389,4 +460,6 @@ module.exports = {
   runCapture,
   proposeCaptureActions,
   buildMyDay,
+  acceptSuggestedTask,
+  dismissSuggestedTask,
 };

@@ -34,6 +34,10 @@ describe('denizen-crm-email-inbound', () => {
     assert.ok(out.state.emailLog[0].direction === 'inbound');
     assert.equal(out.state.emailLog[0].gmailId, 'gmail_abc');
     assert.ok(out.state.notes[0].body.includes('OMES'));
+    assert.ok(out.suggestedTask, 'creates suggested follow-up task');
+    assert.equal(out.suggestedTask.suggested, true);
+    assert.match(out.suggestedTask.title, /OMES/i);
+    assert.ok(Array.isArray(out.state.suggestedTasks) && out.state.suggestedTasks.length >= 1);
   });
 
   it('dedupes by gmailId', () => {

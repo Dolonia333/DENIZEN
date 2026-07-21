@@ -189,7 +189,9 @@ function fileMessageIntoState(state, msg, opts = {}) {
     type: 'Email',
     contactId: contact.id,
     contact: contact.name,
+    text: `📥 Inbound email from ${name} <${email}>\nSubject: ${entry.subject}\n\n${bodyText.slice(0, 2000)}`,
     body: `📥 Inbound email from ${name} <${email}>\nSubject: ${entry.subject}\n\n${bodyText.slice(0, 2000)}`,
+    date: receivedAt.slice(0, 10),
     at: receivedAt,
     author: 'Gmail inbound',
     source: 'gmail_inbound',
@@ -208,12 +210,46 @@ function fileMessageIntoState(state, msg, opts = {}) {
     entry.dealId = linkedDeal.id;
   }
 
+  // Suggested follow-up task — Angela confirms in My Day / Assist (or auto-accept via env)
+  const autoAccept = /^(1|true|yes|on)$/i.test(String(process.env.GMAIL_INBOUND_AUTO_TASK || '0'));
+  const dueDays = Math.min(14, Math.max(1, Number(process.env.GMAIL_INBOUND_TASK_DUE_DAYS || 2)));
+  const due = new Date(Date.now() + dueDays * 86400000).toISOString().slice(0, 10);
+  const taskTitle = `Follow up: ${String(entry.subject || 'email').slice(0, 80)}`;
+  const suggestedTask = {
+    id: nextId([...(working.tasks || []), ...(working.suggestedTasks || [])]),
+    title: taskTitle,
+    contact: contact.name,
+    contactId: contact.id,
+    due,
+    priority: 'Medium',
+    done: false,
+    status: autoAccept ? 'todo' : 'suggested',
+    suggested: !autoAccept,
+    notes: `From Gmail inbound (${email}). ${bodyText.slice(0, 240)}`,
+    source: 'gmail_inbound',
+    gmailId: msg.id,
+    dealId: linkedDeal?.id || null,
+    createdAt: receivedAt,
+  };
+
+  if (autoAccept) {
+    const tasks = Array.isArray(working.tasks) ? [...working.tasks] : [];
+    tasks.unshift(suggestedTask);
+    working.tasks = tasks.slice(0, 500);
+  } else {
+    const suggested = Array.isArray(working.suggestedTasks) ? [...working.suggestedTasks] : [];
+    suggested.unshift(suggestedTask);
+    working.suggestedTasks = suggested.slice(0, 100);
+  }
+
   return {
     state: working,
     skipped: false,
     createdContact: created,
     contact,
     emailEntry: entry,
+    suggestedTask,
+    taskAutoAccepted: autoAccept,
   };
 }
 
@@ -256,6 +292,8 @@ async function ingestInboundEmail(msg, opts = {}) {
     emailLogId: filed.emailEntry.id,
     subject: filed.emailEntry.subject,
     gmailId: msg.id,
+    suggestedTaskId: filed.suggestedTask?.id || null,
+    taskAutoAccepted: !!filed.taskAutoAccepted,
     updated_at: saved?.updated_at || null,
   };
 }

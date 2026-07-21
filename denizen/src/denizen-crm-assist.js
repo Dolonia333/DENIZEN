@@ -26,6 +26,9 @@ function summarizeWorkspace(state = {}) {
   const overdueTickets = openTickets.filter((t) => t.slaDue && String(t.slaDue) < today);
   const campaigns = Array.isArray(state.marketingCampaigns) ? state.marketingCampaigns : [];
   const activeCampaigns = campaigns.filter((c) => c && c.status === 'active');
+  const suggestedTasks = Array.isArray(state.suggestedTasks)
+    ? state.suggestedTasks.filter((t) => t && !t.done).slice(0, 8)
+    : [];
 
   return {
     contactCount: contacts.length,
@@ -92,6 +95,14 @@ function summarizeWorkspace(state = {}) {
     industry: state.industryConfig?.id
       ? { id: state.industryConfig.id, name: state.industryConfig.name, icon: state.industryConfig.icon }
       : null,
+    suggestedTaskCount: suggestedTasks.length,
+    suggestedTasks: suggestedTasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      due: t.due,
+      contact: t.contact,
+      source: t.source,
+    })),
   };
 }
 
@@ -102,6 +113,17 @@ function proposeActions(message, summary) {
   // Capture / confirm writes first — Angela tells Assist what happened
   for (const a of crmCapture.proposeCaptureActions(message, summary)) {
     actions.push(a);
+  }
+
+  // Pending Gmail → task suggestions
+  if (summary.suggestedTaskCount > 0 && (lq.includes('email') || lq.includes('follow') || lq.includes('task') || lq.includes('my day') || lq.includes('inbox') || lq.includes('suggest'))) {
+    for (const t of (summary.suggestedTasks || []).slice(0, 2)) {
+      actions.push({
+        type: 'confirm_suggested_task',
+        label: `Accept: ${t.title}`,
+        payload: { suggestedId: t.id, title: t.title, due: t.due },
+      });
+    }
   }
 
   if (summary.overdueTaskCount > 0 && (lq.includes('focus') || lq.includes('today') || lq.includes('priority') || lq.includes('my day'))) {
@@ -231,6 +253,18 @@ async function executeAssistAction(opts = {}) {
       created: result.ok ? [{ type: 'note', id: result.id }] : [],
       note: result.note,
     };
+  }
+
+  if (type === 'confirm_suggested_task' || type === 'accept_suggested_task') {
+    const suggestedId = payload.suggestedId ?? payload.id;
+    if (suggestedId == null) return { ok: false, error: 'suggestedId required', summary: 'Missing suggested task id.' };
+    return crmCapture.acceptSuggestedTask(orgId, suggestedId, identityId);
+  }
+
+  if (type === 'dismiss_suggested_task') {
+    const suggestedId = payload.suggestedId ?? payload.id;
+    if (suggestedId == null) return { ok: false, error: 'suggestedId required', summary: 'Missing suggested task id.' };
+    return crmCapture.dismissSuggestedTask(orgId, suggestedId, identityId);
   }
 
   return { ok: false, error: `unsupported action: ${type}`, summary: `Cannot execute ${type}.` };

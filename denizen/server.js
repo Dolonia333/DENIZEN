@@ -13113,6 +13113,27 @@ server.listen(PORT, () => {
   log.info('Server', `http://localhost:${PORT}`);
   log.info('WS', `ws://localhost:${PORT}/agent-ws`);
   log.info('Security', `ws://localhost:${PORT}/security-ws`);
+  // Keep main+fast resident in LM Studio; heavy stays JIT-only (16GB GPU).
+  setTimeout(() => {
+    try {
+      const modelMgr = require('./src/lm-studio-model-manager');
+      modelMgr.ensureResidentModels().then((r) => {
+        if (r?.skipped) {
+          log.info('LMStudio', `resident preload skipped (${r.reason})`);
+        } else if (r?.ok) {
+          const loaded = (r.resident || []).map((x) => `${x.model}${x.already ? ' (already)' : ''}`).join(', ');
+          log.info('LMStudio', `resident models ready: ${loaded || 'none'}`);
+          if (r.heavy) log.info('LMStudio', `heavy=${r.heavy.model} strategy=${r.heavy.strategy} ttl=${r.heavy.ttl_sec}s`);
+        } else {
+          log.warn('LMStudio', `resident preload: ${r?.error || 'failed'}`);
+        }
+      }).catch((err) => {
+        log.warn('LMStudio', `resident preload error: ${err?.message || err}`);
+      });
+    } catch (err) {
+      log.warn('LMStudio', `model manager unavailable: ${err?.message || err}`);
+    }
+  }, 4000).unref?.();
   _startDiscordBotSidecar();
   const ttsStatus = elevenLabs.status();
   if (ttsStatus.configured) {

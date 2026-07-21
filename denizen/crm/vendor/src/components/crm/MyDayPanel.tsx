@@ -1,25 +1,44 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { T, S } from "@/lib/crm-data";
-import { fetchMyDay, type MyDayItem, type MyDayResult } from "@/lib/crm-api";
+import {
+  fetchMyDay,
+  acceptSuggestedTask,
+  dismissSuggestedTask,
+  type MyDayItem,
+  type MyDayResult,
+} from "@/lib/crm-api";
 
 type Props = {
   onNavigate?: (tab: string) => void;
 };
 
-function ItemRow({ item }: { item: MyDayItem }) {
+function ItemRow({
+  item,
+  onAccept,
+  onDismiss,
+  busy,
+}: {
+  item: MyDayItem;
+  onAccept?: () => void;
+  onDismiss?: () => void;
+  busy?: boolean;
+}) {
+  const isSuggested = item.kind === "suggested_task" || !!(item as { suggested?: boolean }).suggested;
   const accent = item.overdue
     ? "#f85b5b"
-    : item.kind === "task"
-      ? "#4d9ef7"
-      : item.kind === "email"
-        ? "#8b5cf6"
-        : "#fb923c";
+    : isSuggested
+      ? "#22d3a0"
+      : item.kind === "task"
+        ? "#4d9ef7"
+        : item.kind === "email"
+          ? "#8b5cf6"
+          : "#fb923c";
   return (
     <div style={{
       padding: "10px 12px",
       borderRadius: 8,
-      border: `1px solid ${T.bg4}`,
-      background: T.bg2,
+      border: `1px solid ${isSuggested ? "#22d3a055" : T.bg4}`,
+      background: isSuggested ? "#22d3a012" : T.bg2,
       display: "flex",
       gap: 10,
       alignItems: "flex-start",
@@ -34,7 +53,7 @@ function ItemRow({ item }: { item: MyDayItem }) {
       }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: T.text0 }}>
-          {item.title}
+          {isSuggested ? "Suggested · " : ""}{item.title}
           {item.overdue ? <span style={{ color: "#f85b5b", marginLeft: 6, fontWeight: 600 }}>overdue</span> : null}
           {item.due && !item.overdue ? <span style={{ color: T.text3, marginLeft: 6, fontWeight: 500 }}>due {item.due}</span> : null}
         </div>
@@ -46,6 +65,30 @@ function ItemRow({ item }: { item: MyDayItem }) {
         <div style={{ fontSize: 10, color: T.text3, marginTop: 4 }}>
           {item.kind}{item.author ? ` · ${item.author}` : ""}{item.at ? ` · ${String(item.at).slice(0, 10)}` : ""}
         </div>
+        {isSuggested && (onAccept || onDismiss) ? (
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            {onAccept ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onAccept}
+                style={{ ...S.btn, padding: "5px 10px", fontSize: 11, opacity: busy ? 0.6 : 1 } as React.CSSProperties}
+              >
+                Accept task
+              </button>
+            ) : null}
+            {onDismiss ? (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onDismiss}
+                style={{ ...S.btnGhost, padding: "5px 10px", fontSize: 11 } as React.CSSProperties}
+              >
+                Dismiss
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -54,6 +97,14 @@ function ItemRow({ item }: { item: MyDayItem }) {
 export function MyDayPanel({ onNavigate }: Props) {
   const [data, setData] = useState<MyDayResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | number | null>(null);
+
+  const reload = useCallback(async () => {
+    setLoading(true);
+    const result = await fetchMyDay(168);
+    setData(result);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,8 +120,23 @@ export function MyDayPanel({ onNavigate }: Props) {
   }, []);
 
   const due = data?.dueTasks || [];
+  const suggested = data?.suggestedTasks || due.filter((t) => t.kind === "suggested_task");
   const items = data?.items || [];
   const counts = data?.counts || {};
+
+  const handleAccept = async (id: string | number) => {
+    setBusyId(id);
+    await acceptSuggestedTask(id);
+    setBusyId(null);
+    await reload();
+  };
+
+  const handleDismiss = async (id: string | number) => {
+    setBusyId(id);
+    await dismissSuggestedTask(id);
+    setBusyId(null);
+    await reload();
+  };
 
   return (
     <div style={{
@@ -84,7 +150,7 @@ export function MyDayPanel({ onNavigate }: Props) {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: T.text0 }}>My Day</div>
           <div style={{ fontSize: 11, color: T.text3, marginTop: 2 }}>
-            Your captures, follow-ups, and recent CRM activity
+            Your captures, email follow-ups, and CRM activity
           </div>
         </div>
         <button
@@ -105,6 +171,7 @@ export function MyDayPanel({ onNavigate }: Props) {
         <>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
             {[
+              { label: "Suggested", value: counts.suggested || suggested.length || 0 },
               { label: "Due", value: counts.dueTasks || 0 },
               { label: "Overdue", value: counts.overdue || 0 },
               { label: "Logged", value: counts.notes || 0 },
@@ -123,11 +190,32 @@ export function MyDayPanel({ onNavigate }: Props) {
             ))}
           </div>
 
+          {suggested.length > 0 && (
+            <>
+              <div style={{ fontSize: 12, fontWeight: 700, color: T.text0, marginBottom: 8 }}>
+                From email — confirm follow-ups
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, maxHeight: 260, overflowY: "auto" }}>
+                {suggested.map((t) => (
+                  <ItemRow
+                    key={`sug-${t.id}-${t.title}`}
+                    item={t}
+                    busy={busyId === t.id}
+                    onAccept={() => t.id != null && handleAccept(t.id as string | number)}
+                    onDismiss={() => t.id != null && handleDismiss(t.id as string | number)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
           <div style={{ fontSize: 12, fontWeight: 700, color: T.text0, marginBottom: 8 }}>Due soon</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, maxHeight: 220, overflowY: "auto" }}>
-            {due.length === 0 ? (
+            {due.filter((t) => t.kind !== "suggested_task").length === 0 ? (
               <div style={{ fontSize: 12, color: T.text3 }}>No open follow-ups. Tell the AI what you did today.</div>
-            ) : due.map((t) => <ItemRow key={`due-${t.id}-${t.title}`} item={t} />)}
+            ) : due.filter((t) => t.kind !== "suggested_task").map((t) => (
+              <ItemRow key={`due-${t.id}-${t.title}`} item={t} />
+            ))}
           </div>
 
           <div style={{ fontSize: 12, fontWeight: 700, color: T.text0, marginBottom: 8 }}>Recent activity</div>
