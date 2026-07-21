@@ -1660,21 +1660,25 @@
             ['f', 'statueM', 250, 1, 0],
           ],
         }),
-        // Recipe 2 = archaeology annex: dig-find cases with a docent on duty.
+        // Recipe 2 = archaeology annex: three display cases in a clean exhibit
+        // row, artifact inside each glass, one rail between clusters, docent
+        // on the open floor. dx spacing is width-aware: the climb lane
+        // reserves x<=~85 (clearX 36 + clearR + halfW), and neighbours need
+        // hw1+hw2+6 clearance or placeRoomItems nudges/drops them —
+        // itemDisplay S/M/L are 14/16/30px wide (hw 14/16/30 at SCALE).
         () => ({
-          h: 96, fill: 0xe8dcc0, slots: [95, 155, 285],
+          h: 96, fill: 0xe8dcc0, slots: [110, 200, 285],
           items: [
             ['w', 'lightFixture', 165, 2],
-            ['w', ['clipboardLong1', 'clipboardLong2'], 260, 8],
-            ['f', 'itemDisplayS', 82, 1, 0],
-            ['f', ['crownDig', 'neolithicMask'], 82, 1, 14],
-            ['f', 'guardRail', 106, 1, 0],
-            ['f', 'itemDisplayM', 138, 1, 0],
-            ['f', ['stoneTablet', 'megalodonTooth'], 138, 1, 15],
-            ['f', 'itemDisplayL', 205, 1, 0],
-            ['f', ['potteryAncient', 'fossilFish'], 205, 1, 15],
-            ['f', 'guardRail', 238, 1, 0],
-            ['npc', 'museum-docent', 268],
+            ['w', ['clipboardLong1', 'clipboardLong2'], 262, 8],
+            ['f', 'itemDisplayS', 92, 1, 0],
+            ['f', ['crownDig', 'neolithicMask'], 92, 1, 12],
+            ['f', 'guardRail', 130, 1, 0],
+            ['f', 'itemDisplayM', 170, 1, 0],
+            ['f', ['stoneTablet', 'megalodonTooth'], 170, 1, 12],
+            ['f', 'itemDisplayL', 224, 1, 0],
+            ['f', ['potteryAncient', 'fossilFish'], 224, 1, 12],
+            ['npc', 'museum-docent', 282],
           ],
         }),
       ],
@@ -1909,9 +1913,11 @@
         // --- Sky spirits: floating sheet-ghosts + a bat pair ---
         const ghost = scene.add.image(left - 20, groundY - 60, seededPick(seed, ['ghost1', 'ghost2'], 2)).setScale(SCALE).setDepth(19).setAlpha(0.8);
         scene.tweens.add({ targets: ghost, y: groundY - 80, x: left + 30, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        const bat = scene.add.image(left + bw + 20, groundY - 120, seededPick(seed, ['bat1', 'bat2'], 3)).setScale(SCALE).setDepth(19);
+        // Pack bat art is drawn ROOSTING (hanging head-down, as bats sleep) —
+        // flip vertically so airborne bats read as flying, wings up.
+        const bat = scene.add.image(left + bw + 20, groundY - 120, seededPick(seed, ['bat1', 'bat2'], 3)).setScale(SCALE).setDepth(19).setFlipY(true);
         scene.tweens.add({ targets: bat, x: left + bw + 90, y: groundY - 150, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        const bat2 = scene.add.image(left - 30, groundY - 160, seededPick(seed, ['bat2', 'bat1'], 5)).setScale(SCALE * 0.8).setDepth(19).setAlpha(0.9);
+        const bat2 = scene.add.image(left - 30, groundY - 160, seededPick(seed, ['bat2', 'bat1'], 5)).setScale(SCALE * 0.8).setDepth(19).setAlpha(0.9).setFlipY(true);
         scene.tweens.add({ targets: bat2, x: left + bw * 0.5, y: groundY - 190, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         // --- A real animated ghost NPC haunting the sidewalk ---
         scene.decorNpcQueue.push([`halloween-ghost-street-${left}`, left + bw * 0.5, groundY]);
@@ -2329,7 +2335,7 @@
           for (let i = 0; i < total; i += MAX_ROOMS) {
             const chunk = cat.channels.slice(i, i + MAX_ROOMS);
             const suffix = total > MAX_ROOMS ? ` ${Math.floor(i / MAX_ROOMS) + 1}` : '';
-            const b = this.buildGenericBuilding(decision.theme, x, `${catLabel}${suffix}`, chunk);
+            const b = this.buildGenericBuilding(decision.theme, x, `${catLabel}${suffix}`, chunk, i);
             this.buildings.push({ left: x, right: x + b.bw, kind: decision.theme, channels: chunk, label: catLabel });
             paintSection(x, b.bw);
             x = advanceStreet(x, b.bw, `theme-${cat.id}-${i}`);
@@ -2759,11 +2765,14 @@
       });
     }
 
-    /** Build one themed building for `channels` (already chunked to <= 2). */
-    buildGenericBuilding(theme, left, categoryLabel, channels) {
+    /** Build one themed building for `channels` (already chunked to <= 2).
+     *  recipeOffset carries the category-wide channel index so the recipe
+     *  rotation continues across chunked buildings — without it every chunk
+     *  restarted at recipe 0 and recipes past index 1 never rendered. */
+    buildGenericBuilding(theme, left, categoryLabel, channels, recipeOffset = 0) {
       const kit = THEME_KITS[theme];
       const rooms = channels.map((ch, i) => {
-        const recipe = kit.recipes[i % kit.recipes.length]();
+        const recipe = kit.recipes[(recipeOffset + i) % kit.recipes.length]();
         const ov = this.roomOverrides?.[String(ch.id)];
         let fill = recipe.fill;
         if (ov?.color) {
