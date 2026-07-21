@@ -2,7 +2,7 @@
 
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { summarizeWorkspace, crmAssist } = require('../src/denizen-crm-assist');
+const { summarizeWorkspace, crmAssist, proposeActions } = require('../src/denizen-crm-assist');
 
 describe('denizen-crm-assist', () => {
   it('summarizeWorkspace counts pipeline metrics', () => {
@@ -39,5 +39,13 @@ describe('denizen-crm-assist', () => {
     assert.equal(result.source, 'rules');
     assert.match(result.reply, /Lucy/i);
     assert.equal(result.persona, 'lucy');
+  });
+
+  it('proposeActions includes confirm_capture for Angela-style speech', () => {
+    const actions = proposeActions(
+      'I talked to OK.gov about the OMES bid, follow up Friday',
+      { openDealCount: 2, overdueTaskCount: 0, atRiskCount: 0, newSubmissionCount: 0, openTicketCount: 0, activeCampaignCount: 0 },
+    );
+    assert.ok(actions.some((a) => a.type === 'confirm_capture'));
   });
 });

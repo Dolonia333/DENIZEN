@@ -276,11 +276,13 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'GET|PUT /api/crm/workspace',
           'GET /api/crm/workspace/stream',
           'GET /api/crm/audit',
+          'GET /api/crm/my-day',
           'POST /api/crm/govcon-enable',
           'GET /api/crm/email-inbound/status',
           'POST /api/crm/email-inbound/poll',
           'POST /api/crm/email-inbound',
           'POST /api/crm/assist',
+          'POST /api/crm/assist/execute',
           'POST /api/crm/event',
           'POST /api/crm/send-email',
           'POST /api/crm/sequence/enroll',
@@ -292,6 +294,36 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         ],
       });
       return true;
+    }
+
+    // Personal My Day feed (Angela's notes, tasks, emails, agent captures)
+    if (path === '/api/crm/my-day' && req.method === 'GET') {
+      try {
+        const body = {};
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const actor = await resolveCrmActor(access, sessionId);
+        const row = await crmStore.getWorkspace(orgId);
+        const hours = Math.min(168, Math.max(1, Number(url.searchParams.get('hours') || 168)));
+        const crmCapture = require('./denizen-crm-capture');
+        const myDay = crmCapture.buildMyDay(row?.state || {}, {
+          email: actor.email,
+          user: actor.user,
+          displayName: actor.user,
+          hours,
+        });
+        json(res, 200, { ok: true, org_id: orgId, actor, ...myDay });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
     }
 
     // Recent per-user CRM audit (who changed what)
@@ -688,6 +720,52 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           npcName: body.npc_name || body.npcName || null,
         });
         json(res, 200, { ok: true, ...result });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'DENIED' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    // Confirm chip → execute agent-writes / capture
+    if (path === '/api/crm/assist/execute' && (req.method === 'POST' || req.method === 'OPTIONS')) {
+      if (req.method === 'OPTIONS') {
+        res.writeHead(204, {
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, X-Session-Id, X-Session-Token, X-Denizen-Ceo-Grant, X-Access-Method, X-Org-Slug',
+        });
+        res.end();
+        return true;
+      }
+      try {
+        const body = await readJsonBody(req, 256 * 1024);
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) {
+          json(res, 409, { ok: false, error: 'Session is not linked to an organization' });
+          return true;
+        }
+        const orgSlug = String(
+          body.org_slug
+          || body.orgSlug
+          || access.session?.org_slug
+          || access.org?.slug
+          || process.env.DENIZEN_ORG_SLUG
+          || 'zion',
+        ).trim();
+        const action = body.action && typeof body.action === 'object'
+          ? body.action
+          : { type: body.type, label: body.label, payload: body.payload };
+        const result = await crmAssist.executeAssistAction({
+          orgSlug,
+          orgId,
+          action,
+          npcName: body.npc_name || body.npcName || body.npc_key || body.npcKey || 'Lucy',
+          identityId: access.session?.identity_id || null,
+        });
+        json(res, result.ok ? 200 : 400, { ok: !!result.ok, ...result });
         return true;
       } catch (err) {
         const status = err?.code === 'DENIED' ? 401 : 500;

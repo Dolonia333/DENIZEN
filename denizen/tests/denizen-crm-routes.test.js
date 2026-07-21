@@ -142,6 +142,8 @@ describe('denizen-crm-routes', () => {
       const data = await res.json();
       assert.equal(data.ok, true);
       assert.ok(data.routes.some((r) => r.includes('/api/crm/assist')));
+      assert.ok(data.routes.some((r) => r.includes('/api/crm/assist/execute')));
+      assert.ok(data.routes.some((r) => r.includes('/api/crm/my-day')));
     } finally {
       server.close();
     }

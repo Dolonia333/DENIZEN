@@ -25,7 +25,7 @@ export const CRM_NPC_PERSONAS: CrmNpcPersona[] = [
   { key: "conference_woman", name: "Sarah", title: "Product Manager", expertise: "qualification, industry fit, packages, deal strategy", canWrite: true, setupOwner: ["packages", "industry"] },
   { key: "edward", name: "Edward", title: "Backend Developer", expertise: "deployment scope, infra-heavy proposals, CRM webhooks", canWrite: false },
   { key: "josh", name: "Josh", title: "Frontend Developer", expertise: "UX requirements, intake forms, client portal polish", canWrite: false },
-  { key: "molly", name: "Molly", title: "QA Engineer", expertise: "acceptance criteria, release gates on client work", canWrite: false },
+  { key: "molly", name: "Molly", title: "QA Engineer", expertise: "acceptance criteria, release gates, capturing owner updates into CRM", canWrite: true },
   { key: "oscar", name: "Oscar", title: "DevOps Engineer", expertise: "CRM uptime, integrations health, automation reliability", canWrite: false },
   { key: "pier", name: "Pier", title: "Data Engineer", expertise: "CRM data hygiene, spine sync, reporting", canWrite: true },
   { key: "rob", name: "Rob", title: "UI/UX Designer", expertise: "client touchpoints, proposal visuals, brand fit", canWrite: true },

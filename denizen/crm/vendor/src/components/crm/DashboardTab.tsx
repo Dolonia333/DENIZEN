@@ -5,6 +5,7 @@ import { T, S, fmt, STAGE_COLORS, calcLeadScore, type Contact, type Deal, type T
 import { useCRMTranslation } from "@/hooks/use-crm-translation";
 import { GoalsPanel } from "./GoalsPanel";
 import { DashboardEmptyState } from "./shared/DashboardEmptyState";
+import { MyDayPanel } from "./MyDayPanel";
 
 const PANEL_SCROLL: React.CSSProperties = { maxHeight: 400, overflowY: "auto" };
 
@@ -249,6 +250,8 @@ export function DashboardTab({ contacts, deals, tasks, notes, meetings, goals = 
           </button>
         </div>
       </div>
+
+      <MyDayPanel onNavigate={onNavigate} />
 
       <GoalsPanel goals={goals} deals={deals} contacts={contacts} onNavigate={onNavigate} />
 

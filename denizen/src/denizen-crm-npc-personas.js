@@ -24,7 +24,7 @@ const CRM_WRITE_SKILLS_LIST = [
   'crm-invite-teammate', 'crm-intake-to-pipeline', 'crm-save-at-risk-deal', 'intake-to-client',
   'crm-add-company', 'crm-link-company', 'crm-portal-link', 'crm-add-automation',
   'crm-add-sequence', 'crm-add-email-template', 'crm-import-contacts', 'crm-add-note',
-  'crm-schedule-meeting', 'crm-sync-calendar',
+  'crm-schedule-meeting', 'crm-sync-calendar', 'crm-capture',
 ];
 
 const CRM_NPC_PERSONAS = [
@@ -39,7 +39,7 @@ const CRM_NPC_PERSONAS = [
   { key: 'conference_woman', name: 'Sarah', title: 'Product Manager', expertise: 'qualification, industry fit, packages, deal strategy', canWrite: true, setupOwner: ['packages', 'industry'] },
   { key: 'edward', name: 'Edward', title: 'Backend Developer', expertise: 'deployment scope, infra-heavy proposals, CRM webhooks', canWrite: false, setupOwner: [] },
   { key: 'josh', name: 'Josh', title: 'Frontend Developer', expertise: 'UX requirements, intake forms, client portal polish', canWrite: false, setupOwner: [] },
-  { key: 'molly', name: 'Molly', title: 'QA Engineer', expertise: 'acceptance criteria, release gates on client work', canWrite: false, setupOwner: [] },
+  { key: 'molly', name: 'Molly', title: 'QA Engineer', expertise: 'acceptance criteria, release gates, capturing what the owner told her into CRM', canWrite: true, setupOwner: [] },
   { key: 'oscar', name: 'Oscar', title: 'DevOps Engineer', expertise: 'CRM uptime, integrations health, automation reliability', canWrite: false, setupOwner: [] },
   { key: 'pier', name: 'Pier', title: 'Data Engineer', expertise: 'CRM data hygiene, spine sync, reporting', canWrite: true, setupOwner: [] },
   { key: 'rob', name: 'Rob', title: 'UI/UX Designer', expertise: 'client touchpoints, proposal visuals, brand fit', canWrite: true, setupOwner: [] },
@@ -91,6 +91,7 @@ const SKILL_OWNERS = {
   'crm-add-sequence': 'Lucy',
   'crm-add-email-template': 'Lucy',
   'crm-add-note': 'Lucy',
+  'crm-capture': 'Lucy',
   'crm-schedule-meeting': 'Lucy',
   'crm-list-meetings': 'Lucy',
   'crm-calendar-status': 'Dan',
@@ -108,7 +109,11 @@ const NPC_ALLOWED_SKILLS = {
     'crm-add-contact', 'crm-update-contact', 'crm-qualify-submission', 'crm-intake-to-pipeline',
     'crm-draft-email', 'crm-enroll-sequence', 'crm-invite-teammate', 'crm-schedule-followup',
     'crm-get-intake-link', 'crm-setup-wizard', 'crm-add-task', 'intake-triage', 'intake-to-client',
-    'crm-add-sequence', 'crm-add-email-template', 'crm-add-note', 'crm-schedule-meeting',
+    'crm-add-sequence', 'crm-add-email-template', 'crm-add-note', 'crm-capture', 'crm-schedule-meeting',
+  ]),
+  molly: new Set([
+    ...CRM_READ_SKILLS_LIST,
+    'crm-capture', 'crm-add-note', 'crm-add-task', 'crm-schedule-followup', 'crm-list-tasks',
   ]),
   sarah: new Set([
     ...CRM_READ_SKILLS_LIST,
@@ -395,6 +400,13 @@ function inferCrmAction(message) {
   if (/\b(import)\b.*\bcontact/i.test(msg) || /\bcsv\b.*\bimport/i.test(msg)) {
     return { skill: 'crm-import-contacts', params: params(), source: 'infer-crm' };
   }
+  if (/\b(talked|spoke|met|called|emailed)\b.+\b(about|regarding|re:)\b/i.test(msg)
+    || /\b(log|capture|record)\b.+\b(call|meeting|update|conversation)\b/i.test(msg)
+    || /\b(update|add to|put in)\b.+\b(crm|meridian)\b/i.test(msg)
+    || (/\bfollow[- ]?up\b/i.test(msg) && /\b(talked|spoke|met|call|email|about)\b/i.test(msg))) {
+    return { skill: 'crm-capture', params: params(), source: 'infer-crm' };
+  }
+
   if (/\b(add|log|create)\b.*\bnote\b/i.test(msg)) {
     return { skill: 'crm-add-note', params: params(), source: 'infer-crm' };
   }

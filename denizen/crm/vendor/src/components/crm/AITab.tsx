@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { T, S, type Contact, type Deal, type Task, type AiThread, type AiThreadMessage } from "@/lib/crm-data";
-import { assistCrm, type CrmWorkspaceState, type CrmAssistAction, type CrmTeamMember } from "@/lib/crm-api";
+import { assistCrm, executeCrmAssistAction, type CrmWorkspaceState, type CrmAssistAction, type CrmTeamMember } from "@/lib/crm-api";
 import { dispatchCrmSubNav } from "@/lib/crm-nav";
 import { CRM_NPC_PERSONAS, resolveCrmNpcPersona, type CrmNpcPersona } from "@/lib/crm-npc-personas";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -178,10 +178,15 @@ export function AITab({
   const [activeId, setActiveId] = useState<number | null>(normalizedThreads[0]?.id ?? null);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [pendingActions, setPendingActions] = useState<CrmAssistAction[]>([]);
   const [scope, setScope] = useState<ChatScope>("mine");
   const [selectedNpcKey, setSelectedNpcKey] = useState<string>(defaultNpcKey || "lucy");
   const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== "undefined" ? readSidebarOpen() : true));
   const [teamExpanded, setTeamExpanded] = useState(false);
+
+  const isConfirmAction = (action: CrmAssistAction) =>
+    /^(confirm_|crm_capture)/i.test(String(action.type || "")) || action.type === "create_task";
 
   const toggleSidebar = () => {
     setSidebarOpen((prev) => {
@@ -234,17 +239,43 @@ export function AITab({
     );
   };
 
-  const runAction = (action: CrmAssistAction) => {
+  const runNavAction = (action: CrmAssistAction) => {
     if (action.type === "open_tab" && action.tab) {
       onNavigate?.(action.tab);
       if (action.tab === "sales") dispatchCrmSubNav("sales", "pipeline");
+      if (action.tab === "dashboard") onNavigate?.("dashboard");
     }
-    if (action.type === "create_task" && action.payload && onCreateTask) {
+  };
+
+  const confirmAction = async (action: CrmAssistAction) => {
+    if (!activeThread || confirmBusy) return;
+    const persona = activePersona || selectedPersona;
+    setConfirmBusy(true);
+    const result = await executeCrmAssistAction(action, { npcKey: persona?.key, npcName: persona?.name });
+    setConfirmBusy(false);
+    setPendingActions((prev) => prev.filter((a) => a !== action));
+    const text = result.ok
+      ? (result.summary || "Saved to CRM.")
+      : (result.error || "Could not save to CRM.");
+    persistThread(activeThread.id, {
+      messages: [
+        ...(activeThread.messages || []),
+        {
+          role: "ai",
+          text: result.ok ? `✓ ${text}` : `Could not save: ${text}`,
+          source: result.ok ? "assist-execute" : "error",
+          speaker: persona?.name || "AI",
+          at: new Date().toISOString(),
+        },
+      ],
+    });
+    // Keep local task mirror when confirm_task succeeds and parent can create tasks
+    if (result.ok && (action.type === "confirm_task" || action.type === "create_task") && action.payload && onCreateTask) {
       onCreateTask({
         title: String(action.payload.title || action.label),
         contact: String(action.payload.contact || ""),
         priority: String(action.payload.priority || "High"),
-        due: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10),
+        due: String(action.payload.due || new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10)),
         done: false,
         status: "todo",
       });
@@ -270,6 +301,7 @@ export function AITab({
     });
     setInput("");
     setBusy(true);
+    setPendingActions([]);
     if (isMobile) setSidebarOpen(false);
     const ctx = workspace || { contacts, deals, tasks };
     const result = await assistCrm(userMsg, ctx, { npcKey: persona?.key, npcName: persona?.name });
@@ -281,7 +313,11 @@ export function AITab({
           { role: "ai", text: result.reply, source: result.source, speaker: persona?.name || "AI", at: new Date().toISOString() },
         ],
       });
-      result.actions?.forEach(runAction);
+      const next = result.actions || [];
+      const confirmable = next.filter(isConfirmAction);
+      const navOnly = next.filter((a) => !isConfirmAction(a));
+      navOnly.forEach(runNavAction);
+      setPendingActions(confirmable);
     } else {
       persistThread(activeThread.id, {
         messages: [
@@ -578,6 +614,53 @@ export function AITab({
           {busy && (
             <div style={{ fontSize: 12, color: T.text3, paddingLeft: 4 }}>
               {activePersona?.name || "AI"} is thinking…
+            </div>
+          )}
+          {pendingActions.length > 0 && (
+            <div style={{
+              alignSelf: "flex-start",
+              maxWidth: "min(520px, 92%)",
+              padding: "10px 12px",
+              borderRadius: 10,
+              border: `1px solid ${T.accent}44`,
+              background: `${T.accent}10`,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.text0 }}>
+                Confirm to update CRM
+              </div>
+              {pendingActions.map((action, idx) => (
+                <div key={`${action.type}-${idx}`} style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  <span style={{ fontSize: 12, color: T.text2, flex: 1, minWidth: 120 }}>{action.label}</span>
+                  <button
+                    type="button"
+                    disabled={confirmBusy}
+                    onClick={() => confirmAction(action)}
+                    style={{
+                      ...S.btn,
+                      padding: "6px 12px",
+                      fontSize: 11,
+                      opacity: confirmBusy ? 0.6 : 1,
+                    } as React.CSSProperties}
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    type="button"
+                    disabled={confirmBusy}
+                    onClick={() => setPendingActions((prev) => prev.filter((a) => a !== action))}
+                    style={{
+                      ...S.btnGhost,
+                      padding: "6px 12px",
+                      fontSize: 11,
+                    } as React.CSSProperties}
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>

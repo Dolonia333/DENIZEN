@@ -6,6 +6,8 @@ const orgPolicy = require('../../src/denizen-org-policy');
 const federalPipeline = require('../../src/federal-pipeline');
 const crmMutations = require('../../src/denizen-crm-mutations');
 const crmSkills = require('../../src/denizen-crm-skills');
+const agentWrites = require('../../src/denizen-crm-agent-writes');
+const crmCapture = require('../../src/denizen-crm-capture');
 
 let _cachedOrgId = null;
 
@@ -93,6 +95,7 @@ const ACTIONS = new Set([
   'crm-add-email-template',
   'crm-import-contacts',
   'crm-add-note',
+  'crm-capture',
   'help',
 ]);
 
@@ -148,7 +151,7 @@ async function runAction(action, { npcName, params, config }) {
     case 'crm-add-contact':
       return crmAddContact(config, params);
     case 'crm-update-deal':
-      return crmUpdateDeal(config, params);
+      return crmUpdateDeal(config, params, npcName);
     case 'crm-setup-status':
       return crmSetupStatus(config, params);
     case 'crm-setup-wizard':
@@ -164,7 +167,7 @@ async function runAction(action, { npcName, params, config }) {
     case 'crm-apply-industry':
       return crmApplyIndustry(config, params, npcName);
     case 'crm-add-task':
-      return crmAddTask(config, params);
+      return crmAddTask(config, params, npcName);
     case 'crm-list-tasks':
       return crmListTasks(config, params);
     case 'crm-at-risk':
@@ -249,6 +252,8 @@ async function runAction(action, { npcName, params, config }) {
       return crmImportContacts(config, params, npcName);
     case 'crm-add-note':
       return crmAddNote(config, params, npcName);
+    case 'crm-capture':
+      return crmCaptureAction(config, params, npcName);
     default:
       return {
         summary: `Denizen data skills: ${[...ACTIONS].filter((a) => a !== 'help').join(', ')}`,
@@ -809,9 +814,32 @@ async function crmAddContact(config, params) {
   return crmMutations.addContact(orgId, params);
 }
 
-async function crmUpdateDeal(config, params) {
+async function crmUpdateDeal(config, params, npcName) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const orgSlug = config?.orgSlug || config?.supabase?.orgSlug || process.env.DENIZEN_ORG_SLUG || 'zion';
+  const stage = String(params.stage || '').trim();
+  const dealId = params.dealId ?? params.id;
+  if (stage && dealId != null && dealId !== '') {
+    const viaAgent = await agentWrites.updateDealStage({
+      orgSlug,
+      dealId,
+      stage,
+      npcName: npcName || params.senderName || 'Marcus',
+      identityId: params.identityId || null,
+    });
+    if (viaAgent.ok) {
+      return {
+        summary: viaAgent.summary,
+        deal: viaAgent.deal,
+        previousStage: viaAgent.previousStage,
+        note: /closed won/i.test(stage) ? 'Deal marked won — team office may show a CRM notification.' : undefined,
+      };
+    }
+    if (viaAgent.code === 'ORG_POLICY_DENIED' || viaAgent.code === 'MISSING_ORG') {
+      return { summary: viaAgent.error || viaAgent.summary, error: viaAgent.error };
+    }
+  }
   const result = await crmMutations.updateDeal(orgId, params);
   if (/closed won/i.test(String(result.deal?.stage || ''))) {
     result.note = 'Deal marked won — team office may show a CRM notification.';
@@ -936,9 +964,26 @@ async function crmApplyIndustry(config, params, npcName) {
   return crmMutations.applyIndustry(orgId, { ...params, npcName }, null);
 }
 
-async function crmAddTask(config, params) {
+async function crmAddTask(config, params, npcName) {
   const orgId = await defaultOrgId(config);
   if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const orgSlug = config?.orgSlug || config?.supabase?.orgSlug || process.env.DENIZEN_ORG_SLUG || 'zion';
+  const title = String(params.title || params.task || params.name || '').trim();
+  if (title) {
+    const viaAgent = await agentWrites.logTask({
+      orgSlug,
+      npcName: npcName || params.senderName || 'Lucy',
+      title,
+      dueAt: params.due || params.dueAt || undefined,
+      identityId: params.identityId || null,
+    });
+    if (viaAgent.ok) {
+      return { summary: viaAgent.summary, task: viaAgent.task };
+    }
+    if (viaAgent.code === 'ORG_POLICY_DENIED' || viaAgent.code === 'MISSING_ORG') {
+      return { summary: viaAgent.error || viaAgent.summary, error: viaAgent.error };
+    }
+  }
   return crmMutations.addTask(orgId, params);
 }
 
@@ -993,6 +1038,30 @@ async function crmEnrollSequence(config, params, npcName) {
 
 async function crmMoveDeal(config, params, npcName) {
   const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const orgSlug = config?.orgSlug || config?.supabase?.orgSlug || process.env.DENIZEN_ORG_SLUG || 'zion';
+  const stage = String(params.stage || params.to || '').trim();
+  let dealId = params.dealId ?? params.id;
+  if (stage && (dealId == null || dealId === '')) {
+    const { state } = await crmMutations.loadOrgWorkspace(orgId);
+    const deal = crmSkills.findDeal(state, params);
+    dealId = deal?.id;
+  }
+  if (stage && dealId != null && dealId !== '') {
+    const viaAgent = await agentWrites.updateDealStage({
+      orgSlug,
+      dealId,
+      stage,
+      npcName: npcName || params.senderName || 'Marcus',
+      identityId: params.identityId || null,
+    });
+    if (viaAgent.ok) {
+      return { summary: viaAgent.summary, deal: viaAgent.deal, previousStage: viaAgent.previousStage };
+    }
+    if (viaAgent.code === 'ORG_POLICY_DENIED' || viaAgent.code === 'MISSING_ORG') {
+      return { summary: viaAgent.error || viaAgent.summary, error: viaAgent.error };
+    }
+  }
   return crmWrap(orgId, params, npcName, crmSkills.moveDeal);
 }
 
@@ -1189,7 +1258,56 @@ async function crmImportContacts(config, params, npcName) {
 
 async function crmAddNote(config, params, npcName) {
   const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const orgSlug = config?.orgSlug || config?.supabase?.orgSlug || process.env.DENIZEN_ORG_SLUG || 'zion';
+  const body = String(params.text || params.note || params.body || params.task || '').trim();
+  if (!body) return { summary: 'note text required', error: 'note text required' };
+  const { state } = await crmMutations.loadOrgWorkspace(orgId);
+  const contact = crmSkills.findContact(state, params);
+  const deal = crmSkills.findDeal(state, params);
+  const viaAgent = await agentWrites.createNote({
+    orgSlug,
+    npcName: npcName || params.senderName || 'Lucy',
+    contactId: contact?.id ?? params.contactId,
+    dealId: deal?.id ?? params.dealId,
+    body,
+    identityId: params.identityId || null,
+  });
+  if (viaAgent.ok) {
+    return { summary: viaAgent.summary, note: viaAgent.note };
+  }
+  if (viaAgent.code === 'ORG_POLICY_DENIED' || viaAgent.code === 'MISSING_ORG') {
+    return { summary: viaAgent.error || viaAgent.summary, error: viaAgent.error };
+  }
   return crmWrap(orgId, params, npcName, crmSkills.addNote);
+}
+
+async function crmCaptureAction(config, params, npcName) {
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'CRM workspace unavailable — organization not resolved.' };
+  const orgSlug = config?.orgSlug || config?.supabase?.orgSlug || process.env.DENIZEN_ORG_SLUG || 'zion';
+  const message = String(params.message || params.task || params.text || params.note || '').trim();
+  const result = await crmCapture.runCapture({
+    orgSlug,
+    orgId,
+    npcName: npcName || params.senderName || 'Lucy',
+    message,
+    identityId: params.identityId || null,
+    name: params.name || params.contact,
+    email: params.email,
+    deal: params.deal || params.title,
+    due: params.due || params.dueAt,
+    stage: params.stage,
+  });
+  return {
+    summary: result.summary,
+    ok: result.ok,
+    created: result.created,
+    contact: result.contact,
+    deal: result.deal,
+    due: result.due,
+    error: result.error,
+  };
 }
 
 module.exports = {

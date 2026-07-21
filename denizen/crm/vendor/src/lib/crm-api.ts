@@ -700,6 +700,73 @@ export async function assistCrm(
   }
 }
 
+export async function executeCrmAssistAction(
+  action: CrmAssistAction,
+  opts?: { npcKey?: string | null; npcName?: string | null },
+): Promise<{ ok: boolean; summary?: string; error?: string; created?: Array<{ type: string; id?: unknown }> }> {
+  const session = await ensureDenizenSession();
+  if (!session?.session_id) return { ok: false, error: "no session" };
+  try {
+    const res = await fetchWithTimeout("/api/crm/assist/execute", {
+      method: "POST",
+      headers: authHeaders(session),
+      body: JSON.stringify({
+        session_id: session.session_id,
+        action,
+        npc_key: opts?.npcKey || undefined,
+        npc_name: opts?.npcName || undefined,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || data.summary || `HTTP ${res.status}` };
+    return { ok: true, summary: data.summary, created: data.created };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export type MyDayItem = {
+  kind: string;
+  id?: unknown;
+  title: string;
+  text?: string;
+  at?: string;
+  due?: string | null;
+  overdue?: boolean;
+  contact?: string | null;
+  type?: string;
+  author?: string | null;
+};
+
+export type MyDayResult = {
+  ok: boolean;
+  error?: string;
+  dueTasks?: MyDayItem[];
+  items?: MyDayItem[];
+  counts?: { notes?: number; dueTasks?: number; overdue?: number; audit?: number; email?: number };
+  generatedAt?: string;
+};
+
+export async function fetchMyDay(hours = 168): Promise<MyDayResult> {
+  const session = await ensureDenizenSession();
+  if (!session?.session_id) return { ok: false, error: "no session" };
+  try {
+    const qs = `?session_id=${encodeURIComponent(session.session_id)}&hours=${encodeURIComponent(String(hours))}`;
+    const res = await fetchWithTimeout(`/api/crm/my-day${qs}`, { headers: authHeaders(session) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) return { ok: false, error: data.error || `HTTP ${res.status}` };
+    return {
+      ok: true,
+      dueTasks: data.dueTasks || [],
+      items: data.items || [],
+      counts: data.counts || {},
+      generatedAt: data.generatedAt,
+    };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 export type VisitorAssistant = { npc_key?: string; display_name?: string; role?: string } | null;
 
 export async function fetchVisitorAssistant(): Promise<VisitorAssistant> {

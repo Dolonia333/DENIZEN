@@ -1,6 +1,8 @@
 'use strict';
 
 const { buildAssistPersonaBlock, resolvePersona } = require('./denizen-crm-npc-personas');
+const crmCapture = require('./denizen-crm-capture');
+const agentWrites = require('./denizen-crm-agent-writes');
 
 function summarizeWorkspace(state = {}) {
   const contacts = Array.isArray(state.contacts) ? state.contacts : [];
@@ -97,7 +99,12 @@ function proposeActions(message, summary) {
   const lq = String(message || '').toLowerCase();
   const actions = [];
 
-  if (summary.overdueTaskCount > 0 && (lq.includes('focus') || lq.includes('today') || lq.includes('priority'))) {
+  // Capture / confirm writes first — Angela tells Assist what happened
+  for (const a of crmCapture.proposeCaptureActions(message, summary)) {
+    actions.push(a);
+  }
+
+  if (summary.overdueTaskCount > 0 && (lq.includes('focus') || lq.includes('today') || lq.includes('priority') || lq.includes('my day'))) {
     const t = summary.topTasks.find((x) => x.overdue) || summary.topTasks[0];
     if (t) actions.push({ type: 'open_tab', tab: 'schedule', label: `View task: ${t.title}` });
   }
@@ -107,12 +114,12 @@ function proposeActions(message, summary) {
     if (d) actions.push({ type: 'open_tab', tab: 'sales', label: `Review at-risk: ${d.title}` });
   }
 
-  if (lq.includes('follow') || lq.includes('email') || lq.includes('draft')) {
+  if ((lq.includes('follow') || lq.includes('email') || lq.includes('draft')) && !actions.some((a) => a.type === 'confirm_task')) {
     const d = summary.topDeals[0];
     if (d) {
       actions.push({
-        type: 'create_task',
-        label: `Follow up: ${d.contact}`,
+        type: 'confirm_task',
+        label: `Add follow-up: ${d.contact}`,
         payload: {
           title: `Follow up with ${d.contact} on ${d.title}`,
           contact: d.contact,
@@ -146,7 +153,87 @@ function proposeActions(message, summary) {
     actions.push({ type: 'open_tab', tab: 'settings', label: 'Pick industry template' });
   }
 
-  return actions.slice(0, 4);
+  if (lq.includes('my day') || lq.includes('what did i') || lq.includes('track')) {
+    actions.push({ type: 'open_tab', tab: 'dashboard', label: 'Open My Day on dashboard' });
+  }
+
+  return actions.slice(0, 5);
+}
+
+/**
+ * Execute a confirmed assist action via agent-writes / capture.
+ */
+async function executeAssistAction(opts = {}) {
+  const {
+    orgSlug,
+    orgId,
+    action,
+    npcName = 'Lucy',
+    identityId = null,
+  } = opts;
+  const type = String(action?.type || '').trim();
+  const payload = action?.payload && typeof action.payload === 'object' ? action.payload : {};
+
+  if (!orgSlug || !orgId) {
+    return { ok: false, error: 'organization required', summary: 'CRM workspace unavailable.' };
+  }
+
+  if (type === 'confirm_capture' || type === 'crm_capture') {
+    const message = String(payload.message || action.label || '').trim();
+    return crmCapture.runCapture({
+      orgSlug,
+      orgId,
+      npcName,
+      message,
+      identityId,
+      name: payload.name || payload.contact,
+      email: payload.email,
+      deal: payload.deal || payload.title,
+      due: payload.due,
+      stage: payload.stage,
+    });
+  }
+
+  if (type === 'confirm_task' || type === 'create_task') {
+    const title = String(payload.title || action.label || '').trim();
+    if (!title) return { ok: false, error: 'title required', summary: 'Task title required.' };
+    const result = await agentWrites.logTask({
+      orgSlug,
+      npcName,
+      title,
+      dueAt: payload.due || payload.dueAt || undefined,
+      identityId,
+    });
+    return {
+      ok: result.ok,
+      summary: result.summary || result.error,
+      error: result.error,
+      created: result.ok ? [{ type: 'task', id: result.id }] : [],
+      task: result.task,
+    };
+  }
+
+  if (type === 'confirm_note') {
+    const body = String(payload.text || payload.body || payload.message || '').trim();
+    if (!body) return { ok: false, error: 'body required', summary: 'Note text required.' };
+    const result = await agentWrites.createNote({
+      orgSlug,
+      npcName,
+      body,
+      contactId: payload.contactId,
+      dealId: payload.dealId,
+      identityId,
+    });
+    return {
+      ok: result.ok,
+      summary: result.summary || result.error,
+      error: result.error,
+      created: result.ok ? [{ type: 'note', id: result.id }] : [],
+      note: result.note,
+    };
+  }
+
+  return { ok: false, error: `unsupported action: ${type}`, summary: `Cannot execute ${type}.` };
 }
 
 function pickProvider(npcBrains) {
@@ -199,6 +286,7 @@ async function crmAssist(npcBrains, message, state, opts = {}) {
   const system = [
     personaBlock || 'You are a concise CRM sales copilot for a Denizen team workspace.',
     'Answer using ONLY the workspace snapshot below. Be practical and brief (under 220 words).',
+    'When the user reports a call, meeting, or follow-up, say you prepared Confirm chips to log it into Meridian — do not pretend you already wrote unless they confirmed.',
     'If setup is incomplete, name the next onboarding step and which teammate owns it.',
     'If data is missing, say what to add in the CRM at /crm/. Plain text; short bullets ok.',
     `Snapshot: ${JSON.stringify(summary)}`,
@@ -246,5 +334,6 @@ module.exports = {
   crmAssist,
   summarizeWorkspace,
   proposeActions,
+  executeAssistAction,
   mergeWorkspaceStates,
 };
