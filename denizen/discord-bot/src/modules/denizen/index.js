@@ -344,6 +344,9 @@ function createDenizenAccount(deps) {
     ];
     const KIT_CHOICES = [
       'library', 'office', 'cafe', 'kitchen', 'reception', 'lounge', 'cozy', 'gallery',
+      // Pack-expansion kits (map game.js KITS) — arcade thrones, bathtubs,
+      // coffins, statues, hospital beds, xmas trees…
+      'bedroom', 'bathroom', 'games', 'spooky', 'winter', 'museum', 'medical',
     ];
     const COLOR_CHOICES = [
       'blue', 'teal', 'green', 'mint', 'orange', 'red', 'pink', 'purple', 'lavender', 'yellow', 'brown', 'slate',
@@ -399,7 +402,7 @@ function createDenizenAccount(deps) {
           '`,room show #channel`',
           '`,room theme #channel <plain|cafe|hospital|museum|police|fire|gamer|halloween|voice>`',
           '`,room color #channel <blue|teal|green|mint|orange|red|pink|purple|lavender|yellow|brown|slate>`',
-          '`,room kit #channel <library|office|cafe|kitchen|reception|lounge|cozy|gallery>`',
+          '`,room kit #channel <library|office|cafe|kitchen|reception|lounge|cozy|gallery|bedroom|bathroom|games|spooky|winter|museum|medical>`',
           '`,room name #channel Custom plaque text`',
           '`,room title #channel Building Title`  (category building name)',
           '`,room clear #channel`',

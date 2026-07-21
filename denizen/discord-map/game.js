@@ -219,13 +219,16 @@
     'couchSmall', 'couchSmallG', 'couchSmallR', 'couchSmallY', 'couchSmallGr',
     'officechairBlue', 'officechairRed', 'officechairPurple', 'officechairOrange',
     'stoolBlue', 'stoolRed', 'stoolYellow', 'stoolGreen', 'stool', 'stoolB',
-    'bed', 'bedBlue', 'bedGreen', 'bedHosp', 'bunkBottom',
+    'bed', 'bedBlue', 'bedGreen', 'bedRed', 'bedYellow', 'bedHosp', 'bunkBottom',
+    'throneRed', 'throneBlue', 'throneGreen', 'thronePurple', 'throneYellow',
+    'chairHalloween', 'waitChairSolo', 'waitChairSoloRed',
   ]);
-  const BED_KEYS = new Set(['bed', 'bedBlue', 'bedGreen', 'bedHosp', 'bunkBottom', 'bunkTop']);
+  const BED_KEYS = new Set(['bed', 'bedBlue', 'bedGreen', 'bedRed', 'bedYellow', 'bedHosp', 'bunkBottom', 'bunkTop']);
 
   const LR = `${PACK}/Furniture/Living Room`;
   const KIT = `${PACK}/Furniture/Kitchen`;
   const BR = `${PACK}/Furniture/Bedroom`;
+  const BA = `${PACK}/Furniture/Bathroom`;
   const OBJ = `${PACK}/Objects/Living Room`;
   const OBR = `${PACK}/Objects/Bedroom`;
   const INF = `${PACK}/Infrastructure`;
@@ -336,6 +339,31 @@
     lamp3: `${BR}/Lamp_stand_3.png`,
     cabinet: `${BR}/Cabinet_1.png`,
     drawer: `${BR}/Drawer_medium_1_c.png`,
+    // Bedroom extras — color beds + wall/surface dressing
+    bedRed: `${BR}/Bed_red_front.png`,
+    bedYellow: `${BR}/Bed_yellow_front.png`,
+    alarmBlue: `${OBR}/Alarm_clock_blue.png`,
+    alarmRed: `${OBR}/Alarm_clock_red.png`,
+    alarmGreen: `${OBR}/Alarm_clock_green.png`,
+    airCon: `${OBR}/Air_conditioner.png`,
+    calendar1: `${OBR}/Calendar_1.png`,
+    calendar2: `${OBR}/Calendar_2.png`,
+    // Bathroom family (previously entirely unused in the pack)
+    bathtub: `${BA}/Bathtub.png`,
+    glassShower: `${BA}/Glass_shower.png`,
+    sinkBath: `${BA}/Sink_bathroom.png`,
+    toilet: `${BA}/Toilet.png`,
+    towelRail: `${BA}/Towel_rail_multi.png`,
+    washMachine: `${BA}/Washing_machine.png`,
+    // Sky traffic — blimps + hot-air balloons drift across the skyline
+    blimpGreen: `${BG}/Blimp_green.png`,
+    blimpPurple: `${BG}/Blimp_purple.png`,
+    blimpYellow: `${BG}/Blimp_yellow.png`,
+    balloonBlue: `${BG}/Hot_air_balloon_blue.png`,
+    balloonGreen: `${BG}/Hot_air_balloon_green.png`,
+    balloonPurple: `${BG}/Hot_air_balloon_purple.png`,
+    balloonRed: `${BG}/Hot_air_balloon_red.png`,
+    balloonYellow: `${BG}/Hot_air_balloon_yellow.png`,
     laptop: `${OBR}/Laptop.png`,
     // Kitchen (food/break channels)
     fridge: `${KIT}/Refrigerator_large_white.png`,
@@ -1153,7 +1181,7 @@
   const SURFACE_HOSTS = {
     desk: 14, desk2: 14, coffee: 10, coffee2: 10, counter: 14, counterEnd: 14,
     tableLong: 14, tableMed2: 12, deskOffice: 14, policeDesk: 14, filecabinet: 0,
-    tableSteel: 8, tableSurgery: 6,
+    tableSteel: 8, tableSurgery: 6, drawer: 12,
   };
   /** Props that must sit ON a surface host (not float mid-air). */
   const SURFACE_PROPS = new Set(['laptop', 'books', 'books2', 'radio', 'paperStack', 'paperStack2']);
@@ -1243,18 +1271,78 @@
       { key: 'terrarium', xf: 0.62, depth: 23 },
       { key: ['floraBonsai', 'floraRose'], xf: 0.88, depth: 24 },
     ],
+    // ---- Pack-expansion kits: choosable per channel via `,room kit` ----
+    bedroom: [
+      { key: ['bed', 'bedBlue', 'bedGreen', 'bedRed', 'bedYellow'], xf: 0.40, depth: 23, sit: true, bed: true },
+      { key: 'drawer', xf: 0.60, depth: 22 },
+      { key: ['alarmBlue', 'alarmRed', 'alarmGreen'], xf: 0.60, depth: 24, onSurface: true },
+      { key: ['lamp', 'lamp2'], xf: 0.78, depth: 22 },
+      { key: ['floraSucculent', 'floraAloe'], xf: 0.94, depth: 24 },
+      { key: 'airCon', xf: 0.72, depth: 21, wall: true },
+      { key: ['calendar1', 'calendar2'], xf: 0.52, depth: 21, wall: true },
+    ],
+    bathroom: [
+      { key: 'bathtub', xf: 0.38, depth: 23 },
+      { key: 'sinkBath', xf: 0.56, depth: 22 },
+      { key: 'toilet', xf: 0.72, depth: 22 },
+      { key: 'washMachine', xf: 0.90, depth: 22 },
+      { key: 'towelRail', xf: 0.55, depth: 21, wall: true },
+    ],
+    games: [
+      { key: ['arcadeBlue', 'arcadeRed', 'arcadeGreen', 'arcadeYellow'], xf: 0.36, depth: 22 },
+      { key: ['throneRed', 'throneBlue', 'throneGreen', 'thronePurple'], xf: 0.54, depth: 23, sit: true },
+      { key: 'tvGame', xf: 0.70, depth: 22 },
+      { key: ['vendingBlue', 'vendingRed', 'vendingGreen'], xf: 0.88, depth: 22 },
+      { key: ['gLight1', 'gLight2', 'gLight3'], xf: 0.55, depth: 21, wall: true },
+    ],
+    spooky: [
+      { key: 'coffin', xf: 0.38, depth: 23 },
+      { key: ['candelabra', 'candelabra2'], xf: 0.54, depth: 22 },
+      { key: 'bookshelfDark', xf: 0.70, depth: 22 },
+      { key: 'chairHalloween', xf: 0.86, depth: 23, sit: true },
+      { key: ['jack1', 'jack2', 'jack3'], xf: 0.94, depth: 24 },
+      { key: ['cobwebRoom', 'cobwebRoom2'], xf: 0.60, depth: 21, wall: true },
+    ],
+    winter: [
+      { key: 'xmasTree', xf: 0.38, depth: 23 },
+      { key: ['snowman1', 'snowman2'], xf: 0.58, depth: 23 },
+      { key: ['presentRedL', 'presentGreenL', 'presentWhiteL'], xf: 0.74, depth: 24 },
+      { key: 'sled', xf: 0.90, depth: 23 },
+    ],
+    museum: [
+      { key: ['statueF', 'statueM'], xf: 0.38, depth: 23 },
+      { key: ['itemDisplayL', 'itemDisplayM'], xf: 0.58, depth: 22 },
+      { key: 'guardRail', xf: 0.76, depth: 24 },
+      { key: ['monaPixa', 'paintingNight'], xf: 0.55, depth: 21, wall: true },
+    ],
+    medical: [
+      { key: 'bedHosp', xf: 0.38, depth: 23, sit: true, bed: true },
+      { key: 'salineStand', xf: 0.52, depth: 24 },
+      { key: 'storageMed', xf: 0.68, depth: 22 },
+      { key: 'computerMed', xf: 0.86, depth: 22 },
+      { key: 'posterMed', xf: 0.55, depth: 21, wall: true },
+    ],
   };
   const KIT_NAMES = Object.keys(KITS);
+  // Random fallback pool for unnamed channels — everyday kits only. Seasonal
+  // and specialty kits (spooky/winter/museum/medical) are opt-in: picked by
+  // channel-name keywords or set explicitly with `,room kit`.
+  const KIT_POOL = [
+    'library', 'office', 'cafe', 'kitchen', 'lounge', 'reception', 'cozy',
+    'gallery', 'bedroom', 'games',
+  ];
 
   // Pick a kit name for a channel: keyword on name first, then type, then seed.
   function kitForChannel(name, type, seed) {
     const n = String(name || '').toLowerCase();
     const test = (re) => re.test(n);
     if (type === 'voice' || type === 'stage') {
-      // Voice = social spaces (never bedrooms). Meeting/conference rooms get the
-      // long-table reception kit; the rest are lounges/cafes.
+      // Voice = social spaces. Meeting/conference rooms get the long-table
+      // reception kit; gaming VCs get the arcade; the rest are lounges/cafes.
       if (test(/(meet|conf|stand.?up|board|call|stage|podium)/)) return 'reception';
-      return seededPick(seed, ['lounge', 'cafe']);
+      if (test(/(game|gaming|arcade|play|rank|league|duo|squad|stream)/)) return 'games';
+      if (test(/(afk|sleep|nap|zzz|chill)/)) return 'bedroom';
+      return seededPick(seed, ['lounge', 'cafe', 'games']);
     }
     if (test(/(read|doc|wiki|book|faq|resource|guide|rule|info)/)) return 'library';
     if (test(/(dev|code|eng|build|git|ci|ops|cmd|tech|bug|deploy|infra)/)) return 'office';
@@ -1262,9 +1350,16 @@
     if (test(/(kitchen|cook|recipe|meal)/)) return 'kitchen';
     if (test(/(welcome|start|rule|announce|intro|lobby|front|greet)/)) return 'reception';
     if (test(/(art|gallery|show|media|photo|design|pet|fish)/)) return 'gallery';
+    if (test(/(game|gaming|arcade|play|clip|rank)/)) return 'games';
+    if (test(/(spooky|horror|hallow|scary|grave|creep)/)) return 'spooky';
+    if (test(/(winter|xmas|christmas|holiday|snow)/)) return 'winter';
+    if (test(/(museum|history|exhibit|archive)/)) return 'museum';
+    if (test(/(med|health|clinic|doctor|nurse|care)/)) return 'medical';
+    if (test(/(bed|sleep|nap|dream)/)) return 'bedroom';
+    if (test(/(bath|toilet|wc|wash|shower)/)) return 'bathroom';
     if (test(/(general|chat|hang|off.?topic|random|talk|lounge|social)/)) return 'lounge';
-    if (test(/(afk|sleep|quiet|zzz|away|vent|feel)/)) return 'cozy';
-    return seededPick(seed, KIT_NAMES);
+    if (test(/(afk|quiet|zzz|away|vent|feel)/)) return 'cozy';
+    return seededPick(seed, KIT_POOL);
   }
 
   // =========================================================================
@@ -2971,6 +3066,42 @@
       sprinkle(720, 40, 'cloud', 2.1, 34, 0.15);
       sprinkle(310, 58, 'cloudSm', 1.9, 20, 0.22);
       sprinkle(850, 34, 'cloudSm', 2.4, -18, 0.13);
+      this.placeSkyTraffic();
+    }
+
+    /** Blimps + hot-air balloons drifting slowly across the parallax skyline. */
+    placeSkyTraffic() {
+      const fleet = [
+        'blimpBlue', 'blimpRed', 'blimpGreen', 'blimpPurple', 'blimpYellow',
+        'balloonBlue', 'balloonGreen', 'balloonPurple', 'balloonRed', 'balloonYellow',
+      ].filter((k) => this.textures.exists(k));
+      if (!fleet.length) return;
+      const seed = hashSeed('sky-traffic');
+      const count = 3;
+      for (let i = 0; i < count; i += 1) {
+        const key = seededPick(seed, fleet, i * 5 + 1);
+        const isBalloon = key.startsWith('balloon');
+        const y = 26 + ((seed >> (i + 2)) % 40) + (isBalloon ? 28 : 0);
+        const startX = -90 - i * 300;
+        const img = this.add.image(startX, y, key)
+          .setScale(isBalloon ? 1.6 : 2)
+          .setDepth(-122)
+          .setAlpha(0.95)
+          .setScrollFactor(0.16);
+        this.tweens.add({
+          targets: img,
+          x: 1150,
+          duration: 95000 + i * 30000,
+          repeat: -1,
+          delay: i * 14000,
+          onRepeat: () => { img.x = startX; },
+        });
+        if (isBalloon) {
+          this.tweens.add({
+            targets: img, y: y + 10, duration: 3800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+          });
+        }
+      }
     }
 
     buildFarMountains() {
