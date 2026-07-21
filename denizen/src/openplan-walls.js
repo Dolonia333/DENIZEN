@@ -37,12 +37,15 @@
   // closing navy border. The repeatable face region is therefore 30px —
   // repeating the full row would leak the border into the wall as a line.
   // Mirrors tools/office-wall-kit.py + data/office-wall-kit.json.
-  // Per-style repeatable face height (adversarial pixel review): white 30
-  // (wallpaper 6-row period, 30 % 6 == 0); brick 24 (8px course rhythm —
-  // 30 duplicated the AO shading line mid-wall and squashed one course).
+  // Pixel-measured from Office_Design_1/2 (3-agent scan, native 16px scale
+  // doubled to ours): faced H walls are EXACTLY 2 tile rows — cap row +
+  // one face row = 64px. No repeat row (the earlier 94px walls were the
+  // "too thick" defect). South/map-edge walls are cap-only. Interior V
+  // walls are a 32px SOLID WHITE slab (2px navy/28 white/2 navy — no dark
+  // core); exterior V walls a 14px ribbon (2/10/2) against the void.
   const BLOCK = {
-    white: { y: 352, repeat: 30 },
-    brick: { y: 288, repeat: 24 },
+    white: { y: 352 },
+    brick: { y: 288 },
   };
   const BLOCK_COLS = { left: 0, mid: 32, right: 64, single: 96 };
   const CAP_ROW = 32;
@@ -55,16 +58,15 @@
     if (!src) return null;
     const spec = BLOCK[style] || BLOCK.white;
     const by = spec.y;
-    const repeat = spec.repeat;
-    const texH = CAP_ROW + repeat + FACE_ROW;
+    // Exactly the 2-row block = 64px = BAND_H — visuals equal collision.
+    const texH = CAP_ROW + FACE_ROW;
     const t = scene.textures.createCanvas(key, Math.round(w), texH);
     const ctx = t.context;
     ctx.imageSmoothingEnabled = false;
     const n = Math.max(1, Math.ceil(w / T));
     const drawCol = (sx, dx, colW) => {
       ctx.drawImage(src, sx, by, colW, CAP_ROW, dx, 0, colW, CAP_ROW);
-      ctx.drawImage(src, sx, by + CAP_ROW, colW, repeat, dx, CAP_ROW, colW, repeat);
-      ctx.drawImage(src, sx, by + CAP_ROW, colW, FACE_ROW, dx, CAP_ROW + repeat, colW, FACE_ROW);
+      ctx.drawImage(src, sx, by + CAP_ROW, colW, FACE_ROW, dx, CAP_ROW, colW, FACE_ROW);
     };
     if (n === 1) {
       drawCol(BLOCK_COLS.single, 0, Math.min(T, w));
@@ -139,11 +141,21 @@
     const all = [];
     const brick = face === 'brick' || face === 'wall_face_brick';
     const style = brick ? 'brick' : 'white';
+    // South/map-edge walls show CAP ONLY (the face would look away from
+    // camera) with void beneath — measured 6px native cap over black.
+    const worldH = scene._wallWorldH || 720;
+    const southExterior = y + BAND_H >= worldH;
     // VISUALS split by door gaps AND face gaps (dividing walls slicing
     // through) — every kept piece is a full block with baked edge borders.
     const allGaps = [...(doorGaps || []), ...(faceGaps || [])];
     for (const [a, b] of splitByGaps(startX, endX, allGaps)) {
       if (b - a < 8) continue;
+      if (southExterior) {
+        const capKey = buildCapTexture(scene, b - a, style);
+        if (capKey) all.push(scene.add.image(a, y, capKey).setOrigin(0, 0).setDepth(WALL_TRIM_DEPTH));
+        all.push(scene.add.rectangle(a + (b - a) / 2, y + CAP_STRIP_H + (worldH - y - CAP_STRIP_H) / 2, b - a, worldH - y - CAP_STRIP_H, VOID, 1).setDepth(WALL_FACE_DEPTH));
+        continue;
+      }
       const texKey = buildHSegTexture(scene, b - a, style);
       if (texKey) all.push(scene.add.image(a, y, texKey).setOrigin(0, 0).setDepth(WALL_FACE_DEPTH));
     }
@@ -234,12 +246,27 @@
       }
     });
     const vh = y1 - vy0;
-    const edgeW = 8;
-    const bodyW = T - edgeW * 2;
+    const NAVY = TRIM;
+    const worldW = scene._wallWorldW || 1280;
+    const exterior = x <= 0 || x + T >= worldW;
     if (vh > 0) {
-      objs.push(scene.add.rectangle(x + T / 2, vy0 + vh / 2, bodyW, vh, VOID, 1).setDepth(WALL_FACE_DEPTH));
-      objs.push(scene.add.rectangle(x + edgeW / 2, vy0 + vh / 2, edgeW, vh, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
-      objs.push(scene.add.rectangle(x + T - edgeW / 2, vy0 + vh / 2, edgeW, vh, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+      if (exterior) {
+        // Map-edge vertical: thin 14px ribbon (2 navy / 10 white / 2 navy)
+        // on the room side, void filling the rest of the lane (measured
+        // 7px native against black).
+        const rx = x <= 0 ? x + T - 14 : x;
+        const vxOther = x <= 0 ? x : x + 14;
+        objs.push(scene.add.rectangle(vxOther + (T - 14) / 2, vy0 + vh / 2, T - 14, vh, VOID, 1).setDepth(WALL_FACE_DEPTH));
+        objs.push(scene.add.rectangle(rx + 1, vy0 + vh / 2, 2, vh, NAVY, 1).setDepth(WALL_TRIM_DEPTH));
+        objs.push(scene.add.rectangle(rx + 7, vy0 + vh / 2, 10, vh, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+        objs.push(scene.add.rectangle(rx + 13, vy0 + vh / 2, 2, vh, NAVY, 1).setDepth(WALL_TRIM_DEPTH));
+      } else {
+        // Interior dividing wall: SOLID WHITE slab, one tile thick —
+        // 2px navy / 28px white / 2px navy. No dark core (measured).
+        objs.push(scene.add.rectangle(x + 1, vy0 + vh / 2, 2, vh, NAVY, 1).setDepth(WALL_TRIM_DEPTH));
+        objs.push(scene.add.rectangle(x + T / 2, vy0 + vh / 2, T - 4, vh, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+        objs.push(scene.add.rectangle(x + T - 1, vy0 + vh / 2, 2, vh, NAVY, 1).setDepth(WALL_TRIM_DEPTH));
+      }
     }
     // Doorway end caps — white edge across the wall thickness
     if (cuts?.topCut) {
@@ -363,6 +390,8 @@
     scene._wallSegments.forEach((e) => destroySegment(scene, e));
     scene._wallSegments = [];
     const segments = Array.isArray(layout?.segments) ? layout.segments : [];
+    scene._wallWorldW = layout?.info?.worldSize?.w || 1280;
+    scene._wallWorldH = layout?.info?.worldSize?.h || 720;
     // Junction model from Office_Design_1: a dividing wall SLICES THROUGH
     // the horizontal wall it meets — the H face breaks into per-room
     // segments (each closed by its baked edge border) while the cap ribbon
