@@ -1080,6 +1080,17 @@
     );
   }
   const THEMED_NPC_SHEETS = [...POLICE_NPC_SHEETS, ...FIRE_NPC_SHEETS, ...CAFE_NPC_SHEETS];
+  // Full-body character sheets in the standard 8×14 premade grid:
+  // - skeleton ships with the avatar Body/ set (272px wide — Phaser slices
+  //   the left 256, same crop the avatar baker uses)
+  // - witch / mummy / vampire are baked from pack layers by
+  //   scripts/gen-themed-npcs.mjs into discord-map/baked/
+  const COSTUME_NPC_SHEETS = [
+    { key: 'skeletonNpc', path: 'PixelSpacesFull/Tilesets & SpriteSheets/NPCs/SpriteSheets/Body/skeleton.png' },
+    { key: 'witchNpc', path: 'baked/npc_witch.png' },
+    { key: 'mummyNpc', path: 'baked/npc_mummy.png' },
+    { key: 'vampireNpc', path: 'baked/npc_vampire.png' },
+  ];
   // Premade sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
   // loading at half-width used to slice each character in two down the middle.
   const NPC_FRAME = { w: 32, h: 32 };
@@ -1856,9 +1867,10 @@
             ['f', ['candelabra', 'candelabra3'], 74, 1, 0],
             ['f', ['candleTable2', 'candleTable'], 108, 1, 0],
             ['npc', 'halloween-ghost-seer', 142],
-            ['f', ['candleTable3', 'candleTable2'], 176, 1, 0],
-            ['npc', 'halloween-ghost-guest', 208],
-            ['f', ['candelabra2', 'candelabra'], 244, 1, 0],
+            ['npc', 'halloween-vampire-host', 176],
+            ['f', ['candleTable3', 'candleTable2'], 200, 1, 0],
+            ['npc', 'halloween-ghost-guest', 224],
+            ['f', ['candelabra2', 'candelabra'], 248, 1, 0],
           ],
         }),
         // Scene 4 — pumpkin cellar: harvest wall of jacks + the mummy tending
@@ -1963,6 +1975,7 @@
       HOSP_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       GHOST_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       THEMED_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
+      COSTUME_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       // Street pets — 32x32 frames (Paws & Whiskers free packs).
       PET_SHEETS.forEach((p) => this.load.spritesheet(p.key, p.path, {
         frameWidth: PET_FRAME,
@@ -2679,7 +2692,13 @@
         const sc = (scRaw || 1) * SCALE;
         let x = x0 + dx;
         const hw = halfW(k, sc);
-        if (Math.abs(x - clearX) < clearR + hw) return;
+        // Inside the climb lane → NUDGE right of it, never silently drop.
+        // (Dropping deleted every recipe's left-anchor piece — coffins,
+        // bookshelves, lockers, filecabinets — for years of recipes whose
+        // dx sat within clearR+hw of the lane.)
+        if (Math.abs(x - clearX) < clearR + hw) {
+          x = clearX + clearR + hw;
+        }
         if (x < x0 + 10 + hw || x > x0 + roomW - 10 - hw) return;
         // Nudge right then left to clear overlaps
         let placedOk = false;
@@ -5242,7 +5261,7 @@
 
     makeAnims() {
       // Premades: 8×14 pose grid. Hospital staff: 5×3 (walk/idle/jump + aliases).
-      [...NPC_SHEETS, ...HOSP_NPC_SHEETS, ...GHOST_NPC_SHEETS, ...THEMED_NPC_SHEETS].forEach((n) => {
+      [...NPC_SHEETS, ...HOSP_NPC_SHEETS, ...GHOST_NPC_SHEETS, ...THEMED_NPC_SHEETS, ...COSTUME_NPC_SHEETS].forEach((n) => {
         if (!this.textures.exists(n.key)) return;
         const cols = sheetColCount(n.key);
         const poseDefs = poseDefsForSheet(n.key);
@@ -5511,6 +5530,12 @@
         const k = fromList(HOSP_SURGEON_SHEETS);
         if (k) return k;
       }
+      // Halloween cast: real skeleton sheet + baked witch/mummy/vampire looks
+      // (missing baked sheets fall through to civilians gracefully).
+      if (/halloween-skeleton|^skeleton-/i.test(s) && this.textures.exists('skeletonNpc')) return 'skeletonNpc';
+      if (/halloween-witch|^witch-/i.test(s) && this.textures.exists('witchNpc')) return 'witchNpc';
+      if (/halloween-mummy|^mummy-/i.test(s) && this.textures.exists('mummyNpc')) return 'mummyNpc';
+      if (/halloween-vampire|^vampire-/i.test(s) && this.textures.exists('vampireNpc')) return 'vampireNpc';
       // Themed staff wear their real pack uniforms ('-detainee'/'-visitor'
       // style seeds intentionally fall through to civilians).
       if (/police-cop|^cop-/i.test(s)) {
