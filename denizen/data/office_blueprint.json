@@ -522,20 +522,20 @@
       {
         "id": "plant_potted",
         "instanceId": "editor_plant_potted_35",
-        "x": 332,
-        "y": 156
+        "x": 68,
+        "y": 140
       },
       {
         "id": "plant_spikey",
         "instanceId": "editor_plant_spikey_36",
-        "x": 428,
-        "y": 312
+        "x": 68,
+        "y": 332
       },
       {
         "id": "pop_art_sheet",
         "instanceId": "editor_pop_art_sheet_37",
-        "x": 388,
-        "y": 76
+        "x": 1046,
+        "y": 80
       },
       {
         "id": "chair_black_front_holes",
@@ -726,8 +726,8 @@
       {
         "id": "coffee_machine",
         "instanceId": "editor_coffee_machine_80",
-        "x": 1212,
-        "y": 508
+        "x": 464,
+        "y": 548
       },
       {
         "id": "cubicle_desk",
@@ -744,14 +744,14 @@
       {
         "id": "chair_orange_front_holes",
         "instanceId": "editor_chair_orange_front_holes_83",
-        "x": 1164,
-        "y": 364
+        "x": 1168,
+        "y": 368
       },
       {
         "id": "chair_orange_front_holes",
         "instanceId": "editor_chair_orange_front_holes_84",
-        "x": 972,
-        "y": 364
+        "x": 980,
+        "y": 368
       },
       {
         "id": "chair_black_back_no_holes",
@@ -810,8 +810,8 @@
       {
         "id": "water_dispenser",
         "instanceId": "editor_water_dispenser_97",
-        "x": 80,
-        "y": 668
+        "x": 360,
+        "y": 548
       },
       {
         "id": "vending_full",
@@ -822,8 +822,8 @@
       {
         "id": "trash_can",
         "instanceId": "editor_trash_can_99",
-        "x": 156,
-        "y": 564
+        "x": 322,
+        "y": 552
       },
       {
         "id": "plant_spikey",
@@ -938,8 +938,8 @@
       {
         "id": "plant_floor_bushy",
         "instanceId": "north_plant_1",
-        "x": 760,
-        "y": 132
+        "x": 952,
+        "y": 124
       }
     ]
   },
