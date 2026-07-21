@@ -14,10 +14,15 @@
  *                 vehicles.png (cars, helicopter, helipad platform),
  *                 generic_buildings.png (street facades)
  *   characters    assets/limezu/characters/char_NN.png (16×32, 56 frames/row;
- *                 row 1 = idle, row 2 = walk, 6 frames per direction R,U,L,D)
+ *                 row 1 = idle, row 2 = run, 6 frames per direction R,U,L,D)
  *
- * Sprite rects/indices were decoded from labeled contact sheets (July 2026) —
- * LimeZu ships no documentation. See docs/SPRITE_PIPELINE.md.
+ * The character row map is confirmed by the pack's bundled
+ * Spritesheet_animations_GUIDE.png (Modern Interiors → 2_Characters/
+ * Character_Generator/): rows are static-dirs, idle, run, sleep, sit, sit2,
+ * phone (frames 4-9 loop), book (1-6 loop), push-cart, pick-up, gift, lift,
+ * throw, hit, punch, stab, grab-gun, gun-idle, shoot, hurt. Only idle + run
+ * are wired here so far. Exterior/furniture rects were decoded from labeled
+ * contact sheets — see docs/LIMEZU_SETUP.md for the full official reference.
  */
 
 import { RoomTileRenderer } from './room-tile-renderer.js';

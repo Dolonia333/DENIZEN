@@ -96,7 +96,11 @@ wall editor, then `npm run blueprint:build`.
 
 ## The LimeZu multi-pack world (exteriors / interiors / farm / UI)
 
-A healthy parallel branch, not yet wired into the main office scene:
+> Official pack organization, character-sheet anatomy, shadow variants, and
+> license constraints are documented in [LIMEZU_SETUP.md](LIMEZU_SETUP.md) —
+> read that before touching `assets/limezu/`.
+
+A healthy parallel branch, wired into the main office scene via `?world=full`:
 
 ```
 scripts/extract-limezu.js         zips → assets/limezu/ (exteriors, farm, themes,

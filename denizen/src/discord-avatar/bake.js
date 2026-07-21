@@ -189,10 +189,13 @@ async function bakeLayers(avatar) {
     if (tintHex) tile = applyTint(tile, tintHex);
     overlays.push(tile);
   };
-  addOverlay(pantsSheet, avatar.pants?.index ?? 0, avatar.tint?.clothes);
-  addOverlay(outfitSheet, avatar.outfit?.index ?? 0, avatar.tint?.clothes);
+  // Layer order per LimeZu's official CHARACTER_GENERATOR.txt:
+  // BODY → EYES → OUTFIT → HAIRSTYLE → ACCESSORY. Eyes/face go UNDER the
+  // outfit so high collars and hoods correctly cover the chin/neck pixels.
   addOverlay(faceSheet, avatar.face ?? 0, null);
   addOverlay(eyesSheet, avatar.eyes ?? 0, null);
+  addOverlay(pantsSheet, avatar.pants?.index ?? 0, avatar.tint?.clothes);
+  addOverlay(outfitSheet, avatar.outfit?.index ?? 0, avatar.tint?.clothes);
   addOverlay(hairSheet, avatar.hair?.index ?? 0, avatar.tint?.hair);
   // Booster golden headsets use tint.hat (gold); other hats usually untinted
   addOverlay(hatSheet, avatar.hat?.index ?? 0, avatar.tint?.hat || null);
