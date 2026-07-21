@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { T, S, type Contact, type Deal, type Task, type AiThread, type AiThreadMessage } from "@/lib/crm-data";
 import { assistCrm, executeCrmAssistAction, type CrmWorkspaceState, type CrmAssistAction, type CrmTeamMember } from "@/lib/crm-api";
 import { dispatchCrmSubNav } from "@/lib/crm-nav";
@@ -9,6 +9,16 @@ type ChatScope = "mine" | "teammates" | "npc";
 
 const SIDEBAR_KEY = "meridian_ai_sidebar_open";
 const SIDEBAR_WIDTH = 280;
+/** CRMApp mobile header (52) + main padding top slack + bottom tab (56) + safe area padding budget. */
+const MOBILE_CHROME_H = "calc(100dvh - 146px - env(safe-area-inset-bottom, 0px))";
+
+function sameThreadId(a: unknown, b: unknown): boolean {
+  return String(a ?? "") === String(b ?? "");
+}
+
+function normName(v?: string | null): string {
+  return String(v || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
 
 interface Props {
   contacts: Contact[];
@@ -34,7 +44,9 @@ function authorHue(name: string): string {
 
 function samePerson(a: { name?: string; email?: string | null }, b: { name?: string; email?: string | null }): boolean {
   if (a.email && b.email && a.email.toLowerCase() === b.email.toLowerCase()) return true;
-  return !!(a.name && b.name && a.name === b.name);
+  const an = normName(a.name);
+  const bn = normName(b.name);
+  return !!(an && bn && an === bn);
 }
 
 function threadOwner(thread: AiThread): { name: string; email?: string } {
@@ -45,7 +57,9 @@ function isMyThread(thread: AiThread, self: { name: string; email?: string | nul
   if (thread.ownerEmail && self.email) {
     return thread.ownerEmail.toLowerCase() === self.email.toLowerCase();
   }
-  if (thread.ownerName && self.name) return thread.ownerName === self.name;
+  if (thread.ownerName && self.name) return normName(thread.ownerName) === normName(self.name);
+  // Legacy threads with no owner were created locally — treat as mine so Past chats → Mine stays usable.
+  if (!thread.ownerName && !thread.ownerEmail) return true;
   return false;
 }
 
@@ -174,6 +188,7 @@ export function AITab({
   const isMobile = useIsMobile();
   const self = useMemo(() => ({ name: userName, email: userEmail }), [userName, userEmail]);
   const normalizedThreads = useMemo(() => normalizeThreads(aiThreads), [aiThreads]);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeId, setActiveId] = useState<number | null>(normalizedThreads[0]?.id ?? null);
   const [input, setInput] = useState("");
@@ -182,7 +197,12 @@ export function AITab({
   const [pendingActions, setPendingActions] = useState<CrmAssistAction[]>([]);
   const [scope, setScope] = useState<ChatScope>("mine");
   const [selectedNpcKey, setSelectedNpcKey] = useState<string>(defaultNpcKey || "lucy");
-  const [sidebarOpen, setSidebarOpen] = useState(() => (typeof window !== "undefined" ? readSidebarOpen() : true));
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    // Mobile: start with past-chats closed so the composer is usable immediately.
+    if (window.innerWidth < 768) return false;
+    return readSidebarOpen();
+  });
   const [teamExpanded, setTeamExpanded] = useState(false);
 
   const isConfirmAction = (action: CrmAssistAction) =>
@@ -215,7 +235,7 @@ export function AITab({
 
   useEffect(() => {
     if (!visibleThreads.length) return;
-    if (!visibleThreads.some((t) => t.id === activeId)) {
+    if (!visibleThreads.some((t) => sameThreadId(t.id, activeId))) {
       setActiveId(visibleThreads[0].id);
     }
   }, [visibleThreads, activeId]);
@@ -226,7 +246,7 @@ export function AITab({
     onSaveAiThreads([newThread(self, persona)]);
   }, [aiThreads.length, onSaveAiThreads, self, defaultNpcKey]);
 
-  const activeThread = visibleThreads.find((t) => t.id === activeId) || visibleThreads[0];
+  const activeThread = visibleThreads.find((t) => sameThreadId(t.id, activeId)) || visibleThreads[0];
   const activePersona = resolveCrmNpcPersona(activeThread?.npcKey || activeThread?.npcName || selectedNpcKey);
   const messages = activeThread?.messages || [];
   const threadIsMine = activeThread ? isMyThread(activeThread, self) : true;
@@ -234,9 +254,14 @@ export function AITab({
   const persistThread = (threadId: number, patch: Partial<AiThread>) => {
     if (!onSaveAiThreads) return;
     const updatedAt = new Date().toISOString();
-    onSaveAiThreads(
-      aiThreads.map((t) => (t.id === threadId ? { ...t, ...patch, updatedAt } : t)),
-    );
+    const next = aiThreads.map((t) => (sameThreadId(t.id, threadId) ? { ...t, ...patch, updatedAt } : t));
+    // If id mismatch left the map unchanged, append as a new row so send never silently no-ops.
+    if (!next.some((t) => sameThreadId(t.id, threadId))) {
+      const base = activeThread && sameThreadId(activeThread.id, threadId) ? activeThread : newThread(self, activePersona);
+      onSaveAiThreads([{ ...base, ...patch, id: threadId, updatedAt }, ...aiThreads].slice(0, 30));
+      return;
+    }
+    onSaveAiThreads(next);
   };
 
   const runNavAction = (action: CrmAssistAction) => {
@@ -283,48 +308,61 @@ export function AITab({
   };
 
   const send = async () => {
-    if (!input.trim() || busy || !activeThread) return;
+    if (!input.trim() || busy) return;
     const userMsg = input.trim();
     const now = new Date().toISOString();
     const persona = activePersona || selectedPersona;
+    let thread = activeThread;
+    if (!thread) {
+      if (!onSaveAiThreads) return;
+      thread = newThread(self, persona);
+      onSaveAiThreads([thread, ...aiThreads].slice(0, 30));
+      setActiveId(thread.id);
+      setScope("mine");
+    }
     const withUser: AiThreadMessage[] = [
-      ...messages,
+      ...(thread.messages || []),
       { role: "user", text: userMsg, speaker: userName, authorEmail: userEmail || undefined, at: now },
     ];
-    persistThread(activeThread.id, {
+    persistThread(thread.id, {
       messages: withUser,
-      title: userMsg.slice(0, 48) || activeThread.title,
-      ownerName: activeThread.ownerName || userName,
-      ownerEmail: activeThread.ownerEmail || userEmail || undefined,
-      npcKey: persona?.key || activeThread.npcKey,
-      npcName: persona?.name || activeThread.npcName,
+      title: userMsg.slice(0, 48) || thread.title,
+      ownerName: thread.ownerName || userName,
+      ownerEmail: thread.ownerEmail || userEmail || undefined,
+      npcKey: persona?.key || thread.npcKey,
+      npcName: persona?.name || thread.npcName,
     });
     setInput("");
     setBusy(true);
     setPendingActions([]);
     if (isMobile) setSidebarOpen(false);
     const ctx = workspace || { contacts, deals, tasks };
-    const result = await assistCrm(userMsg, ctx, { npcKey: persona?.key, npcName: persona?.name });
-    setBusy(false);
-    if (result.ok && result.reply) {
-      persistThread(activeThread.id, {
-        messages: [
-          ...withUser,
-          { role: "ai", text: result.reply, source: result.source, speaker: persona?.name || "AI", at: new Date().toISOString() },
-        ],
-      });
-      const next = result.actions || [];
-      const confirmable = next.filter(isConfirmAction);
-      const navOnly = next.filter((a) => !isConfirmAction(a));
-      navOnly.forEach(runNavAction);
-      setPendingActions(confirmable);
-    } else {
-      persistThread(activeThread.id, {
-        messages: [
-          ...withUser,
-          { role: "ai", text: result.error || "Could not reach Denizen AI.", source: "error", speaker: persona?.name || "AI", at: new Date().toISOString() },
-        ],
-      });
+    try {
+      const result = await assistCrm(userMsg, ctx, { npcKey: persona?.key, npcName: persona?.name });
+      if (result.ok && result.reply) {
+        persistThread(thread.id, {
+          messages: [
+            ...withUser,
+            { role: "ai", text: result.reply, source: result.source, speaker: persona?.name || "AI", at: new Date().toISOString() },
+          ],
+        });
+        const next = result.actions || [];
+        const confirmable = next.filter(isConfirmAction);
+        const navOnly = next.filter((a) => !isConfirmAction(a));
+        navOnly.forEach(runNavAction);
+        setPendingActions(confirmable);
+      } else {
+        persistThread(thread.id, {
+          messages: [
+            ...withUser,
+            { role: "ai", text: result.error || "Could not reach Denizen AI.", source: "error", speaker: persona?.name || "AI", at: new Date().toISOString() },
+          ],
+        });
+      }
+    } finally {
+      setBusy(false);
+      // Keep the keyboard/composer ready after a past-chat reply.
+      setTimeout(() => inputRef.current?.focus(), 0);
     }
   };
 
@@ -335,12 +373,24 @@ export function AITab({
     onSaveAiThreads([t, ...aiThreads].slice(0, 30));
     setActiveId(t.id);
     setScope("mine");
-    if (isMobile) setSidebarOpen(false);
+    setSidebarOpen(false);
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const pickThread = (id: number) => {
     setActiveId(id);
-    if (isMobile) setSidebarOpen(false);
+    setBusy(false);
+    setPendingActions([]);
+    setSidebarOpen(false);
+    // Claim legacy/unowned threads when opened from Mine so they stay writable.
+    const picked = normalizedThreads.find((t) => sameThreadId(t.id, id));
+    if (picked && onSaveAiThreads && scope === "mine" && (!picked.ownerEmail || !picked.ownerName)) {
+      persistThread(id, {
+        ownerName: picked.ownerName || userName,
+        ownerEmail: picked.ownerEmail || userEmail || undefined,
+      });
+    }
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
   const scopeBtn = (id: ChatScope, label: string) => (
@@ -401,7 +451,7 @@ export function AITab({
           const mine = isMyThread(t, self);
           const owner = t.ownerName || "Unknown";
           const dot = mine ? T.accent : authorHue(owner);
-          const active = t.id === activeId;
+          const active = sameThreadId(t.id, activeId);
           return (
             <button
               key={t.id}
@@ -483,9 +533,10 @@ export function AITab({
   return (
     <div style={{
       display: "flex",
-      height: "calc(100vh - 80px)",
-      maxHeight: "calc(100dvh - 80px)",
+      height: isMobile ? MOBILE_CHROME_H : "calc(100vh - 80px)",
+      maxHeight: isMobile ? MOBILE_CHROME_H : "calc(100dvh - 80px)",
       gap: 0,
+      position: "relative",
       ...panelShell,
     }}>
       {isMobile && sidebarOpen && (
@@ -493,30 +544,39 @@ export function AITab({
           role="presentation"
           onClick={() => setSidebarOpen(false)}
           style={{
-            position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 40,
+            position: "fixed",
+            top: 52,
+            left: 0,
+            right: 0,
+            bottom: "calc(56px + env(safe-area-inset-bottom, 0px))",
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 860,
           }}
         />
       )}
 
       <aside
         style={{
-          width: sidebarOpen ? SIDEBAR_WIDTH : 0,
+          width: isMobile ? Math.min(SIDEBAR_WIDTH + 40, 320) : (sidebarOpen ? SIDEBAR_WIDTH : 0),
           flexShrink: 0,
           display: "flex",
           flexDirection: "column",
           borderRight: sidebarOpen ? `1px solid ${T.bg3}` : "none",
           background: T.bg0 || T.bg1,
           overflow: "hidden",
-          transition: "width 0.22s ease",
+          transition: isMobile ? "transform 0.22s ease" : "width 0.22s ease",
           position: isMobile ? "fixed" : "relative",
-          top: isMobile ? 0 : undefined,
+          top: isMobile ? 52 : undefined,
           left: isMobile ? 0 : undefined,
-          bottom: isMobile ? 0 : undefined,
-          zIndex: isMobile ? 50 : 1,
-          maxHeight: "100%",
+          bottom: isMobile ? "calc(56px + env(safe-area-inset-bottom, 0px))" : undefined,
+          zIndex: isMobile ? 870 : 1,
+          maxHeight: isMobile ? undefined : "100%",
+          transform: isMobile ? (sidebarOpen ? "translateX(0)" : "translateX(-105%)") : undefined,
+          boxShadow: isMobile && sidebarOpen ? "4px 0 24px rgba(0,0,0,0.45)" : undefined,
+          pointerEvents: isMobile && !sidebarOpen ? "none" : "auto",
         }}
       >
-        {sidebarOpen && sidebarContent}
+        {(sidebarOpen || isMobile) && sidebarContent}
       </aside>
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, background: T.bg1 }}>
@@ -674,20 +734,30 @@ export function AITab({
           background: T.bg1,
         }}>
           <input
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && !busy && send()}
-            placeholder={threadIsMine ? `Message ${activePersona?.name || "AI"}…` : `Reply as ${userName}…`}
+            onFocus={() => { if (isMobile && sidebarOpen) setSidebarOpen(false); }}
+            placeholder={
+              !activeThread
+                ? "Start typing to begin a chat…"
+                : (threadIsMine ? `Message ${activePersona?.name || "AI"}…` : `Reply as ${userName}…`)
+            }
             disabled={busy}
+            enterKeyHint="send"
+            autoComplete="off"
             style={{
               ...S.input,
               flex: 1,
               padding: "12px 16px",
-              fontSize: 14,
+              fontSize: isMobile ? 16 : 14,
               borderRadius: 12,
+              opacity: busy ? 0.75 : 1,
             } as React.CSSProperties}
           />
           <button
+            type="button"
             onClick={send}
             disabled={busy || !input.trim()}
             style={{
@@ -695,9 +765,10 @@ export function AITab({
               padding: "12px 20px",
               borderRadius: 12,
               opacity: busy || !input.trim() ? 0.5 : 1,
+              flexShrink: 0,
             } as React.CSSProperties}
           >
-            Send
+            {busy ? "…" : "Send"}
           </button>
         </div>
       </div>

@@ -234,14 +234,86 @@ export function hasDenizenSession(): boolean {
   return !!readCeoGrant();
 }
 
+/** Default for session/workspace CRUD — keep snappy. */
 const FETCH_TIMEOUT_MS = 8_000;
+/** CRM Assist hits LM Studio; server replies often take 10–45s under load. */
+const ASSIST_FETCH_TIMEOUT_MS = 90_000;
 
-function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}) {
+/** Live timeouts from Denizen self-adjust (bumps when clients abort early). */
+let _assistTimeoutMs = ASSIST_FETCH_TIMEOUT_MS;
+let _timeoutsFetchedAt = 0;
+
+async function refreshAssistTimeout(): Promise<number> {
+  const now = Date.now();
+  if (now - _timeoutsFetchedAt < 60_000 && _assistTimeoutMs > 0) return _assistTimeoutMs;
+  try {
+    const res = await fetch("/api/ux/timeouts", { credentials: "include", signal: AbortSignal.timeout(4_000) });
+    const data = await res.json().catch(() => ({}));
+    const ms = Number(data.assist_timeout_ms);
+    if (Number.isFinite(ms) && ms >= 30_000 && ms <= 180_000) {
+      _assistTimeoutMs = Math.round(ms);
+    }
+    _timeoutsFetchedAt = now;
+  } catch {
+    _timeoutsFetchedAt = now;
+  }
+  return _assistTimeoutMs;
+}
+
+function reportUxEvent(payload: {
+  kind: string;
+  surface?: string;
+  message?: string;
+  latency_ms?: number;
+  timeout_ms?: number;
+  path?: string;
+  ok?: boolean;
+}): void {
+  try {
+    void fetch("/api/ux/event", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        surface: "crm",
+        ...payload,
+      }),
+      signal: AbortSignal.timeout(3_000),
+    }).catch(() => {});
+  } catch {
+    /* never break UX */
+  }
+}
+
+function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs: number = FETCH_TIMEOUT_MS,
+) {
   return fetch(input, {
     credentials: "include",
     ...init,
-    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
+}
+
+function fetchErrorMessage(err: unknown): string {
+  const name = err && typeof err === "object" && "name" in err ? String((err as { name?: string }).name) : "";
+  const msg = err instanceof Error ? err.message : String(err);
+  if (
+    name === "AbortError"
+    || name === "TimeoutError"
+    || /aborted|abort|timed out|timeout/i.test(msg)
+  ) {
+    return "Request timed out — Angela may still be thinking. Try again in a moment.";
+  }
+  return msg;
+}
+
+function isTimeoutError(err: unknown): boolean {
+  const name = err && typeof err === "object" && "name" in err ? String((err as { name?: string }).name) : "";
+  const msg = err instanceof Error ? err.message : String(err);
+  return name === "AbortError" || name === "TimeoutError" || /aborted|abort|timed out|timeout/i.test(msg);
 }
 
 function rawDemoUsername(): string | null {
@@ -680,6 +752,8 @@ export async function assistCrm(
 ): Promise<{ ok: boolean; reply?: string; source?: string; error?: string; actions?: CrmAssistAction[]; persona?: string | null }> {
   const session = await ensureDenizenSession();
   if (!session?.session_id) return { ok: false, error: "no session" };
+  const timeoutMs = await refreshAssistTimeout();
+  const started = Date.now();
   try {
     const res = await fetchWithTimeout("/api/crm/assist", {
       method: "POST",
@@ -691,12 +765,33 @@ export async function assistCrm(
         npc_key: opts?.npcKey || undefined,
         npc_name: opts?.npcName || undefined,
       }),
-    });
+    }, timeoutMs);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) return { ok: false, error: data.error || `HTTP ${res.status}` };
+    if (!res.ok || !data.ok) {
+      reportUxEvent({
+        kind: "assist_http_error",
+        path: "/api/crm/assist",
+        message: data.error || `HTTP ${res.status}`,
+        latency_ms: Date.now() - started,
+        timeout_ms: timeoutMs,
+        ok: false,
+      });
+      return { ok: false, error: data.error || `HTTP ${res.status}` };
+    }
     return { ok: true, reply: data.reply, source: data.source, actions: data.actions, persona: data.persona };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    if (isTimeoutError(err)) {
+      reportUxEvent({
+        kind: "assist_timeout",
+        path: "/api/crm/assist",
+        message: err instanceof Error ? err.message : String(err),
+        latency_ms: Date.now() - started,
+        timeout_ms: timeoutMs,
+        ok: false,
+      });
+      _timeoutsFetchedAt = 0; // force refresh; self-adjust may bump
+    }
+    return { ok: false, error: fetchErrorMessage(err) };
   }
 }
 
@@ -706,6 +801,8 @@ export async function executeCrmAssistAction(
 ): Promise<{ ok: boolean; summary?: string; error?: string; created?: Array<{ type: string; id?: unknown }> }> {
   const session = await ensureDenizenSession();
   if (!session?.session_id) return { ok: false, error: "no session" };
+  const timeoutMs = await refreshAssistTimeout();
+  const started = Date.now();
   try {
     const res = await fetchWithTimeout("/api/crm/assist/execute", {
       method: "POST",
@@ -716,12 +813,23 @@ export async function executeCrmAssistAction(
         npc_key: opts?.npcKey || undefined,
         npc_name: opts?.npcName || undefined,
       }),
-    });
+    }, timeoutMs);
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) return { ok: false, error: data.error || data.summary || `HTTP ${res.status}` };
     return { ok: true, summary: data.summary, created: data.created };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    if (isTimeoutError(err)) {
+      reportUxEvent({
+        kind: "assist_execute_timeout",
+        path: "/api/crm/assist/execute",
+        message: err instanceof Error ? err.message : String(err),
+        latency_ms: Date.now() - started,
+        timeout_ms: timeoutMs,
+        ok: false,
+      });
+      _timeoutsFetchedAt = 0;
+    }
+    return { ok: false, error: fetchErrorMessage(err) };
   }
 }
 
