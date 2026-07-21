@@ -364,6 +364,10 @@
     balloonPurple: `${BG}/Hot_air_balloon_purple.png`,
     balloonRed: `${BG}/Hot_air_balloon_red.png`,
     balloonYellow: `${BG}/Hot_air_balloon_yellow.png`,
+    // Halloween biome — grey storm clouds over spooky sections
+    cloudGrey1: `${EXP}/Halloween/Individual Assets/Cloud_grey_1.png`,
+    cloudGrey2: `${EXP}/Halloween/Individual Assets/Cloud_grey_2.png`,
+    cloudGrey3: `${EXP}/Halloween/Individual Assets/Cloud_grey_3.png`,
     laptop: `${OBR}/Laptop.png`,
     // Kitchen (food/break channels)
     fridge: `${KIT}/Refrigerator_large_white.png`,
@@ -1050,12 +1054,20 @@
     { key: 'hospSurgeonF3', path: `${EXP}/Hospital/NPCs/npc_surgeon_female_3.png` },
   ];
   const HOSP_NPC_SHEETS = [...HOSP_NURSE_SHEETS, ...HOSP_SURGEON_SHEETS];
+  // Halloween ghost NPCs — same 5×3 MOVE/IDLE/JUMP grid as hospital staff.
+  const GHOST_NPC_SHEETS = [1, 2, 3].map((n) => ({
+    key: `ghostNpc${n}`,
+    path: `${EXP}/Halloween/NPCs/npc_ghost_${n}.png`,
+  }));
+  const GHOST_NPC_KEYS = GHOST_NPC_SHEETS.map((s) => s.key);
   // Premade sheets are a 256x448 grid of 32x32 cells (8 cols x 14 rows), not 16x32 —
   // loading at half-width used to slice each character in two down the middle.
   const NPC_FRAME = { w: 32, h: 32 };
   const NPC_COLS = 8;
   const HOSP_COLS = 5;
-  const HOSP_SHEET_KEY_RE = /^hosp(Nurse|Surgeon)/i;
+  // Ghost NPC sheets share the hospital 5×3 pose grid, so they ride the same
+  // pose defs and column count.
+  const HOSP_SHEET_KEY_RE = /^hosp(Nurse|Surgeon)|^ghostNpc/i;
   function isHospNpcSheet(key) {
     return HOSP_SHEET_KEY_RE.test(String(key || ''));
   }
@@ -1684,6 +1696,8 @@
       // chair) then witch tending her jack-o-lantern patch on the right.
       stairsDx: 36,
       recipes: [
+        // Scene 1 — crypt attic: coffin, grave candles, a REAL pack ghost
+        // drifting between the mummy-wrapped caretakers.
         () => ({
           h: 84, fill: 0x584668, slots: [110, 165, 235],
           items: [
@@ -1693,9 +1707,10 @@
             ['w', ['cobwebRoom2', 'cobwebRoom'], 245, 2],
             ['f', 'coffin', 80, 1, 0],
             ['f', ['candleTable', 'candleTable2', 'candleTable3'], 115, 1, 0],
-            ['npc', 'halloween-mummy', 152], ['f', 'lampGhost', 192, 1, 0], ['npc', 'halloween-skeleton', 228],
+            ['npc', 'halloween-ghost-attic', 152], ['f', 'lampGhost', 192, 1, 0], ['npc', 'halloween-skeleton', 228],
           ],
         }),
+        // Scene 2 — witch's parlor: reading corner + jack-o-lantern patch.
         () => ({
           h: 102, fill: 0x6a5478, slots: [105, 155, 220],
           items: [
@@ -1711,18 +1726,81 @@
             ['f', ['pumpkinBasket', 'pumpkinBasket2'], 242, 1, 0],
           ],
         }),
+        // Scene 3 — séance chamber: candelabra ring around the table, dracula
+        // watching, two ghosts in attendance.
+        () => ({
+          h: 96, fill: 0x4a3a5c, slots: [100, 160, 225],
+          items: [
+            ['glow', 0x9a4aff, 0.10],
+            ['w', 'chandelier', 128, 2],
+            ['w', 'portraitDracula', 220, 8],
+            ['w', ['cobwebRoom', 'cobwebRoom2'], 14, 2],
+            ['f', ['candelabra', 'candelabra3'], 74, 1, 0],
+            ['f', ['candleTable2', 'candleTable'], 108, 1, 0],
+            ['npc', 'halloween-ghost-seer', 142],
+            ['f', ['candleTable3', 'candleTable2'], 176, 1, 0],
+            ['npc', 'halloween-ghost-guest', 208],
+            ['f', ['candelabra2', 'candelabra'], 244, 1, 0],
+          ],
+        }),
+        // Scene 4 — pumpkin cellar: harvest wall of jacks + the mummy tending
+        // baskets under a ghost lamp.
+        () => ({
+          h: 88, fill: 0x5c4450, slots: [112, 170, 232],
+          items: [
+            ['glow', 0xff8a30, 0.08],
+            ['w', ['lanternHang2', 'lanternHang'], 60, 2],
+            ['w', ['cobwebRoom2', 'cobwebRoom'], 246, 2],
+            ['f', ['jack1', 'jack2'], 70, 1, 0],
+            ['f', ['jack3', 'jack4'], 92, 1, 0],
+            ['f', 'lampGhost', 122, 1, 0],
+            ['npc', 'halloween-mummy', 156],
+            ['f', ['pumpkinBasket', 'pumpkinBasket2'], 192, 1, 0],
+            ['f', ['pumpkinBasket2', 'pumpkinBasket'], 216, 1, 0],
+            ['npc', 'halloween-ghost-cellar', 240],
+          ],
+        }),
       ],
       outside(scene, left, bw, groundY) {
         const seed = hashSeed(`hw${left}`);
+        // --- Street set dressing ---
         scene.furn('treeDeadL', left - 36, groundY, 18);
         scene.furn('treeDeadM', left + bw + 34, groundY, 18);
         scene.furn('lampPostHW', left + bw + 60, groundY, 19);
         scene.furn(seededPick(seed, ['billboardPumpkin', 'billboardGhosts', 'billboardScary'], 1), left - 62, groundY, 18);
+        scene.furn(seededPick(seed, ['jack2', 'jack4', 'pumpkinBasket'], 7), left - 14, groundY, 19);
+        // --- Biome sky: moon + drifting grey storm clouds + purple haze ---
         scene.add.image(left + bw / 2, 60, 'moonHW').setScale(SCALE).setDepth(-60);
+        const haze = scene.add.graphics().setDepth(-58);
+        haze.fillStyle(0x2a1440, 0.16);
+        haze.fillRect(left - 40, -140, bw + 120, (groundY - -140) + 20);
+        ['cloudGrey1', 'cloudGrey2', 'cloudGrey3'].forEach((ck, i) => {
+          if (!scene.textures.exists(ck)) return;
+          const cx = left + 30 + i * (bw / 2.4);
+          const cy = 34 + ((seed >> i) % 26);
+          const cImg = scene.add.image(cx, cy, ck).setScale(2).setDepth(-59).setAlpha(0.9);
+          scene.tweens.add({
+            targets: cImg, x: cx + 46 + (i * 12), duration: 15000 + i * 4200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+          });
+        });
+        // --- Ground fog banks rolling along the street ---
+        for (let i = 0; i < 2; i += 1) {
+          const fog = scene.add.graphics().setDepth(19.5);
+          fog.fillStyle(0xb8a8d8, 0.10 + i * 0.04);
+          fog.fillEllipse(left + bw * (0.3 + i * 0.4), groundY - 7, bw * 0.7, 22);
+          scene.tweens.add({
+            targets: fog, x: (i ? -1 : 1) * 30, alpha: 0.5, duration: 5200 + i * 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+          });
+        }
+        // --- Sky spirits: floating sheet-ghosts + a bat pair ---
         const ghost = scene.add.image(left - 20, groundY - 60, seededPick(seed, ['ghost1', 'ghost2'], 2)).setScale(SCALE).setDepth(19).setAlpha(0.8);
         scene.tweens.add({ targets: ghost, y: groundY - 80, x: left + 30, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         const bat = scene.add.image(left + bw + 20, groundY - 120, seededPick(seed, ['bat1', 'bat2'], 3)).setScale(SCALE).setDepth(19);
         scene.tweens.add({ targets: bat, x: left + bw + 90, y: groundY - 150, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        const bat2 = scene.add.image(left - 30, groundY - 160, seededPick(seed, ['bat2', 'bat1'], 5)).setScale(SCALE * 0.8).setDepth(19).setAlpha(0.9);
+        scene.tweens.add({ targets: bat2, x: left + bw * 0.5, y: groundY - 190, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        // --- A real animated ghost NPC haunting the sidewalk ---
+        scene.decorNpcQueue.push([`halloween-ghost-street-${left}`, left + bw * 0.5, groundY]);
       },
     },
   };
@@ -1763,6 +1841,7 @@
       // 30 pre-made NPC sheets (16x32 frames): row 0 walk, row 1 idle.
       NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       HOSP_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
+      GHOST_NPC_SHEETS.forEach((n) => this.load.spritesheet(n.key, n.path, { frameWidth: NPC_FRAME.w, frameHeight: NPC_FRAME.h }));
       // Street pets — 32x32 frames (Paws & Whiskers free packs).
       PET_SHEETS.forEach((p) => this.load.spritesheet(p.key, p.path, {
         frameWidth: PET_FRAME,
@@ -2770,7 +2849,11 @@
       const spawned = [];
       for (const entry of this.decorNpcQueue) {
         const [seed, x, floorY, roomKey, opts] = entry;
-        const sheet = this.npcSheetFor(seed);
+        // Real pack ghosts for halloween-ghost seeds — not a reskinned human.
+        const isGhost = /^halloween-ghost/.test(String(seed));
+        const sheet = isGhost
+          ? seededPick(hashSeed(String(seed)), GHOST_NPC_KEYS, 1)
+          : this.npcSheetFor(seed);
         const sp = this.spawnChar(x, floorY, sheet, `${sheet}_idle`, null, 31, {
           roomKey: roomKey || null,
           mode: 'life',
@@ -2780,6 +2863,12 @@
           actor.role = opts?.role || null;
           actor.hospOpts = opts || null;
           actor.seedKey = seed;
+          if (isGhost) {
+            actor.isGhostNpc = true;
+            actor.bobPhase = (hashSeed(String(seed)) % 628) / 100;
+            actor.staySeated = false;
+            sp.setAlpha(0.82);
+          }
           if (actor.role === 'patient') actor.staySeated = true;
           if (actor.role === 'nurse' || actor.role === 'surgeon') {
             actor.staySeated = false;
@@ -2789,6 +2878,22 @@
         }
       }
       this.decorNpcQueue = [];
+      // One shared bob loop keeps every ambient ghost hovering (a tween on
+      // the sprite would be killed by wander movement).
+      if (spawned.some((a) => a.isGhostNpc) && !this._ghostBobTimer) {
+        this._ghostBobTimer = this.time.addEvent({
+          delay: 90,
+          loop: true,
+          callback: () => {
+            const t = this.time.now / 260;
+            for (const a of this.ambientActors || []) {
+              if (!a.isGhostNpc || !a.sprite?.active) continue;
+              a.sprite.displayOriginY = a.sprite.height * NPC_FOOT_ORIGIN_Y
+                + 1.5 + Math.sin(t + (a.bobPhase || 0)) * 2.5;
+            }
+          },
+        });
+      }
 
       this.time.delayedCall(220, () => {
         for (const actor of spawned) {
@@ -5013,7 +5118,7 @@
 
     makeAnims() {
       // Premades: 8×14 pose grid. Hospital staff: 5×3 (walk/idle/jump + aliases).
-      [...NPC_SHEETS, ...HOSP_NPC_SHEETS].forEach((n) => {
+      [...NPC_SHEETS, ...HOSP_NPC_SHEETS, ...GHOST_NPC_SHEETS].forEach((n) => {
         if (!this.textures.exists(n.key)) return;
         const cols = sheetColCount(n.key);
         const poseDefs = poseDefsForSheet(n.key);

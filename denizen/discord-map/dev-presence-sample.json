@@ -5,7 +5,8 @@
   "guildName": "Layout Fixture",
   "categories": [
     { "id": "catv", "name": "Voice Lounge", "position": 0 },
-    { "id": "catt", "name": "Text Channels", "position": 1 }
+    { "id": "catt", "name": "Text Channels", "position": 1 },
+    { "id": "cath", "name": "halloween hollow", "position": 2 }
   ],
   "rooms": [
     { "id": "vc-empty", "name": "empty-vc", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 0, "occupants": [] },
@@ -13,7 +14,11 @@
     { "id": "vc-squad", "name": "squad-room", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 4, "occupants": ["t3", "t4", "t5", "t6"] },
     { "id": "vc-party", "name": "party-vc", "type": "voice", "categoryId": "catv", "categoryName": "Voice Lounge", "occupantCount": 8, "occupants": ["t7", "t8", "t9", "t10", "t11", "t12", "t13", "t14"] },
     { "id": "tx-general", "name": "general", "type": "text", "categoryId": "catt", "categoryName": "Text Channels", "occupantCount": 0, "occupants": [] },
-    { "id": "tx-memes", "name": "memes", "type": "text", "categoryId": "catt", "categoryName": "Text Channels", "occupantCount": 0, "occupants": [] }
+    { "id": "tx-memes", "name": "memes", "type": "text", "categoryId": "catt", "categoryName": "Text Channels", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-crypt", "name": "the-crypt", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-seance", "name": "seance-circle", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-pumpkin", "name": "pumpkin-cellar", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] },
+    { "id": "tx-parlor", "name": "witch-parlor", "type": "text", "categoryId": "cath", "categoryName": "halloween hollow", "occupantCount": 0, "occupants": [] }
   ],
   "people": [
     { "userId": "t1", "displayName": "Ava", "channelId": "vc-duo", "channelName": "duo-hangout", "channelType": "voice", "soft": false, "muted": false, "deafened": false, "live": true },
