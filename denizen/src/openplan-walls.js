@@ -182,11 +182,24 @@
     const objs = [];
     // Website-example look: white caps on both room-facing sides, dark
     // void between (wall body). Caps 8px, void fills the rest of T=32.
+    // Junction rule from the example maps: a V wall hanging from an H wall
+    // starts BELOW that wall's painted face (at its navy bottom border) —
+    // never overlapping it. Collision keeps the full extent.
+    let vy0 = y0;
+    (scene._wallHBands || []).forEach((b) => {
+      if (y0 >= b.y && y0 <= b.y + BAND_H && x + T > b.x0 && x < b.x1) {
+        const spec = b.brick ? BLOCK.brick : BLOCK.white;
+        vy0 = Math.max(vy0, b.y + CAP_ROW + spec.repeat + FACE_ROW);
+      }
+    });
+    const vh = y1 - vy0;
     const edgeW = 8;
     const bodyW = T - edgeW * 2;
-    objs.push(scene.add.rectangle(x + T / 2, y0 + h / 2, bodyW, h, VOID, 1).setDepth(WALL_FACE_DEPTH));
-    objs.push(scene.add.rectangle(x + edgeW / 2, y0 + h / 2, edgeW, h, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
-    objs.push(scene.add.rectangle(x + T - edgeW / 2, y0 + h / 2, edgeW, h, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+    if (vh > 0) {
+      objs.push(scene.add.rectangle(x + T / 2, vy0 + vh / 2, bodyW, vh, VOID, 1).setDepth(WALL_FACE_DEPTH));
+      objs.push(scene.add.rectangle(x + edgeW / 2, vy0 + vh / 2, edgeW, vh, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+      objs.push(scene.add.rectangle(x + T - edgeW / 2, vy0 + vh / 2, edgeW, vh, WHITE, 1).setDepth(WALL_TRIM_DEPTH));
+    }
     // Doorway end caps — white edge across the wall thickness
     if (cuts?.topCut) {
       objs.push(scene.add.rectangle(x + T / 2, y0 + 1.5, T, 3, WHITE, 1).setDepth(WALL_CORNER_TRIM_DEPTH));
@@ -206,12 +219,10 @@
     const trimLeft = role === 'tl' || role === 'bl';
     const trimRight = role === 'tr' || role === 'br';
 
-    // Corner: the block's single-column wall (both edges baked) — same
-    // continuous art as full segments, joins H and V walls without seams.
-    const cornerKey = buildHSegTexture(scene, T, 'white');
-    if (cornerKey) {
-      objs.push(scene.add.image(x, y, cornerKey).setOrigin(0, 0).setDepth(WALL_FACE_DEPTH));
-    }
+    // Corners draw NOTHING in the example style: H faces run continuously
+    // and V walls join them below the face — stamping a corner block onto
+    // the painted face is exactly the seam the examples never have. The
+    // corner keeps only its collision body.
     const obs = scene.add.rectangle(x + T / 2, y + T, T, BAND_H, 0x000000, 0);
     scene.physics.add.existing(obs, true);
     obstacles.push(obs);
@@ -312,6 +323,16 @@
     scene._wallSegments.forEach((e) => destroySegment(scene, e));
     scene._wallSegments = [];
     const segments = Array.isArray(layout?.segments) ? layout.segments : [];
+    // Junction awareness: V walls must START below any H wall face they
+    // hang from (the example never overlaps a face) — record H bands first.
+    scene._wallHBands = segments
+      .filter((s) => s.type === 'h')
+      .map((s) => ({
+        y: s.y,
+        x0: Math.min(s.startX, s.endX),
+        x1: Math.max(s.startX, s.endX),
+        brick: s.face === 'brick' || s.face === 'wall_face_brick',
+      }));
     segments.forEach((seg) => {
       scene._wallSegments.push(renderSegment(scene, seg, obstacles));
     });
