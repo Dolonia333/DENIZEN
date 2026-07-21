@@ -99,28 +99,69 @@
     return { h: 'wall_face', v: 'wall_face_v' };
   }
 
-  function drawHWallWithGaps(scene, startX, y, endX, doorGaps, obstacles, face) {
-    const gaps = (doorGaps || [])
+  /** Split [startX,endX] by gap ranges → kept sub-ranges. */
+  function splitByGaps(startX, endX, gaps) {
+    const gs = (gaps || [])
       .map((g) => [Math.max(startX, g[0]), Math.min(endX, g[1])])
-      .filter(([a, b]) => b - a >= T)
+      .filter(([a, b]) => b > a)
       .sort((a, b) => a[0] - b[0]);
+    const out = [];
     let cursor = startX;
-    const all = [];
-    for (const [gx0, gx1] of gaps) {
-      // Wall segment ending at doorway — GIF cut on the right edge; floor shows through gap
-      if (gx0 > cursor) {
-        all.push(...drawHWall(scene, cursor, y, gx0, obstacles, face, {
-          leftCut: cursor > startX,
-          rightCut: true,
-        }));
-      }
-      cursor = gx1;
+    for (const [g0, g1] of gs) {
+      if (g0 > cursor) out.push([cursor, g0]);
+      cursor = Math.max(cursor, g1);
     }
-    if (endX > cursor) {
-      all.push(...drawHWall(scene, cursor, y, endX, obstacles, face, {
-        leftCut: cursor > startX,
-        rightCut: false,
-      }));
+    if (endX > cursor) out.push([cursor, endX]);
+    return out;
+  }
+
+  // Cap-only strip (navy/white/navy, 12px) — keeps the top ribbon flowing
+  // continuously across face gaps where a dividing wall slices through
+  // (Office_Design_1: the cap never breaks at junctions; the FACE does).
+  const CAP_STRIP_H = 12;
+  function buildCapTexture(scene, w, style) {
+    const key = `wallcap_${style}_${Math.round(w)}`;
+    if (scene.textures.exists(key)) return key;
+    const src = scene.textures.get('room_builder')?.getSourceImage();
+    if (!src) return null;
+    const by = (BLOCK[style] || BLOCK.white).y;
+    const t = scene.textures.createCanvas(key, Math.round(w), CAP_STRIP_H);
+    const ctx = t.context;
+    ctx.imageSmoothingEnabled = false;
+    for (let dx = 0; dx < w; dx += T) {
+      ctx.drawImage(src, BLOCK_COLS.mid, by, Math.min(T, w - dx), CAP_STRIP_H, dx, 0, Math.min(T, w - dx), CAP_STRIP_H);
+    }
+    t.refresh();
+    return key;
+  }
+
+  function drawHWallWithGaps(scene, startX, y, endX, doorGaps, obstacles, face, faceGaps) {
+    const all = [];
+    const brick = face === 'brick' || face === 'wall_face_brick';
+    const style = brick ? 'brick' : 'white';
+    // VISUALS split by door gaps AND face gaps (dividing walls slicing
+    // through) — every kept piece is a full block with baked edge borders.
+    const allGaps = [...(doorGaps || []), ...(faceGaps || [])];
+    for (const [a, b] of splitByGaps(startX, endX, allGaps)) {
+      if (b - a < 8) continue;
+      const texKey = buildHSegTexture(scene, b - a, style);
+      if (texKey) all.push(scene.add.image(a, y, texKey).setOrigin(0, 0).setDepth(WALL_FACE_DEPTH));
+    }
+    // Cap ribbon stays continuous across FACE gaps only (not door gaps)
+    for (const [a, b] of (faceGaps || [])) {
+      const ga = Math.max(startX, a), gb = Math.min(endX, b);
+      if (gb - ga < 4) continue;
+      const capKey = buildCapTexture(scene, gb - ga, style);
+      if (capKey) all.push(scene.add.image(ga, y, capKey).setOrigin(0, 0).setDepth(WALL_TRIM_DEPTH));
+    }
+    // COLLISION split by door gaps only — face gaps stay blocked (the
+    // dividing wall's own body occupies them).
+    for (const [a, b] of splitByGaps(startX, endX, doorGaps || [])) {
+      if (b - a < T) continue;
+      const obs = scene.add.rectangle(a + (b - a) / 2, y + T, b - a, BAND_H, 0x000000, 0);
+      scene.physics.add.existing(obs, true);
+      obstacles.push(obs);
+      all.push(obs);
     }
     return all;
   }
@@ -182,14 +223,14 @@
     const objs = [];
     // Website-example look: white caps on both room-facing sides, dark
     // void between (wall body). Caps 8px, void fills the rest of T=32.
-    // Junction rule from the example maps: a V wall hanging from an H wall
-    // starts BELOW that wall's painted face (at its navy bottom border) —
-    // never overlapping it. Collision keeps the full extent.
+    // Junction rule (Office_Design_1): a V wall meeting an H wall flows
+    // down FROM the cap line — the H face is sliced at this x (renderLayout
+    // face gaps), so the V extends UP through the face zone to just below
+    // the continuous cap ribbon. Collision keeps the original extent.
     let vy0 = y0;
     (scene._wallHBands || []).forEach((b) => {
       if (y0 >= b.y && y0 <= b.y + BAND_H && x + T > b.x0 && x < b.x1) {
-        const spec = b.brick ? BLOCK.brick : BLOCK.white;
-        vy0 = Math.max(vy0, b.y + CAP_ROW + spec.repeat + FACE_ROW);
+        vy0 = b.y + CAP_STRIP_H;
       }
     });
     const vh = y1 - vy0;
@@ -270,11 +311,10 @@
     const face = data.face || null;
     let visuals = [];
     if (data.type === 'h') {
-      if (Array.isArray(data.doorGaps) && data.doorGaps.length) {
-        visuals = drawHWallWithGaps(scene, data.startX, data.y, data.endX, data.doorGaps, obstacles, face);
-      } else {
-        visuals = drawHWall(scene, data.startX, data.y, data.endX, obstacles, face);
-      }
+      visuals = drawHWallWithGaps(
+        scene, data.startX, data.y, data.endX,
+        data.doorGaps || [], obstacles, face, data.__faceGaps || []
+      );
     } else if (data.type === 'v') {
       if (Array.isArray(data.doorGaps) && data.doorGaps.length) {
         visuals = drawVWallWithGaps(scene, data.x, data.startY, data.endY, data.doorGaps, data.shadowSide || 'right', obstacles);
@@ -323,8 +363,10 @@
     scene._wallSegments.forEach((e) => destroySegment(scene, e));
     scene._wallSegments = [];
     const segments = Array.isArray(layout?.segments) ? layout.segments : [];
-    // Junction awareness: V walls must START below any H wall face they
-    // hang from (the example never overlaps a face) — record H bands first.
+    // Junction model from Office_Design_1: a dividing wall SLICES THROUGH
+    // the horizontal wall it meets — the H face breaks into per-room
+    // segments (each closed by its baked edge border) while the cap ribbon
+    // stays continuous, and the V wall flows down from the cap line.
     scene._wallHBands = segments
       .filter((s) => s.type === 'h')
       .map((s) => ({
@@ -333,8 +375,23 @@
         x1: Math.max(s.startX, s.endX),
         brick: s.face === 'brick' || s.face === 'wall_face_brick',
       }));
+    const vSegs = segments.filter((s) => s.type === 'v');
     segments.forEach((seg) => {
-      scene._wallSegments.push(renderSegment(scene, seg, obstacles));
+      let seg2 = seg;
+      if (seg.type === 'h') {
+        const x0 = Math.min(seg.startX, seg.endX);
+        const x1 = Math.max(seg.startX, seg.endX);
+        const faceGaps = vSegs
+          .filter((v) => {
+            const vy0 = Math.min(v.startY, v.endY);
+            const vy1 = Math.max(v.startY, v.endY);
+            const crosses = vy0 <= seg.y + BAND_H && vy1 >= seg.y + T;
+            return crosses && v.x + T > x0 && v.x < x1;
+          })
+          .map((v) => [v.x, v.x + T]);
+        if (faceGaps.length) seg2 = { ...seg, __faceGaps: faceGaps };
+      }
+      scene._wallSegments.push(renderSegment(scene, seg2, obstacles));
     });
     syncAutoCorners(scene, obstacles);
     return scene._wallSegments;
