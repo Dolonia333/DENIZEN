@@ -97,8 +97,12 @@ function applyBoosterGoldenHeadset(avatar, roles = {}, opts = {}) {
 
   const next = {
     ...av,
-    // Headsets only composite in layered mode
-    mode: 'layers',
+    // Sit the headset on the premade (bakePremade → compositeHat) whenever one
+    // exists. Forcing 'layers' here switched clean premade characters into the
+    // layered path, which morphs the whole character per animation pose
+    // ("won't stay one character"). Only fall back to layers when there is no
+    // premade base to overlay the hat on.
+    mode: av.premade ? 'premade' : 'layers',
     hat: {
       set: 'headsets',
       index: Number.isFinite(av.hat?.index) ? av.hat.index : 0,

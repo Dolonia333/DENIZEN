@@ -134,6 +134,24 @@ function createPresenceServer({
       return;
     }
 
+    if (url.pathname === '/membership') {
+      const userId = String(url.searchParams.get('userId') || '').trim();
+      if (!userId) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'userId required' }));
+        return;
+      }
+      const guildIds = typeof tracker.memberGuildIds === 'function'
+        ? tracker.memberGuildIds(userId)
+        : [];
+      res.writeHead(200, {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      });
+      res.end(JSON.stringify({ ok: true, userId, guildIds }));
+      return;
+    }
+
     if (url.pathname === '/invite') {
       const clientId = String(
         applicationId || process.env.DISCORD_APPLICATION_ID || process.env.DISCORD_CLIENT_ID || '',

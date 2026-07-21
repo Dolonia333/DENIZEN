@@ -602,7 +602,12 @@
     }
 
     function hostedGuildsUrl() {
-      return `${location.origin}/api/discord/map/guilds`;
+      const session = loadSession();
+      const params = new URLSearchParams();
+      if (session.session_id) params.set('session_id', session.session_id);
+      if (session.session_token) params.set('session_token', session.session_token);
+      const qs = params.toString();
+      return `${location.origin}/api/discord/map/guilds${qs ? `?${qs}` : ''}`;
     }
 
     function hostedInviteUrl() {
@@ -660,6 +665,9 @@
       if (!gid) return { ok: true, gated: false, unlocked: true };
       const params = new URLSearchParams({ guildId: gid });
       if (mapGrant) params.set('map_grant', mapGrant);
+      const session = loadSession();
+      if (session.session_id) params.set('session_id', session.session_id);
+      if (session.session_token) params.set('session_token', session.session_token);
       const res = await fetch(`/api/discord/map/access?${params}`, { cache: 'no-store' });
       return res.json();
     }
@@ -668,8 +676,23 @@
       const card = $('teamCodeCard');
       card.hidden = false;
       const name = access.org_display_name ? ` for ${access.org_display_name}` : '';
+      if (access.code === 'MEMBERSHIP_REQUIRED') {
+        // No org linked yet — no team code exists to check against. Either
+        // be an active member (bot's own tracking), or — if you're the
+        // server owner — run ,teamlink first to create the link a code
+        // can unlock.
+        $('teamCodeBlurb').innerHTML = (access.message
+          || 'Be active in this server, or link your Discord account, to view its map.')
+          + ` <a href="${discordConnectUrl('link')}">Link Discord</a>.`
+          + ' Server owner? Run <code>,teamlink &lt;your team code&gt;</code> in Discord first — '
+          + 'until then there\'s no team linked here for a code to unlock.';
+        $('teamCodeInput').disabled = true;
+        $('btnUnlockMap').disabled = true;
+        $('teamCodeStatus').textContent = '';
+        card.dataset.guildId = String(guildId || '');
+        return;
+      }
       if (access.setup_required) {
-        // Soft notice only — unlinked maps stay open after the gate fix.
         $('teamCodeBlurb').innerHTML = access.message
           || 'Owner can lock this map with <code>,teamlink &lt;team code&gt;</code>.';
         $('teamCodeInput').disabled = true;
@@ -677,12 +700,11 @@
         $('teamCodeStatus').textContent = '';
         card.hidden = true;
         return;
-      } else {
-        $('teamCodeBlurb').innerHTML = `Enter the Denizen team code${name} to open this server’s map. Get it from the server owner (<code>,mapcode</code>).`;
-        $('teamCodeInput').disabled = false;
-        $('btnUnlockMap').disabled = false;
-        $('teamCodeStatus').textContent = '';
       }
+      $('teamCodeBlurb').innerHTML = `Enter the Denizen team code${name} to open this server’s map. Get it from the server owner (<code>,mapcode</code>), or link your Discord account if you're a member (<a href="${discordConnectUrl('link')}">Link Discord</a>).`;
+      $('teamCodeInput').disabled = false;
+      $('btnUnlockMap').disabled = false;
+      $('teamCodeStatus').textContent = '';
       card.dataset.guildId = String(guildId || '');
     }
 
@@ -701,7 +723,7 @@
       } catch (_) {
         return { ok: true };
       }
-      if (!access.gated || access.unlocked) {
+      if (access.unlocked) {
         hideTeamCodeGate();
         return { ok: true, access };
       }
@@ -782,11 +804,12 @@
       updateHero(c);
     }
 
-    function renderGuilds(guilds, selectedId) {
+    function renderGuilds(guilds, selectedId, emptyMessage) {
       const root = $('guildList');
       root.innerHTML = '';
       if (!guilds.length) {
-        root.innerHTML = '<div class="empty">No servers found yet. Invite the Denizen bot to your Discord, then hit Refresh.</div>';
+        root.innerHTML = `<div class="empty">${emptyMessage
+          || 'No servers found yet. Invite the Denizen bot to your Discord, then hit Refresh.'}</div>`;
         return;
       }
       for (const g of guilds) {
@@ -817,9 +840,14 @@
         const data = await res.json();
         const guilds = Array.isArray(data.guilds) ? data.guilds : [];
         const cfg = loadCfg();
-        renderGuilds(guilds, cfg.guildId);
+        const noAccessMessage = data.botHasGuilds
+          ? 'No servers you can access yet. Be active in one, or link your Discord account, then hit Refresh.'
+          : 'No servers found yet. Invite the Denizen bot to your Discord, then hit Refresh.';
+        renderGuilds(guilds, cfg.guildId, noAccessMessage);
         if (!guilds.length) {
-          setStatus(false, 'Bot online, but no servers yet — invite Denizen', true);
+          setStatus(false, data.botHasGuilds
+            ? 'No servers you have access to yet'
+            : 'Bot online, but no servers yet — invite Denizen', true);
         } else if (cfg.presenceUrlResolved) {
           setStatus(true, `Connected · ${cfg.label || cfg.guildName || 'server'}`);
         } else {
@@ -858,9 +886,11 @@
       setStatus(false, 'Checking access…', true);
       const unlocked = await ensureMapUnlocked(g.guildId);
       if (!unlocked.ok) {
-        setStatus(false, unlocked.access?.setup_required
-          ? 'Owner must link with ,teamlink'
-          : 'Enter team code to open map', true);
+        setStatus(false, unlocked.access?.code === 'MEMBERSHIP_REQUIRED'
+          ? 'Link Discord, or be active in this server, to view it'
+          : unlocked.access?.setup_required
+            ? 'Owner must link with ,teamlink'
+            : 'Enter team code to open map', true);
         renderGuilds((await fetchGuildsSilent()) || [], g.guildId);
         return;
       }
@@ -937,9 +967,11 @@
       const unlocked = await ensureMapUnlocked(cfg.guildId);
       if (!unlocked.ok) {
         showConnect();
-        setStatus(false, unlocked.access?.setup_required
-          ? 'Owner must link with ,teamlink'
-          : 'Enter team code to open map', true);
+        setStatus(false, unlocked.access?.code === 'MEMBERSHIP_REQUIRED'
+          ? 'Link Discord, or be active in this server, to view it'
+          : unlocked.access?.setup_required
+            ? 'Owner must link with ,teamlink'
+            : 'Enter team code to open map', true);
         return;
       }
       const fresh = loadCfg();

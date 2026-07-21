@@ -518,6 +518,32 @@ class TrackerEngine {
   }
 
   /**
+   * True if this user has ever been tracked as a member of the guild — VC/text
+   * activity while online, or hydrated hangout history from disk. Unlike
+   * isOnMap() this is not time-windowed; a member row is never deleted once
+   * created. Used for access-control ("is this a real member of this guild"),
+   * not for live-presence rendering.
+   */
+  hasSeenMember(guildId, userId) {
+    if (!guildId || !userId) return false;
+    const g = this.guilds.get(guildId);
+    return !!g?.members?.has(userId);
+  }
+
+  /**
+   * Every guildId this process tracks for which the given user has a member
+   * row (see hasSeenMember). One call answers membership across all guilds.
+   */
+  memberGuildIds(userId) {
+    const out = [];
+    if (!userId) return out;
+    for (const [guildId, g] of this.guilds) {
+      if (g.members?.has(userId)) out.push(guildId);
+    }
+    return out;
+  }
+
+  /**
    * Ephemeral map emote/eat action (TTL ~5s) broadcast via presence people[].action.
    * @param {string} guildId
    * @param {string} userId

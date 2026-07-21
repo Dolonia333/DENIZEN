@@ -85,14 +85,19 @@ function applyTint(img, hex) {
   return img;
 }
 
-/** Crop body sheet (often 272×448) to 256×448 centered content. */
+/** Crop body sheet (often 272×448) to the left 256×448 of real frames. */
 async function loadBodySheet(bodyId) {
   const img = await loadImg(bodyPath(bodyId));
   const w = img.bitmap.width;
   const h = img.bitmap.height;
   if (w === SHEET_W && h === SHEET_H) return img;
-  // Content sits ~8px inset on 272-wide sheets
-  const x0 = Math.max(0, Math.floor((w - SHEET_W) / 2));
+  // Body sheets are 272 wide = 8 real frames (256px) on a 0-based 32px grid,
+  // plus a ~16px label/extra strip on the RIGHT. Crop the left 256 so body
+  // frame columns line up with the same 0-based grid every per-frame accessory
+  // layer (hair/outfit/headset) is stamped on. A CENTERED crop (x0=8) shifts
+  // the whole body ~8px left of the accessories, which makes the booster
+  // headset and hair float off to the side of the head — the "broken avatar".
+  const x0 = 0;
   const y0 = Math.max(0, Math.floor((h - SHEET_H) / 2));
   return img.clone().crop(x0, y0, Math.min(SHEET_W, w - x0), Math.min(SHEET_H, h - y0))
     .contain(SHEET_W, SHEET_H);
@@ -218,7 +223,85 @@ async function bakeLayers(avatar) {
   return out;
 }
 
+/**
+ * Composite a hat/headset layer onto an already-baked full sheet, per frame.
+ * Shared by the premade path so booster headsets can sit on a clean premade
+ * character (the layered body/hair/outfit path morphs per pose — see
+ * loadBodySheet/mapAnimRow notes — so premades must stay premade and only
+ * gain the hat overlay).
+ */
+async function compositeHat(out, avatar) {
+  const hatMeta = catalog.HAT_SETS.find((h) => h.id === avatar.hat?.set);
+  if (!hatMeta?.file) return out;
+  let hatSheet = null;
+  try {
+    hatSheet = await loadImg(layerFile('hat', hatMeta.file));
+  } catch (_) { return out; }
+  if (!hatSheet) return out;
+  const hatIdx = avatar.hat?.index ?? 0;
+  const tintHex = avatar.tint?.hat || null;
+  // Hat sheets are style catalogs — columns AND rows are color/style variants
+  // (headsets.png = 50×7 variants), NOT animation poses. Sample ONE tile and
+  // stamp it on every frame; mapping pose row → sheet row made the hat change
+  // color whenever the character sat down or lay down.
+  let tile = extractTile(hatSheet, hatIdx, 0);
+  if (!tile) return out;
+  if (tintHex) tile = applyTint(tile, tintHex);
+  for (let row = 0; row < ROWS; row += 1) {
+    for (let col = 0; col < COLS; col += 1) {
+      out.composite(tile.clone(), col * FRAME, row * FRAME);
+    }
+  }
+  return out;
+}
+
+/**
+ * Expand a 5×3 MOVE/IDLE/JUMP sheet (Halloween/hospital packs) into the
+ * standard 8×14 premade grid. Poses beyond walk/idle/jump reuse the idle
+ * frames — a floating ghost hovers instead of sitting/lying, which is right.
+ */
+async function bakeHospSheet(relFile) {
+  const Jimp = jimp();
+  const src = await loadImg(path.join(ROOT, 'discord-map', relFile));
+  const out = await new Promise((resolve, reject) => {
+    // eslint-disable-next-line no-new
+    new Jimp(SHEET_W, SHEET_H, 0x00000000, (err, image) => {
+      if (err) reject(err);
+      else resolve(image);
+    });
+  });
+  const SRC_FRAMES = [4, 3, 2]; // MOVE, IDLE, JUMP real frame counts
+  for (let row = 0; row < ROWS; row += 1) {
+    const srcRow = row === 0 ? 0 : (row === 2 ? 2 : 1);
+    const frames = SRC_FRAMES[srcRow];
+    for (let col = 0; col < COLS; col += 1) {
+      const srcCol = col % frames;
+      const sy = srcRow * FRAME;
+      if (sy + FRAME > src.bitmap.height) continue;
+      const tile = src.clone().crop(srcCol * FRAME, sy, FRAME, FRAME);
+      out.composite(tile, col * FRAME, row * FRAME);
+    }
+  }
+  return out;
+}
+
 async function bakePremade(avatar) {
+  // Special premades (ghost/skeleton) render a dedicated sheet as the whole
+  // character — consistent across poses, no hair/outfit layers.
+  const special = catalog.PREMADES.find((p) => p.id === avatar.premade && p.special);
+  if (special?.special === 'hosp' && special.file) {
+    const img = await bakeHospSheet(special.file);
+    if (avatar.tint?.clothes) applyTint(img, avatar.tint.clothes);
+    await compositeHat(img, avatar);
+    return img;
+  }
+  if (special?.special === 'body') {
+    const img = await loadBodySheet(special.body);
+    if (avatar.tint?.clothes) applyTint(img, avatar.tint.clothes);
+    await compositeHat(img, avatar);
+    return img;
+  }
+
   const p = premadePath(avatar.premade);
   if (!p) {
     // fall back to layers
@@ -230,6 +313,8 @@ async function bakePremade(avatar) {
   }
   // Optional full-sheet clothes tint for premades
   if (avatar.tint?.clothes) applyTint(img, avatar.tint.clothes);
+  // Hat/headset overlay (e.g. booster golden headset) on the clean premade.
+  await compositeHat(img, avatar);
   return img;
 }
 

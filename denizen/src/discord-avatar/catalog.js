@@ -61,6 +61,20 @@ for (let i = 1; i <= 15; i += 1) {
   PREMADES.push({ id: `npc_m${i}`, label: `Male ${i}`, gender: 'm', index: i });
   PREMADES.push({ id: `npc_f${i}`, label: `Female ${i}`, gender: 'f', index: i });
 }
+// Special premades — render a non-standard spritesheet directly as the whole
+// character (no hair/outfit layers), so they stay one consistent figure
+// across every pose.
+// - special:'body'  → a sheet in Body/ (standard 8×14 anim grid)
+// - special:'hosp'  → a 5×3 MOVE/IDLE/JUMP sheet (Halloween/hospital packs),
+//   expanded to the standard grid at bake time; file is relative to
+//   discord-map/.
+PREMADES.push({
+  id: 'ghost',
+  label: 'Ghost (Halloween)',
+  special: 'hosp',
+  file: 'PixelSpacesFull/Expansions/Halloween/NPCs/npc_ghost_2.png',
+});
+PREMADES.push({ id: 'skeleton', label: 'Skeleton', special: 'body', body: 'skeleton' });
 
 /** Active world events → unlock ids. */
 function getActiveEvents(now = new Date()) {

@@ -104,6 +104,21 @@
     }
   })();
 
+  // Denizen visitor session — same key index.html's saveSession() writes.
+  // Lets the server resolve "is this viewer a tracked member of this guild"
+  // for the membership access path, alongside the team-code MAP_GRANT above.
+  const SESSION = (() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('denizen-discord-session') || '{}');
+      return {
+        id: String(stored.session_id || '').trim(),
+        token: String(stored.session_token || '').trim(),
+      };
+    } catch (_) {
+      return { id: '', token: '' };
+    }
+  })();
+
   const PRESENCE_URL = (() => {
     const pageGuildId = (() => {
       try {
@@ -154,6 +169,13 @@
   function presenceFetchInit() {
     const headers = {};
     if (MAP_GRANT) headers['x-map-grant'] = MAP_GRANT;
+    // Session id alone is enough — Discord demo logins never mint a session
+    // token, and requiring both locked those viewers out of the membership
+    // path (server verifies the token only when the session has one stored).
+    if (SESSION.id) {
+      headers['x-session-id'] = SESSION.id;
+      if (SESSION.token) headers['x-session-token'] = SESSION.token;
+    }
     return { cache: 'no-store', headers };
   }
 
@@ -5096,6 +5118,23 @@
       });
     }
 
+    /** Spectral hover for ghost avatars: translucent + a gentle origin bob so
+     *  the drawn sprite floats above its anchor without fighting the movement
+     *  system (x/y stay owned by walk/ambient logic; nameplates stay put).
+     *  The bob itself is driven per-tick from the live-chrome loop — a tween
+     *  on the sprite would be killed by killTweensOf() whenever they walk. */
+    applyGhostFloat(live, person) {
+      live.isGhost = person?.avatar?.premade === 'ghost';
+    }
+
+    tickGhostFloat(live) {
+      if (!live?.isGhost || !live.sprite?.active) return;
+      const base = live.sprite.height * NPC_FOOT_ORIGIN_Y;
+      // ~1.6s sine bob, ±2.5 source px (×SCALE on screen), lifted slightly so
+      // the ghost hovers just off the floor line.
+      live.sprite.displayOriginY = base + 1.5 + Math.sin(this.time.now / 260) * 2.5;
+    }
+
     spawnChar(x, y, sheet, idle, label, depth = 30, opts = {}) {
       const sp = this.add.sprite(x, y, sheet, 0)
         .setScale(SCALE)
@@ -6965,7 +7004,8 @@
             live.tag.setBackgroundColor(isMe ? '#16a34a' : (person.soft ? '#334155' : '#5865f2'));
           }
           live.soft = person.soft;
-          live.sprite.setAlpha(person.soft ? 0.72 : 1);
+          this.applyGhostFloat(live, person);
+          live.sprite.setAlpha(person.soft ? 0.72 : (live.isGhost ? 0.88 : 1));
           this.maybeUpgradeLiveSheet(live, person);
           this.syncLiveChrome(live, person);
         }
@@ -7291,9 +7331,10 @@
         padding: { x: 4, y: 2 },
       }).setOrigin(0.5, 1).setDepth(depth + 1).setResolution(3).setAlpha(0);
 
+      const isGhost = person?.avatar?.premade === 'ghost';
       this.tweens.add({
         targets: [sprite, tag],
-        alpha: person.soft ? 0.72 : 1,
+        alpha: person.soft ? 0.72 : (isGhost ? 0.88 : 1),
         duration: 280,
         ease: 'Sine.easeOut',
       });
@@ -7313,6 +7354,7 @@
         callback: () => {
           const live = this.livePeople.get(String(person.userId));
           if (!live?.sprite?.active) return;
+          this.tickGhostFloat(live);
           this.layoutLiveChrome(live);
         },
       });
@@ -7345,6 +7387,7 @@
       };
       this.livePeople.set(person.userId, live);
       this.maybeUpgradeLiveSheet(live, person);
+      this.applyGhostFloat(live, person);
       this.syncLiveChrome(live, person);
 
       // Hospital channel members claim empty beds and lie; otherwise wander

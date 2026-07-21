@@ -182,6 +182,7 @@ const fleetRegistry    = require('./src/denizen-fleet-registry');
 const lmStudioRouter   = require('./src/lm-studio-router');
 const inferenceMetrics = require('./src/denizen-inference-metrics');
 const usageTracker      = require('./src/inference-usage-tracker');
+const selfAdjust        = require('./src/denizen-self-adjust');
 const denizenFederation = require('./src/denizen-federation');
 const { createWorldPubsub } = require('./src/denizen-world-pubsub');
 const agentWsRelay = require('./src/denizen-agent-ws-relay');
@@ -6564,6 +6565,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // --- Self-adjust: client timeouts + UX abort telemetry (Angela Assist, etc.) ---
+  if (urlPath.startsWith('/api/ux/')) {
+    if (selfAdjust.handleApiRequest(req, res, { pathname: urlPath })) return;
+    if (urlPath === '/api/ux/event' && req.method === 'POST') {
+      (async () => {
+        const body = await _readJsonBody(req, 8 * 1024).catch(() => ({}));
+        const result = selfAdjust.recordUxEvent(body || {});
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      })().catch((err) => {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      });
+      return;
+    }
+  }
+
   // --- Decision parse-health: how often the model's JSON needed repair or
   //     failed. High repair/fail rate = the current model is not very
   //     model-friendly (consider structured output or a stronger model). ---
@@ -7094,22 +7112,21 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
     return;
   }
 
-  // Discord Spaces — map access status (team-code gate)
+  // Discord Spaces — map access status (membership + team-code gate)
   if (urlPath === '/api/discord/map/access' && req.method === 'GET') {
     (async () => {
       const guildId = mapAccess.extractGuildId(req);
       const status = await guildOrg.getAccessStatus(guildId);
-      const grantTok = mapAccess.extractMapGrant(req);
       let unlocked = false;
-      if (grantTok && guildId) {
-        const payload = sessionAuth.verifyMapGrant(grantTok);
-        unlocked = !!(payload && String(payload.guild_id) === String(guildId));
-      }
-      if (!unlocked && guildId && status.linked && status.org_id) {
-        const sessionId = String(req.headers['x-session-id'] || '').trim();
-        if (sessionId) {
-          const gate = await mapAccess.assertMapAccess(req, { guildId });
-          unlocked = !!gate.ok && gate.reason === 'team_session';
+      let code = null;
+      let denyMessage = null;
+      if (guildId) {
+        // Single source of truth — same gate the /presence proxy enforces.
+        const gate = await mapAccess.assertMapAccess(req, { guildId });
+        unlocked = !!gate.ok;
+        if (!gate.ok) {
+          code = gate.code || null;
+          denyMessage = gate.message || null;
         }
       }
       res.writeHead(200, {
@@ -7117,7 +7134,12 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         'Cache-Control': 'no-store',
         'Access-Control-Allow-Origin': '*',
       });
-      res.end(JSON.stringify({ ...status, unlocked }));
+      res.end(JSON.stringify({
+        ...status,
+        unlocked,
+        code,
+        message: denyMessage || status.message || null,
+      }));
     })().catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
@@ -7289,6 +7311,20 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
               if (data.publicMapUrl) delete data.publicMapUrl;
               outBody = JSON.stringify(data);
             }
+          } catch (_) { /* keep upstream body */ }
+        }
+        // Guild list — hide servers the caller has no membership or team-code
+        // path into rather than returning the bot's full unfiltered list.
+        if (urlPath === '/api/discord/map/guilds') {
+          try {
+            const data = JSON.parse(body);
+            const rawGuilds = Array.isArray(data?.guilds) ? data.guilds : [];
+            const accessible = await mapAccess.filterAccessibleGuilds(req, rawGuilds);
+            outBody = JSON.stringify({
+              ...data,
+              guilds: accessible,
+              botHasGuilds: rawGuilds.length > 0,
+            });
           } catch (_) { /* keep upstream body */ }
         }
         res.writeHead(r.status, {
@@ -13134,6 +13170,14 @@ server.listen(PORT, () => {
       log.warn('LMStudio', `model manager unavailable: ${err?.message || err}`);
     }
   }, 4000).unref?.();
+  // Spot client timeouts vs real LM latency and raise Assist budgets automatically.
+  try {
+    const adj = selfAdjust.startLoop();
+    if (adj?.started) log.info('SelfAdjust', `loop every ${adj.loop_ms}ms`);
+    else if (adj?.skipped) log.info('SelfAdjust', 'disabled (DENIZEN_SELF_ADJUST=0)');
+  } catch (err) {
+    log.warn('SelfAdjust', `start failed: ${err?.message || err}`);
+  }
   _startDiscordBotSidecar();
   const ttsStatus = elevenLabs.status();
   if (ttsStatus.configured) {

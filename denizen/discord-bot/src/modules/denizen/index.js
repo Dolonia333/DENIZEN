@@ -307,13 +307,26 @@ function createDenizenAccount(deps) {
               ephemeral: true,
             });
           }
+          const codeBlock = [
+            `**${data.org_display_name || 'Team'}** — Spaces map`,
+            data.team_code ? `Team code: \`${data.team_code}\`` : 'Team code unavailable — check Denizen team settings.',
+            `Map: ${mapUrl(ctx.guild.id)}`,
+            'Members enter this code on the map page after `,signup`.',
+          ].join('\n');
+          // Ephemeral replies are easy to lose (esp. on mobile, or once you
+          // switch to a browser to paste the code) — DM it too so there's a
+          // copy you can scroll back to.
+          let dmSent = false;
+          if (ctx.user?.send) {
+            try {
+              await ctx.user.send(codeBlock);
+              dmSent = true;
+            } catch (_) { /* DMs closed — fall back to the in-channel reply below */ }
+          }
           return ctx.reply({
-            content: [
-              `**${data.org_display_name || 'Team'}** — Spaces map`,
-              data.team_code ? `Team code: \`${data.team_code}\`` : 'Team code unavailable — check Denizen team settings.',
-              `Map: ${mapUrl(ctx.guild.id)}`,
-              'Members enter this code on the map page after `,signup`.',
-            ].join('\n'),
+            content: dmSent
+              ? `${codeBlock}\n\n(Also sent to your DMs, so you have it even if this message disappears.)`
+              : codeBlock,
             ephemeral: true,
           });
         } catch (err) {

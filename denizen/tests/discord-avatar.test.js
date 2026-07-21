@@ -146,8 +146,21 @@ describe('discord-avatar', () => {
     assert.equal(avatar.hat.set, 'headsets');
     assert.equal(avatar.hat.source, 'role:booster');
     assert.equal(avatar.tint.hat, api.BOOSTER_GOLD || api.BOOSTER_HEADSET_GOLD);
-    assert.equal(avatar.mode, 'layers');
+    // Headset now overlays on a premade base (bakePremade → compositeHat) so the
+    // character stays consistent across poses; only promote to layers with no
+    // premade to sit the hat on.
+    assert.equal(avatar.mode, base.premade ? 'premade' : 'layers');
     assert.ok(avatar.unlocks.includes('role:booster'));
+  });
+
+  it('applyBoosterGoldenHeadset sits headset on a premade base (consistent poses)', () => {
+    // normalizeAvatar always supplies a default premade, so boosters overlay
+    // the headset on the premade instead of the pose-morphing layered path.
+    const base = { mode: 'layers', body: 'light', hair: { set: 'short', index: 0 }, outfit: { set: 'shirt', index: 0 } };
+    const { avatar } = api.applyBoosterGoldenHeadset(base, { isBooster: true }, { force: true });
+    assert.equal(avatar.mode, 'premade');
+    assert.ok(avatar.premade, 'premade base present');
+    assert.equal(avatar.hat.set, 'headsets');
   });
 
   it('applyRoleCosmetics detects premiumSince as booster', () => {
