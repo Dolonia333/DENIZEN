@@ -176,11 +176,20 @@ const state = {
   npcs: [],
   keys: null,
   built: false,
+  portals: [],
+  worldW: WORLD_W,
+  worldH: WORLD_H,
 };
 
 export function buildFullWorld(scene) {
   const bust = 'fw1';
   const lz = (p) => `assets/limezu/${p}?v=${bust}`;
+
+  // The city plan (data/city-plan.json) declares districts built from the
+  // FULL Modern Exteriors pack (assets/limezu/ext/): terrain patches,
+  // building/prop stamps, animated sheets, roads, solids, door portals,
+  // labels. Missing file → empty plan, world builds as before.
+  scene.load.json('fw_cityplan', `data/city-plan.json?v=${bust}`);
 
   RoomTileRenderer.preload(scene);
   scene.load.json('fw_blueprint', `data/full-world-blueprint.json?v=${bust}`);
@@ -241,14 +250,19 @@ function build(scene) {
   state.built = true;
   const bp = scene.cache.json.get('fw_blueprint');
   const rbCat = scene.cache.json.get('fw_rbtiles');
+  const plan = scene.cache.json.get('fw_cityplan') || {};
   const zones = {};
   (bp?.zones || []).forEach((z) => { zones[z.id] = z; });
+
+  // The city plan may grow the canvas beyond the blueprint's 4096x3072
+  state.worldW = plan.worldSize?.w || WORLD_W;
+  state.worldH = plan.worldSize?.h || WORLD_H;
 
   // Base tile textures
   ['grass_tile', 'asphalt_tile', 'sidewalk_tile', 'crosswalk_a', 'crosswalk_b'].forEach((n) => cropTex(scene, `fwt_${n}`, n));
 
   // 1 ── Ground: grass everywhere
-  scene.add.tileSprite(0, 0, WORLD_W, WORLD_H, 'fwt_grass_tile').setOrigin(0).setDepth(0);
+  scene.add.tileSprite(0, 0, state.worldW, state.worldH, 'fwt_grass_tile').setOrigin(0).setDepth(0);
 
   // 2 ── Streets
   const roads = [];
@@ -359,12 +373,126 @@ function build(scene) {
   NPC_SPECS.forEach((spec) => spawnNpc(scene, spec));
 
   const cam = scene.cameras.main;
-  cam.setBounds(0, 0, WORLD_W, WORLD_H);
+  cam.setBounds(0, 0, state.worldW, state.worldH);
   cam.setZoom(2);
   cam.startFollow(state.player, true, 0.12, 0.12);
 
   scene.events.on('update', (t, dt) => tick(scene, dt));
+
+  // 6 ── City plan districts (second load pass for its referenced art)
+  renderCityPlan(scene, plan);
   console.log('[FullWorld] built: 6 zones,', state.solids.length, 'solids,', state.npcs.length, 'npcs');
+}
+
+// ── City plan renderer ──────────────────────────────────────────────────────
+// data/city-plan.json is fully declarative:
+//   worldSize {w,h}
+//   patches [{tile:'grass|sidewalk|asphalt', x,y,w,h, depth?}]        terrain
+//   roads   [{x,y,w,h}]                                    asphalt + sidewalk
+//   stamps  [{img:'ext/...', x,y, origin?:'bl|tl|bc', depth?, scale?,
+//             solid?:{dx,dy,w,h} | true}]                buildings and props
+//   anims   [{sheet:'ext/animated/...', fw,fh, x,y, fps?, frames?, depth?,
+//             origin?}]                                    animated objects
+//   solids  [{x,y,w,h}]                                     extra collision
+//   portals [{x0,x1,y, href, doorSheet?, fw,fh, doorX,doorY, dw,dh}]
+//   labels  [{x,y,text}]
+const planKey = (p) => 'cp_' + p.replace(/[^a-zA-Z0-9]/g, '_');
+
+function renderCityPlan(scene, plan) {
+  if (!plan || (!plan.stamps && !plan.anims && !plan.patches)) return;
+  const toLoad = new Set();
+  (plan.stamps || []).forEach((s) => {
+    if (!scene.textures.exists(planKey(s.img))) toLoad.add(JSON.stringify({ t: 'img', p: s.img }));
+  });
+  (plan.anims || []).forEach((a) => {
+    if (!scene.textures.exists(planKey(a.sheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: a.sheet, fw: a.fw || 16, fh: a.fh || 16 }));
+  });
+  (plan.portals || []).forEach((p) => {
+    if (p.doorSheet && !scene.textures.exists(planKey(p.doorSheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: p.doorSheet, fw: p.fw || 32, fh: p.fh || 32 }));
+  });
+  toLoad.forEach((e) => {
+    const d = JSON.parse(e);
+    if (d.t === 'img') scene.load.image(planKey(d.p), 'assets/limezu/' + d.p);
+    else scene.load.spritesheet(planKey(d.p), 'assets/limezu/' + d.p, { frameWidth: d.fw, frameHeight: d.fh });
+  });
+  scene.load.once('complete', () => {
+    try { placeCityPlan(scene, plan); } catch (err) { console.error('[FullWorld] city plan failed:', err); }
+  });
+  scene.load.start();
+}
+
+function placeCityPlan(scene, plan) {
+  const TILE_KEYS = { grass: 'fwt_grass_tile', sidewalk: 'fwt_sidewalk_tile', asphalt: 'fwt_asphalt_tile' };
+  (plan.patches || []).forEach((p) => {
+    const key = TILE_KEYS[p.tile] || TILE_KEYS.sidewalk;
+    scene.add.tileSprite(p.x, p.y, p.w, p.h, key).setOrigin(0).setDepth(p.depth ?? 0.9);
+  });
+  (plan.roads || []).forEach((r) => {
+    scene.add.tileSprite(r.x - T, r.y - T, r.w + 2 * T, r.h + 2 * T, 'fwt_sidewalk_tile').setOrigin(0).setDepth(1);
+    scene.add.tileSprite(r.x, r.y, r.w, r.h, 'fwt_asphalt_tile').setOrigin(0).setDepth(1.1);
+  });
+  (plan.stamps || []).forEach((s) => {
+    const key = planKey(s.img);
+    if (!scene.textures.exists(key)) return;
+    const img = scene.add.image(s.x, s.y, key);
+    if (s.origin === 'tl') img.setOrigin(0, 0);
+    else if (s.origin === 'bc') img.setOrigin(0.5, 1);
+    else img.setOrigin(0, 1); // bl default: baseline placement
+    if (s.scale) img.setScale(s.scale);
+    img.setDepth(s.depth ?? (s.origin === 'tl' ? s.y + img.displayHeight : s.y));
+    if (s.solid === true) {
+      const baseY = s.origin === 'tl' ? s.y + img.displayHeight : s.y;
+      const leftX = s.origin === 'bc' ? s.x - img.displayWidth / 2 : s.x;
+      state.solids.push({ x: leftX, y: baseY - 24, w: img.displayWidth, h: 24 });
+    } else if (s.solid) {
+      state.solids.push({ x: s.x + (s.solid.dx || 0), y: s.y + (s.solid.dy || 0), w: s.solid.w, h: s.solid.h });
+    }
+  });
+  (plan.anims || []).forEach((a, i) => {
+    const key = planKey(a.sheet);
+    if (!scene.textures.exists(key)) return;
+    const animKey = `cpa_${i}_${key}`;
+    if (!scene.anims.exists(animKey)) {
+      const tex = scene.textures.get(key);
+      const total = Math.max(1, tex.frameTotal - 1);
+      const end = Math.min((a.frames || total) - 1, total - 1);
+      scene.anims.create({
+        key: animKey,
+        frames: scene.anims.generateFrameNumbers(key, { start: 0, end }),
+        frameRate: a.fps || 6, repeat: -1,
+      });
+    }
+    const sp = scene.add.sprite(a.x, a.y, key, 0);
+    if (a.origin === 'tl') sp.setOrigin(0, 0); else sp.setOrigin(0.5, 1);
+    sp.setDepth(a.depth ?? a.y);
+    sp.play(animKey);
+  });
+  (plan.solids || []).forEach((r) => state.solids.push(r));
+  (plan.labels || []).forEach((l) => zoneLabel(scene, l.x, l.y, l.text));
+  (plan.portals || []).forEach((p) => {
+    const portal = { x0: p.x0, x1: p.x1, y: p.y, href: p.href, open: false, sprite: null };
+    if (p.doorSheet && scene.textures.exists(planKey(p.doorSheet))) {
+      const key = planKey(p.doorSheet);
+      const openKey = `cpd_open_${key}`;
+      const closeKey = `cpd_close_${key}`;
+      const tex = scene.textures.get(key);
+      const last = Math.max(1, tex.frameTotal - 1) - 1;
+      const end = Math.min(p.openEnd ?? 7, last);
+      if (!scene.anims.exists(openKey)) {
+        scene.anims.create({ key: openKey, frames: scene.anims.generateFrameNumbers(key, { start: 0, end }), frameRate: 18, repeat: 0 });
+        scene.anims.create({ key: closeKey, frames: scene.anims.generateFrameNumbers(key, { start: end, end: 0 }), frameRate: 18, repeat: 0 });
+      }
+      scene.add.rectangle(p.doorX, p.doorY - (p.dh || 36) / 2 - 2, (p.dw || 32), (p.dh || 36) + 2, 0x131521, 1).setDepth(p.y + 1);
+      const sp = scene.add.sprite(p.doorX, p.doorY, key, 0).setOrigin(0.5, 1);
+      if (p.dw && p.dh) sp.setDisplaySize(p.dw, p.dh);
+      sp.setDepth(p.y + 2);
+      portal.sprite = sp;
+      portal.openKey = openKey;
+      portal.closeKey = closeKey;
+    }
+    state.portals.push(portal);
+  });
+  console.log('[FullWorld] city plan placed:', (plan.stamps || []).length, 'stamps,', (plan.anims || []).length, 'anims,', (plan.portals || []).length, 'portals');
 }
 
 // ── Zone builders ───────────────────────────────────────────────────────────
@@ -693,7 +821,7 @@ const NPC_SPEED = 42;
 function hitsSolid(x, y) {
   // Character base: 10 wide, 6 tall, anchored at bottom-center (x, y)
   const bx = x - 5, by = y - 6, bw = 10, bh = 6;
-  if (x < 8 || x > WORLD_W - 8 || y < 40 || y > WORLD_H - 4) return true;
+  if (x < 8 || x > state.worldW - 8 || y < 40 || y > state.worldH - 4) return true;
   for (let i = 0; i < state.solids.length; i++) {
     const s = state.solids[i];
     if (bx < s.x + s.w && bx + bw > s.x && by < s.y + s.h && by + bh > s.y) return true;
@@ -743,6 +871,22 @@ function tick(scene, dt) {
       try { window.location.href = '/office?demo=1'; } catch (_) {}
     }
   }
+
+  // City-plan portals: same approach-open/walk-in pattern, data-driven
+  state.portals.forEach((pt) => {
+    const cx = (pt.x0 + pt.x1) / 2;
+    const dist = Math.hypot(p.x - cx, p.y - (pt.y - 4));
+    if (pt.sprite) {
+      if (dist < 56 && !pt.open) { pt.open = true; pt.sprite.play(pt.openKey); }
+      else if (dist > 84 && pt.open) { pt.open = false; pt.sprite.play(pt.closeKey); }
+    }
+    const ready = !pt.sprite || pt.open;
+    if (ready && pt.href && !state._enteringOffice
+        && p.x > pt.x0 && p.x < pt.x1 && p.y < pt.y - 2 && p.y > pt.y - 50) {
+      state._enteringOffice = true;
+      try { window.location.href = pt.href; } catch (_) {}
+    }
+  });
 
   if (vx || vy) {
     const inv = 1 / Math.hypot(vx, vy);

@@ -1,0 +1,1513 @@
+{
+  "source": "LimeZu Modern Exteriors gallery (68 examples, 9 logo/ui skips dropped)",
+  "generated": "2026-07-21",
+  "sceneCount": 59,
+  "priorityCounts": { "hero": 31, "strong": 16, "filler": 12 },
+  "themes": {
+    "shopping_retail": [
+      {
+        "file": "01.gif",
+        "theme": "downtown_plaza_shopping",
+        "description": "A dense downtown block: two grand 3-story townhouses (teal facade and gray-stone facade) with stooped double-door entrances across the top, and two matching cream/yellow 3-story buildings with dark arched entrances in the middle row, all on gray herringbone plaza. Top-right is a pocket park with a dark tree line behind black metal fencing, a statue on a pedestal, a bench with a seated NPC, a flower meadow, and green dumpsters. Right of the middle buildings stand two street vendor carts with pink-striped awnings (a candy cart and a flower cart) with vendor and shopper NPCs; the bottom edge is a street with hedge planters, bollards, parked red/teal/gray cars, a painted P bay, a crosswalk, and a traffic light with pedestrian-crossing sign.",
+        "elements": [
+          "teal 3-story townhouse with stoop",
+          "gray stone 3-story townhouse",
+          "two cream/yellow 3-story buildings with arched doorways",
+          "candy vendor cart with striped awning",
+          "flower vendor cart with striped awning",
+          "statues on pedestals",
+          "black metal park fence + dense tree line",
+          "flower meadow patch",
+          "benches (occupied and free)",
+          "green dumpsters",
+          "street lamps",
+          "hedge planters with bollard rails",
+          "parked cars: red, teal, gray",
+          "painted P parking bay",
+          "zebra crosswalk",
+          "traffic light + blue pedestrian sign",
+          "manhole covers and street drains",
+          "rooftop satellites/vents/water tanks",
+          "4+ NPCs (vendor, shoppers, driver)"
+        ],
+        "animations": [
+          "likely: cars driving along the bottom street",
+          "likely: traffic light cycling green-yellow-red",
+          "likely: rooftop satellite dishes rotating",
+          "likely: vendor awnings fluttering",
+          "NPC walk/shop cycles"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "07.gif",
+        "theme": "shopping",
+        "description": "City-block shopping center with underground parking. A wide 2-story mall occupies the top half: olive-green corrugated roof with rooftop AC units, red-banded storefront with a full glass window wall, 'SHOPPING CENTER' marquee sign, and two awninged double-door entrances facing south onto a cream-tiled plaza. A white-brick electronics/apple-style shop with poster windows ('NEW', apple logo, price sheets) adjoins on the left, next to a 2-story glass elevator/stair tower. The right third is a below-grade parking garage entrance: a ramp descending north under a gantry with blue down-arrow signs, a 'P' sign, two red no-entry signs and boom barriers, flanked by 'ARE YOU HUNGRY?' burger billboards on the roofline with an orange scissor-lift maintenance truck parked beside them.",
+        "elements": [
+          "2-story mall with olive-green roof and rooftop AC vents",
+          "red storefront band with glass curtain wall and SALE signs",
+          "white-brick side shop with product posters",
+          "glass elevator tower with ladder/cart inside",
+          "underground parking ramp with boom barriers and signage gantry",
+          "two burger billboards on roof edge",
+          "orange scissor-lift truck",
+          "shopping carts and a stocked SALE display rack",
+          "red hatchback parked with SALE sign",
+          "tree planters and white-flower planter boxes",
+          "traffic light and crosswalk sign",
+          "P painted parking bay",
+          "dumpsters and garbage bags (top-left)",
+          "street lamps and road at top edge"
+        ],
+        "animations": [
+          "likely: billboard ad frames cycling/flashing",
+          "likely: SALE signs blinking",
+          "likely: sliding glass entrance doors opening",
+          "likely: boom barriers raising as a car enters the ramp",
+          "likely: traffic light cycling",
+          "likely: elevator cab moving in the glass tower",
+          "likely: scissor-lift platform moving up/down"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "55.png",
+        "theme": "shopping",
+        "description": "Shopping-center block with underground parking. A wide two-story mall fills the left-center: olive corrugated roof with AC fan banks, cream upper facade with large display windows, and a red band at street level carrying two green-awning entrances with automatic doors, a 'SHOPPING CENTER' sign, SALE posters and shop-window ads (toys, 'NEW' phone, groceries). A glass exterior elevator with shopping carts stands at far left; the right third is a ramped underground parking entrance under a big double billboard (car ad + 'ARE YOU HUNGRY?'), with down-arrow/P/no-entry signs and a clearance bar. Foreground is a paved plaza with flower planters, boxed trees, a traffic light, a painted P bay, and a red hatchback driving past on the bottom road; a yellow scissor-lift truck and dumpsters sit along the top service lane.",
+        "elements": [
+          "two-story mall building with olive metal roof and rooftop AC fan banks",
+          "SHOPPING CENTER marquee sign",
+          "two entrances with dark-green awnings and sliding glass doors",
+          "SALE posters and shop-window advertisements",
+          "glass exterior elevator shaft with shopping-cart queue",
+          "underground parking ramp with dashed lane lines and clearance bar",
+          "down-arrow, P, and no-entry road signs over the ramp",
+          "double billboard (yellow car ad, 'ARE YOU HUNGRY?' food ad)",
+          "flower planters, boxed street trees, streetlamps",
+          "traffic light and blue pedestrian sign",
+          "red hatchback car with SALE decal",
+          "yellow scissor-lift/delivery truck near loading area",
+          "green dumpsters with trash bags, pigeons",
+          "painted P parking bay and bottom road with crosswalk dashes"
+        ],
+        "animations": [
+          "likely: traffic light cycling red/green",
+          "likely: red car driving along the bottom road",
+          "likely: automatic sliding entrance doors opening",
+          "likely: glass elevator cab moving up/down",
+          "likely: billboard ads swapping or blinking",
+          "likely: SALE sign flash and rooftop fans spinning",
+          "likely: pigeons pecking near dumpsters"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "31.png",
+        "theme": "shopping/main_street",
+        "description": "Large downtown commercial block at a 4-way intersection. Top-left: a long 2-storey red-brick building whose walkable rooftop holds a PIZZA billboard, a pet-wash billboard, clotheslines with laundry, AC/duct units, a green water tank, tires and crates; its street level has an ATM, wood double doors, and windows. Center: a brick ice-cream parlor with blue-white striped awnings, a giant ice-cream-cone sign reading 'ICE CREAM', outdoor cafe table, and a kid customer. Right: a bakery with a bread-and-cheese rooftop sign, awninged windows, and an outdoor glass pastry display case. The wide dark asphalt street below has a BUS-stenciled bus stop with shelter bench (person waiting), P-marked parallel and lot parking with grey, red, and teal cars, a pay station, two large billboards (car ad and 'are you hungry?' burger ad) on planted islands, crosswalks, traffic lights, fire hydrant, and pedestrian NPCs.",
+        "elements": [
+          "red-brick 2-storey block with walkable prop-filled rooftop",
+          "PIZZA and pet-wash billboards on roof",
+          "ice cream shop with striped awnings and giant cone sign",
+          "bakery with bread sign and outdoor pastry display",
+          "bus stop shelter with bench and BUS road stencil",
+          "P parking bays with grey/red/teal cars and pay station",
+          "two street billboards (car ad, burger ad) on grass islands",
+          "ATM, fire hydrant, traffic lights, street lamps, signposts",
+          "clotheslines, water tank, AC units, tires on rooftop",
+          "pedestrian and customer NPCs"
+        ],
+        "animations": [
+          "likely: traffic light color cycling",
+          "likely: NPC walk cycles and shopper at ice cream counter",
+          "likely: billboard glow/flicker",
+          "likely: laundry swaying on clotheslines",
+          "likely: cars driving through the street"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "64.png",
+        "theme": "shopping",
+        "description": "A downtown main-street block viewed top-down: a row of three attached storefront buildings lines the north side of an east-west road, with a T-intersection (north-south road) splitting the block, and a detached MARKET shop plus small parking lot east of the intersection. The south side of the road is a lower sidewalk strip with trees, dumpsters and a bench. Cream sidewalk tiles, dark asphalt with dashed white center lines, zebra crosswalks at the intersection and mid-block.",
+        "elements": [
+          "grey 3-story office-style building with large blue glass window grid, two ground-floor doors, wall-mounted sign board",
+          "tan/yellow 2-story shop with wide open roll-up garage door (boxes visible inside) and long ribbon windows upstairs — reads as a workshop/garage",
+          "brown 2-story shop with wooden door, flower window boxes on both floors, wall menus/posters, mailbox-style parcel box, wooden bench out front, trash bag on sidewalk",
+          "MARKET store: pink/maroon facade, green-and-white striped awnings over two display windows, sign 'MARKET' over the door, big flat dark-green roof",
+          "small fenced parking lot right of the market with a parked grey car, white 'P' pavement letters, blue P and arrow signs",
+          "sidewalk planter trees in square stone planters (repeated ~6x)",
+          "street furniture: lamp posts, parking meters, traffic lights on poles, pedestrian-crossing signs (blue with figure), traffic cone",
+          "teal hatchback parallel-parked in a marked P bay; grey car in the south lane",
+          "two zebra crosswalks on the horizontal road plus one on the vertical road",
+          "south sidewalk strip: green wheelie bins, two grey dumpsters (one overflowing with trash bags), crossing-signal poles, bench, more planter trees",
+          "manhole covers and road markings (dashed center line, parking-bay outlines with P)"
+        ],
+        "animations": [
+          "likely: traffic lights cycling red/green",
+          "likely: cars driving along the road / pulling into parking bays",
+          "likely: awning or shop-sign subtle sway",
+          "likely: pedestrian walk signals blinking"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "25.gif",
+        "theme": "downtown_hardware",
+        "description": "Downtown building construction kit centered on a hardware store block: assembled at top is a row of grey-brick 2-4 story buildings — a corner unit with wall-mounted basketball hoop, the hardware store with a big HARDWARE sign (hammer + pencil graphic) over a red/cream striped awning and glass storefront, a tall tenement with zig-zag fire escapes, a brownstone with arched windows, a garage-door unit, and a narrow townhouse with stoop stairs. Right side has street furniture: traffic-light poles with crosswalk sets, benches, and paired crosswalk road sections. Lower rows are the modular pieces: rooftop slabs, fire-escape segments, ladders, awnings (red and blue striped), AC fan units, window/shutter variants, wall pipes, posters, and a spare HARDWARE sign.",
+        "elements": [
+          "HARDWARE store: sign with hammer and pencil, red/cream striped awning, glass double storefront",
+          "grey-brick tenement walls with zig-zag fire escapes and ladders",
+          "brownstone facade with arched upper windows",
+          "corner building with basketball hoop and porthole window",
+          "garage roll-up door unit",
+          "townhouse with stoop stairs and wooden door",
+          "rooftop slabs with parapet trim, roof-access doors",
+          "AC fan units, wall pipes, drainpipes, wooden shutters",
+          "traffic lights, crosswalks, benches, streetlamps",
+          "red/cream and blue/cream striped awnings",
+          "posters, clipboards, black cat, trash can, potted plants"
+        ],
+        "animations": [
+          "likely: AC roof fans spinning",
+          "likely: traffic lights cycling",
+          "likely: shop door opening",
+          "likely: cat idle/tail flick"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "26.png",
+        "theme": "downtown_plaza_canal",
+        "description": "Flagship assembled downtown scene (left) plus its embankment tileset (right). The block: a road with crosswalks and dashed parking bays runs down the left edge and across the top; the center is a large paved pedestrian plaza dominated by the HARDWARE store (hammer sign, red striped awning) with an info kiosk booth and staffed counter to its left; a multi-story brick apartment building with rooftop terraces (clothesline, AC units, residents) sits at top, with a hot-dog cart and food stand at top right. The bottom third is a teal canal cut below street level, edged with railed embankments, stair descents, and a rooftop with solar panels at bottom center. Streets have a green sedan and white car, dense pedestrian crowds, graffiti wall, ATM, red phone box, benches, hedges. The right tileset holds all embankment pieces: railing runs, stair flights, canal water tiles, road-edge strips, and two info-kiosk booths.",
+        "elements": [
+          "HARDWARE store with hammer sign and striped awning as plaza anchor",
+          "info kiosk booth (octagonal metal, 'i' sign, attendant inside)",
+          "multi-story apartments with rooftop terraces, clothesline, AC fans",
+          "hot-dog cart / food stand with vendor and eating NPCs",
+          "sunken teal canal with railed embankments and stair descents",
+          "rooftop with solar panel array",
+          "roads with crosswalks, dashed parking bays, green sedan, white car",
+          "graffiti wall, ATM machine, red emergency/phone kiosk",
+          "hedgerows, benches, streetlamps, mailbox bank",
+          "dense pedestrian crowd NPCs, traffic cones, construction worker",
+          "embankment tileset: railings, stairs, water tiles, kiosk booths"
+        ],
+        "animations": [
+          "likely: canal water shimmer",
+          "likely: rooftop AC fans spinning",
+          "likely: cars driving along the road",
+          "likely: pedestrian walk cycles",
+          "likely: hot-dog stand steam"
+        ],
+        "buildPriority": "hero"
+      }
+    ],
+    "food_and_kiosks": [
+      {
+        "file": "27.gif",
+        "theme": "street_food_kiosks",
+        "description": "Novelty vendor kiosk sheet: four themed micro-buildings each in closed and open/staffed variants — a grey octagonal metal info booth with 'i' sign; a giant red-and-white-spotted mushroom kiosk with a service counter cut into the stem and heart-sign menu boards; a giant soft-serve ice cream cone kiosk (white swirl with cherry on top, waffle-cone base) with window modules showing interior menu screens; and a giant coffee cup kiosk with 'COFFEE AND TEA' green band and a barista visible at the counter. Support props include heart-shaped lollipop signs, A-frame boards, a cafe table, vendor NPCs, small delivery-robot sprites on the right edge, and modular counter sections at bottom right.",
+        "elements": [
+          "octagonal metal info booth (closed, open with attendant, counter close-ups)",
+          "mushroom kiosk: red cap with white spots, counter in stem, awning window",
+          "ice-cream-cone kiosk: soft-serve swirl, cherry top, waffle-cone base, interior menu-screen window variants",
+          "coffee-cup kiosk: white cup with COFFEE AND TEA band, barista at counter",
+          "heart-sign menu boards (standing and lollipop styles)",
+          "A-frame sidewalk signs, round cafe table",
+          "vendor/barista NPCs and customers",
+          "small delivery robots / roving vending bots",
+          "modular service-counter sections"
+        ],
+        "animations": [
+          "likely: heart signs blinking/pulsing",
+          "likely: vendor idle animations at counters",
+          "likely: steam rising from coffee cup lid",
+          "likely: delivery robots trundling with indicator lights"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "35.gif",
+        "theme": "street_food_market",
+        "description": "A food-truck plaza on a brown paved lot: four large food trucks arranged around the edges (silver hot-dog truck with red/white umbrella top-left, yellow taco truck with a giant taco on its roof top-right, teal/pink ice-cream truck with a giant cone-and-cherry on its roof right side, red pizza truck with a giant pizza on its roof bottom-center). The middle is filled with small vendor carts — striped-awning snack carts, a produce/watermelon cart under a rainbow beach umbrella, a soup/noodle cart — plus round metal cafe tables with red chairs and condiment bottles where customers sit. A framed inset at bottom-left shows a separate red-brick GUN STORE storefront with a pistol sign and two display windows.",
+        "elements": [
+          "silver hot-dog truck, 'Hot Dogs' banner, hot dog sculpture on roof, red-and-white market umbrella, chalkboard menu sign",
+          "yellow taco truck with giant taco roof prop, green awning over serving window, 'Tacos Truck' lettering",
+          "teal-and-pink ice-cream truck with giant strawberry ice-cream cone on roof, menu board on side",
+          "red pizza truck/stand with giant pizza roof prop, serving window with vendor",
+          "3 small vendor carts with striped awnings (brown-striped, red/white-striped), produce cart with watermelons under rainbow umbrella",
+          "round metal bistro tables with red folding chairs, ketchup/mustard bottles, food trays",
+          "orange/yellow dumpsters in three corners, wooden bench, hay bale seat",
+          "customer and vendor NPCs (eating, queuing, serving), pigeons on the ground",
+          "inset: red-brick GUN STORE storefront with pistol signboard, 'GUN STORE' text, glass display windows, central door"
+        ],
+        "animations": [
+          "likely: vendors serving / customers eating idle loops",
+          "likely: steam or smoke rising from grills and serving windows",
+          "likely: pigeons pecking and hopping",
+          "likely: awning or umbrella flutter"
+        ],
+        "buildPriority": "hero"
+      }
+    ],
+    "civic_services": [
+      {
+        "file": "22.gif",
+        "theme": "post_office",
+        "description": "Post office building plus full delivery kit. The building is a 2-story storefront: dark maroon/brown brick upper floor with a huge white envelope sign and three orange arrows pointing at it, industrial windows and a side door with ladder to a rooftop that has 6 AC/vent units; ground floor is a glass storefront with an orange 'POST OFFICE' band, mail slots/vents flanking the double doors. Left side of the sheet is a white 'DeliVery' box truck in 4 views (two side, back, front) plus separate rear-door modules.",
+        "elements": [
+          "2-story post office: maroon upper floor, giant envelope sign with 3 orange arrows",
+          "glass storefront with orange POST OFFICE fascia and double doors",
+          "rooftop with AC units, roof-access door, wall ladder",
+          "white DeliVery box truck (side left/right, rear, front views)",
+          "truck rear roller-door modules (closed and open variants)",
+          "red, blue, and grey curbside mailboxes in front/back orientations",
+          "postal worker NPCs in blue caps/uniforms (walk cycles, carrying letters)",
+          "brown courier NPCs",
+          "cardboard boxes, taped parcels, package stacks, loose letters",
+          "blue drop-box / sorting cabinet"
+        ],
+        "animations": [
+          "likely: orange envelope-sign arrows blinking in sequence",
+          "likely: truck rear roller door opening/closing",
+          "likely: truck driving (wheel motion)",
+          "likely: postal NPC walk cycles with parcels",
+          "likely: mailbox flag/door flap"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "30.gif",
+        "theme": "hotel",
+        "description": "Composed street scene: a grand 4-storey beige stone hotel facade with teal-green pilaster columns, arched teal-shuttered windows, gold circular medallions between floors, and a giant illuminated 'HOTEL' marquee on the cream-colored top band. Ground floor has central teal double doors with an orange interior glow, a brass luggage-cart canopy with red carpet to the right where a bellhop pushes a loaded gold luggage trolley toward a guest, and a leaking garbage bag with flies to the left. The foreground sidewalk/street strip has lamp posts, two pothole road-work sites ringed by striped barriers and traffic cones (one with a yellow hard hat), pink flower planters, and zebra crosswalks exiting left and right at the top corners.",
+        "elements": [
+          "4-storey beige hotel with teal columns and arched windows",
+          "illuminated HOTEL rooftop marquee sign",
+          "teal double-door entrance with red carpet",
+          "brass canopy + gold luggage trolley + bellhop NPC",
+          "guest NPC checking in",
+          "pothole roadworks with striped barriers, cones, hard hat",
+          "street lamps and pink flower planters",
+          "trash bag with flies",
+          "zebra crosswalks and wall-mounted AC/utility boxes"
+        ],
+        "animations": [
+          "likely: HOTEL sign bulbs sparkling/twinkling",
+          "likely: entrance doors opening as NPCs pass",
+          "likely: bellhop and guest walk cycles",
+          "likely: flies buzzing over the garbage bag"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "32.gif",
+        "theme": "hospital",
+        "description": "Large L-shaped white-and-grey hospital complex. Top-left wing: grey rooftop with rooftop-access doors, AC unit, and a helipad apron where a medical helicopter sits on a blue swoosh pad while staff wheel a patient on a gurney toward it. Bottom-left: the main entrance with a white canopy, blue cross, and arrow, plus a freestanding backlit 'HOSPITAL' monument sign with a person beside it. Right wing: 2-storey slat-panel facade with an 'EMERGENCY' sign over a roller shutter bay; an ambulance marked 112 with red cross parks in front, a second ambulance with rear doors open sits top-right, and nurses push wheelchair patients along the sidewalk next to a spare hospital bed.",
+        "elements": [
+          "white multi-wing hospital with slat-panel and window-band facades",
+          "rooftop helipad with medical helicopter and blue pad graphic",
+          "patient gurney + paramedic NPCs on the roof",
+          "EMERGENCY sign over roller-shutter ambulance bay",
+          "ambulance 112 with red cross, second ambulance with open rear doors",
+          "HOSPITAL backlit monument sign",
+          "canopy entrance with blue cross and ground arrow",
+          "wheelchair patients and nurse NPCs",
+          "spare hospital bed and rooftop AC unit"
+        ],
+        "animations": [
+          "likely: helicopter rotor spin",
+          "likely: ambulance light bar flashing",
+          "likely: roller shutter / automatic doors opening",
+          "likely: gurney and wheelchair NPC movement",
+          "likely: EMERGENCY and HOSPITAL sign glow pulse"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "40.gif",
+        "theme": "police_station",
+        "description": "A police headquarters complex: on the left, a 4-story tower in gray stone and red brick topped by a rooftop helipad where a blue police helicopter sits on a circled pad, with a giant gold badge emblem and a glowing blue 'POLICE' sign on the facade and a glass stairwell column running down the front to a ground-floor entrance. On the right, a curved 2-story red/gray wing with a rounded corner, a gray roll-up garage door facing the yard, and roof-mounted searchlights casting white beams down onto the driveway where an officer patrols. The bottom is a parking lot with three police cruisers in marked bays and street lamps; a dashed-line road crosses the top right with a cruiser driving by; the top left has a slice of park with trees, a dumpster, and fencing.",
+        "elements": [
+          "helipad rooftop with blue police helicopter and pad circle markings",
+          "gold police badge emblem and neon-blue 'POLICE' sign on tower facade",
+          "glass stairwell column (stacked windows), red-brick window bays with blue doors",
+          "curved right wing with rounded glass corner, red columns, roll-up garage door, roof grates",
+          "3 roof searchlights with visible light cones, rooftop officer",
+          "ground entrance with steps, officer NPC, barred gate and fence sections",
+          "parking lot: 3 parked police cruisers with light bars, bay markings, street lamps",
+          "road with dashed markings, moving police cruiser, civilian cars, pedestrian crossing sign",
+          "park corner with trees, green dumpster, utility pole"
+        ],
+        "animations": [
+          "likely: helicopter rotor spinning",
+          "likely: searchlight beams sweeping/pulsing",
+          "likely: police light bars flashing red/blue",
+          "likely: POLICE neon sign glow flicker",
+          "likely: cruiser driving along the top road"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "48.gif",
+        "theme": "fire_station",
+        "description": "Fire station kit: a 2-story station with a dark-roofed tower wing on the left carrying a lit FIRE STATION sign with extinguisher emblem, attached to a yellow-brick garage block with one large gray roll-up bay door center and two smaller red bays on the ground floor with fire engines parked inside; a firefighter NPC stands out front by a hydrant. Right and bottom of the sheet are the vehicle/prop sets: FIRE RESCUE pumper engines and ladder trucks in side/front/rear orientations (several with roof ladders extended at angles), red fire hydrants, hose segments and a coiled hose loop, small firefighter walk-cycle sprites in tan gear, and an interior fire vignette where a firefighter sprays a water jet from a hose onto flames climbing a brick wall.",
+        "elements": [
+          "2-story fire station with tower wing and FIRE STATION sign",
+          "yellow-brick garage facade",
+          "large gray roll-up bay door",
+          "two red truck bays with engines inside",
+          "FIRE RESCUE pumper engine (side/front/rear views)",
+          "ladder truck with extendable roof ladder",
+          "red fire hydrants",
+          "hose segments and coiled hose",
+          "firefighter NPC sprites in tan gear",
+          "burning-interior vignette with flames and water jet"
+        ],
+        "animations": [
+          "flames flickering in the fire vignette",
+          "water jet spraying from the hose",
+          "likely: garage bay doors rolling up",
+          "likely: truck emergency light bars flashing",
+          "likely: ladder extending/retracting on ladder truck",
+          "likely: firefighter walk cycles"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "36.gif",
+        "theme": "train_station",
+        "description": "A grand European-style train station facade viewed from the plaza side: a wide 2-story beige building with a huge red-tile hip roof, two arched entrances with green double doors up a short staircase, arched ground-floor windows, flower boxes, and a round gable window. Attached at the left via a low annex is a red-brick clock tower with a white clock face and its own red-tile spire. The forecourt is light-gray plaza paving with a flag pole on a stone base, a glass-roofed bus shelter with bench at bottom-left, fenced flower planters on both sides, a traffic light and blue station sign at bottom, and a dark asphalt road with dashed lane markings running along the top edge.",
+        "elements": [
+          "main station hall: beige plaster over red-brick base, red tile roof with chimneys and roof vents, two arched green double-door entrances, staircase with side ramps/walls",
+          "red-brick clock tower with white analog clock, arched windows, red spire roof",
+          "connecting annex wing with flower-box window",
+          "flag pole with red flag on stone plinth",
+          "wall-mounted red payphone/ticket machine",
+          "glass-canopy bus shelter with bench, bus-stop sign, trash bin",
+          "two fenced planter gardens with flowers and shrubs",
+          "traffic light, blue building signpost, potted conifers flanking the steps",
+          "NPCs: couple entering the station, two people seated on the right, person at the bus stop"
+        ],
+        "animations": [
+          "likely: clock hands ticking",
+          "likely: flag waving",
+          "likely: traffic light cycling",
+          "likely: NPC idle/walk loops at the entrance and bus stop"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "57.png",
+        "theme": "grand_landmark_building",
+        "description": "A single monumental 4-story landmark facade — reads as a grand hotel / museum / city hall. Cream-and-gold walls with white classical columns, arched twin windows with balustraded balconies on the piano nobile, a stone rusticated ground floor, and a central columned portico entrance reached by a wide stone staircase flanked by gold-orb newel posts. The massive brown metal mansard roof has two large glass-grid skylight sections (greenhouse-style), gabled dormer windows, spiked ridge cresting, three domed pavilion caps, and gold orb finials on pedestals.",
+        "elements": [
+          "wide stone entrance staircase with railings and gold orb posts",
+          "columned portico with double doors and plaque above",
+          "arched central window with balcony over the entrance",
+          "carved frieze band with rosette/wreath medallions",
+          "tall arched twin windows with white curtains and balustrade balconies",
+          "white classical pilasters/columns framing each bay",
+          "rusticated gray stone ground floor with rectangular windows",
+          "brown corrugated mansard roof with 2 large glass skylight grids",
+          "small gabled dormers with orange windows",
+          "3 gray onion-dome pavilion caps and spiked roof cresting",
+          "gold sphere finials on pedestals at roof corners and stairs"
+        ],
+        "animations": [
+          "none visible (static PNG)",
+          "likely: none in-pack; could add window-light flicker at night in our recreation"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "34.gif",
+        "theme": "helipad",
+        "description": "Standalone fenced helipad platform: a raised light-grey concrete pad ringed by metal railings studded with red marker lights, centered on a white painted circle where a red-and-white medical/rescue helicopter is parked with yellow wheel chocks; a pilot/technician stands beside it. Top edge has control consoles/monitors and a wall-mounted heli-info panel; a central staircase descends off the south edge flanked by an info/warning signboard on a post and a bright red 'TELEPHONE' call box with a round phone sign on top.",
+        "elements": [
+          "raised concrete helipad with white landing circle",
+          "red/white rescue helicopter with yellow wheel chocks",
+          "perimeter railing with red marker lights",
+          "control consoles and monitor panels at top edge",
+          "access staircase on south side",
+          "red TELEPHONE booth with circular phone sign",
+          "warning/info signboard on post",
+          "technician NPC"
+        ],
+        "animations": [
+          "likely: main and tail rotor spin",
+          "likely: perimeter red lights blinking in sequence",
+          "likely: console monitor screen flicker",
+          "likely: phone-booth sign glow"
+        ],
+        "buildPriority": "strong"
+      }
+    ],
+    "residential": [
+      {
+        "file": "00.gif",
+        "theme": "residential_playground",
+        "description": "A fenced neighborhood playground square sits in the middle of an apartment block. Three tan/beige 2-3 story apartment buildings with large blue-glass window strips line the top edge, and two more frame the bottom-right corner, all separated by gray herringbone-paved plaza. The playground is a green lawn bordered by tall bulb-shaped trees with a red 2-seat swing set on the left, a red slide (kid mid-slide) on the right, and a black street lamp at top; bottom-left is a small asphalt parking bay with a painted P and one teal car, plus a dumpster corner with trash bags at top-left.",
+        "elements": [
+          "tan 2-3 story apartment buildings with blue window strips",
+          "fenced grass playground square",
+          "red swing set (2 swings)",
+          "red slide with ladder",
+          "rows of tall bulb-shaped trees",
+          "hedge planters with bollards",
+          "black street lamps with yellow glow halos",
+          "green dumpster + trash bags corner",
+          "asphalt parking bay with painted P marking",
+          "teal hatchback car",
+          "rooftop satellite dish and AC props",
+          "herringbone gray plaza paving",
+          "2 kid NPCs"
+        ],
+        "animations": [
+          "likely: swings swaying",
+          "likely: kid riding down the slide repeatedly",
+          "likely: rooftop satellite dish rotating",
+          "likely: lamp glow flicker",
+          "NPC idle/walk cycles"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "08.gif",
+        "theme": "villas",
+        "description": "Suburban family home with a large fenced play-yard, a full corner lot facing a road at the top. Left: a 2-story blue-roofed house with solar panels, round attic window, dormers, flower-box balcony, and a covered porch where a character sits at a table; dirt front path with stepping stones and small shrubs. The rest of the lot is a white-picket-fenced backyard: a red-roofed kids' playhouse with double red doors at center, basketball hoop with loose balls, blue-rimmed sandbox with toys, a low water/craft table, trampoline with safety net (occupant inside) in the top-right corner, seesaw/roundabout, flower patch, and topiary trees. Along the bottom sidewalk: an entry gate, a yellow egg/lemonade vendor stand, dumpsters, planter boxes, a bus-stop bench with sign and a waiting character, street lamps and round trees.",
+        "elements": [
+          "2-story house, blue roof, solar panels, porch and balcony",
+          "white picket fence enclosing the whole yard",
+          "red-roofed playhouse with round-window red doors",
+          "trampoline with safety net",
+          "basketball hoop and balls",
+          "sandbox with toys",
+          "water/activity table",
+          "seesaw / roundabout toy",
+          "flower patch and topiary bushes",
+          "yellow food stand with vendor",
+          "bus-stop bench, sign, and waiting NPC",
+          "dumpsters and planter boxes on sidewalk",
+          "front gates (wood and metal)",
+          "road with dashed centerline at top"
+        ],
+        "animations": [
+          "likely: character bouncing on trampoline",
+          "likely: porch character eating/animating at table",
+          "likely: seesaw rocking",
+          "likely: vendor idle animation at food stand",
+          "likely: NPC walking to/along the sidewalk",
+          "likely: fence gate opening"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "43.gif",
+        "theme": "villas",
+        "description": "Grand 4-story classical mansion/palace shown in two palette variants side by side (yellow-and-cream accent facade on the left, plain white/beige on the right). Each has a rusticated stone ground floor, a columned central portico with double doors reached by a wide front staircase, a second-floor balcony over an arched blue-glass entrance window, tall arched windows with wrought balconies on the wings, and a steep slate mansard roof with dormers, glass-block skylight walls, gold ball finials and chimney rows. Foreground props: a praying-angel statue on an ivy pedestal (left variant) and a cherub statue on a round pedestal (right variant), plus small basement/service storefront strips below each building. A small NPC sits on the left building's steps.",
+        "elements": [
+          "4-story palace facade x2 color variants",
+          "columned portico with double doors",
+          "wide stone front staircase with gold-orb newel posts",
+          "arched stained/blue glass windows",
+          "glass-block mansard skylights",
+          "wrought-iron balconies",
+          "gold ball roof finials",
+          "angel statue on ivy pedestal",
+          "cherub statue on round pedestal",
+          "basement service storefront strip",
+          "seated NPC on steps"
+        ],
+        "animations": [
+          "likely: front double doors opening",
+          "likely: NPC idle animation on the steps",
+          "likely: glint/sparkle on gold roof finials",
+          "likely: curtain or light flicker in windows"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "62.gif",
+        "theme": "modular_houses_residential",
+        "description": "The modular residential district sheet (devlog 393, labeled 'MODULAR'): a full suburb's worth of houses. Top row: an alpine wood chalet with wraparound balcony and porch, then four gray-corrugated modern two-story houses showing modular swaps (plain door, cafe awning + planter, integrated garage, dark-trim entry), and a white gable house with big double garage. Middle row repeats three modular gray houses beside a fence-piece mini-sheet (white picket, silver rail, orange wood — straight/corner pieces). Bottom row: patio umbrella + cafe furniture props, a flat-roof modern luxury home with rooftop terrace and glass lower floor, a grand red-brick Victorian manor/school with slate tower, and a rustic timber shop-house with storefront awning and market crates.",
+        "elements": [
+          "alpine chalet: tan wood walls, dark gray roof, balcony rail, porch with steps, kid NPC on balcony",
+          "modular gray house A: corrugated gray siding, white door, mail slot, red postbox, shrub planters",
+          "modular gray house B: brown cafe awning over bench window, AC unit",
+          "modular gray house C: black roll-up garage door, dark entry porch, potted plant",
+          "white gable house with twin garage doors, round gable window",
+          "fence kit: white picket, silver rail, orange wood — straight runs, corners, gate posts",
+          "patio umbrellas (white, square) on weighted bases, cafe tables + chairs, potted plants",
+          "modern flat-roof villa: rooftop terrace with umbrella + table NPC, glass-walled ground floor, roof planters",
+          "Victorian brick manor: red brick, slate mansard tower with dormer, arched bracketed windows, stone trim, iron balcony",
+          "rustic shop-house: timber frame, storefront awning, produce crates, barrels, shelf rack props",
+          "small prop row: crates, barrels, shop shelving"
+        ],
+        "animations": [
+          "likely: NPC idle on chalet balcony and rooftop terrace",
+          "likely: NPC walking between houses",
+          "likely: front doors opening as characters enter",
+          "likely: awning or umbrella flutter"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "66.gif",
+        "theme": "villas",
+        "description": "A 3-story red-brick apartment building shown face-on with its full rooftop terrace visible above (top-down split view). Street level: grand arched central entrance with double doors flanked by wall lamps, and two smaller side entrances each up a short stoop with white newel-post lamps; both flanks have white-trimmed bay windows stacked all three floors, white cornice bands between storeys and a decorated parapet. Rooftop: sandy-tile terrace with a brick stair-bulkhead (roof access door) center-front, a vegetable garden corner top-left (two raised planter beds, potting table with jars, gardener NPC), two round bushes mid-roof, and a laundry corner top-right with two clotheslines strung between poles — one holding a big white sheet, one with shirts/socks — and an NPC hanging laundry. A resident NPC stands at the front door on the street.",
+        "elements": [
+          "red-brick facade with white cornices, quoins and parapet",
+          "two symmetrical bay-window columns (3 floors each) with curtained windows",
+          "arched double-door main entrance with transom window, letterbox panel, twin wall lanterns",
+          "two side stoops with steps and lamp-topped newel posts",
+          "roof-access bulkhead: small brick hut with sloped side and wooden door",
+          "raised wooden planter beds with crops, one with leafy green plants",
+          "potting bench/table with bottles and a milk crate; gardener NPC in the corner",
+          "two trimmed round bushes on the roof",
+          "clothesline poles with wires: large white sheet, second line of shirts and small garments, laundry-hanging NPC in apron",
+          "resident NPC standing at the entrance"
+        ],
+        "animations": [
+          "likely: sheets and laundry flapping in the wind",
+          "likely: gardener and laundry NPC idle/work loops",
+          "likely: curtain or window shimmer accents"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "04.gif",
+        "theme": "garage_sale",
+        "description": "A suburban garage-sale scene: a cream single-story house with brown roof trim spans the top, its open garage bearing a black 'GARAGE SALES' sign, with two large monster-head wall decorations (green rodent and blue beast) mounted right of the sign and a plant bed with a sleeping dog below them. The seller sits at a box-covered table in front of the garage; the cobblestone yard below is scattered with sale goods — a blue patterned rug with a punk/viking NPC browsing, a red rug, tables with cardboard boxes, stacked water-cooler bottles, junk piles — plus benches with hedges, a small blue fountain with statue, street lamps, and a kid NPC at bottom-left.",
+        "elements": [
+          "cream single-story house with garage",
+          "GARAGE SALES hanging sign",
+          "monster-head wall decorations (green + blue)",
+          "sleeping dog in plant bed",
+          "seller table with cardboard boxes",
+          "blue and red patterned rugs as sale displays",
+          "stacked water-cooler bottles",
+          "junk/trash piles",
+          "wooden benches with hedges",
+          "small blue fountain with statue",
+          "black street lamps",
+          "cobblestone plaza ground",
+          "3 NPCs (seller, punk browser, kid)"
+        ],
+        "animations": [
+          "fountain water spraying (likely)",
+          "likely: GARAGE SALES sign swinging",
+          "likely: dog sleeping z's / tail wag",
+          "NPC browse/walk cycles",
+          "likely: sparkle glints on sale items"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "06.gif",
+        "theme": "rundown_block",
+        "description": "A contrast street scene split by a horizontal asphalt road. Top half: a tidy brown suburban house with wood picket-fenced yard, flower window boxes, trash/dumpster pile at top-left, a police officer NPC standing at the open gate with a package box while a trench-coat resident stands in the yard; a pocket park with large trees, a stone drinking fountain, and street furniture fills the top-right. Bottom half: a derelict two-story building with cracked plaster, boarded broken windows, moss stains, and a ruined rooftop billboard frame, cordoned off by orange mesh barriers with gray rats scurrying nearby, a green portable toilet, a rubber duck, and a man sitting on a log bench to the right; crosswalks, fire hydrant, traffic light, and hedge-planter trees line the road.",
+        "elements": [
+          "tidy brown house with picket fence and window flower boxes",
+          "derelict 2-story building with boarded windows and rooftop billboard frame",
+          "orange mesh condemned-building barriers",
+          "gray rats",
+          "green portable toilet",
+          "trash pile + gray dumpster",
+          "stone drinking fountain",
+          "large park trees",
+          "police officer NPC with package",
+          "trench-coat resident NPC",
+          "man sitting on log bench",
+          "fire hydrant",
+          "traffic light + pedestrian sign",
+          "zebra crosswalks",
+          "hedge planters with small trees",
+          "yellow rubber duck",
+          "asphalt road with dashed lines"
+        ],
+        "animations": [
+          "likely: rats scurrying along the barrier",
+          "likely: traffic light cycling",
+          "likely: flies buzzing over the trash pile",
+          "NPC idle/dialogue cycles",
+          "likely: duck bobbing"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "37.gif",
+        "theme": "playground",
+        "description": "A playground kit sheet plus an assembled example. Top half is the parts catalog on gray background: stadium floodlight poles, wooden climbing-wall panels, balance beams, a red-roofed play fort with canopy bridge, and dozens of modular crawl-tube segments (straight, elbow, T, cross) in red, blue, and yellow. Bottom half is the assembled playground: a green lawn plot with stone/timber border containing a blue-and-red arch slide with ladder, a central two-tower play fort with red roofs and canopy walkway, monkey-bar gym with hanging rings, a swing set with a child swinging, a kids picnic table, and two multi-color crawl-tube assemblies.",
+        "elements": [
+          "stadium floodlights on tall poles (2 heights)",
+          "wooden climbing panels / palisade screens, 3 balance beams",
+          "play fort: two towers with red pyramid roofs, blue ladder, striped canopy bridge, cat/animal peeking from window",
+          "modular crawl tubes in red/blue/yellow: straights, 90-degree elbows, T-junctions, end caps",
+          "assembled lawn plot with hedge-and-stone perimeter and two gate gaps",
+          "blue arch tube-slide with red ladder and platform",
+          "swing set (red A-frame, child on swing)",
+          "monkey bars / rings gym in blue-yellow",
+          "kids picnic table with seated child, rainbow climbing arch",
+          "cross-shaped red/blue tube maze and red/yellow/blue tube maze"
+        ],
+        "animations": [
+          "likely: child on swing swinging",
+          "likely: kids idle/play loops (peeking from fort window, sitting at table)",
+          "likely: canopy flutter"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "56.png",
+        "theme": "school_playground",
+        "description": "A full outdoor PE / playground scene: two irregular clay-dirt activity courts cut into a grass meadow, joined by a grass strip. The upper court has a climbing wall in the top-left corner (a kid mid-climb), a ball storage rack beside it, a row of hurdle gates along the top edge, and a basketball hoop with painted half-court arc and free-throw line in the top-right. The lower court is an obstacle course: slalom post pairs, hurdle gates on both flanks, a long central hedge island to run around, and a ring-toss station at the bottom-left; trees, stumps and wildflower patches frame the whole area.",
+        "elements": [
+          "climbing wall: tall wooden board with colored climbing holds, kid climbing it",
+          "basketball hoop: red rim, white net, backboard on dark metal pole, painted white arc + free-throw line on clay",
+          "loose basketball on the court",
+          "two wooden 2-tier ball racks stocked with basketballs, volleyballs, dodgeballs",
+          "hurdle gates: paired dark metal posts with wooden crossbars (several sets)",
+          "slalom posts: single dark metal segmented poles",
+          "blue gym crash mat and blue vaulting box (stacked drawers look) with red mat on top",
+          "gray metal 2-step vault/springboard",
+          "folded red tumbling mat",
+          "ring-toss stack: pole with rainbow rings, plus blue ring-toss table with rings and hoop",
+          "central rounded hedge island with white boundary line around it",
+          "painted white circles on clay (hopscotch/drill spots)",
+          "grass meadow, big bushy trees, tree stumps, hay/dirt mounds, white+yellow wildflowers",
+          "2 kid NPCs (one climbing, one walking the course)"
+        ],
+        "animations": [
+          "likely: kid NPC climbing the wall (up/down loop)",
+          "likely: second kid running the obstacle course",
+          "likely: basketball bouncing on the court",
+          "likely: tree/bush leaf sway"
+        ],
+        "buildPriority": "hero"
+      }
+    ],
+    "parks_and_nature": [
+      {
+        "file": "11.gif",
+        "theme": "park_sports",
+        "description": "Full-size outdoor basketball court carved into a pine forest clearing. Gray asphalt court with cream painted lines (center circle, keys, arcs) oriented vertically, hoops at top and bottom — the top hoop has a red/white checkered pad and net. Four stadium floodlight masts stand at the corners/edges. Three-section wooden bleachers run along both the left and right sides with a couple of spectators seated; park benches sit at the top and bottom with more NPCs. Two players are on court (pink-hat player holding a ball right of center, blue player near the bottom hoop) with loose basketballs on the asphalt. Dirt patches, rocks, logs and mushrooms frame the clearing.",
+        "elements": [
+          "asphalt court with painted lines and two netted hoops",
+          "checkered backboard padding",
+          "4 stadium floodlight masts",
+          "wooden bleachers left and right (3 tiers)",
+          "park benches top and bottom",
+          "2 player NPCs and 3-4 spectator NPCs",
+          "loose basketballs",
+          "pine trees, dirt patches, rocks, mushrooms"
+        ],
+        "animations": [
+          "likely: players dribbling/moving and shooting",
+          "likely: ball bounce and net swish",
+          "likely: spectators cheering idle loops",
+          "likely: floodlight glow flicker"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "12.png",
+        "theme": "park_sports",
+        "description": "Full soccer pitch with alternating light/dark mowed-grass stripes, white boundary lines, center circle, and both penalty boxes, oriented vertically. An orange-and-white striped goal frame with net sits at the top, a white-frame net goal at the bottom. Floodlight poles stand mid-field left and right plus paired short light posts by the bottom goal; wooden team benches sit along the left and right touchlines and behind each goal. Autumn-brown broadleaf trees fill all four corners, with soccer balls on the pitch, scattered blue flowers, rocks, and grass tufts around the sidelines.",
+        "elements": [
+          "striped grass pitch with full line markings",
+          "two netted goals (orange-striped and white)",
+          "floodlight poles and paired goal-line lights",
+          "wooden benches on touchlines and end lines",
+          "autumn-brown corner trees",
+          "soccer balls",
+          "flowers, rocks, grass tufts"
+        ],
+        "animations": [
+          "likely: none inherent (static PNG) — add player NPCs kicking a ball and net ripple when built"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "13.gif",
+        "theme": "park_outdoor_gym",
+        "description": "Outdoor calisthenics/fitness park on a terracotta rubberized surface with white line markings, set in a lawn with a pond edge at the top. Top-left: wooden climbing wall with colored holds and a character in white facing it; beside it a supply shelf stacked with balls and towels. Top-right: a half-court basketball key with checkered-pad hoop and a ball on the ground. Mid-left: large blue exercise mat, standing scale, and a red folding mat; a stack of colorful ring-toss hoops at center. Center-right: a blue stacked vault/plyo platform with a red mat on top. The lower zone is an agility area: pull-up/parallel bars and posts arranged around a green rectangle with small hurdles on all four sides, a second supply shelf on the left with a blonde NPC, and bottom-left a blue platform with red/orange hula hoops. Bushes, stumps and wildflowers ring the lawn.",
+        "elements": [
+          "climbing wall with holds",
+          "two supply shelves with gym gear",
+          "half-court basketball hoop with checkered pad",
+          "blue exercise mat, red folding mat, scale",
+          "blue vault/plyo box platform",
+          "stack of colored rings and hula hoops",
+          "pull-up / parallel bar posts",
+          "hurdle circuit around a green infield",
+          "3 exercising NPCs",
+          "terracotta ground with white court markings",
+          "lawn border with bushes, stumps, pond edge"
+        ],
+        "animations": [
+          "likely: character climbing the wall",
+          "likely: NPC doing pull-ups/vault reps",
+          "likely: basketball bounce at the half court",
+          "likely: hula-hoop spin",
+          "likely: pond water shimmer at top edge"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "41.gif",
+        "theme": "formal_garden_hedge_maze",
+        "description": "A formal statue garden / hedge maze on sandy-tan ground: winding green hedges form maze corridors decorated with a large praying-angel statue on a pedestal (top left), several smaller weathered/cherub statues among ivy beds, an elephant-shaped topiary, a woman-with-jug fountain statue in a round blue basin (top right), a grand tiered fountain flanked by two tall stone columns (bottom center-right), two small wall fountains beside a stone-and-hedge archway entrance at the bottom, and iron gates set into the hedge line. Gardening props are scattered throughout: flower carts, wheelbarrows with tools, potted trees, red/blue flower buckets, watering cans, and rakes. A right-hand side panel is a prop catalog of the carts, wheelbarrows, and flower buckets in all variants.",
+        "elements": [
+          "large stone angel statue on pedestal, smaller cherub/weathered statues on plinths",
+          "elephant topiary, ivy-covered hedge planter beds with potted trees (terracotta pots)",
+          "woman-with-jug fountain in round blue pool",
+          "grand tiered central fountain with blue water, flanking freestanding stone columns",
+          "two small pedestal wall-fountains, stone archway entrance with hedge arch",
+          "green hedge maze walls with iron double gates",
+          "wooden flower carts and garden wagons loaded with flower buckets and tools",
+          "wheelbarrows with shovels/rakes, watering cans, leaning rake",
+          "red and blue flower buckets with pink flowers, empty pedestals",
+          "NPCs: visitor in the maze, gardener at bottom entrance",
+          "side panel: prop catalog of carts, wheelbarrows, buckets, pot variants"
+        ],
+        "animations": [
+          "likely: fountain water flowing/sparkling in all four fountains",
+          "likely: pool water shimmer",
+          "likely: NPC walking through maze corridors"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "47.gif",
+        "theme": "nature/park",
+        "description": "Riverside nature scene on rocky brown cliff terrain: a waterfall pours from a raised cliff at top-center into a stream that widens into a left pond dotted with moai-like carved standing stones (plants sprouting from their heads), lily pads, cattails and reeds; a wooden ladder climbs the left cliff between two stone towers. To the right, a large concrete drainage pipe set into the cliff face spills water into a second smaller pond with a wooden notice sign beside it; a round no-entry sign sits in the stream and a twisty wooden post stands nearby, with a sewer grate and industrial pipes along the top edge. Bottom strip contains the raw tiles: reed/grass clusters, the waterfall column tile, and dirt-cliff autotiles.",
+        "elements": [
+          "waterfall from cliff into stream",
+          "left pond with lily pads",
+          "moai-style carved standing stones with plants on top",
+          "cattails and tall reeds",
+          "wooden ladder up cliff face",
+          "stone tower columns",
+          "large drainage pipe outflow",
+          "right pond fed by pipe",
+          "wooden notice sign",
+          "round no-entry sign in water",
+          "twisty wooden post",
+          "sewer grate and industrial pipes",
+          "dirt cliff autotiles"
+        ],
+        "animations": [
+          "waterfall flowing",
+          "water sparkles glinting on pond surface",
+          "pipe outflow splashing into pond",
+          "likely: stream current ripples",
+          "likely: lily pads bobbing",
+          "likely: reeds swaying"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "65.gif",
+        "theme": "camping",
+        "description": "A modular treehouse showcase on a plain grey background, shown in three build stages left-to-right: (1) the bare wooden treehouse cabin (plank walls, wood-shingle roof, small window, door) sitting on a stump platform with two detached ladder pieces beside it; (2) the finished treehouse mounted in a large oak, canopy clumps framing it, rope ladder up to the platform, tire swing hanging from a branch, red mushrooms at the trunk, and a kid character standing below; (3) the same large trees empty (no cabin) with a tire swing and a small bush — the vanilla tree variants. It is an asset breakdown rather than a composed map, but stage 2 is a ready-made park/forest set piece.",
+        "elements": [
+          "wooden treehouse cabin: vertical plank walls, tan shingle roof, one small glass window, plank door",
+          "large multi-clump oak tree with thick brown trunk and branch arms",
+          "wide wooden platform deck wrapping the trunk",
+          "wooden ladder (two lengths shown) leaning up to the platform",
+          "tire swing on a rope hanging from a branch",
+          "red-cap mushrooms at the tree base",
+          "grass patch under each composition",
+          "kid NPC in blue overalls standing at the base",
+          "standalone big tree + medium tree pair, and a small bush (undecorated variants)"
+        ],
+        "animations": [
+          "likely: tire swing swaying gently",
+          "likely: tree canopy leaves rustling",
+          "likely: kid NPC idle animation (blinking/bobbing)"
+        ],
+        "buildPriority": "strong"
+      }
+    ],
+    "beach_and_waterfront": [
+      {
+        "file": "09.gif",
+        "theme": "beach",
+        "description": "Lakeside fishing pier: an interconnected T/L-shaped network of plank docks over open blue water, entered from the top-left where crates and a barrel sit. A fisherman with a life-ring stands at the top dock; another character sits on the right pier edge with legs in the water and two rods propped up; a third crouches mid-dock casting a long line with bobbers to the left; a swimmer floats beside the dock. A small wooden table with stools and stacked barrels sit at the junctions, and an inflatable rowboat is moored to a piling bottom-right. Red/white bobbers, lily pads, driftwood, and swimmers in colored caps dot the water; a deep-water shelf darkens the bottom edge.",
+        "elements": [
+          "plank dock network on wooden pilings",
+          "moored inflatable rowboat with rope",
+          "fishing rods with cast lines and bobbers",
+          "barrels, crates, bucket, dock table with stools",
+          "life preserver rings",
+          "lily pads and driftwood",
+          "3 fishing NPCs and 2-3 swimmers",
+          "dark deep-water gradient at bottom"
+        ],
+        "animations": [
+          "likely: water shimmer/ripple across the whole tile",
+          "likely: bobbers dipping and fishing-line tugs",
+          "likely: swimmer paddling loop",
+          "likely: rowboat gently rocking",
+          "likely: fish splash effects",
+          "likely: lily pads drifting"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "18.gif",
+        "theme": "beach",
+        "description": "A full beach cove: golden sand meets animated blue water along a curved diagonal shoreline running from bottom-left to mid-right. Top-left is a beach volleyball court marked with red boundary lines, a net, and three players mid-game; top-right is a wooden beach bar hut with a shark-decorated 'Bar' sign, a bartender behind the counter, and patrons standing around barrel tables with drinks. The middle of the beach is dense with leisure props: a large green/white umbrella with deck chair, sandcastles, smaller blue/white parasols, a beach ball, a surfer carrying a blue surfboard, kids with buckets, towels, seashells, and palm trees, while a pink donut float and a green ring float drift in the water; side panels show sand-texture swatches and a shell/popsicle prop sheet.",
+        "elements": [
+          "beach volleyball court with net and red boundary lines",
+          "wooden beach bar hut with 'Bar' shark sign and roof deck railing",
+          "barrel standing-tables with drinks",
+          "palm trees (multiple sizes)",
+          "large green/white beach umbrella with wooden pole",
+          "small blue/white parasols",
+          "deck chairs and folding beach chair",
+          "sandcastles (large multi-tower and small bucket-shaped)",
+          "beach ball (red/white/green)",
+          "blue surfboard carried by NPC",
+          "pink donut inflatable float in water",
+          "green ring float in water",
+          "beach towels (striped)",
+          "buckets, shovels and sand toys",
+          "seashells, starfish and popsicle props",
+          "lifebuoy stack on grass",
+          "curved sand-to-water shoreline with foam edge",
+          "swimmer and beachgoer NPCs"
+        ],
+        "animations": [
+          "water: animated wave/ripple texture and foamy shoreline edge",
+          "likely: floats bobbing on the water",
+          "likely: volleyball ball flying between players",
+          "likely: bartender and patron idle animations",
+          "likely: palm fronds swaying"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "19.gif",
+        "theme": "beach",
+        "description": "A beach detail vignette plus its prop kit. The scene is a strip of sand along animated water featuring a row of carved sand sculptures (seated figure statues on pedestals), a kid in a yellow tiger costume playing near a red crab, blue crabs scuttling by the waterline, a person lying under a striped towel next to a large green/white closed parasol and a beach ball, plus a barrel, shells, and a small info sign. The bottom strip shows the prop kit: a blue 'Beach' entrance sign, multi-arrow directional signposts, blue notice boards, and the sand-figure sculpture set.",
+        "elements": [
+          "sand sculptures: rows of seated figures on sand pedestals",
+          "blue 'Beach' entrance sign board",
+          "multi-arrow wooden directional signposts",
+          "blue notice/info boards with papers",
+          "kid NPC in yellow tiger costume",
+          "red crab and blue crabs",
+          "person lying under striped beach towel",
+          "large green/white closed parasol",
+          "beach ball (red/white)",
+          "wooden barrel",
+          "seashells and spiral shells",
+          "sand-to-water shoreline"
+        ],
+        "animations": [
+          "water: animated waves along the shoreline",
+          "likely: crabs scuttling sideways",
+          "likely: kid digging/playing animation",
+          "likely: shells washing up"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "21.gif",
+        "theme": "beach",
+        "description": "Ocean/beach props sheet, not an assembled scene: a teal scalloped-wave water field occupies the top two-thirds with navigation buoys and rock formations arranged on it, and a golden sand strip runs along the bottom with beach vegetation. Rocks range from a large multi-peak island boulder in the center to small half-submerged stones with blue shadow rings where they meet the water.",
+        "elements": [
+          "teal water tiles with scalloped wave pattern",
+          "bell buoy (grey ball on post)",
+          "red lighthouse-style buoy with light top",
+          "small orange/yellow float buoy",
+          "seagulls in 4 facing directions (up/down/left/right)",
+          "large tan rock island with multiple peaks",
+          "curved arch rock and assorted small water rocks",
+          "sandy beach strip with wave-line texture",
+          "green tropical shrubs and small palms/ferns in several sizes",
+          "male swimmer NPC in trunks"
+        ],
+        "animations": [
+          "likely: water wave shimmer loop",
+          "likely: buoys bobbing on the water",
+          "likely: buoy light blinking",
+          "likely: seagulls flapping/idling"
+        ],
+        "buildPriority": "filler"
+      },
+      {
+        "file": "39.gif",
+        "theme": "public_pool_waterpark",
+        "description": "An outdoor aquatic center on dark-gray decking with four pools: a large kidney-shaped leisure pool (top center) fed by a gray spiral water slide with stair tower; an Olympic lap pool (top right) with red/white lane ropes, starting blocks, and a swimmer; a second free-form leisure pool (bottom left) flanked by palm trees and orange loungers; and a small gray-tiled shallow/kids pool (bottom right) with ladder. The deck between pools is scattered with beach umbrellas (white, orange, blue), deck chairs, a tall white lifeguard chair, a wooden lifeguard tower with red/white umbrella, drink coolers, and side tables. Pools are full of floats: flamingo ring, green dragon/turtle floats, donut rings, popsicle floats, beach balls.",
+        "elements": [
+          "kidney-shaped main pool with white tile coping, underwater shading, entry ladder",
+          "gray spiral water slide with staircase and splash outlet",
+          "Olympic lap pool: 3 lanes, red/white rope buoys, starting blocks, wall timers",
+          "free-form second pool with corner island planter",
+          "small shallow gray-tile pool with ladder (kids pool)",
+          "floats: pink flamingo ring, green dragon and turtle floats, pink donut rings, popsicle floats, beach balls",
+          "4 palm trees, white lifeguard high-chair, wooden lifeguard tower with red/white parasol, life rings",
+          "beach umbrellas (white, orange/white, blue/white), sun loungers (orange, green, yellow, striped deck chairs)",
+          "drink cooler crates, small side tables",
+          "NPCs: swimmer doing laps, toddler in ring, kid in shallow pool, boy on deck"
+        ],
+        "animations": [
+          "likely: water surface shimmer in all pools",
+          "likely: swimmer stroking down the lap lane",
+          "likely: floats bobbing/drifting",
+          "likely: umbrella flutter"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "20.gif",
+        "theme": "concert",
+        "description": "An outdoor concert on sand: a wooden stage framed by a black metal truss rig with mounted spotlights firing colored laser beams (cyan, magenta, white) over the crowd. A full band performs on stage (drum kit, guitarists, keyboard/DJ gear), flanked by tall PA speaker stacks on both sides plus floor monitors; in front, an audience of roughly 15 NPCs stands in rows with benches behind them, and bottom-right sits a wooden merch/bar stall with a table. The right panel shows the laser/spotlight beam sprites in isolation.",
+        "elements": [
+          "metal truss stage rig with overhead lighting bar",
+          "wooden stage platform",
+          "stage spotlights and moving-head lights",
+          "colored laser beams (cyan, magenta, white)",
+          "drum kit, guitars, keyboard/DJ setup on stage",
+          "band member NPCs performing",
+          "tall PA speaker stacks (both sides, multiple cabinets)",
+          "floor monitor wedges",
+          "audience crowd NPCs in rows",
+          "wooden benches",
+          "wooden merch/bar stall with counter and goods",
+          "sound desk / equipment cases",
+          "sand ground"
+        ],
+        "animations": [
+          "laser beams sweeping/strobing over the crowd (likely, given the separate beam sprite sheet)",
+          "likely: stage lights flashing and changing color",
+          "likely: band playing animations (drummer, guitarist strumming)",
+          "likely: crowd bobbing/cheering"
+        ],
+        "buildPriority": "hero"
+      }
+    ],
+    "camping_and_outskirts": [
+      {
+        "file": "10.gif",
+        "theme": "camping",
+        "description": "Woodland trailer-park campsite. Top-left: a white single-wide mobile home with dark-gray roof, roof AC, and a wooden deck porch (dog and grill on the deck). In front of it a character cooks/washes at a metal camp table with soap bubbles rising. Center: a white RV travel trailer with roof AC, spare-tire ladder rear, step stool and gear beside it, parked on grass between apple trees and a large oak. Left: a wooden beehive box on a dirt path that snakes through the site. Bottom: a picnic table set with pans, plates and eggs, a campfire spit with logs, spare tires, mushrooms, and hiking backpacks propped by the trees; a small pond cuts the bottom-right corner with a beach ball nearby. Directional trail signpost on the right.",
+        "elements": [
+          "white mobile home with wooden deck and dog",
+          "white RV camper trailer with roof AC and rear ladder",
+          "camp cook table with bubbles (dishwashing)",
+          "picnic table with cookware and food",
+          "campfire spit with log pile",
+          "wooden beehive box",
+          "apple trees with droppable fruit, large oak",
+          "hiking backpacks and camping gear",
+          "directional trail signpost",
+          "spare tires, stumps, mushrooms, logs",
+          "pond in bottom-right corner"
+        ],
+        "animations": [
+          "likely: soap bubbles floating up from the wash table",
+          "likely: campfire flames and smoke",
+          "likely: cooking character loop",
+          "likely: pond water shimmer",
+          "likely: dog idle/tail wag on deck",
+          "likely: bees around the hive",
+          "likely: apples dropping from trees"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "67.gif",
+        "theme": "gas_station",
+        "description": "A red-and-white gas station complex on the edge of a forest, with a camping trailhead behind it. The station is a large T-shaped red-edged canopy roof (with vents and a rooftop ladder) over a convenience store with glass double doors and window walls; two pump islands sit under the south canopy arm with ATM-style fuel dispensers on red pillars, and an attached CAR WASH bay on the east end has a teal car inside mid-wash. West of the station: a bus-stop shelter with ticket/vending machines, a parked yellow school bus, and a striped parking lot (P bays) with a teal car; a zebra crosswalk connects the shelter to the station forecourt. The top edge is a dense tree line broken by a wooden 'Camping' sign with a tent icon marking a dirt trail north, with recycling dumpsters and trash bags beside the trail entrance and NPCs (a hiker at the trail, a pedestrian at the bus stop, a driver fueling the teal car).",
+        "elements": [
+          "T-shaped flat canopy roof, white with thick red border, roof vents and access ladder",
+          "convenience store under canopy: glass double doors, full-width windows, interior shelving hint",
+          "tall red price totem sign with yellow lightning-bolt logo and two LED price rows (73 fuel / 59 eco)",
+          "two fuel pump islands: boxy grey/red dispenser machines on kerbed islands with red support pillars",
+          "CAR WASH wing: blue sign lettering, open bay with teal car and wash rollers inside",
+          "teal hatchback at the pump with driver NPC standing beside it",
+          "yellow school bus parked along the west edge",
+          "bus-stop shelter with bench roof, two blue ticket/vending machines, red bus-stop sign",
+          "striped parking lot with white P letters and bay lines, one parked teal car",
+          "zebra crosswalk between shelter and forecourt",
+          "wooden 'Camping' billboard with tent glyph and smaller notice boards, dirt trail into forest",
+          "dense forest tree line across the whole top edge",
+          "green recycling dumpsters and black trash bags near the trail entrance",
+          "blue P parking signs and white directional arrows painted on asphalt",
+          "road with dashed white line along the bottom-right"
+        ],
+        "animations": [
+          "likely: car wash rollers spinning and water/suds splashing over the car inside",
+          "likely: price totem LED digits flickering/changing",
+          "likely: fuel hose/pump animation while the teal car refuels",
+          "likely: bus and cars driving in/out; NPC walk cycles",
+          "likely: tree line leaves rustling"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "38.gif",
+        "theme": "wind_power_station",
+        "description": "A utility/power station carved out of dense forest: a gray industrial building (metal-plate roof, rooftop pipes and ladder, vents) with two dark service doors and hazard-striped bases sits left-of-center, with a very tall smokestack with a red warning band rising behind it. To its right stands a small fenced electrical substation/control cabinet with a yellow '!' warning panel where a worker is operating it. Three large white wind turbines with red-striped blades dominate the right half at different depths. Surroundings are thick pine/oak forest, dirt paths, a stacked log pile, rocks, a discarded tire, and bushes.",
+        "elements": [
+          "gray concrete-and-metal powerhouse: plated roof, roof ladder, pipe stacks, vents, twin service doors, grime decals",
+          "tall smokestack/chimney with red-white band",
+          "electrical substation cabinet with warning '!' sign, gauges, breaker panels",
+          "3 white wind turbines, red-tipped blades, varying heights/depths",
+          "dense pine and deciduous forest border, large oak with exposed roots",
+          "stacked firewood/log pile, boulders, old tire, dirt patches and trenches",
+          "NPCs: technician at building entrance, worker at the control cabinet"
+        ],
+        "animations": [
+          "wind turbine blades rotating (near-certain for this GIF)",
+          "likely: smoke puffing from the smokestack",
+          "likely: blinking warning light on the substation panel",
+          "likely: tree/bush wind sway"
+        ],
+        "buildPriority": "hero"
+      }
+    ],
+    "industrial": [
+      {
+        "file": "05.gif",
+        "theme": "construction_site",
+        "description": "A full construction site: a rectangular dirt lot enclosed by orange mesh barrier fencing with hazard-striped rails, set on a cobblestone street corner. Inside are two gray steel building skeletons (left frame taller with wooden beams, right frame on concrete pillars), an orange scissor lift with a hard-hat worker on the left, a yellow front-loader with lowered bucket parked on the right, a white cement mixer cart with a worker top-center, pallets of cinder blocks in a center grid, stacked black pipes, wooden crates, tripod work lights, buckets, traffic cones, dirt puddles, and a giant yellow rubber duck gag prop. The street edge has a fire hydrant, red-cross first-aid sign, blue roadwork signs, manhole grates, and spare colored doors (red, blue, tan) leaning at the corners.",
+        "elements": [
+          "orange mesh construction barriers with striped posts",
+          "two steel girder building frames",
+          "orange scissor lift",
+          "yellow front-loader/bulldozer",
+          "white cement mixer cart",
+          "cinder block pallets",
+          "black pipe stacks",
+          "wooden beams and crates",
+          "tripod work lights",
+          "traffic cones",
+          "buckets and tools",
+          "dirt ground with puddles",
+          "giant yellow rubber duck",
+          "fire hydrant + first-aid sign",
+          "blue roadwork signs",
+          "spare doors (red/blue/tan) as props",
+          "2-3 hard-hat worker NPCs"
+        ],
+        "animations": [
+          "likely: scissor lift raising and lowering",
+          "likely: cement mixer drum spinning",
+          "likely: workers hammering/shoveling loops",
+          "likely: front-loader bucket or driving movement",
+          "likely: work light flicker",
+          "likely: duck bobbing"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "14.gif",
+        "theme": "junkyard",
+        "description": "A fenced scrapyard compound on packed dirt, enclosed by chain-link fence with barbed wire on all sides. Top center is a large rusted corrugated-metal barn/warehouse with a wooden lean-to counter; to its right a tan shipping container tagged 'SMC' and a second tall gray container along the east fence. Center of the yard has a stack of wrecked cars (orange car piled on two gray/teal wrecks), a flipped rusted car, and a blue shipping container with a ladder against it; bottom left is a small wooden shack office with a window, and the yard is littered with tire piles, barrel pyramids, blue oil drums, crates, scrap-metal heaps, and hazard/radioactive signage, with a small tree grove fenced off bottom right.",
+        "elements": [
+          "rusted corrugated-metal warehouse/barn with wooden storage counter",
+          "chain-link fence with barbed wire perimeter and gate sections",
+          "stack of 3 wrecked cars (orange on top of gray/teal wrecks)",
+          "flipped/overturned rusted car",
+          "blue shipping container with leaning ladder",
+          "tan shipping container with 'SMC' graffiti",
+          "tall gray shipping container",
+          "wooden shack office with window and small porch",
+          "tire crusher/compactor machine with tire piles (top left)",
+          "pyramid of stacked wooden barrels",
+          "blue oil drums cluster",
+          "skull-and-crossbones and radioactive warning signs",
+          "wooden crates and cardboard boxes",
+          "scrap metal / rock rubble heaps",
+          "giant hook and engine parts on the ground",
+          "burn pile with flame (top right corner)",
+          "worker NPCs in overalls",
+          "small fenced grove of round trees (bottom right)",
+          "dirt ground with grass patches"
+        ],
+        "animations": [
+          "likely: flame/burn pile flickering in the top-right corner",
+          "likely: worker NPCs walking around the yard",
+          "likely: crusher/compactor machine moving",
+          "likely: character idle animations (the kid with basketball near the blue container)"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "23.gif",
+        "theme": "parking_lot",
+        "description": "Left half is a parking tileset (dark asphalt slabs with white P stalls, painted STOP/EXIT/TURN text and directional arrows in 4 rotations, ~10 white car sprites in side/top views, and a large catalog of road signs). Right half is an assembled parking lot scene: dark asphalt lot with white-striped stalls, green-hatched EV charging bays with a green car icon, a bank of EV charger pedestals on a paved apron at top right, a central pay-station kiosk, an EXIT lane with painted arrow and no-entry sign, chain-link fence along the bottom, and a dumpster/recycling corner with bins and trash bags on the right.",
+        "elements": [
+          "dark asphalt tiles with white P stall markings",
+          "painted road text: STOP, EXIT, TURN, directional arrows (all rotations)",
+          "white sedans, SUVs, coupes, sports car (side + top views)",
+          "police car with light bar",
+          "EV charging stations (grey pedestals with blue screens)",
+          "green-hatched EV bays with charging-car icon",
+          "central parking pay machine / ticket kiosk",
+          "full road-sign set: red prohibition circles, blue arrow signs, yellow/red warning triangles, yield signs",
+          "chain-link fence, bollards, streetlamps, benches",
+          "dumpsters, recycling bins, garbage bags, manhole covers",
+          "crosswalk and sidewalk edge tiles"
+        ],
+        "animations": [
+          "likely: EV charger screen/indicator blink",
+          "likely: police car light bar flashing",
+          "likely: cars pulling in/out of stalls",
+          "likely: pay-station screen glow"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "53.png",
+        "theme": "condemned_buildings",
+        "description": "Small tileset snippet, not a composed scene: three brown two-story shopfront/apartment facades with tan parapet roofs — one clean with curtained windows and potted plants, one wide-roofed variant, and one derelict with cracked, boarded and cobwebbed windows. Center-left holds a prop cluster of stacked concert loudspeakers/subwoofers.",
+        "elements": [
+          "brown brick two-story facade with wooden door and flowerbox windows",
+          "derelict facade variant with broken boarded windows and grime",
+          "tan flat parapet roof tiles with cracks",
+          "stacked PA speaker / subwoofer props (6-8 boxes)"
+        ],
+        "animations": [],
+        "buildPriority": "filler"
+      }
+    ],
+    "subway": [
+      {
+        "file": "16.gif",
+        "theme": "subway",
+        "description": "A two-level subway station cross-section. Upper level is a grungy old platform: graffiti-covered wall with vending machines, benches, a busker corner (red electric guitar player, drummer, crowd), homeless sleeping spots with cardboard and mattress, ticket machines, a yellow-trimmed staircase, and a silver commuter train covered in pink 'MEH' graffiti sitting at the platform beside exposed third-rail tracks. Lower level is a clean modern station: lavender tiled floor, elevators, LME-branded ticket machines and gates, backlit ad posters, departure boards, benches, potted plants, staffed ticket counters with a police officer, and a sleek white/teal 'LME' high-speed bullet train at the bottom platform; a side panel on the right shows NPC sprites and floor-litter tile swatches.",
+        "elements": [
+          "silver commuter train with pink graffiti tags",
+          "white/teal LME high-speed bullet train with pointed nose",
+          "graffiti wall with tags, posters and a dragon mural",
+          "vending machines (snack and drink)",
+          "wall-mounted departure/info boards",
+          "ticket vending machines and LME fare gates",
+          "yellow-trimmed staircases between levels",
+          "elevators (two banks, lower level)",
+          "benches (grungy upper, modern lower)",
+          "busker setup: red electric guitar, drum kit, tip jar",
+          "homeless sleeping spots: cardboard boxes, mattress, blanket",
+          "ticket counter booths with staff and police officer",
+          "backlit advertising light-box posters",
+          "potted plants/topiary",
+          "platform edge with yellow warning stripe and third-rail tracks",
+          "litter decals: stains, papers, cans",
+          "concrete support pillars"
+        ],
+        "animations": [
+          "likely: trains arriving/departing or door open-close",
+          "likely: departure boards flickering/scrolling text",
+          "likely: busker playing guitar and drummer drumming",
+          "likely: vending machine light glow",
+          "likely: NPC idle/walk cycles (commuters, police, sleeper rolling over)"
+        ],
+        "buildPriority": "hero"
+      },
+      {
+        "file": "17.gif",
+        "theme": "subway",
+        "description": "A close-up grungy subway platform slice plus its prop kit. The scene shows a graffiti wall ('MADRX', 'GONE' tags) with a poster/flyer collage board, metal double doors, storage lockers, and a red SOS emergency intercom box; the platform has metal railings with no-crossing signs, a yellow warning edge strip, tracks with a large weathered concrete pillar rising through them, scattered litter, a slime/trash blob, and a homeless NPC sitting beside a bottle crate. The right panel lays out the individual props: railing segments, SOS box, warning signs, rusty fences, and the concrete pillar.",
+        "elements": [
+          "graffiti wall with MADRX and GONE tags",
+          "poster/flyer collage wall (wanted-poster style grid)",
+          "red SOS emergency intercom box with light",
+          "metal double doors (service entrance)",
+          "metal lockers/cabinets",
+          "platform railings with red no-crossing signs",
+          "yellow platform-edge warning strips",
+          "subway tracks",
+          "large weathered concrete pillar",
+          "rusty broken fence segments",
+          "litter: bottles, cans, papers, pipes",
+          "trash blob/slime creature",
+          "homeless NPC sitting with bottle crate",
+          "green bottles cluster"
+        ],
+        "animations": [
+          "likely: SOS box light blinking red",
+          "likely: train rushing past on the tracks",
+          "likely: flickering fluorescent wall light",
+          "likely: seated NPC idle animation",
+          "likely: trash blob wobbling"
+        ],
+        "buildPriority": "strong"
+      }
+    ],
+    "graveyard": [
+      {
+        "file": "49.gif",
+        "theme": "graveyard",
+        "description": "Full walled Halloween cemetery. A gothic stone chapel/mausoleum with a steep dark shingled roof and arched entry sits top-left; a spiked wrought-iron fence rings the whole lot with an arched stone gate flanked by jack-o-lanterns at bottom-center. Winding dirt paths cut through grass past tombstone clusters, an open dug grave with a visible skeleton, an upright skull-lid coffin, dead twisted trees, and a giant pumpkin-headed tree monster in the top-right corner; a small side panel shows extra cross/urn props.",
+        "elements": [
+          "gothic chapel/mausoleum with arched doorway and cross finials",
+          "spiked iron perimeter fence with stone gate arch",
+          "stone crosses, slab headstones, rounded tombstones",
+          "upright coffin with skull emblem",
+          "open grave with skeleton inside, shovel and dirt mound",
+          "dead leafless trees and one giant pumpkin-head tree creature",
+          "standing torch/candle posts and loose candles",
+          "jack-o-lantern pumpkins at gate and by the pumpkin tree",
+          "zombie and plant-creature NPCs on paths",
+          "wooden crosses, barrels, crates, urns",
+          "dirt paths over grass, scattered leaves and stones",
+          "bats in the sky corners"
+        ],
+        "animations": [
+          "likely: torch and candle flames flickering",
+          "likely: bats flapping across the sky",
+          "likely: blue soul-wisp bubbles drifting up from graves",
+          "likely: zombie/plant NPC idle and walk cycles",
+          "likely: pumpkin tree monster idle breathing/eye glow",
+          "likely: coffin or grave lid creaking open"
+        ],
+        "buildPriority": "hero"
+      }
+    ],
+    "military": [
+      {
+        "file": "29.gif",
+        "theme": "military_base/prison",
+        "description": "Asset-sheet layout (28 animation frames) for a military/prison compound: tall grey concrete perimeter walls topped with barbed/razor wire in straight, corner, and gate segments (plus a labeled 'modular version' set), a multi-storey guard/watch tower with rooftop searchlight and railed platform, boom-barrier checkpoint gates, two large ribbed quonset-hut hangars (one 3-storey with barred windows, one wide with a roller garage door), corrugated-tin-roof barracks buildings labeled N01-N10 with metal doors and hand rails, a flat-roofed concrete bunker with rooftop antennas and pipes, chain-link and razor-wire fencing runs, warning/keep-out signage, wall-mounted searchlights, industrial street lamps, and guard NPCs in blue caps.",
+        "elements": [
+          "concrete perimeter walls with razor wire (straight/corner/gate modules)",
+          "guard watchtower with searchlight and window row",
+          "boom barrier checkpoint arms with control boxes",
+          "large ribbed quonset hangars with barred windows and roller doors",
+          "corrugated-roof barracks with numbered door plates N01-N10",
+          "flat concrete bunker with antennas and external pipework",
+          "chain-link + razor wire fence segments",
+          "WARNING and keep-out signs",
+          "industrial lamp posts and wall floodlights",
+          "guard NPCs in blue uniform caps"
+        ],
+        "animations": [
+          "likely: searchlight beam sweep/rotation on tower and wall mounts",
+          "likely: boom barrier raising and lowering",
+          "likely: guard NPC idle (blink/shift)",
+          "likely: blinking warning-sign or antenna lights"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "58.gif",
+        "theme": "military_base",
+        "description": "Asset-kit sheet for a military base district (devlog update 377), shown as loose groupings rather than one composed map. Contents: two big field tents (tan medic tent with green-cross sign, gray/green plain variant) with awning-covered entrances; two concrete bunker/command buildings with heavy blast doors, roof hatches and antenna masts; and a composed sandbag emplacement in the bottom-right — an L/U-shaped sandbag wall compound with barbed-wire coils, spike strips, floodlights, a supply crate desk, tire stacks and soldiers plus training dummies inside.",
+        "elements": [
+          "large medic tent: tan canvas, green cross sign, wood-framed entrance with desk",
+          "gray/green field tent variant with cot visible at entrance",
+          "concrete bunker building: paneled flat roof, riveted walls, double blast doors with red lights",
+          "second bunker with roof hatch, crate and antenna cluster on top",
+          "sandbag wall segments: straight runs, corners, single bags for stacking",
+          "tire stacks (black, some brown/red)",
+          "wooden training dummies on posts and human-silhouette target boards",
+          "barbed wire coils and anti-vehicle spike rows",
+          "street floodlights (single and double head) and pipe/conduit runs",
+          "WARNING sign on post",
+          "military bunk beds (metal frame, gray and tan bedding variants)",
+          "gray lockers, supply shelves with helmets/bottles/boxes, benches",
+          "camo banners/flags with medic cross (hanging door flaps)",
+          "medic kits, first-aid boxes, radio sets, small props row",
+          "several soldier NPCs in green helmets"
+        ],
+        "animations": [
+          "likely: soldier NPC idle/patrol walking",
+          "likely: floodlight glow flicker / red bunker-door lights blinking",
+          "likely: tent door-flap or banner sway",
+          "likely: antenna beacon blink on bunker masts"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "59.gif",
+        "theme": "military_radar_tower",
+        "description": "Kit sheet (devlog 380) for a tall military radar/communications tower: a geodesic white radome sphere sitting on a mesh-floor platform atop a two-tier gray lattice scaffold tower with ladders, side antennas and dish sensors. Shown in two assembled variants (front-facing ladder vs side strut style) plus exploded modular parts: platform top, lattice frame section, base legs, and accessory props.",
+        "elements": [
+          "geodesic radome: large white triangulated sphere with subtle iridescent facets",
+          "dark mesh observation platform with railing posts and small panel antennas",
+          "gray lattice/truss tower sections with X-bracing and central column",
+          "external ladders between tiers, lower platform with hatch doorway",
+          "footing legs with concrete pads",
+          "small dish and panel antennas mounted on struts",
+          "wall-mounted sensor/camera units with red lenses",
+          "green military footlocker crates (3 sizes)",
+          "gray locker banks (double and single)",
+          "whiteboard, tactical map boards (2 styles) on stands",
+          "soldier NPC for scale at tower base"
+        ],
+        "animations": [
+          "likely: blinking red beacon/sensor lights on antennas",
+          "likely: slow radar dome pulse or antenna rotation",
+          "likely: soldier NPC idle"
+        ],
+        "buildPriority": "strong"
+      },
+      {
+        "file": "60.gif",
+        "theme": "military_vehicles_tanks",
+        "description": "Vehicle sprite sheet (devlog 385): battle tanks in two camo schemes (forest green and desert tan), each drawn in side, front, back and top-down orientations — roughly 16 poses total. A boxed 'Indipendent parts' column on the right shows hull and turret as separate sprites so the turret can rotate independently; bottom-left has small yellow muzzle-flash sprites.",
+        "elements": [
+          "green camo tank: side profile with treads, road wheels, long barrel",
+          "desert tan camo tank: same pose set",
+          "front and rear views with hatch and stowage detail",
+          "top-down views showing turret, engine deck, tow cables",
+          "separate hull sprite + separate turret sprite (independent rotation)",
+          "muzzle-flash effect sprites (yellow, 2-3 frames)"
+        ],
+        "animations": [
+          "likely: tread scroll while driving",
+          "likely: independent turret rotation (separate part sprites)",
+          "likely: muzzle flash firing effect",
+          "likely: slight recoil on fire"
+        ],
+        "buildPriority": "filler"
+      },
+      {
+        "file": "61.gif",
+        "theme": "military_vehicles_helicopter",
+        "description": "Vehicle sprite sheet (devlog 390): a gray military utility helicopter (Huey-like) with orange-tipped rotor, drawn side-view with skids, top-down in two headings, and front view; a '_turn on_' bracket under the side view marks the rotor spin-up animation. Separate part sprites included: main rotor blade, tail boom/engine pieces, and engine block details for assembling other facings.",
+        "elements": [
+          "side-view helicopter on landing skids, yellow '8' fuselage number, soldier NPC for scale",
+          "top-down helicopter, nose-up and nose-down headings, rotor across fuselage",
+          "front view with cockpit glass and rotor",
+          "detached main rotor blade sprite (orange tips)",
+          "engine/gearbox and tail part sprites",
+          "landing skid detail"
+        ],
+        "animations": [
+          "rotor spin-up 'turn on' animation (labeled in sheet)",
+          "likely: rotor blur loop while flying",
+          "likely: takeoff/landing hover bob",
+          "likely: tail rotor spin"
+        ],
+        "buildPriority": "filler"
+      }
+    ],
+    "systems_and_props": [
+      {
+        "file": "02.gif",
+        "theme": "street_infrastructure",
+        "description": "A close-up detail crop of a street corner: dark asphalt road with dashed white lane divider forming an L, a zebra crosswalk at bottom-left, an overhead traffic light arm spanning the road (green lit) plus a second pole-mounted traffic light with blue pedestrian-crossing sign at the corner, the edge of a yellow building on the right, a teal van nose at top-right, a roadside parking meter/machine on the left sidewalk, and a pedestrian NPC waiting on herringbone paving. Essentially a traffic-light and crosswalk behavior demo, not a full scene.",
+        "elements": [
+          "asphalt road with dashed lane lines",
+          "zebra crosswalk",
+          "overhead-arm traffic light (green)",
+          "pole traffic light with pedestrian sign",
+          "parking meter/roadside machine",
+          "corner of yellow building",
+          "teal van (partial)",
+          "pedestrian NPC",
+          "herringbone sidewalk"
+        ],
+        "animations": [
+          "likely: traffic light cycling green-yellow-red",
+          "likely: van driving through",
+          "likely: pedestrian crossing when light changes"
+        ],
+        "buildPriority": "filler"
+      },
+      {
+        "file": "03.gif",
+        "theme": "street_infrastructure",
+        "description": "A plain four-way asphalt intersection with dashed white center lines meeting in a cross, four light-gray herringbone sidewalk corners with raised curbs, and a manhole cover near the center. Four blue cars are entering/exiting at the edges — this is a vehicle traffic demo showing cars driving through the intersection. Props-only reference for the road/vehicle system.",
+        "elements": [
+          "4-way asphalt intersection",
+          "dashed white lane markings",
+          "curbed herringbone sidewalk corners",
+          "manhole cover",
+          "4 blue cars at edges"
+        ],
+        "animations": [
+          "likely: cars driving through the intersection from all four directions",
+          "likely: cars yielding/queueing"
+        ],
+        "buildPriority": "filler"
+      },
+      {
+        "file": "15.gif",
+        "theme": "vehicles",
+        "description": "A 2x2 sprite showcase of drivable cars on road tiles, not a full scene. Top row: side-view olive-green sedan and side-view black police car with roof light bar, each on a horizontal street with sidewalk and dashed center line. Bottom row: top-down red/orange car and top-down teal car on vertical lane tiles with dashed lane lines.",
+        "elements": [
+          "olive-green sedan (side view)",
+          "black police car with red/blue roof light bar (side view)",
+          "red/orange car (top-down view)",
+          "teal car (top-down view)",
+          "asphalt road tiles with dashed white lane markings",
+          "gray sidewalk/paver strip"
+        ],
+        "animations": [
+          "likely: wheels rolling / cars driving loop",
+          "likely: police light bar flashing red and blue"
+        ],
+        "buildPriority": "filler"
+      },
+      {
+        "file": "24.gif",
+        "theme": "vehicles",
+        "description": "Vehicle sprite sheet with three car types, each in 3/4 side view and straight top-down front/rear views: a white family sedan/hatchback, a yellow taxi with roof sign and checker hints, and a white sports coupe with black hood panels and red tail accents. Small sparkle glints are drawn around bodies indicating a shine animation.",
+        "elements": [
+          "white sedan (two side poses, top-down front and rear)",
+          "yellow taxi with roof-mounted sign (side and top views)",
+          "white sports coupe with black hood/roof and red details",
+          "white SUV/crossover top view",
+          "paint sparkle/glint marks"
+        ],
+        "animations": [
+          "likely: driving loop (wheel roll/body bob)",
+          "likely: paint sparkle glint twinkle",
+          "likely: taxi roof-sign light blink"
+        ],
+        "buildPriority": "filler"
+      },
+      {
+        "file": "28.gif",
+        "theme": "tech/drones",
+        "description": "Not a scene — a small prop showcase sheet on a flat olive background. Rows of quadcopter-style drones (blue-grey with orange cargo pods), a hover-robot with a red eye, a worker character in a cap, handheld remote controllers with joysticks, and a caption 'makes stuff fly' pointing at a controller; a crate-carrying delivery drone sits bottom-right.",
+        "elements": [
+          "quadcopter drones with blue rotor caps",
+          "cargo drones carrying orange crates/parcels",
+          "hover robot with single red eye",
+          "drone operator NPC with cap",
+          "remote controller props (joystick pads, buttons)",
+          "wooden crate with delivery drone"
+        ],
+        "animations": [
+          "likely: rotor blades spinning on all drones",
+          "likely: hover bob (drones oscillate up/down)",
+          "likely: controller button/joystick blink"
+        ],
+        "buildPriority": "filler"
+      },
+      {
+        "file": "46.gif",
+        "theme": "garbage/sanitation",
+        "description": "Garbage-collection vehicle and prop sheet: two large orange rear-loader garbage trucks with white cabs in left-facing side view (one with recycle-bin decal on the hopper), plus front and rear orientations of the same truck; one rear view shows a sanitation worker riding in the open hopper. Right side is a prop set: two closed-lid dumpsters and two open ventilated dumpsters with grime/graffiti, three round metal trash cans (one with raccoon-ear silhouette peeking), black trash bags singly and in piles, cardboard boxes, traffic cone, and small litter bits (cans, bottles, crumpled paper, food scraps).",
+        "elements": [
+          "orange rear-loader garbage truck side view x2",
+          "garbage truck front view",
+          "garbage truck rear view with worker in hopper",
+          "dumpsters closed and open x4",
+          "round metal trash cans x3",
+          "black trash bag piles",
+          "cardboard boxes",
+          "traffic cone",
+          "scattered litter bits (cans, bottles, paper)"
+        ],
+        "animations": [
+          "likely: amber beacon/hazard lights blinking on truck cabs",
+          "likely: wheels turning while driving",
+          "likely: rear compactor crushing cycle",
+          "likely: worker bobbing in the hopper",
+          "likely: raccoon peeking out of trash can"
+        ],
+        "buildPriority": "filler"
+      }
+    ]
+  }
+}

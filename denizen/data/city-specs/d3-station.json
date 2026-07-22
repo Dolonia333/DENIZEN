@@ -1,0 +1,41 @@
+{
+  "district": "D3 Station Square",
+  "bbox": { "x": 5200, "y": 1600, "w": 900, "h": 500 },
+  "patches": [
+    { "tile": "sidewalk", "x": 5200, "y": 1600, "w": 896, "h": 496, "depth": 0.9 },
+    { "tile": "asphalt", "x": 5776, "y": 1600, "w": 320, "h": 176, "depth": 0.9 },
+    { "tile": "grass", "x": 5216, "y": 1840, "w": 64, "h": 96, "depth": 0.9 },
+    { "tile": "grass", "x": 6016, "y": 1840, "w": 64, "h": 112, "depth": 0.9 }
+  ],
+  "roads": [],
+  "stamps": [
+    { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Building_1.png", "x": 5480, "y": 1808, "origin": "bl", "solid": true },
+    { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Roof_Decoration.png", "x": 5640, "y": 1876, "origin": "bl", "solid": true },
+    { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Truck_Right_Side.png", "x": 5824, "y": 1760, "origin": "bl", "solid": true },
+    { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Truck_Back.png", "x": 5984, "y": 1770, "origin": "bl", "solid": true },
+    { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Red_Mailbox_1_Front.png", "x": 5448, "y": 1808, "origin": "bl", "solid": true },
+    { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Blue_Mailbox_1_Front.png", "x": 5624, "y": 1808, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_ Stairs_Structure_1.png", "x": 5280, "y": 2040, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_ Example_Lateral_Turnstile_1.png", "x": 5264, "y": 2040, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_ Example_Lateral_Turnstile_1.png", "x": 5376, "y": 2040, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_3.png", "x": 5952, "y": 2020, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png", "x": 5900, "y": 1936, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Map_Monitor.png", "x": 5400, "y": 1940, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Black_Bench_Frontal_1.png", "x": 5344, "y": 1900, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_1.png", "x": 5688, "y": 1990, "origin": "bl", "solid": true }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/School_Flag_1_16x16.png", "fw": 48, "fh": 144, "x": 5460, "y": 1950, "fps": 6 },
+    { "sheet": "ext/animated/Post_Office_Door_1_16x16.png", "fw": 32, "fh": 32, "x": 5528, "y": 1776, "fps": 6 },
+    { "sheet": "ext/animated/Subway_Busker_1_16x16.png", "fw": 32, "fh": 32, "x": 5320, "y": 2052, "fps": 6 },
+    { "sheet": "ext/animated/Subway_Elevator_Going_Up_16x16.png", "fw": 32, "fh": 32, "x": 5224, "y": 1948, "fps": 4 }
+  ],
+  "solids": [
+    { "x": 5216, "y": 1840, "w": 64, "h": 96 },
+    { "x": 6016, "y": 1840, "w": 64, "h": 112 }
+  ],
+  "labels": [
+    { "x": 5560, "y": 1864, "text": "STATION SQUARE" }
+  ],
+  "portals": []
+}
