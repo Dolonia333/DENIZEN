@@ -195,7 +195,7 @@ export function buildFullWorld(scene) {
   scene.load.image('fw_st_l1', lz('examples/studio_layer1.png'));
   scene.load.image('fw_st_l2', lz('examples/studio_layer2.png'));
   scene.load.image('fw_st_l3', lz('examples/studio_layer3.png'));
-  scene.load.spritesheet('fw_door_glass', lz('animated/door_glass.png'), { frameWidth: 32, frameHeight: 48 });
+  scene.load.spritesheet('fw_door_sliding', lz('animated/door_sliding.png'), { frameWidth: 32, frameHeight: 32 });
   scene.load.spritesheet('fw_anim_screens', lz('animated/control_screens.png'), { frameWidth: 32, frameHeight: 48 });
   scene.load.spritesheet('fw_anim_server', lz('animated/server_rack.png'), { frameWidth: 16, frameHeight: 48 });
   scene.load.spritesheet('fw_anim_coffee', lz('animated/coffee.png'), { frameWidth: 16, frameHeight: 32 });
@@ -305,39 +305,38 @@ function build(scene) {
     const bx = 1200, by = 1864; // origin bottom-left on the north sidewalk
     const b = scene.add.image(bx, by, 'fw_hq_building').setOrigin(0, 1);
     b.setDepth(by);
-    // Solid except the entrance (door at facade center, ~x 1352-1390)
-    state.solids.push({ x: bx, y: by - 40, w: 152, h: 40 });
-    state.solids.push({ x: bx + 190, y: by - 40, w: 114, h: 40 });
+    // The facade's REAL entrance is the glass double door at facade
+    // x 84-116 (pixel-measured) — world x 1284-1316, NOT the center.
+    state.solids.push({ x: bx, y: by - 40, w: 84, h: 40 });
+    state.solids.push({ x: bx + 116, y: by - 40, w: 188, h: 40 });
     const label = scene.add.text(bx + 152, by - 292, 'DENIZEN HQ', {
       fontFamily: 'monospace', fontSize: '10px', color: '#e2e8f0',
       backgroundColor: '#0f172acc', padding: { x: 5, y: 2 },
     }).setOrigin(0.5, 1).setDepth(6000);
     label.setResolution(2);
-    state.hqDoor = { x0: bx + 148, x1: bx + 194, y: by };
-    // Animated glass double door over the facade entrance — slides open
-    // when the player approaches (frames 0-4 of the official animated
-    // object), closes again when they walk away. Entry requires it open.
-    if (scene.textures.exists('fw_door_glass')) {
+    state.hqDoor = { x0: bx + 82, x1: bx + 118, y: by };
+    // Automatic sliding door (animated/door_sliding, 32x32, frames 0-7 =
+    // panels retracting) placed EXACTLY over the facade's baked entrance
+    // (door bottom at facade y284 = world by-4). Renders above the facade
+    // (which has the doors painted shut), below the y-sorted player.
+    if (scene.textures.exists('fw_door_sliding')) {
       if (!scene.anims.exists('fw_door_opening')) {
         scene.anims.create({
           key: 'fw_door_opening',
-          frames: scene.anims.generateFrameNumbers('fw_door_glass', { start: 0, end: 4 }),
-          frameRate: 14, repeat: 0,
+          frames: scene.anims.generateFrameNumbers('fw_door_sliding', { start: 0, end: 7 }),
+          frameRate: 18, repeat: 0,
         });
       }
       if (!scene.anims.exists('fw_door_closing')) {
         scene.anims.create({
           key: 'fw_door_closing',
-          frames: scene.anims.generateFrameNumbers('fw_door_glass', { start: 4, end: 0 }),
-          frameRate: 14, repeat: 0,
+          frames: scene.anims.generateFrameNumbers('fw_door_sliding', { start: 7, end: 0 }),
+          frameRate: 18, repeat: 0,
         });
       }
-      // Backdrop + door must render ABOVE the facade image (depth `by`) —
-      // the facade has painted-shut doors baked in, and anything below its
-      // depth is invisible. Dark doorway backdrop first, animated door on
-      // top; the y-sorted player (depth ≈ 1870+) still walks in front.
-      scene.add.rectangle(bx + 171, by - 19, 38, 38, 0x131521, 1).setDepth(by + 1);
-      const doorSp = scene.add.sprite(bx + 171, by, 'fw_door_glass', 0).setOrigin(0.5, 1);
+      scene.add.rectangle(bx + 100, by - 21, 32, 36, 0x131521, 1).setDepth(by + 1);
+      const doorSp = scene.add.sprite(bx + 100, by - 3, 'fw_door_sliding', 0).setOrigin(0.5, 1);
+      doorSp.setDisplaySize(32, 36);
       doorSp.setDepth(by + 2);
       state.hqDoorSprite = doorSp;
       state.hqDoorOpen = false;
