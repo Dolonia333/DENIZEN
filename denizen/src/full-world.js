@@ -197,6 +197,10 @@ export function buildFullWorld(scene) {
   scene.load.json('fw_blueprint', `data/full-world-blueprint.json?v=${bust}`);
   scene.load.json('fw_rbtiles', `data/room-builder-tiles.json?v=${bust}`);
   scene.load.image('fw_terrain', lz('exteriors/city_terrain.png'));
+  // Beach sheet loaded in the FIRST pass so sand patches (and the paved core)
+  // can paint immediately, instead of the world showing all-grass for minutes
+  // then popping to sidewalk once the heavy second-pass load finishes.
+  scene.load.image('cp_ext_themes_21_Beach_png', 'assets/limezu/ext/themes/21_Beach.png');
   scene.load.image('fw_props', lz('exteriors/city_props.png'));
   scene.load.image('fw_vehicles', lz('exteriors/vehicles.png'));
   scene.load.image('fw_buildings', lz('exteriors/generic_buildings.png'));
@@ -426,7 +430,13 @@ function renderCityPlan(scene, plan) {
     if (!scene.textures.exists(planKey(b.sheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: b.sheet, fw: b.fw || 16, fh: b.fh || 16 }));
   });
   (plan.vehicles || []).forEach((v) => {
-    if (!scene.textures.exists(planKey(v.sheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: v.sheet, fw: v.fw || 48, fh: v.fh || 32 }));
+    // New cars are directional single images (correct facing by filename, no
+    // flip/anim guesswork). Legacy sheet cars still supported.
+    if (v.img) {
+      if (!scene.textures.exists(planKey(v.img))) toLoad.add(JSON.stringify({ t: 'img', p: v.img }));
+    } else if (v.sheet && !scene.textures.exists(planKey(v.sheet))) {
+      toLoad.add(JSON.stringify({ t: 'sheet', p: v.sheet, fw: v.fw || 48, fh: v.fh || 32 }));
+    }
   });
   if ((plan.patches || []).some((p) => p.tile === 'sand') && !scene.textures.exists(planKey('ext/themes/21_Beach.png'))) {
     toLoad.add(JSON.stringify({ t: 'img', p: 'ext/themes/21_Beach.png' }));
@@ -436,16 +446,23 @@ function renderCityPlan(scene, plan) {
     if (d.t === 'img') scene.load.image(planKey(d.p), 'assets/limezu/' + d.p);
     else scene.load.spritesheet(planKey(d.p), 'assets/limezu/' + d.p, { frameWidth: d.fw, frameHeight: d.fh });
   });
+  // Ground (patches + roads) needs only the base tiles, which are already
+  // loaded — paint it NOW, in the first pass, so the city STRUCTURE is correct
+  // immediately. Only the art-heavy stamps/anims/vehicles wait for the load.
+  try { renderGround(scene, plan); } catch (err) { console.error('[FullWorld] ground failed:', err); }
   scene.load.once('complete', () => {
     try { placeCityPlan(scene, plan); } catch (err) { console.error('[FullWorld] city plan failed:', err); }
   });
   scene.load.start();
 }
 
-function placeCityPlan(scene, plan) {
-  // Sand terrain: seamless 16px tile from the beach theme sheet (10,6)
+// First-pass ground: sand tile + all terrain patches + roads. Runs before the
+// heavy load so there's no "all grass, then sidewalk pops in" flash.
+function renderGround(scene, plan) {
+  if (state._groundDone) return;
+  state._groundDone = true;
   if (!scene.textures.exists('fwt_sand_tile')) {
-    const beach = scene.textures.get(planKey('ext/themes/21_Beach.png'))?.getSourceImage();
+    const beach = scene.textures.get('cp_ext_themes_21_Beach_png')?.getSourceImage();
     if (beach) {
       const t = scene.textures.createCanvas('fwt_sand_tile', 16, 16);
       t.context.imageSmoothingEnabled = false;
@@ -454,6 +471,17 @@ function placeCityPlan(scene, plan) {
     }
   }
   const TILE_KEYS = { grass: 'fwt_grass_tile', sidewalk: 'fwt_sidewalk_tile', asphalt: 'fwt_asphalt_tile', sand: 'fwt_sand_tile' };
+  (plan.patches || []).forEach((p) => {
+    const key = TILE_KEYS[p.tile] || TILE_KEYS.sidewalk;
+    scene.add.tileSprite(p.x, p.y, p.w, p.h, key).setOrigin(0).setDepth(p.depth ?? 0.9);
+  });
+  (plan.roads || []).forEach((r) => {
+    scene.add.tileSprite(r.x - T, r.y - T, r.w + 2 * T, r.h + 2 * T, 'fwt_sidewalk_tile').setOrigin(0).setDepth(1);
+    scene.add.tileSprite(r.x, r.y, r.w, r.h, 'fwt_asphalt_tile').setOrigin(0).setDepth(1.1);
+  });
+}
+
+function placeCityPlan(scene, plan) {
   // animBands: {sheet, fw, fh, x,y,w,h, fps} → region tiled with sprites all
   // playing the same loop (continuous animated ocean/water surfaces).
   (plan.animBands || []).forEach((b, bi) => {
@@ -475,14 +503,7 @@ function placeCityPlan(scene, plan) {
       }
     }
   });
-  (plan.patches || []).forEach((p) => {
-    const key = TILE_KEYS[p.tile] || TILE_KEYS.sidewalk;
-    scene.add.tileSprite(p.x, p.y, p.w, p.h, key).setOrigin(0).setDepth(p.depth ?? 0.9);
-  });
-  (plan.roads || []).forEach((r) => {
-    scene.add.tileSprite(r.x - T, r.y - T, r.w + 2 * T, r.h + 2 * T, 'fwt_sidewalk_tile').setOrigin(0).setDepth(1);
-    scene.add.tileSprite(r.x, r.y, r.w, r.h, 'fwt_asphalt_tile').setOrigin(0).setDepth(1.1);
-  });
+  // patches + roads already painted in renderGround() (first pass).
   (plan.stamps || []).forEach((s) => {
     const key = planKey(s.img);
     if (!scene.textures.exists(key)) return;
@@ -525,27 +546,37 @@ function placeCityPlan(scene, plan) {
   (plan.npcs || []).forEach((n) => {
     if (scene.textures.exists(`fw_char_${n.char}`)) spawnNpc(scene, n);
   });
-  // Driving vehicles: {sheet, fw, fh, path: [[x,y],...], speed, fps?, loop:true}
-  (plan.vehicles || []).forEach((v, vi) => {
+  // Driving vehicles — directional single images (Car_Right/Left/Up/Down):
+  // {img, dir:'r'|'l'|'u'|'d', axis:'x'|'y', lane, from, to, speed, phase}.
+  // The sprite's art already faces `dir`, so NO flip and NO reversal — it drives
+  // `from`->`to` along `axis` (the other coord fixed at `lane`) and wraps back
+  // to `from` off-screen. `phase` staggers multiple cars into a traffic stream.
+  (plan.vehicles || []).forEach((v) => {
+    if (v.img) {
+      const key = planKey(v.img);
+      if (!scene.textures.exists(key)) return;
+      const axis = v.axis || 'x';
+      const start = axis === 'x' ? [v.from, v.lane] : [v.lane, v.from];
+      const sp = scene.add.image(start[0], start[1], key).setOrigin(0.5, 1);
+      state.vehicles.push({ sp, kind: 'lane', axis, lane: v.lane,
+        from: v.from, to: v.to, speed: v.speed || 80, t: v.phase || 0 });
+      return;
+    }
+    // Legacy sheet-based car (kept for compatibility).
     const key = planKey(v.sheet);
     if (!scene.textures.exists(key)) return;
-    const animKey = `cpv_${vi}_${key}`;
+    const animKey = `cpv_${key}`;
     if (!scene.anims.exists(animKey)) {
       const tex = scene.textures.get(key);
       const total = Math.max(1, tex.frameTotal - 1);
-      scene.anims.create({
-        key: animKey,
+      scene.anims.create({ key: animKey,
         frames: scene.anims.generateFrameNumbers(key, { start: 0, end: total - 1 }),
-        frameRate: v.fps || 8, repeat: -1,
-      });
+        frameRate: v.fps || 8, repeat: -1 });
     }
     const sp = scene.add.sprite(v.path[0][0], v.path[0][1], key, 0).setOrigin(0.5, 1);
     sp.play(animKey);
-    // face: base art orientation of the sheet — 'left' for side cars, 'down'
-    // for top-down cars. oneway: straight lane that jumps back to start instead
-    // of reversing (so a car never drives backwards).
-    state.vehicles.push({ sp, path: v.path, speed: v.speed || 70, seg: 0, t: 0,
-      face: v.face || 'left', oneway: v.oneway !== false });
+    state.vehicles.push({ sp, kind: 'path', path: v.path, speed: v.speed || 70,
+      seg: 0, t: 0, face: v.face || 'left', oneway: v.oneway !== false });
   });
   (plan.portals || []).forEach((p) => {
     const portal = { x0: p.x0, x1: p.x1, y: p.y, href: p.href, teleport: p.teleport || null, open: false, sprite: null };
@@ -1055,29 +1086,29 @@ function tick(scene, dt) {
   }
   p.setDepth(p.y);
 
-  // Driving vehicles: follow waypoint loops, flip to travel direction
+  // Driving vehicles
   state.vehicles.forEach((v) => {
-    const a = v.path[v.seg];
-    const b = v.path[(v.seg + 1) % v.path.length];
-    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-    v.t += (v.speed * step) / len;
-    if (v.t >= 1) {
-      v.t = 0;
-      // Straight lane: jump back to the start (off-screen) instead of driving
-      // the segment in reverse — that reversal was the "car moving backwards".
-      v.seg = v.oneway ? 0 : (v.seg + 1) % v.path.length;
+    if (v.kind === 'lane') {
+      // Directional single: drive from->to along axis; art already faces the
+      // travel direction, so never flip. Wrap off-screen back to `from`.
+      const span = v.to - v.from || 1;
+      v.t += (v.speed * step) / Math.abs(span);
+      if (v.t >= 1) v.t -= 1;                 // seamless wrap (fractional carry)
+      const pos = v.from + span * v.t;
+      if (v.axis === 'x') { v.sp.x = pos; v.sp.y = v.lane; }
+      else { v.sp.x = v.lane; v.sp.y = pos; }
+      v.sp.setDepth(v.sp.y);
+      return;
     }
+    // Legacy path/flip car.
+    if (v.t >= 1) { v.t = 0; v.seg = v.oneway ? 0 : (v.seg + 1) % v.path.length; }
     const A = v.path[v.seg], B = v.path[(v.seg + 1) % v.path.length];
     const ddx = B[0] - A[0], ddy = B[1] - A[1];
+    v.t += (v.speed * step) / (Math.hypot(ddx, ddy) || 1);
     v.sp.x = A[0] + ddx * v.t;
     v.sp.y = A[1] + ddy * v.t;
-    // Face travel direction. Side art faces LEFT; top-down 'down' art faces
-    // DOWN — flip on the matching axis to reverse.
-    if (v.face === 'down') {
-      if (Math.abs(ddy) >= Math.abs(ddx)) v.sp.setFlipY(ddy < 0);
-    } else if (Math.abs(ddx) >= Math.abs(ddy)) {
-      v.sp.setFlipX(ddx > 0);
-    }
+    if (v.face === 'down') { if (Math.abs(ddy) >= Math.abs(ddx)) v.sp.setFlipY(ddy < 0); }
+    else if (Math.abs(ddx) >= Math.abs(ddy)) v.sp.setFlipX(ddx > 0);
     v.sp.setDepth(v.sp.y);
   });
 

@@ -10840,80 +10840,104 @@
  ],
  "vehicles": [
   {
-   "sheet": "ext/vehicles/Car_3_16x16_4_drive_side.png",
-   "fw": 96,
-   "fh": 96,
-   "face": "left",
-   "oneway": true,
-   "speed": 92,
-   "fps": 10,
-   "path": [
-    [
-     -140,
-     1900
-    ],
-    [
-     6800,
-     1900
-    ]
-   ]
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_3.png",
+   "dir": "r",
+   "axis": "x",
+   "lane": 1898,
+   "from": -200,
+   "to": 6860,
+   "speed": 95,
+   "phase": 0.0
   },
   {
-   "sheet": "ext/vehicles/Car_3_16x16_5_drive_side.png",
-   "fw": 96,
-   "fh": 96,
-   "face": "left",
-   "oneway": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_12.png",
+   "dir": "r",
+   "axis": "x",
+   "lane": 1898,
+   "from": -200,
+   "to": 6860,
    "speed": 78,
-   "fps": 9,
-   "path": [
-    [
-     6800,
-     1930
-    ],
-    [
-     -140,
-     1930
-    ]
-   ]
+   "phase": 0.35
   },
   {
-   "sheet": "ext/vehicles/Car_5_16x16_5_drive_down.png",
-   "fw": 80,
-   "fh": 80,
-   "face": "down",
-   "oneway": true,
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_7.png",
+   "dir": "r",
+   "axis": "x",
+   "lane": 1898,
+   "from": -200,
+   "to": 6860,
+   "speed": 88,
+   "phase": 0.7
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_7.png",
+   "dir": "l",
+   "axis": "x",
+   "lane": 1934,
+   "from": 6860,
+   "to": -200,
+   "speed": 90,
+   "phase": 0.15
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_1.png",
+   "dir": "l",
+   "axis": "x",
+   "lane": 1934,
+   "from": 6860,
+   "to": -200,
    "speed": 72,
-   "fps": 8,
-   "path": [
-    [
-     988,
-     1552
-    ],
-    [
-     988,
-     4448
-    ]
-   ]
+   "phase": 0.55
   },
   {
-   "sheet": "ext/vehicles/Car_4_16x16_6_drive_down.png",
-   "fw": 80,
-   "fh": 80,
-   "face": "down",
-   "oneway": true,
-   "speed": 66,
-   "fps": 8,
-   "path": [
-    [
-     2596,
-     3600
-    ],
-    [
-     2596,
-     384
-    ]
-   ]
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_15.png",
+   "dir": "l",
+   "axis": "x",
+   "lane": 1934,
+   "from": 6860,
+   "to": -200,
+   "speed": 83,
+   "phase": 0.85
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_2.png",
+   "dir": "d",
+   "axis": "y",
+   "lane": 986,
+   "from": 1500,
+   "to": 4500,
+   "speed": 70,
+   "phase": 0.2
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Down_9.png",
+   "dir": "d",
+   "axis": "y",
+   "lane": 986,
+   "from": 1500,
+   "to": 4500,
+   "speed": 60,
+   "phase": 0.65
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_1.png",
+   "dir": "u",
+   "axis": "y",
+   "lane": 2610,
+   "from": 3650,
+   "to": 350,
+   "speed": 68,
+   "phase": 0.1
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Up_5.png",
+   "dir": "u",
+   "axis": "y",
+   "lane": 2610,
+   "from": 3650,
+   "to": 350,
+   "speed": 58,
+   "phase": 0.6
   }
  ]
 }
