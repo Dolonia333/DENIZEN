@@ -1,0 +1,55 @@
+{
+  "district": "D6 Residential District",
+  "bbox": { "x": 200, "y": 3200, "w": 2000, "h": 1200 },
+  "patches": [
+    { "tile": "grass", "x": 200, "y": 3200, "w": 2000, "h": 1200, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 200, "y": 3600, "w": 2000, "h": 144, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 200, "y": 4072, "w": 2000, "h": 144, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 1110, "y": 3200, "w": 144, "h": 1200, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 1260, "y": 3744, "w": 220, "h": 328, "depth": 0.9 },
+    { "tile": "grass", "x": 1280, "y": 3800, "w": 180, "h": 192, "depth": 0.9 },
+    { "tile": "asphalt", "x": 1264, "y": 3996, "w": 120, "h": 72, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 1500, "y": 3744, "w": 200, "h": 108, "depth": 0.9 }
+  ],
+  "roads": [
+    { "x": 200, "y": 3640, "w": 2000, "h": 64 },
+    { "x": 1150, "y": 3200, "w": 64, "h": 1200 },
+    { "x": 200, "y": 4112, "w": 2000, "h": 64 }
+  ],
+  "stamps": [
+    { "img": "ext/singles/24_additional_houses/24_Additional_Houses_Victorian_House_1_16x16.png", "x": 250, "y": 3600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_1.png", "x": 560, "y": 3600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_3.png", "x": 760, "y": 3600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Villa_5.png", "x": 960, "y": 3600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_4_38.png", "x": 1300, "y": 3600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Condo_3_46.png", "x": 1620, "y": 3600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/24_additional_houses/24_Additional_Houses_Country_House_16x16.png", "x": 280, "y": 4104, "origin": "bl", "solid": true },
+    { "img": "ext/singles/24_additional_houses/24_Additional_Houses_Modern_House_16x16.png", "x": 660, "y": 4104, "origin": "bl", "solid": true },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_School_1.png", "x": 1750, "y": 4104, "origin": "bl", "solid": true },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Court_1.png", "x": 1480, "y": 4064, "origin": "bl" },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_1.png", "x": 1590, "y": 3920, "origin": "bl", "solid": true },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_School_Yard_Toy_15.png", "x": 1292, "y": 3884, "origin": "bl", "solid": true },
+    { "img": "ext/singles/24_additional_houses/24_Additional_Houses_Post_Apocalyptic_House_1_16x16.png", "x": 1880, "y": 4390, "origin": "bl", "solid": true },
+    { "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Pool_35.png", "x": 1540, "y": 3830, "origin": "bl", "solid": { "dx": 0, "dy": -44, "w": 32, "h": 44 } },
+    { "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Pool_41.png", "x": 1566, "y": 3800, "origin": "bl" },
+    { "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Lifeguard_Chair_1.png", "x": 1610, "y": 3830, "origin": "bl", "solid": true },
+    { "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Palm_1.png", "x": 1652, "y": 3836, "origin": "bl", "solid": true },
+    { "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Sunbed_1.png", "x": 1506, "y": 3830, "origin": "bl", "solid": true }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/Park_Swing_1.png", "fw": 32, "fh": 32, "x": 1300, "y": 3900, "fps": 6 },
+    { "sheet": "ext/animated/Spring_Swing_1.png", "fw": 32, "fh": 32, "x": 1360, "y": 3944, "fps": 5 },
+    { "sheet": "ext/animated/Trampoline_1.png", "fw": 48, "fh": 80, "x": 340, "y": 3760, "fps": 6 },
+    { "sheet": "ext/animated/Clothes_Hanging_1_16x16.png", "fw": 48, "fh": 48, "x": 1340, "y": 3336, "fps": 4 },
+    { "sheet": "ext/animated/School_Flag_1_16x16.png", "fw": 48, "fh": 144, "x": 1698, "y": 3960, "fps": 4 },
+    { "sheet": "ext/animated/Floating_Separation_Buoys_1_16x16.png", "fw": 16, "fh": 16, "x": 1548, "y": 3806, "fps": 4 },
+    { "sheet": "ext/animated/Portable_Toilet_16x16.png", "fw": 32, "fh": 80, "x": 1830, "y": 4310, "fps": 5 },
+    { "sheet": "ext/animated/Street_Lamp_16x16.png", "fw": 80, "fh": 80, "x": 860, "y": 3524, "fps": 4 }
+  ],
+  "solids": [],
+  "labels": [
+    { "x": 1050, "y": 3250, "text": "RESIDENTIAL DISTRICT" },
+    { "x": 1960, "y": 4225, "text": "OLD BLOCK" }
+  ],
+  "portals": []
+}

@@ -1,0 +1,52 @@
+{
+  "district": "D9 Graveyard (Old Cemetery)",
+  "bbox": { "x": 200, "y": 4400, "w": 900, "h": 660 },
+  "patches": [
+    { "tile": "grass", "x": 200, "y": 4400, "w": 900, "h": 660, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 626, "y": 4620, "w": 48, "h": 436, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 304, "y": 4624, "w": 370, "h": 48, "depth": 0.9 }
+  ],
+  "roads": [],
+  "stamps": [
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Grace_Chapel_With_Gate.png", "x": 304, "y": 4640, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Big_Gate_Red_Orb.png", "x": 618, "y": 5056, "origin": "bl" },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Grave_Cage.png", "x": 880, "y": 4700, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Big_Tree_.png", "x": 430, "y": 4520, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Tree_1.png", "x": 230, "y": 4950, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Tree_2.png", "x": 1020, "y": 4930, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Red_Skull_Coffin.png", "x": 396, "y": 4640, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Dirt_Ditch_2_Red_Skull_Coffin.png", "x": 760, "y": 4880, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Shovel_Big_Pile_Of_Dirt.png", "x": 800, "y": 4872, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Marble_Grey_Tombstone_1.png", "x": 480, "y": 4780, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Marble_Brown_Tombstone_1.png", "x": 530, "y": 4830, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Grey_Cross_1.png", "x": 440, "y": 4860, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Black_Cross_1.png", "x": 830, "y": 4760, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Long_Tombstone_1.png", "x": 760, "y": 4770, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_1.png", "x": 500, "y": 4900, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Grey_Tombstone_2.png", "x": 880, "y": 4850, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Big_Yellow_Lights_Pumpkin_1.png", "x": 578, "y": 5048, "origin": "bl", "solid": true },
+    { "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Medium_Yellow_Lights_Pumpkin_1.png", "x": 690, "y": 5048, "origin": "bl", "solid": true }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/Graveyard_Haunted_Tree_Pumpkins_16x16.png", "fw": 64, "fh": 64, "x": 980, "y": 4440, "fps": 5 },
+    { "sheet": "ext/animated/Graveyard_Ghosts_2_16x16.png", "fw": 32, "fh": 64, "x": 490, "y": 4720, "fps": 6 },
+    { "sheet": "ext/animated/Graveyard_Ghosts_4_16x16.png", "fw": 64, "fh": 48, "x": 740, "y": 4800, "fps": 6 },
+    { "sheet": "ext/animated/Graveyard_Candle_Standing_16x16.png", "fw": 16, "fh": 48, "x": 288, "y": 4592, "fps": 6 },
+    { "sheet": "ext/animated/Graveyard_Candle_Standing_16x16.png", "fw": 16, "fh": 48, "x": 600, "y": 4640, "fps": 6 },
+    { "sheet": "ext/animated/Graveyard_Candle_1_16x16.png", "fw": 16, "fh": 16, "x": 512, "y": 4880, "fps": 6 },
+    { "sheet": "ext/animated/Crow_idle_16x16.png", "fw": 32, "fh": 32, "x": 900, "y": 4640, "fps": 6 }
+  ],
+  "solids": [
+    { "x": 208, "y": 4408, "w": 884, "h": 12 },
+    { "x": 208, "y": 4408, "w": 12, "h": 644 },
+    { "x": 1080, "y": 4408, "w": 12, "h": 644 },
+    { "x": 208, "y": 5040, "w": 410, "h": 12 },
+    { "x": 682, "y": 5040, "w": 410, "h": 12 },
+    { "x": 618, "y": 5030, "w": 8, "h": 22 },
+    { "x": 674, "y": 5030, "w": 8, "h": 22 }
+  ],
+  "labels": [
+    { "x": 560, "y": 4432, "text": "OLD CEMETERY" }
+  ],
+  "portals": []
+}

@@ -189,7 +189,8 @@ export function buildFullWorld(scene) {
   // FULL Modern Exteriors pack (assets/limezu/ext/): terrain patches,
   // building/prop stamps, animated sheets, roads, solids, door portals,
   // labels. Missing file → empty plan, world builds as before.
-  scene.load.json('fw_cityplan', `data/city-plan.json?v=${bust}`);
+  // Always fetch the current plan — it changes far more often than code
+  scene.load.json('fw_cityplan', `data/city-plan.json?t=${Date.now()}`);
 
   RoomTileRenderer.preload(scene);
   scene.load.json('fw_blueprint', `data/full-world-blueprint.json?v=${bust}`);
@@ -410,6 +411,12 @@ function renderCityPlan(scene, plan) {
   (plan.portals || []).forEach((p) => {
     if (p.doorSheet && !scene.textures.exists(planKey(p.doorSheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: p.doorSheet, fw: p.fw || 32, fh: p.fh || 32 }));
   });
+  (plan.animBands || []).forEach((b) => {
+    if (!scene.textures.exists(planKey(b.sheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: b.sheet, fw: b.fw || 16, fh: b.fh || 16 }));
+  });
+  if ((plan.patches || []).some((p) => p.tile === 'sand') && !scene.textures.exists(planKey('ext/themes/21_Beach.png'))) {
+    toLoad.add(JSON.stringify({ t: 'img', p: 'ext/themes/21_Beach.png' }));
+  }
   toLoad.forEach((e) => {
     const d = JSON.parse(e);
     if (d.t === 'img') scene.load.image(planKey(d.p), 'assets/limezu/' + d.p);
@@ -422,7 +429,38 @@ function renderCityPlan(scene, plan) {
 }
 
 function placeCityPlan(scene, plan) {
-  const TILE_KEYS = { grass: 'fwt_grass_tile', sidewalk: 'fwt_sidewalk_tile', asphalt: 'fwt_asphalt_tile' };
+  // Sand terrain: seamless 16px tile from the beach theme sheet (10,6)
+  if (!scene.textures.exists('fwt_sand_tile')) {
+    const beach = scene.textures.get(planKey('ext/themes/21_Beach.png'))?.getSourceImage();
+    if (beach) {
+      const t = scene.textures.createCanvas('fwt_sand_tile', 16, 16);
+      t.context.imageSmoothingEnabled = false;
+      t.context.drawImage(beach, 160, 96, 16, 16, 0, 0, 16, 16);
+      t.refresh();
+    }
+  }
+  const TILE_KEYS = { grass: 'fwt_grass_tile', sidewalk: 'fwt_sidewalk_tile', asphalt: 'fwt_asphalt_tile', sand: 'fwt_sand_tile' };
+  // animBands: {sheet, fw, fh, x,y,w,h, fps} → region tiled with sprites all
+  // playing the same loop (continuous animated ocean/water surfaces).
+  (plan.animBands || []).forEach((b, bi) => {
+    const key = planKey(b.sheet);
+    if (!scene.textures.exists(key)) return;
+    const animKey = `cpb_${bi}_${key}`;
+    if (!scene.anims.exists(animKey)) {
+      const tex = scene.textures.get(key);
+      const total = Math.max(1, tex.frameTotal - 1);
+      scene.anims.create({
+        key: animKey,
+        frames: scene.anims.generateFrameNumbers(key, { start: 0, end: total - 1 }),
+        frameRate: b.fps || 5, repeat: -1,
+      });
+    }
+    for (let yy = b.y; yy < b.y + b.h; yy += b.fh) {
+      for (let xx = b.x; xx < b.x + b.w; xx += b.fw) {
+        scene.add.sprite(xx, yy, key, 0).setOrigin(0, 0).setDepth(b.depth ?? 0.95).play(animKey);
+      }
+    }
+  });
   (plan.patches || []).forEach((p) => {
     const key = TILE_KEYS[p.tile] || TILE_KEYS.sidewalk;
     scene.add.tileSprite(p.x, p.y, p.w, p.h, key).setOrigin(0).setDepth(p.depth ?? 0.9);
@@ -470,7 +508,7 @@ function placeCityPlan(scene, plan) {
   (plan.solids || []).forEach((r) => state.solids.push(r));
   (plan.labels || []).forEach((l) => zoneLabel(scene, l.x, l.y, l.text));
   (plan.portals || []).forEach((p) => {
-    const portal = { x0: p.x0, x1: p.x1, y: p.y, href: p.href, open: false, sprite: null };
+    const portal = { x0: p.x0, x1: p.x1, y: p.y, href: p.href, teleport: p.teleport || null, open: false, sprite: null };
     if (p.doorSheet && scene.textures.exists(planKey(p.doorSheet))) {
       const key = planKey(p.doorSheet);
       const openKey = `cpd_open_${key}`;
@@ -881,8 +919,17 @@ function tick(scene, dt) {
       else if (dist > 84 && pt.open) { pt.open = false; pt.sprite.play(pt.closeKey); }
     }
     const ready = !pt.sprite || pt.open;
-    if (ready && pt.href && !state._enteringOffice
-        && p.x > pt.x0 && p.x < pt.x1 && p.y < pt.y - 2 && p.y > pt.y - 50) {
+    const inBand = p.x > pt.x0 && p.x < pt.x1 && p.y < pt.y - 2 && p.y > pt.y - 50;
+    if (ready && inBand && pt.teleport) {
+      // Same-world teleport (subway stairs): cooldown so the paired stair
+      // doesn't instantly bounce the player back.
+      const now = scene.time.now;
+      if (!state._teleCooldown || now > state._teleCooldown) {
+        state._teleCooldown = now + 1200;
+        p.x = pt.teleport.x;
+        p.y = pt.teleport.y;
+      }
+    } else if (ready && inBand && pt.href && !state._enteringOffice) {
       state._enteringOffice = true;
       try { window.location.href = pt.href; } catch (_) {}
     }

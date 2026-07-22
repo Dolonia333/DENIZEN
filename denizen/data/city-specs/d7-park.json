@@ -1,0 +1,60 @@
+{
+  "district": "D7 Grand Park & Gardens",
+  "bbox": { "x": 2200, "y": 3200, "w": 1400, "h": 1600 },
+  "patches": [
+    { "tile": "grass", "x": 2200, "y": 3200, "w": 1400, "h": 1600, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 2860, "y": 3200, "w": 48, "h": 1600, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 2200, "y": 3820, "w": 1400, "h": 48, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 2764, "y": 3368, "w": 240, "h": 224, "depth": 0.9 },
+    { "tile": "asphalt", "x": 3328, "y": 3900, "w": 224, "h": 224, "depth": 0.9 },
+    { "tile": "asphalt", "x": 2300, "y": 4080, "w": 208, "h": 176, "depth": 0.9 }
+  ],
+  "roads": [],
+  "stamps": [
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Soccer_Court_2.png", "x": 2960, "y": 4600, "origin": "bl", "solid": false },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Court_2.png", "x": 3336, "y": 4116, "origin": "bl", "solid": false },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_1.png", "x": 3416, "y": 3968, "origin": "bl", "solid": { "dx": 12, "dy": -14, "w": 24, "h": 14 } },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_2.png", "x": 3416, "y": 4112, "origin": "bl", "solid": { "dx": 12, "dy": -14, "w": 24, "h": 14 } },
+    { "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Tree_House_1.png", "x": 2280, "y": 4720, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Example.png", "x": 3320, "y": 3560, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Angel_Statue_1.png", "x": 2330, "y": 3520, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Arch_1.png", "x": 2860, "y": 3300, "origin": "bl", "solid": false },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Statue_4.png", "x": 2440, "y": 3700, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Bench_Horizontal.png", "x": 2920, "y": 3480, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Flowers_Bench_Horizontal.png", "x": 2600, "y": 3420, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Wood_Cart_Full_1.png", "x": 3100, "y": 3700, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Red_Flower_Vase.png", "x": 2772, "y": 3400, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_100.png", "x": 2460, "y": 4700, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png", "x": 2560, "y": 4600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_10.png", "x": 2260, "y": 4440, "origin": "bl", "solid": true },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Soccer_Ball_1.png", "x": 3040, "y": 4460, "origin": "bl", "solid": false },
+    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Ball_1.png", "x": 3430, "y": 4020, "origin": "bl", "solid": false }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/Garden_Fountain_5_16x16.png", "fw": 64, "fh": 80, "x": 2852, "y": 3420, "fps": 6 },
+    { "sheet": "ext/animated/Garden_Fountain_3_16x16.png", "fw": 48, "fh": 96, "x": 3180, "y": 3320, "fps": 6 },
+    { "sheet": "ext/animated/Garden_Fountain_1_16x16.png", "fw": 32, "fh": 48, "x": 2700, "y": 3600, "fps": 6 },
+    { "sheet": "ext/animated/Garden_Fountain_1_16x16.png", "fw": 32, "fh": 48, "x": 3040, "y": 3600, "fps": 6 },
+    { "sheet": "ext/animated/Waterfall_16x16.png", "fw": 48, "fh": 48, "x": 2480, "y": 3900, "fps": 6 },
+    { "sheet": "ext/animated/Waterfall_Drain_Tube_16x16.png", "fw": 32, "fh": 64, "x": 2580, "y": 3940, "fps": 6 },
+    { "sheet": "ext/animated/Park_Swing_1.png", "fw": 64, "fh": 32, "x": 2450, "y": 4560, "fps": 4 },
+    { "sheet": "ext/animated/Drinking_Fountain_1_loop_3-6.png", "fw": 32, "fh": 48, "x": 2320, "y": 4090, "fps": 5 }
+  ],
+  "solids": [
+    { "x": 2860, "y": 3278, "w": 10, "h": 22 },
+    { "x": 2898, "y": 3278, "w": 10, "h": 22 },
+    { "x": 2852, "y": 3448, "w": 64, "h": 52 },
+    { "x": 3180, "y": 3368, "w": 48, "h": 48 },
+    { "x": 2700, "y": 3620, "w": 32, "h": 28 },
+    { "x": 3040, "y": 3620, "w": 32, "h": 28 },
+    { "x": 2480, "y": 3900, "w": 48, "h": 48 },
+    { "x": 2580, "y": 3956, "w": 32, "h": 48 },
+    { "x": 3024, "y": 4312, "w": 64, "h": 32 },
+    { "x": 3024, "y": 4568, "w": 64, "h": 32 },
+    { "x": 2320, "y": 4118, "w": 32, "h": 20 }
+  ],
+  "labels": [
+    { "x": 2820, "y": 3230, "text": "GRAND PARK" }
+  ],
+  "portals": []
+}

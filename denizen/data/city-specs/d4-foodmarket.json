@@ -1,0 +1,50 @@
+{
+  "district": "D4 Plaza Food Market & Canal",
+  "bbox": { "x": 400, "y": 2000, "w": 1100, "h": 1060 },
+  "patches": [
+    { "tile": "sidewalk", "x": 400, "y": 2000, "w": 1100, "h": 440, "depth": 0.9 },
+    { "tile": "asphalt", "x": 400, "y": 2440, "w": 320, "h": 420, "depth": 0.9 },
+    { "tile": "asphalt", "x": 720, "y": 2440, "w": 780, "h": 420, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 400, "y": 2860, "w": 1100, "h": 40, "depth": 0.9 },
+    { "tile": "asphalt", "x": 400, "y": 2900, "w": 1100, "h": 160, "depth": 0.9 }
+  ],
+  "roads": [],
+  "stamps": [
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Mushroom_Example.png", "x": 470, "y": 2200, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Icecream_Example.png", "x": 650, "y": 2210, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Coffee_Cup_Example.png", "x": 840, "y": 2200, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Infopoint_1.png", "x": 1020, "y": 2190, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Hot_Dog_Cart_1.png", "x": 760, "y": 2570, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Tacos_Truck_1.png", "x": 1330, "y": 2560, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ice_Cream_Truck_1.png", "x": 1350, "y": 2790, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Pizza_Tuk_Tuk_1.png", "x": 1010, "y": 2850, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_1.png", "x": 990, "y": 2610, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_5.png", "x": 1130, "y": 2670, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_1.png", "x": 1050, "y": 2710, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_3.png", "x": 870, "y": 2690, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png", "x": 1230, "y": 2620, "origin": "bl", "solid": true },
+    { "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Signboard_1.png", "x": 470, "y": 2500, "origin": "bl", "solid": true },
+    { "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Table_3.png", "x": 460, "y": 2600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Picnic_1.png", "x": 490, "y": 2700, "origin": "bl", "solid": false },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_1.png", "x": 936, "y": 3024, "origin": "bl", "solid": false },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_2.png", "x": 952, "y": 3024, "origin": "bl", "solid": false }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/Fountain_16x16.png", "fw": 32, "fh": 48, "x": 1330, "y": 2130, "fps": 6 },
+    { "sheet": "ext/animated/Pigeon_16x16.png", "fw": 16, "fh": 16, "x": 1180, "y": 2350, "fps": 5 },
+    { "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png", "fw": 64, "fh": 64, "x": 430, "y": 2960, "fps": 6 },
+    { "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png", "fw": 64, "fh": 64, "x": 610, "y": 2960, "fps": 6 },
+    { "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png", "fw": 64, "fh": 64, "x": 790, "y": 2960, "fps": 6 },
+    { "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png", "fw": 64, "fh": 64, "x": 970, "y": 2960, "fps": 6 },
+    { "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png", "fw": 64, "fh": 64, "x": 1150, "y": 2960, "fps": 6 },
+    { "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png", "fw": 64, "fh": 64, "x": 1330, "y": 2960, "fps": 6 }
+  ],
+  "solids": [
+    { "x": 400, "y": 2900, "w": 536, "h": 160 },
+    { "x": 968, "y": 2900, "w": 532, "h": 160 }
+  ],
+  "labels": [
+    { "x": 950, "y": 2020, "text": "PLAZA FOOD MARKET & CANAL" }
+  ],
+  "portals": []
+}

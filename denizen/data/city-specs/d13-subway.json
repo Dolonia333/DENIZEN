@@ -1,0 +1,52 @@
+{
+  "district": "D13",
+  "name": "Subway Underground",
+  "bbox": { "x0": 640, "y0": 5120, "x1": 4096, "y1": 5632 },
+  "patches": [
+    { "tile": "asphalt", "x": 640, "y": 5120, "w": 3456, "h": 512, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 656, "y": 5232, "w": 1604, "h": 336, "depth": 0.91 },
+    { "tile": "sidewalk", "x": 2540, "y": 5232, "w": 1540, "h": 336, "depth": 0.91 },
+    { "tile": "sidewalk", "x": 2260, "y": 5360, "w": 280, "h": 96, "depth": 0.91 }
+  ],
+  "roads": [],
+  "stamps": [
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Example_Graffiti_Train.png", "x": 900, "y": 5232, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Left.png", "x": 2900, "y": 5232, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Middle.png", "x": 3012, "y": 5232, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Right.png", "x": 3156, "y": 5232, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_1.png", "x": 704, "y": 5336, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_2.png", "x": 4000, "y": 5336, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Drink_Machine_Front.png", "x": 1020, "y": 5336, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Coffee_Machine_Front.png", "x": 3300, "y": 5336, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_1.png", "x": 1150, "y": 5408, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_1.png", "x": 3100, "y": 5408, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Posters.png", "x": 1750, "y": 5320, "origin": "bl" },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Cardboard_Bed_1.png", "x": 1900, "y": 5480, "origin": "bl" },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Green_Mattress.png", "x": 1936, "y": 5480, "origin": "bl" },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Black_Locker.png", "x": 2210, "y": 5352, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_SOS_Box.png", "x": 2470, "y": 5352, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Big_Pillar.png", "x": 2380, "y": 5352, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png", "x": 2560, "y": 5360, "origin": "bl", "solid": true },
+    { "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Closed.png", "x": 2560, "y": 5520, "origin": "bl", "solid": true }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/Subway_Train_4_Door_1_Graffiti_16x16.png", "fw": 32, "fh": 32, "x": 996, "y": 5200, "fps": 6 },
+    { "sheet": "ext/animated/Subway_Train_5_Door_1_16x16.png", "fw": 32, "fh": 32, "x": 3060, "y": 5200, "fps": 6 },
+    { "sheet": "ext/animated/Subway_Busker_1_16x16.png", "fw": 32, "fh": 32, "x": 1550, "y": 5340, "fps": 6 },
+    { "sheet": "ext/animated/Subway_Busker_2_16x16.png", "fw": 32, "fh": 32, "x": 1590, "y": 5340, "fps": 6 },
+    { "sheet": "ext/animated/Subway_Elevator_Going_Down_16x16.png", "fw": 32, "fh": 32, "x": 3600, "y": 5250, "fps": 4 }
+  ],
+  "solids": [
+    { "x": 640, "y": 5120, "w": 3456, "h": 112 },
+    { "x": 640, "y": 5568, "w": 3456, "h": 64 },
+    { "x": 640, "y": 5120, "w": 16, "h": 512 },
+    { "x": 4080, "y": 5120, "w": 16, "h": 512 },
+    { "x": 2260, "y": 5232, "w": 280, "h": 128 },
+    { "x": 2260, "y": 5456, "w": 280, "h": 112 }
+  ],
+  "labels": [
+    { "x": 1300, "y": 5540, "text": "SUBWAY - OLD PLATFORM" },
+    { "x": 3200, "y": 5540, "text": "LME STATION" }
+  ],
+  "portals": []
+}

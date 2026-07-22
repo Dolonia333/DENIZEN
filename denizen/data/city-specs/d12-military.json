@@ -1,0 +1,43 @@
+{
+  "district": "D12 Military Base (scenes 29, 58, 59, 60, 61)",
+  "bbox": { "x": 5100, "y": 1600, "w": 1000, "h": 1100 },
+  "patches": [
+    { "tile": "grass", "x": 5100, "y": 1600, "w": 1000, "h": 1100, "depth": 0.9 },
+    { "tile": "asphalt", "x": 5220, "y": 1700, "w": 800, "h": 860, "depth": 0.9 }
+  ],
+  "roads": [
+    { "x": 5100, "y": 1880, "w": 120, "h": 64 }
+  ],
+  "stamps": [
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Watch_Tower.png", "x": 5170, "y": 1876, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Barbed_Wire_1.png", "x": 5186, "y": 2140, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign.png", "x": 5140, "y": 2010, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar.png", "x": 5280, "y": 1960, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker.png", "x": 5540, "y": 1950, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Dormitory_1.png", "x": 5700, "y": 1950, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Radio_Tower.png", "x": 5924, "y": 2060, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Helicopter.png", "x": 5260, "y": 2150, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Brown.png", "x": 5640, "y": 2270, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Black.png", "x": 5880, "y": 2290, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png", "x": 5548, "y": 2210, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Vertical_1.png", "x": 5532, "y": 2258, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png", "x": 5610, "y": 2190, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Green_Tank_Right_Side.png", "x": 5280, "y": 2360, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Brown_Tank_Left_Side.png", "x": 5472, "y": 2360, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png", "x": 5640, "y": 2350, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barrier.png", "x": 5600, "y": 2440, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Watch_Tower.png", "x": 5960, "y": 2560, "origin": "bl", "solid": true }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/Automatic_Barrier_1_16x16.png", "fw": 80, "fh": 80, "x": 5192, "y": 1872, "fps": 6 },
+    { "sheet": "ext/animated/Spotlight_1_16x16.png", "fw": 32, "fh": 48, "x": 5236, "y": 1950, "fps": 6 },
+    { "sheet": "ext/animated/Spotlight_1_16x16.png", "fw": 32, "fh": 48, "x": 5920, "y": 2470, "fps": 4 },
+    { "sheet": "ext/animated/School_Flag_1_16x16.png", "fw": 48, "fh": 144, "x": 5560, "y": 1990, "fps": 6 },
+    { "sheet": "ext/animated/Military_Bunker_Door_16x16.png", "fw": 32, "fh": 32, "x": 5588, "y": 1918, "fps": 6 }
+  ],
+  "solids": [],
+  "labels": [
+    { "x": 5520, "y": 1630, "text": "MILITARY BASE" }
+  ],
+  "portals": []
+}

@@ -1,0 +1,51 @@
+{
+  "district": "D5 Civic Safety Campus",
+  "bbox": { "x": 3300, "y": 1900, "w": 790, "h": 1160 },
+  "patches": [
+    { "tile": "sidewalk", "x": 3300, "y": 1900, "w": 790, "h": 500, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 3300, "y": 2400, "w": 100, "h": 230, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 3652, "y": 2400, "w": 438, "h": 230, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 3300, "y": 2630, "w": 790, "h": 430, "depth": 0.9 },
+    { "tile": "asphalt", "x": 3320, "y": 2280, "w": 320, "h": 120, "depth": 0.9 },
+    { "tile": "asphalt", "x": 3752, "y": 2220, "w": 330, "h": 180, "depth": 0.9 }
+  ],
+  "roads": [
+    { "x": 3680, "y": 1900, "w": 64, "h": 720 },
+    { "x": 3300, "y": 2990, "w": 790, "h": 64 }
+  ],
+  "stamps": [
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Station_1.png", "x": 3316, "y": 2260, "origin": "bl", "solid": true },
+    { "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Building.png", "x": 3760, "y": 2210, "origin": "bl", "solid": true },
+    { "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hospital_1.png", "x": 3560, "y": 2980, "origin": "bl", "solid": true },
+    { "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hospital_Sign_1.png", "x": 3360, "y": 2900, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Car_1.png", "x": 3340, "y": 2350, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Car_2.png", "x": 3440, "y": 2350, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Car_3.png", "x": 3556, "y": 2382, "origin": "bl", "solid": true },
+    { "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Truck_Right.png", "x": 3770, "y": 2320, "origin": "bl", "solid": true },
+    { "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Truck_Ladder_1_Right.png", "x": 3930, "y": 2320, "origin": "bl", "solid": true },
+    { "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Hydrant.png", "x": 4032, "y": 2260, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Police_Box_1.png", "x": 3340, "y": 2760, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_1.png", "x": 3332, "y": 2276, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Sidewalk_Obstacle_2.png", "x": 3396, "y": 2276, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Barrier_1.png", "x": 3430, "y": 2662, "origin": "bl", "solid": true },
+    { "img": "ext/singles/15_police_station/ME_Singles_Police_Station_16x16_Barrier_1.png", "x": 3560, "y": 2662, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ambulance_Right_1.png", "x": 3830, "y": 3050, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ambulance_Down_1.png", "x": 3480, "y": 3020, "origin": "bl", "solid": true },
+    { "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Stretcher_1.png", "x": 3996, "y": 2960, "origin": "bl", "solid": false }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/School_Flag_1_16x16.png", "fw": 48, "fh": 144, "x": 3312, "y": 2812, "fps": 6 },
+    { "sheet": "ext/animated/School_Flag_2_16x16.png", "fw": 48, "fh": 144, "x": 4032, "y": 1916, "fps": 6 },
+    { "sheet": "ext/animated/Spotlight_1_16x16.png", "fw": 32, "fh": 48, "x": 3492, "y": 2036, "fps": 6 },
+    { "sheet": "ext/animated/Spotlight_1_16x16.png", "fw": 32, "fh": 48, "x": 3572, "y": 2112, "fps": 6 },
+    { "sheet": "ext/animated/Police_Station_Door_1_16x16.png", "fw": 32, "fh": 32, "x": 3356, "y": 2228, "fps": 4 },
+    { "sheet": "ext/animated/Hospital_Emergency_Shutter_left_16x16.png", "fw": 48, "fh": 48, "x": 3850, "y": 2932, "fps": 6 },
+    { "sheet": "ext/animated/Hospital_Emergency_Shutter_right_16x16.png", "fw": 48, "fh": 48, "x": 3922, "y": 2932, "fps": 6 },
+    { "sheet": "ext/animated/Fire_Hydrant_Water_Jet_16x16.png", "fw": 48, "fh": 80, "x": 4030, "y": 2120, "fps": 6 }
+  ],
+  "solids": [],
+  "labels": [
+    { "x": 3695, "y": 1915, "text": "CIVIC SAFETY CAMPUS" }
+  ],
+  "portals": []
+}

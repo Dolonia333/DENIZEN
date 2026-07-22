@@ -1,0 +1,257 @@
+{
+ "district": "D8 Beach & Boardwalk",
+ "bbox": {
+  "x": 3600,
+  "y": 3200,
+  "w": 2500,
+  "h": 1900
+ },
+ "patches": [
+  {
+   "tile": "sand",
+   "x": 3600,
+   "y": 4380,
+   "w": 2500,
+   "h": 564,
+   "depth": 0.92
+  },
+  {
+   "tile": "grass",
+   "x": 3600,
+   "y": 3200,
+   "w": 2500,
+   "h": 1180,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 3700,
+   "y": 3300,
+   "w": 560,
+   "h": 360,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 3600,
+   "y": 3840,
+   "w": 2500,
+   "h": 64,
+   "depth": 0.9
+  }
+ ],
+ "roads": [],
+ "stamps": [
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Example_Four_Sand_Mountains.png",
+   "x": 3760,
+   "y": 4360,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Example_Four_Sand_Mountains.png",
+   "x": 4900,
+   "y": 4250,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Example_Single_Big_Sand_Mountain.png",
+   "x": 5560,
+   "y": 4180,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Ship_Bar.png",
+   "x": 5150,
+   "y": 4120,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Example_Big_Stage_1_Sand.png",
+   "x": 4280,
+   "y": 4740,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Example_Big_Stage_Structure.png",
+   "x": 4288,
+   "y": 4740,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Example_Lighthouse.png",
+   "x": 5880,
+   "y": 5020,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Sign.png",
+   "x": 4480,
+   "y": 3990,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Direction_Pole_Big.png",
+   "x": 4560,
+   "y": 3984,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Palm_Tree.png",
+   "x": 3780,
+   "y": 3560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Palm_Tree.png",
+   "x": 4750,
+   "y": 4060,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Blue_Beach_Umbrella_Opened.png",
+   "x": 4000,
+   "y": 3520,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Green_Beach_Umbrella_Opened.png",
+   "x": 4050,
+   "y": 4280,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Yellow_Beach_Towel_1.png",
+   "x": 4110,
+   "y": 4310,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/21_beach/21_Beach_16x16_Sand_Castle_1_Vers_1.png",
+   "x": 4350,
+   "y": 4450,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/14_swimming_pool/ME_Singles_Swimming_Pool_16x16_Lifeguard_Chair_1.png",
+   "x": 4850,
+   "y": 4600,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_1.png",
+   "x": 5600,
+   "y": 5052,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_2.png",
+   "x": 5600,
+   "y": 5100,
+   "origin": "bl"
+  }
+ ],
+ "anims": [
+  {
+   "sheet": "ext/animated/Beach_Water_Buoy_1_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 3800,
+   "y": 5052,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Beach_Water_Buoy_2_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 5320,
+   "y": 5058,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Beach_Seagull_Idle_Left_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 4550,
+   "y": 4500,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Crabs_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 4150,
+   "y": 4900,
+   "fps": 5
+  },
+  {
+   "sheet": "ext/animated/Fishing_Boat_2_left_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 5660,
+   "y": 5030,
+   "fps": 5
+  },
+  {
+   "sheet": "ext/animated/Beach_Concert_DJ_16x16.png",
+   "fw": 48,
+   "fh": 48,
+   "x": 4352,
+   "y": 4650,
+   "fps": 8
+  },
+  {
+   "sheet": "ext/animated/Beach_Stage_Fog_Machine_Loop_16x16.png",
+   "fw": 96,
+   "fh": 96,
+   "x": 4180,
+   "y": 4660,
+   "fps": 6
+  }
+ ],
+ "solids": [
+  {
+   "x": 3600,
+   "y": 5036,
+   "w": 1990,
+   "h": 64
+  },
+  {
+   "x": 5640,
+   "y": 5036,
+   "w": 460,
+   "h": 64
+  }
+ ],
+ "labels": [
+  {
+   "x": 4600,
+   "y": 3250,
+   "text": "BEACH & BOARDWALK"
+  }
+ ],
+ "portals": [],
+ "animBands": [
+  {
+   "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 3600,
+   "y": 4944,
+   "w": 2496,
+   "h": 192,
+   "fps": 5,
+   "depth": 0.96
+  }
+ ]
+}

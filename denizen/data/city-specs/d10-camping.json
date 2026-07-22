@@ -1,0 +1,49 @@
+{
+  "district": "D10 Camping Forest (scenes 67/10/65/38)",
+  "bbox": { "x": 4200, "y": 200, "w": 1900, "h": 1400 },
+  "patches": [
+    { "tile": "grass", "x": 4200, "y": 200, "w": 1900, "h": 1400, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 5000, "y": 998, "w": 48, "h": 602, "depth": 0.9 },
+    { "tile": "sidewalk", "x": 4560, "y": 950, "w": 488, "h": 48, "depth": 0.9 }
+  ],
+  "roads": [],
+  "stamps": [
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_157.png", "x": 4260, "y": 340, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_158.png", "x": 4620, "y": 340, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_161.png", "x": 4980, "y": 340, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_100.png", "x": 5340, "y": 336, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_103.png", "x": 5680, "y": 336, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mobile_House_Big_1.png", "x": 4400, "y": 680, "origin": "bl", "solid": true },
+    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Camper_Right_1.png", "x": 4700, "y": 680, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png", "x": 4850, "y": 700, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_1.png", "x": 4450, "y": 900, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_5.png", "x": 4600, "y": 920, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_1.png", "x": 4500, "y": 1150, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_2.png", "x": 4650, "y": 1180, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Cut_Wood_3.png", "x": 4720, "y": 1140, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Stump_1.png", "x": 4420, "y": 1120, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mushrooms_1.png", "x": 4800, "y": 1160, "origin": "bl" },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Backpack_1.png", "x": 4530, "y": 918, "origin": "bl" },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sign_2.png", "x": 5060, "y": 990, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Signboard_1.png", "x": 5060, "y": 1560, "origin": "bl", "solid": true }
+  ],
+  "anims": [
+    { "sheet": "ext/animated/Campfire_16x16.png", "fw": 32, "fh": 32, "x": 4550, "y": 898, "fps": 6 },
+    { "sheet": "ext/animated/Campfire_2_16x16.png", "fw": 32, "fh": 32, "x": 4580, "y": 1128, "fps": 8 },
+    { "sheet": "ext/animated/Bubbles_16x16.png", "fw": 16, "fh": 16, "x": 4590, "y": 644, "fps": 6 },
+    { "sheet": "ext/animated/Camping_Lantern_1.png", "fw": 48, "fh": 48, "x": 4700, "y": 872, "fps": 6 },
+    { "sheet": "ext/animated/Water_Tileset_16x16.png", "fw": 48, "fh": 48, "x": 5350, "y": 1180, "fps": 4 }
+  ],
+  "solids": [
+    { "x": 4200, "y": 200, "w": 1900, "h": 120 },
+    { "x": 4200, "y": 320, "w": 80, "h": 1280 },
+    { "x": 6020, "y": 320, "w": 80, "h": 1280 },
+    { "x": 4280, "y": 1520, "w": 720, "h": 80 },
+    { "x": 5180, "y": 1520, "w": 840, "h": 80 },
+    { "x": 5354, "y": 1188, "w": 40, "h": 32 }
+  ],
+  "labels": [
+    { "x": 4980, "y": 380, "text": "CAMPING FOREST" }
+  ],
+  "portals": []
+}
