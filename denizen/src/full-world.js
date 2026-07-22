@@ -318,6 +318,12 @@ function build(scene) {
   buildPlaza(scene, zones.city_plaza);
   buildHelipad(scene, zones.helipad);
 
+  // 3a2 ── Enclose the shop interiors in proper LimeZu room shells (floor +
+  // 3D walls) so they read as rooms you teleport INTO, not furniture dumped on
+  // bare pavement outside. Visual only (renderRoom adds no collision), so the
+  // teleported player is never trapped. Coords mirror d16-interiors floors.
+  encloseInteriors(scene, rtr);
+
   // 3b ── The Denizen HQ building on the avenue — the door back into the
   // office interior. The G-NERIC CORP facade (office_building_ex2) stands
   // west of the HQ connector path; its glass entrance is the return portal.
@@ -783,6 +789,29 @@ function buildHelipad(scene, zone) {
   state.solids.push({ x, y: y + 176, w: 100, h: 16 });
   state.solids.push({ x: x + 152, y: y + 176, w: 100, h: 16 });
   zoneLabel(scene, x + 126, y - 6, 'HELIPAD');
+}
+
+// Wrap each d16 shop-interior floor in a LimeZu room shell (floor + 3D walls)
+// so a teleported shopper stands INSIDE a proper room, not on bare pavement.
+// Coords/sizes mirror d16-interiors.json (5 sidewalk floor patches, 400x304 =
+// 25x19 tiles at y5824). Themed floor/wall per shop. depthBase 2 keeps the
+// shell above ground patches (0.9) but below the furniture stamps (y-depth),
+// so the shop fixtures render inside the room. renderRoom adds no solids.
+function encloseInteriors(scene, rtr) {
+  if (!rtr) return;
+  const ROOMS = [
+    { x: 800,  floor: 'tile_white', wall: 'office_white' },  // LIME MART (grocery)
+    { x: 1408, floor: 'wood_light', wall: 'warm_wood' },     // THREAD & NEEDLE (clothing)
+    { x: 2000, floor: 'tile_teal',  wall: 'office_white' },  // SCOOPS ICE CREAM
+    { x: 2592, floor: 'marble',     wall: 'office_grey' },   // CITY MUSEUM
+    { x: 3200, floor: 'marble',     wall: 'warm_red' },      // GRAND HOTEL LOBBY
+  ];
+  ROOMS.forEach((r) => {
+    try {
+      rtr.renderRoom({ x: r.x, y: 5824, cols: 25, rows: 19,
+        floor: r.floor, wall: r.wall, depthBase: 2, doors: [] });
+    } catch (err) { console.error('[FullWorld] interior shell failed:', err); }
+  });
 }
 
 function scatterGreenery(scene) {
