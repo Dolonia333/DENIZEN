@@ -494,7 +494,7 @@
  ],
  "animBands": [
   {
-   "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png",
+   "sheet": "ext/animated/_water_fill_16x16.png",
    "fw": 64,
    "fh": 64,
    "x": 406,

@@ -215,6 +215,10 @@ export function buildFullWorld(scene) {
     const nn = String(c).padStart(2, '0');
     scene.load.spritesheet(`fw_char_${c}`, lz(`characters/char_${nn}.png`), { frameWidth: 16, frameHeight: 32 });
   }
+  // The player's real avatar (same as the office): Character Generator 2.0
+  // sheet, 24 cols x 1 row, 32x64 frames. Used so walking outside keeps you
+  // as Dolo instead of swapping to a generic character.
+  scene.load.spritesheet('fw_dolo', 'assets/Dolo.png', { frameWidth: 32, frameHeight: 64 });
 
   const wanted = new Set();
   [...HQ_FURNITURE, ...SECURITY_FURNITURE].forEach((f) => wanted.add(f.s.join(':')));
@@ -531,7 +535,11 @@ function placeCityPlan(scene, plan) {
     }
     const sp = scene.add.sprite(v.path[0][0], v.path[0][1], key, 0).setOrigin(0.5, 1);
     sp.play(animKey);
-    state.vehicles.push({ sp, path: v.path, speed: v.speed || 70, seg: 0, t: 0 });
+    // face: base art orientation of the sheet — 'left' for side cars, 'down'
+    // for top-down cars. oneway: straight lane that jumps back to start instead
+    // of reversing (so a car never drives backwards).
+    state.vehicles.push({ sp, path: v.path, speed: v.speed || 70, seg: 0, t: 0,
+      face: v.face || 'left', oneway: v.oneway !== false });
   });
   (plan.portals || []).forEach((p) => {
     const portal = { x0: p.x0, x1: p.x1, y: p.y, href: p.href, teleport: p.teleport || null, open: false, sprite: null };
@@ -846,11 +854,49 @@ function makeCharAnims(scene) {
       }
     });
   }
+  makeDoloAnims(scene);
+}
+
+// Dolo avatar anims (assets/Dolo.png, 24 cols x 1 row, 32x64). Frame map is
+// IDENTICAL to the office's registerDoloAnims so the player looks the same
+// inside and outside: RIGHT 0-5, UP 6-11, LEFT 12-17, DOWN 18-23; idle = a
+// mid frame of each run so the standing pose is neutral.
+function makeDoloAnims(scene) {
+  const tex = 'fw_dolo';
+  if (!scene.textures.exists(tex)) return;
+  const map = {
+    r: { walk: [0, 1, 2, 3, 4, 5], idle: 2 },
+    u: { walk: [6, 7, 8, 9, 10, 11], idle: 8 },
+    l: { walk: [12, 13, 14, 15, 16, 17], idle: 14 },
+    d: { walk: [18, 19, 20, 21, 22, 23], idle: 20 },
+  };
+  Object.entries(map).forEach(([d, m]) => {
+    if (!scene.anims.exists(`${tex}_walk_${d}`)) {
+      scene.anims.create({
+        key: `${tex}_walk_${d}`,
+        frames: scene.anims.generateFrameNumbers(tex, { frames: m.walk }),
+        frameRate: 12, repeat: -1,
+      });
+    }
+    if (!scene.anims.exists(`${tex}_idle_${d}`)) {
+      scene.anims.create({
+        key: `${tex}_idle_${d}`,
+        frames: scene.anims.generateFrameNumbers(tex, { frames: [m.idle] }),
+        frameRate: 1, repeat: -1,
+      });
+    }
+  });
 }
 
 function spawnPlayer(scene, x, y) {
-  const sp = scene.add.sprite(x, y, 'fw_char_1').setOrigin(0.5, 1);
-  sp.play('fw_char_1_idle_d');
+  // Use the real Dolo avatar (same as the office) if it loaded, else fall back
+  // to a generic world character. Dolo is 32x64; world folk are 16x32, so
+  // scale 0.5 keeps proportions consistent with the NPCs.
+  const useDolo = scene.textures.exists('fw_dolo');
+  state.playerTex = useDolo ? 'fw_dolo' : 'fw_char_1';
+  const sp = scene.add.sprite(x, y, state.playerTex).setOrigin(0.5, 1);
+  if (useDolo) sp.setScale(0.5);
+  sp.play(`${state.playerTex}_idle_d`);
   sp.setDepth(y);
   state.player = sp;
   state.playerDir = 'd';
@@ -972,10 +1018,10 @@ function tick(scene, dt) {
     if (stuck || !hitsSolid(p.x, ny)) p.y = ny;
     const d = dirFrom(vx, vy);
     state.playerDir = d;
-    const want = `fw_char_1_walk_${d}`;
+    const want = `${state.playerTex}_walk_${d}`;
     if (p.anims?.currentAnim?.key !== want) p.play(want);
   } else {
-    const want = `fw_char_1_idle_${state.playerDir}`;
+    const want = `${state.playerTex}_idle_${state.playerDir}`;
     if (p.anims?.currentAnim?.key !== want) p.play(want);
   }
   p.setDepth(p.y);
@@ -984,13 +1030,25 @@ function tick(scene, dt) {
   state.vehicles.forEach((v) => {
     const a = v.path[v.seg];
     const b = v.path[(v.seg + 1) % v.path.length];
-    const dx = b[0] - a[0], dy = b[1] - a[1];
-    const len = Math.hypot(dx, dy) || 1;
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
     v.t += (v.speed * step) / len;
-    if (v.t >= 1) { v.t = 0; v.seg = (v.seg + 1) % v.path.length; }
-    v.sp.x = a[0] + dx * v.t;
-    v.sp.y = a[1] + dy * v.t;
-    if (Math.abs(dx) > Math.abs(dy)) v.sp.setFlipX(dx < 0);
+    if (v.t >= 1) {
+      v.t = 0;
+      // Straight lane: jump back to the start (off-screen) instead of driving
+      // the segment in reverse — that reversal was the "car moving backwards".
+      v.seg = v.oneway ? 0 : (v.seg + 1) % v.path.length;
+    }
+    const A = v.path[v.seg], B = v.path[(v.seg + 1) % v.path.length];
+    const ddx = B[0] - A[0], ddy = B[1] - A[1];
+    v.sp.x = A[0] + ddx * v.t;
+    v.sp.y = A[1] + ddy * v.t;
+    // Face travel direction. Side art faces LEFT; top-down 'down' art faces
+    // DOWN — flip on the matching axis to reverse.
+    if (v.face === 'down') {
+      if (Math.abs(ddy) >= Math.abs(ddx)) v.sp.setFlipY(ddy < 0);
+    } else if (Math.abs(ddx) >= Math.abs(ddy)) {
+      v.sp.setFlipX(ddx > 0);
+    }
     v.sp.setDepth(v.sp.y);
   });
 

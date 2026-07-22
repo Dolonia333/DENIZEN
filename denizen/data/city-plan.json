@@ -9781,7 +9781,7 @@
    "depth": 0.95
   },
   {
-   "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png",
+   "sheet": "ext/animated/_water_fill_16x16.png",
    "fw": 64,
    "fh": 64,
    "x": 406,
@@ -9791,7 +9791,7 @@
    "fps": 6
   },
   {
-   "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png",
+   "sheet": "ext/animated/_water_fill_16x16.png",
    "fw": 64,
    "fh": 64,
    "x": 3600,
@@ -10843,101 +10843,77 @@
    "sheet": "ext/vehicles/Car_3_16x16_4_drive_side.png",
    "fw": 96,
    "fh": 96,
+   "face": "left",
+   "oneway": true,
+   "speed": 92,
+   "fps": 10,
    "path": [
     [
-     200,
+     -140,
      1900
     ],
     [
-     3900,
+     6800,
      1900
-    ],
-    [
-     3900,
-     1925
-    ],
-    [
-     200,
-     1925
     ]
-   ],
-   "speed": 85,
-   "fps": 10
+   ]
   },
   {
    "sheet": "ext/vehicles/Car_3_16x16_5_drive_side.png",
    "fw": 96,
    "fh": 96,
+   "face": "left",
+   "oneway": true,
+   "speed": 78,
+   "fps": 9,
    "path": [
     [
-     3900,
-     1925
+     6800,
+     1930
     ],
     [
-     200,
-     1925
-    ],
-    [
-     200,
-     1900
-    ],
-    [
-     3900,
-     1900
+     -140,
+     1930
     ]
-   ],
-   "speed": 68,
-   "fps": 8
+   ]
   },
   {
    "sheet": "ext/vehicles/Car_5_16x16_5_drive_down.png",
    "fw": 80,
    "fh": 80,
+   "face": "down",
+   "oneway": true,
+   "speed": 72,
+   "fps": 8,
    "path": [
     [
-     972,
-     420
+     988,
+     1552
     ],
     [
-     972,
-     1860
-    ],
-    [
-     1000,
-     1860
-    ],
-    [
-     1000,
-     420
+     988,
+     4448
     ]
-   ],
-   "speed": 60,
-   "fps": 8
+   ]
   },
   {
    "sheet": "ext/vehicles/Car_4_16x16_6_drive_down.png",
    "fw": 80,
    "fh": 80,
+   "face": "down",
+   "oneway": true,
+   "speed": 66,
+   "fps": 8,
    "path": [
     [
-     2578,
-     440
+     2596,
+     3600
     ],
     [
-     2578,
-     1860
-    ],
-    [
-     2606,
-     1860
-    ],
-    [
-     2606,
-     440
+     2596,
+     384
     ]
-   ],
-   "speed": 64,
-   "fps": 8
+   ]
   }
  ]
 }
