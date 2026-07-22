@@ -201,6 +201,14 @@ export function buildFullWorld(scene) {
   // can paint immediately, instead of the world showing all-grass for minutes
   // then popping to sidewalk once the heavy second-pass load finishes.
   scene.load.image('cp_ext_themes_21_Beach_png', 'assets/limezu/ext/themes/21_Beach.png');
+  // Grass-overhang autotile (Grass_2): tufted grass edges that flow OVER the
+  // concrete boundary so the paved core doesn't meet grass with a hard cut.
+  // Index per direction decoded by tufted-edge classification.
+  const GO = { n: 6, s: 2, w: 4, e: 8, nw: 5, ne: 7, sw: 3, se: 1 };
+  for (const [k, idx] of Object.entries(GO)) {
+    scene.load.image('fwt_go_' + k,
+      'assets/limezu/ext/singles/1_terrains_and_fences/ME_Singles_Terrains_and_Fences_16x16_Grass_2_' + idx + '.png');
+  }
   scene.load.image('fw_props', lz('exteriors/city_props.png'));
   scene.load.image('fw_vehicles', lz('exteriors/vehicles.png'));
   scene.load.image('fw_buildings', lz('exteriors/generic_buildings.png'));
@@ -537,6 +545,74 @@ function renderGround(scene, plan) {
       curbRun(r.x + (r.w - T) / 2, r.y, r.y + r.h, 'fwt_lane_v', r.x - T, false);
     }
   });
+
+  // ── Grass overhang ──────────────────────────────────────────────────────
+  // Soften every concrete↔grass boundary so the paved core FLOWS into the grass
+  // with a tufted edge instead of a hard rectangle. Grass_2 overhang tiles are
+  // laid over the boundary paved cell, tufts pointing at the grass side.
+  if (scene.textures.exists('fwt_go_n')) {
+    const paved = new Set(roadCells), sand = new Set(), water = new Set(), grassP = new Set();
+    (plan.patches || []).forEach((p) => {
+      const set = p.tile === 'sand' ? sand : (p.tile === 'grass' ? grassP : paved);
+      for (let y = p.y; y < p.y + p.h; y += T)
+        for (let x = p.x; x < p.x + p.w; x += T) set.add(ckey(x, y));
+    });
+    (plan.animBands || []).forEach((b) => {
+      for (let y = b.y; y < b.y + b.h; y += T)
+        for (let x = b.x; x < b.x + b.w; x += T) water.add(ckey(x, y));
+    });
+    // grass shows where a grass patch sits (even over a slab) OR bare world grass
+    const isGrass = (x, y) => {
+      const k = ckey(x, y);
+      return grassP.has(k) || (!paved.has(k) && !sand.has(k) && !water.has(k));
+    };
+    // visible concrete = paved and NOT covered by a grass patch / sand / water
+    const isConc = (x, y) => {
+      const k = ckey(x, y);
+      return paved.has(k) && !grassP.has(k) && !sand.has(k) && !water.has(k);
+    };
+    const goRun = (fixed, from, to, key, outFn, horizontal) => {
+      let start = null;
+      for (let p = from; p <= to; p += T) {
+        const on = p < to && outFn(p);
+        if (on && start === null) start = p;
+        if (!on && start !== null) {
+          if (horizontal) scene.add.tileSprite(start, fixed, p - start, T, key).setOrigin(0).setDepth(1.3);
+          else scene.add.tileSprite(fixed, start, T, p - start, key).setOrigin(0).setDepth(1.3);
+          start = null;
+        }
+      }
+    };
+    // For a rectangle, lay grass-overhang on the CONCRETE side of each edge with
+    // the tuft pointing at the grass. `onSide` picks concrete cells; `sx,sy` are
+    // the concrete cell offsets from the edge line.
+    const edgeOverhang = (x0, y0, x1, y1, grassOfConc) => {
+      // grassOfConc(x,y) true where that concrete cell has grass just outside
+      goRun(y0, x0, x1, 'fwt_go_n', (x) => grassOfConc(x, y0, 'n'), true);
+      goRun(y1 - T, x0, x1, 'fwt_go_s', (x) => grassOfConc(x, y1 - T, 's'), true);
+      goRun(x0, y0, y1, 'fwt_go_w', (y) => grassOfConc(x0, y, 'w'), false);
+      goRun(x1 - T, y0, y1, 'fwt_go_e', (y) => grassOfConc(x1 - T, y, 'e'), false);
+    };
+    // 1) concrete patches meeting bare world grass (the paved core's outer edge)
+    (plan.patches || []).forEach((p) => {
+      if (p.tile === 'grass' || p.tile === 'sand') return;
+      const x0 = p.x, y0 = p.y, x1 = p.x + p.w, y1 = p.y + p.h;
+      const g = (cx, cy, dir) => isConc(cx, cy) && (
+        dir === 'n' ? isGrass(cx, cy - T) : dir === 's' ? isGrass(cx, cy + T)
+          : dir === 'w' ? isGrass(cx - T, cy) : isGrass(cx + T, cy));
+      edgeOverhang(x0, y0, x1, y1, g);
+    });
+    // 2) grass patches on the slab — lay overhang on the concrete cells JUST
+    //    outside each edge, tuft pointing back into the grass patch.
+    (plan.patches || []).forEach((p) => {
+      if (p.tile !== 'grass') return;
+      const x0 = p.x, y0 = p.y, x1 = p.x + p.w, y1 = p.y + p.h;
+      goRun(y0 - T, x0, x1, 'fwt_go_s', (x) => isConc(x, y0 - T), true);   // patch top -> grass to S
+      goRun(y1, x0, x1, 'fwt_go_n', (x) => isConc(x, y1), true);           // patch bottom -> grass to N
+      goRun(x0 - T, y0, y1, 'fwt_go_e', (y) => isConc(x0 - T, y), false);  // patch left -> grass to E
+      goRun(x1, y0, y1, 'fwt_go_w', (y) => isConc(x1, y), false);          // patch right -> grass to W
+    });
+  }
 }
 
 function placeCityPlan(scene, plan) {
