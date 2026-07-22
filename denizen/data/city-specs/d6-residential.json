@@ -64,7 +64,6 @@
     { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_23.png", "x": 430, "y": 3772, "origin": "bl", "solid": true },
     { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_23.png", "x": 880, "y": 3774, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_7.png", "x": 330, "y": 3832, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Wood_Cart_Full_1.png", "x": 720, "y": 3846, "origin": "bl", "solid": true },
     { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_2.png", "x": 225, "y": 3900, "origin": "bl", "solid": true },
     { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png", "x": 1035, "y": 3910, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png", "x": 636, "y": 4108, "origin": "bl", "solid": true },

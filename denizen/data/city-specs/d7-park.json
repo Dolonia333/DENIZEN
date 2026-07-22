@@ -117,6 +117,7 @@
       "x": 3416,
       "y": 3968,
       "origin": "bl",
+      "depth": 4130,
       "solid": {
         "dx": 12,
         "dy": -14,
@@ -127,8 +128,9 @@
     {
       "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_2.png",
       "x": 3416,
-      "y": 4112,
+      "y": 4120,
       "origin": "bl",
+      "depth": 4130,
       "solid": {
         "dx": 12,
         "dy": -14,

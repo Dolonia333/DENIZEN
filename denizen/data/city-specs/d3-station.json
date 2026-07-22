@@ -37,7 +37,6 @@
     { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Multiple_Packages_1.png", "x": 5684, "y": 1716, "origin": "bl", "solid": true },
     { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Single_Package_1.png", "x": 5688, "y": 1732, "origin": "bl", "solid": false },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png", "x": 5732, "y": 1716, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_1.png", "x": 5744, "y": 1676, "origin": "bl", "solid": true },
     { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Letter_1.png", "x": 5700, "y": 1744, "origin": "bl", "solid": false },
 
     { "img": "ext/singles/22_post_office/22_Post_Office_16x16_Truck_Right_Side.png", "x": 5824, "y": 1760, "origin": "bl", "solid": true },

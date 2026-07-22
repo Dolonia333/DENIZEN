@@ -18,8 +18,8 @@
     { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Medium_2.png", "x": 4768, "y": 1180, "origin": "bl", "solid": true },
 
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_ATM_1.png", "x": 4188, "y": 1198, "origin": "bl", "solid": true },
-    { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Props_7.png", "x": 4340, "y": 1198, "origin": "bl", "solid": true },
-    { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Props_8.png", "x": 4374, "y": 1198, "origin": "bl", "solid": true },
+    { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Props_7.png", "x": 4592, "y": 1198, "origin": "bl", "solid": true },
+    { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Props_8.png", "x": 4736, "y": 1198, "origin": "bl", "solid": true },
     { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Shopping_Carts_2.png", "x": 4232, "y": 1252, "origin": "bl", "solid": true },
     { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Shopping_Carts_1.png", "x": 4444, "y": 1244, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_2.png", "x": 4508, "y": 1232, "origin": "bl", "solid": true },

@@ -2449,22 +2449,22 @@
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Cardboard_Trash_2.png",
-   "x": 4408,
-   "y": 1652,
+   "x": 4340,
+   "y": 1868,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Cardboard_Trash_1.png",
-   "x": 4420,
-   "y": 1660,
+   "x": 4352,
+   "y": 1874,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_1.png",
-   "x": 4666,
-   "y": 1660,
+   "x": 4650,
+   "y": 1868,
    "origin": "bl",
    "solid": false
   },
@@ -2694,8 +2694,8 @@
   },
   {
    "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Hardware_Store_Tent_1.png",
-   "x": 4560,
-   "y": 2056,
+   "x": 4700,
+   "y": 1878,
    "origin": "bl",
    "solid": true
   },
@@ -3120,8 +3120,8 @@
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sign_2.png",
-   "x": 3257,
-   "y": 687,
+   "x": 3312,
+   "y": 716,
    "origin": "bl",
    "solid": true
   },
@@ -3971,8 +3971,8 @@
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Watch_Tower.png",
-   "x": 6270,
-   "y": 3020,
+   "x": 6290,
+   "y": 3058,
    "origin": "bl",
    "solid": true
   },
@@ -4294,8 +4294,8 @@
   },
   {
    "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Yellow_Trolley_1.png",
-   "x": 3700,
-   "y": 5480,
+   "x": 2790,
+   "y": 5500,
    "origin": "bl"
   },
   {
@@ -4606,15 +4606,9 @@
    "origin": "bl"
   },
   {
-   "img": "farm/cut/bed_carrot.png",
-   "x": 448,
-   "y": 880,
-   "origin": "bl"
-  },
-  {
    "img": "farm/cut/bed_strawberry.png",
-   "x": 448,
-   "y": 916,
+   "x": 380,
+   "y": 985,
    "origin": "bl"
   },
   {
@@ -4706,12 +4700,6 @@
    "img": "farm/cut/hay_mound.png",
    "x": 430,
    "y": 856,
-   "origin": "bl"
-  },
-  {
-   "img": "farm/cut/sacks.png",
-   "x": 470,
-   "y": 912,
    "origin": "bl"
   },
   {
@@ -5166,12 +5154,6 @@
    "solid": true
   },
   {
-   "img": "singles/16_grocery_store/Grocery_Store_Singles_1.png",
-   "x": 954,
-   "y": 6100,
-   "origin": "bl"
-  },
-  {
    "img": "singles/21_clothing_store/Clothing_Store_Singles_146.png",
    "x": 1684,
    "y": 5896,
@@ -5556,14 +5538,14 @@
   },
   {
    "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Props_7.png",
-   "x": 4340,
+   "x": 4592,
    "y": 1198,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Mall_Props_8.png",
-   "x": 4374,
+   "x": 4736,
    "y": 1198,
    "origin": "bl",
    "solid": true
@@ -6095,13 +6077,6 @@
    "solid": true
   },
   {
-   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_1.png",
-   "x": 5744,
-   "y": 1676,
-   "origin": "bl",
-   "solid": true
-  },
-  {
    "img": "ext/singles/22_post_office/22_Post_Office_16x16_Letter_1.png",
    "x": 5700,
    "y": 1744,
@@ -6396,11 +6371,11 @@
    "solid": true
   },
   {
-   "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Picnic_1.png",
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png",
    "x": 604,
    "y": 2300,
    "origin": "bl",
-   "solid": false
+   "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_3.png",
@@ -6515,32 +6490,11 @@
    "solid": true
   },
   {
-   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Signboard_1.png",
-   "x": 450,
-   "y": 2510,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Table_3.png",
-   "x": 440,
-   "y": 2590,
-   "origin": "bl",
-   "solid": true
-  },
-  {
    "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Table_1.png",
    "x": 505,
    "y": 2580,
    "origin": "bl",
    "solid": true
-  },
-  {
-   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Box_4.png",
-   "x": 460,
-   "y": 2635,
-   "origin": "bl",
-   "solid": false
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_1.png",
@@ -6866,8 +6820,8 @@
   },
   {
    "img": "ext/singles/18_fire_station/ME_Singles_Fire_Station_16x16_Fire_Hydrant.png",
-   "x": 4046,
-   "y": 2446,
+   "x": 3966,
+   "y": 2452,
    "origin": "bl",
    "solid": true
   },
@@ -7139,8 +7093,8 @@
   },
   {
    "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Stretcher_2.png",
-   "x": 3476,
-   "y": 2756,
+   "x": 4000,
+   "y": 2996,
    "origin": "bl",
    "solid": false
   },
@@ -7413,13 +7367,6 @@
    "solid": true
   },
   {
-   "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Wood_Cart_Full_1.png",
-   "x": 720,
-   "y": 3846,
-   "origin": "bl",
-   "solid": true
-  },
-  {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_2.png",
    "x": 225,
    "y": 3900,
@@ -7584,6 +7531,7 @@
    "x": 3416,
    "y": 3968,
    "origin": "bl",
+   "depth": 4130,
    "solid": {
     "dx": 12,
     "dy": -14,
@@ -7594,8 +7542,9 @@
   {
    "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_2.png",
    "x": 3416,
-   "y": 4112,
+   "y": 4120,
    "origin": "bl",
+   "depth": 4130,
    "solid": {
     "dx": 12,
     "dy": -14,
@@ -8036,7 +7985,7 @@
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Example_Lighthouse.png",
    "x": 5880,
-   "y": 4900,
+   "y": 4610,
    "origin": "bl",
    "solid": true
   },
@@ -8105,21 +8054,21 @@
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Counter_1.png",
-   "x": 3860,
-   "y": 3720,
+   "x": 3680,
+   "y": 4180,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Chiar_1.png",
-   "x": 3830,
-   "y": 3745,
+   "x": 3650,
+   "y": 4205,
    "origin": "bl"
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Chiar_2.png",
-   "x": 3930,
-   "y": 3745,
+   "x": 3750,
+   "y": 4205,
    "origin": "bl"
   },
   {
@@ -8561,8 +8510,8 @@
   },
   {
    "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Wood_Cross_1.png",
-   "x": 560,
-   "y": 4624,
+   "x": 490,
+   "y": 4745,
    "origin": "bl",
    "solid": true
   },
@@ -8589,8 +8538,8 @@
   },
   {
    "img": "ext/singles/19_graveyard/ME_Singles_Graveyard_16x16_Small_Black_Tombstone_3.png",
-   "x": 700,
-   "y": 4620,
+   "x": 540,
+   "y": 4745,
    "origin": "bl",
    "solid": true
   },
@@ -8877,16 +8826,16 @@
    "sheet": "ext/animated/Campfire_16x16.png",
    "fw": 32,
    "fh": 32,
-   "x": 5020,
-   "y": 2590,
+   "x": 5048,
+   "y": 2600,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Flame_2_16x16.png",
    "fw": 16,
    "fh": 16,
-   "x": 5056,
-   "y": 2594,
+   "x": 5062,
+   "y": 2600,
    "fps": 8
   },
   {
@@ -9271,8 +9220,8 @@
    "sheet": "ext/animated/Fire_Hydrant_Water_Jet_16x16.png",
    "fw": 48,
    "fh": 80,
-   "x": 4062,
-   "y": 2446,
+   "x": 3982,
+   "y": 2452,
    "fps": 6
   },
   {

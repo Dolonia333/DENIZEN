@@ -99,7 +99,7 @@
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Example_Lighthouse.png",
    "x": 5880,
-   "y": 4900,
+   "y": 4610,
    "origin": "bl",
    "solid": true
   },
@@ -168,21 +168,21 @@
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Counter_1.png",
-   "x": 3860,
-   "y": 3720,
+   "x": 3680,
+   "y": 4180,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Chiar_1.png",
-   "x": 3830,
-   "y": 3745,
+   "x": 3650,
+   "y": 4205,
    "origin": "bl"
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Chiar_2.png",
-   "x": 3930,
-   "y": 3745,
+   "x": 3750,
+   "y": 4205,
    "origin": "bl"
   },
   {

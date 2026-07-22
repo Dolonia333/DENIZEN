@@ -21,7 +21,6 @@
     { "img": "singles/16_grocery_store/Grocery_Store_Singles_170.png", "x": 900, "y": 6072, "origin": "bl", "solid": true },
     { "img": "singles/16_grocery_store/Grocery_Store_Singles_171.png", "x": 1050, "y": 6072, "origin": "bl", "solid": true },
     { "img": "singles/16_grocery_store/Grocery_Store_Singles_308.png", "x": 850, "y": 6084, "origin": "bl", "solid": true },
-    { "img": "singles/16_grocery_store/Grocery_Store_Singles_1.png", "x": 954, "y": 6100, "origin": "bl" },
 
     { "img": "singles/21_clothing_store/Clothing_Store_Singles_146.png", "x": 1684, "y": 5896, "origin": "bl", "solid": true },
     { "img": "singles/21_clothing_store/Clothing_Store_Singles_147.png", "x": 1738, "y": 5896, "origin": "bl", "solid": true },

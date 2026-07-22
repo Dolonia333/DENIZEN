@@ -108,11 +108,11 @@
       "solid": true
     },
     {
-      "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Picnic_1.png",
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png",
       "x": 604,
       "y": 2300,
       "origin": "bl",
-      "solid": false
+      "solid": true
     },
     {
       "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_3.png",
@@ -227,32 +227,11 @@
       "solid": true
     },
     {
-      "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Signboard_1.png",
-      "x": 450,
-      "y": 2510,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Table_3.png",
-      "x": 440,
-      "y": 2590,
-      "origin": "bl",
-      "solid": true
-    },
-    {
       "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Table_1.png",
       "x": 505,
       "y": 2580,
       "origin": "bl",
       "solid": true
-    },
-    {
-      "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Box_4.png",
-      "x": 460,
-      "y": 2635,
-      "origin": "bl",
-      "solid": false
     },
     {
       "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_1.png",

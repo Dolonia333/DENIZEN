@@ -459,16 +459,16 @@
    "sheet": "ext/animated/Campfire_16x16.png",
    "fw": 32,
    "fh": 32,
-   "x": 5020,
-   "y": 2590,
+   "x": 5048,
+   "y": 2600,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Flame_2_16x16.png",
    "fw": 16,
    "fh": 16,
-   "x": 5056,
-   "y": 2594,
+   "x": 5062,
+   "y": 2600,
    "fps": 8
   },
   {

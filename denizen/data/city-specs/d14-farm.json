@@ -267,15 +267,9 @@
    "origin": "bl"
   },
   {
-   "img": "farm/cut/bed_carrot.png",
-   "x": 448,
-   "y": 880,
-   "origin": "bl"
-  },
-  {
    "img": "farm/cut/bed_strawberry.png",
-   "x": 448,
-   "y": 916,
+   "x": 380,
+   "y": 985,
    "origin": "bl"
   },
   {
@@ -367,12 +361,6 @@
    "img": "farm/cut/hay_mound.png",
    "x": 430,
    "y": 856,
-   "origin": "bl"
-  },
-  {
-   "img": "farm/cut/sacks.png",
-   "x": 470,
-   "y": 912,
    "origin": "bl"
   },
   {

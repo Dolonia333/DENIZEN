@@ -18,9 +18,9 @@
     { "img": "ext/singles/9_shopping_center_and_markets/ME_Singles_Shopping_Center_and_Markets_16x16_Market_Big_6.png", "x": 4964, "y": 1832, "origin": "bl", "solid": true },
 
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Billboard_3.png", "x": 5000, "y": 1648, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Cardboard_Trash_2.png", "x": 4408, "y": 1652, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Cardboard_Trash_1.png", "x": 4420, "y": 1660, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_1.png", "x": 4666, "y": 1660, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Cardboard_Trash_2.png", "x": 4340, "y": 1868, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Cardboard_Trash_1.png", "x": 4352, "y": 1874, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_1.png", "x": 4650, "y": 1868, "origin": "bl", "solid": false },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_1.png", "x": 4412, "y": 1820, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Electric_Pole_2.png", "x": 4668, "y": 1820, "origin": "bl", "solid": true },
 
@@ -56,7 +56,7 @@
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Drinking_Fountain_1.png", "x": 4416, "y": 2100, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png", "x": 4522, "y": 2004, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_6.png", "x": 4560, "y": 2090, "origin": "bl", "solid": false },
-    { "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Hardware_Store_Tent_1.png", "x": 4560, "y": 2056, "origin": "bl", "solid": true },
+    { "img": "ext/singles/4_generic_building/ME_Singles_Generic_Building_16x16_Hardware_Store_Tent_1.png", "x": 4700, "y": 1878, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_3.png", "x": 4632, "y": 2094, "origin": "bl", "solid": false },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_3.png", "x": 4652, "y": 2100, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_4.png", "x": 4674, "y": 2094, "origin": "bl", "solid": false },
