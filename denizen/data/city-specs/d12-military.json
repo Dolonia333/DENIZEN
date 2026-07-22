@@ -9,74 +9,74 @@
  "patches": [
   {
    "tile": "grass",
-   "x": 5450,
-   "y": 2100,
-   "w": 1000,
-   "h": 1100,
+   "x": 5456,
+   "y": 2096,
+   "w": 1008,
+   "h": 1104,
    "depth": 0.9
   },
   {
    "tile": "asphalt",
-   "x": 5570,
-   "y": 2200,
-   "w": 840,
-   "h": 820,
+   "x": 5568,
+   "y": 2208,
+   "w": 848,
+   "h": 832,
    "depth": 0.92
   },
   {
    "tile": "asphalt",
-   "x": 5510,
-   "y": 2450,
-   "w": 60,
-   "h": 570,
+   "x": 5504,
+   "y": 2448,
+   "w": 64,
+   "h": 576,
    "depth": 0.93
   },
   {
    "tile": "asphalt",
-   "x": 5500,
-   "y": 2294,
-   "w": 116,
-   "h": 86,
+   "x": 5504,
+   "y": 2288,
+   "w": 128,
+   "h": 96,
    "depth": 0.93
   },
   {
    "tile": "sand",
-   "x": 5602,
-   "y": 2780,
-   "w": 248,
-   "h": 200,
+   "x": 5600,
+   "y": 2784,
+   "w": 256,
+   "h": 208,
    "depth": 1.0
   },
   {
    "tile": "sidewalk",
-   "x": 5590,
-   "y": 2456,
-   "w": 790,
+   "x": 5584,
+   "y": 2464,
+   "w": 800,
    "h": 48,
    "depth": 1.05
   },
   {
    "tile": "sidewalk",
-   "x": 5570,
-   "y": 2380,
+   "x": 5568,
+   "y": 2384,
    "w": 48,
-   "h": 124,
+   "h": 128,
    "depth": 1.05
   },
   {
    "tile": "sidewalk",
-   "x": 6156,
-   "y": 2504,
-   "w": 40,
-   "h": 316,
+   "x": 6160,
+   "y": 2496,
+   "w": 48,
+   "h": 320,
    "depth": 1.05
   }
  ],
  "roads": [
   {
-   "x": 5450,
-   "y": 2380,
-   "w": 120,
+   "x": 5456,
+   "y": 2384,
+   "w": 128,
    "h": 64
   }
  ],
@@ -111,8 +111,8 @@
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Double_1.png",
-   "x": 5522,
-   "y": 2564,
+   "x": 5592,
+   "y": 2600,
    "origin": "bl",
    "solid": true
   },
@@ -308,7 +308,7 @@
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png",
    "x": 5790,
-   "y": 2952,
+   "y": 2956,
    "origin": "bl",
    "solid": true
   },
@@ -357,35 +357,35 @@
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
    "x": 5650,
-   "y": 2836,
+   "y": 2832,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
    "x": 5706,
-   "y": 2836,
+   "y": 2832,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
    "x": 5762,
-   "y": 2830,
+   "y": 2832,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
    "x": 5798,
-   "y": 2830,
+   "y": 2832,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "x": 5826,
-   "y": 2830,
+   "x": 5834,
+   "y": 2832,
    "origin": "bl",
    "solid": false
   },

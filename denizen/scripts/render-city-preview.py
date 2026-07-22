@@ -109,8 +109,16 @@ if __name__ == "__main__":
         out = sys.argv[2] if len(sys.argv) > 2 else src.replace(".json", "-preview.png")
     frag = json.load(open(src, encoding="utf-8"))
     img = render(frag)
-    # keep previews manageable
-    if img.width > 3000:
+    # --scale N upscales NEAREST for pixel-level inspection; --crop x0 y0 x1 y1
+    # limits to a region (world px) BEFORE scaling.
+    if "--crop" in sys.argv:
+        i = sys.argv.index("--crop")
+        cx0, cy0, cx1, cy1 = (int(sys.argv[i + k]) for k in range(1, 5))
+        img = img.crop((cx0, cy0, cx1, cy1))
+    if "--scale" in sys.argv:
+        s = int(sys.argv[sys.argv.index("--scale") + 1])
+        img = img.resize((img.width * s, img.height * s), Image.NEAREST)
+    elif img.width > 3000:
         img = img.resize((img.width // 2, img.height // 2), Image.NEAREST)
     img.save(out)
     print(out, img.size)

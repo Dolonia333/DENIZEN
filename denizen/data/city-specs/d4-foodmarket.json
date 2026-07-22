@@ -1,529 +1,529 @@
 {
-  "district": "D4 Plaza Food Market & Canal",
-  "bbox": {
-    "x": 400,
-    "y": 2000,
-    "w": 1100,
-    "h": 1060
+ "district": "D4 Plaza Food Market & Canal",
+ "bbox": {
+  "x": 400,
+  "y": 2000,
+  "w": 1100,
+  "h": 1060
+ },
+ "patches": [
+  {
+   "tile": "sidewalk",
+   "x": 400,
+   "y": 2000,
+   "w": 1104,
+   "h": 448,
+   "depth": 0.9
   },
-  "patches": [
-    {
-      "tile": "sidewalk",
-      "x": 400,
-      "y": 2000,
-      "w": 1100,
-      "h": 440,
-      "depth": 0.9
-    },
-    {
-      "tile": "asphalt",
-      "x": 400,
-      "y": 2440,
-      "w": 320,
-      "h": 300,
-      "depth": 0.9
-    },
-    {
-      "tile": "asphalt",
-      "x": 720,
-      "y": 2440,
-      "w": 780,
-      "h": 300,
-      "depth": 0.9
-    },
-    {
-      "tile": "sidewalk",
-      "x": 920,
-      "y": 2440,
-      "w": 64,
-      "h": 460,
-      "depth": 0.91
-    },
-    {
-      "tile": "sidewalk",
-      "x": 400,
-      "y": 2740,
-      "w": 1100,
-      "h": 160,
-      "depth": 0.9
-    },
-    {
-      "tile": "asphalt",
-      "x": 400,
-      "y": 2900,
-      "w": 1100,
-      "h": 160,
-      "depth": 0.9
-    }
-  ],
-  "roads": [],
-  "stamps": [
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Mushroom_Example.png",
-      "x": 470,
-      "y": 2190,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Icecream_Example.png",
-      "x": 605,
-      "y": 2215,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Coffee_Cup_Example.png",
-      "x": 755,
-      "y": 2200,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Infopoint_1.png",
-      "x": 895,
-      "y": 2170,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Sign_1.png",
-      "x": 600,
-      "y": 2248,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_1.png",
-      "x": 496,
-      "y": 2300,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_2.png",
-      "x": 548,
-      "y": 2300,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png",
-      "x": 604,
-      "y": 2300,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_3.png",
-      "x": 660,
-      "y": 2302,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_1.png",
-      "x": 764,
-      "y": 2300,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
-      "x": 746,
-      "y": 2292,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
-      "x": 784,
-      "y": 2292,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Green_Closed_Trash_Can.png",
-      "x": 1430,
-      "y": 2830,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-      "x": 430,
-      "y": 2130,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-      "x": 1040,
-      "y": 2140,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png",
-      "x": 1440,
-      "y": 2150,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_5.png",
-      "x": 1090,
-      "y": 2170,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_8.png",
-      "x": 470,
-      "y": 2810,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_2.png",
-      "x": 1420,
-      "y": 2425,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_4.png",
-      "x": 1160,
-      "y": 2225,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_1.png",
-      "x": 1305,
-      "y": 2230,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
-      "x": 1170,
-      "y": 2310,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_2.png",
-      "x": 1258,
-      "y": 2310,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png",
-      "x": 425,
-      "y": 2430,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Table_1.png",
-      "x": 505,
-      "y": 2580,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_1.png",
-      "x": 515,
-      "y": 2640,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_3.png",
-      "x": 570,
-      "y": 2625,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Hot_Dog_Cart_1.png",
-      "x": 615,
-      "y": 2570,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Fruit_Flowers_Cart_1.png",
-      "x": 765,
-      "y": 2555,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_1.png",
-      "x": 835,
-      "y": 2560,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_5.png",
-      "x": 995,
-      "y": 2560,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Fruit_Flowers_Cart_3.png",
-      "x": 1065,
-      "y": 2555,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_2.png",
-      "x": 1135,
-      "y": 2560,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_3.png",
-      "x": 1205,
-      "y": 2555,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Tacos_Truck_1.png",
-      "x": 1290,
-      "y": 2565,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Hot_Dog_Cart_Props_1.png",
-      "x": 625,
-      "y": 2620,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Hot_Dog_Cart_Props_5.png",
-      "x": 658,
-      "y": 2622,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Sign_2.png",
-      "x": 640,
-      "y": 2700,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png",
-      "x": 445,
-      "y": 2720,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_4.png",
-      "x": 535,
-      "y": 2710,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
-      "x": 517,
-      "y": 2702,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
-      "x": 555,
-      "y": 2702,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_7.png",
-      "x": 1080,
-      "y": 2700,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
-      "x": 1062,
-      "y": 2692,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
-      "x": 1100,
-      "y": 2692,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Pizza_Tuk_Tuk_1.png",
-      "x": 800,
-      "y": 2730,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ice_Cream_Truck_1.png",
-      "x": 1320,
-      "y": 2730,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Closed_Trash_Can.png",
-      "x": 1160,
-      "y": 2690,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_2.png",
-      "x": 600,
-      "y": 2850,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
-      "x": 1250,
-      "y": 2850,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-      "x": 700,
-      "y": 2800,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-      "x": 1200,
-      "y": 2800,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_1.png",
-      "x": 936,
-      "y": 3000,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_2.png",
-      "x": 952,
-      "y": 3000,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_1.png",
-      "x": 936,
-      "y": 3060,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_2.png",
-      "x": 952,
-      "y": 3060,
-      "origin": "bl",
-      "solid": false
-    },
-    {
-      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Stacked_Barrels_1.png",
-      "x": 1250,
-      "y": 2660,
-      "origin": "bl",
-      "solid": true
-    }
-  ],
-  "anims": [
-    {
-      "sheet": "ext/animated/Fountain_16x16.png",
-      "fw": 32,
-      "fh": 48,
-      "x": 1230,
-      "y": 2260,
-      "fps": 6
-    },
-    {
-      "sheet": "ext/animated/Pigeon_16x16.png",
-      "fw": 16,
-      "fh": 16,
-      "x": 1180,
-      "y": 2350,
-      "fps": 5
-    },
-    {
-      "sheet": "ext/animated/Pigeon_16x16.png",
-      "fw": 16,
-      "fh": 16,
-      "x": 990,
-      "y": 2380,
-      "fps": 5
-    },
-    {
-      "sheet": "ext/animated/Pigeon_16x16.png",
-      "fw": 16,
-      "fh": 16,
-      "x": 820,
-      "y": 2830,
-      "fps": 5
-    }
-  ],
-  "animBands": [
-    {
-      "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png",
-      "fw": 64,
-      "fh": 64,
-      "x": 406,
-      "y": 2932,
-      "w": 1088,
-      "h": 128,
-      "fps": 6
-    }
-  ],
-  "solids": [
-    {
-      "x": 400,
-      "y": 2900,
-      "w": 536,
-      "h": 160
-    },
-    {
-      "x": 968,
-      "y": 2900,
-      "w": 532,
-      "h": 160
-    }
-  ],
-  "labels": [
-    {
-      "x": 950,
-      "y": 2020,
-      "text": "PLAZA FOOD MARKET & CANAL"
-    }
-  ],
-  "portals": []
+  {
+   "tile": "asphalt",
+   "x": 400,
+   "y": 2432,
+   "w": 320,
+   "h": 304,
+   "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 720,
+   "y": 2432,
+   "w": 784,
+   "h": 304,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 928,
+   "y": 2432,
+   "w": 64,
+   "h": 464,
+   "depth": 0.91
+  },
+  {
+   "tile": "sidewalk",
+   "x": 400,
+   "y": 2736,
+   "w": 1104,
+   "h": 160,
+   "depth": 0.9
+  },
+  {
+   "tile": "asphalt",
+   "x": 400,
+   "y": 2896,
+   "w": 1104,
+   "h": 160,
+   "depth": 0.9
+  }
+ ],
+ "roads": [],
+ "stamps": [
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Mushroom_Example.png",
+   "x": 470,
+   "y": 2190,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Icecream_Example.png",
+   "x": 605,
+   "y": 2215,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Coffee_Cup_Example.png",
+   "x": 755,
+   "y": 2200,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Infopoint_1.png",
+   "x": 895,
+   "y": 2170,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Sign_1.png",
+   "x": 600,
+   "y": 2248,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_1.png",
+   "x": 496,
+   "y": 2300,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_2.png",
+   "x": 548,
+   "y": 2300,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png",
+   "x": 604,
+   "y": 2300,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_3.png",
+   "x": 660,
+   "y": 2300,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_1.png",
+   "x": 764,
+   "y": 2300,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
+   "x": 746,
+   "y": 2292,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
+   "x": 784,
+   "y": 2292,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Green_Closed_Trash_Can.png",
+   "x": 1430,
+   "y": 2830,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 430,
+   "y": 2130,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 1040,
+   "y": 2140,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png",
+   "x": 1440,
+   "y": 2150,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_5.png",
+   "x": 1090,
+   "y": 2170,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_8.png",
+   "x": 470,
+   "y": 2810,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_2.png",
+   "x": 1420,
+   "y": 2425,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_4.png",
+   "x": 1160,
+   "y": 2225,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_1.png",
+   "x": 1305,
+   "y": 2230,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+   "x": 1170,
+   "y": 2310,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_2.png",
+   "x": 1258,
+   "y": 2310,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png",
+   "x": 425,
+   "y": 2430,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/6_garage_sales/ME_Singles_Garage_Sales_16x16_Table_1.png",
+   "x": 505,
+   "y": 2580,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_1.png",
+   "x": 515,
+   "y": 2640,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Crate_3.png",
+   "x": 570,
+   "y": 2625,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Hot_Dog_Cart_1.png",
+   "x": 615,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Fruit_Flowers_Cart_1.png",
+   "x": 765,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_1.png",
+   "x": 835,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_5.png",
+   "x": 995,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Fruit_Flowers_Cart_3.png",
+   "x": 1065,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_2.png",
+   "x": 1135,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Cart_3.png",
+   "x": 1205,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Tacos_Truck_1.png",
+   "x": 1290,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Hot_Dog_Cart_Props_1.png",
+   "x": 625,
+   "y": 2620,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Hot_Dog_Cart_Props_5.png",
+   "x": 658,
+   "y": 2622,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Sign_2.png",
+   "x": 640,
+   "y": 2700,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png",
+   "x": 445,
+   "y": 2720,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_4.png",
+   "x": 535,
+   "y": 2710,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
+   "x": 517,
+   "y": 2702,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
+   "x": 555,
+   "y": 2702,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Table_7.png",
+   "x": 1080,
+   "y": 2700,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
+   "x": 1062,
+   "y": 2692,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Street_Food_Chair_1.png",
+   "x": 1100,
+   "y": 2692,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Pizza_Tuk_Tuk_1.png",
+   "x": 800,
+   "y": 2730,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Ice_Cream_Truck_1.png",
+   "x": 1320,
+   "y": 2730,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Closed_Trash_Can.png",
+   "x": 1160,
+   "y": 2690,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_2.png",
+   "x": 600,
+   "y": 2850,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+   "x": 1250,
+   "y": 2850,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 700,
+   "y": 2800,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 1200,
+   "y": 2800,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_1.png",
+   "x": 936,
+   "y": 3000,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_2.png",
+   "x": 952,
+   "y": 3000,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_1.png",
+   "x": 936,
+   "y": 3046,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_Bridge_2.png",
+   "x": 952,
+   "y": 3046,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Stacked_Barrels_1.png",
+   "x": 1250,
+   "y": 2660,
+   "origin": "bl",
+   "solid": true
+  }
+ ],
+ "anims": [
+  {
+   "sheet": "ext/animated/Fountain_16x16.png",
+   "fw": 32,
+   "fh": 48,
+   "x": 1230,
+   "y": 2260,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Pigeon_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 1180,
+   "y": 2350,
+   "fps": 5
+  },
+  {
+   "sheet": "ext/animated/Pigeon_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 990,
+   "y": 2380,
+   "fps": 5
+  },
+  {
+   "sheet": "ext/animated/Pigeon_16x16.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 820,
+   "y": 2830,
+   "fps": 5
+  }
+ ],
+ "animBands": [
+  {
+   "sheet": "ext/animated/Sea_Water_Tileset_No_Sand_Basic_16x16.png",
+   "fw": 64,
+   "fh": 64,
+   "x": 406,
+   "y": 2932,
+   "w": 1088,
+   "h": 128,
+   "fps": 6
+  }
+ ],
+ "solids": [
+  {
+   "x": 400,
+   "y": 2900,
+   "w": 536,
+   "h": 160
+  },
+  {
+   "x": 968,
+   "y": 2900,
+   "w": 532,
+   "h": 160
+  }
+ ],
+ "labels": [
+  {
+   "x": 950,
+   "y": 2020,
+   "text": "PLAZA FOOD MARKET & CANAL"
+  }
+ ],
+ "portals": []
 }

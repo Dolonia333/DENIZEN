@@ -1,591 +1,591 @@
 {
-  "district": "D13",
-  "name": "Subway Underground",
-  "bbox": {
-    "x0": 640,
-    "y0": 5120,
-    "x1": 4096,
-    "y1": 5632
+ "district": "D13",
+ "name": "Subway Underground",
+ "bbox": {
+  "x0": 640,
+  "y0": 5120,
+  "x1": 4096,
+  "y1": 5632
+ },
+ "patches": [
+  {
+   "tile": "asphalt",
+   "x": 640,
+   "y": 5120,
+   "w": 3456,
+   "h": 512,
+   "depth": 0.9
   },
-  "patches": [
-    {
-      "tile": "asphalt",
-      "x": 640,
-      "y": 5120,
-      "w": 3456,
-      "h": 512,
-      "depth": 0.9
-    },
-    {
-      "tile": "sidewalk",
-      "x": 656,
-      "y": 5232,
-      "w": 1604,
-      "h": 336,
-      "depth": 0.91
-    },
-    {
-      "tile": "sidewalk",
-      "x": 2540,
-      "y": 5232,
-      "w": 1540,
-      "h": 336,
-      "depth": 0.91
-    },
-    {
-      "tile": "sidewalk",
-      "x": 2260,
-      "y": 5328,
-      "w": 280,
-      "h": 160,
-      "depth": 0.91
-    }
-  ],
-  "roads": [],
-  "stamps": [
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Example_Graffiti_Train.png",
-      "x": 900,
-      "y": 5232,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Left.png",
-      "x": 2900,
-      "y": 5232,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Middle.png",
-      "x": 3012,
-      "y": 5232,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Right.png",
-      "x": 3156,
-      "y": 5232,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_1.png",
-      "x": 704,
-      "y": 5336,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_2.png",
-      "x": 4000,
-      "y": 5336,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Drink_Machine_Front.png",
-      "x": 764,
-      "y": 5336,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Map_Monitor.png",
-      "x": 800,
-      "y": 5336,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
-      "x": 840,
-      "y": 5336,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
-      "x": 1096,
-      "y": 5330,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
-      "x": 1330,
-      "y": 5330,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Posters.png",
-      "x": 1162,
-      "y": 5392,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Poster_1_And_2.png",
-      "x": 1216,
-      "y": 5392,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Consumed_Poster.png",
-      "x": 1284,
-      "y": 5392,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_1.png",
-      "x": 1150,
-      "y": 5408,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_2.png",
-      "x": 1204,
-      "y": 5408,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Two_Seats_Green_Bench_Frontal_1.png",
-      "x": 1258,
-      "y": 5408,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_2.png",
-      "x": 1120,
-      "y": 5408,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
-      "x": 1300,
-      "y": 5408,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Guitar_Case_Money.png",
-      "x": 1552,
-      "y": 5516,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Musician_Stand.png",
-      "x": 1596,
-      "y": 5514,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Ground_Paper_1.png",
-      "x": 1624,
-      "y": 5500,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Cardboard.png",
-      "x": 1876,
-      "y": 5480,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Cardboard_Bed_1.png",
-      "x": 1900,
-      "y": 5480,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Green_Mattress.png",
-      "x": 1936,
-      "y": 5480,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Cardboard_Bed_2.png",
-      "x": 1876,
-      "y": 5504,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Homeless_Ground_Money.png",
-      "x": 1930,
-      "y": 5502,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Black_Baggage.png",
-      "x": 1972,
-      "y": 5480,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plastic_Bag_Bottles.png",
-      "x": 1990,
-      "y": 5496,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Bottle_1.png",
-      "x": 2006,
-      "y": 5484,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Black_Locker.png",
-      "x": 2210,
-      "y": 5352,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Big_Pillar.png",
-      "x": 2380,
-      "y": 5352,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Control_Big_Monitor.png",
-      "x": 2420,
-      "y": 5352,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_SOS_Box.png",
-      "x": 2470,
-      "y": 5352,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png",
-      "x": 2560,
-      "y": 5360,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png",
-      "x": 2560,
-      "y": 5440,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Closed.png",
-      "x": 2560,
-      "y": 5520,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
-      "x": 3040,
-      "y": 5330,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
-      "x": 3320,
-      "y": 5330,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Map_Monitor.png",
-      "x": 3060,
-      "y": 5336,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Coffee_Machine_Front.png",
-      "x": 3180,
-      "y": 5336,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Drink_Machine_Front.png",
-      "x": 3220,
-      "y": 5336,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_1.png",
-      "x": 3100,
-      "y": 5408,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_2.png",
-      "x": 3154,
-      "y": 5408,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Black_Triple_Wait_Seat_1.png",
-      "x": 3208,
-      "y": 5408,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_2.png",
-      "x": 3070,
-      "y": 5408,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
-      "x": 3268,
-      "y": 5408,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_2.png",
-      "x": 3590,
-      "y": 5336,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Yellow_Trolley_1.png",
-      "x": 2790,
-      "y": 5500,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
-      "x": 3960,
-      "y": 5336,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Black_Locker.png",
-      "x": 2680,
-      "y": 5500,
-      "origin": "bl",
-      "solid": true
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Blue_Trolley_1.png",
-      "x": 2720,
-      "y": 5500,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Brown_Baggage_1.png",
-      "x": 2740,
-      "y": 5500,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Green_Baggage.png",
-      "x": 2756,
-      "y": 5500,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Pressed_Can_1.png",
-      "x": 1700,
-      "y": 5500,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Ground_Paper_2.png",
-      "x": 1770,
-      "y": 5470,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Angry_Grey_Face_Graffiti.png",
-      "x": 1050,
-      "y": 5624,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_White_Writing_Graffiti.png",
-      "x": 1600,
-      "y": 5616,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Yellow_Writing_Graffiti.png",
-      "x": 2900,
-      "y": 5616,
-      "origin": "bl"
-    },
-    {
-      "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Blue_Wolf_Dirty_Graffiti_1.png",
-      "x": 3450,
-      "y": 5616,
-      "origin": "bl"
-    }
-  ],
-  "anims": [
-    {
-      "sheet": "ext/animated/Subway_Train_4_Door_1_Graffiti_16x16.png",
-      "fw": 32,
-      "fh": 32,
-      "x": 996,
-      "y": 5200,
-      "fps": 6
-    },
-    {
-      "sheet": "ext/animated/Subway_Train_5_Door_1_16x16.png",
-      "fw": 32,
-      "fh": 32,
-      "x": 3060,
-      "y": 5200,
-      "fps": 6
-    },
-    {
-      "sheet": "ext/animated/Subway_Busker_1_16x16.png",
-      "fw": 32,
-      "fh": 32,
-      "x": 1550,
-      "y": 5490,
-      "fps": 6
-    },
-    {
-      "sheet": "ext/animated/Subway_Busker_2_16x16.png",
-      "fw": 32,
-      "fh": 32,
-      "x": 1590,
-      "y": 5490,
-      "fps": 6
-    },
-    {
-      "sheet": "ext/animated/Subway_Elevator_Going_Down_16x16.png",
-      "fw": 32,
-      "fh": 32,
-      "x": 3620,
-      "y": 5336,
-      "fps": 4
-    }
-  ],
-  "solids": [
-    {
-      "x": 640,
-      "y": 5120,
-      "w": 3456,
-      "h": 112
-    },
-    {
-      "x": 640,
-      "y": 5568,
-      "w": 3456,
-      "h": 64
-    },
-    {
-      "x": 640,
-      "y": 5120,
-      "w": 16,
-      "h": 512
-    },
-    {
-      "x": 4080,
-      "y": 5120,
-      "w": 16,
-      "h": 512
-    },
-    {
-      "x": 2260,
-      "y": 5232,
-      "w": 280,
-      "h": 96
-    },
-    {
-      "x": 2260,
-      "y": 5488,
-      "w": 280,
-      "h": 80
-    }
-  ],
-  "labels": [
-    {
-      "x": 1300,
-      "y": 5540,
-      "text": "SUBWAY - OLD PLATFORM"
-    },
-    {
-      "x": 3200,
-      "y": 5540,
-      "text": "LME STATION"
-    }
-  ],
-  "portals": [],
-  "animBands": [
-    {
-      "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Brown_Rail_Modular_Horizontal.png",
-      "fw": 16,
-      "fh": 32,
-      "x": 656,
-      "y": 5150,
-      "w": 1604,
-      "h": 32,
-      "fps": 1
-    },
-    {
-      "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Grey_Rail_Modular_Horizontal.png",
-      "fw": 16,
-      "fh": 32,
-      "x": 2260,
-      "y": 5150,
-      "w": 1820,
-      "h": 32,
-      "fps": 1
-    },
-    {
-      "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Brown_Rail_Modular_Horizontal.png",
-      "fw": 16,
-      "fh": 32,
-      "x": 656,
-      "y": 5190,
-      "w": 1604,
-      "h": 32,
-      "fps": 1
-    },
-    {
-      "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Grey_Rail_Modular_Horizontal.png",
-      "fw": 16,
-      "fh": 32,
-      "x": 2260,
-      "y": 5190,
-      "w": 1820,
-      "h": 32,
-      "fps": 1
-    },
-    {
-      "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Loges_Horizontal_Path_Yellow.png",
-      "fw": 16,
-      "fh": 16,
-      "x": 656,
-      "y": 5232,
-      "w": 1604,
-      "h": 16,
-      "fps": 1
-    },
-    {
-      "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Loges_Horizontal_Path_Yellow.png",
-      "fw": 16,
-      "fh": 16,
-      "x": 2540,
-      "y": 5232,
-      "w": 1540,
-      "h": 16,
-      "fps": 1
-    }
-  ]
+  {
+   "tile": "sidewalk",
+   "x": 656,
+   "y": 5232,
+   "w": 1616,
+   "h": 336,
+   "depth": 0.91
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2544,
+   "y": 5232,
+   "w": 1552,
+   "h": 336,
+   "depth": 0.91
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2256,
+   "y": 5328,
+   "w": 288,
+   "h": 160,
+   "depth": 0.91
+  }
+ ],
+ "roads": [],
+ "stamps": [
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Example_Graffiti_Train.png",
+   "x": 900,
+   "y": 5232,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Left.png",
+   "x": 2900,
+   "y": 5232,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Middle.png",
+   "x": 3012,
+   "y": 5232,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Exterior_Train_White_Right.png",
+   "x": 3156,
+   "y": 5232,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_1.png",
+   "x": 704,
+   "y": 5336,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Stairs_Complete_2.png",
+   "x": 4000,
+   "y": 5336,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Drink_Machine_Front.png",
+   "x": 764,
+   "y": 5343,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Map_Monitor.png",
+   "x": 800,
+   "y": 5336,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
+   "x": 840,
+   "y": 5336,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
+   "x": 1096,
+   "y": 5330,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
+   "x": 1330,
+   "y": 5330,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Posters.png",
+   "x": 1162,
+   "y": 5392,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Poster_1_And_2.png",
+   "x": 1216,
+   "y": 5392,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Consumed_Poster.png",
+   "x": 1284,
+   "y": 5392,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_1.png",
+   "x": 1150,
+   "y": 5408,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Green_Bench_Frontal_2.png",
+   "x": 1204,
+   "y": 5408,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Two_Seats_Green_Bench_Frontal_1.png",
+   "x": 1258,
+   "y": 5408,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_2.png",
+   "x": 1120,
+   "y": 5408,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
+   "x": 1300,
+   "y": 5408,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Guitar_Case_Money.png",
+   "x": 1552,
+   "y": 5516,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Musician_Stand.png",
+   "x": 1596,
+   "y": 5514,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Ground_Paper_1.png",
+   "x": 1624,
+   "y": 5500,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Cardboard.png",
+   "x": 1876,
+   "y": 5480,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Cardboard_Bed_1.png",
+   "x": 1900,
+   "y": 5480,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Green_Mattress.png",
+   "x": 1936,
+   "y": 5480,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Cardboard_Bed_2.png",
+   "x": 1876,
+   "y": 5504,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Homeless_Ground_Money.png",
+   "x": 1930,
+   "y": 5502,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Black_Baggage.png",
+   "x": 1972,
+   "y": 5480,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plastic_Bag_Bottles.png",
+   "x": 1990,
+   "y": 5496,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Bottle_1.png",
+   "x": 2006,
+   "y": 5484,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Black_Locker.png",
+   "x": 2210,
+   "y": 5352,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Big_Pillar.png",
+   "x": 2380,
+   "y": 5352,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Control_Big_Monitor.png",
+   "x": 2420,
+   "y": 5352,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_SOS_Box.png",
+   "x": 2470,
+   "y": 5352,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png",
+   "x": 2560,
+   "y": 5360,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Opened.png",
+   "x": 2560,
+   "y": 5440,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Turnstile_Closed.png",
+   "x": 2560,
+   "y": 5520,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
+   "x": 3040,
+   "y": 5330,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Pillar.png",
+   "x": 3320,
+   "y": 5330,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Map_Monitor.png",
+   "x": 3060,
+   "y": 5336,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Coffee_Machine_Front.png",
+   "x": 3180,
+   "y": 5336,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Drink_Machine_Front.png",
+   "x": 3220,
+   "y": 5343,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_1.png",
+   "x": 3100,
+   "y": 5408,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Three_Seats_Grey_Bench_Frontal_2.png",
+   "x": 3154,
+   "y": 5408,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Black_Triple_Wait_Seat_1.png",
+   "x": 3208,
+   "y": 5408,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_2.png",
+   "x": 3070,
+   "y": 5408,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
+   "x": 3268,
+   "y": 5408,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_2.png",
+   "x": 3590,
+   "y": 5336,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Yellow_Trolley_1.png",
+   "x": 2790,
+   "y": 5500,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Plant_Vase_1.png",
+   "x": 3960,
+   "y": 5336,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Small_Black_Locker.png",
+   "x": 2680,
+   "y": 5500,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Blue_Trolley_1.png",
+   "x": 2720,
+   "y": 5500,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Brown_Baggage_1.png",
+   "x": 2740,
+   "y": 5500,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Green_Baggage.png",
+   "x": 2756,
+   "y": 5500,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Pressed_Can_1.png",
+   "x": 1700,
+   "y": 5500,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Ground_Paper_2.png",
+   "x": 1770,
+   "y": 5470,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Angry_Grey_Face_Graffiti.png",
+   "x": 1050,
+   "y": 5624,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_White_Writing_Graffiti.png",
+   "x": 1600,
+   "y": 5616,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Yellow_Writing_Graffiti.png",
+   "x": 2900,
+   "y": 5616,
+   "origin": "bl"
+  },
+  {
+   "img": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Blue_Wolf_Dirty_Graffiti_1.png",
+   "x": 3450,
+   "y": 5616,
+   "origin": "bl"
+  }
+ ],
+ "anims": [
+  {
+   "sheet": "ext/animated/Subway_Train_4_Door_1_Graffiti_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 996,
+   "y": 5200,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Subway_Train_5_Door_1_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 3060,
+   "y": 5200,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Subway_Busker_1_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 1550,
+   "y": 5490,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Subway_Busker_2_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 1590,
+   "y": 5490,
+   "fps": 6
+  },
+  {
+   "sheet": "ext/animated/Subway_Elevator_Going_Down_16x16.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 3620,
+   "y": 5336,
+   "fps": 4
+  }
+ ],
+ "solids": [
+  {
+   "x": 640,
+   "y": 5120,
+   "w": 3456,
+   "h": 112
+  },
+  {
+   "x": 640,
+   "y": 5568,
+   "w": 3456,
+   "h": 64
+  },
+  {
+   "x": 640,
+   "y": 5120,
+   "w": 16,
+   "h": 512
+  },
+  {
+   "x": 4080,
+   "y": 5120,
+   "w": 16,
+   "h": 512
+  },
+  {
+   "x": 2260,
+   "y": 5232,
+   "w": 280,
+   "h": 96
+  },
+  {
+   "x": 2260,
+   "y": 5488,
+   "w": 280,
+   "h": 80
+  }
+ ],
+ "labels": [
+  {
+   "x": 1300,
+   "y": 5540,
+   "text": "SUBWAY - OLD PLATFORM"
+  },
+  {
+   "x": 3200,
+   "y": 5540,
+   "text": "LME STATION"
+  }
+ ],
+ "portals": [],
+ "animBands": [
+  {
+   "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Brown_Rail_Modular_Horizontal.png",
+   "fw": 16,
+   "fh": 32,
+   "x": 656,
+   "y": 5150,
+   "w": 1604,
+   "h": 32,
+   "fps": 1
+  },
+  {
+   "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Grey_Rail_Modular_Horizontal.png",
+   "fw": 16,
+   "fh": 32,
+   "x": 2260,
+   "y": 5150,
+   "w": 1820,
+   "h": 32,
+   "fps": 1
+  },
+  {
+   "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Brown_Rail_Modular_Horizontal.png",
+   "fw": 16,
+   "fh": 32,
+   "x": 656,
+   "y": 5190,
+   "w": 1604,
+   "h": 32,
+   "fps": 1
+  },
+  {
+   "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Grey_Rail_Modular_Horizontal.png",
+   "fw": 16,
+   "fh": 32,
+   "x": 2260,
+   "y": 5190,
+   "w": 1820,
+   "h": 32,
+   "fps": 1
+  },
+  {
+   "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Loges_Horizontal_Path_Yellow.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 656,
+   "y": 5232,
+   "w": 1604,
+   "h": 16,
+   "fps": 1
+  },
+  {
+   "sheet": "ext/singles/20_subway_and_train_station/ME_Singles_Subway_and_Train_Station_16x16_Loges_Horizontal_Path_Yellow.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 2540,
+   "y": 5232,
+   "w": 1540,
+   "h": 16,
+   "fps": 1
+  }
+ ]
 }

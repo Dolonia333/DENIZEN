@@ -11,13 +11,13 @@
    "tile": "grass",
    "x": 3600,
    "y": 3200,
-   "w": 2500,
-   "h": 1180,
+   "w": 2512,
+   "h": 1184,
    "depth": 0.9
   },
   {
    "tile": "sidewalk",
-   "x": 3700,
+   "x": 3696,
    "y": 3600,
    "w": 560,
    "h": 304,
@@ -33,7 +33,7 @@
   },
   {
    "tile": "sidewalk",
-   "x": 5340,
+   "x": 5344,
    "y": 3200,
    "w": 96,
    "h": 704,
@@ -43,7 +43,7 @@
    "tile": "sidewalk",
    "x": 3600,
    "y": 3904,
-   "w": 2500,
+   "w": 2512,
    "h": 96,
    "depth": 0.9
   },
@@ -51,7 +51,7 @@
    "tile": "sand",
    "x": 3600,
    "y": 4000,
-   "w": 2500,
+   "w": 2512,
    "h": 624,
    "depth": 0.92
   }
@@ -212,19 +212,19 @@
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Net_Middle_Modular.png",
    "x": 3992,
-   "y": 4260,
+   "y": 4244,
    "origin": "bl"
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Net_Middle_Modular.png",
    "x": 4008,
-   "y": 4260,
+   "y": 4244,
    "origin": "bl"
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Beach_Volley_Net_Middle_Modular.png",
    "x": 4024,
-   "y": 4260,
+   "y": 4244,
    "origin": "bl"
   },
   {
@@ -354,13 +354,13 @@
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Chiar_1_Sand.png",
    "x": 5170,
-   "y": 4155,
+   "y": 4152,
    "origin": "bl"
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Bamboo_Bar_Chiar_2_Sand.png",
    "x": 5215,
-   "y": 4150,
+   "y": 4152,
    "origin": "bl"
   },
   {
@@ -427,13 +427,13 @@
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_1.png",
    "x": 5600,
-   "y": 4672,
+   "y": 4700,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Pier_2.png",
-   "x": 5600,
-   "y": 4720,
+   "x": 5632,
+   "y": 4700,
    "origin": "bl"
   }
  ],

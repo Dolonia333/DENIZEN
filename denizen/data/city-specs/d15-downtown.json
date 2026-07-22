@@ -1,94 +1,507 @@
 {
-  "district": "D15 Downtown & Hotel",
-  "bbox": { "x": 2000, "y": 600, "w": 500, "h": 900 },
-  "patches": [
-    { "tile": "grass", "x": 2000, "y": 600, "w": 500, "h": 900, "depth": 0.85 },
-    { "tile": "sidewalk", "x": 2016, "y": 624, "w": 468, "h": 360, "depth": 0.9 },
-    { "tile": "sidewalk", "x": 2016, "y": 1080, "w": 468, "h": 404, "depth": 0.9 }
-  ],
-  "roads": [
-    { "x": 2000, "y": 1000, "w": 500, "h": 64 }
-  ],
-  "stamps": [
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Condo_1.png", "x": 2040, "y": 960, "origin": "bl", "solid": true },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_1.png", "x": 2040, "y": 912, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_4.png", "x": 2040, "y": 848, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_1.png", "x": 2040, "y": 784, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_2.png", "x": 2132, "y": 772, "origin": "bl", "solid": false, "depth": 785 },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_2.png", "x": 2048, "y": 772, "origin": "bl", "solid": false, "depth": 785 },
-
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Condo_5.png", "x": 2196, "y": 960, "origin": "bl", "solid": true },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_7.png", "x": 2196, "y": 912, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_10.png", "x": 2196, "y": 848, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_11.png", "x": 2196, "y": 784, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_10.png", "x": 2196, "y": 720, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_16.png", "x": 2212, "y": 700, "origin": "bl", "solid": false, "depth": 721 },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_2.png", "x": 2284, "y": 712, "origin": "bl", "solid": false, "depth": 721 },
-
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Condo_10.png", "x": 2352, "y": 960, "origin": "bl", "solid": true },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_17.png", "x": 2352, "y": 912, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_5.png", "x": 2352, "y": 848, "origin": "bl", "solid": false },
-    { "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_10.png", "x": 2366, "y": 840, "origin": "bl", "solid": false, "depth": 849 },
-
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_2.png", "x": 2018, "y": 930, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_1.png", "x": 2466, "y": 940, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png", "x": 2158, "y": 952, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Open_Empty_Trash_Can.png", "x": 2312, "y": 952, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png", "x": 2050, "y": 976, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Mailbox_1.png", "x": 2210, "y": 978, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png", "x": 2270, "y": 980, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_1.png", "x": 2338, "y": 976, "origin": "bl", "solid": false },
-
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Manhole_1.png", "x": 2130, "y": 1030, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Manhole_2.png", "x": 2400, "y": 1052, "origin": "bl", "solid": false },
-    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_7.png", "x": 2300, "y": 1024, "origin": "bl", "solid": true },
-    { "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_3.png", "x": 2080, "y": 1062, "origin": "bl", "solid": true },
-
-    { "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hotel_1.png", "x": 2114, "y": 1448, "origin": "bl", "solid": true },
-    { "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hotel_Signboard_2.png", "x": 2378, "y": 1452, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_1.png", "x": 2220, "y": 1454, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_2.png", "x": 2264, "y": 1454, "origin": "bl", "solid": false },
-    { "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_1.png", "x": 2196, "y": 1460, "origin": "bl", "solid": true },
-    { "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_2.png", "x": 2286, "y": 1456, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png", "x": 2130, "y": 1466, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png", "x": 2350, "y": 1462, "origin": "bl", "solid": true },
-
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_5.png", "x": 2020, "y": 1140, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_3.png", "x": 2056, "y": 1132, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Coffee_Cup_Example.png", "x": 2016, "y": 1300, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png", "x": 2032, "y": 1350, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Open_Empty_Trash_Can.png", "x": 2070, "y": 1346, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png", "x": 2028, "y": 1420, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Drinking_Fountain_1.png", "x": 2064, "y": 1416, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flowers_1.png", "x": 2094, "y": 1410, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_1.png", "x": 2024, "y": 1470, "origin": "bl", "solid": false },
-
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Billboard_5.png", "x": 2404, "y": 1180, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_1.png", "x": 2440, "y": 1260, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_3.png", "x": 2432, "y": 1300, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_3.png", "x": 2430, "y": 1360, "origin": "bl", "solid": false },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_2.png", "x": 2464, "y": 1330, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png", "x": 2470, "y": 1400, "origin": "bl", "solid": false }
-  ],
-  "anims": [
-    { "sheet": "ext/animated/Street_Lamp_16x16.png", "fw": 80, "fh": 80, "x": 2160, "y": 998, "fps": 4 },
-    { "sheet": "ext/animated/Street_Lamp_16x16.png", "fw": 80, "fh": 80, "x": 2400, "y": 998, "fps": 4 },
-    { "sheet": "ext/animated/Street_Lamp_16x16.png", "fw": 80, "fh": 80, "x": 2104, "y": 1480, "fps": 4 },
-    { "sheet": "ext/animated/Street_Lamp_16x16.png", "fw": 80, "fh": 80, "x": 2420, "y": 1480, "fps": 4 },
-    { "sheet": "ext/animated/Stoplight_16x16.png", "fw": 11, "fh": 27, "x": 2008, "y": 998, "fps": 4 },
-    { "sheet": "ext/animated/Stoplight_16x16.png", "fw": 11, "fh": 27, "x": 2492, "y": 1078, "fps": 4 },
-    { "sheet": "ext/animated/Billboard_1.png", "fw": 80, "fh": 64, "x": 2096, "y": 752, "fps": 6, "depth": 786 }
-  ],
-  "animBands": [],
-  "solids": [],
-  "labels": [
-    { "x": 2240, "y": 1494, "text": "DOWNTOWN" }
-  ],
-  "portals": [],
-  "npcs": [
-    { "char": 5, "name": "Bellhop Bruno", "x": 2262, "y": 1462, "r": 90 },
-    { "char": 11, "name": "Barista Mara", "x": 2100, "y": 1320, "r": 90 },
-    { "char": 17, "name": "Broker Bo", "x": 2250, "y": 988, "r": 90 }
-  ],
-  "vehicles": []
+ "district": "D15 Downtown & Hotel",
+ "bbox": {
+  "x": 2000,
+  "y": 600,
+  "w": 500,
+  "h": 900
+ },
+ "patches": [
+  {
+   "tile": "grass",
+   "x": 2000,
+   "y": 608,
+   "w": 512,
+   "h": 912,
+   "depth": 0.85
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2016,
+   "y": 624,
+   "w": 480,
+   "h": 368,
+   "depth": 0.9
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2016,
+   "y": 1088,
+   "w": 480,
+   "h": 416,
+   "depth": 0.9
+  }
+ ],
+ "roads": [
+  {
+   "x": 2000,
+   "y": 992,
+   "w": 512,
+   "h": 64
+  }
+ ],
+ "stamps": [
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Condo_1.png",
+   "x": 2040,
+   "y": 960,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_1.png",
+   "x": 2040,
+   "y": 912,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_4.png",
+   "x": 2040,
+   "y": 848,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_1.png",
+   "x": 2040,
+   "y": 784,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_2.png",
+   "x": 2132,
+   "y": 772,
+   "origin": "bl",
+   "solid": false,
+   "depth": 785
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_2.png",
+   "x": 2048,
+   "y": 772,
+   "origin": "bl",
+   "solid": false,
+   "depth": 785
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Condo_5.png",
+   "x": 2196,
+   "y": 960,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_7.png",
+   "x": 2196,
+   "y": 912,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_10.png",
+   "x": 2196,
+   "y": 848,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_11.png",
+   "x": 2196,
+   "y": 784,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_10.png",
+   "x": 2196,
+   "y": 720,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_16.png",
+   "x": 2212,
+   "y": 700,
+   "origin": "bl",
+   "solid": false,
+   "depth": 721
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_2.png",
+   "x": 2284,
+   "y": 712,
+   "origin": "bl",
+   "solid": false,
+   "depth": 721
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Ground_Floor_Condo_10.png",
+   "x": 2352,
+   "y": 960,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Middle_Floor_17.png",
+   "x": 2352,
+   "y": 912,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_5.png",
+   "x": 2352,
+   "y": 848,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/5_floor_modular_building/ME_Singles_Floor_Modular_Building_16x16_Roof_Props_10.png",
+   "x": 2366,
+   "y": 840,
+   "origin": "bl",
+   "solid": false,
+   "depth": 849
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_2.png",
+   "x": 2018,
+   "y": 930,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_1.png",
+   "x": 2466,
+   "y": 940,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png",
+   "x": 2158,
+   "y": 952,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Open_Empty_Trash_Can.png",
+   "x": 2312,
+   "y": 952,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png",
+   "x": 2050,
+   "y": 976,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Mailbox_1.png",
+   "x": 2210,
+   "y": 978,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+   "x": 2270,
+   "y": 980,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_1.png",
+   "x": 2338,
+   "y": 976,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Manhole_1.png",
+   "x": 2130,
+   "y": 1030,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Manhole_2.png",
+   "x": 2400,
+   "y": 1052,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Left_7.png",
+   "x": 2300,
+   "y": 1024,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Car_Right_3.png",
+   "x": 2080,
+   "y": 1052,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hotel_1.png",
+   "x": 2114,
+   "y": 1448,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Hotel_Signboard_2.png",
+   "x": 2378,
+   "y": 1452,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_1.png",
+   "x": 2220,
+   "y": 1454,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Pot_2.png",
+   "x": 2264,
+   "y": 1454,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_1.png",
+   "x": 2196,
+   "y": 1460,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/12_hotel_and_hospital/ME_Singles_Hotel_and_Hospital_16x16_Luggage_Trolley_2.png",
+   "x": 2286,
+   "y": 1456,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+   "x": 2130,
+   "y": 1466,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Blue_Closed_Trash_Can.png",
+   "x": 2350,
+   "y": 1462,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_5.png",
+   "x": 2020,
+   "y": 1140,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_3.png",
+   "x": 2056,
+   "y": 1132,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Kiosk_Coffee_Cup_Example.png",
+   "x": 2016,
+   "y": 1300,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+   "x": 2032,
+   "y": 1350,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Open_Empty_Trash_Can.png",
+   "x": 2070,
+   "y": 1346,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+   "x": 2028,
+   "y": 1420,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Drinking_Fountain_1.png",
+   "x": 2064,
+   "y": 1416,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flowers_1.png",
+   "x": 2094,
+   "y": 1410,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_1.png",
+   "x": 2024,
+   "y": 1470,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Billboard_5.png",
+   "x": 2404,
+   "y": 1180,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_1.png",
+   "x": 2440,
+   "y": 1260,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_3.png",
+   "x": 2432,
+   "y": 1300,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Flower_Bush_3.png",
+   "x": 2430,
+   "y": 1360,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_2.png",
+   "x": 2464,
+   "y": 1330,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Hydrant_1.png",
+   "x": 2470,
+   "y": 1400,
+   "origin": "bl",
+   "solid": false
+  }
+ ],
+ "anims": [
+  {
+   "sheet": "ext/animated/Street_Lamp_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "x": 2160,
+   "y": 998,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Street_Lamp_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "x": 2400,
+   "y": 998,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Street_Lamp_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "x": 2104,
+   "y": 1480,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Street_Lamp_16x16.png",
+   "fw": 80,
+   "fh": 80,
+   "x": 2420,
+   "y": 1480,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Stoplight_16x16.png",
+   "fw": 11,
+   "fh": 27,
+   "x": 2008,
+   "y": 998,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Stoplight_16x16.png",
+   "fw": 11,
+   "fh": 27,
+   "x": 2492,
+   "y": 1078,
+   "fps": 4
+  },
+  {
+   "sheet": "ext/animated/Billboard_1.png",
+   "fw": 80,
+   "fh": 64,
+   "x": 2096,
+   "y": 752,
+   "fps": 6,
+   "depth": 786
+  }
+ ],
+ "animBands": [],
+ "solids": [],
+ "labels": [
+  {
+   "x": 2240,
+   "y": 1494,
+   "text": "DOWNTOWN"
+  }
+ ],
+ "portals": [],
+ "npcs": [
+  {
+   "char": 5,
+   "name": "Bellhop Bruno",
+   "x": 2262,
+   "y": 1462,
+   "r": 90
+  },
+  {
+   "char": 11,
+   "name": "Barista Mara",
+   "x": 2100,
+   "y": 1320,
+   "r": 90
+  },
+  {
+   "char": 17,
+   "name": "Broker Bo",
+   "x": 2250,
+   "y": 988,
+   "r": 90
+  }
+ ],
+ "vehicles": []
 }
