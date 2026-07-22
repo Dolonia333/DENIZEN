@@ -42,23 +42,36 @@ CORE_SLABS = [
     (0,    1145, 2016, 352),
 ]
 
-# Asphalt road grid (x, y, w, h). Sidewalk auto-drawn 16px around each by the
-# renderer. The avenue (y1880) + verticals already exist in-engine; these ADD
-# the cross-streets that bound the core into blocks.
-ROADS = [
-    # main arterials (x, y, w, h). Sidewalk auto-drawn 16px around each.
-    (180, 1876, 6280, 64),      # MAIN AVENUE (full width)
-    (1720, 1146, 2280, 64),     # north cross-street
-    (3040, 2620, 3560, 64),     # south-core cross-street
-    (2500, 3540, 1240, 64),     # park/residential cross (partial)
-    # vertical arteries
-    (1808, 380, 64, 1560),      # downtown vertical
-    (2560, 380, 64, 3220),      # CENTRAL artery (north to park)
-    (3900, 700, 64, 1940),      # civic|shopping divider
-    (4700, 1150, 64, 1520),     # core -> industrial connector
-    (5240, 720, 64, 1920),      # mainstreet|station divider
-    (964, 1550, 64, 2900),      # west artery (down through residential)
-]
+# ── REGULAR CITY GRID ─────────────────────────────────────────────────────
+# Streets on a fixed lattice so the urban core divides into even, buildable
+# blocks (the skeleton the districts get built onto). The renderer auto-draws a
+# 16px sidewalk around every road, so each street reads as asphalt + sidewalks.
+#
+# Anchored to what already exists so nothing has to move: one E-W street sits on
+# the main avenue (y1880, the HQ + traffic) and one N-S street on the central
+# artery (x2560). Grid lives BELOW the rural pockets (farm y<=1145, camping
+# y<=1040) and ABOVE the green south (y>3300).
+STREET = 64
+GRID_X0, GRID_X1 = 0, 6656        # full width
+GRID_Y0, GRID_Y1 = 1160, 3300     # urban-core band (clears farm/camping + south)
+VLINES = [64, 896, 1728, 2560, 3392, 4224, 5056, 5888]   # N-S streets (x, 832 apart, 2560 = central artery)
+HLINES = [1200, 1880, 2560, 3240]                        # E-W streets (y, ~680 apart, 1880 = main avenue)
+# A few N-S streets extend UP to frame the downtown + shopping spurs.
+VSPUR_TOP = {1728: 540, 2560: 540, 4224: 880, 5056: 880}  # x -> street top y
+
+
+def gen_grid():
+    """Emit the lattice as (x, y, w, h) asphalt roads."""
+    roads = []
+    for x in VLINES:                       # vertical (N-S) streets
+        top = VSPUR_TOP.get(x, GRID_Y0)
+        roads.append((x, top, STREET, GRID_Y1 - top))
+    for y in HLINES:                       # horizontal (E-W) streets
+        roads.append((GRID_X0, y, GRID_X1 - GRID_X0, STREET))
+    return roads
+
+
+ROADS = gen_grid()
 
 
 TREE = "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tree_9.png"
