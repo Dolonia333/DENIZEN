@@ -51,13 +51,15 @@ CORE_SLABS = [
 # the main avenue (y1880, the HQ + traffic) and one N-S street on the central
 # artery (x2560). Grid lives BELOW the rural pockets (farm y<=1145, camping
 # y<=1040) and ABOVE the green south (y>3300).
+# NOTE: every value is a multiple of 16 so road cells snap to the tile grid —
+# the curb autotiler in full-world.js keys cells on a 16px lattice.
 STREET = 64
 GRID_X0, GRID_X1 = 0, 6656        # full width
-GRID_Y0, GRID_Y1 = 1160, 3300     # urban-core band (clears farm/camping + south)
+GRID_Y0, GRID_Y1 = 1152, 3296     # urban-core band (clears farm/camping + south)
 VLINES = [64, 896, 1728, 2560, 3392, 4224, 5056, 5888]   # N-S streets (x, 832 apart, 2560 = central artery)
-HLINES = [1200, 1880, 2560, 3240]                        # E-W streets (y, ~680 apart, 1880 = main avenue)
+HLINES = [1200, 1872, 2560, 3248]                        # E-W streets (y, ~680 apart, 1872 = main avenue)
 # A few N-S streets extend UP to frame the downtown + shopping spurs.
-VSPUR_TOP = {1728: 540, 2560: 540, 4224: 880, 5056: 880}  # x -> street top y
+VSPUR_TOP = {1728: 544, 2560: 544, 4224: 880, 5056: 880}  # x -> street top y
 
 
 def gen_grid():

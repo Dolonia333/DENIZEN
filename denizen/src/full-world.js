@@ -477,14 +477,59 @@ function renderGround(scene, plan) {
     t.context.drawImage(beach, 192, 16, 16, 16, 0, 0, 16, 16);
     t.refresh();
   }
+  // Curb tiles cropped from city_terrain (decoded by border classification):
+  // the raised concrete edge that separates sidewalk from asphalt. 16px each.
+  const terr = scene.textures.get('fw_terrain')?.getSourceImage();
+  const CURB = { top: [16, 32], bot: [16, 0], left: [32, 16], right: [0, 16] };
+  if (terr) {
+    for (const [k, [sx, sy]] of Object.entries(CURB)) {
+      const key = 'fwt_curb_' + k;
+      if (scene.textures.exists(key)) continue;
+      const t = scene.textures.createCanvas(key, 16, 16);
+      t.context.imageSmoothingEnabled = false;
+      t.context.drawImage(terr, sx, sy, 16, 16, 0, 0, 16, 16);
+      t.refresh();
+    }
+  }
   const TILE_KEYS = { grass: 'fwt_grass_tile', sidewalk: 'fwt_sidewalk_tile', asphalt: 'fwt_asphalt_tile', sand: 'fwt_sand_tile' };
   (plan.patches || []).forEach((p) => {
     const key = TILE_KEYS[p.tile] || TILE_KEYS.sidewalk;
     scene.add.tileSprite(p.x, p.y, p.w, p.h, key).setOrigin(0).setDepth(p.depth ?? 0.9);
   });
+
+  // Road cell lattice (16px) so curbs open at intersections instead of running
+  // straight through where cars cross.
+  const roadCells = new Set();
+  const ckey = (x, y) => Math.floor(x / T) + ',' + Math.floor(y / T);
+  (plan.roads || []).forEach((r) => {
+    for (let y = r.y; y < r.y + r.h; y += T)
+      for (let x = r.x; x < r.x + r.w; x += T) roadCells.add(ckey(x, y));
+  });
+  const isRoad = (x, y) => roadCells.has(ckey(x, y));
+  // Draw a curb along one road edge as contiguous RUNS (one tileSprite per run,
+  // broken wherever the outward neighbour is another road = an intersection).
+  const curbRun = (fixed, from, to, curbKey, outward, horizontal) => {
+    let start = null;
+    for (let p = from; p <= to; p += T) {
+      const open = p < to && (horizontal ? !isRoad(p, outward) : !isRoad(outward, p));
+      if (open && start === null) start = p;
+      if (!open && start !== null) {
+        if (horizontal) scene.add.tileSprite(start, fixed, p - start, T, curbKey).setOrigin(0).setDepth(1.15);
+        else scene.add.tileSprite(fixed, start, T, p - start, curbKey).setOrigin(0).setDepth(1.15);
+        start = null;
+      }
+    }
+  };
   (plan.roads || []).forEach((r) => {
     scene.add.tileSprite(r.x - T, r.y - T, r.w + 2 * T, r.h + 2 * T, 'fwt_sidewalk_tile').setOrigin(0).setDepth(1);
     scene.add.tileSprite(r.x, r.y, r.w, r.h, 'fwt_asphalt_tile').setOrigin(0).setDepth(1.1);
+    if (r.w >= r.h) {  // horizontal street: curbs on top + bottom
+      curbRun(r.y, r.x, r.x + r.w, 'fwt_curb_top', r.y - T, true);
+      curbRun(r.y + r.h - T, r.x, r.x + r.w, 'fwt_curb_bot', r.y + r.h, true);
+    } else {           // vertical street: curbs on left + right
+      curbRun(r.x, r.y, r.y + r.h, 'fwt_curb_left', r.x - T, false);
+      curbRun(r.x + r.w - T, r.y, r.y + r.h, 'fwt_curb_right', r.x + r.w, false);
+    }
   });
 }
 
