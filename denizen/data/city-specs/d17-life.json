@@ -1,0 +1,38 @@
+{
+ "district": "D17 City Life Overlay",
+ "note": "Ambient street life only: 14 wandering NPCs + 4 looping cars. No terrain, no stamps.",
+ "patches": [],
+ "roads": [],
+ "stamps": [],
+ "anims": [],
+ "animBands": [],
+ "solids": [],
+ "labels": [],
+ "portals": [],
+ "npcs": [
+  {"char": 10, "name": "Theo",   "x": 4500, "y": 1990, "r": 200},
+  {"char": 11, "name": "Isla",   "x": 4530, "y": 1270, "r": 150},
+  {"char": 12, "name": "Kenji",  "x": 5660, "y": 1990, "r": 180},
+  {"char": 13, "name": "Rosa",   "x": 900,  "y": 2450, "r": 160},
+  {"char": 14, "name": "June",   "x": 2900, "y": 3800, "r": 250},
+  {"char": 15, "name": "Malik",  "x": 1200, "y": 3660, "r": 220},
+  {"char": 16, "name": "Coral",  "x": 4660, "y": 4530, "r": 200},
+  {"char": 17, "name": "Sage",   "x": 5000, "y": 800,  "r": 120},
+  {"char": 18, "name": "Ada",    "x": 3700, "y": 2300, "r": 160},
+  {"char": 19, "name": "Mori",   "x": 650,  "y": 4800, "r": 100},
+  {"char": 20, "name": "Nina",   "x": 900,  "y": 5400, "r": 150},
+  {"char": 3,  "name": "Felix",  "x": 3800, "y": 5400, "r": 150},
+  {"char": 6,  "name": "Dot",    "x": 1300, "y": 2400, "r": 200},
+  {"char": 9,  "name": "Rex",    "x": 2440, "y": 1380, "r": 150}
+ ],
+ "vehicles": [
+  {"sheet": "ext/vehicles/Car_3_16x16_4_drive_side.png", "fw": 96, "fh": 96,
+   "path": [[200, 1900], [3900, 1900], [3900, 1925], [200, 1925]], "speed": 85, "fps": 10},
+  {"sheet": "ext/vehicles/Car_3_16x16_5_drive_side.png", "fw": 96, "fh": 96,
+   "path": [[3900, 1925], [200, 1925], [200, 1900], [3900, 1900]], "speed": 68, "fps": 8},
+  {"sheet": "ext/vehicles/Car_5_16x16_5_drive_down.png", "fw": 80, "fh": 80,
+   "path": [[972, 420], [972, 1860], [1000, 1860], [1000, 420]], "speed": 60, "fps": 8},
+  {"sheet": "ext/vehicles/Car_4_16x16_6_drive_down.png", "fw": 80, "fh": 80,
+   "path": [[2578, 440], [2578, 1860], [2606, 1860], [2606, 440]], "speed": 64, "fps": 8}
+ ]
+}

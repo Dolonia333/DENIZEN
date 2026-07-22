@@ -177,6 +177,7 @@ const state = {
   keys: null,
   built: false,
   portals: [],
+  vehicles: [],
   worldW: WORLD_W,
   worldH: WORLD_H,
 };
@@ -210,7 +211,7 @@ export function buildFullWorld(scene) {
   scene.load.spritesheet('fw_anim_server', lz('animated/server_rack.png'), { frameWidth: 16, frameHeight: 48 });
   scene.load.spritesheet('fw_anim_coffee', lz('animated/coffee.png'), { frameWidth: 16, frameHeight: 32 });
 
-  for (let c = 1; c <= 9; c++) {
+  for (let c = 1; c <= 20; c++) {
     const nn = String(c).padStart(2, '0');
     scene.load.spritesheet(`fw_char_${c}`, lz(`characters/char_${nn}.png`), { frameWidth: 16, frameHeight: 32 });
   }
@@ -414,6 +415,9 @@ function renderCityPlan(scene, plan) {
   (plan.animBands || []).forEach((b) => {
     if (!scene.textures.exists(planKey(b.sheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: b.sheet, fw: b.fw || 16, fh: b.fh || 16 }));
   });
+  (plan.vehicles || []).forEach((v) => {
+    if (!scene.textures.exists(planKey(v.sheet))) toLoad.add(JSON.stringify({ t: 'sheet', p: v.sheet, fw: v.fw || 48, fh: v.fh || 32 }));
+  });
   if ((plan.patches || []).some((p) => p.tile === 'sand') && !scene.textures.exists(planKey('ext/themes/21_Beach.png'))) {
     toLoad.add(JSON.stringify({ t: 'img', p: 'ext/themes/21_Beach.png' }));
   }
@@ -507,6 +511,28 @@ function placeCityPlan(scene, plan) {
   });
   (plan.solids || []).forEach((r) => state.solids.push(r));
   (plan.labels || []).forEach((l) => zoneLabel(scene, l.x, l.y, l.text));
+  // Plan-declared ambient NPCs: {char: 1-20, name, x, y, r}
+  (plan.npcs || []).forEach((n) => {
+    if (scene.textures.exists(`fw_char_${n.char}`)) spawnNpc(scene, n);
+  });
+  // Driving vehicles: {sheet, fw, fh, path: [[x,y],...], speed, fps?, loop:true}
+  (plan.vehicles || []).forEach((v, vi) => {
+    const key = planKey(v.sheet);
+    if (!scene.textures.exists(key)) return;
+    const animKey = `cpv_${vi}_${key}`;
+    if (!scene.anims.exists(animKey)) {
+      const tex = scene.textures.get(key);
+      const total = Math.max(1, tex.frameTotal - 1);
+      scene.anims.create({
+        key: animKey,
+        frames: scene.anims.generateFrameNumbers(key, { start: 0, end: total - 1 }),
+        frameRate: v.fps || 8, repeat: -1,
+      });
+    }
+    const sp = scene.add.sprite(v.path[0][0], v.path[0][1], key, 0).setOrigin(0.5, 1);
+    sp.play(animKey);
+    state.vehicles.push({ sp, path: v.path, speed: v.speed || 70, seg: 0, t: 0 });
+  });
   (plan.portals || []).forEach((p) => {
     const portal = { x0: p.x0, x1: p.x1, y: p.y, href: p.href, teleport: p.teleport || null, open: false, sprite: null };
     if (p.doorSheet && scene.textures.exists(planKey(p.doorSheet))) {
@@ -798,7 +824,7 @@ function ensureAnim(scene, key, tex, lastFrame, rate) {
 }
 
 function makeCharAnims(scene) {
-  for (let c = 1; c <= 9; c++) {
+  for (let c = 1; c <= 20; c++) {
     const tex = `fw_char_${c}`;
     if (!scene.textures.exists(tex)) continue;
     DIRS.forEach((d, di) => {
@@ -953,6 +979,20 @@ function tick(scene, dt) {
     if (p.anims?.currentAnim?.key !== want) p.play(want);
   }
   p.setDepth(p.y);
+
+  // Driving vehicles: follow waypoint loops, flip to travel direction
+  state.vehicles.forEach((v) => {
+    const a = v.path[v.seg];
+    const b = v.path[(v.seg + 1) % v.path.length];
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    const len = Math.hypot(dx, dy) || 1;
+    v.t += (v.speed * step) / len;
+    if (v.t >= 1) { v.t = 0; v.seg = (v.seg + 1) % v.path.length; }
+    v.sp.x = a[0] + dx * v.t;
+    v.sp.y = a[1] + dy * v.t;
+    if (Math.abs(dx) > Math.abs(dy)) v.sp.setFlipX(dx < 0);
+    v.sp.setDepth(v.sp.y);
+  });
 
   // NPC wander
   const now = scene.time.now;

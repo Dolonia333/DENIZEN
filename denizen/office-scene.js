@@ -462,7 +462,7 @@ class OfficeScene extends Phaser.Scene {
     // Must run before ANY office drawing (floor tileSprites start ~110 lines
     // down) so the city isn't painted over by the 1280×720 office floor.
     if (urlParams.get('world') === 'full') {
-      import('./src/full-world.js?v=fw9')
+      import('./src/full-world.js?v=fw10')
         .then((m) => m.buildFullWorld(this))
         .catch((err) => {
           console.error('[OfficeScene] full-world load failed:', err);
