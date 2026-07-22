@@ -130,6 +130,54 @@ merged["stamps"] = [s for s in merged["stamps"]
                     if not (id(s) in _struct_ids and _base_in_obstacle(s))]
 _pruned = _before - len(merged["stamps"])
 
+# --- Nudge buildings off the grid streets -------------------------------------
+# Districts were placed before the street grid, so some buildings straddle a
+# street. Shift each on-road building perpendicular to that street just far
+# enough to clear it — but ONLY if the new spot hits no road and overlaps no
+# other building. So it can only improve, never create a new collision.
+_roads = [(r["x"], r["y"], r.get("w", 0), r.get("h", 0)) for r in merged["roads"]]
+_BLD_KW = ("building", "house", "hotel", "hospital", "mall", "market", "store",
+           "condo", "villa", "school", "_station", "barn", "hangar", "office",
+           "police", "fire_station", "museum", "apartment", "bank", "chapel",
+           "post_office", "warehouse", "silo", "farmhouse")
+
+
+def _ov(a, b):
+    return (a[0] < b[0] + b[2] and a[0] + a[2] > b[0]
+            and a[1] < b[1] + b[3] and a[1] + a[3] > b[1])
+
+
+def _hits_road(rect):
+    return any(_ov(rect, r) for r in _roads)
+
+
+def _is_bld(img):
+    return any(k in img.lower() for k in _BLD_KW)
+
+
+_bld = [(s, _rect(s)) for s in merged["stamps"] if _is_bld(s["img"])]
+_bld = [(s, r) for s, r in _bld if r]
+_nudged = 0
+for s, r in _bld:
+    road = next((rd for rd in _roads if _ov(r, rd)), None)
+    if not road:
+        continue
+    rx, ry, rw, rh = road
+    if rw >= rh:                              # horizontal street: push up/down
+        up = ry - (r[1] + r[3]) - 4
+        dn = (ry + rh) - r[1] + 4
+        d = up if abs(up) <= abs(dn) else dn
+        cand, nx, ny = (r[0], r[1] + d, r[2], r[3]), s["x"], s["y"] + d
+    else:                                    # vertical street: push left/right
+        lf = rx - (r[0] + r[2]) - 4
+        rt = (rx + rw) - r[0] + 4
+        d = lf if abs(lf) <= abs(rt) else rt
+        cand, nx, ny = (r[0] + d, r[1], r[2], r[3]), s["x"] + d, s["y"]
+    if _hits_road(cand) or any(_ov(cand, br) for bs, br in _bld if bs is not s):
+        continue
+    s["x"], s["y"] = nx, ny
+    _nudged += 1
+
 missing = []
 for s in merged["stamps"]:
     if not os.path.exists(os.path.join(DEN, "assets", "limezu", s["img"].replace("/", os.sep))):
@@ -142,6 +190,7 @@ for a in merged["anims"] + merged["animBands"] + merged["vehicles"]:
 json.dump(merged, open(OUT, "w", encoding="utf-8"), indent=1)
 print("merged:", {k: len(v) for k, v in merged.items() if isinstance(v, list)})
 print(f"pruned {_pruned} structure props off building footprints")
+print(f"nudged {_nudged} buildings off the streets")
 print("missing:", len(missing))
 for m in missing[:10]:
     print("  MISS", m)

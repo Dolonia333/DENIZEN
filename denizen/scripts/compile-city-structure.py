@@ -89,24 +89,34 @@ def in_slab(x, y):
     return False
 
 
+def on_road(px, py):
+    """True if the point sits on (or right at the edge of) ANY street — so
+    shoulder furniture never lands in a crossing road at an intersection."""
+    for rx, ry, rw, rh in ROADS:
+        if rx - 10 <= px <= rx + rw + 10 and ry - 10 <= py <= ry + rh + 10:
+            return True
+    return False
+
+
 def street_furniture():
-    """Line the major roads with alternating trees + lamps on their paved
-    shoulders (grammar: props hug the sidewalk edges). Deterministic."""
+    """Line the streets with alternating lamps + trees on their sidewalks,
+    HUGGING the curb and SKIPPING intersections (never on a crossing road).
+    Deterministic."""
     out = []
-    for i, (x, y, w, h) in enumerate(ROADS):
+    for (x, y, w, h) in ROADS:
         horizontal = w >= h
-        if horizontal:
-            for j, px in enumerate(range(x + 40, x + w - 40, 180)):
-                for py in (y - 22, y + h + 46):   # both shoulders
-                    if in_slab(px, py):
-                        img = TREE if (j % 2 == 0) else LAMP
+        if horizontal:                       # lamps on the two long shoulders
+            for j, px in enumerate(range(x + 48, x + w - 48, 208)):
+                for py in (y - 12, y + h + 22):      # just off each curb
+                    if in_slab(px, py) and not on_road(px, py):
+                        img = LAMP if (j % 2 == 0) else TREE
                         out.append({"img": img, "x": px, "y": py,
                                     "origin": "bc", "solid": True})
         else:
-            for j, py in enumerate(range(y + 60, y + h - 40, 200)):
-                for px in (x - 22, x + w + 46):
-                    if in_slab(px, py):
-                        img = TREE if (j % 2 == 0) else LAMP
+            for j, py in enumerate(range(y + 48, y + h - 48, 208)):
+                for px in (x - 12, x + w + 22):
+                    if in_slab(px, py) and not on_road(px, py):
+                        img = LAMP if (j % 2 == 0) else TREE
                         out.append({"img": img, "x": px, "y": py,
                                     "origin": "bc", "solid": True})
     return out

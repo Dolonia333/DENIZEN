@@ -480,10 +480,14 @@ function renderGround(scene, plan) {
   // Curb tiles cropped from city_terrain (decoded by border classification):
   // the raised concrete edge that separates sidewalk from asphalt. 16px each.
   const terr = scene.textures.get('fw_terrain')?.getSourceImage();
-  const CURB = { top: [16, 32], bot: [16, 0], left: [32, 16], right: [0, 16] };
+  // curbs + dashed lane centre-lines, all cropped from city_terrain.
+  const TCROP = {
+    curb_top: [16, 32], curb_bot: [16, 0], curb_left: [32, 16], curb_right: [0, 16],
+    lane_h: [160, 80], lane_v: [144, 96],   // dashed centre lines
+  };
   if (terr) {
-    for (const [k, [sx, sy]] of Object.entries(CURB)) {
-      const key = 'fwt_curb_' + k;
+    for (const [k, [sx, sy]] of Object.entries(TCROP)) {
+      const key = 'fwt_' + k;
       if (scene.textures.exists(key)) continue;
       const t = scene.textures.createCanvas(key, 16, 16);
       t.context.imageSmoothingEnabled = false;
@@ -523,12 +527,14 @@ function renderGround(scene, plan) {
   (plan.roads || []).forEach((r) => {
     scene.add.tileSprite(r.x - T, r.y - T, r.w + 2 * T, r.h + 2 * T, 'fwt_sidewalk_tile').setOrigin(0).setDepth(1);
     scene.add.tileSprite(r.x, r.y, r.w, r.h, 'fwt_asphalt_tile').setOrigin(0).setDepth(1.1);
-    if (r.w >= r.h) {  // horizontal street: curbs on top + bottom
+    if (r.w >= r.h) {  // horizontal street: curbs top+bottom, dashed centre line
       curbRun(r.y, r.x, r.x + r.w, 'fwt_curb_top', r.y - T, true);
       curbRun(r.y + r.h - T, r.x, r.x + r.w, 'fwt_curb_bot', r.y + r.h, true);
-    } else {           // vertical street: curbs on left + right
+      curbRun(r.y + (r.h - T) / 2, r.x, r.x + r.w, 'fwt_lane_h', r.y - T, true);
+    } else {           // vertical street: curbs left+right, dashed centre line
       curbRun(r.x, r.y, r.y + r.h, 'fwt_curb_left', r.x - T, false);
       curbRun(r.x + r.w - T, r.y, r.y + r.h, 'fwt_curb_right', r.x + r.w, false);
+      curbRun(r.x + (r.w - T) / 2, r.y, r.y + r.h, 'fwt_lane_v', r.x - T, false);
     }
   });
 }
