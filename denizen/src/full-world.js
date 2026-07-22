@@ -461,14 +461,21 @@ function renderCityPlan(scene, plan) {
 function renderGround(scene, plan) {
   if (state._groundDone) return;
   state._groundDone = true;
-  if (!scene.textures.exists('fwt_sand_tile')) {
-    const beach = scene.textures.get('cp_ext_themes_21_Beach_png')?.getSourceImage();
-    if (beach) {
-      const t = scene.textures.createCanvas('fwt_sand_tile', 16, 16);
-      t.context.imageSmoothingEnabled = false;
-      t.context.drawImage(beach, 160, 96, 16, 16, 0, 0, 16, 16);
-      t.refresh();
-    }
+  const beach = scene.textures.get('cp_ext_themes_21_Beach_png')?.getSourceImage();
+  if (beach && !scene.textures.exists('fwt_sand_tile')) {
+    const t = scene.textures.createCanvas('fwt_sand_tile', 16, 16);
+    t.context.imageSmoothingEnabled = false;
+    t.context.drawImage(beach, 160, 96, 16, 16, 0, 0, 16, 16);
+    t.refresh();
+  }
+  // Shoreline tile — sand-on-top / water-below (found by border classification
+  // at beach-sheet 192,16). Laid over the water's top edge so the beach meets
+  // the sea with a foam line instead of a dead-straight colour cut.
+  if (beach && !scene.textures.exists('fwt_shore_top')) {
+    const t = scene.textures.createCanvas('fwt_shore_top', 16, 16);
+    t.context.imageSmoothingEnabled = false;
+    t.context.drawImage(beach, 192, 16, 16, 16, 0, 0, 16, 16);
+    t.refresh();
   }
   const TILE_KEYS = { grass: 'fwt_grass_tile', sidewalk: 'fwt_sidewalk_tile', asphalt: 'fwt_asphalt_tile', sand: 'fwt_sand_tile' };
   (plan.patches || []).forEach((p) => {
@@ -501,6 +508,12 @@ function placeCityPlan(scene, plan) {
       for (let xx = b.x; xx < b.x + b.w; xx += b.fw) {
         scene.add.sprite(xx, yy, key, 0).setOrigin(0, 0).setDepth(b.depth ?? 0.95).play(animKey);
       }
+    }
+    // Shoreline: straddle the band's top edge with the sand->water foam tile so
+    // the sea meets the beach with a shoreline, not a straight colour cut.
+    if (b.shore === 'top' && scene.textures.exists('fwt_shore_top')) {
+      scene.add.tileSprite(b.x, b.y - 8, b.w, 16, 'fwt_shore_top')
+        .setOrigin(0, 0).setDepth((b.depth ?? 0.95) + 0.02);
     }
   });
   // patches + roads already painted in renderGround() (first pass).
