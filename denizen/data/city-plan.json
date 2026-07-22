@@ -4510,109 +4510,109 @@
    "depth": 2
   },
   {
-   "img": "farm/cut/wheat.png",
+   "img": "farm/cut/bed_cabbage.png",
    "x": 254,
    "y": 916,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/wheat.png",
+   "img": "farm/cut/bed_tomato.png",
    "x": 296,
    "y": 916,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/wheat.png",
+   "img": "farm/cut/bed_carrot.png",
    "x": 254,
    "y": 940,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/wheat.png",
+   "img": "farm/cut/bed_strawberry.png",
    "x": 296,
    "y": 940,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/corn.png",
+   "img": "farm/cut/bed_eggplant.png",
    "x": 352,
    "y": 920,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/corn.png",
+   "img": "farm/cut/bed_wheat.png",
    "x": 370,
    "y": 942,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/tomato.png",
+   "img": "farm/cut/bed_beet.png",
    "x": 256,
    "y": 982,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/tomato.png",
+   "img": "farm/cut/bed_cabbage.png",
    "x": 298,
    "y": 982,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/tomato.png",
+   "img": "farm/cut/bed_tomato.png",
    "x": 276,
    "y": 1006,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/pumpkin.png",
+   "img": "farm/cut/bed_carrot.png",
    "x": 350,
    "y": 1000,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/cabbage.png",
+   "img": "farm/cut/bed_strawberry.png",
    "x": 256,
    "y": 1036,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/cabbage.png",
+   "img": "farm/cut/bed_eggplant.png",
    "x": 296,
    "y": 1048,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/cabbage.png",
+   "img": "farm/cut/bed_wheat.png",
    "x": 256,
    "y": 1062,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/melon.png",
+   "img": "farm/cut/bed_beet.png",
    "x": 356,
    "y": 1062,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/sign_wheat.png",
+   "img": "farm/cut/bed_cabbage.png",
    "x": 240,
    "y": 886,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/sign_pumpkin.png",
+   "img": "farm/cut/bed_tomato.png",
    "x": 416,
    "y": 1066,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/crate_wheat.png",
+   "img": "farm/cut/bed_carrot.png",
    "x": 448,
    "y": 880,
    "origin": "bl"
   },
   {
-   "img": "farm/cut/crate_tomato.png",
+   "img": "farm/cut/bed_strawberry.png",
    "x": 448,
    "y": 916,
    "origin": "bl"

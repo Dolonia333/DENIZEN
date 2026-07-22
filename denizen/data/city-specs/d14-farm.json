@@ -1,116 +1,607 @@
 {
-  "district": "D14 Farm",
-  "bbox": { "x0": 200, "y0": 600, "x1": 900, "y1": 1150 },
-  "patches": [
-    { "tile": "sand", "x": 400, "y": 790, "w": 500, "h": 230, "depth": 0.9 },
-    { "tile": "sand", "x": 326, "y": 800, "w": 24, "h": 80, "depth": 0.9 }
-  ],
-  "roads": [],
-  "stamps": [
-    { "img": "farm/cut/barn_red.png", "x": 420, "y": 795, "origin": "bl", "solid": true },
-    { "img": "farm/cut/silo_red.png", "x": 668, "y": 824, "origin": "bl", "solid": true },
-    { "img": "farm/cut/farmhouse.png", "x": 240, "y": 800, "origin": "bl", "solid": true },
-    { "img": "farm/cut/silo_metal.png", "x": 745, "y": 765, "origin": "bl", "solid": true },
-    { "img": "farm/cut/coop_small.png", "x": 770, "y": 905, "origin": "bl", "solid": true },
-    { "img": "farm/cut/tractor.png", "x": 690, "y": 875, "origin": "bl", "solid": true },
-
-    { "img": "farm/cut/fence_h.png", "x": 234, "y": 872, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 354, "y": 872, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 234, "y": 1110, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 330, "y": 1110, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 226, "y": 910, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 226, "y": 975, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 226, "y": 1040, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 426, "y": 910, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 426, "y": 975, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 426, "y": 1040, "origin": "bl" },
-
-    { "img": "farm/cut/dirt_plot.png", "x": 250, "y": 944, "origin": "bl", "depth": 2 },
-    { "img": "farm/cut/dirt_plot.png", "x": 346, "y": 944, "origin": "bl", "depth": 2 },
-    { "img": "farm/cut/dirt_plot.png", "x": 250, "y": 1008, "origin": "bl", "depth": 2 },
-    { "img": "farm/cut/dirt_plot.png", "x": 346, "y": 1008, "origin": "bl", "depth": 2 },
-    { "img": "farm/cut/dirt_plot.png", "x": 250, "y": 1072, "origin": "bl", "depth": 2 },
-    { "img": "farm/cut/dirt_plot.png", "x": 346, "y": 1072, "origin": "bl", "depth": 2 },
-
-    { "img": "farm/cut/wheat.png", "x": 254, "y": 916, "origin": "bl" },
-    { "img": "farm/cut/wheat.png", "x": 296, "y": 916, "origin": "bl" },
-    { "img": "farm/cut/wheat.png", "x": 254, "y": 940, "origin": "bl" },
-    { "img": "farm/cut/wheat.png", "x": 296, "y": 940, "origin": "bl" },
-    { "img": "farm/cut/corn.png", "x": 352, "y": 920, "origin": "bl" },
-    { "img": "farm/cut/corn.png", "x": 370, "y": 942, "origin": "bl" },
-    { "img": "farm/cut/tomato.png", "x": 256, "y": 982, "origin": "bl" },
-    { "img": "farm/cut/tomato.png", "x": 298, "y": 982, "origin": "bl" },
-    { "img": "farm/cut/tomato.png", "x": 276, "y": 1006, "origin": "bl" },
-    { "img": "farm/cut/pumpkin.png", "x": 350, "y": 1000, "origin": "bl" },
-    { "img": "farm/cut/cabbage.png", "x": 256, "y": 1036, "origin": "bl" },
-    { "img": "farm/cut/cabbage.png", "x": 296, "y": 1048, "origin": "bl" },
-    { "img": "farm/cut/cabbage.png", "x": 256, "y": 1062, "origin": "bl" },
-    { "img": "farm/cut/melon.png", "x": 356, "y": 1062, "origin": "bl" },
-    { "img": "farm/cut/sign_wheat.png", "x": 240, "y": 886, "origin": "bl" },
-    { "img": "farm/cut/sign_pumpkin.png", "x": 416, "y": 1066, "origin": "bl" },
-    { "img": "farm/cut/crate_wheat.png", "x": 448, "y": 880, "origin": "bl" },
-    { "img": "farm/cut/crate_tomato.png", "x": 448, "y": 916, "origin": "bl" },
-
-    { "img": "farm/cut/fence_h.png", "x": 560, "y": 1052, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 652, "y": 1052, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 744, "y": 1052, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 560, "y": 1145, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 652, "y": 1145, "origin": "bl" },
-    { "img": "farm/cut/fence_h.png", "x": 744, "y": 1145, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 552, "y": 1085, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 552, "y": 1120, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 828, "y": 1085, "origin": "bl" },
-    { "img": "farm/cut/fence_end.png", "x": 828, "y": 1120, "origin": "bl" },
-    { "img": "farm/cut/trough_water.png", "x": 795, "y": 1092, "origin": "bl" },
-    { "img": "farm/cut/haybale.png", "x": 585, "y": 1082, "origin": "bl" },
-
-    { "img": "farm/cut/well.png", "x": 640, "y": 925, "origin": "bl", "solid": true },
-    { "img": "farm/cut/milkcans.png", "x": 588, "y": 852, "origin": "bl" },
-    { "img": "farm/cut/hay_mound.png", "x": 430, "y": 856, "origin": "bl" },
-    { "img": "farm/cut/sacks.png", "x": 470, "y": 912, "origin": "bl" },
-    { "img": "farm/cut/shelter_logs.png", "x": 835, "y": 1000, "origin": "bl", "solid": true },
-    { "img": "farm/cut/pen_fence.png", "x": 730, "y": 1000, "origin": "bl" },
-    { "img": "farm/cut/haybale.png", "x": 505, "y": 854, "origin": "bl" }
-  ],
-  "anims": [
-    { "sheet": "farm/cut/anim_cow_graze.png", "fw": 48, "fh": 48, "x": 640, "y": 1105, "fps": 5 },
-    { "sheet": "farm/cut/anim_cow_front.png", "fw": 48, "fh": 48, "x": 775, "y": 1128, "fps": 4 },
-    { "sheet": "farm/cut/anim_sheep_graze.png", "fw": 32, "fh": 32, "x": 600, "y": 1130, "fps": 5 },
-    { "sheet": "farm/cut/anim_sheep_front.png", "fw": 32, "fh": 32, "x": 708, "y": 1095, "fps": 4 },
-    { "sheet": "farm/cut/anim_chicken_peck.png", "fw": 16, "fh": 16, "x": 765, "y": 980, "fps": 7 },
-    { "sheet": "farm/cut/anim_chicken_front.png", "fw": 16, "fh": 16, "x": 795, "y": 955, "fps": 6 },
-    { "sheet": "farm/cut/anim_chicken_peck.png", "fw": 16, "fh": 16, "x": 700, "y": 888, "fps": 8 },
-    { "sheet": "farm/cut/anim_dog_idle.png", "fw": 48, "fh": 32, "x": 560, "y": 962, "fps": 5 }
-  ],
-  "animBands": [],
-  "solids": [
-    { "x": 240, "y": 736, "w": 124, "h": 64 },
-    { "x": 420, "y": 712, "w": 240, "h": 83 },
-    { "x": 668, "y": 742, "w": 71, "h": 82 },
-    { "x": 745, "y": 700, "w": 120, "h": 65 },
-    { "x": 770, "y": 877, "w": 32, "h": 28 },
-    { "x": 692, "y": 832, "w": 76, "h": 43 },
-    { "x": 642, "y": 887, "w": 52, "h": 38 },
-    { "x": 837, "y": 957, "w": 63, "h": 43 },
-    { "x": 730, "y": 921, "w": 96, "h": 79 },
-    { "x": 234, "y": 856, "w": 96, "h": 10 },
-    { "x": 354, "y": 856, "w": 96, "h": 10 },
-    { "x": 234, "y": 1094, "w": 192, "h": 10 },
-    { "x": 222, "y": 860, "w": 8, "h": 246 },
-    { "x": 424, "y": 860, "w": 8, "h": 246 },
-    { "x": 556, "y": 1036, "w": 288, "h": 10 },
-    { "x": 556, "y": 1129, "w": 288, "h": 10 },
-    { "x": 548, "y": 1040, "w": 8, "h": 100 },
-    { "x": 826, "y": 1040, "w": 8, "h": 100 }
-  ],
-  "labels": [
-    { "x": 550, "y": 618, "text": "SUNRISE FARM" }
-  ],
-  "portals": [],
-  "npcs": [
-    { "char": 4, "name": "Farmer Ada", "x": 470, "y": 945, "r": 90 },
-    { "char": 11, "name": "Rancher Bo", "x": 640, "y": 1020, "r": 90 },
-    { "char": 7, "name": "Hand Milo", "x": 336, "y": 830, "r": 80 }
-  ],
-  "vehicles": []
+ "district": "D14 Farm",
+ "bbox": {
+  "x0": 200,
+  "y0": 600,
+  "x1": 900,
+  "y1": 1150
+ },
+ "patches": [
+  {
+   "tile": "sand",
+   "x": 400,
+   "y": 790,
+   "w": 500,
+   "h": 230,
+   "depth": 0.9
+  },
+  {
+   "tile": "sand",
+   "x": 326,
+   "y": 800,
+   "w": 24,
+   "h": 80,
+   "depth": 0.9
+  }
+ ],
+ "roads": [],
+ "stamps": [
+  {
+   "img": "farm/cut/barn_red.png",
+   "x": 420,
+   "y": 795,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/silo_red.png",
+   "x": 668,
+   "y": 824,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/farmhouse.png",
+   "x": 240,
+   "y": 800,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/silo_metal.png",
+   "x": 745,
+   "y": 765,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/coop_small.png",
+   "x": 770,
+   "y": 905,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/tractor.png",
+   "x": 690,
+   "y": 875,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 234,
+   "y": 872,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 354,
+   "y": 872,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 234,
+   "y": 1110,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 330,
+   "y": 1110,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 226,
+   "y": 910,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 226,
+   "y": 975,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 226,
+   "y": 1040,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 426,
+   "y": 910,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 426,
+   "y": 975,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 426,
+   "y": 1040,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/dirt_plot.png",
+   "x": 250,
+   "y": 944,
+   "origin": "bl",
+   "depth": 2
+  },
+  {
+   "img": "farm/cut/dirt_plot.png",
+   "x": 346,
+   "y": 944,
+   "origin": "bl",
+   "depth": 2
+  },
+  {
+   "img": "farm/cut/dirt_plot.png",
+   "x": 250,
+   "y": 1008,
+   "origin": "bl",
+   "depth": 2
+  },
+  {
+   "img": "farm/cut/dirt_plot.png",
+   "x": 346,
+   "y": 1008,
+   "origin": "bl",
+   "depth": 2
+  },
+  {
+   "img": "farm/cut/dirt_plot.png",
+   "x": 250,
+   "y": 1072,
+   "origin": "bl",
+   "depth": 2
+  },
+  {
+   "img": "farm/cut/dirt_plot.png",
+   "x": 346,
+   "y": 1072,
+   "origin": "bl",
+   "depth": 2
+  },
+  {
+   "img": "farm/cut/bed_cabbage.png",
+   "x": 254,
+   "y": 916,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_tomato.png",
+   "x": 296,
+   "y": 916,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_carrot.png",
+   "x": 254,
+   "y": 940,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_strawberry.png",
+   "x": 296,
+   "y": 940,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_eggplant.png",
+   "x": 352,
+   "y": 920,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_wheat.png",
+   "x": 370,
+   "y": 942,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_beet.png",
+   "x": 256,
+   "y": 982,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_cabbage.png",
+   "x": 298,
+   "y": 982,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_tomato.png",
+   "x": 276,
+   "y": 1006,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_carrot.png",
+   "x": 350,
+   "y": 1000,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_strawberry.png",
+   "x": 256,
+   "y": 1036,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_eggplant.png",
+   "x": 296,
+   "y": 1048,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_wheat.png",
+   "x": 256,
+   "y": 1062,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_beet.png",
+   "x": 356,
+   "y": 1062,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_cabbage.png",
+   "x": 240,
+   "y": 886,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_tomato.png",
+   "x": 416,
+   "y": 1066,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_carrot.png",
+   "x": 448,
+   "y": 880,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/bed_strawberry.png",
+   "x": 448,
+   "y": 916,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 560,
+   "y": 1052,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 652,
+   "y": 1052,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 744,
+   "y": 1052,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 560,
+   "y": 1145,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 652,
+   "y": 1145,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_h.png",
+   "x": 744,
+   "y": 1145,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 552,
+   "y": 1085,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 552,
+   "y": 1120,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 828,
+   "y": 1085,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/fence_end.png",
+   "x": 828,
+   "y": 1120,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/trough_water.png",
+   "x": 795,
+   "y": 1092,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/haybale.png",
+   "x": 585,
+   "y": 1082,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/well.png",
+   "x": 640,
+   "y": 925,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/milkcans.png",
+   "x": 588,
+   "y": 852,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/hay_mound.png",
+   "x": 430,
+   "y": 856,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/sacks.png",
+   "x": 470,
+   "y": 912,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/shelter_logs.png",
+   "x": 835,
+   "y": 1000,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "farm/cut/pen_fence.png",
+   "x": 730,
+   "y": 1000,
+   "origin": "bl"
+  },
+  {
+   "img": "farm/cut/haybale.png",
+   "x": 505,
+   "y": 854,
+   "origin": "bl"
+  }
+ ],
+ "anims": [
+  {
+   "sheet": "farm/cut/anim_cow_graze.png",
+   "fw": 48,
+   "fh": 48,
+   "x": 640,
+   "y": 1105,
+   "fps": 5
+  },
+  {
+   "sheet": "farm/cut/anim_cow_front.png",
+   "fw": 48,
+   "fh": 48,
+   "x": 775,
+   "y": 1128,
+   "fps": 4
+  },
+  {
+   "sheet": "farm/cut/anim_sheep_graze.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 600,
+   "y": 1130,
+   "fps": 5
+  },
+  {
+   "sheet": "farm/cut/anim_sheep_front.png",
+   "fw": 32,
+   "fh": 32,
+   "x": 708,
+   "y": 1095,
+   "fps": 4
+  },
+  {
+   "sheet": "farm/cut/anim_chicken_peck.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 765,
+   "y": 980,
+   "fps": 7
+  },
+  {
+   "sheet": "farm/cut/anim_chicken_front.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 795,
+   "y": 955,
+   "fps": 6
+  },
+  {
+   "sheet": "farm/cut/anim_chicken_peck.png",
+   "fw": 16,
+   "fh": 16,
+   "x": 700,
+   "y": 888,
+   "fps": 8
+  },
+  {
+   "sheet": "farm/cut/anim_dog_idle.png",
+   "fw": 48,
+   "fh": 32,
+   "x": 560,
+   "y": 962,
+   "fps": 5
+  }
+ ],
+ "animBands": [],
+ "solids": [
+  {
+   "x": 240,
+   "y": 736,
+   "w": 124,
+   "h": 64
+  },
+  {
+   "x": 420,
+   "y": 712,
+   "w": 240,
+   "h": 83
+  },
+  {
+   "x": 668,
+   "y": 742,
+   "w": 71,
+   "h": 82
+  },
+  {
+   "x": 745,
+   "y": 700,
+   "w": 120,
+   "h": 65
+  },
+  {
+   "x": 770,
+   "y": 877,
+   "w": 32,
+   "h": 28
+  },
+  {
+   "x": 692,
+   "y": 832,
+   "w": 76,
+   "h": 43
+  },
+  {
+   "x": 642,
+   "y": 887,
+   "w": 52,
+   "h": 38
+  },
+  {
+   "x": 837,
+   "y": 957,
+   "w": 63,
+   "h": 43
+  },
+  {
+   "x": 730,
+   "y": 921,
+   "w": 96,
+   "h": 79
+  },
+  {
+   "x": 234,
+   "y": 856,
+   "w": 96,
+   "h": 10
+  },
+  {
+   "x": 354,
+   "y": 856,
+   "w": 96,
+   "h": 10
+  },
+  {
+   "x": 234,
+   "y": 1094,
+   "w": 192,
+   "h": 10
+  },
+  {
+   "x": 222,
+   "y": 860,
+   "w": 8,
+   "h": 246
+  },
+  {
+   "x": 424,
+   "y": 860,
+   "w": 8,
+   "h": 246
+  },
+  {
+   "x": 556,
+   "y": 1036,
+   "w": 288,
+   "h": 10
+  },
+  {
+   "x": 556,
+   "y": 1129,
+   "w": 288,
+   "h": 10
+  },
+  {
+   "x": 548,
+   "y": 1040,
+   "w": 8,
+   "h": 100
+  },
+  {
+   "x": 826,
+   "y": 1040,
+   "w": 8,
+   "h": 100
+  }
+ ],
+ "labels": [
+  {
+   "x": 550,
+   "y": 618,
+   "text": "SUNRISE FARM"
+  }
+ ],
+ "portals": [],
+ "npcs": [
+  {
+   "char": 4,
+   "name": "Farmer Ada",
+   "x": 470,
+   "y": 945,
+   "r": 90
+  },
+  {
+   "char": 11,
+   "name": "Rancher Bo",
+   "x": 640,
+   "y": 1020,
+   "r": 90
+  },
+  {
+   "char": 7,
+   "name": "Hand Milo",
+   "x": 336,
+   "y": 830,
+   "r": 80
+  }
+ ],
+ "vehicles": []
 }
