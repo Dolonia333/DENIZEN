@@ -195,6 +195,7 @@ export function buildFullWorld(scene) {
   scene.load.image('fw_st_l1', lz('examples/studio_layer1.png'));
   scene.load.image('fw_st_l2', lz('examples/studio_layer2.png'));
   scene.load.image('fw_st_l3', lz('examples/studio_layer3.png'));
+  scene.load.spritesheet('fw_door_glass', lz('animated/door_glass.png'), { frameWidth: 32, frameHeight: 48 });
   scene.load.spritesheet('fw_anim_screens', lz('animated/control_screens.png'), { frameWidth: 32, frameHeight: 48 });
   scene.load.spritesheet('fw_anim_server', lz('animated/server_rack.png'), { frameWidth: 16, frameHeight: 48 });
   scene.load.spritesheet('fw_anim_coffee', lz('animated/coffee.png'), { frameWidth: 16, frameHeight: 32 });
@@ -312,7 +313,30 @@ function build(scene) {
       backgroundColor: '#0f172acc', padding: { x: 5, y: 2 },
     }).setOrigin(0.5, 1).setDepth(6000);
     label.setResolution(2);
-    state.hqDoor = { x0: bx + 152, x1: bx + 190, y: by };
+    state.hqDoor = { x0: bx + 148, x1: bx + 194, y: by };
+    // Animated glass double door over the facade entrance — slides open
+    // when the player approaches (frames 0-4 of the official animated
+    // object), closes again when they walk away. Entry requires it open.
+    if (scene.textures.exists('fw_door_glass')) {
+      if (!scene.anims.exists('fw_door_opening')) {
+        scene.anims.create({
+          key: 'fw_door_opening',
+          frames: scene.anims.generateFrameNumbers('fw_door_glass', { start: 0, end: 4 }),
+          frameRate: 14, repeat: 0,
+        });
+      }
+      if (!scene.anims.exists('fw_door_closing')) {
+        scene.anims.create({
+          key: 'fw_door_closing',
+          frames: scene.anims.generateFrameNumbers('fw_door_glass', { start: 4, end: 0 }),
+          frameRate: 14, repeat: 0,
+        });
+      }
+      const doorSp = scene.add.sprite(bx + 171, by, 'fw_door_glass', 0).setOrigin(0.5, 1);
+      doorSp.setDepth(by - 1);
+      state.hqDoorSprite = doorSp;
+      state.hqDoorOpen = false;
+    }
   }
 
   // 4 ── Ambient greenery outside zones (deterministic scatter)
@@ -692,12 +716,28 @@ function tick(scene, dt) {
   if (k.up?.isDown || k.u2?.isDown || raw.up) vy -= 1;
   if (k.down?.isDown || k.d2?.isDown || raw.down) vy += 1;
 
-  // Denizen HQ entrance: walking into the glass doors returns to the office
+  // Denizen HQ entrance: the glass door slides open on approach; walking
+  // through the OPEN door returns to the office interior.
   const door = state.hqDoor;
-  if (door && !state._enteringOffice
-      && p.x > door.x0 && p.x < door.x1 && p.y < door.y - 6 && p.y > door.y - 46) {
-    state._enteringOffice = true;
-    try { window.location.href = '/office?demo=1'; } catch (_) {}
+  if (door) {
+    const cx = (door.x0 + door.x1) / 2;
+    const dist = Math.hypot(p.x - cx, p.y - (door.y - 4));
+    const sp = state.hqDoorSprite;
+    if (sp) {
+      if (dist < 56 && !state.hqDoorOpen) {
+        state.hqDoorOpen = true;
+        sp.play('fw_door_opening');
+      } else if (dist > 84 && state.hqDoorOpen) {
+        state.hqDoorOpen = false;
+        sp.play('fw_door_closing');
+      }
+    }
+    const doorReady = !sp || state.hqDoorOpen;
+    if (doorReady && !state._enteringOffice
+        && p.x > door.x0 && p.x < door.x1 && p.y < door.y - 2 && p.y > door.y - 50) {
+      state._enteringOffice = true;
+      try { window.location.href = '/office?demo=1'; } catch (_) {}
+    }
   }
 
   if (vx || vy) {
