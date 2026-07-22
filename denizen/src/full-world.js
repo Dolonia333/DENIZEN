@@ -332,8 +332,13 @@ function build(scene) {
           frameRate: 14, repeat: 0,
         });
       }
+      // Backdrop + door must render ABOVE the facade image (depth `by`) —
+      // the facade has painted-shut doors baked in, and anything below its
+      // depth is invisible. Dark doorway backdrop first, animated door on
+      // top; the y-sorted player (depth ≈ 1870+) still walks in front.
+      scene.add.rectangle(bx + 171, by - 19, 38, 38, 0x131521, 1).setDepth(by + 1);
       const doorSp = scene.add.sprite(bx + 171, by, 'fw_door_glass', 0).setOrigin(0.5, 1);
-      doorSp.setDepth(by - 1);
+      doorSp.setDepth(by + 2);
       state.hqDoorSprite = doorSp;
       state.hqDoorOpen = false;
     }
