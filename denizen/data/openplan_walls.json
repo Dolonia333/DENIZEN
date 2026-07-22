@@ -2,15 +2,103 @@
   "info": {
     "purpose": "Openplan walls. Lavender main walls; tan brick on lower-room back wall. No RB T-junction sprites.",
     "tileSize": 32,
-    "worldSize": { "w": 1280, "h": 720 }
+    "worldSize": {
+      "w": 1280,
+      "h": 720
+    }
   },
   "segments": [
-    { "instanceId": "wall_perim_top", "type": "h", "label": "Perimeter top", "startX": 0, "y": 0, "endX": 1280 },
-    { "instanceId": "wall_perim_bottom", "type": "h", "label": "Perimeter bottom", "startX": 0, "y": 656, "endX": 1280 },
-    { "instanceId": "wall_perim_left", "type": "v", "label": "Perimeter left", "x": 0, "startY": 64, "endY": 656, "shadowSide": "right" },
-    { "instanceId": "wall_perim_right", "type": "v", "label": "Perimeter right", "x": 1248, "startY": 64, "endY": 656, "shadowSide": "left" },
-    { "instanceId": "wall_div_v_center", "type": "v", "label": "Center divider", "x": 848, "startY": 64, "endY": 656, "shadowSide": "right", "doorGaps": [[160, 240], [352, 448]] },
-    { "instanceId": "wall_div_h_south", "type": "h", "label": "Lower-room back wall (brick)", "startX": 0, "y": 448, "endX": 848, "doorGaps": [[288, 384], [560, 656]], "face": "brick" },
-    { "instanceId": "wall_div_h_right", "type": "h", "label": "CEO office ↔ meeting room", "startX": 880, "y": 256, "endX": 1248, "doorGaps": [[1000, 1096]] }
+    {
+      "instanceId": "wall_perim_top",
+      "type": "h",
+      "label": "Perimeter top",
+      "startX": 0,
+      "y": 0,
+      "endX": 1280
+    },
+    {
+      "instanceId": "wall_perim_bottom",
+      "type": "h",
+      "label": "Perimeter bottom",
+      "startX": 0,
+      "y": 656,
+      "endX": 1280,
+      "doorGaps": [
+        [
+          608,
+          672
+        ]
+      ]
+    },
+    {
+      "instanceId": "wall_perim_left",
+      "type": "v",
+      "label": "Perimeter left",
+      "x": 0,
+      "startY": 64,
+      "endY": 656,
+      "shadowSide": "right"
+    },
+    {
+      "instanceId": "wall_perim_right",
+      "type": "v",
+      "label": "Perimeter right",
+      "x": 1248,
+      "startY": 64,
+      "endY": 656,
+      "shadowSide": "left"
+    },
+    {
+      "instanceId": "wall_div_v_center",
+      "type": "v",
+      "label": "Center divider",
+      "x": 848,
+      "startY": 64,
+      "endY": 656,
+      "shadowSide": "right",
+      "doorGaps": [
+        [
+          160,
+          240
+        ],
+        [
+          352,
+          448
+        ]
+      ]
+    },
+    {
+      "instanceId": "wall_div_h_south",
+      "type": "h",
+      "label": "Lower-room back wall (brick)",
+      "startX": 0,
+      "y": 448,
+      "endX": 848,
+      "doorGaps": [
+        [
+          288,
+          384
+        ],
+        [
+          560,
+          656
+        ]
+      ],
+      "face": "brick"
+    },
+    {
+      "instanceId": "wall_div_h_right",
+      "type": "h",
+      "label": "CEO office \u2194 meeting room",
+      "startX": 880,
+      "y": 256,
+      "endX": 1248,
+      "doorGaps": [
+        [
+          1000,
+          1096
+        ]
+      ]
+    }
   ]
 }

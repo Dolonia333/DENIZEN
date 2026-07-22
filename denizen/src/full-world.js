@@ -189,6 +189,7 @@ export function buildFullWorld(scene) {
   scene.load.image('fw_props', lz('exteriors/city_props.png'));
   scene.load.image('fw_vehicles', lz('exteriors/vehicles.png'));
   scene.load.image('fw_buildings', lz('exteriors/generic_buildings.png'));
+  scene.load.image('fw_hq_building', lz('examples/office_building_ex2.png'));
   scene.load.image('fw_jp_l1', lz('examples/japanese_layer1.png'));
   scene.load.image('fw_jp_l2', lz('examples/japanese_layer2.png'));
   scene.load.image('fw_st_l1', lz('examples/studio_layer1.png'));
@@ -296,12 +297,37 @@ function build(scene) {
   buildPlaza(scene, zones.city_plaza);
   buildHelipad(scene, zones.helipad);
 
+  // 3b ── The Denizen HQ building on the avenue — the door back into the
+  // office interior. The G-NERIC CORP facade (office_building_ex2) stands
+  // west of the HQ connector path; its glass entrance is the return portal.
+  if (scene.textures.exists('fw_hq_building')) {
+    const bx = 1200, by = 1864; // origin bottom-left on the north sidewalk
+    const b = scene.add.image(bx, by, 'fw_hq_building').setOrigin(0, 1);
+    b.setDepth(by);
+    // Solid except the entrance (door at facade center, ~x 1352-1390)
+    state.solids.push({ x: bx, y: by - 40, w: 152, h: 40 });
+    state.solids.push({ x: bx + 190, y: by - 40, w: 114, h: 40 });
+    const label = scene.add.text(bx + 152, by - 292, 'DENIZEN HQ', {
+      fontFamily: 'monospace', fontSize: '10px', color: '#e2e8f0',
+      backgroundColor: '#0f172acc', padding: { x: 5, y: 2 },
+    }).setOrigin(0.5, 1).setDepth(6000);
+    label.setResolution(2);
+    state.hqDoor = { x0: bx + 152, x1: bx + 190, y: by };
+  }
+
   // 4 ── Ambient greenery outside zones (deterministic scatter)
   scatterGreenery(scene);
 
   // 5 ── Player + NPCs + camera
   makeCharAnims(scene);
-  spawnPlayer(scene, 1592, 985);
+  const entry = new URLSearchParams(window.location.search).get('entry');
+  if (entry === 'office' && state.hqDoor) {
+    // Just stepped out of the office — spawn on the sidewalk at the door
+    spawnPlayer(scene, (state.hqDoor.x0 + state.hqDoor.x1) / 2, state.hqDoor.y + 14);
+    state.playerDir = 'd';
+  } else {
+    spawnPlayer(scene, 1592, 985);
+  }
   NPC_SPECS.forEach((spec) => spawnNpc(scene, spec));
 
   const cam = scene.cameras.main;
@@ -665,6 +691,14 @@ function tick(scene, dt) {
   if (k.right?.isDown || k.r2?.isDown || raw.right) vx += 1;
   if (k.up?.isDown || k.u2?.isDown || raw.up) vy -= 1;
   if (k.down?.isDown || k.d2?.isDown || raw.down) vy += 1;
+
+  // Denizen HQ entrance: walking into the glass doors returns to the office
+  const door = state.hqDoor;
+  if (door && !state._enteringOffice
+      && p.x > door.x0 && p.x < door.x1 && p.y < door.y - 6 && p.y > door.y - 46) {
+    state._enteringOffice = true;
+    try { window.location.href = '/office?demo=1'; } catch (_) {}
+  }
 
   if (vx || vy) {
     const inv = 1 / Math.hypot(vx, vy);

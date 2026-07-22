@@ -462,7 +462,7 @@ class OfficeScene extends Phaser.Scene {
     // Must run before ANY office drawing (floor tileSprites start ~110 lines
     // down) so the city isn't painted over by the 1280×720 office floor.
     if (urlParams.get('world') === 'full') {
-      import('./src/full-world.js?v=fw1')
+      import('./src/full-world.js?v=fw2')
         .then((m) => m.buildFullWorld(this))
         .catch((err) => {
           console.error('[OfficeScene] full-world load failed:', err);
@@ -1687,6 +1687,15 @@ class OfficeScene extends Phaser.Scene {
       notifyOfficeFurnitureReady(this);
     };
 
+    // Street-door dressing at the south wall gap (x 608-672): exit sign +
+    // doormat. The gap itself comes from wall_perim_bottom doorGaps.
+    this.add.text(640, 660, 'EXIT', {
+      fontFamily: 'monospace', fontSize: '9px', color: '#22c55e',
+      backgroundColor: '#0f172a', padding: { x: 4, y: 2 },
+    }).setOrigin(0.5, 1).setDepth(1.4).setResolution(2);
+    this.add.rectangle(640, 706, 56, 22, 0x8b7355, 1).setDepth(0.6);
+    this.add.rectangle(640, 706, 50, 16, 0xa08563, 1).setDepth(0.61);
+
     if (furnitureCatalog) {
       fetch(layoutUrl)
         .then((r) => (r.ok ? r.json() : null))
@@ -2843,6 +2852,15 @@ class OfficeScene extends Phaser.Scene {
           this.showNpcDialog('Adam', 'Yawn... It’s getting late. Maybe I should sleep.');
         }
       }
+    }
+
+    // Street exit: the south wall has a door gap at x 608-672 — walking
+    // through it steps outside into the full LimeZu city (?world=full),
+    // spawning at the Denizen HQ building's entrance.
+    if (this.player && !this._exitingToCity
+        && this.player.y > 700 && this.player.x > 600 && this.player.x < 680) {
+      this._exitingToCity = true;
+      try { window.location.href = '/office?demo=1&world=full&entry=office'; } catch (_) {}
     }
 
     // Y-depth for characters only (cheap). Full furniture re-sort is rare —
