@@ -2,38 +2,95 @@
   "district": "D11 Industrial Yard (junkyard compound, scenes 14/46/53)",
   "bbox": { "x": 4200, "y": 1600, "w": 900, "h": 1100 },
   "patches": [
-    { "tile": "grass", "x": 4200, "y": 2100, "w": 900, "h": 600, "depth": 0.9 },
-    { "tile": "asphalt", "x": 4288, "y": 2192, "w": 704, "h": 448, "depth": 0.9 }
+    { "tile": "grass", "x": 4200, "y": 1900, "w": 900, "h": 800, "depth": 0.85 },
+    { "tile": "sand", "x": 4288, "y": 2192, "w": 704, "h": 448, "depth": 0.9 }
   ],
   "roads": [
     { "x": 4552, "y": 1944, "w": 80, "h": 248 }
   ],
   "stamps": [
-    { "img": "ext/singles/24_additional_houses/24_Additional_Houses_Post_Apocalyptic_House_1_16x16.png", "x": 4600, "y": 2376, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_Shack_1.png", "x": 4320, "y": 2620, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_1.png", "x": 4856, "y": 2270, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_5.png", "x": 4928, "y": 2420, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Top_Corner_Left.png", "x": 4288, "y": 2208, "origin": "bl", "solid": false },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Top_Corner_Right.png", "x": 4976, "y": 2208, "origin": "bl", "solid": false },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Bottom_Corner_Left.png", "x": 4288, "y": 2640, "origin": "bl", "solid": false },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Bottom_Corner_Right.png", "x": 4976, "y": 2640, "origin": "bl", "solid": false },
+
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Building_Skeleton_2.png", "x": 4304, "y": 2380, "origin": "bl", "solid": true },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_1.png", "x": 4420, "y": 2296, "origin": "bl", "solid": true },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_3.png", "x": 4420, "y": 2348, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Stacked_Barrels_1.png", "x": 4310, "y": 2436, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_1.png", "x": 4360, "y": 2430, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Brown_Barrel_1.png", "x": 4378, "y": 2436, "origin": "bl", "solid": true },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Tool_Box_1.png", "x": 4362, "y": 2470, "origin": "bl", "solid": false },
+    { "img": "ext/singles/21_beach/21_Beach_16x16_Mixer.png", "x": 4448, "y": 2420, "origin": "bl", "solid": true },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Light_Tower_1.png", "x": 4472, "y": 2260, "origin": "bl", "solid": true },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Cone_1.png", "x": 4548, "y": 2300, "origin": "bl", "solid": false },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Cone_2.png", "x": 4660, "y": 2296, "origin": "bl", "solid": false },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Entrance_1.png", "x": 4568, "y": 2224, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Danger_Sign_1.png", "x": 4648, "y": 2208, "origin": "bl", "solid": false },
+
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_2.png", "x": 4384, "y": 2456, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Broken_Ladder_1.png", "x": 4444, "y": 2450, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_7.png", "x": 4390, "y": 2492, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Small_Trash_Pile_1.png", "x": 4452, "y": 2545, "origin": "bl", "solid": false },
+
+    { "img": "ext/singles/24_additional_houses/24_Additional_Houses_Post_Apocalyptic_House_1_16x16.png", "x": 4600, "y": 2376, "origin": "bl", "solid": true },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Portable_Toilet_1.png", "x": 4560, "y": 2336, "origin": "bl", "solid": true },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Props_1.png", "x": 4624, "y": 2396, "origin": "bl", "solid": false },
+    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Props_5.png", "x": 4700, "y": 2392, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_4.png", "x": 4660, "y": 2402, "origin": "bl", "solid": false },
+
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_1.png", "x": 4856, "y": 2270, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_3.png", "x": 4856, "y": 2318, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_4.png", "x": 4856, "y": 2366, "origin": "bl", "solid": true },
+
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_10.png", "x": 4560, "y": 2500, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_5.png", "x": 4592, "y": 2520, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_1.png", "x": 4650, "y": 2532, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_8.png", "x": 4676, "y": 2548, "origin": "bl", "solid": true },
-    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Building_Skeleton_2.png", "x": 4304, "y": 2380, "origin": "bl", "solid": true },
-    { "img": "ext/singles/21_beach/21_Beach_16x16_Mixer.png", "x": 4448, "y": 2420, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_3.png", "x": 4588, "y": 2576, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_12.png", "x": 4656, "y": 2600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_1.png", "x": 4548, "y": 2540, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Scrap_Metal_1.png", "x": 4724, "y": 2586, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_1.png", "x": 4560, "y": 2606, "origin": "bl", "solid": false },
+
     { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Excavator_1.png", "x": 4792, "y": 2500, "origin": "bl", "solid": true },
-    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Light_Tower_1.png", "x": 4472, "y": 2260, "origin": "bl", "solid": true },
-    { "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Entrance_1.png", "x": 4568, "y": 2224, "origin": "bl", "solid": false },
-    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png", "x": 4432, "y": 2600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_5.png", "x": 4928, "y": 2420, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png", "x": 4936, "y": 2480, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png", "x": 4916, "y": 2472, "origin": "bl", "solid": false },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Scrap_Metal_Pile_1.png", "x": 4880, "y": 2560, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_1.png", "x": 4886, "y": 2600, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Scrap_Metal_4.png", "x": 4864, "y": 2520, "origin": "bl", "solid": false },
+
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Dumpster_3.png", "x": 4760, "y": 2616, "origin": "bl", "solid": true },
     { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Open_Full_Trash_Can.png", "x": 4800, "y": 2612, "origin": "bl", "solid": true },
-    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Danger_Sign_1.png", "x": 4648, "y": 2208, "origin": "bl", "solid": false }
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_3.png", "x": 4688, "y": 2618, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_2.png", "x": 4820, "y": 2610, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_Shack_1.png", "x": 4320, "y": 2612, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png", "x": 4432, "y": 2600, "origin": "bl", "solid": true },
+    { "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png", "x": 4462, "y": 2610, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_2.png", "x": 4494, "y": 2596, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_2.png", "x": 4432, "y": 2616, "origin": "bl", "solid": false },
+
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png", "x": 4216, "y": 2260, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_10.png", "x": 5010, "y": 2380, "origin": "bl", "solid": true },
+    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_20.png", "x": 4220, "y": 2560, "origin": "bl", "solid": true },
+    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_7.png", "x": 4250, "y": 2420, "origin": "bl", "solid": false },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png", "x": 4512, "y": 2080, "origin": "bl", "solid": true },
+    { "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_4.png", "x": 4648, "y": 2140, "origin": "bl", "solid": true }
   ],
   "anims": [
     { "sheet": "ext/animated/Campfire_16x16.png", "fw": 32, "fh": 32, "x": 4920, "y": 2240, "fps": 6 },
     { "sheet": "ext/animated/Flame_2_16x16.png", "fw": 16, "fh": 16, "x": 4956, "y": 2244, "fps": 8 },
-    { "sheet": "ext/animated/Flame_1_16x16.png", "fw": 16, "fh": 16, "x": 4900, "y": 2556, "fps": 7 },
-    { "sheet": "ext/animated/Automatic_Barrier_1_16x16.png", "fw": 80, "fh": 80, "x": 4552, "y": 2150, "fps": 6 },
-    { "sheet": "ext/animated/Worksite_Door_16x16.png", "fw": 48, "fh": 48, "x": 4344, "y": 2620, "fps": 6 }
+    { "sheet": "ext/animated/Flame_1_16x16.png", "fw": 16, "fh": 16, "x": 4906, "y": 2566, "fps": 7 },
+    { "sheet": "ext/animated/Automatic_Barrier_1_16x16.png", "fw": 80, "fh": 80, "x": 4592, "y": 2150, "fps": 6 },
+    { "sheet": "ext/animated/Worksite_Door_16x16.png", "fw": 48, "fh": 48, "x": 4368, "y": 2612, "fps": 6 }
+  ],
+  "animBands": [
+    { "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Horizontal.png", "fw": 48, "fh": 16, "x": 4304, "y": 2192, "w": 240, "h": 16 },
+    { "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Horizontal.png", "fw": 48, "fh": 16, "x": 4640, "y": 2192, "w": 336, "h": 16 },
+    { "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Vertical.png", "fw": 16, "fh": 16, "x": 4288, "y": 2208, "w": 16, "h": 416 },
+    { "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Vertical.png", "fw": 16, "fh": 16, "x": 4976, "y": 2208, "w": 16, "h": 416 },
+    { "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Horizontal.png", "fw": 48, "fh": 16, "x": 4304, "y": 2624, "w": 672, "h": 16 }
   ],
   "solids": [
     { "x": 4288, "y": 2192, "w": 264, "h": 8 },

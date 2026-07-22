@@ -1,60 +1,674 @@
 {
   "district": "D7 Grand Park & Gardens",
-  "bbox": { "x": 2200, "y": 3200, "w": 1400, "h": 1600 },
+  "bbox": {
+    "x": 2200,
+    "y": 3200,
+    "w": 1400,
+    "h": 1600
+  },
   "patches": [
-    { "tile": "grass", "x": 2200, "y": 3200, "w": 1400, "h": 1600, "depth": 0.9 },
-    { "tile": "sidewalk", "x": 2860, "y": 3200, "w": 48, "h": 1600, "depth": 0.9 },
-    { "tile": "sidewalk", "x": 2200, "y": 3820, "w": 1400, "h": 48, "depth": 0.9 },
-    { "tile": "sidewalk", "x": 2764, "y": 3368, "w": 240, "h": 224, "depth": 0.9 },
-    { "tile": "asphalt", "x": 3328, "y": 3900, "w": 224, "h": 224, "depth": 0.9 },
-    { "tile": "asphalt", "x": 2300, "y": 4080, "w": 208, "h": 176, "depth": 0.9 }
+    {
+      "tile": "grass",
+      "x": 2200,
+      "y": 3200,
+      "w": 1400,
+      "h": 1600,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 2860,
+      "y": 3200,
+      "w": 48,
+      "h": 1600,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 2200,
+      "y": 3820,
+      "w": 1400,
+      "h": 48,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 2764,
+      "y": 3368,
+      "w": 240,
+      "h": 224,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 3004,
+      "y": 3512,
+      "w": 300,
+      "h": 48,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 3304,
+      "y": 3480,
+      "w": 96,
+      "h": 96,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 2908,
+      "y": 4012,
+      "w": 420,
+      "h": 48,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 2908,
+      "y": 4288,
+      "w": 52,
+      "h": 48,
+      "depth": 0.9
+    },
+    {
+      "tile": "sidewalk",
+      "x": 2620,
+      "y": 3868,
+      "w": 48,
+      "h": 222,
+      "depth": 0.9
+    },
+    {
+      "tile": "asphalt",
+      "x": 3328,
+      "y": 3900,
+      "w": 224,
+      "h": 224,
+      "depth": 0.9
+    },
+    {
+      "tile": "sand",
+      "x": 2560,
+      "y": 4090,
+      "w": 150,
+      "h": 120,
+      "depth": 0.9
+    }
   ],
   "roads": [],
   "stamps": [
-    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Soccer_Court_2.png", "x": 2960, "y": 4600, "origin": "bl", "solid": false },
-    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Court_2.png", "x": 3336, "y": 4116, "origin": "bl", "solid": false },
-    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_1.png", "x": 3416, "y": 3968, "origin": "bl", "solid": { "dx": 12, "dy": -14, "w": 24, "h": 14 } },
-    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_2.png", "x": 3416, "y": 4112, "origin": "bl", "solid": { "dx": 12, "dy": -14, "w": 24, "h": 14 } },
-    { "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Tree_House_1.png", "x": 2280, "y": 4720, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Example.png", "x": 3320, "y": 3560, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Angel_Statue_1.png", "x": 2330, "y": 3520, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Arch_1.png", "x": 2860, "y": 3300, "origin": "bl", "solid": false },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Statue_4.png", "x": 2440, "y": 3700, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Bench_Horizontal.png", "x": 2920, "y": 3480, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Flowers_Bench_Horizontal.png", "x": 2600, "y": 3420, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Wood_Cart_Full_1.png", "x": 3100, "y": 3700, "origin": "bl", "solid": true },
-    { "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Red_Flower_Vase.png", "x": 2772, "y": 3400, "origin": "bl", "solid": true },
-    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_100.png", "x": 2460, "y": 4700, "origin": "bl", "solid": true },
-    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png", "x": 2560, "y": 4600, "origin": "bl", "solid": true },
-    { "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_10.png", "x": 2260, "y": 4440, "origin": "bl", "solid": true },
-    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Soccer_Ball_1.png", "x": 3040, "y": 4460, "origin": "bl", "solid": false },
-    { "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Ball_1.png", "x": 3430, "y": 4020, "origin": "bl", "solid": false }
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Soccer_Court_2.png",
+      "x": 2960,
+      "y": 4460,
+      "origin": "bl",
+      "solid": false
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Court_2.png",
+      "x": 3336,
+      "y": 4116,
+      "origin": "bl",
+      "solid": false
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_1.png",
+      "x": 3416,
+      "y": 3968,
+      "origin": "bl",
+      "solid": {
+        "dx": 12,
+        "dy": -14,
+        "w": 24,
+        "h": 14
+      }
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Net_2.png",
+      "x": 3416,
+      "y": 4112,
+      "origin": "bl",
+      "solid": {
+        "dx": 12,
+        "dy": -14,
+        "w": 24,
+        "h": 14
+      }
+    },
+    {
+      "img": "ext/singles/7_villas/ME_Singles_Villas_16x16_Tree_House_1.png",
+      "x": 2450,
+      "y": 4730,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Pergola_Example.png",
+      "x": 3320,
+      "y": 3560,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Angel_Statue_1.png",
+      "x": 2330,
+      "y": 3520,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Arch_1.png",
+      "x": 2860,
+      "y": 3300,
+      "origin": "bl",
+      "solid": false
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Statue_4.png",
+      "x": 2440,
+      "y": 3700,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Bench_Horizontal.png",
+      "x": 2920,
+      "y": 3480,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Flowers_Bench_Horizontal.png",
+      "x": 2600,
+      "y": 3420,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Wood_Cart_Full_1.png",
+      "x": 3300,
+      "y": 3690,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Red_Flower_Vase.png",
+      "x": 2772,
+      "y": 3400,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_100.png",
+      "x": 2620,
+      "y": 4760,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png",
+      "x": 2740,
+      "y": 4620,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_10.png",
+      "x": 2430,
+      "y": 4470,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Soccer_Ball_1.png",
+      "x": 3040,
+      "y": 4320,
+      "origin": "bl",
+      "solid": false
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Basketball_Ball_1.png",
+      "x": 3430,
+      "y": 4020,
+      "origin": "bl",
+      "solid": false
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Statue_Putto_1.png",
+      "x": 2260,
+      "y": 3556,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Statue_Putto_3.png",
+      "x": 2430,
+      "y": 3556,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Blue_Vase_1_Four_Flowers.png",
+      "x": 2300,
+      "y": 3560,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Red_Vase_1_Four_Flowers.png",
+      "x": 2414,
+      "y": 3560,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Grass_Statue_2.png",
+      "x": 2620,
+      "y": 3760,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
+      "x": 2740,
+      "y": 3360,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_2.png",
+      "x": 2960,
+      "y": 3360,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Bench_Vertical.png",
+      "x": 2780,
+      "y": 3560,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_20.png",
+      "x": 2216,
+      "y": 3320,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_40.png",
+      "x": 2296,
+      "y": 3300,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_60.png",
+      "x": 3080,
+      "y": 3700,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_30.png",
+      "x": 2230,
+      "y": 3650,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Sprout_Vase_1.png",
+      "x": 3420,
+      "y": 3540,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Sprout_Vase_3.png",
+      "x": 3440,
+      "y": 3568,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Sunflower_Vase.png",
+      "x": 3416,
+      "y": 3596,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Big_Wood_Cart_Full_2.png",
+      "x": 3350,
+      "y": 3648,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Bench_1.png",
+      "x": 3230,
+      "y": 3560,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_70.png",
+      "x": 3010,
+      "y": 3300,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_90.png",
+      "x": 3100,
+      "y": 3290,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_110.png",
+      "x": 3300,
+      "y": 3300,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_40.png",
+      "x": 3200,
+      "y": 3740,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Stadium_Light_1.png",
+      "x": 3290,
+      "y": 3936,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Stadium_Light_2.png",
+      "x": 3556,
+      "y": 3936,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Bench_1.png",
+      "x": 3280,
+      "y": 3990,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Bench_2.png",
+      "x": 3280,
+      "y": 4110,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Stadium_Light_2.png",
+      "x": 2900,
+      "y": 4230,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Stadium_Light_1.png",
+      "x": 3170,
+      "y": 4230,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Flag_1.png",
+      "x": 3180,
+      "y": 4430,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Bench_4.png",
+      "x": 2904,
+      "y": 4240,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/13_school/ME_Singles_School_16x16_Bench_5.png",
+      "x": 2904,
+      "y": 4300,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_30.png",
+      "x": 3020,
+      "y": 4560,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_90.png",
+      "x": 3250,
+      "y": 4520,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rock_1.png",
+      "x": 2460,
+      "y": 3916,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rock_5.png",
+      "x": 2528,
+      "y": 3920,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rock_3.png",
+      "x": 2558,
+      "y": 3936,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rock_7.png",
+      "x": 2494,
+      "y": 3928,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_12.png",
+      "x": 2440,
+      "y": 3944,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_50.png",
+      "x": 2470,
+      "y": 4090,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_80.png",
+      "x": 2480,
+      "y": 4280,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Stump_1.png",
+      "x": 2720,
+      "y": 4720,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_5.png",
+      "x": 2718,
+      "y": 4140,
+      "origin": "bl",
+      "solid": true
+    },
+    {
+      "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_2.png",
+      "x": 2722,
+      "y": 4188,
+      "origin": "bl",
+      "solid": true
+    }
   ],
   "anims": [
-    { "sheet": "ext/animated/Garden_Fountain_5_16x16.png", "fw": 64, "fh": 80, "x": 2852, "y": 3420, "fps": 6 },
-    { "sheet": "ext/animated/Garden_Fountain_3_16x16.png", "fw": 48, "fh": 96, "x": 3180, "y": 3320, "fps": 6 },
-    { "sheet": "ext/animated/Garden_Fountain_1_16x16.png", "fw": 32, "fh": 48, "x": 2700, "y": 3600, "fps": 6 },
-    { "sheet": "ext/animated/Garden_Fountain_1_16x16.png", "fw": 32, "fh": 48, "x": 3040, "y": 3600, "fps": 6 },
-    { "sheet": "ext/animated/Waterfall_16x16.png", "fw": 48, "fh": 48, "x": 2480, "y": 3900, "fps": 6 },
-    { "sheet": "ext/animated/Waterfall_Drain_Tube_16x16.png", "fw": 32, "fh": 64, "x": 2580, "y": 3940, "fps": 6 },
-    { "sheet": "ext/animated/Park_Swing_1.png", "fw": 64, "fh": 32, "x": 2450, "y": 4560, "fps": 4 },
-    { "sheet": "ext/animated/Drinking_Fountain_1_loop_3-6.png", "fw": 32, "fh": 48, "x": 2320, "y": 4090, "fps": 5 }
+    {
+      "sheet": "ext/animated/Garden_Fountain_5_16x16.png",
+      "fw": 64,
+      "fh": 80,
+      "x": 2852,
+      "y": 3420,
+      "fps": 6
+    },
+    {
+      "sheet": "ext/animated/Garden_Fountain_3_16x16.png",
+      "fw": 48,
+      "fh": 96,
+      "x": 3180,
+      "y": 3320,
+      "fps": 6
+    },
+    {
+      "sheet": "ext/animated/Garden_Fountain_1_16x16.png",
+      "fw": 32,
+      "fh": 48,
+      "x": 2750,
+      "y": 3700,
+      "fps": 6
+    },
+    {
+      "sheet": "ext/animated/Garden_Fountain_1_16x16.png",
+      "fw": 32,
+      "fh": 48,
+      "x": 2920,
+      "y": 3700,
+      "fps": 6
+    },
+    {
+      "sheet": "ext/animated/Waterfall_16x16.png",
+      "fw": 48,
+      "fh": 48,
+      "x": 2480,
+      "y": 3900,
+      "fps": 6
+    },
+    {
+      "sheet": "ext/animated/Waterfall_Drain_Tube_16x16.png",
+      "fw": 32,
+      "fh": 64,
+      "x": 2580,
+      "y": 3940,
+      "fps": 6
+    },
+    {
+      "sheet": "ext/animated/Park_Swing_1.png",
+      "fw": 64,
+      "fh": 32,
+      "x": 2600,
+      "y": 4170,
+      "fps": 4
+    },
+    {
+      "sheet": "ext/animated/Drinking_Fountain_1_loop_3-6.png",
+      "fw": 32,
+      "fh": 48,
+      "x": 2570,
+      "y": 4086,
+      "fps": 5
+    }
   ],
   "solids": [
-    { "x": 2860, "y": 3278, "w": 10, "h": 22 },
-    { "x": 2898, "y": 3278, "w": 10, "h": 22 },
-    { "x": 2852, "y": 3448, "w": 64, "h": 52 },
-    { "x": 3180, "y": 3368, "w": 48, "h": 48 },
-    { "x": 2700, "y": 3620, "w": 32, "h": 28 },
-    { "x": 3040, "y": 3620, "w": 32, "h": 28 },
-    { "x": 2480, "y": 3900, "w": 48, "h": 48 },
-    { "x": 2580, "y": 3956, "w": 32, "h": 48 },
-    { "x": 3024, "y": 4312, "w": 64, "h": 32 },
-    { "x": 3024, "y": 4568, "w": 64, "h": 32 },
-    { "x": 2320, "y": 4118, "w": 32, "h": 20 }
+    {
+      "x": 2860,
+      "y": 3278,
+      "w": 10,
+      "h": 22
+    },
+    {
+      "x": 2898,
+      "y": 3278,
+      "w": 10,
+      "h": 22
+    },
+    {
+      "x": 2852,
+      "y": 3448,
+      "w": 64,
+      "h": 52
+    },
+    {
+      "x": 3180,
+      "y": 3368,
+      "w": 48,
+      "h": 48
+    },
+    {
+      "x": 2750,
+      "y": 3720,
+      "w": 32,
+      "h": 28
+    },
+    {
+      "x": 2920,
+      "y": 3720,
+      "w": 32,
+      "h": 28
+    },
+    {
+      "x": 2480,
+      "y": 3900,
+      "w": 48,
+      "h": 48
+    },
+    {
+      "x": 2580,
+      "y": 3956,
+      "w": 32,
+      "h": 48
+    },
+    {
+      "x": 3024,
+      "y": 4172,
+      "w": 64,
+      "h": 32
+    },
+    {
+      "x": 3024,
+      "y": 4428,
+      "w": 64,
+      "h": 32
+    },
+    {
+      "x": 2570,
+      "y": 4114,
+      "w": 32,
+      "h": 20
+    }
   ],
   "labels": [
-    { "x": 2820, "y": 3230, "text": "GRAND PARK" }
+    {
+      "x": 2820,
+      "y": 3230,
+      "text": "GRAND PARK"
+    }
   ],
   "portals": []
 }
