@@ -17,22 +17,29 @@ import os
 DEN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(DEN, "data", "city-specs", "d00-structure.json")
 
-# Paved sidewalk slabs covering each urban district's footprint. depth 0.87:
+# Paved sidewalk slabs forming ONE CONTINUOUS urban floor. depth 0.87:
 # above the world grass (0), below district patches (~0.9) and stamps.
+#
+# DESIGN: big OVERLAPPING rectangles that fully tile the urban core with zero
+# interior gaps. Overlap is harmless (same tile + depth); grass slivers between
+# ad-hoc slabs were the real "broken/gappy" bug. Carved ONLY around the two
+# rural pockets that must stay green:
+#   - farm  x226-928  y704-1145  (sits on bare world grass, NO self-cover)
+#   - camping x2688-3872 y160-1040 (self-covers with its own grass patch)
+# The green SOUTH (park/residential/beach/graveyard, y>3200) is left unpaved;
+# each of those districts draws its own ground.
 CORE_SLABS = [
-    # (x, y, w, h)  -- continuous paved fabric over the urban north, drawn
-    # AROUND the rural pockets (farm NW, camping N-gap) which stay grass.
-    (180, 1700, 6260, 600),     # avenue spine: whole main E-W corridor
-    (1740, 360, 980, 1420),     # downtown block (down to the spine)
-    (3780, 680, 2660, 1640),    # shopping + mainstreet + station NE mass
-    (3040, 1640, 1300, 1520),   # civic campus
-    (160, 1820, 1580, 1360),    # food-market / west-center
-    (540, 1900, 1780, 980),     # plaza apron
-    (2360, 1120, 1320, 2140),   # CENTRAL connector: downtown -> avenue ->
-    #                             park-top (kills the big central grass gap)
-    (4240, 2080, 2360, 1200),   # industrial + military band paving
-    (1720, 1060, 2260, 240),    # north cross-street fabric (downtown->NE)
-    (3040, 2560, 3560, 260),    # south-core cross fabric (civic->military)
+    # MAIN BAND — the whole urban midriff, full width, no gaps possible. Sits
+    # BELOW farm(y<=1145) and camping(y<=1040) so it never bleeds into them.
+    (0,    1480, 6656, 1780),
+    # Downtown spur up to the band (between farm x<928 and camping x>2688).
+    (1744, 560,  936,  960),
+    # Under-camping connector: fills the strip below camping down to the band.
+    (2540, 1040, 1640, 480),
+    # NE shopping + station mass up to the band.
+    (3952, 896,  2320, 624),
+    # West apron: paved fabric below the farm, joining plaza/food-market north.
+    (0,    1145, 2016, 352),
 ]
 
 # Asphalt road grid (x, y, w, h). Sidewalk auto-drawn 16px around each by the

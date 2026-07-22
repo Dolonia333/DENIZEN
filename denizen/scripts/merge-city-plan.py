@@ -10,19 +10,32 @@ import glob
 import json
 import os
 
+from PIL import Image
+
 DEN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = os.path.join(DEN, "data", "city-specs")
+ASSETS = os.path.join(DEN, "assets", "limezu")
 OUT = os.path.join(DEN, "data", "city-plan.json")
 
 merged = {"worldSize": {"w": 6656, "h": 6400}, "patches": [], "roads": [],
           "stamps": [], "anims": [], "animBands": [], "solids": [],
           "labels": [], "portals": [], "npcs": [], "vehicles": []}
 
+# d00-structure furniture (auto-placed trees/lamps) is placed knowing only the
+# roads, not the districts — so where a road passes THROUGH a district it drops
+# props onto buildings. Tag those stamps here so we can prune the collisions
+# post-merge, once every district's stamps are known.
+_struct_furniture = []
+
 for f in sorted(glob.glob(os.path.join(SPECS, "d*.json"))):
     frag = json.load(open(f, encoding="utf-8"))
+    is_struct = os.path.basename(f).startswith("d00")
     for k in merged:
         if k == "worldSize":
             continue
+        if k == "stamps" and is_struct:
+            for s in frag.get("stamps", []):
+                _struct_furniture.append(s)
         merged[k].extend(frag.get(k, []))
 
 # Avenue connectors (old city -> D1 -> D3)
@@ -61,6 +74,62 @@ for pt in merged["portals"]:
     if t.get("x") == 4640 and t.get("y") == 1880:
         t["x"], t["y"] = hotel_door[0], hotel_door[1] + 20
 
+# --- Prune structure furniture that lands on district buildings ---------------
+# A tree/lamp whose base point falls inside a real building footprint is wrong
+# (the road-shoulder generator can't see districts). Drop those specific stamps.
+_dim_cache = {}
+
+
+def _dims(img):
+    if img not in _dim_cache:
+        try:
+            with Image.open(os.path.join(ASSETS, img.replace("/", os.sep))) as im:
+                _dim_cache[img] = im.size
+        except Exception:
+            _dim_cache[img] = None
+    return _dim_cache[img]
+
+
+def _rect(s):
+    d = _dims(s["img"])
+    if not d:
+        return None
+    w, h = d
+    o = s.get("origin", "bl")
+    if o == "tl":
+        return (s["x"], s["y"], w, h)
+    if o == "bc":
+        return (s["x"] - w // 2, s["y"] - h, w, h)
+    return (s["x"], s["y"] - h, w, h)
+
+
+_struct_ids = {id(s) for s in _struct_furniture}
+# Obstacle footprints = every SOLID non-structure stamp (buildings AND placed
+# props: tents, vehicles, barriers, district trees...). Districts landscape
+# themselves, so auto street-furniture should survive only on open pavement.
+_obstacles = []
+for s in merged["stamps"]:
+    if id(s) in _struct_ids or not s.get("solid"):
+        continue
+    r = _rect(s)
+    if r and r[2] * r[3] > 24 * 24:   # ignore tiny decals
+        _obstacles.append(r)
+
+
+def _base_in_obstacle(s):
+    bx, by = s["x"], s["y"]          # furniture is origin "bc": (x,y) is the base
+    for rx, ry, rw, rh in _obstacles:
+        # inset 6px so props legitimately hugging an edge survive
+        if rx + 6 <= bx <= rx + rw - 6 and ry + 6 <= by <= ry + rh:
+            return True
+    return False
+
+
+_before = len(merged["stamps"])
+merged["stamps"] = [s for s in merged["stamps"]
+                    if not (id(s) in _struct_ids and _base_in_obstacle(s))]
+_pruned = _before - len(merged["stamps"])
+
 missing = []
 for s in merged["stamps"]:
     if not os.path.exists(os.path.join(DEN, "assets", "limezu", s["img"].replace("/", os.sep))):
@@ -72,6 +141,7 @@ for a in merged["anims"] + merged["animBands"] + merged["vehicles"]:
 
 json.dump(merged, open(OUT, "w", encoding="utf-8"), indent=1)
 print("merged:", {k: len(v) for k, v in merged.items() if isinstance(v, list)})
+print(f"pruned {_pruned} structure props off building footprints")
 print("missing:", len(missing))
 for m in missing[:10]:
     print("  MISS", m)
