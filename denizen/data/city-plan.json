@@ -1,9 +1,65 @@
 {
  "worldSize": {
-  "w": 6144,
+  "w": 6656,
   "h": 6400
  },
  "patches": [
+  {
+   "tile": "sidewalk",
+   "x": 180,
+   "y": 1720,
+   "w": 6180,
+   "h": 560,
+   "depth": 0.87
+  },
+  {
+   "tile": "sidewalk",
+   "x": 1760,
+   "y": 380,
+   "w": 960,
+   "h": 1400,
+   "depth": 0.87
+  },
+  {
+   "tile": "sidewalk",
+   "x": 3820,
+   "y": 720,
+   "w": 2500,
+   "h": 1560,
+   "depth": 0.87
+  },
+  {
+   "tile": "sidewalk",
+   "x": 3060,
+   "y": 1660,
+   "w": 1240,
+   "h": 1480,
+   "depth": 0.87
+  },
+  {
+   "tile": "sidewalk",
+   "x": 180,
+   "y": 1840,
+   "w": 1520,
+   "h": 1320,
+   "depth": 0.87
+  },
+  {
+   "tile": "sidewalk",
+   "x": 560,
+   "y": 1920,
+   "w": 1760,
+   "h": 940,
+   "depth": 0.87
+  },
+  {
+   "tile": "sidewalk",
+   "x": 2560,
+   "y": 1200,
+   "w": 900,
+   "h": 1080,
+   "depth": 0.87
+  },
   {
    "tile": "grass",
    "x": 4100,
@@ -30,152 +86,152 @@
   },
   {
    "tile": "grass",
-   "x": 4200,
-   "y": 200,
-   "w": 1900,
-   "h": 1400,
+   "x": 2680,
+   "y": 160,
+   "w": 1178,
+   "h": 868,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 4380,
-   "y": 620,
-   "w": 500,
-   "h": 180,
+   "x": 2792,
+   "y": 420,
+   "w": 310,
+   "h": 112,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 4640,
-   "y": 800,
-   "w": 64,
-   "h": 160,
+   "x": 2953,
+   "y": 532,
+   "w": 40,
+   "h": 99,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 4600,
-   "y": 952,
-   "w": 520,
-   "h": 96,
+   "x": 2928,
+   "y": 626,
+   "w": 322,
+   "h": 60,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 5020,
-   "y": 1000,
-   "w": 96,
-   "h": 600,
+   "x": 3188,
+   "y": 656,
+   "w": 60,
+   "h": 372,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 4620,
-   "y": 1048,
-   "w": 56,
-   "h": 100,
+   "x": 2940,
+   "y": 686,
+   "w": 35,
+   "h": 62,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 4560,
-   "y": 1120,
-   "w": 88,
-   "h": 64,
+   "x": 2903,
+   "y": 730,
+   "w": 55,
+   "h": 40,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 4850,
-   "y": 1070,
-   "w": 180,
-   "h": 170,
+   "x": 3083,
+   "y": 699,
+   "w": 112,
+   "h": 105,
    "depth": 0.9
   },
   {
    "tile": "sand",
-   "x": 5116,
-   "y": 1060,
-   "w": 216,
-   "h": 56,
+   "x": 3248,
+   "y": 693,
+   "w": 134,
+   "h": 35,
    "depth": 0.9
   },
   {
    "tile": "grass",
-   "x": 4200,
-   "y": 1900,
+   "x": 4300,
+   "y": 2250,
    "w": 900,
    "h": 800,
    "depth": 0.85
   },
   {
    "tile": "sand",
-   "x": 4288,
-   "y": 2192,
+   "x": 4388,
+   "y": 2542,
    "w": 704,
    "h": 448,
    "depth": 0.9
   },
   {
    "tile": "grass",
-   "x": 5100,
-   "y": 1600,
+   "x": 5450,
+   "y": 2100,
    "w": 1000,
    "h": 1100,
    "depth": 0.9
   },
   {
    "tile": "asphalt",
-   "x": 5220,
-   "y": 1700,
+   "x": 5570,
+   "y": 2200,
    "w": 840,
    "h": 820,
    "depth": 0.92
   },
   {
    "tile": "asphalt",
-   "x": 5160,
-   "y": 1950,
+   "x": 5510,
+   "y": 2450,
    "w": 60,
    "h": 570,
    "depth": 0.93
   },
   {
    "tile": "asphalt",
-   "x": 5150,
-   "y": 1794,
+   "x": 5500,
+   "y": 2294,
    "w": 116,
    "h": 86,
    "depth": 0.93
   },
   {
    "tile": "sand",
-   "x": 5252,
-   "y": 2280,
+   "x": 5602,
+   "y": 2780,
    "w": 248,
    "h": 200,
    "depth": 1.0
   },
   {
    "tile": "sidewalk",
-   "x": 5240,
-   "y": 1956,
+   "x": 5590,
+   "y": 2456,
    "w": 790,
    "h": 48,
    "depth": 1.05
   },
   {
    "tile": "sidewalk",
-   "x": 5220,
-   "y": 1880,
+   "x": 5570,
+   "y": 2380,
    "w": 48,
    "h": 124,
    "depth": 1.05
   },
   {
    "tile": "sidewalk",
-   "x": 5806,
-   "y": 2004,
+   "x": 6156,
+   "y": 2504,
    "w": 40,
    "h": 316,
    "depth": 1.05
@@ -799,20 +855,62 @@
  ],
  "roads": [
   {
+   "x": 400,
+   "y": 1876,
+   "w": 5900,
+   "h": 64
+  },
+  {
+   "x": 1808,
+   "y": 380,
+   "w": 64,
+   "h": 1560
+  },
+  {
+   "x": 2560,
+   "y": 380,
+   "w": 64,
+   "h": 3200
+  },
+  {
+   "x": 3900,
+   "y": 720,
+   "w": 64,
+   "h": 1160
+  },
+  {
+   "x": 5240,
+   "y": 760,
+   "w": 64,
+   "h": 1120
+  },
+  {
+   "x": 3820,
+   "y": 1140,
+   "w": 2500,
+   "h": 64
+  },
+  {
+   "x": 1760,
+   "y": 1150,
+   "w": 900,
+   "h": 64
+  },
+  {
    "x": 4100,
    "y": 1880,
    "w": 1000,
    "h": 64
   },
   {
-   "x": 4552,
-   "y": 1944,
+   "x": 4652,
+   "y": 2294,
    "w": 80,
    "h": 248
   },
   {
-   "x": 5100,
-   "y": 1880,
+   "x": 5450,
+   "y": 2380,
    "w": 120,
    "h": 64
   },
@@ -1280,1231 +1378,1173 @@
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_157.png",
-   "x": 4230,
-   "y": 564,
+   "x": 2699,
+   "y": 386,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_162.png",
-   "x": 4312,
-   "y": 596,
+   "x": 2749,
+   "y": 406,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_158.png",
-   "x": 4394,
-   "y": 564,
+   "x": 2800,
+   "y": 386,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_100.png",
-   "x": 4476,
-   "y": 596,
+   "x": 2851,
+   "y": 406,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_161.png",
-   "x": 4558,
-   "y": 564,
+   "x": 2902,
+   "y": 386,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_163.png",
-   "x": 4640,
-   "y": 596,
+   "x": 2953,
+   "y": 406,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_103.png",
-   "x": 4722,
-   "y": 564,
+   "x": 3004,
+   "y": 386,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_159.png",
-   "x": 4804,
-   "y": 596,
+   "x": 3054,
+   "y": 406,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_164.png",
-   "x": 4886,
-   "y": 564,
+   "x": 3105,
+   "y": 386,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_104.png",
-   "x": 4968,
-   "y": 596,
+   "x": 3156,
+   "y": 406,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_160.png",
-   "x": 5050,
-   "y": 564,
+   "x": 3207,
+   "y": 386,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_101.png",
-   "x": 5132,
-   "y": 596,
+   "x": 3258,
+   "y": 406,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_165.png",
-   "x": 5214,
-   "y": 564,
+   "x": 3309,
+   "y": 386,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_105.png",
-   "x": 4260,
-   "y": 760,
+   "x": 2717,
+   "y": 507,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_110.png",
-   "x": 4360,
-   "y": 1330,
+   "x": 2779,
+   "y": 861,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_102.png",
-   "x": 5350,
-   "y": 580,
+   "x": 3393,
+   "y": 396,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_3.png",
-   "x": 5440,
-   "y": 604,
+   "x": 3449,
+   "y": 410,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_2.png",
-   "x": 5530,
-   "y": 760,
+   "x": 3505,
+   "y": 507,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_106.png",
-   "x": 5560,
-   "y": 1010,
+   "x": 3523,
+   "y": 662,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_130.png",
-   "x": 5390,
-   "y": 1044,
+   "x": 3418,
+   "y": 683,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mobile_House_Big_1.png",
-   "x": 4390,
-   "y": 756,
+   "x": 2798,
+   "y": 505,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/10_vehicles/ME_Singles_Vehicles_16x16_Camper_Right_1.png",
-   "x": 4640,
-   "y": 760,
+   "x": 2953,
+   "y": 507,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png",
-   "x": 4790,
-   "y": 770,
+   "x": 3046,
+   "y": 513,
    "origin": "bl",
    "solid": true
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sign_1.png",
-   "x": 4570,
-   "y": 750,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Chair_1.png",
-   "x": 4580,
-   "y": 724,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tiny_Table_1.png",
-   "x": 4600,
-   "y": 722,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Bucket_1.png",
-   "x": 4750,
-   "y": 742,
-   "origin": "bl"
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tire_1.png",
-   "x": 4756,
-   "y": 700,
-   "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_1.png",
-   "x": 4500,
-   "y": 1140,
+   "x": 2866,
+   "y": 743,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_5.png",
-   "x": 4552,
-   "y": 1096,
+   "x": 2898,
+   "y": 716,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_3.png",
-   "x": 4680,
-   "y": 1120,
+   "x": 2978,
+   "y": 730,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tent_6.png",
-   "x": 4620,
-   "y": 1256,
+   "x": 2940,
+   "y": 815,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sleeping_Bag_1.png",
-   "x": 4570,
-   "y": 1152,
+   "x": 2909,
+   "y": 750,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sleeping_Bag_2.png",
-   "x": 4740,
-   "y": 1160,
-   "origin": "bl"
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Backpack_1.png",
-   "x": 4524,
-   "y": 1104,
-   "origin": "bl"
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Backpack_2.png",
-   "x": 4690,
-   "y": 1248,
+   "x": 3015,
+   "y": 755,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Cut_Wood_Bench_1.png",
-   "x": 4556,
-   "y": 1180,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Cut_Wood_Bench_2.png",
-   "x": 4614,
-   "y": 1206,
+   "x": 2901,
+   "y": 768,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Ball_1.png",
-   "x": 4580,
-   "y": 1244,
+   "x": 2916,
+   "y": 807,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mushrooms_1.png",
-   "x": 4440,
-   "y": 1210,
+   "x": 2829,
+   "y": 786,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_1.png",
-   "x": 4870,
-   "y": 1120,
+   "x": 3095,
+   "y": 730,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_2.png",
-   "x": 4950,
-   "y": 1150,
+   "x": 3145,
+   "y": 749,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Benched_Table_4.png",
-   "x": 4890,
-   "y": 1214,
+   "x": 3108,
+   "y": 789,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Barbecue_1.png",
-   "x": 4950,
-   "y": 1094,
+   "x": 3145,
+   "y": 714,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Cut_Wood_3.png",
-   "x": 4990,
-   "y": 1124,
+   "x": 3170,
+   "y": 733,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Stump_1.png",
-   "x": 4844,
-   "y": 1170,
+   "x": 3079,
+   "y": 761,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Stump_2.png",
-   "x": 4986,
-   "y": 1232,
+   "x": 3167,
+   "y": 800,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Basket_1.png",
-   "x": 4900,
-   "y": 1142,
+   "x": 3114,
+   "y": 744,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Apples_1.png",
-   "x": 4920,
-   "y": 1148,
+   "x": 3126,
+   "y": 748,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fishing_Spot_2.png",
-   "x": 5310,
-   "y": 1080,
+   "x": 3368,
+   "y": 706,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Armchair_1.png",
-   "x": 5258,
-   "y": 1116,
+   "x": 3336,
+   "y": 728,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Fish_Bucket_1.png",
-   "x": 5282,
-   "y": 1122,
+   "x": 3351,
+   "y": 732,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rock_1.png",
-   "x": 5440,
-   "y": 1080,
+   "x": 3449,
+   "y": 706,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Signboard_1.png",
-   "x": 5012,
-   "y": 1558,
+   "x": 3183,
+   "y": 1002,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Sign_2.png",
-   "x": 5130,
-   "y": 1050,
+   "x": 3257,
+   "y": 687,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Lantern_1.png",
-   "x": 5000,
-   "y": 1500,
-   "origin": "bl"
-  },
-  {
-   "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Lantern_2.png",
-   "x": 5136,
-   "y": 1500,
+   "x": 3176,
+   "y": 966,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Mushrooms_2.png",
-   "x": 4350,
-   "y": 830,
+   "x": 2773,
+   "y": 551,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Rock_3.png",
-   "x": 5210,
-   "y": 880,
+   "x": 3306,
+   "y": 582,
    "origin": "bl"
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_Dead_1.png",
-   "x": 5150,
-   "y": 945,
+   "x": 3269,
+   "y": 622,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Top_Corner_Left.png",
-   "x": 4288,
-   "y": 2208,
+   "x": 4388,
+   "y": 2558,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Top_Corner_Right.png",
-   "x": 4976,
-   "y": 2208,
+   "x": 5076,
+   "y": 2558,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Bottom_Corner_Left.png",
-   "x": 4288,
-   "y": 2640,
+   "x": 4388,
+   "y": 2990,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Bottom_Corner_Right.png",
-   "x": 4976,
-   "y": 2640,
+   "x": 5076,
+   "y": 2990,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Building_Skeleton_2.png",
-   "x": 4304,
-   "y": 2380,
+   "x": 4404,
+   "y": 2730,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_1.png",
-   "x": 4420,
-   "y": 2296,
+   "x": 4520,
+   "y": 2646,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Stacked_Material_3.png",
-   "x": 4420,
-   "y": 2348,
+   "x": 4520,
+   "y": 2698,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Stacked_Barrels_1.png",
-   "x": 4310,
-   "y": 2436,
+   "x": 4410,
+   "y": 2786,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Barrel_1.png",
-   "x": 4360,
-   "y": 2430,
+   "x": 4460,
+   "y": 2780,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Brown_Barrel_1.png",
-   "x": 4378,
-   "y": 2436,
+   "x": 4478,
+   "y": 2786,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Tool_Box_1.png",
-   "x": 4362,
-   "y": 2470,
+   "x": 4462,
+   "y": 2820,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/21_beach/21_Beach_16x16_Mixer.png",
-   "x": 4448,
-   "y": 2420,
+   "x": 4548,
+   "y": 2770,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Light_Tower_1.png",
-   "x": 4472,
-   "y": 2260,
+   "x": 4572,
+   "y": 2610,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Cone_1.png",
-   "x": 4548,
-   "y": 2300,
+   "x": 4648,
+   "y": 2650,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Cone_2.png",
-   "x": 4660,
-   "y": 2296,
+   "x": 4760,
+   "y": 2646,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Entrance_1.png",
-   "x": 4568,
-   "y": 2224,
+   "x": 4668,
+   "y": 2574,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Danger_Sign_1.png",
-   "x": 4648,
-   "y": 2208,
+   "x": 4748,
+   "y": 2558,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_2.png",
-   "x": 4384,
-   "y": 2456,
+   "x": 4484,
+   "y": 2806,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Broken_Ladder_1.png",
-   "x": 4444,
-   "y": 2450,
+   "x": 4544,
+   "y": 2800,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_7.png",
-   "x": 4390,
-   "y": 2492,
+   "x": 4490,
+   "y": 2842,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Small_Trash_Pile_1.png",
-   "x": 4452,
-   "y": 2545,
+   "x": 4552,
+   "y": 2895,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/24_additional_houses/24_Additional_Houses_Post_Apocalyptic_House_1_16x16.png",
-   "x": 4600,
-   "y": 2376,
+   "x": 4700,
+   "y": 2726,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Portable_Toilet_1.png",
-   "x": 4560,
-   "y": 2336,
+   "x": 4660,
+   "y": 2686,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Props_1.png",
-   "x": 4624,
-   "y": 2396,
+   "x": 4724,
+   "y": 2746,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Props_5.png",
-   "x": 4700,
-   "y": 2392,
+   "x": 4800,
+   "y": 2742,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_4.png",
-   "x": 4660,
-   "y": 2402,
+   "x": 4760,
+   "y": 2752,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_1.png",
-   "x": 4856,
-   "y": 2270,
+   "x": 4956,
+   "y": 2620,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_3.png",
-   "x": 4856,
-   "y": 2318,
+   "x": 4956,
+   "y": 2668,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_4.png",
-   "x": 4856,
-   "y": 2366,
+   "x": 4956,
+   "y": 2716,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_10.png",
-   "x": 4560,
-   "y": 2500,
+   "x": 4660,
+   "y": 2850,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_5.png",
-   "x": 4592,
-   "y": 2520,
+   "x": 4692,
+   "y": 2870,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_1.png",
-   "x": 4650,
-   "y": 2532,
+   "x": 4750,
+   "y": 2882,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_8.png",
-   "x": 4676,
-   "y": 2548,
+   "x": 4776,
+   "y": 2898,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_3.png",
-   "x": 4588,
-   "y": 2576,
+   "x": 4688,
+   "y": 2926,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Car_Wreck_12.png",
-   "x": 4656,
-   "y": 2600,
+   "x": 4756,
+   "y": 2950,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_1.png",
-   "x": 4548,
-   "y": 2540,
+   "x": 4648,
+   "y": 2890,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Scrap_Metal_1.png",
-   "x": 4724,
-   "y": 2586,
+   "x": 4824,
+   "y": 2936,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_1.png",
-   "x": 4560,
-   "y": 2606,
+   "x": 4660,
+   "y": 2956,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/8_worksite/ME_Singles_Worksite_16x16_Excavator_1.png",
-   "x": 4792,
-   "y": 2500,
+   "x": 4892,
+   "y": 2850,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Container_5.png",
-   "x": 4928,
-   "y": 2420,
+   "x": 5028,
+   "y": 2770,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 4936,
-   "y": 2480,
+   "x": 5036,
+   "y": 2830,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
-   "x": 4916,
-   "y": 2472,
+   "x": 5016,
+   "y": 2822,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Scrap_Metal_Pile_1.png",
-   "x": 4880,
-   "y": 2560,
+   "x": 4980,
+   "y": 2910,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_1.png",
-   "x": 4886,
-   "y": 2600,
+   "x": 4986,
+   "y": 2950,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Scrap_Metal_4.png",
-   "x": 4864,
-   "y": 2520,
+   "x": 4964,
+   "y": 2870,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Dumpster_3.png",
-   "x": 4760,
-   "y": 2616,
+   "x": 4860,
+   "y": 2966,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Black_Open_Full_Trash_Can.png",
-   "x": 4800,
-   "y": 2612,
+   "x": 4900,
+   "y": 2962,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_3.png",
-   "x": 4688,
-   "y": 2618,
+   "x": 4788,
+   "y": 2968,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Trash_Pile_2.png",
-   "x": 4820,
-   "y": 2610,
+   "x": 4920,
+   "y": 2960,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_Shack_1.png",
-   "x": 4320,
-   "y": 2612,
+   "x": 4420,
+   "y": 2962,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 4432,
-   "y": 2600,
+   "x": 4532,
+   "y": 2950,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 4462,
-   "y": 2610,
+   "x": 4562,
+   "y": 2960,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Tire_2.png",
-   "x": 4494,
-   "y": 2596,
+   "x": 4594,
+   "y": 2946,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Junk_2.png",
-   "x": 4432,
-   "y": 2616,
+   "x": 4532,
+   "y": 2966,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_1.png",
-   "x": 4216,
-   "y": 2260,
+   "x": 4316,
+   "y": 2610,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_10.png",
-   "x": 5010,
-   "y": 2380,
+   "x": 5110,
+   "y": 2730,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/11_camping/ME_Singles_Camping_16x16_Tree_20.png",
-   "x": 4220,
-   "y": 2560,
+   "x": 4320,
+   "y": 2910,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/17_garden/ME_Singles_Garden_16x16_Bush_7.png",
-   "x": 4250,
-   "y": 2420,
+   "x": 4350,
+   "y": 2770,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_1.png",
-   "x": 4512,
-   "y": 2080,
+   "x": 4612,
+   "y": 2430,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/3_city_props/ME_Singles_City_Props_16x16_Street_Lamp_4.png",
-   "x": 4648,
-   "y": 2140,
+   "x": 4748,
+   "y": 2490,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Watch_Tower.png",
-   "x": 5170,
-   "y": 1876,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Barbed_Wire_1.png",
-   "x": 5164,
-   "y": 2140,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Barbed_Wire_1.png",
-   "x": 5164,
-   "y": 2316,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign.png",
-   "x": 5240,
-   "y": 2032,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Double_1.png",
-   "x": 5172,
-   "y": 2064,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar.png",
-   "x": 5280,
-   "y": 1960,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker.png",
-   "x": 5540,
-   "y": 1950,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Dormitory_1.png",
-   "x": 5700,
-   "y": 1950,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Radio_Tower.png",
-   "x": 5924,
-   "y": 2060,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Dormitory_Sign_1.png",
-   "x": 5686,
-   "y": 1946,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
-   "x": 5464,
-   "y": 1996,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_2.png",
-   "x": 5900,
-   "y": 2080,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png",
-   "x": 5730,
-   "y": 2058,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
-   "x": 5648,
-   "y": 2052,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
-   "x": 5352,
-   "y": 2498,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Helicopter.png",
-   "x": 5290,
-   "y": 2160,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
-   "x": 5330,
-   "y": 2184,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Grey_Single.png",
-   "x": 5378,
-   "y": 2180,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Brown.png",
-   "x": 5620,
-   "y": 2260,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Black.png",
-   "x": 5850,
-   "y": 2296,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png",
-   "x": 5560,
-   "y": 2230,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Vertical_2.png",
-   "x": 5556,
-   "y": 2296,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Closed.png",
-   "x": 5716,
-   "y": 2296,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box.png",
-   "x": 5768,
-   "y": 2300,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
-   "x": 5752,
-   "y": 2312,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
-   "x": 5806,
-   "y": 2296,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
-   "x": 5794,
-   "y": 2308,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Corner_Left.png",
-   "x": 5280,
-   "y": 2456,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Middle_Modular.png",
-   "x": 5312,
-   "y": 2456,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Middle_Modular.png",
-   "x": 5344,
-   "y": 2456,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Middle_Modular.png",
-   "x": 5376,
-   "y": 2456,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Corner_Right.png",
-   "x": 5408,
-   "y": 2456,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png",
-   "x": 5440,
-   "y": 2452,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Vertical_1.png",
-   "x": 5272,
-   "y": 2380,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
-   "x": 5334,
-   "y": 2402,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_2.png",
-   "x": 5392,
-   "y": 2418,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Horizontal_Single.png",
-   "x": 5442,
-   "y": 2392,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Horizontal_Single.png",
-   "x": 5468,
-   "y": 2246,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_5.png",
-   "x": 5430,
-   "y": 2250,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
-   "x": 5300,
-   "y": 2336,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
-   "x": 5356,
-   "y": 2336,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
-   "x": 5412,
-   "y": 2330,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
-   "x": 5448,
-   "y": 2330,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
-   "x": 5476,
-   "y": 2330,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_1.png",
-   "x": 5268,
-   "y": 2300,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
-   "x": 5320,
-   "y": 2492,
-   "origin": "bl",
-   "solid": false
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Pole_Single.png",
-   "x": 5440,
-   "y": 2500,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Green_Tank_Right_Side.png",
-   "x": 5620,
-   "y": 2400,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Brown_Tank_Left_Side.png",
-   "x": 5790,
-   "y": 2400,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
-   "x": 5750,
-   "y": 2370,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
-   "x": 5592,
-   "y": 2364,
-   "origin": "bl",
-   "solid": true
-  },
-  {
-   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
-   "x": 5862,
+   "x": 5520,
    "y": 2376,
    "origin": "bl",
    "solid": true
   },
   {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Barbed_Wire_1.png",
+   "x": 5514,
+   "y": 2640,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_External_Wall_Barbed_Wire_1.png",
+   "x": 5514,
+   "y": 2816,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign.png",
+   "x": 5590,
+   "y": 2532,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Double_1.png",
+   "x": 5522,
+   "y": 2564,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Hangar.png",
+   "x": 5630,
+   "y": 2460,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Bunker.png",
+   "x": 5890,
+   "y": 2450,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Dormitory_1.png",
+   "x": 6050,
+   "y": 2450,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Radio_Tower.png",
+   "x": 6274,
+   "y": 2560,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Dormitory_Sign_1.png",
+   "x": 6036,
+   "y": 2446,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_3.png",
+   "x": 5814,
+   "y": 2496,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_2.png",
+   "x": 6250,
+   "y": 2580,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png",
+   "x": 6080,
+   "y": 2558,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_6.png",
+   "x": 5998,
+   "y": 2552,
+   "origin": "bl",
+   "solid": false
+  },
+  {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
-   "x": 5768,
-   "y": 2392,
+   "x": 5702,
+   "y": 2998,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Helicopter.png",
+   "x": 5640,
+   "y": 2660,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_2.png",
+   "x": 5680,
+   "y": 2684,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Grey_Single.png",
+   "x": 5728,
+   "y": 2680,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Brown.png",
+   "x": 5970,
+   "y": 2760,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Black.png",
+   "x": 6200,
+   "y": 2796,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png",
+   "x": 5910,
+   "y": 2730,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Vertical_2.png",
+   "x": 5906,
+   "y": 2796,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Closed.png",
+   "x": 6066,
+   "y": 2796,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box.png",
+   "x": 6118,
+   "y": 2800,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_1.png",
+   "x": 6102,
+   "y": 2812,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_First_Aid_Kit_Red.png",
+   "x": 6156,
+   "y": 2796,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Soldier_Helmet.png",
+   "x": 6144,
+   "y": 2808,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Corner_Left.png",
+   "x": 5630,
+   "y": 2956,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Middle_Modular.png",
+   "x": 5662,
+   "y": 2956,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Middle_Modular.png",
+   "x": 5694,
+   "y": 2956,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Middle_Modular.png",
+   "x": 5726,
+   "y": 2956,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Top_Corner_Right.png",
+   "x": 5758,
+   "y": 2956,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Horizontal.png",
+   "x": 5790,
+   "y": 2952,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Pile_Vertical_1.png",
+   "x": 5622,
+   "y": 2880,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_1.png",
+   "x": 5684,
+   "y": 2902,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Mine_2.png",
+   "x": 5742,
+   "y": 2918,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Horizontal_Single.png",
+   "x": 5792,
+   "y": 2892,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Sandbag_Horizontal_Single.png",
+   "x": 5818,
+   "y": 2746,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_5.png",
+   "x": 5780,
+   "y": 2750,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_2.png",
+   "x": 5650,
+   "y": 2836,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_2.png",
+   "x": 5706,
+   "y": 2836,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_2_Vers_1.png",
+   "x": 5762,
+   "y": 2830,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_1_Vers_1.png",
+   "x": 5798,
+   "y": 2830,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Target_Down_Vers_1.png",
+   "x": 5826,
+   "y": 2830,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_1.png",
+   "x": 5618,
+   "y": 2800,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Brown_Single.png",
+   "x": 5670,
+   "y": 2992,
+   "origin": "bl",
+   "solid": false
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Warning_Sign_Pole_Single.png",
+   "x": 5790,
+   "y": 3000,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Green_Tank_Right_Side.png",
+   "x": 5970,
+   "y": 2900,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Brown_Tank_Left_Side.png",
+   "x": 6140,
+   "y": 2900,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_Double.png",
+   "x": 6100,
+   "y": 2870,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_1.png",
+   "x": 5942,
+   "y": 2864,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tires_Pile_2.png",
+   "x": 6212,
+   "y": 2876,
+   "origin": "bl",
+   "solid": true
+  },
+  {
+   "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Tire_Black_Single.png",
+   "x": 6118,
+   "y": 2892,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barrier.png",
-   "x": 5660,
-   "y": 2470,
+   "x": 6010,
+   "y": 2970,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Left_Side.png",
-   "x": 5588,
-   "y": 2470,
+   "x": 5938,
+   "y": 2970,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Light_Pole_Right_Side.png",
-   "x": 5876,
-   "y": 2470,
+   "x": 6226,
+   "y": 2970,
    "origin": "bl",
    "solid": true
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Military_Tent_Box_Small_4.png",
-   "x": 5880,
-   "y": 2420,
+   "x": 6230,
+   "y": 2920,
    "origin": "bl",
    "solid": false
   },
   {
    "img": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Watch_Tower.png",
-   "x": 5920,
-   "y": 2520,
+   "x": 6270,
+   "y": 3020,
    "origin": "bl",
    "solid": true
   },
@@ -7369,120 +7409,120 @@
    "sheet": "ext/animated/Campfire_16x16.png",
    "fw": 32,
    "fh": 32,
-   "x": 4610,
-   "y": 1160,
+   "x": 2934,
+   "y": 755,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Campfire_2_16x16.png",
    "fw": 32,
    "fh": 32,
-   "x": 4920,
-   "y": 1170,
+   "x": 3126,
+   "y": 761,
    "fps": 8
   },
   {
    "sheet": "ext/animated/Bubbles_16x16.png",
    "fw": 16,
    "fh": 16,
-   "x": 5364,
-   "y": 1060,
+   "x": 3402,
+   "y": 693,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Camping_Lantern_1.png",
    "fw": 48,
    "fh": 48,
-   "x": 4680,
-   "y": 1180,
+   "x": 2978,
+   "y": 768,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Water_Tileset_16x16.png",
    "fw": 48,
    "fh": 48,
-   "x": 5350,
-   "y": 1080,
+   "x": 3393,
+   "y": 706,
    "fps": 4
   },
   {
    "sheet": "ext/animated/Campfire_16x16.png",
    "fw": 32,
    "fh": 32,
-   "x": 4920,
-   "y": 2240,
+   "x": 5020,
+   "y": 2590,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Flame_2_16x16.png",
    "fw": 16,
    "fh": 16,
-   "x": 4956,
-   "y": 2244,
+   "x": 5056,
+   "y": 2594,
    "fps": 8
   },
   {
    "sheet": "ext/animated/Flame_1_16x16.png",
    "fw": 16,
    "fh": 16,
-   "x": 4906,
-   "y": 2566,
+   "x": 5006,
+   "y": 2916,
    "fps": 7
   },
   {
    "sheet": "ext/animated/Automatic_Barrier_1_16x16.png",
    "fw": 80,
    "fh": 80,
-   "x": 4592,
-   "y": 2150,
+   "x": 4692,
+   "y": 2500,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Worksite_Door_16x16.png",
    "fw": 48,
    "fh": 48,
-   "x": 4368,
-   "y": 2612,
+   "x": 4468,
+   "y": 2962,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Automatic_Barrier_1_16x16.png",
    "fw": 80,
    "fh": 80,
-   "x": 5192,
-   "y": 1872,
+   "x": 5542,
+   "y": 2372,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Spotlight_1_16x16.png",
    "fw": 32,
    "fh": 48,
-   "x": 5266,
-   "y": 2186,
+   "x": 5616,
+   "y": 2686,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Spotlight_1_16x16.png",
    "fw": 32,
    "fh": 48,
-   "x": 5896,
-   "y": 2496,
+   "x": 6246,
+   "y": 2996,
    "fps": 4
   },
   {
    "sheet": "ext/animated/School_Flag_1_16x16.png",
    "fw": 48,
    "fh": 144,
-   "x": 5524,
-   "y": 2000,
+   "x": 5874,
+   "y": 2500,
    "fps": 6
   },
   {
    "sheet": "ext/animated/Military_Bunker_Door_16x16.png",
    "fw": 32,
    "fh": 32,
-   "x": 5588,
-   "y": 1918,
+   "x": 5938,
+   "y": 2418,
    "fps": 6
   },
   {
@@ -8093,8 +8133,8 @@
    "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Horizontal.png",
    "fw": 48,
    "fh": 16,
-   "x": 4304,
-   "y": 2192,
+   "x": 4404,
+   "y": 2542,
    "w": 240,
    "h": 16
   },
@@ -8102,8 +8142,8 @@
    "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Horizontal.png",
    "fw": 48,
    "fh": 16,
-   "x": 4640,
-   "y": 2192,
+   "x": 4740,
+   "y": 2542,
    "w": 336,
    "h": 16
   },
@@ -8111,8 +8151,8 @@
    "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Vertical.png",
    "fw": 16,
    "fh": 16,
-   "x": 4288,
-   "y": 2208,
+   "x": 4388,
+   "y": 2558,
    "w": 16,
    "h": 416
   },
@@ -8120,8 +8160,8 @@
    "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Vertical.png",
    "fw": 16,
    "fh": 16,
-   "x": 4976,
-   "y": 2208,
+   "x": 5076,
+   "y": 2558,
    "w": 16,
    "h": 416
   },
@@ -8129,8 +8169,8 @@
    "sheet": "ext/singles/23_military_base/23_MIlitary_Base_16x16_Barbed_Wire_1_Horizontal.png",
    "fw": 48,
    "fh": 16,
-   "x": 4304,
-   "y": 2624,
+   "x": 4404,
+   "y": 2974,
    "w": 672,
    "h": 16
   },
@@ -8328,68 +8368,68 @@
  ],
  "solids": [
   {
-   "x": 4200,
-   "y": 200,
-   "w": 1900,
-   "h": 120
+   "x": 2680,
+   "y": 160,
+   "w": 1178,
+   "h": 74
   },
   {
-   "x": 4200,
-   "y": 320,
-   "w": 80,
-   "h": 1280
+   "x": 2680,
+   "y": 234,
+   "w": 50,
+   "h": 794
   },
   {
-   "x": 6020,
-   "y": 320,
-   "w": 80,
-   "h": 1280
+   "x": 3808,
+   "y": 234,
+   "w": 50,
+   "h": 794
   },
   {
-   "x": 4280,
-   "y": 1520,
-   "w": 720,
-   "h": 80
+   "x": 2730,
+   "y": 978,
+   "w": 446,
+   "h": 50
   },
   {
-   "x": 5180,
-   "y": 1520,
-   "w": 840,
-   "h": 80
+   "x": 3288,
+   "y": 978,
+   "w": 521,
+   "h": 50
   },
   {
-   "x": 5354,
-   "y": 1088,
-   "w": 40,
-   "h": 32
+   "x": 3395,
+   "y": 711,
+   "w": 25,
+   "h": 20
   },
   {
-   "x": 4288,
-   "y": 2192,
+   "x": 4388,
+   "y": 2542,
    "w": 264,
    "h": 8
   },
   {
-   "x": 4632,
-   "y": 2192,
+   "x": 4732,
+   "y": 2542,
    "w": 360,
    "h": 8
   },
   {
-   "x": 4288,
-   "y": 2632,
+   "x": 4388,
+   "y": 2982,
    "w": 704,
    "h": 8
   },
   {
-   "x": 4288,
-   "y": 2192,
+   "x": 4388,
+   "y": 2542,
    "w": 8,
    "h": 448
   },
   {
-   "x": 4984,
-   "y": 2192,
+   "x": 5084,
+   "y": 2542,
    "w": 8,
    "h": 448
   },
@@ -8917,18 +8957,18 @@
    "text": "MAIN STREET RETAIL"
   },
   {
-   "x": 4950,
-   "y": 430,
+   "x": 3145,
+   "y": 303,
    "text": "CAMPING FOREST"
   },
   {
-   "x": 4600,
-   "y": 2130,
+   "x": 4700,
+   "y": 2480,
    "text": "INDUSTRIAL YARD"
   },
   {
-   "x": 5520,
-   "y": 1630,
+   "x": 5870,
+   "y": 2130,
    "text": "MILITARY BASE"
   },
   {

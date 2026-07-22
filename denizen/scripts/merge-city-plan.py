@@ -14,7 +14,7 @@ DEN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SPECS = os.path.join(DEN, "data", "city-specs")
 OUT = os.path.join(DEN, "data", "city-plan.json")
 
-merged = {"worldSize": {"w": 6144, "h": 6400}, "patches": [], "roads": [],
+merged = {"worldSize": {"w": 6656, "h": 6400}, "patches": [], "roads": [],
           "stamps": [], "anims": [], "animBands": [], "solids": [],
           "labels": [], "portals": [], "npcs": [], "vehicles": []}
 
