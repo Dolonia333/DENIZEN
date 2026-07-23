@@ -14,6 +14,8 @@ const crmStripe = require('./denizen-crm-stripe');
 const crmCalendar = require('./denizen-crm-calendar');
 const { inviteTeamMember } = require('./denizen-crm-team-invite');
 const crmSetupWizard = require('./denizen-crm-setup-wizard');
+const crmSam = require('./denizen-crm-sam');
+const samGov = require('./denizen-sam-gov');
 const denizenDb = require('./denizen-db');
 const denizenVisitor = require('./denizen-visitor');
 const sessionAuth = require('./visitor-session-auth');
@@ -291,6 +293,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           'GET /api/crm/team',
           'POST /api/crm/team/invite',
           'POST /api/crm/setup-wizard',
+          'GET /api/crm/sam/search',
+          'POST /api/crm/sam/ingest',
         ],
       });
       return true;
@@ -1300,6 +1304,65 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
       } catch (err) {
         const status = err?.code === 'DENIED' ? 401 : 500;
         json(res, status, { ok: false, error: err?.message || String(err) });
+        return true;
+      }
+    }
+
+    // SAM.gov federal opportunities. Org resolves from the session when present,
+    // else falls back to the default org so these are testable directly. `search`
+    // is a read-only proxy of public federal data; `ingest` writes matching
+    // opportunities into the RFP pipeline (idempotent by sam_gov_id).
+    if (path === '/api/crm/sam/search' && req.method === 'GET') {
+      try {
+        if (!samGov.hasKey()) {
+          json(res, 200, { ok: false, configured: false, error: 'SAM_GOV_API_KEY is not set' });
+          return true;
+        }
+        const q = url.searchParams;
+        const result = await samGov.searchOpportunities({
+          naics: q.get('naics') != null ? q.get('naics') : undefined,
+          setAside: q.get('setAside') != null ? q.get('setAside') : undefined,
+          ptype: q.get('ptype') != null ? q.get('ptype') : undefined,
+          days: q.get('days') != null ? Number(q.get('days')) : undefined,
+          q: q.get('q') || undefined,
+          limit: q.get('limit') != null ? Number(q.get('limit')) : undefined,
+          offset: q.get('offset') != null ? Number(q.get('offset')) : undefined,
+        });
+        json(res, 200, { ok: true, configured: true, ...result });
+        return true;
+      } catch (err) {
+        const status = err?.code === 'SAM_AUTH' ? 401 : (err?.code === 'NO_SAM_KEY' ? 409 : 502);
+        json(res, status, { ok: false, error: err?.message || String(err), code: err?.code });
+        return true;
+      }
+    }
+
+    if (path === '/api/crm/sam/ingest' && req.method === 'POST') {
+      try {
+        const body = await readJsonBody(req, 16 * 1024).catch(() => ({}));
+        // Best-effort org from the session; fall back to the default org.
+        let orgId = null;
+        try {
+          const sessionId = sessionIdFrom(req, body, url);
+          if (sessionId) {
+            const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+            orgId = await resolveOrgIdAsync(access);
+          }
+        } catch (_) { /* no session → default org */ }
+        const result = await crmSam.ingestOpportunities({
+          orgId: orgId || undefined,
+          naics: body.naics,
+          setAside: body.setAside,
+          ptype: body.ptype,
+          days: body.days != null ? Number(body.days) : undefined,
+          q: body.q,
+          limit: body.limit != null ? Number(body.limit) : undefined,
+        });
+        json(res, result.ok ? 200 : (result.code === 'NO_SAM_KEY' ? 409 : 500), result);
+        return true;
+      } catch (err) {
+        const status = err?.code === 'SAM_AUTH' ? 401 : 500;
+        json(res, status, { ok: false, error: err?.message || String(err), code: err?.code });
         return true;
       }
     }
