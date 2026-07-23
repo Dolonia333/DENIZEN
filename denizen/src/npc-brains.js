@@ -2645,10 +2645,17 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         pendingSkill: rt.pendingSkillResults?.has(npcName),
         realWorkMode: this._resolveAutonomousRealWork(npcName, officeContext),
         cyclesSinceSkill: rt.cyclesSinceSkillRun?.[npcName] || 0,
+        cyclesSinceLlm: rt.cyclesSinceLlm?.[npcName] || 0,
         realWorkThreshold: promptTuning?.realWorkCyclesWithoutSkill ?? 6,
-        forceLlm: Boolean(officeContext?.forceLlm),
+        // A wake IS the signal that something real happened (directive, chat,
+        // bus event) — treat it as force, or the wake just lands on the roll
+        // table and gets vetoed like any idle cycle.
+        forceLlm: Boolean(officeContext?.forceLlm || officeContext?.urgentWake),
       };
       if (!officeDirector.needsLlm(npcName, directorCtx)) {
+        // Count vetoed cycles so the director cannot starve an NPC forever.
+        if (!rt.cyclesSinceLlm) rt.cyclesSinceLlm = {};
+        rt.cyclesSinceLlm[npcName] = (rt.cyclesSinceLlm[npcName] || 0) + 1;
         const hEarly = this._hierarchy[npcName];
         let directed = officeDirector.plan(this, npcName, directorCtx);
         directed = this._normalizeThinkDecision(npcName, directed, officeContext);
@@ -2660,6 +2667,9 @@ ${brain.voiceAnchor || ''}Respond as ${npcName}. Dialogue only — no stage dire
         });
       }
     }
+    // Past the director gate — a real LLM think is about to run, so this NPC is
+    // no longer starving. Reset the counter.
+    if (rt.cyclesSinceLlm) rt.cyclesSinceLlm[npcName] = 0;
 
     const rawMemory = brain.longTermMemory || '';
     // Tighter default — telemetry showed ~1.5–7k tokens in from context bloat.

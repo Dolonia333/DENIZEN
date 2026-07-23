@@ -42,7 +42,11 @@ class NpcThinkRunner {
 
     this._debounce.set(name, setTimeout(() => {
       this._debounce.delete(name);
-      this.runCycle(name, { urgentWake: true, wakeReason: reason, ...opts }).catch((err) => {
+      // forceLlm: a wake means something real happened (directive, chat, bus
+      // event). Without it the wake only bypasses the throttle and then lands
+      // on the director's roll table, which usually vetoes — so "something
+      // interesting happened" never became actual thinking.
+      this.runCycle(name, { urgentWake: true, forceLlm: true, wakeReason: reason, ...opts }).catch((err) => {
         console.warn(`[ThinkRunner] ${name}: ${err?.message || err}`);
       });
     }, delay));

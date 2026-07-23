@@ -59,6 +59,14 @@ function needsLlm(npcName, ctx = {}) {
   if (ctx.pendingSkill) return true;
   if (ctx.forceLlm) return true;
 
+  // Starvation escape. Without this the roll table can veto an NPC forever:
+  // production measured 14 of 16 NPCs going a FULL 24h without a single
+  // think() (Roki 30, Bob 2, everyone else zero). Guarantee every NPC a real
+  // think at least every N vetoed cycles so it actually inhabits the character
+  // instead of running as a pure script. Tune via DENIZEN_THINK_STARVE_CYCLES.
+  const starveAfter = Number(process.env.DENIZEN_THINK_STARVE_CYCLES) || 3;
+  if ((ctx.cyclesSinceLlm || 0) >= starveAfter) return true;
+
   if (ctx.realWorkMode) {
     const threshold = ctx.realWorkThreshold ?? 6;
     if ((ctx.cyclesSinceSkill || 0) >= threshold) return true;
