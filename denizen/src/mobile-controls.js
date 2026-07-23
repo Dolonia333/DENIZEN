@@ -74,12 +74,20 @@
     state.vy = vy;
     state.mag = mag;
     state.active = mag > 0;
-    // Mirror into the booleans for consumers that predate the analog stick.
+    // Mirror into the booleans for consumers that predate the analog stick
+    // (office-scene.js reads ONLY these). Derive them from the unit direction,
+    // not from vx/vy — those are already scaled by magnitude, so thresholding
+    // them left the first 35% of the stick throw completely dead for anyone
+    // reading the booleans, and clipped shallow diagonals to a single axis.
+    const len = Math.hypot(vx, vy) || 1;
+    const dx = vx / len;
+    const dy = vy / len;
+    const on = mag > 0;
     setDir({
-      left: vx < -0.35,
-      right: vx > 0.35,
-      up: vy < -0.35,
-      down: vy > 0.35,
+      left: on && dx < -0.38,
+      right: on && dx > 0.38,
+      up: on && dy < -0.38,
+      down: on && dy > 0.38,
     });
   }
 
@@ -733,6 +741,21 @@
     return 54;
   }
 
+  /**
+   * The stick may only be armed FROM THE GAME SURFACE.
+   *
+   * isUiTarget() is a denylist of specific panel ids, so every panel added since
+   * it was written was invisible to it and a drag inside one walked the player.
+   * Requiring the press to land inside #game-container inverts that: anything
+   * that is not the playfield is excluded by default, and isUiTarget still
+   * catches controls that sit inside the container.
+   */
+  function isGameSurface(t) {
+    if (!t || typeof t.closest !== 'function') return false;
+    if (isUiTarget(t)) return false;
+    return Boolean(t.closest('#game-container'));
+  }
+
   function installInvisibleJoystick() {
     let id = null;
     let ox = 0;
@@ -749,7 +772,8 @@
       if (id !== null) return;                     // one stick at a time
       if (e.pointerType === 'mouse') return;       // desktop stays keyboard/click
       if (window.__DenizenGameInputBlocked) return;
-      if (isUiTarget(e.target)) return;            // dock, chat, panels, buttons
+      if (document.documentElement.dataset.denizenModal === 'open') return;
+      if (!isGameSurface(e.target)) return;
       id = e.pointerId;
       ox = e.clientX;
       oy = e.clientY;

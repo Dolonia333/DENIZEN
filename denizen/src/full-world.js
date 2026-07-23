@@ -1171,11 +1171,25 @@ function installChunkCulling(scene) {
   state._cullInstalled = true;
   const buckets = new Map();
   const always = [];
+  // Buckets are keyed on the position an object had at INSTALL time, so
+  // anything that moves must be excluded by identity. Testing `type` is not
+  // enough: lane vehicles are Images (add.image at :708, only path vehicles are
+  // Sprites), so a type check bucketed traffic at its spawn point and the cars
+  // vanished for good the moment the camera left that chunk. NPC name labels
+  // are Text and travel with their NPC for the same reason.
+  const moving = new Set();
+  (state.vehicles || []).forEach((v) => { if (v && v.sp) moving.add(v.sp); });
+  (state.npcs || []).forEach((n) => {
+    if (!n) return;
+    if (n.sp) moving.add(n.sp);
+    if (n.label) moving.add(n.label);
+  });
+  if (state.player) moving.add(state.player);
   for (const o of scene.children.list) {
     if (!o || o.visible === false) continue;
-    // Moving things (player, NPCs, vehicles) change bucket constantly, and
-    // anything wider than a chunk would be hidden while still on screen.
-    if (o.type === 'Sprite'
+    // Movers, plus anything wider than a chunk (it would be hidden while still
+    // on screen), opt out of culling entirely.
+    if (moving.has(o) || o.type === 'Sprite'
       || (o.width || 0) > CULL_CHUNK || (o.height || 0) > CULL_CHUNK) {
       always.push(o);
       continue;
@@ -1241,6 +1255,14 @@ function installTapToMove(scene) {
   scene.input.on('pointerup', (pointer) => {
     // Respect the same input gate the office uses (chat/dialog open, etc.).
     if (window.__DenizenGameInputBlocked) return;
+    if (document.documentElement.dataset.denizenModal === 'open') return;
+    // Phaser mirrors WINDOW-level pointerup so that drags ending off-canvas
+    // still resolve — which means a tap on the dock, chat or any panel button
+    // also arrives here and sent the player walking. Only accept releases that
+    // happened on the playfield itself.
+    const domTarget = pointer.event && pointer.event.target;
+    if (domTarget && typeof domTarget.closest === 'function'
+      && !domTarget.closest('#game-container')) return;
     let travelled = 0;
     try { travelled = pointer.getDistance(); } catch (_) { travelled = 0; }
     if (travelled > 12) return;                     // that was a drag, not a tap

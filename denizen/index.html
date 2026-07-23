@@ -21,7 +21,12 @@
     <title>DENIZEN</title>
     <!-- interactive-widget=resizes-content: shrink the layout when the on-screen
          keyboard opens so bottom-anchored login inputs stay visible while typing -->
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no,interactive-widget=resizes-content" />
+    <!-- No user-scalable=no: it disabled pinch-zoom for the WHOLE site to protect
+         one element, and the playfield does not need it — #game-container and its
+         canvas both set touch-action:none, which is what actually stops browser
+         gestures from stealing the invisible joystick's drag. Low-vision users
+         can magnify chat and panels again. -->
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -679,7 +684,7 @@
     <!-- Phone / tablet / desktop profile (classes + panel sizing vars) -->
     <script src="./src/device-profile.js?v=smooth1" defer></script>
     <!-- Mobile/iPad touch controls + responsive viewport sync -->
-    <script src="./src/mobile-controls.js?v=joystick1" defer></script>
+    <script src="./src/mobile-controls.js?v=joystick2" defer></script>
     <script src="./src/mobile-sidebar.js?v=mobme12city" defer></script>
     <!-- Visitor session + assistant claim (before player chat) -->
     <script src="./src/visitor-session.js?v=mpBuzz1" defer></script>
