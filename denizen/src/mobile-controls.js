@@ -330,16 +330,15 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         padding: 0;
       }
-      /* Show it on EVERY touch tier. This rule used to hide the button on
-         .denizen-tap-move — which is exactly the phone tier it was built for —
-         while .mc-action below is hidden on all touch. Between the two, no
-         touch device had any interact control at all: the game would prompt
-         "[F] Sit" on a phone with no F key and no button to press. */
-      html.denizen-touch #${TAP_INTERACT_ID} {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+      /* The floating "E" is off by request — it sat above Buzz in the
+         bottom-right corner. The element and its styling stay so it can be
+         brought back by restoring this one rule:
+             html.denizen-touch #${TAP_INTERACT_ID} {
+               display: flex; align-items: center; justify-content: center;
+             }
+         Note that with it hidden, nothing calls setInteractPulse(), so
+         __DenizenTouchState.interact stays false and touch has no way to
+         trigger "[F] Sit"-style interactions. */
       html.denizen-touch.denizen-chat-open #${TAP_INTERACT_ID},
       html.denizen-touch.denizen-llm-tel-open #${TAP_INTERACT_ID} {
         display: none !important;
@@ -811,8 +810,11 @@
   }
 
   function buildTapMoveInteract() {
-    // Built on every touch tier, not just phones: tablets lost their only
-    // interact control when the large in-container "E" button was hidden.
+    // Off by request: the button rendered above Buzz in the bottom-right.
+    // Delete this line (and restore the CSS show rule noted above) to bring the
+    // touch interact button back.
+    return;
+    // eslint-disable-next-line no-unreachable
     if (document.getElementById(TAP_INTERACT_ID)) return;
 
     const btn = document.createElement('button');
