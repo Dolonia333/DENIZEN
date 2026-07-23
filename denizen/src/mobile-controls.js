@@ -202,12 +202,12 @@
                   - var(--denizen-frame-chrome)
         );
         --denizen-play-h: var(--denizen-available-play-h);
-        /* No 16:9 cap. The canvas uses Phaser.Scale.RESIZE on touch, so it
-           follows this box exactly — a taller box shows MORE of the world
-           instead of stretching it. Capping to 16:9 here was what squeezed a
-           375x812 phone down to a 355x200 strip. */
-        width: var(--denizen-play-w);
-        height: var(--denizen-play-h);
+        /* 16:9 letterbox, matching desktop: the game is a fixed-aspect box that
+           floats in the night-city skyline instead of stretching edge to edge.
+           (An earlier build dropped this cap to fill the screen; the desktop
+           framing was preferred.) */
+        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
+        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
         max-width: none;
         max-height: none;
         border-radius: 4px;
@@ -233,19 +233,17 @@
           - var(--denizen-frame-chrome)
           - 2px
         );
-        width: var(--denizen-play-w);
-        height: var(--denizen-play-h);
+        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
+        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
         margin: 0 auto;
         flex: 0 0 auto;
       }
 
-      /* Portrait phones: fill the screen. The old rule reserved the space below
-         for "chat / joystick letterbox", but the stick is invisible now and
-         chat overlays, so that space was simply dead — 602px of it on a
-         375x812 phone. */
+      /* Portrait phones: 16:9 letterbox like desktop — the game sits in the
+         upper area and the night-city skyline fills the space below it. */
       html.denizen-touch.denizen-phone.denizen-portrait #game-container {
-        width: var(--denizen-play-w);
-        height: var(--denizen-available-play-h);
+        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
+        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
         flex: 0 0 auto;
         margin: 0 auto;
       }

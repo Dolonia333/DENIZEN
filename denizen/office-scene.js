@@ -3996,12 +3996,6 @@ function bootOfficeGame() {
     window.__DenizenLightPerf = !!perf.light;
     if (perf.light) console.log('[Perf] light office profile ON', perf);
   } catch (_) {}
-  const _touchLayout = (() => {
-    try {
-      if (document.documentElement.classList.contains('denizen-touch')) return true;
-    } catch (_) {}
-    return !!window.__DenizenIsTouch;
-  })();
   const config = {
     type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
     width: 1280,
@@ -4010,18 +4004,11 @@ function bootOfficeGame() {
     backgroundColor: '#020617',
     pixelArt: true,
     scale: {
+      // Fixed 1280x720 on every device. Touch used to switch to Scale.RESIZE to
+      // fill the screen, but the desktop framing — a fixed-aspect game box in
+      // the night-city skyline — was preferred on mobile too, so CSS letterboxes
+      // this buffer to 16:9 in both orientations (see mobile-controls.js).
       pauseOnBlur: false,
-      // Touch devices let the canvas follow its CSS box instead of staying a
-      // fixed 1280x720. On a 375x812 phone the 16:9 lock rendered the game at
-      // 355x200 — 25% of the screen, with 602px dead below — and it rendered
-      // 1280x720 pixels just to shrink them into 355x200. RESIZE fixes both:
-      // a tall box shows more world, and the backing store matches what is
-      // actually displayed. Desktop keeps the framing the office was laid out
-      // for. The `||` is deliberate: __DenizenIsTouch and the denizen-touch
-      // class come from two different detectors, and if they ever disagree a
-      // RESIZE canvas still matches whatever box CSS produces, whereas a fixed
-      // canvas in a non-16:9 box would stretch.
-      ...(_touchLayout ? { mode: Phaser.Scale.RESIZE } : {}),
     },
     // Snap every draw to whole pixels. Without this, NPCs at fractional
     // coordinates (e.g. x=156.7) render their name labels at sub-pixel
