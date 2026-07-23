@@ -76,18 +76,84 @@ function normalizeOpportunity(o) {
   };
 }
 
+function csvList(v) {
+  return String(v == null ? '' : v)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** Run tasks with bounded concurrency (gentle on the api.data.gov rate limit). */
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let i = 0;
+  const workers = new Array(Math.min(limit, items.length || 1)).fill(0).map(async () => {
+    while (i < items.length) {
+      const idx = i++;
+      out[idx] = await fn(items[idx], idx);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+
+/** One SAM.gov query (single set-aside, single NAICS). */
+async function _singleSearch({ from, to, limit, offset, naics, setAside, ptype, q, signal }) {
+  const params = new URLSearchParams();
+  params.set('api_key', process.env.SAM_GOV_API_KEY.trim());
+  params.set('postedFrom', from);
+  params.set('postedTo', to);
+  params.set('limit', String(limit));
+  params.set('offset', String(offset));
+  if (naics) params.set('ncode', String(naics));
+  if (setAside) params.set('typeOfSetAside', String(setAside));
+  if (ptype) params.set('ptype', String(ptype));
+  if (q) params.set('title', String(q));
+
+  let res;
+  try {
+    res = await fetch(`${BASE}?${params.toString()}`, {
+      method: 'GET', headers: { Accept: 'application/json' }, signal,
+    });
+  } catch (netErr) {
+    const err = new Error(`SAM.gov request failed: ${netErr.message}`);
+    err.code = 'SAM_NETWORK';
+    throw err;
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    const safe = body.replace(/api_key=[^&\s"]+/gi, 'api_key=REDACTED').slice(0, 300);
+    const err = new Error(`SAM.gov returned ${res.status}: ${safe}`);
+    err.code = res.status === 401 || res.status === 403 ? 'SAM_AUTH' : 'SAM_HTTP';
+    err.status = res.status;
+    throw err;
+  }
+  const data = await res.json().catch(() => ({}));
+  return {
+    total: Number(data.totalRecords) || 0,
+    list: Array.isArray(data.opportunitiesData) ? data.opportunitiesData : [],
+  };
+}
+
+const MAX_COMBOS = 24;   // set-aside × NAICS fan-out cap
+
 /**
  * Search SAM.gov opportunities.
+ *
+ * `typeOfSetAside` and `ncode` are SINGLE-value on the SAM API (a comma list or
+ * repeated param returns zero), so multiple set-asides/NAICS fan out into one
+ * request each and the results are merged + deduped by noticeId. `ptype` does
+ * take a comma list, so it stays a single param.
+ *
  * @param {object} opts
  *   naics    CSV of NAICS codes  (default env SAM_GOV_NAICS, else none)
  *   setAside CSV of set-aside codes (default env SAM_GOV_SETASIDE, else WOSB,EDWOSB,HZC)
  *   ptype    CSV of notice types (default o,p,k,r)
- *   days     lookback window in days (default 7; SAM requires a bounded window)
+ *   days     lookback window (default 7; SAM requires a bounded window)
  *   q        free-text title match (optional)
- *   limit    page size (default 25, max 100)
- *   offset   page offset (default 0)
+ *   limit    page size PER sub-query (default 25, max 100)
  *   signal   optional AbortSignal
- * @returns {Promise<{total:number, count:number, opportunities:Array, window:{from,to}}>}
+ * @returns {Promise<{total, count, window, queries, truncatedCombos, opportunities}>}
  */
 async function searchOpportunities(opts = {}) {
   if (!hasKey()) {
@@ -96,56 +162,46 @@ async function searchOpportunities(opts = {}) {
     throw err;
   }
   const days = Math.max(1, Math.min(365, Number(opts.days) || DEFAULT_DAYS));
-  const to = new Date();
-  const from = new Date(to.getTime() - days * 24 * 60 * 60 * 1000);
+  const toD = new Date();
+  const fromD = new Date(toD.getTime() - days * 24 * 60 * 60 * 1000);
+  const from = fmtDate(fromD);
+  const to = fmtDate(toD);
   const limit = Math.max(1, Math.min(MAX_LIMIT, Number(opts.limit) || DEFAULT_LIMIT));
-
-  const params = new URLSearchParams();
-  params.set('api_key', process.env.SAM_GOV_API_KEY.trim());
-  params.set('postedFrom', fmtDate(from));
-  params.set('postedTo', fmtDate(to));
-  params.set('limit', String(limit));
-  params.set('offset', String(Math.max(0, Number(opts.offset) || 0)));
-
-  const naics = opts.naics != null ? opts.naics : csvEnv('SAM_GOV_NAICS', '');
-  const setAside = opts.setAside != null ? opts.setAside : csvEnv('SAM_GOV_SETASIDE', DEFAULT_SETASIDE);
+  const offset = Math.max(0, Number(opts.offset) || 0);
   const ptype = opts.ptype != null ? opts.ptype : csvEnv('SAM_GOV_PTYPE', DEFAULT_PTYPE);
-  if (naics) params.set('ncode', String(naics));
-  if (setAside) params.set('typeOfSetAside', String(setAside));
-  if (ptype) params.set('ptype', String(ptype));
-  if (opts.q) params.set('title', String(opts.q));
 
-  let res;
-  try {
-    res = await fetch(`${BASE}?${params.toString()}`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      signal: opts.signal,
-    });
-  } catch (netErr) {
-    // Never let a SAM outage take down a request; surface a typed error.
-    const err = new Error(`SAM.gov request failed: ${netErr.message}`);
-    err.code = 'SAM_NETWORK';
-    throw err;
+  // '' (explicit) means "no filter"; undefined falls back to the env default.
+  const setAsides = csvList(opts.setAside != null ? opts.setAside : csvEnv('SAM_GOV_SETASIDE', DEFAULT_SETASIDE));
+  const naicsList = csvList(opts.naics != null ? opts.naics : csvEnv('SAM_GOV_NAICS', ''));
+  const saAxis = setAsides.length ? setAsides : [''];
+  const ncAxis = naicsList.length ? naicsList : [''];
+
+  let combos = [];
+  for (const s of saAxis) for (const n of ncAxis) combos.push({ setAside: s, naics: n });
+  const truncatedCombos = Math.max(0, combos.length - MAX_COMBOS);
+  if (truncatedCombos) combos = combos.slice(0, MAX_COMBOS);
+
+  const results = await mapLimit(combos, 4, (c) => _singleSearch({
+    from, to, limit, offset, ptype, q: opts.q, signal: opts.signal,
+    setAside: c.setAside, naics: c.naics,
+  }));
+
+  const byId = new Map();
+  let total = 0;
+  for (const r of results) {
+    total += r.total;
+    for (const o of r.list) {
+      const id = o.noticeId || `${o.solicitationNumber}|${o.title}`;
+      if (!byId.has(id)) byId.set(id, normalizeOpportunity(o));
+    }
   }
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    // Redact the key if the API happens to echo the query back in an error.
-    const safe = body.replace(/api_key=[^&\s"]+/gi, 'api_key=REDACTED').slice(0, 300);
-    const err = new Error(`SAM.gov returned ${res.status}: ${safe}`);
-    err.code = res.status === 401 || res.status === 403 ? 'SAM_AUTH' : 'SAM_HTTP';
-    err.status = res.status;
-    throw err;
-  }
-
-  const data = await res.json().catch(() => ({}));
-  const list = Array.isArray(data.opportunitiesData) ? data.opportunitiesData : [];
   return {
-    total: Number(data.totalRecords) || 0,
-    count: list.length,
-    window: { from: fmtDate(from), to: fmtDate(to) },
-    opportunities: list.map(normalizeOpportunity),
+    total,                        // summed across sub-queries (combos are ~disjoint)
+    count: byId.size,             // deduped
+    window: { from, to },
+    queries: combos.length,
+    truncatedCombos,
+    opportunities: [...byId.values()],
   };
 }
 
