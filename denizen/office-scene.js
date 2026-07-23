@@ -1818,8 +1818,18 @@ class OfficeScene extends Phaser.Scene {
       }
       isLate() { return this.hour >= 22; }
     }
-    // Fast demo clock: ~10 game-min/sec so night→morning is obvious (~50s of night)
-    this.worldClock = new WorldClock({ startHour: 17, startMinute: 0, tickMs: 800, minuteStep: 10 });
+    // The world opens at the player's LOCAL time, so arriving in the afternoon
+    // gives you an afternoon office. This used to hardcode 17:00 with a ~10
+    // game-min/sec demo clock, so EVERY session opened at dusk reading
+    // "17:00 SUNSET" and then cycled a whole day every ~1.9 real minutes.
+    // 1 game-min per 2s is ambient instead: a full day takes ~48 real minutes.
+    // ?clock=fast restores the old behaviour for demos and recordings where
+    // showing night→morning quickly is the point.
+    const _fastClock = /[?&]clock=fast(&|$)/.test(window.location.search);
+    const _now = new Date();
+    this.worldClock = new WorldClock(_fastClock
+      ? { startHour: 17, startMinute: 0, tickMs: 800, minuteStep: 10 }
+      : { startHour: _now.getHours(), startMinute: _now.getMinutes(), tickMs: 2000, minuteStep: 1 });
     try { window.DenizenCityTod?.apply?.(this.worldClock.hour, this.worldClock.minute); } catch (_) {}
     // DOM HUD (#denizen-tod-hud) is the visible clock — keep a hidden Phaser mirror for dialogs
     this.timeText = this.add.text(16, 44, `Time: ${this.worldClock.toString()}`, {

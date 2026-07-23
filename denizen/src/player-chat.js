@@ -2988,7 +2988,9 @@ class PlayerChat {
     if (!document.getElementById('denizen-ws-banner')) {
       const banner = document.createElement('div');
       banner.id = 'denizen-ws-banner';
-      banner.textContent = 'Chat offline — hard-refresh (Ctrl+Shift+R). If NPCs still won\'t reply, restart the server in the denizen folder.';
+      // Matches chat-bootstrap.js — see the note there. This banner is only ever
+      // shown to remote viewers, who cannot act on local-dev instructions.
+      banner.textContent = 'Chat disconnected — reconnecting…';
       document.body.appendChild(banner);
     }
 

@@ -152,7 +152,12 @@
 
       b.id = 'denizen-ws-banner';
 
-      b.textContent = 'Chat offline — hard-refresh (Ctrl+Shift+R). Server not running? Start it in the denizen folder.';
+      // The banner only ever shows on REMOTE hosts (player-chat.js setWsConnected
+      // gates on hostname), so telling that viewer to "start the server in the
+      // denizen folder" or hit Ctrl+Shift+R was advice for a machine they are
+      // not on — a phone on the LAN can do neither. The socket reconnects on its
+      // own with backoff, so say what is actually happening.
+      b.textContent = 'Chat disconnected — reconnecting…';
 
       document.body.appendChild(b);
 
