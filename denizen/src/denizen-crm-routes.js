@@ -1327,6 +1327,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           q: q.get('q') || undefined,
           limit: q.get('limit') != null ? Number(q.get('limit')) : undefined,
           offset: q.get('offset') != null ? Number(q.get('offset')) : undefined,
+          activeOnly: q.get('activeOnly') === '0' ? false : undefined,   // default true
         });
         json(res, 200, { ok: true, configured: true, ...result });
         return true;
@@ -1357,6 +1358,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           days: body.days != null ? Number(body.days) : undefined,
           q: body.q,
           limit: body.limit != null ? Number(body.limit) : undefined,
+          activeOnly: body.activeOnly === false ? false : undefined,   // default true
+          mirrorToDeals: body.mirrorToDeals !== false,                 // default true
         });
         json(res, result.ok ? 200 : (result.code === 'NO_SAM_KEY' ? 409 : 500), result);
         return true;

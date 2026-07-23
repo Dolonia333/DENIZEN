@@ -13068,6 +13068,14 @@ startCrmScheduler({
   log,
 });
 
+// Nightly SAM.gov federal-opportunity auto-ingest (no-op until SAM_GOV_API_KEY
+// is set; disable with SAM_GOV_AUTO_INGEST=0).
+try {
+  require('./src/denizen-crm-sam').startAutoIngest({ log });
+} catch (err) {
+  log.warn?.('SAM', `auto-ingest scheduler failed to start: ${err?.message || err}`);
+}
+
 _resetLucyBrowserOnStartup();
 probePlaywrightBrowsers();
 _startLucyMirrorFrameWatcher();

@@ -14,6 +14,7 @@
 
 const denizenDb = require('./denizen-db');
 const samGov = require('./denizen-sam-gov');
+const crmStore = require('./denizen-crm-store');
 
 /**
  * `rfps.set_aside_type` has a CHECK constraint. Confirmed-allowed tokens:
@@ -137,6 +138,22 @@ async function ingestOpportunities(opts = {}) {
     }
   }
 
+  // Mirror into the phone CRM deal board. Operates on every found opportunity
+  // that made it into `rfps` (inserted now OR already present), so a first run
+  // that predates mirroring gets backfilled. Dedup is by samGovId on the deals.
+  let mirroredDeals = null;
+  let skippedExistingDeals = null;
+  if (opts.mirrorToDeals && orgId) {
+    try {
+      const m = await mirrorOpportunitiesToDeals(orgId, found);
+      mirroredDeals = m.mirrored;
+      skippedExistingDeals = m.skippedExistingDeals;
+      if (m.conflict) errors.push({ stage: 'mirror', error: 'workspace write conflict (retried)' });
+    } catch (err) {
+      errors.push({ stage: 'mirror', error: err && err.message ? err.message : String(err) });
+    }
+  }
+
   return {
     ok: true,
     orgId,
@@ -146,13 +163,168 @@ async function ingestOpportunities(opts = {}) {
     inserted,
     skippedExisting,
     skippedNoDueDate,
+    mirroredDeals,
+    skippedExistingDeals,
     errorCount: errors.length,
     errors: errors.slice(0, 10),
     items,
   };
 }
 
+/** Max(id)+1, recomputed after each push (empty array → Date.now(), which would
+ *  collide if precomputed for a batch). */
+function nextDealId(deals) {
+  const ids = (deals || []).map((d) => Number(d && d.id) || 0);
+  return ids.length ? Math.max(...ids) + 1 : Date.now();
+}
+
+/** noticeId → rfp uuid, for the opportunities that exist in `rfps`. */
+async function rfpIdsBySamId(noticeIds) {
+  const ids = noticeIds.filter(Boolean);
+  const out = new Map();
+  if (!ids.length || !denizenDb.enabled) return out;
+  const quoted = ids.map((id) => `"${String(id).replace(/"/g, '')}"`).join(',');
+  const rows = await denizenDb
+    ._get(`rfps?select=id,sam_gov_id&sam_gov_id=in.(${encodeURIComponent(quoted)})`)
+    .catch(() => []);
+  for (const r of rows || []) if (r.sam_gov_id) out.set(r.sam_gov_id, r.id);
+  return out;
+}
+
+/** rfp uuid → bid probability (0..1). Trigger writes prediction.bid_probability. */
+async function bidProbByRfpId(rfpIds) {
+  const ids = rfpIds.filter(Boolean);
+  const out = new Map();
+  if (!ids.length || !denizenDb.enabled) return out;
+  const quoted = ids.map((id) => `"${id}"`).join(',');
+  const rows = await denizenDb
+    ._get(`denizen_predictions?select=entity_id,prediction,confidence,created_at`
+      + `&entity_type=eq.rfp&prediction_type=eq.rfp.bid_probability`
+      + `&entity_id=in.(${encodeURIComponent(quoted)})&order=created_at.desc`)
+    .catch(() => []);
+  for (const r of rows || []) {
+    if (out.has(r.entity_id)) continue;          // first seen = newest
+    const p = r.prediction && (r.prediction.bid_probability ?? r.prediction.close_probability);
+    const val = p != null ? p : r.confidence;
+    if (val != null && Number.isFinite(Number(val))) out.set(r.entity_id, Number(val));
+  }
+  return out;
+}
+
+function opportunityToDeal(opp, deals, rfpId, prob) {
+  const due = toDate(opp.responseDeadline) || toDate(opp.archiveDate);
+  return {
+    id: nextDealId(deals),
+    title: (opp.title || opp.solicitationNumber || 'SAM.gov opportunity').slice(0, 300),
+    contact: String(opp.contactName || opp.agency || '').slice(0, 200),
+    value: 0,                                    // dollar value unknown from search
+    stage: 'RFP Released',                       // real GovCon pipeline stage
+    probability: (prob != null && Number.isFinite(prob)) ? Math.round(prob * 100) : 30,
+    closeDate: due || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+    daysInStage: 0,
+    health: 'good',
+    // custom fields (survive sanitizeState) — traceability + dedup
+    source: 'sam_gov',
+    samGovId: opp.noticeId || null,
+    solicitationNumber: opp.solicitationNumber || null,
+    naics: opp.naicsCode || null,
+    setAside: opp.setAside || null,
+    rfpId: rfpId || null,
+    samUrl: opp.samUrl || null,
+  };
+}
+
+/**
+ * Batch-append deals for the given opportunities (one workspace read + one
+ * write, per the store's optimistic-concurrency contract). Retries once on a
+ * concurrent-write conflict.
+ */
+async function mirrorOpportunitiesToDeals(orgId, opps) {
+  if (!orgId || !denizenDb.enabled) return { mirrored: 0, skippedExistingDeals: 0, conflict: false };
+  const noticeIds = opps.map((o) => o.noticeId).filter(Boolean);
+  const samToRfp = await rfpIdsBySamId(noticeIds);
+  const probByRfp = await bidProbByRfpId([...new Set(samToRfp.values())]);
+
+  const attempt = async () => {
+    const ws = await crmStore.getWorkspace(orgId);
+    const state = (ws && ws.state) || {};
+    const updatedAt = ws && ws.updated_at;
+    const deals = Array.isArray(state.deals) ? [...state.deals] : [];
+    const haveSam = new Set(deals.map((d) => d && d.samGovId).filter(Boolean));
+    let mirrored = 0;
+    let skipped = 0;
+    for (const opp of opps) {
+      const rfpId = opp.noticeId ? samToRfp.get(opp.noticeId) : null;
+      if (!rfpId) continue;                        // only mirror opps that reached rfps
+      if (opp.noticeId && haveSam.has(opp.noticeId)) { skipped += 1; continue; }
+      deals.push(opportunityToDeal(opp, deals, rfpId, probByRfp.get(rfpId)));
+      if (opp.noticeId) haveSam.add(opp.noticeId);
+      mirrored += 1;
+    }
+    if (!mirrored) return { mirrored: 0, skippedExistingDeals: skipped, conflict: false };
+    const res = await crmStore.upsertWorkspace(orgId, { ...state, deals }, null, { ifUpdatedAt: updatedAt });
+    if (res && res.conflict) return { conflict: true };
+    return { mirrored, skippedExistingDeals: skipped, conflict: false };
+  };
+
+  let r = await attempt();
+  if (r.conflict) r = await attempt();             // one retry
+  if (r.conflict) return { mirrored: 0, skippedExistingDeals: 0, conflict: true };
+  return r;
+}
+
+/**
+ * Nightly auto-ingest. Default ON when a key + DB are present; disable with
+ * SAM_GOV_AUTO_INGEST=0. Runs every SAM_GOV_AUTO_INGEST_MS (default 24h, min
+ * 1h), pulling the last SAM_GOV_AUTO_INGEST_DAYS (default 2 — daily run plus
+ * overlap so a missed night is caught; dedup handles the repeats). Uses the
+ * env NAICS/set-aside defaults, active opportunities only, and mirrors into the
+ * CRM deal board.
+ */
+function startAutoIngest({ log } = {}) {
+  const info = (m) => { try { (log && log.info ? log.info : console.log)('SAM', m); } catch (_) {} };
+  const warn = (m) => { try { (log && log.warn ? log.warn : console.warn)('SAM', m); } catch (_) {} };
+
+  if (process.env.SAM_GOV_AUTO_INGEST === '0') {
+    info('auto-ingest disabled (SAM_GOV_AUTO_INGEST=0)');
+    return { stop() {} };
+  }
+  const intervalMs = Math.max(60 * 60 * 1000, Number(process.env.SAM_GOV_AUTO_INGEST_MS) || 24 * 60 * 60 * 1000);
+  const days = Math.max(1, Number(process.env.SAM_GOV_AUTO_INGEST_DAYS) || 2);
+  const limit = Math.max(1, Number(process.env.SAM_GOV_AUTO_INGEST_LIMIT) || 20);
+
+  let running = false;
+  const run = async () => {
+    if (running) return;               // never overlap two runs
+    if (!samGov.hasKey() || !denizenDb.enabled) return;   // wait until configured
+    running = true;
+    try {
+      const r = await ingestOpportunities({ days, limit, activeOnly: true, mirrorToDeals: true });
+      if (r && r.ok) {
+        info(`auto-ingest: found ${r.found}, inserted ${r.inserted}, existing ${r.skippedExisting}`
+          + (r.mirroredDeals != null ? `, deals +${r.mirroredDeals}` : '')
+          + (r.errorCount ? `, errors ${r.errorCount}` : ''));
+      } else if (r) {
+        warn(`auto-ingest skipped: ${r.error || 'unknown'}`);
+      }
+    } catch (err) {
+      warn(`auto-ingest failed: ${err && err.message ? err.message : err}`);
+    } finally {
+      running = false;
+    }
+  };
+
+  const timer = setInterval(run, intervalMs);
+  if (timer.unref) timer.unref();
+  const bootMs = Math.max(10_000, Number(process.env.SAM_GOV_AUTO_INGEST_BOOT_MS) || 3 * 60 * 1000);
+  const boot = setTimeout(run, bootMs);
+  if (boot.unref) boot.unref();
+  info(`auto-ingest scheduled every ${Math.round(intervalMs / 3_600_000)}h (lookback ${days}d, first run in ${Math.round(bootMs / 1000)}s)`);
+  return { stop() { clearInterval(timer); clearTimeout(boot); } };
+}
+
 module.exports = {
   mapOpportunityToRfp,
   ingestOpportunities,
+  startAutoIngest,
 };

@@ -195,13 +195,33 @@ async function searchOpportunities(opts = {}) {
       if (!byId.has(id)) byId.set(id, normalizeOpportunity(o));
     }
   }
+  let opportunities = [...byId.values()];
+
+  // activeOnly (default true): drop opportunities SAM marks inactive or whose
+  // response deadline has already passed. A missing deadline (e.g. sources
+  // sought) is kept — it's still an open signal.
+  const activeOnly = opts.activeOnly !== false;
+  let droppedInactive = 0;
+  if (activeOnly) {
+    const now = Date.now();
+    opportunities = opportunities.filter((o) => {
+      if (o.active === false) { droppedInactive += 1; return false; }
+      if (o.responseDeadline) {
+        const t = Date.parse(o.responseDeadline);
+        if (Number.isFinite(t) && t < now) { droppedInactive += 1; return false; }
+      }
+      return true;
+    });
+  }
+
   return {
     total,                        // summed across sub-queries (combos are ~disjoint)
-    count: byId.size,             // deduped
+    count: opportunities.length,  // deduped, after activeOnly
     window: { from, to },
     queries: combos.length,
     truncatedCombos,
-    opportunities: [...byId.values()],
+    droppedInactive,
+    opportunities,
   };
 }
 
