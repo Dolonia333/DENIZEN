@@ -762,7 +762,26 @@ function zoneLabel(scene, x, y, text) {
     backgroundColor: '#0f172acc', padding: { x: 5, y: 2 },
   }).setOrigin(0.5, 1).setDepth(6000);
   t.setResolution(2);
+  // Collected rather than fitted here: the camera is configured after the zones
+  // are built, so worldView is not meaningful yet.
+  if (!state.zoneLabels) state.zoneLabels = [];
+  state.zoneLabels.push(t);
   return t;
+}
+
+// A district sign sized for a desktop viewport runs off both edges of a phone.
+// Scale each one down so it always fits the visible width. Re-run whenever the
+// camera changes, so rotating a phone re-fits instead of leaving it clipped.
+function fitZoneLabels(scene) {
+  const labels = state.zoneLabels;
+  if (!labels || !labels.length) return;
+  const view = scene.cameras.main.worldView;
+  const maxW = (view && view.width ? view.width : 640) * 0.9;
+  labels.forEach((t) => {
+    if (!t || !t.active) return;
+    const natural = t.width / (t.scaleX || 1);
+    t.setScale(natural > maxW && natural > 0 ? Math.max(0.45, maxW / natural) : 1);
+  });
 }
 
 function placeFurniture(scene, zone, defs) {
@@ -1134,6 +1153,9 @@ function applyCityCamera(scene) {
   } catch (_) {}
   cam.setZoom(zoom);
   try { cam.setRoundPixels(false); } catch (_) {}
+  // worldView only reflects the new zoom after the camera updates its matrix.
+  try { cam.preRender(); } catch (_) {}
+  fitZoneLabels(scene);
 }
 
 // PERF: the city is ~7,300 game objects. Phaser walks the entire display list
