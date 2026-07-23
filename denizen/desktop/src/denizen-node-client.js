@@ -132,15 +132,26 @@ async function _runWorkerLoop(state) {
           }, signal).catch(() => null);
         },
       });
+      // The runner can RETURN a failure without throwing — e.g. an unsupported
+      // job type yields {ok:false, mocked:true, error:'Unsupported local job
+      // type: ...'}. Hardcoding ok:true here reported those to the server as
+      // successes, so jobs_completed counted no-ops as real work (6 of the last
+      // 15 completions were exactly this). Propagate the runner's real verdict.
+      const ranOk = !(result && (result.ok === false || result.error));
       await _postComplete(baseUrl, {
         identityId,
         nodeToken,
         jobId: job.id,
-        ok: true,
+        ok: ranOk,
+        ...(ranOk ? {} : { error: String(result?.error || 'runner returned ok:false') }),
         result,
       }, signal);
-      state.lastCompletedJobId = job.id;
-      state.lastCompletedAt = Date.now();
+      if (ranOk) {
+        state.lastCompletedJobId = job.id;
+        state.lastCompletedAt = Date.now();
+      } else {
+        state.lastError = String(result?.error || 'runner returned ok:false');
+      }
     } catch (err) {
       const errMsg = err?.message || String(err);
       state.lastError = errMsg;
