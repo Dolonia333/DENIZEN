@@ -446,8 +446,19 @@ function captureSystemError(npcName, systemContext, error) {
     severity = 10;
   } else if (ctx.startsWith('skill_failure:') || ctx.startsWith('skill_') || ctx.includes('run_skill')) {
     const skillName = ctx.replace(/^skill_(failure:)?/, '').replace(/^run_/, '');
-    domain = `skill_failure:${skillName || 'unknown'}`;
-    severity = 8;
+    // A consult that is merely QUEUED/unanswered is not a hard skill failure.
+    // This branch used to swallow those (it runs before the consult_unanswered
+    // check below), tagging them skill_failure:consult-* at severity 8. That
+    // inflated friction until the mentors advised NPCs to stop consulting at
+    // all — disabling the very loop that makes the local models smarter.
+    if (skillName.includes('consult')
+      && (errMsg.includes('pending') || errMsg.includes('unanswered') || errMsg.includes('queued'))) {
+      domain = 'consult_unanswered';
+      severity = 7;
+    } else {
+      domain = `skill_failure:${skillName || 'unknown'}`;
+      severity = 8;
+    }
   } else if (ctx.includes('consult') && (errMsg.includes('pending') || errMsg.includes('unanswered'))) {
     domain = 'consult_unanswered';
     severity = 7;

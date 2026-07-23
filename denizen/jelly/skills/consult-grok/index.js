@@ -21,15 +21,29 @@ module.exports = {
     mode: 'sync',  // immediate feedback
   },
   async run({ npcName, params, broadcast, deps }) {
-    const question = (params?.question || params?.query || '').trim();
+    let question = (params?.question || params?.query || '').trim();
     const topic = (params?.topic || 'general').trim();
     const context = (params?.context || '').trim();
 
+    // Local models often emit this skill call but fail to populate `question`.
+    // Hard-failing there registered as skill_failure:consult-grok (severity 8),
+    // which spiked friction until the mentors advised NPCs to stop consulting
+    // at all — killing the loop that makes the local models smarter. Derive a
+    // usable question from the topic/context the model DID provide instead.
+    if (!question && (context || topic !== 'general')) {
+      question = context
+        ? `Regarding ${topic}: ${context.slice(0, 300)} — what should I do next?`
+        : `What should I focus on to improve "${topic}" right now?`;
+    }
+
     if (!question) {
+      // Nothing to work with at all — report it, but as a soft no-op so it does
+      // not register as a hard skill failure and poison the friction score.
       return {
-        ok: false,
-        output: 'Please provide a clear question to ask real Grok.',
+        ok: true,
+        output: 'No question or topic supplied — skipping consult (nothing to ask).',
         skill: 'consult-grok',
+        skipped: true,
       };
     }
 
