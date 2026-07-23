@@ -462,7 +462,7 @@ class OfficeScene extends Phaser.Scene {
     // Must run before ANY office drawing (floor tileSprites start ~110 lines
     // down) so the city isn't painted over by the 1280×720 office floor.
     if (urlParams.get('world') === 'full') {
-      import('./src/full-world.js?v=fw10')
+      import('./src/full-world.js?v=fw11')
         .then((m) => m.buildFullWorld(this))
         .catch((err) => {
           console.error('[OfficeScene] full-world load failed:', err);
@@ -2417,22 +2417,39 @@ class OfficeScene extends Phaser.Scene {
     this._domTapToMoveInstalled = true;
     const canvas = this.game?.canvas;
     if (!canvas) return;
+    // Where the gesture began, so a drag can be told from a tap. At pointerdown
+    // a tap and the first pixel of an invisible-joystick drag are identical, so
+    // firing walk-to-here on DOWN left a stale target fighting the stick.
+    let downX = 0;
+    let downY = 0;
+    const TAP_SLOP = 12;
+    const markDown = (x, y) => { downX = x; downY = y; };
+    const travelled = (x, y) => Math.hypot(x - downX, y - downY);
+
+    canvas.addEventListener('pointerdown', (e) => markDown(e.clientX, e.clientY), { passive: true });
+    canvas.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches && e.changedTouches[0];
+      if (t) markDown(t.clientX, t.clientY);
+    }, { passive: true });
+
     const onPointer = (e) => {
       if (e.pointerType === 'mouse' && typeof e.button === 'number' && e.button !== 0) return;
       if (!(window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch'))) return;
       if (document.documentElement.dataset.denizenModal === 'open') return;
       if (e.target?.closest?.('#denizen-visitor-name-modal, #denizen-demo-account-modal')) return;
+      if (travelled(e.clientX, e.clientY) > TAP_SLOP) return;   // drag, not a tap
       const pt = this._worldPointFromClient(e.clientX, e.clientY);
       if (!pt) return;
       this._tapMoveToWorld(pt.x, pt.y);
     };
-    canvas.addEventListener('pointerdown', onPointer, { passive: true });
+    canvas.addEventListener('pointerup', onPointer, { passive: true });
     // iOS Safari sometimes drops pointer events on Canvas2D — touchend is a backup.
     canvas.addEventListener('touchend', (e) => {
       if (!(window.__DenizenIsTouch || document.documentElement.classList.contains('denizen-touch'))) return;
       if (document.documentElement.dataset.denizenModal === 'open') return;
       const t = e.changedTouches && e.changedTouches[0];
       if (!t) return;
+      if (travelled(t.clientX, t.clientY) > TAP_SLOP) return;   // drag, not a tap
       const pt = this._worldPointFromClient(t.clientX, t.clientY);
       if (!pt) return;
       this._tapMoveToWorld(pt.x, pt.y);
@@ -3969,6 +3986,12 @@ function bootOfficeGame() {
     window.__DenizenLightPerf = !!perf.light;
     if (perf.light) console.log('[Perf] light office profile ON', perf);
   } catch (_) {}
+  const _touchLayout = (() => {
+    try {
+      if (document.documentElement.classList.contains('denizen-touch')) return true;
+    } catch (_) {}
+    return !!window.__DenizenIsTouch;
+  })();
   const config = {
     type: useCanvas ? Phaser.CANVAS : Phaser.AUTO,
     width: 1280,
@@ -3978,6 +4001,17 @@ function bootOfficeGame() {
     pixelArt: true,
     scale: {
       pauseOnBlur: false,
+      // Touch devices let the canvas follow its CSS box instead of staying a
+      // fixed 1280x720. On a 375x812 phone the 16:9 lock rendered the game at
+      // 355x200 — 25% of the screen, with 602px dead below — and it rendered
+      // 1280x720 pixels just to shrink them into 355x200. RESIZE fixes both:
+      // a tall box shows more world, and the backing store matches what is
+      // actually displayed. Desktop keeps the framing the office was laid out
+      // for. The `||` is deliberate: __DenizenIsTouch and the denizen-touch
+      // class come from two different detectors, and if they ever disagree a
+      // RESIZE canvas still matches whatever box CSS produces, whereas a fixed
+      // canvas in a non-16:9 box would stretch.
+      ...(_touchLayout ? { mode: Phaser.Scale.RESIZE } : {}),
     },
     // Snap every draw to whole pixels. Without this, NPCs at fractional
     // coordinates (e.g. x=156.7) render their name labels at sub-pixel

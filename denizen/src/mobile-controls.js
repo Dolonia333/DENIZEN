@@ -24,6 +24,13 @@
     up: false,
     down: false,
     interact: false,
+    // Analog stick, added alongside the four booleans rather than replacing
+    // them: office-scene.js ORs the booleans with its key state and must keep
+    // working untouched. vx/vy are a direction scaled by `mag` (0..1).
+    vx: 0,
+    vy: 0,
+    mag: 0,
+    active: false,
   };
 
   window.__DenizenTouchState = state;
@@ -60,6 +67,28 @@
 
   function clearDir() {
     setDir({ left: false, right: false, up: false, down: false });
+  }
+
+  function setAnalog(vx, vy, mag) {
+    state.vx = vx;
+    state.vy = vy;
+    state.mag = mag;
+    state.active = mag > 0;
+    // Mirror into the booleans for consumers that predate the analog stick.
+    setDir({
+      left: vx < -0.35,
+      right: vx > 0.35,
+      up: vy < -0.35,
+      down: vy > 0.35,
+    });
+  }
+
+  function clearAnalog() {
+    state.vx = 0;
+    state.vy = 0;
+    state.mag = 0;
+    state.active = false;
+    clearDir();
   }
 
   function setInteractPulse(ms = 180) {
@@ -165,8 +194,12 @@
                   - var(--denizen-frame-chrome)
         );
         --denizen-play-h: var(--denizen-available-play-h);
-        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
-        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
+        /* No 16:9 cap. The canvas uses Phaser.Scale.RESIZE on touch, so it
+           follows this box exactly — a taller box shows MORE of the world
+           instead of stretching it. Capping to 16:9 here was what squeezed a
+           375x812 phone down to a 355x200 strip. */
+        width: var(--denizen-play-w);
+        height: var(--denizen-play-h);
         max-width: none;
         max-height: none;
         border-radius: 4px;
@@ -192,17 +225,19 @@
           - var(--denizen-frame-chrome)
           - 2px
         );
-        width: min(var(--denizen-play-w), calc(var(--denizen-play-h) * 16 / 9));
-        height: min(var(--denizen-play-h), calc(var(--denizen-play-w) * 9 / 16));
+        width: var(--denizen-play-w);
+        height: var(--denizen-play-h);
         margin: 0 auto;
         flex: 0 0 auto;
       }
 
-      /* Portrait phones: contain the office in the screen width (no wider-than-viewport crop).
-         Leftover height below stays for chat / joystick letterbox. */
+      /* Portrait phones: fill the screen. The old rule reserved the space below
+         for "chat / joystick letterbox", but the stick is invisible now and
+         chat overlays, so that space was simply dead — 602px of it on a
+         375x812 phone. */
       html.denizen-touch.denizen-phone.denizen-portrait #game-container {
-        width: min(var(--denizen-play-w), calc(var(--denizen-available-play-h) * 16 / 9));
-        height: min(var(--denizen-available-play-h), calc(var(--denizen-play-w) * 9 / 16));
+        width: var(--denizen-play-w);
+        height: var(--denizen-available-play-h);
         flex: 0 0 auto;
         margin: 0 auto;
       }
@@ -246,9 +281,16 @@
         pointer-events: none;
         display: none;
       }
-      /* Tablets only — joystick (phones use tap-to-move, no on-screen stick) */
+      /* Tablets only — the container still carries the interact button. */
       html.denizen-touch:not(.denizen-tap-move) #${CONTROLS_ID} {
         display: block;
+      }
+      /* The fixed stick is retired: the invisible joystick works on every touch
+         tier, so this one only duplicated it and sat on top of the playfield.
+         Kept in the DOM (not deleted) so it can be restored by dropping this
+         rule if a visible stick is ever wanted back. */
+      #${CONTROLS_ID} .mc-joy-base {
+        display: none !important;
       }
       html.denizen-touch.denizen-tap-move #${CONTROLS_ID} {
         display: none !important;
@@ -262,23 +304,33 @@
       #${TAP_INTERACT_ID} {
         display: none;
         position: fixed;
-        top: calc(var(--denizen-play-top) + max(6px, env(safe-area-inset-top, 0px)));
-        right: max(6px, env(safe-area-inset-right, 0px));
+        /* Thumb zone, not the top corner: at the top it sat under the XP pill,
+           and it is the one control a player presses constantly. Raised clear
+           of the dock and the bottom-right mascot. */
+        bottom: calc(var(--denizen-dock-height, 48px) + env(safe-area-inset-bottom, 0px) + 116px);
+        right: max(10px, env(safe-area-inset-right, 0px));
         z-index: 99995;
-        width: 40px;
-        height: 40px;
+        width: 54px;
+        height: 54px;
         border-radius: 50%;
         background: rgba(30, 58, 138, 0.88);
         border: 2px solid rgba(96, 165, 250, 0.7);
         color: #dbeafe;
-        font: 700 13px/1 system-ui, sans-serif;
+        font: 700 17px/1 system-ui, sans-serif;
         cursor: pointer;
         touch-action: manipulation;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         padding: 0;
       }
-      html.denizen-touch.denizen-tap-move #${TAP_INTERACT_ID} {
-        display: none !important;
+      /* Show it on EVERY touch tier. This rule used to hide the button on
+         .denizen-tap-move — which is exactly the phone tier it was built for —
+         while .mc-action below is hidden on all touch. Between the two, no
+         touch device had any interact control at all: the game would prompt
+         "[F] Sit" on a phone with no F key and no button to press. */
+      html.denizen-touch #${TAP_INTERACT_ID} {
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       html.denizen-touch.denizen-chat-open #${TAP_INTERACT_ID},
       html.denizen-touch.denizen-llm-tel-open #${TAP_INTERACT_ID} {
@@ -517,6 +569,14 @@
         min-width: 34px;
         min-height: 34px;
       }
+
+      /* The invisible joystick is a drag on the canvas. Without this the browser
+         claims that drag for scroll/rubber-band and fires double-tap zoom, so
+         the stick would stutter or die mid-gesture. */
+      html.denizen-touch #game-container,
+      html.denizen-touch #game-container canvas {
+        touch-action: none;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -651,8 +711,84 @@
     }, { passive: true });
   }
 
+  /**
+   * Invisible joystick — press anywhere on the playfield and drag to walk.
+   *
+   * The visible stick above sits in a fixed corner and is tablet-only, so phones
+   * had no stick at all, and the city (src/full-world.js) never read touch input
+   * in the first place. This one has no DOM and no fixed origin: wherever you
+   * press becomes the centre and the drag vector is analog, so a small pull
+   * walks slowly and a full pull runs.
+   *
+   * A press that never travels past DRAG_PX stays a TAP, so tap-to-move and the
+   * interact button behave exactly as before.
+   */
+  const DRAG_PX = 10;
+
+  /** A 320px phone cannot spare the same throw as a 1024px tablet. */
+  function stickRadius() {
+    const shortest = Math.min(window.innerWidth, window.innerHeight);
+    if (shortest < 380) return 38;
+    if (shortest < 520) return 46;
+    return 54;
+  }
+
+  function installInvisibleJoystick() {
+    let id = null;
+    let ox = 0;
+    let oy = 0;
+    let dragging = false;
+
+    const release = () => {
+      id = null;
+      dragging = false;
+      clearAnalog();
+    };
+
+    document.addEventListener('pointerdown', (e) => {
+      if (id !== null) return;                     // one stick at a time
+      if (e.pointerType === 'mouse') return;       // desktop stays keyboard/click
+      if (window.__DenizenGameInputBlocked) return;
+      if (isUiTarget(e.target)) return;            // dock, chat, panels, buttons
+      id = e.pointerId;
+      ox = e.clientX;
+      oy = e.clientY;
+      dragging = false;
+    }, { passive: true });
+
+    document.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== id) return;
+      const dx = e.clientX - ox;
+      const dy = e.clientY - oy;
+      const dist = Math.hypot(dx, dy);
+      if (!dragging) {
+        if (dist < DRAG_PX) return;                // still could be a tap
+        dragging = true;
+      }
+      const r = stickRadius();
+      // Subtract the tap threshold so the stick eases in from zero instead of
+      // snapping to a jump the instant it engages.
+      const mag = Math.max(0, Math.min(1, (Math.min(dist, r) - DRAG_PX) / (r - DRAG_PX)));
+      setAnalog((dx / dist) * mag, (dy / dist) * mag, mag);
+    }, { passive: true });
+
+    const end = (e) => {
+      if (e.pointerId !== id) return;
+      release();
+    };
+    document.addEventListener('pointerup', end, { passive: true });
+    document.addEventListener('pointercancel', end, { passive: true });
+
+    // Never leave the player walking forever because a gesture was interrupted.
+    window.addEventListener('blur', release);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) release();
+    });
+  }
+
   function buildTapMoveInteract() {
-    if (!useTapMove()) return;
+    // Built on every touch tier, not just phones: tablets lost their only
+    // interact control when the large in-container "E" button was hidden.
     if (document.getElementById(TAP_INTERACT_ID)) return;
 
     const btn = document.createElement('button');
@@ -689,6 +825,7 @@
     injectStyles();
     buildRotateHint();
     buildVirtualControls();
+    installInvisibleJoystick();
     buildTapMoveInteract();
     removeCeoUiArtifacts();
     installKeyboardViewportSync();
@@ -724,6 +861,8 @@
     useTapMove,
     requiresLandscape: () => false,
     isLandscape,
+    /** Analog stick reading: {vx, vy, mag, active}. Consumed by full-world.js. */
+    stick: () => ({ vx: state.vx, vy: state.vy, mag: state.mag, active: state.active }),
     setCeoMode,
     isCeoMode: () => !!globalThis.DenizenVisitorSession?.isCeoMode?.(),
   };

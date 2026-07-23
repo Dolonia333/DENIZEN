@@ -1205,9 +1205,16 @@ function updateChunkCulling(scene, force) {
 function installTapToMove(scene) {
   if (state._tapMoveInstalled) return;
   state._tapMoveInstalled = true;
-  scene.input.on('pointerdown', (pointer) => {
+  // Fires on pointerUP, not down, and only when the finger barely travelled.
+  // At pointerdown a tap and the first pixel of a joystick drag are identical,
+  // so treating every press as a tap left a stale walk-to target fighting the
+  // stick for control of the player.
+  scene.input.on('pointerup', (pointer) => {
     // Respect the same input gate the office uses (chat/dialog open, etc.).
     if (window.__DenizenGameInputBlocked) return;
+    let travelled = 0;
+    try { travelled = pointer.getDistance(); } catch (_) { travelled = 0; }
+    if (travelled > 12) return;                     // that was a drag, not a tap
     const cam = scene.cameras.main;
     const wx = Number.isFinite(pointer.worldX) ? pointer.worldX : cam.scrollX + pointer.x / cam.zoom;
     const wy = Number.isFinite(pointer.worldY) ? pointer.worldY : cam.scrollY + pointer.y / cam.zoom;
@@ -1265,10 +1272,23 @@ function tick(scene, dt) {
   const k = state.keys || {};
   const raw = window.__DenizenRawMoveKeys || {};
   let vx = 0, vy = 0;
+  let speedScale = 1;
   if (k.left?.isDown || k.l2?.isDown || raw.left) vx -= 1;
   if (k.right?.isDown || k.r2?.isDown || raw.right) vx += 1;
   if (k.up?.isDown || k.u2?.isDown || raw.up) vy -= 1;
   if (k.down?.isDown || k.d2?.isDown || raw.down) vy += 1;
+
+  // Invisible joystick. The city never read touch input at all, so on a phone
+  // the only way to move was the tap target added alongside this. The stick is
+  // analog, so a short pull walks and a full pull runs; it outranks a pending
+  // tap target because it is the more deliberate gesture.
+  const stick = window.__DenizenTouchState;
+  if (!vx && !vy && stick && stick.active && stick.mag > 0) {
+    vx = stick.vx;
+    vy = stick.vy;
+    speedScale = Math.min(1, stick.mag);
+    state.moveTarget = null;
+  }
 
   // Denizen HQ entrance: the glass door slides open on approach; walking
   // through the OPEN door returns to the office interior.
@@ -1337,9 +1357,11 @@ function tick(scene, dt) {
 
   if (vx || vy) {
     const before = { x: p.x, y: p.y };
+    // Normalise direction, then scale by the stick magnitude (1 for keys/taps).
     const inv = 1 / Math.hypot(vx, vy);
-    const nx = p.x + vx * inv * PLAYER_SPEED * step;
-    const ny = p.y + vy * inv * PLAYER_SPEED * step;
+    const sp = PLAYER_SPEED * speedScale;
+    const nx = p.x + vx * inv * sp * step;
+    const ny = p.y + vy * inv * sp * step;
     // If already overlapping a solid (bad spawn, moved furniture), let the
     // player walk out instead of freezing forever.
     const stuck = hitsSolid(p.x, p.y);
