@@ -25,7 +25,7 @@ DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
 ENV_PATH = "/volume1/docker/denizen-server/.env.production"
 REMOTE_DIR = "/volume1/docker/denizen-server"
 
-KEYS = ("SAM_GOV_API_KEY",)
+KEYS = ("SAM_GOV_API_KEY", "SAM_GOV_NAICS")
 
 
 def load_local_keys() -> dict[str, str]:
