@@ -398,8 +398,11 @@ function build(scene) {
 
   const cam = scene.cameras.main;
   cam.setBounds(0, 0, state.worldW, state.worldH);
-  cam.setZoom(2);
+  applyCityCamera(scene);
   cam.startFollow(state.player, true, 0.12, 0.12);
+  // Re-apply on rotate/resize: a phone that starts portrait and turns landscape
+  // otherwise keeps the portrait zoom and shows a sliver of street.
+  scene.scale.on('resize', () => applyCityCamera(scene));
 
   scene.events.on('update', (t, dt) => tick(scene, dt));
 
@@ -616,25 +619,30 @@ function renderGround(scene, plan) {
 }
 
 function placeCityPlan(scene, plan) {
-  // animBands: {sheet, fw, fh, x,y,w,h, fps} → region tiled with sprites all
-  // playing the same loop (continuous animated ocean/water surfaces).
-  (plan.animBands || []).forEach((b, bi) => {
+  // animBands: {sheet, fw, fh, x,y,w,h, fps} → one tiling sprite per region,
+  // frame-stepped on a timer (continuous animated ocean/water surfaces).
+  (plan.animBands || []).forEach((b) => {
     const key = planKey(b.sheet);
     if (!scene.textures.exists(key)) return;
-    const animKey = `cpb_${bi}_${key}`;
-    if (!scene.anims.exists(animKey)) {
-      const tex = scene.textures.get(key);
-      const total = Math.max(1, tex.frameTotal - 1);
-      scene.anims.create({
-        key: animKey,
-        frames: scene.anims.generateFrameNumbers(key, { start: 0, end: total - 1 }),
-        frameRate: b.fps || 5, repeat: -1,
+    // PERF: this used to create ONE animated Sprite per fw x fh cell — 1,120
+    // of them across the plan (the beach ocean alone is hundreds), each running
+    // its own animation tick every frame. That was the main cause of the city
+    // feeling laggy, and it hit phones hardest. A TileSprite tiles the texture
+    // in a single object, so we step its frame on one timer instead: ~1120
+    // animated sprites -> 23 tile sprites + 23 timers, identical visual result.
+    const tsBand = scene.add.tileSprite(b.x, b.y, b.w, b.h, key, 0)
+      .setOrigin(0, 0).setDepth(b.depth ?? 0.95);
+    const frameTotal = Math.max(1, scene.textures.get(key).frameTotal - 1);
+    if (frameTotal > 1) {
+      let _f = 0;
+      const ev = scene.time.addEvent({
+        delay: Math.max(60, Math.round(1000 / (b.fps || 5))),
+        loop: true,
+        callback: () => {
+          _f = (_f + 1) % frameTotal;
+          try { tsBand.setFrame(_f); } catch (_) { ev.remove(); }
+        },
       });
-    }
-    for (let yy = b.y; yy < b.y + b.h; yy += b.fh) {
-      for (let xx = b.x; xx < b.x + b.w; xx += b.fw) {
-        scene.add.sprite(xx, yy, key, 0).setOrigin(0, 0).setDepth(b.depth ?? 0.95).play(animKey);
-      }
     }
     // Shoreline: straddle the band's top edge with the sand->water foam tile so
     // the sea meets the beach with a shoreline, not a straight colour cut.
@@ -742,6 +750,8 @@ function placeCityPlan(scene, plan) {
     state.portals.push(portal);
   });
   console.log('[FullWorld] city plan placed:', (plan.stamps || []).length, 'stamps,', (plan.anims || []).length, 'anims,', (plan.portals || []).length, 'portals');
+  // Everything the city will ever draw now exists — safe to bucket it.
+  installChunkCulling(scene);
 }
 
 // ── Zone builders ───────────────────────────────────────────────────────────
@@ -1106,6 +1116,103 @@ function spawnPlayer(scene, x, y) {
     up: 'W', down: 'S', left: 'A', right: 'D',
     u2: 'UP', d2: 'DOWN', l2: 'LEFT', r2: 'RIGHT',
   });
+  installTapToMove(scene);
+}
+
+// The city hardcoded setZoom(2) and never looked at the device, while the
+// office has had a full phone/tablet/desktop profile all along. On a phone that
+// meant a fixed zoom tuned for a monitor. Reuse the office's own profile so the
+// two halves of the game frame the world the same way.
+function applyCityCamera(scene) {
+  const cam = scene.cameras.main;
+  if (!cam) return;
+  const dp = globalThis.DenizenDeviceProfile;
+  let zoom = 2;
+  try {
+    const profile = dp?.get?.();
+    if (profile && dp?.playfieldZoomFor) zoom = dp.playfieldZoomFor(profile);
+  } catch (_) {}
+  cam.setZoom(zoom);
+  try { cam.setRoundPixels(false); } catch (_) {}
+}
+
+// PERF: the city is ~7,300 game objects. Phaser walks the entire display list
+// every frame, so off-screen stamps cost real time even though the GPU throws
+// them away — measured 20fps standing still, 29fps with off-screen objects
+// hidden. Bucket every static object into a grid once at build time, then flip
+// whole buckets as the camera moves. Only objects that started visible are ever
+// touched, and wide objects that straddle buckets opt out entirely.
+const CULL_CHUNK = 512;
+
+function installChunkCulling(scene) {
+  if (state._cullInstalled) return;
+  state._cullInstalled = true;
+  const buckets = new Map();
+  const always = [];
+  for (const o of scene.children.list) {
+    if (!o || o.visible === false) continue;
+    // Moving things (player, NPCs, vehicles) change bucket constantly, and
+    // anything wider than a chunk would be hidden while still on screen.
+    if (o.type === 'Sprite'
+      || (o.width || 0) > CULL_CHUNK || (o.height || 0) > CULL_CHUNK) {
+      always.push(o);
+      continue;
+    }
+    const k = `${Math.floor(o.x / CULL_CHUNK)},${Math.floor(o.y / CULL_CHUNK)}`;
+    let b = buckets.get(k);
+    if (!b) { b = []; buckets.set(k, b); }
+    b.push(o);
+  }
+  state._cullBuckets = buckets;
+  state._cullActive = new Set();
+  state._cullAlways = always.length;
+  updateChunkCulling(scene, true);
+}
+
+function updateChunkCulling(scene, force) {
+  const buckets = state._cullBuckets;
+  if (!buckets) return;
+  const view = scene.cameras.main.worldView;
+  // One chunk of slack so nothing pops in at the screen edge.
+  const x0 = Math.floor((view.x - CULL_CHUNK) / CULL_CHUNK);
+  const x1 = Math.floor((view.right + CULL_CHUNK) / CULL_CHUNK);
+  const y0 = Math.floor((view.y - CULL_CHUNK) / CULL_CHUNK);
+  const y1 = Math.floor((view.bottom + CULL_CHUNK) / CULL_CHUNK);
+  const sig = `${x0},${x1},${y0},${y1}`;
+  if (!force && sig === state._cullSig) return;
+  state._cullSig = sig;
+
+  const next = new Set();
+  for (let cy = y0; cy <= y1; cy += 1) {
+    for (let cx = x0; cx <= x1; cx += 1) {
+      const k = `${cx},${cy}`;
+      if (buckets.has(k)) next.add(k);
+    }
+  }
+  // Only touch buckets whose state actually changed.
+  for (const k of state._cullActive) {
+    if (!next.has(k)) for (const o of buckets.get(k)) o.visible = false;
+  }
+  for (const k of next) {
+    if (!state._cullActive.has(k)) for (const o of buckets.get(k)) o.visible = true;
+  }
+  state._cullActive = next;
+}
+
+// Tap / click to walk. The city was keyboard-only (WASD + arrows), so on a
+// phone you could not move AT ALL once you stepped outside the office — the
+// office has _installTapToMove/_installDomTapToMove, the city had nothing.
+function installTapToMove(scene) {
+  if (state._tapMoveInstalled) return;
+  state._tapMoveInstalled = true;
+  scene.input.on('pointerdown', (pointer) => {
+    // Respect the same input gate the office uses (chat/dialog open, etc.).
+    if (window.__DenizenGameInputBlocked) return;
+    const cam = scene.cameras.main;
+    const wx = Number.isFinite(pointer.worldX) ? pointer.worldX : cam.scrollX + pointer.x / cam.zoom;
+    const wy = Number.isFinite(pointer.worldY) ? pointer.worldY : cam.scrollY + pointer.y / cam.zoom;
+    state.moveTarget = { x: wx, y: wy };
+  });
 }
 
 function spawnNpc(scene, spec) {
@@ -1150,6 +1257,9 @@ function tick(scene, dt) {
   const p = state.player;
   if (!p || !p.active) return;
   const step = Math.min(dt, 50) / 1000;
+
+  // Cheap: bails immediately unless the camera crossed a chunk boundary.
+  updateChunkCulling(scene, false);
 
   // Player movement (WASD/arrows + the raw-key bootstrap fallback)
   const k = state.keys || {};
@@ -1209,7 +1319,24 @@ function tick(scene, dt) {
     }
   });
 
+  // Tap-to-move: walk toward the tapped point when no key is held. Any key
+  // press cancels the target so keyboard always wins.
   if (vx || vy) {
+    state.moveTarget = null;
+  } else if (state.moveTarget) {
+    const tdx = state.moveTarget.x - p.x;
+    const tdy = state.moveTarget.y - p.y;
+    const tdist = Math.hypot(tdx, tdy);
+    if (tdist < 8) {
+      state.moveTarget = null;
+    } else {
+      vx = tdx / tdist;
+      vy = tdy / tdist;
+    }
+  }
+
+  if (vx || vy) {
+    const before = { x: p.x, y: p.y };
     const inv = 1 / Math.hypot(vx, vy);
     const nx = p.x + vx * inv * PLAYER_SPEED * step;
     const ny = p.y + vy * inv * PLAYER_SPEED * step;
@@ -1218,6 +1345,12 @@ function tick(scene, dt) {
     const stuck = hitsSolid(p.x, p.y);
     if (stuck || !hitsSolid(nx, p.y)) p.x = nx;
     if (stuck || !hitsSolid(p.x, ny)) p.y = ny;
+    // A tap target behind a wall would otherwise make the player grind into it
+    // forever — if we didn't actually move, drop the target.
+    if (state.moveTarget
+      && Math.abs(p.x - before.x) < 0.01 && Math.abs(p.y - before.y) < 0.01) {
+      state.moveTarget = null;
+    }
     const d = dirFrom(vx, vy);
     state.playerDir = d;
     const want = `${state.playerTex}_walk_${d}`;
