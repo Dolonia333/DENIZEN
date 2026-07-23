@@ -1166,6 +1166,13 @@ function installChunkCulling(scene) {
   state._cullBuckets = buckets;
   state._cullActive = new Set();
   state._cullAlways = always.length;
+  // Start from "everything hidden". updateChunkCulling is a delta updater: it
+  // only hides buckets that LEAVE the active set, so with an empty active set
+  // its first pass can only ever switch buckets on — every distant object
+  // stayed visible and nothing was culled at all.
+  for (const b of buckets.values()) {
+    for (const o of b) o.visible = false;
+  }
   updateChunkCulling(scene, true);
 }
 
