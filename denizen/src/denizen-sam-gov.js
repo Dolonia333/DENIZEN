@@ -181,10 +181,29 @@ async function searchOpportunities(opts = {}) {
   const truncatedCombos = Math.max(0, combos.length - MAX_COMBOS);
   if (truncatedCombos) combos = combos.slice(0, MAX_COMBOS);
 
-  const results = await mapLimit(combos, 4, (c) => _singleSearch({
-    from, to, limit, offset, ptype, q: opts.q, signal: opts.signal,
-    setAside: c.setAside, naics: c.naics,
-  }));
+  // Isolate each combo: a single failing sub-query (e.g. one SAM 429) must not
+  // discard every other combo's results. Collect errors so a total wipeout is
+  // still visible, and only throw if EVERY combo failed (a real auth/outage).
+  const subErrors = [];
+  const results = await mapLimit(combos, 4, async (c) => {
+    try {
+      return await _singleSearch({
+        from, to, limit, offset, ptype, q: opts.q, signal: opts.signal,
+        setAside: c.setAside, naics: c.naics,
+      });
+    } catch (err) {
+      subErrors.push({ setAside: c.setAside, naics: c.naics, code: err.code, status: err.status });
+      return { total: 0, list: [] };
+    }
+  });
+  if (subErrors.length && subErrors.length === combos.length) {
+    // Every sub-query failed — surface it instead of returning a silent count:0.
+    const e0 = subErrors[0];
+    const err = new Error(`SAM.gov: all ${combos.length} sub-queries failed (${e0.code || e0.status || 'error'})`);
+    err.code = e0.code || 'SAM_HTTP';
+    err.status = e0.status;
+    throw err;
+  }
 
   const byId = new Map();
   let total = 0;
@@ -219,6 +238,7 @@ async function searchOpportunities(opts = {}) {
     count: opportunities.length,  // deduped, after activeOnly
     window: { from, to },
     queries: combos.length,
+    failedQueries: subErrors.length,   // >0 means partial results
     truncatedCombos,
     droppedInactive,
     opportunities,

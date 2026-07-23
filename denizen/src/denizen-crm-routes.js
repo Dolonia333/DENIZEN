@@ -1308,12 +1308,17 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
       }
     }
 
-    // SAM.gov federal opportunities. Org resolves from the session when present,
-    // else falls back to the default org so these are testable directly. `search`
-    // is a read-only proxy of public federal data; `ingest` writes matching
-    // opportunities into the RFP pipeline (idempotent by sam_gov_id).
+    // SAM.gov federal opportunities. Both routes require a verified CRM session
+    // (same gate as /api/crm/workspace): `search` amplifies each call into up to
+    // ~21 upstream SAM requests on the shared key, and `ingest` WRITES to the DB
+    // — neither may be anonymous on a public host. The nightly auto-ingest calls
+    // the ingest logic directly (not this route), so it is unaffected.
     if (path === '/api/crm/sam/search' && req.method === 'GET') {
       try {
+        const sessionId = sessionIdFrom(req, {}, url);
+        const access = await verifyCrmSession(req, sessionId, {}, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) { json(res, 409, { ok: false, error: 'Session is not linked to an organization' }); return true; }
         if (!samGov.hasKey()) {
           json(res, 200, { ok: false, configured: false, error: 'SAM_GOV_API_KEY is not set' });
           return true;
@@ -1332,7 +1337,9 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         json(res, 200, { ok: true, configured: true, ...result });
         return true;
       } catch (err) {
-        const status = err?.code === 'SAM_AUTH' ? 401 : (err?.code === 'NO_SAM_KEY' ? 409 : 502);
+        const authFail = err?.code === 'DENIED' || err?.code === 'BAD_INPUT';   // no/invalid session
+        const status = authFail ? 401
+          : (err?.code === 'NO_SAM_KEY' ? 409 : 502);
         json(res, status, { ok: false, error: err?.message || String(err), code: err?.code });
         return true;
       }
@@ -1341,17 +1348,15 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
     if (path === '/api/crm/sam/ingest' && req.method === 'POST') {
       try {
         const body = await readJsonBody(req, 16 * 1024).catch(() => ({}));
-        // Best-effort org from the session; fall back to the default org.
-        let orgId = null;
-        try {
-          const sessionId = sessionIdFrom(req, body, url);
-          if (sessionId) {
-            const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
-            orgId = await resolveOrgIdAsync(access);
-          }
-        } catch (_) { /* no session → default org */ }
+        // Required session — never fall back to the default org for an anonymous
+        // caller. verifyCrmSession throws DENIED (→ 401) without a valid session,
+        // demo session, or CEO grant header.
+        const sessionId = sessionIdFrom(req, body, url);
+        const access = await verifyCrmSession(req, sessionId, body, verifyVisitorSession);
+        const orgId = await resolveOrgIdAsync(access);
+        if (!orgId) { json(res, 409, { ok: false, error: 'Session is not linked to an organization' }); return true; }
         const result = await crmSam.ingestOpportunities({
-          orgId: orgId || undefined,
+          orgId,
           naics: body.naics,
           setAside: body.setAside,
           ptype: body.ptype,
@@ -1364,7 +1369,8 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         json(res, result.ok ? 200 : (result.code === 'NO_SAM_KEY' ? 409 : 500), result);
         return true;
       } catch (err) {
-        const status = err?.code === 'SAM_AUTH' ? 401 : 500;
+        const authFail = err?.code === 'DENIED' || err?.code === 'BAD_INPUT';   // no/invalid session
+        const status = authFail ? 401 : (err?.code === 'SAM_AUTH' ? 502 : 500);
         json(res, status, { ok: false, error: err?.message || String(err), code: err?.code });
         return true;
       }

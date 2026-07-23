@@ -44,12 +44,39 @@ function toDate(v) {
 }
 
 /**
+ * Stable dedup key. Mirrors the search layer's fallback (denizen-sam-gov.js)
+ * so an opportunity with no noticeId still dedups consistently across runs
+ * instead of being re-inserted every time.
+ */
+function samDedupId(opp) {
+  if (!opp) return null;
+  if (opp.noticeId) return String(opp.noticeId);
+  if (opp.solicitationNumber && opp.title) return `${opp.solicitationNumber}|${opp.title}`;
+  return null;
+}
+
+function chunk(arr, n) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
+  return out;
+}
+
+/**
  * Map a normalized opportunity → an `rfps` row. Returns null if it can't
  * satisfy the NOT-NULL columns (no usable due date), so the caller can skip it
  * rather than fabricate a deadline that would poison the bid prediction.
  */
 function mapOpportunityToRfp(opp, orgId) {
-  const proposalDue = toDate(opp.responseDeadline) || toDate(opp.archiveDate);
+  let proposalDue = toDate(opp.responseDeadline);
+  if (!proposalDue) {
+    // Fall back to archiveDate only if it's still in the future. activeOnly
+    // never checks archiveDate, so a past one is an effectively-closed
+    // opportunity — skip it rather than persist a stale (past) due date that
+    // would mislead the bid prediction and the mirrored deal's closeDate.
+    const arch = toDate(opp.archiveDate);
+    const today = new Date().toISOString().slice(0, 10);   // YYYY-MM-DD sorts chronologically
+    if (arch && arch >= today) proposalDue = arch;
+  }
   if (!proposalDue) return null;
   const naics = [];
   if (opp.naicsCode) naics.push(String(opp.naicsCode));
@@ -60,7 +87,7 @@ function mapOpportunityToRfp(opp, orgId) {
     title: (opp.title || opp.solicitationNumber || 'Untitled SAM.gov opportunity').slice(0, 500),
     agency: opp.agency || 'Unknown agency',
     solicitation_number: opp.solicitationNumber || null,
-    sam_gov_id: opp.noticeId || null,
+    sam_gov_id: samDedupId(opp),
     description: opp.setAsideLabel
       ? `${opp.setAsideLabel}${opp.placeOfPerformance ? ` — ${opp.placeOfPerformance}` : ''}`
       : (opp.placeOfPerformance || null),
@@ -76,15 +103,26 @@ function mapOpportunityToRfp(opp, orgId) {
   return row;
 }
 
-/** Which of these notice ids already exist as rfps (dedup, batched). */
-async function existingSamIds(noticeIds) {
-  const ids = noticeIds.filter(Boolean);
-  if (!ids.length || !denizenDb.enabled) return new Set();
-  const quoted = ids.map((id) => `"${String(id).replace(/"/g, '')}"`).join(',');
-  const rows = await denizenDb
-    ._get(`rfps?select=sam_gov_id&sam_gov_id=in.(${encodeURIComponent(quoted)})`)
-    .catch(() => []);
-  return new Set((rows || []).map((r) => r.sam_gov_id).filter(Boolean));
+/**
+ * Which of these dedup ids already exist as rfps. Chunked so the in.() URL
+ * stays well under proxy limits, and it does NOT swallow errors: if the lookup
+ * fails, this THROWS so the caller aborts rather than treating "query failed"
+ * as "nothing exists" and duplicating every row.
+ */
+async function existingSamIds(ids) {
+  const clean = ids.filter(Boolean);
+  const out = new Set();
+  if (!clean.length || !denizenDb.enabled) return out;
+  for (const batch of chunk(clean, 80)) {
+    const quoted = batch.map((id) => `"${String(id).replace(/"/g, '')}"`).join(',');
+    // No .catch — a failed dedup read must abort the ingest, not silently
+    // disable dedup.
+    const rows = await denizenDb._get(
+      `rfps?select=sam_gov_id&sam_gov_id=in.(${encodeURIComponent(quoted)})`,
+    );
+    for (const r of rows || []) if (r.sam_gov_id) out.add(r.sam_gov_id);
+  }
+  return out;
 }
 
 /**
@@ -105,7 +143,15 @@ async function ingestOpportunities(opts = {}) {
 
   const search = await samGov.searchOpportunities(opts);
   const found = search.opportunities;
-  const seen = await existingSamIds(found.map((o) => o.noticeId));
+
+  // Dedup pre-read. If it fails we abort — inserting blind would duplicate
+  // every row (there is no DB unique constraint on sam_gov_id).
+  let seen;
+  try {
+    seen = await existingSamIds(found.map(samDedupId));
+  } catch (err) {
+    return { ok: false, code: 'DEDUP_FAILED', error: `rfps dedup lookup failed: ${err && err.message ? err.message : err}` };
+  }
 
   const items = [];
   let inserted = 0;
@@ -114,7 +160,8 @@ async function ingestOpportunities(opts = {}) {
   const errors = [];
 
   for (const opp of found) {
-    if (opp.noticeId && seen.has(opp.noticeId)) {
+    const key = samDedupId(opp);
+    if (key && seen.has(key)) {
       skippedExisting += 1;
       items.push({ noticeId: opp.noticeId, title: opp.title, outcome: 'exists' });
       continue;
@@ -178,16 +225,19 @@ function nextDealId(deals) {
   return ids.length ? Math.max(...ids) + 1 : Date.now();
 }
 
-/** noticeId → rfp uuid, for the opportunities that exist in `rfps`. */
-async function rfpIdsBySamId(noticeIds) {
-  const ids = noticeIds.filter(Boolean);
+/** samDedupId → rfp uuid, for the opportunities that exist in `rfps` (chunked).
+ *  Best-effort: a failure here just means fewer deals mirrored this round. */
+async function rfpIdsBySamId(samIds) {
+  const ids = samIds.filter(Boolean);
   const out = new Map();
   if (!ids.length || !denizenDb.enabled) return out;
-  const quoted = ids.map((id) => `"${String(id).replace(/"/g, '')}"`).join(',');
-  const rows = await denizenDb
-    ._get(`rfps?select=id,sam_gov_id&sam_gov_id=in.(${encodeURIComponent(quoted)})`)
-    .catch(() => []);
-  for (const r of rows || []) if (r.sam_gov_id) out.set(r.sam_gov_id, r.id);
+  for (const batch of chunk(ids, 80)) {
+    const quoted = batch.map((id) => `"${String(id).replace(/"/g, '')}"`).join(',');
+    const rows = await denizenDb
+      ._get(`rfps?select=id,sam_gov_id&sam_gov_id=in.(${encodeURIComponent(quoted)})`)
+      .catch(() => []);
+    for (const r of rows || []) if (r.sam_gov_id) out.set(r.sam_gov_id, r.id);
+  }
   return out;
 }
 
@@ -196,17 +246,19 @@ async function bidProbByRfpId(rfpIds) {
   const ids = rfpIds.filter(Boolean);
   const out = new Map();
   if (!ids.length || !denizenDb.enabled) return out;
-  const quoted = ids.map((id) => `"${id}"`).join(',');
-  const rows = await denizenDb
-    ._get(`denizen_predictions?select=entity_id,prediction,confidence,created_at`
-      + `&entity_type=eq.rfp&prediction_type=eq.rfp.bid_probability`
-      + `&entity_id=in.(${encodeURIComponent(quoted)})&order=created_at.desc`)
-    .catch(() => []);
-  for (const r of rows || []) {
-    if (out.has(r.entity_id)) continue;          // first seen = newest
-    const p = r.prediction && (r.prediction.bid_probability ?? r.prediction.close_probability);
-    const val = p != null ? p : r.confidence;
-    if (val != null && Number.isFinite(Number(val))) out.set(r.entity_id, Number(val));
+  for (const batch of chunk(ids, 80)) {
+    const quoted = batch.map((id) => `"${id}"`).join(',');
+    const rows = await denizenDb
+      ._get(`denizen_predictions?select=entity_id,prediction,confidence,created_at`
+        + `&entity_type=eq.rfp&prediction_type=eq.rfp.bid_probability`
+        + `&entity_id=in.(${encodeURIComponent(quoted)})&order=created_at.desc`)
+      .catch(() => []);
+    for (const r of rows || []) {
+      if (out.has(r.entity_id)) continue;          // first seen = newest
+      const p = r.prediction && (r.prediction.bid_probability ?? r.prediction.close_probability);
+      const val = p != null ? p : r.confidence;
+      if (val != null && Number.isFinite(Number(val))) out.set(r.entity_id, Number(val));
+    }
   }
   return out;
 }
@@ -225,7 +277,7 @@ function opportunityToDeal(opp, deals, rfpId, prob) {
     health: 'good',
     // custom fields (survive sanitizeState) — traceability + dedup
     source: 'sam_gov',
-    samGovId: opp.noticeId || null,
+    samGovId: samDedupId(opp),
     solicitationNumber: opp.solicitationNumber || null,
     naics: opp.naicsCode || null,
     setAside: opp.setAside || null,
@@ -241,8 +293,8 @@ function opportunityToDeal(opp, deals, rfpId, prob) {
  */
 async function mirrorOpportunitiesToDeals(orgId, opps) {
   if (!orgId || !denizenDb.enabled) return { mirrored: 0, skippedExistingDeals: 0, conflict: false };
-  const noticeIds = opps.map((o) => o.noticeId).filter(Boolean);
-  const samToRfp = await rfpIdsBySamId(noticeIds);
+  const samIds = opps.map(samDedupId).filter(Boolean);
+  const samToRfp = await rfpIdsBySamId(samIds);
   const probByRfp = await bidProbByRfpId([...new Set(samToRfp.values())]);
 
   const attempt = async () => {
@@ -254,11 +306,12 @@ async function mirrorOpportunitiesToDeals(orgId, opps) {
     let mirrored = 0;
     let skipped = 0;
     for (const opp of opps) {
-      const rfpId = opp.noticeId ? samToRfp.get(opp.noticeId) : null;
+      const key = samDedupId(opp);
+      const rfpId = key ? samToRfp.get(key) : null;
       if (!rfpId) continue;                        // only mirror opps that reached rfps
-      if (opp.noticeId && haveSam.has(opp.noticeId)) { skipped += 1; continue; }
+      if (key && haveSam.has(key)) { skipped += 1; continue; }
       deals.push(opportunityToDeal(opp, deals, rfpId, probByRfp.get(rfpId)));
-      if (opp.noticeId) haveSam.add(opp.noticeId);
+      if (key) haveSam.add(key);
       mirrored += 1;
     }
     if (!mirrored) return { mirrored: 0, skippedExistingDeals: skipped, conflict: false };
