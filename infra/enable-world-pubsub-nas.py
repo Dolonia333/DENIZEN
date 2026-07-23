@@ -13,7 +13,12 @@ import paramiko
 HOST = os.environ.get("SYNO_HOST", "192.168.1.237")
 PASSWORD = os.environ.get("SYNO_SSH_PASSWORD", "")
 DOCKER = os.environ.get("SYNO_DOCKER", "/usr/local/bin/docker")
-ENV_PATH = "/volume1/docker/denizen-server/.env"
+# NOTE: docker-compose.yml for denizen-server declares env_file: .env.production,
+# so THAT is the file the container actually reads. Patching plain .env wrote to a
+# file nothing loads — these patches silently had no effect (this is why the CLI
+# bridge env never reached the server). Also: docker restart does NOT reload env;
+# use .
+ENV_PATH = "/volume1/docker/denizen-server/.env.production"
 REDIS_PORT = os.environ.get("DENIZEN_REDIS_PORT", "6379")
 PRIMARY_PORT = os.environ.get("SYNO_DENIZEN_PORT", "8888")
 IMAGE = os.environ.get("DENIZEN_DOCKER_IMAGE", "denizen-server:latest")
