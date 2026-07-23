@@ -2846,7 +2846,9 @@ class AgentOfficeManager {
 
   _scheduleReconnect() {
     if (this._reconnectTimer) return;
-    const delay = Math.min(2000 * Math.pow(2, this._reconnectAttempt), 30000);
+    // 1s,2s,4s,8s,8s… — was 2s…30s, which left a page sitting disconnected for
+    // up to half a minute after the server was already back (e.g. a redeploy).
+    const delay = Math.min(1000 * Math.pow(2, this._reconnectAttempt), 8000);
     this._reconnectAttempt++;
     console.log(`[AgentManager] Reconnecting in ${delay}ms`);
     this._reconnectTimer = setTimeout(() => {

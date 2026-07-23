@@ -240,17 +240,53 @@ class PlayerChat {
   /**
    * Toggle chat visibility
    */
+  /** The one true socket state, independent of which manager owns it. */
+  _liveWsOpen() {
+    try {
+      const ws = window.__DenizenAgentWs;
+      return !!ws && ws.readyState === WebSocket.OPEN;
+    } catch (_) {
+      return false;
+    }
+  }
+
   setWsConnected(connected) {
+    // Callers pass a snapshot that goes stale during the bootstrap→AgentManager
+    // handoff: a (true) can fire while scene._playerChat is still null and be
+    // lost, leaving the banner stuck up even though the socket is fine. So the
+    // live socket wins — but only to CLEAR the banner. We never fake "connected"
+    // when the socket is genuinely down, so a viewer who truly can't reach the
+    // server still sees the notice.
+    const reallyConnected = !!connected || this._liveWsOpen();
     if (this._fab) {
-      this._fab.classList.toggle('ws-on', !!connected);
-      this._fab.classList.toggle('ws-off', !connected);
+      this._fab.classList.toggle('ws-on', reallyConnected);
+      this._fab.classList.toggle('ws-off', !reallyConnected);
       this._syncFabLabel();
     }
     const banner = document.getElementById('denizen-ws-banner');
     const remote = !/^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
     if (banner && remote) {
-      banner.style.display = connected ? 'none' : 'block';
+      banner.style.display = reallyConnected ? 'none' : 'block';
     }
+    // While the banner is up, poll the live socket so a reconnect that never
+    // routed a setWsConnected(true) through this instance still clears it.
+    if (remote) {
+      if (!reallyConnected) this._startWsWatchdog();
+      else this._stopWsWatchdog();
+    }
+  }
+
+  _startWsWatchdog() {
+    if (this._wsWatchdog) return;
+    this._wsWatchdog = setInterval(() => {
+      if (this._liveWsOpen()) this.setWsConnected(true);   // hides + stops itself
+    }, 2000);
+  }
+
+  _stopWsWatchdog() {
+    if (!this._wsWatchdog) return;
+    clearInterval(this._wsWatchdog);
+    this._wsWatchdog = null;
   }
 
   setVisible(visible) {

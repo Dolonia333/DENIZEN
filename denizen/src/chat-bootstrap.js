@@ -332,7 +332,9 @@
 
         if (mgr._reconnectTimer) return;
 
-        const delay = Math.min(2000 * Math.pow(2, mgr._reconnectAttempt), 30000);
+        // 1s,2s,4s,8s,8s… — matches AgentManager; the old 2s…30s cap left the
+        // page disconnected for up to 30s after the server was already back.
+        const delay = Math.min(1000 * Math.pow(2, mgr._reconnectAttempt), 8000);
 
         mgr._reconnectAttempt++;
 
