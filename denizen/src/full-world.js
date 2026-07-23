@@ -1068,7 +1068,9 @@ function makeDoloAnims(scene) {
     r: { walk: [0, 1, 2, 3, 4, 5], idle: 2 },
     u: { walk: [6, 7, 8, 9, 10, 11], idle: 8 },
     l: { walk: [12, 13, 14, 15, 16, 17], idle: 14 },
-    d: { walk: [18, 19, 20, 21, 22, 23], idle: 20 },
+    // idle 22, not 20 — measured against the canonical down idle (dolonia.png
+    // f74): 20 is 208px off (mid-stride), 22 is 61px. Down is the default facing.
+    d: { walk: [18, 19, 20, 21, 22, 23], idle: 22 },
   };
   Object.entries(map).forEach(([d, m]) => {
     if (!scene.anims.exists(`${tex}_walk_${d}`)) {

@@ -13453,9 +13453,13 @@ server.listen(PORT, () => {
       setTimeout(_runDialogueDrainer, 55_000).unref?.();
       log.info('Mentor', `Mentor dialogue drainer started (${DIALOGUE_MS}ms)`);
     }
+  }
 
-    // Live telemetry job — refresh grok-telemetry-latest.json (no canned facts).
-    if (process.env.GROK_TELEMETRY_JOB !== '0') {
+  // Live telemetry job — refresh grok-telemetry-latest.json (no canned facts).
+  // Deliberately OUTSIDE the mentor-drainer gate above. It used to be nested
+  // inside it, so GROK_MENTOR_DRAINER=0 (or a relay-only node) silently killed
+  // the 10-min telemetry refresh with no log line saying so.
+  if (process.env.GROK_TELEMETRY_JOB !== '0') {
       const pathMod = require('path');
       const { spawn } = require('child_process');
       const TEL_JOB_MS = Math.max(120_000, Number(process.env.GROK_TELEMETRY_JOB_MS) || 10 * 60_000);
@@ -13485,7 +13489,6 @@ server.listen(PORT, () => {
       setTimeout(_runTelemetryJob, 70_000).unref?.();
       log.info('Telemetry', `Grok mesh telemetry job scheduled (${TEL_JOB_MS}ms)`);
     }
-  }
 });
 
 // Graceful shutdown — stop the security monitor's intervals and child

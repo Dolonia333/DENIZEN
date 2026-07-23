@@ -3149,6 +3149,12 @@ If the CEO's request is ambiguous (could be a chat reply OR a PC task), briefly 
         lessonBlock,
         chainContext,
         telemetryContext,
+        // The tool catalog is built above (~:2998) but was never passed to the
+        // COMPACT prompt — so on the compact path the model was asked to act
+        // without ever being told what it can actually do, and defaulted to
+        // idle/desk chatter. Same for its current goal.
+        openClawContext,
+        goalContext,
       })
       : brain.personality + '\n\n' +
       (directiveBlock ? directiveBlock : '') +
@@ -4591,6 +4597,11 @@ ${actionFooter}`;
       chat ? `## Recent chat\n${chat}` : '',
       parts.continuitySection ? `## Last decision\n${String(parts.continuitySection).slice(0, 240)}` : '',
       parts.inboxText ? `## Inbox\n${String(parts.inboxText).slice(0, 320)}` : '',
+      // What this NPC can actually DO, and what it is working toward. Without
+      // these the compact prompt gives the model no verb vocabulary, so it
+      // cannot choose real action — it can only narrate.
+      parts.openClawContext ? `## Tools\n${String(parts.openClawContext).slice(0, 700)}` : '',
+      parts.goalContext ? `## Goal\n${String(parts.goalContext).slice(0, 160)}` : '',
       tel,
       liveAwareness,
       officeDesc ? `## Office\n${officeDesc}` : '',

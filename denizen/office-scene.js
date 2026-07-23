@@ -1148,7 +1148,11 @@ class OfficeScene extends Phaser.Scene {
         idle_right: { frames: [2],                     fps: 1 },
         idle_up:    { frames: [8],                     fps: 1 },
         idle_left:  { frames: [14],                    fps: 1 },
-        idle_down:  { frames: [20],                    fps: 1 },
+        // frame 22, not 20. Measured against the canonical down idle pose
+        // (dolonia.png f74): frame 20 is 208px off — a mid-stride walk frame —
+        // while 22 is 61px, the closest in the row. Down is the DEFAULT facing,
+        // so this is the idle pose the player sees most of the time.
+        idle_down:  { frames: [22],                    fps: 1 },
         walk_right: { frames: [0, 1, 2, 3, 4, 5],     fps: 13 },
         walk_up:    { frames: [6, 7, 8, 9, 10, 11],   fps: 13 },
         walk_left:  { frames: [12, 13, 14, 15, 16, 17], fps: 13 },
