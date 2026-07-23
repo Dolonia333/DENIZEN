@@ -30,6 +30,8 @@ import { RoomTileRenderer } from './room-tile-renderer.js';
 const T = 16;
 const WORLD_W = 4096;
 const WORLD_H = 3072;
+const CHAR_COLS = 56; // 896 / 16 — character sheet columns
+const DIRS = ['r', 'u', 'l', 'd'];
 
 // ── Asset tables ────────────────────────────────────────────────────────────
 
@@ -263,6 +265,83 @@ function cropTex(scene, key, rectName) {
   return key;
 }
 
+/** Drop a GPU texture after all useful pixels have been cropped out of it. */
+function releaseTexture(scene, key) {
+  if (!scene.textures.exists(key)) return false;
+  try {
+    scene.textures.remove(key);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
+ * Character sheets are 20 rows × 56 cols, but the city only plays idle (row 1)
+ * and run (row 2). Replacing each full sheet with a 2-row slim copy frees
+ * ~40 MB of GPU texture (896×656 → 896×64 × 20).
+ */
+function slimCharSheets(scene) {
+  if (state._charsSlimmed) return;
+  const FW = 16;
+  const FH = 32;
+  const COLS = CHAR_COLS;
+  const SLIM_ROWS = 2;
+  const SRC_Y = FH; // skip static-dirs row 0
+  let slimmed = 0;
+  for (let c = 1; c <= 20; c += 1) {
+    const key = `fw_char_${c}`;
+    if (!scene.textures.exists(key)) continue;
+    const tex = scene.textures.get(key);
+    if (tex?.customData?.slimmed) continue;
+    const src = tex.getSourceImage?.() || tex.source?.[0]?.image;
+    if (!src) continue;
+    const w = COLS * FW;
+    const h = SLIM_ROWS * FH;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(src, 0, SRC_Y, w, h, 0, 0, w, h);
+    releaseTexture(scene, key);
+    scene.textures.addSpriteSheet(key, canvas, { frameWidth: FW, frameHeight: FH });
+    const slim = scene.textures.get(key);
+    if (slim) slim.customData = { ...(slim.customData || {}), slimmed: true };
+    slimmed += 1;
+  }
+  state._charsSlimmed = true;
+  state._charsSlimCount = slimmed;
+}
+
+/** Estimate resident GPU texture bytes (RGBA, no mipmaps). */
+function textureBudget(scene) {
+  const list = scene?.textures?.list || {};
+  let bytes = 0;
+  let count = 0;
+  const big = [];
+  Object.keys(list).forEach((key) => {
+    if (key === '__DEFAULT' || key === '__MISSING') return;
+    const tex = list[key];
+    const src = tex?.source?.[0];
+    const w = Number(src?.width || tex?.width || 0);
+    const h = Number(src?.height || tex?.height || 0);
+    if (!w || !h) return;
+    const b = w * h * 4;
+    bytes += b;
+    count += 1;
+    if (b >= 256 * 1024) big.push({ key, w, h, mb: +(b / 1024 / 1024).toFixed(2) });
+  });
+  big.sort((a, b) => b.mb - a.mb);
+  return {
+    textures: count,
+    mb: +(bytes / 1024 / 1024).toFixed(2),
+    charsSlimmed: !!state._charsSlimmed,
+    atlasesReleased: !!state._atlasesReleased,
+    biggest: big.slice(0, 12),
+  };
+}
+
 function build(scene) {
   if (state.built) return;
   state.built = true;
@@ -276,8 +355,20 @@ function build(scene) {
   state.worldW = plan.worldSize?.w || WORLD_W;
   state.worldH = plan.worldSize?.h || WORLD_H;
 
-  // Base tile textures
-  ['grass_tile', 'asphalt_tile', 'sidewalk_tile', 'crosswalk_a', 'crosswalk_b'].forEach((n) => cropTex(scene, `fwt_${n}`, n));
+  // Trim character sheets BEFORE anims / sprites reference frame indices.
+  slimCharSheets(scene);
+
+  // Eagerly crop every exterior rect so source atlases can be freed after zones.
+  ['grass_tile', 'asphalt_tile', 'sidewalk_tile', 'crosswalk_a', 'crosswalk_b'].forEach((n) => {
+    cropTex(scene, `fwt_${n}`, n);
+  });
+  Object.keys(EXT_RECTS).forEach((n) => {
+    if (n.endsWith('_tile') || n.startsWith('crosswalk_')) return;
+    cropTex(scene, `fwp_${n}`, n);
+  });
+  // Call-site aliases (helipad uses shorter keys than EXT_RECTS names).
+  cropTex(scene, 'fwp_helipad', 'helipad_platform');
+  cropTex(scene, 'fwp_heli', 'helicopter');
 
   // 1 ── Ground: grass everywhere
   scene.add.tileSprite(0, 0, state.worldW, state.worldH, 'fwt_grass_tile').setOrigin(0).setDepth(0);
@@ -384,6 +475,10 @@ function build(scene) {
   // 4 ── Ambient greenery outside zones (deterministic scatter)
   scatterGreenery(scene);
 
+  // Props / vehicles / buildings atlases are crop sources only — drop them now
+  // that every fwp_* canvas exists (~24 MB GPU back).
+  ['fw_props', 'fw_vehicles', 'fw_buildings'].forEach((k) => releaseTexture(scene, k));
+
   // 5 ── Player + NPCs + camera
   makeCharAnims(scene);
   const entry = new URLSearchParams(window.location.search).get('entry');
@@ -408,7 +503,15 @@ function build(scene) {
 
   // 6 ── City plan districts (second load pass for its referenced art)
   renderCityPlan(scene, plan);
-  console.log('[FullWorld] built: 6 zones,', state.solids.length, 'solids,', state.npcs.length, 'npcs');
+  const budget = textureBudget(scene);
+  console.log(
+    '[FullWorld] built: 6 zones,',
+    state.solids.length, 'solids,',
+    state.npcs.length, 'npcs,',
+    `textures=${budget.mb}MB (${budget.textures})`,
+    state._charsSlimmed ? `charsSlim=${state._charsSlimCount || 20}` : 'charsFull',
+    state._atlasesReleased ? 'atlasesReleased' : 'atlasesKept',
+  );
 }
 
 // ── City plan renderer ──────────────────────────────────────────────────────
@@ -616,6 +719,11 @@ function renderGround(scene, plan) {
       goRun(x1, y0, y1, 'fwt_go_w', (y) => isConc(x1, y), false);          // patch right -> grass to W
     });
   }
+
+  // Terrain + beach sheets were only crop sources for tiles/curbs/sand/shore.
+  releaseTexture(scene, 'fw_terrain');
+  releaseTexture(scene, 'cp_ext_themes_21_Beach_png');
+  state._atlasesReleased = true;
 }
 
 function placeCityPlan(scene, plan) {
@@ -1047,9 +1155,6 @@ function scatterGreenery(scene) {
 
 // ── Characters ──────────────────────────────────────────────────────────────
 
-const CHAR_COLS = 56; // 896 / 16
-const DIRS = ['r', 'u', 'l', 'd'];
-
 function ensureAnim(scene, key, tex, lastFrame, rate) {
   if (scene.anims.exists(key)) return;
   scene.anims.create({
@@ -1061,12 +1166,15 @@ function ensureAnim(scene, key, tex, lastFrame, rate) {
 }
 
 function makeCharAnims(scene) {
+  // Slim sheets keep only idle+run (2 rows). Full sheets used row1/row2, which
+  // becomes row0/row1 after slimCharSheets().
+  const slim = !!state._charsSlimmed;
   for (let c = 1; c <= 20; c++) {
     const tex = `fw_char_${c}`;
     if (!scene.textures.exists(tex)) continue;
     DIRS.forEach((d, di) => {
-      const idleStart = CHAR_COLS + di * 6;
-      const walkStart = CHAR_COLS * 2 + di * 6;
+      const idleStart = slim ? (di * 6) : (CHAR_COLS + di * 6);
+      const walkStart = slim ? (CHAR_COLS + di * 6) : (CHAR_COLS * 2 + di * 6);
       if (!scene.anims.exists(`${tex}_idle_${d}`)) {
         scene.anims.create({
           key: `${tex}_idle_${d}`,
@@ -1495,4 +1603,6 @@ function tick(scene, dt) {
   });
 }
 
-if (typeof window !== 'undefined') window.DenizenFullWorld = { buildFullWorld, state };
+if (typeof window !== 'undefined') {
+  window.DenizenFullWorld = { buildFullWorld, state, textureBudget };
+}
