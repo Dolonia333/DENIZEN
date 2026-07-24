@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "electron": "42.3.3",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.dolonia.denizen",
@@ -42,7 +42,10 @@
       "signAndEditExecutable": false
     },
     "mac": {
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "artifactName": "Denizen.${ext}"
     },
     "linux": {
@@ -59,18 +62,24 @@
       {
         "from": "resources/ollama",
         "to": "ollama",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "resources/llama",
         "to": "llama",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "protocols": [
       {
         "name": "Denizen",
-        "schemes": ["denizen"]
+        "schemes": [
+          "denizen"
+        ]
       }
     ],
     "files": [
@@ -81,6 +90,10 @@
       "!dist-build*/**",
       "!dist-review*/**",
       "!dist-old-*/**"
+    ],
+    "asarUnpack": [
+      "**/*.node",
+      "node_modules/@nut-tree-fork/**"
     ]
   }
 }
