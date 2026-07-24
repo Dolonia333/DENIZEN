@@ -119,7 +119,10 @@ async function _loadLatestPredictions(db, rfpIds) {
     select: ['entity_id', 'prediction', 'confidence', 'created_at'],
     filters: {
       entity_type: { eq: 'rfp' },
-      prediction_type: { eq: 'rfp.bid' },
+      // Stored type is 'rfp.bid_probability' (trigger denizen_predict_rfp_bid);
+      // the old 'rfp.bid' matched nothing, so bid-probability enrichment here
+      // silently returned null for every RFP.
+      prediction_type: { eq: 'rfp.bid_probability' },
       entity_id: { in: rfpIds },
     },
     order: { created_at: 'desc' },
