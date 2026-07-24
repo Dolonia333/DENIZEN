@@ -114,6 +114,7 @@ const NPC_ALLOWED_SKILLS = {
   molly: new Set([
     ...CRM_READ_SKILLS_LIST,
     'crm-capture', 'crm-add-note', 'crm-add-task', 'crm-schedule-followup', 'crm-list-tasks',
+    'crm-update-deal', 'crm-update-contact', 'crm-move-deal',
   ]),
   sarah: new Set([
     ...CRM_READ_SKILLS_LIST,
@@ -400,9 +401,24 @@ function inferCrmAction(message) {
   if (/\b(import)\b.*\bcontact/i.test(msg) || /\bcsv\b.*\bimport/i.test(msg)) {
     return { skill: 'crm-import-contacts', params: params(), source: 'infer-crm' };
   }
+  // Corrections must stay on crm-capture edit mode (handled inside runCapture).
+  // Prefer update skills when the message clearly targets a contact/deal field change.
+  if (/^\s*EDIT\b/i.test(msg)
+    || /\bEXECUTE CRM CORRECTIONS\b/i.test(msg)
+    || /\bFIX ALL CRM\b/i.test(msg)
+    || /\b(correction|detach|remove note|wrong note|not just a summary)\b/i.test(msg)) {
+    if (/\bcontact\b/i.test(msg) && /\b(update|edit|change|correct)\b/i.test(msg)) {
+      return { skill: 'crm-update-contact', params: params(), source: 'infer-crm-edit' };
+    }
+    if (/\bdeal\b/i.test(msg) && /\b(update|edit|change|correct|move|stage|expired)\b/i.test(msg)) {
+      return { skill: 'crm-update-deal', params: params(), source: 'infer-crm-edit' };
+    }
+    return { skill: 'crm-capture', params: params(), source: 'infer-crm-edit' };
+  }
+
   if (/\b(talked|spoke|met|called|emailed)\b.+\b(about|regarding|re:)\b/i.test(msg)
     || /\b(log|capture|record)\b.+\b(call|meeting|update|conversation)\b/i.test(msg)
-    || /\b(update|add to|put in)\b.+\b(crm|meridian)\b/i.test(msg)
+    || /\b(add to|put in)\b.+\b(crm|meridian)\b/i.test(msg)
     || (/\bfollow[- ]?up\b/i.test(msg) && /\b(talked|spoke|met|call|email|about)\b/i.test(msg))) {
     return { skill: 'crm-capture', params: params(), source: 'infer-crm' };
   }

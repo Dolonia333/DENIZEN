@@ -15,6 +15,10 @@ const AGENT_ACTION = {
   note: 'agent-note',
   task: 'agent-task',
   dealStage: 'agent-deal-stage',
+  detachNote: 'agent-detach-note',
+  closeTask: 'agent-close-task',
+  dealUpdate: 'agent-deal-update',
+  companyUpdate: 'agent-company-update',
 };
 
 function nextId(list) {
@@ -273,11 +277,104 @@ async function updateDealStage(opts = {}) {
   }
 }
 
+async function detachNote(opts = {}) {
+  try {
+    const { orgSlug, npcName, noteId, matchText, dealId, identityId = null } = opts;
+    const agent = String(npcName || '').trim();
+    if (!agent) return fail('npcName required', 'VALIDATION');
+    await assertAgentWriteAllowed(orgSlug, AGENT_ACTION.detachNote);
+    const orgId = await resolveOrgId(orgSlug);
+    if (!orgId) return fail('organization not found', 'MISSING_ORG');
+    const result = await crmMutations.detachNote(orgId, { noteId, matchText, dealId }, identityId);
+    return okResult(result.removed?.[0]?.id || null, {
+      summary: result.summary,
+      removed: result.removed || [],
+      notesRemoved: result.notesRemoved || 0,
+    });
+  } catch (err) {
+    return fail(err.message, err.code || 'ERROR');
+  }
+}
+
+async function closeTask(opts = {}) {
+  try {
+    const {
+      orgSlug,
+      npcName,
+      taskId,
+      titleMatch,
+      delete: deleteTask = false,
+      identityId = null,
+    } = opts;
+    const agent = String(npcName || '').trim();
+    if (!agent) return fail('npcName required', 'VALIDATION');
+    await assertAgentWriteAllowed(orgSlug, AGENT_ACTION.closeTask);
+    const orgId = await resolveOrgId(orgSlug);
+    if (!orgId) return fail('organization not found', 'MISSING_ORG');
+    const result = await crmMutations.closeTask(
+      orgId,
+      { taskId, titleMatch, delete: !!deleteTask },
+      identityId,
+    );
+    return okResult(result.closed?.[0]?.id || null, {
+      summary: result.summary,
+      closed: result.closed || [],
+      tasksClosed: result.tasksClosed || 0,
+    });
+  } catch (err) {
+    return fail(err.message, err.code || 'ERROR');
+  }
+}
+
+async function updateDealFields(opts = {}) {
+  try {
+    const { orgSlug, npcName, dealId, identityId = null, ...fields } = opts;
+    const agent = String(npcName || '').trim();
+    if (!agent) return fail('npcName required', 'VALIDATION');
+    if (dealId == null || dealId === '') return fail('dealId required', 'VALIDATION');
+    await assertAgentWriteAllowed(orgSlug, AGENT_ACTION.dealUpdate);
+    const orgId = await resolveOrgId(orgSlug);
+    if (!orgId) return fail('organization not found', 'MISSING_ORG');
+    const result = await crmMutations.updateDeal(orgId, { dealId, ...fields }, identityId);
+    return okResult(result.deal?.id ?? dealId, {
+      summary: result.summary || `Updated deal fields (by ${agent}).`,
+      deal: result.deal,
+      previousStage: result.previousStage,
+    });
+  } catch (err) {
+    if (/not found/i.test(err.message || '')) return fail(err.message, 'NOT_FOUND');
+    return fail(err.message, err.code || 'ERROR');
+  }
+}
+
+async function updateCompanyFields(opts = {}) {
+  try {
+    const { orgSlug, npcName, identityId = null, ...fields } = opts;
+    const agent = String(npcName || '').trim();
+    if (!agent) return fail('npcName required', 'VALIDATION');
+    await assertAgentWriteAllowed(orgSlug, AGENT_ACTION.companyUpdate);
+    const orgId = await resolveOrgId(orgSlug);
+    if (!orgId) return fail('organization not found', 'MISSING_ORG');
+    const result = await crmMutations.updateCompany(orgId, fields, identityId);
+    return okResult(result.company?.id || null, {
+      summary: result.summary || `Updated company (by ${agent}).`,
+      company: result.company,
+    });
+  } catch (err) {
+    if (/not found/i.test(err.message || '')) return fail(err.message, 'NOT_FOUND');
+    return fail(err.message, err.code || 'ERROR');
+  }
+}
+
 module.exports = {
   AGENT_ACTION,
   createNote,
   logTask,
   updateDealStage,
+  detachNote,
+  closeTask,
+  updateDealFields,
+  updateCompanyFields,
   resolveOrgId,
   assertAgentWriteAllowed,
 };

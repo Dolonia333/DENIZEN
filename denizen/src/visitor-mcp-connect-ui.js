@@ -615,6 +615,10 @@
     const sessionId = sess?.getSessionId?.();
     if (!sessionId) throw new Error('No visitor session');
 
+    const clientType = opts.clientType || opts.client_type || null;
+    const label = opts.label
+      || (clientType === 'chatgpt' ? 'chatgpt' : 'visitor-ui');
+
     const res = await fetch('/api/mcp/tokens', {
       method: 'POST',
       headers: {
@@ -624,9 +628,10 @@
       body: JSON.stringify({
         session_id: sessionId,
         npc_key: npcKey,
-        label: opts.label || 'visitor-ui',
+        label,
         scope_preset: opts.scopePreset || opts.scope_preset || 'full',
         scopes: opts.scopes,
+        client_type: clientType,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -835,12 +840,18 @@
       }, 3500);
     });
     modal.querySelector('.mcp-rotate')?.addEventListener('click', async () => {
-      if (!confirm('Create a new token and revoke this one? Update Cursor with the new bearer token.')) return;
+      if (!confirm('Create a new token and revoke this one? Update Cursor/ChatGPT with the new bearer token.')) return;
       try {
         if (payload.token_id) await revokeToken(payload.token_id);
+        const activeTab = modal.querySelector('.mcp-tab.active')?.getAttribute('data-tab');
+        const clientType = activeTab === 'chatgpt' ? 'chatgpt' : null;
         const fresh = npcKey === '_team'
           ? await createTeamToken({ scopes: payload.scopes })
-          : await createToken(npcKey, { scopes: payload.scopes });
+          : await createToken(npcKey, {
+            scopes: payload.scopes,
+            clientType,
+            label: clientType === 'chatgpt' ? 'chatgpt' : 'visitor-ui',
+          });
         if (npcKey !== '_team') syncCompanion(fresh, displayName);
         showTokenModal(npcKey, displayName, fresh);
       } catch (err) {
@@ -1023,6 +1034,23 @@
         return;
       }
       openConnectFlow(key, name);
+    },
+
+    /** Open MCP connect for whoever is currently in player chat (avatar letter click). */
+    openConnectForActiveChat() {
+      const pc = globalThis.playerChat || globalThis.DenizenPlayerChat;
+      const name = pc?._currentChatTargetName;
+      if (!name) {
+        alert('Click an NPC first, then tap their letter avatar to open MCP connect.');
+        return;
+      }
+      const display = typeof pc._displayNpcName === 'function'
+        ? pc._displayNpcName(name)
+        : name;
+      const folder = typeof pc._folderForNpcName === 'function'
+        ? pc._folderForNpcName(display)
+        : String(display).toLowerCase();
+      this.openConnect(folder, display);
     },
 
     openTeamConnect() {

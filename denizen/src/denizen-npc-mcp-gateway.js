@@ -74,27 +74,50 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'run_skill',
-    description: 'Run a real skill as this NPC (mockups, research, CRM, coding-agent, web-search). Returns immediately unless wait=true.',
+    description:
+      'Run a real skill as this NPC (research, CRM, web-search, …). '
+      + 'For ChatGPT: use wait=false (returns job_id) then poll get_skill_job. '
+      + 'For Cursor/local: wait=true returns the result.',
     inputSchema: {
       type: 'object',
       properties: {
         skill: { type: 'string', description: 'Skill name, e.g. canvas-render, research, crm-summary' },
         params: { type: 'object', description: 'Skill parameters (query, task, etc.)' },
-        wait: { type: 'boolean', description: 'If false, return immediately (default true — waits for result)' },
+        wait: { type: 'boolean', description: 'If false, return job_id immediately (default true)' },
+        max_wait_ms: {
+          type: 'number',
+          description: 'When wait=false, optionally wait up to this many ms before returning job_id',
+        },
         timeout_ms: { type: 'number', description: 'Max wait when wait=true (default 180000)' },
       },
       required: ['skill'],
     },
   },
   {
+    name: 'get_skill_job',
+    description: 'Poll an async run_skill job by job_id until status is done or failed.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        job_id: { type: 'string', description: 'Job id from run_skill (skj_…)' },
+      },
+      required: ['job_id'],
+    },
+  },
+  {
     name: 'assign_task',
-    description: 'Assign a mandatory task to this NPC (wakes think loop, shows in directive inbox).',
+    description:
+      'Queue work for the local office NPC brain (slow). Blocked for ChatGPT clients — use run_skill.',
     inputSchema: {
       type: 'object',
       properties: {
         task: { type: 'string', description: 'What the NPC should do' },
         urgent: { type: 'boolean', description: 'Skip think cooldown when true' },
         from: { type: 'string', description: 'Who assigned it (default MCP teammate)' },
+        allow_local_queue: {
+          type: 'boolean',
+          description: 'Required override if a ChatGPT-labeled token must queue local work',
+        },
       },
       required: ['task'],
     },
@@ -307,6 +330,7 @@ async function callToolImpl(scope, name, args) {
     case 'log_activity': return toolLogActivity(scope, args);
     case 'list_skills': return mcpActions.toolListSkills(scope, args);
     case 'run_skill': return mcpActions.toolRunSkill(scope, args);
+    case 'get_skill_job': return mcpActions.toolGetSkillJob(scope, args);
     case 'assign_task': return mcpActions.toolAssignTask(scope, args);
     case 'delegate_task': return mcpActions.toolDelegateTask(scope, args);
     case 'announce_in_office': return mcpActions.toolAnnounce(scope, args);
@@ -622,9 +646,23 @@ async function handleRestSync(req, res, action) {
   const scope = await authenticateBearerRequest(req, res);
   if (!scope) return;
 
-  if (action === 'status') {
+  if (action === 'status' || action === 'list-skills' || action === 'skill-job') {
     if (req.method !== 'GET') {
       return sendJson(res, 405, { ok: false, error: 'GET only' });
+    }
+    if (action === 'list-skills') {
+      const result = await callTool(scope, 'list_skills', {});
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'skill-job') {
+      let jobId = null;
+      try {
+        const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+        jobId = u.searchParams.get('job_id') || u.searchParams.get('id');
+      } catch (_) { /* keep null */ }
+      const result = await callTool(scope, 'get_skill_job', { job_id: jobId });
+      const found = result && result.error !== 'job_not_found';
+      return sendJson(res, found ? 200 : 404, result);
     }
     let limit = 10;
     try {
@@ -666,10 +704,21 @@ async function handleRestSync(req, res, action) {
     } catch (err) {
       return sendJson(res, 400, { ok: false, error: err?.message || 'invalid json' });
     }
-    const payload = body || {};
-    const result = action === 'run-skill'
-      ? await callTool(scope, 'run_skill', payload)
-      : await callTool(scope, 'assign_task', payload);
+    const payload = { ...(body || {}) };
+    if (action === 'run-skill') {
+      // ChatGPT Custom GPT Actions time out ~45s — default to async job + soft wait.
+      if (payload.wait === undefined) {
+        payload.wait = false;
+        if (payload.max_wait_ms === undefined) payload.max_wait_ms = 20000;
+      }
+      const result = await callTool(scope, 'run_skill', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    // REST assign-task is the ChatGPT Actions path — block the slow Molly queue.
+    const result = await callTool(scope, 'assign_task', {
+      ...payload,
+      client_type: payload.client_type || 'chatgpt',
+    });
     return sendJson(res, result?.ok ? 200 : 400, result);
   }
 
@@ -683,9 +732,11 @@ function buildOpenApiSpec(baseUrl) {
     info: {
       title: 'Denizen NPC Sync API',
       description:
-        'REST bridge for ChatGPT Custom GPT Actions and other HTTP clients. '
-        + 'Create a bearer token in the Denizen office (Connect AI), then configure your client.',
-      version: '1.7.0',
+        'REST bridge for ChatGPT Custom GPT Actions. YOU execute work via runNpcSkill. '
+        + 'Long work: runNpcSkill with wait=false → poll getSkillJob. '
+        + 'assignNpcTask is blocked (queues slow local NPC). '
+        + 'Mint a Standard/Full Connect AI token.',
+      version: '1.9.0',
     },
     servers: [{ url: base }],
     components: {
@@ -693,7 +744,7 @@ function buildOpenApiSpec(baseUrl) {
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          description: 'NPC sync token from Denizen Connect AI',
+          description: 'NPC sync token from Denizen Connect AI (needs skills scope for runNpcSkill)',
         },
       },
     },
@@ -710,6 +761,32 @@ function buildOpenApiSpec(baseUrl) {
           }],
           responses: {
             200: { description: 'NPC status payload' },
+          },
+        },
+      },
+      '/api/npc-sync/list-skills': {
+        get: {
+          operationId: 'listNpcSkills',
+          summary: 'List skills YOU can run now via runNpcSkill (do not ask the office NPC)',
+          responses: {
+            200: { description: 'Allowed skill names for this NPC token' },
+          },
+        },
+      },
+      '/api/npc-sync/skill-job': {
+        get: {
+          operationId: 'getSkillJob',
+          summary: 'Poll an async runNpcSkill job until status is done or failed',
+          parameters: [{
+            name: 'job_id',
+            in: 'query',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Job id returned by runNpcSkill (skj_…)',
+          }],
+          responses: {
+            200: { description: 'Job status (running | done | failed)' },
+            404: { description: 'Unknown job' },
           },
         },
       },
@@ -762,7 +839,7 @@ function buildOpenApiSpec(baseUrl) {
       '/api/npc-sync/run-skill': {
         post: {
           operationId: 'runNpcSkill',
-          summary: 'Run an allowed skill as this NPC',
+          summary: 'Start a skill NOW (async by default for ChatGPT — poll getSkillJob)',
           requestBody: {
             required: true,
             content: {
@@ -771,21 +848,39 @@ function buildOpenApiSpec(baseUrl) {
                   type: 'object',
                   required: ['skill'],
                   properties: {
-                    skill: { type: 'string' },
-                    params: { type: 'object' },
-                    wait: { type: 'boolean' },
+                    skill: {
+                      type: 'string',
+                      description: 'Skill name from listNpcSkills, e.g. research, web-search, crm-summary',
+                    },
+                    params: {
+                      type: 'object',
+                      description: 'Skill parameters (query, task, note, etc.)',
+                    },
+                    wait: {
+                      type: 'boolean',
+                      description:
+                        'Default false on this REST API. false returns job_id; true blocks until done (may time out in ChatGPT)',
+                      default: false,
+                    },
+                    max_wait_ms: {
+                      type: 'integer',
+                      description: 'When wait=false, soft-wait this many ms before returning job_id (default 20000)',
+                      default: 20000,
+                    },
                   },
                 },
               },
             },
           },
-          responses: { 200: { description: 'Skill started or completed' } },
+          responses: { 200: { description: 'Skill finished early, or job_id while still running' } },
         },
       },
       '/api/npc-sync/assign-task': {
         post: {
           operationId: 'assignNpcTask',
-          summary: 'Assign a task to this NPC',
+          summary: 'BLOCKED for ChatGPT — use runNpcSkill. Local office queue only with allow_local_queue=true',
+          description:
+            'Queues the in-world NPC local brain. ChatGPT Actions cannot use this; it returns assign_task_blocked_for_chatgpt.',
           requestBody: {
             required: true,
             content: {
@@ -796,12 +891,19 @@ function buildOpenApiSpec(baseUrl) {
                   properties: {
                     task: { type: 'string' },
                     urgent: { type: 'boolean' },
+                    allow_local_queue: {
+                      type: 'boolean',
+                      description: 'Escape hatch only — still not recommended for ChatGPT',
+                    },
                   },
                 },
               },
             },
           },
-          responses: { 200: { description: 'Task assigned' } },
+          responses: {
+            200: { description: 'Task queued (only if allow_local_queue)' },
+            400: { description: 'Blocked — use runNpcSkill' },
+          },
         },
       },
     },
@@ -817,8 +919,12 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
     rest_sync: {
       base_url: `${base}/api/npc-sync`,
       status_url: `${base}/api/npc-sync/status`,
+      list_skills_url: `${base}/api/npc-sync/list-skills`,
       memory_url: `${base}/api/npc-sync/memory`,
       activity_url: `${base}/api/npc-sync/activity`,
+      run_skill_url: `${base}/api/npc-sync/run-skill`,
+      skill_job_url: `${base}/api/npc-sync/skill-job`,
+      assign_task_url: `${base}/api/npc-sync/assign-task`,
       openapi_url: openapiUrl,
     },
     chatgpt: {
@@ -826,16 +932,17 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
       auth_type: 'Bearer',
       steps: [
         'Create a Custom GPT at chatgpt.com/gpts/editor',
-        'Actions → Import from URL → paste the OpenAPI URL',
-        'Authentication → API Key → Auth Type: Bearer → paste your token',
-        'Instructions: use getNpcStatus, updateNpcMemory, logNpcActivity for the teammate NPC',
+        'Actions → Import from URL → paste the OpenAPI URL (re-import after Denizen updates)',
+        'Authentication → API Key → Auth Type: Bearer → paste your token (standard or full scope)',
+        'Paste the gpt_instructions below — YOU run skills async; never assignNpcTask',
       ],
       gpt_instructions: [
-        `You are synced to ${npcDisplayName(npcKey)} in the Denizen virtual office.`,
-        'When the user shares decisions, tasks, or context worth remembering, call updateNpcMemory.',
-        'When they want real work, call run_skill (list_skills first). Use assign_task to queue office work.',
-        'When they finish work, call logNpcActivity with a short note.',
-        'At the start of a session, call getNpcStatus to see what the NPC already knows.',
+        `You ARE the connected brain for ${npcDisplayName(npcKey)} in Denizen.`,
+        'Never use assignNpcTask — it is blocked and only queues the slow local office AI.',
+        'Do work with runNpcSkill (default wait=false). If you get a job_id / status=running, poll getSkillJob until status is done or failed, then summarize output.',
+        'Start hard jobs with listNpcSkills, then runNpcSkill with a clear params object (query/task/note).',
+        'Use getNpcStatus at session start. Use updateNpcMemory for lasting context. Use logNpcActivity after you finish.',
+        'If you see scope_denied, tell the user to mint a Connect AI token with Standard or Full access.',
       ].join(' '),
     },
     claude_ai: {
@@ -859,6 +966,8 @@ async function createMcpToken({
   label = null,
   scopes = null,
   scopePreset = null,
+  clientType = null,
+  metadata = null,
 } = {}) {
   if (!denizenDb.enabled || !orgId || !npcKey) {
     throw new Error('database unavailable or missing org/npc');
@@ -867,6 +976,11 @@ async function createMcpToken({
   const token = crypto.randomBytes(32).toString('base64url');
   const tokenHash = hashSessionToken(token);
   const normalizedScopes = mcpScopes.normalizeScopes(scopes || scopePreset);
+  const meta = {
+    scopes: normalizedScopes,
+    ...(metadata && typeof metadata === 'object' ? metadata : {}),
+  };
+  if (clientType) meta.client_type = String(clientType).toLowerCase().trim();
 
   const tokenId = await denizenDb._rpc('denizen_register_mcp_token', {
     p_org_id: orgId,
@@ -875,7 +989,7 @@ async function createMcpToken({
     p_member_id: memberId || null,
     p_session_id: sessionId || null,
     p_label: label || null,
-    p_metadata: { scopes: normalizedScopes },
+    p_metadata: meta,
   });
 
   const baseUrl = getPublicBaseUrl();

@@ -19,12 +19,17 @@ const WEEKDAYS = {
   saturday: 6, sat: 6,
 };
 
+function hasDueLanguage(text) {
+  return /\b(due|follow[- ]?up|remind|callback|call back|check[- ]?in|schedule|by\s+(?:friday|monday|tuesday|wednesday|thursday|saturday|sunday|tomorrow|today))\b/i
+    .test(String(text || ''));
+}
+
 function parseRelativeDue(text) {
   const msg = String(text || '').toLowerCase();
   const today = new Date();
   today.setHours(12, 0, 0, 0);
 
-  if (/\btoday\b/.test(msg)) return today.toISOString().slice(0, 10);
+  if (/\btoday\b/.test(msg) && hasDueLanguage(msg)) return today.toISOString().slice(0, 10);
   if (/\btomorrow\b/.test(msg)) {
     const d = new Date(today);
     d.setDate(d.getDate() + 1);
@@ -36,11 +41,14 @@ function parseRelativeDue(text) {
     return d.toISOString().slice(0, 10);
   }
 
+  // Only treat ISO dates as due dates when due/follow-up language is present.
+  // Correction text often cites historical deadlines (e.g. 2026-06-11) — those
+  // must NOT spawn overdue follow-up tasks.
   const iso = msg.match(/\b(\d{4}-\d{2}-\d{2})\b/);
-  if (iso) return iso[1];
+  if (iso && hasDueLanguage(msg)) return iso[1];
 
   const weekday = msg.match(/\b(?:on\s+)?(next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)\b/);
-  if (weekday) {
+  if (weekday && hasDueLanguage(msg)) {
     const target = WEEKDAYS[weekday[2]];
     const d = new Date(today);
     let delta = (target - d.getDay() + 7) % 7;
@@ -50,6 +58,27 @@ function parseRelativeDue(text) {
   }
 
   return null;
+}
+
+/**
+ * True when the message is a correction/edit directive — must mutate records,
+ * never become a CRM note or follow-up task.
+ */
+function isEditCorrectionIntent(message) {
+  const text = String(message || '').trim();
+  if (!text) return false;
+  if (/^\s*EDIT\b/i.test(text)) return true;
+  if (/\bEXECUTE CRM CORRECTIONS\b/i.test(text)) return true;
+  if (/\bFIX ALL CRM\b/i.test(text)) return true;
+  return /\b(correction|correct this|correct the|fix the note|undo|detach|remove note|wrong note|delete note|close task|remove task|update the (deal|company|contact|note|task|record)|not just a summary|do not (log|capture|create) (a )?note)\b/i
+    .test(text);
+}
+
+function looksLikeInstructionNote(text) {
+  const body = String(text || '');
+  if (body.length < 80) return false;
+  return isEditCorrectionIntent(body)
+    || /\b(create or update|correct the canonical|execute crm|return a detailed|verified deadline|detach|read-after-write)\b/i.test(body);
 }
 
 function extractWho(message) {
@@ -87,7 +116,141 @@ function wantsDealTouch(message) {
 }
 
 /**
+ * Correction path: update/detach/close — never create notes or follow-up tasks.
+ */
+async function runCaptureEdit(opts = {}) {
+  const {
+    orgSlug,
+    orgId,
+    npcName = 'Lucy',
+    message,
+    identityId = null,
+  } = opts;
+  const text = String(message || '').trim();
+  const { state } = await crmMutations.loadOrgWorkspace(orgId);
+  const dealHint = extractDealHint(text) || opts.deal || opts.title || null;
+  const who = extractWho(text) || opts.name || opts.contact || null;
+  const mutated = [];
+  const summaries = [];
+
+  let deal = dealHint
+    ? crmSkills.findDeal(state, { title: dealHint, deal: dealHint, contact: who })
+    : null;
+  if (!deal && /omes|ev00000919/i.test(text)) {
+    deal = crmSkills.findDeal(state, { title: 'OMES EV00000919', deal: 'OMES' });
+  }
+
+  // Detach instruction-dump notes on the target deal (or any matching instruction notes).
+  const notes = Array.isArray(state.notes) ? state.notes : [];
+  const instructionNotes = notes.filter((n) => {
+    if (!looksLikeInstructionNote(n?.text)) return false;
+    if (deal?.id != null && n.dealId != null) return String(n.dealId) === String(deal.id);
+    if (deal?.title && n.contact) {
+      return String(n.contact).toLowerCase().includes(String(deal.title).slice(0, 24).toLowerCase());
+    }
+    return !!deal;
+  });
+  for (const note of instructionNotes) {
+    const detached = await agentWrites.detachNote({
+      orgSlug,
+      npcName,
+      noteId: note.id,
+      identityId,
+    });
+    if (detached.ok) {
+      mutated.push({ type: 'note_detached', id: note.id });
+      summaries.push(`Detached note #${note.id}`);
+    }
+  }
+
+  // Close false follow-up / teaming tasks tied to this correction.
+  const taskMatchers = [];
+  if (dealHint) taskMatchers.push(String(dealHint).slice(0, 40).toLowerCase());
+  if (/omes|ev00000919/i.test(text)) {
+    taskMatchers.push('omes');
+    taskMatchers.push('ev00000919');
+  }
+  if (/teaming/i.test(text)) taskMatchers.push('teaming');
+  taskMatchers.push('follow up');
+  const tasks = Array.isArray(state.tasks) ? state.tasks : [];
+  const closedIds = new Set();
+  for (const task of tasks) {
+    if (!task || task.done) continue;
+    const title = String(task.title || '').toLowerCase();
+    const hit = taskMatchers.some((m) => m && title.includes(m))
+      && (/follow\s*up|teaming|execute rm cyber/i.test(title) || /omes|ev00000919/i.test(title));
+    if (!hit) continue;
+    const closed = await agentWrites.closeTask({
+      orgSlug,
+      npcName,
+      taskId: task.id,
+      identityId,
+    });
+    if (closed.ok && !closedIds.has(task.id)) {
+      closedIds.add(task.id);
+      mutated.push({ type: 'task_closed', id: task.id, title: task.title });
+      summaries.push(`Closed task #${task.id}`);
+    }
+  }
+
+  if (deal) {
+    const patch = {};
+    if (/\bexpired\b|\bneeds correction\b/i.test(text)) {
+      patch.stage = 'Expired / Needs Correction';
+      patch.status = 'expired';
+      patch.health = 'critical';
+    } else if (/\bonboarding\b|\bawaiting payment\b/i.test(text)) {
+      patch.stage = 'Onboarding / Awaiting Payment';
+    } else if (/\bpartnership[- ]?development\b/i.test(text)) {
+      patch.stage = 'Partnership Development';
+    } else if (/\bapplication[- ]?ready\b/i.test(text)) {
+      patch.stage = 'Application Ready';
+    }
+    const deadline = text.match(/\bdeadline(?:\s+was|\s+of|:)?\s*(\d{4}-\d{2}-\d{2})\b/i)
+      || text.match(/\bverified deadline\s+(\d{4}-\d{2}-\d{2})\b/i);
+    if (deadline) patch.deadline = deadline[1];
+    if (/\bno invented\b|\bclear(?:ed)? (?:the )?value\b|\bremove .*\$|\bwithout .*value\b|\bno .*monetary value\b/i.test(text)) {
+      patch.clearValue = true;
+    }
+    if (Object.keys(patch).length) {
+      const updated = await agentWrites.updateDealFields({
+        orgSlug,
+        npcName,
+        dealId: deal.id,
+        identityId,
+        ...patch,
+      });
+      if (updated.ok) {
+        mutated.push({ type: 'deal_updated', id: deal.id, patch });
+        summaries.push(updated.summary || `Updated deal #${deal.id}`);
+      } else {
+        summaries.push(`Deal update skipped: ${updated.error}`);
+      }
+    }
+  }
+
+  if (!summaries.length) {
+    summaries.push(
+      'Edit mode: no note/task created. Provide a deal name and concrete field changes '
+      + '(stage/deadline/detach/close) to mutate records.',
+    );
+  }
+
+  return {
+    ok: true,
+    mode: 'edit',
+    summary: summaries.join(' '),
+    mutated,
+    created: [],
+    contact: who ? { name: who } : null,
+    deal: deal ? { id: deal.id, title: deal.title, stage: deal.stage } : null,
+    due: null,
+  };
+}
+
+/**
  * Run capture: match/create contact → note → optional task → optional deal stage touch.
+ * EDIT/correction messages take the mutation path and never create notes/tasks.
  */
 async function runCapture(opts = {}) {
   const {
@@ -103,6 +266,10 @@ async function runCapture(opts = {}) {
   if (!text) return { ok: false, error: 'message required', summary: 'Nothing to capture.' };
   if (!orgSlug) return { ok: false, error: 'org_slug required', summary: 'Organization required.' };
   if (!orgId) return { ok: false, error: 'org_id required', summary: 'CRM workspace unavailable.' };
+
+  if (isEditCorrectionIntent(text)) {
+    return runCaptureEdit(opts);
+  }
 
   const { state } = await crmMutations.loadOrgWorkspace(orgId);
   const who = extractWho(text) || opts.name || opts.contact || null;
@@ -219,6 +386,7 @@ async function runCapture(opts = {}) {
 function proposeCaptureActions(message, summary = {}) {
   const text = String(message || '').trim();
   if (!text) return [];
+  if (isEditCorrectionIntent(text)) return [];
   const who = extractWho(text);
   const dealHint = extractDealHint(text);
   const due = parseRelativeDue(text);
@@ -453,11 +621,15 @@ async function dismissSuggestedTask(orgId, suggestedId, identityId = null) {
 
 module.exports = {
   parseRelativeDue,
+  hasDueLanguage,
+  isEditCorrectionIntent,
+  looksLikeInstructionNote,
   extractWho,
   extractDealHint,
   wantsFollowUp,
   wantsDealTouch,
   runCapture,
+  runCaptureEdit,
   proposeCaptureActions,
   buildMyDay,
   acceptSuggestedTask,

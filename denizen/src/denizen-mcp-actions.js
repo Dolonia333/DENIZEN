@@ -7,6 +7,7 @@
 
 const npcCapabilities = require('./npc-capabilities');
 const npcRoster = require('./npc-roster');
+const skillJobs = require('./denizen-mcp-skill-jobs');
 
 let _deps = {};
 
@@ -77,6 +78,35 @@ function assertSkillAllowed(npcKey, skill) {
   };
 }
 
+function isChatgptClient(scope, args = {}) {
+  const label = String(scope?.label || scope?.token_label || '').toLowerCase();
+  const meta = scope?.metadata || scope?.meta || {};
+  const clientType = String(
+    meta.client_type || meta.clientType || args.client_type || args.client || '',
+  ).toLowerCase();
+  const from = String(args.from || '').toLowerCase();
+  if (clientType.includes('chatgpt') || clientType === 'openai') return true;
+  if (label.includes('chatgpt') || label.includes('openai-gpt')) return true;
+  if (from.includes('chatgpt') || from.includes('via chatgpt')) return true;
+  if (meta.chatgpt === true || meta.block_assign_task === true) return true;
+  return false;
+}
+
+function assignTaskBlockedResponse() {
+  return {
+    ok: false,
+    error: 'assign_task_blocked_for_chatgpt',
+    message:
+      'ChatGPT must execute work with run_skill (wait=false + poll get_skill_job). '
+      + 'assign_task queues the slow local office brain — not allowed for cloud GPT.',
+    use_instead: {
+      tool: 'run_skill',
+      wait: false,
+      then: 'get_skill_job',
+    },
+  };
+}
+
 async function toolListSkills(scope) {
   const display = displayNameForKey(scope.npc_key);
   const cap = npcCapabilities.getCapabilities(display);
@@ -89,6 +119,10 @@ async function toolListSkills(scope) {
   };
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function toolRunSkill(scope, args) {
   const gate = assertSkillAllowed(scope.npc_key, args?.skill);
   if (!gate.ok) return gate;
@@ -99,23 +133,60 @@ async function toolRunSkill(scope, args) {
   const display = displayNameForKey(scope.npc_key);
   const params = args?.params && typeof args.params === 'object' ? args.params : {};
   const wait = args?.wait !== false;
+  const maxWaitMsRaw = Number(args?.max_wait_ms);
+  const maxWaitMs = Number.isFinite(maxWaitMsRaw) && maxWaitMsRaw > 0
+    ? Math.min(maxWaitMsRaw, SKILL_TIMEOUT_MS)
+    : null;
   const broadcast = _deps.broadcast || (() => {});
 
-  const promise = _deps.runNpcSkill(display, gate.skill, params, {
-    broadcast,
+  const job = skillJobs.createJob({
+    orgId: scope.org_id,
+    npcKey: scope.npc_key,
+    skill: gate.skill,
+    params,
+    tokenId: scope.token_id || null,
     sessionId: scope.session_id || null,
   });
 
+  const promise = Promise.resolve()
+    .then(() => _deps.runNpcSkill(display, gate.skill, params, {
+      broadcast,
+      sessionId: scope.session_id || null,
+    }))
+    .then((result) => {
+      skillJobs.completeJob(job.id, result || {});
+      return result;
+    })
+    .catch((err) => {
+      skillJobs.failJob(job.id, err);
+      throw err;
+    });
+
+  // Fire-and-forget / ChatGPT poll path
   if (!wait) {
-    promise.catch((err) => console.warn('[MCP run_skill]', err?.message || err));
+    const softWait = maxWaitMs || 0;
+    if (softWait > 0) {
+      const done = await Promise.race([
+        promise.then(() => skillJobs.getJob(job.id)).catch(() => skillJobs.getJob(job.id)),
+        sleep(softWait).then(() => null),
+      ]);
+      if (done && (done.status === 'done' || done.status === 'failed')) {
+        return skillJobs.publicJobView(done);
+      }
+    } else {
+      promise.catch((err) => console.warn('[MCP run_skill]', err?.message || err));
+    }
     return {
       ok: true,
       started: true,
+      job_id: job.id,
       skill: gate.skill,
       npc_key: scope.npc_key,
       display_name: display,
+      status: 'running',
       mode: 'async',
-      hint: 'Poll get_status or watch office WS for npc_skill_result',
+      hint: 'Poll get_skill_job with this job_id until status is done or failed',
+      poll: { tool: 'get_skill_job', job_id: job.id },
     };
   }
 
@@ -138,21 +209,36 @@ async function toolRunSkill(scope, args) {
       skill: gate.skill,
     }));
   } finally {
-    // A successful fast skill used to leave the full 180s rejection timer
-    // alive. That kept tests and short-lived CLI/MCP processes from exiting.
     if (timeoutId) clearTimeout(timeoutId);
   }
 
+  const finished = skillJobs.getJob(job.id);
   return {
     ok: result?.ok !== false,
+    job_id: job.id,
     skill: gate.skill,
     npc_key: scope.npc_key,
-    output: result?.output || result?.summary || null,
+    output: result?.output || result?.summary || finished?.output || null,
+    error: finished?.error || null,
+    status: finished?.status || (result?.ok !== false ? 'done' : 'failed'),
     routed: result?.routed,
   };
 }
 
-async function toolAssignTask(scope, args) {
+async function toolGetSkillJob(scope, args) {
+  const id = args?.job_id || args?.id;
+  if (!id) return { ok: false, error: 'job_id required' };
+  const job = skillJobs.getJobForScope(id, scope);
+  if (!job) return { ok: false, error: 'job_not_found', job_id: id };
+  return skillJobs.publicJobView(job);
+}
+
+async function toolAssignTask(scope, args, opts = {}) {
+  if (opts.restChatgptPath || isChatgptClient(scope, args)) {
+    if (!args?.allow_local_queue) {
+      return assignTaskBlockedResponse();
+    }
+  }
   const task = String(args?.task || '').trim().slice(0, 2000);
   if (!task) return { ok: false, error: 'task required' };
   if (!_deps.npcBrains?.assignDirective) {
@@ -166,6 +252,9 @@ async function toolAssignTask(scope, args) {
 }
 
 async function toolDelegateTask(scope, args) {
+  if (isChatgptClient(scope, args)) {
+    return assignTaskBlockedResponse();
+  }
   const task = String(args?.task || '').trim().slice(0, 2000);
   const target = resolveTargetNpc(args?.to_npc || args?.to);
   if (!task) return { ok: false, error: 'task required' };
@@ -201,8 +290,10 @@ module.exports = {
   configure,
   listSkillsForNpc,
   assertSkillAllowed,
+  isChatgptClient,
   toolListSkills,
   toolRunSkill,
+  toolGetSkillJob,
   toolAssignTask,
   toolDelegateTask,
   toolAnnounce,

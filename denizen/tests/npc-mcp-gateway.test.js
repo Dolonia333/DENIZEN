@@ -6,6 +6,7 @@ const http = require('node:http');
 
 const gateway = require('../src/denizen-npc-mcp-gateway.js');
 const mcpActions = require('../src/denizen-mcp-actions.js');
+const skillJobs = require('../src/denizen-mcp-skill-jobs.js');
 const denizenDb = require('../src/denizen-db.js');
 
 // Node's global fetch pools HTTP/1.1 connections. Explicitly close each test
@@ -86,9 +87,10 @@ describe('npc-mcp-gateway', () => {
   });
 
   it('exports core MCP action tools', () => {
-    assert.equal(gateway.TOOL_DEFINITIONS.length, 8);
+    assert.equal(gateway.TOOL_DEFINITIONS.length, 9);
     const names = gateway.TOOL_DEFINITIONS.map((t) => t.name);
     assert.ok(names.includes('run_skill'));
+    assert.ok(names.includes('get_skill_job'));
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('assign_task'));
   });
@@ -232,10 +234,112 @@ describe('npc-mcp-gateway', () => {
   it('buildOpenApiSpec documents REST sync paths', () => {
     const spec = gateway.buildOpenApiSpec('http://localhost:8080');
     assert.equal(spec.openapi, '3.1.0');
+    assert.equal(spec.info.version, '1.9.0');
     assert.ok(spec.paths['/api/npc-sync/status']);
+    assert.ok(spec.paths['/api/npc-sync/list-skills']);
+    assert.ok(spec.paths['/api/npc-sync/skill-job']);
     assert.ok(spec.paths['/api/npc-sync/memory']);
     assert.ok(spec.paths['/api/npc-sync/run-skill']);
     assert.ok(spec.paths['/api/npc-sync/assign-task']);
+    assert.equal(spec.paths['/api/npc-sync/list-skills'].get.operationId, 'listNpcSkills');
+    assert.equal(spec.paths['/api/npc-sync/skill-job'].get.operationId, 'getSkillJob');
+    assert.equal(spec.paths['/api/npc-sync/run-skill'].post.operationId, 'runNpcSkill');
+  });
+
+  it('onboarding tells ChatGPT to run skills itself (not assign local NPC)', () => {
+    const payload = gateway.buildOnboardingPayload({
+      baseUrl: 'http://localhost:8080',
+      npcKey: 'molly',
+      token: 'test-token',
+    });
+    assert.match(payload.chatgpt.gpt_instructions, /runNpcSkill/i);
+    assert.match(payload.chatgpt.gpt_instructions, /Never use assignNpcTask/i);
+    assert.match(payload.chatgpt.gpt_instructions, /getSkillJob/i);
+    assert.match(payload.chatgpt.gpt_instructions, /listNpcSkills/i);
+  });
+
+  it('REST GET /list-skills returns allowed skills', async () => {
+    const server = http.createServer((req, res) => {
+      gateway.handleRestSync(req, res, 'list-skills');
+    });
+    await new Promise((resolve) => server.listen(0, resolve));
+    const { port } = server.address();
+
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/api/npc-sync/list-skills`, {
+      headers: { Authorization: 'Bearer good-token' },
+    });
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.ok, true);
+    assert.ok(Array.isArray(body.skills));
+
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('REST assign-task is blocked for ChatGPT path', async () => {
+    const server = http.createServer((req, res) => {
+      gateway.handleRestSync(req, res, 'assign-task');
+    });
+    await new Promise((resolve) => server.listen(0, resolve));
+    const { port } = server.address();
+
+    const res = await fetchNoKeepAlive(`http://127.0.0.1:${port}/api/npc-sync/assign-task`, {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer good-token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ task: 'Fix CRM now', urgent: true }),
+    });
+    const body = await res.json();
+    assert.equal(res.status, 400);
+    assert.equal(body.ok, false);
+    assert.equal(body.error, 'assign_task_blocked_for_chatgpt');
+    assert.equal(body.use_instead.tool, 'run_skill');
+
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('run_skill wait=false returns job_id and get_skill_job polls done', async () => {
+    skillJobs._resetForTests();
+    gateway.configure({
+      runNpcSkill: async () => {
+        await new Promise((r) => setTimeout(r, 30));
+        return { ok: true, output: 'async-done' };
+      },
+      npcBrains: {
+        assignDirective: () => {},
+        getDirective: () => null,
+        getOpenCommitments: () => [],
+      },
+      broadcast: () => {},
+    });
+
+    const started = await gateway.callTool(SCOPE, 'run_skill', {
+      skill: 'research',
+      wait: false,
+    });
+    assert.equal(started.ok, true);
+    assert.equal(started.status, 'running');
+    assert.ok(started.job_id);
+
+    let job;
+    for (let i = 0; i < 20; i++) {
+      await new Promise((r) => setTimeout(r, 20));
+      job = await gateway.callTool(SCOPE, 'get_skill_job', { job_id: started.job_id });
+      if (job.status === 'done' || job.status === 'failed') break;
+    }
+    assert.equal(job.status, 'done');
+    assert.equal(job.output, 'async-done');
+  });
+
+  it('MCP assign_task blocked when from mentions ChatGPT', async () => {
+    const blocked = await gateway.callTool(SCOPE, 'assign_task', {
+      task: 'do crm',
+      from: 'Angela via ChatGPT',
+    });
+    assert.equal(blocked.ok, false);
+    assert.equal(blocked.error, 'assign_task_blocked_for_chatgpt');
   });
 
   it('REST GET /status returns NPC status with bearer token', async () => {

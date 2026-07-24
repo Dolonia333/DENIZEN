@@ -2211,6 +2211,21 @@ class PlayerChat {
         border: 2px solid #020617;
         box-shadow: 2px 2px 0 #020617, inset 0 1px 0 rgba(255,255,255,0.35);
       }
+      .pc-header-avatar.pc-avatar-mcp {
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+      }
+      .pc-header-avatar.pc-avatar-mcp:hover,
+      .pc-header-avatar.pc-avatar-mcp:focus-visible {
+        transform: translateY(-1px) scale(1.04);
+        filter: brightness(1.08);
+        box-shadow: 2px 3px 0 #020617, 0 0 0 2px rgba(125, 211, 252, 0.55), inset 0 1px 0 rgba(255,255,255,0.35);
+        outline: none;
+      }
+      .pc-header-avatar.pc-avatar-mcp:active {
+        transform: translateY(1px) scale(0.98);
+      }
       #player-chat-header .chat-header-main {
         flex: 1;
         min-width: 0;
@@ -2990,7 +3005,7 @@ class PlayerChat {
       panel.id = 'player-chat-panel';
       panel.innerHTML = `
         <div id="player-chat-header">
-          <div class="pc-header-avatar" id="player-chat-avatar" aria-hidden="true"></div>
+          <div class="pc-header-avatar" id="player-chat-avatar" role="button" tabindex="-1" title="Click an NPC, then tap their letter to open MCP"></div>
           <div class="chat-header-main">
             <span class="target" id="player-chat-target">Messages</span>
             <span class="pc-header-status" id="player-chat-header-status">Click an NPC to start</span>
@@ -3037,6 +3052,7 @@ class PlayerChat {
     this._logEl = panel.querySelector('#player-chat-log');
     this._targetLabel = panel.querySelector('#player-chat-target');
     this._autoResizeChatInput();
+    this._wireAvatarMcpClick(panel);
 
     if (this._composerListenersWired) return;
     this._composerListenersWired = true;
@@ -3829,10 +3845,67 @@ class PlayerChat {
       } else if (this._waitingForResponse) {
         statusText = 'Typing…';
       } else {
-        statusText = 'In conversation';
+        statusText = 'In conversation · tap letter for MCP';
       }
     }
     status.textContent = statusText;
+  }
+
+  _wireAvatarMcpClick(panel) {
+    if (this._avatarMcpWired) return;
+    const avatar = panel?.querySelector?.('#player-chat-avatar')
+      || document.getElementById('player-chat-avatar');
+    if (!avatar) return;
+    this._avatarMcpWired = true;
+    const open = (e) => {
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      this._openActiveNpcMcpConnect();
+    };
+    if (window.DenizenTouchBind?.bindPress) {
+      window.DenizenTouchBind.bindPress(avatar, open);
+    } else {
+      avatar.addEventListener('click', open);
+    }
+    avatar.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        open(e);
+      }
+    });
+  }
+
+  async _openActiveNpcMcpConnect() {
+    const name = this._currentChatTargetName;
+    if (!name) {
+      alert('Click an NPC first, then tap their letter avatar to open MCP connect.');
+      return;
+    }
+    const display = this._displayNpcName(name);
+    const folder = this._folderForNpcName(display)
+      || this._folderForNpcKey(this._lastTargetKey)
+      || String(display).toLowerCase();
+    const sess = globalThis.DenizenVisitorSession;
+    if (sess?.isProtectedNpc?.(folder)) {
+      alert(`${display} is a system NPC — MCP tokens are not available. Claim a teammate assistant instead.`);
+      return;
+    }
+
+    const ensureUi = async () => {
+      if (globalThis.DenizenVisitorMcpConnectUI?.openConnect) return true;
+      try {
+        await globalThis.DenizenLazyScripts?.load?.(
+          ['./src/visitor-mcp-connect-ui.js?v=mcp9avatar'],
+        );
+      } catch (_) { /* ignore */ }
+      return !!globalThis.DenizenVisitorMcpConnectUI?.openConnect;
+    };
+
+    if (!(await ensureUi())) {
+      alert('MCP connect UI is still loading — try again in a second.');
+      return;
+    }
+    globalThis.DenizenVisitorMcpConnectUI.openConnect(folder, display);
   }
 
   _updateTargetLabel(name) {
@@ -3843,10 +3916,22 @@ class PlayerChat {
     const avatar = document.getElementById('player-chat-avatar');
     if (avatar) {
       if (name) {
-        avatar.textContent = String(this._displayNpcName(name)).trim().charAt(0).toUpperCase() || '•';
+        const letter = String(display).trim().charAt(0).toUpperCase() || '•';
+        avatar.textContent = letter;
+        avatar.classList.add('pc-avatar-mcp');
+        avatar.setAttribute('tabindex', '0');
+        avatar.setAttribute('role', 'button');
+        avatar.setAttribute('aria-label', `Open ${display} MCP connect`);
+        avatar.title = `Open ${display} MCP — token, server URL, ChatGPT / Cursor setup`;
+        avatar.removeAttribute('aria-hidden');
       } else {
         const T = globalThis.DenizenTablerIcons;
         avatar.innerHTML = T?.icon ? T.icon('messages', { size: 16, className: 'pc-ti' }) : '💬';
+        avatar.classList.remove('pc-avatar-mcp');
+        avatar.setAttribute('tabindex', '-1');
+        avatar.setAttribute('role', 'presentation');
+        avatar.title = 'Click an NPC, then tap their letter to open MCP';
+        avatar.setAttribute('aria-hidden', 'true');
       }
     }
   }

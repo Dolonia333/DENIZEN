@@ -42,6 +42,7 @@ const TOOL_SCOPE = Object.freeze({
   enqueue_compute_job: 'compute',
   get_job_status: 'read',
   get_inference_nodes: 'read',
+  get_skill_job: 'read',
   enqueue_cursor_work: 'delegate',
   list_cursor_work: 'read',
   claim_cursor_work: 'skills',

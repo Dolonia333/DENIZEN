@@ -87,13 +87,20 @@ async function updateDeal(orgId, params = {}, identityId = null) {
   if (idx < 0) throw new Error('deal not found');
 
   const prev = deals[idx];
+  const clearValue = params.clearValue === true || params.clear_value === true;
   const updated = {
     ...prev,
     ...(params.stage != null ? { stage: String(params.stage) } : {}),
-    ...(params.value != null ? { value: Number(params.value) || 0 } : {}),
+    ...(clearValue ? { value: 0 } : (params.value != null ? { value: Number(params.value) || 0 } : {})),
     ...(params.probability != null ? { probability: Number(params.probability) || prev.probability } : {}),
     ...(params.health != null ? { health: String(params.health) } : {}),
     ...(params.contact != null ? { contact: String(params.contact) } : {}),
+    ...(params.deadline != null ? { deadline: String(params.deadline) } : {}),
+    ...(params.closeDate != null || params.close_date != null
+      ? { closeDate: String(params.closeDate ?? params.close_date) }
+      : {}),
+    ...(params.notes != null ? { notes: String(params.notes).slice(0, 2000) } : {}),
+    ...(params.status != null ? { status: String(params.status) } : {}),
   };
   deals[idx] = updated;
   const next = { ...state, deals };
@@ -443,6 +450,116 @@ async function listTickets(orgId, params = {}) {
   };
 }
 
+async function detachNote(orgId, params = {}, identityId = null) {
+  const noteId = params.noteId ?? params.note_id ?? params.id;
+  const matchText = String(params.matchText || params.match || params.contains || '').trim().toLowerCase();
+  const dealId = params.dealId ?? params.deal_id;
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const notes = Array.isArray(state.notes) ? [...state.notes] : [];
+  const before = notes.length;
+  const removed = [];
+  const nextNotes = notes.filter((n) => {
+    if (!n) return false;
+    let hit = false;
+    if (noteId != null && String(n.id) === String(noteId)) hit = true;
+    if (!hit && matchText && String(n.text || '').toLowerCase().includes(matchText)) hit = true;
+    if (hit && dealId != null && n.dealId != null && String(n.dealId) !== String(dealId)) {
+      hit = false;
+    }
+    if (hit) {
+      removed.push({ id: n.id, dealId: n.dealId || null, contact: n.contact || null });
+      return false;
+    }
+    return true;
+  });
+  if (removed.length === 0) {
+    return { summary: 'No matching notes to detach.', removed: [], notesRemoved: 0 };
+  }
+  await saveOrgWorkspace(orgId, { ...state, notes: nextNotes }, identityId, ifUpdatedAt);
+  return {
+    summary: `Detached ${removed.length} note(s) (was ${before}).`,
+    removed,
+    notesRemoved: removed.length,
+  };
+}
+
+async function closeTask(orgId, params = {}, identityId = null) {
+  const taskId = params.taskId ?? params.task_id ?? params.id;
+  const titleMatch = String(params.titleMatch || params.match || params.title || '').trim().toLowerCase();
+  const deleteTask = params.delete === true || params.remove === true;
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const tasks = Array.isArray(state.tasks) ? [...state.tasks] : [];
+  const closed = [];
+  let nextTasks;
+  if (deleteTask) {
+    nextTasks = tasks.filter((t) => {
+      if (!t) return false;
+      let hit = false;
+      if (taskId != null && String(t.id) === String(taskId)) hit = true;
+      if (!hit && titleMatch && String(t.title || '').toLowerCase().includes(titleMatch)) hit = true;
+      if (hit) {
+        closed.push({ id: t.id, title: t.title, deleted: true });
+        return false;
+      }
+      return true;
+    });
+  } else {
+    nextTasks = tasks.map((t) => {
+      if (!t) return t;
+      let hit = false;
+      if (taskId != null && String(t.id) === String(taskId)) hit = true;
+      if (!hit && titleMatch && String(t.title || '').toLowerCase().includes(titleMatch)) hit = true;
+      if (!hit || t.done) return t;
+      closed.push({ id: t.id, title: t.title, deleted: false });
+      return { ...t, done: true, status: 'done', closedAt: new Date().toISOString() };
+    });
+  }
+  if (closed.length === 0) {
+    return { summary: 'No matching open tasks to close.', closed: [], tasksClosed: 0 };
+  }
+  await saveOrgWorkspace(orgId, { ...state, tasks: nextTasks }, identityId, ifUpdatedAt);
+  return {
+    summary: `${deleteTask ? 'Deleted' : 'Closed'} ${closed.length} task(s).`,
+    closed,
+    tasksClosed: closed.length,
+  };
+}
+
+async function updateCompany(orgId, params = {}, identityId = null) {
+  const companyId = params.companyId ?? params.company_id ?? params.id;
+  const name = String(params.name || params.company || '').trim();
+  const { state, updated_at: ifUpdatedAt } = await loadOrgWorkspace(orgId);
+  const companies = Array.isArray(state.companies) ? [...state.companies] : [];
+  let idx = -1;
+  if (companyId != null) idx = companies.findIndex((c) => String(c?.id) === String(companyId));
+  if (idx < 0 && name) {
+    idx = companies.findIndex((c) => String(c?.name || '').toLowerCase() === name.toLowerCase());
+  }
+  if (idx < 0 && name) {
+    idx = companies.findIndex((c) => String(c?.name || '').toLowerCase().includes(name.toLowerCase()));
+  }
+  if (idx < 0) throw new Error('company not found');
+  const prev = companies[idx];
+  const updated = {
+    ...prev,
+    ...(params.name != null ? { name: String(params.name) } : {}),
+    ...(params.address != null ? { address: String(params.address) } : {}),
+    ...(params.physicalAddress != null || params.physical_address != null
+      ? { physicalAddress: String(params.physicalAddress ?? params.physical_address) }
+      : {}),
+    ...(params.mailingAddress != null || params.mailing_address != null
+      ? { mailingAddress: String(params.mailingAddress ?? params.mailing_address) }
+      : {}),
+    ...(params.notes != null ? { notes: String(params.notes).slice(0, 2000) } : {}),
+    ...(params.type != null ? { type: String(params.type) } : {}),
+    ...(params.status != null ? { status: String(params.status) } : {}),
+    ...(Array.isArray(params.tags) ? { tags: params.tags } : {}),
+  };
+  companies[idx] = updated;
+  await saveOrgWorkspace(orgId, { ...state, companies }, identityId, ifUpdatedAt);
+  return { summary: `Updated company "${updated.name}".`, company: updated };
+}
+
 module.exports = {
   listPipeline,
   addContact,
@@ -461,4 +578,7 @@ module.exports = {
   markOnboardingFlag,
   STARTER_PACKAGES,
   loadOrgWorkspace,
+  detachNote,
+  closeTask,
+  updateCompany,
 };

@@ -1508,8 +1508,33 @@ class AgentActions {
     if (!npc) return;
 
     // Micro nameplate — world-space; camera zoom is often 1.5–2.8× so
-    // even 7–8px chips read huge over ~32px sprites. Name only, one line.
+    // even 7–8px chips read huge over ~32px sprites. Letter chip + name.
     const who = String(name || npcKey || '').trim() || 'Agent';
+    const letter = who.charAt(0).toUpperCase() || '•';
+
+    const chip = this.scene.add.text(0, 0, letter, {
+      fontSize: '7px',
+      fontFamily: 'Syne, Segoe UI, system-ui, sans-serif',
+      fontStyle: '800',
+      color: '#0b1220',
+      backgroundColor: '#7dd3fc',
+      padding: { x: 3, y: 1 },
+      align: 'center',
+    });
+    chip.setOrigin(0.5, 1);
+    chip.setDepth(9997);
+    chip.setAlpha(0.98);
+    chip.setData?.('npcKey', npcKey);
+    chip.setData?.('displayName', who);
+    chip.setInteractive({ useHandCursor: true });
+    chip.on('pointerover', () => { try { chip.setAlpha(1); chip.setScale(1.08); } catch (_) {} });
+    chip.on('pointerout', () => { try { chip.setAlpha(0.98); chip.setScale(1); } catch (_) {} });
+    chip.on('pointerdown', (pointer, _lx, _ly, event) => {
+      try { event?.stopPropagation?.(); } catch (_) {}
+      try { pointer?.event?.stopPropagation?.(); } catch (_) {}
+      this._openNpcMcpConnect(npcKey, who);
+    });
+
     const label = this.scene.add.text(0, 0, who, {
       fontSize: '5px',
       fontFamily: 'Segoe UI, system-ui, -apple-system, sans-serif',
@@ -1530,19 +1555,61 @@ class AgentActions {
       if (light) res = 1;
     } catch (_) {}
     if (typeof label.setResolution === 'function') label.setResolution(res);
+    if (typeof chip.setResolution === 'function') chip.setResolution(res);
     // Optional: keep role for tooltips if Phaser exposes it (no visual line).
     if (role && typeof label.setData === 'function') label.setData('role', String(role).trim());
+
+    chip.x = npc.x;
+    chip.y = npc.y - 42;
     label.x = npc.x;
-    // Just above the sprite head.
     label.y = npc.y - 34;
 
-    this._roleLabels.set(npcKey, { text: label, npc, yOff: 34 });
+    this._roleLabels.set(npcKey, {
+      text: label,
+      chip,
+      npc,
+      yOff: 34,
+      chipYOff: 42,
+    });
+  }
+
+  _folderForNpcKey(npcKey) {
+    const roster = globalThis.DenizenNpcRoster;
+    const key = String(npcKey || '');
+    const entry = (roster?.entries || []).find((e) => e.textureKey === key || e.folder === key);
+    if (entry?.folder) return entry.folder;
+    return key.replace(/^xp_/, '').toLowerCase();
+  }
+
+  async _openNpcMcpConnect(npcKey, displayName) {
+    const folder = this._folderForNpcKey(npcKey);
+    const name = String(displayName || npcKey || folder).trim();
+    const sess = globalThis.DenizenVisitorSession;
+    if (sess?.isProtectedNpc?.(folder)) {
+      alert(`${name} is a system NPC — MCP tokens are not available. Claim a teammate assistant instead.`);
+      return;
+    }
+    const ensureUi = async () => {
+      if (globalThis.DenizenVisitorMcpConnectUI?.openConnect) return true;
+      try {
+        await globalThis.DenizenLazyScripts?.load?.(
+          ['./src/visitor-mcp-connect-ui.js?v=mcp9avatar'],
+        );
+      } catch (_) { /* ignore */ }
+      return !!globalThis.DenizenVisitorMcpConnectUI?.openConnect;
+    };
+    if (!(await ensureUi())) {
+      alert('MCP connect UI is still loading — try again in a second.');
+      return;
+    }
+    globalThis.DenizenVisitorMcpConnectUI.openConnect(folder, name);
   }
 
   _clearRoleLabel(npcKey) {
     const existing = this._roleLabels.get(npcKey);
     if (existing) {
-      existing.text.destroy();
+      try { existing.text?.destroy?.(); } catch (_) {}
+      try { existing.chip?.destroy?.(); } catch (_) {}
       this._roleLabels.delete(npcKey);
     }
   }
@@ -1570,6 +1637,10 @@ class AgentActions {
           entry.text.x = entry.npc.x;
           const off = entry.isThought ? 44 : (entry.yOff != null ? entry.yOff : yOffset);
           entry.text.y = entry.npc.y - off;
+        }
+        if (entry.npc && entry.chip && entry.chip.scene) {
+          entry.chip.x = entry.npc.x;
+          entry.chip.y = entry.npc.y - (entry.chipYOff != null ? entry.chipYOff : 42);
         }
       });
     };

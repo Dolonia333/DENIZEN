@@ -55,8 +55,12 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 | `GET` | `/api/mcp/connect-info?team=1` | Optional session | Team operator setup |
 | `GET` | `/api/npc-sync/openapi.json` | None | OpenAPI 3.1 spec for ChatGPT Custom GPT Actions |
 | `GET` | `/api/npc-sync/status` | Bearer (NPC token) | REST alias for `get_status` |
+| `GET` | `/api/npc-sync/list-skills` | Bearer | REST alias for `list_skills` |
+| `GET` | `/api/npc-sync/skill-job?job_id=` | Bearer | Poll async `run_skill` job (`get_skill_job`) |
 | `POST` | `/api/npc-sync/memory` | Bearer | REST alias for `update_memory` (`body` or `note`) |
 | `POST` | `/api/npc-sync/activity` | Bearer | REST alias for `log_activity` |
+| `POST` | `/api/npc-sync/run-skill` | Bearer (`skills`) | REST alias for `run_skill` — **async by default** (job_id + poll) |
+| `POST` | `/api/npc-sync/assign-task` | Bearer | **Blocked for ChatGPT** — returns `assign_task_blocked_for_chatgpt` |
 
 ### MCP tools
 
@@ -129,11 +133,16 @@ Every `tools/call` is logged to `denizen_mcp_audit`. Revoke tokens in **Settings
 
 Works within OpenAI ToS — subscription chat only, no programmatic API routing.
 
-1. Connect AI → **ChatGPT GPT** tab → copy OpenAPI URL + bearer token.
+**Important:** mint the token with **Standard** or **Full** scope (not Read-only). Read tokens can sync memory but cannot `runNpcSkill`.
+
+1. Connect AI → **ChatGPT GPT** tab → copy OpenAPI URL + bearer token (**Standard/Full**).
 2. [Create a Custom GPT](https://chatgpt.com/gpts/editor) → **Actions** → **Import from URL**.
 3. Paste `https://<your-host>/api/npc-sync/openapi.json`.
 4. **Authentication** → API Key → Type: **Bearer** → paste your NPC token.
 5. Paste suggested instructions from the modal (or use `data/templates/chatgpt-npc-assistant.yaml`).
+6. After Denizen Action schema updates, **re-import** the OpenAPI URL so `listNpcSkills` / `runNpcSkill` appear.
+
+ChatGPT should call **`runNpcSkill`** (async job + **`getSkillJob`** poll) to do work itself. **`assignNpcTask` is blocked** on the ChatGPT REST path — it used to wake the slow local office brain.
 
 ### Claude.ai (MCP connector — Pro subscription)
 

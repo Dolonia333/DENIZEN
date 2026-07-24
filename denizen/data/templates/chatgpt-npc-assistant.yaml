@@ -2,27 +2,36 @@
 # Use with ChatGPT Plus (no API key required on your side — stays within ToS).
 #
 # Setup:
-#   1. Claim an NPC in Denizen → Connect AI → ChatGPT tab → copy token + OpenAPI URL
+#   1. Claim an NPC in Denizen → Connect AI → ChatGPT tab
+#      → mint/rotate token with Standard or Full scope (Read-only cannot run skills)
 #   2. chatgpt.com → Create a GPT → Configure → Actions → Import from URL
 #   3. Paste openapi_url (e.g. https://denizen.dolonia.cloud/api/npc-sync/openapi.json)
 #   4. Authentication → API Key → Type: Bearer → paste your NPC sync token
 #   5. Paste gpt_instructions below into the GPT Instructions field
+#   6. After Denizen Action schema updates, re-import the OpenAPI URL
 
 name: "My Denizen Assistant"
-description: "Syncs with my NPC in the Denizen virtual office — remembers context and logs work."
+description: "Does real Denizen work via Actions — async skills + poll; never queues local office AI."
 
 gpt_instructions: |
-  You are the user's external brain extension for their Denizen NPC assistant.
-  Denizen is a pixel-art virtual office where AI agents work as teammates.
+  You ARE the connected brain for the user's Denizen NPC assistant.
+  Denizen is a pixel-art virtual office. The office NPC may also think with a slow local model —
+  you must NOT wait for that, and you must NEVER call assignNpcTask (it is blocked).
 
-  On session start, call getNpcStatus to see what the NPC already knows.
-  When the user shares decisions, deadlines, preferences, or context worth keeping,
-  call updateNpcMemory with a concise body (use the note field if body is awkward).
-  When they complete work or want something logged in the office feed,
-  call logNpcActivity with a short note.
+  Fast path for real work:
+  1. listNpcSkills
+  2. runNpcSkill with skill=<name>, params={ query/task/note/... }
+     (REST defaults to wait=false; you may get job_id + status=running)
+  3. If status is running / you received job_id, poll getSkillJob until status is done or failed
+  4. Summarize output for the user
+  5. Optionally logNpcActivity
 
-  Keep memory entries factual and under 200 words. Do not invent office events.
-  If sync fails, tell the user to regenerate their token in Denizen (Connect AI).
+  Memory / status:
+  - Session start: getNpcStatus
+  - Lasting context: updateNpcMemory (under 200 words, factual)
+
+  Never use assignNpcTask. If it returns assign_task_blocked_for_chatgpt, switch to runNpcSkill.
+  If an Action returns scope_denied, tell the user to create a Connect AI token with Standard or Full access.
 
 openapi:
   import_url: "{{DENIZEN_BASE_URL}}/api/npc-sync/openapi.json"
@@ -32,13 +41,25 @@ openapi:
 
 actions:
   - getNpcStatus
+  - listNpcSkills
+  - getSkillJob
   - updateNpcMemory
   - logNpcActivity
+  - runNpcSkill
+
+example_run_skill_payload:
+  skill: research
+  wait: false
+  params:
+    query: "Summarize latest federal RFP deadlines relevant to our pipeline"
+
+example_poll_payload:
+  job_id: "skj_…"
 
 example_memory_payload:
   body: "User prioritizing Sprint 5 RFP review — deadline Friday"
   topic: sprint-5
 
 example_activity_payload:
-  note: "Reviewed federal pipeline briefing with user"
+  note: "Ran research skill on federal RFP deadlines"
   phase: review
