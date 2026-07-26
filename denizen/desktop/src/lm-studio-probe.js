@@ -52,11 +52,37 @@ async function probeLmStudioEndpoint(baseUrl, opts = {}) {
           const data = await res.json().catch(() => ({}));
           models = parseModelList(data);
         }
+        // Prefer env-pinned models when they appear in the catalog.
+        const pickIfLoaded = (id) => {
+          if (!id) return null;
+          const want = String(id).toLowerCase();
+          return models.find((m) => String(m).toLowerCase() === want
+            || String(m).toLowerCase().includes(want)
+            || want.includes(String(m).toLowerCase())) || null;
+        };
+        const envMain = process.env.LM_STUDIO_MODEL;
+        const envFast = process.env.LM_STUDIO_FAST_MODEL;
+        const envHeavy = process.env.LM_STUDIO_HEAVY_MODEL;
+        const heavyPick = [
+          envHeavy, 'qwen/qwen3.6-27b', 'qwen2.5-14b-instruct-1m',
+          'mistralai/ministral-3-14b-reasoning',
+        ].map(pickIfLoaded).find(Boolean) || null;
+        const mainPick = pickIfLoaded(envMain)
+          || heavyPick
+          || models.find((m) => /14b|27b|32b|ministral/i.test(m))
+          || models[0]
+          || null;
+        const fastPick = pickIfLoaded(envFast)
+          || models.find((m) => /gemma|e2b|3b|1b|mini|8b/i.test(m) && !/14b|27b|32b/i.test(m))
+          || models[0]
+          || null;
         return {
           url,
           reachable: true,
           models,
-          main_model: models[0] || null,
+          main_model: mainPick,
+          fast_model: fastPick,
+          heavy_model: heavyPick || mainPick,
           probed_at: new Date().toISOString(),
           probed_path: path,
           http_status: res.status,

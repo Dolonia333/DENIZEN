@@ -6,6 +6,22 @@ const fs = require("fs");
 
 const os = require("os");
 
+// --- DIAG INSTRUMENTATION (temporary; remove once the packaging hang is found) ---
+const __DIAG = path.join(os.homedir(), "denizen-desktop-diag.log");
+function __diag(tag, extra) {
+  try {
+    fs.appendFileSync(
+      __DIAG,
+      `[${new Date().toISOString()}] ${tag}${extra ? " :: " + (extra && extra.stack ? extra.stack : String(extra)) : ""}\n`,
+    );
+  } catch (_) {}
+}
+try { fs.writeFileSync(__DIAG, ""); } catch (_) {}
+__diag("A: main.js module-eval start");
+process.on("uncaughtException", (e) => __diag("uncaughtException", e));
+process.on("unhandledRejection", (e) => __diag("unhandledRejection", e));
+// --- END DIAG ---
+
 const pkg = require("./package.json");
 
 const { pathToFileURL } = require("url");
@@ -1894,13 +1910,17 @@ async function capturePrimaryScreenPng() {
 
 stationAgent.setCaptureScreen(capturePrimaryScreenPng);
 
+__diag("A2: module load complete, registering whenReady");
 app.whenReady().then(async () => {
+ try {
+  __diag("B: whenReady start");
 
   registerProtocolHandler();
 
   setupIpc();
 
   setupTrayStub();
+  __diag("C: protocol/ipc/tray registered");
 
 
 
@@ -1917,6 +1937,7 @@ app.whenReady().then(async () => {
 
 
   const setup = readSetupState();
+  __diag("D: setup.completed=" + setup.completed);
 
   if (!setup.completed) {
 
@@ -1924,13 +1945,18 @@ app.whenReady().then(async () => {
 
   } else {
 
+    __diag("E: calling ensureDenizenServer");
     const target = await ensureDenizenServer();
+    __diag("F: server target=" + (target && target.url));
 
     await createWindow(`${target.url}?layout=openplan&desktop=1`);
+    __diag("H: main window created");
 
     maybeStartWorkerLoop();
+    __diag("J: worker loop started — startup complete");
 
   }
+ } catch (e) { __diag("whenReady THREW", e); }
 
   if (app.isPackaged) {
     const setup = readSetupState();

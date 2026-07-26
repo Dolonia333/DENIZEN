@@ -135,8 +135,10 @@ async function _runWorkerLoop(state) {
       // The runner can RETURN a failure without throwing — e.g. an unsupported
       // job type yields {ok:false, mocked:true, error:'Unsupported local job
       // type: ...'}. Hardcoding ok:true here reported those to the server as
-      // successes, so jobs_completed counted no-ops as real work (6 of the last
-      // 15 completions were exactly this). Propagate the runner's real verdict.
+      // successes, so jobs_completed counted no-ops as real work. Propagate the
+      // runner's real verdict. (This file is the SOURCE OF TRUTH — scripts/
+      // copy-denizen-src.js copies it into desktop/src at build time, so the fix
+      // must live here or a rebuild silently reverts it.)
       const ranOk = !(result && (result.ok === false || result.error));
       await _postComplete(baseUrl, {
         identityId,

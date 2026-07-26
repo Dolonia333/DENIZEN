@@ -10,7 +10,15 @@ function isLoopbackUrl(url) {
   return /\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(u);
 }
 
-/** Prefer Tailscale (100.x) then first private LAN IPv4. */
+function isPrivateLanIp(ip) {
+  return /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(String(ip || ''));
+}
+
+function isTailscaleIp(ip) {
+  return /^100\.\d+\.\d+\.\d+$/.test(String(ip || ''));
+}
+
+/** Prefer LAN on home mesh (NAS probes .232 directly); Tailscale for remote agents. */
 function pickAdvertiseHost(extra = {}) {
   const explicit = String(
     extra.advertise_host
@@ -20,6 +28,12 @@ function pickAdvertiseHost(extra = {}) {
   ).trim();
   if (explicit) return explicit;
 
+  const prefer = String(
+    process.env.LM_STUDIO_ADVERTISE_PREFER
+    || process.env.DENIZEN_MESH_PREFER_LAN
+    || 'lan',
+  ).trim().toLowerCase();
+
   const nets = os.networkInterfaces();
   const candidates = [];
   for (const ifaces of Object.values(nets)) {
@@ -28,10 +42,12 @@ function pickAdvertiseHost(extra = {}) {
       candidates.push(addr.address);
     }
   }
-  const tailscale = candidates.find((ip) => /^100\.\d+\.\d+\.\d+$/.test(ip));
-  if (tailscale) return tailscale;
-  const lan = candidates.find((ip) => /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(ip));
-  return lan || candidates[0] || null;
+  const tailscale = candidates.find((ip) => isTailscaleIp(ip));
+  const lan = candidates.find((ip) => isPrivateLanIp(ip));
+  if (prefer === 'tailscale') {
+    return tailscale || lan || candidates[0] || null;
+  }
+  return lan || tailscale || candidates[0] || null;
 }
 
 function buildAdvertiseUrl(host, port = DEFAULT_PORT) {
@@ -86,11 +102,43 @@ function enrichLmStudioBlock(lmStudio, extra = {}) {
   };
 }
 
+function isTailscaleUrl(url) {
+  try {
+    const host = new URL(String(url || '')).hostname;
+    return isTailscaleIp(host);
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
+ * NAS primaries probe fleet nodes over LAN — remap Tailscale advertise URLs when possible.
+ */
+function preferServerProbeUrl(url, machine = {}) {
+  const normalized = url ? normalizeBaseUrl(url) : null;
+  if (!normalized || !isTailscaleUrl(normalized)) return normalized;
+
+  const mapRaw = String(process.env.DENIZEN_MESH_LAN_PROBE_URL || '').trim();
+  if (mapRaw) return normalizeBaseUrl(mapRaw);
+
+  const remoteRaw = String(process.env.LM_STUDIO_REMOTE_URLS || '').trim();
+  if (!remoteRaw) return normalized;
+  const lanRemote = remoteRaw.split(',')
+    .map((s) => normalizeBaseUrl(s))
+    .find((u) => u && !isLoopbackUrl(u) && !isTailscaleUrl(u));
+  if (lanRemote && (machine.role === 'desktop' || machine.contributing)) return lanRemote;
+  return normalized;
+}
+
 module.exports = {
   DEFAULT_PORT,
   isLoopbackUrl,
+  isPrivateLanIp,
+  isTailscaleIp,
+  isTailscaleUrl,
   pickAdvertiseHost,
   buildAdvertiseUrl,
   resolveRouterLmUrl,
+  preferServerProbeUrl,
   enrichLmStudioBlock,
 };

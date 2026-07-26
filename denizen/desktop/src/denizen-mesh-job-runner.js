@@ -3,6 +3,7 @@
 const inferenceRuntime = require('./denizen-inference-runtime');
 const { runEmbeddingIndex } = require('./denizen-embedding-worker');
 const { runSimTick } = require('./denizen-sim-tick');
+const { runNodePatrol } = require('./denizen-bouncer-mesh-patrol');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 
@@ -81,29 +82,6 @@ function mockMeshJob(jobType, payload = {}) {
     };
   }
 
-  if (type === 'grok_telemetry_check') {
-    // Run the Python telemetry + auto-consult job
-    const { spawnSync } = require('node:child_process');
-    const script = path.join(__dirname, '..', '..', 'infra', 'grok-mesh-telemetry-job.py');
-    try {
-      const pythonBin = process.env.DENIZEN_PYTHON_BIN || (process.platform === 'win32' ? 'python' : 'python3');
-      const res = spawnSync(pythonBin, [script], {
-        cwd: path.dirname(script),
-        encoding: 'utf8',
-        timeout: 60000,
-        env: { ...process.env, GROK_AGENT: '1' },
-      });
-      return {
-        ok: res.status === 0,
-        jobType: type,
-        output: (res.stdout || '') + (res.stderr || ''),
-        completed_at: new Date().toISOString(),
-      };
-    } catch (e) {
-      return { ok: false, jobType: type, error: e.message };
-    }
-  }
-
   return {
     ok: false,
     jobType: type || 'unknown',
@@ -125,13 +103,13 @@ async function runNpcThinkBatch(payload = {}) {
 
   const result = await inferenceRuntime.chatCompletion({
     tier: 'fast',
+    kind: 'idle',
     systemPrompt: 'You simulate brief NPC thoughts in a virtual office. Reply with one short sentence only.',
     messages: [{
       role: 'user',
       content: `NPCs: ${npcLabel}. One ambient thought (max 20 words).`,
     }],
     max_tokens: 48,
-    temperature: 0.75,
     timeoutMs: 60_000,
   });
 
@@ -151,6 +129,60 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
   const safePayload = payload && typeof payload === 'object' ? payload : {};
   const onProgress = typeof ctx.onProgress === 'function' ? ctx.onProgress : null;
 
+  if (type === 'grok_cli_chat') {
+    const grokCli = require('./grok-cli-chat');
+    try {
+      const messages = Array.isArray(safePayload.messages) ? safePayload.messages : [];
+      const text = await grokCli.completePlayerChat({
+        systemPrompt: safePayload.system_prompt || safePayload.systemPrompt || '',
+        messages,
+        prefer: 'local',
+        timeoutMs: safePayload.timeout_ms || safePayload.timeoutMs,
+        priority: safePayload.priority,
+      });
+      return {
+        ok: true,
+        jobType: 'grok_cli_chat',
+        text,
+        completed_at: new Date().toISOString(),
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        jobType: 'grok_cli_chat',
+        error: err?.message || String(err),
+        completed_at: new Date().toISOString(),
+      };
+    }
+  }
+
+  if (type === 'claude_cli_chat') {
+    const claudeCli = require('./claude-cli-chat');
+    try {
+      const messages = Array.isArray(safePayload.messages) ? safePayload.messages : [];
+      const text = await claudeCli.completePlayerChat({
+        systemPrompt: safePayload.system_prompt || safePayload.systemPrompt || '',
+        messages,
+        prefer: 'local',
+        timeoutMs: safePayload.timeout_ms || safePayload.timeoutMs,
+        priority: safePayload.priority,
+      });
+      return {
+        ok: true,
+        jobType: 'claude_cli_chat',
+        text,
+        completed_at: new Date().toISOString(),
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        jobType: 'claude_cli_chat',
+        error: err?.message || String(err),
+        completed_at: new Date().toISOString(),
+      };
+    }
+  }
+
   if (type === 'inference_rpc') {
     if (await isInferenceReachable()) {
       try {
@@ -161,6 +193,7 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
           messages: Array.isArray(safePayload.messages) ? safePayload.messages : [],
           max_tokens: safePayload.max_tokens ?? safePayload.maxTokens,
           temperature: safePayload.temperature,
+          kind: safePayload.kind || safePayload.task_kind || 'chat',
           onToken: onProgress
             ? (delta) => onProgress({ delta, partial: true })
             : null,
@@ -224,6 +257,27 @@ async function processMeshJob(jobType, payload = {}, ctx = {}) {
       return {
         ok: false,
         jobType: 'web_search',
+        error: err?.message || String(err),
+        completed_at: new Date().toISOString(),
+      };
+    }
+  }
+
+  if (type === 'bouncer_patrol') {
+    try {
+      const nodeInfo = safePayload.node && typeof safePayload.node === 'object'
+        ? { ...safePayload.node, ...safePayload }
+        : safePayload;
+      const patrol = await runNodePatrol(nodeInfo);
+      return {
+        ...patrol,
+        jobType: 'bouncer_patrol',
+        completed_at: new Date().toISOString(),
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        jobType: 'bouncer_patrol',
         error: err?.message || String(err),
         completed_at: new Date().toISOString(),
       };
