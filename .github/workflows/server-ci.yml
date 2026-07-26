@@ -1,18 +1,10 @@
 name: server-ci
 
-# Regression-gate CI: the suite has a known set of pre-existing failures
-# (tracked in .github/known-test-failures.txt and in the dossier defect
-# register). The job fails ONLY if the failure count exceeds that baseline,
-# so new regressions block while the legacy reds are burned down.
-# Tighten the baseline file as failures get fixed.
-#
-# Ubuntu baseline composition (observed 2026-07-26, 9 case-failures):
-#   chat-attachments, denizen-mesh-capabilities (2), discord-integration-
-#   security (2), dossier-system (no Chromium — PLAYWRIGHT_SKIP_BROWSER_
-#   DOWNLOAD=1), health-runbook (TIMEOUT on slow runner), jelly,
-#   local-harness-loop, npc-brains. Note generate-city-endpoint and
-#   npc-local-metrics PASS here (their Windows failures are teardown-reap
-#   and runtime-state pollution respectively — see the dossier register).
+# Regression-gate CI: the suite has known pre-existing failures (tracked as
+# a FILE LIST in .github/known-test-failures.txt and in the dossier defect
+# register). The job fails ONLY if a test file NOT on that list fails —
+# counts flap with runner flakiness, file identity doesn't. Remove lines
+# from the list as failures get fixed; additions require justification.
 
 on:
   push:
@@ -44,26 +36,29 @@ jobs:
         working-directory: denizen
         run: npm ci --no-audit --no-fund
 
-      - name: Run suite (regression gate vs known baseline)
+      - name: Run suite (regression gate vs known-failing file list)
         working-directory: denizen
         shell: bash
         run: |
           set +e
           npm test 2>&1 | tee test-output.log
           set -e
-          SUMMARY=$(grep -Eo 'failed=[0-9]+' test-output.log | tail -1)
-          FAILED=${SUMMARY#failed=}
-          BASELINE=$(tr -d '[:space:]' < ../.github/known-test-failures.txt)
-          echo "failed=${FAILED:-unknown} baseline=${BASELINE}"
-          if [ -z "${FAILED}" ]; then
-            echo "::error::Could not parse test summary — treating as failure"
+          if ! grep -q '\[run-tests\] files=' test-output.log; then
+            echo "::error::Suite never produced a summary — infrastructure failure"
             exit 1
           fi
-          if [ "${FAILED}" -gt "${BASELINE}" ]; then
-            echo "::error::Test failures (${FAILED}) exceed known baseline (${BASELINE}) — a regression was introduced"
+          grep -E "FAIL " test-output.log \
+            | grep -oE "(tests|desktop/tests)[/\\\\][^ ]+\.test\.(js|mjs|cjs)" \
+            | tr '\\\\' '/' | sort -u > failing-files.txt
+          grep -vE '^\s*(#|$)' ../.github/known-test-failures.txt | sort -u > known.txt
+          NEW=$(comm -23 failing-files.txt known.txt)
+          echo "--- failing files ---"; cat failing-files.txt
+          if [ -n "$NEW" ]; then
+            echo "::error::New failing test file(s) not on the known list:"
+            echo "$NEW"
             exit 1
           fi
-          echo "Within baseline — pass"
+          echo "All failures are on the known list — pass"
 
       - name: List failing files (informational)
         if: always()

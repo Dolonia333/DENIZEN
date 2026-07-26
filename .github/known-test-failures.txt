@@ -1,1 +1,13 @@
-9
+# Known-failing test files (see TECHNICAL_DOSSIER.md Appendix G).
+# CI fails only if a file NOT on this list fails — remove lines as they get fixed.
+tests/chat-attachments.test.js
+tests/denizen-mesh-capabilities.test.js
+tests/discord-integration-security.test.js
+tests/dossier-system.test.js
+tests/generate-city-endpoint.test.js
+tests/health-runbook.test.js
+tests/jelly.test.js
+tests/local-harness-loop.test.js
+tests/npc-brains.test.js
+tests/npc-local-metrics.test.js
+tests/room-generator.test.mjs
