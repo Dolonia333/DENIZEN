@@ -5,6 +5,14 @@ name: server-ci
 # register). The job fails ONLY if the failure count exceeds that baseline,
 # so new regressions block while the legacy reds are burned down.
 # Tighten the baseline file as failures get fixed.
+#
+# Ubuntu baseline composition (observed 2026-07-26, 9 case-failures):
+#   chat-attachments, denizen-mesh-capabilities (2), discord-integration-
+#   security (2), dossier-system (no Chromium — PLAYWRIGHT_SKIP_BROWSER_
+#   DOWNLOAD=1), health-runbook (TIMEOUT on slow runner), jelly,
+#   local-harness-loop, npc-brains. Note generate-city-endpoint and
+#   npc-local-metrics PASS here (their Windows failures are teardown-reap
+#   and runtime-state pollution respectively — see the dossier register).
 
 on:
   push:
