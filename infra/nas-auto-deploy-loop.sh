@@ -63,20 +63,40 @@ while :; do
       ( cd "$DEPLOY_DIR" && docker compose -f docker-compose.yml up -d ) \
         >>"$DEPLOY_DIR/last-build.log" 2>&1
 
+      # VERIFY the swap actually happened: compose cannot replace a container
+      # it does not own (e.g. one created by docker run) — it errors
+      # "name already in use" while the OLD container keeps serving, and a
+      # bare health check then false-positives. Compare image ids; on
+      # mismatch, force-remove the stale container and recreate.
+      WANT=$(docker images --no-trunc -q "$IMAGE" | head -1)
+      HAVE=$(docker inspect denizen-server --format '{{.Image}}' 2>/dev/null)
+      if [ -n "$WANT" ] && [ "$WANT" != "$HAVE" ]; then
+        log "swap did not take (running image != built image) — forcing recreate"
+        docker rm -f denizen-server >>"$DEPLOY_DIR/last-build.log" 2>&1
+        ( cd "$DEPLOY_DIR" && docker compose -f docker-compose.yml up -d ) \
+          >>"$DEPLOY_DIR/last-build.log" 2>&1
+        HAVE=$(docker inspect denizen-server --format '{{.Image}}' 2>/dev/null)
+      fi
+
       OK=""
-      for i in $(seq 1 12); do
-        sleep 10
-        if curl -fsS -m 10 "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1; then
-          OK=1; break
-        fi
-      done
+      if [ "$WANT" = "$HAVE" ]; then
+        for i in $(seq 1 12); do
+          sleep 10
+          if curl -fsS -m 10 "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1; then
+            OK=1; break
+          fi
+        done
+      else
+        log "SWAP FAILED — running image still differs after forced recreate"
+      fi
 
       if [ -n "$OK" ]; then
         echo "$REMOTE" > "$DEPLOY_DIR/.deployed-sha"
-        log "DEPLOYED $REMOTE — health OK"
+        log "DEPLOYED $REMOTE — image verified + health OK"
       else
-        log "HEALTH FAIL after $REMOTE — ROLLING BACK to :prev"
+        log "DEPLOY FAIL for $REMOTE — ROLLING BACK to :prev"
         docker tag "${IMAGE%:*}:prev" "$IMAGE" 2>/dev/null || true
+        docker rm -f denizen-server >>"$DEPLOY_DIR/last-build.log" 2>&1
         ( cd "$DEPLOY_DIR" && docker compose -f docker-compose.yml up -d ) \
           >>"$DEPLOY_DIR/last-build.log" 2>&1
       fi
