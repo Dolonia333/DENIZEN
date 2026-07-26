@@ -14,6 +14,10 @@ const MUTATING_CLIENT_TYPES = new Set([
   'assign_task',
   'place_furniture',
   'remove_furniture',
+  // Bouncer WS triggers reach real WSL command execution — a read-only
+  // spectate follower must never be able to fire them.
+  'bouncer_run_tool',
+  'bouncer_run_linux',
 ]);
 
 function isFollowerRole(env = process.env) {

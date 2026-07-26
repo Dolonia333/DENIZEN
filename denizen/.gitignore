@@ -68,3 +68,13 @@ data/discord-farm/
 data/conversation-sense/
 data/crm-email-inbound-state.json
 
+
+# Runtime approval queue (written by jelly impact-approval flow / test runs)
+data/impact-approvals.json
+
+# One-off probe outputs from discord-bot/scripts (keep the scripts, not the dumps)
+discord-bot/scripts/_*
+
+# Rendered dossier artifacts — regenerate from docs/TECHNICAL_DOSSIER.md
+reports/dossiers/*.pdf
+reports/dossiers/denizen-technical-dossier-v*.html

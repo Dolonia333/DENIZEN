@@ -9,3 +9,6 @@ supabase-project/volumes/storage/
 
 .bouncer-token.local
 .cli-bridge-tokens.local
+
+# Live-data repair outputs — contain real client rows, never commit
+repair-*-report.json

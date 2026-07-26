@@ -270,13 +270,28 @@ function createLinuxAgentBridge() {
   };
 }
 
+function investigationAuthConfigured() {
+  return !!remoteInvestigationToken();
+}
+
+function _timingSafeEquals(candidate, expected) {
+  const crypto = require('node:crypto');
+  const a = Buffer.from(String(candidate));
+  const b = Buffer.from(String(expected));
+  if (a.length === 0 || a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
 function validateInvestigationAuth(req) {
   const expected = remoteInvestigationToken();
-  if (!expected) return true;
+  // Fail closed: with no token configured nothing is authorized. The agent
+  // listens on 0.0.0.0 and must never be open by default; callers that want a
+  // localhost-operator escape hatch layer it explicitly (server _hasBouncerApiAuth).
+  if (!expected) return false;
   const auth = String(req.headers.authorization || '');
   const bearer = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
   const header = String(req.headers['x-bouncer-token'] || '').trim();
-  return bearer === expected || header === expected;
+  return _timingSafeEquals(bearer, expected) || _timingSafeEquals(header, expected);
 }
 
 module.exports = {
@@ -290,5 +305,6 @@ module.exports = {
   writeReport,
   createLinuxAgentBridge,
   validateInvestigationAuth,
+  investigationAuthConfigured,
   COOLDOWN_MS,
 };

@@ -352,9 +352,15 @@ def deploy_remote_build(client: paramiko.SSHClient, src_tar: Path) -> int:
     if stream_to_remote(client, src_tar, f"{REMOTE_DIR}/denizen-src.tar.gz") != 0:
         log("ERROR: source upload failed")
         return 1
-    if stream_to_remote(client, BUNDLE_ENV, f"{REMOTE_DIR}/.env", timeout=120) != 0:
-        log("ERROR: .env upload failed")
+    # Compose loads .env.production (docker-compose.production.yml env_file) —
+    # plain .env is only read for ${PORT} interpolation. Upload the generated
+    # bundle as a reference copy and seed .env.production ONLY if it does not
+    # exist yet; the live file is hand-maintained via patch-*-nas-env.py and
+    # must never be clobbered by a deploy.
+    if stream_to_remote(client, BUNDLE_ENV, f"{REMOTE_DIR}/.env.generated", timeout=120) != 0:
+        log("ERROR: env bundle upload failed")
         return 1
+    run_ssh(client, f"[ -f {REMOTE_DIR}/.env.production ] || cp {REMOTE_DIR}/.env.generated {REMOTE_DIR}/.env.production")
     if stream_to_remote(client, COMPOSE_FILE, f"{REMOTE_DIR}/docker-compose.yml", timeout=120) != 0:
         log("ERROR: compose upload failed")
         return 1
@@ -398,11 +404,14 @@ def deploy_local_image(client: paramiko.SSHClient, image_tar: Path) -> int:
 
         return 1
 
-    if stream_to_remote(client, BUNDLE_ENV, f"{REMOTE_DIR}/.env", timeout=120) != 0:
+    # See deploy_remote_build: compose loads .env.production; never clobber it.
+    if stream_to_remote(client, BUNDLE_ENV, f"{REMOTE_DIR}/.env.generated", timeout=120) != 0:
 
-        log("ERROR: .env upload failed")
+        log("ERROR: env bundle upload failed")
 
         return 1
+
+    run_ssh(client, f"[ -f {REMOTE_DIR}/.env.production ] || cp {REMOTE_DIR}/.env.generated {REMOTE_DIR}/.env.production")
 
     if stream_to_remote(client, COMPOSE_FILE, f"{REMOTE_DIR}/docker-compose.yml", timeout=120) != 0:
 

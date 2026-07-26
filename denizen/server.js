@@ -3474,10 +3474,15 @@ function _fleetBearerFromReq(req) {
 function _hasBouncerApiAuth(req) {
   if (bouncerInvestigation.validateInvestigationAuth(req)) return true;
   const fleet = String(process.env.DENIZEN_FLEET_AGENT_TOKEN || '').trim();
-  if (!fleet) return false;
-  const bearer = _fleetBearerFromReq(req);
-  const fleetHeader = String(req?.headers?.['x-fleet-agent-token'] || '').trim();
-  return bearer === fleet || fleetHeader === fleet;
+  if (fleet) {
+    const bearer = _fleetBearerFromReq(req);
+    const fleetHeader = String(req?.headers?.['x-fleet-agent-token'] || '').trim();
+    if (bearer === fleet || fleetHeader === fleet) return true;
+  }
+  // Tokenless escape hatch for a local operator only: loopback socket with no
+  // forwarding headers. Tunnel/proxy traffic always carries forwarding headers,
+  // so remote requests can never qualify (hostCompute.isLocalOperatorRequest).
+  return hostCompute.isLocalOperatorRequest(req);
 }
 
 async function _securityTestHasCeoAccess(req, urlObj) {
@@ -10462,6 +10467,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
               patrolMode: String(process.env.BOUNCER_PATROL || '').trim() || (process.platform === 'win32' ? 'wsl' : 'off'),
               investigationUrl: String(process.env.BOUNCER_INVESTIGATION_URL || '').trim() || null,
               investigationConfigured: !!String(process.env.BOUNCER_INVESTIGATION_URL || '').trim(),
+              investigationTokenConfigured: bouncerInvestigation.investigationAuthConfigured(),
               wslLocal: process.platform === 'win32',
               relayOnly: IS_RELAY_ONLY,
               securityRelay: _securityRelayStatus || null,
