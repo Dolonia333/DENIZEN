@@ -10,6 +10,7 @@ This is the canonical map of Denizen documentation across committed GitHub docs 
 
 | Category | Document | Status | Description |
 |----------|----------|--------|-------------|
+| Overview | [TECHNICAL_DOSSIER.md](TECHNICAL_DOSSIER.md) | new/local | **Start here (anyone)** — the maintained source of record for the branded dossier: full architecture, PRD, maintenance manual, builder profile, verification appendix, and the **open defect register**. Verified against a pinned commit; renders to PDF via `pdf-dossier` |
 | Overview | [TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md) | new/local | **Start here (engineers)** — whole-platform architecture, subsystems, data model, API surface, deploy |
 | Overview | [PRODUCT_MANUAL.md](PRODUCT_MANUAL.md) | new/local | **Start here (users)** — landing→demo, office, NPCs, phone, MCP, CRM, compute |
 | Overview | [PRD.md](PRD.md) | new/local | **Start here (product)** — vision, personas, goals, functional requirements, metrics, risks, roadmap |
