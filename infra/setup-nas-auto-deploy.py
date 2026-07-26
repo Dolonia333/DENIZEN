@@ -96,12 +96,19 @@ def main() -> int:
     print(pub.strip())
     print("=== e.g.: gh repo deploy-key add <file> --title denizen-nas-auto-deploy ===\n")
 
-    # 4. upload loop script
-    sftp = client.open_sftp()
-    sftp.put(LOOP_SRC, f"{DEPLOY_DIR}/auto-deploy-loop.sh")
-    sftp.close()
-    run(client, f"chmod +x {DEPLOY_DIR}/auto-deploy-loop.sh "
-                f"&& sed -i 's/\\r$//' {DEPLOY_DIR}/auto-deploy-loop.sh")
+    # 4. upload loop script — Synology SFTP is restricted (same reason
+    # deploy-denizen-to-nas.py streams over SSH stdin), so cat > file.
+    with open(LOOP_SRC, "rb") as fh:
+        payload = fh.read().replace(b"\r\n", b"\n")
+    stdin, stdout, stderr = client.exec_command(
+        f"cat > {DEPLOY_DIR}/auto-deploy-loop.sh", timeout=120)
+    stdin.write(payload)
+    stdin.flush()
+    stdin.channel.shutdown_write()
+    if stdout.channel.recv_exit_status() != 0:
+        print("loop upload failed:", stderr.read().decode()[:200])
+        return 1
+    run(client, f"chmod +x {DEPLOY_DIR}/auto-deploy-loop.sh")
 
     # 5. optionally mark current master as already deployed
     if mark_current:
