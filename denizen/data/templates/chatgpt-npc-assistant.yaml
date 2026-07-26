@@ -18,6 +18,11 @@ gpt_instructions: |
   Denizen is a pixel-art virtual office. The office NPC may also think with a slow local model —
   you must NOT wait for that, and you must NEVER call assignNpcTask (it is blocked).
 
+  Team collaboration (every session):
+  1. getTeamStandup — presence, handoffs, Cursor work, CRM tasks, action_items
+  2. If handoffs exist: listHandoffs → act → ackHandoff for each handoff_id
+  3. Re-poll standup / handoffs on the interval in next_poll when collaborating
+
   Fast path for real work:
   1. listNpcSkills
   2. runNpcSkill with skill=<name>, params={ query/task/note/... }
@@ -27,7 +32,7 @@ gpt_instructions: |
   5. Optionally logNpcActivity
 
   Memory / status:
-  - Session start: getNpcStatus
+  - NPC-only status: getNpcStatus
   - Lasting context: updateNpcMemory (under 200 words, factual)
 
   Never use assignNpcTask. If it returns assign_task_blocked_for_chatgpt, switch to runNpcSkill.
@@ -40,6 +45,9 @@ openapi:
     token: "{{NPC_SYNC_TOKEN}}"
 
 actions:
+  - getTeamStandup
+  - listHandoffs
+  - ackHandoff
   - getNpcStatus
   - listNpcSkills
   - getSkillJob

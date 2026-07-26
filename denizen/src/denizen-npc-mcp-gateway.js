@@ -646,7 +646,13 @@ async function handleRestSync(req, res, action) {
   const scope = await authenticateBearerRequest(req, res);
   if (!scope) return;
 
-  if (action === 'status' || action === 'list-skills' || action === 'skill-job') {
+  if (
+    action === 'status'
+    || action === 'list-skills'
+    || action === 'skill-job'
+    || action === 'team-standup'
+    || action === 'handoffs'
+  ) {
     if (req.method !== 'GET') {
       return sendJson(res, 405, { ok: false, error: 'GET only' });
     }
@@ -663,6 +669,29 @@ async function handleRestSync(req, res, action) {
       const result = await callTool(scope, 'get_skill_job', { job_id: jobId });
       const found = result && result.error !== 'job_not_found';
       return sendJson(res, found ? 200 : 404, result);
+    }
+    if (action === 'team-standup') {
+      let includeCrm = true;
+      let includeCursor = true;
+      try {
+        const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+        if (u.searchParams.get('include_crm') === 'false') includeCrm = false;
+        if (u.searchParams.get('include_cursor') === 'false') includeCursor = false;
+      } catch (_) { /* keep defaults */ }
+      const result = await callTool(scope, 'team_standup', {
+        include_crm: includeCrm,
+        include_cursor: includeCursor,
+      });
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
+    if (action === 'handoffs') {
+      let limit = 20;
+      try {
+        const u = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+        limit = Number(u.searchParams.get('limit')) || 20;
+      } catch (_) { /* keep default */ }
+      const result = await callTool(scope, 'list_pending_handoffs', { limit });
+      return sendJson(res, result?.ok ? 200 : 400, result);
     }
     let limit = 10;
     try {
@@ -694,7 +723,7 @@ async function handleRestSync(req, res, action) {
     return sendJson(res, result?.ok ? 200 : 400, result);
   }
 
-  if (action === 'run-skill' || action === 'assign-task') {
+  if (action === 'run-skill' || action === 'assign-task' || action === 'ack-handoff') {
     if (req.method !== 'POST') {
       return sendJson(res, 405, { ok: false, error: 'POST only' });
     }
@@ -705,6 +734,10 @@ async function handleRestSync(req, res, action) {
       return sendJson(res, 400, { ok: false, error: err?.message || 'invalid json' });
     }
     const payload = { ...(body || {}) };
+    if (action === 'ack-handoff') {
+      const result = await callTool(scope, 'acknowledge_handoff', payload);
+      return sendJson(res, result?.ok ? 200 : 400, result);
+    }
     if (action === 'run-skill') {
       // ChatGPT Custom GPT Actions time out ~45s — default to async job + soft wait.
       if (payload.wait === undefined) {
@@ -734,9 +767,10 @@ function buildOpenApiSpec(baseUrl) {
       description:
         'REST bridge for ChatGPT Custom GPT Actions. YOU execute work via runNpcSkill. '
         + 'Long work: runNpcSkill with wait=false → poll getSkillJob. '
+        + 'Collaborate via getTeamStandup + listHandoffs + ackHandoff. '
         + 'assignNpcTask is blocked (queues slow local NPC). '
         + 'Mint a Standard/Full Connect AI token.',
-      version: '1.9.0',
+      version: '2.0.0',
     },
     servers: [{ url: base }],
     components: {
@@ -906,6 +940,67 @@ function buildOpenApiSpec(baseUrl) {
           },
         },
       },
+      '/api/npc-sync/team-standup': {
+        get: {
+          operationId: 'getTeamStandup',
+          summary: 'One-shot team sync: presence, handoff inbox, Cursor work, directives, CRM tasks',
+          parameters: [
+            {
+              name: 'include_crm',
+              in: 'query',
+              schema: { type: 'boolean', default: true },
+            },
+            {
+              name: 'include_cursor',
+              in: 'query',
+              schema: { type: 'boolean', default: true },
+            },
+          ],
+          responses: {
+            200: { description: 'Standup payload with action_items and next_poll' },
+          },
+        },
+      },
+      '/api/npc-sync/handoffs': {
+        get: {
+          operationId: 'listHandoffs',
+          summary: 'Poll pending teammate handoffs addressed to your session',
+          parameters: [{
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', default: 20 },
+          }],
+          responses: {
+            200: { description: 'Pending handoffs inbox' },
+          },
+        },
+      },
+      '/api/npc-sync/ack-handoff': {
+        post: {
+          operationId: 'ackHandoff',
+          summary: 'Mark a handoff delivered/read after you acted on it',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['handoff_id'],
+                  properties: {
+                    handoff_id: {
+                      type: 'string',
+                      description: 'Id from listHandoffs / getTeamStandup',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: { description: 'Handoff acknowledged' },
+          },
+        },
+      },
     },
   };
 }
@@ -925,6 +1020,9 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
       run_skill_url: `${base}/api/npc-sync/run-skill`,
       skill_job_url: `${base}/api/npc-sync/skill-job`,
       assign_task_url: `${base}/api/npc-sync/assign-task`,
+      team_standup_url: `${base}/api/npc-sync/team-standup`,
+      handoffs_url: `${base}/api/npc-sync/handoffs`,
+      ack_handoff_url: `${base}/api/npc-sync/ack-handoff`,
       openapi_url: openapiUrl,
     },
     chatgpt: {
@@ -934,14 +1032,15 @@ function buildOnboardingPayload({ baseUrl, npcKey, token }) {
         'Create a Custom GPT at chatgpt.com/gpts/editor',
         'Actions → Import from URL → paste the OpenAPI URL (re-import after Denizen updates)',
         'Authentication → API Key → Auth Type: Bearer → paste your token (standard or full scope)',
-        'Paste the gpt_instructions below — YOU run skills async; never assignNpcTask',
+        'Paste the gpt_instructions below — YOU run skills async; never assignNpcTask; poll team standup',
       ],
       gpt_instructions: [
         `You ARE the connected brain for ${npcDisplayName(npcKey)} in Denizen.`,
         'Never use assignNpcTask — it is blocked and only queues the slow local office AI.',
+        'Start collaborative sessions with getTeamStandup. Follow action_items. Poll listHandoffs; after you act, call ackHandoff.',
         'Do work with runNpcSkill (default wait=false). If you get a job_id / status=running, poll getSkillJob until status is done or failed, then summarize output.',
         'Start hard jobs with listNpcSkills, then runNpcSkill with a clear params object (query/task/note).',
-        'Use getNpcStatus at session start. Use updateNpcMemory for lasting context. Use logNpcActivity after you finish.',
+        'Use getNpcStatus when you need NPC-only status. Use updateNpcMemory for lasting context. Use logNpcActivity after you finish.',
         'If you see scope_denied, tell the user to mint a Connect AI token with Standard or Full access.',
       ].join(' '),
     },

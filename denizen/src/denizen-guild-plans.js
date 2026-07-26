@@ -40,6 +40,41 @@ const ACTIVE_STATUSES = new Set(['active', 'trialing']);
 
 const FREE_PLAN = Object.freeze({ plan: 'free', status: 'active', active: false, free: true });
 
+/**
+ * Official Denizen Discord server(s) that get premium modules (security/community)
+ * without Stripe. Everyone else still pays.
+ *
+ * Env: DISCORD_HOME_GUILD_IDS=id1,id2  (preferred)
+ *      DISCORD_HOME_GUILD_ID=id         (singular alias)
+ * Default: the public DENIZEN community guild snowflake if env unset.
+ */
+const DEFAULT_HOME_GUILD_ID = '1494164569440915496';
+const HOME_PLAN = Object.freeze({
+  plan: 'pro',
+  status: 'active',
+  active: true,
+  free: false,
+  home: true,
+  source: 'home_guild',
+});
+
+function homeGuildIds() {
+  const raw = String(
+    process.env.DISCORD_HOME_GUILD_IDS
+    || process.env.DISCORD_HOME_GUILD_ID
+    || DEFAULT_HOME_GUILD_ID,
+  ).trim();
+  if (!raw || raw === '0' || raw.toLowerCase() === 'none') return new Set();
+  return new Set(
+    raw.split(/[,\s]+/).map((s) => s.trim()).filter((s) => /^\d{5,}$/.test(s)),
+  );
+}
+
+function isHomeGuild(guildId) {
+  const gid = String(guildId || '').trim();
+  return !!gid && homeGuildIds().has(gid);
+}
+
 /** guildId → { row, fetchedAt } */
 const cache = new Map();
 
@@ -96,6 +131,7 @@ async function fetchPlanRow(guildId) {
 async function getGuildPlan(guildId) {
   const gid = String(guildId || '').trim();
   if (!gid) return { ...FREE_PLAN };
+  if (isHomeGuild(gid)) return { ...HOME_PLAN, guild_id: gid };
 
   const hit = cache.get(gid);
   const now = Date.now();
@@ -118,6 +154,7 @@ async function getGuildPlan(guildId) {
 function peekGuildPlan(guildId) {
   const gid = String(guildId || '').trim();
   if (!gid) return { ...FREE_PLAN };
+  if (isHomeGuild(gid)) return { ...HOME_PLAN, guild_id: gid };
   const hit = cache.get(gid);
   if (!hit) return null;
   return normalize(hit.row);
@@ -127,9 +164,10 @@ function isPremiumModule(moduleName) {
   return PREMIUM_MODULES.has(String(moduleName || '').toLowerCase());
 }
 
-/** Free modules always allowed; premium modules require an active paid plan. */
+/** Free modules always allowed; premium modules require an active paid plan (or home guild). */
 async function isModuleAllowed(guildId, moduleName) {
   if (!isPremiumModule(moduleName)) return true;
+  if (isHomeGuild(guildId)) return true;
   const plan = await getGuildPlan(guildId);
   return plan.active === true;
 }
@@ -197,11 +235,15 @@ module.exports = {
   PREMIUM_MODULES,
   PLAN_RANK,
   FREE_PLAN,
+  HOME_PLAN,
+  DEFAULT_HOME_GUILD_ID,
   dbConfigured,
   getGuildPlan,
   peekGuildPlan,
   isModuleAllowed,
   isPremiumModule,
+  isHomeGuild,
+  homeGuildIds,
   setGuildPlanFromStripe,
   findGuildBySubscription,
   invalidate,

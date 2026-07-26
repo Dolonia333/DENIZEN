@@ -234,16 +234,20 @@ describe('npc-mcp-gateway', () => {
   it('buildOpenApiSpec documents REST sync paths', () => {
     const spec = gateway.buildOpenApiSpec('http://localhost:8080');
     assert.equal(spec.openapi, '3.1.0');
-    assert.equal(spec.info.version, '1.9.0');
+    assert.equal(spec.info.version, '2.0.0');
     assert.ok(spec.paths['/api/npc-sync/status']);
     assert.ok(spec.paths['/api/npc-sync/list-skills']);
     assert.ok(spec.paths['/api/npc-sync/skill-job']);
     assert.ok(spec.paths['/api/npc-sync/memory']);
     assert.ok(spec.paths['/api/npc-sync/run-skill']);
     assert.ok(spec.paths['/api/npc-sync/assign-task']);
+    assert.ok(spec.paths['/api/npc-sync/team-standup']);
+    assert.ok(spec.paths['/api/npc-sync/handoffs']);
+    assert.ok(spec.paths['/api/npc-sync/ack-handoff']);
     assert.equal(spec.paths['/api/npc-sync/list-skills'].get.operationId, 'listNpcSkills');
     assert.equal(spec.paths['/api/npc-sync/skill-job'].get.operationId, 'getSkillJob');
     assert.equal(spec.paths['/api/npc-sync/run-skill'].post.operationId, 'runNpcSkill');
+    assert.equal(spec.paths['/api/npc-sync/team-standup'].get.operationId, 'getTeamStandup');
   });
 
   it('onboarding tells ChatGPT to run skills itself (not assign local NPC)', () => {
@@ -256,6 +260,9 @@ describe('npc-mcp-gateway', () => {
     assert.match(payload.chatgpt.gpt_instructions, /Never use assignNpcTask/i);
     assert.match(payload.chatgpt.gpt_instructions, /getSkillJob/i);
     assert.match(payload.chatgpt.gpt_instructions, /listNpcSkills/i);
+    assert.match(payload.chatgpt.gpt_instructions, /getTeamStandup/i);
+    assert.match(payload.chatgpt.gpt_instructions, /listHandoffs/i);
+    assert.ok(payload.rest_sync.team_standup_url);
   });
 
   it('REST GET /list-skills returns allowed skills', async () => {

@@ -33,11 +33,12 @@ function memberWith(perms = [], roleIds = []) {
 
 describe('permission gates fixes', () => {
   it('avatar is not a premium module; security and community are', () => {
-    const { PREMIUM_MODULES, isPremiumModule } = require('../../src/denizen-guild-plans.js');
+    const { PREMIUM_MODULES, isPremiumModule, isHomeGuild, DEFAULT_HOME_GUILD_ID } = require('../../src/denizen-guild-plans.js');
     assert.equal(isPremiumModule('avatar'), false);
     assert.equal(isPremiumModule('security'), true);
     assert.equal(isPremiumModule('community'), true);
     assert.ok(!PREMIUM_MODULES.has('avatar'));
+    assert.equal(isHomeGuild(DEFAULT_HOME_GUILD_ID), true);
   });
 
   it('voicemaster has no blanket ManageChannels registry gate', () => {

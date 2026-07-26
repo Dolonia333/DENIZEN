@@ -81,7 +81,13 @@ const TEAM_RESOURCES = [
   {
     uri: 'team://handoffs',
     name: 'team_handoffs',
-    description: 'Pending assistant handoffs for your session',
+    description: 'Pending assistant handoffs for your session (poll + acknowledge_handoff)',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'team://standup',
+    name: 'team_standup',
+    description: 'One-shot team sync: presence, handoffs, Cursor work, directives, CRM tasks',
     mimeType: 'application/json',
   },
   {
@@ -127,14 +133,27 @@ async function toolTeamStatus(scope) {
     mcpTeamTools.buildStatusExtras(scope, { work: [] }),
   ]);
   const directives = _deps.npcBrains?.getAllDirectives?.() || {};
+  const teammates = team.teammates || [];
   return {
     ok: true,
     org_slug: scope.org_slug,
-    teammates: team.teammates || [],
+    teammates,
     teammate_count: team.count || 0,
+    online_count: team.online_count || teammates.filter((t) => t.online).length,
+    presence_summary: {
+      office: teammates.filter((t) => t.ws_online).length,
+      ai: teammates.filter((t) => t.mcp_online).length,
+      offline: teammates.filter((t) => !t.online).length,
+    },
+    presence_hint: team.presence_hint || null,
     active_directives: directives,
     inference: extras.inference,
     pending_handoffs_count: extras.pending_handoffs_count,
+    poll: {
+      standup: 'team_standup',
+      handoffs: 'list_pending_handoffs',
+      ack: 'acknowledge_handoff',
+    },
   };
 }
 
@@ -234,6 +253,10 @@ async function readResource(scope, uri) {
   if (uri === 'team://handoffs') {
     const inbox = await mcpTeamTools.callTool(scope, 'list_pending_handoffs', { limit: 20 });
     return JSON.stringify(inbox, null, 2);
+  }
+  if (uri === 'team://standup') {
+    const standup = await mcpTeamTools.callTool(scope, 'team_standup', {});
+    return JSON.stringify(standup, null, 2);
   }
   if (uri === 'team://cursor-work') {
     const queue = await mcpCursorTools.callTool(scope, 'list_cursor_work', { status: 'pending', limit: 25 });

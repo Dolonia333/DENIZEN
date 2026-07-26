@@ -17,6 +17,8 @@ Billing (Stripe wiring): `src/denizen-guild-billing.js` + two server endpoints. 
 
 Plans are **per guild**, not per user. One paying server = one subscription.
 
+**Home guild exception:** the official Denizen Discord server (`DISCORD_HOME_GUILD_ID` / `DISCORD_HOME_GUILD_IDS`, default snowflake in `denizen-guild-plans.js`) gets premium modules (`security`, `community`) **without Stripe**. Every other Discord server still pays.
+
 **Premium modules** (require a paid, active plan):
 
 | Module | What it covers |

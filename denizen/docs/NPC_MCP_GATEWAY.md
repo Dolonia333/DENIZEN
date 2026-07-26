@@ -61,6 +61,9 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 | `POST` | `/api/npc-sync/activity` | Bearer | REST alias for `log_activity` |
 | `POST` | `/api/npc-sync/run-skill` | Bearer (`skills`) | REST alias for `run_skill` — **async by default** (job_id + poll) |
 | `POST` | `/api/npc-sync/assign-task` | Bearer | **Blocked for ChatGPT** — returns `assign_task_blocked_for_chatgpt` |
+| `GET` | `/api/npc-sync/team-standup` | Bearer | One-shot team sync (`team_standup`) |
+| `GET` | `/api/npc-sync/handoffs` | Bearer | Pending handoff inbox |
+| `POST` | `/api/npc-sync/ack-handoff` | Bearer (`handoff`) | Mark handoff delivered |
 
 ### MCP tools
 
@@ -80,15 +83,17 @@ Protected NPCs (`abby`, `bouncer`, `lucy`) cannot receive MCP tokens. Demo org (
 
 **Team orchestration**
 
-9. **`list_team`** — org teammates with claimed NPC and online presence
+9. **`list_team`** — org teammates with WS + MCP/AI presence
 10. **`send_handoff`** — message a teammate or escalate to CEO bridge
-11. **`list_pending_handoffs`** — your assistant handoff inbox
+11. **`list_pending_handoffs`** — your assistant handoff inbox (poll regularly)
+12. **`acknowledge_handoff`** — mark a handoff delivered after you act
+13. **`team_standup`** — one-call sync: presence, handoffs, Cursor work, directives, CRM
 
 **CRM** (NPCs with CRM skills only)
 
-12. **`crm_pipeline_brief`** — pipeline summary
-13. **`crm_list_tasks`** — open CRM tasks
-14. **`crm_draft_email`** — draft email (does not send)
+14. **`crm_pipeline_brief`** — pipeline summary
+15. **`crm_list_tasks`** — open CRM tasks
+16. **`crm_draft_email`** — draft email (does not send)
 
 **Market** (Roki only) — see `denizen-mcp-market-tools.js`
 
@@ -101,20 +106,20 @@ Use **Team MCP** in the office UI or `POST /api/mcp/team-tokens`.
 | `team_status` | Whole-office snapshot |
 | `run_as_npc` | Run any tool as another NPC |
 | `broadcast_task` | Assign task to many NPCs |
-| `list_team` / `send_handoff` / `list_pending_handoffs` | Team orchestration |
+| `list_team` / `send_handoff` / `list_pending_handoffs` / `acknowledge_handoff` / `team_standup` | Team orchestration |
 
-**MCP Resources:** `team://roster`, `team://handoffs`
+**MCP Resources:** `team://roster`, `team://handoffs`, `team://standup`
 
-## Token scopes (v1.9)
+## Token scopes (v2.0)
 
 Tokens may carry scopes in `metadata.scopes`. Missing scopes = full access (backward compatible).
 
 | Scope | Tools |
 |-------|--------|
-| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, CRM read, market read |
+| `read` | `get_status`, `update_memory`, `log_activity`, `list_skills`, `list_team`, `team_standup`, `list_pending_handoffs`, CRM read, market read |
 | `skills` | `run_skill`, `run_as_npc` |
 | `crm_write` | `crm_draft_email` |
-| `handoff` | `send_handoff` |
+| `handoff` | `send_handoff`, `acknowledge_handoff` |
 | `delegate` | `assign_task`, `delegate_task`, `announce_in_office`, `broadcast_task` |
 
 **Presets** (Settings / Connect AI): `read`, `standard` (read+skills+handoff), `full`.
@@ -140,9 +145,9 @@ Works within OpenAI ToS — subscription chat only, no programmatic API routing.
 3. Paste `https://<your-host>/api/npc-sync/openapi.json`.
 4. **Authentication** → API Key → Type: **Bearer** → paste your NPC token.
 5. Paste suggested instructions from the modal (or use `data/templates/chatgpt-npc-assistant.yaml`).
-6. After Denizen Action schema updates, **re-import** the OpenAPI URL so `listNpcSkills` / `runNpcSkill` appear.
+6. After Denizen Action schema updates, **re-import** the OpenAPI URL so standup / handoff / skill Actions appear.
 
-ChatGPT should call **`runNpcSkill`** (async job + **`getSkillJob`** poll) to do work itself. **`assignNpcTask` is blocked** on the ChatGPT REST path — it used to wake the slow local office brain.
+ChatGPT should start with **`getTeamStandup`**, poll **`listHandoffs`** + **`ackHandoff`**, and do work with **`runNpcSkill`** (async + **`getSkillJob`**). **`assignNpcTask` is blocked** on the ChatGPT REST path.
 
 ### Claude.ai (MCP connector — Pro subscription)
 

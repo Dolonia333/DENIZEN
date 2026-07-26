@@ -265,7 +265,8 @@
     {
       label: 'Team & tasks',
       tools: [
-        'list_team', 'send_handoff', 'list_pending_handoffs',
+        'team_standup', 'list_team', 'send_handoff',
+        'list_pending_handoffs', 'acknowledge_handoff',
         'team_status', 'run_as_npc', 'broadcast_task',
         'delegate_task', 'assign_task', 'announce_in_office',
       ],

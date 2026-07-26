@@ -39,6 +39,11 @@ describe('denizen-mcp-team-tools', () => {
         getPendingHandoffs: async () => ([
           { id: 'h1', message: 'Review deck', status: 'pending' },
         ]),
+        markHandoffDelivered: async (id, sessionId) => ({
+          id,
+          session_id: sessionId,
+          status: 'delivered',
+        }),
       },
       visitorConnections: {
         assertCanMessage: async () => true,
@@ -48,6 +53,7 @@ describe('denizen-mcp-team-tools', () => {
       npcBrains: {
         getDirective: () => ({ from: 'MCP', task: 'Ship mockups', urgent: false }),
         getOpenCommitments: () => [{ text: 'Send Figma link', status: 'open' }],
+        getAllDirectives: () => ({ Rob: { from: 'MCP', task: 'Ship mockups', urgent: true } }),
       },
     });
   });
@@ -62,6 +68,27 @@ describe('denizen-mcp-team-tools', () => {
     assert.equal(r.ok, true);
     assert.equal(r.count, 1);
     assert.equal(r.teammates[0].npc_key, 'josh');
+    assert.equal(r.teammates[0].ws_online, true);
+    assert.equal(r.online_count, 1);
+    assert.ok(r.presence_hint);
+  });
+
+  it('acknowledge_handoff marks delivered', async () => {
+    const r = await teamTools.callTool(SCOPE, 'acknowledge_handoff', { handoff_id: 'h1' });
+    assert.equal(r.ok, true);
+    assert.equal(r.status, 'delivered');
+  });
+
+  it('team_standup aggregates action items', async () => {
+    const r = await teamTools.callTool(SCOPE, 'team_standup', {
+      include_crm: false,
+      include_cursor: false,
+    });
+    assert.equal(r.ok, true);
+    assert.equal(r.handoffs.count, 1);
+    assert.ok(Array.isArray(r.action_items));
+    assert.ok(r.action_items.some((a) => a.action === 'list_pending_handoffs'));
+    assert.ok(r.next_poll?.tools?.includes('team_standup'));
   });
 
   it('send_handoff to CEO', async () => {

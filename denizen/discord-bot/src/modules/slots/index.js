@@ -409,8 +409,8 @@ function createSlots(deps) {
     const cfg = slotCfg(ctx.guild.id);
     const staffActions = new Set([
       'setup', 'create', 'renew', 'extend', 'transfer', 'revoke', 'hold', 'unhold',
-      'delete', 'warn', 'blacklist', 'unblacklist', 'announce', 'ticket', 'createredeem',
-      'redeems', 'deleteredeem', 'history',
+      'delete', 'warn', 'blacklist', 'unblacklist', 'announce', 'ticket', 'ticketcat',
+      'createredeem', 'redeems', 'deleteredeem', 'history',
     ]);
     const publicActions = new Set(['list', 'info', 'leaderboard', 'ping']);
 
@@ -447,6 +447,19 @@ function createSlots(deps) {
         });
       }
 
+      let ticketCat = cfg.ticketCategoryId
+        ? await ctx.guild.channels.fetch(cfg.ticketCategoryId).catch(() => null)
+        : null;
+      if (!ticketCat || ticketCat.type !== ChannelType.GuildCategory) {
+        ticketCat = await ctx.guild.channels.create({
+          name: 'Slot-Tickets',
+          type: ChannelType.GuildCategory,
+          permissionOverwrites: [
+            { id: ctx.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+          ],
+        });
+      }
+
       async function ensureRole(name, existingId) {
         if (existingId) {
           const r = await ctx.guild.roles.fetch(existingId).catch(() => null);
@@ -465,6 +478,7 @@ function createSlots(deps) {
         c.slots.categoryId1 = cat1.id;
         c.slots.categoryId2 = cat2.id;
         c.slots.logChannelId = log.id;
+        c.slots.ticketCategoryId = ticketCat.id;
         c.slots.staffRoleId = staffRole.id;
         c.slots.slotRoleId = holderRole.id;
         c.slots.premiumRoleId = premiumRole.id;
@@ -478,10 +492,51 @@ function createSlots(deps) {
           'Slots ready',
           [
             `Categories: ${cat1} · ${cat2}`,
+            `Ticket category: ${ticketCat}`,
             `Logs: ${log}`,
             `Roles: ${staffRole} · ${holderRole} · ${premiumRole}`,
-            'Set ticket category: `,slots ticket` after configuring `ticketCategoryId`.',
+            'Post panel: `,slots ticket` · Override category: `,slots ticketcat #category`',
           ].join('\n'),
+        )],
+      });
+    }
+
+    // ── ticketcat — set / create category for Open slot ticket buttons ──
+    if (act === 'ticketcat') {
+      if (!canRunCommand(ctx, { permission: 'Administrator' }).ok && !isStaff(ctx)) {
+        return denyStaff(ctx);
+      }
+      let cat = ctx.getChannel?.('category')
+        || ctx.message?.mentions?.channels?.first?.()
+        || null;
+      const rawId = (args[0] || ctx.args?.[0] || '').replace(/[<#>]/g, '');
+      if (!cat && rawId) {
+        cat = await ctx.guild.channels.fetch(rawId).catch(() => null);
+      }
+      if (cat && cat.type !== ChannelType.GuildCategory) {
+        return ctx.reply({
+          embeds: [dangerEmbed('Not a category', 'Mention a **category** channel, or omit to auto-create Slot-Tickets.')],
+        });
+      }
+      if (!cat) {
+        cat = await ctx.guild.channels.create({
+          name: 'Slot-Tickets',
+          type: ChannelType.GuildCategory,
+          permissionOverwrites: [
+            { id: ctx.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+          ],
+        });
+      }
+      config.update(ctx.guild.id, (c) => {
+        c.slots = c.slots || {};
+        c.slots.enabled = true;
+        c.slots.ticketCategoryId = cat.id;
+        return c;
+      });
+      return ctx.reply({
+        embeds: [successEmbed(
+          'Ticket category set',
+          `${cat}\nOpen-ticket buttons will create channels here. Post panel: \`,slots ticket\``,
         )],
       });
     }
@@ -847,7 +902,9 @@ function createSlots(deps) {
 
   async function openSlotTicket(guild, user) {
     const cfg = slotCfg(guild.id);
-    if (!cfg.ticketCategoryId) throw new Error('Ticket category not set — configure `ticketCategoryId` in slots config');
+    if (!cfg.ticketCategoryId) {
+      throw new Error('Ticket category not set — run `,slots setup` or `,slots ticketcat` (Admin/staff)');
+    }
     const existing = store.getTicketByUser(guild.id, user.id);
     if (existing) throw new Error(`You already have a ticket: <#${existing.channelId}>`);
 

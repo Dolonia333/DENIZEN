@@ -3871,7 +3871,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity|list-skills|skill-job|run-skill|assign-task)\/?$/);
+  const npcSyncMatch = urlPath.match(/^\/api\/npc-sync\/(status|memory|activity|list-skills|skill-job|run-skill|assign-task|team-standup|handoffs|ack-handoff)\/?$/);
   if (npcSyncMatch) {
     npcMcpGateway.handleRestSync(req, res, npcSyncMatch[1]).catch((err) => {
       res.writeHead(500, { 'Content-Type': 'application/json' });

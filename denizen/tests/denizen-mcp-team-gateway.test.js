@@ -34,14 +34,17 @@ describe('denizen-mcp-team-gateway', () => {
       denizenVisitor: {
         listTeammatesWithPresence: async () => ([{ session_id: 's2', display_name: 'Jake', online: true }]),
         getPendingHandoffs: async () => ([]),
+        markHandoffDelivered: async (id) => ({ id, status: 'delivered' }),
         sendHandoff: async (p) => ({ id: 'h1', ...p }),
         resolveHandoffTarget: async () => ({ session_id: 's2' }),
       },
       visitorConnections: { assertCanMessage: async () => true },
-      listOnlineSessionIds: () => new Set(),
+      listOnlineSessionIds: () => new Set(['s2']),
       npcBrains: {
         assignDirective: () => { assignCount += 1; },
         getAllDirectives: () => ({ Rob: { task: 'Design mockup', from: 'MCP' } }),
+        getDirective: () => null,
+        getOpenCommitments: () => [],
       },
     });
   });
@@ -58,7 +61,21 @@ describe('denizen-mcp-team-gateway', () => {
     const r = await teamGateway.callTool(TEAM_SCOPE, 'team_status', {});
     assert.equal(r.ok, true);
     assert.equal(r.teammate_count, 1);
+    assert.equal(r.online_count, 1);
+    assert.ok(r.presence_summary);
+    assert.ok(r.poll?.standup);
     assert.ok(r.active_directives.Rob);
+  });
+
+  it('team_standup tool and resource are registered', async () => {
+    assert.ok(teamGateway.TEAM_TOOL_DEFINITIONS.some((t) => t.name === 'team_standup'));
+    assert.ok(teamGateway.TEAM_RESOURCES.some((r) => r.uri === 'team://standup'));
+    const r = await teamGateway.callTool(TEAM_SCOPE, 'team_standup', {
+      include_crm: false,
+      include_cursor: false,
+    });
+    assert.equal(r.ok, true);
+    assert.ok(Array.isArray(r.action_items));
   });
 
   it('run_as_npc delegates to npc gateway', async () => {

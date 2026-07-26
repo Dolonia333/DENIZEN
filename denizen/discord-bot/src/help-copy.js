@@ -63,7 +63,7 @@ function spacesHelpEmbed(opts = {}) {
       { name: 'Duels', value: `\`${p}duel @user [wager]\` · \`${p}duel open\` · \`${p}duel lb\` · \`${p}forfeit\``, inline: true },
       { name: 'Games', value: `\`${p}coinflip @user\` · \`${p}rps @user\` · open boards with \`${p}coinflip open\``, inline: true },
       { name: 'Shop', value: `\`${p}shop\` · \`${p}buy <item>\` · \`${p}inv\` · \`${p}redeem <code>\``, inline: true },
-      { name: 'Seller slots', value: `\`${p}slots setup\` · \`${p}screate @user 7 d\` · \`${p}myslot\` · \`${p}slotping\``, inline: false },
+      { name: 'Seller slots', value: `\`${p}slots setup\` · \`${p}slots ticketcat\` · \`${p}screate @user 7 d\` · \`${p}myslot\` · \`${p}slotping\``, inline: false },
       { name: 'Game', value: 'Earn Credits → duel / coinflip / rps → spend in the Shop. Replies stay in chat.', inline: false },
       { name: 'Chat', value: `\`@Denizen <question>\`\nStaff: \`${p}chat on\``, inline: true },
     ],
