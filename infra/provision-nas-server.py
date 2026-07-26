@@ -138,7 +138,7 @@ def main() -> int:
         "DENIZEN_PUBLIC_DEMO": local.get("DENIZEN_PUBLIC_DEMO", "true"),
         "DENIZEN_PUBLIC_DEMO_TRIM_BRAINS": local.get("DENIZEN_PUBLIC_DEMO_TRIM_BRAINS", "false"),
         "DENIZEN_PUBLIC_DEMO_NPCS": local.get("DENIZEN_PUBLIC_DEMO_NPCS", "abby,alex,lucy,bouncer"),
-        "DENIZEN_PUBLIC_DEMO_MODEL": local.get("DENIZEN_PUBLIC_DEMO_MODEL", "claude-haiku-3-5-20241022"),
+        "DENIZEN_PUBLIC_DEMO_MODEL": local.get("DENIZEN_PUBLIC_DEMO_MODEL", "claude-haiku-4-5"),
         "DENIZEN_MAX_WS_CLIENTS": local.get("DENIZEN_MAX_WS_CLIENTS", "30"),
         "DENIZEN_PLATFORM_BRIDGE": local.get("DENIZEN_PLATFORM_BRIDGE", "false"),
     }

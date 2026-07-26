@@ -76,7 +76,7 @@ def claude_api_reply(question: str, npc: str, grok_reply: str | None = None) -> 
         "React to Grok if present; agree or add nuance. No corporate fluff."
     )
     payload = {
-        "model": os.environ.get("MENTOR_CLAUDE_MODEL", "claude-haiku-3-5-20241022"),
+        "model": os.environ.get("MENTOR_CLAUDE_MODEL", "claude-haiku-4-5"),
         "max_tokens": 600,
         "messages": [{"role": "user", "content": prompt}],
     }

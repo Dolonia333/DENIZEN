@@ -857,7 +857,7 @@ class NpcBrainManager {
         this.providers.claude = {
           baseUrl: 'https://api.anthropic.com',
           apiKey: p.anthropic.apiKey,
-          model: p.anthropic.model || haikuModel?.id || anthropicModels[0]?.id || 'claude-haiku-3-5-20241022',
+          model: p.anthropic.model || haikuModel?.id || anthropicModels[0]?.id || 'claude-haiku-4-5',
           type: 'anthropic',
         };
       }
@@ -950,7 +950,7 @@ class NpcBrainManager {
       this.providers['claude-haiku'] = {
         baseUrl: 'https://api.anthropic.com',
         apiKey: publicDemoKey,
-        model: promptTuning?.publicDemoModel || 'claude-haiku-3-5-20241022',
+        model: promptTuning?.publicDemoModel || 'claude-haiku-4-5',
         type: 'anthropic',
       };
     }

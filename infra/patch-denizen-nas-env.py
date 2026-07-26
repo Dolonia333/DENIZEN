@@ -30,7 +30,7 @@ PATCH = {
     "DENIZEN_PUBLIC_DEMO": "true",
     "DENIZEN_PUBLIC_DEMO_TRIM_BRAINS": "false",
     "DENIZEN_PUBLIC_DEMO_NPCS": "abby,alex,lucy,bouncer",
-    "DENIZEN_PUBLIC_DEMO_MODEL": "claude-haiku-3-5-20241022",
+    "DENIZEN_PUBLIC_DEMO_MODEL": "claude-haiku-4-5",
     "DENIZEN_MAX_WS_CLIENTS": "30",
     "DENIZEN_PLATFORM_BRIDGE": "false",
     "DENIZEN_INFERENCE_RPC_TIMEOUT_MS": "120000",

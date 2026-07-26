@@ -40,7 +40,7 @@ module.exports = {
   publicDemoMode: publicDemo || !!_publicDemoFolders,
   publicDemoNpcFolders: _publicDemoFolders,
   publicDemoAnthropicKey: String(process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY || ''),
-  publicDemoModel: String(process.env.DENIZEN_PUBLIC_DEMO_MODEL || 'claude-haiku-3-5-20241022'),
+  publicDemoModel: String(process.env.DENIZEN_PUBLIC_DEMO_MODEL || 'claude-haiku-4-5'),
   publicDemoUseCloud: Boolean(
     process.env.DENIZEN_PUBLIC_DEMO_ANTHROPIC_KEY
     || (publicDemo && process.env.ANTHROPIC_API_KEY)
@@ -82,8 +82,11 @@ module.exports = {
   anthropicPromptCache: envBool('DENIZEN_ANTHROPIC_PROMPT_CACHE', true),
   evidenceRule: 'Do not claim you fixed, shipped, researched, or filed something unless you ran run_skill or produced an artifact this cycle. Say you will check instead.',
   autoClaimSprintTasks: envBool('DENIZEN_AUTO_CLAIM_SPRINT', !economy),
-  /** Off by default — enables run_skill nudges (drives ~27% run_skill in telemetry). Set true to force real tools. */
-  realWorkMode: envBool('DENIZEN_REAL_WORK_MODE', economy ? false : false),
+  /** Enables the grounding check + run_skill nudges (advisory: flags unbacked
+   * completion claims, never blocks actions). Default ON outside economy mode
+   * — both branches being `false` was a typo that silently disabled the
+   * honesty rail everywhere (dossier defect #10). */
+  realWorkMode: envBool('DENIZEN_REAL_WORK_MODE', economy ? false : true),
   realWorkCyclesWithoutSkill: envInt('DENIZEN_REAL_WORK_CYCLES', economy ? 8 : 6),
   /** Hard cap: max autonomous run_skill per NPC per cooldown window (directives bypass). */
   runSkillCooldownMs: envInt('DENIZEN_RUN_SKILL_COOLDOWN_MS', 900000),
