@@ -124,17 +124,24 @@ def main() -> int:
             print("WARN: could not resolve remote SHA (key not on GitHub yet?) "
                   "— first tick WILL deploy")
 
-    # 6. (re)start the deployer container
+    # 6. (re)start the deployer container.
+    # CRITICAL: the deploy dir is mounted at its REAL host path, not an alias.
+    # docker-compose.yml uses relative binds (./data, ./layouts); compose
+    # resolves them against its own cwd INSIDE this container, but the Docker
+    # daemon mounts them from the HOST. If the paths differ, the recreated
+    # denizen-server lands in Created state with "Bind mount failed" and
+    # production goes DOWN (2026-07-26 incident).
     run(client, f"{DOCKER} rm -f denizen-deployer 2>/dev/null")
     cmd = (
         f"{DOCKER} run -d --name denizen-deployer --restart unless-stopped "
         f"--network host "
         f"-v /var/run/docker.sock:/var/run/docker.sock "
         f"-v {REPO_DIR}:/repo "
-        f"-v {DEPLOY_DIR}:/deploy "
+        f"-v {DEPLOY_DIR}:{DEPLOY_DIR} "
         f"-e REPO_URL='{REPO_URL}' -e BRANCH='{BRANCH}' "
+        f"-e DEPLOY_DIR='{DEPLOY_DIR}' "
         f"-e POLL_SECONDS='{poll}' -e HEALTH_PORT='{PORT}' "
-        f"--entrypoint /bin/sh {DEPLOYER_IMAGE} /deploy/auto-deploy-loop.sh"
+        f"--entrypoint /bin/sh {DEPLOYER_IMAGE} {DEPLOY_DIR}/auto-deploy-loop.sh"
     )
     code, out = run(client, cmd, timeout=600)
     if code != 0:
