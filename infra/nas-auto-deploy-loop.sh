@@ -54,6 +54,12 @@ while :; do
     log "new $BRANCH: $REMOTE (deployed: $CURRENT) — building"
     git reset --hard "origin/$BRANCH" --quiet
 
+    # compose config is GitOps'd too: the deploy-dir copy is what compose
+    # actually reads, refresh it from the repo on every deploy
+    cp "$REPO_DIR/denizen/docker-compose.production.yml" \
+       "$DEPLOY_DIR/docker-compose.yml" 2>>"$LOG" \
+      || log "WARN: compose refresh failed — using existing copy"
+
     # keep a rollback tag of whatever is currently running
     docker tag "$IMAGE" "${IMAGE%:*}:prev" 2>/dev/null || true
 

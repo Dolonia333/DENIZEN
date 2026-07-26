@@ -13,6 +13,11 @@ services:
       - ./data:/app/data
       - ./layouts:/app/layouts
       - ./desktop:/app/desktop
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
     healthcheck:
       test:
         - CMD
