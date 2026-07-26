@@ -37,7 +37,13 @@ denizen/data/dossier-proposals.json
 
 # Embedded git repos (tracked separately)
 openclaw/
-.github/
+# .github contains an embedded clone of the GitHub *profile* repo — ignore
+# that noise specifically, NOT the whole directory: workflows/ must be
+# trackable or CI files can never be committed (this bit us until 2026-07-25).
+.github/.git/
+.github/profile/
+.github/README.md
+.github/copilot-instructions.md
 
 # Large raw game asset dumps (binary files, not source code)
 pixel game stuff/
@@ -136,6 +142,8 @@ infra/_*
 infra/hotfix-*.py
 infra/deploy-log*.txt
 infra/probe-*.py
+# …but durable probe tooling is explicitly tracked:
+!infra/probe-container-drift.py
 infra/connect-robinhood-local.py
 infra/patch-discord-bot-nas-env.py
 infra/reset-team-password-nas.py

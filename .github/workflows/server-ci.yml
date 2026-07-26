@@ -1,0 +1,64 @@
+name: server-ci
+
+# Regression-gate CI: the suite has a known set of pre-existing failures
+# (tracked in .github/known-test-failures.txt and in the dossier defect
+# register). The job fails ONLY if the failure count exceeds that baseline,
+# so new regressions block while the legacy reds are burned down.
+# Tighten the baseline file as failures get fixed.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "denizen/**"
+      - ".github/workflows/server-ci.yml"
+      - ".github/known-test-failures.txt"
+  pull_request:
+    paths:
+      - "denizen/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: denizen/package-lock.json
+
+      - name: Install deps
+        working-directory: denizen
+        run: npm ci --no-audit --no-fund
+
+      - name: Run suite (regression gate vs known baseline)
+        working-directory: denizen
+        shell: bash
+        run: |
+          set +e
+          npm test 2>&1 | tee test-output.log
+          set -e
+          SUMMARY=$(grep -Eo 'failed=[0-9]+' test-output.log | tail -1)
+          FAILED=${SUMMARY#failed=}
+          BASELINE=$(tr -d '[:space:]' < ../.github/known-test-failures.txt)
+          echo "failed=${FAILED:-unknown} baseline=${BASELINE}"
+          if [ -z "${FAILED}" ]; then
+            echo "::error::Could not parse test summary — treating as failure"
+            exit 1
+          fi
+          if [ "${FAILED}" -gt "${BASELINE}" ]; then
+            echo "::error::Test failures (${FAILED}) exceed known baseline (${BASELINE}) — a regression was introduced"
+            exit 1
+          fi
+          echo "Within baseline — pass"
+
+      - name: List failing files (informational)
+        if: always()
+        working-directory: denizen
+        shell: bash
+        run: grep -E "FAIL tests" test-output.log || echo "no failing files"
