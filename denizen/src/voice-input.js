@@ -145,7 +145,10 @@
             const audioBase64 = await blobToBase64(blob);
             const res = await fetch('/api/stt', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                ...(globalThis.DenizenVisitorSession?.authHeaders?.() || {}),
+              },
               body: JSON.stringify({
                 audioBase64,
                 mimeType: blob.type || recorder?.mimeType || 'audio/webm',

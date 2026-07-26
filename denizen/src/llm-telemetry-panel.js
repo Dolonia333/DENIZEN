@@ -747,7 +747,7 @@
   async function loadStatsBundle() {
     const w = state.windowMs || 7 * 24 * 60 * 60 * 1000; // "all" → 7 days for stats
     const safe = (url, fallback) =>
-      fetch(url, { cache: 'no-store' })
+      fetch(url, { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) })
         .then(r => r.ok ? r.json() : fallback)
         .catch(() => fallback);
     const [stats, decisions, pcStats, pcActive, pcRecent, chains, proposals, cost, npcProfiles, parseHealth, grounding] = await Promise.all([
@@ -796,7 +796,7 @@
         if (state.filterErrorsOnly) qs.set('errorsOnly', 'true');
         const sinceMs = effectiveSinceMs();
         if (sinceMs) qs.set('sinceMs', sinceMs);
-        const r = await fetch(callsUrl(qs.toString()), { cache: 'no-store' });
+        const r = await fetch(callsUrl(qs.toString()), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) });
         const j = await r.json();
         state.calls = j.calls || [];
         body.innerHTML = state.calls.length === 0
@@ -806,7 +806,7 @@
         await loadStatsBundle();
         body.innerHTML = renderStats(state.stats);
       } else if (state.tab === 'errors') {
-        const r = await fetch(errorsUrl(), { cache: 'no-store' });
+        const r = await fetch(errorsUrl(), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) });
         const j = await r.json();
         state.errors = j.errors || [];
         body.innerHTML = state.errors.length === 0
@@ -815,8 +815,8 @@
       } else if (state.tab === 'openclaw') {
         const w = state.windowMs || 7 * 24 * 60 * 60 * 1000;
         const [eventsRes, statsRes] = await Promise.all([
-          fetch(openclawUrl(), { cache: 'no-store' }).then(r => r.json()),
-          fetch(openclawStatsUrl(w), { cache: 'no-store' }).then(r => r.json()),
+          fetch(openclawUrl(), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) }).then(r => r.json()),
+          fetch(openclawStatsUrl(w), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) }).then(r => r.json()),
         ]);
         const events = eventsRes.events || [];
         body.innerHTML = renderOpenClaw(events, statsRes);
@@ -1342,7 +1342,7 @@
   async function pollStats() {
     try {
       const w = state.windowMs || 7 * 24 * 60 * 60 * 1000;
-      const r = await fetch(statsUrl(w), { cache: 'no-store' });
+      const r = await fetch(statsUrl(w), { cache: 'no-store', headers: (globalThis.DenizenVisitorSession?.authHeaders?.() || {}) });
       if (r.ok) state.stats = await r.json();
       paintChip();
       if (state.open && state.tab === 'stats') {

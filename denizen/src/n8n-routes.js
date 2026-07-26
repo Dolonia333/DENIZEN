@@ -41,7 +41,17 @@ function authorizeN8nRoute(req, body = {}, env = process.env) {
 
   if (inboundSecret && gotInbound === inboundSecret) return true;
   if (fleetToken && gotFleet === fleetToken) return true;
-  if (!inboundSecret && !fleetToken) return true; // dev open when unset
+  if (!inboundSecret && !fleetToken) {
+    // No secrets configured: allow ONLY a local operator (loopback with no
+    // forwarding headers). Dev on localhost keeps working without env vars,
+    // but an internet-exposed box with an incomplete .env no longer exposes
+    // workflow create/activate (dossier G#4 — was fail-open).
+    try {
+      return require('./denizen-host-compute').isLocalOperatorRequest(req);
+    } catch (_) {
+      return false;
+    }
+  }
   return false;
 }
 

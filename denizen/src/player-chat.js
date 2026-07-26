@@ -3380,7 +3380,10 @@ class PlayerChat {
       grantBtn.disabled = true;
       fetch('/api/grant-permission', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(globalThis.DenizenVisitorSession?.authHeaders?.() || {}),
+        },
         body: JSON.stringify({
           npcName,
           permission: permission || task,

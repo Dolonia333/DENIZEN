@@ -53,7 +53,13 @@
     const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
     try {
       const res = await fetch(path, {
-        headers: { 'Content-Type': 'application/json', ...(opts?.headers || {}) },
+        // authHeaders() carries the signed CEO grant + session — the market
+        // write routes and portfolio/positions reads are operator-gated.
+        headers: {
+          'Content-Type': 'application/json',
+          ...(globalThis.DenizenVisitorSession?.authHeaders?.() || {}),
+          ...(opts?.headers || {}),
+        },
         ...opts,
         signal: ctrl.signal,
       });

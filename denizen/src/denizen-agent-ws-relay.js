@@ -100,8 +100,14 @@ function buildRuntimePublicConfig(env = process.env) {
 
 async function fetchPrimaryWorldSnapshot(env = process.env) {
   const base = resolvePrimaryBaseUrl(env);
+  // Cross-host proxy: send the internal bearer so a non-public-demo primary
+  // (where /api/world-state is operator-gated) still serves the follower.
+  const headers = {};
+  const internal = String(env.DENIZEN_INTERNAL_API_TOKEN || '').trim();
+  if (internal) headers.Authorization = `Bearer ${internal}`;
   const res = await fetch(`${base}/api/world-state`, {
     method: 'GET',
+    headers,
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) {

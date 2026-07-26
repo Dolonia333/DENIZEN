@@ -74,7 +74,14 @@
       const status = document.getElementById('status');
       status.textContent = 'Loading...';
       try {
-        const res = await fetch(`/api/llm/usage?hours=${hours}&recent=100`);
+        // Standalone page: send the CEO grant from localStorage so the
+        // operator-gated usage API works through the tunnel too.
+        const authHeaders = {};
+        try {
+          const grant = localStorage.getItem('denizen-ceo-grant');
+          if (grant) { authHeaders['X-Denizen-Ceo-Grant'] = grant; authHeaders['X-Access-Method'] = 'ceo'; }
+        } catch (_) {}
+        const res = await fetch(`/api/llm/usage?hours=${hours}&recent=100`, { headers: authHeaders });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || 'Unknown error');
         render(data.stats);

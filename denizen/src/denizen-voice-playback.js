@@ -68,7 +68,10 @@
     const t0 = performance.now?.() || Date.now();
     const res = await fetch(TTS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(globalThis.DenizenVisitorSession?.authHeaders?.() || {}),
+      },
       body: JSON.stringify({ npcName, text: String(text).slice(0, 4000) }),
       signal,
     });

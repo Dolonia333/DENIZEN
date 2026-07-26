@@ -1068,7 +1068,8 @@
     try {
       const res = await fetch('/api/soul-proposal/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        credentials: 'include',
         body: JSON.stringify({ id: '__probe__' }),
       });
       const ctype = (res.headers.get('content-type') || '').toLowerCase();
@@ -1712,7 +1713,8 @@
     try {
       const res = await fetch('/api/soul-proposal/apply', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        credentials: 'include',
         body: JSON.stringify({ id }),
       });
       if (!res.ok) {

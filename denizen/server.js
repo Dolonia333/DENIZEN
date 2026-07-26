@@ -3485,6 +3485,88 @@ function _hasBouncerApiAuth(req) {
   return hostCompute.isLocalOperatorRequest(req);
 }
 
+// ---- Operator API auth (dossier defect G#4) --------------------------------
+// Sync-verifiable principals: local operator (loopback, no forwarding headers),
+// signed CEO grant (sent by DenizenVisitorSession.authHeaders()), or an
+// internal/fleet bearer. Loopback smokes, NAS-local curls and the office UI
+// with a CEO login all pass; anonymous tunnel traffic does not.
+function _operatorBearerOk(req) {
+  const bearer = _fleetBearerFromReq(req);
+  const internal = String(process.env.DENIZEN_INTERNAL_API_TOKEN || '').trim();
+  if (internal && bearer === internal) return true;
+  const fleet = String(process.env.DENIZEN_FLEET_AGENT_TOKEN || '').trim();
+  if (fleet && (bearer === fleet || String(req?.headers?.['x-fleet-agent-token'] || '').trim() === fleet)) return true;
+  return false;
+}
+
+function _operatorAccessSync(req) {
+  return hostCompute.isLocalOperatorRequest(req)
+    || hostCompute.isCeoPrincipalRequest(req)
+    || _operatorBearerOk(req);
+}
+
+function _denyOperatorApi(res) {
+  res.writeHead(403, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ ok: false, error: 'operator_access_required' }));
+}
+
+// Async variant: sync principals OR a verified visitor session with
+// org-manage/ceo tier (same shape as _securityTestHasCeoAccess).
+async function _hasOperatorApiAccess(req) {
+  if (_operatorAccessSync(req)) return true;
+  try {
+    return await _securityTestHasCeoAccess(req, new URL(req.url || '/', 'http://x'));
+  } catch (_) {
+    return false;
+  }
+}
+
+// Voice-tier access: any verified visitor session (ordinary visitors
+// legitimately hear NPC voices / use server STT), plus the sync principals.
+async function _hasAnySessionAccess(req, body = {}) {
+  if (_operatorAccessSync(req)) return true;
+  try {
+    const merged = _mergeSessionAuthBody(req, body || {});
+    const sessionId = _sessionIdFromRequest(req, merged, new URL(req.url || '/', 'http://x'));
+    if (!sessionId) return false;
+    const access = await _verifyVisitorSession(req, sessionId, merged);
+    return !!access;
+  } catch (_) {
+    return false;
+  }
+}
+
+const _OPERATOR_GATED_GET_EXACT = new Set([
+  '/api/llm/usage', '/api/costs', '/api/npc-profiles',
+  '/api/market/portfolio', '/api/market/positions',
+  '/api/intelligence/prediction-summary', '/api/federal/pipeline-summary',
+  '/api/intelligence/mirofish-status',
+]);
+const _OPERATOR_GATED_POST_EXACT = new Set([
+  '/api/market/watchlist', '/api/market/paper/reset', '/api/market/paper/order',
+  '/api/telemetry/openclaw', '/api/intelligence/mirofish-sync',
+]);
+
+function _operatorGatedRoute(method, urlPath) {
+  if (method === 'GET') {
+    if (_OPERATOR_GATED_GET_EXACT.has(urlPath)) return true;
+    if (urlPath.startsWith('/api/telemetry') || urlPath.startsWith('/api/pc-activity')) return true;
+    // world-state stays open in public-demo mode — the spectate/follower
+    // proxy depends on it (followers also send the internal bearer).
+    if (urlPath === '/api/world-state') {
+      return String(process.env.DENIZEN_PUBLIC_DEMO || '').trim() !== 'true';
+    }
+    return false;
+  }
+  if (method === 'POST') {
+    if (_OPERATOR_GATED_POST_EXACT.has(urlPath)) return true;
+    if (/^\/api\/market\/paper\/from-suggestion\/[^/]+$/.test(urlPath)) return true;
+    if (/^\/api\/trade-suggestions\/[^/]+\/dismiss$/.test(urlPath)) return true;
+    return false;
+  }
+  return false;
+}
+
 async function _securityTestHasCeoAccess(req, urlObj) {
   if (hostCompute.isCeoPrincipalRequest(req) || hostCompute.isLocalOperatorRequest(req)) return true;
   const merged = _mergeSessionAuthBody(req, {});
@@ -4464,6 +4546,12 @@ const server = http.createServer((req, res) => {
   // a 50-proposal total cap (drops oldest), and emits a worldState event.
   // Does NOT apply the edit to SOUL.md — that's deferred (operator UI).
   if (urlPath === '/api/soul-proposal' && req.method === 'POST') {
+    // Only the local NPC runtime (loopback reflection loop) or an internal
+    // bearer may enqueue soul proposals (dossier G#4).
+    if (!(hostCompute.isLocalOperatorRequest(req) || _operatorBearerOk(req))) {
+      _denyOperatorApi(res);
+      return;
+    }
     let body = '';
     req.on('data', (c) => { body += c; });
     req.on('end', () => {
@@ -4573,12 +4661,22 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/soul-proposal/approve' && req.method === 'POST') {
     let body = '';
     req.on('data', (c) => { body += c; });
-    req.on('end', () => {
+    req.on('end', async () => {
       let payload;
       try { payload = JSON.parse(body || '{}'); }
       catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
+        return;
+      }
+      // Human-review gate: same access rule as the dossier/skill approval
+      // routes (local operator, CEO grant, or approvals-capable session).
+      try {
+        const access = await _resolveApprovalsAccess(req, payload || {});
+        if (!access?.operator) { _denyOperatorApi(res); return; }
+      } catch (err) {
+        res.writeHead(err?.status || 401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || 'unauthorized' }));
         return;
       }
       const id = String(payload.id || '').trim();
@@ -4630,12 +4728,21 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/soul-proposal/apply' && req.method === 'POST') {
     let body = '';
     req.on('data', (c) => { body += c; });
-    req.on('end', () => {
+    req.on('end', async () => {
       let payload;
       try { payload = JSON.parse(body || '{}'); }
       catch (err) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
+        return;
+      }
+      // Mutates SOUL.md — same review-gate as approve (dossier G#4).
+      try {
+        const access = await _resolveApprovalsAccess(req, payload || {});
+        if (!access?.operator) { _denyOperatorApi(res); return; }
+      } catch (err) {
+        res.writeHead(err?.status || 401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || 'unauthorized' }));
         return;
       }
       const id = String(payload.id || '').trim();
@@ -5011,6 +5118,11 @@ const server = http.createServer((req, res) => {
           res.end(JSON.stringify({ error: 'bad or missing secret' }));
           return;
         }
+      } else if (!hostCompute.isLocalOperatorRequest(req)) {
+        // Secret unset: local-only instead of open-to-everyone (dossier G#4).
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'EMAIL_INBOUND_SECRET not configured; remote posts rejected' }));
+        return;
       }
 
       try {
@@ -5141,7 +5253,7 @@ const server = http.createServer((req, res) => {
   if (urlPath === '/api/grant-permission' && req.method === 'POST') {
     let body = '';
     req.on('data', c => { body += c; });
-    req.on('end', () => {
+    req.on('end', async () => {
       let p;
       try { p = JSON.parse(body || '{}'); }
       catch (err) {
@@ -5149,6 +5261,8 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
         return;
       }
+      // Grants agent permissions — operator only (dossier G#4).
+      if (!(await _hasOperatorApiAccess(req))) { _denyOperatorApi(res); return; }
 
       const npcName  = String(p.npcName  || '').trim().slice(0, 60);
       const permission = String(p.permission || p.task || '').trim().slice(0, 200);
@@ -5187,6 +5301,15 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, npcName, permission, isNew }));
     });
+    return;
+  }
+
+  // ---- OPERATOR AUTH GATE (dossier defect G#4) ----------------------------
+  // One choke point for the operator-only read/write families: telemetry,
+  // cost, pc-activity, sensitive market surfaces, intelligence summaries and
+  // (outside public demo) world-state. 403s before any handler runs.
+  if (_operatorGatedRoute(req.method, urlPath) && !_operatorAccessSync(req)) {
+    _denyOperatorApi(res);
     return;
   }
 
@@ -5231,7 +5354,9 @@ const server = http.createServer((req, res) => {
   // --- POST /api/assign-directive — push a mandatory task to an NPC ---
   // Body: { from: "Abby", to: "Josh", task: "Fix the auth bug today", urgent?: true }
   if (urlPath === '/api/assign-directive' && req.method === 'POST') {
-    _readJsonBody(req).then(payload => {
+    _readJsonBody(req).then(async (payload) => {
+      // Makes any NPC do work — operator only (dossier G#4).
+      if (!(await _hasOperatorApiAccess(req))) { _denyOperatorApi(res); return; }
       if (!payload.from || !payload.to || !payload.task) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'from, to, and task are required' }));
@@ -6318,6 +6443,8 @@ const server = http.createServer((req, res) => {
       let payload;
       try { payload = JSON.parse(body || '{}'); }
       catch (_) { res.writeHead(400); res.end(JSON.stringify({ error: 'invalid JSON' })); return; }
+      // LLM cover-letter + outbound Gmail send — operator only (dossier G#4).
+      if (!(await _hasOperatorApiAccess(req))) { _denyOperatorApi(res); return; }
 
       const result = await jobApplication.applyToJob(
         {
@@ -7732,7 +7859,7 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         res.end(JSON.stringify({ ok: false, error: 'Intelligence layer unavailable' }));
         return;
       }
-      const summary = await getPredictionSummary(denizenDb.orgId, denizenDb);
+      const summary = await getPredictionSummary(denizenDb.orgId, denizenDb, { includeTopForecasts: true, topLimit: 5 });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, summary }));
     })().catch((err) => {
@@ -9802,10 +9929,20 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   const approveMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/approve$/);
   if (approveMatch && req.method === 'POST') {
     const proposalId = approveMatch[1];
-    _readJsonBody(req, 16 * 1024).then((body) => {
+    _readJsonBody(req, 16 * 1024).then(async (body) => {
+      // Merges an NPC branch into master — review gate (dossier G#4).
+      try {
+        const access = await _resolveApprovalsAccess(req, body || {});
+        if (!access?.operator) { _denyOperatorApi(res); return null; }
+      } catch (err) {
+        res.writeHead(err?.status || 401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || 'unauthorized' }));
+        return null;
+      }
       const note = body?.note ? String(body.note).slice(0, 400) : null;
       return codingTaskRunner.approveProposal(proposalId, { note });
     }).then(result => {
+      if (!result) return;
       if (result.ok) {
         _broadcastProposalQueueChanged('code', 'approved', proposalId);
       }
@@ -9822,10 +9959,20 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   const rejectMatch = urlPath.match(/^\/api\/code-proposals\/([^/]+)\/reject$/);
   if (rejectMatch && req.method === 'POST') {
     const proposalId = rejectMatch[1];
-    _readJsonBody(req, 16 * 1024).then((body) => {
+    _readJsonBody(req, 16 * 1024).then(async (body) => {
+      // Same review gate as approve (dossier G#4).
+      try {
+        const access = await _resolveApprovalsAccess(req, body || {});
+        if (!access?.operator) { _denyOperatorApi(res); return null; }
+      } catch (err) {
+        res.writeHead(err?.status || 401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: err?.message || 'unauthorized' }));
+        return null;
+      }
       const note = body?.note ? String(body.note).slice(0, 400) : null;
       return codingTaskRunner.rejectProposal(proposalId, { note });
     }).then(result => {
+      if (!result) return;
       if (result.ok) {
         _broadcastProposalQueueChanged('code', 'rejected', proposalId);
       }
@@ -10567,6 +10714,8 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
   // Returns: { text }
   if (urlPath === '/api/stt' && req.method === 'POST') {
     (async () => {
+      // Provider-cost surface — same session-tier gate as /api/tts (G#4).
+      if (!(await _hasAnySessionAccess(req, {}))) { _denyOperatorApi(res); return; }
       const stt = _resolveSttConfig();
       if (!stt.configured) {
         res.writeHead(503, { 'Content-Type': 'application/json' });
@@ -10687,6 +10836,9 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         res.end(JSON.stringify({ error: 'invalid JSON: ' + err.message }));
         return;
       }
+      // Provider-cost surface: any verified visitor session (or operator
+      // principal) may synthesize speech; anonymous internet may not (G#4).
+      if (!(await _hasAnySessionAccess(req, payload))) { _denyOperatorApi(res); return; }
       const text = String(payload.text || '').slice(0, 4000);
       if (!text.trim()) {
         res.writeHead(400, { 'Content-Type': 'application/json' });

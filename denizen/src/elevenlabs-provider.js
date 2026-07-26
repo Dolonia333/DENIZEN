@@ -113,7 +113,10 @@
     try {
       const res = await fetch(TTS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(globalThis.DenizenVisitorSession?.authHeaders?.() || {}),
+        },
         body: JSON.stringify({ npcName, text }),
       });
       if (!res.ok) {
