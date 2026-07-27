@@ -1,19 +1,17 @@
 'use strict';
 
 const denizenDb = require('./denizen-db.js');
+const meshCapabilities = require('./denizen-mesh-capabilities.js');
 
 const JOB_TABLE = 'denizen_compute_jobs';
 
-const JOB_MIN_HARDWARE_SCORE = {
-  embedding_index: 24,
-  npc_think_batch: 16,
-  inference_rpc: 12,
-  grok_cli_chat: 0,
-  claude_cli_chat: 0,
-  sim_tick: 8,
-  web_search: 0,
-  grok_telemetry_check: 0,  // Python analysis + MCP, no heavy GPU needed
-};
+// Hardware floors live in denizen-mesh-capabilities (its header already names
+// this module as the claim-path consumer). The queue used to keep a private
+// copy of the score table with no VRAM dimension at all, so a node with a
+// weak GPU but a good CPU score could claim GPU work and then fail it. The
+// tables agreed on every score, so adopting the shared one changes nothing
+// except adding the VRAM floor — and that only bites when a node reports VRAM.
+const { JOB_MIN_HARDWARE_SCORE } = meshCapabilities;
 
 const LIGHT_NODE_BLOCKED_TYPES = new Set(['embedding_index']);
 
@@ -43,18 +41,22 @@ function buildEffectiveNodeProfile(profile, live = null) {
 
 function nodeCanRunJob(nodeProfile, job) {
   if (!job) return false;
+  // Legacy contract: an unknown node is ungated on the claim path (ranking
+  // still filters it). meshCapabilities.nodeCanClaim agrees, but be explicit.
   if (!nodeProfile) return true;
+
   const level = String(nodeProfile.contribution_level || 'standard').toLowerCase();
-  if (level === 'off') return false;
   const jobType = String(job.job_type || '').trim();
-  const payload = job.payload && typeof job.payload === 'object' ? job.payload : {};
-  const minScore = Number(
-    payload.required_hardware_score ?? JOB_MIN_HARDWARE_SCORE[jobType] ?? 0,
-  );
-  const nodeScore = Number(nodeProfile.hardware_score) || 0;
-  if (nodeScore < minScore) return false;
+  // Operator policy the capability table deliberately does not model: a node
+  // set to "light" opts out of sustained indexing work however strong it is.
   if (level === 'light' && LIGHT_NODE_BLOCKED_TYPES.has(jobType)) return false;
-  return true;
+
+  // Everything else — offline/contribution-off, hardware score, VRAM floor and
+  // payload overrides — is the shared capability gate.
+  return meshCapabilities.nodeCanClaim(
+    nodeProfile,
+    meshCapabilities.requirementsForJob(job),
+  ).ok === true;
 }
 
 function isEnabled() {
@@ -410,4 +412,10 @@ module.exports = {
   nodeCanRunJob,
   JOB_MIN_HARDWARE_SCORE,
   JOB_TABLE,
+  // Re-exported so callers that already hold the queue module can rank and
+  // pre-check without reaching for denizen-mesh-capabilities separately.
+  jobRequirements: meshCapabilities.jobRequirements,
+  nodeCanClaim: meshCapabilities.nodeCanClaim,
+  rankNodes: meshCapabilities.rankNodes,
+  requirementsForJob: meshCapabilities.requirementsForJob,
 };
