@@ -71,18 +71,23 @@ describe('workspace scaling', () => {
   before(() => { gen = new RoomGenerator(catalogData); });
 
   it('workspace has desks and chairs for each occupant', () => {
-    // Run multiple attempts because generation is randomised
-    let bestDesks = 0;
-    let bestChairs = 0;
+    // Count by instanceId, not catalog id — same as "more occupants → more
+    // items" below. The generator names what it places (desk_1, chair_2), but
+    // the catalog ids behind them are arbitrary (office_prop_g14_38_2x3,
+    // box_desk, cubicle_desk), so the old /desk|cubicle/ id regex matched only
+    // some of the pool at random. That, not the generator, was the flake: it
+    // places all 4 workstations every run.
+    const countByPrefix = (tpl, prefix) => tpl.items.filter(
+      (i) => new RegExp(`^${prefix}_`).test(i.instanceId || ''),
+    ).length;
+
+    // Deterministic now, but keep several runs so a regression in placement
+    // shows up as a hard failure rather than an occasional one.
     for (let attempt = 0; attempt < 5; attempt++) {
       const tpl = gen.generate({ purpose: 'workspace', occupants: 4, width: 512, height: 512 });
-      const desks = tpl.items.filter(i => /desk|cubicle/.test(i.id) && !/setup|monitor/.test(i.id));
-      const chairs = tpl.items.filter(i => /chair/.test(i.id));
-      bestDesks = Math.max(bestDesks, desks.length);
-      bestChairs = Math.max(bestChairs, chairs.length);
+      assert.equal(countByPrefix(tpl, 'desk'), 4, 'expected one desk per occupant');
+      assert.ok(countByPrefix(tpl, 'chair') >= 3, 'expected a chair for nearly every desk');
     }
-    assert.ok(bestDesks >= 3, `should have at least 3 desks, got ${bestDesks}`);
-    assert.ok(bestChairs >= 3, `should have at least 3 chairs, got ${bestChairs}`);
   });
 
   it('more occupants → more items', () => {

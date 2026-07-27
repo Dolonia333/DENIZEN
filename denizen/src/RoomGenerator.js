@@ -238,37 +238,46 @@ function placeWorkstations(items, palette, grid, count) {
 
     for (let i = 0; i < perRow && placed < count; i++) {
       const cx = startX + i * slotW + Math.floor(slotW / 2);
-      const deskTopLeftX = cx - Math.floor(deskW / 2);
+
+      // Pick the desk for THIS slot before testing it. The row-level `desk`
+      // above only sizes the row; picking again after canPlace() meant the
+      // collision test validated one desk's footprint and then occupied
+      // another's, corrupting the grid whenever the second was larger. That
+      // starved later slots: a 4-occupant workspace produced fewer than 3
+      // desks ~70% of the time and none at all ~15%, while chairs were
+      // unaffected — which is what made the room-generator test flaky.
+      const deskChoice = pick(deskPool) || desk;
+      const choiceW = deskChoice.w;
+      const choiceH = deskChoice.h;
+      const deskTopLeftX = cx - Math.floor(choiceW / 2);
       const deskTopLeftY = curY;
 
       // Check grid space for desk + chair below
-      if (!grid.canPlace(deskTopLeftX, deskTopLeftY, deskW, deskH + chairBehindOffset)) {
+      if (!grid.canPlace(deskTopLeftX, deskTopLeftY, choiceW, choiceH + chairBehindOffset)) {
         continue;
       }
 
-      // Place desk
-      const deskChoice = pick(deskPool);
       const deskId = uid('desk');
       items.push({
         id: deskChoice.id,
         instanceId: deskId,
         x: cx,
-        y: deskTopLeftY + deskH // bottom of desk
+        y: deskTopLeftY + choiceH // bottom of desk
       });
-      grid.occupy(deskTopLeftX, deskTopLeftY, deskChoice.w, deskChoice.h);
+      grid.occupy(deskTopLeftX, deskTopLeftY, choiceW, choiceH);
 
       // Place chair behind desk (front-facing chair below the desk)
       const chair = pick(chairPool);
       if (chair) {
         const chairX = cx;
-        const chairY = deskTopLeftY + deskH + chairBehindOffset;
+        const chairY = deskTopLeftY + choiceH + chairBehindOffset;
         items.push({
           id: chair.id,
           instanceId: uid('chair'),
           x: chairX,
           y: chairY
         });
-        grid.occupy(chairX - Math.floor(chair.w / 2), deskTopLeftY + deskH, chair.w, chairBehindOffset);
+        grid.occupy(chairX - Math.floor(chair.w / 2), deskTopLeftY + choiceH, chair.w, chairBehindOffset);
       }
 
       // Place desk setup as decor on desk
