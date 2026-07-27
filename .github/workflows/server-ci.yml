@@ -36,6 +36,18 @@ jobs:
         working-directory: denizen
         run: npm ci --no-audit --no-fund
 
+      # Ported from denizen/.github/workflows/test.yml, which was gated on a
+      # `main` branch that does not exist here and so never ran once. Catches a
+      # parse error in a module the suite never loads — cheap, and the packaging
+      # regressions this repo has hit were exactly that class of silent break.
+      - name: Syntax check
+        working-directory: denizen
+        shell: bash
+        run: |
+          node --check server.js
+          node --check security-monitor-server.js
+          for f in src/*.js; do node --check "$f"; done
+
       - name: Run suite (regression gate vs known-failing file list)
         working-directory: denizen
         shell: bash
