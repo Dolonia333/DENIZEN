@@ -310,7 +310,11 @@ async function leadMonitor(config, params) {
 }
 
 async function rfpStatus(config, params) {
-  const filters = {};
+  // rfps is shared by every org on this database (dossier G#5) — scope first.
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'Default org not found — apply Denizen migrations.' };
+
+  const filters = { org_id: { eq: orgId } };
   if (params.status) filters.status = { eq: params.status };
   if (params.rfp_id) filters.id = { eq: params.rfp_id };
   if (params.solicitation_number) filters.solicitation_number = { eq: params.solicitation_number };
@@ -326,7 +330,7 @@ async function rfpStatus(config, params) {
   const pipelineDb = createPipelineBridgeDb(config);
   const enriched = [];
   for (const rfp of rfps) {
-    const detail = await federalPipeline.getRfpDetail(pipelineDb, rfp.id).catch(() => null);
+    const detail = await federalPipeline.getRfpDetail(pipelineDb, rfp.id, { orgId }).catch(() => null);
     if (detail) {
       enriched.push({
         ...rfp,
@@ -551,7 +555,13 @@ async function entityLink(config, params, npcName) {
 
 async function rfpRequirementReview(config, params) {
   if (!params.rfp_id) return { summary: 'rfp-requirement-review requires rfp_id.' };
-  const detail = await federalPipeline.getRfpDetail(createPipelineBridgeDb(config), params.rfp_id);
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'Default org not found — apply Denizen migrations.' };
+  // Scoped by org as well as id, so an rfp uuid from another tenant reads as
+  // "not found" rather than returning their solicitation.
+  const detail = await federalPipeline.getRfpDetail(
+    createPipelineBridgeDb(config), params.rfp_id, { orgId },
+  );
   if (!detail) return { summary: `RFP ${params.rfp_id} not found.` };
   const reqs = (detail.requirements_by_status ? Object.values(detail.requirements_by_status).flat() : [])
     .slice(0, Number(params.limit) || 1000);
@@ -574,7 +584,11 @@ function createPipelineBridgeDb(config) {
 }
 
 async function rfpPipelineSummary(config) {
-  const summary = await federalPipeline.getRfpPipelineSummary(createPipelineBridgeDb(config));
+  const orgId = await defaultOrgId(config);
+  if (!orgId) return { summary: 'Default org not found — apply Denizen migrations.' };
+  const summary = await federalPipeline.getRfpPipelineSummary(
+    createPipelineBridgeDb(config), { orgId },
+  );
   const countsTxt = Object.entries(summary.counts_by_status || {})
     .map(([status, count]) => `${status}:${count}`)
     .join(', ');

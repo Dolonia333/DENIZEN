@@ -1,5 +1,38 @@
 'use strict';
 
+/**
+ * Federal RFP pipeline reads.
+ *
+ * Every `rfps` read here MUST be org-scoped. The Supabase instance is shared by
+ * every organization (zion, acme, and each Discord guild org), and these
+ * queries run under the service-role key, so an unfiltered read returns every
+ * tenant's pipeline. `getRfpPipelineSummary` previously passed `filters: {}`
+ * and `getRfpDetail` filtered on `id` alone — dossier defect G#5.
+ *
+ * Callers therefore pass `orgId` explicitly. It is deliberately NOT defaulted
+ * to `denizenDb.orgId`: the briefing path serves per-session orgs, and a silent
+ * global default is exactly how the leak would come back.
+ */
+
+class FederalPipelineError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.name = 'FederalPipelineError';
+    this.code = code;
+  }
+}
+
+function _requireOrgId(orgId, fnName) {
+  const id = orgId == null ? '' : String(orgId).trim();
+  if (!id) {
+    throw new FederalPipelineError(
+      `${fnName} requires options.orgId — refusing to read rfps unscoped`,
+      'ORG_ID_REQUIRED',
+    );
+  }
+  return id;
+}
+
 const COMPLETED_REQUIREMENT_STATUSES = new Set([
   'complete',
   'completed',
@@ -112,12 +145,44 @@ async function _query(db, query) {
   throw new Error('federal-pipeline db adapter requires query(), bridgeQuery(), or _get()');
 }
 
-async function _loadLatestPredictions(db, rfpIds) {
+/**
+ * Run a query whose org filter is load-bearing, and fail CLOSED if the backend
+ * rejects it.
+ *
+ * `rfps.org_id` is added by migration `20260606000005_platform_org_bridge.sql`,
+ * which `infra/apply-migrations-nas.py` currently hard-skips (dossier G#7). On
+ * a database where that migration has not run, PostgREST answers the scoped
+ * query with a 400. The only safe response is to surface that as an error —
+ * retrying without the filter would hand back every tenant's rows, which is
+ * the exact bug this scoping exists to prevent.
+ */
+async function _queryOrgScoped(db, query) {
+  try {
+    return await _query(db, query);
+  } catch (err) {
+    const message = String(err?.message || err);
+    if (/HTTP\s+4\d\d/.test(message)) {
+      throw new FederalPipelineError(
+        `org-scoped read of "${query.table}" was rejected by the database (${message}). `
+        + 'This usually means migration 20260606000005 (which adds org_id to the platform '
+        + 'tables) has not been applied. Not falling back to an unscoped read.',
+        'ORG_SCOPE_UNAVAILABLE',
+      );
+    }
+    throw err;
+  }
+}
+
+async function _loadLatestPredictions(db, rfpIds, orgId) {
   if (!rfpIds.length) return {};
   const rows = await _query(db, {
     table: 'denizen_predictions',
     select: ['entity_id', 'prediction', 'confidence', 'created_at'],
     filters: {
+      // Redundant with the rfp ids (which are already org-scoped) but cheap:
+      // denizen_predictions carries org_id from migration ...0004, and a
+      // defence-in-depth filter here means one bad id list cannot cross orgs.
+      org_id: { eq: orgId },
       entity_type: { eq: 'rfp' },
       // Stored type is 'rfp.bid_probability' (trigger denizen_predict_rfp_bid);
       // the old 'rfp.bid' matched nothing, so bid-probability enrichment here
@@ -131,6 +196,9 @@ async function _loadLatestPredictions(db, rfpIds) {
   return _latestPredictionsByEntity(rows || []);
 }
 
+// `rfp_requirements` has no org_id column (migration ...0005 scopes the parent
+// tables only), so it is scoped transitively: every id in `rfpIds` has already
+// been proven to belong to the caller's org by the rfps query above.
 async function _loadRequirementsByRfp(db, rfpIds, limit = 1000) {
   if (!rfpIds.length) return {};
   const rows = await _query(db, {
@@ -188,11 +256,12 @@ function _buildRfpMetrics(rfp, requirements, predictionByEntity, nowMs = Date.no
   };
 }
 
-async function getRfpPipelineSummary(db) {
-  const rfps = await _query(db, {
+async function getRfpPipelineSummary(db, options = {}) {
+  const orgId = _requireOrgId(options.orgId, 'getRfpPipelineSummary');
+  const rfps = await _queryOrgScoped(db, {
     table: 'rfps',
     select: ['id', 'title', 'agency', 'status', 'proposal_due_date', 'estimated_value_max'],
-    filters: {},
+    filters: { org_id: { eq: orgId } },
     order: { proposal_due_date: 'asc' },
     limit: 300,
   });
@@ -227,11 +296,14 @@ async function getRfpPipelineSummary(db) {
   };
 }
 
-async function getRfpDetail(db, rfpId) {
+async function getRfpDetail(db, rfpId, options = {}) {
+  const orgId = _requireOrgId(options.orgId, 'getRfpDetail');
   if (!rfpId) {
-    throw new Error('getRfpDetail requires rfpId');
+    throw new FederalPipelineError('getRfpDetail requires rfpId', 'BAD_INPUT');
   }
-  const rfps = await _query(db, {
+  // The org filter is what makes this not an IDOR: without it any caller
+  // holding an rfp uuid could read another tenant's solicitation.
+  const rfps = await _queryOrgScoped(db, {
     table: 'rfps',
     select: [
       'id',
@@ -243,17 +315,18 @@ async function getRfpDetail(db, rfpId) {
       'proposal_due_date',
       'estimated_value_max',
     ],
-    filters: { id: { eq: rfpId } },
+    filters: { id: { eq: rfpId }, org_id: { eq: orgId } },
     limit: 1,
   });
   const rfp = rfps?.[0];
   if (!rfp) return null;
   const requirementsByRfp = await _loadRequirementsByRfp(db, [rfp.id], 600);
-  const predictionByEntity = await _loadLatestPredictions(db, [rfp.id]);
+  const predictionByEntity = await _loadLatestPredictions(db, [rfp.id], orgId);
   return _buildRfpMetrics(rfp, requirementsByRfp[rfp.id] || [], predictionByEntity);
 }
 
 module.exports = {
   getRfpPipelineSummary,
   getRfpDetail,
+  FederalPipelineError,
 };

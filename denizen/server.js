@@ -7876,12 +7876,18 @@ Then hard-refresh and open <b>Roki Market</b>.</p>
         res.end(JSON.stringify({ ok: false, error: 'Intelligence layer unavailable' }));
         return;
       }
-      const summary = await getRfpPipelineSummary(denizenDb);
+      // This surface is single-tenant by design (the process-global org), but
+      // the org must still be passed explicitly — the shared Supabase holds
+      // every other tenant's rfps too (dossier G#5).
+      const summary = await getRfpPipelineSummary(denizenDb, { orgId: denizenDb.orgId });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true, summary }));
     })().catch((err) => {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+      // A missing org_id column means the platform-bridge migration has not
+      // been applied — that is a 503 (not configured), not a 500 (crash).
+      const status = err?.code === 'ORG_SCOPE_UNAVAILABLE' ? 503 : 500;
+      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: err?.message || String(err), code: err?.code }));
     });
     return;
   }

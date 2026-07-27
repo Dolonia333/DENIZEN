@@ -63,7 +63,10 @@ function getFederalSummaryProvider(deps) {
   const fn = mod.getRfpPipelineSummary || mod.getPipelineSummary || mod.pipelineSummary;
   if (typeof fn !== 'function') return null;
   const db = deps.denizenDb || safeRequire('./denizen-db');
-  return async () => fn(db);
+  // Org scope is mandatory — federal-pipeline throws without it rather than
+  // reading every tenant's rfps. This provider is currently unreferenced; the
+  // scope is here so reviving it cannot silently reintroduce dossier G#5.
+  return async () => fn(db, { orgId: db?.orgId || null });
 }
 
 function getIntelligenceRouteHandler(deps) {

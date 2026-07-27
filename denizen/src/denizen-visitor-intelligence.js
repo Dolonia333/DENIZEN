@@ -231,6 +231,29 @@ function _sessionCanViewFederalPipeline(session) {
   return !!orgSlug && orgSlug !== 'acme';
 }
 
+/**
+ * Which org's federal pipeline this session is allowed to see, or null.
+ *
+ * Returning the id (rather than a boolean) is deliberate: the tier gate above
+ * says *whether* a session may see a pipeline, and it used to be paired with an
+ * unscoped read, so every permitted session saw every tenant's RFPs regardless
+ * of which org it belonged to (dossier G#5). Resolving the id here makes the
+ * scope impossible to omit at the call site.
+ *
+ * Falls back to the process-global org only when the session demonstrably
+ * belongs to it — same slug, or no slug at all on a single-tenant deployment.
+ * A session carrying a *different* org slug with no resolvable id gets nothing.
+ */
+function _federalPipelineOrgIdForSession(session) {
+  if (!_sessionCanViewFederalPipeline(session)) return null;
+  if (session?.org_id) return session.org_id;
+
+  const sessionSlug = String(session?.metadata?.org_slug || '').toLowerCase();
+  const defaultSlug = String(denizenDb.orgSlug || '').toLowerCase();
+  if (!sessionSlug || sessionSlug === defaultSlug) return denizenDb.orgId || null;
+  return null;
+}
+
 async function buildMorningBriefing(sessionId) {
   _ensureDb();
   if (!sessionId) throw new IntelligenceError('sessionId required', 'BAD_INPUT');
@@ -273,9 +296,12 @@ async function buildMorningBriefing(sessionId) {
   }
 
   let federalPipelineSummary = null;
-  if (_sessionCanViewFederalPipeline(session)) {
+  const federalOrgId = _federalPipelineOrgIdForSession(session);
+  if (federalOrgId) {
     try {
-      federalPipelineSummary = await federalPipeline.getRfpPipelineSummary(denizenDb);
+      federalPipelineSummary = await federalPipeline.getRfpPipelineSummary(denizenDb, {
+        orgId: federalOrgId,
+      });
       sections.push('', 'Federal pipeline:');
       sections.push(`- ${federalPipelineSummary.total_rfps} active RFPs, total value $${Math.round(federalPipelineSummary.total_pipeline_value || 0).toLocaleString()}`);
       if (federalPipelineSummary.next_due_dates?.length) {

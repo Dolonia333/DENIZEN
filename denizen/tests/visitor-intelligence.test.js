@@ -181,6 +181,56 @@ describe('denizen-visitor-intelligence', () => {
     assert.ok(briefing.content.federal_pipeline);
   });
 
+  // Dossier defect G#5: the tier gate decided *whether* a session saw a
+  // federal pipeline, but the read itself was unscoped, so every permitted
+  // session saw every tenant's RFPs.
+  it('scopes the briefing federal pipeline to the session org', async () => {
+    const origGet = denizenDb._get;
+    const rfpPaths = [];
+    denizenDb._get = async (path) => {
+      if (path.startsWith('rfps?')) {
+        rfpPaths.push(path);
+        return [{
+          id: 'rfp-1',
+          title: 'USAF Data Platform',
+          status: 'in_review',
+          proposal_due_date: '2099-06-20T00:00:00.000Z',
+          estimated_value_max: 900000,
+        }];
+      }
+      return origGet(path);
+    };
+    const briefing = await buildMorningBriefing(SESSION_ID);
+    denizenDb._get = origGet;
+    assert.ok(briefing.content.federal_pipeline);
+    assert.equal(rfpPaths.length, 1);
+    assert.match(rfpPaths[0], new RegExp(`org_id=eq\\.${ORG_ID}`));
+  });
+
+  it('omits the federal pipeline for a session belonging to another org', async () => {
+    const origGet = denizenDb._get;
+    let rfpsQueried = false;
+    denizenDb._get = async (path) => {
+      if (path.startsWith('rfps?')) {
+        rfpsQueried = true;
+        return [{ id: 'rfp-other', title: 'Other tenant RFP', status: 'in_review' }];
+      }
+      if (path.includes('denizen_visitor_sessions') && path.includes('id=eq.')) {
+        // Same server, different tenant, and no resolvable org id.
+        return [{
+          id: SESSION_ID,
+          display_name: 'Alex',
+          metadata: { org_slug: 'othercorp' },
+        }];
+      }
+      return origGet(path);
+    };
+    const briefing = await buildMorningBriefing(SESSION_ID);
+    denizenDb._get = origGet;
+    assert.equal(briefing.content.federal_pipeline, null);
+    assert.equal(rfpsQueried, false, 'must not read rfps it cannot scope');
+  });
+
   it('includes prediction summary and forecast cards in briefing payload', async () => {
     denizenDb._get = async (path) => {
       if (path.includes('denizen_visitor_profiles')) return [];
