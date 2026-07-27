@@ -25,7 +25,21 @@ describe('Discord integration security boundaries', () => {
     const route = server.slice(start, end);
     assert.match(route, /getLinkStatusForSession\(sessionId, sessionToken\)/);
     assert.match(route, /String\(linked\.discord_user_id\) !== userId/);
-    assert.match(route, /!store\.hasCustom\(userId\)/);
+    // The "no custom avatar → 404" guard used to be an inline
+    // `!store.hasCustom(userId)` here; it now lives inside
+    // ensurePngOnDemand (asserted below). The route must still 404 on a
+    // falsy bake rather than serving something.
+    assert.match(route, /await avatarApi\.ensurePngOnDemand\(store, userId\)/);
+    assert.match(route, /custom avatar not found/);
+  });
+
+  // Guards the property the two route tests above delegate to. Without this,
+  // the refactor that moved hasCustom out of the routes would have left the
+  // check untested in every location.
+  it('refuses to bake a PNG for a user with no custom avatar', () => {
+    const bake = read('src/discord-avatar/bake.js');
+    const fn = bake.slice(bake.indexOf('async function ensurePngOnDemand'));
+    assert.match(fn, /if \(!store\.hasCustom\(userId\)\) return null;/);
   });
 
   it('requires session credentials on public avatar PUT (closet UI ships separately)', () => {
@@ -46,7 +60,10 @@ describe('Discord integration security boundaries', () => {
     assert.match(presence, /path\.join\(__dirname, '\.\.\/\.\.\/src\/discord-avatar'\)/);
     assert.match(presence, /Access-Control-Allow-Methods', 'GET, OPTIONS'/);
     assert.doesNotMatch(handler, /req\.method === 'PUT'/);
-    assert.match(handler, /!store\.hasCustom\(userId\)/);
+    // Same refactor as the server route: the hasCustom guard is now inside
+    // ensurePngOnDemand, so assert the delegation and the 404 branch.
+    assert.match(handler, /await avatarApi\.ensurePngOnDemand\(store, userId\)/);
+    assert.match(handler, /custom avatar not found/);
   });
 
   it('handles NAS inotify exhaustion and keeps the polling fallback alive', () => {

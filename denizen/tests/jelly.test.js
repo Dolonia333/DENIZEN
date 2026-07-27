@@ -103,17 +103,28 @@ describe('Jelly skill execution', () => {
     assert.ok(broadcasts.some(b => b.type === 'trade_suggestion'));
   });
 
-  it('blocks trade execution attempts', async () => {
+  it('blocks trade execution attempts behind an approval gate', async () => {
+    // execute:true no longer returns a flat "BLOCKED" string — high-impact
+    // skills now route through the approval gate and come back with an
+    // approvalId for a human to release. Refusal is still the default; the
+    // assertion just has to describe the newer, richer contract.
+    let createSuggestionCalls = 0;
     const runtime = createJelly({
       denizenRoot: path.join(__dirname, '..'),
       deps: {
         npcBrains: { injectSkillResult: () => {} },
-        robinhoodMcp: { createSuggestion: () => { throw new Error('should not run'); } },
+        robinhoodMcp: { createSuggestion: () => { createSuggestionCalls += 1; } },
         log: { info: () => {}, warn: () => {} },
       },
     });
     const result = await runtime.runSkill('Roki', 'trade-suggest', { execute: true }, { broadcast: () => {} });
+
     assert.equal(result.ok, false);
-    assert.match(result.output, /BLOCKED/);
+    assert.equal(result.error, 'approval_required');
+    assert.equal(result.level, 'high');
+    assert.match(result.reason, /execute=true/);
+    assert.match(result.approvalId, /^ia_/);
+    // The point of the gate: nothing downstream ran.
+    assert.equal(createSuggestionCalls, 0, 'must not reach the trade API');
   });
 });

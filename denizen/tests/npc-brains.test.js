@@ -48,10 +48,21 @@ after(() => {
 // ---------------------------------------------------------------------------
 
 describe('demo mode', () => {
-  it('_demoMode is true when no config file is present', () => {
-    // In a clean test environment there is no ~/.openclaw/openclaw.json
-    // The constructor falls through to demo provider only → _demoMode must be true
-    assert.equal(mgr._demoMode, true);
+  it('runs without cloud providers when no config file is present', () => {
+    // This used to assert `_demoMode === true`. It cannot be: npc-brains.js
+    // registers the `lmstudio` provider unconditionally (with a default
+    // localhost:1234 URL and no reachability check), so `hasLocalLlm` is
+    // always true and `_demoMode = remoteCount === 0 && !hasLocalLlm` is
+    // always false. What a clean machine actually reaches is local-only mode.
+    // See the note in the summary about _demoMode being unreachable.
+    assert.equal(mgr._demoMode, false);
+    assert.equal(mgr._localOnlyMode, true, 'no cloud keys → local-only');
+
+    const cloudProviders = Object.entries(mgr.providers).filter(
+      ([key, p]) => !['demo', 'lmstudio', 'lmstudio-fast'].includes(key)
+        && !['grok-cli', 'claude-cli'].includes(p?.type),
+    );
+    assert.deepEqual(cloudProviders, [], 'no remote provider without config or keys');
   });
 
   it('demo provider is always registered', () => {

@@ -1,13 +1,19 @@
 # Known-failing test files (see TECHNICAL_DOSSIER.md Appendix G).
 # CI fails only if a file NOT on this list fails — remove lines as they get fixed.
-tests/chat-attachments.test.js
-tests/denizen-mesh-capabilities.test.js
-tests/discord-integration-security.test.js
-tests/dossier-system.test.js
+#
+# 2026-07-27: cut from 11 files to 1. Seven were genuinely failing and are now
+# fixed (denizen-mesh-capabilities, discord-integration-security, jelly,
+# local-harness-loop, npc-brains, npc-local-metrics, room-generator). Four more
+# — chat-attachments, dossier-system, health-runbook and generate-city-endpoint
+# — had started passing but were still listed, leaving the gate looser than the
+# suite required.
+#
+# generate-city-endpoint is NOT an assertion failure: all five of its tests
+# pass. It boots a real server as a child process and the test process then
+# fails to exit, so run-tests.mjs kills it at the 30s per-file timeout and
+# counts that as a failure (dossier defect G#36). It is intermittent — under
+# the harness it sometimes exits cleanly in ~5s. Active handles at exit are the
+# child's stdio pipes, the ChildProcess itself, and an undici keep-alive socket
+# to the server. Releasing all three did not demonstrably help, so that attempt
+# was reverted rather than shipped unverified.
 tests/generate-city-endpoint.test.js
-tests/health-runbook.test.js
-tests/jelly.test.js
-tests/local-harness-loop.test.js
-tests/npc-brains.test.js
-tests/npc-local-metrics.test.js
-tests/room-generator.test.mjs

@@ -14,17 +14,44 @@ describe('npc-local-metrics', () => {
     },
   };
 
+  // consultHistory: [] pins the cooldown input. Without it these read
+  // data/grok-consult-queue.jsonl — gitignored runtime state — so a single
+  // pending consult on the developer's machine failed the test while CI, with
+  // no such file, passed.
+  const isolated = { cooldownMs: 0, sourcePrefix: 'never', consultHistory: [] };
+
   it('triggers consult when latency threshold crossed', () => {
-    const v = lm.evaluate('Bouncer', tel, { cooldownMs: 0, sourcePrefix: 'never' });
+    const v = lm.evaluate('Bouncer', tel, isolated);
     assert.equal(v.triggered, true);
     assert.ok(v.reasons.some((r) => r.includes('latency')));
     assert.equal(v.baseline.avg_latency_ms, 4197);
   });
 
   it('triggers Bob on token threshold', () => {
-    const v = lm.evaluate('Bob', tel, { cooldownMs: 0, sourcePrefix: 'never' });
+    // Bob's 1800 avg_tokens in the shared fixture is under the 2500 default,
+    // so the original assertion here was actually satisfied by his latency.
+    // Use a fixture that crosses the token floor and nothing else.
+    const tokenHeavy = {
+      generatedAt: tel.generatedAt,
+      facts: [],
+      npcs: { Bob: { count: 77, avg_latency_ms: 100, avg_tokens: 4000 } },
+    };
+    const v = lm.evaluate('Bob', tokenHeavy, isolated);
     assert.equal(v.triggered, true);
-    assert.ok(v.reasons.some((r) => r.includes('tokens')));
+    assert.ok(
+      v.reasons.some((r) => r.includes('tokens')),
+      `expected a token reason, got: ${JSON.stringify(v.reasons)}`,
+    );
+    assert.ok(!v.reasons.some((r) => r.includes('latency')));
+  });
+
+  it('honours a pending consult in the supplied history', () => {
+    const v = lm.evaluate('Bob', tel, {
+      cooldownMs: 0,
+      consultHistory: [{ npc: 'Bob', status: 'pending', ts: new Date().toISOString() }],
+    });
+    assert.equal(v.triggered, false);
+    assert.equal(v.reason, 'consult_cooldown');
   });
 
   it('respects cooldown when recent consult exists', () => {

@@ -718,7 +718,13 @@ function readQueueTail(limit = 40) {
   }
 }
 
-function hasRecentConsult(npcName, cooldownMs, sourcePrefix = '') {
+/**
+ * @param history optional pre-read consult entries. Defaults to the on-disk
+ *   queue. Callers (and tests) pass this to evaluate against a known history
+ *   instead of whatever happens to be in data/grok-consult-queue.jsonl, which
+ *   is gitignored runtime state and therefore differs per machine.
+ */
+function hasRecentConsult(npcName, cooldownMs, sourcePrefix = '', history = null) {
   const now = Date.now();
   const folder = String(npcName || '').toLowerCase();
   // After a lesson lands in MEMORY, stay quiet longer so NPCs can apply it.
@@ -726,7 +732,8 @@ function hasRecentConsult(npcName, cooldownMs, sourcePrefix = '') {
     cooldownMs,
     Number(process.env.DENIZEN_CONSULT_ANSWERED_COOLDOWN_MS) || 3 * 60 * 60 * 1000,
   );
-  for (const entry of readQueueTail(120).reverse()) {
+  const entries = Array.isArray(history) ? history.slice() : readQueueTail(120);
+  for (const entry of entries.reverse()) {
     if (String(entry.npc || '').toLowerCase() !== folder) continue;
     // Pending always blocks a re-ask (any source).
     if (entry.status === 'pending') return true;
@@ -794,8 +801,10 @@ function evaluate(npcName, tel, opts = {}) {
   }
 
   // Global cooldown across all sources so mesh job + metrics don't double-fire.
+  // sourcePrefix stays '' here on purpose — the cooldown is deliberately global
+  // — but opts.consultHistory lets a caller supply the history to judge against.
   const cooldownMs = opts.cooldownMs ?? thresholds.consultCooldownMs;
-  if (hasRecentConsult(npcName, cooldownMs, '')) {
+  if (hasRecentConsult(npcName, cooldownMs, '', opts.consultHistory ?? null)) {
     return { triggered: false, reason: 'consult_cooldown' };
   }
 

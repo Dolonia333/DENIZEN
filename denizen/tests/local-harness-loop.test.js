@@ -119,21 +119,43 @@ describe('grok-mentor-drainer', () => {
     assert.match(log, /"injected":true/);
   });
 
-  it('skips protected NPCs', async () => {
+  it('never sends a protected NPC to the Grok CLI, but still teaches it', async () => {
+    // Protected NPCs (abby, lucy, bouncer) used to be skipped outright. They
+    // are now answered from telemetry so the MEMORY.md learning loop still
+    // reaches them — only the CLI call is withheld. The old assertions
+    // (processed 0 / skipped 1 / still pending) encoded the previous contract
+    // and, more importantly, never actually checked that askGrok stayed
+    // unused — they only inferred it. Assert it directly.
     fs.writeFileSync(queuePath, JSON.stringify({
       npc: 'Bouncer', status: 'pending', question: 'Threat?',
     }) + '\n');
 
+    let askGrokCalls = 0;
     const summary = await drainer.drainConsultQueue({
       run: true,
       queuePath,
       logPath,
-      askGrok: async () => 'should not run',
+      askGrok: async () => { askGrokCalls += 1; return 'should not run'; },
       inject: async () => ({ ok: true }),
     });
 
-    assert.equal(summary.processed, 0);
-    assert.equal(summary.skipped, 1);
-    assert.equal(drainer.readQueue(queuePath)[0].status, 'pending');
+    assert.equal(askGrokCalls, 0, 'protected NPC must not reach the Grok CLI');
+    assert.equal(summary.processed, 1);
+    assert.equal(summary.skipped, 0);
+
+    const row = drainer.readQueue(queuePath)[0];
+    assert.equal(row.status, 'answered');
+    assert.equal(row.answered_by, 'telemetry-protected');
+    assert.ok(!/should not run/.test(row.answer), 'answer must not come from the CLI');
+    assert.equal(row.memory_injected, true);
+  });
+
+  it('lists bouncer, abby and lucy as protected', () => {
+    // Guards the set itself — the test above would still pass if the set were
+    // emptied and the NPC simply had no CLI configured.
+    assert.deepEqual(
+      [...drainer.PROTECTED_NPC_KEYS].sort(),
+      ['abby', 'bouncer', 'lucy'],
+    );
   });
 });
