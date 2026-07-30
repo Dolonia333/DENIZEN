@@ -1507,33 +1507,11 @@ class AgentActions {
     const npc = this._getNpc(npcKey);
     if (!npc) return;
 
-    // Micro nameplate — world-space; camera zoom is often 1.5–2.8× so
-    // even 7–8px chips read huge over ~32px sprites. Letter chip + name.
+    // Micro nameplate — world-space; camera zoom is often 1.5–2.8× so a
+    // small name chip still reads clearly over ~32px sprites. The blue
+    // letter-initial chip that used to sit above the name was removed; the
+    // name label now doubles as the click target for the MCP-connect dialog.
     const who = String(name || npcKey || '').trim() || 'Agent';
-    const letter = who.charAt(0).toUpperCase() || '•';
-
-    const chip = this.scene.add.text(0, 0, letter, {
-      fontSize: '7px',
-      fontFamily: 'Syne, Segoe UI, system-ui, sans-serif',
-      fontStyle: '800',
-      color: '#0b1220',
-      backgroundColor: '#7dd3fc',
-      padding: { x: 3, y: 1 },
-      align: 'center',
-    });
-    chip.setOrigin(0.5, 1);
-    chip.setDepth(9997);
-    chip.setAlpha(0.98);
-    chip.setData?.('npcKey', npcKey);
-    chip.setData?.('displayName', who);
-    chip.setInteractive({ useHandCursor: true });
-    chip.on('pointerover', () => { try { chip.setAlpha(1); chip.setScale(1.08); } catch (_) {} });
-    chip.on('pointerout', () => { try { chip.setAlpha(0.98); chip.setScale(1); } catch (_) {} });
-    chip.on('pointerdown', (pointer, _lx, _ly, event) => {
-      try { event?.stopPropagation?.(); } catch (_) {}
-      try { pointer?.event?.stopPropagation?.(); } catch (_) {}
-      this._openNpcMcpConnect(npcKey, who);
-    });
 
     const label = this.scene.add.text(0, 0, who, {
       fontSize: '5px',
@@ -1547,6 +1525,16 @@ class AgentActions {
     label.setOrigin(0.5, 1);
     label.setDepth(9996);
     label.setAlpha(0.92);
+    label.setData?.('npcKey', npcKey);
+    label.setData?.('displayName', who);
+    label.setInteractive({ useHandCursor: true });
+    label.on('pointerover', () => { try { label.setAlpha(1); label.setScale(1.08); } catch (_) {} });
+    label.on('pointerout', () => { try { label.setAlpha(0.92); label.setScale(1); } catch (_) {} });
+    label.on('pointerdown', (pointer, _lx, _ly, event) => {
+      try { event?.stopPropagation?.(); } catch (_) {}
+      try { pointer?.event?.stopPropagation?.(); } catch (_) {}
+      this._openNpcMcpConnect(npcKey, who);
+    });
     // Crisp on retina; 1 on light-perf phones.
     let res = 2;
     try {
@@ -1555,21 +1543,16 @@ class AgentActions {
       if (light) res = 1;
     } catch (_) {}
     if (typeof label.setResolution === 'function') label.setResolution(res);
-    if (typeof chip.setResolution === 'function') chip.setResolution(res);
     // Optional: keep role for tooltips if Phaser exposes it (no visual line).
     if (role && typeof label.setData === 'function') label.setData('role', String(role).trim());
 
-    chip.x = npc.x;
-    chip.y = npc.y - 42;
     label.x = npc.x;
     label.y = npc.y - 34;
 
     this._roleLabels.set(npcKey, {
       text: label,
-      chip,
       npc,
       yOff: 34,
-      chipYOff: 42,
     });
   }
 
@@ -1609,7 +1592,6 @@ class AgentActions {
     const existing = this._roleLabels.get(npcKey);
     if (existing) {
       try { existing.text?.destroy?.(); } catch (_) {}
-      try { existing.chip?.destroy?.(); } catch (_) {}
       this._roleLabels.delete(npcKey);
     }
   }
@@ -1637,10 +1619,6 @@ class AgentActions {
           entry.text.x = entry.npc.x;
           const off = entry.isThought ? 44 : (entry.yOff != null ? entry.yOff : yOffset);
           entry.text.y = entry.npc.y - off;
-        }
-        if (entry.npc && entry.chip && entry.chip.scene) {
-          entry.chip.x = entry.npc.x;
-          entry.chip.y = entry.npc.y - (entry.chipYOff != null ? entry.chipYOff : 42);
         }
       });
     };
