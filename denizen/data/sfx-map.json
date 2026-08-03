@@ -57,6 +57,11 @@
       "//": "Controllable loop via setLoop('keyboard', …). sfx.js auto-drives it while the user types in a text field (chat, etc.); stops ~500ms after typing pauses.",
       "file": "keyboard/clicks.ogg",
       "volume": 0.3
+    },
+    "crm_lead": {
+      "//": "Office phone rings when a fresh CRM lead is captured. Fired server-side by worldState.notifyCrmLead → world_state frame; routed here by kind. One-shot.",
+      "file": "phone/ring.ogg",
+      "volume": 0.5
     }
   }
 }

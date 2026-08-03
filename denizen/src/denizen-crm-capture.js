@@ -299,6 +299,14 @@ async function runCapture(opts = {}) {
       if (contact) {
         created.push({ type: 'contact', id: contact.id, name: contact.name });
         summaries.push(`Added contact ${contact.name}`);
+        // Ring the office phone — a fresh lead just came in from a conversation.
+        try {
+          require('./world-state').notifyCrmLead({
+            name: contact.name,
+            company: contact.company,
+            source: contact.leadSource || 'ai-capture',
+          });
+        } catch (_) { /* worldState optional / not this process */ }
       }
     } catch (err) {
       summaries.push(`Contact create skipped: ${err.message}`);

@@ -3671,6 +3671,7 @@ const WS_BROADCAST_INTERVAL_MS = 500;
 const IMMEDIATE_KINDS = new Set([
   'presence', 'threat', 'threat-cleared',
   'office_level_up', 'achievement_unlocked', 'quest_complete', 'quest_claimed',
+  'crm_lead',
 ]);
 
 const worldPubsub = createWorldPubsub();

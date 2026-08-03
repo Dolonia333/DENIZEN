@@ -558,6 +558,18 @@ class WorldState extends EventEmitter {
     this._emit('event', ev);
   }
 
+  // Fired when a fresh CRM lead/contact is captured. Drives the office
+  // phone ring (SFX map events.crm_lead) and any other 'crm_lead'
+  // subscribers. Payload kept tiny + serialisable for the WS broadcast.
+  notifyCrmLead(lead = {}) {
+    this._emit('crm_lead', {
+      name: String(lead.name || lead.company || 'New lead').slice(0, 80),
+      company: String(lead.company || '').slice(0, 80),
+      source: String(lead.source || lead.leadSource || '').slice(0, 40),
+      ts: Date.now(),
+    });
+  }
+
   // ---------------------------------------------------------------------
   // Office HQ — stats / XP / quests (logic in src/office-hq/*)
   // ---------------------------------------------------------------------
