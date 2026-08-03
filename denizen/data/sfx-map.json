@@ -47,6 +47,11 @@
       "//": "Client-triggered via window.DenizenSfx.playEvent('door', 'open'|'close'). Sliding glass street door on the office↔city transition.",
       "open":  { "file": "doors/sliding-open.ogg",  "volume": 0.5 },
       "close": { "file": "doors/sliding-close.ogg", "volume": 0.45 }
+    },
+    "footsteps": {
+      "//": "Controllable loop via window.DenizenSfx.setLoop('footsteps', true|false) — office-scene drives it from the player's walk state. Indoor floor; swap to footsteps/hard.ogg or footsteps/grass.ogg for other surfaces.",
+      "file": "footsteps/inside.ogg",
+      "volume": 0.35
     }
   }
 }

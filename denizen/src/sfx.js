@@ -222,7 +222,7 @@
 
   // Public start/stop the presence gate uses — music bed + all ambient layers.
   function startAmbient() { startMusic(); startLayers(); }
-  function stopAmbient()  { stopMusic();  stopLayers(); }
+  function stopAmbient()  { stopMusic();  stopLayers(); stopAllLoops(); }
 
   // ----- worldState event router -----
   function handleWorldStateChange(kind, payload) {
@@ -265,6 +265,30 @@
     if (e && e.file) throttledPlay(variant ? kind + ':' + variant : kind, e.file, e.volume);
   }
 
+  // ----- Controllable loops (footsteps while walking, typing at a desk, …) -----
+  // window.DenizenSfx.setLoop('footsteps', true|false). Reuses one <audio> per
+  // key and pauses/resumes it (no restart-from-zero) so start/stop stays smooth.
+  const activeLoops = new Map(); // key -> HTMLAudioElement
+  function setLoop(key, on) {
+    const existing = activeLoops.get(key);
+    if (on) {
+      if (!gateOpen()) return;                 // presence-gated like everything else
+      if (existing && !existing.paused) return; // already looping
+      const ev = map?.events?.[key];
+      if (!ev || !ev.file) return;
+      let a = existing;
+      if (!a) { a = new Audio(ASSETS_BASE + ev.file); a.loop = true; activeLoops.set(key, a); }
+      a.volume = typeof ev.volume === 'number' ? ev.volume : 0.4;
+      a.play().catch(() => { /* missing file or autoplay block — silent */ });
+    } else if (existing) {
+      try { existing.pause(); } catch (_) {}
+    }
+  }
+
+  function stopAllLoops() {
+    for (const a of activeLoops.values()) { try { a.pause(); } catch (_) {} }
+  }
+
   // ----- Wire to the existing /agent-ws connection -----
   function watchWs() {
     let attached = null;
@@ -300,7 +324,7 @@
 
     started = true;
     // Expose the client-trigger API now that the map is loaded.
-    window.DenizenSfx = { play, playEvent };
+    window.DenizenSfx = { play, playEvent, setLoop };
     watchWs();
 
     // Try to start ambient on the first user gesture (autoplay-safe).

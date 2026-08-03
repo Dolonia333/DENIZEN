@@ -3130,6 +3130,16 @@ class OfficeScene extends Phaser.Scene {
       }
     }
 
+    // Footsteps — loop the indoor walk cycle while the player is actually
+    // walking. Edge-triggered so we only start/stop on state changes.
+    if (window.DenizenSfx && window.DenizenSfx.setLoop) {
+      const wantFootsteps = moving && !this._playerSitting && !this._playerOnPhone && !this.playerLocked;
+      if (wantFootsteps !== this._footstepsOn) {
+        this._footstepsOn = wantFootsteps;
+        window.DenizenSfx.setLoop('footsteps', wantFootsteps);
+      }
+    }
+
     if (this._playerSitting && !this._rawMoveActive()) {
       this.player.body.setVelocity(0, 0);
     } else if (this._playerOnPhone && !this._rawMoveActive()) {
