@@ -42,6 +42,11 @@
       "start": { "file": "meeting_start.ogg", "volume": 0.55 },
       "end":   { "file": "meeting_end.ogg",   "volume": 0.45 }
     },
-    "player_chat_response": { "file": "chat_ding.ogg", "volume": 0.5 }
+    "player_chat_response": { "file": "chat_ding.ogg", "volume": 0.5 },
+    "door": {
+      "//": "Client-triggered via window.DenizenSfx.playEvent('door', 'open'|'close'). Sliding glass street door on the office↔city transition.",
+      "open":  { "file": "doors/sliding-open.ogg",  "volume": 0.5 },
+      "close": { "file": "doors/sliding-close.ogg", "volume": 0.45 }
+    }
   }
 }

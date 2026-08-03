@@ -254,6 +254,17 @@
     // gate already covers them. Hook here if you want one.
   }
 
+  // ----- Public API for client-triggered SFX (doors, typing, …) -----
+  // e.g. office-scene.js calls window.DenizenSfx.playEvent('door', 'open').
+  // Presence-gated + throttled, exactly like the worldState-driven sounds.
+  function playEvent(kind, variant) {
+    if (!map?.events) return;
+    const ev = map.events[kind];
+    if (!ev) return;
+    const e = variant ? ev[variant] : ev;
+    if (e && e.file) throttledPlay(variant ? kind + ':' + variant : kind, e.file, e.volume);
+  }
+
   // ----- Wire to the existing /agent-ws connection -----
   function watchWs() {
     let attached = null;
@@ -288,6 +299,8 @@
     } catch (_) { return; /* SFX optional */ }
 
     started = true;
+    // Expose the client-trigger API now that the map is loaded.
+    window.DenizenSfx = { play, playEvent };
     watchWs();
 
     // Try to start ambient on the first user gesture (autoplay-safe).

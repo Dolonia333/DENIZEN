@@ -2891,7 +2891,13 @@ class OfficeScene extends Phaser.Scene {
     if (this.player && !this._exitingToCity
         && this.player.y > 700 && this.player.x > 600 && this.player.x < 680) {
       this._exitingToCity = true;
-      try { window.location.href = '/office?demo=1&world=full&entry=office'; } catch (_) {}
+      // Sliding street door as you step out. Delay the nav a beat so the
+      // sound is actually heard before the page transitions to the city.
+      const goToCity = () => { try { window.location.href = '/office?demo=1&world=full&entry=office'; } catch (_) {} };
+      try {
+        if (window.DenizenSfx) { window.DenizenSfx.playEvent('door', 'open'); setTimeout(goToCity, 300); }
+        else goToCity();
+      } catch (_) { goToCity(); }
     }
 
     // Y-depth for characters only (cheap). Full furniture re-sort is rare —
