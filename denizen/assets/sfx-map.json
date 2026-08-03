@@ -25,6 +25,18 @@
       }
     ]
   },
+  "ambientCity": {
+    "//": "City / full-world (?world=full) ambience — replaces the office bed when outside. No music track: a looping outdoor bed plus an occasional passing car (random every minMs..maxMs). Presence-gated like the office bed.",
+    "layers": [
+      {
+        "name": "outside",
+        "files": ["outside/base.ogg"],
+        "volume": 0.22,
+        "fadeInMs": 3000
+      }
+    ],
+    "car": { "file": "outside/car.ogg", "volume": 0.4, "minMs": 20000, "maxMs": 50000 }
+  },
   "events": {
     "presence": {
       "true":  { "file": "presence_on.ogg",  "volume": 0.6 },

@@ -47,6 +47,12 @@
     return !!(window.DenizenPresence && window.DenizenPresence.zionPresent);
   }
 
+  // True when we're in the full LimeZu city (?world=full) rather than the office.
+  function isCity() {
+    try { return new URLSearchParams(window.location.search).get('world') === 'full'; }
+    catch (_) { return false; }
+  }
+
   // Single-use cache so we don't re-fetch the same .ogg over and over.
   const audioCache = new Map();
   function getAudio(file, volume = 0.6) {
@@ -191,11 +197,13 @@
     return ambientLayers.some(l => l.audios.some(a => !a.paused));
   }
 
-  function startLayers() {
+  function startLayers() { startLayersFrom(map && map.ambient); }
+
+  function startLayersFrom(ambCfg) {
     if (!gateOpen() || layersArePlaying()) return;
     stopLayers(); // clear any earlier attempt that was autoplay-blocked
-    const layers = Array.isArray(map?.ambient?.layers) ? map.ambient.layers : [];
-    const baseFade = typeof map?.ambient?.fadeInMs === 'number' ? map.ambient.fadeInMs : 0;
+    const layers = Array.isArray(ambCfg?.layers) ? ambCfg.layers : [];
+    const baseFade = typeof ambCfg?.fadeInMs === 'number' ? ambCfg.fadeInMs : 0;
     for (const layer of layers) {
       const files = Array.isArray(layer.files) ? layer.files.filter(Boolean)
                   : (layer.file ? [layer.file] : []);
@@ -222,9 +230,39 @@
     ambientLayers = [];
   }
 
-  // Public start/stop the presence gate uses — music bed + all ambient layers.
-  function startAmbient() { startMusic(); startLayers(); }
-  function stopAmbient()  { stopMusic();  stopLayers(); stopAllLoops(); }
+  // ----- City / full-world (?world=full) ambience -----
+  // Outside, the office bed makes no sense — swap it for an outdoor layer
+  // (map.ambientCity.layers) plus an occasional passing car.
+  let cityCarTimer = null;
+  function scheduleCityCar() {
+    if (cityCarTimer) return;
+    const cfg = map && map.ambientCity && map.ambientCity.car;
+    if (!cfg || !cfg.file) return;
+    const min = typeof cfg.minMs === 'number' ? cfg.minMs : 20000;
+    const max = typeof cfg.maxMs === 'number' ? cfg.maxMs : 50000;
+    const wait = min + Math.floor(Math.random() * Math.max(1000, max - min));
+    cityCarTimer = setTimeout(() => {
+      cityCarTimer = null;
+      if (gateOpen() && isCity()) play(cfg.file, cfg.volume);
+      if (isCity()) scheduleCityCar();
+    }, wait);
+  }
+  function startCityAmbient() {
+    startLayersFrom(map && map.ambientCity);
+    scheduleCityCar();
+  }
+  function stopCityAmbient() {
+    if (cityCarTimer) { clearTimeout(cityCarTimer); cityCarTimer = null; }
+  }
+
+  // Public start/stop the presence gate uses. In the city we play the outdoor
+  // bed instead of the office music/layers.
+  function startAmbient() {
+    if (isCity()) { startCityAmbient(); return; }
+    startMusic();
+    startLayers();
+  }
+  function stopAmbient()  { stopMusic();  stopLayers(); stopAllLoops(); stopCityAmbient(); }
 
   // ----- worldState event router -----
   function handleWorldStateChange(kind, payload) {
