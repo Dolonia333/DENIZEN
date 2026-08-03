@@ -73,7 +73,7 @@
         './src/denizen-voice-session.js?v=vc1',
         './src/denizen-voice-call-ui.js?v=vc1',
         './src/elevenlabs-provider.js',
-        './src/sfx.js?v=key1',
+        './src/sfx.js?v=map1',
         './src/voice-input.js?v=voicevc3corner',
         './src/llm-telemetry-panel.js?v=lmfix8',
         './src/mesh-jobs-panel.js?v=mesh2',

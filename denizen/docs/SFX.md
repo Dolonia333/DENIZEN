@@ -5,14 +5,15 @@
 > the system ships before any audio lands.
 
 Source: [`src/sfx.js`](../src/sfx.js).
-Map: [`data/sfx-map.json`](../data/sfx-map.json).
+Map: [`assets/sfx-map.json`](../assets/sfx-map.json).
 Audio drop folder: [`assets/audio/`](../assets/audio/).
 
 **Also:** marketing landing Buzz enter cue — see [Landing Buzz (Web Audio)](#landing-buzz-web-audio) below.
 
 ## What it does
 
-On boot, the SFX module fetches `/data/sfx-map.json`, then listens to
+On boot, the SFX module fetches `/assets/sfx-map.json` (served from the image; `data/` is a
+bind-mounted volume in production and would 404), then listens to
 the `/agent-ws` connection (the same one voice-gate.js listens to). On
 relevant events it plays a sound from `assets/audio/`. Two layers:
 
@@ -28,7 +29,7 @@ relevant events it plays a sound from `assets/audio/`. Two layers:
 
 ### 1. Drop audio files into `assets/audio/`
 
-Match the filenames in `data/sfx-map.json` (or edit the map to use your
+Match the filenames in `assets/sfx-map.json` (or edit the map to use your
 filenames). A `README.md` at `assets/audio/README.md` lists the default
 expected files and links to free-tier sources.
 

@@ -334,7 +334,7 @@ flowchart TB
 | `data/scene_recipes_modern_office_small_office.json` | Scene recipe |
 | `data/scene_recipes_reference_office_small.json` | Reference scene recipe |
 | `data/modern_ui_catalog.json` | UI asset catalog |
-| `data/sfx-map.json` | SFX mapping definitions |
+| `assets/sfx-map.json` | SFX mapping definitions |
 | `data/animations_character_animations.json` | Character animation defs |
 | `data/animations_portrait_animations.json` | Portrait animation defs |
 | `data/world/prefabs/README.md` | Prefab folder contract |

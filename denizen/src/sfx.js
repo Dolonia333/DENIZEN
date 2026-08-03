@@ -1,7 +1,7 @@
 /**
  * SFX — ambient + event-driven sound effects, gated by presence.
  *
- * Loads `/data/sfx-map.json` (or `assets-catalog`-style remote map),
+ * Loads `/assets/sfx-map.json` (or `assets-catalog`-style remote map),
  * listens to the same /agent-ws frames the rest of the client uses,
  * and plays small audio clips on the right events.
  *
@@ -22,13 +22,15 @@
  *
  * To add a new event sound:
  *   1. Drop the file into assets/audio/.
- *   2. Add an entry under `events` in `data/sfx-map.json`.
+ *   2. Add an entry under `events` in `assets/sfx-map.json`.
  *   3. Reload — no code changes.
  */
 (function () {
   'use strict';
 
-  const SFX_MAP_URL = '/data/sfx-map.json';
+  // NB: served from /assets (part of the image), NOT /data — in production
+  // ./data is a bind-mounted volume that shadows the repo's committed files.
+  const SFX_MAP_URL = '/assets/sfx-map.json';
   const ASSETS_BASE = '/assets/audio/';
   const THROTTLE_MS = 350;
 
