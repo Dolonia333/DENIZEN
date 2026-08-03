@@ -37,6 +37,7 @@
   let ambientOrder = [];       // resolved playlist order (playlist mode only)
   let ambientIdx = 0;          // index into ambientOrder
   let ambientFails = 0;        // consecutive load failures — guards all-missing playlists
+  let ambientLayers = [];      // extra always-on ambient beds (office-air, chatter, …)
   let started = false;
   const lastFiredAt = new Map(); // key → ts
 
@@ -89,7 +90,8 @@
     const t = setInterval(() => {
       i++;
       a.volume = Math.min(targetVol, (i / steps) * targetVol);
-      if (i >= steps || ambient !== a) clearInterval(t);
+      // Stop ramping once done, or if the track was paused (superseded/stopped).
+      if (i >= steps || a.paused) clearInterval(t);
     }, fadeMs / steps);
   }
 
@@ -111,7 +113,7 @@
     if (!ambientOrder.length) return;
     // Every track failed to load in a row → none exist on disk. Go quiet
     // instead of spinning (matches the "missing files are silent" contract).
-    if (ambientFails >= ambientOrder.length) { stopAmbient(); return; }
+    if (ambientFails >= ambientOrder.length) { stopMusic(); return; }
 
     const file = ambientOrder[ambientIdx % ambientOrder.length];
     const targetVol = ambientTargetVol();
@@ -145,7 +147,7 @@
             });
   }
 
-  function startAmbient() {
+  function startMusic() {
     if (ambient || !gateOpen() || !map?.ambient) return;
     const fade = typeof map.ambient.fadeInMs === 'number' ? map.ambient.fadeInMs : 0;
 
@@ -170,13 +172,57 @@
             .catch(() => { if (ambient === a) ambient = null; /* autoplay blocked — retry on next gesture */ });
   }
 
-  function stopAmbient() {
+  function stopMusic() {
     if (ambient) { try { ambient.pause(); } catch (_) {} }
     ambient = null;
     ambientOrder = [];
     ambientIdx = 0;
     ambientFails = 0;
   }
+
+  // ----- Extra ambient layers (office-air, chatter, …) -----
+  // Each layer in map.ambient.layers loops one or more files simultaneously,
+  // at its own volume, for the whole time presence is on. Missing files are
+  // silently skipped. A layer with several `files` plays them together (e.g.
+  // L/R stems → a wide stereo bed).
+  function layersArePlaying() {
+    return ambientLayers.some(l => l.audios.some(a => !a.paused));
+  }
+
+  function startLayers() {
+    if (!gateOpen() || layersArePlaying()) return;
+    stopLayers(); // clear any earlier attempt that was autoplay-blocked
+    const layers = Array.isArray(map?.ambient?.layers) ? map.ambient.layers : [];
+    const baseFade = typeof map?.ambient?.fadeInMs === 'number' ? map.ambient.fadeInMs : 0;
+    for (const layer of layers) {
+      const files = Array.isArray(layer.files) ? layer.files.filter(Boolean)
+                  : (layer.file ? [layer.file] : []);
+      if (!files.length) continue;
+      const vol = typeof layer.volume === 'number' ? layer.volume : 0.14;
+      const fade = typeof layer.fadeInMs === 'number' ? layer.fadeInMs : baseFade;
+      const audios = [];
+      for (const file of files) {
+        const a = new Audio(ASSETS_BASE + file);
+        a.loop = true;
+        a.volume = fade > 0 ? 0 : vol;
+        a.play().then(() => rampVolume(a, vol, fade))
+                .catch(() => { /* missing file or autoplay block — silent; retried next gesture */ });
+        audios.push(a);
+      }
+      ambientLayers.push({ name: layer.name || 'layer', audios });
+    }
+  }
+
+  function stopLayers() {
+    for (const layer of ambientLayers) {
+      for (const a of layer.audios) { try { a.pause(); } catch (_) {} }
+    }
+    ambientLayers = [];
+  }
+
+  // Public start/stop the presence gate uses — music bed + all ambient layers.
+  function startAmbient() { startMusic(); startLayers(); }
+  function stopAmbient()  { stopMusic();  stopLayers(); }
 
   // ----- worldState event router -----
   function handleWorldStateChange(kind, payload) {

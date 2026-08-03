@@ -7,7 +7,23 @@
     ],
     "shuffle": true,
     "volume": 0.3,
-    "fadeInMs": 2000
+    "fadeInMs": 2000,
+    "layers": [
+      {
+        "//": "Room-air bed — L/R stems played together for a wide stereo field. Swap to the 25/50/75% variants (office-air/left-50.ogg etc.) for a quieter/closer feel.",
+        "name": "office-air",
+        "files": ["office-air/left.ogg", "office-air/right.ogg"],
+        "volume": 0.14,
+        "fadeInMs": 3000
+      },
+      {
+        "//": "Distant office chatter murmur. Uses the 75% stems; drop to 50% for subtler, 100% for busier.",
+        "name": "chatter",
+        "files": ["chatter/left-75.ogg", "chatter/right-75.ogg"],
+        "volume": 0.1,
+        "fadeInMs": 3000
+      }
+    ]
   },
   "events": {
     "presence": {
