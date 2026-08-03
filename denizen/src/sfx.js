@@ -289,6 +289,34 @@
     for (const a of activeLoops.values()) { try { a.pause(); } catch (_) {} }
   }
 
+  // ----- Keyboard: clatter while the user types in a text field -----
+  function isEditableTarget(el) {
+    if (!el) return false;
+    const tag = el.tagName;
+    if (tag === 'TEXTAREA') return true;
+    if (tag === 'INPUT') {
+      const t = (el.type || 'text').toLowerCase();
+      // Text-like fields only; skip password/checkbox/button/etc.
+      return ['text', 'search', 'email', 'url', 'tel', 'number', ''].includes(t);
+    }
+    return el.isContentEditable === true;
+  }
+
+  function initTypingSfx() {
+    let stopTimer = null;
+    window.addEventListener('keydown', (e) => {
+      if (!gateOpen() || !isEditableTarget(e.target)) return;
+      const k = e.key || '';
+      // Only real "typing" keys — single chars (letters/digits/punct/space)
+      // plus Backspace/Enter. Modifiers and arrows are ignored.
+      const typing = k.length === 1 || k === 'Backspace' || k === 'Enter';
+      if (!typing) return;
+      setLoop('keyboard', true);
+      if (stopTimer) clearTimeout(stopTimer);
+      stopTimer = setTimeout(() => setLoop('keyboard', false), 500);
+    }, true);
+  }
+
   // ----- Wire to the existing /agent-ws connection -----
   function watchWs() {
     let attached = null;
@@ -326,6 +354,7 @@
     // Expose the client-trigger API now that the map is loaded.
     window.DenizenSfx = { play, playEvent, setLoop };
     watchWs();
+    initTypingSfx();
 
     // Try to start ambient on the first user gesture (autoplay-safe).
     const onFirstGesture = () => {

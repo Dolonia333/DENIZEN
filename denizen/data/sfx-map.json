@@ -52,6 +52,11 @@
       "//": "Controllable loop via window.DenizenSfx.setLoop('footsteps', true|false) — office-scene drives it from the player's walk state. Indoor floor; swap to footsteps/hard.ogg or footsteps/grass.ogg for other surfaces.",
       "file": "footsteps/inside.ogg",
       "volume": 0.35
+    },
+    "keyboard": {
+      "//": "Controllable loop via setLoop('keyboard', …). sfx.js auto-drives it while the user types in a text field (chat, etc.); stops ~500ms after typing pauses.",
+      "file": "keyboard/clicks.ogg",
+      "volume": 0.3
     }
   }
 }
