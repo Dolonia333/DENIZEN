@@ -13,8 +13,12 @@
  *     voice gate. Same toggle (Alt+V) controls both.
  *   - **Throttled per-event** so a noisy moment (5 threats in 1s) plays
  *     the SFX once, not five times.
- *   - **Ambient loop** auto-starts on the first user gesture (browser
- *     autoplay policies require it). Volume + fade configurable.
+ *   - **Ambient bed** auto-starts on the first user gesture (browser
+ *     autoplay policies require it). It's either a single looping file
+ *     (`ambient.loop`) or a rotating multi-track playlist
+ *     (`ambient.playlist`, with optional `shuffle`). Tracks play in
+ *     sequence and repeat forever; a missing track is skipped, and if
+ *     none exist the bed just stays silent. Volume + fade configurable.
  *
  * To add a new event sound:
  *   1. Drop the file into assets/audio/.
@@ -29,7 +33,10 @@
   const THROTTLE_MS = 350;
 
   let map = null;
-  let ambient = null;
+  let ambient = null;          // current ambient <audio> (single-loop or playlist track)
+  let ambientOrder = [];       // resolved playlist order (playlist mode only)
+  let ambientIdx = 0;          // index into ambientOrder
+  let ambientFails = 0;        // consecutive load failures — guards all-missing playlists
   let started = false;
   const lastFiredAt = new Map(); // key → ts
 
@@ -70,34 +77,105 @@
     play(file, volume);
   }
 
+  function ambientTargetVol() {
+    return typeof map?.ambient?.volume === 'number' ? map.ambient.volume : 0.18;
+  }
+
+  // Ramp a freshly-started track from 0 up to its target volume.
+  function rampVolume(a, targetVol, fadeMs) {
+    if (!(fadeMs > 0)) { a.volume = targetVol; return; }
+    const steps = 20;
+    let i = 0;
+    const t = setInterval(() => {
+      i++;
+      a.volume = Math.min(targetVol, (i / steps) * targetVol);
+      if (i >= steps || ambient !== a) clearInterval(t);
+    }, fadeMs / steps);
+  }
+
+  // Shuffle a copy of the declared playlist (Fisher–Yates) when shuffle is on.
+  function buildAmbientOrder() {
+    const list = Array.isArray(map?.ambient?.playlist) ? map.ambient.playlist.filter(Boolean) : [];
+    if (map?.ambient?.shuffle && list.length > 1) {
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+    }
+    return list;
+  }
+
+  // Play ambientOrder[ambientIdx], then chain to the next track when it ends.
+  // `fadeMs` fades the first track in; between-track calls pass 0.
+  function playPlaylistTrack(fadeMs) {
+    if (!ambientOrder.length) return;
+    // Every track failed to load in a row → none exist on disk. Go quiet
+    // instead of spinning (matches the "missing files are silent" contract).
+    if (ambientFails >= ambientOrder.length) { stopAmbient(); return; }
+
+    const file = ambientOrder[ambientIdx % ambientOrder.length];
+    const targetVol = ambientTargetVol();
+    // A one-track playlist just loops that track gaplessly (no 'ended' gap);
+    // multi-track playlists rotate on 'ended'.
+    const single = ambientOrder.length === 1;
+    const a = new Audio(ASSETS_BASE + file);
+    a.loop = single;
+    a.volume = fadeMs > 0 ? 0 : targetVol;
+
+    let settled = false; // dedupe: 'ended', 'error' and play().catch() can race
+    const advance = (failed) => {
+      if (settled) return;
+      settled = true;
+      if (ambient !== a) return; // superseded by stopAmbient() or a restart
+      ambientFails = failed ? ambientFails + 1 : 0;
+      ambientIdx = (ambientIdx + 1) % ambientOrder.length;
+      // Re-shuffle each time we wrap so repeats don't lock to one order.
+      if (ambientIdx === 0 && map?.ambient?.shuffle) ambientOrder = buildAmbientOrder();
+      playPlaylistTrack(0);
+    };
+
+    if (!single) a.addEventListener('ended', () => advance(false));
+    a.addEventListener('error', () => advance(true));
+    ambient = a;
+    a.play().then(() => { ambientFails = 0; rampVolume(a, targetVol, fadeMs); })
+            .catch((err) => {
+              // Autoplay blocked ≠ bad file: reset and let the next gesture retry.
+              if (err && err.name === 'NotAllowedError') { if (ambient === a) ambient = null; return; }
+              advance(true);
+            });
+  }
+
   function startAmbient() {
-    if (!map?.ambient?.loop || ambient) return;
-    if (!gateOpen()) return;
-    const file = map.ambient.loop;
-    const targetVol = typeof map.ambient.volume === 'number' ? map.ambient.volume : 0.18;
+    if (ambient || !gateOpen() || !map?.ambient) return;
     const fade = typeof map.ambient.fadeInMs === 'number' ? map.ambient.fadeInMs : 0;
 
-    const a = new Audio(ASSETS_BASE + file);
+    // Playlist mode wins when a non-empty `playlist` is declared; otherwise
+    // fall back to the single looping `loop` file.
+    const playlist = Array.isArray(map.ambient.playlist) ? map.ambient.playlist.filter(Boolean) : [];
+    if (playlist.length) {
+      ambientOrder = buildAmbientOrder();
+      ambientIdx = 0;
+      ambientFails = 0;
+      playPlaylistTrack(fade);
+      return;
+    }
+
+    if (!map.ambient.loop) return;
+    const targetVol = ambientTargetVol();
+    const a = new Audio(ASSETS_BASE + map.ambient.loop);
     a.loop = true;
     a.volume = fade > 0 ? 0 : targetVol;
-    a.play().then(() => {
-      ambient = a;
-      if (fade > 0) {
-        const steps = 20;
-        let i = 0;
-        const t = setInterval(() => {
-          i++;
-          a.volume = (i / steps) * targetVol;
-          if (i >= steps) clearInterval(t);
-        }, fade / steps);
-      }
-    }).catch(() => { /* autoplay blocked — try again on next user gesture */ });
+    ambient = a;
+    a.play().then(() => { rampVolume(a, targetVol, fade); })
+            .catch(() => { if (ambient === a) ambient = null; /* autoplay blocked — retry on next gesture */ });
   }
 
   function stopAmbient() {
-    if (!ambient) return;
-    try { ambient.pause(); } catch (_) {}
+    if (ambient) { try { ambient.pause(); } catch (_) {} }
     ambient = null;
+    ambientOrder = [];
+    ambientIdx = 0;
+    ambientFails = 0;
   }
 
   // ----- worldState event router -----

@@ -6,7 +6,7 @@ Default expected files (override the map to use different names):
 
 | File | When it plays |
 |---|---|
-| `office_ambient.ogg` | Ambient loop while presence is on |
+| `office_ambient_1.wav` (+ add more) | Office music playlist — tracks rotate (shuffled) while presence is on. A one-entry playlist loops gaplessly; add entries to `data/sfx-map.json` → `ambient.playlist` to rotate. Missing files are skipped. `.ogg`/`.mp3` also work and are much smaller — convert when you can. |
 | `presence_on.ogg` / `presence_off.ogg` | Alt+V toggle |
 | `threat_low.ogg` … `threat_critical.ogg` | Per-severity threat alerts |
 | `task_ping.ogg` | New `/api/task-update` arrives |
