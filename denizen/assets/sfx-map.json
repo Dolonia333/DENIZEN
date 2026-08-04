@@ -1,5 +1,7 @@
 {
   "//": "Sound effects map. Each entry binds a worldState 'change' event kind (or a synthetic event name) to an audio file. Files are relative to assets/audio/ and must exist for playback to actually fire — missing files are silently skipped (no console spam) so you can ship the system before the audio assets land.",
+  "//ambientAlwaysOn": "true = office music + ambient layers + city bed play for anyone once they interact (no Alt+V). Event SFX (doors, footsteps, keyboard, phone, alerts) still require presence. Set false to gate the ambient behind Alt+V too.",
+  "ambientAlwaysOn": true,
   "ambient": {
     "//": "Office background music. Provide EITHER a single looping file via 'loop', OR a rotating playlist via 'playlist' (tracks play in sequence, then repeat forever; set 'shuffle': true to randomize the order each cycle). Files live in assets/audio/ and are silently skipped if absent. Presence-gated: plays only while Alt+V presence is on.",
     "playlist": [

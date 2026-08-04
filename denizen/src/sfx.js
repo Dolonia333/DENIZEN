@@ -53,6 +53,20 @@
     catch (_) { return false; }
   }
 
+  // Ambient atmosphere (music + layers + city bed) is decoupled from the Alt+V
+  // presence gate — it plays for anyone in the office once they interact —
+  // unless the map opts back into gating with "ambientAlwaysOn": false. Event
+  // SFX (doors, footsteps, keyboard, phone, alerts) still respect gateOpen().
+  function ambientGate() {
+    return (map && map.ambientAlwaysOn === false) ? gateOpen() : true;
+  }
+
+  // Play a sound WITHOUT the presence gate — for ambient one-shots (city car).
+  function playRaw(file, volume) {
+    if (!file) return;
+    try { getAudio(file, volume).play().catch(() => {}); } catch (_) {}
+  }
+
   // Single-use cache so we don't re-fetch the same .ogg over and over.
   const audioCache = new Map();
   function getAudio(file, volume = 0.6) {
@@ -156,7 +170,7 @@
   }
 
   function startMusic() {
-    if (ambient || !gateOpen() || !map?.ambient) return;
+    if (ambient || !ambientGate() || !map?.ambient) return;
     const fade = typeof map.ambient.fadeInMs === 'number' ? map.ambient.fadeInMs : 0;
 
     // Playlist mode wins when a non-empty `playlist` is declared; otherwise
@@ -200,7 +214,7 @@
   function startLayers() { startLayersFrom(map && map.ambient); }
 
   function startLayersFrom(ambCfg) {
-    if (!gateOpen() || layersArePlaying()) return;
+    if (!ambientGate() || layersArePlaying()) return;
     stopLayers(); // clear any earlier attempt that was autoplay-blocked
     const layers = Array.isArray(ambCfg?.layers) ? ambCfg.layers : [];
     const baseFade = typeof ambCfg?.fadeInMs === 'number' ? ambCfg.fadeInMs : 0;
@@ -243,7 +257,7 @@
     const wait = min + Math.floor(Math.random() * Math.max(1000, max - min));
     cityCarTimer = setTimeout(() => {
       cityCarTimer = null;
-      if (gateOpen() && isCity()) play(cfg.file, cfg.volume);
+      if (ambientGate() && isCity()) playRaw(cfg.file, cfg.volume);
       if (isCity()) scheduleCityCar();
     }, wait);
   }
@@ -274,8 +288,11 @@
     if (kind === 'presence') {
       const variant = ev[String(!!payload?.zionPresent)];
       if (variant?.file) play(variant.file, variant.volume);
-      // Also start/stop the ambient loop.
-      if (payload?.zionPresent) startAmbient(); else stopAmbient();
+      // Ambient is decoupled from presence (plays for everyone). Presence only
+      // gates event SFX, so on presence-off stop just the gated loops — unless
+      // the map re-gates ambient, in which case fully stop.
+      if (payload?.zionPresent) startAmbient();
+      else { stopAllLoops(); if (map && map.ambientAlwaysOn === false) stopAmbient(); }
       return;
     }
 
@@ -396,9 +413,10 @@
     watchWs();
     initTypingSfx();
 
-    // Try to start ambient on the first user gesture (autoplay-safe).
+    // Start ambient on the first user gesture (autoplay-safe). Ambient plays
+    // for everyone (ambientGate); presence only matters for event SFX.
     const onFirstGesture = () => {
-      if (gateOpen()) startAmbient();
+      startAmbient();
       window.removeEventListener('pointerdown', onFirstGesture);
       window.removeEventListener('keydown', onFirstGesture);
     };
@@ -413,7 +431,8 @@
       const cur = window.DenizenPresence?.zionPresent;
       if (cur === lastPresence) return;
       lastPresence = cur;
-      if (cur) startAmbient(); else stopAmbient();
+      if (cur) startAmbient();
+      else { stopAllLoops(); if (map && map.ambientAlwaysOn === false) stopAmbient(); }
     }, 500);
 
     console.log('[SFX] ready (events:', Object.keys(map.events || {}).join(','), ')');
