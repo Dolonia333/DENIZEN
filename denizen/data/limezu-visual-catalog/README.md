@@ -1,19 +1,34 @@
 # LimeZu visual catalog
 
-Vision-labeled inventory of Modern Exteriors theme sheets → durable IDs for city generation.
+Vision-labeled inventory of **Modern Exteriors** theme contact sheets (24/24) for DENIZEN city generation.
+
+## Status
+
+| Pack | Sheets labeled | Objects |
+|------|----------------|--------:|
+| `limezu_modern_exteriors` (`ext/themes/*.png`) | **24 / 24** | **2749** |
+| Interiors (`themes/*.png`) | 0 / ~26 | pending |
+| Singles file↔id linking | pending | use `notes` + filename hints |
+
+Regenerate band previews (gitignored JPGs):
+
+```bash
+python3 scripts/slice-limezu-sheets-for-vision.py --pack exteriors
+node scripts/merge-limezu-visual-catalog.js
+```
 
 ## Layout
 
 ```
 data/limezu-visual-catalog/
-  sheets-manifest.json          # band slices for every theme sheet
+  README.md
+  sheets-manifest.json
+  registry.jsonl              # flat stream of all objects
+  registry-summary.json
   sheets/<SheetName>/
-    _overview.jpg
-    band_XX_yA-B.jpg
     meta.json
-    labels.json                 # vision labels for this sheet
-  singles-montages/             # optional contact sheets of Singles
-  registry.jsonl                # flat id → record stream (merged)
+    labels.json               # vision labels (tracked)
+    _overview.jpg / band_*.jpg  # regenerable, gitignored
 ```
 
 ## Label schema (`labels.json`)
@@ -34,17 +49,21 @@ data/limezu-visual-catalog/
       "surface": "sidewalk",
       "facing": "south",
       "multi_tile": true,
-      "shadow_variant": "unknown",
       "notes": "Place as stamp group, not one 16px single"
     }
   ],
-  "row_guide": "Top→bottom narrative of the contact sheet"
+  "row_guide": "brief top-to-bottom description of the sheet"
 }
 ```
 
-## How to continue
+## How IDs help generation
 
-1. Regenerate bands: `python3 scripts/slice-limezu-sheets-for-vision.py`
-2. Label a sheet with an agent that can see `band_*.jpg` images
-3. Write `labels.json` next to the bands
-4. Merge: `node scripts/merge-limezu-visual-catalog.js`
+- `me.<theme>.<slug>` is stable — city recipes reference IDs, not raw LimeZu filenames
+- `multi_tile` + `notes` flag objects that must be stamp **groups**
+- `surface` / `facing` / `tags` feed Minecraft-like placement rules
+
+## Next
+
+1. Link Singles PNG basenames → `me.*` ids (montage vision pass per folder)
+2. Label interior theme sheets the same way
+3. Wire registry into `compile-city-structure` / district recipes
