@@ -418,7 +418,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities,
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.0.0' },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.1.0' },
       },
     });
   }

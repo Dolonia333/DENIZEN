@@ -133,7 +133,10 @@ function hasCrmAccess(npcKey) {
 }
 
 function toolsForNpc(npcKey) {
-  return hasCrmAccess(npcKey) ? [...CRM_TOOL_DEFINITIONS] : [];
+  const policyTool = CRM_TOOL_DEFINITIONS.filter((t) => t.name === 'mail_policy_status');
+  // Always expose read-only mail policy so connectors can verify default-deny.
+  if (!hasCrmAccess(npcKey)) return [...policyTool];
+  return [...CRM_TOOL_DEFINITIONS];
 }
 
 function isCrmTool(name) {
@@ -238,13 +241,16 @@ async function toolSendDraft(scope, args = {}) {
 
 async function callTool(scope, name, args) {
   const key = scope?.npc_key;
+
+  // Read-only mail policy is always available (default deny must be inspectable).
+  if (name === 'mail_policy_status') return toolMailPolicyStatus();
+
   if (!hasCrmAccess(key) && scope?.scope_mode !== 'team') {
     return { ok: false, error: 'CRM tools not available for this NPC' };
   }
 
   if (name === 'crm_working_set') return toolWorkingSet(scope, args);
   if (name === 'crm_park_deal') return toolParkDeal(scope, args);
-  if (name === 'mail_policy_status') return toolMailPolicyStatus();
   if (name === 'send_draft') return toolSendDraft(scope, args);
 
   if (!_runSkill) {
