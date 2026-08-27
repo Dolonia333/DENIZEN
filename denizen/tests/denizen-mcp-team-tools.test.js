@@ -96,9 +96,29 @@ describe('denizen-mcp-team-tools', () => {
     teamTools.clearMcpPresenceForTests();
   });
 
-  it('list_team requires session_id', async () => {
-    const r = await teamTools.callTool({ ...SCOPE, session_id: null }, 'list_team', {});
-    assert.equal(r.ok, false);
+  it('list_team works without session_id for CLI/API tokens', async () => {
+    const r = await teamTools.callTool({ ...SCOPE, session_id: null, npc_key: 'grok' }, 'list_team', {});
+    assert.equal(r.ok, true);
+    assert.equal(r.session_linked, false);
+    assert.ok(r.count >= 1);
+    const you = r.teammates.find((t) => t.is_you);
+    assert.ok(you);
+    assert.equal(you.npc_key, 'grok');
+    assert.equal(you.mcp_online, true);
+    assert.ok(r.online_count >= 1);
+  });
+
+  it('team_standup works without session_id (degraded handoffs)', async () => {
+    const r = await teamTools.callTool(
+      { ...SCOPE, session_id: null, npc_key: 'claude' },
+      'team_standup',
+      { include_crm: false, include_cursor: false },
+    );
+    assert.equal(r.ok, true);
+    assert.equal(r.session_linked, false);
+    assert.equal(r.handoffs.count, 0);
+    assert.ok(r.team.count >= 1);
+    assert.ok(Array.isArray(r.action_items));
   });
 
   it('list_team marks caller mcp_online and online_count >= 1', async () => {
