@@ -10,6 +10,8 @@ const crmStore = require('./denizen-crm-store');
 const workingSet = require('./denizen-crm-working-set');
 const crmMutations = require('./denizen-crm-mutations');
 const denizenDb = require('./denizen-db');
+const mailPolicy = require('./denizen-mail-policy');
+const { sendCrmEmail } = require('./denizen-crm-email');
 
 let _runSkill = null;
 
@@ -71,6 +73,32 @@ const CRM_TOOL_DEFINITIONS = [
     },
   },
   {
+    name: 'mail_policy_status',
+    description:
+      'READ-ONLY: current outbound mail policy (never|confirm|allowlist). '
+      + 'Default is never — use send_draft only after policy allows.',
+    inputSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'send_draft',
+    description:
+      'Send a CRM email under DENIZEN_MAIL_POLICY. Default policy=never (blocked). '
+      + 'confirm mode: first call returns confirm_token; re-call with same args + token. '
+      + 'allowlist mode: to must match DENIZEN_MAIL_ALLOWLIST. Prefer crm_draft_email first.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        to: { type: 'string', description: 'Recipient email address' },
+        subject: { type: 'string', description: 'Email subject' },
+        body: { type: 'string', description: 'Email body' },
+        confirm_token: { type: 'string', description: 'Token from prior confirm challenge' },
+        contact_id: { type: 'number', description: 'Optional CRM contact id' },
+        deal_id: { type: 'number', description: 'Optional CRM deal id' },
+      },
+      required: ['to', 'subject', 'body'],
+    },
+  },
+  {
     name: 'crm_park_deal',
     description:
       'Park a deal to watchlist (research / SAM scrape). Sets status=watchlist, value=$0, not open pipeline. '
@@ -105,7 +133,10 @@ function hasCrmAccess(npcKey) {
 }
 
 function toolsForNpc(npcKey) {
-  return hasCrmAccess(npcKey) ? [...CRM_TOOL_DEFINITIONS] : [];
+  const policyTool = CRM_TOOL_DEFINITIONS.filter((t) => t.name === 'mail_policy_status');
+  // Always expose read-only mail policy so connectors can verify default-deny.
+  if (!hasCrmAccess(npcKey)) return [...policyTool];
+  return [...CRM_TOOL_DEFINITIONS];
 }
 
 function isCrmTool(name) {
@@ -150,14 +181,77 @@ async function toolParkDeal(scope, args = {}) {
   }
 }
 
+function toolMailPolicyStatus() {
+  return { ok: true, ...mailPolicy.policyStatus() };
+}
+
+async function toolSendDraft(scope, args = {}) {
+  const npcKey = scope?.npc_key || 'mcp';
+  const to = String(args?.to || args?.toEmail || args?.to_email || '').trim();
+  const subject = String(args?.subject || '').trim();
+  const body = String(args?.body || args?.context || '').trim();
+  const confirmToken = args?.confirm_token || args?.confirmToken || null;
+
+  const gate = mailPolicy.assertSendAllowed({
+    npcKey,
+    to,
+    subject,
+    body,
+    confirmToken,
+  });
+  if (!gate.ok) {
+    return { ...gate, sent: false };
+  }
+
+  const orgId = resolveOrgId(scope);
+  if (!orgId) return { ok: false, error: 'org_id unavailable', policy: gate.policy };
+
+  try {
+    const row = await crmStore.getWorkspace(orgId);
+    const sendResult = await sendCrmEmail(row?.state || {}, {
+      contactId: args?.contact_id ?? args?.contactId,
+      dealId: args?.deal_id ?? args?.dealId,
+      toEmail: to,
+      subject,
+      body,
+      senderName: npcKey,
+    });
+    if (!sendResult.ok) {
+      return { ok: false, error: sendResult.error || 'Send failed', policy: gate.policy };
+    }
+    const identityId = scope?.identity_id || null;
+    if (sendResult.state) {
+      await crmStore.upsertWorkspace(orgId, sendResult.state, identityId, {
+        ifUpdatedAt: row?.updated_at || null,
+      });
+    }
+    return {
+      ok: true,
+      sent: true,
+      policy: gate.policy,
+      mode: sendResult.mode,
+      mailto: sendResult.mailto || null,
+      subject: sendResult.subject || subject,
+      to,
+    };
+  } catch (err) {
+    return { ok: false, error: err?.message || String(err), policy: gate.policy };
+  }
+}
+
 async function callTool(scope, name, args) {
   const key = scope?.npc_key;
+
+  // Read-only mail policy is always available (default deny must be inspectable).
+  if (name === 'mail_policy_status') return toolMailPolicyStatus();
+
   if (!hasCrmAccess(key) && scope?.scope_mode !== 'team') {
     return { ok: false, error: 'CRM tools not available for this NPC' };
   }
 
   if (name === 'crm_working_set') return toolWorkingSet(scope, args);
   if (name === 'crm_park_deal') return toolParkDeal(scope, args);
+  if (name === 'send_draft') return toolSendDraft(scope, args);
 
   if (!_runSkill) {
     return { ok: false, error: 'skill runner not configured' };

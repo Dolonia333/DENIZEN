@@ -464,6 +464,8 @@ async function callTool(scope, name, args) {
   const toolName = String(name || '').trim();
   if (scope?.session_id) {
     try { mcpTeamTools.touchMcpPresence(scope.session_id); } catch (_) { /* non-fatal */ }
+  } else if (scope?.npc_key) {
+    try { mcpTeamTools.touchMcpPresenceByNpc(scope.npc_key); } catch (_) { /* non-fatal */ }
   }
   if (!mcpScopes.toolAllowed(scope, toolName)) {
     const denied = {
@@ -577,7 +579,7 @@ async function handleHttpRequest(req, res) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {}, resources: {} },
-        serverInfo: { name: 'denizen-team', version: '1.0.0' },
+        serverInfo: { name: 'denizen-team', version: '1.1.0' },
       },
     }));
     return;

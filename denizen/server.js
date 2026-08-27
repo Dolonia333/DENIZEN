@@ -176,6 +176,8 @@ const { mountComputeRoutes } = require('./src/denizen-compute-routes');
 const { mountCrmRoutes } = require('./src/denizen-crm-routes');
 const { mountN8nRoutes } = require('./src/n8n-routes');
 const { startCrmScheduler } = require('./src/denizen-crm-scheduler');
+const { startJennyDurableLoop } = require('./src/npc-jenny-durable-loop');
+const mcpTeamTools = require('./src/denizen-mcp-team-tools');
 const hostCompute      = require('./src/denizen-host-compute');
 const hardwareMonitor  = require('./src/denizen-hardware-monitor');
 const fleetRegistry    = require('./src/denizen-fleet-registry');
@@ -3250,7 +3252,8 @@ console.log(
 npcMcpGateway.configure({
   runNpcSkill,
   npcBrains,
-  broadcast: _broadcastOps,
+  // Use the office agent bus (WS + pubsub relay) so announce/skills show live.
+  broadcast: _agentBroadcast,
   robinhoodMcp,
   denizenVisitor,
   visitorConnections,
@@ -3272,7 +3275,7 @@ npcMcpGateway.configure({
 teamMcpGateway.configure({
   runNpcSkill,
   npcBrains,
-  broadcast: _broadcastOps,
+  broadcast: _agentBroadcast,
   robinhoodMcp,
   denizenVisitor,
   visitorConnections,
@@ -13235,6 +13238,18 @@ startCrmScheduler({
   log,
   npcBrains,
 });
+
+// Durable Jenny — MCP presence + directive pulse without an open Grok/Claude tab.
+try {
+  startJennyDurableLoop({
+    npcBrains,
+    mcpTeamTools,
+    denizenDb,
+    log,
+  });
+} catch (err) {
+  log.warn?.('JennyDurable', `failed to start: ${err?.message || err}`);
+}
 
 // Nightly SAM.gov federal-opportunity auto-ingest (no-op until SAM_GOV_API_KEY
 // is set; disable with SAM_GOV_AUTO_INGEST=0).

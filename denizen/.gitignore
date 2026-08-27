@@ -71,6 +71,9 @@ data/crm-email-inbound-state.json
 
 # Runtime approval queue (written by jelly impact-approval flow / test runs)
 data/impact-approvals.json
+data/mail-confirm-tokens.json
+data/outcome-ledger.jsonl
+data/crm-hygiene/
 
 # One-off probe outputs from discord-bot/scripts (keep the scripts, not the dumps)
 discord-bot/scripts/_*

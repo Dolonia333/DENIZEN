@@ -6,6 +6,7 @@ const crmSpine = require('./denizen-crm-spine');
 const crmAssist = require('./denizen-crm-assist');
 const { intakeQualifiedHandoff } = require('./denizen-crm-handoffs');
 const { sendCrmEmail } = require('./denizen-crm-email');
+const mailPolicy = require('./denizen-mail-policy');
 const { enrollContact } = require('./denizen-crm-sequences');
 const crmPortal = require('./denizen-crm-portal');
 const { submitPublicIntake } = require('./denizen-crm-intake-public');
@@ -834,10 +835,34 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
         }
         const row = await crmStore.getWorkspace(orgId);
         const senderName = await resolveUpdatedByLabel(access.session?.identity_id) || 'You';
-        const sendResult = await sendCrmEmail(row?.state || {}, {
+        const state = row?.state || {};
+        let toEmail = String(body.toEmail || body.to_email || '').trim();
+        if (!toEmail && (body.contactId ?? body.contact_id)) {
+          const cid = body.contactId ?? body.contact_id;
+          const contact = (state.contacts || []).find((c) => String(c.id) === String(cid));
+          toEmail = String(contact?.email || '').trim();
+        }
+        const subject = String(body.subject || '').trim();
+        const mailBody = String(body.body || '').trim();
+        const gate = mailPolicy.assertSendAllowed({
+          npcKey: body.npc_key || body.npcKey || 'visitor',
+          to: toEmail,
+          subject,
+          body: mailBody,
+          confirmToken: body.confirm_token || body.confirmToken || null,
+        });
+        if (!gate.ok) {
+          json(res, gate.needs_confirm ? 202 : 403, {
+            ok: false,
+            ...gate,
+            error: gate.error || 'mail policy blocked send',
+          });
+          return true;
+        }
+        const sendResult = await sendCrmEmail(state, {
           contactId: body.contactId ?? body.contact_id,
           dealId: body.dealId ?? body.deal_id,
-          toEmail: body.toEmail || body.to_email,
+          toEmail,
           subject: body.subject,
           body: body.body,
           templateId: body.templateId ?? body.template_id,
@@ -860,6 +885,7 @@ function mountCrmRoutes({ verifyVisitorSession, readJsonBody, npcBrains, broadca
           mailto: sendResult.mailto || null,
           logEntry: sendResult.logEntry,
           subject: sendResult.subject,
+          policy: gate.policy,
         });
         return true;
       } catch (err) {

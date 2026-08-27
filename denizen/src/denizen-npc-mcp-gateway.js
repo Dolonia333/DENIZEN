@@ -342,6 +342,8 @@ async function callTool(scope, name, args) {
   const toolName = String(name || '').trim();
   if (scope?.session_id) {
     try { mcpTeamTools.touchMcpPresence(scope.session_id); } catch (_) { /* non-fatal */ }
+  } else if (scope?.npc_key) {
+    try { mcpTeamTools.touchMcpPresenceByNpc(scope.npc_key); } catch (_) { /* non-fatal */ }
   }
   if (!mcpScopes.toolAllowed(scope, toolName)) {
     const denied = {
@@ -416,7 +418,7 @@ async function handleRpc(scope, req, res, message, sessionId) {
       result: {
         protocolVersion: PROTOCOL_VERSION,
         capabilities,
-        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.0.0' },
+        serverInfo: { name: `denizen-npc-${scope.npc_key}`, version: '2.1.0' },
       },
     });
   }

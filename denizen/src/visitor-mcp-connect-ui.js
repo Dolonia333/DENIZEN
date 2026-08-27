@@ -260,7 +260,7 @@
   }
 
   const JOB_CATEGORIES = [
-    { label: 'CRM', tools: ['crm_pipeline_brief', 'business_context_brief', 'crm_list_tasks', 'crm_draft_email'] },
+    { label: 'CRM', tools: ['crm_working_set', 'crm_pipeline_brief', 'business_context_brief', 'crm_list_tasks', 'crm_draft_email', 'mail_policy_status', 'send_draft', 'crm_park_deal'] },
     { label: 'Coding & skills', tools: ['run_skill', 'list_skills'] },
     {
       label: 'Team & tasks',
