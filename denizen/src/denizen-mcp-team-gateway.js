@@ -294,6 +294,9 @@ async function callToolImpl(scope, name, args) {
 
 async function callTool(scope, name, args) {
   const toolName = String(name || '').trim();
+  if (scope?.session_id) {
+    try { mcpTeamTools.touchMcpPresence(scope.session_id); } catch (_) { /* non-fatal */ }
+  }
   if (!mcpScopes.toolAllowed(scope, toolName)) {
     const denied = {
       ok: false,

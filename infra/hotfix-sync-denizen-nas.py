@@ -153,6 +153,11 @@ SYNC_PATHS = [
     "npcs/claude/SOUL.md",
     "npcs/grok/SOUL.md",
     "npcs/abby/SOUL.md",
+    # MCP presence + roster collapse (cwr_2d111c46eafb79b4)
+    "src/denizen-mcp-team-tools.js",
+    "src/denizen-npc-mcp-gateway.js",
+    "tests/denizen-mcp-team-tools.test.js",
+    "tests/denizen-mcp-team-gateway.test.js",
 ]
 
 
