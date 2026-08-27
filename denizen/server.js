@@ -3250,7 +3250,8 @@ console.log(
 npcMcpGateway.configure({
   runNpcSkill,
   npcBrains,
-  broadcast: _broadcastOps,
+  // Use the office agent bus (WS + pubsub relay) so announce/skills show live.
+  broadcast: _agentBroadcast,
   robinhoodMcp,
   denizenVisitor,
   visitorConnections,
@@ -3272,7 +3273,7 @@ npcMcpGateway.configure({
 teamMcpGateway.configure({
   runNpcSkill,
   npcBrains,
-  broadcast: _broadcastOps,
+  broadcast: _agentBroadcast,
   robinhoodMcp,
   denizenVisitor,
   visitorConnections,
@@ -13353,6 +13354,51 @@ server.listen(PORT, () => {
         log,
       });
       if (marketLoop?.ok) log.info('Market', `scheduler started (${marketLoop.tickMs}ms tick, US market hours)`);
+    }
+
+    if (!/^(0|false|no|off)$/i.test(String(process.env.NPC_MCP_CLOUD_PATROL || '1'))) {
+      try {
+        const npcMcpPatrol = require('./src/npc-mcp-cloud-patrol-loop.js');
+        npcMcpPatrol.startNpcMcpCloudPatrol({
+          orgId: denizenDb.orgId,
+          createMcpToken: npcMcpGateway.createMcpToken,
+        }).then((r) => {
+          if (r?.ok) log.info('NpcMcpPatrol', `cloud patrol started (${r.intervalMs || 180000}ms)`);
+          else log.warn('NpcMcpPatrol', r?.reason || 'not started');
+        }).catch((err) => {
+          log.warn('NpcMcpPatrol', err?.message || err);
+        });
+      } catch (err) {
+        log.warn('NpcMcpPatrol', err?.message || err);
+      }
+    }
+
+    if (!/^(0|false|no|off)$/i.test(String(process.env.NPC_MCP_CLOUD_SUPERVISOR || '1'))) {
+      try {
+        const supervisor = require('./src/npc-mcp-cloud-supervisor-loop.js');
+        const r = supervisor.startNpcMcpCloudSupervisor({
+          npcBrains,
+          announceInOffice: (payload) => {
+            try {
+              _agentBroadcast({
+                type: 'npc_response',
+                npcName: payload?.npcName || 'Grok',
+                fromName: 'Cloud supervisor',
+                text: payload?.message || payload?.text || '',
+                turn: 1,
+                ts: Date.now(),
+              });
+            } catch (_) {}
+          },
+          refreshNpcMemories: (name) => {
+            try { npcBrains.refreshDbMemories?.(name); } catch (_) {}
+          },
+        });
+        if (r?.ok) log.info('NpcMcpSupervisor', `cloud→local guide started (${r.intervalMs || 120000}ms)`);
+        else log.warn('NpcMcpSupervisor', r?.reason || 'not started');
+      } catch (err) {
+        log.warn('NpcMcpSupervisor', err?.message || err);
+      }
     }
   }).catch(() => {});
 

@@ -70,6 +70,16 @@ function buildHealth() {
   if (answeredNoMem.length > 5) issues.push(`answered_without_memory_${answeredNoMem.length}`);
   if (awaitingPeers.length > 0) issues.push(`mentor_awaiting_peers_${awaitingPeers.length}`);
 
+  let supervisor = { open: 0, by_type: {} };
+  try {
+    const inbox = require('./npc-cloud-supervisor-inbox');
+    const snap = inbox.summarizeForCloud(40);
+    supervisor = { open: snap.open_count, by_type: snap.by_type };
+    if (snap.open_count > 8) issues.push(`supervisor_inbox_${snap.open_count}`);
+    if ((snap.by_type.hallucination || 0) > 0) issues.push(`hallucinations_open_${snap.by_type.hallucination}`);
+    if ((snap.by_type.chronos_loop || 0) > 0) issues.push(`chronos_loops_open_${snap.by_type.chronos_loop}`);
+  } catch (_) {}
+
   const ok = issues.length === 0
     || (issues.length === 1 && issues[0].startsWith('telemetry_stale') && telAge < 90);
 
@@ -97,6 +107,7 @@ function buildHealth() {
       finalized: finalized.length,
       openIds: awaitingPeers.slice(0, 5).map((s) => s.id),
     },
+    supervisor,
     lessonsApplied: lessons.slice(-5),
     recentImprovements: improve.slice(-5).map((r) => ({
       npc: r.npc,
