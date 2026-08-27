@@ -25,8 +25,10 @@ const ARRAY_KEYS = [
 
 const OBJECT_KEYS = [
   'contactGroupMap', 'userPrefs', 'calendarConnections', 'integrations',
-  'onboarding', 'availability', 'industryConfig', 'teamPolicy',
+  'onboarding', 'availability', 'teamPolicy',
 ];
+// Do NOT wipe industryConfig to {} — empty object crashes the CRM UI (truthy but missing stages).
+// Leave industryConfig unset so the client keeps its local default.
 
 async function main() {
   const store = require('/app/src/denizen-crm-store.js');
@@ -48,6 +50,12 @@ async function main() {
   const empty = {};
   for (const k of ARRAY_KEYS) empty[k] = [];
   for (const k of OBJECT_KEYS) empty[k] = {};
+  // Preserve a usable industry config if present; otherwise omit (client uses default).
+  if (prev.industryConfig && typeof prev.industryConfig === 'object'
+    && prev.industryConfig.id && prev.industryConfig.terminology
+    && Array.isArray(prev.industryConfig.pipelineStages)) {
+    empty.industryConfig = prev.industryConfig;
+  }
   empty.auditLog = [{
     id: `full-reset-${Date.now()}`,
     at: NOW,

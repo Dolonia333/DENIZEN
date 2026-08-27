@@ -927,7 +927,13 @@ export default function CRMApp() {
     if (state.emailLog) setEmailLog(state.emailLog as EmailLogEntry[]);
     if (state.auditLog) setAuditLog(state.auditLog as AuditEntry[]);
     if (state.noteBoards) setNoteBoards(state.noteBoards);
-    if (state.industryConfig) setIndustryConfigRaw(state.industryConfig as IndustryConfig);
+    // Empty {} from a full reset is truthy but not a usable industry config — keep local default.
+    const ic = state.industryConfig as IndustryConfig | undefined;
+    if (ic && typeof ic === "object" && ic.id && ic.terminology && Array.isArray(ic.pipelineStages) && Array.isArray(ic.contactStatuses)) {
+      setIndustryConfigRaw(ic);
+    } else if (ic && typeof ic === "object" && Object.keys(ic).length === 0) {
+      setIndustryConfigRaw(DEFAULT_INDUSTRY_CONFIG);
+    }
     if (state.contactGroups) setContactGroups(state.contactGroups as import("./ContactGroups").ContactGroup[]);
     if (state.contactGroupMap) setContactGroupMap(state.contactGroupMap);
     if (state.crmQuotas) setCrmQuotas(state.crmQuotas as Quota[]);
