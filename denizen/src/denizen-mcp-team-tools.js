@@ -7,6 +7,7 @@
 const npcRoster = require('./npc-roster');
 const mcpActions = require('./denizen-mcp-actions');
 const denizenDb = require('./denizen-db.js');
+const outcomeLedger = require('./denizen-outcome-ledger.js');
 
 let _deps = {};
 
@@ -533,10 +534,19 @@ async function toolTeamStandup(scope, args = {}) {
   const directives = _deps.npcBrains?.getAllDirectives?.() || {};
   const directiveRows = Object.entries(directives).map(([npc, d]) => ({
     npc,
+    id: d?.id || null,
     from: d?.from || null,
     task: d?.task || null,
     urgent: !!d?.urgent,
+    status: d?.status || 'queued',
+    started_at: d?.started_at || null,
+    expires_at: d?.expires_at || null,
   }));
+
+  let recentOutcomes = { count: 0, outcomes: [], breakdown: {} };
+  try {
+    recentOutcomes = outcomeLedger.standup({ hours: 168, limit: 10 });
+  } catch (_) {}
 
   let cursorWork = { ok: true, items: [], count: 0 };
   if (includeCursor) {
@@ -627,11 +637,17 @@ async function toolTeamStandup(scope, args = {}) {
       error: cursorWork?.ok === false ? cursorWork.error : null,
     },
     office_directives: directiveRows.slice(0, 20),
+    recent_outcomes: {
+      count: recentOutcomes.count || 0,
+      breakdown: recentOutcomes.breakdown || {},
+      outcomes: recentOutcomes.outcomes || [],
+      summary: recentOutcomes.summary || null,
+    },
     crm_tasks: crmTasks,
     inference: extras.inference,
     action_items: actionItems,
     next_poll: {
-      tools: ['team_standup', 'list_pending_handoffs'],
+      tools: ['team_standup', 'list_pending_handoffs', 'list_directives', 'list_jobs'],
       suggested_interval_seconds: needsYou || pendingCursor ? 60 : 300,
     },
   };

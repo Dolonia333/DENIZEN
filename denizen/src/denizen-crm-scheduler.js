@@ -36,6 +36,8 @@ function startCrmScheduler(deps = {}) {
 
   const log = deps.log || console;
 
+  const npcBrains = deps.npcBrains || null;
+
   const orgId = () => denizenDb.orgId;
 
 
@@ -272,6 +274,8 @@ function startCrmScheduler(deps = {}) {
 
       await tickDailySnapshots(log);
 
+      await tickNightlyHygiene(log, oid, npcBrains);
+
 
 
       const hour = new Date().getHours();
@@ -418,5 +422,33 @@ async function tickDailySnapshots(log) {
 
 
 
-module.exports = { startCrmScheduler, tickDailySnapshots };
+async function tickNightlyHygiene(log, oid, npcBrains) {
+  if (!oid) return;
+  const hour = new Date().getHours();
+  const dayKey = new Date().toISOString().slice(0, 10);
+  // Hour 1 local — same window as daily snapshots
+  if (hour !== 1) return;
+  if (tickNightlyHygiene._done === dayKey) return;
+  tickNightlyHygiene._done = dayKey;
+
+  try {
+    const jobs = require('./denizen-scheduled-jobs');
+    const job = jobs.getJob('crm-hygiene');
+    if (job && job.enabled === false) {
+      log?.info?.('[CrmScheduler] crm-hygiene disabled — skip');
+      return;
+    }
+    const result = await jobs.runJob('crm-hygiene', { orgId: oid, npcBrains, log });
+    log?.info?.(
+      '[CrmScheduler] hygiene',
+      `parked=${result?.result?.parked_count ?? 0} expired=${result?.result?.expired_count ?? 0}`,
+    );
+  } catch (err) {
+    log?.warn?.('[CrmScheduler] hygiene', err?.message || err);
+  }
+}
+
+
+
+module.exports = { startCrmScheduler, tickDailySnapshots, tickNightlyHygiene };
 

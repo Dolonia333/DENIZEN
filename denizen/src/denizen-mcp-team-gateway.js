@@ -11,9 +11,12 @@ const mcpMeshTools = require('./denizen-mcp-mesh-tools.js');
 const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
 const mcpResources = require('./denizen-mcp-resources.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
+const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
+const outcomeLedger = require('./denizen-outcome-ledger.js');
+const scheduledJobs = require('./denizen-scheduled-jobs.js');
 
 const TEAM_NPC_KEY = '_team';
 const PROTOCOL_VERSION = '2024-11-05';
@@ -56,7 +59,7 @@ const TEAM_TOOL_DEFINITIONS = [
   },
   {
     name: 'clear_directive',
-    description: 'Clear a stale/completed directive for one NPC (directives previously only got overwritten by a new one, never completed).',
+    description: 'Clear a stale/completed directive for one NPC (alias for complete_directive status=done).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -65,10 +68,78 @@ const TEAM_TOOL_DEFINITIONS = [
       required: ['npc_key'],
     },
   },
+  {
+    name: 'list_directives',
+    description:
+      'List NPC directives with lifecycle status (queued|running|done|blocked|expired). '
+      + 'Pass include_archived to see recent completions from the archive.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', description: 'Filter: queued|running|done|blocked|expired' },
+        include_archived: { type: 'boolean', description: 'Include archived completions (default false)' },
+      },
+    },
+  },
+  {
+    name: 'complete_directive',
+    description:
+      'Close a directive: done|blocked|expired. Archives + writes an outcome receipt. '
+      + 'Use when MCP Jenny finishes work the local brain never acked.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        npc_key: { type: 'string', description: 'NPC folder key' },
+        status: { type: 'string', description: 'done (default) | blocked | expired' },
+        note: { type: 'string', description: 'Result note / blocker reason' },
+        artifact: { type: 'string', description: 'Commit, path, closed task id, etc.' },
+      },
+      required: ['npc_key'],
+    },
+  },
+  {
+    name: 'record_outcome',
+    description:
+      'Write one outcome ledger receipt (owner, type, artifact, pass/fail). '
+      + 'This is what morning standup reads — not log_activity diary lines.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        outcome_type: { type: 'string', description: 'e.g. hygiene.nightly, directive.done, crm.park_deal' },
+        value_text: { type: 'string', description: 'Human-readable receipt' },
+        entity_type: { type: 'string', description: 'deal|task|npc_directive|workspace|…' },
+        entity_key: { type: 'string', description: 'ID or key of the entity' },
+        artifact: { type: 'string', description: 'Commit SHA, path, ticket id' },
+        pass: { type: 'boolean', description: 'true=success (default), false=fail' },
+        actor: { type: 'string', description: 'Who produced this (default: caller NPC)' },
+      },
+      required: ['outcome_type', 'value_text'],
+    },
+  },
+  {
+    name: 'schedule_job',
+    description:
+      'Schedule or run a Denizen job. job=crm-hygiene parks scrape deals + expires directives + writes outcome. '
+      + 'Pass run_now:true to execute immediately (needs org).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        job: { type: 'string', description: 'Job id (default crm-hygiene)' },
+        run_now: { type: 'boolean', description: 'Run immediately instead of waiting for hour-1 tick' },
+        enabled: { type: 'boolean', description: 'Enable/disable scheduled run' },
+      },
+    },
+  },
+  {
+    name: 'list_jobs',
+    description: 'List Denizen scheduled jobs (crm-hygiene, …) with last_run_at and last_result.',
+    inputSchema: { type: 'object', properties: {} },
+  },
   ...mcpTeamTools.TEAM_TOOL_DEFINITIONS,
   ...mcpMeshTools.MESH_TOOL_DEFINITIONS,
   ...mcpCursorTools.CURSOR_TOOL_DEFINITIONS,
   ...mcpMentorTools.toolsForGateway(),
+  ...mcpCrmTools.CRM_TOOL_DEFINITIONS,
 ];
 
 const TEAM_RESOURCES = [
@@ -111,6 +182,7 @@ let _deps = {};
 function configure(deps = {}) {
   _deps = { ..._deps, ...deps };
   mcpTeamTools.configure(deps);
+  mcpCrmTools.configure(deps);
   npcGateway.configure(deps);
 }
 
@@ -237,12 +309,100 @@ async function toolBroadcastTask(scope, args) {
 async function toolClearDirective(scope, args) {
   const key = String(args?.npc_key || '').toLowerCase().trim();
   if (!key) return { ok: false, error: 'npc_key required' };
-  if (!_deps.npcBrains?.clearDirective) {
+  if (!_deps.npcBrains?.clearDirective && !_deps.npcBrains?.completeDirective) {
     return { ok: false, error: 'npc brains not configured' };
   }
   const display = displayNameForKey(key);
+  if (_deps.npcBrains.completeDirective) {
+    const result = _deps.npcBrains.completeDirective(display, {
+      status: 'done',
+      note: args?.note || 'cleared via MCP clear_directive',
+    });
+    return { ok: result.ok !== false, npc_key: key, display_name: display, ...result };
+  }
   const cleared = _deps.npcBrains.clearDirective(display);
   return { ok: true, npc_key: key, display_name: display, cleared };
+}
+
+async function toolListDirectives(scope, args = {}) {
+  if (!_deps.npcBrains?.listDirectives && !_deps.npcBrains?.getAllDirectives) {
+    return { ok: false, error: 'npc brains not configured' };
+  }
+  const rows = _deps.npcBrains.listDirectives
+    ? _deps.npcBrains.listDirectives({
+      status: args?.status || null,
+      include_archived: args?.include_archived === true || args?.includeArchived === true,
+    })
+    : Object.entries(_deps.npcBrains.getAllDirectives() || {}).map(([npc, d]) => ({ npc, ...d, active: true }));
+  return {
+    ok: true,
+    count: rows.length,
+    directives: rows,
+    summary: rows.length
+      ? `${rows.length} directive(s): ${rows.slice(0, 5).map((r) => `${r.npc}=${r.status || 'queued'}`).join(', ')}`
+      : 'No active directives.',
+  };
+}
+
+async function toolCompleteDirective(scope, args = {}) {
+  const key = String(args?.npc_key || '').toLowerCase().trim();
+  if (!key) return { ok: false, error: 'npc_key required' };
+  if (!_deps.npcBrains?.completeDirective) {
+    return { ok: false, error: 'npc brains not configured' };
+  }
+  const display = displayNameForKey(key);
+  const result = _deps.npcBrains.completeDirective(display, {
+    status: args?.status || 'done',
+    note: args?.note,
+    artifact: args?.artifact,
+  });
+  return { ok: result.ok !== false, npc_key: key, display_name: display, ...result };
+}
+
+async function toolRecordOutcome(scope, args = {}) {
+  const outcomeType = String(args?.outcome_type || args?.type || '').trim();
+  const valueText = String(args?.value_text || args?.text || args?.note || '').trim();
+  if (!outcomeType) return { ok: false, error: 'outcome_type required' };
+  if (!valueText) return { ok: false, error: 'value_text required' };
+  const entry = outcomeLedger.appendOutcome({
+    org_id: scope?.org_id || denizenDb.orgId || null,
+    actor: String(args?.actor || scope?.npc_key || 'mcp').slice(0, 80),
+    outcome_type: outcomeType,
+    entity_type: args?.entity_type || 'workspace',
+    entity_key: args?.entity_key || null,
+    value_text: valueText,
+    value_json: {
+      artifact: args?.artifact || null,
+      ...(args?.value_json && typeof args.value_json === 'object' ? args.value_json : {}),
+    },
+    source: 'mcp_record_outcome',
+    pass: args?.pass !== false,
+  });
+  return { ok: true, outcome: entry, summary: `Recorded ${entry.outcome_type} (${entry.id})` };
+}
+
+async function toolScheduleJob(scope, args = {}) {
+  const job = String(args?.job || args?.job_id || 'crm-hygiene').trim();
+  const runNow = args?.run_now === true || args?.runNow === true;
+  if (runNow) {
+    const orgId = scope?.org_id || denizenDb.orgId;
+    if (!orgId) return { ok: false, error: 'org_id unavailable for run_now' };
+    return scheduledJobs.runJob(job, {
+      orgId,
+      npcBrains: _deps.npcBrains,
+      actor: scope?.npc_key || 'mcp',
+      log: console,
+    });
+  }
+  return scheduledJobs.scheduleJob(job, {
+    enabled: args?.enabled,
+    run_now: false,
+  });
+}
+
+async function toolListJobs() {
+  const jobs = scheduledJobs.listJobs();
+  return { ok: true, count: jobs.length, jobs };
 }
 
 async function readResource(scope, uri) {
@@ -275,9 +435,17 @@ async function callToolImpl(scope, name, args) {
     case 'run_as_npc': return toolRunAsNpc(scope, args);
     case 'broadcast_task': return toolBroadcastTask(scope, args);
     case 'clear_directive': return toolClearDirective(scope, args);
+    case 'list_directives': return toolListDirectives(scope, args);
+    case 'complete_directive': return toolCompleteDirective(scope, args);
+    case 'record_outcome': return toolRecordOutcome(scope, args);
+    case 'schedule_job': return toolScheduleJob(scope, args);
+    case 'list_jobs': return toolListJobs(scope, args);
     default:
       if (mcpTeamTools.isTeamTool(name)) {
         return mcpTeamTools.callTool(scope, name, args);
+      }
+      if (mcpCrmTools.isCrmTool(name)) {
+        return mcpCrmTools.callTool(scope, name, args);
       }
       if (mcpMeshTools.isMeshTool(name)) {
         return mcpMeshTools.callTool(scope, name, args);

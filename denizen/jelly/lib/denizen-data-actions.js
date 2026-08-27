@@ -440,24 +440,53 @@ async function outcomeStandup(config, params) {
   const hours = Number(params.hours) || 168;
   const since = new Date(Date.now() - hours * 3600 * 1000).toISOString();
 
-  const outcomes = await bridge.bridgeQuery(config, {
-    table: 'denizen_outcomes',
-    select: ['outcome_type', 'entity_type', 'entity_id', 'entity_key', 'value_text', 'observed_at'],
-    filters: {},
-    order: { observed_at: 'desc' },
-    limit: Number(params.limit) || 20,
-  });
+  let outcomes = [];
+  try {
+    outcomes = await bridge.bridgeQuery(config, {
+      table: 'denizen_outcomes',
+      select: ['outcome_type', 'entity_type', 'entity_id', 'entity_key', 'value_text', 'observed_at'],
+      filters: {},
+      order: { observed_at: 'desc' },
+      limit: Number(params.limit) || 20,
+    });
+  } catch (_) {
+    outcomes = [];
+  }
 
-  const recent = outcomes.filter((o) => !since || o.observed_at >= since);
+  let recent = (outcomes || []).filter((o) => !since || o.observed_at >= since);
+  let source = 'denizen_outcomes';
+
+  // Local ledger fallback — unattended work writes here even when DB table is empty
+  if (!recent.length) {
+    try {
+      const ledger = require('../../src/denizen-outcome-ledger');
+      const local = ledger.standup({ hours, limit: Number(params.limit) || 20 });
+      if (local.count > 0) {
+        recent = local.outcomes.map((o) => ({
+          outcome_type: o.outcome_type,
+          entity_type: o.entity_type,
+          entity_key: o.entity_key,
+          value_text: o.value_text,
+          observed_at: o.ts,
+          pass: o.pass,
+          actor: o.actor,
+          source: o.source,
+        }));
+        source = 'outcome-ledger';
+      }
+    } catch (_) {}
+  }
+
   const byType = {};
   for (const o of recent) {
     byType[o.outcome_type] = (byType[o.outcome_type] || 0) + 1;
   }
 
   return {
-    summary: `Last ${hours}h: ${recent.length} outcomes. Breakdown: ${JSON.stringify(byType)}. ${fmtRows(recent, 5)}`,
+    summary: `Last ${hours}h: ${recent.length} outcomes (${source}). Breakdown: ${JSON.stringify(byType)}. ${fmtRows(recent, 5)}`,
     outcomes: recent,
     breakdown: byType,
+    source,
   };
 }
 
