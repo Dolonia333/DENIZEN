@@ -233,28 +233,58 @@ async function markDealOutcome(orgId, params = {}, identityId = null) {
 }
 
 async function pipelineBrief(orgId, params = {}) {
-  const [pipeline, atRisk, tasks, status] = await Promise.all([
+  const workingSetMod = require('./denizen-crm-working-set');
+  const { state } = await crmMutations.loadOrgWorkspace(orgId);
+  const ws = workingSetMod.buildWorkingSet(state);
+  const [pipeline, tasks, status] = await Promise.all([
     crmMutations.listPipeline(orgId, { limit: 8 }),
-    crmMutations.listAtRisk(orgId, {}),
     crmMutations.listTasks(orgId, { overdue: true }),
     crmMutations.getSetupStatus(orgId, params),
   ]);
   const lines = [
     pipeline.summary,
-    atRisk.count ? `At-risk: ${atRisk.deals.map((d) => d.title).slice(0, 3).join(', ')}.` : '',
+    ws.counts.at_risk
+      ? `At-risk (missed next date): ${ws.atRiskDeals.map((d) => d.title).slice(0, 3).join(', ')}.`
+      : 'At-risk: none (only live deals with missed next dates count).',
+    ws.counts.watchlist ? `Watchlist parked: ${ws.counts.watchlist} (not pipeline $).` : '',
     tasks.overdueCount ? `Overdue tasks: ${tasks.tasks.map((t) => t.title).slice(0, 3).join(', ')}.` : '',
     status.setup?.onboarding?.next
       ? `Setup ${status.setup.onboarding.completed}/${status.setup.onboarding.total} — next: ${status.setup.onboarding.next.label}.`
       : '',
+    ws.empty ? 'Next: add real account → contact → deal → verb task. Never invent seed rows.' : '',
   ].filter(Boolean);
   return {
     summary: lines.join('\n'),
+    philosophy: workingSetMod.PHILOSOPHY,
+    checklist: workingSetMod.LOCAL_CHECKLIST,
+    working_set: ws,
     pipeline,
-    atRisk,
+    atRisk: { count: ws.counts.at_risk, deals: ws.atRiskDeals },
     tasks,
     setup: status.setup,
     crm_actions: chatActions.normalizeCrmActions([
-      chatActions.openTabAction('dashboard', 'Open CRM dashboard'),
+      chatActions.openTabAction('dashboard', 'Open My Board'),
+      chatActions.openTabAction('sales', 'Open pipeline', { subTab: 'pipeline' }),
+    ]),
+  };
+}
+
+async function workingSetBrief(orgId, params = {}) {
+  const workingSetMod = require('./denizen-crm-working-set');
+  const { state } = await crmMutations.loadOrgWorkspace(orgId);
+  const ws = workingSetMod.buildWorkingSet(state);
+  const summary = ws.empty
+    ? 'Working set empty. Ready for a clean rebuild — company, contact, deal, task.'
+    : `Working set: ${ws.counts.open_pipeline} deals / $${ws.counts.open_pipeline_value} · ${ws.counts.contacts} contacts · ${ws.counts.open_tasks} tasks · ${ws.counts.watchlist} watchlist.`;
+  return {
+    summary,
+    philosophy: workingSetMod.PHILOSOPHY,
+    checklist: workingSetMod.LOCAL_CHECKLIST,
+    working_set: ws,
+    next_steps: ws.next_steps,
+    crm_actions: chatActions.normalizeCrmActions([
+      chatActions.openTabAction('dashboard', 'Open My Board'),
+      chatActions.openTabAction('contacts', 'Add contact'),
       chatActions.openTabAction('sales', 'Open pipeline', { subTab: 'pipeline' }),
     ]),
   };
@@ -1058,6 +1088,7 @@ module.exports = {
   moveDeal,
   markDealOutcome,
   pipelineBrief,
+  workingSetBrief,
   dedupeContacts,
   auditWorkspace,
   exportSnapshot,

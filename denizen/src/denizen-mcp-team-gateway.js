@@ -9,11 +9,14 @@ const npcGateway = require('./denizen-npc-mcp-gateway.js');
 const mcpTeamTools = require('./denizen-mcp-team-tools.js');
 const mcpMeshTools = require('./denizen-mcp-mesh-tools.js');
 const mcpCursorTools = require('./denizen-mcp-cursor-tools.js');
+const mcpCrmTools = require('./denizen-mcp-crm-tools.js');
 const mcpResources = require('./denizen-mcp-resources.js');
 const mcpMentorTools = require('./denizen-mcp-mentor-tools.js');
 const mcpScopes = require('./denizen-mcp-scopes.js');
 const denizenDb = require('./denizen-db.js');
 const npcRoster = require('./npc-roster');
+const crmWorkingSet = require('./denizen-crm-working-set.js');
+const crmStore = require('./denizen-crm-store.js');
 
 const TEAM_NPC_KEY = '_team';
 const PROTOCOL_VERSION = '2024-11-05';
@@ -69,6 +72,7 @@ const TEAM_TOOL_DEFINITIONS = [
   ...mcpMeshTools.MESH_TOOL_DEFINITIONS,
   ...mcpCursorTools.CURSOR_TOOL_DEFINITIONS,
   ...mcpMentorTools.toolsForGateway(),
+  ...mcpCrmTools.CRM_TOOL_DEFINITIONS,
 ];
 
 const TEAM_RESOURCES = [
@@ -96,6 +100,21 @@ const TEAM_RESOURCES = [
     description: 'Pending Denizen→Cursor self-improvement tasks',
     mimeType: 'application/json',
   },
+  {
+    uri: 'crm://working-set',
+    name: 'crm_working_set',
+    description:
+      'Live Meridian working-set JSON (open deals, contacts, tasks, watchlist). '
+      + 'Read before mutating CRM. Empty is valid — do not invent seed data.',
+    mimeType: 'application/json',
+  },
+  {
+    uri: 'crm://playbook',
+    name: 'crm_playbook',
+    description:
+      'Static CRM agent playbook: keep/park/kill rules, checklist for cloud + slow local LM modes.',
+    mimeType: 'application/json',
+  },
   ...mcpResources.fleetResourcesList(),
   ...mcpResources.mentorResourcesList(),
   {
@@ -111,6 +130,7 @@ let _deps = {};
 function configure(deps = {}) {
   _deps = { ..._deps, ...deps };
   mcpTeamTools.configure(deps);
+  mcpCrmTools.configure(deps);
   npcGateway.configure(deps);
 }
 
@@ -262,6 +282,23 @@ async function readResource(scope, uri) {
     const queue = await mcpCursorTools.callTool(scope, 'list_cursor_work', { status: 'pending', limit: 25 });
     return JSON.stringify(queue, null, 2);
   }
+  if (uri === 'crm://playbook') {
+    return JSON.stringify(crmWorkingSet.playbookResource(), null, 2);
+  }
+  if (uri === 'crm://working-set') {
+    const orgId = scope?.org_id;
+    if (!orgId) {
+      return JSON.stringify({ ok: false, error: 'org_id missing on team scope' }, null, 2);
+    }
+    const row = await crmStore.getWorkspace(orgId);
+    const ws = crmWorkingSet.buildWorkingSet(row?.state || {});
+    return JSON.stringify({
+      ok: true,
+      org_id: orgId,
+      updated_at: row?.updated_at || null,
+      ...ws,
+    }, null, 2);
+  }
   if (mcpResources.canReadTelemetry(scope, uri)) {
     // Covers fleet telemetry, grok consult queue, and mentor dialogues (scope-checked per URI).
     return mcpResources.readResource(uri);
@@ -287,6 +324,9 @@ async function callToolImpl(scope, name, args) {
       }
       if (mcpMentorTools.isMentorTool(name)) {
         return mcpMentorTools.callTool(scope, name, args);
+      }
+      if (mcpCrmTools.isCrmTool(name)) {
+        return mcpCrmTools.callTool(scope, name, args);
       }
       return { ok: false, error: `unknown team tool: ${name}` };
   }

@@ -1,6 +1,6 @@
 {
   "name": "crm_list_tasks",
-  "description": "List open CRM tasks and follow-ups.",
+  "description": "READ-ONLY list of open CRM tasks (not done/closed). Prefer verb titles tied to one deal. Overdue hygiene chores should be closed, not enriched.",
   "inputSchema": {
     "type": "object",
     "properties": {

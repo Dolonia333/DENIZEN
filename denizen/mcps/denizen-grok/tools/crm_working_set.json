@@ -1,0 +1,13 @@
+{
+  "name": "crm_working_set",
+  "description": "READ-ONLY Meridian working-set board: live deals, contacts, open tasks, watchlist parked, at-risk (missed next date). Excludes seed/watchlist from pipeline $. Empty workspace is OK — do not invent data. Call this first before any CRM write. Returns checklist for cloud + slow local modes.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "focus": {
+        "type": "string",
+        "description": "Optional note (ignored for filtering; for agent context)"
+      }
+    }
+  }
+}

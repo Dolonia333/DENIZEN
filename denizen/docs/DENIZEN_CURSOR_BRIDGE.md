@@ -61,6 +61,24 @@ Add to your Cursor rules or run manually when connected to Denizen MCP:
 
 Requires **`compute`** scope on token (included in **Full access** preset).
 
+## Meridian CRM (cloud + local)
+
+CRM is empty-or-real after hygiene — **never invent seed deals or fake $**.
+
+| Surface | Use |
+|---------|-----|
+| MCP tool `crm_working_set` | First read: live board JSON + checklist |
+| MCP tool `crm_pipeline_brief` | Short text brief (working-set filtered) |
+| MCP tool `crm_list_tasks` | Open tasks only |
+| Resource `crm://working-set` | Same board via team MCP `resources/read` |
+| Resource `crm://playbook` | Keep/park/kill + slow-LM checklist (static) |
+| Skill `crm-working-set` / `crm-pipeline-brief` | NPC `run_skill` path |
+
+**Cloud (team token):** `resources/read crm://working-set` → then one write via `run_skill` (Abby/Marcus/Lucy owners).  
+**Slow local LM:** `run_skill` with `wait: false` → poll `get_skill_job`; one mutation per turn; follow checklist in playbook.
+
+Philosophy: who / what / next / by when. Watchlist RFPs are parked — not pipeline $.
+
 ## Self-improvement examples
 
 **Abby sees LM Stats `provider_down`:**
