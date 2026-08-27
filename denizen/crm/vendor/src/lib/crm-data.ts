@@ -21,6 +21,12 @@ export interface Deal {
   forecastCategory?: string; leadSource?: string; commissionRate?: number;
   customFieldValues?: Record<string, any>;
   ownerId?: string;
+  /** Workspace outcome status (open / watchlist / expired / closed / …) */
+  status?: string;
+  company?: string;
+  tags?: string[];
+  notes?: string;
+  dealId?: number;
 }
 export interface Note { id: number; contact: string; text: string; date: string; type: string; }
 export interface Subtask { id: number; title: string; done: boolean; }

@@ -10,6 +10,12 @@ import {
 } from "@/lib/crm-data";
 import { useCRMTranslation } from "@/hooks/use-crm-translation";
 import { getRoleLayout, type KpiId, type WidgetId } from "@/lib/crm-roles";
+import {
+  isOpenPipelineDeal,
+  isAtRiskWorkingDeal,
+  isOpenTask,
+  isOverdueTask,
+} from "@/lib/crm-working-set";
 
 interface RoleDashboardProps {
   roleId: string;
@@ -103,19 +109,19 @@ export function RoleDashboard(props: RoleDashboardProps) {
   const layout = useMemo(() => getRoleLayout(roleId, industryConfig.id), [roleId, industryConfig.id]);
 
   const m = useMemo(() => {
-    const open = deals.filter((d) => !isClosed(d));
+    const open = deals.filter((d) => isOpenPipelineDeal(d));
     const won = deals.filter((d) => d.stage === WON);
-    const lost = deals.filter((d) => d.stage === LOST);
+    const lost = deals.filter((d) => d.stage === LOST || /disqual/i.test(String(d.status || "")) || /lost/i.test(d.stage));
     const pipelineValue = open.reduce((s, d) => s + (d.value || 0), 0);
     const weighted = open.reduce((s, d) => s + (d.value || 0) * (d.probability || 0) / 100, 0);
     const wonValue = won.reduce((s, d) => s + (d.value || 0), 0);
-    const customers = contacts.filter((c) => /customer/i.test(c.status || ""));
-    const openTasks = tasks.filter((t) => !t.done);
-    const overdue = openTasks.filter((t) => t.due && t.due < todayStr());
+    const customers = contacts.filter((c) => /customer|active client/i.test(c.status || ""));
+    const openTasks = tasks.filter((t) => isOpenTask(t));
+    const overdue = openTasks.filter((t) => isOverdueTask(t, todayStr()));
     const today = todayStr();
     const meetingsToday = meetings.filter((mt) => mt.date === today);
-    const atRisk = deals.filter((d) => d.health === "at-risk" && !isClosed(d));
-    const leads = contacts.filter((c) => !/customer/i.test(c.status || ""));
+    const atRisk = open.filter((d) => isAtRiskWorkingDeal(d, today));
+    const leads = contacts.filter((c) => !/customer|active client|capture team|partner/i.test(c.status || ""));
     const newLeads = leads.filter((c) => daysSince(c.lastContact) <= 14);
     const qualified = contacts.filter((c) => calcLeadScore(c, emailLog, deals, notes, tasks) >= 70);
     const sentEmails = emailLog.length;
@@ -202,7 +208,7 @@ export function RoleDashboard(props: RoleDashboardProps) {
           const owner = d.ownerId || "Unassigned";
           const cur = byOwner.get(owner) || { won: 0, open: 0 };
           if (d.stage === WON) cur.won += d.value || 0;
-          else if (!isClosed(d)) cur.open += d.value || 0;
+          else if (isOpenPipelineDeal(d)) cur.open += d.value || 0;
           byOwner.set(owner, cur);
         });
         const rows = [...byOwner.entries()].sort((a, b) => b[1].won - a[1].won).slice(0, 6);

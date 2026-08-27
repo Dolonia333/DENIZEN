@@ -30,6 +30,7 @@ export const SupportTab = lazyTab(() => import("./SupportTab"), "SupportTab");
 export const MarketingTab = lazyTab(() => import("./MarketingTab"), "MarketingTab");
 export const TeamTab = lazyTab(() => import("./TeamTab"), "TeamTab");
 export const MyWorkPanel = lazyTab(() => import("./MyWorkPanel"), "MyWorkPanel");
+export const WorkingSetDashboard = lazyTab(() => import("./WorkingSetDashboard"), "WorkingSetDashboard");
 export const AIProspector = lazyTab(() => import("./AIProspector"), "AIProspector");
 export const ScheduleSection = lazyTab(() => import("./ScheduleSection"), "ScheduleSection");
 

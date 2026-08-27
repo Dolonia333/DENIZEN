@@ -60,6 +60,16 @@ export interface CrmRole {
 
 export const CRM_ROLES: CrmRole[] = [
   {
+    id: "me",
+    label: "My Board",
+    icon: "📋",
+    blurb: "Working set only — real deals, real next steps, $0 unless signed",
+    accent: "#f0b429",
+    defaultTab: "dashboard",
+    kpis: ["open-deals", "pipeline-value", "tasks-due", "at-risk-count"],
+    widgets: ["tasks-due", "follow-ups", "at-risk-deals", "meetings-today", "recent-activity"],
+  },
+  {
     id: "rep",
     label: "Sales Rep",
     icon: "💼",
@@ -126,19 +136,19 @@ export const CRM_ROLES: CrmRole[] = [
     blurb: "Revenue, growth & the whole business",
     accent: "#f85b5b",
     defaultTab: "dashboard",
-    kpis: ["total-revenue", "weighted-pipeline", "win-rate", "open-deals"],
-    widgets: ["revenue-trend", "pipeline-by-stage", "leaderboard", "funnel", "goals"],
+    kpis: ["total-revenue", "pipeline-value", "open-deals", "at-risk-count"],
+    widgets: ["revenue-trend", "pipeline-by-stage", "at-risk-deals", "goals", "recent-activity"],
   },
 ];
 
-export const DEFAULT_ROLE_ID = "rep";
+export const DEFAULT_ROLE_ID = "me";
 
 export function getRole(id: string | null | undefined): CrmRole {
   return CRM_ROLES.find((r) => r.id === id) || CRM_ROLES[0];
 }
 
 // Roles that should surface the industry spotlight (the deal/account-centric ones).
-const SPOTLIGHT_ROLES = new Set(["rep", "manager", "account", "exec"]);
+const SPOTLIGHT_ROLES = new Set(["me", "rep", "manager", "account", "exec"]);
 
 export interface RoleLayout {
   role: CrmRole;

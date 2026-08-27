@@ -46,6 +46,7 @@ import {
   MarketingTab,
   TeamTab,
   MyWorkPanel,
+  WorkingSetDashboard,
   AIProspector,
   LazyTab,
   type Board,
@@ -1105,29 +1106,42 @@ export default function CRMApp() {
         </h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.text2 }}>{role.blurb}</p>
       </div>
-      <MyWorkPanel
-        userName={denizenProfile.name}
-        deals={deals}
-        tasks={tasks}
-        tickets={supportTickets}
-        onNavigate={handleNavigate}
-      />
-      <RoleDashboard
-        roleId={activeRole}
-        contacts={contacts}
-        deals={deals}
-        tasks={tasks}
-        notes={notes}
-        meetings={meetings}
-        goals={goals}
-        auditLog={auditLog}
-        emailLog={emailLog}
-        sequences={sequences}
-        sequenceEnrollments={sequenceEnrollments}
-        submissions={submissions}
-        companies={companies}
-        onNavigate={handleNavigate}
-      />
+      {(activeRole === "me" || activeRole === "exec") && (
+        <WorkingSetDashboard
+          contacts={contacts}
+          deals={deals}
+          tasks={tasks}
+          companies={companies}
+          onNavigate={handleNavigate}
+        />
+      )}
+      {activeRole !== "me" && (
+        <MyWorkPanel
+          userName={denizenProfile.name}
+          deals={deals}
+          tasks={tasks}
+          tickets={supportTickets}
+          onNavigate={handleNavigate}
+        />
+      )}
+      {activeRole !== "me" && (
+        <RoleDashboard
+          roleId={activeRole}
+          contacts={contacts}
+          deals={deals}
+          tasks={tasks}
+          notes={notes}
+          meetings={meetings}
+          goals={goals}
+          auditLog={auditLog}
+          emailLog={emailLog}
+          sequences={sequences}
+          sequenceEnrollments={sequenceEnrollments}
+          submissions={submissions}
+          companies={companies}
+          onNavigate={handleNavigate}
+        />
+      )}
     </div>
   );
 
