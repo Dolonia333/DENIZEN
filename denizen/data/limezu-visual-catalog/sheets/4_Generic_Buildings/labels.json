@@ -1,0 +1,3080 @@
+{
+  "sheet": "4_Generic_Buildings",
+  "pack": "limezu_modern_exteriors",
+  "labeled_by": "vision",
+  "objects": [
+    {
+      "id": "me.generic_building.facade_yellow_roof",
+      "name": "Yellow modular flat roof cap",
+      "category": "building",
+      "tags": [
+        "facade",
+        "roof",
+        "modular",
+        "yellow",
+        "tan",
+        "condo",
+        "flat"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flat roof with dark brown trim; Condo_1 top modules"
+    },
+    {
+      "id": "me.generic_building.facade_yellow_mid_double_window",
+      "name": "Yellow mid-floor double vertical windows",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "yellow",
+        "window",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan brick mid module with two tall blue windows side-by-side"
+    },
+    {
+      "id": "me.generic_building.facade_yellow_mid_wide_window",
+      "name": "Yellow mid-floor wide horizontal window",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "yellow",
+        "window",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan brick mid module with single wide horizontal window"
+    },
+    {
+      "id": "me.generic_building.facade_yellow_mid_narrow",
+      "name": "Yellow mid-floor narrow single window strip",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "yellow",
+        "window",
+        "narrow",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow vertical tan strip with one tall window; width filler"
+    },
+    {
+      "id": "me.generic_building.facade_yellow_blank_trim",
+      "name": "Yellow blank / edge trim strips",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "yellow",
+        "trim",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Plain wall and ultra-narrow edge strips for facade width tuning"
+    },
+    {
+      "id": "me.generic_building.facade_yellow_ground_entrance",
+      "name": "Yellow ground double-door entrance module",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "yellow",
+        "door",
+        "entrance",
+        "storefront",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ground floor with double glass doors, small awning/step"
+    },
+    {
+      "id": "me.generic_building.facade_yellow_ground_small_window",
+      "name": "Yellow ground small square window strip",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "yellow",
+        "window",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow ground strip with high small square window"
+    },
+    {
+      "id": "me.generic_building.window_yellow_vertical_pair",
+      "name": "Yellow-set vertical window pair",
+      "category": "building",
+      "tags": [
+        "window",
+        "yellow",
+        "glass",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Paired tall vertical panes used on yellow mid modules"
+    },
+    {
+      "id": "me.generic_building.window_yellow_horizontal",
+      "name": "Yellow-set wide horizontal window",
+      "category": "building",
+      "tags": [
+        "window",
+        "yellow",
+        "glass",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wide dark-framed horizontal window"
+    },
+    {
+      "id": "me.generic_building.window_yellow_narrow",
+      "name": "Yellow-set narrow vertical window",
+      "category": "building",
+      "tags": [
+        "window",
+        "yellow",
+        "narrow",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Single narrow vertical pane on filler strips"
+    },
+    {
+      "id": "me.generic_building.window_yellow_square_small",
+      "name": "Yellow-set small square ground window",
+      "category": "building",
+      "tags": [
+        "window",
+        "yellow",
+        "square",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small high square window on ground filler"
+    },
+    {
+      "id": "me.generic_building.door_yellow_double_glass",
+      "name": "Yellow-set double glass entrance doors",
+      "category": "building",
+      "tags": [
+        "door",
+        "yellow",
+        "glass",
+        "entrance",
+        "double"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown/grey framed double doors with step"
+    },
+    {
+      "id": "me.generic_building.facade_grey_roof",
+      "name": "Grey-blue modular flat roof cap",
+      "category": "building",
+      "tags": [
+        "facade",
+        "roof",
+        "modular",
+        "grey",
+        "blue",
+        "condo",
+        "flat"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        80
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Cool grey/blue flat roof with dark trim; Condo_2 top"
+    },
+    {
+      "id": "me.generic_building.facade_grey_mid_double_window",
+      "name": "Grey mid-floor double vertical windows",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "grey",
+        "window",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Light grey brick mid with paired tall windows"
+    },
+    {
+      "id": "me.generic_building.facade_grey_mid_wide_window",
+      "name": "Grey mid-floor wide horizontal window",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "grey",
+        "window",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey mid module with wide horizontal window"
+    },
+    {
+      "id": "me.generic_building.facade_grey_mid_narrow",
+      "name": "Grey mid-floor narrow single window strip",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "grey",
+        "window",
+        "narrow",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow grey filler strip with one tall window"
+    },
+    {
+      "id": "me.generic_building.facade_grey_blank_trim",
+      "name": "Grey blank / edge trim strips",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "grey",
+        "trim",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        0,
+        220
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Plain grey wall and edge strips"
+    },
+    {
+      "id": "me.generic_building.facade_grey_ground_entrance",
+      "name": "Grey ground double-door entrance module",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "grey",
+        "door",
+        "entrance",
+        "storefront",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey ground floor double glass doors with step"
+    },
+    {
+      "id": "me.generic_building.facade_grey_ground_small_window",
+      "name": "Grey ground small square window strip",
+      "category": "building",
+      "tags": [
+        "facade",
+        "modular",
+        "grey",
+        "window",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        180,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow grey ground strip with small square window"
+    },
+    {
+      "id": "me.generic_building.window_grey_vertical_pair",
+      "name": "Grey-set vertical window pair",
+      "category": "building",
+      "tags": [
+        "window",
+        "grey",
+        "glass",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "White-framed paired vertical windows on grey facade"
+    },
+    {
+      "id": "me.generic_building.window_grey_horizontal",
+      "name": "Grey-set wide horizontal window",
+      "category": "building",
+      "tags": [
+        "window",
+        "grey",
+        "glass",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        70,
+        200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wide horizontal window on grey mid module"
+    },
+    {
+      "id": "me.generic_building.door_grey_double_glass",
+      "name": "Grey-set double glass entrance doors",
+      "category": "building",
+      "tags": [
+        "door",
+        "grey",
+        "glass",
+        "entrance",
+        "double"
+      ],
+      "band": 0,
+      "y_hint": [
+        200,
+        320
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grey-framed double entrance doors"
+    },
+    {
+      "id": "me.generic_building.facade_brown_frame_tall",
+      "name": "Brown tall open-frame / balcony structure",
+      "category": "building",
+      "tags": [
+        "facade",
+        "brown",
+        "modular",
+        "balcony",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall narrow brown L-frame showing floors/balcony voids"
+    },
+    {
+      "id": "me.generic_building.facade_brown_wall_narrow",
+      "name": "Brown narrow wall modules with small windows",
+      "category": "building",
+      "tags": [
+        "facade",
+        "brown",
+        "modular",
+        "window",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow brown brick wall segments with small square windows"
+    },
+    {
+      "id": "me.generic_building.facade_brown_wide_floors",
+      "name": "Brown wide multi-floor facade modules",
+      "category": "building",
+      "tags": [
+        "facade",
+        "brown",
+        "modular",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        560
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wider brown floor modules with medium windows; includes rooftop shed placements"
+    },
+    {
+      "id": "me.generic_building.door_brown_single_wood",
+      "name": "Brown single wood door",
+      "category": "building",
+      "tags": [
+        "door",
+        "brown",
+        "wood",
+        "residential"
+      ],
+      "band": 0,
+      "y_hint": [
+        420,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Single brown door with small upper pane; also in 3-door base strip"
+    },
+    {
+      "id": "me.generic_building.door_brown_row_strip",
+      "name": "Brown three-door ground strip",
+      "category": "building",
+      "tags": [
+        "door",
+        "brown",
+        "facade",
+        "modular",
+        "ground"
+      ],
+      "band": 0,
+      "y_hint": [
+        440,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal grey base with three identical brown doors"
+    },
+    {
+      "id": "me.generic_building.door_rooftop_access_brown",
+      "name": "Brown rooftop access door / shed",
+      "category": "building",
+      "tags": [
+        "door",
+        "roof",
+        "access",
+        "brown",
+        "shed"
+      ],
+      "band": 0,
+      "y_hint": [
+        520,
+        640
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small brown penthouse with door for stair exit onto flat roof"
+    },
+    {
+      "id": "me.generic_building.window_brown_standard",
+      "name": "Brown standard double-pane window",
+      "category": "building",
+      "tags": [
+        "window",
+        "brown",
+        "glass"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        500
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Basic brown-framed double-pane window"
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_red",
+      "name": "Window with red flower box",
+      "category": "building",
+      "tags": [
+        "window",
+        "flowerbox",
+        "red",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown window with red flower planter"
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_orange",
+      "name": "Window with orange flower box",
+      "category": "building",
+      "tags": [
+        "window",
+        "flowerbox",
+        "orange",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown window with orange flower planter"
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_blue",
+      "name": "Window with blue flower box",
+      "category": "building",
+      "tags": [
+        "window",
+        "flowerbox",
+        "blue",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown window with blue flower planter"
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_white",
+      "name": "Window with white flower box",
+      "category": "building",
+      "tags": [
+        "window",
+        "flowerbox",
+        "white",
+        "decor"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Brown window with white flower planter"
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_double",
+      "name": "Double-wide window with flower boxes",
+      "category": "building",
+      "tags": [
+        "window",
+        "flowerbox",
+        "double"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Wider two-pane window with continuous planter"
+    },
+    {
+      "id": "me.generic_building.window_flowerbox_row",
+      "name": "Multi-window flower-box row strip",
+      "category": "building",
+      "tags": [
+        "window",
+        "flowerbox",
+        "row",
+        "modular"
+      ],
+      "band": 0,
+      "y_hint": [
+        380,
+        520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Rows of 3\u20134 windows with continuous flower boxes"
+    },
+    {
+      "id": "me.generic_building.vent_basement_square",
+      "name": "Basement / utility vent squares",
+      "category": "infra",
+      "tags": [
+        "vent",
+        "utility",
+        "basement",
+        "brown"
+      ],
+      "band": 0,
+      "y_hint": [
+        480,
+        540
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small square/rect metallic vents under brown window column"
+    },
+    {
+      "id": "me.generic_building.roof_brown_flat_trim",
+      "name": "Brown building flat roof with stone trim",
+      "category": "building",
+      "tags": [
+        "roof",
+        "flat",
+        "brown",
+        "parapet"
+      ],
+      "band": 0,
+      "y_hint": [
+        300,
+        400
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flat roof caps on brown apartment modules"
+    },
+    {
+      "id": "me.generic_building.roof_snow_flat",
+      "name": "Snow-covered flat roof modules",
+      "category": "building",
+      "tags": [
+        "roof",
+        "snow",
+        "flat",
+        "winter"
+      ],
+      "band": 0,
+      "y_hint": [
+        620,
+        768
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White snow-covered flat roof tiles and edges"
+    },
+    {
+      "id": "me.generic_building.roof_snow_slope",
+      "name": "Snow-covered sloped roof edge modules",
+      "category": "building",
+      "tags": [
+        "roof",
+        "snow",
+        "slope",
+        "winter"
+      ],
+      "band": 0,
+      "y_hint": [
+        620,
+        768
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Angled/sloped snowy roof edge pieces"
+    },
+    {
+      "id": "me.generic_building.roof_access_brown_penthouse",
+      "name": "Brown rooftop access structure",
+      "category": "building",
+      "tags": [
+        "roof",
+        "access",
+        "shed",
+        "brown",
+        "door"
+      ],
+      "band": 0,
+      "y_hint": [
+        560,
+        700
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Standalone brown stair-exit hut for flat roofs"
+    },
+    {
+      "id": "me.generic_building.prop_satellite_dish",
+      "name": "Rooftop satellite dish",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "satellite",
+        "antenna",
+        "prop"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Grey circular dishes on assembled brown building roofs"
+    },
+    {
+      "id": "me.generic_building.prop_antenna",
+      "name": "Thin rooftop antenna",
+      "category": "prop",
+      "tags": [
+        "roof",
+        "antenna",
+        "prop"
+      ],
+      "band": 0,
+      "y_hint": [
+        340,
+        480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Thin metal antennas beside satellite dishes"
+    },
+    {
+      "id": "me.generic_building.example_brown_tall",
+      "name": "Example brown 5-story apartment",
+      "category": "building",
+      "tags": [
+        "example",
+        "brown",
+        "apartment",
+        "assembled",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        320,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Pre-assembled tall brown building with flower boxes, dishes, vents; Condo examples"
+    },
+    {
+      "id": "me.generic_building.example_brown_medium",
+      "name": "Example brown 3-story apartment",
+      "category": "building",
+      "tags": [
+        "example",
+        "brown",
+        "apartment",
+        "assembled",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        360,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Medium assembled brown building with roof dish/vent"
+    },
+    {
+      "id": "me.generic_building.example_brown_short",
+      "name": "Example brown short apartment",
+      "category": "building",
+      "tags": [
+        "example",
+        "brown",
+        "apartment",
+        "assembled",
+        "condo"
+      ],
+      "band": 0,
+      "y_hint": [
+        400,
+        560
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Shorter assembled brown building with plain vented roof"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_side_alley",
+      "name": "Red brick side/alley facade strip",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "side",
+        "pipe",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1100
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Thin vertical side-view strip with small windows and grey downpipe"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_straight_upper",
+      "name": "Red brick straight upper-floor module",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "modular",
+        "window",
+        "upper"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1050
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Straight red brick wall with white-framed double windows and white cornice"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_straight_ground",
+      "name": "Red brick straight ground-floor module",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "modular",
+        "window",
+        "ground",
+        "foundation"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ground floor with white/grey stone base trim and windows"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_corner_bay_upper",
+      "name": "Red brick angled bay corner upper",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "corner",
+        "bay",
+        "modular",
+        "45deg"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        1050
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "45\u00b0 chamfered corner with wrapping bay windows"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_corner_bay_ground",
+      "name": "Red brick angled bay corner ground",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "corner",
+        "bay",
+        "modular",
+        "ground"
+      ],
+      "band": 1,
+      "y_hint": [
+        980,
+        1200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ground chamfered corner with stone base and windows/door"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_1floor",
+      "name": "Red brick 1-floor version modules",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "modular",
+        "single_story",
+        "1floor"
+      ],
+      "band": 1,
+      "y_hint": [
+        1050,
+        1220
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Labeled '1 floor version' condensed corner/window/entrance set"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_cornice_white",
+      "name": "Red brick white dentil cornice band",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "cornice",
+        "trim",
+        "white"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        900
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Decorative white recessed-panel cornice under parapet"
+    },
+    {
+      "id": "me.generic_building.roof_redbrick_tan_flat",
+      "name": "Red brick building tan flat roof",
+      "category": "building",
+      "tags": [
+        "roof",
+        "flat",
+        "tan",
+        "red_brick",
+        "parapet"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Beige tiled flat roof surface for red brick buildings"
+    },
+    {
+      "id": "me.generic_building.roof_parapet_white_straight",
+      "name": "White parapet straight edge",
+      "category": "building",
+      "tags": [
+        "roof",
+        "parapet",
+        "white",
+        "edge",
+        "modular"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        920
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Straight light-grey/white roof border pieces"
+    },
+    {
+      "id": "me.generic_building.roof_parapet_white_corner",
+      "name": "White parapet corner / bay edge",
+      "category": "building",
+      "tags": [
+        "roof",
+        "parapet",
+        "white",
+        "corner",
+        "bay"
+      ],
+      "band": 1,
+      "y_hint": [
+        768,
+        960
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Outer/inner/angled white parapet corners for bay roofs"
+    },
+    {
+      "id": "me.generic_building.roof_access_redbrick_shed",
+      "name": "Red brick rooftop access shed",
+      "category": "building",
+      "tags": [
+        "roof",
+        "access",
+        "shed",
+        "red_brick",
+        "door"
+      ],
+      "band": 1,
+      "y_hint": [
+        1280,
+        1500
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Small red-brick slanted-roof stair exit with brown door; bottom-left"
+    },
+    {
+      "id": "me.generic_building.window_redbrick_double_hooded",
+      "name": "Red brick double window with white hood",
+      "category": "building",
+      "tags": [
+        "window",
+        "red_brick",
+        "white_frame",
+        "hood"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1100
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Side-by-side panes, white lintel/hood and sill, blue glass"
+    },
+    {
+      "id": "me.generic_building.window_redbrick_bay",
+      "name": "Red brick bay/angled corner window",
+      "category": "building",
+      "tags": [
+        "window",
+        "red_brick",
+        "bay",
+        "corner",
+        "45deg"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        1100
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Narrow panes on 45\u00b0 bay faces plus front bay pane"
+    },
+    {
+      "id": "me.generic_building.window_redbrick_side_small",
+      "name": "Red brick side-facade small window",
+      "category": "building",
+      "tags": [
+        "window",
+        "red_brick",
+        "side",
+        "small"
+      ],
+      "band": 1,
+      "y_hint": [
+        800,
+        1100
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small square white-framed windows on alley strip"
+    },
+    {
+      "id": "me.generic_building.door_redbrick_arch_double",
+      "name": "Red brick arched stone double doors",
+      "category": "building",
+      "tags": [
+        "door",
+        "red_brick",
+        "arch",
+        "stone",
+        "double",
+        "entrance"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grand grey stone arch with brown wood double doors and lanterns"
+    },
+    {
+      "id": "me.generic_building.door_redbrick_arch_open",
+      "name": "Red brick open stone archway",
+      "category": "building",
+      "tags": [
+        "door",
+        "red_brick",
+        "arch",
+        "open",
+        "entrance"
+      ],
+      "band": 1,
+      "y_hint": [
+        1080,
+        1280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Empty arched portal showing dark interior"
+    },
+    {
+      "id": "me.generic_building.door_redbrick_corner_double",
+      "name": "Red brick corner double doors under awning",
+      "category": "building",
+      "tags": [
+        "door",
+        "red_brick",
+        "corner",
+        "double",
+        "awning"
+      ],
+      "band": 1,
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown double doors on angled corner with small white awning"
+    },
+    {
+      "id": "me.generic_building.door_redbrick_roof_wood",
+      "name": "Red brick roof-shed wood door",
+      "category": "building",
+      "tags": [
+        "door",
+        "roof",
+        "wood",
+        "red_brick"
+      ],
+      "band": 1,
+      "y_hint": [
+        1300,
+        1480
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Simple brown door on rooftop access hut"
+    },
+    {
+      "id": "me.generic_building.steps_stone_carpet_red",
+      "name": "Stone steps with red carpet runner",
+      "category": "building",
+      "tags": [
+        "steps",
+        "entrance",
+        "carpet",
+        "red",
+        "stone"
+      ],
+      "band": 1,
+      "y_hint": [
+        1150,
+        1280
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Detached stair/carpet module for grand entrance"
+    },
+    {
+      "id": "me.generic_building.storefront_blue_three_story",
+      "name": "Blue/teal three-story storefront building",
+      "category": "building",
+      "tags": [
+        "storefront",
+        "blue",
+        "teal",
+        "shop",
+        "assembled",
+        "condo"
+      ],
+      "band": 1,
+      "y_hint": [
+        1200,
+        1520
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Compact blue building: glass door+display ground, mid windows, large top pane; bottom-right"
+    },
+    {
+      "id": "me.generic_building.door_blue_storefront_glass",
+      "name": "Blue storefront glass double door",
+      "category": "building",
+      "tags": [
+        "door",
+        "storefront",
+        "glass",
+        "blue",
+        "double"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Ground glass entrance on blue shop building"
+    },
+    {
+      "id": "me.generic_building.window_blue_storefront_display",
+      "name": "Blue storefront display window",
+      "category": "building",
+      "tags": [
+        "window",
+        "storefront",
+        "glass",
+        "blue",
+        "display"
+      ],
+      "band": 1,
+      "y_hint": [
+        1400,
+        1520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Large ground display pane beside blue shop door"
+    },
+    {
+      "id": "me.generic_building.prop_hedge_rect",
+      "name": "Rectangular green hedge planter",
+      "category": "prop",
+      "tags": [
+        "plant",
+        "hedge",
+        "planter",
+        "street"
+      ],
+      "band": 1,
+      "y_hint": [
+        780,
+        900
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Long wooden planter with dense green hedge"
+    },
+    {
+      "id": "me.generic_building.prop_bush_round",
+      "name": "Round potted bush / topiary",
+      "category": "prop",
+      "tags": [
+        "plant",
+        "bush",
+        "pot",
+        "street"
+      ],
+      "band": 1,
+      "y_hint": [
+        780,
+        950
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Manicured round bushes in square wooden tubs"
+    },
+    {
+      "id": "me.generic_building.prop_bench_wood",
+      "name": "Wooden street bench",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "wood",
+        "street",
+        "seating"
+      ],
+      "band": 1,
+      "y_hint": [
+        800,
+        950
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown slat bench with metal frame; also side profile variants"
+    },
+    {
+      "id": "me.generic_building.prop_sign_wood_small",
+      "name": "Small wooden post signboard",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "wood",
+        "street"
+      ],
+      "band": 1,
+      "y_hint": [
+        850,
+        980
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small freestanding wooden sign on posts"
+    },
+    {
+      "id": "me.generic_building.prop_clothesline_empty",
+      "name": "Clothesline empty between poles",
+      "category": "prop",
+      "tags": [
+        "laundry",
+        "clothesline",
+        "alley"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1400
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sagging empty line on metal poles"
+    },
+    {
+      "id": "me.generic_building.prop_clothesline_laundry",
+      "name": "Clothesline with hanging clothes",
+      "category": "prop",
+      "tags": [
+        "laundry",
+        "clothesline",
+        "clothes",
+        "alley"
+      ],
+      "band": 1,
+      "y_hint": [
+        1180,
+        1450
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Colored shirts/socks/pants on line"
+    },
+    {
+      "id": "me.generic_building.prop_clothesline_sheets",
+      "name": "Clothesline with hanging sheets",
+      "category": "prop",
+      "tags": [
+        "laundry",
+        "clothesline",
+        "sheet",
+        "alley"
+      ],
+      "band": 1,
+      "y_hint": [
+        1220,
+        1500
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large white/patterned sheets; some with circle logos"
+    },
+    {
+      "id": "me.generic_building.prop_planter_ledge_green",
+      "name": "Small green ledge/window planter",
+      "category": "prop",
+      "tags": [
+        "plant",
+        "planter",
+        "ledge",
+        "balcony"
+      ],
+      "band": 1,
+      "y_hint": [
+        780,
+        920
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Green bushes/planters for ledges near red brick set"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_upper_shuttered",
+      "name": "Red brick upper with shuttered windows",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "window",
+        "shutter",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Upper straight/corner modules with white shutters/caps over windows"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_ground_arch_entry",
+      "name": "Red brick ground arched wooden entrance",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "door",
+        "arch",
+        "entrance",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1680,
+        1900
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ground modules with arched wood double doors and exterior lamps"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_1floor_arch",
+      "name": "Red brick single-story arched corner",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "1floor",
+        "arch",
+        "corner"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        1920
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Labeled 1-floor angled corner with arched door and white parapet"
+    },
+    {
+      "id": "me.generic_building.facade_redbrick_narrow_recessed_entry",
+      "name": "Red brick narrow recessed doorway",
+      "category": "building",
+      "tags": [
+        "facade",
+        "red_brick",
+        "door",
+        "steps",
+        "narrow"
+      ],
+      "band": 2,
+      "y_hint": [
+        1750,
+        1950
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow module with dark recessed door and small steps"
+    },
+    {
+      "id": "me.generic_building.door_redbrick_arch_wood_lamps",
+      "name": "Arched wood double doors with lamps",
+      "category": "building",
+      "tags": [
+        "door",
+        "red_brick",
+        "arch",
+        "wood",
+        "lamp",
+        "double"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        1900
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Brown double doors in stone/white arch with side lamps"
+    },
+    {
+      "id": "me.generic_building.window_redbrick_shutter_cap",
+      "name": "Red brick window with white shutter/cap",
+      "category": "building",
+      "tags": [
+        "window",
+        "red_brick",
+        "shutter",
+        "white"
+      ],
+      "band": 2,
+      "y_hint": [
+        1550,
+        1750
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Horizontal windows with grey/white shutter caps"
+    },
+    {
+      "id": "me.generic_building.roof_redbrick_balcony_planter",
+      "name": "Red brick roof corner with balcony planter",
+      "category": "building",
+      "tags": [
+        "roof",
+        "balcony",
+        "planter",
+        "red_brick",
+        "tree"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Corner roof detail with potted tree on ledge"
+    },
+    {
+      "id": "me.generic_building.storefront_teal_office_stack",
+      "name": "Teal/blue-grey office modular stack",
+      "category": "building",
+      "tags": [
+        "storefront",
+        "facade",
+        "teal",
+        "blue",
+        "office",
+        "modular",
+        "condo"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Roof + mid window band + ground glass doors/display; Condo_7-like teal set"
+    },
+    {
+      "id": "me.generic_building.facade_teal_roof",
+      "name": "Teal office flat roof module",
+      "category": "building",
+      "tags": [
+        "roof",
+        "facade",
+        "teal",
+        "flat",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1620
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flat teal/blue roof with recessed panels"
+    },
+    {
+      "id": "me.generic_building.facade_teal_mid_windows",
+      "name": "Teal office mid-floor window band",
+      "category": "building",
+      "tags": [
+        "facade",
+        "teal",
+        "window",
+        "modular",
+        "office"
+      ],
+      "band": 2,
+      "y_hint": [
+        1600,
+        1720
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Mid floor with horizontal windows and blue bands"
+    },
+    {
+      "id": "me.generic_building.facade_teal_ground_storefront",
+      "name": "Teal office ground storefront entrance",
+      "category": "building",
+      "tags": [
+        "facade",
+        "storefront",
+        "teal",
+        "door",
+        "glass",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        1850
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ground double glass doors flanked by large display windows"
+    },
+    {
+      "id": "me.generic_building.storefront_grey_banded_stack",
+      "name": "Grey banded commercial modular stack",
+      "category": "building",
+      "tags": [
+        "storefront",
+        "facade",
+        "grey",
+        "modular",
+        "commercial"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Grey flat roof + mid windows + ground glass entrance stack"
+    },
+    {
+      "id": "me.generic_building.facade_grey_banded_roof",
+      "name": "Grey commercial flat roof module",
+      "category": "building",
+      "tags": [
+        "roof",
+        "grey",
+        "flat",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1620
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark-trim flat grey roof piece"
+    },
+    {
+      "id": "me.generic_building.facade_grey_banded_mid",
+      "name": "Grey commercial mid-floor windows",
+      "category": "building",
+      "tags": [
+        "facade",
+        "grey",
+        "window",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1600,
+        1720
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Mid band with rectangular windows and grey ledges"
+    },
+    {
+      "id": "me.generic_building.facade_grey_banded_ground",
+      "name": "Grey commercial ground storefront",
+      "category": "building",
+      "tags": [
+        "facade",
+        "storefront",
+        "grey",
+        "door",
+        "glass",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        1850
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ground double glass doors and storefront windows"
+    },
+    {
+      "id": "me.generic_building.storefront_tan_yellow_stack",
+      "name": "Tan/yellow commercial modular stack",
+      "category": "building",
+      "tags": [
+        "storefront",
+        "facade",
+        "tan",
+        "yellow",
+        "modular",
+        "commercial"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan roof + mid windows + ground glass doors/display"
+    },
+    {
+      "id": "me.generic_building.facade_tan_roof",
+      "name": "Tan commercial flat roof module",
+      "category": "building",
+      "tags": [
+        "roof",
+        "tan",
+        "flat",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1536,
+        1620
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flat tan roof with raised border"
+    },
+    {
+      "id": "me.generic_building.facade_tan_mid_windows",
+      "name": "Tan commercial mid-floor windows",
+      "category": "building",
+      "tags": [
+        "facade",
+        "tan",
+        "window",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1600,
+        1720
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tan mid with wide blue-tinted windows"
+    },
+    {
+      "id": "me.generic_building.facade_tan_ground_storefront",
+      "name": "Tan commercial ground storefront",
+      "category": "building",
+      "tags": [
+        "facade",
+        "storefront",
+        "tan",
+        "door",
+        "glass",
+        "arch",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1700,
+        1880
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Ground entrance (arched/grey frame variants) with flanking windows"
+    },
+    {
+      "id": "me.generic_building.door_storefront_glass_double",
+      "name": "Glass double storefront doors (color stacks)",
+      "category": "building",
+      "tags": [
+        "door",
+        "storefront",
+        "glass",
+        "double",
+        "commercial"
+      ],
+      "band": 2,
+      "y_hint": [
+        1720,
+        1850
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Shared glass double-door style across teal/grey/tan stacks"
+    },
+    {
+      "id": "me.generic_building.window_storefront_display_wide",
+      "name": "Wide storefront display window module",
+      "category": "building",
+      "tags": [
+        "window",
+        "storefront",
+        "glass",
+        "display",
+        "commercial"
+      ],
+      "band": 2,
+      "y_hint": [
+        1720,
+        1850
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Large ground display panes flanking commercial doors"
+    },
+    {
+      "id": "me.generic_building.example_grey_stone_complex",
+      "name": "Grey stone L-shaped complex building",
+      "category": "building",
+      "tags": [
+        "example",
+        "grey",
+        "stone",
+        "assembled",
+        "storefront",
+        "garage"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Multi-story grey stone with arched upper windows, ground storefront, roll-up garage wing"
+    },
+    {
+      "id": "me.generic_building.facade_grey_stone_arched_upper",
+      "name": "Grey stone arched-window upper facade",
+      "category": "building",
+      "tags": [
+        "facade",
+        "grey",
+        "stone",
+        "window",
+        "arch",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2050
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Upper floors with arched blue-glass windows and parapet"
+    },
+    {
+      "id": "me.generic_building.facade_grey_stone_storefront_ground",
+      "name": "Grey stone ground storefront + garage",
+      "category": "building",
+      "tags": [
+        "facade",
+        "storefront",
+        "grey",
+        "stone",
+        "garage",
+        "door"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Glass double door + large windows + grey roll-up garage door extension"
+    },
+    {
+      "id": "me.generic_building.facade_grey_stone_side_stair_entry",
+      "name": "Grey stone side stair entrance strip",
+      "category": "building",
+      "tags": [
+        "facade",
+        "grey",
+        "stone",
+        "door",
+        "stairs",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        1900,
+        2200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical strip: roof segment, plain walls, stair-up dark door"
+    },
+    {
+      "id": "me.generic_building.window_grey_stone_arch_band",
+      "name": "Grey stone arched window horizontal band",
+      "category": "building",
+      "tags": [
+        "window",
+        "grey",
+        "stone",
+        "arch",
+        "band",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal strips of three arched windows"
+    },
+    {
+      "id": "me.generic_building.window_grey_stone_rect_band",
+      "name": "Grey stone rectangular window band",
+      "category": "building",
+      "tags": [
+        "window",
+        "grey",
+        "stone",
+        "rect",
+        "band",
+        "modular"
+      ],
+      "band": 2,
+      "y_hint": [
+        2080,
+        2220
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Horizontal strips of three rectangular windows"
+    },
+    {
+      "id": "me.generic_building.door_garage_rollup_grey",
+      "name": "Grey roll-up garage / service door",
+      "category": "building",
+      "tags": [
+        "door",
+        "garage",
+        "rollup",
+        "service",
+        "grey"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2220
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide grey horizontal-slat garage door on complex building"
+    },
+    {
+      "id": "me.generic_building.door_grey_stair_stoop",
+      "name": "Grey stone stair stoop entrance door",
+      "category": "building",
+      "tags": [
+        "door",
+        "stairs",
+        "stone",
+        "entrance",
+        "grey"
+      ],
+      "band": 2,
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark door with white/grey stone steps on side strip"
+    },
+    {
+      "id": "me.generic_building.door_rooftop_access_grey",
+      "name": "Grey complex rooftop access door",
+      "category": "building",
+      "tags": [
+        "door",
+        "roof",
+        "access",
+        "wood",
+        "grey"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2000
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Small wooden roof-access door on grey parapet roof"
+    },
+    {
+      "id": "me.generic_building.roof_grey_parapet_notched",
+      "name": "Grey notched stone parapet roof",
+      "category": "building",
+      "tags": [
+        "roof",
+        "parapet",
+        "grey",
+        "stone",
+        "flat"
+      ],
+      "band": 2,
+      "y_hint": [
+        1850,
+        2000
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Flat grey roof with decorative notched parapet"
+    },
+    {
+      "id": "me.generic_building.roof_skylight_glass_pitched",
+      "name": "Pitched glass skylight / greenhouse roof",
+      "category": "building",
+      "tags": [
+        "roof",
+        "skylight",
+        "glass",
+        "pitched",
+        "greenhouse"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Sloped metal-frame glass skylight module; bottom-right"
+    },
+    {
+      "id": "me.generic_building.roof_vent_grille_pair",
+      "name": "Flat roof dual ventilation grilles",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "vent",
+        "grille",
+        "utility"
+      ],
+      "band": 2,
+      "y_hint": [
+        1950,
+        2100
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Two dark rectangular vents set into flat roof"
+    },
+    {
+      "id": "me.generic_building.infra_hvac_box",
+      "name": "Rooftop HVAC / AC box unit",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "ac",
+        "roof",
+        "utility"
+      ],
+      "band": 2,
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Boxy metal AC with fan grill; also smaller vent boxes"
+    },
+    {
+      "id": "me.generic_building.window_misc_square_column",
+      "name": "Misc small square window variants",
+      "category": "building",
+      "tags": [
+        "window",
+        "square",
+        "misc",
+        "variant"
+      ],
+      "band": 2,
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Vertical column of small square windows (lit/dark)"
+    },
+    {
+      "id": "me.generic_building.prop_bench_park_small",
+      "name": "Small park bench (band 2)",
+      "category": "furniture",
+      "tags": [
+        "bench",
+        "wood",
+        "park"
+      ],
+      "band": 2,
+      "y_hint": [
+        2150,
+        2280
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wooden bench with metal legs near HVAC cluster"
+    },
+    {
+      "id": "me.generic_building.prop_plant_red_pot",
+      "name": "Small plant in red pot",
+      "category": "prop",
+      "tags": [
+        "plant",
+        "pot",
+        "red",
+        "decor"
+      ],
+      "band": 2,
+      "y_hint": [
+        2180,
+        2280
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tiny square planter with red flower"
+    },
+    {
+      "id": "me.generic_building.facade_balcony_stair_strip",
+      "name": "External balcony + stair facade strip",
+      "category": "building",
+      "tags": [
+        "facade",
+        "balcony",
+        "stairs",
+        "fire_escape",
+        "modular",
+        "tan"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Vertical modules with black metal railings and wooden external stairs on tan wall"
+    },
+    {
+      "id": "me.generic_building.facade_beige_pipe_wall",
+      "name": "Beige facade with pipes, circle & shutter windows",
+      "category": "building",
+      "tags": [
+        "facade",
+        "beige",
+        "pipes",
+        "window",
+        "condo"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Two-story beige block: circular window, shuttered Juliet balcony window, copper pipes"
+    },
+    {
+      "id": "me.generic_building.window_circular_porthole",
+      "name": "Circular porthole window",
+      "category": "building",
+      "tags": [
+        "window",
+        "circular",
+        "porthole",
+        "cross"
+      ],
+      "band": 3,
+      "y_hint": [
+        2320,
+        2450
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Round grey-frame window with cross divider; Condo_9_Window"
+    },
+    {
+      "id": "me.generic_building.window_shutter_juliet_balcony",
+      "name": "Shuttered window with Juliet balcony",
+      "category": "building",
+      "tags": [
+        "window",
+        "shutter",
+        "balcony",
+        "juliet"
+      ],
+      "band": 3,
+      "y_hint": [
+        2350,
+        2520
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Tall rectangular window, dark shutters, black metal railing"
+    },
+    {
+      "id": "me.generic_building.infra_pipes_copper_vertical",
+      "name": "Vertical copper utility pipes",
+      "category": "infra",
+      "tags": [
+        "pipe",
+        "utility",
+        "copper",
+        "wall"
+      ],
+      "band": 3,
+      "y_hint": [
+        2350,
+        2580
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Parallel brown/copper pipes down facade; Condo_9_Pipe"
+    },
+    {
+      "id": "me.generic_building.stairs_wood_external",
+      "name": "External wooden stair modules",
+      "category": "building",
+      "tags": [
+        "stairs",
+        "wood",
+        "external",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2320,
+        2550
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Three angle variants of wooden balcony stairs"
+    },
+    {
+      "id": "me.generic_building.balcony_railing_metal",
+      "name": "Black metal balcony railings",
+      "category": "building",
+      "tags": [
+        "balcony",
+        "railing",
+        "metal",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2320,
+        2500
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Three widths of black metal balcony rails; Condo_8/9"
+    },
+    {
+      "id": "me.generic_building.fire_escape_ladder",
+      "name": "Metal fire-escape ladder modules",
+      "category": "infra",
+      "tags": [
+        "fire_escape",
+        "ladder",
+        "metal"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2800
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Dark metal fire-escape ladder/platform pieces; Condo_8_Fire_Escape"
+    },
+    {
+      "id": "me.generic_building.roof_vent_square",
+      "name": "Square roof vent / skylight box",
+      "category": "infra",
+      "tags": [
+        "roof",
+        "vent",
+        "square",
+        "utility"
+      ],
+      "band": 3,
+      "y_hint": [
+        2304,
+        2450
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Square grey frame vents; some with tall pipe"
+    },
+    {
+      "id": "me.generic_building.infra_hvac_fan_pair",
+      "name": "Industrial HVAC units with fans",
+      "category": "infra",
+      "tags": [
+        "hvac",
+        "ac",
+        "fan",
+        "roof",
+        "utility"
+      ],
+      "band": 3,
+      "y_hint": [
+        2380,
+        2550
+      ],
+      "surface": "roof",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "White/grey AC units with visible fans and red/blue wiring; Hardware_Store_Air_Unit / Condo_6"
+    },
+    {
+      "id": "me.generic_building.storefront_hardware_base",
+      "name": "Hardware storefront glass + awning base",
+      "category": "building",
+      "tags": [
+        "storefront",
+        "hardware",
+        "awning",
+        "glass",
+        "shop"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2750
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide glass doors/windows under red-white striped awning; Hardware_Store"
+    },
+    {
+      "id": "me.generic_building.sign_hardware_hammer",
+      "name": "HARDWARE sign with hammer icon",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "hardware",
+        "hammer",
+        "shop",
+        "roof"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2620
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Red HARDWARE lettering with oversized hammer; Hardware_Store_Roof_Sign"
+    },
+    {
+      "id": "me.generic_building.awning_striped_red_cream",
+      "name": "Red/cream striped fabric awnings",
+      "category": "building",
+      "tags": [
+        "awning",
+        "storefront",
+        "striped",
+        "red",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2750
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Modular scalloped awnings in multiple widths; Hardware_Store_Tent / Shop_Tent"
+    },
+    {
+      "id": "me.generic_building.awning_striped_blue_yellow",
+      "name": "Blue/yellow striped fabric awnings",
+      "category": "building",
+      "tags": [
+        "awning",
+        "storefront",
+        "striped",
+        "blue",
+        "yellow",
+        "modular"
+      ],
+      "band": 3,
+      "y_hint": [
+        2550,
+        2750
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Blue-and-cream/yellow striped awning set; Shop_Tent variants"
+    },
+    {
+      "id": "me.generic_building.door_hardware_glass_entrance",
+      "name": "Hardware store glass entrance doors",
+      "category": "building",
+      "tags": [
+        "door",
+        "storefront",
+        "glass",
+        "hardware",
+        "double"
+      ],
+      "band": 3,
+      "y_hint": [
+        2580,
+        2750
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Glass entry doors on hardware storefront module"
+    },
+    {
+      "id": "me.generic_building.window_hardware_display",
+      "name": "Hardware store tool display window",
+      "category": "building",
+      "tags": [
+        "window",
+        "storefront",
+        "display",
+        "hardware",
+        "glass"
+      ],
+      "band": 3,
+      "y_hint": [
+        2580,
+        2750
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Large display showing tool silhouettes"
+    },
+    {
+      "id": "me.generic_building.prop_info_kiosk",
+      "name": "Octagonal information kiosk",
+      "category": "prop",
+      "tags": [
+        "kiosk",
+        "info",
+        "booth",
+        "street"
+      ],
+      "band": 3,
+      "y_hint": [
+        2450,
+        2650
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Three states: closed base, counter with papers, roofed with i icon"
+    },
+    {
+      "id": "me.generic_building.prop_flyers_stack",
+      "name": "Flyer / newspaper stacks",
+      "category": "prop",
+      "tags": [
+        "flyer",
+        "paper",
+        "street",
+        "decor"
+      ],
+      "band": 3,
+      "y_hint": [
+        2480,
+        2650
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Stacks of papers near kiosk; Condo_8_Flyers"
+    },
+    {
+      "id": "me.generic_building.prop_poster_wall",
+      "name": "Wall posters and bulletin flyers",
+      "category": "prop",
+      "tags": [
+        "poster",
+        "flyer",
+        "wall",
+        "decor"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2800
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Cat silhouette poster and stapled flyer clusters; Condo_9_Poster"
+    },
+    {
+      "id": "me.generic_building.prop_plant_potted_green",
+      "name": "Small green potted plants",
+      "category": "prop",
+      "tags": [
+        "plant",
+        "pot",
+        "green",
+        "decor"
+      ],
+      "band": 3,
+      "y_hint": [
+        2500,
+        2700
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Identical small leafy pots near hardware/examples"
+    },
+    {
+      "id": "me.generic_building.example_rowhouses_narrow",
+      "name": "Example narrow brick row-houses",
+      "category": "building",
+      "tags": [
+        "example",
+        "rowhouse",
+        "brick",
+        "residential",
+        "assembled"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        3050
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Three narrow multi-story brown brick examples with shutters and stoops"
+    },
+    {
+      "id": "me.generic_building.example_hardware_complex",
+      "name": "Example hardware / commercial complex",
+      "category": "building",
+      "tags": [
+        "example",
+        "hardware",
+        "storefront",
+        "skylight",
+        "assembled"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        3072
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Large assembled commercial with arched windows, skylight, HVAC, hardware sign/awning"
+    },
+    {
+      "id": "me.generic_building.example_fire_escape_tower",
+      "name": "Example tall fire-escape balcony building",
+      "category": "building",
+      "tags": [
+        "example",
+        "balcony",
+        "stairs",
+        "fire_escape",
+        "assembled"
+      ],
+      "band": 3,
+      "y_hint": [
+        2750,
+        3072
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Tall narrow building using stair/balcony modules, posters and bench at base"
+    },
+    {
+      "id": "me.generic_building.window_arched_example",
+      "name": "Arched dark-pane windows (examples)",
+      "category": "building",
+      "tags": [
+        "window",
+        "arch",
+        "example",
+        "commercial"
+      ],
+      "band": 3,
+      "y_hint": [
+        2800,
+        3000
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Arched windows visible on commercial example assembly"
+    },
+    {
+      "id": "me.generic_building.door_wood_stoop_residential",
+      "name": "Residential wood door with stoop",
+      "category": "building",
+      "tags": [
+        "door",
+        "wood",
+        "stoop",
+        "residential"
+      ],
+      "band": 3,
+      "y_hint": [
+        2900,
+        3050
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Single brown wood doors with small concrete steps on row-houses"
+    },
+    {
+      "id": "me.generic_building.awning_metal_ribbed_small",
+      "name": "Small grey ribbed metal awning",
+      "category": "building",
+      "tags": [
+        "awning",
+        "metal",
+        "residential",
+        "door"
+      ],
+      "band": 3,
+      "y_hint": [
+        2850,
+        3050
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Corrugated metal hoods over residential doors/windows in examples"
+    },
+    {
+      "id": "me.generic_building.facade_beige_detail_slice",
+      "name": "Beige detail facade with pipes & graffiti",
+      "category": "building",
+      "tags": [
+        "facade",
+        "beige",
+        "pipes",
+        "graffiti",
+        "poster",
+        "condo"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Narrow beige wall: porthole, shutter balcony, pipes, cat poster, graffiti, trash; Condo_9"
+    },
+    {
+      "id": "me.generic_building.decal_cat_poster",
+      "name": "Orange black-cat poster decal",
+      "category": "prop",
+      "tags": [
+        "poster",
+        "cat",
+        "decal",
+        "wall"
+      ],
+      "band": 4,
+      "y_hint": [
+        3120,
+        3180
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Orange square with black cat silhouette"
+    },
+    {
+      "id": "me.generic_building.decal_graffiti_scrawl",
+      "name": "White graffiti scrawl decal",
+      "category": "prop",
+      "tags": [
+        "graffiti",
+        "decal",
+        "wall"
+      ],
+      "band": 4,
+      "y_hint": [
+        3120,
+        3180
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Faint white spray scrawl beside cat poster"
+    },
+    {
+      "id": "me.generic_building.prop_trash_can",
+      "name": "Metal street trash can",
+      "category": "prop",
+      "tags": [
+        "trash",
+        "bin",
+        "street",
+        "prop"
+      ],
+      "band": 4,
+      "y_hint": [
+        3140,
+        3200
+      ],
+      "surface": "sidewalk",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Dark grey rubbish bin at base of pipe facade"
+    },
+    {
+      "id": "me.generic_building.storefront_hardware_assembled",
+      "name": "Hardware storefront assembled module",
+      "category": "building",
+      "tags": [
+        "storefront",
+        "hardware",
+        "sign",
+        "awning",
+        "glass",
+        "assembled"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3200
+      ],
+      "surface": "ground",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Complete HARDWARE sign+hammer, red/cream awning, glass door, tool display window"
+    },
+    {
+      "id": "me.generic_building.sign_hardware_hammer_detail",
+      "name": "HARDWARE hammer sign (detail band)",
+      "category": "sign",
+      "tags": [
+        "sign",
+        "hardware",
+        "hammer"
+      ],
+      "band": 4,
+      "y_hint": [
+        3072,
+        3140
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Close crop of hammer-over-HARDWARE signboard"
+    },
+    {
+      "id": "me.generic_building.awning_hardware_red_cream",
+      "name": "Hardware red/cream scalloped awning",
+      "category": "building",
+      "tags": [
+        "awning",
+        "hardware",
+        "striped",
+        "red",
+        "storefront"
+      ],
+      "band": 4,
+      "y_hint": [
+        3100,
+        3160
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Wide scalloped awning over hardware glass front"
+    },
+    {
+      "id": "me.generic_building.door_hardware_glass_detail",
+      "name": "Hardware glass door (detail)",
+      "category": "building",
+      "tags": [
+        "door",
+        "glass",
+        "hardware",
+        "storefront"
+      ],
+      "band": 4,
+      "y_hint": [
+        3140,
+        3200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Glass entry door left of tool display"
+    },
+    {
+      "id": "me.generic_building.window_hardware_tools_display",
+      "name": "Hardware tools display window",
+      "category": "building",
+      "tags": [
+        "window",
+        "display",
+        "hardware",
+        "tools",
+        "glass"
+      ],
+      "band": 4,
+      "y_hint": [
+        3140,
+        3200
+      ],
+      "surface": "wall",
+      "facing": "south",
+      "multi_tile": false,
+      "notes": "Large pane with hammer/saw/wrench silhouettes"
+    },
+    {
+      "id": "me.generic_building.decor_string_lights_flags",
+      "name": "String lights / hanging flag bunting",
+      "category": "prop",
+      "tags": [
+        "decor",
+        "lights",
+        "flags",
+        "bunting",
+        "overhead"
+      ],
+      "band": 1,
+      "y_hint": [
+        900,
+        1100
+      ],
+      "surface": "air",
+      "facing": "south",
+      "multi_tile": true,
+      "notes": "Overhead wires with colorful hanging flags/bunting near red-brick mid sheet"
+    }
+  ],
+  "row_guide": "Band0 (y0\u2013768): yellow/tan + grey-blue modular condo stacks (roof/mid-window/ground-door strips, narrow fillers); brown apartment kit (frames, door row, flower-box windows red/orange/blue/white, basement vents, satellite/antenna); assembled brown tall/med/short examples; snow flat+slope roofs and brown rooftop access sheds. Band1 (y768\u20131536): red-brick modular system (straight/bay-corner/1-floor, white cornice+parapet, arched stone entrances, carpet steps); roof access sheds; street props (hedges, bushes, benches, signs); laundry clotheslines; blue 3-story storefront. Band2 (y1536\u20132304): more red-brick arch/shutter modules; teal/grey/tan commercial storefront stacks; grey-stone complex with arched window bands, garage door, stair entry; pitched glass skylight + HVAC/vents. Band3 (y2304\u20133072): balcony/stair/fire-escape strips, beige pipe facade (porthole+Juliet), HVAC fans, HARDWARE sign+hammer, striped awnings (red/cream + blue/yellow), info kiosks, flyers/posters; EXAMPLES row-houses, hardware commercial complex, fire-escape tower. Band4 (y3072\u20133200): beige detail slice (cat poster, graffiti, trash, pipes) + hardware storefront close-up."
+}
