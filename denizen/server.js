@@ -3250,7 +3250,8 @@ console.log(
 npcMcpGateway.configure({
   runNpcSkill,
   npcBrains,
-  broadcast: _broadcastOps,
+  // Use the office agent bus (WS + pubsub relay) so announce/skills show live.
+  broadcast: _agentBroadcast,
   robinhoodMcp,
   denizenVisitor,
   visitorConnections,
@@ -3272,7 +3273,7 @@ npcMcpGateway.configure({
 teamMcpGateway.configure({
   runNpcSkill,
   npcBrains,
-  broadcast: _broadcastOps,
+  broadcast: _agentBroadcast,
   robinhoodMcp,
   denizenVisitor,
   visitorConnections,

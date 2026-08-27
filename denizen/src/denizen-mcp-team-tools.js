@@ -109,6 +109,20 @@ function requireSession(scope) {
   return null;
 }
 
+const _mcpPresenceByNpc = new Map();
+
+function _prunePresenceMap(map) {
+  if (map.size <= MCP_PRESENCE_MAX) return;
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  for (const [k, v] of map) {
+    if (v < cutoff) map.delete(k);
+  }
+  while (map.size > MCP_PRESENCE_MAX) {
+    const oldest = map.keys().next().value;
+    map.delete(oldest);
+  }
+}
+
 /** Record MCP activity for a visitor session (call on every MCP tools/call). */
 function touchMcpPresence(sessionId, at = Date.now()) {
   const sid = String(sessionId || '').trim();
@@ -117,16 +131,19 @@ function touchMcpPresence(sessionId, at = Date.now()) {
   const ms = Number.isFinite(ts) ? ts : Date.now();
   const prev = _mcpPresenceBySession.get(sid);
   if (!prev || ms >= prev) _mcpPresenceBySession.set(sid, ms);
-  if (_mcpPresenceBySession.size > MCP_PRESENCE_MAX) {
-    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    for (const [k, v] of _mcpPresenceBySession) {
-      if (v < cutoff) _mcpPresenceBySession.delete(k);
-    }
-    while (_mcpPresenceBySession.size > MCP_PRESENCE_MAX) {
-      const oldest = _mcpPresenceBySession.keys().next().value;
-      _mcpPresenceBySession.delete(oldest);
-    }
-  }
+  _prunePresenceMap(_mcpPresenceBySession);
+  return new Date(ms).toISOString();
+}
+
+/** Record MCP activity for CLI / API tokens that have no visitor session_id. */
+function touchMcpPresenceByNpc(npcKey, at = Date.now()) {
+  const key = String(npcKey || '').trim().toLowerCase();
+  if (!key || key === '_team') return null;
+  const ts = typeof at === 'number' && Number.isFinite(at) ? at : Date.parse(at);
+  const ms = Number.isFinite(ts) ? ts : Date.now();
+  const prev = _mcpPresenceByNpc.get(key);
+  if (!prev || ms >= prev) _mcpPresenceByNpc.set(key, ms);
+  _prunePresenceMap(_mcpPresenceByNpc);
   return new Date(ms).toISOString();
 }
 
@@ -135,8 +152,14 @@ function getMcpPresenceAt(sessionId) {
   return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
 }
 
+function getMcpPresenceAtNpc(npcKey) {
+  const ms = _mcpPresenceByNpc.get(String(npcKey || '').trim().toLowerCase());
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+
 function clearMcpPresenceForTests() {
   _mcpPresenceBySession.clear();
+  _mcpPresenceByNpc.clear();
 }
 
 function presenceBucket(lastUsedAt) {
@@ -355,11 +378,76 @@ async function resolveSelfTeammate(scope) {
   };
 }
 
+/** Office CLI / API tokens (no Connect AI session) — roster from NPC souls + MCP activity. */
+async function toolListTeamWithoutSession(scope) {
+  if (scope?.npc_key) touchMcpPresenceByNpc(scope.npc_key);
+  const brains = _deps.npcBrains;
+  const teammates = (npcRoster.entries || []).map((entry) => {
+    const mcpAt = getMcpPresenceAtNpc(entry.folder);
+    const mcpBucket = presenceBucket(mcpAt);
+    const isYou = scope?.npc_key && scope.npc_key !== '_team' && entry.folder === scope.npc_key;
+    const directive = brains?.getDirective?.(entry.display) || null;
+    let presence = 'offline';
+    if (mcpBucket === 'active') presence = 'ai';
+    else if (mcpBucket === 'recent') presence = 'recent';
+    return {
+      session_id: null,
+      display_name: entry.display,
+      identity_id: null,
+      npc_key: entry.folder,
+      assistant_name: entry.display,
+      is_you: !!isYou,
+      online: mcpBucket === 'active' || !!isYou,
+      ws_online: false,
+      mcp_online: mcpBucket === 'active' || !!isYou,
+      mcp_presence: isYou && !mcpBucket ? 'active' : mcpBucket,
+      last_mcp_at: mcpAt || (isYou ? new Date().toISOString() : null),
+      mcp_clients: (mcpBucket === 'active' || isYou) ? [inferClientType({ label: entry.folder })] : [],
+      presence: isYou ? 'ai' : presence,
+      directive: directive
+        ? { from: directive.from || null, task: directive.task || null, urgent: !!directive.urgent }
+        : null,
+      sessions_collapsed: 1,
+    };
+  });
+  // Ensure the calling NPC is marked active even mid-first-call.
+  if (scope?.npc_key && scope.npc_key !== '_team') {
+    const self = teammates.find((t) => t.npc_key === scope.npc_key);
+    if (self) {
+      self.is_you = true;
+      self.online = true;
+      self.mcp_online = true;
+      self.mcp_presence = 'active';
+      self.presence = 'ai';
+      self.last_mcp_at = self.last_mcp_at || new Date().toISOString();
+    }
+  }
+  const onlineCount = teammates.filter((t) => t.online).length;
+  return {
+    ok: true,
+    org_slug: scope.org_slug,
+    your_npc_key: scope.npc_key,
+    your_session_id: null,
+    session_linked: false,
+    teammates,
+    count: teammates.length,
+    raw_session_count: teammates.length,
+    pruned_probe_count: 0,
+    online_count: onlineCount,
+    presence_hint:
+      'CLI/API token (no visitor session) — roster is office NPCs; '
+      + 'mcp_online = this NPC MCP client called tools recently. '
+      + 'Mint from Connect AI while logged in for full human presence + handoffs.',
+  };
+}
+
 async function toolListTeam(scope) {
-  const err = requireSession(scope);
-  if (err) return err;
+  if (!scope?.session_id) {
+    return toolListTeamWithoutSession(scope);
+  }
   // Always stamp the caller's MCP presence so standup/list_team itself counts as online.
   touchMcpPresence(scope.session_id);
+  if (scope.npc_key) touchMcpPresenceByNpc(scope.npc_key);
   const visitor = _deps.denizenVisitor;
   if (!visitor?.listTeammatesWithPresence) {
     return { ok: false, error: 'visitor module not configured' };
@@ -384,6 +472,7 @@ async function toolListTeam(scope) {
     org_slug: scope.org_slug,
     your_npc_key: scope.npc_key,
     your_session_id: scope.session_id,
+    session_linked: true,
     teammates,
     count: teammates.length,
     raw_session_count: rawCount,
@@ -518,15 +607,21 @@ async function toolAcknowledgeHandoff(scope, args) {
 }
 
 async function toolTeamStandup(scope, args = {}) {
-  const err = requireSession(scope);
-  if (err) return err;
-
   const includeCrm = args?.include_crm !== false;
   const includeCursor = args?.include_cursor !== false;
+  const sessionLinked = Boolean(scope?.session_id);
+  if (scope?.npc_key) touchMcpPresenceByNpc(scope.npc_key);
 
   const [team, handoffs, extras] = await Promise.all([
     toolListTeam(scope),
-    toolListPendingHandoffs(scope, { limit: 20 }),
+    sessionLinked
+      ? toolListPendingHandoffs(scope, { limit: 20 })
+      : Promise.resolve({
+        ok: true,
+        count: 0,
+        handoffs: [],
+        hint: 'Handoffs need a Connect AI token minted while logged in (session_linked=false)',
+      }),
     buildStatusExtras(scope, { work: [] }),
   ]);
 
@@ -602,8 +697,9 @@ async function toolTeamStandup(scope, args = {}) {
     ok: true,
     generated_at: new Date().toISOString(),
     org_slug: scope.org_slug,
+    session_linked: sessionLinked,
     you: {
-      session_id: scope.session_id,
+      session_id: scope.session_id || null,
       npc_key: scope.npc_key,
       display_name: extras.display_name,
       directive: extras.directive_inbox,
@@ -631,7 +727,9 @@ async function toolTeamStandup(scope, args = {}) {
     inference: extras.inference,
     action_items: actionItems,
     next_poll: {
-      tools: ['team_standup', 'list_pending_handoffs'],
+      tools: sessionLinked
+        ? ['team_standup', 'list_pending_handoffs']
+        : ['team_standup', 'announce_in_office', 'get_status'],
       suggested_interval_seconds: needsYou || pendingCursor ? 60 : 300,
     },
   };
@@ -691,6 +789,7 @@ function isTeamTool(name) {
 
 async function callTool(scope, name, args) {
   if (scope?.session_id) touchMcpPresence(scope.session_id);
+  else if (scope?.npc_key) touchMcpPresenceByNpc(scope.npc_key);
   switch (name) {
     case 'list_team': return toolListTeam(scope, args);
     case 'send_handoff': return toolSendHandoff(scope, args);
@@ -712,7 +811,9 @@ module.exports = {
   collapseRosterByIdentity,
   isProbeSessionName,
   touchMcpPresence,
+  touchMcpPresenceByNpc,
   getMcpPresenceAt,
+  getMcpPresenceAtNpc,
   clearMcpPresenceForTests,
   MCP_ACTIVE_MS,
 };
