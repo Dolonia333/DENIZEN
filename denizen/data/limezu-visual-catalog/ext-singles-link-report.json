@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-08-27T23:37:09.157017Z",
+  "single_count": 6224,
+  "linked": 6224,
+  "confidence": {
+    "high": 4696,
+    "medium": 300,
+    "vision": 1228
+  },
+  "source": {
+    "spatial_filename": 4996,
+    "vision": 1228
+  },
+  "me_ids_with_singles": 1295,
+  "vision_overrides_applied": 1228
+}

@@ -1,0 +1,995 @@
+{
+  "sheet": "24_Additional_Houses",
+  "labels": [
+    {
+      "id": "me.houses.country_house",
+      "name": "Country house with balcony banisters",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.country_house_no_banisters",
+      "name": "Country house without upper banisters",
+      "y_hint": [
+        200,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.country_banister_balcony",
+      "name": "Country house balcony banister module",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.country_banister_ground",
+      "name": "Country house ground porch banister",
+      "y_hint": [
+        150,
+        350
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.fence_stone",
+      "name": "Stone/light-grey picket fence kit",
+      "y_hint": [
+        40,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.fence_wood_light",
+      "name": "Light wood fence kit",
+      "y_hint": [
+        40,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.fence_wood_dark",
+      "name": "Dark wood fence kit",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.modern_house",
+      "name": "Modern shed-roof house with mailbox/planter",
+      "y_hint": [
+        450,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.modern_house_unadorned",
+      "name": "Modern house clean without props",
+      "y_hint": [
+        520,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.modern_banister_balcony",
+      "name": "Modern house balcony banister",
+      "y_hint": [
+        450,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.prop_bench",
+      "name": "Outdoor wooden bench",
+      "y_hint": [
+        550,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.prop_mailbox",
+      "name": "Red wall mailbox",
+      "y_hint": [
+        550,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.prop_ac_unit",
+      "name": "Outdoor AC unit",
+      "y_hint": [
+        580,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.prop_planters",
+      "name": "Planters with bushes and topiary",
+      "y_hint": [
+        580,
+        750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_porch",
+      "name": "Terraced house with wooden porch and bushes",
+      "y_hint": [
+        768,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_brick_base",
+      "name": "Terraced house brick foundation no porch",
+      "y_hint": [
+        768,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_garage",
+      "name": "Terraced house with garage door and skylight",
+      "y_hint": [
+        980,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_garage_plain",
+      "name": "Terraced house garage plain roof",
+      "y_hint": [
+        980,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_porch_module",
+      "name": "Standalone wooden porch/canopy",
+      "y_hint": [
+        800,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_window_modules",
+      "name": "Terraced house window texture tiles",
+      "y_hint": [
+        1000,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.terraced_modular_upper",
+      "name": "Modular upper floor + slanted roof units",
+      "y_hint": [
+        1280,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_modular_ac_overhang",
+      "name": "Upper modular with AC and metal overhang",
+      "y_hint": [
+        1350,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_module_planter",
+      "name": "Terraced module with mailbox and planter",
+      "y_hint": [
+        1536,
+        1800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_module_porch_ac",
+      "name": "Terraced module with porch and AC",
+      "y_hint": [
+        1536,
+        1820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_module_garage_skylight",
+      "name": "Terraced module garage + skylight",
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_roof_segments",
+      "name": "Corrugated slanted roof segments",
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_wall_brick_band",
+      "name": "Wall modules grey siding over brick",
+      "y_hint": [
+        1800,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_planter_props",
+      "name": "Bush planters and conical topiary",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_ac_prop",
+      "name": "Silver AC unit prop",
+      "y_hint": [
+        1880,
+        2080
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.terraced_railing_post",
+      "name": "Vertical wooden railing post",
+      "y_hint": [
+        1880,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.terraced_wide_roof",
+      "name": "Wide single-slope corrugated roof",
+      "y_hint": [
+        2050,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.stairs_railing",
+      "name": "Grey stairs with blue-grey railing",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.umbrella_pair",
+      "name": "White patio umbrellas",
+      "y_hint": [
+        2100,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.modern_wide_facade",
+      "name": "Wide modern building glass doors/windows",
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.umbrella_topdown",
+      "name": "Patio umbrellas top-down views",
+      "y_hint": [
+        2350,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.umbrella_with_table",
+      "name": "Umbrella over table and chairs",
+      "y_hint": [
+        2400,
+        2650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.deck_chair",
+      "name": "Deck lounge chairs white/grey",
+      "y_hint": [
+        2420,
+        2680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.tiny_table",
+      "name": "Tiny patio tables with/without drinks",
+      "y_hint": [
+        2450,
+        2700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.potted_plants_white",
+      "name": "White pot plants round and square",
+      "y_hint": [
+        2480,
+        2720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.glass_railing",
+      "name": "Modern glass railing modular",
+      "y_hint": [
+        2500,
+        2720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_corner_terrace",
+      "name": "Victorian brick L-corner with roof terrace",
+      "y_hint": [
+        2550,
+        2950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_facade_narrow",
+      "name": "Victorian narrow vertical facade strip",
+      "y_hint": [
+        2600,
+        3000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_facade_wide",
+      "name": "Victorian wide multi-floor facade",
+      "y_hint": [
+        2600,
+        3020
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_entrance_stairs",
+      "name": "Victorian stair entrance module",
+      "y_hint": [
+        2750,
+        3000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_roof_caps",
+      "name": "Victorian roof gables and chimneys",
+      "y_hint": [
+        2900,
+        3072
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_corner_flat_roof",
+      "name": "Victorian corner with flat roof center",
+      "y_hint": [
+        3072,
+        3350
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_side_entrance_balcony",
+      "name": "Victorian narrow with raised entrance balcony",
+      "y_hint": [
+        3072,
+        3400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_tower_circle_window",
+      "name": "Victorian facade with circular tower window",
+      "y_hint": [
+        3300,
+        3600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_flat_roof_chimneys",
+      "name": "Victorian section flat roof four chimneys",
+      "y_hint": [
+        3350,
+        3650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_tower_top",
+      "name": "Victorian tower top pyramidal roof",
+      "y_hint": [
+        3600,
+        3840
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_tower_partial",
+      "name": "Victorian tower top partial adjacent roof",
+      "y_hint": [
+        3550,
+        3800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_arched_windows",
+      "name": "Victorian arched window facade wide/narrow",
+      "y_hint": [
+        3840,
+        4050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.japanese_house",
+      "name": "Japanese white house with garage",
+      "y_hint": [
+        4000,
+        4250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.japanese_porch",
+      "name": "Japanese house porch/entry component",
+      "y_hint": [
+        4100,
+        4300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.japanese_pillars",
+      "name": "Wooden porch pillars",
+      "y_hint": [
+        4100,
+        4280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.one_story_house",
+      "name": "One-story grey house with wooden awning",
+      "y_hint": [
+        4000,
+        4300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.japanese_shelf_props",
+      "name": "Wooden shelves and chest props",
+      "y_hint": [
+        4150,
+        4350
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.post_apoc_cabin",
+      "name": "Rustic log cabin orange door",
+      "y_hint": [
+        4250,
+        4450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.post_apoc_door",
+      "name": "Cabin orange door component",
+      "y_hint": [
+        4280,
+        4450
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.utility_shed_white",
+      "name": "White utility storage shed",
+      "y_hint": [
+        4280,
+        4450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.windmill",
+      "name": "Windmill with lattice tower and blades",
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.windmill_tower",
+      "name": "Windmill lattice tower no propeller",
+      "y_hint": [
+        4280,
+        4500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.windmill_propeller",
+      "name": "Windmill blades top-down",
+      "y_hint": [
+        4300,
+        4480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.solar_panels",
+      "name": "Solar panel array racks",
+      "y_hint": [
+        4300,
+        4500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.generators",
+      "name": "Generator / machine boxes",
+      "y_hint": [
+        4320,
+        4520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.radio_antenna_box",
+      "name": "Radio box with antenna",
+      "y_hint": [
+        4350,
+        4520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.haunted_roof_peaks",
+      "name": "Ornate gothic roof peaks",
+      "y_hint": [
+        4400,
+        4580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.roof_pointed_cap",
+      "name": "Pointed metal roof/turret cap",
+      "y_hint": [
+        4450,
+        4580
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.fence_enclosure",
+      "name": "Square wooden fence enclosure",
+      "y_hint": [
+        4450,
+        4600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.fence_rustic_parts",
+      "name": "Rustic fence posts and rails",
+      "y_hint": [
+        4480,
+        4608
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.haunted_house",
+      "name": "Gothic haunted house full stamp",
+      "y_hint": [
+        4608,
+        4900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.haunted_house_no_lantern",
+      "name": "Haunted house without hanging lantern",
+      "y_hint": [
+        4608,
+        4900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.haunted_basement_door",
+      "name": "Haunted basement door closed/open",
+      "y_hint": [
+        4750,
+        4900
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.haunted_door_open",
+      "name": "Haunted main door open variant",
+      "y_hint": [
+        4700,
+        4880
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.haunted_fence",
+      "name": "Haunted house fence kit",
+      "y_hint": [
+        4608,
+        4780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.haunted_poles",
+      "name": "Haunted wooden poles/stakes",
+      "y_hint": [
+        4650,
+        4800
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.haunted_sign_blank",
+      "name": "Blank wooden hanging signs",
+      "y_hint": [
+        4700,
+        4850
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.haunted_sign_get_out",
+      "name": "GET OUT / danger / stop signs",
+      "y_hint": [
+        4720,
+        4880
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.haunted_gates",
+      "name": "Wooden double gates and fence frames",
+      "y_hint": [
+        4650,
+        4900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.haunted_beam",
+      "name": "Detached wooden beam fragment",
+      "y_hint": [
+        4850,
+        4920
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.doorway_interior_tile",
+      "name": "Dark doorway interior/shadow tile",
+      "y_hint": [
+        4850,
+        4928
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.fence_4",
+      "name": "Fence kit 4 modular",
+      "y_hint": [
+        100,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.fence_5",
+      "name": "Fence kit 5 modular",
+      "y_hint": [
+        4480,
+        4600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.fence_6",
+      "name": "Fence kit 6 modular",
+      "y_hint": [
+        4480,
+        4608
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_1",
+      "name": "Terraced house variant 1",
+      "y_hint": [
+        768,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_2",
+      "name": "Terraced house variant 2",
+      "y_hint": [
+        768,
+        1120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_3",
+      "name": "Terraced house variant 3",
+      "y_hint": [
+        950,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_4",
+      "name": "Terraced house variant 4",
+      "y_hint": [
+        950,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_5",
+      "name": "Terraced house variant 5",
+      "y_hint": [
+        1536,
+        1820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_house_6",
+      "name": "Terraced house variant 6",
+      "y_hint": [
+        1536,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_roof_styling",
+      "name": "Terraced roof styling pieces",
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_roof_door",
+      "name": "Terraced roof access door",
+      "y_hint": [
+        1800,
+        2050
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.terraced_side_view",
+      "name": "Terraced side-view base and roof set",
+      "y_hint": [
+        1850,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.terraced_pot",
+      "name": "Terraced house pot prop",
+      "y_hint": [
+        1880,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.victorian_1",
+      "name": "Victorian house stamp 1",
+      "y_hint": [
+        2550,
+        2950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_2",
+      "name": "Victorian house stamp 2",
+      "y_hint": [
+        2600,
+        3000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_3",
+      "name": "Victorian house stamp 3",
+      "y_hint": [
+        3072,
+        3400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_4",
+      "name": "Victorian house stamp 4",
+      "y_hint": [
+        3200,
+        3550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_5",
+      "name": "Victorian house stamp 5",
+      "y_hint": [
+        3300,
+        3650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_6",
+      "name": "Victorian house stamp 6",
+      "y_hint": [
+        3500,
+        3800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.victorian_7",
+      "name": "Victorian house stamp 7",
+      "y_hint": [
+        3840,
+        4100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.japanese_door_open",
+      "name": "Japanese house door open",
+      "y_hint": [
+        4050,
+        4280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.japanese_pots",
+      "name": "Japanese house pots 1-3",
+      "y_hint": [
+        4150,
+        4350
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.one_story_door_open",
+      "name": "One-story house door open",
+      "y_hint": [
+        4050,
+        4300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.post_apoc_1",
+      "name": "Post-apocalyptic house 1",
+      "y_hint": [
+        4250,
+        4480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.post_apoc_2",
+      "name": "Post-apocalyptic house 2",
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.houses.post_apoc_door_open",
+      "name": "Post-apoc house door open",
+      "y_hint": [
+        4280,
+        4480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.modern_door_open",
+      "name": "Modern house door open",
+      "y_hint": [
+        500,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.modern_potted_bloomed",
+      "name": "Modern potted plant bloomed",
+      "y_hint": [
+        2480,
+        2720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.houses.umbrella_shadows",
+      "name": "Umbrella shadow variants",
+      "y_hint": [
+        2400,
+        2680
+      ],
+      "multi_tile": false
+    }
+  ]
+}

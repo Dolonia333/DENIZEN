@@ -1,0 +1,383 @@
+{
+  "sheet": "8_Worksite",
+  "labels": [
+    {
+      "id": "me.worksite.light_tower_a",
+      "name": "Mobile light tower with floodlights",
+      "y_hint": [
+        0,
+        90
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.light_tower_b",
+      "name": "Mobile light tower variant",
+      "y_hint": [
+        0,
+        90
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.scissor_lift_lowered",
+      "name": "Scissor lift retracted",
+      "y_hint": [
+        0,
+        90
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.scissor_lift_raised",
+      "name": "Scissor lift extended",
+      "y_hint": [
+        0,
+        110
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.excavator_yellow",
+      "name": "Front loader yellow",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.excavator_orange_n",
+      "name": "Front loader orange north pair",
+      "y_hint": [
+        0,
+        100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.excavator_orange_s",
+      "name": "Front loader orange lower",
+      "y_hint": [
+        90,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.excavator_green",
+      "name": "Front loader green",
+      "y_hint": [
+        90,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.portable_toilet_red_closed",
+      "name": "Portable toilet red closed",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.portable_toilet_red_open",
+      "name": "Portable toilet red open",
+      "y_hint": [
+        0,
+        90
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.portable_toilet_blue_closed",
+      "name": "Portable toilet blue closed",
+      "y_hint": [
+        0,
+        80
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.portable_toilet_blue_open",
+      "name": "Portable toilet blue open",
+      "y_hint": [
+        0,
+        90
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.scaffolding_frame_a",
+      "name": "Building skeleton scaffolding A",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.scaffolding_frame_b",
+      "name": "Building skeleton scaffolding B",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.fence_gate_keypad",
+      "name": "Safety fence gate with keypad",
+      "y_hint": [
+        60,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.fence_panel_tall",
+      "name": "Tall red mesh fence panel",
+      "y_hint": [
+        60,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.fence_panel_hardhat",
+      "name": "Fence panel with hard-hat sign",
+      "y_hint": [
+        100,
+        190
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.fence_corner",
+      "name": "Safety fence corner piece",
+      "y_hint": [
+        60,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.fence_low_base",
+      "name": "Low fence with dirt base",
+      "y_hint": [
+        180,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.site_entrance",
+      "name": "Construction site entrance gate",
+      "y_hint": [
+        200,
+        310
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.trench_cut",
+      "name": "Excavation trench / sand pit",
+      "y_hint": [
+        100,
+        190
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.dirt_pile_large",
+      "name": "Dirt mound large",
+      "y_hint": [
+        80,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.dirt_pile_small",
+      "name": "Dirt mound small",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.water_puddle",
+      "name": "Construction water puddle",
+      "y_hint": [
+        90,
+        170
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.lumber_stack",
+      "name": "Stacked lumber planks",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.rebar_stack_vertical",
+      "name": "Vertical rebar / rod bundle",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.pipes_horizontal",
+      "name": "Horizontal pipe stack",
+      "y_hint": [
+        230,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.steel_beams",
+      "name": "Stacked steel I-beams",
+      "y_hint": [
+        210,
+        310
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.concrete_blocks",
+      "name": "Pallet of concrete blocks",
+      "y_hint": [
+        240,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.toolbox_closed",
+      "name": "Orange toolbox closed",
+      "y_hint": [
+        220,
+        310
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.toolbox_open",
+      "name": "Orange toolbox open",
+      "y_hint": [
+        220,
+        310
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.storage_bin",
+      "name": "Orange storage bin / dumpster",
+      "y_hint": [
+        220,
+        310
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.worksite.shovel_upright",
+      "name": "Shovel upright",
+      "y_hint": [
+        140,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.shovel_in_dirt",
+      "name": "Shovel in dirt mound",
+      "y_hint": [
+        150,
+        270
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.pickaxe",
+      "name": "Pickaxe",
+      "y_hint": [
+        150,
+        270
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.cone_upright",
+      "name": "Traffic cone upright",
+      "y_hint": [
+        160,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.cone_fallen",
+      "name": "Traffic cone tipped over",
+      "y_hint": [
+        170,
+        290
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.bucket",
+      "name": "Construction bucket",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.hard_hat",
+      "name": "Hard hat on ground",
+      "y_hint": [
+        150,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.hardhat_sign",
+      "name": "Hard hat required sign",
+      "y_hint": [
+        100,
+        190
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.wood_scraps",
+      "name": "Wood scrap pile",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.worksite.ground_patch",
+      "name": "Dirt ground patch tiles",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": true
+    }
+  ]
+}

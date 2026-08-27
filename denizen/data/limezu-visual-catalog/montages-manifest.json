@@ -1,0 +1,441 @@
+{
+  "generated_at": "2026-08-27T23:26:16.322332Z",
+  "thumb": 72,
+  "cols": 8,
+  "rows_per": 6,
+  "only_weak": true,
+  "sheets": [
+    {
+      "sheet": "1_Terrains_and_Fences",
+      "cell_count": 39,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/1_Terrains_and_Fences/mosaic_00.png",
+          "start": 1,
+          "count": 39
+        }
+      ]
+    },
+    {
+      "sheet": "2_City_Terrains",
+      "cell_count": 77,
+      "mosaic_count": 2,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/2_City_Terrains/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/2_City_Terrains/mosaic_01.png",
+          "start": 49,
+          "count": 29
+        }
+      ]
+    },
+    {
+      "sheet": "3_City_Props",
+      "cell_count": 108,
+      "mosaic_count": 3,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/3_City_Props/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/3_City_Props/mosaic_01.png",
+          "start": 49,
+          "count": 48
+        },
+        {
+          "index": 2,
+          "path": "data/limezu-visual-catalog/montages/3_City_Props/mosaic_02.png",
+          "start": 97,
+          "count": 12
+        }
+      ]
+    },
+    {
+      "sheet": "4_Generic_Buildings",
+      "cell_count": 120,
+      "mosaic_count": 3,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/4_Generic_Buildings/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/4_Generic_Buildings/mosaic_01.png",
+          "start": 49,
+          "count": 48
+        },
+        {
+          "index": 2,
+          "path": "data/limezu-visual-catalog/montages/4_Generic_Buildings/mosaic_02.png",
+          "start": 97,
+          "count": 24
+        }
+      ]
+    },
+    {
+      "sheet": "5_Floor_Modular_Buildings",
+      "cell_count": 80,
+      "mosaic_count": 2,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/5_Floor_Modular_Buildings/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/5_Floor_Modular_Buildings/mosaic_01.png",
+          "start": 49,
+          "count": 32
+        }
+      ]
+    },
+    {
+      "sheet": "6_Garage_Sales",
+      "cell_count": 33,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/6_Garage_Sales/mosaic_00.png",
+          "start": 1,
+          "count": 33
+        }
+      ]
+    },
+    {
+      "sheet": "7_Villas",
+      "cell_count": 6,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/7_Villas/mosaic_00.png",
+          "start": 1,
+          "count": 6
+        }
+      ]
+    },
+    {
+      "sheet": "8_Worksite",
+      "cell_count": 21,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/8_Worksite/mosaic_00.png",
+          "start": 1,
+          "count": 21
+        }
+      ]
+    },
+    {
+      "sheet": "9_Shopping_Center_and_Markets",
+      "cell_count": 9,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/9_Shopping_Center_and_Markets/mosaic_00.png",
+          "start": 1,
+          "count": 9
+        }
+      ]
+    },
+    {
+      "sheet": "10_Vehicles",
+      "cell_count": 96,
+      "mosaic_count": 2,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/10_Vehicles/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/10_Vehicles/mosaic_01.png",
+          "start": 49,
+          "count": 48
+        }
+      ]
+    },
+    {
+      "sheet": "11_Camping",
+      "cell_count": 307,
+      "mosaic_count": 7,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/11_Camping/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/11_Camping/mosaic_01.png",
+          "start": 49,
+          "count": 48
+        },
+        {
+          "index": 2,
+          "path": "data/limezu-visual-catalog/montages/11_Camping/mosaic_02.png",
+          "start": 97,
+          "count": 48
+        },
+        {
+          "index": 3,
+          "path": "data/limezu-visual-catalog/montages/11_Camping/mosaic_03.png",
+          "start": 145,
+          "count": 48
+        },
+        {
+          "index": 4,
+          "path": "data/limezu-visual-catalog/montages/11_Camping/mosaic_04.png",
+          "start": 193,
+          "count": 48
+        },
+        {
+          "index": 5,
+          "path": "data/limezu-visual-catalog/montages/11_Camping/mosaic_05.png",
+          "start": 241,
+          "count": 48
+        },
+        {
+          "index": 6,
+          "path": "data/limezu-visual-catalog/montages/11_Camping/mosaic_06.png",
+          "start": 289,
+          "count": 19
+        }
+      ]
+    },
+    {
+      "sheet": "12_Hotel_and_Hospital",
+      "cell_count": 13,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/12_Hotel_and_Hospital/mosaic_00.png",
+          "start": 1,
+          "count": 13
+        }
+      ]
+    },
+    {
+      "sheet": "13_School",
+      "cell_count": 91,
+      "mosaic_count": 2,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/13_School/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/13_School/mosaic_01.png",
+          "start": 49,
+          "count": 43
+        }
+      ]
+    },
+    {
+      "sheet": "14_Swimming_Pool",
+      "cell_count": 130,
+      "mosaic_count": 3,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/14_Swimming_Pool/mosaic_00.png",
+          "start": 1,
+          "count": 48
+        },
+        {
+          "index": 1,
+          "path": "data/limezu-visual-catalog/montages/14_Swimming_Pool/mosaic_01.png",
+          "start": 49,
+          "count": 48
+        },
+        {
+          "index": 2,
+          "path": "data/limezu-visual-catalog/montages/14_Swimming_Pool/mosaic_02.png",
+          "start": 97,
+          "count": 34
+        }
+      ]
+    },
+    {
+      "sheet": "15_Police_Station",
+      "cell_count": 9,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/15_Police_Station/mosaic_00.png",
+          "start": 1,
+          "count": 9
+        }
+      ]
+    },
+    {
+      "sheet": "16_Office",
+      "cell_count": 12,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/16_Office/mosaic_00.png",
+          "start": 1,
+          "count": 12
+        }
+      ]
+    },
+    {
+      "sheet": "17_Garden",
+      "cell_count": 5,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/17_Garden/mosaic_00.png",
+          "start": 1,
+          "count": 5
+        }
+      ]
+    },
+    {
+      "sheet": "18_Fire_Station",
+      "cell_count": 11,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/18_Fire_Station/mosaic_00.png",
+          "start": 1,
+          "count": 11
+        }
+      ]
+    },
+    {
+      "sheet": "19_Graveyard",
+      "cell_count": 2,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/19_Graveyard/mosaic_00.png",
+          "start": 1,
+          "count": 2
+        }
+      ]
+    },
+    {
+      "sheet": "20_Subway_and_Train_Station",
+      "cell_count": 21,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/20_Subway_and_Train_Station/mosaic_00.png",
+          "start": 1,
+          "count": 21
+        }
+      ]
+    },
+    {
+      "sheet": "21_Beach",
+      "cell_count": 9,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/21_Beach/mosaic_00.png",
+          "start": 1,
+          "count": 9
+        }
+      ]
+    },
+    {
+      "sheet": "22_Post_Office",
+      "cell_count": 6,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/22_Post_Office/mosaic_00.png",
+          "start": 1,
+          "count": 6
+        }
+      ]
+    },
+    {
+      "sheet": "23_MIlitary_Base",
+      "cell_count": 23,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/23_MIlitary_Base/mosaic_00.png",
+          "start": 1,
+          "count": 23
+        }
+      ]
+    },
+    {
+      "sheet": "24_Additional_Houses",
+      "cell_count": 1,
+      "mosaic_count": 1,
+      "only_weak": true,
+      "mosaics": [
+        {
+          "index": 0,
+          "path": "data/limezu-visual-catalog/montages/24_Additional_Houses/mosaic_00.png",
+          "start": 1,
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "sheet": "19_Graveyard",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.graveyard.pumpkin_branch_left",
+    "2": "me.graveyard.pumpkin_branch_right"
+  }
+}

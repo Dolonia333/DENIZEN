@@ -1,0 +1,419 @@
+{
+  "sheet": "22_Post_Office",
+  "labels": [
+    {
+      "id": "me.post_office.truck_right_side",
+      "name": "Delivery truck right side (logo)",
+      "y_hint": [
+        21,
+        96
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.truck_left_side",
+      "name": "Delivery truck left side (plain)",
+      "y_hint": [
+        101,
+        176
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.truck_back_closed",
+      "name": "Delivery truck rear closed",
+      "y_hint": [
+        21,
+        150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.truck_back_open_full",
+      "name": "Delivery truck rear open full",
+      "y_hint": [
+        100,
+        176
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.truck_back_open_empty",
+      "name": "Delivery truck rear open empty",
+      "y_hint": [
+        100,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.truck_front",
+      "name": "Delivery truck front",
+      "y_hint": [
+        21,
+        150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.sign_pole_cones",
+      "name": "Orange triangle signal pole",
+      "y_hint": [
+        8,
+        54
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.sign_envelope",
+      "name": "Envelope post office sign",
+      "y_hint": [
+        22,
+        54
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.roof_decoration",
+      "name": "Roof decoration cluster",
+      "y_hint": [
+        8,
+        64
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.roof_trapdoor_1",
+      "name": "Roof trapdoor 1",
+      "y_hint": [
+        32,
+        64
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.roof_trapdoor_2",
+      "name": "Roof trapdoor 2",
+      "y_hint": [
+        32,
+        64
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.building_maroon",
+      "name": "Post office building maroon",
+      "y_hint": [
+        64,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.building_green",
+      "name": "Post office building sage green",
+      "y_hint": [
+        64,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.building_grey",
+      "name": "Post office building grey",
+      "y_hint": [
+        250,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.building_orange_stripe",
+      "name": "Post office building orange stripe",
+      "y_hint": [
+        250,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.package_pile_large",
+      "name": "Large package pile with letters",
+      "y_hint": [
+        160,
+        210
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.package_pile_small",
+      "name": "Small package stack",
+      "y_hint": [
+        160,
+        210
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.package_big_1",
+      "name": "Large single package 1",
+      "y_hint": [
+        208,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.package_big_2",
+      "name": "Large single package 2",
+      "y_hint": [
+        208,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.package_flat",
+      "name": "Flat package",
+      "y_hint": [
+        218,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.package_square",
+      "name": "Square package",
+      "y_hint": [
+        224,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.post_office.package_tall",
+      "name": "Tall package",
+      "y_hint": [
+        218,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.package_small_1",
+      "name": "Tiny package 1",
+      "y_hint": [
+        224,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.post_office.package_small_2",
+      "name": "Tiny package 2",
+      "y_hint": [
+        256,
+        272
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.post_office.letter_1",
+      "name": "Loose letter 1",
+      "y_hint": [
+        229,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.post_office.letter_2",
+      "name": "Loose letter 2",
+      "y_hint": [
+        263,
+        272
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.post_office.mailbox_blue_1_front",
+      "name": "Blue residential mailbox 1 front",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_blue_1_side_a",
+      "name": "Blue residential mailbox 1 side A",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_blue_1_side_b",
+      "name": "Blue residential mailbox 1 side B",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_blue_2_front",
+      "name": "Blue residential mailbox 2 front",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_blue_2_side_a",
+      "name": "Blue residential mailbox 2 side A",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_blue_2_side_b",
+      "name": "Blue residential mailbox 2 side B",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_red_1_front",
+      "name": "Red residential mailbox 1 front",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_red_1_side_a",
+      "name": "Red residential mailbox 1 side A",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_red_1_side_b",
+      "name": "Red residential mailbox 1 side B",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_red_2_front",
+      "name": "Red residential mailbox 2 front",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_red_2_side_a",
+      "name": "Red residential mailbox 2 side A",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_red_2_side_b",
+      "name": "Red residential mailbox 2 side B",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_black_1_front",
+      "name": "Black residential mailbox 1 front",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_black_1_side_a",
+      "name": "Black residential mailbox 1 side A",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_black_1_side_b",
+      "name": "Black residential mailbox 1 side B",
+      "y_hint": [
+        222,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_black_2_front",
+      "name": "Black residential mailbox 2 front",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_black_2_side_a",
+      "name": "Black residential mailbox 2 side A",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.mailbox_black_2_side_b",
+      "name": "Black residential mailbox 2 side B",
+      "y_hint": [
+        253,
+        272
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.dropbox_blue",
+      "name": "Public mail drop box blue",
+      "y_hint": [
+        284,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.post_office.dropbox_grey",
+      "name": "Public mail drop box grey",
+      "y_hint": [
+        284,
+        320
+      ],
+      "multi_tile": true
+    }
+  ]
+}

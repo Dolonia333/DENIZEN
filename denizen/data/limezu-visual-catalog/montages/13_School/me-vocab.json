@@ -1,0 +1,563 @@
+{
+  "sheet": "13_School",
+  "labels": [
+    {
+      "id": "me.school.building_main",
+      "name": "Main school building facade",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.clock_tower",
+      "name": "Clock tower",
+      "y_hint": [
+        0,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.clock_face",
+      "name": "Standalone clock face tile",
+      "y_hint": [
+        180,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.wall_modular_set",
+      "name": "School wall / roof modular corridor strips",
+      "y_hint": [
+        220,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.entrance_ramp",
+      "name": "School entrance zigzag ramp / stairs",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.railing",
+      "name": "School yard metal railing segment",
+      "y_hint": [
+        300,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.flagpole_blue",
+      "name": "Flagpole with blue flag",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.flagpole_red",
+      "name": "Flagpole with red/orange flag",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.bench_plaza",
+      "name": "School plaza bench set",
+      "y_hint": [
+        160,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.court_basketball_clean",
+      "name": "Basketball court clean full markings",
+      "y_hint": [
+        420,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.court_basketball_overgrown",
+      "name": "Basketball court overgrown / cracked",
+      "y_hint": [
+        480,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.court_basketball_half_a",
+      "name": "Basketball half-court / section A",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.court_basketball_half_b",
+      "name": "Basketball half-court / section B",
+      "y_hint": [
+        0,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.hoop_basketball_front",
+      "name": "Basketball hoop front / backboard",
+      "y_hint": [
+        520,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.hoop_basketball_side",
+      "name": "Basketball hoop side profile",
+      "y_hint": [
+        520,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.hoop_basketball_angled",
+      "name": "Basketball hoop angled / alternate",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.ball_basketball",
+      "name": "Basketball ball sprites",
+      "y_hint": [
+        560,
+        680
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.stadium_light_single",
+      "name": "Stadium floodlight single head",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.stadium_light_cluster",
+      "name": "Stadium floodlight multi-head cluster",
+      "y_hint": [
+        0,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.bleachers_front",
+      "name": "Wooden bleachers front view",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.bleachers_side",
+      "name": "Wooden bleachers side / modular",
+      "y_hint": [
+        100,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.playground_slide_double",
+      "name": "Double blue slide play unit",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.playground_swing_set",
+      "name": "Swing set",
+      "y_hint": [
+        220,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.playground_rings",
+      "name": "Gymnastics rings / hanging rings",
+      "y_hint": [
+        220,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.playground_fort_large_a",
+      "name": "Large playground fort A",
+      "y_hint": [
+        280,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.playground_fort_large_b",
+      "name": "Large playground fort B",
+      "y_hint": [
+        300,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.playground_bridge_arch",
+      "name": "Playground arched bridge",
+      "y_hint": [
+        320,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.playground_monkey_bars",
+      "name": "Monkey bars / climbing frame",
+      "y_hint": [
+        240,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.playground_climbing_unit",
+      "name": "Climbing unit with net / obstacles",
+      "y_hint": [
+        260,
+        440
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.field_soccer",
+      "name": "Soccer field full markings",
+      "y_hint": [
+        200,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.field_soccer_striped",
+      "name": "Soccer field striped turf variant",
+      "y_hint": [
+        80,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.goal_soccer_front",
+      "name": "Soccer goal front / 3-4 view",
+      "y_hint": [
+        360,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.goal_soccer_back",
+      "name": "Soccer goal rear / side view",
+      "y_hint": [
+        360,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.goal_soccer_white",
+      "name": "Soccer goal white frame variant",
+      "y_hint": [
+        400,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.ball_soccer",
+      "name": "Soccer ball sprites",
+      "y_hint": [
+        420,
+        560
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.tube_tunnel_yellow",
+      "name": "Modular tube tunnel yellow set",
+      "y_hint": [
+        480,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.tube_tunnel_blue",
+      "name": "Modular tube tunnel blue set",
+      "y_hint": [
+        500,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.tube_tunnel_red",
+      "name": "Modular tube tunnel red set",
+      "y_hint": [
+        520,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.gym_vault_boxes",
+      "name": "Vaulting / step boxes",
+      "y_hint": [
+        560,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.gym_horizontal_bars",
+      "name": "Horizontal / pull-up bars",
+      "y_hint": [
+        560,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.gym_equipment_rack",
+      "name": "Ball / equipment storage rack",
+      "y_hint": [
+        580,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.gym_hula_hoops",
+      "name": "Hula hoop stacks",
+      "y_hint": [
+        600,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.gym_mats",
+      "name": "Gym mats flat and folded",
+      "y_hint": [
+        600,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.gym_hurdles",
+      "name": "Wooden hurdles / low obstacles",
+      "y_hint": [
+        600,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.sandbox",
+      "name": "Sandbox / play pit",
+      "y_hint": [
+        620,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.climbing_wall",
+      "name": "Climbing wall with handholds",
+      "y_hint": [
+        620,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.pe_cones_balls",
+      "name": "PE cones and loose sports balls",
+      "y_hint": [
+        640,
+        768
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.playground_bridge_set",
+      "name": "Playground wooden bridge with bead panel",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.playground_bridge_segment",
+      "name": "Playground bridge segment only",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.playground_platform_rail",
+      "name": "Elevated platform with grey railings",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.goal_soccer_left",
+      "name": "Soccer goal facing left",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.goal_soccer_right",
+      "name": "Soccer goal facing right",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.playground_slide_single",
+      "name": "Single slide / ladder unit",
+      "y_hint": [
+        220,
+        400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.playground_see_activity",
+      "name": "Small activity / bead play panels",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.playground_fence",
+      "name": "Playground fence segments",
+      "y_hint": [
+        280,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.court_line_markings",
+      "name": "Court line marking fragments",
+      "y_hint": [
+        420,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.bleachers_bench_low",
+      "name": "Low bench / single-row stand",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.goal_soccer_pair_stamp",
+      "name": "Soccer goals placed as field-end pair",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.tube_tunnel_endcap",
+      "name": "Tube tunnel end-cap openings",
+      "y_hint": [
+        500,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.tube_tunnel_junction",
+      "name": "Tube tunnel T and cross junctions",
+      "y_hint": [
+        500,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.school.gym_balance_beam",
+      "name": "Balance beam / low beam",
+      "y_hint": [
+        600,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.school.pe_jump_rope_bin",
+      "name": "Jump ropes / PE accessory bin",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": false
+    }
+  ]
+}

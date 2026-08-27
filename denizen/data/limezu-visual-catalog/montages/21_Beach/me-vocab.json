@@ -1,0 +1,815 @@
+{
+  "sheet": "21_Beach",
+  "labels": [
+    {
+      "id": "me.beach.terrain_sand_fill",
+      "name": "Sand fill / texture tiles",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.terrain_sand_grass_transition",
+      "name": "Sand\u2013grass transition tiles",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.terrain_sand_water_island",
+      "name": "Sand island / water edge tiles",
+      "y_hint": [
+        40,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.terrain_sand_mound_small",
+      "name": "Small sand mound / mountain modular",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.bucket_red",
+      "name": "Red beach bucket",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.bucket_green",
+      "name": "Green / emerald beach bucket",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.bucket_blue",
+      "name": "Blue / ice-white beach bucket",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.bucket_yellow",
+      "name": "Yellow / pink / white beach bucket",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.shovel_red",
+      "name": "Red shovel (loose + insertable)",
+      "y_hint": [
+        20,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.shovel_green",
+      "name": "Green shovel (loose + insertable)",
+      "y_hint": [
+        20,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.shovel_blue",
+      "name": "Blue shovel (loose + insertable)",
+      "y_hint": [
+        20,
+        140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.shovel_yellow",
+      "name": "Yellow / multicolor shovel",
+      "y_hint": [
+        20,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.bucket_shovel_example",
+      "name": "Bucket with shovel example stamp",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.sandcastle_simple",
+      "name": "Sandcastle simple mounds / towers",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.sandcastle_flagged",
+      "name": "Sandcastle with flags",
+      "y_hint": [
+        60,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.sand_hole",
+      "name": "Sand hole",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.crab",
+      "name": "Beach crabs",
+      "y_hint": [
+        60,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.starfish",
+      "name": "Starfish set",
+      "y_hint": [
+        60,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.towel_blue",
+      "name": "Blue striped beach towel",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.towel_green",
+      "name": "Green striped beach towel",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.towel_purple_pink",
+      "name": "Purple / pink / multicolor towels",
+      "y_hint": [
+        100,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.towel_yellow_grey",
+      "name": "Yellow / grey beach towels",
+      "y_hint": [
+        120,
+        240
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.shells_brown",
+      "name": "Brown seashells",
+      "y_hint": [
+        140,
+        260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.shells_gold",
+      "name": "Gold / gold-blue seashells",
+      "y_hint": [
+        140,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.shells_pink_grey",
+      "name": "Pink / grey / ice-white shells",
+      "y_hint": [
+        160,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.sign_arch_beach",
+      "name": "BEACH entrance archway",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.sign_direction_big",
+      "name": "Directional signpost large",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.sign_direction_small",
+      "name": "Directional signpost small",
+      "y_hint": [
+        220,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.info_board_blue",
+      "name": "Blue information / map boards",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.bar_ship",
+      "name": "Ship / shark beach bar building",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.bar_counter",
+      "name": "Bar counter modules",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.bar_stool",
+      "name": "Bar stools / chairs",
+      "y_hint": [
+        300,
+        440
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.bar_table_drinks",
+      "name": "Bar tables with bottles / cocktails",
+      "y_hint": [
+        300,
+        460
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.palm_tree",
+      "name": "Palm tree",
+      "y_hint": [
+        260,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.umbrella_blue_open",
+      "name": "Blue beach umbrella open",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.umbrella_blue_closed",
+      "name": "Blue beach umbrella closed",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.umbrella_green_open",
+      "name": "Green beach umbrella open",
+      "y_hint": [
+        280,
+        440
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.umbrella_green_closed",
+      "name": "Green beach umbrella closed",
+      "y_hint": [
+        280,
+        440
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.umbrella_lightblue_open",
+      "name": "Light-blue / orange umbrella open",
+      "y_hint": [
+        300,
+        460
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.umbrella_lightblue_closed",
+      "name": "Light-blue / orange umbrella closed",
+      "y_hint": [
+        300,
+        460
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.stall_thatch",
+      "name": "Thatched beach market stalls",
+      "y_hint": [
+        400,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.speaker_big",
+      "name": "Big loudspeaker / PA stacks",
+      "y_hint": [
+        420,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.speaker_medium_small",
+      "name": "Medium / small loudspeakers",
+      "y_hint": [
+        440,
+        580
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.dj_set",
+      "name": "DJ turntable / mixer set",
+      "y_hint": [
+        440,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.stage_barrier",
+      "name": "Crowd control stage barriers",
+      "y_hint": [
+        460,
+        600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.stage_stairs",
+      "name": "Stage access stairs",
+      "y_hint": [
+        480,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.boardwalk_deck",
+      "name": "Wooden boardwalk / stage deck platforms",
+      "y_hint": [
+        480,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.stage_truss",
+      "name": "Metal stage truss structure",
+      "y_hint": [
+        500,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.stage_spotlight",
+      "name": "Stage spotlights on truss",
+      "y_hint": [
+        520,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.stage_example_big",
+      "name": "Example big stage assembly",
+      "y_hint": [
+        500,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.stage_example_small",
+      "name": "Example small stage assembly",
+      "y_hint": [
+        520,
+        740
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.volley_net",
+      "name": "Beach volleyball net",
+      "y_hint": [
+        560,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.volley_court_lines",
+      "name": "Beach volleyball court line modular",
+      "y_hint": [
+        560,
+        740
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.ball_volleyball",
+      "name": "Volleyball / beach ball",
+      "y_hint": [
+        580,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.seagull",
+      "name": "Seagulls standing / flying",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.rock_land",
+      "name": "Land rocks / boulders",
+      "y_hint": [
+        620,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.rock_sea",
+      "name": "Sea rocks with water ripples",
+      "y_hint": [
+        620,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.rock_sea_arch",
+      "name": "Broken arch sea rocks",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.buoy_lighthouse",
+      "name": "Miniature lighthouse buoy",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.buoy_round",
+      "name": "Round nautical buoys",
+      "y_hint": [
+        80,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.plants_tropical",
+      "name": "Tropical beach plants / sprouts",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.truss_standalone",
+      "name": "Standalone metal truss posts",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.boardwalk_foggy",
+      "name": "Foggy boardwalk / deck variants",
+      "y_hint": [
+        200,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.boardwalk_vertical",
+      "name": "Vertical boardwalk deck strips",
+      "y_hint": [
+        180,
+        450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.lighthouse_full",
+      "name": "Lighthouse complete assembly",
+      "y_hint": [
+        480,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.lighthouse_open_top",
+      "name": "Lighthouse lantern room open / no dome",
+      "y_hint": [
+        500,
+        768
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.lighthouse_lens",
+      "name": "Lighthouse lens / light mechanism top-down",
+      "y_hint": [
+        560,
+        720
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.lighthouse_roof",
+      "name": "Lighthouse roof / trapdoor / decorated tops",
+      "y_hint": [
+        520,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.lighthouse_door",
+      "name": "Lighthouse door open / closed",
+      "y_hint": [
+        600,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.spotlight_search",
+      "name": "Coastal searchlight / spotlight prop",
+      "y_hint": [
+        620,
+        760
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.lighthouse_base_ring",
+      "name": "Lighthouse circular base segments",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.lighthouse_mid_ring",
+      "name": "Lighthouse mid wall / window segments",
+      "y_hint": [
+        0,
+        140
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.lighthouse_balcony_top",
+      "name": "Lighthouse balcony / lantern top segment",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.cliff_sand_modular",
+      "name": "Sandy cliff / rock wall modular set",
+      "y_hint": [
+        80,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.cliff_stairs_wood",
+      "name": "Wooden stairs into sand cliffs",
+      "y_hint": [
+        120,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.sand_mountain_big",
+      "name": "Big sand mountain modular sides",
+      "y_hint": [
+        100,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.sand_mountain_small",
+      "name": "Small sand mountain modular sides",
+      "y_hint": [
+        140,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.sand_mountain_four_example",
+      "name": "Four sand mountains example plateau",
+      "y_hint": [
+        160,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.sand_mountain_single_example",
+      "name": "Single sand mountain examples",
+      "y_hint": [
+        200,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.grass_tuft",
+      "name": "Beach grass / sprout tufts",
+      "y_hint": [
+        360,
+        460
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.lighthouse_to_decorate",
+      "name": "Lighthouse shell to decorate",
+      "y_hint": [
+        540,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.ship_bar_anchor_variant",
+      "name": "Ship bar anchor logo variant",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.bamboo_bar_sand",
+      "name": "Bamboo bar counter/chair sand-embedded",
+      "y_hint": [
+        280,
+        440
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.music_box",
+      "name": "Small music / amp box",
+      "y_hint": [
+        440,
+        600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.stage_lateral_barrier",
+      "name": "Stage lateral barrier segments",
+      "y_hint": [
+        460,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.boardwalk_sand_under",
+      "name": "Boardwalk with sand-under edge",
+      "y_hint": [
+        480,
+        680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.lighthouse_example",
+      "name": "Example assembled lighthouse stamp",
+      "y_hint": [
+        480,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.beach.float_green",
+      "name": "Green inflatable float",
+      "y_hint": [
+        580,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.float_orange",
+      "name": "Orange inflatable float",
+      "y_hint": [
+        580,
+        740
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.beach.float_red",
+      "name": "Red inflatable float",
+      "y_hint": [
+        580,
+        740
+      ],
+      "multi_tile": false
+    }
+  ]
+}

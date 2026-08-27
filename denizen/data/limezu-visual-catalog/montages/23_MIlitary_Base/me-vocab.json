@@ -1,0 +1,1031 @@
+{
+  "sheet": "23_MIlitary_Base",
+  "labels": [
+    {
+      "id": "me.military.wall_plain",
+      "name": "Concrete perimeter wall plain segments",
+      "y_hint": [
+        0,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.wall_barbed",
+      "name": "Concrete wall with barbed wire top",
+      "y_hint": [
+        0,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.wall_arrow_corner",
+      "name": "Concrete wall corner with directional arrows",
+      "y_hint": [
+        80,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.wall_modular_parts",
+      "name": "Modular wall pillars and panels",
+      "y_hint": [
+        400,
+        620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.barbed_wire_kit",
+      "name": "Standalone razor/barbed wire segments",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.warning_signs",
+      "name": "Warning / no-entry sign posts",
+      "y_hint": [
+        20,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.spotlight_standalone",
+      "name": "Industrial floodlight / spotlight",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.railing_enclosure",
+      "name": "Square metal railing floor enclosure",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.bunker_entrance_building",
+      "name": "Multi-story bunker / entrance building",
+      "y_hint": [
+        160,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.spotlight_platform",
+      "name": "Raised platform with mounted spotlight",
+      "y_hint": [
+        200,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.watchtower_top",
+      "name": "Watchtower upper deck with windows and light",
+      "y_hint": [
+        280,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.silo_base",
+      "name": "Large curved silo / tower base section",
+      "y_hint": [
+        520,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.barrier_boom",
+      "name": "Red-white striped boom barrier / gate arm",
+      "y_hint": [
+        300,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.wall_pillars_tall",
+      "name": "Tall concrete wall / pillar sections",
+      "y_hint": [
+        768,
+        980
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.quonset_small_closed",
+      "name": "Small closed Quonset hut",
+      "y_hint": [
+        768,
+        1000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.quonset_tall_closed",
+      "name": "Tall closed Quonset hangar",
+      "y_hint": [
+        900,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.quonset_tall_open",
+      "name": "Tall open Quonset hangar interior",
+      "y_hint": [
+        900,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.quonset_interior_cutaway",
+      "name": "Quonset interior cutaway with console",
+      "y_hint": [
+        1000,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.narrow_tower_building",
+      "name": "Narrow tall building with red door",
+      "y_hint": [
+        768,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.barracks_l_shape",
+      "name": "L-shaped barracks brown roof",
+      "y_hint": [
+        1000,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.barracks_rectangular",
+      "name": "Large rectangular barracks brown roof",
+      "y_hint": [
+        1280,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.barracks_wall_modules",
+      "name": "Barracks wall / door / window modules",
+      "y_hint": [
+        1180,
+        1400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.barracks_roof_modules",
+      "name": "Barracks corrugated roof modules",
+      "y_hint": [
+        1350,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.boom_gate_extended",
+      "name": "Boom gate arm extended",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.boom_gate_segments",
+      "name": "Boom gate broken / short segments",
+      "y_hint": [
+        1100,
+        1280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.streetlight_straight",
+      "name": "Grey metal streetlight pole straight",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.streetlight_bent",
+      "name": "Grey metal streetlight L-bend",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.lockers_numbered",
+      "name": "Numbered hangar lockers N00-N10",
+      "y_hint": [
+        1150,
+        1380
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.utility_box",
+      "name": "Grey metal utility / electrical box",
+      "y_hint": [
+        1180,
+        1320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.stairs_walkway",
+      "name": "Metal staircase and railing walkway",
+      "y_hint": [
+        1150,
+        1400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.wooden_fence_low",
+      "name": "Low wooden post-and-rail fence",
+      "y_hint": [
+        1400,
+        1520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.antenna_mast_base",
+      "name": "Antenna / communication mast base segments",
+      "y_hint": [
+        1400,
+        1530
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.dormitory_n05",
+      "name": "Corrugated roof dormitory labeled N-05",
+      "y_hint": [
+        1536,
+        1780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.bunker_roof_vents",
+      "name": "Square grey bunker with roof vents",
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.bunker_flat_roof",
+      "name": "Square grey bunker flat top",
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.wall_vent_section",
+      "name": "Long wall section with windows and HVAC",
+      "y_hint": [
+        1536,
+        1680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tent_tan_closed",
+      "name": "Tan military tent closed",
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tent_grey_closed",
+      "name": "Grey/black military tent closed",
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tent_tan_open",
+      "name": "Tan military tent open interior",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tent_grey_open",
+      "name": "Grey military tent open interior",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.sandbag_ring",
+      "name": "Circular sandbag fortification ring",
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.sandbag_stacks",
+      "name": "Sandbag stacks and loose pieces",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tire_stacks",
+      "name": "Stacked tire piles",
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.training_dummy",
+      "name": "Wooden training dummy on stand",
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.shooting_target",
+      "name": "Shooting range bullseye target",
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.soldier_helmet",
+      "name": "Olive combat helmet",
+      "y_hint": [
+        1950,
+        2050
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.bunk_bed",
+      "name": "Metal bunk bed",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.single_bed",
+      "name": "Metal single bed",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.metal_locker",
+      "name": "Tall metal locker",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.supply_shelf",
+      "name": "Stocked metal supply shelf",
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.footlocker",
+      "name": "Footlocker / supply chest",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.folding_chair",
+      "name": "Grey folding chair",
+      "y_hint": [
+        2050,
+        2220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.medical_crate",
+      "name": "Medical crate with green cross",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.first_aid_kit",
+      "name": "Portable first-aid kit",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.medical_supplies_small",
+      "name": "Small bottles vials packets clipboard",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.antenna_floor_plate",
+      "name": "Floor-plate communication antenna",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.pipe_l_bend",
+      "name": "Industrial pipe L-bend section",
+      "y_hint": [
+        2150,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.whiteboard",
+      "name": "Blank whiteboard on stand",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.map_board",
+      "name": "Tactical map board stand",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.table_desk",
+      "name": "Command table / desk",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.radio_tower_column",
+      "name": "Radar tower on solid central column",
+      "y_hint": [
+        2304,
+        2650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.radio_tower_lattice_frame",
+      "name": "Lattice tower frame with dish antennas",
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.radio_tower_lattice",
+      "name": "Radar tower on lattice support",
+      "y_hint": [
+        2304,
+        2680
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.radio_tower_base",
+      "name": "Square metal tower base platform",
+      "y_hint": [
+        2500,
+        2720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_green_east",
+      "name": "Green tank assembled facing east",
+      "y_hint": [
+        2700,
+        2950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_green_west",
+      "name": "Green tank assembled facing west",
+      "y_hint": [
+        2700,
+        2950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_green_south",
+      "name": "Green tank top-down facing south",
+      "y_hint": [
+        2750,
+        3000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_green_north",
+      "name": "Green tank top-down facing north",
+      "y_hint": [
+        2750,
+        3000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_green_hull",
+      "name": "Green tank hull without turret",
+      "y_hint": [
+        2900,
+        3070
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_green_turret",
+      "name": "Green tank turret modular set",
+      "y_hint": [
+        2900,
+        3070
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.tank_green_chassis_side",
+      "name": "Green tank side chassis modular",
+      "y_hint": [
+        3072,
+        3250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_green_turret_set_b",
+      "name": "Green tank turret set (band 4)",
+      "y_hint": [
+        3072,
+        3250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.tank_tan_east",
+      "name": "Tan/brown tank assembled facing east",
+      "y_hint": [
+        3250,
+        3500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_tan_west",
+      "name": "Tan/brown tank assembled facing west",
+      "y_hint": [
+        3250,
+        3500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_tan_south",
+      "name": "Tan/brown tank top-down facing south",
+      "y_hint": [
+        3300,
+        3550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_tan_north",
+      "name": "Tan/brown tank top-down facing north",
+      "y_hint": [
+        3300,
+        3550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_tan_hull",
+      "name": "Tan tank hull modular",
+      "y_hint": [
+        3500,
+        3750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tank_tan_turret",
+      "name": "Tan tank turret modular set",
+      "y_hint": [
+        3500,
+        3840
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.tank_tan_chassis_side",
+      "name": "Tan tank side chassis",
+      "y_hint": [
+        3650,
+        3840
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.helicopter_side_complete",
+      "name": "Helicopter side profile with rotors",
+      "y_hint": [
+        3840,
+        4100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.helicopter_side_body",
+      "name": "Helicopter side body no main rotor",
+      "y_hint": [
+        3840,
+        4100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.helicopter_top_with_rotor",
+      "name": "Helicopter top-down with rotor",
+      "y_hint": [
+        4050,
+        4300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.helicopter_top_body",
+      "name": "Helicopter top-down body no rotor",
+      "y_hint": [
+        4050,
+        4300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.helicopter_bottom_body",
+      "name": "Helicopter underside body",
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.helicopter_bottom_with_rotor",
+      "name": "Helicopter underside with rotor",
+      "y_hint": [
+        4250,
+        4500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.helicopter_main_rotor",
+      "name": "Detached main rotor blades",
+      "y_hint": [
+        4100,
+        4570
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.helicopter_tail_rotor",
+      "name": "Detached tail rotor bits",
+      "y_hint": [
+        4150,
+        4570
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.mine",
+      "name": "Land mine prop variants",
+      "y_hint": [
+        4400,
+        4570
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.wall_corner_internal",
+      "name": "Concrete wall internal corners",
+      "y_hint": [
+        40,
+        240
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.wall_pillar",
+      "name": "Concrete wall pillar variants",
+      "y_hint": [
+        40,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.watchtower_full",
+      "name": "Complete watchtower assembly",
+      "y_hint": [
+        200,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.watchtower_empty",
+      "name": "Watchtower empty frame",
+      "y_hint": [
+        220,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.watchtower_entrance",
+      "name": "Watchtower ground entrance",
+      "y_hint": [
+        350,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.watchtower_roof_fence",
+      "name": "Watchtower roof with fence",
+      "y_hint": [
+        200,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.bunker_base_props",
+      "name": "Bunker base antennas pipes trapdoors",
+      "y_hint": [
+        300,
+        520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.hangar_full",
+      "name": "Complete hangar stamp",
+      "y_hint": [
+        850,
+        1200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.hangar_modular_exterior",
+      "name": "Hangar modular exterior bands",
+      "y_hint": [
+        900,
+        1250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.hangar_modular_interior",
+      "name": "Hangar modular interior bands",
+      "y_hint": [
+        900,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.hangar_wall",
+      "name": "Hangar end wall",
+      "y_hint": [
+        950,
+        1250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.dormitory_fence_1",
+      "name": "Dormitory fence kit style 1",
+      "y_hint": [
+        1200,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.dormitory_fence_2",
+      "name": "Dormitory fence kit style 2",
+      "y_hint": [
+        1220,
+        1480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.dormitory_signs",
+      "name": "Dormitory number signs 0-10 + ruined",
+      "y_hint": [
+        1150,
+        1400
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.dormitory_entrances",
+      "name": "Dormitory single/double door modules",
+      "y_hint": [
+        1180,
+        1450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.tent_table_set",
+      "name": "Tent table with chair and papers",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.shelf_empty",
+      "name": "Empty metal supply shelves",
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.sandbag_single",
+      "name": "Single sandbag horizontal/vertical",
+      "y_hint": [
+        1900,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.tire_single",
+      "name": "Single tire black/brown/grey",
+      "y_hint": [
+        1920,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.target_variants",
+      "name": "Range target variants including downed",
+      "y_hint": [
+        1900,
+        2120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.bunk_stairs",
+      "name": "Bunk bed side stairs",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.command_console",
+      "name": "Command console with monitors",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.server_rack",
+      "name": "Server rack / computer cabinet",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.crate_pallet",
+      "name": "Wooden crates and pallets",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.military.barrel",
+      "name": "Metal supply barrel",
+      "y_hint": [
+        1880,
+        2100
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.military.flagpole",
+      "name": "Flagpole with red/white flag",
+      "y_hint": [
+        1300,
+        1500
+      ],
+      "multi_tile": false
+    }
+  ]
+}

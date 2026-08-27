@@ -8,7 +8,7 @@
     "multi": 1056,
     "unmatched": 697
   },
-  "vision_linked": 5905,
+  "vision_linked": 6224,
   "aligned_16_all": true,
   "top_sizes": [
     [
@@ -343,5 +343,15 @@
   "vision_link_threshold": "strict_object_tokens_v2",
   "matched_exact": 5527,
   "match_rate": 0.888,
-  "content_bbox_all": 6224
+  "content_bbox_all": 6224,
+  "link_confidence": {
+    "high": 4696,
+    "medium": 300,
+    "vision": 1228
+  },
+  "link_source": {
+    "spatial_filename": 4996,
+    "vision": 1228
+  },
+  "me_ids_with_singles": 1295
 }

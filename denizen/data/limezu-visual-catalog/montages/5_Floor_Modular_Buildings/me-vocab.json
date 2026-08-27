@@ -1,0 +1,1256 @@
+{
+  "sheet": "5_Floor_Modular_Buildings",
+  "labels": [
+    {
+      "id": "me.modular_floors.example_stack_red",
+      "name": "Completed example multi-story red brick stack",
+      "y_hint": [
+        0,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_roof_flat",
+      "name": "Red-kit flat roof edges and corners",
+      "y_hint": [
+        40,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_roof_access",
+      "name": "Red-kit rooftop access unit with dish",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_mid_solid",
+      "name": "Red brick mid-floor solid wall",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_mid_windows",
+      "name": "Red brick mid-floor window variants",
+      "y_hint": [
+        160,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_mid_balcony",
+      "name": "Red brick mid-floor with balcony railing",
+      "y_hint": [
+        200,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_ground_glass",
+      "name": "Red ground glass storefront segments",
+      "y_hint": [
+        320,
+        500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_ground_doors",
+      "name": "Red ground single/double glass doors",
+      "y_hint": [
+        320,
+        520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_shop_sushi",
+      "name": "Red sushi/seafood shopfront with fish signs",
+      "y_hint": [
+        380,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_shop_florist",
+      "name": "Red florist/rose shopfront",
+      "y_hint": [
+        380,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_shop_bakery",
+      "name": "Red bakery/cafe shopfront croissant",
+      "y_hint": [
+        380,
+        560
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_signage_icons",
+      "name": "Red-kit decorative shop icons",
+      "y_hint": [
+        450,
+        580
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.red_building_shadows",
+      "name": "Red section building shadow tiles",
+      "y_hint": [
+        520,
+        700
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.blue_roof_flat",
+      "name": "Blue-grey kit flat roof edges",
+      "y_hint": [
+        580,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_roof_access",
+      "name": "Blue-grey rooftop access unit",
+      "y_hint": [
+        768,
+        920
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_mid_solid",
+      "name": "Blue-grey mid-floor solid wall",
+      "y_hint": [
+        850,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_mid_windows",
+      "name": "Blue-grey mid-floor window variants",
+      "y_hint": [
+        850,
+        1100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_mid_balcony",
+      "name": "Blue-grey mid-floor balcony",
+      "y_hint": [
+        900,
+        1120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_ground_glass",
+      "name": "Blue-grey ground glass storefront",
+      "y_hint": [
+        1050,
+        1280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_ground_doors",
+      "name": "Blue-grey ground entrance doors",
+      "y_hint": [
+        1050,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_shop_sushi",
+      "name": "Blue sushi/seafood shopfront",
+      "y_hint": [
+        1150,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_shop_florist",
+      "name": "Blue florist/rose shopfront",
+      "y_hint": [
+        1150,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_shop_bakery",
+      "name": "Blue bakery/cafe shopfront",
+      "y_hint": [
+        1150,
+        1380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_signage_icons",
+      "name": "Blue-kit decorative shop icons",
+      "y_hint": [
+        1250,
+        1420
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.blue_building_shadows",
+      "name": "Blue section building shadows",
+      "y_hint": [
+        1350,
+        1520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.dark_roof_flat",
+      "name": "Dark/black kit flat roof edges",
+      "y_hint": [
+        1450,
+        1536
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_roof_access",
+      "name": "Dark kit rooftop access unit",
+      "y_hint": [
+        1536,
+        1700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_mid_solid",
+      "name": "Dark mid-floor solid wall",
+      "y_hint": [
+        1600,
+        1800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_mid_windows",
+      "name": "Dark mid-floor window variants",
+      "y_hint": [
+        1600,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_mid_balcony",
+      "name": "Dark mid-floor balcony",
+      "y_hint": [
+        1650,
+        1880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_ground_glass",
+      "name": "Dark ground glass storefront",
+      "y_hint": [
+        1750,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_ground_doors",
+      "name": "Dark ground entrance doors",
+      "y_hint": [
+        1750,
+        2020
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_shop_sushi",
+      "name": "Dark sushi/seafood shopfront",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_shop_florist",
+      "name": "Dark florist shopfront",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_shop_bakery",
+      "name": "Dark bakery shopfront",
+      "y_hint": [
+        1850,
+        2100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_extra_signs",
+      "name": "Extra bottom signs pizza burger yogurt ice cream",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.dark_building_shadows",
+      "name": "Dark section building shadows",
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.sample_building_teal",
+      "name": "Sample three-story teal-trim brick building",
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.roof_tiled_grey",
+      "name": "Grey tiled flat roof sections",
+      "y_hint": [
+        1550,
+        1720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.roof_slanted_red",
+      "name": "Slanted red-tile roof with stone pillars",
+      "y_hint": [
+        1650,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.roof_utility_orange",
+      "name": "Orange rooftop utility shed green roof",
+      "y_hint": [
+        1650,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.roof_props_hvac",
+      "name": "Rooftop HVAC pipes vents AC units",
+      "y_hint": [
+        1680,
+        1900
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.roof_props_green_box",
+      "name": "Green rooftop electrical boxes",
+      "y_hint": [
+        1700,
+        1900
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.atm_standalone",
+      "name": "Standalone ATM machine",
+      "y_hint": [
+        1700,
+        1900
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.mid_multi_window_band",
+      "name": "Long red-brick multi-window band",
+      "y_hint": [
+        1750,
+        1950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.mid_balcony_band",
+      "name": "Balcony / large window mid band",
+      "y_hint": [
+        1800,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.mid_pillar_facade",
+      "name": "Teal pillar architectural facade band",
+      "y_hint": [
+        1850,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.mid_arched_window",
+      "name": "Arched window brick segment",
+      "y_hint": [
+        1880,
+        2080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.ground_condo_glass_door",
+      "name": "Condo ground double glass door",
+      "y_hint": [
+        1950,
+        2150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.ground_condo_atm",
+      "name": "Condo ground with built-in ATM",
+      "y_hint": [
+        1980,
+        2180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.ground_condo_arch",
+      "name": "Condo ground arched stone doorway",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.ground_condo_wood_door",
+      "name": "Condo ground wooden door + windows",
+      "y_hint": [
+        2020,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_plume",
+      "name": "Plume flower shopfront",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_closed",
+      "name": "CLOSED papered shopfront",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_groove",
+      "name": "Groove shopfront",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_coolies",
+      "name": "Coolies shopfront",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.bakery_full",
+      "name": "Bakery storefront with bread/cheese sign",
+      "y_hint": [
+        2304,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.bakery_sign",
+      "name": "Bakery bread and cheese signs",
+      "y_hint": [
+        2304,
+        2500
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.butchery_full",
+      "name": "Butchery storefront with meat/cleavers",
+      "y_hint": [
+        2304,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.butchery_sign",
+      "name": "Butchery meat and cleaver sign",
+      "y_hint": [
+        2304,
+        2520
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.bait_shop_full",
+      "name": "Bait shop storefront with fish hook sign",
+      "y_hint": [
+        2350,
+        2650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.bait_shop_sign",
+      "name": "Bait shop fish signs pink/gold/red",
+      "y_hint": [
+        2350,
+        2600
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.ice_cream_full",
+      "name": "Ice cream shop with striped awning",
+      "y_hint": [
+        2400,
+        2700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.ice_cream_sign",
+      "name": "Ice cream cone roof sign",
+      "y_hint": [
+        2400,
+        2650
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.ice_cream_cafe_set",
+      "name": "Outdoor cafe table chairs menu boards",
+      "y_hint": [
+        2450,
+        2700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.fitness_full",
+      "name": "Fitness gym storefront with dumbbell sign",
+      "y_hint": [
+        2500,
+        2780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.fitness_sign",
+      "name": "FITNESS dumbbell signs",
+      "y_hint": [
+        2500,
+        2750
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.laundry_clotheslines",
+      "name": "Clotheslines with hanging laundry",
+      "y_hint": [
+        2550,
+        2800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.building_shadows_b3",
+      "name": "Building shadow tiles band 3",
+      "y_hint": [
+        2600,
+        2850
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.industrial_walls",
+      "name": "Grey industrial wall panels and pillars",
+      "y_hint": [
+        2650,
+        2900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.metal_grates",
+      "name": "Industrial metal grate / fence tiles",
+      "y_hint": [
+        2700,
+        2950
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.roof_utility_cluster",
+      "name": "Roof utility shed HVAC pipes ATM cluster",
+      "y_hint": [
+        2680,
+        2950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.mid_olive_window_bands",
+      "name": "Olive/grey military-style window facade bands",
+      "y_hint": [
+        2850,
+        3070
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.facade_triple_window",
+      "name": "Dark facade with triple-pane window",
+      "y_hint": [
+        3072,
+        3250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.facade_arched_window",
+      "name": "Dark facade arched window",
+      "y_hint": [
+        3072,
+        3250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.facade_residential_door",
+      "name": "Dark facade residential door + windows",
+      "y_hint": [
+        3072,
+        3280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_plume_b4",
+      "name": "Plume boutique storefront",
+      "y_hint": [
+        3200,
+        3400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_closed_generic",
+      "name": "Closed dark-interior shopfront",
+      "y_hint": [
+        3200,
+        3400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_groove_b4",
+      "name": "Groove boutique storefront",
+      "y_hint": [
+        3200,
+        3400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_coolies_b4",
+      "name": "Coolies boutique storefront",
+      "y_hint": [
+        3200,
+        3400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_closed_shutter",
+      "name": "Closed shop with security shutter",
+      "y_hint": [
+        3250,
+        3450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_bim_bum",
+      "name": "Bin Bun / Bim Bum costume shop",
+      "y_hint": [
+        3250,
+        3450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_danger",
+      "name": "DANGER science shopfront",
+      "y_hint": [
+        3250,
+        3450
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.music_piano",
+      "name": "Music store piano window",
+      "y_hint": [
+        3300,
+        3500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.music_guitars",
+      "name": "Music store guitars window",
+      "y_hint": [
+        3300,
+        3500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.music_store_sign",
+      "name": "Circular MUSIC STORE vinyl sign",
+      "y_hint": [
+        3300,
+        3480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.shop_empty_interior",
+      "name": "Empty grey shopfront module",
+      "y_hint": [
+        3350,
+        3520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.bakery_variants_b4",
+      "name": "Bakery full/base/sign variants",
+      "y_hint": [
+        3450,
+        3700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.butchery_variants_b4",
+      "name": "Butchery full/base/sign variants",
+      "y_hint": [
+        3480,
+        3720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.bait_shop_variants_b4",
+      "name": "Bait shop full/base/sign variants",
+      "y_hint": [
+        3500,
+        3750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.ice_cream_variants_b4",
+      "name": "Ice cream full/base/sign variants",
+      "y_hint": [
+        3520,
+        3780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.fitness_variants_b4",
+      "name": "Fitness full/base/sign variants",
+      "y_hint": [
+        3550,
+        3800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.brick_wall_segments",
+      "name": "Dark brick wall filler segments",
+      "y_hint": [
+        3600,
+        3800
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.laundry_b4",
+      "name": "Laundry clothesline variants",
+      "y_hint": [
+        3650,
+        3820
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.building_shadows_b4",
+      "name": "Building shadows band 4",
+      "y_hint": [
+        3680,
+        3840
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.ice_cream_sign_small",
+      "name": "Small ICE CREAM text sign",
+      "y_hint": [
+        3840,
+        3950
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.cafe_set_b5",
+      "name": "Cafe table chairs menu boards",
+      "y_hint": [
+        3840,
+        3980
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.entrance_glass_doors",
+      "name": "Double glass door entrance with flyers",
+      "y_hint": [
+        3840,
+        4000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.metal_fence_mesh",
+      "name": "Chain-link / metal mesh fence panels",
+      "y_hint": [
+        3880,
+        4020
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.billboard_hungry",
+      "name": "Billboard are you HUNGRY burger",
+      "y_hint": [
+        3950,
+        4080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.billboard_empty",
+      "name": "Empty billboard frame",
+      "y_hint": [
+        3950,
+        4080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.billboard_pet_wash",
+      "name": "Billboard pet wash cat",
+      "y_hint": [
+        3950,
+        4080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.billboard_pizza",
+      "name": "Billboard PIZZA slice",
+      "y_hint": [
+        3950,
+        4080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.billboard_taxi",
+      "name": "Billboard yellow taxi/car",
+      "y_hint": [
+        3950,
+        4080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.billboard_your_ad",
+      "name": "Billboard YOUR AD HERE",
+      "y_hint": [
+        3950,
+        4080
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.gun_store_orange",
+      "name": "Gun store orange/red facade with sign",
+      "y_hint": [
+        4000,
+        4100
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.gun_store_blue",
+      "name": "Gun store blue facade with sign",
+      "y_hint": [
+        4040,
+        4120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.gun_store_grey",
+      "name": "Gun store grey/dark-green facade with sign",
+      "y_hint": [
+        4080,
+        4144
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.gun_store_sign",
+      "name": "GUN STORE sign with handgun and crosshair",
+      "y_hint": [
+        4000,
+        4140
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.gun_store_base",
+      "name": "Gun store facade without sign",
+      "y_hint": [
+        4000,
+        4144
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_roof_modular",
+      "name": "Red-kit roof modular edge set",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_roof_modular",
+      "name": "Blue-kit roof modular edge set",
+      "y_hint": [
+        768,
+        950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_roof_modular",
+      "name": "Dark-kit roof modular edge set",
+      "y_hint": [
+        1536,
+        1720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_mid_modular",
+      "name": "Red mid-floor modular fillers",
+      "y_hint": [
+        160,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_mid_modular",
+      "name": "Blue mid-floor modular fillers",
+      "y_hint": [
+        850,
+        1120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_mid_modular",
+      "name": "Dark mid-floor modular fillers",
+      "y_hint": [
+        1600,
+        1880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.red_condo_ground",
+      "name": "Red condo ground entrance set",
+      "y_hint": [
+        320,
+        540
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.blue_condo_ground",
+      "name": "Blue condo ground entrance set",
+      "y_hint": [
+        1050,
+        1320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.dark_condo_ground",
+      "name": "Dark condo ground entrance set",
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_generic_open",
+      "name": "Generic OPEN neon shopfronts",
+      "y_hint": [
+        400,
+        580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_generic_blue",
+      "name": "Generic shopfronts blue kit",
+      "y_hint": [
+        1180,
+        1420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_generic_dark",
+      "name": "Generic shopfronts dark kit",
+      "y_hint": [
+        1880,
+        2150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.pharmacy_sign",
+      "name": "Pharmacy green cross sign",
+      "y_hint": [
+        2080,
+        2250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.pink_yellow_misc_signs",
+      "name": "Pink and yellow miscellaneous shop signs",
+      "y_hint": [
+        2100,
+        2260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.bakery_modular",
+      "name": "Bakery modular wall slices",
+      "y_hint": [
+        2320,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.butchery_modular",
+      "name": "Butchery modular wall slices",
+      "y_hint": [
+        2320,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.bait_modular",
+      "name": "Bait shop modular wall slices",
+      "y_hint": [
+        2350,
+        2650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.ice_cream_modular",
+      "name": "Ice cream modular wall slices",
+      "y_hint": [
+        2400,
+        2720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.gym_modular",
+      "name": "Gym/fitness modular wall slices",
+      "y_hint": [
+        2500,
+        2780
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.music_modular",
+      "name": "Music store modular slices",
+      "y_hint": [
+        3300,
+        3520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.gun_store_modular",
+      "name": "Gun store modular slices",
+      "y_hint": [
+        4000,
+        4144
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.sliding_door_caution",
+      "name": "Modern sliding glass doors yellow caution strip",
+      "y_hint": [
+        1950,
+        2150
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.garage_metal_door",
+      "name": "Large grey metal garage/sliding door",
+      "y_hint": [
+        2700,
+        2950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.roof_props_numbered",
+      "name": "Numbered roof prop set 1-16",
+      "y_hint": [
+        2680,
+        2950
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.modular_floors.middle_floor_numbered",
+      "name": "Numbered middle floor stamps 1-18",
+      "y_hint": [
+        1700,
+        2000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.roof_numbered",
+      "name": "Numbered roof stamps 1-11",
+      "y_hint": [
+        1550,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_empty_brick",
+      "name": "Empty brick shopfront interior",
+      "y_hint": [
+        3350,
+        3550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_bricked_closed",
+      "name": "Bricked-up CLOSED storefront",
+      "y_hint": [
+        3250,
+        3480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.modular_floors.shop_security_gate",
+      "name": "Metal roll-up security gate shopfront",
+      "y_hint": [
+        3280,
+        3500
+      ],
+      "multi_tile": true
+    }
+  ]
+}

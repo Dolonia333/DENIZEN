@@ -1,0 +1,27 @@
+{
+  "sheet": "8_Worksite",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.worksite.water_puddle",
+    "2": "me.worksite.water_puddle",
+    "3": "me.worksite.fence_gate_keypad",
+    "4": "me.worksite.fence_gate_keypad",
+    "5": "me.worksite.dirt_pile_small",
+    "6": "me.worksite.site_entrance",
+    "7": "me.worksite.dirt_pile_large",
+    "8": "me.worksite.dirt_pile_large",
+    "9": "me.worksite.dirt_pile_small",
+    "10": "me.worksite.bucket",
+    "11": "me.worksite.bucket",
+    "12": "me.worksite.hard_hat",
+    "13": "me.worksite.toolbox_closed",
+    "14": "me.worksite.ground_patch",
+    "15": "me.worksite.dirt_pile_small",
+    "16": "me.worksite.hard_hat",
+    "17": "me.worksite.toolbox_open",
+    "18": "me.worksite.wood_scraps",
+    "19": "me.worksite.storage_bin",
+    "20": "me.worksite.fence_panel_hardhat",
+    "21": "me.worksite.fence_panel_hardhat"
+  }
+}

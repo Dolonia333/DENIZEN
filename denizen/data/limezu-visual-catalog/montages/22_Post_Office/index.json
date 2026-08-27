@@ -1,0 +1,97 @@
+{
+  "sheet": "22_Post_Office",
+  "cells": {
+    "1": {
+      "n": 1,
+      "id": "exs.22_post_office.post_office_building_1",
+      "basename": "22_Post_Office_16x16_Building_1.png",
+      "path": "assets/limezu/ext/singles/22_post_office/22_Post_Office_16x16_Building_1.png",
+      "w": 128,
+      "h": 208,
+      "sheet_x": 256,
+      "sheet_y": 64,
+      "match_status": "unique",
+      "prior_me_id": null,
+      "prior_score": null,
+      "mosaic": 0
+    },
+    "2": {
+      "n": 2,
+      "id": "exs.22_post_office.post_office_building_2",
+      "basename": "22_Post_Office_16x16_Building_2.png",
+      "path": "assets/limezu/ext/singles/22_post_office/22_Post_Office_16x16_Building_2.png",
+      "w": 128,
+      "h": 208,
+      "sheet_x": 384,
+      "sheet_y": 64,
+      "match_status": "unique",
+      "prior_me_id": null,
+      "prior_score": null,
+      "mosaic": 0
+    },
+    "3": {
+      "n": 3,
+      "id": "exs.22_post_office.post_office_multiple_packages_1",
+      "basename": "22_Post_Office_16x16_Multiple_Packages_1.png",
+      "path": "assets/limezu/ext/singles/22_post_office/22_Post_Office_16x16_Multiple_Packages_1.png",
+      "w": 32,
+      "h": 32,
+      "sheet_x": 80,
+      "sheet_y": 208,
+      "match_status": "unique",
+      "prior_me_id": null,
+      "prior_score": null,
+      "mosaic": 0
+    },
+    "4": {
+      "n": 4,
+      "id": "exs.22_post_office.post_office_multiple_packages_2",
+      "basename": "22_Post_Office_16x16_Multiple_Packages_2.png",
+      "path": "assets/limezu/ext/singles/22_post_office/22_Post_Office_16x16_Multiple_Packages_2.png",
+      "w": 32,
+      "h": 32,
+      "sheet_x": 80,
+      "sheet_y": 240,
+      "match_status": "unique",
+      "prior_me_id": null,
+      "prior_score": null,
+      "mosaic": 0
+    },
+    "5": {
+      "n": 5,
+      "id": "exs.22_post_office.post_office_building_3",
+      "basename": "22_Post_Office_16x16_Building_3.png",
+      "path": "assets/limezu/ext/singles/22_post_office/22_Post_Office_16x16_Building_3.png",
+      "w": 128,
+      "h": 208,
+      "sheet_x": 256,
+      "sheet_y": 272,
+      "match_status": "unique",
+      "prior_me_id": null,
+      "prior_score": null,
+      "mosaic": 0
+    },
+    "6": {
+      "n": 6,
+      "id": "exs.22_post_office.post_office_building_4",
+      "basename": "22_Post_Office_16x16_Building_4.png",
+      "path": "assets/limezu/ext/singles/22_post_office/22_Post_Office_16x16_Building_4.png",
+      "w": 128,
+      "h": 208,
+      "sheet_x": 384,
+      "sheet_y": 272,
+      "match_status": "unique",
+      "prior_me_id": null,
+      "prior_score": null,
+      "mosaic": 0
+    }
+  },
+  "mosaics": [
+    {
+      "index": 0,
+      "path": "data/limezu-visual-catalog/montages/22_Post_Office/mosaic_00.png",
+      "start": 1,
+      "count": 6
+    }
+  ]
+}

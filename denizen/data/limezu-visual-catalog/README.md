@@ -8,6 +8,7 @@ Vision-labeled inventory of **Modern Exteriors** theme contact sheets (24/24) fo
 |------|----------|------:|
 | Theme sheets labeled (`ext/themes/*.png`) | **24 / 24** | **2749** semantic objects |
 | Singles pixel-perfect (`ext/singles/`) | **6224 / 6224** inventoried | **5527** exact sheet placements |
+| Singles → `me.*` links | **6224 / 6224** | spatial/filename + montage vision |
 | Interiors (`themes/*.png`) | 0 / ~26 | pending |
 
 Official LimeZu **Singles** are the ground-truth cutouts (do not re-slice contact sheets). Vision labels describe semantic stamps on the sheet; Singles are the placeable PNG units.
@@ -26,6 +27,14 @@ python3 scripts/catalog-limezu-ext-singles-pixelperfect.py
 python3 scripts/catalog-limezu-ext-singles-pixelperfect.py --theme 8_Worksite   # one theme
 ```
 
+Harden Singles → `me.*` links (spatial + optional montage vision overrides):
+
+```bash
+python3 scripts/build-limezu-ext-singles-montages.py --only-weak
+# after writing montages/<sheet>/vision-links.json from vision pass:
+python3 scripts/link-limezu-singles-to-me.py
+```
+
 ## Layout
 
 ```
@@ -36,6 +45,12 @@ data/limezu-visual-catalog/
   registry-summary.json
   ext-singles-pixelperfect.jsonl      # one row per Single PNG
   ext-singles-pixelperfect-summary.json
+  ext-singles-link-report.json
+  me-to-singles.json                  # reverse index me_id → [singles…]
+  montages-manifest.json
+  montages/<SheetName>/
+    index.json / me-vocab.json / vision-links.json
+    mosaic_*.png                      # regenerable, gitignored
   sheets/<SheetName>/
     meta.json
     labels.json               # vision labels (tracked)
@@ -85,15 +100,14 @@ data/limezu-visual-catalog/
   "content_bbox": [1, 0, 15, 16],
   "sheet_x": 112, "sheet_y": 48,
   "match_status": "unique",
-  "vision_link": { "me_id": "me.worksite.bucket", "score": 5.5 }
-}
+  "vision_link": { "me_id": "me.worksite.bucket", "score": 5.5, "confidence": "high", "source": "spatial_filename" }
 ```
 
 - `match_status`: `unique` | `multi` (same cutout appears more than once on the contact sheet) | `unmatched` (Single exists in pack but is not an exact RGB stamp on that theme sheet — common for color variants)
 - All canvases are 16px-aligned; `content_bbox` is the opaque footprint inside the canvas
+- `vision_link.source`: `spatial_filename` | `vision` (montage override). Confidence: `high` | `medium` | `weak` | `vision`
 
 ## Next
 
-1. Montage vision pass to harden weak `vision_link`s (filename heuristics only today)
-2. Label interior theme sheets the same way
-3. Wire `exs.*` registry into `compile-city-structure` / district recipes / atlases
+1. Label interior theme sheets the same way
+2. Wire `exs.*` + `me-to-singles` into `compile-city-structure` / district recipes / atlases

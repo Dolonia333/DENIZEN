@@ -1,0 +1,275 @@
+{
+  "sheet": "18_Fire_Station",
+  "labels": [
+    {
+      "id": "me.fire_station.building_main",
+      "name": "Fire station main building",
+      "y_hint": [
+        0,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_rear_left",
+      "name": "Garage bay with truck rear left",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_rear_right",
+      "name": "Garage bay with truck rear right",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_front_left",
+      "name": "Garage bay with truck front left",
+      "y_hint": [
+        260,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.garage_bay_truck_front_right",
+      "name": "Garage bay with truck front right",
+      "y_hint": [
+        260,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_east",
+      "name": "Fire rescue truck facing east",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_west",
+      "name": "Fire rescue truck facing west",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_south",
+      "name": "Fire rescue truck facing south",
+      "y_hint": [
+        0,
+        160
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_north",
+      "name": "Fire rescue truck facing north",
+      "y_hint": [
+        40,
+        200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_ladder_east",
+      "name": "Ladder truck east extended",
+      "y_hint": [
+        120,
+        260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_ladder_west",
+      "name": "Ladder truck west extended",
+      "y_hint": [
+        140,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_ladder_south",
+      "name": "Ladder truck south extended",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_ladder_north",
+      "name": "Ladder truck north extended",
+      "y_hint": [
+        140,
+        300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_open_east",
+      "name": "Fire truck compartments open east",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_open_west",
+      "name": "Fire truck compartments open west",
+      "y_hint": [
+        260,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_open_south",
+      "name": "Fire truck open compartments south",
+      "y_hint": [
+        240,
+        400
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.truck_open_north",
+      "name": "Fire truck open compartments north",
+      "y_hint": [
+        260,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.hydrant",
+      "name": "Fire hydrant",
+      "y_hint": [
+        400,
+        470
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.hydrant_hose_short",
+      "name": "Hydrant with short hose",
+      "y_hint": [
+        400,
+        470
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.hydrant_hose_long",
+      "name": "Hydrant with long winding hose",
+      "y_hint": [
+        400,
+        480
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.fire_station.hose_horizontal",
+      "name": "Hose segment horizontal",
+      "y_hint": [
+        410,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.hose_vertical",
+      "name": "Hose segment vertical",
+      "y_hint": [
+        410,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.hose_corner",
+      "name": "Hose corner bend",
+      "y_hint": [
+        410,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.hose_mouth",
+      "name": "Hose nozzle / mouth",
+      "y_hint": [
+        420,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.hose_loop",
+      "name": "Hose coiled loop",
+      "y_hint": [
+        410,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.water_puddle_small",
+      "name": "Water splash puddle small",
+      "y_hint": [
+        410,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.water_puddle_medium",
+      "name": "Water splash puddle medium",
+      "y_hint": [
+        410,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.water_puddle_large",
+      "name": "Water splash puddle large",
+      "y_hint": [
+        410,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.ground_marker",
+      "name": "White square ground marker",
+      "y_hint": [
+        420,
+        480
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.fire_station.extinguisher_icon_prop",
+      "name": "Fire extinguisher roof icon prop",
+      "y_hint": [
+        40,
+        120
+      ],
+      "multi_tile": false
+    }
+  ]
+}

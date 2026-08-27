@@ -1,0 +1,11 @@
+{
+  "sheet": "17_Garden",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.garden.gate_iron",
+    "2": "me.garden.pot_empty",
+    "3": "me.garden.gate_iron",
+    "4": "me.garden.topiary_elephant",
+    "5": "me.garden.tool_scissors"
+  }
+}

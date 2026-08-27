@@ -1,0 +1,19 @@
+{
+  "sheet": "12_Hotel_and_Hospital",
+  "labeled_by": "vision_montage",
+  "links": {
+    "1": "me.hotel_hospital.hotel_sign_horizontal",
+    "2": "me.hotel_hospital.hotel_sign_vertical",
+    "3": "me.hotel_hospital.hotel_roof_band",
+    "4": "me.hotel_hospital.hotel_ground_band",
+    "5": "me.hotel_hospital.hotel_mid_band",
+    "6": "me.hotel_hospital.hotel_full",
+    "7": "me.hotel_hospital.hospital_roof_helipad",
+    "8": "me.hotel_hospital.hospital_roof_utility",
+    "9": "me.hotel_hospital.hospital_entrance",
+    "10": "me.hotel_hospital.hospital_mid_windows",
+    "11": "me.hotel_hospital.hospital_full",
+    "12": "me.hotel_hospital.hotel_full",
+    "13": "me.hotel_hospital.hotel_roof_band"
+  }
+}

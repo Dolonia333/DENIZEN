@@ -1,0 +1,1148 @@
+{
+  "sheet": "20_Subway_and_Train_Station",
+  "labels": [
+    {
+      "id": "me.subway.stairs_complete_1",
+      "name": "Station stairwell complete 1",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.stairs_complete_2",
+      "name": "Station stairwell complete 2",
+      "y_hint": [
+        0,
+        180
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.stairs_complete_3",
+      "name": "Station stairwell complete 3",
+      "y_hint": [
+        40,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.stairs_complete_4",
+      "name": "Station stairwell complete 4",
+      "y_hint": [
+        40,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.stairs_modular_set",
+      "name": "Stairs modular segments + structure",
+      "y_hint": [
+        0,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.pillar_big",
+      "name": "Large cylindrical station pillar",
+      "y_hint": [
+        80,
+        220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.pillar_small",
+      "name": "Small station pillar",
+      "y_hint": [
+        100,
+        220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.floor_white_tile",
+      "name": "White station floor tiles",
+      "y_hint": [
+        0,
+        120
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.floor_lilac_tile",
+      "name": "Lilac/purple accent floor tiles",
+      "y_hint": [
+        40,
+        160
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.floor_spot_stains",
+      "name": "Dirty floor spot tiles",
+      "y_hint": [
+        60,
+        180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.platform_edge_yellow",
+      "name": "Yellow tactile platform edge path",
+      "y_hint": [
+        100,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.elevator_closed",
+      "name": "Elevator doors closed",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.elevator_opened",
+      "name": "Elevator doors opened",
+      "y_hint": [
+        120,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.elevator_buttons",
+      "name": "Elevator call buttons",
+      "y_hint": [
+        140,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.door_green",
+      "name": "Green station service door",
+      "y_hint": [
+        150,
+        280
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.door_black_double",
+      "name": "Black double utility door",
+      "y_hint": [
+        150,
+        280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.turnstile_closed",
+      "name": "Ticket turnstile closed",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.turnstile_opened",
+      "name": "Ticket turnstile opened",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.drink_machine",
+      "name": "Drink vending machine",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.coffee_machine",
+      "name": "Coffee vending machine",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.map_monitor",
+      "name": "Subway map display",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.monitor_blank",
+      "name": "Blank info monitor",
+      "y_hint": [
+        180,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.sign_arrow_up",
+      "name": "Green arrow up sign",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.sign_arrow_down",
+      "name": "Green arrow down sign",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.sign_arrow_left",
+      "name": "Green arrow left sign",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.sign_arrow_right",
+      "name": "Green arrow right sign",
+      "y_hint": [
+        200,
+        300
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.sign_stop",
+      "name": "Stop / no-entry sign",
+      "y_hint": [
+        200,
+        320
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.sos_box",
+      "name": "Emergency SOS call box",
+      "y_hint": [
+        220,
+        340
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.led_light",
+      "name": "LED strip light on/off",
+      "y_hint": [
+        100,
+        200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.bench_green",
+      "name": "Green platform bench",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.bench_grey",
+      "name": "Grey platform bench",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.bench_black",
+      "name": "Black platform bench",
+      "y_hint": [
+        240,
+        380
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.wait_seats_orange",
+      "name": "Orange waiting seats row",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.wait_seats_white",
+      "name": "White waiting seats row",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.wait_seats_black",
+      "name": "Black waiting seats row",
+      "y_hint": [
+        280,
+        420
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.plant_vase",
+      "name": "Potted station plant",
+      "y_hint": [
+        260,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.railing_generic",
+      "name": "Metal station railing",
+      "y_hint": [
+        80,
+        250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.locker_small",
+      "name": "Small black locker",
+      "y_hint": [
+        250,
+        360
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.train_blue_exterior",
+      "name": "Blue/white subway exterior L/M/R",
+      "y_hint": [
+        450,
+        700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_blue_interior",
+      "name": "Blue/white subway interior L/M/R",
+      "y_hint": [
+        520,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_blue_seats",
+      "name": "Blue train seat props",
+      "y_hint": [
+        560,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_blue_controls",
+      "name": "Blue train driver controls",
+      "y_hint": [
+        560,
+        760
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_orange_exterior",
+      "name": "Orange train exterior L/M/R",
+      "y_hint": [
+        768,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_orange_interior",
+      "name": "Orange train interior L/M/R",
+      "y_hint": [
+        828,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_orange_seats",
+      "name": "Orange train seat props",
+      "y_hint": [
+        848,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_orange_controls",
+      "name": "Orange train driver controls + poles",
+      "y_hint": [
+        848,
+        1050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_green_exterior",
+      "name": "Green train exterior L/M/R",
+      "y_hint": [
+        1000,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_green_interior",
+      "name": "Green train interior L/M/R",
+      "y_hint": [
+        1060,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_green_seats",
+      "name": "Green train seat props",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_green_controls",
+      "name": "Green train driver controls + poles",
+      "y_hint": [
+        1080,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_grey_exterior",
+      "name": "Grey train exterior L/M/R",
+      "y_hint": [
+        1250,
+        1530
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_grey_interior",
+      "name": "Grey train interior L/M/R",
+      "y_hint": [
+        1310,
+        1530
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_grey_seats",
+      "name": "Grey train seat props",
+      "y_hint": [
+        1330,
+        1530
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_grey_controls",
+      "name": "Grey train driver controls + poles",
+      "y_hint": [
+        1330,
+        1530
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_green_seats_red",
+      "name": "Green-train red bucket seats",
+      "y_hint": [
+        1100,
+        1300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_white_exterior",
+      "name": "White/teal high-speed exterior L/M/R",
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_white_interior",
+      "name": "White high-speed interior L/M/R",
+      "y_hint": [
+        1600,
+        1850
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_white_seats",
+      "name": "White-train orange/tan seats",
+      "y_hint": [
+        1650,
+        1900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_white_controls",
+      "name": "White-train cockpit monitors/controls",
+      "y_hint": [
+        1650,
+        1900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.train_graffiti_car",
+      "name": "Graffiti-covered grey subway car",
+      "y_hint": [
+        1700,
+        1950
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.rail_brown_modular",
+      "name": "Brown rail track modular set",
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.rail_grey_modular",
+      "name": "Grey rail track modular set",
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.rail_tube",
+      "name": "Trackside tube/pipe",
+      "y_hint": [
+        1800,
+        2000
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_angry_face",
+      "name": "Angry face graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_angry_grey_face",
+      "name": "Angry grey face graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_crown_white",
+      "name": "Big white crown graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_flower",
+      "name": "Flower graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_frog_clean",
+      "name": "Frog graffiti clean",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_frog_dirty",
+      "name": "Frog graffiti dirty",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_hew",
+      "name": "HEW tag graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_meh",
+      "name": "MEH tag graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_smile",
+      "name": "Smile graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_worm",
+      "name": "Worm graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_fns_green",
+      "name": "Green FNS writing graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_fns_grey",
+      "name": "Grey FNS writing graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_fns_red",
+      "name": "Red FNS writing graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_wolf_blue_clean",
+      "name": "Blue wolf graffiti clean",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_wolf_blue_dirty",
+      "name": "Blue wolf graffiti dirty",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_wolf_black_clean",
+      "name": "Black wolf graffiti clean",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_wolf_black_dirty",
+      "name": "Black wolf graffiti dirty",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_multicolor_drawing",
+      "name": "Multicolor drawing graffiti",
+      "y_hint": [
+        1850,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_arrow_set",
+      "name": "Arrow graffiti set 1\u201311",
+      "y_hint": [
+        1900,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_spray_set",
+      "name": "Spray blot graffiti set",
+      "y_hint": [
+        1900,
+        2150
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_writing_set",
+      "name": "Assorted writing graffiti tags",
+      "y_hint": [
+        1900,
+        2180
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.graffiti_drops_clouds",
+      "name": "Pink/green drop & cloud graffiti",
+      "y_hint": [
+        1920,
+        2200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.poster_set",
+      "name": "Station posters & TRUTH stickers",
+      "y_hint": [
+        1950,
+        2200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.crack_set",
+      "name": "Wall crack/damage decals",
+      "y_hint": [
+        1980,
+        2220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.baggage_black",
+      "name": "Black suitcase",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.baggage_brown",
+      "name": "Brown suitcase set",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.baggage_green",
+      "name": "Green suitcase",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.travel_case",
+      "name": "Travel case set",
+      "y_hint": [
+        2000,
+        2220
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.trolley_blue",
+      "name": "Blue luggage trolley",
+      "y_hint": [
+        2020,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.trolley_green",
+      "name": "Green luggage trolley",
+      "y_hint": [
+        2020,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.trolley_yellow",
+      "name": "Yellow luggage trolley",
+      "y_hint": [
+        2020,
+        2220
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.trash_bags",
+      "name": "Plastic trash bags",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.trash_cans_pressed",
+      "name": "Pressed cans litter",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.bottles_box",
+      "name": "Bottle crate + bottles",
+      "y_hint": [
+        2050,
+        2250
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.cardboard_box",
+      "name": "Cardboard box / bed",
+      "y_hint": [
+        2080,
+        2260
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.ground_paper",
+      "name": "Ground paper litter",
+      "y_hint": [
+        2080,
+        2260
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.mattress_set",
+      "name": "Street mattresses + blankets + pillow",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.guitar_busker_set",
+      "name": "Busker guitar case + stands + money",
+      "y_hint": [
+        2100,
+        2280
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.control_desk_set",
+      "name": "Station control PC/monitors/box",
+      "y_hint": [
+        2000,
+        2200
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.tunnel_large",
+      "name": "Large tunnel portal",
+      "y_hint": [
+        2304,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.tunnel_double",
+      "name": "Double-arch tunnel portal",
+      "y_hint": [
+        2320,
+        2620
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.tunnel_single",
+      "name": "Single-arch tunnel portal",
+      "y_hint": [
+        2340,
+        2650
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.binary_edge_modular",
+      "name": "Hazard platform-edge binary modular",
+      "y_hint": [
+        2350,
+        2700
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.stairs_diamond_hub",
+      "name": "Diamond hub staircase assembly",
+      "y_hint": [
+        2600,
+        2900
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.stairs_v_chevron",
+      "name": "V/chevron diagonal stair sets",
+      "y_hint": [
+        2580,
+        2880
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.ui_number_blue",
+      "name": "Blue platform number icons 0\u20139",
+      "y_hint": [
+        2750,
+        2960
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.ui_number_orange",
+      "name": "Orange platform number icons 0\u20139",
+      "y_hint": [
+        2750,
+        2960
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.ui_number_modular",
+      "name": "Platform number modular base",
+      "y_hint": [
+        2750,
+        2960
+      ],
+      "multi_tile": false
+    },
+    {
+      "id": "me.subway.vehicle_top_blue",
+      "name": "Top-down blue/white bus or train car",
+      "y_hint": [
+        2320,
+        2550
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.vehicle_top_grey",
+      "name": "Top-down grey bus or tram",
+      "y_hint": [
+        2350,
+        2580
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.vehicle_front_dark",
+      "name": "Front-facing dark train/bus",
+      "y_hint": [
+        2304,
+        2500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.vehicle_front_red",
+      "name": "Front-facing red/orange vehicle",
+      "y_hint": [
+        2320,
+        2520
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.vehicle_top_teal_nose",
+      "name": "Top-down white/teal high-speed nose",
+      "y_hint": [
+        2380,
+        2600
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.gallery_example",
+      "name": "Example gallery / composed stamp",
+      "y_hint": [
+        2100,
+        2300
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.ticket_kiosk_tall",
+      "name": "Tall ticket/info kiosk",
+      "y_hint": [
+        200,
+        360
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_train_blue",
+      "name": "Example blue train stamp set",
+      "y_hint": [
+        500,
+        720
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_train_orange",
+      "name": "Example orange/brown train stamp",
+      "y_hint": [
+        768,
+        1000
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_train_green",
+      "name": "Example green train stamp",
+      "y_hint": [
+        1000,
+        1250
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_train_grey",
+      "name": "Example grey/silver train stamp",
+      "y_hint": [
+        1250,
+        1500
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_train_white",
+      "name": "Example white high-speed train stamp",
+      "y_hint": [
+        1536,
+        1750
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_turnstile",
+      "name": "Example lateral turnstile assembly",
+      "y_hint": [
+        160,
+        320
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_rail_brown",
+      "name": "Example brown rail assemblies",
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.example_rail_grey",
+      "name": "Example grey rail assemblies",
+      "y_hint": [
+        1750,
+        2050
+      ],
+      "multi_tile": true
+    },
+    {
+      "id": "me.subway.pillar_height_set",
+      "name": "Tunnel pillar height variants",
+      "y_hint": [
+        2400,
+        2750
+      ],
+      "multi_tile": true
+    }
+  ]
+}
